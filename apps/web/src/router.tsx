@@ -33,6 +33,7 @@ type PageTitle =
   | "common.adminSettings"
   | "common.approvals"
   | "common.home"
+  | "common.projects"
   | "common.jobs"
   | "common.settings"
   | "common.tasks"

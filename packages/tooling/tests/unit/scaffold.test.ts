@@ -29,7 +29,7 @@ describe("workspace scaffolding", () => {
     expect(
       JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
         .devDependencies,
-    ).toEqual({ "@raypx-kit/tsconfig": "catalog:dev", "@raypx/tooling": "workspace:*" });
+    ).toEqual({ "@raypx/tsconfig": "workspace:*", "@raypx/tooling": "workspace:*" });
     const scripts = JSON.parse(
       readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"),
     ).scripts;

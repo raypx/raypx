@@ -100,7 +100,7 @@ async function submission() {
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
-  fireEvent.click(await screen.findByRole("button", { name: "New task" }));
+  fireEvent.click(await screen.findByRole("button", { name: "New session" }));
   await selectOption("Computer", device.id);
   await selectOption("Project", projectId);
   const prompt = screen.getByRole("textbox", { name: "What should the agent do?" });
@@ -139,7 +139,7 @@ it("keeps an ambiguous submission open when another task occupies the project", 
   const fixture = await submission();
   await fixture.fail();
   await fixture.publish(false);
-  await screen.findByText("Another task is using this project. Wait for it to finish.");
+  await screen.findByText("Another session is using this project. Wait for it to finish.");
   expect(screen.getByRole("alert")).toBeVisible();
   expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toBeVisible();
   expect(fixture.get).not.toHaveBeenCalled();

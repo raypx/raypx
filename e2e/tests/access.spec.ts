@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./helpers/browser-fixture.js";
 import { web, desktop } from "./helpers/surfaces.js";
 import { capture } from "./helpers/capture.js";
-import { authResponse, signedInAccount } from "./helpers/account-fixture.js";
+import { authResponse, connectedProject, signedInAccount } from "./helpers/account-fixture.js";
 import { selectOption } from "./helpers/select.js";
 
 async function expectPrivatePages(page: Page, surface: "Web" | "Desktop", reads: string[]) {
@@ -134,7 +134,10 @@ test(
       authResponse(route, { json: { allowed: false } }),
     );
     await page.route("**/rpc/account/get", (route) => authResponse(route, { json: user }));
-    for (const path of ["tasks/list", "devices/list", "approvals/list"])
+    const deviceId = crypto.randomUUID(),
+      projectId = crypto.randomUUID();
+    await connectedProject(page, deviceId, projectId);
+    for (const path of ["tasks/list", "approvals/list"])
       await page.route("**/rpc/" + path, (route) => authResponse(route, { json: [] }));
     await page.route("**/rpc/observed/list", (route) =>
       authResponse(route, { json: { sessions: [], requests: [] } }),
@@ -162,7 +165,7 @@ test(
     await page
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .fill(content);
-    await page.getByRole("button", { name: "Task options", exact: false }).click();
+    await page.getByRole("button", { name: "Session options", exact: false }).click();
     await selectOption(page, page.getByRole("combobox", { name: "Agent", exact: true }), "codex");
     await selectOption(
       page,
@@ -175,11 +178,23 @@ test(
     await page.getByLabel("Email address", { exact: true }).fill(user.email);
     await page.getByLabel("Password", { exact: true }).fill("synthetic-password");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page).toHaveURL(web + "/tasks?from=guest");
+    await expect(page).toHaveURL(
+      (url) =>
+        url.pathname === "/tasks" &&
+        url.searchParams.get("from") === "guest" &&
+        Boolean(url.searchParams.get("guestDraft")),
+    );
+    await expect(
+      page.getByText(
+        "Your draft is saved. Choose a project to keep editing; execution waits for Send.",
+      ),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Raypx", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`project=${projectId}`));
     await expect(
       page.getByRole("textbox", { name: "What should the agent do?", exact: true }),
     ).toHaveValue(content);
-    await page.getByRole("button", { name: "Task options", exact: false }).click();
+    await page.getByRole("button", { name: "Session options", exact: false }).click();
     await expect(page.getByRole("combobox", { name: "Agent", exact: true })).toContainText("Codex");
     await expect(page.getByRole("combobox", { name: "Execution", exact: true })).toContainText(
       "Analyze, then ask before implementing",
@@ -216,7 +231,7 @@ test(
     }
     expect(privateReads).toEqual([]);
     await page.goto(desktop + "/tasks");
-    await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+    await page.getByRole("link", { name: "Browse remote projects", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Sign in for remote access", exact: true }),
     ).toBeVisible();
@@ -255,9 +270,7 @@ test(
     await page.getByLabel("Password", { exact: true }).fill("browser-fixture-password");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(desktop + "/tasks?scope=remote");
-    await expect(
-      page.getByRole("tab", { name: "Connected computers", exact: true }),
-    ).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
     await page.route("**/api/auth/sign-out", async (route) => {
       await page.route("**/api/auth/get-session**", (session) => authResponse(session, null));
       return authResponse(route, { success: true });
@@ -266,7 +279,7 @@ test(
     await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
     await expect(page).toHaveURL(desktop + "/");
     await expect(
-      page.getByRole("heading", { name: "Your local files", exact: true }),
+      page.getByRole("heading", { name: "Start on this computer", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
   },

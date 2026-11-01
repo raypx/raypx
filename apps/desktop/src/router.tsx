@@ -37,6 +37,7 @@ type PageTitle =
   | "common.files"
   | "common.jobs"
   | "common.settings"
+  | "common.projects"
   | "common.tasks"
   | "common.terminal"
   | "localWorkspace.welcome"

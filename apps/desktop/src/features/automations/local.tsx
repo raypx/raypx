@@ -14,17 +14,20 @@ import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition, JobInput, JobRun } from "@raypx/jobs";
 import { localRequest } from "../../lib/desktop";
+import { Link } from "@tanstack/react-router";
 
 export function LocalJobsPage({
   data,
   local,
   desktopAvailable,
   refresh,
+  projectId,
 }: {
   data: { jobs: JobDefinition[] | null; failed: boolean };
   local: { roots: RootGrant[] | null };
   desktopAvailable: boolean;
   refresh: () => Promise<void>;
+  projectId?: string | undefined;
 }) {
   const t = useTranslations("jobs");
   const c = useTranslations("common");
@@ -40,12 +43,18 @@ export function LocalJobsPage({
   const [editing, setEditing] = useState<JobDefinition | null | false>(false);
   const [action, setAction] = useState("directory.scan");
   const [selectedRoot, setRootId] = useState<string | null>(null);
+  const [association, setAssociation] = useState(projectId ?? "");
   const rootId = selectedRoot ?? roots[0]?.id ?? null;
   const [history, setHistory] = useState<{ job: JobDefinition; runs: JobRun[] } | null>(null);
   function edit(job: JobDefinition | null) {
     setEditing(job);
     setAction(job?.action.type ?? "directory.scan");
-    setRootId(job?.action.type === "directory.scan" ? job.action.rootId : (roots[0]?.id ?? null));
+    setRootId(
+      job?.action.type === "directory.scan"
+        ? job.action.rootId
+        : (projectId ?? roots[0]?.id ?? null),
+    );
+    setAssociation(job ? (job.projectId ?? "") : (projectId ?? ""));
     setError("");
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -59,6 +68,7 @@ export function LocalJobsPage({
       if (!Array.isArray(args) || args.some((entry) => typeof entry !== "string"))
         throw new Error("arguments");
       input = {
+        ...(association ? { projectId: association } : {}),
         name: value("name"),
         cron: value("cron"),
         timezone: value("timezone"),
@@ -150,6 +160,7 @@ export function LocalJobsPage({
   }
   const date = (value: string) => format.dateTime(new Date(value), "timestamp");
   const command = editing && editing.action.type === "command.run" ? editing.action.command : null;
+  const shown = projectId ? jobs?.filter((job) => job.projectId === projectId) : jobs;
   return (
     <section>
       <header className="mb-10 flex items-start justify-between gap-6 @max-4xl/main:flex-col @max-4xl/main:gap-5">
@@ -162,6 +173,15 @@ export function LocalJobsPage({
           {t("create")}
         </Button>
       </header>
+      {projectId && (
+        <Link
+          to="/automations"
+          search={{ scope: "local" }}
+          className="mb-5 inline-block text-sm underline underline-offset-4"
+        >
+          {t("allAutomations")}
+        </Link>
+      )}
       {!desktopAvailable && (
         <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">
           {c("desktopOnly")}
@@ -188,6 +208,21 @@ export function LocalJobsPage({
             onSubmit={save}
             className="flex max-w-180 flex-col gap-[19px] [&_label]:flex [&_label]:flex-col [&_label]:gap-[7px] [&_label]:text-[13px] [&_label]:font-medium [&_input]:min-h-[39px] [&>button]:mt-1"
           >
+            <label htmlFor="job-project">
+              {t("projectAssociation")}
+              <SelectField
+                id="job-project"
+                value={association}
+                onValueChange={setAssociation}
+                options={[
+                  { value: "", label: t("globalAutomation") },
+                  ...roots.map((root) => ({ value: root.id, label: root.name })),
+                  ...(association && !roots.some((root) => root.id === association)
+                    ? [{ value: association, label: t("projectUnavailable") }]
+                    : []),
+                ]}
+              />
+            </label>
             <label htmlFor="job-name">
               {c("name")}
               <Input
@@ -281,7 +316,14 @@ export function LocalJobsPage({
                 </label>
                 <label htmlFor="job-cwd">
                   {t("cwd")}
-                  <Input id="job-cwd" name="cwd" defaultValue={command?.cwd ?? ""} required />
+                  <Input
+                    id="job-cwd"
+                    name="cwd"
+                    defaultValue={
+                      command?.cwd ?? roots.find((root) => root.id === projectId)?.path ?? ""
+                    }
+                    required
+                  />
                 </label>
                 <p className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
                   {t("commandHint")}
@@ -302,7 +344,7 @@ export function LocalJobsPage({
           </form>
         </section>
       )}
-      {jobs?.length === 0 && editing === false ? (
+      {shown?.length === 0 && editing === false ? (
         <div className="flex flex-col items-center px-6 py-20 text-center">
           <Clock size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
           <h2 className="text-xl">{t("empty")}</h2>
@@ -310,7 +352,7 @@ export function LocalJobsPage({
         </div>
       ) : (
         <div>
-          {jobs?.map((job) => (
+          {shown?.map((job) => (
             <article
               className="flex items-start gap-4 border-t border-border py-6 @max-4xl/main:flex-wrap"
               key={job.id}
@@ -321,6 +363,12 @@ export function LocalJobsPage({
               <div className="min-w-30 flex-1">
                 <div className="mb-2 flex items-center gap-2.5">
                   <h2 className="text-[15px]">{job.name}</h2>
+                  <span className="text-xs text-muted-foreground">
+                    {job.projectId
+                      ? (roots.find((root) => root.id === job.projectId)?.name ??
+                        t("projectUnavailable"))
+                      : t("globalAutomation")}
+                  </span>
                   <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
                     {t(job.enabled ? "enabled" : "disabled")}
                   </span>

@@ -39,7 +39,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     ...(options.kind !== "app" ? { exports: { ".": "./src/index.ts" } } : {}),
     scripts,
     devDependencies: {
-      "@raypx-kit/tsconfig": "catalog:dev",
+      "@raypx/tsconfig": "workspace:*",
       "@raypx/tooling": "workspace:*",
       ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
     },
@@ -51,7 +51,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
         ? "library"
         : "node";
   const tsconfig = {
-    extends: `@raypx-kit/tsconfig/${config}.json`,
+    extends: `@raypx/tsconfig/${config}.json`,
     compilerOptions: {
       ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}),
       ...(options.target === "bun" ? { types: ["bun"] } : {}),

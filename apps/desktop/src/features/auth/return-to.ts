@@ -1,5 +1,6 @@
 const paths = new Set([
   "/",
+  "/files",
   "/tasks",
   "/approvals",
   "/account",

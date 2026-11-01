@@ -34,6 +34,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 
 type WebPath =
   | "/"
+  | "/account"
   | "/settings"
   | "/tasks"
   | "/approvals"
@@ -84,7 +85,7 @@ export function WebShell() {
       ),
   });
   const navigation: ShellNavItem<WebPath>[] = [
-    { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
+    { to: "/", label: c("projects"), icon: <ListTodo />, exact: true },
     { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
     { to: "/memory", label: memory("title"), icon: <BookOpen /> },
     {
@@ -97,7 +98,7 @@ export function WebShell() {
     },
   ];
   const secondaryNavigation: ShellNavItem<WebPath>[] = [
-    { to: "/", label: c(accountId ? "account" : "home"), icon: <CircleUserRound />, exact: true },
+    { to: "/account", label: c("account"), icon: <CircleUserRound /> },
     { to: "/settings", label: c("settings"), icon: <Settings /> },
   ];
   if (access.data?.allowed)
@@ -140,10 +141,11 @@ export function WebShell() {
                 void router.navigate({
                   to: "/login",
                   search: {
-                    returnTo: guestReturnTo(apiUrl, destination === "account" ? "/" : href),
+                    returnTo: guestReturnTo(apiUrl, destination === "account" ? "/account" : href),
                   },
                 });
-              else void router.navigate({ to: destination === "account" ? "/" : "/settings" });
+              else
+                void router.navigate({ to: destination === "account" ? "/account" : "/settings" });
             }}
             onSignOut={async () => {
               const result = await auth.signOut(async () => {

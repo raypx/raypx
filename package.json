@@ -19,7 +19,6 @@
       "@tanstack/react-router-ssr-query": "^1.167.3",
       "@tanstack/react-start": "1.169.4",
       "@tanstack/react-virtual": "^3.14.23",
-      "@raypx-kit/env": "0.0.0-alpha.2",
       "@raypx-kit/intl": "0.0.0-alpha.2",
       "@react-email/components": "^1.0.12",
       "@react-email/render": "^2.2.0",
@@ -70,7 +69,6 @@
         "@vitest/coverage-v8": "5.0.5",
         "@raypx-kit/devkit": "0.0.0-alpha.6",
         "@raypx-kit/email-preview": "0.0.0-alpha.4",
-        "@raypx-kit/tsconfig": "0.0.0-alpha.2",
         "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.4",
         "happy-dom": "^21.0.4",
         "knip": "^6.43.0",
@@ -128,8 +126,8 @@
     "eval:agents": "raypx-dev tasks cli#eval:agents --"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
     "knip": "catalog:dev",

@@ -30,7 +30,9 @@ task ID equals its run ID for the existing host command receipt protocol.
 
 Client views receive independent ports, never SDK-derived Pick types. Private state
 is remounted and in-flight requests aborted on account/client changes. Keep local
-automations in the Desktop device profile; login does not migrate them. Cloud
+automations in the Desktop device profile; login does not migrate them.
+Local definitions accept an optional projectId. New project forms default it to
+the current project; existing unassigned plans remain in global management. Cloud
 forms retain edits on CAS errors and require explicit device epoch reselection.
 
 ## Verification

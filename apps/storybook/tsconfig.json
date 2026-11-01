@@ -1,5 +1,5 @@
 {
-  "extends": "@raypx-kit/tsconfig/browser.json",
+  "extends": "@raypx/tsconfig/browser.json",
   "include": ["src/**/*.ts", "src/**/*.tsx", ".storybook/*.ts", ".storybook/*.tsx"],
   "compilerOptions": {
     "types": ["vite/client", "node"]

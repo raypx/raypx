@@ -1,7 +1,7 @@
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../../features/analytics/client";
-import { createFileRoute } from "@tanstack/react-router";
-import { TaskWorkspace } from "@raypx/tasks/client";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
 import { SessionBoundary } from "../../features/auth/components/session-boundary";
 import { GuestTasks } from "../../features/tasks/guest";
 import { useGuestDraft } from "../../features/tasks/guest-draft";
@@ -10,11 +10,20 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { apiUrl } from "../../features/auth/client";
 import { taskClient } from "../../features/tasks/client";
 import { accountMemory } from "../../features/memory/client";
+import { ProjectTools } from "../../features/tasks/project-tools";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const Route = createFileRoute("/(app)/tasks")({
   staticData: { page: { title: "common.tasks", layout: "workbench" } },
-  validateSearch: (search: Record<string, unknown>): { taskId?: string; guestDraft?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { taskId?: string; project?: string; device?: string; guestDraft?: string } => ({
+    ...(typeof search.project === "string" && uuid.test(search.project)
+      ? { project: search.project }
+      : {}),
+    ...(typeof search.device === "string" && uuid.test(search.device)
+      ? { device: search.device }
+      : {}),
     ...(typeof search.taskId === "string" && uuid.test(search.taskId)
       ? { taskId: search.taskId }
       : {}),
@@ -32,10 +41,50 @@ function Page() {
   );
 }
 function SignedInTasks({ accountId }: { accountId: string }) {
-  const { taskId } = Route.useSearch();
+  const { taskId, project, device, guestDraft } = Route.useSearch();
+  const router = useRouter();
   const resume = useGuestDraft(apiUrl, accountId);
   const g = useTranslations("guest");
+  const t = useTranslations("tasks");
+  const scope = { kind: "remote", namespace: apiUrl, accountId } as const;
+  const select = (target: { projectId: string; deviceId: string }, linkedTask?: string) =>
+    void router.navigate({
+      to: "/tasks",
+      search: {
+        project: target.projectId,
+        device: target.deviceId,
+        ...(linkedTask ? { taskId: linkedTask } : {}),
+        ...(guestDraft ? { guestDraft } : {}),
+      },
+    });
   if (!resume.ready) return <LoadingState label={g("restoring")} />;
+  if ((!project || !device) && taskId)
+    return (
+      <TaskProjectLink
+        client={reportedClient}
+        scope={scope}
+        taskId={taskId}
+        onSelect={(target) => select(target, taskId)}
+      />
+    );
+  if (!project)
+    return (
+      <>
+        {resume.draft && (
+          <p className="mb-5 text-sm text-muted-foreground">{t("chooseProjectForDraft")}</p>
+        )}
+        <ProjectList
+          client={reportedClient}
+          scope={scope}
+          onSelect={select}
+          connectionAction={
+            <Link to="/settings" className="text-sm underline underline-offset-4">
+              {t("agentSettings")}
+            </Link>
+          }
+        />
+      </>
+    );
   return (
     <>
       {resume.failed && (
@@ -43,15 +92,27 @@ function SignedInTasks({ accountId }: { accountId: string }) {
           {g("restoreFailed")}
         </p>
       )}
-      <TaskWorkspace
-        contextLibrary={accountMemory}
-        client={reportedClient}
-        scope={{ kind: "remote", namespace: apiUrl, accountId }}
-        view="tasks"
-        initialDraft={resume.draft}
-        onDraftRestored={resume.restored}
-        initialTaskId={taskId}
-      />
+      <ProjectTools projectId={project} deviceId={device} />
+      {device && (
+        <TaskWorkspace
+          contextLibrary={accountMemory}
+          client={reportedClient}
+          scope={scope}
+          persistEditor
+          {...(device ? { deviceId: device } : {})}
+          view="tasks"
+          initialDraft={resume.draft}
+          onDraftRestored={resume.restored}
+          initialTaskId={taskId}
+          {...(project ? { projectId: project } : {})}
+          onTaskChange={(id) =>
+            void router.navigate({
+              to: "/tasks",
+              search: { project, ...(device ? { device } : {}), ...(id ? { taskId: id } : {}) },
+            })
+          }
+        />
+      )}
     </>
   );
 }

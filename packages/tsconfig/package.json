@@ -1,0 +1,44 @@
+{
+  "name": "@raypx/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Strict TypeScript presets for ESM libraries, browser applications and Node-compatible runtimes.",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Zack",
+    "email": "heyloyep@gmail.com"
+  },
+  "files": [
+    "base.json",
+    "browser.json",
+    "library.json",
+    "node.json",
+    "react-library.json",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./browser.json": "./browser.json",
+    "./node.json": "./node.json",
+    "./library.json": "./library.json",
+    "./react-library.json": "./react-library.json"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run tests",
+    "test:coverage": "bun --bun vp test --run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
+  }
+}

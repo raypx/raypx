@@ -55,9 +55,9 @@
   },
   "devDependencies": {
     "@orpc/server": "catalog:",
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/devtools": "workspace:*",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",

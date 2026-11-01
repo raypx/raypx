@@ -39,6 +39,7 @@ const mocks = vi.hoisted(() => ({
   session: vi.fn(),
 }));
 vi.mock("../../../../../src/features/auth/client", () => ({
+  apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
     signIn: { email: mocks.signIn },

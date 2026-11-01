@@ -16,8 +16,8 @@
     "@earendil-works/pi-ai": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev"
   },

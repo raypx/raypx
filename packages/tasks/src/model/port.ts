@@ -31,7 +31,12 @@ export interface TaskWorkspacePort extends TaskChangeSource {
   };
   tasks: {
     list(
-      input?: { limit?: number | undefined; before?: string | undefined },
+      input?: {
+        limit?: number | undefined;
+        before?: string | undefined;
+        projectId?: string | undefined;
+        deviceId?: string | undefined;
+      },
       options?: TaskReadOptions,
     ): Promise<AgentTask[]>;
     get(

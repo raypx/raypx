@@ -116,6 +116,8 @@ export const localParams = {
     ...deviceOwner,
     limit: z.number().int().min(1).max(100).default(100),
     before: z.string().optional(),
+    projectId: z.string().uuid().optional(),
+    deviceId: z.string().uuid().optional(),
   }),
   "agents.local.get": z.object({
     ...deviceOwner,

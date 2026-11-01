@@ -209,7 +209,13 @@ export class AgentStore {
       .all()
       .map((row) => storedRecord(localAgentTaskSchema, row.value));
   }
-  taskPage(binding: string, limit: number, before?: string): AgentTask[] {
+  taskPage(
+    binding: string,
+    limit: number,
+    before?: string,
+    projectId?: string,
+    deviceId?: string,
+  ): AgentTask[] {
     before ||= undefined;
     return this.database
       .select({ value: tasks.value })
@@ -217,7 +223,13 @@ export class AgentStore {
       .where(
         and(
           eq(taskBinding, binding),
+          deviceId === undefined
+            ? undefined
+            : eq(sql`json_extract(${tasks.value},'$.task.deviceId')`, deviceId),
           before === undefined ? undefined : lt(taskPageCursor, before),
+          projectId === undefined
+            ? undefined
+            : eq(sql`json_extract(${tasks.value},'$.task.projectId')`, projectId),
         ),
       )
       .orderBy(desc(taskPageCursor))

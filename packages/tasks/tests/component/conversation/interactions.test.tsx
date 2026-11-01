@@ -40,7 +40,30 @@ async function workspace() {
       get: async () => ({ task, events: [], requests: [], activity: [] }),
       followUp,
     },
-    devices: { list: async () => [] },
+    devices: {
+      list: async () => [
+        {
+          id: task.deviceId,
+          name: "Test computer",
+          platform: "darwin",
+          appVersion: "1.0.0",
+          epoch: 1,
+          revoked: false,
+          lastSeenAt: null,
+          online: true,
+          projects: [{ id: task.projectId, name: "Project", providers: ["codex"], dirty: false }],
+          capabilities: [
+            {
+              provider: "codex",
+              available: true,
+              version: "test",
+              reason: "ready",
+              inputModes: [],
+            },
+          ],
+        },
+      ],
+    },
     approvals: { list: async () => [] },
   });
   render(

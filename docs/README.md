@@ -1,5 +1,6 @@
 # Raypx documentation
 
+- [Persistent Agent Platform roadmap](roadmap.md)
 - [Architecture and runtime boundaries](architecture/README.md)
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)

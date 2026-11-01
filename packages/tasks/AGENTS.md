@@ -88,8 +88,12 @@ The wide split can be resized by pointer or keyboard and stores only its width
 as a device preference. Existing-task views start with a compact editor; opening
 and closing it preserves unsent text. Saved drafts expand on demand. Finished
 tasks show their outcome before the expandable full conversation.
-Optional project selection filters the loaded page and can be controlled by an
-application URL through `projectId`/`onProjectChange`; never imply a global search.
+Applications own project/computer selection in their URL and pass `projectId` and
+`deviceId` as a controlled execution target. List reads and next-page probes send
+the same target; storage filters it before pagination. Remount the cursor, editor
+and detail selection on target changes. Draft/editor identities include that target.
+Search/status/agent filters still describe only the loaded page. Project views hide
+duplicate computer/project controls and reject a detail from another target.
 Overview counts describe the loaded
 page; running/queued excludes tasks waiting for an answer. Drafts are explicitly
 saved to device storage, scoped by injected server identity, account and local/remote

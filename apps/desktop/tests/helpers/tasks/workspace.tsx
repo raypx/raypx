@@ -52,7 +52,7 @@ vi.mock("../../../src/features/auth/client", () => ({
 vi.mock("../../../src/features/tasks/client", () => ({
   taskClient: {
     tasks: { list: mocks.remote },
-    devices: { list: async () => [] },
+    devices: { list: async () => [remoteDevice] },
     approvals: { list: async () => [] },
     subscribe: () => () => {},
   },
@@ -73,6 +73,7 @@ export const device: SyncDevice = {
   online: true,
   projects: [
     { id: crypto.randomUUID(), name: "Local project", providers: ["codex"], dirty: false },
+    { id: crypto.randomUUID(), name: "Second project", providers: ["codex"], dirty: false },
   ],
   capabilities: [
     {
@@ -83,6 +84,11 @@ export const device: SyncDevice = {
       inputModes: ["steer", "queue"],
     },
   ],
+};
+export const remoteDevice: SyncDevice = {
+  ...device,
+  id: crypto.randomUUID(),
+  name: "Remote computer",
 };
 const histories: ReturnType<typeof createMemoryHistory>[] = [];
 export function setupWorkspaceTests() {
@@ -121,62 +127,72 @@ export function setupWorkspaceTests() {
     localStorage.clear();
     localStorage.setItem("raypx_locale", "en");
     mocks.remote.mockReset().mockRejectedValue(new Error("API offline"));
-    mocks.request
-      .mockReset()
-      .mockImplementation(
-        async (
-          method: string,
-          params: { request?: { method: string; input: AgentTask }; before?: string; id?: string },
-        ) => {
-          if (method === "agents.local.device") return device;
-          if (method === "memory.list") return [];
-          if (method === "agents.local.list")
-            return state.tasks.filter(
-              (task) => !params.before || `${task.createdAt}:${task.id}` < params.before,
-            );
-          if (method === "agents.local.approvals")
-            return state.request?.status === "pending" ? [state.request] : [];
-          if (method === "agents.local.get")
-            return {
-              task: state.tasks.find((task) => task.id === params.id),
-              events: [],
-              requests: state.request ? [state.request] : [],
-              activity: state.activity,
-            };
-          if (method === "agents.local.execute") {
-            if (params.request?.method === "tasks.create") {
-              state.tasks = [
-                {
-                  ...params.request.input,
-                  parentTaskId: null,
-                  status: "waiting",
-                  summary: "",
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                },
-              ];
-              state.request = {
-                id: crypto.randomUUID(),
-                taskId: state.tasks[0]!.id,
-                kind: "permission",
-                title: "Run local tests",
-                body: "bun test",
-                questions: [],
-                expiresAt: new Date(Date.now() + 60_000).toISOString(),
-                status: "pending",
-                decision: null,
-              };
-              return { ok: true, value: state.tasks[0] };
-            }
-            state.tasks = [
-              { ...state.tasks[0]!, status: "succeeded", summary: "Private local result" },
-            ];
-            state.request = { ...state.request!, status: "applied", decision: { type: "allow" } };
-            return { ok: true, value: state.request };
-          }
-          throw new Error("Unexpected IPC");
+    mocks.request.mockReset().mockImplementation(
+      async (
+        method: string,
+        params: {
+          request?: { method: string; input: AgentTask };
+          before?: string;
+          id?: string;
+          projectId?: string;
+          deviceId?: string;
+          limit?: number;
         },
-      );
+      ) => {
+        if (method === "agents.local.device") return device;
+        if (method === "memory.list") return [];
+        if (method === "agents.local.list")
+          return state.tasks
+            .filter(
+              (task) =>
+                (!params.projectId || task.projectId === params.projectId) &&
+                (!params.deviceId || task.deviceId === params.deviceId) &&
+                (!params.before || `${task.createdAt}:${task.id}` < params.before),
+            )
+            .slice(0, params.limit ?? 100);
+        if (method === "agents.local.approvals")
+          return state.request?.status === "pending" ? [state.request] : [];
+        if (method === "agents.local.get")
+          return {
+            task: state.tasks.find((task) => task.id === params.id),
+            events: [],
+            requests: state.request ? [state.request] : [],
+            activity: state.activity,
+          };
+        if (method === "agents.local.execute") {
+          if (params.request?.method === "tasks.create") {
+            state.tasks = [
+              {
+                ...params.request.input,
+                parentTaskId: null,
+                status: "waiting",
+                summary: "",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ];
+            state.request = {
+              id: crypto.randomUUID(),
+              taskId: state.tasks[0]!.id,
+              kind: "permission",
+              title: "Run local tests",
+              body: "bun test",
+              questions: [],
+              expiresAt: new Date(Date.now() + 60_000).toISOString(),
+              status: "pending",
+              decision: null,
+            };
+            return { ok: true, value: state.tasks[0] };
+          }
+          state.tasks = [
+            { ...state.tasks[0]!, status: "succeeded", summary: "Private local result" },
+          ];
+          state.request = { ...state.request!, status: "applied", decision: { type: "allow" } };
+          return { ok: true, value: state.request };
+        }
+        throw new Error("Unexpected IPC");
+      },
+    );
   });
   afterEach(() => {
     cleanup();
@@ -191,7 +207,7 @@ export async function page(url = "/") {
   const routeTree = createRootRoute({ component: () => <DesktopTaskWorkspace view="tasks" /> });
   const router = createRouter({ routeTree, history });
   await router.load();
-  return render(
+  const rendered = render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
@@ -200,6 +216,7 @@ export async function page(url = "/") {
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
+  return { ...rendered, router };
 }
 export async function showDrafts() {
   const trigger = await screen.findByRole("button", { name: "Drafts" });

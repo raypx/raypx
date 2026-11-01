@@ -101,7 +101,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
       .toBe(true);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("http://127.0.0.1:4173/tasks");
-    await page.getByRole("button", { name: "New task", exact: true }).click();
+    await page.getByRole("button", { name: "New session", exact: true }).click();
     const form = page
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .locator("xpath=ancestor::form[1]");
@@ -122,7 +122,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     await expect(
       page.getByText("This project has uncommitted changes.", { exact: false }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Send task", exact: true }).click();
+    await page.getByRole("button", { name: "Send session", exact: true }).click();
     const start = await take("command");
     if (start.command.request.method !== "tasks.create")
       throw new Error("Unexpected relay command");

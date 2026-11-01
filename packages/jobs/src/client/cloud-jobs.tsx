@@ -21,6 +21,7 @@ export interface CloudJobsPageProps {
   devices: JobDevicesPort;
   renderTaskLink: (taskId: string) => ReactNode;
   contextLibrary?: MemoryClientPort | undefined;
+  target?: { deviceId: string; projectId: string } | undefined;
 }
 const identities = new WeakMap<object, number>();
 let identity = 0;
@@ -38,6 +39,8 @@ export function CloudJobsPage(props: CloudJobsPageProps) {
         key(props.client),
         key(props.devices),
         props.contextLibrary ? key(props.contextLibrary) : null,
+        props.target?.deviceId,
+        props.target?.projectId,
       ])}
       {...props}
     />
@@ -49,6 +52,7 @@ function CloudJobs({
   renderTaskLink,
   contextLibrary,
   accountId,
+  target,
 }: CloudJobsPageProps) {
   const t = useTranslations("cloudJobs"),
     j = useTranslations("jobs"),
@@ -119,17 +123,17 @@ function CloudJobs({
               ? jobFailure(devices.reason)
               : undefined,
         );
-        const target = historyTarget.current;
-        if (target) {
+        const historyJob = historyTarget.current;
+        if (historyJob) {
           const runs = await request((options) =>
-            client.history({ id: target.id, limit: 50 }, options),
+            client.history({ id: historyJob.id, limit: 50 }, options),
           );
-          if (alive.current && historyTarget.current?.id === target.id)
+          if (alive.current && historyTarget.current?.id === historyJob.id)
             setHistory({
               job:
                 (value.status === "fulfilled"
-                  ? value.value.jobs.find((job) => job.id === target.id)
-                  : undefined) ?? target,
+                  ? value.value.jobs.find((job) => job.id === historyJob.id)
+                  : undefined) ?? historyJob,
               runs,
             });
         }
@@ -260,6 +264,13 @@ function CloudJobs({
     });
   }
   const date = (value: string) => format.dateTime(new Date(value), "timestamp");
+  const shown = data?.jobs.filter(
+    (job) =>
+      !target ||
+      (job.action.type === "agent.run" &&
+        job.action.deviceId === target.deviceId &&
+        job.action.projectId === target.projectId),
+  );
   return (
     <section>
       <header className="mb-7 flex flex-wrap items-start justify-between gap-4">
@@ -311,6 +322,7 @@ function CloudJobs({
         <JobForm
           key={editing ? `${editing.id}:${editing.revision}` : "new"}
           job={editing}
+          target={target}
           devices={data.devices}
           busy={busy}
           contextLibrary={contextLibrary}
@@ -323,7 +335,7 @@ function CloudJobs({
         />
       )}
       {!data && loading && <LoadingState label={c("loading")} />}
-      {data?.jobs.length === 0 && editing === false && (
+      {shown?.length === 0 && editing === false && (
         <div className="py-14 text-center">
           <CalendarClock className="mx-auto mb-4 size-9 text-muted-foreground" />
           <h2 className="text-lg">{t("empty")}</h2>
@@ -332,77 +344,78 @@ function CloudJobs({
           </p>
         </div>
       )}
-      {data?.jobs.map((job) => (
-        <article
-          key={job.id}
-          className="flex flex-wrap items-start gap-4 border-t border-border py-5"
-        >
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-medium wrap-anywhere">{job.name}</h2>
-              <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {j(job.enabled ? "enabled" : "disabled")}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <code>{job.cron}</code> · {job.timezone} ·{" "}
-              {t(job.action.type === "device.sync" ? "sync" : "agent")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {data.devices.find((item) => item.id === job.action.deviceId)?.name ??
-                t("targetUnavailable")}
-            </p>
-            {job.enabled && job.nextRunAt && (
+      {data &&
+        shown?.map((job) => (
+          <article
+            key={job.id}
+            className="flex flex-wrap items-start gap-4 border-t border-border py-5"
+          >
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-medium wrap-anywhere">{job.name}</h2>
+                <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {j(job.enabled ? "enabled" : "disabled")}
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground">
-                {j("next")}: {date(job.nextRunAt)}
+                <code>{job.cron}</code> · {job.timezone} ·{" "}
+                {t(job.action.type === "device.sync" ? "sync" : "agent")}
               </p>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            <Button
-              variant="outline"
-              disabled={busy || !data.enabled}
-              onClick={() => void runNow(job)}
-            >
-              <Play aria-hidden="true" />
-              {pendingRuns.includes(job.id) ? t("checkRun") : j("run")}
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
-              {j("history")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={`${j(job.enabled ? "pause" : "enable")}: ${job.name}`}
-              disabled={busy}
-              onClick={() => void toggle(job)}
-            >
-              {job.enabled ? <Pause /> : <Play />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={`${c("edit")}: ${job.name}`}
-              disabled={busy}
-              onClick={() => {
-                setEditing(job);
-                setError(undefined);
-              }}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={c("deleteNamed", { name: job.name })}
-              disabled={busy}
-              onClick={() => void remove(job)}
-            >
-              <Trash2 />
-            </Button>
-          </div>
-        </article>
-      ))}
+              <p className="text-xs text-muted-foreground">
+                {data.devices.find((item) => item.id === job.action.deviceId)?.name ??
+                  t("targetUnavailable")}
+              </p>
+              {job.enabled && job.nextRunAt && (
+                <p className="text-xs text-muted-foreground">
+                  {j("next")}: {date(job.nextRunAt)}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              <Button
+                variant="outline"
+                disabled={busy || !data.enabled}
+                onClick={() => void runNow(job)}
+              >
+                <Play aria-hidden="true" />
+                {pendingRuns.includes(job.id) ? t("checkRun") : j("run")}
+              </Button>
+              <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
+                {j("history")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`${j(job.enabled ? "pause" : "enable")}: ${job.name}`}
+                disabled={busy}
+                onClick={() => void toggle(job)}
+              >
+                {job.enabled ? <Pause /> : <Play />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`${c("edit")}: ${job.name}`}
+                disabled={busy}
+                onClick={() => {
+                  setEditing(job);
+                  setError(undefined);
+                }}
+              >
+                <Pencil />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={c("deleteNamed", { name: job.name })}
+                disabled={busy}
+                onClick={() => void remove(job)}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          </article>
+        ))}
       {history && (
         <section className="mt-8 space-y-3">
           <header className="flex items-center justify-between gap-3">

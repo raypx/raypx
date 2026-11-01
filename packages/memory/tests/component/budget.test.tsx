@@ -28,7 +28,7 @@ it("measures the selected historical version and updates on typing without refet
   const page = render(language(<ContextBudget {...props} />));
   const expected = taskExecutionBudget({ prompt: "Task", context: { sources: [old] } });
   await waitFor(() =>
-    expect(screen.getByLabelText("Reference and task budget")).toHaveTextContent(
+    expect(screen.getByLabelText("Reference and session budget")).toHaveTextContent(
       `${expected.characters} / 32000`,
     ),
   );
@@ -58,7 +58,7 @@ it("ignores an old owner's late budget failure and aborts its requests", async (
   await waitFor(() => expect(client.get).toHaveBeenCalledTimes(1));
   const signal = client.get.mock.calls[0]?.[1]?.signal;
   page.rerender(language(<ContextBudget {...props} ownerKey="new-owner" />));
-  await screen.findByLabelText("Reference and task budget");
+  await screen.findByLabelText("Reference and session budget");
   await act(async () => old.reject(new Error("Old private failure")));
   expect(signal?.aborted).toBe(true);
   expect(screen.queryByRole("alert")).toBeNull();
@@ -91,7 +91,7 @@ it("keeps unknown budgets blocked until a deliberate retry succeeds", async () =
   expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ status: "error" }));
   expect(screen.queryByText("private service details")).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Recalculate budget" }));
-  await screen.findByLabelText("Reference and task budget");
+  await screen.findByLabelText("Reference and session budget");
   expect(changed).toHaveBeenLastCalledWith(
     expect.objectContaining({ status: "ready", exceeded: false }),
   );

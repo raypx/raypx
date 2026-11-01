@@ -15,7 +15,7 @@ it("isolates device and remote draft ownership", () => {
   ];
   expect(scopes.map(workspaceOwner)).toEqual(["device:local-workspace:v1", "account-a"]);
   expect(scopes.map(isLocalWorkspace)).toEqual([true, false]);
-  expect(scopes.map(workspaceDraftKey)).toEqual([
+  expect(scopes.map((scope) => workspaceDraftKey(scope))).toEqual([
     JSON.stringify(["raypx.task-drafts.v1", namespace, "device:local-workspace:v1", true]),
     JSON.stringify(["raypx.task-drafts.v1", namespace, "account-a", false]),
   ]);
@@ -33,4 +33,20 @@ it("isolates server/account changes without making the device owner account-depe
     workspaceDraftKey(remote),
   );
   expect(workspaceScopeKey({ ...local, namespace: "server-b" })).not.toBe(workspaceScopeKey(local));
+});
+
+it("isolates unsent text and references by project, computer and remote owner", () => {
+  const scope = { kind: "remote", namespace: "server", accountId: "account-a" } as const;
+  const keys = [
+    workspaceDraftKey(scope, "project-a", "computer-a"),
+    workspaceDraftKey(scope, "project-b", "computer-a"),
+    workspaceDraftKey(scope, "project-a", "computer-b"),
+    workspaceDraftKey({ ...scope, accountId: "account-b" }, "project-a", "computer-a"),
+    workspaceDraftKey(
+      { kind: "device", namespace: "server", workspaceId: "profile" },
+      "project-a",
+      "computer-a",
+    ),
+  ];
+  expect(new Set(keys).size).toBe(keys.length);
 });

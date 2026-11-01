@@ -17,6 +17,13 @@ belongs to the device workspace; old account-owned local history is unsupported.
 guest browsing and restores an explicitly submitted guest draft after login,
 without automatically sending it. The CLI engine and persisted local state remain
 independent of browser sessions.
+The product entry is project → session → requests → result. A project is one
+authorized directory, identified with its ownership scope and computer. Desktop
+restores valid recent local selection; Web lists remote projects after login and
+keeps account details at `/account`. URL selection never dispatches execution.
+TaskWorkspacePort list targets flow through HTTP/private IPC into storage filters
+before cursor/limit. Query keys, page probes and draft identities use the same
+target; unavailable targets are explicit and never redirect execution elsewhere.
 Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
 on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.

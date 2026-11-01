@@ -13,7 +13,6 @@ for (const [surface, base] of [
   ["Desktop", "http://127.0.0.1:4174"],
 ] as const) {
   const memoryPath = surface === "Desktop" ? "/memory?scope=account" : "/memory";
-  const tasksPath = surface === "Desktop" ? "/tasks?scope=remote" : "/tasks";
   test(
     `${surface} versions a template and preserves its captured task context`,
     { tag: [`@${surface.toLowerCase()}`, "@smoke"] },
@@ -23,6 +22,13 @@ for (const [surface, base] of [
       const deviceId = crypto.randomUUID(),
         projectId = crypto.randomUUID(),
         time = new Date().toISOString();
+      const tasksPath =
+        "/tasks?" +
+        new URLSearchParams({
+          ...(surface === "Desktop" ? { scope: "remote" } : {}),
+          device: deviceId,
+          project: projectId,
+        });
       const original = "Run the project tests and explain the result.";
       let document: ContextDocument | undefined, task: AgentTask | undefined;
       const versions: ContextVersion[] = [];
@@ -215,33 +221,25 @@ for (const [surface, base] of [
       });
 
       await page.goto(base + tasksPath);
-      const composer = page.getByRole("form", { name: "New task", exact: true });
+      const composer = page.getByRole("form", { name: "New session", exact: true });
       if (!(await composer.isVisible()))
-        await page.getByRole("button", { name: "New task", exact: true }).click();
-      if (!(await page.getByRole("combobox", { name: "Computer", exact: true }).isVisible()))
-        await page.getByRole("button", { name: /Task options/ }).click();
-      await selectOption(
-        page,
-        page.getByRole("combobox", { name: "Computer", exact: true }),
-        deviceId,
-      );
-      await selectOption(
-        page,
-        page.getByRole("combobox", { name: "Project", exact: true }),
-        projectId,
-      );
+        await page.getByRole("button", { name: "New session", exact: true }).click();
+      if (!(await page.getByRole("combobox", { name: "Agent", exact: true }).isVisible()))
+        await page.getByRole("button", { name: /Session options/ }).click();
       await selectOption(page, page.getByRole("combobox", { name: "Agent", exact: true }), "codex");
       await page
         .getByRole("textbox", { name: "What should the agent do?", exact: true })
         .fill("Check this repository.");
       await page.getByRole("button", { name: /Memory and templates \(0\/8\)/ }).click();
       await page.getByRole("checkbox", { name: /Repository check template/ }).check();
-      await expect(page.getByLabel("Reference and task budget")).toBeVisible();
+      await expect(page.getByLabel("Reference and session budget")).toBeVisible();
       await page
         .getByRole("textbox", { name: "What should the agent do?", exact: true })
         .fill("x".repeat(32_000));
       await expect(page.getByText(/Over the limit by/)).toBeVisible();
-      await expect(composer.getByRole("button", { name: "Send task", exact: true })).toBeDisabled();
+      await expect(
+        composer.getByRole("button", { name: "Send session", exact: true }),
+      ).toBeDisabled();
       expect(submitted).toBeUndefined();
       const viewport = page.viewportSize()!;
       await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
@@ -250,7 +248,7 @@ for (const [surface, base] of [
           page.evaluate(() => window.document.documentElement.scrollWidth <= innerWidth + 1),
         )
         .toBe(true);
-      await page.getByLabel("Reference and task budget").scrollIntoViewIfNeeded();
+      await page.getByLabel("Reference and session budget").scrollIntoViewIfNeeded();
       await capture(page, {
         path: test.info().outputPath(`${surface.toLowerCase()}-context-budget.png`),
         fullPage: true,
@@ -259,8 +257,8 @@ for (const [surface, base] of [
       await page
         .getByRole("textbox", { name: "What should the agent do?", exact: true })
         .fill("Check this repository.");
-      await composer.getByRole("button", { name: "Send task", exact: true }).click();
-      const snapshot = page.getByRole("region", { name: "Task context", exact: true });
+      await composer.getByRole("button", { name: "Send session", exact: true }).click();
+      const snapshot = page.getByRole("region", { name: "Session context", exact: true });
       await expect(snapshot).toBeVisible();
       await snapshot.getByRole("button", { name: /Repository check template/ }).click();
       await expect(snapshot.getByText(original, { exact: true })).toBeVisible();
@@ -302,7 +300,7 @@ for (const [surface, base] of [
       await page.goto(
         `${base}${tasksPath}${tasksPath.includes("?") ? "&" : "?"}taskId=${task!.id}`,
       );
-      const retained = page.getByRole("region", { name: "Task context", exact: true });
+      const retained = page.getByRole("region", { name: "Session context", exact: true });
       await retained.getByRole("button", { name: /Repository check template/ }).click();
       await expect(retained.getByText(original, { exact: true })).toBeVisible();
       await expect(retained).toContainText("Revision 3");

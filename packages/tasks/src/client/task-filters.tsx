@@ -61,12 +61,14 @@ export function TaskFilterBar({
   count,
   total,
   onChange,
+  fixedTarget = false,
 }: {
   filters: TaskFilters;
   devices: SyncDevice[];
   count: number;
   total: number;
   onChange: (filters: TaskFilters) => void;
+  fixedTarget?: boolean;
 }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
@@ -74,9 +76,8 @@ export function TaskFilterBar({
   const active =
     filters.query !== "" ||
     filters.status !== "all" ||
-    filters.device !== "" ||
     filters.provider !== "" ||
-    filters.project !== "";
+    (!fixedTarget && (filters.device !== "" || filters.project !== ""));
   return (
     <div className="@container mb-5 space-y-3">
       <Collapsible className="space-y-3">
@@ -132,37 +133,41 @@ export function TaskFilterBar({
               ]}
             />
           </Field>
-          <Field className="col-span-2 @min-[48rem]:col-span-1">
-            <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
-            <SelectField
-              id={`${id}-device`}
-              className="w-full"
-              value={filters.device}
-              onValueChange={(device) => onChange({ ...filters, device })}
-              options={[
-                { value: "", label: t("allDevices") },
-                ...devices.map((device) => ({ value: device.id, label: device.name })),
-              ]}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
-            <SelectField
-              id={`${id}-project`}
-              className="w-full"
-              value={filters.project}
-              onValueChange={(project) => onChange({ ...filters, project })}
-              options={[
-                { value: "", label: t("allProjects") },
-                ...devices.flatMap((device) =>
-                  device.projects.map((project) => ({
-                    value: project.id,
-                    label: devices.length > 1 ? `${project.name} · ${device.name}` : project.name,
-                  })),
-                ),
-              ]}
-            />
-          </Field>
+          {!fixedTarget && (
+            <Field className="col-span-2 @min-[48rem]:col-span-1">
+              <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
+              <SelectField
+                id={`${id}-device`}
+                className="w-full"
+                value={filters.device}
+                onValueChange={(device) => onChange({ ...filters, device })}
+                options={[
+                  { value: "", label: t("allDevices") },
+                  ...devices.map((device) => ({ value: device.id, label: device.name })),
+                ]}
+              />
+            </Field>
+          )}
+          {!fixedTarget && (
+            <Field>
+              <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
+              <SelectField
+                id={`${id}-project`}
+                className="w-full"
+                value={filters.project}
+                onValueChange={(project) => onChange({ ...filters, project })}
+                options={[
+                  { value: "", label: t("allProjects") },
+                  ...devices.flatMap((device) =>
+                    device.projects.map((project) => ({
+                      value: project.id,
+                      label: devices.length > 1 ? `${project.name} · ${device.name}` : project.name,
+                    })),
+                  ),
+                ]}
+              />
+            </Field>
+          )}
         </CollapsibleContent>
       </Collapsible>
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">

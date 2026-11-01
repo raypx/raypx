@@ -21,19 +21,7 @@ import {
 import { isDesktop, onLocalEvent } from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 import { taskChangeSchema } from "@raypx/contracts/tasks";
-import { desktopStorageKey } from "../../lib/storage";
-
-const recentKey = "raypx.recent-projects.v1";
-function readRecent(): string[] {
-  try {
-    const value: unknown = JSON.parse(localStorage.getItem(desktopStorageKey(recentKey)) ?? "[]");
-    return Array.isArray(value)
-      ? value.filter((id): id is string => typeof id === "string" && id.length <= 256).slice(0, 20)
-      : [];
-  } catch {
-    return [];
-  }
-}
+import { recentProjects, rememberProject } from "./project-history";
 
 /** Local project shortcuts never depend on a browser account or remote task data. */
 export function ProjectNavigation() {
@@ -41,11 +29,10 @@ export function ProjectNavigation() {
   const queries = useQueryClient();
   const location = useLocation();
   const search = new URLSearchParams(location.searchStr);
-  const selected =
-    location.pathname === "/tasks" && search.get("scope") !== "remote"
-      ? search.get("project")
-      : null;
-  const [recent, setRecent] = useState(readRecent);
+  const selected = !["remote", "account", "cloud"].includes(search.get("scope") ?? "local")
+    ? (search.get("project") ?? search.get("rootId"))
+    : null;
+  const [recent, setRecent] = useState(recentProjects);
   const [query, setQuery] = useState("");
   const [allOpen, setAllOpen] = useState(false);
   const { data, isError, isPending } = useQuery({
@@ -81,13 +68,9 @@ export function ProjectNavigation() {
     return rank(a.id) - rank(b.id);
   });
   function remember(id: string) {
-    const next = [id, ...readRecent().filter((value) => value !== id)].slice(0, 20);
+    const next = [id, ...recentProjects().filter((value) => value !== id)].slice(0, 20);
     setRecent(next);
-    try {
-      localStorage.setItem(desktopStorageKey(recentKey), JSON.stringify(next));
-    } catch {
-      /* In-memory navigation still works. */
-    }
+    rememberProject(id);
   }
   function items(values: typeof projects) {
     return (
@@ -100,7 +83,11 @@ export function ProjectNavigation() {
               render={
                 <Link
                   to="/tasks"
-                  search={{ scope: "local", project: project.id }}
+                  search={{
+                    scope: "local",
+                    project: project.id,
+                    ...(data?.[0] ? { device: data[0].id } : {}),
+                  }}
                   aria-current={selected === project.id ? "page" : undefined}
                   onClick={() => remember(project.id)}
                 />

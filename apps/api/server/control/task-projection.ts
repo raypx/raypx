@@ -250,11 +250,20 @@ export class TaskProjection {
     });
     return cursor;
   }
-  listTasks(userId: string, input: { limit: number; before?: string | undefined }) {
+  listTasks(
+    userId: string,
+    input: {
+      limit: number;
+      before?: string | undefined;
+      projectId?: string | undefined;
+      deviceId?: string | undefined;
+    },
+  ) {
     return this.repository.read(userId, (tx) =>
-      tx.list("task", undefined, {
+      tx.list("task", input.deviceId, {
         limit: input.limit,
         ...(input.before ? { beforeTask: input.before } : {}),
+        ...(input.projectId ? { projectId: input.projectId } : {}),
       }),
     );
   }

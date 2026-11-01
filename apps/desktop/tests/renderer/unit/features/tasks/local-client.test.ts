@@ -22,6 +22,21 @@ const task: AgentTask = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
+it("forwards the same controlled target and cursor through the local contract", async () => {
+  const request = vi.fn(async () => []);
+  const client = createLocalTaskClient(createLocalClient(request), () => () => {});
+  const input = {
+    limit: 1,
+    before: `${task.createdAt}:${task.id}`,
+    projectId: task.projectId,
+    deviceId: task.deviceId,
+  };
+  await client.tasks.list(input);
+  expect(request).toHaveBeenCalledWith("agents.local.list", {
+    ...input,
+    accountId: LOCAL_WORKSPACE_ID,
+  });
+});
 it("keeps the device owner stable across login, account switches and logout", async () => {
   const request = vi.fn(async () => [task]);
   const client = createLocalTaskClient(createLocalClient(request), () => () => {});

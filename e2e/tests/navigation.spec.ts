@@ -33,12 +33,14 @@ for (const [surface, base] of surfaces) {
       await page.goto(`${base}/settings`);
       const sidebar = page.getByRole("complementary");
       const workspace = sidebar.getByRole("group", { name: "Workspace", exact: true });
-      await expect(workspace.getByRole("link", { name: "Tasks", exact: true })).toBeVisible();
+      await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
       const waiting = workspace.getByRole("link", { name: /^Waiting/ });
       await expect(waiting).toContainText("1");
       if (surface === "Desktop") {
-        const local = sidebar.getByRole("group", { name: "Local tools", exact: true });
-        await expect(local.getByRole("link", { name: "Files", exact: true })).toBeVisible();
+        const local = sidebar;
+        await expect(
+          local.getByRole("link", { name: "Memory and templates", exact: true }),
+        ).toBeVisible();
         await expect(local.getByRole("link", { name: "Automations", exact: true })).toBeVisible();
       }
       await expect(sidebar.locator('[aria-current="page"]')).toHaveCount(1);
@@ -49,14 +51,14 @@ for (const [surface, base] of surfaces) {
       expect((await sidebar.boundingBox())!.width).toBe(64);
       expect(expanded.width).toBeGreaterThan(190);
       await expect(waiting.getByText("1", { exact: true })).toBeInViewport();
-      const tasks = workspace.getByRole("link", { name: "Tasks", exact: true });
+      const tasks = workspace.getByRole("link", { name: "Projects", exact: true });
       await tasks.focus();
       // Tooltips follow visible keyboard focus rather than focus moved by a pointer action.
       await page.keyboard.press("Shift+Tab");
       await page.keyboard.press("Tab");
       await expect(tasks).toBeFocused();
       // Base UI tooltips are visual labels; the link itself retains its accessible name.
-      const hint = page.locator('[data-slot="tooltip-content"]').filter({ hasText: /^Tasks$/ });
+      const hint = page.locator('[data-slot="tooltip-content"]').filter({ hasText: /^Projects$/ });
       await expect(hint).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(hint).not.toBeVisible();
@@ -219,7 +221,7 @@ for (const [surface, base] of surfaces) {
         await expect(page).toHaveURL(base + "/");
         await expect(
           page.getByRole("heading", {
-            name: surface === "Web" ? "Remote tasks and approvals" : "Your local files",
+            name: surface === "Web" ? "Remote sessions and approvals" : "Start on this computer",
             exact: true,
           }),
         ).toBeVisible();

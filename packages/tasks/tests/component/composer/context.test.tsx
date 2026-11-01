@@ -41,7 +41,7 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
 });
-function fixture(guest = false, content = "Selected reference content") {
+function fixture(guest = false, content = "Selected reference content", fixedProjectId?: string) {
   const reference = {
     id: sourceId,
     revision: 3,
@@ -77,6 +77,8 @@ function fixture(guest = false, content = "Selected reference content") {
         tasks={[]}
         onCreated={() => {}}
         local
+        fixedProjectId={fixedProjectId}
+        fixedDeviceId={fixedProjectId ? deviceId : undefined}
         draftKey="device-context-draft"
         promptRef={prompt}
         optionsOpen={options}
@@ -102,7 +104,7 @@ function fixture(guest = false, content = "Selected reference content") {
 }
 it("saves source revisions in a draft and sends only the selection when creating a task", async () => {
   const { create } = fixture();
-  await waitFor(() => expect(screen.getByRole("button", { name: "Send task" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: "Send session" })).toBeEnabled());
   fireEvent.click(await screen.findByRole("button", { name: "Save draft" }));
   expect(JSON.parse(localStorage.getItem("device-context-draft")!)[0].contextSelection).toEqual(
     selection,
@@ -124,6 +126,17 @@ it("clears selected references when the target project changes", async () => {
   expect(create.mock.calls[0]?.[0]).toMatchObject({ projectId: otherProject });
   expect(create.mock.calls[0]?.[0].contextSelection).toBeUndefined();
 });
+it("keeps a controlled project authoritative and discards references from a different draft target", async () => {
+  const { create } = fixture(false, "Selected reference content", otherProject);
+  await waitFor(() => expect(screen.getByRole("button", { name: "Send session" })).toBeEnabled());
+  expect(screen.queryByRole("combobox", { name: "Project" })).toBeNull();
+  fireEvent.submit(
+    screen.getByRole("textbox", { name: "What should the agent do?" }).closest("form")!,
+  );
+  await waitFor(() => expect(create).toHaveBeenCalledOnce());
+  expect(create.mock.calls[0]![0]).toMatchObject({ projectId: otherProject, deviceId });
+  expect(create.mock.calls[0]![0].contextSelection).toBeUndefined();
+});
 it("does not read private references or carry saved source IDs through a guest sign-in", async () => {
   const { list, create, signIn } = fixture(true);
   await userEvent.click(screen.getByRole("button", { name: "Sign in to send" }));
@@ -138,12 +151,12 @@ it("blocks an oversized combined prompt through both the button and form, then p
   const prompt = screen.getByRole("textbox", { name: "What should the agent do?" });
   fireEvent.change(prompt, { target: { value: "x".repeat(25_000) } });
   await screen.findByText(/Over the limit/);
-  expect(screen.getByRole("button", { name: "Send task" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Send session" })).toBeDisabled();
   fireEvent.submit(prompt.closest("form")!);
   fireEvent.keyDown(prompt, { key: "Enter", ctrlKey: true });
   expect(create).not.toHaveBeenCalled();
   fireEvent.change(prompt, { target: { value: "  Shorter task\n " } });
-  await waitFor(() => expect(screen.getByRole("button", { name: "Send task" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: "Send session" })).toBeEnabled());
   const expected = taskExecutionBudget({
     prompt: "Shorter task",
     context: {
@@ -152,7 +165,7 @@ it("blocks an oversized combined prompt through both the button and form, then p
       ],
     },
   });
-  expect(screen.getByLabelText("Reference and task budget")).toHaveTextContent(
+  expect(screen.getByLabelText("Reference and session budget")).toHaveTextContent(
     `${expected.characters} / 32000`,
   );
   fireEvent.submit(prompt.closest("form")!);

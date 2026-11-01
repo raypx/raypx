@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TanStack Start SSR application for account access and device preferences. This
+TanStack Start SSR application for optional remote project access and device preferences. This
 application is an independent composition root and is never imported by another workspace.
 
 ## Interface
@@ -48,6 +48,10 @@ application is an independent composition root and is never imported by another 
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.
 - The account page composes `ProfileSettings` and `AccountSessions` from
+  `/account`; the signed-in home lists authorized remote projects grouped by computer.
+  Project/session selection lives in validated URL search. The composer consumes
+  that target and never executes on navigation or guest draft restoration.
+  The account page composes its views from
   `features/auth/components`. They call the existing Better Auth client methods.
   Name saves invalidate the account query before reloading route context. Session
   lists stay in component memory, never query caches or persisted storage; tokens

@@ -22,7 +22,8 @@ describe("Desktop shell pages", () => {
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
       ),
     ).toEqual({
-      "/": { title: "common.files", layout: "tool" },
+      "/": { title: "common.projects", layout: "workbench" },
+      "/files": { title: "common.files", layout: "tool" },
       "/account": { title: "common.account", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },

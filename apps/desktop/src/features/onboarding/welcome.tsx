@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { useTranslations } from "@raypx/i18n/browser";
@@ -7,12 +7,14 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Check, FolderOpen, RefreshCw } from "lucide-react";
 import { isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
+import { recentProjects, rememberProject } from "../tasks/project-history";
 
 export function LocalWelcome() {
   const t = useTranslations("localWorkspace"),
     tasks = useTranslations("tasks"),
     c = useTranslations("common");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(false);
   const setup = useQuery({
@@ -37,7 +39,9 @@ export function LocalWelcome() {
       const root = await pickDirectory();
       if (root) {
         await localRequest("agents.configure", { rootId: root.id, providers: ["claude", "codex"] });
+        rememberProject(root.id);
         await setup.refetch();
+        await queryClient.invalidateQueries({ queryKey: ["desktop-project-navigation"] });
       }
     } catch {
       setError(true);
@@ -48,7 +52,6 @@ export function LocalWelcome() {
   return (
     <section className="mx-auto max-w-240">
       <header className="mb-9">
-        <p className="mb-3 text-sm text-muted-foreground">{t("localMode")}</p>
         <h1>{t("welcome")}</h1>
         <p className="mt-3 max-w-[65ch] text-muted-foreground">{t("welcomeHint")}</p>
       </header>
@@ -123,7 +126,22 @@ export function LocalWelcome() {
             <Button
               className="mt-4"
               disabled={!configured || !available || busy}
-              onClick={() => void navigate({ to: "/tasks", search: { scope: "local" } })}
+              onClick={() =>
+                void navigate({
+                  to: "/tasks",
+                  search: {
+                    scope: "local",
+                    ...(setup.data?.projects[0]
+                      ? {
+                          project:
+                            setup.data.projects.find(
+                              (project) => project.id === recentProjects()[0],
+                            )?.id ?? setup.data.projects[0].id,
+                        }
+                      : {}),
+                  },
+                })
+              }
             >
               {t("writeTask")}
             </Button>

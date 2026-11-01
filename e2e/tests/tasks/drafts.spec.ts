@@ -78,48 +78,41 @@ for (const [surface, base] of surfaces) {
           ],
         }),
       );
-      await page.goto(base + "/tasks");
-      if (surface === "Desktop")
-        await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
-      const overview = page.getByRole("group", { name: "Tasks on this page", exact: true });
+      await page.goto(
+        base +
+          "/tasks?" +
+          new URLSearchParams({
+            ...(surface === "Desktop" ? { scope: "remote" } : {}),
+            device: deviceId,
+            project: projectId,
+          }),
+      );
+      const overview = page.getByRole("group", { name: "Sessions on this page", exact: true });
       await expect(overview.getByRole("button", { name: /^Needs you/ })).toContainText("1");
       await overview.getByRole("button", { name: /^In progress/ }).click();
-      const list = page.getByRole("list", { name: "Agent tasks", exact: true });
+      const list = page.getByRole("list", { name: "Agent sessions", exact: true });
       await expect(list.getByRole("button", { name: /Validate reconnect behavior/ })).toBeVisible();
       await expect(list.getByRole("button", { name: /Approve the migration/ })).toHaveCount(0);
       await overview.getByRole("button", { name: /^All/ }).click();
-      await page.getByRole("button", { name: "New task", exact: true }).click();
-      const form = page.getByRole("form", { name: "New task", exact: true });
+      await page.getByRole("button", { name: "New session", exact: true }).click();
+      const form = page.getByRole("form", { name: "New session", exact: true });
       const editor = form.getByRole("textbox", { name: "What should the agent do?", exact: true });
       await editor.fill("Investigate wake and reconnect behavior");
-      await selectOption(
-        page,
-        form.getByRole("combobox", { name: "Computer", exact: true }),
-        deviceId,
-      );
-      await selectOption(
-        page,
-        form.getByRole("combobox", { name: "Project", exact: true }),
-        projectId,
-      );
       await selectOption(page, form.getByRole("combobox", { name: "Agent", exact: true }), "codex");
       await form.getByRole("button", { name: "Save draft", exact: true }).click();
       await expect(form.getByText("Draft saved on this device.", { exact: true })).toBeVisible();
       await page.reload();
-      if (surface === "Desktop")
-        await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
       const drafts = page.getByRole("region", { name: "Drafts", exact: true });
       await drafts.getByRole("button", { name: "Drafts", exact: true }).click();
       await drafts
         .getByRole("button", { name: /^Investigate wake and reconnect behavior/ })
         .click();
       await expect(editor).toHaveValue("Investigate wake and reconnect behavior");
-      await expect(form.getByRole("combobox", { name: "Project", exact: true })).toContainText(
-        "Raypx",
-      );
+      await expect(page.getByRole("heading", { name: "Raypx", exact: true })).toBeVisible();
+      await expect(form.getByRole("combobox", { name: "Project", exact: true })).toHaveCount(0);
       await form.getByRole("button", { name: "New draft", exact: true }).click();
       await expect(editor).toHaveValue("");
-      await form.getByRole("button", { name: /^Task options/ }).click();
+      await form.getByRole("button", { name: /^Session options/ }).click();
       await list.getByRole("button", { name: /Approve the migration/ }).click();
       await page.getByRole("main").evaluate((element) => element.scrollTo(0, 0));
       expect(
@@ -130,9 +123,11 @@ for (const [surface, base] of surfaces) {
         fullPage: true,
       });
       await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
-      await page.getByRole("button", { name: "Back to tasks", exact: true }).click();
+      await page.getByRole("button", { name: "Back to sessions", exact: true }).click();
       await list.getByRole("button", { name: /Validate reconnect behavior/ }).click();
-      await expect(page.getByRole("region", { name: "Task details", exact: true })).toBeFocused();
+      await expect(
+        page.getByRole("region", { name: "Session details", exact: true }),
+      ).toBeFocused();
       await expect(
         page.getByRole("heading", { name: "Validate reconnect behavior", exact: true }),
       ).toBeInViewport();
@@ -143,7 +138,7 @@ for (const [surface, base] of surfaces) {
         path: test.info().outputPath(`${surface.toLowerCase()}-task-workspace-mobile.png`),
         fullPage: true,
       });
-      await page.getByRole("button", { name: "Back to tasks", exact: true }).click();
+      await page.getByRole("button", { name: "Back to sessions", exact: true }).click();
       await expect(list.getByRole("button", { name: /Validate reconnect behavior/ })).toBeFocused();
       await expect(
         list.getByRole("button", { name: /Validate reconnect behavior/ }),

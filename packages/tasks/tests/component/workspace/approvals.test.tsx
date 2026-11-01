@@ -34,7 +34,7 @@ it("loads approvals independently when the task list is unavailable", async () =
   );
   await waitFor(() => expect(approvals).toHaveBeenCalledOnce());
   expect(tasks).not.toHaveBeenCalled();
-  expect(devices).not.toHaveBeenCalled();
+  expect(devices).toHaveBeenCalledOnce();
   expect(await screen.findByText("Nothing needs your answer.")).toBeInTheDocument();
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });

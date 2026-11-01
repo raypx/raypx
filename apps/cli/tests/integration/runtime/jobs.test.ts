@@ -8,6 +8,30 @@ import { runtimeFixtures } from "../../helpers/runtime.js";
 const { fixture, runtimes } = runtimeFixtures();
 
 describe("device jobs and leases", () => {
+  it("persists optional project associations while retaining unassigned plans after restart", async () => {
+    const { runtime, grant, dir } = await fixture();
+    const input = {
+      name: "Project scan",
+      cron: "0 9 * * *",
+      timezone: "UTC",
+      enabled: false,
+      action: { type: "directory.scan" as const, rootId: grant.id, path: "" },
+    };
+    const scoped = runtime.jobs.create({ ...input, projectId: grant.id });
+    const global = runtime.jobs.create({ ...input, name: "General scan" });
+    await runtime.close();
+    const reopened = createRuntime({ dataDir: dir });
+    runtimes.push(reopened);
+    expect(reopened.jobs.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: scoped.id, projectId: grant.id }),
+        expect.objectContaining({ id: global.id, name: "General scan" }),
+      ]),
+    );
+    expect(reopened.jobs.list().find((job) => job.id === global.id)).not.toHaveProperty(
+      "projectId",
+    );
+  });
   it("records one bounded summary for completed and skipped runs without private job data", async () => {
     const diagnostics: Diagnostic[] = [];
     const { runtime, grant } = await fixture((event) => diagnostics.push(event));

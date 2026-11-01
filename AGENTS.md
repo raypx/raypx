@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Raypx is a multi-platform account foundation with device-local desktop tools.
+Raypx is a project-centered personal development workbench with device-local Desktop execution and optional Web remote access.
 Read the nearest workspace AGENTS.md and docs/README.md before changing code.
 The accepted foundation design supersedes documents in docs/history.
 
@@ -44,7 +44,7 @@ The accepted foundation design supersedes documents in docs/history.
   only enables reading package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
   Keep external versions there and use workspace:* for internal dependencies.
-- @raypx-kit packages remain independently released external dependencies.
+- Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.3 and Go 1.27.3.

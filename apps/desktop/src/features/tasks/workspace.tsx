@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../analytics/client";
 import { Link, useRouter, useLocation } from "@tanstack/react-router";
-import { TaskWorkspace } from "@raypx/tasks/client";
+import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { useTranslations } from "@raypx/i18n/browser";
+import { LoadingState } from "@raypx/ui/loading-state";
+import { Button } from "@raypx/ui/components/ui/button";
 import { apiUrl } from "../auth/client";
 import { taskClient } from "./client";
 import { isDesktop } from "../../lib/desktop";
@@ -11,9 +14,15 @@ import { localTaskClient } from "./local-client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { RemoteBoundary } from "../auth/components/remote-boundary";
 import { accountMemory, localMemory } from "../memory/client";
+import { LocalWelcome } from "../onboarding/welcome";
+import { ProjectTools } from "./project-tools";
+import { useLocalProjectContext } from "./project-context";
+import { rememberProject } from "./project-history";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
 const remote = instrumentTaskClient(taskClient, analytics, "remote");
+const localScope = { kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID } as const;
+
 export function DesktopTaskWorkspace({
   view,
   initialScope = "local",
@@ -22,101 +31,203 @@ export function DesktopTaskWorkspace({
   initialScope?: "local" | "remote";
 }) {
   const router = useRouter();
-  const selectedScope = useLocation({
-    select: (location) => new URLSearchParams(location.searchStr).get("scope"),
-  });
+  const search = useLocation({ select: (location) => new URLSearchParams(location.searchStr) });
+  const scope = search.get("scope") === "remote" ? "remote" : initialScope;
+  const projectId = search.get("project") ?? "";
+  const deviceId = search.get("device") ?? "";
+  const rawTask = search.get("taskId");
+  const taskId = rawTask && /^[0-9a-f-]{36}$/i.test(rawTask) ? rawTask : undefined;
   const t = useTranslations("tasks"),
     c = useTranslations("common");
-  const text = useTranslations("localWorkspace");
-  const projectId = useLocation({
-    select: (location) => new URLSearchParams(location.searchStr).get("project") ?? "",
-  });
-  const taskId = useLocation({
-    select: (location) => {
-      const value = new URLSearchParams(location.searchStr).get("taskId");
-      return value &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-        ? value
-        : undefined;
-    },
-  });
-  return (
-    <Tabs
-      value={
-        selectedScope === "remote" ? "remote" : selectedScope === "local" ? "local" : initialScope
-      }
-      className="gap-5"
-      onValueChange={(value) => {
-        const next = value === "remote" ? "remote" : "local";
+  function selectRemote(target: { projectId: string; deviceId: string }, linkedTask?: string) {
+    void router.navigate({
+      to: "/tasks",
+      search: {
+        scope: "remote",
+        project: target.projectId,
+        device: target.deviceId,
+        ...(linkedTask ? { taskId: linkedTask } : {}),
+      },
+    });
+  }
+  const localView = !isDesktop() ? (
+    <p className="text-sm text-muted-foreground">{c("desktopOnly")}</p>
+  ) : view === "tasks" ? (
+    <LocalProjectSessions taskId={taskId} />
+  ) : (
+    <TaskWorkspace
+      client={local}
+      scope={localScope}
+      view="approvals"
+      onOpenTask={(task) =>
         void router.navigate({
-          to: view === "approvals" ? "/approvals" : "/tasks",
-          search: { scope: next },
-          replace: true,
-        });
-        analytics.capture("task_scope_changed", { scope: next });
-      }}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <TabsList aria-label={t("taskScope")}>
-          <TabsTrigger value="local">{t("thisComputer")}</TabsTrigger>
-          <TabsTrigger value="remote">{t("connectedComputers")}</TabsTrigger>
-        </TabsList>
-        <Link
-          to="/settings"
-          className="text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          {t("agentSettings")}
-        </Link>
-      </div>
-      <TabsContent value="local" className="space-y-6">
-        <div className="space-y-3">
-          <p className="max-w-[75ch] text-sm text-muted-foreground">{text("ownershipHint")}</p>
-          <Link to="/welcome" className="text-sm underline underline-offset-4">
-            {text("getStarted")}
-          </Link>
-        </div>
-        {isDesktop() ? (
-          <TaskWorkspace
-            contextLibrary={localMemory}
-            persistEditor
-            storageNamespace={apiUrl}
-            client={local}
-            scope={{ kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID }}
-            view={view}
-            projectId={projectId}
-            initialTaskId={taskId}
-            onProjectChange={(project) =>
-              void router.navigate({
-                to: "/tasks",
-                search: {
-                  scope: "local",
-                  ...(project ? { project } : {}),
-                },
-              })
-            }
-          />
-        ) : (
-          <section>
-            <h1>{t(view === "tasks" ? "title" : "inbox")}</h1>
-            <p className="mt-4 text-sm text-muted-foreground">{c("desktopOnly")}</p>
-          </section>
-        )}
-      </TabsContent>
-      <TabsContent value="remote">
-        <RemoteBoundary>
-          {(remoteAccount) => (
+          to: "/tasks",
+          search: {
+            scope: "local",
+            project: task.projectId,
+            device: task.deviceId,
+            taskId: task.id,
+          },
+        })
+      }
+    />
+  );
+  const remoteView = (
+    <RemoteBoundary>
+      {(accountId) => {
+        const remoteScope = { kind: "remote", namespace: apiUrl, accountId } as const;
+        if (view === "approvals")
+          return (
             <TaskWorkspace
+              client={remote}
+              scope={remoteScope}
+              view="approvals"
+              onOpenTask={(task) =>
+                selectRemote({ projectId: task.projectId, deviceId: task.deviceId }, task.id)
+              }
+            />
+          );
+        if ((!projectId || !deviceId) && taskId)
+          return (
+            <TaskProjectLink
+              client={remote}
+              scope={remoteScope}
+              taskId={taskId}
+              onSelect={(target) => selectRemote(target, taskId)}
+            />
+          );
+        if (!projectId || !deviceId)
+          return (
+            <ProjectList
+              client={remote}
+              scope={remoteScope}
+              onSelect={selectRemote}
+              connectionAction={
+                <Link to="/settings" className="text-sm underline underline-offset-4">
+                  {t("agentSettings")}
+                </Link>
+              }
+            />
+          );
+        return (
+          <>
+            <ProjectTools remote projectId={projectId} deviceId={deviceId} />
+            <TaskWorkspace
+              client={remote}
+              scope={remoteScope}
               contextLibrary={accountMemory}
               persistEditor
               storageNamespace={apiUrl}
-              client={remote}
-              scope={{ kind: "remote", namespace: apiUrl, accountId: remoteAccount }}
-              view={view}
+              projectId={projectId}
+              {...(deviceId ? { deviceId } : {})}
               initialTaskId={taskId}
+              onTaskChange={(id) =>
+                void router.navigate({
+                  to: "/tasks",
+                  search: {
+                    scope: "remote",
+                    project: projectId,
+                    ...(deviceId ? { device: deviceId } : {}),
+                    ...(id ? { taskId: id } : {}),
+                  },
+                })
+              }
             />
-          )}
-        </RemoteBoundary>
-      </TabsContent>
+          </>
+        );
+      }}
+    </RemoteBoundary>
+  );
+  if (view === "tasks") return scope === "remote" ? remoteView : localView;
+  return (
+    <Tabs
+      value={scope}
+      className="gap-5"
+      onValueChange={(value) =>
+        void router.navigate({
+          to: "/approvals",
+          search: { scope: value === "remote" ? "remote" : "local" },
+        })
+      }
+    >
+      <TabsList aria-label={t("taskScope")}>
+        <TabsTrigger value="local">{t("thisComputer")}</TabsTrigger>
+        <TabsTrigger value="remote">{t("connectedComputers")}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="local">{localView}</TabsContent>
+      <TabsContent value="remote">{remoteView}</TabsContent>
     </Tabs>
+  );
+}
+
+function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
+  const context = useLocalProjectContext();
+  const router = useRouter();
+  const c = useTranslations("common"),
+    t = useTranslations("tasks");
+  useEffect(() => {
+    if (!context.project || !context.device || taskId || context.requested) return;
+    void router.navigate({
+      to: "/tasks",
+      search: { scope: "local", project: context.project.id, device: context.device.id },
+      replace: true,
+    });
+  }, [context.project, context.device, context.requested, router, taskId]);
+  useEffect(() => {
+    if (context.project) rememberProject(context.project.id);
+  }, [context.project]);
+  if (context.isPending) return <LoadingState label={c("loading")} />;
+  if (context.isError)
+    return (
+      <div role="alert">
+        <p>{t("LOCAL_UNAVAILABLE")}</p>
+        <Button variant="outline" onClick={() => void context.refetch()}>
+          {c("retry")}
+        </Button>
+      </div>
+    );
+  if (!context.requested && taskId)
+    return (
+      <TaskProjectLink
+        client={local}
+        scope={localScope}
+        taskId={taskId}
+        onSelect={(target) =>
+          void router.navigate({
+            to: "/tasks",
+            search: { scope: "local", project: target.projectId, device: target.deviceId, taskId },
+            replace: true,
+          })
+        }
+      />
+    );
+  if (!context.projectId) return <LocalWelcome />;
+  const projectId = context.projectId,
+    deviceId = context.deviceId;
+  return (
+    <>
+      <ProjectTools projectId={projectId} {...(deviceId ? { deviceId } : {})} />
+      <TaskWorkspace
+        client={local}
+        scope={localScope}
+        contextLibrary={localMemory}
+        persistEditor
+        storageNamespace={apiUrl}
+        projectId={projectId}
+        {...(deviceId ? { deviceId } : {})}
+        initialTaskId={taskId}
+        onTaskChange={(id) =>
+          void router.navigate({
+            to: "/tasks",
+            search: {
+              scope: "local",
+              project: projectId,
+              ...(deviceId ? { device: deviceId } : {}),
+              ...(id ? { taskId: id } : {}),
+            },
+          })
+        }
+      />
+    </>
   );
 }

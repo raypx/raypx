@@ -88,7 +88,7 @@ function workspace(
 }
 
 function visiblePrompts() {
-  const list = screen.getByRole("list", { name: "Agent tasks" });
+  const list = screen.getByRole("list", { name: "Agent sessions" });
   return within(list)
     .getAllByRole("button")
     .map((button) => button.querySelector("span")?.textContent);
@@ -106,7 +106,7 @@ it.each([
   fireEvent.change(search, { target: { value: query } });
   await waitFor(() => expect(visiblePrompts()).toEqual(expected));
   expect(screen.getByRole("status")).toHaveTextContent(
-    `${expected.length} of 4 tasks on this page`,
+    `${expected.length} of 4 sessions on this page`,
   );
   expect(list).toHaveBeenCalledTimes(callsBeforeFiltering);
 });
@@ -120,8 +120,8 @@ it("combines status, agent and computer filters and clears an empty result", asy
   await selectOption("Computer", windows.id);
   await waitFor(() => expect(visiblePrompts()).toEqual(["Review approval"]));
   fireEvent.change(screen.getByRole("searchbox"), { target: { value: "unmatched query" } });
-  await screen.findByText("No matching tasks");
-  expect(screen.queryByRole("list", { name: "Agent tasks" })).not.toBeInTheDocument();
+  await screen.findByText("No matching sessions");
+  expect(screen.queryByRole("list", { name: "Agent sessions" })).not.toBeInTheDocument();
   fireEvent.click(screen.getAllByRole("button", { name: "Clear filters" })[0]!);
   await waitFor(() => expect(visiblePrompts()).toEqual(sampleTasks.map((item) => item.prompt)));
   expect(screen.getByRole("searchbox")).toHaveValue("");
@@ -167,16 +167,16 @@ it("keeps cursor pagination available when this page has no matches", async () =
   workspace([newest], list);
   const search = await screen.findByRole("searchbox", { name: "Search this page" });
   fireEvent.change(search, { target: { value: "archive" } });
-  await screen.findByText("No matching tasks");
-  const pages = screen.getByRole("navigation", { name: "Task pages" });
-  expect(within(pages).getByRole("button", { name: "Newer tasks" })).toBeDisabled();
-  fireEvent.click(within(pages).getByRole("button", { name: "Older tasks" }));
+  await screen.findByText("No matching sessions");
+  const pages = screen.getByRole("navigation", { name: "Session pages" });
+  expect(within(pages).getByRole("button", { name: "Newer sessions" })).toBeDisabled();
+  fireEvent.click(within(pages).getByRole("button", { name: "Older sessions" }));
   await screen.findByRole("button", { name: /Archive task/ });
   expect(screen.getByRole("searchbox")).toHaveValue("archive");
   expect(list).toHaveBeenCalledWith({ limit: 100, before: cursor }, expect.anything());
-  expect(screen.getByRole("button", { name: "Older tasks" })).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Newer tasks" }));
-  await screen.findByText("No matching tasks");
+  expect(screen.getByRole("button", { name: "Older sessions" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Newer sessions" }));
+  await screen.findByText("No matching sessions");
   fireEvent.click(screen.getAllByRole("button", { name: "Clear filters" })[0]!);
   await screen.findByRole("button", { name: /Newest task/ });
 });
@@ -248,7 +248,9 @@ it("filters the loaded page by project without creating or refetching tasks", as
 
 it("resizes the split view with the keyboard, clamps its width and saves the device preference", async () => {
   workspace();
-  const separator = await screen.findByRole("separator", { name: "Resize task list and details" });
+  const separator = await screen.findByRole("separator", {
+    name: "Resize session list and details",
+  });
   fireEvent.keyDown(separator, { key: "End" });
   expect(separator).toHaveAttribute("aria-valuenow", "50");
   fireEvent.keyDown(separator, { key: "ArrowRight" });

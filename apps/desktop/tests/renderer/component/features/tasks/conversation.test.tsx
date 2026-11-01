@@ -1,10 +1,11 @@
 /** @vitest-environment happy-dom */
 import { expect, it } from "vite-plus/test";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import {
   setupWorkspaceTests,
   state,
   mocks,
+  device,
   page,
   runningTask,
 } from "../../../../helpers/tasks/workspace";
@@ -100,15 +101,20 @@ it("recovers an accepted queued input after a lost receipt without sending it ag
 
 it("runs and approves local tasks without signing in or reaching the cloud", async () => {
   mocks.user = null;
-  await page();
-  fireEvent.click(await screen.findByRole("button", { name: "New task" }));
+  const { router } = await page();
+  fireEvent.click(await screen.findByRole("button", { name: "New session" }));
   fireEvent.change(screen.getByRole("textbox", { name: "What should the agent do?" }), {
     target: { value: "Keep this task local" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Send task" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send session" }));
   await screen.findByText("Run local tests");
   fireEvent.click(screen.getByRole("button", { name: "Allow once" }));
   await screen.findByText("Private local result");
+  await waitFor(() =>
+    expect(new URLSearchParams(router.state.location.searchStr).get("taskId")).toBe(
+      state.tasks[0]!.id,
+    ),
+  );
   expect(mocks.remote).not.toHaveBeenCalled();
   expect(
     mocks.request.mock.calls.every(
@@ -116,10 +122,15 @@ it("runs and approves local tasks without signing in or reaching the cloud", asy
         String(method).startsWith("agents.local.") || String(method).startsWith("memory."),
     ),
   ).toBe(true);
-  fireEvent.click(screen.getByRole("tab", { name: "Connected computers" }));
+  await act(() => router.navigate({ to: "/tasks", search: { scope: "remote" } }));
   await screen.findByRole("heading", { name: "Sign in for remote access" });
   expect(mocks.remote).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("tab", { name: "This computer" }));
+  await act(() =>
+    router.navigate({
+      to: "/tasks",
+      search: { scope: "local", project: device.projects[0]!.id, device: device.id },
+    }),
+  );
   await screen.findByRole("button", { name: /Keep this task local/ });
 });
 
@@ -127,7 +138,9 @@ it("shows local engine recovery feedback without exposing raw IPC errors", async
   mocks.request.mockRejectedValue(new Error("Secret path and native error"));
   await page();
   const alert = await screen.findByRole("alert");
-  expect(alert.textContent).toBe("Unable to reach the local engine. Restart it and try again.");
+  expect(alert.textContent).toContain(
+    "Unable to reach the local engine. Restart it and try again.",
+  );
   expect(document.body.textContent).not.toContain("Secret path");
   expect(mocks.remote).not.toHaveBeenCalled();
 });

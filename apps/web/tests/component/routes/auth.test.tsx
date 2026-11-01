@@ -19,6 +19,7 @@ import {
 } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { SyncDevice } from "@raypx/tasks";
 import { routeTree } from "../../../src/routeTree.gen";
 
 const mocks = vi.hoisted(() => ({
@@ -31,7 +32,7 @@ const mocks = vi.hoisted(() => ({
     session: { id: string };
   },
   tasks: vi.fn(async () => []),
-  devices: vi.fn(async () => []),
+  devices: vi.fn(async (): Promise<SyncDevice[]> => []),
   approvals: vi.fn(async () => []),
   create: vi.fn(),
   signIn: vi.fn(),
@@ -260,6 +261,24 @@ describe("authentication routes", () => {
   });
 
   it("restores a guest draft after failed then successful sign-in without sending", async () => {
+    const deviceId = crypto.randomUUID(),
+      projectId = crypto.randomUUID();
+    mocks.devices.mockResolvedValue([
+      {
+        id: deviceId,
+        name: "Remote computer",
+        platform: "darwin",
+        appVersion: "1.0.0",
+        epoch: 1,
+        revoked: false,
+        online: true,
+        lastSeenAt: null,
+        projects: [{ id: projectId, name: "Remote project", providers: ["codex"], dirty: false }],
+        capabilities: [
+          { provider: "codex", available: true, reason: "ready", version: "test", inputModes: [] },
+        ],
+      },
+    ]);
     const router = await page("/tasks?from=guest");
     const prompt = "Guest draft 中😀";
     fireEvent.change(await screen.findByLabelText("What should the agent do?"), {
@@ -288,11 +307,12 @@ describe("authentication routes", () => {
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
     fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
     await waitFor(() => expect(router.state.location.pathname).toBe("/tasks"));
+    fireEvent.click(await screen.findByRole("button", { name: "Remote project" }));
     await waitFor(() =>
       expect(screen.getByLabelText("What should the agent do?")).toHaveValue(prompt),
     );
     expect(mocks.create).not.toHaveBeenCalled();
-    expect(router.state.location.search).toMatchObject({ from: "guest" });
+    expect(router.state.location.search).toMatchObject({ project: projectId, device: deviceId });
   });
 
   it("preserves the page through registration and password recovery links", async () => {

@@ -164,12 +164,18 @@ for (const [surface, base] of surfaces) {
           );
         });
       });
-      await page.goto(base + "/tasks");
-      if (surface === "Desktop")
-        await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+      await page.goto(
+        base +
+          "/tasks?" +
+          new URLSearchParams({
+            ...(surface === "Desktop" ? { scope: "remote" } : {}),
+            device: deviceId,
+            project: projectId,
+          }),
+      );
       await page.getByRole("button", { name: "Filters", exact: true }).click();
       const agentFilter = page
-        .getByRole("region", { name: "Task history", exact: true })
+        .getByRole("region", { name: "Session history", exact: true })
         .getByRole("combobox", { name: "Agent", exact: true });
       await selectOption(page, agentFilter, "claude");
       await expect(
@@ -218,23 +224,11 @@ for (const [surface, base] of surfaces) {
         .poll(() => page.getByRole("main").evaluate((element) => element.scrollTop))
         .toBe(0);
       await page.goBack();
-      if (surface === "Desktop")
-        await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
-      await expect(page.getByRole("button", { name: "New task", exact: true })).toBeVisible();
-      await page.getByRole("button", { name: "New task", exact: true }).click();
+      await expect(page.getByRole("button", { name: "New session", exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "New session", exact: true }).click();
       const createForm = page
         .getByRole("textbox", { name: "What should the agent do?", exact: true })
         .locator("xpath=ancestor::form[1]");
-      await selectOption(
-        page,
-        createForm.getByRole("combobox", { name: "Computer", exact: true }),
-        deviceId,
-      );
-      await selectOption(
-        page,
-        createForm.getByRole("combobox", { name: "Project", exact: true }),
-        projectId,
-      );
       await selectOption(
         page,
         createForm.getByRole("combobox", { name: "Agent", exact: true }),
@@ -245,9 +239,10 @@ for (const [surface, base] of surfaces) {
         createForm.getByRole("combobox", { name: "Execution", exact: true }),
         "plan",
       );
-      await expect(
-        createForm.getByRole("combobox", { name: "Project", exact: true }),
-      ).toContainText("Raypx");
+      await expect(page.getByRole("heading", { name: "Raypx", exact: true })).toBeVisible();
+      await expect(createForm.getByRole("combobox", { name: "Project", exact: true })).toHaveCount(
+        0,
+      );
       await expect(
         createForm.getByRole("combobox", { name: "Execution", exact: true }),
       ).toContainText("Analyze, then ask before implementing");
@@ -261,9 +256,11 @@ for (const [surface, base] of surfaces) {
         await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
         await page.getByRole("combobox", { name: "Language", exact: true }).click();
         await page.getByRole("option", { name: "简体中文", exact: true }).click();
-        await page.goto(base + "/tasks");
+        await page.goto(
+          base + "/tasks?" + new URLSearchParams({ device: deviceId, project: projectId }),
+        );
         await page.getByRole("button", { name: /Improve task delivery reliability/ }).click();
-        await expect(page.getByRole("heading", { name: "会话", exact: true })).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Raypx", exact: true })).toBeVisible();
         await expectViewportShell(page);
         await capture(page, {
           path: test.info().outputPath("web-conversation-dark-zh.png"),

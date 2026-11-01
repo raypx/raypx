@@ -17,12 +17,14 @@ export function DocumentForm({
   busy,
   onSave,
   onCancel,
+  defaultProject,
 }: {
   document: ContextDocument | null;
   projects: Awaited<ReturnType<MemoryProjectsPort["list"]>>;
   busy: boolean;
   onSave: (input: ContextDocumentInput) => Promise<void>;
   onCancel: () => void;
+  defaultProject?: { deviceId: string; projectId: string } | undefined;
 }) {
   const t = useTranslations("memory"),
     c = useTranslations("common"),
@@ -32,7 +34,13 @@ export function DocumentForm({
     [content, setContent] = useState(document?.content ?? "");
   const [kind, setKind] = useState<"memory" | "template">(document?.kind ?? "memory");
   const [project, setProject] = useState(
-    document?.project ? JSON.stringify(document.project) : "global",
+    document
+      ? document.project
+        ? JSON.stringify(document.project)
+        : "global"
+      : defaultProject
+        ? JSON.stringify(defaultProject)
+        : "global",
   );
   const [invalid, setInvalid] = useState(false);
   const options = [

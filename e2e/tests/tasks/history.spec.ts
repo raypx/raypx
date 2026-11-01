@@ -2,10 +2,15 @@ import { expect } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.js";
 import { desktop, surfaces } from "../helpers/surfaces.js";
 import { capture } from "../helpers/capture.js";
-import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
+import {
+  authResponse,
+  connectedProject,
+  signedInAccount,
+  webShellFixture,
+} from "../helpers/account-fixture.js";
 
 test(
-  "Desktop defaults to local tasks and opens remote tasks through an accessible scope switch",
+  "Desktop opens local work first and navigates to remote projects",
   { tag: "@desktop" },
   async ({ page }) => {
     await signedInAccount(page);
@@ -15,8 +20,6 @@ test(
       await authResponse(route, { json: [] });
     });
     await page.goto(desktop + "/tasks");
-    const local = page.getByRole("tab", { name: "This computer", exact: true });
-    await expect(local).toHaveAttribute("aria-selected", "true");
     await expect(
       page.getByText("Open the desktop app to use local tools.", { exact: true }),
     ).toBeVisible();
@@ -25,25 +28,16 @@ test(
       path: test.info().outputPath("local-tasks-preview.png"),
       fullPage: true,
     });
-    await local.focus();
-    await page.keyboard.press("ArrowRight");
-    const remote = page.getByRole("tab", { name: "Connected computers", exact: true });
-    await expect(remote).toBeFocused();
-    await page.keyboard.press("Enter");
-    await expect(remote).toHaveAttribute("aria-selected", "true");
-    await expect(
-      page.getByRole("heading", { name: "No agent tasks yet", exact: true }),
-    ).toBeVisible();
-    expect(remoteReads).toBeGreaterThan(0);
+    await page.getByRole("link", { name: "Browse remote projects", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
+    await expect(page.getByText(/Sign in to Desktop with the same account/)).toBeVisible();
+    expect(remoteReads).toBe(0);
     await page.goto(desktop + "/settings");
     await page.getByRole("radio", { name: "Dark", exact: true }).check();
     await page.getByRole("combobox", { name: "Language", exact: true }).click();
     await page.getByRole("option", { name: "简体中文", exact: true }).click();
     await page.goto(desktop + "/tasks");
-    await expect(page.getByRole("tab", { name: "此电脑", exact: true })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    await expect(page.getByText("请打开桌面应用以使用本地工具。", { exact: true })).toBeVisible();
     await capture(page, {
       path: test.info().outputPath("local-tasks-preview-dark-zh.png"),
       fullPage: true,
@@ -56,10 +50,13 @@ test(
   { tag: "@desktop" },
   async ({ page }) => {
     await signedInAccount(page);
+    const deviceId = crypto.randomUUID(),
+      projectId = crypto.randomUUID();
+    await connectedProject(page, deviceId, projectId);
     const tasks = Array.from({ length: 3 }, (_, index) => ({
       id: crypto.randomUUID(),
-      deviceId: crypto.randomUUID(),
-      projectId: crypto.randomUUID(),
+      deviceId,
+      projectId,
       provider: "codex",
       mode: "run",
       prompt: `Review local changes ${index + 1}`,
@@ -89,10 +86,13 @@ test(
         },
       });
     });
-    await page.goto(desktop + "/tasks");
-    await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
-    const older = page.getByRole("button", { name: "Older tasks", exact: true });
-    const newer = page.getByRole("button", { name: "Newer tasks", exact: true });
+    await page.goto(
+      desktop +
+        "/tasks?" +
+        new URLSearchParams({ scope: "remote", device: deviceId, project: projectId }),
+    );
+    const older = page.getByRole("button", { name: "Older sessions", exact: true });
+    const newer = page.getByRole("button", { name: "Newer sessions", exact: true });
     await expect(page.getByRole("button", { name: /Review local changes 1/ })).toBeVisible();
     await expect(newer).toBeDisabled();
     await older.click();
@@ -117,10 +117,13 @@ for (const [surface, base] of surfaces) {
     async ({ page }) => {
       if (surface === "Web") await webShellFixture(page);
       await signedInAccount(page);
+      const deviceId = crypto.randomUUID(),
+        projectId = crypto.randomUUID();
+      await connectedProject(page, deviceId, projectId);
       const tasks = Array.from({ length: 101 }, (_, index) => ({
         id: crypto.randomUUID(),
-        deviceId: crypto.randomUUID(),
-        projectId: crypto.randomUUID(),
+        deviceId,
+        projectId,
         provider: "codex",
         mode: "run",
         prompt: `Virtual task ${index + 1}: ${index % 2 ? "Check the result" : "检查项目的构建结果和任务执行状态。".repeat(12)}`,
@@ -153,9 +156,15 @@ for (const [surface, base] of surfaces) {
           },
         });
       });
-      await page.goto(base + "/tasks");
-      if (surface === "Desktop")
-        await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+      await page.goto(
+        base +
+          "/tasks?" +
+          new URLSearchParams({
+            ...(surface === "Desktop" ? { scope: "remote" } : {}),
+            device: deviceId,
+            project: projectId,
+          }),
+      );
       const viewport = page.locator("[data-task-list]");
       const rows = viewport.getByRole("listitem");
       const first = viewport.getByRole("button", { name: /^Virtual task 1:/ });
@@ -188,10 +197,12 @@ for (const [surface, base] of surfaces) {
       await expect(first).toBeInViewport();
       await expect(previous).toBeFocused();
       await expect.poll(() => rows.count()).toBeLessThan(30);
-      await page.getByRole("button", { name: "Older tasks", exact: true }).click();
+      await page.getByRole("button", { name: "Older sessions", exact: true }).click();
       await expect(viewport.getByRole("button", { name: /^Virtual task 101:/ })).toBeInViewport();
-      await expect(page.getByRole("button", { name: "Older tasks", exact: true })).toBeDisabled();
-      await page.getByRole("button", { name: "Newer tasks", exact: true }).click();
+      await expect(
+        page.getByRole("button", { name: "Older sessions", exact: true }),
+      ).toBeDisabled();
+      await page.getByRole("button", { name: "Newer sessions", exact: true }).click();
       await expect(first).toBeInViewport();
       if (surface === "Web") await page.setViewportSize({ width: 390, height: 844 });
       await expect

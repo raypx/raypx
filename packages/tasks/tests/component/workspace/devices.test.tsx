@@ -51,7 +51,7 @@ it("can cancel disconnecting a computer without revoking its grant", async () =>
   const dialog = await screen.findByRole("dialog", { name: "Disconnect computer" });
   expect(dialog).toHaveTextContent("Studio MacBook");
   expect(dialog).toHaveAccessibleDescription(
-    /synced terminal approvals will be deleted.*Managed task history, local files and changes will be preserved/,
+    /synced terminal approvals will be deleted.*Managed session history, local files and changes will be preserved/,
   );
   expect(revoke).not.toHaveBeenCalled();
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));

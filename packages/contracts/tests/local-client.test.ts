@@ -1,5 +1,6 @@
 import { expect, expectTypeOf, it, vi } from "vite-plus/test";
 import { createLocalClient, type LocalClient } from "../src/local-client.js";
+import { LOCAL_WORKSPACE_ID } from "../src/local.js";
 
 // This function is checked by the workspace typecheck, never executed.
 function typeContract(client: LocalClient) {
@@ -13,6 +14,32 @@ function typeContract(client: LocalClient) {
   void client("roots.register", { path: "/private" });
 }
 void typeContract;
+
+it("validates project and computer list filters before calling the host", async () => {
+  const transport = vi.fn(async () => []),
+    client = createLocalClient(transport);
+  const projectId = "00000000-0000-4000-8000-000000000001",
+    deviceId = "00000000-0000-4000-8000-000000000002";
+  await expect(
+    client("agents.local.list", { accountId: LOCAL_WORKSPACE_ID, projectId, deviceId, limit: 2 }),
+  ).resolves.toEqual([]);
+  expect(transport).toHaveBeenCalledWith("agents.local.list", {
+    accountId: LOCAL_WORKSPACE_ID,
+    projectId,
+    deviceId,
+    limit: 2,
+  });
+  transport.mockClear();
+  await expect(
+    client("agents.local.list", {
+      accountId: LOCAL_WORKSPACE_ID,
+      projectId: "invalid",
+      deviceId,
+      limit: 2,
+    }),
+  ).rejects.toThrow(/projectId/);
+  expect(transport).not.toHaveBeenCalled();
+});
 
 it("rejects malformed parameters before transport and malformed native replies after transport", async () => {
   const transport = vi.fn(async () => ({ text: 42, version: "v1" }));

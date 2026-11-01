@@ -5,6 +5,7 @@ import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import {
   setupWorkspaceTests,
   device,
+  remoteDevice,
   mocks,
   page,
   showDrafts,
@@ -12,6 +13,46 @@ import {
 } from "../../../../helpers/tasks/workspace";
 
 setupWorkspaceTests();
+
+it("restores each project's unsent text through navigation, back and remount without executing", async () => {
+  const firstProject = device.projects[0]!.id,
+    secondProject = device.projects[1]!.id;
+  const first = await page(`/tasks?scope=local&device=${device.id}&project=${firstProject}`);
+  const editor = () => screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(await editor(), { target: { value: "Project A unsent work" } });
+  await act(() =>
+    first.router.navigate({
+      to: "/tasks",
+      search: { scope: "local", device: device.id, project: secondProject },
+    }),
+  );
+  expect(await editor()).toHaveValue("");
+  fireEvent.change(await editor(), { target: { value: "Project B unsent work" } });
+  act(() => first.router.history.back());
+  await waitFor(async () => expect(await editor()).toHaveValue("Project A unsent work"));
+  first.unmount();
+  const second = await page(`/tasks?scope=local&device=${device.id}&project=${secondProject}`);
+  expect(await editor()).toHaveValue("Project B unsent work");
+  await act(() =>
+    second.router.navigate({
+      to: "/tasks",
+      search: { scope: "local", device: device.id, project: firstProject },
+    }),
+  );
+  expect(await editor()).toHaveValue("Project A unsent work");
+  fireEvent.click(screen.getByRole("button", { name: "Send session" }));
+  await screen.findByText("Run local tests");
+  const sent = mocks.request.mock.calls.filter(
+    ([method, params]) =>
+      method === "agents.local.execute" && params.request.method === "tasks.create",
+  );
+  expect(sent).toHaveLength(1);
+  expect(sent[0]![1].request.input).toMatchObject({
+    projectId: firstProject,
+    deviceId: device.id,
+    prompt: "Project A unsent work",
+  });
+});
 
 it("saves and restores local drafts without sending a task, and preserves unsaved text on cancel", async () => {
   const first = await page();
@@ -73,7 +114,7 @@ it("removes a sent draft only after the task is accepted", async () => {
   fireEvent.change(editor, { target: { value: "Validate this saved draft" } });
   fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
   await screen.findByRole("region", { name: "Drafts" });
-  fireEvent.click(screen.getByRole("button", { name: "Send task" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send session" }));
   await screen.findByText("Run local tests");
   expect(editor).toHaveValue("");
   expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
@@ -81,20 +122,30 @@ it("removes a sent draft only after the task is accepted", async () => {
 
 it("keeps local drafts separate from drafts for connected computers", async () => {
   mocks.remote.mockResolvedValue([]);
-  await page();
+  const { router } = await page();
   const localEditor = await screen.findByRole("textbox", { name: "What should the agent do?" });
   fireEvent.change(localEditor, { target: { value: "Private local draft" } });
   fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
   await showDrafts();
   await screen.findByRole("button", { name: /^Private local draft/ });
-  fireEvent.click(screen.getByRole("tab", { name: "Connected computers" }));
+  await act(() =>
+    router.navigate({
+      to: "/tasks",
+      search: { scope: "remote", device: remoteDevice.id, project: remoteDevice.projects[0]!.id },
+    }),
+  );
   const remoteEditor = await screen.findByRole("textbox", { name: "What should the agent do?" });
   expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
   fireEvent.change(remoteEditor, { target: { value: "Connected computer draft" } });
   fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
   await showDrafts();
   await screen.findByRole("button", { name: /^Connected computer draft/ });
-  fireEvent.click(screen.getByRole("tab", { name: "This computer" }));
+  await act(() =>
+    router.navigate({
+      to: "/tasks",
+      search: { scope: "local", device: device.id, project: device.projects[0]!.id },
+    }),
+  );
   await showDrafts();
   await screen.findByRole("button", { name: /^Private local draft/ });
   expect(screen.queryByRole("button", { name: /^Connected computer draft/ })).toBeNull();
@@ -166,12 +217,12 @@ it("keeps earlier account-owned drafts isolated instead of adopting them into th
 it("collapses an unsent editor without losing its text or creating a task", async () => {
   runningTask();
   await page();
-  fireEvent.click(await screen.findByRole("button", { name: "Write a task" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Write a session" }));
   const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
   fireEvent.change(editor, { target: { value: "Keep this unsent investigation" } });
-  fireEvent.click(screen.getByRole("button", { name: "Collapse task editor" }));
+  fireEvent.click(screen.getByRole("button", { name: "Collapse session editor" }));
   expect(screen.queryByRole("textbox", { name: "What should the agent do?" })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Write a task" }));
+  fireEvent.click(screen.getByRole("button", { name: "Write a session" }));
   expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
     "Keep this unsent investigation",
   );

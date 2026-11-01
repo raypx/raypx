@@ -73,7 +73,7 @@ How the pieces talk: [architecture](references/architecture.md).
 | Server cache                       | `apps/api/server/cache`: Redis or memory         | [caching](references/caching.md)                           |
 | Object storage                     | `@raypx/storage`, `runtime.storage` in API       | [storage](references/storage.md)                           |
 | Deployment                         | Bun services; Desktop packages                   | [deployment](references/deployment.md)                     |
-| Environment and setup              | `@raypx-kit/env`, `.env`, toolchain              | [setup](references/setup.md)                               |
+| Environment and setup              | `@raypx/env`, `.env`, toolchain                  | [setup](references/setup.md)                               |
 
 Not present: payments, CMS, SEO tooling, feature flags, webhooks, push or in-app
 notifications (Desktop only shows a native pending-approval notice), collaboration,

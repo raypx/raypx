@@ -1,7 +1,12 @@
 import { expect, type Locator } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.js";
 import { surfaces } from "../helpers/surfaces.js";
-import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
+import {
+  authResponse,
+  connectedProject,
+  signedInAccount,
+  webShellFixture,
+} from "../helpers/account-fixture.js";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 
@@ -138,9 +143,16 @@ for (const [surface, base] of surfaces) {
           },
         });
       });
-      await page.goto(base + "/tasks");
-      if (surface === "Desktop")
-        await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+      await connectedProject(page, task.deviceId, task.projectId);
+      await page.goto(
+        base +
+          "/tasks?" +
+          new URLSearchParams({
+            ...(surface === "Desktop" ? { scope: "remote" } : {}),
+            device: task.deviceId,
+            project: task.projectId,
+          }),
+      );
       await page.getByRole("button", { name: /Long conversation performance fixture/ }).click();
       const viewport = page.locator("[data-conversation]");
       await expect(viewport).toHaveAttribute("data-conversation-mode", "virtual");

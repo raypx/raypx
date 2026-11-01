@@ -15,8 +15,8 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@storybook/addon-a11y": "catalog:dev",
     "@storybook/addon-docs": "catalog:dev",
     "@storybook/react-vite": "catalog:dev",

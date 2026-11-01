@@ -27,6 +27,7 @@ export function JobForm({
   onCancel,
   contextLibrary,
   ownerKey,
+  target,
 }: {
   job: CloudJob | null;
   devices: JobDevice[];
@@ -35,6 +36,7 @@ export function JobForm({
   onCancel: () => void;
   contextLibrary?: MemoryClientPort | undefined;
   ownerKey: string;
+  target?: { deviceId: string; projectId: string } | undefined;
 }) {
   const t = useTranslations("cloudJobs"),
     c = useTranslations("common"),
@@ -47,19 +49,28 @@ export function JobForm({
     job?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const [action, setAction] = useState<"device.sync" | "agent.run">(
-    job?.action.type ?? "device.sync",
+    job?.action.type ?? (target ? "agent.run" : "device.sync"),
   );
+  const defaultDevice = target
+    ? devices.find((device) => device.id === target.deviceId)
+    : devices[0];
   const [selected, setSelected] = useState(
-    job ? `${job.action.deviceId}:${job.action.epoch}` : devices[0] ? deviceKey(devices[0]) : "",
+    job
+      ? `${job.action.deviceId}:${job.action.epoch}`
+      : defaultDevice
+        ? deviceKey(defaultDevice)
+        : "",
   );
   const device = devices.find((item) => deviceKey(item) === selected);
   const [project, setProject] = useState(
-    job?.action.type === "agent.run" ? job.action.projectId : (devices[0]?.projects[0]?.id ?? ""),
+    job?.action.type === "agent.run"
+      ? job.action.projectId
+      : (target?.projectId ?? defaultDevice?.projects[0]?.id ?? ""),
   );
   const [provider, setProvider] = useState<"claude" | "codex">(
     job?.action.type === "agent.run"
       ? job.action.provider
-      : (devices[0]?.capabilities.find((item) => item.available)?.provider ?? "codex"),
+      : (defaultDevice?.capabilities.find((item) => item.available)?.provider ?? "codex"),
   );
   const [mode, setMode] = useState<"run" | "plan">(
     job?.action.type === "agent.run" ? job.action.mode : "run",
@@ -108,7 +119,15 @@ export function JobForm({
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !device || !budgetReady) return;
+    if (
+      busy ||
+      !device ||
+      !budgetReady ||
+      !available ||
+      (target &&
+        (action !== "agent.run" || device.id !== target.deviceId || project !== target.projectId))
+    )
+      return;
     const result = cloudJobInputSchema.safeParse({
       name,
       cron,
@@ -187,7 +206,7 @@ export function JobForm({
             onValueChange={(value) =>
               setAction(value === "agent.run" ? "agent.run" : "device.sync")
             }
-            disabled={busy}
+            disabled={busy || Boolean(target)}
           >
             <Field orientation="horizontal">
               <RadioGroupItem id={`${prefix}-sync`} value="device.sync" />
@@ -210,7 +229,7 @@ export function JobForm({
             onValueChange={chooseDevice}
             options={options}
             placeholder={t("chooseDevice")}
-            disabled={busy}
+            disabled={busy || Boolean(target)}
             required
           />
         </Field>
@@ -232,7 +251,7 @@ export function JobForm({
                   label: item.name,
                 }))}
                 placeholder={t("chooseProject")}
-                disabled={busy}
+                disabled={busy || Boolean(target)}
                 required
               />
             </Field>

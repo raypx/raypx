@@ -14,6 +14,7 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({
   request: vi.fn<(method: string, input: unknown) => Promise<unknown>>(),
   fetch: vi.fn(),
@@ -21,6 +22,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../../src/lib/desktop", () => ({
   isDesktop: () => true,
   localRequest: mocks.request,
+  onLocalEvent: () => () => {},
+  hasTerminalHooks: () => false,
 }));
 vi.mock("../../../../src/features/auth/client", () => ({
   apiUrl: "https://api.example.test",
@@ -60,9 +63,13 @@ async function page() {
   });
   await router.load();
   render(
-    <BrowserLanguageProvider>
-      <RouterProvider router={router} />
-    </BrowserLanguageProvider>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <BrowserLanguageProvider>
+        <RouterProvider router={router} />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
   );
   return router;
 }

@@ -14,7 +14,7 @@ it("requires an explicit answer before replacing a host with active work", async
   );
   fireEvent.click(screen.getByRole("button", { name: "Stop old host and update" }));
   let dialog = await screen.findByRole("alertdialog");
-  expect(within(dialog).getByText(/cancels its active tasks/)).toBeTruthy();
+  expect(within(dialog).getByText(/cancels its active sessions/)).toBeTruthy();
   expect(restart).not.toHaveBeenCalled();
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(restart).not.toHaveBeenCalled();

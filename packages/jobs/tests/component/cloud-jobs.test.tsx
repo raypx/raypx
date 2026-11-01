@@ -80,7 +80,7 @@ function fixture() {
   };
   return { client, devices };
 }
-const link = (id: string) => <a href={`/tasks?taskId=${id}`}>Open related agent task</a>;
+const link = (id: string) => <a href={`/tasks?taskId=${id}`}>Open related agent session</a>;
 function page(props: Omit<CloudJobsPageProps, "renderTaskLink">) {
   return (
     <BrowserLanguageProvider>
@@ -164,14 +164,56 @@ it("applies refreshed schedules while retaining the last successful device direc
   expect(screen.queryByText("private device diagnostic")).toBeNull();
 });
 
+it("shows only the open project's agent schedules and defaults new schedules to that target", async () => {
+  const { client, devices } = fixture();
+  const action = run().action;
+  if (action.type !== "agent.run") throw new Error("Expected an Agent schedule fixture");
+  client.list.mockResolvedValue({
+    enabled: true,
+    jobs: [
+      job(),
+      { ...job("Project review"), id: runId, action },
+      {
+        ...job("Other project review"),
+        id: "55555555-5555-4555-8555-555555555555",
+        action: {
+          ...action,
+          type: "agent.run",
+          projectId: "66666666-6666-4666-8666-666666666666",
+        },
+      },
+    ],
+  });
+  render(page({ accountId: "one", client, devices, target: { deviceId, projectId } }));
+  await screen.findByRole("heading", { name: "Project review" });
+  expect(screen.queryByRole("heading", { name: "Cloud sync" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Other project review" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "New cloud automation" }));
+  expect(screen.getByRole("combobox", { name: "Computer" })).toBeDisabled();
+  expect(screen.getByRole("combobox", { name: "Project" })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "New project review" } });
+  fireEvent.change(screen.getByLabelText("Session instructions"), {
+    target: { value: "Review this project" },
+  });
+  fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
+  await waitFor(() => expect(client.create).toHaveBeenCalledTimes(1));
+  expect(client.create.mock.calls[0]?.[0].action).toMatchObject({
+    type: "agent.run",
+    deviceId,
+    projectId,
+    epoch: 2,
+  });
+  expect(client.run).not.toHaveBeenCalled();
+});
+
 it("creates an agent schedule with explicit target epoch and no immediate task execution", async () => {
   const { client, devices } = fixture();
   render(page({ accountId: "one", client, devices }));
   await screen.findByRole("heading", { name: "Cloud sync" });
   fireEvent.click(screen.getByRole("button", { name: "New cloud automation" }));
   fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Morning review" } });
-  await userEvent.click(screen.getByRole("radio", { name: "Create an agent task" }));
-  fireEvent.change(screen.getByLabelText("Task instructions"), {
+  await userEvent.click(screen.getByRole("radio", { name: "Create an agent session" }));
+  fireEvent.change(screen.getByLabelText("Session instructions"), {
     target: { value: "Review the changes" },
   });
   fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
@@ -264,7 +306,7 @@ it("reuses a manual run request ID after an uncertain response and links immutab
   expect(client.run.mock.calls[0]?.[0].requestId).toBe(client.run.mock.calls[1]?.[0].requestId);
   const trigger = await screen.findByRole("button", { name: /Delivery uncertain/ });
   await userEvent.click(trigger);
-  expect(await screen.findByRole("link", { name: "Open related agent task" })).toHaveAttribute(
+  expect(await screen.findByRole("link", { name: "Open related agent session" })).toHaveAttribute(
     "href",
     `/tasks?taskId=${runId}`,
   );
@@ -304,7 +346,7 @@ it("confirms revision-based deletion of schedule history while preserving create
   fireEvent.click(screen.getByRole("button", { name: "Delete: Cloud sync" }));
   const dialog = await screen.findByRole("alertdialog");
   expect(dialog).toHaveTextContent(
-    "Delete this schedule and its run history? Agent tasks already created will remain.",
+    "Delete this schedule and its run history? Agent sessions already created will remain.",
   );
   await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
   await waitFor(() => expect(client.remove).toHaveBeenCalledTimes(1));

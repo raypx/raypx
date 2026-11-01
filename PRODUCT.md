@@ -8,11 +8,11 @@ web
 
 ## Users
 
-People who need one account and the same preferences on Web, including phone browsers, and on Desktop. On their own computer they also work with local files, recurring tasks, and external tools. Each local profile has one Owner and one execution Host. A cloud account is optional.
+Individual developers who work across authorized local projects, Agent sessions, project references, automations and terminals. Desktop is their complete workspace; Web provides optional remote access, including from phone browsers. Each local profile has one Owner and one execution Host. A cloud account is optional.
 
 ## Product Purpose
 
-Raypx is an extensible application foundation. Web provides the account and preferences. Desktop adds authorized local directories, scheduled actions, and interactive terminals through the bundled Raypx CLI. Success means a person can browse, change device preferences, and prepare work without an account, then sign in only when a computer, remote data, or a remote approval is involved.
+Raypx is a project-centered personal development workbench. The primary flow is open a project, start or continue a session, answer requests, and inspect the result. A project represents one authorized directory on one computer. Desktop restores the most recent valid local project or guides the person through directory authorization, Agent detection and their first message. Opening a page or restoring a draft never starts execution. Web opens authorized remote projects after login; account details have their own page.
 
 ## Positioning
 
@@ -26,7 +26,7 @@ Web runs in desktop and phone browsers. Desktop runs on macOS and Windows throug
 
 Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Verified administrators can manage site identity, registration, and background cleanup in Web.
 
-Guests can browse, change preferences, and prepare task drafts. Private history, computer connections, task execution, and approval actions require login. After login, return to the original page and restore drafts without sending them. Local runtime state and device preferences survive logout.
+Guests can browse, change preferences, and prepare session drafts. Local projects, sessions, requests and tools need no login. Remote history, computer connections, execution and approvals require login. After login, return to the original page and restore drafts without sending them. Local runtime state and device preferences survive logout.
 
 New Desktop local tasks and drafts belong to the current device workspace across login, account switches, and logout. Old account-owned local workspaces and automatic data migration are unsupported. Memory and task templates have explicit device or account ownership and immutable versions. Tasks use only user-selected references and keep their captured context after later edits.
 
@@ -50,6 +50,10 @@ The working Web and Desktop interfaces, their copy, and the original logo are in
 
 ## Product Principles
 
+- Organize work by project and describe Agent work records as sessions in the interface. Existing execution and parent/child continuation semantics remain unchanged.
+- An execution target includes ownership scope, computer and project. Missing authorization or an offline computer is an explicit state, never a reason to switch directories.
+- Keep unsent text and selected reference revisions isolated by project and owner. List pagination filters the project before limiting records.
+- Project tools default to that authorized directory. General references are explicitly labelled; unassigned automations remain available in global management.
 - Local tools and browsing work without an account. Login is for connecting computers, reading remote data, and handling remote approvals.
 - Device-owned work stays on the device. Nothing local is uploaded automatically.
 - Show real execution, failures, and retry state. Never fabricate data.

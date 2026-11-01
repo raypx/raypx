@@ -1,4 +1,4 @@
-import { createEnv, type Preset, z } from "@raypx-kit/env";
+import { createEnv, type Preset, z } from "@raypx/env";
 
 export const databaseEnv = {
   id: "database",

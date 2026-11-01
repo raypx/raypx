@@ -28,7 +28,7 @@ their own outer width or gutters.
 
 `@raypx/contracts/local-client` owns renderer method/parameter/reply inference and validates both sides of IPC; callers never supply reply generics.
 `preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
-sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...`. This filters the loaded task page, never creates
+sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...&device=...`. Project and computer filters apply before storage pagination, never create
 work or reads remote/account-owned projects. Account and settings share the footer.
 
 `src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group, like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
@@ -42,7 +42,11 @@ changes. Local reads use the route loader; mutations invalidate it. Keep root er
 silent and successful lists during reload failure. Cloud state is account/client-keyed,
 aborts on identity change and never loads before login. Validated
 `/tasks?scope=remote&taskId=...` links read projections without executing tasks.
-Files keeps rootId/path/offset in validated route search. Directory navigation
+`/` restores a valid recent local project or shows authorization/Agent onboarding.
+`/files` keeps rootId/path/offset in validated route search. Project tools consume
+the application target; an unavailable explicit project never falls back to another
+directory. Session selection lives in the URL. Draft/editor slots include the
+owner, computer and project. Directory navigation
 pushes history; pagination replaces it. The loader defers its listing promise to
 the table so the editor and toolbar stay mounted during reloads. Features/files
 owns components, mutation actions and a scoped Zustand vanilla store for drafts,

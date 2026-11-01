@@ -19,13 +19,13 @@
     "studio": "bun --bun drizzle-kit studio --config drizzle.config.ts"
   },
   "dependencies": {
-    "@raypx-kit/env": "catalog:",
+    "@raypx/env": "workspace:*",
     "drizzle-orm": "catalog:",
     "postgres": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
     "drizzle-kit": "catalog:dev"
   },

@@ -18,6 +18,7 @@ export const jobActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("command.run"), command: commandSchema }),
 ]);
 export const jobInputSchema = z.object({
+  projectId: z.uuid().optional(),
   name: z.string().min(1).max(120),
   cron: z.string().min(1),
   timezone: z.string().min(1),

@@ -148,7 +148,7 @@ for (const [surface, base] of [
         .getByRole("textbox", { name: "Name", exact: true })
         .fill("Daily repository checks");
       await page.getByRole("textbox", { name: "Time zone", exact: true }).fill("Asia/Singapore");
-      await page.getByRole("radio", { name: "Create an agent task", exact: true }).click();
+      await page.getByRole("radio", { name: "Create an agent session", exact: true }).click();
       await selectOption(
         page,
         page.getByRole("combobox", { name: "Computer", exact: true }),
@@ -165,7 +165,7 @@ for (const [surface, base] of [
         "claude",
       );
       await page
-        .getByRole("textbox", { name: "Task instructions", exact: true })
+        .getByRole("textbox", { name: "Session instructions", exact: true })
         .fill("Run the scheduled repository checks");
       await page.getByRole("button", { name: "Save changes", exact: true }).click();
       await expect(
@@ -179,7 +179,7 @@ for (const [surface, base] of [
       expect(creates[0]!.requestId).toMatch(/^[0-9a-f-]{36}$/);
       await page.getByRole("button", { name: "Run now", exact: true }).click();
       await page.getByRole("button", { name: /Manual run/ }).click();
-      await page.getByRole("link", { name: "Open related agent task", exact: true }).click();
+      await page.getByRole("link", { name: "Open related agent session", exact: true }).click();
       await expect(
         page.getByText("Scheduled execution is visible through its task link.", { exact: true }),
       ).toBeVisible();

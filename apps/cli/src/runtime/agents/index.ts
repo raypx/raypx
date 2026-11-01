@@ -111,8 +111,16 @@ export class AgentRuntime {
       capabilities: await this.capabilities(),
     };
   }
-  localTasks(accountId: string, limit: number, before?: string) {
-    return bounded(this.store.taskPage(desktopBinding(accountId), limit, before));
+  localTasks(
+    accountId: string,
+    limit: number,
+    before?: string,
+    projectId?: string,
+    deviceId?: string,
+  ) {
+    return bounded(
+      this.store.taskPage(desktopBinding(accountId), limit, before, projectId, deviceId),
+    );
   }
   localTask(accountId: string, id: string, after: number, beforeActivity?: number) {
     const binding = desktopBinding(accountId),

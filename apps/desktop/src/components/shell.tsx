@@ -9,6 +9,7 @@ import { taskClient } from "../features/tasks/client";
 import { signOutDesktopHost } from "../features/tasks/host-session";
 import { TerminalRequestNotice } from "../features/tasks/request-notice";
 import { ProjectNavigation } from "../features/tasks/project-navigation";
+import { RemoteProjectNavigation } from "../features/tasks/remote-navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { createPendingClient, localTaskClient } from "../features/tasks/local-client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
@@ -22,15 +23,7 @@ import {
   useRouterState,
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
-import {
-  CalendarClock,
-  FolderOpen,
-  ListTodo,
-  Inbox,
-  Settings,
-  SquareTerminal,
-  BookOpen,
-} from "lucide-react";
+import { CalendarClock, FolderOpen, Inbox, Settings, BookOpen } from "lucide-react";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { EngineNotice } from "../features/engine/notice";
 import { desktopStorageKey } from "../lib/storage";
@@ -41,6 +34,7 @@ const pendingClient = createPendingClient(localTaskClient, taskClient);
 
 type DesktopPath =
   | "/"
+  | "/files"
   | "/automations"
   | "/memory"
   | "/terminal"
@@ -119,10 +113,16 @@ export function DesktopShell() {
         storageKey={desktopStorageKey("raypx_sidebar_open")}
         frame="window"
         brand={{ to: "/", label: "Raypx", description: c("deviceWorkspace") }}
-        contextNavigation={<ProjectNavigation />}
-        navigationLabels={[c("workspace"), c("localTools")]}
+        contextNavigation={
+          <div className="space-y-6">
+            <ProjectNavigation />
+            <RemoteProjectNavigation key={accountId ?? "signed-out"} accountId={accountId} />
+          </div>
+        }
+        navigationLabels={[c("workspace")]}
         navigation={[
           [
+            { to: "/", label: c("projects"), icon: <FolderOpen />, exact: true },
             {
               to: "/approvals",
               label: c("approvals"),
@@ -135,14 +135,11 @@ export function DesktopShell() {
                 />
               ),
             },
-            { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
-            { to: "/memory", label: memory("title"), icon: <BookOpen /> },
           ],
-          [
-            { to: "/", label: c("files"), icon: <FolderOpen />, exact: true },
-            { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
-            { to: "/terminal", label: c("terminal"), icon: <SquareTerminal /> },
-          ],
+        ]}
+        secondaryNavigation={[
+          { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
+          { to: "/memory", label: memory("title"), icon: <BookOpen /> },
         ]}
         accountAction={
           <Tooltip>

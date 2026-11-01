@@ -41,8 +41,11 @@ interface Props {
   initialDraft?: TaskComposerDraft | undefined;
   onDraftRestored?: (() => void) | undefined;
   projectId?: string;
+  deviceId?: string;
   onProjectChange?: (project: string) => void;
   initialTaskId?: string | undefined;
+  onTaskChange?: ((taskId: string | undefined) => void) | undefined;
+  onOpenTask?: ((task: AgentTask) => void) | undefined;
   contextLibrary?: MemoryClientPort | undefined;
 }
 export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
@@ -52,7 +55,13 @@ export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
         <Gate {...(props.pending === undefined ? {} : { pending: props.pending })} />
       </section>
     );
-  return <Workspace key={workspaceScopeKey(props.scope)} {...props} scope={props.scope} />;
+  return (
+    <Workspace
+      key={JSON.stringify([workspaceScopeKey(props.scope), props.deviceId, props.projectId])}
+      {...props}
+      scope={props.scope}
+    />
+  );
 }
 function Workspace({
   client,
@@ -63,8 +72,11 @@ function Workspace({
   persistEditor = false,
   storageNamespace,
   projectId,
+  deviceId,
   onProjectChange,
   initialTaskId,
+  onTaskChange,
+  onOpenTask,
   contextLibrary,
 }: Props & { view?: "tasks" | "approvals"; scope: WorkspaceScope }) {
   const t = useTranslations("tasks");
@@ -78,11 +90,20 @@ function Workspace({
     async (signal: AbortSignal) => {
       const [tasks, devices, requests] = await Promise.all([
         view === "tasks"
-          ? client.tasks.list({ limit: 100, ...(before ? { before } : {}) }, { signal })
+          ? client.tasks.list(
+              {
+                limit: 100,
+                ...(before ? { before } : {}),
+                ...(projectId ? { projectId } : {}),
+                ...(deviceId ? { deviceId } : {}),
+              },
+              { signal },
+            )
           : Promise.resolve([] as AgentTask[]),
-        view === "tasks"
-          ? client.devices.list({}, { signal })
-          : Promise.resolve([] as SyncDevice[]),
+        client.devices.list({}, { signal }).catch((error: unknown) => {
+          if (view === "tasks") throw error;
+          return [] as SyncDevice[];
+        }),
         view === "approvals"
           ? client.approvals.list({}, { signal })
           : Promise.resolve([] as HumanRequest[]),
@@ -92,14 +113,30 @@ function Workspace({
       // A short page may hit the local byte budget before the record limit.
       const more =
         view === "tasks" && cursor
-          ? await client.tasks.list({ limit: 1, before: cursor }, { signal })
+          ? await client.tasks.list(
+              {
+                limit: 1,
+                before: cursor,
+                ...(projectId ? { projectId } : {}),
+                ...(deviceId ? { deviceId } : {}),
+              },
+              { signal },
+            )
           : [];
       return { tasks, devices, requests, before, next: more.length ? cursor : undefined };
     },
-    [client, before, view],
+    [client, before, projectId, deviceId, view],
   );
   const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
-    ["workspace", accountId, workspaceScopeKey(scope), view, before ?? null],
+    [
+      "workspace",
+      accountId,
+      workspaceScopeKey(scope),
+      view,
+      deviceId ?? null,
+      projectId ?? null,
+      before ?? null,
+    ],
     load,
     true,
     client,
@@ -113,6 +150,10 @@ function Workspace({
   const [editorOpen, setEditorOpen] = useState<boolean>();
   const [detailVisible, setDetailVisible] = useState(Boolean(initialTaskId));
   const linkedTask = useRef(initialTaskId);
+  function selectTask(id: string | null) {
+    setSelected(id);
+    onTaskChange?.(id ?? undefined);
+  }
   useEffect(() => {
     if (linkedTask.current === initialTaskId) return;
     linkedTask.current = initialTaskId;
@@ -126,8 +167,9 @@ function Workspace({
     previousProject.current = projectId;
     setPages([]);
     setSelected(null);
+    onTaskChange?.(undefined);
     setDetailVisible(false);
-  }, [projectId]);
+  }, [onTaskChange, projectId]);
   useEffect(() => {
     if (!data || !revealPage.current) return;
     revealPage.current = false;
@@ -136,22 +178,35 @@ function Workspace({
     list?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
   }, [data]);
   const [filters, setFilters] = useState(emptyTaskFilters);
-  const activeFilters = { ...filters, project: projectId ?? filters.project };
+  const activeFilters = {
+    ...filters,
+    device: deviceId ?? filters.device,
+    project: projectId ?? filters.project,
+  };
   function changeFilters(next: typeof filters) {
     setFilters(next);
     if (next.project !== activeFilters.project) onProjectChange?.(next.project);
   }
   const filtered = filterTasks(data?.tasks ?? [], data?.devices ?? [], activeFilters);
   const selectedProject = data?.devices
+    .filter((device) => !deviceId || device.id === deviceId)
     .flatMap((device) => device.projects)
     .find((project) => project.id === activeFilters.project);
+  const targetDevice = data?.devices.find((device) => device.id === deviceId);
+  const targetUnavailable = Boolean(
+    projectId && data && (!selectedProject || !targetDevice?.online || targetDevice.revoked),
+  );
   return (
     <section data-tasks className="@container">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1>{t(view === "approvals" ? "inbox" : "title")}</h1>
-            {activeFilters.project && (
+            <h1>
+              {view === "tasks" && projectId
+                ? (selectedProject?.name ?? t("projectUnavailable"))
+                : t(view === "approvals" ? "inbox" : "title")}
+            </h1>
+            {activeFilters.project && !projectId && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -188,7 +243,16 @@ function Workspace({
           )}
         </div>
       </header>
-      <ObservedApprovals client={client} accountId={accountId} />
+      {view === "approvals" && <ObservedApprovals client={client} accountId={accountId} />}
+      {targetUnavailable && (
+        <p role="alert" className="mb-4 max-w-[65ch] text-sm text-destructive-text">
+          {t(
+            targetDevice && !targetDevice.revoked && selectedProject && !targetDevice.online
+              ? "DEVICE_OFFLINE"
+              : "projectUnavailableHint",
+          )}
+        </p>
+      )}
       {error && (
         <p role="alert" className="mb-4 text-sm text-destructive-text">
           {t(errorCode)}
@@ -209,11 +273,13 @@ function Workspace({
                 </p>
               ) : (
                 data.requests.map((request) => (
-                  <Approval
+                  <PendingSessionRequest
                     key={request.id}
                     client={client}
                     request={request}
-                    task={data.tasks.find((task) => task.id === request.taskId)}
+                    scope={scope}
+                    devices={data.devices}
+                    onOpenTask={onOpenTask}
                     onChanged={refresh}
                   />
                 ))
@@ -231,21 +297,27 @@ function Workspace({
                 <>
                   <Composer
                     contextLibrary={contextLibrary}
-                    key={workspaceScopeKey(scope)}
+                    key={`${workspaceScopeKey(scope)}:${projectId ?? "all"}`}
                     client={client}
+                    fixedProjectId={projectId}
+                    fixedDeviceId={
+                      projectId
+                        ? (deviceId ?? (local ? (data.devices[0]?.id ?? "") : ""))
+                        : undefined
+                    }
                     initialDraft={initialDraft}
                     onDraftRestored={onDraftRestored}
                     devices={data.devices}
                     tasks={data.tasks}
                     local={local}
-                    draftKey={workspaceDraftKey(scope)}
+                    draftKey={workspaceDraftKey(scope, projectId, deviceId)}
                     optionsOpen={optionsOpen}
                     onOptionsOpenChange={setOptionsOpen}
                     editorOpen={editorOpen ?? data.tasks.length === 0}
                     onEditorOpenChange={setEditorOpen}
                     promptRef={composer}
                     onCreated={(task) => {
-                      setSelected(task.id);
+                      selectTask(task.id);
                       setDetailVisible(true);
                       setPages([]);
                       refresh();
@@ -269,6 +341,7 @@ function Workspace({
                         devices={data.devices}
                         count={filtered.length}
                         total={data.tasks.length}
+                        fixedTarget={Boolean(projectId)}
                         onChange={changeFilters}
                       />
                     )}
@@ -298,7 +371,7 @@ function Workspace({
                         devices={data.devices}
                         selected={selected}
                         onSelect={(id) => {
-                          setSelected(id);
+                          selectTask(id);
                           setDetailVisible(true);
                           // Stacked layouts move focus to details instead of leaving them below the fold.
                           if (
@@ -326,7 +399,7 @@ function Workspace({
                           onClick={() => {
                             revealPage.current = true;
                             setPages((previous) => previous.slice(0, -1));
-                            setSelected(null);
+                            selectTask(null);
                           }}
                         >
                           {t("newerTasks")}
@@ -337,7 +410,7 @@ function Workspace({
                           onClick={() => {
                             revealPage.current = true;
                             if (data.next) setPages((previous) => [...previous, data.next!]);
-                            setSelected(null);
+                            selectTask(null);
                           }}
                         >
                           {t("olderTasks")}
@@ -378,6 +451,16 @@ function Workspace({
                       scope={scope}
                       devices={data.devices}
                       onChanged={refresh}
+                      target={projectId ? { projectId, deviceId } : undefined}
+                      onFollowUp={
+                        projectId
+                          ? (id) => {
+                              selectTask(id);
+                              setDetailVisible(true);
+                              setPages([]);
+                            }
+                          : undefined
+                      }
                     />
                   ) : (
                     <div className="flex min-h-72 flex-col items-center justify-center gap-3 px-5 text-center">
@@ -392,6 +475,59 @@ function Workspace({
           )}
         </>
       )}
+    </section>
+  );
+}
+
+function PendingSessionRequest({
+  client,
+  scope,
+  request,
+  devices,
+  onChanged,
+  onOpenTask,
+}: {
+  client: TaskWorkspacePort;
+  scope: WorkspaceScope;
+  request: HumanRequest;
+  devices: SyncDevice[];
+  onChanged: () => void;
+  onOpenTask?: ((task: AgentTask) => void) | undefined;
+}) {
+  const t = useTranslations("tasks");
+  const load = useCallback(
+    (signal: AbortSignal) => client.tasks.get({ id: request.taskId }, { signal }),
+    [client, request.taskId],
+  );
+  const { data } = useRemoteQuery(
+    ["pending-session", workspaceScopeKey(scope), request.taskId],
+    load,
+    true,
+    client,
+  );
+  const device = devices.find((candidate) => candidate.id === data?.task.deviceId);
+  return (
+    <section className="space-y-2">
+      {data && (
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span>{device?.name ?? t("device")}</span>
+          <span>
+            {device?.projects.find((project) => project.id === data.task.projectId)?.name ??
+              t("projectUnavailable")}
+          </span>
+          {onOpenTask && (
+            <Button variant="ghost" size="sm" onClick={() => onOpenTask(data.task)}>
+              {t("viewSession")}
+            </Button>
+          )}
+        </div>
+      )}
+      <Approval
+        client={client}
+        request={request}
+        {...(data ? { task: data.task } : {})}
+        onChanged={onChanged}
+      />
     </section>
   );
 }

@@ -25,6 +25,7 @@ import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as localIndexRouteImport } from './routes/(local)/index'
 import { Route as localAutomationsRouteImport } from './routes/(local)/automations'
+import { Route as localFilesRouteImport } from './routes/(local)/files'
 
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
@@ -104,6 +105,11 @@ const localAutomationsRoute = localAutomationsRouteImport.update({
   path: '/automations',
   getParentRoute: () => localRouteRoute,
 } as any)
+const localFilesRoute = localFilesRouteImport.update({
+  id: '/files',
+  path: '/files',
+  getParentRoute: () => localRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/automations': typeof localAutomationsRoute
+  '/files': typeof localFilesRoute
   '/': typeof localIndexRoute
 }
 export interface FileRoutesByTo {
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/automations': typeof localAutomationsRoute
+  '/files': typeof localFilesRoute
   '/': typeof localIndexRoute
 }
 export interface FileRoutesById {
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/(local)/automations': typeof localAutomationsRoute
+  '/(local)/files': typeof localFilesRoute
   '/(local)/': typeof localIndexRoute
 }
 export interface FileRouteTypes {
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/automations'
+    | '/files'
     | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/automations'
+    | '/files'
     | '/'
   id:
     | '__root__'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(auth)/verify-email'
     | '/(local)/automations'
+    | '/(local)/files'
     | '/(local)/'
   fileRoutesById: FileRoutesById
 }
@@ -335,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof localAutomationsRouteImport
       parentRoute: typeof localRouteRoute
     }
+    '/(local)/files': {
+      id: '/(local)/files'
+      path: '/files'
+      fullPath: '/files'
+      preLoaderRoute: typeof localFilesRouteImport
+      parentRoute: typeof localRouteRoute
+    }
   }
 }
 
@@ -360,11 +379,13 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 
 interface localRouteRouteChildren {
   localAutomationsRoute: typeof localAutomationsRoute
+  localFilesRoute: typeof localFilesRoute
   localIndexRoute: typeof localIndexRoute
 }
 
 const localRouteRouteChildren: localRouteRouteChildren = {
   localAutomationsRoute: localAutomationsRoute,
+  localFilesRoute: localFilesRoute,
   localIndexRoute: localIndexRoute,
 }
 

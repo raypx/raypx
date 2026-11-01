@@ -26,6 +26,7 @@ interface Props {
   scope: "device" | "account";
   projects?: MemoryProjectsPort;
   usage?: MemoryUsagePort;
+  target?: { deviceId: string; projectId: string } | undefined;
 }
 export function MemoryLibraryPage(props: Props) {
   return (
@@ -35,12 +36,14 @@ export function MemoryLibraryPage(props: Props) {
         memoryClientKey(props.client),
         props.projects && memoryClientKey(props.projects),
         props.usage && memoryClientKey(props.usage),
+        props.target?.deviceId,
+        props.target?.projectId,
       ])}
       {...props}
     />
   );
 }
-function Library({ client, projects: projectPort, usage, scope }: Props) {
+function Library({ client, projects: projectPort, usage, scope, target }: Props) {
   const t = useTranslations("memory"),
     format = useFormatter(),
     c = useTranslations("common"),
@@ -276,7 +279,13 @@ function Library({ client, projects: projectPort, usage, scope }: Props) {
     });
   }
   const shown = documents?.filter(
-    (document) => (archived || !document.archived) && (kind === "all" || document.kind === kind),
+    (document) =>
+      (archived || !document.archived) &&
+      (kind === "all" || document.kind === kind) &&
+      (!target ||
+        !document.project ||
+        (document.project.deviceId === target.deviceId &&
+          document.project.projectId === target.projectId)),
   );
   return (
     <section>
@@ -324,6 +333,7 @@ function Library({ client, projects: projectPort, usage, scope }: Props) {
           key={editing ? `${editing.id}:${editing.revision}` : "new"}
           document={editing}
           projects={projects}
+          defaultProject={target}
           busy={busy}
           onSave={save}
           onCancel={() => {
@@ -361,15 +371,14 @@ function Library({ client, projects: projectPort, usage, scope }: Props) {
             <p className="mt-2 text-xs text-muted-foreground">
               {t(document.kind)} · {document.category || t("uncategorized")} ·{" "}
               {t("revision", { revision: String(document.revision) })} ·{" "}
-              {document.archived
-                ? t("archived")
-                : document.project
-                  ? (projects.find(
-                      (project) =>
-                        project.deviceId === document.project?.deviceId &&
-                        project.projectId === document.project?.projectId,
-                    )?.name ?? t("projectUnavailable"))
-                  : t("global")}
+              {document.archived && <>{t("archived")} · </>}
+              {document.project
+                ? (projects.find(
+                    (project) =>
+                      project.deviceId === document.project?.deviceId &&
+                      project.projectId === document.project?.projectId,
+                  )?.name ?? t("projectUnavailable"))
+                : t("global")}
             </p>
           </div>
           <div className="flex flex-wrap gap-1">

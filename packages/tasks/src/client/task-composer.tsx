@@ -45,7 +45,16 @@ import {
 export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode"> &
   Partial<Pick<DraftInput, "deviceId" | "projectId" | "contextSelection">>;
 
-export function TaskComposer({
+export function TaskComposer(props: Parameters<typeof TaskComposerView>[0]) {
+  return (
+    <TaskComposerView
+      key={JSON.stringify([props.draftKey, props.fixedDeviceId, props.fixedProjectId])}
+      {...props}
+    />
+  );
+}
+
+function TaskComposerView({
   client,
   devices,
   tasks,
@@ -59,6 +68,8 @@ export function TaskComposer({
   initialDraft,
   onDraftRestored,
   onEditorChange,
+  fixedProjectId,
+  fixedDeviceId,
   editorOpen,
   onEditorOpenChange,
   contextLibrary,
@@ -67,6 +78,9 @@ export function TaskComposer({
   contextLibrary?: MemoryClientPort | undefined;
   onEditorOpenChange?: (open: boolean) => void;
   onEditorChange?: (draft: DraftInput) => void;
+  /** When set by an enclosing project workspace, the target cannot be changed here. */
+  fixedProjectId?: string | undefined;
+  fixedDeviceId?: string | undefined;
   guest?: {
     signIn(draft: TaskComposerDraft): void | Promise<void>;
     changed?(draft: TaskComposerDraft): void;
@@ -105,20 +119,37 @@ export function TaskComposer({
     return () => cancelAnimationFrame(frame);
   }, [expanded, promptRef]);
   const localDevice = local ? devices[0] : undefined;
-  const [deviceId, setDeviceId] = useState(initialDraft?.deviceId ?? localDevice?.id ?? "");
+  const initialDevice =
+    devices.find((device) => device.id === (fixedDeviceId ?? initialDraft?.deviceId)) ??
+    localDevice;
+  const initialProject = initialDevice?.projects.find(
+    (project) => project.id === (fixedProjectId ?? initialDraft?.projectId),
+  );
+  const [deviceId, setDeviceId] = useState(
+    fixedDeviceId ?? initialDraft?.deviceId ?? localDevice?.id ?? "",
+  );
   const [projectId, setProjectId] = useState(
-    initialDraft?.projectId ??
+    fixedProjectId ??
+      initialDraft?.projectId ??
       (localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : ""),
   );
   const [provider, setProvider] = useState<AgentProvider>(
     initialDraft?.provider ??
-      localDevice?.capabilities.find((capability) => capability.available)?.provider ??
+      initialDevice?.capabilities.find(
+        (capability) =>
+          capability.available &&
+          (!initialProject || initialProject.providers.includes(capability.provider)),
+      )?.provider ??
       "claude",
   );
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
   const [mode, setMode] = useState<"run" | "plan">(initialDraft?.mode ?? "run");
   const [contextSelection, setContextSelection] = useState<TaskContextSelection | undefined>(
-    guest ? undefined : initialDraft?.contextSelection,
+    guest ||
+      (fixedProjectId && initialDraft?.projectId !== fixedProjectId) ||
+      (fixedDeviceId && initialDraft?.deviceId !== fixedDeviceId)
+      ? undefined
+      : initialDraft?.contextSelection,
   );
   const [busy, setBusy] = useState(false);
   const [contextBudget, setContextBudget] = useState<ContextBudgetState>();
@@ -245,13 +276,22 @@ export function TaskComposer({
       return;
     expandEditor(true);
     onOptionsOpenChange(true);
-    setDeviceId(draft.deviceId);
-    setProjectId(draft.projectId);
+    const targetMatches =
+      (!fixedDeviceId || fixedDeviceId === draft.deviceId) &&
+      (!fixedProjectId || fixedProjectId === draft.projectId);
+    const restored = {
+      ...draft,
+      deviceId: fixedDeviceId ?? draft.deviceId,
+      projectId: fixedProjectId ?? draft.projectId,
+      contextSelection: targetMatches ? draft.contextSelection : undefined,
+    };
+    setDeviceId(restored.deviceId);
+    setProjectId(restored.projectId);
     setProvider(draft.provider);
     setMode(draft.mode);
     setPrompt(draft.prompt);
-    setContextSelection(draft.contextSelection);
-    changed(draft);
+    setContextSelection(restored.contextSelection);
+    changed(restored);
     setDraftId(draft.id);
     setDraftStatus(null);
     setError(undefined);
@@ -453,49 +493,53 @@ export function TaskComposer({
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 pt-3">
-                <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
-                  <Field>
-                    <FieldLabel htmlFor={`${fieldId}-device`}>{t("device")}</FieldLabel>
-                    <SelectField
-                      id={`${fieldId}-device`}
-                      className="w-full"
-                      disabled={busy || Boolean(guest)}
-                      required={!guest}
-                      value={deviceId || null}
-                      placeholder={t("chooseDevice")}
-                      onValueChange={(value) => {
-                        setDeviceId(value);
-                        setProjectId("");
-                        setContextSelection(undefined);
-                        changed({ deviceId: value, projectId: "", contextSelection: undefined });
-                      }}
-                      options={devices
-                        .filter((d) => !d.revoked)
-                        .map((d) => ({
-                          value: d.id,
-                          label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
-                          disabled: !d.online,
-                        }))}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor={`${fieldId}-project`}>{t("project")}</FieldLabel>
-                    <SelectField
-                      id={`${fieldId}-project`}
-                      className="w-full"
-                      disabled={busy || Boolean(guest)}
-                      required={!guest}
-                      value={projectId || null}
-                      placeholder={t("chooseProject")}
-                      onValueChange={(value) => {
-                        setProjectId(value);
-                        setContextSelection(undefined);
-                        changed({ projectId: value, contextSelection: undefined });
-                      }}
-                      options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
-                    />
-                  </Field>
-                </div>
+                {!fixedProjectId && (
+                  <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
+                    <Field>
+                      <FieldLabel htmlFor={`${fieldId}-device`}>{t("device")}</FieldLabel>
+                      <SelectField
+                        id={`${fieldId}-device`}
+                        className="w-full"
+                        disabled={busy || Boolean(guest)}
+                        required={!guest}
+                        value={deviceId || null}
+                        placeholder={t("chooseDevice")}
+                        onValueChange={(value) => {
+                          setDeviceId(value);
+                          setProjectId("");
+                          setContextSelection(undefined);
+                          changed({ deviceId: value, projectId: "", contextSelection: undefined });
+                        }}
+                        options={devices
+                          .filter((d) => !d.revoked)
+                          .map((d) => ({
+                            value: d.id,
+                            label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
+                            disabled: !d.online,
+                          }))}
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor={`${fieldId}-project`}>{t("project")}</FieldLabel>
+                      <SelectField
+                        id={`${fieldId}-project`}
+                        className="w-full"
+                        disabled={busy || Boolean(guest)}
+                        required={!guest}
+                        value={projectId || null}
+                        placeholder={t("chooseProject")}
+                        onValueChange={(value) => {
+                          setProjectId(value);
+                          setContextSelection(undefined);
+                          changed({ projectId: value, contextSelection: undefined });
+                        }}
+                        options={
+                          device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []
+                        }
+                      />
+                    </Field>
+                  </div>
+                )}
                 {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
                 <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
                   <Field>

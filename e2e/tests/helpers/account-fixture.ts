@@ -59,3 +59,32 @@ export async function signedInAccount(page: Page) {
   await page.route("**/rpc/devices/list", (route) => authResponse(route, { json: [] }));
   return user;
 }
+
+export async function connectedProject(page: Page, deviceId: string, projectId: string) {
+  await page.route("**/rpc/devices/list", (route) =>
+    authResponse(route, {
+      json: [
+        {
+          id: deviceId,
+          name: "Development Mac",
+          platform: "darwin",
+          appVersion: "0.1.0",
+          epoch: 1,
+          revoked: false,
+          online: true,
+          lastSeenAt: null,
+          projects: [{ id: projectId, name: "Raypx", providers: ["codex"], dirty: false }],
+          capabilities: [
+            {
+              provider: "codex",
+              available: true,
+              version: "0.163.0",
+              reason: "ready",
+              inputModes: ["queue", "steer"],
+            },
+          ],
+        },
+      ],
+    }),
+  );
+}

@@ -18,8 +18,8 @@
     "@raypx/core": "workspace:*"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev"
   },

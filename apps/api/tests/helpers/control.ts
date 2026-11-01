@@ -72,6 +72,7 @@ export function memoryControlRepository(): ControlRepository & {
             ([, item]) =>
               structuredClone(item) as ControlRecord & {
                 taskId?: string;
+                projectId?: string;
                 createdAt?: string;
                 expiresAt?: string;
                 status?: string;
@@ -83,6 +84,7 @@ export function memoryControlRepository(): ControlRepository & {
           .filter(
             (item) =>
               (!query.beforeTask || `${item.createdAt}:${item.id}` < query.beforeTask) &&
+              (query.projectId === undefined || item.projectId === query.projectId) &&
               (query.ids === undefined || query.ids.includes(item.id)) &&
               (query.observedAt === undefined || !revoked(item.deviceId)) &&
               (!query.pendingApprovals ||

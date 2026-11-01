@@ -25,7 +25,7 @@ export async function expectViewportShell(page: Page) {
     );
   } else {
     await expect(
-      page.getByRole("button", { name: /^(Back to tasks|返回任务列表)$/ }),
+      page.getByRole("button", { name: /^(Back to sessions|返回会话列表)$/ }),
     ).toBeVisible();
   }
   for (const filter of await page.getByRole("combobox").all()) {

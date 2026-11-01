@@ -85,6 +85,8 @@ export const apiContract = {
         z.object({
           before: z.string().optional(),
           limit: z.number().int().min(1).max(100).default(50),
+          projectId: z.string().uuid().optional(),
+          deviceId: z.string().uuid().optional(),
         }),
       )
       .output(z.array(taskSchema)),

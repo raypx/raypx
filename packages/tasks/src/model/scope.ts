@@ -12,12 +12,13 @@ export function isLocalWorkspace(scope: WorkspaceScope) {
 }
 
 /** Draft storage is scoped to its data owner. */
-export function workspaceDraftKey(scope: WorkspaceScope) {
+export function workspaceDraftKey(scope: WorkspaceScope, projectId?: string, deviceId?: string) {
   return JSON.stringify([
     "raypx.task-drafts.v1",
     scope.namespace,
     workspaceOwner(scope),
     isLocalWorkspace(scope),
+    ...(projectId ? [deviceId ?? null, projectId] : []),
   ]);
 }
 

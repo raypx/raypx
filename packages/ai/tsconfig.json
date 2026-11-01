@@ -1,5 +1,5 @@
 {
-  "extends": "@raypx-kit/tsconfig/node.json",
+  "extends": "@raypx/tsconfig/node.json",
   "compilerOptions": {},
   "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"]
 }

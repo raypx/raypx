@@ -45,6 +45,7 @@ const mocks = vi.hoisted(() => ({
   listeners: new Set<() => void>(),
 }));
 vi.mock("../../../../src/features/auth/client", () => ({
+  apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
     getSession: mocks.getSession,

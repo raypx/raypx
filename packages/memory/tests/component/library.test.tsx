@@ -11,9 +11,52 @@ import {
   fixture,
   language,
   id,
+  deviceId,
+  projectId,
   setupMemoryClientTests,
 } from "../helpers/client";
 setupMemoryClientTests();
+
+it("shows project and general references and defaults new references to the current project", async () => {
+  const client = fixture(),
+    target = { deviceId, projectId };
+  const projects = { list: async () => [{ ...target, name: "Current project" }] };
+  client.list.mockResolvedValue([
+    { ...document(), name: "General conventions" },
+    { ...document(), id: crypto.randomUUID(), name: "Current conventions", project: target },
+    {
+      ...document(),
+      id: crypto.randomUUID(),
+      name: "Other conventions",
+      project: { deviceId, projectId: crypto.randomUUID() },
+    },
+  ]);
+  render(
+    language(
+      <MemoryLibraryPage
+        client={client}
+        projects={projects}
+        ownerKey="device"
+        scope="device"
+        target={target}
+      />,
+    ),
+  );
+  await screen.findByRole("heading", { name: "Current conventions" });
+  expect(screen.getByRole("heading", { name: "General conventions" })).toBeVisible();
+  expect(screen.queryByRole("heading", { name: "Other conventions" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "New reference" }));
+  expect(screen.getByRole("combobox", { name: "Project scope" })).toHaveTextContent(
+    "Current project",
+  );
+  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "New project reference" } });
+  fireEvent.change(screen.getByLabelText("Reference content"), {
+    target: { value: "Project decisions" },
+  });
+  fireEvent.submit(screen.getByLabelText("Reference content").closest("form")!);
+  await waitFor(() => expect(client.create).toHaveBeenCalledOnce());
+  expect(client.create.mock.calls[0]![0].document.project).toEqual(target);
+});
 
 it("retains the creation intent and edited content after a lost receipt and payload conflict", async () => {
   const client = fixture();
@@ -61,7 +104,7 @@ it("keeps content open after a CAS conflict and confirms archiving independently
   expect(dialog).toHaveTextContent(
     "Future runs of schedules that reference this item will fail and pause the schedule",
   );
-  expect(dialog).toHaveTextContent("Existing task snapshots and version history are preserved");
+  expect(dialog).toHaveTextContent("Existing session snapshots and version history are preserved");
   expect(client.archive).not.toHaveBeenCalled();
   await userEvent.click(within(dialog).getByRole("button", { name: "Archive" }));
   await waitFor(() => expect(client.archive).toHaveBeenCalledTimes(1));
@@ -170,7 +213,7 @@ it("never reads cloud usage while archiving device-owned references", async () =
   await screen.findByRole("heading", { name: "Project conventions" });
   fireEvent.click(screen.getByRole("button", { name: "Archive: Project conventions" }));
   const dialog = await screen.findByRole("alertdialog");
-  expect(dialog).toHaveTextContent("Existing task snapshots and version history are preserved");
+  expect(dialog).toHaveTextContent("Existing session snapshots and version history are preserved");
   expect(dialog).not.toHaveTextContent("Cloud schedules");
   expect(dialog).not.toHaveTextContent("Unable to confirm references");
   expect(scheduledPlans).not.toHaveBeenCalled();

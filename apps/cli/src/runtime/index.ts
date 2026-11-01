@@ -186,7 +186,7 @@ export function createRuntime(
             return getAgents().localDevice(localParams[method].parse(raw).accountId);
           case "agents.local.list": {
             const p = localParams[method].parse(raw);
-            return getAgents().localTasks(p.accountId, p.limit, p.before);
+            return getAgents().localTasks(p.accountId, p.limit, p.before, p.projectId, p.deviceId);
           }
           case "agents.local.get": {
             const p = localParams[method].parse(raw);

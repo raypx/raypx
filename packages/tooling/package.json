@@ -30,7 +30,7 @@
     "@raypx-kit/intl": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "nitro": "catalog:"

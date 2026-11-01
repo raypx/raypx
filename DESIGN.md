@@ -6,18 +6,19 @@ Primary actions are dark on light backgrounds and light on dark backgrounds.
 Express feature styles and responsive states with Tailwind utilities in components.
 CSS entry points register sources and shared styles; avoid feature-specific selectors.
 
-Web has a quiet account/settings shell. Desktop adds Files, Automations and
-Terminal navigation available before login. The local setup guide uses three inline
-steps: project authorization, agent readiness and opening the task editor. Remote
-actions offer contextual sign-in and return to the requested page. Task views default to This
-computer, with a separate Connected computers tab for remote tasks. Web layouts also serve phone browsers;
+Desktop opens the most recent valid local project, with project authorization,
+Agent readiness and the first message as its empty state. Web opens remote projects;
+account details live at `/account`. Local work remains available before login.
+Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers;
 the planned Expo iOS app is a separate delivery phase.
 
-Sidebar task navigation comes first, with local tools in a separate Desktop group.
+The sidebar concentrates on projects and the global pending inbox.
 Account and settings stay at the bottom. Use consistent 20px Lucide icons, visible
 keyboard focus and labelled tooltips in the collapsed rail; keep pending counts visible.
-Desktop places bounded recent authorized-project shortcuts between primary tasks
-and local tools, with searchable expansion and a clear project filter in Tasks.
+Desktop separates local projects from connected computers, with bounded recent
+shortcuts and searchable expansion. Project headers provide Sessions, Files,
+References, Automations and Terminal; remote projects expose only supported tools.
+The session editor consumes the chosen computer/project without repeating selectors.
 The account menu and settings shortcut share one fixed footer row.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
@@ -26,8 +27,9 @@ Theme and language follow the device by default and retain explicit local choice
 Respect reduced motion, narrow screens, long Chinese/English content and large fonts.
 
 Application chrome composes the shadcn Sidebar, with a persistent icon rail on
-narrow screens. Task workspaces pair a persistent composer and device-only drafts
-with a task list and a separate detail column. Overview counts describe the loaded
+narrow screens. Session workspaces pair a persistent composer and project-scoped drafts
+with a session list and a separate detail column. Completed sessions lead with the
+result and collapse the process. Overview counts describe the loaded
 page; pending answers and running work are distinct. Use actual statuses, never
 synthetic progress. Stack columns on narrow screens and focus the opened detail.
 

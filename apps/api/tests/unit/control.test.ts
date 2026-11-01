@@ -9,6 +9,64 @@ import {
 } from "../helpers/control.js";
 
 describe("Desktop-owned task projections", () => {
+  it("filters the project and computer before paging newer sessions from other projects", async () => {
+    const repository = memoryControlRepository(),
+      service = new ControlService(repository),
+      f = await connected(service),
+      template = await running(service, f);
+    const projectId = crypto.randomUUID(),
+      otherProjectId = crypto.randomUUID(),
+      otherDeviceId = crypto.randomUUID();
+    const expected: string[] = [];
+    await repository.transaction(f.auth.user.id, async (tx) => {
+      for (let index = 0; index < 30; index++) {
+        const task = {
+          ...template,
+          id: crypto.randomUUID(),
+          projectId: index % 3 === 0 ? projectId : otherProjectId,
+          deviceId: index % 5 === 0 ? otherDeviceId : template.deviceId,
+          createdAt: new Date(1_700_000_000_000 - index * 1000).toISOString(),
+          updatedAt: new Date(1_800_000_000_000 + index * 1000).toISOString(),
+          epoch: 1,
+        };
+        if (task.projectId === projectId && task.deviceId === template.deviceId)
+          expected.push(task.id);
+        await tx.put("task", task);
+      }
+    });
+    const found: string[] = [];
+    let before: string | undefined;
+    for (let count = 0; count <= expected.length; count++) {
+      const page = await service.listTasks(f.auth.user.id, {
+        projectId,
+        deviceId: template.deviceId,
+        limit: 2,
+        ...(before ? { before } : {}),
+      });
+      if (!page.length) break;
+      expect(
+        page.every((task) => task.projectId === projectId && task.deviceId === template.deviceId),
+      ).toBe(true);
+      found.push(...page.map((task) => task.id));
+      const last = page.at(-1)!;
+      before = `${last.createdAt}:${last.id}`;
+      const probe = await service.listTasks(f.auth.user.id, {
+        projectId,
+        deviceId: template.deviceId,
+        limit: 1,
+        before,
+      });
+      if (!probe.length) break;
+    }
+    expect(found).toEqual(expected);
+    expect(
+      await service.listTasks("other-account", {
+        projectId,
+        deviceId: template.deviceId,
+        limit: 100,
+      }),
+    ).toEqual([]);
+  });
   it("bounds replay and removes orphans without deleting conversation history absent from a snapshot", async () => {
     const repository = memoryControlRepository(),
       service = new ControlService(repository),

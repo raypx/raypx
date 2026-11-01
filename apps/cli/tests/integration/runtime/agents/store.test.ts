@@ -354,6 +354,55 @@ it("paginates every local task across byte and record limits, including equal ti
     removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
+it("filters the authorized project and computer before local pagination", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-project-pages-")),
+    state = new StateStore(profileStorage(directory)),
+    runtime = new AgentRuntime(state, () => {}),
+    store = new AgentStore(profileStorage(directory).database),
+    binding = desktopBinding("account-a"),
+    deviceId = store.deviceId(binding),
+    projectId = crypto.randomUUID(),
+    otherProject = crypto.randomUUID();
+  try {
+    const expected: string[] = [];
+    for (let index = 0; index < 40; index++) {
+      const task = taskSchema.parse({
+        id: crypto.randomUUID(),
+        deviceId,
+        projectId: index % 4 === 0 ? projectId : otherProject,
+        provider: "codex",
+        mode: "run",
+        prompt: `Session ${index}`,
+        summary: "Done",
+        status: "succeeded",
+        parentTaskId: null,
+        createdAt: new Date(1_700_000_000_000 - index * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      store.put({ task, binding, sessionId: null });
+      if (task.projectId === projectId) expected.push(task.id);
+    }
+    const found: string[] = [];
+    let before: string | undefined;
+    for (let index = 0; index <= expected.length; index++) {
+      const page = runtime.localTasks("account-a", 3, before, projectId, deviceId);
+      if (!page.length) break;
+      found.push(...page.map((task) => task.id));
+      const last = page.at(-1)!;
+      before = `${last.createdAt}:${last.id}`;
+      const probe = runtime.localTasks("account-a", 1, before, projectId, deviceId);
+      if (!probe.length) break;
+    }
+    expect(found).toEqual(expected);
+    expect(runtime.localTasks("account-a", 100, undefined, projectId, crypto.randomUUID())).toEqual(
+      [],
+    );
+    expect(runtime.localTasks("account-b", 100, undefined, projectId, deviceId)).toEqual([]);
+  } finally {
+    await runtime.close();
+    removeProfileDirectory(directory, { recursive: true, force: true });
+  }
+});
 it("retains local activity across relay compaction and restart without creating a cloud outbox", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-local-history-")),
     binding = desktopBinding("account-a"),

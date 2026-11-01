@@ -82,20 +82,20 @@ async function page() {
 it("authorizes a project and checks a provider before opening the editor, without starting work", async () => {
   const router = await page();
   await screen.findByText("Codex");
-  expect(screen.getByRole("button", { name: "Write a local task" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Write a message" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Authorize a project folder" }));
   await screen.findByText("My project");
   expect(mocks.request).toHaveBeenCalledWith("agents.configure", {
     rootId: "root-one",
     providers: ["claude", "codex"],
   });
-  expect(screen.getByRole("button", { name: "Write a local task" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Write a message" })).toBeDisabled();
   available = true;
   fireEvent.click(screen.getByRole("button", { name: "Check agents again" }));
   await waitFor(() =>
-    expect(screen.getByRole("button", { name: "Write a local task" })).toBeEnabled(),
+    expect(screen.getByRole("button", { name: "Write a message" })).toBeEnabled(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Write a local task" }));
+  fireEvent.click(screen.getByRole("button", { name: "Write a message" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/tasks"));
   expect(
     mocks.request.mock.calls.every(([method]) =>

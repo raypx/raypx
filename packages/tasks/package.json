@@ -31,8 +31,8 @@
     "remark-gfm": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",

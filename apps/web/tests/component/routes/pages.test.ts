@@ -27,7 +27,8 @@ describe("application shell pages", () => {
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
       ),
     ).toEqual({
-      "/": { title: "common.account", guestTitle: "common.home", layout: "document" },
+      "/": { title: "common.projects", guestTitle: "common.home", layout: "workbench" },
+      "/account": { title: "common.account", guestTitle: "common.home", layout: "document" },
       "/admin/settings": { title: "common.adminSettings", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },

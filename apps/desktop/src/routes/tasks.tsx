@@ -4,7 +4,10 @@ export const Route = createFileRoute("/tasks")({
   staticData: { page: { title: "common.tasks", layout: "workbench" } },
   validateSearch: (
     search: Record<string, unknown>,
-  ): { scope?: "local" | "remote"; project?: string; taskId?: string } => ({
+  ): { scope?: "local" | "remote"; project?: string; device?: string; taskId?: string } => ({
+    ...(typeof search.device === "string" && /^[0-9a-f-]{36}$/i.test(search.device)
+      ? { device: search.device }
+      : {}),
     ...(search.scope === "remote" || search.scope === "local" ? { scope: search.scope } : {}),
     ...(typeof search.project === "string" && search.project.length <= 256 && search.project
       ? { project: search.project }

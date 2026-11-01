@@ -12,11 +12,32 @@ import { themeTokens, useTheme } from "@raypx/ui/themes";
 import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop";
 import { terminalFrame } from "../features/terminal/frame";
 import { terminalKey } from "../features/terminal/input";
+import { recentProjects } from "../features/tasks/project-history";
+import { ProjectTools } from "../features/tasks/project-tools";
 
 export const Route = createFileRoute("/terminal")({
   staticData: { page: { title: "common.terminal", layout: "tool" } },
-  component: TerminalPage,
+  ssr: false,
+  preload: false,
+  validateSearch: (search: Record<string, unknown>): { project?: string } =>
+    typeof search.project === "string" && search.project.length <= 256
+      ? { project: search.project }
+      : {},
+  loaderDeps: ({ search }) => ({ project: search.project }),
+  loader: async ({ deps }) => {
+    if (!isDesktop()) return { project: deps.project, cwd: "" };
+    const roots = await localRequest("roots.list", {});
+    const project =
+      deps.project ?? recentProjects().find((id) => roots.some((root) => root.id === id));
+    return { project, cwd: roots.find((root) => root.id === project)?.path ?? "" };
+  },
+  component: TerminalRoute,
 });
+
+function TerminalRoute() {
+  const project = Route.useLoaderData();
+  return <TerminalPage key={project.project ?? "global"} />;
+}
 
 function encode(value: string) {
   let binary = "";
@@ -24,9 +45,12 @@ function encode(value: string) {
   return btoa(binary);
 }
 function TerminalPage() {
+  const project = Route.useLoaderData();
   const t = useTranslations("terminal");
   const c = useTranslations("common");
   const j = useTranslations("jobs");
+  const tasks = useTranslations("tasks");
+  const unavailable = Boolean(project.project && !project.cwd);
   const { resolvedTheme } = useTheme();
   const container = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal | null>(null);
@@ -203,7 +227,7 @@ function TerminalPage() {
   }, [resolvedTheme]);
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (opening || running || !terminal.current) return;
+    if (opening || running || !terminal.current || unavailable) return;
     const data = new FormData(event.currentTarget);
     let args: string[];
     try {
@@ -272,6 +296,12 @@ function TerminalPage() {
   }
   return (
     <section>
+      {project.project && <ProjectTools projectId={project.project} />}
+      {unavailable && (
+        <p role="alert" className="mb-5 text-sm text-destructive-text">
+          {tasks("projectUnavailableHint")}
+        </p>
+      )}
       <header className="mb-10">
         <h1>{t("title")}</h1>
         <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
@@ -311,7 +341,13 @@ function TerminalPage() {
             className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
           >
             {t("cwd")}
-            <Input id="terminal-cwd" name="cwd" required disabled={running || opening} />
+            <Input
+              id="terminal-cwd"
+              name="cwd"
+              defaultValue={project.cwd}
+              required
+              disabled={running || opening}
+            />
           </label>
         </div>
         <div className="flex gap-5">
@@ -329,7 +365,7 @@ function TerminalPage() {
                 {t("stop")}
               </Button>
             ) : (
-              <Button type="submit" disabled={opening || !isDesktop()}>
+              <Button type="submit" disabled={opening || !isDesktop() || unavailable}>
                 <TerminalIcon size={16} />
                 {opening ? c("working") : t("start")}
               </Button>

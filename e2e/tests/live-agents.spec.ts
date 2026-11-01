@@ -50,7 +50,7 @@ test("Beta Web runs approved Claude and Codex tasks on a hidden packaged Desktop
   for (const provider of ["claude", "codex"] as const) {
     const file = provider + "-beta-" + Date.now() + ".txt";
     const marker = `RAYPX_BETA_${provider.toUpperCase()}_7319`;
-    await page.getByRole("button", { name: "New task", exact: true }).click();
+    await page.getByRole("button", { name: "New session", exact: true }).click();
     const form = page
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .locator("xpath=ancestor::form[1]");
@@ -75,7 +75,7 @@ test("Beta Web runs approved Claude and Codex tasks on a hidden packaged Desktop
       .fill(
         `Use a file tool to create ${file} containing exactly ${marker} followed by one newline. Read it back to verify, and include ${marker} in your final reply. Do not modify any other files. First propose a concise plan for approval.`,
       );
-    await form.getByRole("button", { name: "Send task", exact: true }).click();
+    await form.getByRole("button", { name: "Send session", exact: true }).click();
     const approve = page.getByRole("button", { name: "Approve plan", exact: true });
     await expect(approve).toBeVisible({ timeout: 180_000 });
     if (provider === "claude") {

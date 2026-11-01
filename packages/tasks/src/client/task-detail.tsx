@@ -33,12 +33,16 @@ export function TaskDetail({
   id,
   onChanged,
   scope,
+  target,
+  onFollowUp,
 }: {
   client: TaskWorkspacePort;
   id: string;
   devices: SyncDevice[];
   onChanged: () => void;
   scope: WorkspaceScope;
+  target?: { projectId: string; deviceId?: string | undefined } | undefined;
+  onFollowUp?: ((id: string) => void) | undefined;
 }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
@@ -55,6 +59,21 @@ export function TaskDetail({
     id,
     scope,
     setFailure,
+  );
+  const targetDevice = data
+    ? devices.find((device) => device.id === data.task.deviceId)
+    : undefined;
+  const canContinue = Boolean(
+    data &&
+    targetDevice?.online &&
+    !targetDevice.revoked &&
+    targetDevice.projects.some(
+      (project) =>
+        project.id === data.task.projectId && project.providers.includes(data.task.provider),
+    ) &&
+    targetDevice.capabilities.some(
+      (capability) => capability.provider === data.task.provider && capability.available,
+    ),
   );
   async function cancel() {
     if (active.current) return;
@@ -74,19 +93,20 @@ export function TaskDetail({
   }
   async function follow(event: FormEvent) {
     event.preventDefault();
-    if (active.current || !prompt.trim()) return;
+    if (active.current || !prompt.trim() || !canContinue) return;
     active.current = true;
     setFailure(undefined);
     if (followId.current?.prompt !== prompt) followId.current = { prompt, id: crypto.randomUUID() };
     setBusy(true);
     try {
-      await client.tasks.followUp(
+      const task = await client.tasks.followUp(
         { id: followId.current.id, parentTaskId: id, prompt },
         { signal: AbortSignal.timeout(15_000) },
       );
       followId.current = null;
       setPrompt("");
       onChanged();
+      onFollowUp?.(task.id);
     } catch (e) {
       setFailure(failureCode(e));
     } finally {
@@ -114,6 +134,16 @@ export function TaskDetail({
           </Button>
         )}
       </div>
+    );
+  if (
+    target &&
+    (data.task.projectId !== target.projectId ||
+      (target.deviceId && data.task.deviceId !== target.deviceId))
+  )
+    return (
+      <p role="alert" className="text-sm text-destructive-text">
+        {t("sessionOutsideProject")}
+      </p>
     );
   return (
     <div className="space-y-5">
@@ -265,7 +295,12 @@ export function TaskDetail({
               onChange={(event) => setPrompt(event.target.value)}
             />
           </Field>
-          <Button type="submit" disabled={busy || !prompt.trim()}>
+          {!canContinue && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {t("projectUnavailable")}
+            </p>
+          )}
+          <Button type="submit" disabled={busy || !prompt.trim() || !canContinue}>
             {t("send")}
           </Button>
         </form>

@@ -30,6 +30,7 @@ import type { JobDefinition } from "@raypx/jobs";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../../../src/routeTree.gen";
+import { rememberProject } from "../../../../src/features/tasks/project-history";
 
 expect.extend(matchers);
 
@@ -52,6 +53,7 @@ vi.mock("../../../../src/lib/desktop", () => ({
   saveDesktopPreferences: vi.fn(),
 }));
 vi.mock("../../../../src/features/auth/client", () => ({
+  apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
     signIn: { email: vi.fn() },
@@ -179,6 +181,23 @@ async function page(url: string) {
 }
 
 describe("Desktop local file routes", () => {
+  it("prefills the terminal from the current project without starting it and retains revoked targets", async () => {
+    rememberProject("work");
+    const recent = testRouter("/terminal");
+    await recent.load();
+    expect(recent.state.matches.find((match) => match.routeId === "/terminal")?.loaderData).toEqual(
+      { project: "work", cwd: "/work" },
+    );
+    const unavailable = testRouter("/terminal?project=revoked");
+    await unavailable.load();
+    expect(
+      unavailable.state.matches.find((match) => match.routeId === "/terminal")?.loaderData,
+    ).toEqual({ project: "revoked", cwd: "" });
+    expect(mocks.localRequest.mock.calls.some(([method]) => method === "terminal.open")).toBe(
+      false,
+    );
+  });
+
   it.each(["/", "/automations"])(
     "keeps %s usable as a preview without RPC or redirects",
     async (url) => {
@@ -221,6 +240,50 @@ describe("Desktop local file routes", () => {
     );
   });
 
+  it("defaults new automations to the open project and keeps unassigned schedules globally accessible", async () => {
+    const existing = job("Unassigned scan");
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method === "jobs.list")
+        return [existing, { ...job("Project scan"), id: "project-job", projectId: "work" }];
+      if (method === "roots.list") return grants;
+      if (method === "jobs.create" || method === "jobs.update") return existing;
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    const router = await page("/automations?scope=local&project=work");
+    expect(screen.getByRole("heading", { name: "Project scan" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Unassigned scan" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "New automation" }));
+    expect(screen.getByRole("combobox", { name: "Project" })).toHaveTextContent("Work");
+    expect(screen.getByRole("combobox", { name: "Folder" })).toHaveTextContent("Work");
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "New project scan" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
+    await waitFor(() =>
+      expect(mocks.localRequest).toHaveBeenCalledWith(
+        "jobs.create",
+        expect.objectContaining({
+          projectId: "work",
+          action: { type: "directory.scan", rootId: "work", path: "" },
+        }),
+      ),
+    );
+    await userEvent.click(
+      screen.getByRole("link", { name: "Manage all automations, including unassigned plans" }),
+    );
+    expect(router.state.location.search.project).toBeUndefined();
+    expect(await screen.findByRole("heading", { name: "Unassigned scan" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Unassigned scan" }));
+    expect(screen.getByRole("combobox", { name: "Project" })).toHaveTextContent("General plan");
+    fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
+    await waitFor(() =>
+      expect(mocks.localRequest).toHaveBeenCalledWith(
+        "jobs.update",
+        expect.objectContaining({ id: existing.id }),
+      ),
+    );
+    const update = mocks.localRequest.mock.calls.find(([method]) => method === "jobs.update")?.[1];
+    expect(update).not.toHaveProperty("projectId");
+  });
+
   it("shows pending UI until the initial jobs loader finishes", async () => {
     const jobs = deferred<JobDefinition[]>();
     const roots = deferred<RootGrant[]>();
@@ -253,7 +316,7 @@ describe("Desktop local file routes", () => {
 
   it.each([
     {
-      destination: "/" as const,
+      destination: "/files" as const,
       otherDestination: "/automations" as const,
       assertAuthorizedPage: async () => {
         expect(await screen.findByText("This folder is empty.")).toBeTruthy();
@@ -267,7 +330,7 @@ describe("Desktop local file routes", () => {
     },
     {
       destination: "/automations" as const,
-      otherDestination: "/" as const,
+      otherDestination: "/files" as const,
       assertAuthorizedPage: async () => {
         fireEvent.click(await screen.findByRole("button", { name: "New automation" }));
         await waitFor(() =>
@@ -286,7 +349,7 @@ describe("Desktop local file routes", () => {
         if (method === "files.list") return { entries: [], total: 0, offset: 0 };
         throw new Error(`Unexpected local request: ${method}`);
       });
-      const router = testRouter("/", { hash: true });
+      const router = testRouter("/files", { hash: true });
       await router.load();
       await act(async () => {
         mount(router);
@@ -338,7 +401,7 @@ describe("Desktop local file routes", () => {
   });
 
   it("keeps job events out of Files requests while engine readiness refreshes its lists", async () => {
-    await page("/");
+    await page("/files");
     expect(await screen.findByText("This folder is empty.")).toBeTruthy();
     const reads = (method: LocalMethod) =>
       mocks.localRequest.mock.calls.filter(([called]) => called === method).length;

@@ -19,8 +19,8 @@
     "unstorage": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev"
   },
   "raypx": {

@@ -35,6 +35,7 @@ import type {
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../../../../src/routeTree.gen";
+import { rememberProject } from "../../../../../src/features/tasks/project-history";
 
 expect.extend(matchers);
 
@@ -58,6 +59,7 @@ vi.mock("../../../../../src/lib/desktop", () => ({
   saveDesktopPreferences: vi.fn(),
 }));
 vi.mock("../../../../../src/features/auth/client", () => ({
+  apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
     signIn: { email: vi.fn() },
@@ -185,6 +187,31 @@ async function page(url: string, hash = false) {
 }
 
 describe("Files route and workspace", () => {
+  it("opens the recent authorized directory and keeps a revoked directory explicit", async () => {
+    const other = { ...grants[0]!, id: "other", name: "Other", path: "/other" };
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method === "roots.list") return [...grants, other];
+      if (method === "files.list") return { entries: [], total: 0, offset: 0 };
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    rememberProject(other.id);
+    const router = await page("/files");
+    await screen.findByText("This folder is empty.");
+    expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
+      rootId: other.id,
+      path: "",
+      offset: 0,
+      limit: 100,
+    });
+    mocks.localRequest.mockClear();
+    await act(() => router.navigate({ to: "/files", search: { rootId: "revoked" } }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This project is unavailable or its authorization was revoked.",
+    );
+    expect(router.state.location.search.rootId).toBe("revoked");
+    expect(mocks.localRequest.mock.calls.some(([method]) => method === "files.list")).toBe(false);
+  });
+
   async function answerConfirmation(label: "Cancel" | "Discard changes" | "Delete") {
     const dialog = await screen.findByRole("alertdialog");
     fireEvent.click(within(dialog).getByRole("button", { name: label }));
@@ -196,7 +223,7 @@ describe("Files route and workspace", () => {
   }
 
   it("reads encoded hash search and normalizes invalid pagination", async () => {
-    const router = await page("/?rootId=work&path=design%20%26%20notes&offset=100", true);
+    const router = await page("/files?rootId=work&path=design%20%26%20notes&offset=100", true);
     expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
       rootId: "work",
       path: "design & notes",
@@ -204,7 +231,9 @@ describe("Files route and workspace", () => {
       limit: 100,
     });
     expect(await screen.findByText("101–200 / 201")).toBeTruthy();
-    await act(async () => router.navigate({ to: "/", search: { rootId: "work", offset: -4 } }));
+    await act(async () =>
+      router.navigate({ to: "/files", search: { rootId: "work", offset: -4 } }),
+    );
     expect(mocks.localRequest).toHaveBeenCalledWith(
       "files.list",
       expect.objectContaining({ offset: 0 }),
@@ -212,7 +241,7 @@ describe("Files route and workspace", () => {
   });
 
   it("pushes directories, replaces pages and shares grants with Jobs", async () => {
-    const router = await page("/");
+    const router = await page("/files");
     await screen.findByRole("button", { name: /^docs$/ });
     const initial = router.history.length;
     fireEvent.click(screen.getByRole("button", { name: /^docs$/ }));
@@ -238,7 +267,7 @@ describe("Files route and workspace", () => {
       const q = p as { offset: number; path: string };
       return q.offset === 100 ? second.promise : listing(q.path, q.offset);
     });
-    await page("/");
+    await page("/files");
     await draft();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() =>
@@ -255,7 +284,7 @@ describe("Files route and workspace", () => {
   });
 
   it("confirms once and leaves a cancelled directory navigation unchanged", async () => {
-    const router = await page("/");
+    const router = await page("/files");
     await draft();
     const reads = mocks.localRequest.mock.calls.length;
     fireEvent.click(screen.getByRole("button", { name: /^docs$/ }));
@@ -283,7 +312,7 @@ describe("Files route and workspace", () => {
       }
       return listing("", (p as { offset: number }).offset);
     });
-    await page("/");
+    await page("/files");
     await draft();
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("This file changed on disk.");
@@ -310,12 +339,12 @@ describe("Files route and workspace", () => {
       if (m === "files.read") return late.promise;
       return listing("", (p as { offset: number }).offset);
     });
-    const router = await page("/");
+    const router = await page("/files");
     fireEvent.click(await screen.findByRole("button", { name: /^readme\.txt$/ }));
     await act(async () => router.navigate({ to: "/settings" }));
     await act(async () => late.resolve({ text: "old content", version: "v1" }));
     expect(router.state.location.pathname).toBe("/settings");
-    await act(async () => router.navigate({ to: "/" }));
+    await act(async () => router.navigate({ to: "/files" }));
     expect(screen.queryByLabelText("Text editor")).toBeNull();
     const picked = deferred<RootGrant | null>();
     mocks.pickDirectory.mockReturnValue(picked.promise);
@@ -326,7 +355,7 @@ describe("Files route and workspace", () => {
   });
 
   it("creates a clean store on return and prevents stale list results from replacing a new location", async () => {
-    const router = await page("/");
+    const router = await page("/files");
     await draft();
     let navigation!: Promise<void>;
     act(() => {
@@ -334,7 +363,7 @@ describe("Files route and workspace", () => {
     });
     await answerConfirmation("Discard changes");
     await act(async () => navigation);
-    await act(async () => router.navigate({ to: "/" }));
+    await act(async () => router.navigate({ to: "/files" }));
     expect(screen.queryByLabelText("Text editor")).toBeNull();
     const old = deferred<FileListing>();
     mocks.localRequest.mockImplementation(async (m, p) => {
@@ -342,8 +371,12 @@ describe("Files route and workspace", () => {
       const q = p as { path: string; offset: number };
       return q.path === "slow" ? old.promise : listing(q.path, q.offset);
     });
-    await act(async () => router.navigate({ to: "/", search: { rootId: "work", path: "slow" } }));
-    await act(async () => router.navigate({ to: "/", search: { rootId: "work", path: "fresh" } }));
+    await act(async () =>
+      router.navigate({ to: "/files", search: { rootId: "work", path: "slow" } }),
+    );
+    await act(async () =>
+      router.navigate({ to: "/files", search: { rootId: "work", path: "fresh" } }),
+    );
     await screen.findByTitle("fresh");
     await act(async () => old.resolve({ entries: [entry("old.txt")], total: 1, offset: 0 }));
     expect(screen.queryByRole("button", { name: "old.txt" })).toBeNull();
@@ -351,7 +384,7 @@ describe("Files route and workspace", () => {
   });
 
   it("updates translations without re-reading native data", async () => {
-    await page("/");
+    await page("/files");
     await screen.findByRole("button", { name: /^readme\.txt$/ });
     const reads = mocks.localRequest.mock.calls.length;
     await act(async () => {
@@ -376,7 +409,7 @@ describe("Files route and workspace", () => {
       if (["files.mkdir", "files.move", "files.delete"].includes(method)) return {};
       throw new Error(`Unexpected request: ${method} ${String(params)}`);
     });
-    await page("/");
+    await page("/files");
     fireEvent.click(screen.getByRole("button", { name: "New text file" }));
     fireEvent.change(screen.getByLabelText("Relative path"), { target: { value: "new.txt" } });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
@@ -431,7 +464,7 @@ describe("Files route and workspace", () => {
       if (failed) throw new Error("private listing diagnostic");
       return listing();
     });
-    const router = await page("/");
+    const router = await page("/files");
     await draft();
     const user = userEvent.setup();
     await user.click(screen.getByRole("combobox", { name: "Folders" }));
@@ -454,7 +487,7 @@ describe("Files route and workspace", () => {
   it("does not read native files during preloading or the build shell", async () => {
     const preload = testRouter("/settings");
     await preload.load();
-    await preload.preloadRoute({ to: "/" });
+    await preload.preloadRoute({ to: "/files" });
     const shell = testRouter("/", { isServer: true, isShell: true });
     await shell.load();
     expect(mocks.localRequest).not.toHaveBeenCalled();

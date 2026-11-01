@@ -28,6 +28,7 @@ export interface ControlRecord {
 }
 export interface ControlQuery {
   taskId?: string;
+  projectId?: string;
   beforeTask?: string;
   pendingApprovals?: boolean;
   activity?: boolean;
@@ -43,7 +44,7 @@ export interface ControlQuery {
 type ControlQueries = {
   device: Pick<ControlQuery, "limit" | "ids">;
   project: Pick<ControlQuery, "limit" | "ids">;
-  task: Pick<ControlQuery, "limit" | "beforeTask">;
+  task: Pick<ControlQuery, "limit" | "beforeTask" | "projectId">;
   request: Pick<ControlQuery, "limit" | "taskId" | "pendingApprovals">;
   event: Pick<
     ControlQuery,
@@ -151,6 +152,7 @@ export function controlListQuery(
           ? undefined
           : sql`${body}->>'status' in ('pending','decided') and exists (select 1 from ${controlTask} task where ${task.userId}=${userId} and ${task.id}=${body}->>'taskId' and ${task.body}->>'status' in ('pending','running','waiting','cancelling'))`,
         query.taskId === undefined ? undefined : sql`${body}->>'taskId'=${query.taskId}`,
+        query.projectId === undefined ? undefined : sql`${body}->>'projectId'=${query.projectId}`,
         query.activity === undefined
           ? undefined
           : query.activity
