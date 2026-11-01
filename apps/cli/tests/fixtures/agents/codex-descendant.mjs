@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { exitForVersion } from "./version.mjs";
+import { exitForVersion } from "./version";
 
 exitForVersion("codex");
 writeFileSync("parent-pid", String(process.pid));

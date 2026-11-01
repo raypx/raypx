@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, unlinkSync } from "node:fs";
 import { createInterface } from "node:readline";
-import { exitForVersion } from "./version.mjs";
+import { exitForVersion } from "./version";
 exitForVersion("codex");
 const send = (value) => process.stdout.write(JSON.stringify(value) + "\n");
 let turn = 0,

@@ -1,5 +1,5 @@
 import { appendFileSync } from "node:fs";
-import { exitForVersion } from "./version.mjs";
+import { exitForVersion } from "./version";
 
 exitForVersion("codex");
 appendFileSync("starts", "start\n");

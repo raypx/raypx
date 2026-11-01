@@ -1,4 +1,4 @@
-import { exitForVersion } from "./version.mjs";
+import { exitForVersion } from "./version";
 
 exitForVersion("claude");
 const settings = JSON.parse(process.argv[process.argv.indexOf("--settings") + 1]);
