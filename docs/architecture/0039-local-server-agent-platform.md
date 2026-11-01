@@ -8,9 +8,9 @@ Raypx is moving toward persistent Agents that can work on a user's own computer 
 
 ## Decision
 
-Support standalone local, standalone server, and explicitly linked local/server operation. Both deployments use the same Agent domain and Run protocol, with distinct composition roots and persistence adapters.
+Support standalone local, standalone server, and explicitly linked local/server operation. Deliver them in that order. Both deployments use the same Agent domain and Run protocol, with distinct composition roots and persistence adapters.
 
-A standalone local instance needs no account. Its SQLite database, credentials, private Agent conversations, memory, and local files remain on that computer. A background daemon owns execution independently from the Desktop window. Local model endpoints work without a network; external models and connectors require an explicit connection and receive only the context needed for a request.
+A standalone local instance is the first implementation target and needs no account. The existing CLI daemon owns the first Agent Runtime, its SQLite database, credentials, private Agent conversations, memory, local files, provider calls, approvals, and recovery. Desktop is a control surface over that daemon and closing the window does not stop local work. Local model endpoints work without a network; external models and connectors require an explicit connection and receive only the context needed for a request.
 
 A server instance owns its PostgreSQL state, Workers, object storage, and authenticated client sessions. It can be hosted or self-hosted. A server-owned Agent has one authoritative configuration, conversation, Run history, approval history, and event stream on that server.
 
@@ -24,7 +24,7 @@ The execution target is immutable for a Run and records the selected Host/projec
 
 Local-only Agents are never synchronized implicitly. Moving one to a server is a reviewed export/import that excludes secrets and local workspace contents by default. The server becomes authoritative only after import succeeds. Future collaboration synchronizes projections and commands for server-owned Agents, not competing copies of one Agent database.
 
-The local deployment uses SQLite and local-file adapters; the server deployment uses PostgreSQL and object storage. Shared domain and runtime contracts run through conformance tests against both stores. Start as a modular monolith. Deliver the local vertical slice first, then the Host pairing protocol and tool authorization, then the server-owned Agent using the paired Desktop daemon as its first Computer. Put the selected Agent Runtime behind a Raypx-owned interface and choose it after a focused prototype; persistence, tool authorization, approval, effects, and recovery remain Raypx responsibilities.
+The local deployment uses SQLite and local-file adapters; the server deployment uses PostgreSQL and object storage. Start as a modular monolith. Complete and exercise the local CLI flow first, including tools, approvals, effects, memory, and recovery. Then add reviewed export/import, Host pairing, and the server-owned Agent using the paired Desktop daemon as its first Computer. Keep the existing CLI Agent Runtime behind a Raypx-owned boundary; migration to a server Runtime is a later composition change, while persistence, tool authorization, approval, effects, and recovery remain Raypx responsibilities.
 
 ## Pairing Protocol
 
@@ -49,3 +49,4 @@ The local deployment uses SQLite and local-file adapters; the server deployment 
 - Two writable copies of the same Agent: it has no single answer for Run ownership, approval order, or recovery after a partition.
 - Transparent mirroring of local-only Agents: it violates the local data posture and requires conflict semantics that the first release does not need.
 - Local Host running the shared Agent Runtime: it would split model/tool lifecycle, persistence, and approval authority across two runtimes.
+- Starting with a server Runtime: it would delay validation of the local CLI workflow and add cloud ownership, relay, and recovery risks before the primary local use case is proven.
