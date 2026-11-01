@@ -73,28 +73,7 @@ Exit criteria: written decisions name one authority for each Agent, Run, workspa
 
 Exit criteria: a Run survives client disconnects and Worker restarts without losing committed history or allowing a stale Worker to write. Tests prove the chosen behavior for a crash during model generation and immediately before/after a tool effect; no inference or effect is replayed invisibly.
 
-### 2. Server-Owned Agent Vertical Slice
-
-- Add the minimum server composition needed for a real server-owned Agent: authenticated API, PostgreSQL, a background Worker, and server-computer execution. Keep the server deployable as one modular application before considering scale-out.
-- Use the same Core Run contract and domain conformance suite as the local instance; add PostgreSQL concurrency and crash-recovery tests.
-- Create a server-owned Agent, continuous conversation, durable Run records, and sequenced event history. Closing a client never stops a server-owned Run.
-- Keep the local instance account-free and independently usable. Authentication is required only when connecting to a server-owned Agent.
-- Provide a repeatable self-hosted deployment with backup and restore for the minimum server composition; defer horizontal scaling and operational hardening until the basic ownership boundary works end to end.
-
-Exit criteria: one server instance can create, run, inspect, and recover a server-owned Agent after Worker restart; authorization isolates accounts; and shared Core behavior passes against SQLite and PostgreSQL.
-
-### 3. Tools, Effects, and Human Approval
-
-- Add a small set of built-in tools and a single Tool Gateway for all model-requested actions.
-- Persist effect intent and idempotency keys before external side effects. Record completion, refusal, failure, and uncertainty.
-- Keep per-Agent and per-Computer execution ownership explicit so concurrent Runs cannot mutate the same workspace unsafely.
-- Add Ask, Auto, and Never approval modes with exact tool/resource allow and block rules. Auto review errors or uncertainty must ask.
-- Bind approvals to the exact arguments and resource version shown to the user; resume only that approved request.
-- Add audit history and artifact delivery for tool results.
-
-Exit criteria: every action is authorized by the Agent's owning instance; pending approval does not block unrelated conversations, and retries cannot silently repeat a completed or uncertain effect. Phase 4 adds the independent Host grant check for linked local projects.
-
-### 4. Local/Server Pairing and Host Coordination
+### 2. Local/Server Pairing and Host Coordination
 
 - Pair one local daemon with one server account using an outbound authenticated connection and a restricted, revocable Host grant.
 - Let the server create and execute a server-owned Run targeted at an authorized local project; the server Runtime calls the paired Host's scoped Computer/tools and persists the conversation, approvals, effects, and sequenced events.
@@ -105,14 +84,35 @@ Exit criteria: every action is authorized by the Agent's owning instance; pendin
 
 Exit criteria: duplicate commands do not start duplicate execution, disconnect/reconnect loses no acknowledged state, revocation prevents stale execution, and tests prove local-only data never enters the server projection.
 
-### 5. Durable Computer and Memory
+### 3. Tools, Effects, and Human Approval
 
-- Give each Agent a durable workspace with lazy start, snapshot, restore, stop, and recovery operations. Support a local workspace first, then an isolated container for local or server deployments.
-- Keep workspace data independent of the underlying container or VM identity so a replacement can restore it; verify snapshots before advancing the last-known-good revision.
+- Add a small set of built-in tools and a single Tool Gateway for all model-requested actions.
+- Persist effect intent and idempotency keys before external side effects. Record completion, refusal, failure, and uncertainty.
+- Keep per-Agent and per-Computer execution ownership explicit so concurrent Runs cannot mutate the same workspace unsafely.
+- Add Ask, Auto, and Never approval modes with exact tool/resource allow and block rules. Auto review errors or uncertainty must ask.
+- Bind approvals to the exact arguments and resource version shown to the user; resume only that approved request.
+- Add audit history and artifact delivery for tool results.
+
+Exit criteria: every action is authorized by the Agent's owning instance, and the paired Host independently enforces its local grant; pending approval does not block unrelated conversations, and retries cannot silently repeat a completed or uncertain effect.
+
+### 4. Server-Owned Agent with Desktop Computer
+
+- Add the minimum server composition needed for a real server-owned Agent: authenticated API, PostgreSQL, and a background Worker. Use the already paired Desktop daemon as the first Computer provider.
+- Use the same Core Run contract and domain conformance suite as the local instance; add PostgreSQL concurrency and crash-recovery tests.
+- Create a server-owned Agent, continuous conversation, durable Run records, and sequenced event history. Closing a client never stops a server-owned Run.
+- Keep the local instance account-free and independently usable. Authentication is required only when connecting to a server-owned Agent.
+- Provide a repeatable self-hosted deployment with backup and restore for the minimum server composition; defer horizontal scaling and operational hardening until the basic ownership boundary works end to end.
+
+Exit criteria: one server instance can create, run, inspect, and recover a server-owned Agent after Worker restart using a paired Desktop project; authorization isolates accounts; and shared Core behavior passes against SQLite and PostgreSQL.
+
+### 5. Desktop-Backed Computer and Memory
+
+- Treat a paired Desktop daemon and an explicitly granted project root as the first durable Computer. Its stable identity is the Host/project binding; its workspace is the user's existing directory.
+- Keep the daemon independent from the Desktop window so closing the UI does not stop a Run. Reconnect and process restart recover the binding and Run history; they do not claim snapshot or VM restore semantics.
 - Add revisioned Agent and shared memory, explicit retrieval scope, inspect/edit/delete/export flows, and memory provenance.
 - Add workspace and artifact retention, backup, restore, and encryption-key rotation procedures.
 
-Exit criteria: a computer can be replaced without losing the latest verified workspace; users can inspect and remove what the Agent remembers; backup restoration is exercised against a disposable deployment.
+Exit criteria: a shared Run can use the paired Desktop project after UI close/reopen and daemon reconnect; the project grant remains explicit and revocable; users can inspect and remove what the Agent remembers. Container or VM replacement remains a later phase.
 
 ### 6. Automations and Continuous Work
 
@@ -138,6 +138,7 @@ Exit criteria: supported clients expose the same durable state and authorization
 - A large integration catalog or public plugin marketplace.
 - Voice calls, visual workflow builders, and broad messaging-platform support.
 - Multiple Computer providers before one provider's lifecycle, isolation, and recovery contract is proven.
+- Container or VM isolation for Computer execution before the Desktop-backed Host contract and effect recovery are proven.
 - Microservices, a mandatory Redis deployment, or a separate workflow engine before measured operational needs justify them.
 - Transparent synchronization of local-only Agents before conflict, offline, and ownership semantics have a concrete need and design.
 
@@ -145,6 +146,7 @@ Exit criteria: supported clients expose the same durable state and authorization
 
 - One canonical owner for each durable Agent and Run. In linked mode the server owns shared Agent state and the Host owns granted local execution state; synchronize projections, not competing authorities.
 - Every model-visible tool is enforced by the owning instance's authorization and effect path. A paired Host adds a second local grant check before touching a local project.
+- A Desktop-backed Computer is a trusted user-host process with normal OS permissions, not a sandbox. Never describe its project grant as container isolation; add a separate isolation provider when the threat model requires it.
 - Never treat prompt instructions as a security control. Scope, approval, secret access, and computer isolation are enforced outside the model.
 - Do not claim exactly-once behavior for external systems. Use durable intent, idempotency where supported, and explicit uncertain outcomes.
 - Keep tests deterministic and offline by default. Run provider-specific acceptance separately from core state-machine and adapter conformance tests.
