@@ -53,16 +53,16 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
   const c = useTranslations("common");
   return (
     <div>
-      <div className="mb-9 flex items-center gap-4">
-        <span className="grid size-13.5 place-items-center rounded-full border border-border bg-muted text-[22px]">
+      <div className="mb-8 flex items-center gap-3">
+        <span className="grid size-12 place-items-center rounded-full border border-border bg-muted text-lg font-medium">
           {account.name.slice(0, 1).toUpperCase()}
         </span>
-        <div>
-          <h2>{account.name}</h2>
-          <p className="mt-0.75 text-muted-foreground">{account.email}</p>
+        <div className="min-w-0">
+          <h2 className="truncate">{account.name}</h2>
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">{account.email}</p>
         </div>
       </div>
-      <dl className="mb-7 [&>div]:flex [&>div]:items-center [&>div]:gap-6 [&>div]:border-t [&>div]:border-border [&>div]:py-4.5 [&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere] [&_dt]:w-32.5 [&_dt]:text-muted-foreground @max-sm/main:[&>div]:flex-col @max-sm/main:[&>div]:items-start @max-sm/main:[&>div]:gap-1.75">
+      <dl className="mb-8 [&>div]:flex [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-border [&>div]:py-3.5 [&_dd]:m-0 [&_dd]:min-w-0 [&_dd]:[overflow-wrap:anywhere] [&_dt]:w-28 [&_dt]:shrink-0 [&_dt]:text-sm [&_dt]:text-muted-foreground @max-sm/main:[&>div]:flex-col @max-sm/main:[&>div]:items-start @max-sm/main:[&>div]:gap-1">
         <div>
           <dt>{t("name")}</dt>
           <dd>{account.name}</dd>
@@ -93,7 +93,7 @@ export function AccountSkeleton() {
   const c = useTranslations("common");
   return (
     <div className="flex flex-col gap-4" role="status" aria-label={c("loading")}>
-      <span className="size-13.5 rounded-full bg-muted motion-safe:animate-pulse" />
+      <span className="size-12 rounded-full bg-muted motion-safe:animate-pulse" />
       <span className="h-4.5 w-full max-w-75 rounded-[5px] bg-muted motion-safe:animate-pulse" />
       <span className="h-4.5 w-45 rounded-[5px] bg-muted motion-safe:animate-pulse" />
     </div>

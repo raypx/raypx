@@ -1,60 +1,61 @@
 # Product
 
+<!-- impeccable:product-schema 1 -->
+
+## Platform
+
+web
+
 ## Users
 
-People who need a consistent account and preferences across Web (including
-phone browsers) and Desktop, with local files, recurring tasks and external tools on their own desktop. Each local profile has one Owner and one execution Host; cloud accounts are optional.
+People who need one account and the same preferences on Web, including phone browsers, and on Desktop. On their own computer they also work with local files, recurring tasks, and external tools. Each local profile has one Owner and one execution Host. A cloud account is optional.
 
-## Product purpose
+## Product Purpose
 
-Raypx is an extensible application foundation. Web provides account and
-preferences on desktop and phone browsers. Desktop also manages authorized local directories, scheduled
-actions and interactive terminals through the bundled Raypx CLI.
+Raypx is an extensible application foundation. Web provides the account and preferences. Desktop adds authorized local directories, scheduled actions, and interactive terminals through the bundled Raypx CLI. Success means a person can browse, change device preferences, and prepare work without an account, then sign in only when a computer, remote data, or a remote approval is involved.
 
-## Principles
+## Positioning
 
-- Desktop local tools and Web browsing are available without login. Desktop asks for
-  login when connecting computers, reading remote data or handling remote approvals.
-- Web guests can browse the interface, change preferences and prepare task drafts.
-  Private history, computer connections, task execution and approval actions require
-  login. Return to the original page afterward and restore drafts without sending them.
-- Local runtime state and device preferences survive account logout.
-- New Desktop local tasks and drafts belong to the current device workspace, across
-  login, account switches and logout. Local data is never uploaded automatically.
-  Old account-owned local workspaces and automatic data migration are unsupported.
-- Show real execution, permission failures and retry state. Never fabricate data.
-- macOS and Windows Desktop Quit leaves the independent CLI daemon and Agent tasks running.
-  Explicit logout/revoke cancels affected remote work, preserving
-  device-owned tasks. Daemon stop cancels owned work. Host/OS restart recovery
-  remains a separate capability.
-- Use stable package interfaces and add shared packages when real consumers need them.
-- Memory and task templates have explicit device/account ownership and immutable versions.
-  Tasks use only user-selected references and keep their captured context after later edits.
-- Keep the original brand mark and neutral light/dark visual system.
+Local work stays on the device unless that person explicitly opts a host in. Device-owned tasks and drafts are never uploaded automatically, including when remote access is enabled. The account connects computers and remote approvals. It does not become the owner of local work.
 
-## Scope
+## Operating Context
 
-Email/password accounts, verification/reset, theme, English/Chinese, local files,
-Cron automations, terminals and local/opted-in remote Claude/Codex tasks. Retired business
-projects, research, cloud file delivery and general role management stay outside this scope. Verified administrators can manage
-site identity, registration and background cleanup in Web. Remote Agent tasks and approvals synchronize
-between Web and opted-in hosts. macOS adds explicitly installed Claude/Codex
-terminal hooks: per-project Away mode forwards validated Bash approvals to the local
-Desktop without login. The visible, unminimized Desktop maintains a 15-second
-approval lease; hidden/minimized/Quit releases it. Cloud terminal sharing requires
-a separate explicit project scope within the local scope. A qualified cloud channel
-can continue while Desktop is closed. Timeout/unavailability returns control to
-the terminal. This release does not support simultaneous native-terminal answers. Terminal
-outputs and full session streams are not synchronized. This is a plaintext private
-test feature until content protection is complete. Desktop also runs private local Agent
-tasks directly through its bundled CLI. These tasks never upload to the account,
-even when remote access is enabled. The local setup guide authorizes a project,
-checks installed agent capabilities and opens the task editor without starting work.
+Web runs in desktop and phone browsers. Desktop runs on macOS and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
 
-The CLI, application features and shared contracts use Bun + TypeScript. Desktop
-uses a MyGo policy host and system WKWebView/WebView2; native development and
-packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI; Windows terminal
-hooks await a packaged acceptance run. Linux keeps the existing CLI implementation without a claim
-of complete Desktop product acceptance.
-Configuration sync, local Web, standalone Server, native mobile, team ownership and
-additional providers remain separate deliveries. Signing in enables none of them.
+## Capabilities and Constraints
+
+Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Verified administrators can manage site identity, registration, and background cleanup in Web.
+
+Guests can browse, change preferences, and prepare task drafts. Private history, computer connections, task execution, and approval actions require login. After login, return to the original page and restore drafts without sending them. Local runtime state and device preferences survive logout.
+
+New Desktop local tasks and drafts belong to the current device workspace across login, account switches, and logout. Old account-owned local workspaces and automatic data migration are unsupported. Memory and task templates have explicit device or account ownership and immutable versions. Tasks use only user-selected references and keep their captured context after later edits.
+
+macOS and Windows Desktop Quit leaves the independent CLI daemon and Agent tasks running. Explicit logout or revoke cancels affected remote work and preserves device-owned tasks. Stopping the daemon cancels owned work. Recovery after a host or OS restart is a separate capability.
+
+macOS can install Claude and Codex terminal hooks. Per-project Away mode forwards validated Bash approvals to the local Desktop without login. The visible, unminimized Desktop holds a 15-second approval lease. Hidden, minimized, or Quit releases it. Cloud terminal sharing needs a separate explicit project scope inside the local scope. A qualified cloud channel can continue while Desktop is closed. Timeout or unavailability returns control to the terminal. This release does not support simultaneous native-terminal answers. Terminal outputs and full session streams are not synchronized. This remains a plaintext private test feature until content protection is complete.
+
+The CLI, application features, and shared contracts use Bun and TypeScript. Desktop uses a MyGo policy host and system WKWebView or WebView2. Native development and packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
+
+Retired business projects, research, cloud file delivery, and general role management stay outside this scope. Configuration sync, local Web, a standalone Server, native mobile, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. Shared packages are added only when a real consumer needs them.
+
+Show real execution, permission failures, and retry state. Never fabricate data.
+
+## Brand Commitments
+
+The product name is Raypx. Keep the original brand mark and the neutral light and dark visual system.
+
+## Evidence on Hand
+
+The working Web and Desktop interfaces, their copy, and the original logo are in this repository. There are no testimonials, case studies, press mentions, or pricing claims to reuse. Do not invent them.
+
+## Product Principles
+
+- Local tools and browsing work without an account. Login is for connecting computers, reading remote data, and handling remote approvals.
+- Device-owned work stays on the device. Nothing local is uploaded automatically.
+- Show real execution, failures, and retry state. Never fabricate data.
+- Tasks keep the references and context the user selected. Later edits do not rewrite that capture.
+- Add a shared package only when a real consumer needs it.
+
+## Accessibility & Inclusion
+
+English and Chinese are both first-class. Web layouts must remain usable in phone browsers, with long copy in either language.

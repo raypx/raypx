@@ -92,7 +92,7 @@ export function AccountSessions({
   const others = sessions?.filter((session) => session.id !== currentSessionId) ?? [];
   return (
     <section
-      className="mt-9 mb-7 border-t border-border pt-7"
+      className="mt-8 mb-8 border-t border-border pt-6"
       aria-labelledby="account-sessions-title"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">

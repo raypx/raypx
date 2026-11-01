@@ -24,14 +24,14 @@ export interface SettingsPageProps {
 export function SettingsPage({ title, description, footnote, children }: SettingsPageProps) {
   return (
     <section>
-      <header className="mb-10">
+      <header className="mb-8">
         <h1>{title}</h1>
         {description && (
-          <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{description}</p>
+          <p className="mt-2 max-w-prose text-sm text-muted-foreground">{description}</p>
         )}
       </header>
       {children}
-      {footnote && <p className="mt-6 text-xs text-muted-foreground">{footnote}</p>}
+      {footnote && <p className="mt-8 text-sm text-muted-foreground">{footnote}</p>}
     </section>
   );
 }
@@ -48,13 +48,15 @@ export function SettingsSection({ title, description, children }: SettingsSectio
   return (
     <section
       aria-labelledby={id}
-      className="flex items-start justify-between gap-8 border-b border-border pt-7 pb-8 first-of-type:pt-0 @max-4xl/main:flex-col @max-4xl/main:gap-5.5"
+      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-b border-border py-6 first-of-type:pt-0"
     >
-      <div>
-        <h2 id={id} className="mb-1.5 text-[15px]">
+      <div className="min-w-0 max-w-md">
+        <h2 id={id} className="text-sm font-medium">
           {title}
         </h2>
-        {description && <p className="text-[13px] text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
       {children}
     </section>

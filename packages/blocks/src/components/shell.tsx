@@ -71,13 +71,12 @@ export interface ShellPage<Title extends string = string> {
 }
 
 const pageLayouts: Record<PageLayout, string> = {
-  // Settings, account and onboarding keep a reading width.
-  document:
-    "max-w-240 px-14 pt-13 pb-20 @max-4xl/main:px-8 @max-4xl/main:pt-9 @max-4xl/main:pb-14 @max-xl/main:px-5",
+  // Settings and account stay in a reading column so labels sit with their controls.
+  document: "max-w-3xl px-8 pt-10 pb-16 @max-xl/main:px-5 @max-xl/main:pt-8 @max-xl/main:pb-12",
   // List and detail workspaces.
-  workbench: "max-w-400 px-8 pt-6 pb-10 @max-2xl/main:px-5",
+  workbench: "max-w-400 px-6 pt-5 pb-8 @max-2xl/main:px-5",
   // Local tools use the whole main region.
-  tool: "px-8 pt-6 pb-10 @max-2xl/main:px-5",
+  tool: "px-6 pt-5 pb-8 @max-2xl/main:px-5",
 };
 
 export interface AppShellProps<To extends string> {
@@ -155,7 +154,7 @@ function ShellContents<To extends string>({
       <SidebarMenuItem key={item.to}>
         <SidebarMenuButton
           tooltip={item.label}
-          className="relative min-h-10 gap-3 rounded-lg px-3 text-[13px] text-muted-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground max-[760px]:min-h-11 [&_svg]:size-5 [&_svg]:stroke-[1.75]"
+          className="relative min-h-9 gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground max-[760px]:min-h-11 [&_svg]:size-5 [&_svg]:stroke-[1.75]"
           render={
             <LinkComponent
               to={item.to}
@@ -191,21 +190,21 @@ function ShellContents<To extends string>({
         role="complementary"
         collapsible="icon"
         className={cn(
-          "min-h-0 overflow-hidden border-border bg-sidebar pb-3 px-3 sidebar-icon:px-2 max-[420px]:sidebar-icon:px-1.5",
-          windowed ? "pt-11" : "pt-6 max-[760px]:pt-5",
+          "min-h-0 overflow-hidden border-border bg-sidebar px-2 pb-2 sidebar-icon:px-1.5 max-[420px]:sidebar-icon:px-1",
+          windowed ? "pt-10" : "pt-2",
         )}
       >
-        <SidebarHeader className="mb-6 shrink-0 p-0">
+        <SidebarHeader className="mb-4 shrink-0 gap-0 p-0">
           <LinkComponent
             to={brand.to}
             markActive={false}
             aria-label={brand.label}
-            className="mx-3 w-fit max-w-full min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
+            className="mx-2.5 flex min-h-9 w-fit max-w-full min-w-0 items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
           >
             <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
           </LinkComponent>
           {brand.description && (
-            <p className="mt-2 truncate px-3 text-xs text-muted-foreground sidebar-icon:hidden">
+            <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground sidebar-icon:hidden">
               {brand.description}
             </p>
           )}
@@ -215,10 +214,10 @@ function ShellContents<To extends string>({
             {navigation.map((group, index) => (
               <Fragment key={index}>
                 <SidebarGroup role="group" aria-label={navigationLabels?.[index]} className="p-0">
-                  {navigationLabels?.[index] && (
+                  {navigation.length > 1 && navigationLabels?.[index] && (
                     <SidebarGroupLabel
                       aria-hidden="true"
-                      className="mb-2 h-auto px-3 text-muted-foreground"
+                      className="mb-1.5 h-auto px-2.5 text-xs font-medium text-muted-foreground"
                     >
                       {navigationLabels[index]}
                     </SidebarGroupLabel>
@@ -232,13 +231,13 @@ function ShellContents<To extends string>({
             ))}
           </SidebarContent>
           {secondaryNavigation && secondaryNavigation.length > 0 && (
-            <SidebarFooter className="mt-3 shrink-0 border-t border-border px-0 pt-3 pb-0">
+            <SidebarFooter className="mt-auto shrink-0 border-t border-border px-0 pt-2 pb-0">
               <SidebarMenu className="gap-1">{secondaryNavigation.map(renderItem)}</SidebarMenu>
             </SidebarFooter>
           )}
         </nav>
         {account !== undefined && (
-          <SidebarFooter className="mt-2 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 sidebar-icon:flex-col">
+          <SidebarFooter className="mt-1 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 sidebar-icon:flex-col">
             <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
             {accountAction}
           </SidebarFooter>
@@ -247,7 +246,7 @@ function ShellContents<To extends string>({
       <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className={cn(
-            "flex h-[66px] shrink-0 items-center gap-[13px] border-b border-border px-6 text-[13px] text-muted-foreground max-[760px]:h-[58px] max-[760px]:px-5",
+            "flex h-12 shrink-0 items-center gap-2 border-b border-border px-4 text-sm text-muted-foreground max-[760px]:px-3",
             windowed && "[-webkit-app-region:drag]",
           )}
         >
@@ -281,7 +280,7 @@ function ShellContents<To extends string>({
               <span
                 className={cn(
                   "max-w-48 truncate",
-                  index === breadcrumbs.length - 1 && "text-foreground",
+                  index === breadcrumbs.length - 1 && "font-medium text-foreground",
                 )}
               >
                 {crumb}

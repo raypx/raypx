@@ -49,9 +49,9 @@ function AccountPage() {
     return <LoadingState label={c("loading")} />;
   return (
     <section>
-      <header className="mb-10">
+      <header className="mb-8">
         <h1>{t("accountTitle")}</h1>
-        <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("accountIntro")}</p>
       </header>
       {state.status === "unavailable" || session.error ? (
         <div className="flex flex-wrap items-center gap-4 py-9">
@@ -85,7 +85,7 @@ function AccountPage() {
               currentSessionId={session.data.session.id}
             />
           ) : (
-            <section className="mt-9 border-t border-border pt-7" aria-label={t("sessionsTitle")}>
+            <section className="mt-8 border-t border-border pt-6" aria-label={t("sessionsTitle")}>
               <p role={session.isPending ? "status" : "alert"}>
                 {session.error
                   ? c("networkError")

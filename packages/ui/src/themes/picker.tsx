@@ -29,7 +29,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
       aria-label={label}
       value={current}
       onValueChange={(theme) => change?.(theme as UserTheme)}
-      className="flex w-auto gap-3 [@media(width<=420px)]:gap-[9px]"
+      className="flex w-auto gap-2"
     >
       {(
         [
@@ -39,7 +39,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
         ] as const
       ).map(([theme, Icon]) => (
         <label
-          className="relative w-[100px] cursor-pointer has-[:focus-visible]:rounded-[8px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-4 [@media(width<=420px)]:w-[76px]"
+          className="relative w-24 cursor-pointer has-[:focus-visible]:rounded-md has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2 max-[420px]:w-20"
           key={theme}
         >
           <RadioGroupItem
@@ -50,7 +50,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
           />
           <span
             className={cn(
-              "relative flex h-[72px] flex-col gap-1.5 overflow-hidden rounded-[8px] border border-border py-3 pr-3 pl-[25px] before:absolute before:inset-y-0 before:left-0 before:w-[15px] before:border-r before:content-[''] [&>span]:h-[5px] [&>span]:w-full [&>span]:rounded-[2px] [&>span:first-child]:w-3/5 [&>span:first-child]:bg-[#a3a3a3]",
+              "relative flex h-16 flex-col gap-1.5 overflow-hidden rounded-md border border-border py-2.5 pr-2.5 pl-5 before:absolute before:inset-y-0 before:left-0 before:w-3.5 before:border-r before:content-[''] [&>span]:h-1 [&>span]:w-full [&>span]:rounded-xs [&>span:first-child]:w-3/5 [&>span:first-child]:bg-[#a3a3a3]",
               previewClasses[theme],
               current === theme && "outline-2 outline-foreground outline-offset-2",
             )}
@@ -60,7 +60,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
             <span />
             <span />
           </span>
-          <span className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] [@media(width<=420px)]:text-[11px]">
+          <span className="mt-2 flex items-center justify-center gap-1.5 text-xs">
             <Icon size={16} />
             {labels[theme]}
           </span>

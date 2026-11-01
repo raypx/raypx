@@ -7,10 +7,9 @@ export function GuestHome() {
   const t = useTranslations("guest");
   return (
     <section>
-      <p className="mb-4 text-sm text-muted-foreground">{t("visitor")}</p>
       <h1>{t("title")}</h1>
-      <p className="mt-3 max-w-[65ch] text-muted-foreground">{t("intro")}</p>
-      <div className="mt-7 flex flex-wrap gap-3">
+      <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
+      <div className="mt-6 flex flex-wrap gap-2">
         <Button render={<Link to="/tasks" />}>{t("writeDraft")}</Button>
         <SignInLink variant="outline" returnTo="/settings">
           {t("connect")}
@@ -18,15 +17,12 @@ export function GuestHome() {
       </div>
       <dl className="mt-10 divide-y divide-border border-y border-border">
         {(["draft", "approvals", "preferences"] as const).map((key) => (
-          <div key={key} className="grid gap-2 py-5 @xl/main:grid-cols-[10rem_1fr]">
-            <dt className="font-medium">{t(key)}</dt>
-            <dd className="max-w-[65ch] text-sm text-muted-foreground">{t(`${key}Hint`)}</dd>
+          <div key={key} className="grid gap-1 py-4">
+            <dt className="text-sm font-medium">{t(key)}</dt>
+            <dd className="max-w-prose text-sm text-muted-foreground">{t(`${key}Hint`)}</dd>
           </div>
         ))}
       </dl>
-      <Button className="mt-6" variant="outline" render={<Link to="/settings" />}>
-        {t("preferences")}
-      </Button>
     </section>
   );
 }

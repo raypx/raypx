@@ -8,22 +8,19 @@ export function AnalyticsSettings() {
     id = useId(),
     state = useAnalyticsPreferences();
   return (
-    <section className="border-b border-border py-7" aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`} className="text-[15px]">
+    <section className="border-b border-border py-6" aria-labelledby={`${id}-title`}>
+      <h2 id={`${id}-title`} className="text-sm font-medium">
         {t("title")}
       </h2>
-      <p className="mt-1.5 max-w-[65ch] text-[13px] text-muted-foreground">{t("hint")}</p>
-      <div className="mt-5 space-y-5">
+      <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("hint")}</p>
+      <div className="mt-4 max-w-md space-y-4">
         {(["usage", "errors"] as const).map((key) => (
-          <div key={key} className="flex items-start justify-between gap-8">
+          <div key={key} className="flex items-start justify-between gap-6">
             <div>
               <label htmlFor={`${id}-${key}`} className="text-sm font-medium">
                 {t(key)}
               </label>
-              <p
-                id={`${id}-${key}-hint`}
-                className="mt-1 max-w-[65ch] text-[13px] text-muted-foreground"
-              >
+              <p id={`${id}-${key}-hint`} className="mt-1 text-sm text-muted-foreground">
                 {t(`${key}Hint`)}
               </p>
             </div>
@@ -38,7 +35,7 @@ export function AnalyticsSettings() {
         ))}
       </div>
       {!state.configured && (
-        <p className="mt-4 text-[13px] text-muted-foreground">{t("unavailable")}</p>
+        <p className="mt-4 text-sm text-muted-foreground">{t("unavailable")}</p>
       )}
       {state.error && (
         <p role="alert" className="mt-4 text-sm text-destructive">

@@ -8,7 +8,7 @@ import { authClient } from "../../auth/client";
 import { configurationClient, configurationError, type Configuration } from "../client";
 
 const row =
-  "grid gap-5 border-b border-border py-7 @xl/main:grid-cols-[minmax(0,1fr)_minmax(200px,1fr)] @xl/main:gap-10";
+  "grid items-start gap-4 border-b border-border py-6 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] @xl/main:items-center @xl/main:gap-8";
 
 export function ConfigurationSettings() {
   const t = useTranslations("configuration");
@@ -24,9 +24,9 @@ export function ConfigurationSettings() {
   });
   return (
     <section>
-      <header className="mb-3">
+      <header className="mb-8">
         <h1>{t("title")}</h1>
-        <p className="mt-2 max-w-[65ch] text-muted-foreground">{t("intro")}</p>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
       </header>
       {session.error ? (
         <div className="space-y-4 py-8">

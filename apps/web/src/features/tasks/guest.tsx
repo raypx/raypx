@@ -24,12 +24,11 @@ export function GuestTasks({
   const resume = useGuestDraft(namespace);
   return (
     <section className="@container">
-      <header className="mb-7">
-        <p className="mb-2 text-sm text-muted-foreground">{g("visitor")}</p>
+      <header className="mb-8">
         <h1>{t("title")}</h1>
-        <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{g("tasksHint")}</p>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{g("tasksHint")}</p>
       </header>
-      <div className="grid items-start gap-8 @3xl/main:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-6 @3xl/main:grid-cols-[minmax(0,1fr)_20rem]">
         {!resume.ready ? (
           <LoadingState label={g("restoring")} />
         ) : (
@@ -63,15 +62,15 @@ export function GuestTasks({
             />
           </div>
         )}
-        <section className="min-w-0 border-t border-border pt-6 @3xl/main:border-t-0 @3xl/main:border-l @3xl/main:pl-8 @3xl/main:pt-0">
+        <section className="min-w-0 border-t border-border pt-6 @3xl/main:border-t-0 @3xl/main:border-l @3xl/main:pl-6 @3xl/main:pt-0">
           <h2 className="text-base font-semibold">{g("history")}</h2>
-          <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{g("historyHint")}</p>
-          <div className="mt-5">
+          <p className="mt-2 text-sm text-muted-foreground">{g("historyHint")}</p>
+          <div className="mt-4">
             <SignInLink>{g("viewTasks")}</SignInLink>
           </div>
-          <div className="mt-8 space-y-3 border-t border-border pt-6">
+          <div className="mt-6 space-y-3 border-t border-border pt-6">
             <h3 className="text-sm font-medium">{g("computers")}</h3>
-            <p className="max-w-[65ch] text-sm text-muted-foreground">{g("computersHint")}</p>
+            <p className="text-sm text-muted-foreground">{g("computersHint")}</p>
             <Button
               variant="outline"
               render={<Link to="/login" search={{ returnTo: "/settings" }} />}

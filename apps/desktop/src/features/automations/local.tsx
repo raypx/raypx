@@ -155,7 +155,7 @@ export function LocalJobsPage({
       <header className="mb-10 flex items-start justify-between gap-6 @max-4xl/main:flex-col @max-4xl/main:gap-5">
         <div>
           <h1>{t("title")}</h1>
-          <p className="mt-[9px] max-w-[64ch] text-muted-foreground">{t("intro")}</p>
+          <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
         </div>
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
           <Plus size={16} />
@@ -306,7 +306,7 @@ export function LocalJobsPage({
         <div className="flex flex-col items-center px-6 py-20 text-center">
           <Clock size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
           <h2 className="text-xl">{t("empty")}</h2>
-          <p className="mt-[9px] max-w-[50ch] text-muted-foreground">{t("emptyHint")}</p>
+          <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">{t("emptyHint")}</p>
         </div>
       ) : (
         <div>
