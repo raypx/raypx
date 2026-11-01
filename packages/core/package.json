@@ -6,6 +6,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./agent-runs": "./src/agent-runs.ts",
     "./tasks": "./src/tasks.ts",
     "./activity": "./src/activity.ts",
     "./task-text": "./src/task-text.ts"

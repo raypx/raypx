@@ -40,8 +40,9 @@ to the parent domain of sibling Web/API hosts.
 
 ## Libraries
 
-Core owns the normalized task, activity, input and human-decision schemas and
-their pure rules. It has no transport, React, filesystem or database dependency.
+Core owns the normalized task, activity, input and human-decision schemas,
+Agent Run manifests and pure state-transition rules. It has no transport, React,
+filesystem or database dependency.
 Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
 domain consumers import Core directly, without contract re-export aliases.
 There is one domain schema source and the dependency direction is contracts → core.
@@ -212,3 +213,12 @@ Local tasks, connectors and approvals require
 no account; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
 [ADR 0036](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
 token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks run through shared verification.
+
+## Persistent Agent platform target
+
+[ADR 0039](0039-local-server-agent-platform.md) defines the greenfield target:
+an account-free local Agent platform, a server-owned Agent platform, and an
+explicitly linked mode where the server owns shared Agent Runs and the local Host
+provides scoped project tools. The rollout order is recorded in the
+[roadmap](../roadmap.md); the current sections above continue to describe shipped
+architecture until each target phase is implemented.
