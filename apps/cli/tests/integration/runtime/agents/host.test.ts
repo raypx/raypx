@@ -115,6 +115,69 @@ it("runs local tasks and approvals without a grant, isolates accounts, and keeps
   expect(() => runtime.localTask(accountId, input.id, 0)).toThrow("Task unavailable");
   expect(runtime.localApprovals(accountId)).toEqual([]);
 });
+it("completes a local Codex run through approved work, follow-up and runtime restart", async () => {
+  const { runtime, task: template, directory, state } = await host("codex", "codex-local-workflow");
+  const accountId = "local-workspace";
+  writeFileSync(join(directory, "seed.txt"), "LOCAL_RUN_SEED");
+  const device = await runtime.localDevice(accountId);
+  const id = crypto.randomUUID();
+  const input = {
+    id,
+    deviceId: device.id,
+    projectId: template.projectId,
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Read the seed and create a report after approval",
+  };
+
+  expect(
+    await runtime.localExecute(accountId, id, { method: "tasks.create", input }),
+  ).toMatchObject({ ok: true });
+  await expect.poll(() => runtime.localApprovals(accountId).length).toBe(1);
+  const approval = runtime.localApprovals(accountId)[0]!;
+  expect(approval.kind).toBe("permission");
+  expect(existsSync(join(directory, "report.txt"))).toBe(false);
+  expect(
+    await runtime.localExecute(accountId, crypto.randomUUID(), {
+      method: "approvals.decide",
+      input: { id: approval.id, decision: { type: "allow" } },
+    }),
+  ).toMatchObject({ ok: true });
+  await expect.poll(() => runtime.localTask(accountId, id, 0).task.status).toBe("succeeded");
+  expect(readFileSync(join(directory, "report.txt"), "utf8")).toBe("LOCAL_RUN_SEED\napproved\n");
+  expect(runtime.localTask(accountId, id, 0).task.summary).toContain("LOCAL_RUN_SEED");
+
+  const followUpId = crypto.randomUUID();
+  expect(
+    await runtime.localExecute(accountId, followUpId, {
+      method: "tasks.followUp",
+      input: { id: followUpId, parentTaskId: id, prompt: "Continue the same task" },
+    }),
+  ).toMatchObject({ ok: true });
+  await expect
+    .poll(() => runtime.localTask(accountId, followUpId, 0).task.status)
+    .toBe("succeeded");
+  expect(runtime.localTask(accountId, followUpId, 0).task.parentTaskId).toBe(id);
+  expect(readFileSync(join(directory, "sessions"), "utf8").trim().split("\n")).toEqual([
+    "thread/start:new",
+    "thread/resume:thread-local-workflow",
+  ]);
+
+  await runtime.close();
+  const restarted = new AgentRuntime(state, () => {}, {
+    executables: { codex: join(directory, "codex") },
+  });
+  try {
+    expect((await restarted.localDevice(accountId)).id).toBe(device.id);
+    expect(restarted.localTasks(accountId, 10).map((entry) => entry.status)).toEqual([
+      "succeeded",
+      "succeeded",
+    ]);
+    expect(restarted.localTask(accountId, followUpId, 0).task.parentTaskId).toBe(id);
+  } finally {
+    await restarted.close();
+  }
+});
 it("keeps device-owned work running when an old account binding is detached", async () => {
   const { runtime, task } = await host("codex", "codex");
   const device = await runtime.localDevice(LOCAL_WORKSPACE_ID);

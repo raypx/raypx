@@ -64,7 +64,7 @@ Exit criteria: the CLI daemon is the sole local authority; Run, approval, effect
 - Run the Agent platform locally without account setup. A Desktop-managed daemon owns the API, background execution, local SQLite database, and shutdown/recovery lifecycle.
 - Keep the current CLI `AgentRuntime`, `ManagedExecution`, Codex adapter, task store and provider session as the execution path. Do not introduce a second runtime or first-class Agent database in this slice.
 - Use the existing local task and follow-up flow as the first conversation/Run experience; preserve provider session continuity and project locking.
-- Normalize the existing task lifecycle against the Core Agent Run contract without maintaining two durable statuses. Keep receipts, activity, approvals and replay in the existing SQLite journal.
+- Project the existing task lifecycle into the Core Agent Run vocabulary at read boundaries; keep `AgentTask` as the sole persisted status. Map `pending` to `queued` and `delivery_failed` to `failed`; resolve `waiting` from its pending request kind (`question` to input, `permission`/`plan` to approval), and reject ambiguous waits instead of guessing. Keep receipts, activity, approvals and replay in the existing SQLite journal.
 - Verify Desktop-to-daemon create, stream, inspect, follow-up, disconnect and restart flows against synthetic providers before live-provider acceptance.
 - Limit first acceptance to one configured provider, one granted project, a project read and an explicitly approved write through existing provider approval hooks. Track usage through existing activity/provider paths where available.
 

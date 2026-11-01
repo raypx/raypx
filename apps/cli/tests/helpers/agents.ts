@@ -23,6 +23,7 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
     provider: AgentProvider,
     fixture:
       | "codex"
+      | "codex-local-workflow"
       | "codex-descendant"
       | "codex-interactive"
       | "claude-interactive"
@@ -37,7 +38,10 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
     const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
     const file = join(directory, provider);
     cpSync(join(import.meta.dirname, "../fixtures/agents"), directory, { recursive: true });
-    const source = readFileSync(join(directory, fixture + ".mjs"), "utf8");
+    const source =
+      fixture === "codex-local-workflow"
+        ? `import "./${fixture}.ts";`
+        : readFileSync(join(directory, fixture + ".mjs"), "utf8");
     writeFileSync(file, `#!${process.execPath}\n${source}`, { mode: 0o700 });
     const state = new StateStore(profileStorage(directory));
     const rootId = crypto.randomUUID();
