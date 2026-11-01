@@ -8,11 +8,11 @@ Raypx is moving toward persistent Agents that can work on a user's own computer 
 
 ## Decision
 
-Support standalone local, standalone server, and explicitly linked local/server operation. Deliver them in that order. Both deployments use the same Agent domain and Run protocol, with distinct composition roots and persistence adapters.
+Support standalone local, standalone server, and explicitly linked local/server operation. Deliver them in that order. Both deployments use the same Agent domain and Run protocol, with distinct composition roots and persistence adapters. Avoid a second Agent Runtime until the local composition is proven.
 
-A standalone local instance is the first implementation target and needs no account. The existing CLI daemon owns the first Agent Runtime, its SQLite database, credentials, private Agent conversations, memory, local files, provider calls, approvals, and recovery. Desktop is a control surface over that daemon and closing the window does not stop local work. Local model endpoints work without a network; external models and connectors require an explicit connection and receive only the context needed for a request.
+A standalone local instance is the first implementation target and needs no account. The existing CLI daemon owns the first Agent Runtime, its `AgentTask` Run records, `AgentStore` SQLite journal, credentials, private Agent conversations, memory, local files, provider calls, approvals, and recovery. `ManagedExecution` remains the owner of provider turns, inputs, approvals, cancellation and project-lock release. Desktop is a control surface over that daemon and closing the window does not stop local work. The first acceptance uses the existing Codex CLI adapter; local model endpoints work without a network, while external models and connectors require an explicit connection and receive only the context needed for a request.
 
-A server instance owns its PostgreSQL state, Workers, object storage, and authenticated client sessions. It can be hosted or self-hosted. A server-owned Agent has one authoritative configuration, conversation, Run history, approval history, and event stream on that server.
+A server instance is a later deployment of the same CLI Agent Runtime. The first migration target is one headless process with a persistent SQLite profile; PostgreSQL, independent Workers, object storage and multi-tenant sessions are later scale options. A server-owned Agent has one authoritative configuration, conversation, Run history, approval history and event stream on that server.
 
 In linked mode, the server runs the shared Agent Runtime and owns Run transitions, model calls, approvals, effects, and visible conversation events. A paired local Host is a Computer/tool provider for selected projects; it does not run a second copy of that shared Agent Runtime. The Host opens an outbound authenticated connection, receives narrowly scoped commands, enforces its local project grant, and returns bounded tool results and visible execution events. It never exposes an inbound listener.
 
@@ -24,7 +24,7 @@ The execution target is immutable for a Run and records the selected Host/projec
 
 Local-only Agents are never synchronized implicitly. Moving one to a server is a reviewed export/import that excludes secrets and local workspace contents by default. The server becomes authoritative only after import succeeds. Future collaboration synchronizes projections and commands for server-owned Agents, not competing copies of one Agent database.
 
-The local deployment uses SQLite and local-file adapters; the server deployment uses PostgreSQL and object storage. Start as a modular monolith. Complete and exercise the local CLI flow first, including tools, approvals, effects, memory, and recovery. Then add reviewed export/import, Host pairing, and the server-owned Agent using the paired Desktop daemon as its first Computer. Keep the existing CLI Agent Runtime behind a Raypx-owned boundary; migration to a server Runtime is a later composition change, while persistence, tool authorization, approval, effects, and recovery remain Raypx responsibilities.
+The local deployment uses SQLite and local-file adapters. Start as a modular monolith. Complete and exercise the local CLI flow first, including tools, approvals, effects, memory, and recovery, while reusing the existing task store, receipts, activity, provider adapters, local approvals, memory and jobs. Then run the same CLI Agent Runtime headlessly as a single server composition on a persistent SQLite volume. Only after that path is useful should reviewed export/import, Host pairing, PostgreSQL, horizontal Workers, object storage and stronger isolation be introduced. Persistence, tool authorization, approval, effects and recovery remain Raypx responsibilities at both composition roots.
 
 ## Pairing Protocol
 
@@ -40,13 +40,14 @@ The local deployment uses SQLite and local-file adapters; the server deployment 
 - Shared Agent state has one owner, while local project files remain under the Host's control.
 - A shared Agent that targets a local project cannot make progress while that Host is offline. Automatic cloud fallback is intentionally unavailable because it could target different files.
 - Linked Runs send requested context and visible results through the server and selected model provider. The product must disclose this before enabling a shared Agent on local files.
-- Local SQLite and server PostgreSQL must preserve the same domain transitions, even though their storage and transaction implementations differ.
-- Pairing, remote revocation, cursor recovery, and at-least-once command delivery are first-release platform work, not later polish.
+- The first local and headless server compositions use the same SQLite-backed runtime/store; if PostgreSQL is introduced later, it must pass the same domain conformance suite.
+- Pairing, remote revocation, cursor recovery and at-least-once command delivery are required before a server-owned Agent can safely use a local project, but are not prerequisites for local or server-workspace runs.
 
 ## Rejected Alternatives
 
 - Server-only execution: it cannot use local projects without copying or separately mounting them.
 - Two writable copies of the same Agent: it has no single answer for Run ownership, approval order, or recovery after a partition.
 - Transparent mirroring of local-only Agents: it violates the local data posture and requires conflict semantics that the first release does not need.
-- Local Host running the shared Agent Runtime: it would split model/tool lifecycle, persistence, and approval authority across two runtimes.
-- Starting with a server Runtime: it would delay validation of the local CLI workflow and add cloud ownership, relay, and recovery risks before the primary local use case is proven.
+- Local Host running a second copy of a migrated shared Agent Runtime: it would split model/tool lifecycle, persistence, and approval authority across two runtimes.
+- Starting with a server deployment: it would delay validation of the local CLI workflow and add cloud ownership, relay, and recovery risks before the primary local use case is proven.
+- Creating a parallel Agent/Run store and Runtime beside `AgentTask`/`AgentStore`: it would make local recovery, approvals and provider sessions disagree before the product semantics are stable.
