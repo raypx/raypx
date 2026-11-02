@@ -34,6 +34,7 @@ func TestBuiltCLIMaintainsApprovalVisibilityLease(t *testing.T) {
 	t.Setenv("CLAUDE_CONFIG_DIR", t.TempDir())
 	t.Setenv("RAYPX_TERMINAL_HOST", "")
 	args := []string{"--profile", "mygo-approval-test", "--data-dir", directory}
+	enrollBuiltCLI(t, binary, directory, "mygo-approval-test", args)
 	defer func() { _ = host.Command(binary, append([]string{"daemon", "stop"}, args...)...).Run() }()
 	config, _ := host.ParseConfig(nil)
 	desktop, err := host.New(config, t.TempDir(), binary, "0.1.0", args, true, &keys{}, nil)

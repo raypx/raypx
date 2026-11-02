@@ -165,4 +165,14 @@ func TestBuiltCLIUsesPrivateDaemonProtocol(t *testing.T) {
 	if _, err := engine.Request(ctx, "roots.list", host.JSON{}); err == nil || err.Error() != "INSTANCE_ENROLLMENT_REQUIRED" {
 		t.Fatal("unregistered CLI profile admitted local work")
 	}
+	enrollBuiltCLI(t, binary, directory, "mygo-host-test", args)
+	registeredCtx, registeredCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer registeredCancel()
+	registered, err := engine.Request(registeredCtx, "instance.status", host.JSON{})
+	if err != nil || registered.(map[string]any)["state"] != "registered" {
+		t.Fatal("compiled CLI did not observe its enrolled identity")
+	}
+	if _, err := engine.Request(registeredCtx, "roots.list", host.JSON{}); err != nil {
+		t.Fatal("enrolled CLI profile rejected local work")
+	}
 }

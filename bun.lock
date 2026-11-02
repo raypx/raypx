@@ -117,6 +117,7 @@
       "devDependencies": {
         "@orpc/server": "catalog:",
         "@raypx/devtools": "workspace:*",
+        "@raypx/instances": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",

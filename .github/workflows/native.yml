@@ -110,7 +110,7 @@ jobs:
         shell: bash
         run: |
           bun run --cwd apps/desktop mygo:check
-          bun run --cwd apps/desktop mygo:test
+          bun packages/tooling/src/validation/macos-test-keychain.ts bun run --cwd apps/desktop mygo:test
           cd apps/desktop
           CGO_ENABLED=0 go vet -tags native_smoke ./internal/... ./tests/native/host/...
           CGO_ENABLED=0 go test -tags native_smoke ./tests/native/host/... -run '^TestSmokeProtocol'
