@@ -10,7 +10,8 @@ import {
 import { LocalError } from "../../errors";
 import type { AgentStore, LocalAgentTask } from "../store";
 import type { ConversationRecorder } from "../activity";
-import { createDriver, type ExecutionDriver, type ExecutionHandle } from "./registry";
+import { createAdapter } from "./registry";
+import type { AdapterEvent, ExecutionDriver, ExecutionHandle } from "./adapter";
 
 export function initialExecutionPrompt(
   task: AgentTask,
@@ -23,7 +24,7 @@ export function initialExecutionPrompt(
   });
   return (
     prompt +
-    (task.provider === "codex" && task.mode === "plan"
+    (task.mode === "plan"
       ? "\nInspect the project and propose an implementation plan. Do not modify files before the plan is approved."
       : "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user.")
   );
@@ -56,7 +57,7 @@ interface ExecutionEffects {
   changed(pendingRequest?: string): void;
   resolved(requestId: string): void;
   hook(): { url: string; token: string };
-  /** Provider processes inherit this, including the bundled `bun` PATH entry. */
+  /** Adapter transports inherit this, including the bundled `bun` PATH entry. */
   environment(): Record<string, string | undefined>;
   track(completion: Promise<void>): void;
   ended(): void;
@@ -66,13 +67,10 @@ type Pending = {
   resolve(decision: HumanDecision): void;
   timer: ReturnType<typeof setTimeout>;
 };
-const text = (value: unknown, max = 128_000) =>
-  typeof value === "string" ? taskText(value, max) : "";
-
 /** Single owner for turn/input/approval state and the project lock through process draining. */
 export class ManagedExecution {
   private process: ExecutionHandle | undefined;
-  private provider: ExecutionDriver | undefined;
+  private adapter: ExecutionDriver | undefined;
   private readonly pending = new Map<string, Pending>();
   private cancelled = false;
   private finished = false;
@@ -95,7 +93,7 @@ export class ManagedExecution {
     private readonly store: ExecutionStore,
     private readonly effects: ExecutionEffects,
     private readonly interruptTimeoutMs = 10_000,
-    private readonly driverFactory: typeof createDriver = createDriver,
+    private readonly adapterFactory: typeof createAdapter = createAdapter,
   ) {}
   hasPending(id: string) {
     return this.pending.has(id);
@@ -150,11 +148,11 @@ export class ManagedExecution {
           await this.nextInput();
           return;
         }
-        const provider = this.provider!;
-        if (provider.input === "steer") {
+        const adapter = this.adapter!;
+        if (adapter.input === "steer") {
           this.inputStatus(entry, "sending");
           try {
-            await provider.steer(entry.text, this.local.sessionId);
+            await adapter.steer(entry.text, this.local.sessionId);
             this.inputs = this.inputs.filter((input) => input.id !== entry.id);
             this.inputStatus(entry, "sent");
           } catch (error) {
@@ -170,7 +168,7 @@ export class ManagedExecution {
           this.inputStatus(entry, "sending");
           this.interrupting = true;
           try {
-            await provider.interrupt();
+            await adapter.interrupt();
             if (this.turnActive && !this.finished) {
               clearTimeout(this.interruptTimer);
               const runner = this.process;
@@ -297,7 +295,7 @@ export class ManagedExecution {
     )
       throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
     this.planRequestHandled = false;
-    const provider = this.driverFactory(
+    const adapter = this.adapterFactory(
       task.provider,
       {
         executable,
@@ -309,29 +307,13 @@ export class ManagedExecution {
       {
         approval: { ask: (...args) => this.ask(...args), hook: () => this.effects.hook() },
         current: (handle) => !this.finished && this.process === handle,
-        codexRecord: (method, params) => this.conversation.codex(method, params),
-        claudeRecord: (message) => this.conversation.claude(message),
-        session: (id) => {
-          if (sessionId && id !== sessionId) {
-            this.finish("failed", "SESSION_UNAVAILABLE");
-            return;
-          }
-          this.local.sessionId = id;
-          this.store.put(this.local);
-        },
-        codexCompleted: (driver, status, turnId) => this.codexCompleted(driver, status, turnId),
-        claudeCompleted: (handle, message) =>
-          this.claudeCompleted(handle, message, executable, directory),
-        failed: (handle) => {
-          if (this.process === handle) this.finish("failed", "AGENT_PROTOCOL_FAILED");
-        },
-        turnId: (id) => this.conversation.setTurnId(id),
+        emit: (event) => this.adapterEvent(event, executable, directory, sessionId),
       },
     );
-    this.provider = provider;
-    this.process = provider.handle;
-    if (!provider.holdPlanOnExit) this.watch(provider.handle, false);
-    const initializedSession = await provider.initialize(task.mode, sessionId);
+    this.adapter = adapter;
+    this.process = adapter.handle;
+    if (!adapter.holdPlanOnExit) this.watch(adapter.handle, false);
+    const initializedSession = await adapter.initialize(task.mode, sessionId);
     if (initializedSession) {
       if (sessionId && initializedSession !== sessionId)
         throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
@@ -350,17 +332,48 @@ export class ManagedExecution {
       this.turnActive = true;
       this.summary = "";
       this.conversation.startTurn();
-      await provider.sendTurn(prompt, this.local.sessionId, task.mode);
+      await adapter.sendTurn(prompt, this.local.sessionId, task.mode);
     };
     const start = async () => {
       await this.sendTurn!(initialExecutionPrompt(task, continuationPrompt, Boolean(sessionId)));
       this.ready = true;
     };
-    // Claude plan approval may replace the driver while already in the serial queue.
-    if (provider.holdPlanOnExit) {
+    // Some adapters replace their process after a plan is approved.
+    if (adapter.holdPlanOnExit) {
       await start();
-      this.watch(provider.handle, true);
+      this.watch(adapter.handle, true);
     } else await this.serial(start);
+  }
+
+  private adapterEvent(
+    event: AdapterEvent,
+    executable: string,
+    directory: string,
+    expectedSessionId?: string,
+  ) {
+    if (this.finished || this.process !== event.handle) return;
+    if (event.type === "record") {
+      this.conversation.record(this.local.task.provider, event.message);
+      return;
+    }
+    if (event.type === "session") {
+      if (expectedSessionId && event.id !== expectedSessionId) {
+        this.finish("failed", "SESSION_UNAVAILABLE");
+        return;
+      }
+      this.local.sessionId = event.id;
+      this.store.put(this.local);
+      return;
+    }
+    if (event.type === "turn-id") {
+      this.conversation.setTurnId(event.id);
+      return;
+    }
+    if (event.type === "failed") {
+      this.finish("failed", "AGENT_PROTOCOL_FAILED");
+      return;
+    }
+    this.completed(event, executable, directory);
   }
 
   private watch(runner: ExecutionHandle, holdPlanOnExit: boolean) {
@@ -387,81 +400,76 @@ export class ManagedExecution {
     this.completedTurn = turn;
     return true;
   }
-  private codexCompleted(provider: ExecutionDriver, status: unknown, turnId?: string) {
-    const turn = this.turnVersion;
-    void this.serial(async () => {
-      // Sending may still be awaiting the turn/start reply when completion arrives.
-      // Check the authoritative id after that operation, before claiming this turn.
-      if (turnId && provider.turnId && turnId !== provider.turnId) return;
-      if (!this.acceptResult(provider.handle, turn)) return;
-      clearTimeout(this.interruptTimer);
-      this.interruptTimer = undefined;
-      this.turnActive = false;
-      this.conversation.endTurn(status === "completed" ? "complete" : "interrupted");
-      if (status === "completed" && this.local.task.mode === "plan") {
-        const decision = await this.ask("plan", "Codex", provider.preview);
-        if (this.finished) return;
-        if (decision.type !== "allow") {
-          if (decision.type === "deny" && decision.note.trim()) await this.sendTurn!(decision.note);
-          else this.finish("cancelled");
-          return;
-        }
-        this.local.task.mode = "run";
-        this.store.put(this.local);
-        await this.sendTurn!(
-          "Implement the approved plan. Modify and validate only; do not commit, merge or push.",
-        );
-        return;
-      }
-      if (status === "completed" && (await this.nextInput())) return;
-      this.finish(
-        status === "completed" ? "succeeded" : status === "interrupted" ? "cancelled" : "failed",
-        provider.summary,
-      );
-    });
-  }
-  private claudeCompleted(
-    runner: ExecutionHandle,
-    message: Record<string, unknown>,
+  private completed(
+    event: Extract<AdapterEvent, { type: "completed" }>,
     executable: string,
     directory: string,
   ) {
-    const interrupted = message.is_error === true && this.interrupting;
     const turn = this.turnVersion;
     void this.serial(async () => {
-      // A result can wait behind a plan decision that replaces its process.
-      // Ownership and turn identity must still hold when the operation runs.
-      if (!this.acceptResult(runner, turn)) return;
+      if (event.turnId && this.adapter?.turnId && event.turnId !== this.adapter.turnId) return;
+      if (!this.acceptResult(event.handle, turn)) return;
       clearTimeout(this.interruptTimer);
       this.interruptTimer = undefined;
       this.turnActive = false;
+      const interrupted =
+        event.status === "interrupted" || (event.status === "failed" && this.interrupting);
+      const failed = event.status === "failed" && !this.interrupting;
       this.interrupting = false;
-      this.conversation.endTurn(
-        message.is_error === true || interrupted ? "interrupted" : "complete",
-      );
-      this.summary = text(message.result, 32_000);
+      this.conversation.endTurn(event.status === "completed" ? "complete" : "interrupted");
+      this.summary = taskText(event.summary, 32_000);
       if (
-        (message.is_error !== true || interrupted) &&
-        (interrupted ||
-          this.local.task.mode !== "plan" ||
-          this.inputs.some((entry) => entry.mode === "steer" && entry.status === "sending")) &&
+        !failed &&
+        (interrupted
+          ? this.adapter?.input === "interrupt"
+          : this.local.task.mode !== "plan" ||
+            this.inputs.some((entry) => entry.mode === "steer" && entry.status === "sending")) &&
         (await this.nextInput())
       )
         return;
       if (
-        message.is_error !== true &&
+        event.status === "completed" &&
         !interrupted &&
         this.local.task.mode === "plan" &&
         !this.planRequestHandled
       ) {
-        this.awaitingPlan = true;
-        await this.continueClaudePlan(runner, executable, directory, text(message.result, 128_001));
+        if (this.adapter?.planContinuation === "process") {
+          this.awaitingPlan = true;
+          await this.continuePlanProcess(event.handle, executable, directory, event.preview);
+        } else {
+          const decision = await this.planDecision(
+            this.adapter?.planTitle ?? "Agent",
+            event.preview,
+          );
+          if (this.finished) return;
+          const prompt = decision ? this.planPrompt(decision) : undefined;
+          if (!prompt) {
+            this.finish("cancelled");
+            return;
+          }
+          await this.sendTurn!(prompt);
+        }
         return;
       }
-      this.finish(message.is_error === true ? "failed" : "succeeded", this.summary);
+      this.finish(failed ? "failed" : interrupted ? "cancelled" : "succeeded", this.summary);
     });
   }
-  private async continueClaudePlan(
+
+  private async planDecision(title: string, plan: string): Promise<HumanDecision | undefined> {
+    const decision = await this.ask("plan", title, plan);
+    return this.finished ? undefined : decision;
+  }
+
+  private planPrompt(decision: HumanDecision): string | undefined {
+    if (decision.type === "allow") {
+      this.local.task.mode = "run";
+      this.store.put(this.local);
+      return "Implement the approved plan. Modify and validate only; do not commit, merge or push.";
+    }
+    return decision.type === "deny" && decision.note.trim() ? decision.note : undefined;
+  }
+
+  private async continuePlanProcess(
     runner: ExecutionHandle,
     executable: string,
     directory: string,
@@ -480,7 +488,7 @@ export class ManagedExecution {
       this.finish("failed", "AGENT_PROTOCOL_FAILED");
       return;
     }
-    const answer = this.ask("plan", "Claude Code", plan);
+    const answer = this.planDecision(this.adapter?.planTitle ?? "Agent", plan);
     const request = [...this.pending.values()].find(
       (item) => item.request.kind === "plan",
     )?.request;
@@ -491,14 +499,8 @@ export class ManagedExecution {
       this.finish("cancelled");
       return;
     }
-    let prompt: string;
-    if (decision.type === "allow") {
-      this.local.task.mode = "run";
-      prompt =
-        "Implement the approved plan. Modify and validate only; do not commit, merge or push.";
-    } else if (decision.type === "deny" && decision.note.trim()) {
-      prompt = decision.note;
-    } else {
+    const prompt = decision ? this.planPrompt(decision) : undefined;
+    if (!prompt) {
       this.finish("cancelled");
       return;
     }

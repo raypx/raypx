@@ -1,8 +1,5 @@
 import { z } from "zod";
-import type {
-  ProcessFactory,
-  ProviderProcess,
-} from "../../src/runtime/agents/harness/providers/process";
+import type { AgentTransport, TransportFactory } from "../../src/runtime/agents/harness/transport";
 
 const object = z.record(z.string(), z.unknown());
 const recordSchema = z
@@ -92,7 +89,7 @@ export class ProviderReplay {
   private readonly exited = deferred<number>();
   readonly sent: { channel: string; method?: string; message?: unknown }[] = [];
   readonly launches: { args: string[]; environment?: Record<string, string | undefined> }[] = [];
-  readonly process: ProviderProcess = {
+  readonly process: AgentTransport = {
     completed: this.exited.promise,
     send: (message) => {
       void this.call("send", message).catch(() => {});
@@ -103,7 +100,7 @@ export class ProviderReplay {
       await this.call("kill");
     },
   };
-  readonly factory: ProcessFactory = (_executable, args, _directory, receive, environment) => {
+  readonly factory: TransportFactory = (_executable, args, _directory, receive, environment) => {
     if (this.receive) throw new Error("A replay owns exactly one provider process");
     this.receive = receive;
     this.launches.push({ args, ...(environment ? { environment } : {}) });

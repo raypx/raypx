@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { chmod, copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { JsonProcess } from "../../src/runtime/agents/transport";
+import { ProcessTransport } from "../../src/runtime/agents/transport";
 
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to record the real Codex stream");
@@ -21,7 +21,7 @@ let complete: () => void;
 const completed = new Promise<void>((resolve) => {
   complete = resolve;
 });
-const runner = new JsonProcess(
+const runner = new ProcessTransport(
   executable,
   ["app-server"],
   directory,

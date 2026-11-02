@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { createDriver } from "../../../../src/runtime/agents/harness/registry";
+import { createAdapter } from "../../../../src/runtime/agents/harness/registry";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -24,17 +24,11 @@ it.skipIf(process.platform === "win32")(
         hook: () => ({ url: "http://127.0.0.1/hook/task", token: "fixture" }),
       },
       current: () => true,
-      codexRecord: vi.fn(),
-      claudeRecord: vi.fn(),
-      session: vi.fn(),
-      codexCompleted: vi.fn(),
-      claudeCompleted: vi.fn(),
-      failed: vi.fn(),
-      turnId: vi.fn(),
+      emit: vi.fn(),
     };
     for (const provider of ["codex", "claude"] as const) {
       const output = join(directory, provider);
-      const driver = createDriver(
+      const driver = createAdapter(
         provider,
         {
           executable,

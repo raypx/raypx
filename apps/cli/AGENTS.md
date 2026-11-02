@@ -117,13 +117,13 @@ explicit revisions after receipt lookup, while remote tasks use only command
 snapshots. Persist context metadata on follow-ups and inject reference text into
 the first provider prompt, rejecting excess total size before launching execution.
 
-`runtime/agents/index.ts` is the local/replay/receipt facade. Its private
-`harness/execution.ts` owns each task's turn queue, approvals, cancellation and
-project-lock release through process draining. `harness/providers/codex.ts` and
-`claude.ts` adapt provider protocols through a narrow process port; they never
-own task storage or account/relay transport. Keep protocol callbacks fenced to
-the current process. The coordinator uses an explicit persistence subset and
-lifecycle effects; do not pass the entire AgentRuntime as an adapter context.
+`runtime/agents/index.ts` is the local/replay/receipt facade. `harness/execution.ts`
+owns each task's turn queue, approvals, cancellation and lock release through
+process draining. Adapters in `harness/adapters/` translate provider protocols
+into lifecycle events without owning task storage or relay transport.
+`harness/transport.ts` defines protocol I/O; its process implementation is
+`runtime/agents/transport.ts`. Fence callbacks to the current execution handle.
+Keep a persistence subset and lifecycle effects, never the full runtime.
 
 `harness/providers/pi.ts` is a private SDK experiment, not a registered provider.
 Callers supply tools, approval, model streaming and a revision-checked context store.
@@ -194,6 +194,6 @@ and connectors bypass cloud restoration and serial work. Only authenticated clie
 leases make the local approval channel reachable. Remote eligibility is frozen per
 request; independent projection withdrawal revisions never alter broker revisions.
 Cloud settings are explicit `host.terminal.*` Native RPCs. See ADR 0035.
-Registry/driver interfaces in `agents/harness` own provider construction and bounded
-probes; keep plan policy and persistence in ManagedExecution and raw record parsing
-in ConversationRecorder. Do not require a ProviderProcess in the lifecycle port.
+Registry interfaces own adapter construction and bounded probes. Execution owns
+plan policy and persistence; ConversationRecorder parses raw records. Lifecycle
+code sees execution handles and adapter events, never transport controls.

@@ -1,22 +1,22 @@
 import type { HumanDecision, HumanRequest } from "@raypx/core/tasks";
-import { JsonProcess } from "../../transport";
+import { ProcessTransport } from "../transport";
 
-/** The provider adapter sees protocol I/O, never Bun's child process or task storage. */
-export interface ProviderProcess {
+/** Adapters see protocol I/O, never Bun's child process or task storage. */
+export interface AgentTransport {
   readonly completed: Promise<number>;
   send(value: unknown): void;
   request(method: string, params: unknown): Promise<Record<string, unknown>>;
   control(request: Record<string, unknown>): Promise<Record<string, unknown>>;
   kill(): Promise<void>;
 }
-export type ProcessFactory = (
+export type TransportFactory = (
   executable: string,
   args: string[],
   directory: string,
   onMessage: (message: Record<string, unknown>) => void,
   env?: Record<string, string | undefined>,
-) => ProviderProcess;
-export const createProcess: ProcessFactory = (...args) => new JsonProcess(...args);
+) => AgentTransport;
+export const createTransport: TransportFactory = (...args) => new ProcessTransport(...args);
 export type AskApproval = (
   kind: HumanRequest["kind"],
   title: string,

@@ -6,8 +6,8 @@ import {
   ManagedExecution,
   type ExecutionStore,
 } from "../../../../src/runtime/agents/harness/execution";
-import { CodexProvider } from "../../../../src/runtime/agents/harness/providers/codex";
-import { createDriver } from "../../../../src/runtime/agents/harness/registry";
+import { CodexAdapter } from "../../../../src/runtime/agents/harness/adapters/codex";
+import { createAdapter } from "../../../../src/runtime/agents/harness/registry";
 import { ConversationRecorder } from "../../../../src/runtime/agents/activity";
 import type { LocalAgentTask } from "../../../../src/runtime/agents/store";
 import {
@@ -122,7 +122,7 @@ function fixture(provider: AgentProvider, records = recording(provider)) {
       ended,
     },
     10_000,
-    (name, start, ports) => createDriver(name, start, ports, replay.factory),
+    (name, start, ports) => createAdapter(name, start, ports, replay.factory),
   );
   const running = execution.run(provider, "/synthetic-project");
   async function finished() {
@@ -370,23 +370,19 @@ it("rejects the unscoped Codex input method without opening an approval", async 
     { direction: "host", channel: "send", message: response },
     { direction: "exit", code: 0 },
   ]);
-  const ask = vi.fn();
-  const provider = new CodexProvider(
-    "codex",
-    "/synthetic-project",
+  const ask = vi.fn(async () => ({ type: "allow" as const }));
+  const provider = new CodexAdapter(
+    { executable: "codex", directory: "/synthetic-project", mode: "run", environment: {} },
     {
+      approval: { ask, hook: () => ({ url: "http://127.0.0.1/hook", token: "fixture" }) },
       current: () => true,
-      record: vi.fn(),
-      ask,
-      completed: vi.fn(),
-      failed: vi.fn(),
-      turnId: vi.fn(),
+      emit: vi.fn(),
     },
     replay.factory,
   );
   replay.release("request");
   await replay.drain();
-  expect(await provider.process.completed).toBe(0);
+  expect(await provider.transport.completed).toBe(0);
   expect(replay.sent).toMatchObject([{ channel: "send", message: response }]);
   expect(ask).not.toHaveBeenCalled();
 });
@@ -407,16 +403,17 @@ it.each(["item/commandExecution/requestApproval", "item/tool/requestUserInput"])
       }),
     );
     const failed = vi.fn();
-    const provider = new CodexProvider(
-      "codex",
-      "/synthetic-project",
+    const provider = new CodexAdapter(
+      { executable: "codex", directory: "/synthetic-project", mode: "run", environment: {} },
       {
+        approval: {
+          ask: () => answer,
+          hook: () => ({ url: "http://127.0.0.1/hook", token: "fixture" }),
+        },
         current: () => current,
-        record: vi.fn(),
-        ask: () => answer,
-        completed: vi.fn(),
-        failed,
-        turnId: vi.fn(),
+        emit: vi.fn((event) => {
+          if (event.type === "failed") failed();
+        }),
       },
       replay.factory,
     );
@@ -426,7 +423,7 @@ it.each(["item/commandExecution/requestApproval", "item/tool/requestUserInput"])
     await answer;
     replay.release("approval");
     await replay.drain();
-    expect(provider.process).toBe(replay.process);
+    expect(provider.transport).toBe(replay.process);
     expect(replay.sent).toEqual([]);
     expect(failed).not.toHaveBeenCalled();
   },

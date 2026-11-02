@@ -1,6 +1,6 @@
 import { taskText } from "@raypx/core/task-text";
 
-import type { TaskActivity } from "@raypx/core/tasks";
+import type { AgentProvider, TaskActivity } from "@raypx/core/tasks";
 import type { ActivityDraft } from "./store";
 
 const object = (value: unknown): Record<string, unknown> =>
@@ -50,6 +50,10 @@ export class ConversationRecorder {
   }
   setTurnId(value: string) {
     this.codexTurn = value;
+  }
+  record(provider: AgentProvider, message: Record<string, unknown>) {
+    if (provider === "codex") this.codex(text(message.method), object(message.params));
+    else this.claude(message);
   }
   private base() {
     const now = new Date().toISOString();

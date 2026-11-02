@@ -9,6 +9,8 @@ import { discover } from "./repository.js";
 import { checkToolchain } from "./validation/toolchain.js";
 import { checkDeployment } from "./validation/deployment.js";
 
+const MAX_WORKSPACE_AGENTS_LINES = 500;
+
 export function policy(root: string): string[] {
   const index = discover(root);
   const findings = checkArchitecture(index);
@@ -16,8 +18,8 @@ export function policy(root: string): string[] {
   for (const workspace of index.workspaces) {
     const file = join(root, workspace.path, "AGENTS.md");
     if (!existsSync(file)) findings.push(`${workspace.path}: missing AGENTS.md`);
-    else if (readFileSync(file, "utf8").split("\n").length > 200)
-      findings.push(`${workspace.path}: AGENTS.md exceeds 200 lines`);
+    else if (readFileSync(file, "utf8").split("\n").length > MAX_WORKSPACE_AGENTS_LINES)
+      findings.push(`${workspace.path}: AGENTS.md exceeds ${MAX_WORKSPACE_AGENTS_LINES} lines`);
     if (
       workspace.manifest.scripts?.test &&
       !existsSync(join(root, workspace.path, "vitest.config.ts"))

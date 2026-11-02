@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { LocalError } from "../errors";
 
-export class JsonProcess {
+export class ProcessTransport {
   readonly child: ReturnType<typeof Bun.spawn>;
   private termination: Promise<void> | undefined;
   private serial = 0;

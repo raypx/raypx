@@ -1,48 +1,55 @@
 import { taskText } from "@raypx/core/task-text";
 import { type AgentTask } from "@raypx/core/tasks";
 import {
-  createProcess,
-  object,
-  type AskApproval,
-  type ProcessFactory,
-  type ProviderProcess,
-} from "./process";
+  type AdapterPorts,
+  type AdapterStart,
+  type AgentAdapter,
+  type ExecutionHandle,
+} from "../adapter";
+import { createTransport, object, type AgentTransport, type TransportFactory } from "../transport";
 
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? taskText(value, max) : "";
-interface CodexObserver {
-  current(): boolean;
-  record(method: string, params: Record<string, unknown>): void;
-  ask: AskApproval;
-  completed(status: unknown, turnId?: string): void;
-  failed(): void;
-  turnId(id: string): void;
-}
 /** Private app-server protocol. Task/approval policy belongs to ManagedExecution. */
-export class CodexProvider {
-  readonly process: ProviderProcess;
+export class CodexAdapter implements AgentAdapter {
+  readonly input = "steer" as const;
+  readonly holdPlanOnExit = false;
+  readonly planContinuation = "turn" as const;
+  readonly planTitle = "Codex";
+  readonly transport: AgentTransport;
+  readonly handle: ExecutionHandle;
+  private readonly directory: string;
   private readonly items = new Map<string, Record<string, unknown>>();
   private currentTurnId = "";
   summary = "";
   preview = "";
   constructor(
-    executable: string,
-    private readonly directory: string,
-    private readonly observer: CodexObserver,
-    processFactory: ProcessFactory = createProcess,
+    start: AdapterStart,
+    private readonly ports: AdapterPorts,
+    transportFactory: TransportFactory = createTransport,
   ) {
-    this.process = processFactory(
-      executable,
+    this.directory = start.directory;
+    const pending: Record<string, unknown>[] = [];
+    let ready = false;
+    this.transport = transportFactory(
+      start.executable,
       ["app-server", "--listen", "stdio://"],
-      directory,
-      (message) => this.message(message),
+      start.directory,
+      (message) => (ready ? this.message(message) : pending.push(message)),
+      start.environment,
     );
+    this.handle = { completed: this.transport.completed, kill: () => this.transport.kill() };
+    ready = true;
+    queueMicrotask(() => {
+      for (const message of pending) this.message(message);
+      pending.length = 0;
+    });
   }
   private message(message: Record<string, unknown>) {
-    if (!this.observer.current()) return;
+    if (!this.ports.current(this.handle)) return;
     const method = text(message.method),
       params = object(message.params);
-    this.observer.record(method, params);
+    this.ports.emit({ type: "record", handle: this.handle, message });
     if (method === "turn/started") this.currentTurnId = text(object(params.turn).id, 500);
     if (method === "item/started") {
       const item = object(params.item);
@@ -56,7 +63,7 @@ export class CodexProvider {
       this.preview = text(object(params.item).text, 128_001);
     } else if (message.id !== undefined && method.includes("requestApproval")) {
       const item = this.items.get(text(params.itemId, 500)) ?? object(params.item);
-      void this.observer
+      void this.ports.approval
         .ask(
           "permission",
           text(params.reason, 500) || "Codex",
@@ -71,8 +78,8 @@ export class CodexProvider {
           ),
         )
         .then((decision) => {
-          if (!this.observer.current()) return;
-          this.process.send({
+          if (!this.ports.current(this.handle)) return;
+          this.transport.send({
             id: message.id,
             result:
               method === "item/permissions/requestApproval"
@@ -84,7 +91,8 @@ export class CodexProvider {
           });
         })
         .catch(() => {
-          if (this.observer.current()) this.observer.failed();
+          if (this.ports.current(this.handle))
+            this.ports.emit({ type: "failed", handle: this.handle });
         });
     } else if (message.id !== undefined && method === "item/tool/requestUserInput") {
       const questions = Array.isArray(params.questions)
@@ -103,7 +111,7 @@ export class CodexProvider {
             };
           })
         : [];
-      void this.observer
+      void this.ports.approval
         .ask(
           "question",
           "Codex",
@@ -114,8 +122,8 @@ export class CodexProvider {
             : undefined,
         )
         .then((decision) => {
-          if (!this.observer.current()) return;
-          this.process.send({
+          if (!this.ports.current(this.handle)) return;
+          this.transport.send({
             id: message.id,
             result: {
               answers:
@@ -128,10 +136,11 @@ export class CodexProvider {
           });
         })
         .catch(() => {
-          if (this.observer.current()) this.observer.failed();
+          if (this.ports.current(this.handle))
+            this.ports.emit({ type: "failed", handle: this.handle });
         });
     } else if (message.id !== undefined && method)
-      this.process.send({
+      this.transport.send({
         id: message.id,
         error: { code: -32601, message: "Unsupported host request" },
       });
@@ -140,19 +149,32 @@ export class CodexProvider {
       this.preview = taskText(this.preview + text(params.delta, 128_001), 128_001);
     } else if (method === "turn/completed") {
       const turn = object(params.turn);
-      this.observer.completed(turn.status, text(turn.id, 500) || undefined);
+      const status =
+        turn.status === "completed"
+          ? "completed"
+          : turn.status === "interrupted"
+            ? "interrupted"
+            : "failed";
+      this.ports.emit({
+        type: "completed",
+        handle: this.handle,
+        status,
+        summary: this.summary,
+        preview: this.preview,
+        ...(text(turn.id, 500) ? { turnId: text(turn.id, 500) } : {}),
+      });
     }
   }
   get turnId() {
     return this.currentTurnId;
   }
   async initialize(mode: AgentTask["mode"], sessionId?: string) {
-    await this.process.request("initialize", {
+    await this.transport.request("initialize", {
       clientInfo: { name: "raypx", title: "Raypx", version: "0.1.0" },
       capabilities: { experimentalApi: true },
     });
-    this.process.send({ method: "initialized", params: {} });
-    const response = await this.process.request(sessionId ? "thread/resume" : "thread/start", {
+    this.transport.send({ method: "initialized", params: {} });
+    const response = await this.transport.request(sessionId ? "thread/resume" : "thread/start", {
       ...(sessionId ? { threadId: sessionId } : {}),
       cwd: this.directory,
       approvalPolicy: "on-request",
@@ -165,7 +187,7 @@ export class CodexProvider {
     this.summary = "";
     this.preview = "";
     this.items.clear();
-    const response = await this.process.request("turn/start", {
+    const response = await this.transport.request("turn/start", {
       threadId: sessionId,
       input: [{ type: "text", text: prompt }],
       sandboxPolicy:
@@ -174,16 +196,16 @@ export class CodexProvider {
           : { type: "workspaceWrite", writableRoots: [this.directory], networkAccess: false },
     });
     this.currentTurnId = text(object(response.turn).id, 500) || this.currentTurnId;
-    this.observer.turnId(this.currentTurnId);
+    this.ports.emit({ type: "turn-id", handle: this.handle, id: this.currentTurnId });
   }
-  interrupt(sessionId: string | null) {
-    return this.process.request("turn/interrupt", {
-      threadId: sessionId,
+  async interrupt(sessionId?: string | null) {
+    await this.transport.request("turn/interrupt", {
+      threadId: sessionId ?? null,
       turnId: this.currentTurnId,
     });
   }
-  steer(prompt: string, sessionId: string | null) {
-    return this.process.request("turn/steer", {
+  async steer(prompt: string, sessionId: string | null) {
+    await this.transport.request("turn/steer", {
       threadId: sessionId,
       expectedTurnId: this.currentTurnId,
       input: [{ type: "text", text: prompt }],
