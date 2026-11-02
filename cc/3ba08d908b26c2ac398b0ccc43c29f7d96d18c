@@ -1,0 +1,27 @@
+apps/web/src/features/settings/quick-settings-modal.tsx
+  s_0fc40799f2bf44::t_2d6b45e9ecc684 66-68,70-72
+  s_0fc40799f2bf44::t_fbd8ebe7ac8583 14,18,21,24,27,43,57-58,62,65,69,73
+apps/web/src/components/shell.tsx
+  s_0fc40799f2bf44::t_2d6b45e9ecc684 83,85
+  s_0fc40799f2bf44::t_9d6a42a1919523 13,41,67,84,142,189
+apps/web/package.json
+  s_0fc40799f2bf44::t_ef3ba115fe7f53 36-37
+apps/web/src/features/settings/quick-settings-store.ts
+  s_0fc40799f2bf44::t_03f5d739ddbe00 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cc3ba08d908b26c2ac398b0ccc43c29f7d96d18c",
+  "prompts": {},
+  "sessions": {
+    "s_0fc40799f2bf44": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ad3-4075-7941-aceb-b5dc81e71036",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
