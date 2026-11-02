@@ -1,4 +1,5 @@
-import type { AuthSession } from "@raypx/auth/types";
+import { hasPermission } from "@raypx/account/access";
+import type { AccessPolicy } from "../access.js";
 import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";
 import { createCache } from "../cache/cache.js";
 import { createMemoryStore } from "../cache/memory.js";
@@ -20,7 +21,7 @@ export class ConfigurationError extends Error {
 
 export interface ConfigurationServiceOptions {
   repository: ConfigurationRepository;
-  adminEmails: readonly string[];
+  access: AccessPolicy;
   /** Pass a longer-lived or shared cache; defaults to one private to this service. */
   cache?: Cache;
   /** How long readCached() may serve a snapshot; changes elsewhere apply within it. */
@@ -31,18 +32,10 @@ const CACHE_KEY = "configuration:snapshot";
 
 export function createConfigurationService({
   repository,
-  adminEmails,
+  access,
   cache = createCache(createMemoryStore()),
   cacheTtlMs = 5_000,
 }: ConfigurationServiceOptions): ConfigurationService {
-  const admins = new Set(adminEmails.map((email) => email.trim().toLowerCase()));
-  const isAdmin = (auth: AuthSession | null) =>
-    Boolean(
-      auth?.user.emailVerified &&
-      auth.session.userId === auth.user.id &&
-      auth.session.expiresAt.getTime() > Date.now() &&
-      admins.has(auth.user.email.toLowerCase()),
-    );
   async function read() {
     try {
       return configurationSnapshotSchema.parse(await repository.read());
@@ -51,7 +44,6 @@ export function createConfigurationService({
     }
   }
   return {
-    isAdmin,
     read,
     readCached: () =>
       cache.getOrLoad(
@@ -61,7 +53,8 @@ export function createConfigurationService({
       ),
     async update(input, auth) {
       if (!auth) throw new ConfigurationError("UNAUTHORIZED");
-      if (!isAdmin(auth)) throw new ConfigurationError("FORBIDDEN");
+      if (!hasPermission(access(auth), "configuration.update"))
+        throw new ConfigurationError("FORBIDDEN");
       const parsed = configurationUpdateSchema.safeParse(input);
       if (!parsed.success) throw new ConfigurationError("INVALID_INPUT");
       let saved;

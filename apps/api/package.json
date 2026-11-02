@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "auth:bootstrap-admins": "bun server/administration/bootstrap.ts",
     "dev": "bun --bun vp dev --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",

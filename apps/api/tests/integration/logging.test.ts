@@ -22,7 +22,13 @@ const sensitiveHeaders = {
   "x-request-id": secret.forgedId,
 };
 const session: AuthSession = {
-  user: { id: "logging-user", email: secret.email, name: secret.name, emailVerified: true },
+  user: {
+    id: "logging-user",
+    email: secret.email,
+    name: secret.name,
+    emailVerified: true,
+    role: "member",
+  },
   session: {
     id: "logging-session",
     userId: "logging-user",

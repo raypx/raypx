@@ -2,7 +2,7 @@ import { expect, it, vi } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth, projectAuthUser, recipientLocale } from "../src/server.js";
 
-it("projects a fresh account without roles and strips credentials", () => {
+it("projects Better Auth role fields and strips credentials", () => {
   expect(
     projectAuthUser({
       id: "u",
@@ -10,9 +10,20 @@ it("projects a fresh account without roles and strips credentials", () => {
       name: "User",
       emailVerified: true,
       password: "secret",
-      role: "owner",
+      role: "member",
+      banned: false,
     }),
-  ).toEqual({ id: "u", email: "u@example.com", name: "User", emailVerified: true });
+  ).toEqual({
+    id: "u",
+    email: "u@example.com",
+    name: "User",
+    emailVerified: true,
+    role: "member",
+    banned: false,
+  });
+  expect(
+    projectAuthUser({ id: "u", email: "u@example.com", name: "User", emailVerified: true }),
+  ).toBeNull();
 });
 
 it("derives mail locale from the current request", () => {

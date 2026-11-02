@@ -10,11 +10,13 @@ server or configuration package.
    origins and the mail provider in the API environment.
 2. Run `bun run db:migrate` against that database. This creates all foundation
    tables, including `system_configuration`; the migration does not create a database.
-3. Set `ADMIN_EMAILS=owner@example.com` in the API runtime environment (comma-separated
-   for multiple administrators), then deploy/restart the API. Use a runtime variable. An empty list grants nobody access.
-4. Register that account, verify its email and sign in to Web. Open **Site settings**
-   in the sidebar. Membership is checked from the current server session on every
-   admin request, including writes. No first-user takeover or client-supplied role exists.
+3. Register the intended administrator accounts and verify their emails.
+4. Set explicit `DATABASE_URL` and `ADMIN_EMAILS=owner@example.com` (comma-separated
+   for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
+   This is an operator command, never a startup action. Database roles remain
+   authoritative after it finishes; removing a role is not undone by the email list.
+5. Sign in to Web and open **Site settings**. Membership is checked from the current
+   stored role on every admin request, including writes. There is no first-user takeover.
 
 Upgrading an existing deployment: run the migration before deploying this API.
 Sign-up is fail-closed, so until `system_configuration` exists every registration
@@ -125,7 +127,7 @@ For a custom adapter or a test double, construct the service directly:
 ```ts
 const configuration = createConfigurationService({
   repository,
-  adminEmails: environment.ADMIN_EMAILS,
+  access: createAccessPolicy(),
 });
 ```
 

@@ -154,8 +154,12 @@ Source-map upload is an explicit release step; ship those same injected assets.
 ## Administrator configuration
 
 `/admin/settings` and `features/configuration/` provide the Web-only administrator
-page through the public API SDK. The sidebar link depends on the server access
-check; API permissions remain authoritative on direct navigation and every save.
+page through the public API SDK. `features/auth/access.ts` declares each Web page's
+permission. Account-scoped `account.access` reads filter sidebar entries and gate
+private page mounts through `PermissionBoundary`, including direct navigation.
+Loading, failed reads and identity changes never reuse another account's grants.
+Guests retain public pages and contextual sign-in gates; Desktop local tools stay
+account-free. API permissions remain authoritative on every request and save.
 Keep editable drafts through network failures and revision conflicts, with explicit
 reload/discard actions. No configuration secrets or deployment credentials enter
 the browser. Public settings supply the shell label and signup availability.

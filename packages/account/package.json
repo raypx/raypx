@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./access": "./src/access.ts",
     "./client": "./src/client.ts",
     "./client/styles.css": "./src/client/styles.css",
     "./server": "./src/server.ts"
@@ -15,6 +16,7 @@
     "test:unit": "bun --bun vp test --run tests"
   },
   "dependencies": {
+    "@raypx/auth": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/i18n": "workspace:*",

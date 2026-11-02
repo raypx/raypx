@@ -156,7 +156,14 @@ The runtime constructor accepts these typed providers as a second argument.
 each call; consumers must not retain that session between requests. Direct
 service writes require a freshly resolved administrator session and expected revision,
 just like HTTP writes. Keep the service in its owned runtime.
-`configuration.get/update` require a fresh verified session in `ADMIN_EMAILS`; writes
+`server/access.ts` projects Better Auth's persisted roles from fresh verified sessions,
+using its shared ACL through `@raypx/account/access`. `account.access`
+projects these grants; menu visibility never authorizes an API request. Remote HTTP
+reads/writes check their feature permission and retain account/device ownership checks.
+`ADMIN_EMAILS` is used only by the explicit `auth:bootstrap-admins` operator command
+for existing verified accounts. It never overrides a later role change. Runtime's
+server-only `auth` instance supports that command; no auth implementation enters Web.
+`configuration.get/update` require configuration permissions; writes
 also require a trusted Origin. Public projection exposes only site name and signup
 availability. Save with an expected revision; never overwrite concurrent edits.
 Registration is enforced by the Better Auth user-create hook with a fresh read, so

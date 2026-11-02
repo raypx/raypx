@@ -47,6 +47,10 @@ export default {
     restoreFailed: "The temporary draft could not be restored. No session has been sent.",
     back: "Back to browsing",
   },
+  access: {
+    forbidden: "You do not have permission to access this page.",
+    unavailable: "Unable to verify permissions. Please try again.",
+  },
   configuration: {
     registrationUnavailable: "Registration is temporarily unavailable. Please try again later.",
     checkingRegistration: "Checking registration availability…",

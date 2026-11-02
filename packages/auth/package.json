@@ -8,6 +8,8 @@
     "./client": "./src/client.ts",
     "./hooks": "./src/hooks.ts",
     "./types": "./src/types.ts",
+    "./access": "./src/access.ts",
+    "./permissions": "./src/permissions.ts",
     "./client/styles.css": "./src/client/styles.css",
     "./origins": "./src/origins.ts"
   },

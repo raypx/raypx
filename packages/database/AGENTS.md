@@ -21,6 +21,10 @@ Node defaults to a process pool of ten connections. `/connection` keeps runtime
 connections separate from filesystem-based migrations in `migrate.ts`.
 Session and verification expiry indexes support API maintenance batches; retention
 and scheduling policy belongs to the API, not this persistence package.
+Better Auth Admin uses `user.role/banned/ban_reason/ban_expires` and
+`session.impersonated_by`. New/existing foundation users default to `member`;
+operator bootstrap and role mutations belong to API/Auth. No role backfill touches
+retired product tables.
 
 ## Verification
 

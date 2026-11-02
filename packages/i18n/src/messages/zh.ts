@@ -45,6 +45,10 @@ export default {
     restoreFailed: "暂时无法恢复登录前的草稿，尚未发送任何会话。",
     back: "返回浏览",
   },
+  access: {
+    forbidden: "你没有访问此页面的权限。",
+    unavailable: "暂时无法验证权限，请重试。",
+  },
   configuration: {
     registrationUnavailable: "注册服务暂不可用，请稍后重试。",
     checkingRegistration: "正在检查注册状态…",

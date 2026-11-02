@@ -3,6 +3,8 @@ import { createApiClient } from "@raypx/client";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createApiApp } from "../../server/api.js";
+import { createAccessPolicy } from "../../server/access.js";
+import { hasPermission } from "@raypx/account/access";
 import { createConfigurationService } from "../../server/configuration/service.js";
 import type { ConfigurationRepository } from "../../server/configuration/types.js";
 import { getApiEnvironment } from "../../server/env.js";
@@ -14,7 +16,13 @@ function fixture() {
     updatedAt: null,
   };
   let auth: AuthSession | null = {
-    user: { id: "admin", email: "admin@example.test", name: "Admin", emailVerified: true },
+    user: {
+      id: "admin",
+      email: "admin@example.test",
+      name: "Admin",
+      emailVerified: true,
+      role: "admin",
+    },
     session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
   };
   const repository: ConfigurationRepository = {
@@ -25,12 +33,14 @@ function fixture() {
       return structuredClone(state);
     }),
   };
+  const access = createAccessPolicy();
   const configuration = createConfigurationService({
     repository,
-    adminEmails: ["ADMIN@example.test"],
+    access,
   });
   const authHandler = vi.fn(async () => Response.json({ ok: true }));
   const app = createApiApp({
+    access,
     configuration,
     authHandler,
     readSession: async () => auth,
@@ -68,7 +78,7 @@ describe("administrator configuration", () => {
     });
     for (const user of [
       { ...f.auth.user, emailVerified: false },
-      { ...f.auth.user, email: "other@example.test" },
+      { ...f.auth.user, role: "member" },
     ]) {
       f.setAuth({ ...f.auth, user });
       expect(await f.client().access({})).toEqual({ allowed: false });
@@ -154,7 +164,10 @@ describe("administrator configuration", () => {
   it("has no implicit administrator and validates deployment email addresses", () => {
     const f = fixture();
     expect(
-      createConfigurationService({ repository: f.repository, adminEmails: [] }).isAdmin(f.auth),
+      hasPermission(
+        createAccessPolicy()({ ...f.auth, user: { ...f.auth.user, role: "member" } }),
+        "configuration.read",
+      ),
     ).toBe(false);
     expect(
       getApiEnvironment({ ADMIN_EMAILS: " Admin@example.test, owner@example.test " }).ADMIN_EMAILS,

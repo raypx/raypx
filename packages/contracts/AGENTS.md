@@ -54,6 +54,10 @@ status remains unchanged and remote task detail keeps its existing contract.
 
 `/api` also exports configuration DTOs and administrator RPC contracts. Public
 settings are an explicit projection; write values reject unknown keys. No secrets.
+`account.access` returns only the server-derived account ID, role and permissions,
+including an explicit guest projection. Auth's pure `/permissions` vocabulary
+defines wire role/permission values; its Better Auth ACL owns the role policy.
+RPC inputs never accept roles or grants.
 
 Relay v4 includes authoritative snapshot sync and frozen task contexts for every
 host. `resume.syncId` and `snapshot.syncId` correlate backend-requested snapshots;

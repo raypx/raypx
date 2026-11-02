@@ -52,7 +52,13 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
     expect(ownedDatabases).toEqual(connections.map(({ db }) => db));
     expect(ownedDatabases[0]).not.toBe(ownedDatabases[1]);
     const auth: AuthSession = {
-      user: { id: "admin", name: "Admin", email: "admin@example.test", emailVerified: true },
+      user: {
+        id: "admin",
+        name: "Admin",
+        email: "admin@example.test",
+        emailVerified: true,
+        role: "admin",
+      },
       session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
     };
     mocks.readSession.mockResolvedValueOnce(auth).mockResolvedValue(null);

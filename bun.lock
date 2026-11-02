@@ -176,6 +176,7 @@
         "nitro": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
+        "zustand": "catalog:",
       },
       "devDependencies": {
         "@raypx/devtools": "workspace:*",
@@ -216,6 +217,7 @@
       "name": "@raypx/account",
       "version": "0.0.0",
       "dependencies": {
+        "@raypx/auth": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/i18n": "workspace:*",
@@ -336,6 +338,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@orpc/contract": "catalog:",
+        "@raypx/auth": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",

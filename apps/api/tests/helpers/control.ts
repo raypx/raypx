@@ -226,7 +226,13 @@ export function memoryControlRepository(): ControlRepository & {
 }
 export function controlAuth(userId = "user-a"): AuthSession {
   return {
-    user: { id: userId, email: `${userId}@example.com`, name: userId, emailVerified: true },
+    user: {
+      id: userId,
+      email: `${userId}@example.com`,
+      name: userId,
+      emailVerified: true,
+      role: "member",
+    },
     session: {
       id: `session-${userId}`,
       userId,

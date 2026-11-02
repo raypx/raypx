@@ -9,6 +9,10 @@ Desktop and API. Auth continues to own authentication and credentials.
 
 - Root: `AccountProfile`, `AccountState` and `readAccount(client, { signal })`.
   Reads use an injected remote client, a five-second timeout and caller cancellation.
+- `/access`: pure permission projections, `accessForRole`, `accessForAssignedRoles` and `hasPermission`.
+  Guests have no account capabilities; members own personal remote features;
+  administrators additionally read and update site configuration. Better Auth persists
+  roles; its shared `/access` ACL supplies all grants, including composed assignments.
 - `/client`: `AccountDetails`, `SignedOutAccount`, `AccountSkeleton`, `AccountMenu` and their types.
   Applications inject links, sign-out actions and feedback through props/children.
   The sidebar menu receives session identity and delegates navigation and logout to applications.
@@ -20,7 +24,8 @@ Desktop and API. Auth continues to own authentication and credentials.
 
 Keep the root platform-neutral; DOM imports stay behind `/client`, and the
 server entry never imports views. Use public workspace entries and keep the
-dependency graph acyclic. This package has no dependency on auth.
+dependency graph acyclic. Only Auth's pure `/access` entry supplies role rules;
+never import its server, credentials, session adapters or forms here.
 
 Do not own routes, client instances, session storage, HTTP handlers or database
 queries. API owns protocol error mapping. Applications own SSR cookie forwarding,

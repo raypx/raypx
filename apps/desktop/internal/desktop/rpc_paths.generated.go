@@ -3,6 +3,7 @@
 package desktop
 
 var rpcPaths = []string{
+	"/rpc/account/access",
 	"/rpc/account/get",
 	"/rpc/approvals/list",
 	"/rpc/configuration/access",

@@ -9,7 +9,7 @@ export type AccountState =
 
 /** Reads the safe account projection without owning credentials or session storage. */
 export async function readAccount(
-  client: Pick<ApiClient, "account">,
+  client: { account: Pick<ApiClient["account"], "get"> },
   { signal }: { signal?: AbortSignal } = {},
 ): Promise<AccountState> {
   const controller = new AbortController();

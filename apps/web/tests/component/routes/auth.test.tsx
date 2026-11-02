@@ -20,9 +20,13 @@ import {
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/tasks";
+import { accessForRole, type AccountRole } from "@raypx/account/access";
 import { routeTree } from "../../../src/routeTree.gen";
 
 const mocks = vi.hoisted(() => ({
+  role: "member" as AccountRole,
+  access: vi.fn(),
+  configurationGet: vi.fn(),
   registrationEnabled: true,
   sessionError: false,
   sessionPending: false,
@@ -64,16 +68,21 @@ vi.mock("../../../src/features/auth/client", () => ({
   },
 }));
 vi.mock("../../../src/features/configuration/client", () => ({
+  configurationClient: { get: mocks.configurationGet },
   publicConfigurationQuery: () => ({
     queryKey: ["configuration", "public"],
     queryFn: async () => ({ siteName: "Raypx", registrationEnabled: mocks.registrationEnabled }),
     initialData: { siteName: "Raypx", registrationEnabled: mocks.registrationEnabled },
     staleTime: Infinity,
   }),
-  configurationAccessQuery: () => ({
-    queryKey: ["configuration", "access"],
-    queryFn: async () => ({ allowed: false }),
-    enabled: false,
+}));
+vi.mock("../../../src/features/auth/access", async (original) => ({
+  ...(await original<typeof import("../../../src/features/auth/access")>()),
+  accountAccessQuery: (accountId: string | null) => ({
+    queryKey: ["account-access", accountId],
+    queryFn: mocks.access,
+    enabled: Boolean(accountId),
+    retry: false,
   }),
 }));
 vi.mock("../../../src/features/tasks/client", () => ({
@@ -120,6 +129,11 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
   mocks.loadAccount.mockResolvedValue({ status: "signed-out" });
+  mocks.role = "member";
+  mocks.access
+    .mockReset()
+    .mockImplementation(async () => accessForRole(mocks.role, mocks.session?.user.id ?? null));
+  mocks.configurationGet.mockReset();
 });
 
 async function page(url: string) {
@@ -140,6 +154,72 @@ async function page(url: string) {
   );
   return router;
 }
+
+function signIn(role: AccountRole = "member", accountId = "user-1") {
+  mocks.role = role;
+  mocks.session = {
+    user: { id: accountId, name: "Ada", email: "ada@example.test" },
+    session: { id: "session-1" },
+  };
+  mocks.loadAccount.mockResolvedValue({ status: "signed-in", account: mocks.session.user });
+}
+
+describe("menu permissions", () => {
+  it("keeps private menu links and their queries hidden for guests", async () => {
+    await page("/");
+    expect(screen.queryByRole("link", { name: "Waiting" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Memory and templates" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull();
+    expect(mocks.access).not.toHaveBeenCalled();
+  });
+
+  it.each(["/admin/settings", "/admin/settings/", "/ADMIN/SETTINGS"])(
+    "shows member menus and blocks direct navigation to %s before private reads",
+    async (path) => {
+      signIn();
+      await page(path);
+      expect(await screen.findByRole("alert")).toHaveTextContent("You do not have permission");
+      expect(await screen.findByRole("link", { name: "Automations" })).toBeTruthy();
+      expect(screen.getByRole("link", { name: "Memory and templates" })).toBeTruthy();
+      expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull();
+      expect(mocks.configurationGet).not.toHaveBeenCalled();
+    },
+  );
+
+  it("removes administrator navigation when the server downgrades the same account", async () => {
+    signIn("admin");
+    const router = await page("/approvals");
+    expect(await screen.findByRole("link", { name: "Site settings" })).toBeTruthy();
+    mocks.role = "member";
+    await router.options.context.queryClient.invalidateQueries({ queryKey: ["account-access"] });
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull());
+  });
+
+  it("fails closed on permission lookup errors and lets the user retry", async () => {
+    signIn("admin");
+    mocks.access.mockRejectedValue(new Error("private diagnostic"));
+    await page("/admin/settings");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unable to verify permissions");
+    expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull();
+    expect(screen.queryByText("private diagnostic")).toBeNull();
+    expect(mocks.configurationGet).not.toHaveBeenCalled();
+    mocks.access.mockResolvedValue(accessForRole("member", "user-1"));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("You do not have permission to access this page.")).toBeTruthy();
+  });
+
+  it("never carries administrator navigation into another account while grants are pending", async () => {
+    signIn("admin");
+    const router = await page("/");
+    expect(await screen.findByRole("link", { name: "Site settings" })).toBeTruthy();
+    signIn("member", "user-2");
+    mocks.access.mockImplementation(() => new Promise(() => {}));
+    await router.navigate({ to: "/admin/settings" });
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull());
+    expect(mocks.configurationGet).not.toHaveBeenCalled();
+  });
+});
 
 describe("authentication routes", () => {
   it("replaces closed registration with a sign-in link", async () => {

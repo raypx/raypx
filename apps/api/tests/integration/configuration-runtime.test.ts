@@ -50,7 +50,13 @@ it("scopes injected repositories to each runtime and shares the service with HTT
     await first.configuration.update(
       { revision: initial.revision, values: { ...initial.values, siteName: "First runtime" } },
       {
-        user: { id: "admin", name: "Admin", email: "admin@example.test", emailVerified: true },
+        user: {
+          id: "admin",
+          name: "Admin",
+          email: "admin@example.test",
+          emailVerified: true,
+          role: "admin",
+        },
         session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
       },
     );

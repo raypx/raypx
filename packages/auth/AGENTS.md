@@ -15,6 +15,10 @@ Account authentication, platform-specific session adapters and shared DOM forms.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.
 - `/types`: pure public account/session types.
+- `/permissions`: framework-free role names and application permission vocabulary.
+- `/access`: Better Auth's shared access controller and member/admin roles. The Admin
+  plugin and permission projections consume this same ACL. Admin grants user list,
+  get and set-role only; other account administration operations remain denied.
 
 ## Ownership
 
@@ -26,7 +30,13 @@ instances, callback origins, query sources, navigation adapters and session data
 
 Do not import database, mail, remote client or application implementations. Require
 verified email for password sign-in. Resolve sessions on the server for each RPC.
-Keep account types free from credentials and retired role/status requirements.
+Keep account types free from credentials and retired product status fields. The
+Admin plugin persists `member`/`admin` roles; multiple supported roles compose grants.
+Missing/unknown assignments grant no remote access. `readAuthSession` reloads the
+user record even with secondary session storage. Admin HTTP operations also check
+the fresh verified, unbanned user's ACL before plugin dispatch. Client role checks
+are display hints only; mutations require a trusted Origin. Preserve synthetic
+signup responses so Admin fields do not disclose account existence.
 The injected host-revocation callback runs only after successful session-security
 operations. Single-session revocation passes its ID; bulk revocation omits it.
 Ordinary sign-out/expiry does not revoke independent host credentials.

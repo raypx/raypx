@@ -80,9 +80,7 @@ export function WebShell() {
   const c = useTranslations("common");
   const memory = useTranslations("memory");
   const href = useRouterState({ select: (state) => state.location.href });
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname.replace(/\/+$/, "") || "/",
-  });
+  const pathname = useMatches({ select: (matches) => matches.at(-1)?.fullPath ?? "/" });
   const pagePermission = Object.hasOwn(webPagePermissions, pathname)
     ? webPagePermissions[pathname as WebPath]
     : null;

@@ -14,15 +14,6 @@ export const configurationClient = createApiClient({
 }).configuration;
 export type Configuration = Awaited<ReturnType<ApiClient["configuration"]["get"]>>;
 
-export function configurationAccessQuery(accountId: string | null) {
-  return {
-    queryKey: ["configuration", "access", accountId],
-    queryFn: ({ signal }: { signal: AbortSignal }) => configurationClient.access({}, { signal }),
-    enabled: Boolean(accountId),
-    retry: false,
-    staleTime: 30_000,
-  };
-}
 export function publicConfigurationQuery() {
   return {
     queryKey: ["configuration", "public"],

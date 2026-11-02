@@ -1,4 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { admin } from "better-auth/plugins/admin";
+import { accountAccessControl, accountRoles, assignedRoles } from "./access.js";
 import { APIError, createAuthMiddleware, getAuthoritativeSessionFromCtx } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
@@ -75,9 +77,13 @@ export function createAuth({
     basePath: "/api/auth",
     secret: config.secret,
     trustedOrigins: origins,
+    plugins: [admin({ defaultRole: "member", ac: accountAccessControl, roles: accountRoles })],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         if (
+          ((ctx.request || ctx.headers) &&
+            ctx.path.startsWith("/admin/") &&
+            !["/admin/list-users", "/admin/get-user"].includes(ctx.path)) ||
           [
             "/update-user",
             "/revoke-session",
@@ -91,6 +97,52 @@ export function createAuth({
               code: "INVALID_ORIGIN",
               message: "Untrusted origin",
             });
+        }
+        if (ctx.path.startsWith("/admin/") && (ctx.request || ctx.headers)) {
+          const session = await getAuthoritativeSessionFromCtx(ctx);
+          const user = session && (await ctx.context.internalAdapter.findUserById(session.user.id));
+          const profile = projectAuthUser(user);
+          if (
+            !session ||
+            !profile?.emailVerified ||
+            profile.banned ||
+            profile.id !== session.session.userId ||
+            ("impersonatedBy" in session.session && session.session.impersonatedBy)
+          )
+            throw new APIError("FORBIDDEN", { code: "FORBIDDEN", message: "Access denied" });
+          const roles = assignedRoles(profile.role);
+          if (ctx.path === "/admin/has-permission") {
+            const permissions = ctx.body?.permissions;
+            if (
+              !permissions ||
+              typeof permissions !== "object" ||
+              Array.isArray(permissions) ||
+              !Object.values(permissions).every(
+                (actions) =>
+                  Array.isArray(actions) && actions.every((action) => typeof action === "string"),
+              )
+            )
+              throw new APIError("BAD_REQUEST", { message: "Invalid permissions" });
+            return ctx.json({
+              error: null,
+              success: roles.some((role) => accountRoles[role].authorize(permissions).success),
+            });
+          }
+          const action =
+            ctx.path === "/admin/set-role"
+              ? "set-role"
+              : ctx.path === "/admin/list-users"
+                ? "list"
+                : ctx.path === "/admin/get-user"
+                  ? "get"
+                  : null;
+          // Admin's middleware reads the session cache again. Check the fresh user
+          // before dispatch so a failed cache refresh cannot preserve old privileges.
+          if (
+            !action ||
+            !roles.some((role) => accountRoles[role].authorize({ user: [action] }).success)
+          )
+            throw new APIError("FORBIDDEN", { code: "FORBIDDEN", message: "Access denied" });
         }
         if (
           revokeHostAuthorizations &&
@@ -135,6 +187,15 @@ export function createAuth({
       enabled: true,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
+      customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
+        ...coreFields,
+        role: "member",
+        banned: false,
+        banReason: null,
+        banExpires: null,
+        ...additionalFields,
+        id,
+      }),
       sendResetPassword: async ({ user, url }, request) =>
         mailer.sendPasswordReset({
           email: user.email,
@@ -212,7 +273,9 @@ export function projectAuthUser(value: unknown): AuthUser | null {
     typeof v.id !== "string" ||
     typeof v.email !== "string" ||
     typeof v.name !== "string" ||
-    typeof v.emailVerified !== "boolean"
+    typeof v.emailVerified !== "boolean" ||
+    typeof v.role !== "string" ||
+    typeof v.banned !== "boolean"
   )
     return null;
   return {
@@ -220,18 +283,22 @@ export function projectAuthUser(value: unknown): AuthUser | null {
     email: v.email,
     name: v.name,
     emailVerified: v.emailVerified,
+    role: v.role,
+    banned: v.banned,
     ...(typeof v.image === "string" || v.image === null ? { image: v.image } : {}),
   };
 }
-/** A fresh database account needs no retired role/status fields to authenticate. */
+/** Resolve roles from the user record on every call, independent of cached session users. */
 export async function readAuthSession(
-  auth: Pick<Auth, "api">,
+  auth: Pick<Auth, "api" | "$context">,
   headers: Headers,
 ): Promise<AuthSession | null> {
-  const result = await auth.api.getSession({ headers });
-  if (!result) return null;
-  const user = projectAuthUser(result.user);
-  if (!user) return null;
+  const result = await auth.api.getSession({ headers, query: { disableCookieCache: true } });
+  if (!result || result.session.impersonatedBy) return null;
+  const user = projectAuthUser(
+    await (await auth.$context).internalAdapter.findUserById(result.user.id),
+  );
+  if (!user || user.banned || user.id !== result.session.userId) return null;
   return {
     user,
     session: {

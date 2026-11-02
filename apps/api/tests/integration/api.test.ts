@@ -5,7 +5,7 @@ import type { ControlService } from "../../server/control/service.js";
 import type { AuthSession } from "@raypx/auth/types";
 
 const session: AuthSession = {
-  user: { id: "u1", email: "a@example.com", name: "A", emailVerified: true },
+  user: { id: "u1", email: "a@example.com", name: "A", emailVerified: true, role: "member" },
   session: { id: "s1", userId: "u1", expiresAt: new Date(Date.now() + 60000) },
 };
 const app = createApiApp({

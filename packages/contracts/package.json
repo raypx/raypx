@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@orpc/contract": "catalog:",
+    "@raypx/auth": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",

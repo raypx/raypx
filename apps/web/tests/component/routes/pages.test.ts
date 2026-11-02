@@ -3,6 +3,7 @@ import { createMemoryHistory, createRouter, type AnyRoute } from "@tanstack/reac
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vite-plus/test";
 import { routeTree } from "../../../src/routeTree.gen";
+import { webPagePermissions } from "../../../src/features/auth/access";
 
 function leaves(route: AnyRoute): AnyRoute[] {
   const children = Object.values((route.children ?? {}) as Record<string, AnyRoute>);
@@ -20,6 +21,14 @@ function pages() {
 }
 
 describe("application shell pages", () => {
+  it("requires an explicit public or private permission policy for every shell page", () => {
+    expect(
+      pages()
+        .filter((route) => route.id.startsWith("/(app)"))
+        .map((route) => route.fullPath)
+        .sort((a, b) => a.localeCompare(b)),
+    ).toEqual(Object.keys(webPagePermissions).sort((a, b) => a.localeCompare(b)));
+  });
   it("declare a translated title and page template for every shell route", () => {
     const shellPages = pages().filter((route) => route.id.startsWith("/(app)"));
     expect(

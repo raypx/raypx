@@ -96,6 +96,20 @@ it("registers, verifies, signs in, resets password and revokes the session", asy
     fetch: async (input, init) => app.fetch(new Request(input, init)),
   });
   expect(await client.account.get({})).toMatchObject({ email, name: "Foundation User" });
+  const currentUser = (await readAuthSession(auth, headers))!.user;
+  expect(await client.account.access({})).toMatchObject({ role: "member" });
+  expect(
+    (await request("admin/set-role", { userId: currentUser.id, role: "admin" }, cookie)).status,
+  ).toBe(403);
+  await connection.db.update(user).set({ role: "admin" }).where(eq(user.id, currentUser.id));
+  expect(await client.account.access({})).toMatchObject({
+    role: "admin",
+    permissions: expect.arrayContaining(["configuration.update"]),
+  });
+  expect(
+    (await request("admin/set-role", { userId: currentUser.id, role: "member" }, cookie)).status,
+  ).toBe(200);
+  expect(await client.account.access({})).toMatchObject({ role: "member" });
   expect(
     (
       await request("request-password-reset", {

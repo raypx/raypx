@@ -11,6 +11,8 @@ import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 import { createAccountService } from "@raypx/account/server";
+import { hasPermission, type AccountPermission } from "@raypx/account/access";
+import { createAccessPolicy, type AccessPolicy } from "./access.js";
 import type { ApiEventLogger } from "./logging.js";
 import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
 import type { RateLimiter, RateRule } from "./rate-limit.js";
@@ -20,6 +22,7 @@ import { ContextError } from "@raypx/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";
 
 export interface ApiAppOptions {
+  access?: AccessPolicy;
   configuration?: ConfigurationService;
   jobsEnabled?: boolean;
   control?: ControlService;
@@ -89,6 +92,7 @@ export function newRequestId(): string {
   return `req_${Array.from(crypto.getRandomValues(new Uint8Array(24)), (byte) => alphabet[byte % 26]).join("")}`;
 }
 export function createApiApp(options: ApiAppOptions) {
+  const access = options.access ?? createAccessPolicy();
   const allowedOrigins = normalizeTrustedOrigins(options.allowedOrigins);
   const accountService = createAccountService({
     readSession: (headers) => options.readSession(headers),
@@ -242,14 +246,11 @@ export function createApiApp(options: ApiAppOptions) {
     ).join("");
   async function controlCall<T>(
     context: Context,
+    permission: AccountPermission,
     run: (control: ControlService, auth: AuthSession) => Promise<T>,
     limit?: keyof typeof rpcLimits,
   ) {
-    const auth = await options.readSession(context.headers);
-    if (!auth)
-      throw new ORPCError("UNAUTHORIZED", {
-        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
-      });
+    const auth = await requirePermission(context, permission);
     if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
     if (
       limit &&
@@ -300,13 +301,17 @@ export function createApiApp(options: ApiAppOptions) {
       );
     }
   }
-  async function requireAdmin(context: Context, limit?: keyof typeof rpcLimits) {
+  async function requirePermission(
+    context: Context,
+    permission: AccountPermission,
+    limit?: keyof typeof rpcLimits,
+  ) {
     const auth = await options.readSession(context.headers);
     if (!auth)
       throw new ORPCError("UNAUTHORIZED", {
         data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
       });
-    if (!options.configuration?.isAdmin(auth))
+    if (!hasPermission(access(auth), permission))
       throw new ORPCError("FORBIDDEN", {
         data: { error: { code: "FORBIDDEN" }, requestId: context.requestId },
       });
@@ -326,11 +331,7 @@ export function createApiApp(options: ApiAppOptions) {
     write: boolean,
     run: (service: CloudJobsService, userId: string) => Promise<T>,
   ) {
-    const auth = await options.readSession(context.headers);
-    if (!auth)
-      throw new ORPCError("UNAUTHORIZED", {
-        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
-      });
+    const auth = await requirePermission(context, "automations.manage");
     if (write) {
       const origin = context.headers.get("origin");
       if (!origin || !allowedOrigins.includes(origin))
@@ -365,11 +366,7 @@ export function createApiApp(options: ApiAppOptions) {
     write: boolean,
     run: (service: ContextLibraryService, owner: string) => Promise<T>,
   ) {
-    const auth = await options.readSession(context.headers);
-    if (!auth)
-      throw new ORPCError("UNAUTHORIZED", {
-        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
-      });
+    const auth = await requirePermission(context, "memory.manage");
     if (write) {
       const origin = context.headers.get("origin");
       if (!origin || !allowedOrigins.includes(origin))
@@ -473,6 +470,7 @@ export function createApiApp(options: ApiAppOptions) {
           });
         return controlCall(
           context,
+          "projects.read",
           (control, auth) => control.authorizeHost(auth, input),
           "hosts.authorize",
         );
@@ -510,10 +508,14 @@ export function createApiApp(options: ApiAppOptions) {
     },
     observed: {
       list: os.observed.list.handler(({ context }) =>
-        controlCall(context, (control, auth) => control.listObserved(auth.user.id)),
+        controlCall(context, "approvals.read", (control, auth) =>
+          control.listObserved(auth.user.id),
+        ),
       ),
       get: os.observed.get.handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.getObserved(auth.user.id, input.id)),
+        controlCall(context, "approvals.read", (control, auth) =>
+          control.getObserved(auth.user.id, input.id),
+        ),
       ),
     },
     configuration: {
@@ -524,11 +526,13 @@ export function createApiApp(options: ApiAppOptions) {
         }),
       ),
       access: os.configuration.access.handler(async ({ context }) => ({
-        allowed:
-          options.configuration?.isAdmin(await options.readSession(context.headers)) ?? false,
+        allowed: hasPermission(
+          access(await options.readSession(context.headers)),
+          "configuration.read",
+        ),
       })),
       get: os.configuration.get.handler(async ({ context }) => {
-        await requireAdmin(context);
+        await requirePermission(context, "configuration.read");
         return configurationCall(context, async (service) => ({
           ...(await service.read()),
           deployment: {
@@ -538,7 +542,11 @@ export function createApiApp(options: ApiAppOptions) {
         }));
       }),
       update: os.configuration.update.handler(async ({ context, input }) => {
-        const auth = await requireAdmin(context, "configuration.update");
+        const auth = await requirePermission(
+          context,
+          "configuration.update",
+          "configuration.update",
+        );
         // Cookie-authenticated writes require an explicit trusted browser origin.
         const origin = context.headers.get("origin");
         if (!origin || !allowedOrigins.includes(origin))
@@ -550,20 +558,26 @@ export function createApiApp(options: ApiAppOptions) {
     },
     devices: {
       register: os.devices.register.handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.register(auth, input), "devices.register"),
+        controlCall(
+          context,
+          "projects.read",
+          (control, auth) => control.register(auth, input),
+          "devices.register",
+        ),
       ),
       refreshGrant: os.devices.refreshGrant.handler(({ input, context }) =>
         controlCall(
           context,
+          "projects.read",
           (control, auth) => control.refreshGrant(auth, input),
           "devices.refreshGrant",
         ),
       ),
       list: os.devices.list.handler(({ context }) =>
-        controlCall(context, (control, auth) => control.listDevices(auth.user.id)),
+        controlCall(context, "projects.read", (control, auth) => control.listDevices(auth.user.id)),
       ),
       revoke: os.devices.revoke.handler(({ input, context }) =>
-        controlCall(context, async (control, auth) => {
+        controlCall(context, "projects.read", async (control, auth) => {
           const result = await control.revoke(auth.user.id, input);
           await options.onRevoke?.(auth.user.id, input.deviceId);
           return result;
@@ -572,25 +586,32 @@ export function createApiApp(options: ApiAppOptions) {
     },
     tasks: {
       list: os.tasks.list.handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.listTasks(auth.user.id, input)),
+        controlCall(context, "tasks.read", (control, auth) =>
+          control.listTasks(auth.user.id, input),
+        ),
       ),
       get: os.tasks.get.handler(({ input, context }) =>
-        controlCall(context, (control, auth) =>
+        controlCall(context, "tasks.read", (control, auth) =>
           control.getTask(auth.user.id, input.id, input.after, input.beforeActivity),
         ),
       ),
     },
     approvals: {
       list: os.approvals.list.handler(({ context }) =>
-        controlCall(context, (control, auth) => control.listApprovals(auth.user.id)),
+        controlCall(context, "approvals.read", (control, auth) =>
+          control.listApprovals(auth.user.id),
+        ),
       ),
     },
     relay: {
       ticket: os.relay.ticket.handler(({ context }) =>
-        controlCall(context, (control, auth) => control.ticket(auth), "relay.ticket"),
+        controlCall(context, "tasks.read", (control, auth) => control.ticket(auth), "relay.ticket"),
       ),
     },
     account: {
+      access: os.account.access.handler(async ({ context }) =>
+        access(await options.readSession(context.headers)),
+      ),
       get: os.account.get.handler(async ({ context }) => {
         const account = await accountService.get(context.headers);
         if (!account)

@@ -9,7 +9,6 @@ export interface ConfigurationReader {
 export interface ConfigurationService extends ConfigurationReader {
   /** Briefly cached read for public pages and pre-checks; authoritative paths use read(). */
   readCached(this: void): Promise<ConfigurationSnapshot>;
-  isAdmin(this: void, auth: AuthSession | null): boolean;
   /** Pass a freshly resolved server session, never identity supplied by a client. */
   update(
     this: void,

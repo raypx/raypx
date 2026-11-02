@@ -2,7 +2,7 @@ import { expect, it } from "vite-plus/test";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { schema, user } from "../src/schema.js";
 
-it("uses an isolated foundation schema without legacy role admission", () => {
+it("uses the isolated foundation schema with Better Auth Admin fields", () => {
   expect(Object.keys(schema)).toEqual(
     expect.arrayContaining([
       "user",
@@ -17,5 +17,7 @@ it("uses an isolated foundation schema without legacy role admission", () => {
   const config = getTableConfig(user);
   expect(config.schema).toBe("raypx_foundation");
   expect(config.columns.map((c) => c.name)).toContain("name");
-  expect(config.columns.map((c) => c.name)).not.toContain("role");
+  expect(config.columns.map((c) => c.name)).toEqual(
+    expect.arrayContaining(["role", "banned", "ban_reason", "ban_expires"]),
+  );
 });

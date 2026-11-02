@@ -1,4 +1,5 @@
 import { createConfigurationRepository } from "../configuration/repository.js";
+import { createAccessPolicy } from "../access.js";
 import { createConfigurationService } from "../configuration/service.js";
 import type { ConfigurationRepository } from "../configuration/types.js";
 import type { Cache } from "../cache/types.js";
@@ -70,9 +71,10 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       resources,
       db,
     );
+    const access = createAccessPolicy();
     const configuration = createConfigurationService({
       repository: (resources.createConfigurationRepository ?? createConfigurationRepository)(db),
-      adminEmails: environment.ADMIN_EMAILS,
+      access,
       cache,
     });
     const control = new ControlService(
@@ -115,6 +117,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     // Keep sessions request-owned even when the process reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
     return {
+      auth,
       cache,
       storage,
       control,
@@ -127,6 +130,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,
         jobsEnabled: environment.JOBS_ENABLED,

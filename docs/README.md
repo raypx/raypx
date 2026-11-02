@@ -7,6 +7,7 @@
 - [Local and server Agent platform decision](architecture/0039-local-server-agent-platform.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
 - [Account settings and session management](development/account-security.md)
+- [Account roles and menu permissions](development/access-control.md)
 - [Adding and extracting packages](development/workspaces.md)
 - [Windows daemon decision](architecture/0037-windows-daemon.md)
 - [MyGo Desktop host decision](architecture/0038-mygo-desktop-host.md)

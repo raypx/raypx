@@ -4,6 +4,7 @@ import { configurationDefaults } from "@raypx/contracts/api";
 import { createCache } from "../../../server/cache/cache.js";
 import { createMemoryStore } from "../../../server/cache/memory.js";
 import { createConfigurationService } from "../../../server/configuration/service.js";
+import { createAccessPolicy } from "../../../server/access.js";
 import type {
   ConfigurationReader,
   ConfigurationRepository,
@@ -11,7 +12,13 @@ import type {
 
 function fixture() {
   const auth: AuthSession = {
-    user: { id: "admin", email: "admin@example.test", name: "Admin", emailVerified: true },
+    user: {
+      id: "admin",
+      email: "admin@example.test",
+      name: "Admin",
+      emailVerified: true,
+      role: "admin",
+    },
     session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
   };
   const snapshot = { values: { ...configurationDefaults }, revision: 0, updatedAt: null };
@@ -27,7 +34,10 @@ function fixture() {
     auth,
     snapshot,
     repository,
-    service: createConfigurationService({ repository, adminEmails: ["ADMIN@example.test"] }),
+    service: createConfigurationService({
+      repository,
+      access: createAccessPolicy(),
+    }),
   };
 }
 
@@ -74,11 +84,10 @@ it("does not let direct callers bypass administrator/session checks", async () =
   await expect(f.service.update(input, null)).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   for (const auth of [
     { ...f.auth, user: { ...f.auth.user, emailVerified: false } },
-    { ...f.auth, user: { ...f.auth.user, email: "other@example.test" } },
+    { ...f.auth, user: { ...f.auth.user, role: "member" } },
     { ...f.auth, session: { ...f.auth.session, userId: "other" } },
     { ...f.auth, session: { ...f.auth.session, expiresAt: new Date(0) } },
   ]) {
-    expect(f.service.isAdmin(auth)).toBe(false);
     await expect(f.service.update(input, auth)).rejects.toMatchObject({ code: "FORBIDDEN" });
   }
   expect(f.repository.update).not.toHaveBeenCalled();
@@ -102,7 +111,7 @@ it("serves brief cached reads, refreshes them after saves and never caches failu
   const cache = createCache(createMemoryStore({ now: () => time }));
   const service = createConfigurationService({
     repository: f.repository,
-    adminEmails: ["admin@example.test"],
+    access: createAccessPolicy(),
     cache,
     cacheTtlMs: 1000,
   });
@@ -114,7 +123,7 @@ it("serves brief cached reads, refreshes them after saves and never caches failu
   // Another service sharing the cache, as per-request Worker runtimes do, reuses it.
   const sibling = createConfigurationService({
     repository: f.repository,
-    adminEmails: [],
+    access: createAccessPolicy(),
     cache,
     cacheTtlMs: 1000,
   });

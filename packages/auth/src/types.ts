@@ -4,6 +4,9 @@ export interface AuthUser {
   email: string;
   name: string;
   emailVerified: boolean;
+  /** Better Auth Admin plugin roles, not a browser-assigned authorization claim. */
+  role?: string;
+  banned?: boolean;
   image?: string | null;
 }
 export interface AuthSession {
