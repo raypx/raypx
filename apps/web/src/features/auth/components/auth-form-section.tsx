@@ -3,6 +3,7 @@ import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu } from "../../../components/language-menu";
 import { ThemeMenu } from "../../../components/theme-menu";
 import type { ReactNode } from "react";
+import { LegalFooter } from "../../../components/legal-footer";
 
 interface AuthFormSectionProps {
   siteName: string;
@@ -32,6 +33,7 @@ export function AuthFormSection({ siteName, children }: AuthFormSectionProps) {
       >
         {children}
       </main>
+      <LegalFooter className="px-6 py-6 text-center" />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { publicConfigurationQuery } from "../../configuration/client";
 import { LanguageMenu } from "../../../components/language-menu";
 import { ThemeMenu } from "../../../components/theme-menu";
+import { LegalFooter } from "../../../components/legal-footer";
 
 export function LandingLayout() {
   const c = useTranslations("common");
@@ -51,6 +52,7 @@ export function LandingLayout() {
       >
         <Outlet />
       </main>
+      <LegalFooter className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-10" />
     </div>
   );
 }

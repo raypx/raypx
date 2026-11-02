@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as landingRouteRouteImport } from './routes/(landing)/route'
+import { Route as legalRouteRouteImport } from './routes/(legal)/route'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as appAccountRouteImport } from './routes/(app)/account'
 import { Route as appApprovalsRouteImport } from './routes/(app)/approvals'
@@ -26,6 +27,7 @@ import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-pas
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as landingIndexRouteImport } from './routes/(landing)/index'
+import { Route as legalPrivacyRouteImport } from './routes/(legal)/privacy'
 import { Route as appAdminSettingsRouteImport } from './routes/(app)/admin/settings'
 
 const appRouteRoute = appRouteRouteImport.update({
@@ -38,6 +40,10 @@ const authRouteRoute = authRouteRouteImport.update({
 } as any)
 const landingRouteRoute = landingRouteRouteImport.update({
   id: '/(landing)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const legalRouteRoute = legalRouteRouteImport.update({
+  id: '/(legal)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HealthRoute = HealthRouteImport.update({
@@ -110,6 +116,11 @@ const landingIndexRoute = landingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => landingRouteRoute,
 } as any)
+const legalPrivacyRoute = legalPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => legalRouteRoute,
+} as any)
 const appAdminSettingsRoute = appAdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
@@ -130,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/privacy': typeof legalPrivacyRoute
   '/': typeof landingIndexRoute
   '/admin/settings': typeof appAdminSettingsRoute
 }
@@ -147,6 +159,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/privacy': typeof legalPrivacyRoute
   '/': typeof landingIndexRoute
   '/admin/settings': typeof appAdminSettingsRoute
 }
@@ -155,6 +168,7 @@ export interface FileRoutesById {
   '/(app)': typeof appRouteRouteWithChildren
   '/(auth)': typeof authRouteRouteWithChildren
   '/(landing)': typeof landingRouteRouteWithChildren
+  '/(legal)': typeof legalRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/(app)/account': typeof appAccountRoute
   '/(app)/approvals': typeof appApprovalsRoute
@@ -168,6 +182,7 @@ export interface FileRoutesById {
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
+  '/(legal)/privacy': typeof legalPrivacyRoute
   '/(landing)/': typeof landingIndexRoute
   '/(app)/admin/settings': typeof appAdminSettingsRoute
 }
@@ -187,6 +202,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
+    | '/privacy'
     | '/'
     | '/admin/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -204,6 +220,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
+    | '/privacy'
     | '/'
     | '/admin/settings'
   id:
@@ -211,6 +228,7 @@ export interface FileRouteTypes {
     | '/(app)'
     | '/(auth)'
     | '/(landing)'
+    | '/(legal)'
     | '/health'
     | '/(app)/account'
     | '/(app)/approvals'
@@ -224,6 +242,7 @@ export interface FileRouteTypes {
     | '/(auth)/reset-password'
     | '/(auth)/signup'
     | '/(auth)/verify-email'
+    | '/(legal)/privacy'
     | '/(landing)/'
     | '/(app)/admin/settings'
   fileRoutesById: FileRoutesById
@@ -232,6 +251,7 @@ export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
   landingRouteRoute: typeof landingRouteRouteWithChildren
+  legalRouteRoute: typeof legalRouteRouteWithChildren
   HealthRoute: typeof HealthRoute
 }
 
@@ -256,6 +276,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof landingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(legal)': {
+      id: '/(legal)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof legalRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/health': {
@@ -356,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof landingIndexRouteImport
       parentRoute: typeof landingRouteRoute
     }
+    '/(legal)/privacy': {
+      id: '/(legal)/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof legalPrivacyRouteImport
+      parentRoute: typeof legalRouteRoute
+    }
     '/(app)/admin/settings': {
       id: '/(app)/admin/settings'
       path: '/admin/settings'
@@ -424,10 +458,23 @@ const landingRouteRouteWithChildren = landingRouteRoute._addFileChildren(
   landingRouteRouteChildren,
 )
 
+interface legalRouteRouteChildren {
+  legalPrivacyRoute: typeof legalPrivacyRoute
+}
+
+const legalRouteRouteChildren: legalRouteRouteChildren = {
+  legalPrivacyRoute: legalPrivacyRoute,
+}
+
+const legalRouteRouteWithChildren = legalRouteRoute._addFileChildren(
+  legalRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
   landingRouteRoute: landingRouteRouteWithChildren,
+  legalRouteRoute: legalRouteRouteWithChildren,
   HealthRoute: HealthRoute,
 }
 export const routeTree = rootRouteImport

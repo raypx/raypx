@@ -23,6 +23,12 @@ application is an independent composition root and is never imported by another 
   `src/components/shell.tsx` (`@raypx/blocks/shell` with the account menu and pending count) for the account,
   settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
   Import heavy client modules only from the layout or route that needs them.
+- `src/routes/(legal)/` holds public legal pages under a lightweight document layout.
+  `/privacy` is account-free and does not load the app shell or account queries.
+  Keep privacy disclosures aligned with local storage, remote projections and opt-in
+  diagnostics; English and Chinese copy live in the `legal` catalog namespace.
+  The header shares `ThemeMenu` and `LanguageMenu` with the other public layouts.
+  `src/components/legal-footer.tsx` provides the shared entry from landing and auth pages.
 - Every `(app)` route declares `staticData.page` (title key from `PageTitle` in
   `src/router.tsx` and a Blocks page layout). The shell derives breadcrumbs and the
   page template from it; pages never add their own outer width or gutters.
