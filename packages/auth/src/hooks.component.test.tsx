@@ -2,8 +2,9 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { useAuthActions } from "./hooks";
+import { createAuthClient } from "better-auth/react";
 
-type AuthResponse = { error: null | { code?: string; message?: string } };
+type AuthResponse = { error: null | { code?: string; message?: string; status?: number } };
 
 function clientFixture() {
   const action = () =>
@@ -33,9 +34,44 @@ function actions(client = clientFixture()) {
   };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("shared authentication actions", () => {
+  it.each([
+    ["X-Retry-After", "90", 90],
+    ["Retry-After", "120", 120],
+    ["Retry-After", "Mon, 02 Nov 2026 12:01:30 GMT", 90],
+    ["X-Retry-After", "invalid", undefined],
+  ])("reads %s=%s through the real Better Auth client", async (header, value, seconds) => {
+    vi.spyOn(Date, "now").mockReturnValue(Date.UTC(2026, 10, 2, 12));
+    const client = createAuthClient({
+      baseURL: "https://raypx.example",
+      fetchOptions: {
+        customFetchImpl: async () =>
+          Response.json(
+            { message: "private diagnostic" },
+            {
+              status: 429,
+              headers: { [header]: value },
+            },
+          ),
+      },
+    });
+    const { result } = renderHook(() =>
+      useAuthActions({ client, webUrl: "https://raypx.example" }),
+    );
+    await act(async () => {
+      await result.current.requestPasswordReset({ email: "user@example.test" });
+    });
+    expect(result.current.error).toEqual({
+      kind: "auth",
+      key: "rateLimited",
+      ...(seconds === undefined ? {} : { retryAfterSeconds: seconds }),
+    });
+  });
   it("normalizes identity fields and keeps credentials, language and verification links intact", async () => {
     const { result, client } = actions();
     await act(async () => {
@@ -63,7 +99,7 @@ describe("shared authentication actions", () => {
     expect(client.sendVerificationEmail).toHaveBeenCalledWith({
       email: "ada@example.test",
       callbackURL: "https://raypx.example/verify-email?verified=1",
-      fetchOptions,
+      fetchOptions: { ...fetchOptions, onError: expect.any(Function) },
     });
   });
 
@@ -77,7 +113,7 @@ describe("shared authentication actions", () => {
     expect(client.requestPasswordReset).toHaveBeenCalledWith({
       email: "ada@example.test",
       redirectTo: "https://raypx.example/reset-password",
-      fetchOptions,
+      fetchOptions: { ...fetchOptions, onError: expect.any(Function) },
     });
     expect(client.resetPassword).toHaveBeenCalledWith({
       token: "reset-token",
@@ -226,6 +262,17 @@ describe("shared authentication actions", () => {
       });
     });
     expect(result.current.error).toEqual({ kind: "auth", key });
+  });
+
+  it("recognizes a rate-limit response without an error code", async () => {
+    const { result, client } = actions();
+    client.requestPasswordReset.mockResolvedValueOnce({
+      error: { status: 429, message: "private diagnostic" },
+    });
+    await act(async () => {
+      await result.current.requestPasswordReset({ email: "user@example.test" });
+    });
+    expect(result.current.error).toEqual({ kind: "auth", key: "rateLimited" });
   });
 
   it("reduces unknown server errors to a safe key without exposing diagnostic text", async () => {

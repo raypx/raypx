@@ -32,7 +32,7 @@ export function ThemeMenu() {
         >
           {items.map(({ value, icon: Icon }) => (
             <DropdownMenuRadioItem key={value} value={value} closeOnClick>
-              <Icon aria-hidden="true" />
+              <Icon aria-hidden="true" className="text-muted-foreground" />
               {c(value)}
             </DropdownMenuRadioItem>
           ))}

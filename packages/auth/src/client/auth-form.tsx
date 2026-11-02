@@ -5,11 +5,12 @@ import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
-import { PasswordInput } from "@raypx/ui/password-input";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
 import { authPolicy } from "../policy";
 import { formText } from "./form-text";
+import { PasswordField } from "./password-field";
+import { useMailCooldown } from "./use-mail-cooldown";
 
 const modeLabels = {
   login: { title: "login", submit: "login" },
@@ -70,6 +71,8 @@ export function AuthForm({
   const [message, setMessage] = useState("");
   const [signedIn, setSignedIn] = useState(false);
   const [resetSaved, setResetSaved] = useState(false);
+  const cooldown = useMailCooldown();
+  const mailMode = mode === "forgot-password" || mode === "verify-email";
   const params = new URLSearchParams(search);
   const token = params.get("token") ?? "";
   const invalidReset =
@@ -82,7 +85,7 @@ export function AuthForm({
   const title = t(modeLabels[mode].title);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || signedIn || resetSaved || invalidReset) return;
+    if (busy || signedIn || resetSaved || invalidReset || (mailMode && cooldown.isActive())) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const email = formText(data, "email");
@@ -105,7 +108,17 @@ export function AuthForm({
                   token,
                 })
               : await auth.sendVerificationEmail({ email });
-    if (result.status !== "success") return;
+    if (result.status !== "success") {
+      if (
+        mailMode &&
+        result.status === "error" &&
+        result.error.kind === "auth" &&
+        result.error.key === "rateLimited"
+      )
+        cooldown.start(result.error.retryAfterSeconds);
+      return;
+    }
+    if (mailMode) cooldown.start();
     if (mode === "reset-password") {
       form.reset();
       setResetSaved(true);
@@ -219,31 +232,32 @@ export function AuthForm({
                 </Field>
               )}
               {(mode === "login" || mode === "signup" || mode === "reset-password") && (
-                <Field data-disabled={busy}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <FieldLabel htmlFor="auth-password">
-                      {t(mode === "reset-password" ? "newPassword" : "password")}
-                    </FieldLabel>
-                    {mode === "login" && (
+                <PasswordField
+                  label={t(mode === "reset-password" ? "newPassword" : "password")}
+                  labelAction={
+                    mode === "login" ? (
                       <LinkComponent to="forgot-password" className={linkClassName}>
                         {t("forgot")}
                       </LinkComponent>
-                    )}
-                  </div>
-                  <PasswordInput
-                    id="auth-password"
-                    labels={{ show: c("showPassword"), hide: c("hidePassword") }}
-                    name="password"
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
-                    minLength={mode === "login" ? 1 : authPolicy.passwordMinLength}
-                    maxLength={authPolicy.passwordMaxLength}
-                    required
-                    disabled={busy}
-                    className="h-11"
-                  />
-                </Field>
+                    ) : undefined
+                  }
+                  id="auth-password"
+                  newPassword={mode !== "login"}
+                  name="password"
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  minLength={mode === "login" ? 1 : authPolicy.passwordMinLength}
+                  maxLength={authPolicy.passwordMaxLength}
+                  required
+                  disabled={busy}
+                  className="h-11"
+                />
               )}
-              <Button type="submit" size="lg" className="mt-1 h-11 w-full" disabled={busy}>
+              <Button
+                type="submit"
+                size="lg"
+                className="mt-1 h-11 w-full"
+                disabled={busy || (mailMode && cooldown.remaining > 0)}
+              >
                 {busy ? (
                   <LoaderCircle
                     data-icon="inline-start"
@@ -251,8 +265,16 @@ export function AuthForm({
                     aria-hidden="true"
                   />
                 ) : null}
-                {busy ? c("working") : mode === "login" ? c("signIn") : t(modeLabels[mode].submit)}
-                {!busy && <ArrowRight data-icon="inline-end" aria-hidden="true" />}
+                {busy
+                  ? c("working")
+                  : mailMode && cooldown.remaining > 0
+                    ? t("resendIn", { seconds: String(cooldown.remaining) })
+                    : mode === "login"
+                      ? c("signIn")
+                      : t(modeLabels[mode].submit)}
+                {!busy && !(mailMode && cooldown.remaining > 0) && (
+                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                )}
               </Button>
             </FieldGroup>
           </form>

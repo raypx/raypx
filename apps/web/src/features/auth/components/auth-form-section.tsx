@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu } from "../../../components/language-menu";
+import { ThemeMenu } from "../../../components/theme-menu";
 import type { ReactNode } from "react";
 
 interface AuthFormSectionProps {
@@ -19,7 +20,10 @@ export function AuthFormSection({ siteName, children }: AuthFormSectionProps) {
         >
           <Logo label={siteName} className="max-w-full [&>span]:truncate" />
         </Link>
-        <LanguageMenu />
+        <div className="flex shrink-0 items-center gap-1">
+          <ThemeMenu />
+          <LanguageMenu />
+        </div>
       </header>
       <main
         id="main"

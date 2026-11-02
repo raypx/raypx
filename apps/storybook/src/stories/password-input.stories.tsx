@@ -28,7 +28,7 @@ const meta = {
   component: PasswordInput,
   parameters: { layout: "padded" },
   args: {
-    labels: { show: "Show password", hide: "Hide password" },
+    labels: { show: "Show password", hide: "Hide password", capsLock: "Caps Lock is on" },
     name: "password",
     autoComplete: "current-password",
     defaultValue: "example-password",
@@ -61,7 +61,7 @@ export const Invalid: Story = {
 
 export const Chinese: Story = {
   args: {
-    labels: { show: "显示密码", hide: "隐藏密码" },
+    labels: { show: "显示密码", hide: "隐藏密码", capsLock: "大写锁定已开启" },
     defaultValue: "",
     placeholder: "请输入密码",
   },

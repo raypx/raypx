@@ -144,7 +144,7 @@ export function createApiApp(options: ApiAppOptions) {
       credentials: true,
       allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization", "Accept-Language", "X-Request-Id"],
-      exposeHeaders: ["X-Request-Id"],
+      exposeHeaders: ["X-Request-Id", "Retry-After", "X-Retry-After"],
       // Every JSON RPC call is preflighted; let browsers reuse the answer for ten minutes.
       maxAge: 600,
     }),

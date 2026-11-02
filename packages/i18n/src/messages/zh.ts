@@ -418,6 +418,7 @@ export default {
     signIn: "登录",
     signOut: "退出登录",
     showPassword: "显示密码",
+    capsLockOn: "大写锁定已开启",
     hidePassword: "隐藏密码",
     desktopOnly: "请打开桌面应用以使用本地工具。",
     working: "处理中…",
@@ -434,6 +435,9 @@ export default {
     skipped: "已跳过",
   },
   auth: {
+    passwordRequirements: "使用 {min}–{max} 个字符。",
+    passwordRequirementsMet: "密码长度符合要求。",
+    resendIn: "{seconds} 秒后可重新发送",
     invalidName: "显示名称需要 1–80 个字符。",
     passwordLong: "密码不能超过 128 个字符。",
     signInCompletionFailed: "已登录，但页面加载失败，请重试以继续。",

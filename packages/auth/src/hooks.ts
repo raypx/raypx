@@ -17,7 +17,7 @@ export type AuthErrorKey =
   | "generic";
 
 export type AuthActionError =
-  | { kind: "auth"; key: AuthErrorKey }
+  | { kind: "auth"; key: AuthErrorKey; retryAfterSeconds?: number }
   | { kind: "network" }
   | { kind: "completion" };
 
@@ -29,10 +29,16 @@ export type AuthActionResult =
 export type AuthActionSuccess = () => void | Promise<unknown>;
 
 export interface AuthActionResponse {
-  error?: { code?: string | undefined } | null | undefined;
+  error?: { code?: string | undefined; status?: number | undefined } | null | undefined;
+  retryAfterSeconds?: number;
 }
 
-type RequestOptions = { fetchOptions: { headers: Record<string, string> } };
+type RequestOptions = {
+  fetchOptions: {
+    headers: Record<string, string>;
+    onError?: (context: { response: Response }) => void;
+  };
+};
 type Credentials = { email: string; password: string };
 
 /** The common email/password methods provided by browser and native auth clients. */
@@ -85,6 +91,34 @@ function authErrorKey(code?: string): AuthErrorKey {
   return "generic";
 }
 
+async function mailRequest(
+  request: (fetchOptions: RequestOptions["fetchOptions"]) => Promise<AuthActionResponse>,
+  fetchOptions: RequestOptions["fetchOptions"],
+): Promise<AuthActionResponse> {
+  let limited = false;
+  let retryAfterSeconds: number | undefined;
+  const result = await request({
+    ...fetchOptions,
+    onError: ({ response }) => {
+      if (response.status !== 429) return;
+      limited = true;
+      // Better Auth 1.7 uses X-Retry-After; standard Retry-After also accepts an HTTP date.
+      const value = response.headers.get("Retry-After") ?? response.headers.get("X-Retry-After");
+      if (!value) return;
+      const seconds = Math.ceil(
+        /^\d+$/.test(value) ? Number(value) : (Date.parse(value) - Date.now()) / 1000,
+      );
+      if (Number.isSafeInteger(seconds) && seconds >= 0) retryAfterSeconds = Math.max(1, seconds);
+    },
+  });
+  return limited
+    ? {
+        error: { code: "TOO_MANY_REQUESTS" },
+        ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+      }
+    : result;
+}
+
 function useAuthRequest() {
   const active = useRef(false);
   // Only retain the follow-up, never the request closure that contains credentials.
@@ -118,7 +152,14 @@ function useAuthRequest() {
         } catch {
           return fail({ kind: "network" });
         }
-        if (result.error) return fail({ kind: "auth", key: authErrorKey(result.error.code) });
+        if (result.error)
+          return fail({
+            kind: "auth",
+            key: result.error.status === 429 ? "rateLimited" : authErrorKey(result.error.code),
+            ...(result.retryAfterSeconds === undefined
+              ? {}
+              : { retryAfterSeconds: result.retryAfterSeconds }),
+          });
         try {
           await onSuccess?.();
         } catch {
@@ -188,11 +229,15 @@ export function useAuthActions({
     requestPasswordReset(input: { email: string }, onSuccess?: AuthActionSuccess) {
       return run(
         () =>
-          client.requestPasswordReset({
-            email: input.email.trim(),
-            redirectTo: callbackURLs?.reset ?? `${webUrl}/reset-password`,
+          mailRequest(
+            (options) =>
+              client.requestPasswordReset({
+                email: input.email.trim(),
+                redirectTo: callbackURLs?.reset ?? `${webUrl}/reset-password`,
+                fetchOptions: options,
+              }),
             fetchOptions,
-          }),
+          ),
         onSuccess,
       );
     },
@@ -210,7 +255,15 @@ export function useAuthActions({
     sendVerificationEmail(input: { email: string }, onSuccess?: AuthActionSuccess) {
       return run(
         () =>
-          client.sendVerificationEmail({ email: input.email.trim(), callbackURL, fetchOptions }),
+          mailRequest(
+            (options) =>
+              client.sendVerificationEmail({
+                email: input.email.trim(),
+                callbackURL,
+                fetchOptions: options,
+              }),
+            fetchOptions,
+          ),
         onSuccess,
       );
     },

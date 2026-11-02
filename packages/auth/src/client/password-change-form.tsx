@@ -5,10 +5,10 @@ import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
-import { PasswordInput } from "@raypx/ui/password-input";
 import { usePasswordChange, type AuthActionSuccess, type PasswordChangeClient } from "../hooks";
 import { authPolicy } from "../policy";
 import { formText } from "./form-text";
+import { PasswordField } from "./password-field";
 
 export function PasswordChangeForm({
   client,
@@ -98,24 +98,23 @@ export function PasswordChangeForm({
                     auth.error?.kind === "auth" &&
                     auth.error.key === "currentPasswordInvalid";
               return (
-                <Field key={name} data-disabled={auth.busy} data-invalid={invalid || undefined}>
-                  <FieldLabel htmlFor={`${id}-${name}`}>{t(name)}</FieldLabel>
-                  <PasswordInput
-                    id={`${id}-${name}`}
-                    name={name}
-                    labels={{ show: c("showPassword"), hide: c("hidePassword") }}
-                    autoComplete={name === "currentPassword" ? "current-password" : "new-password"}
-                    minLength={name === "currentPassword" ? 1 : authPolicy.passwordMinLength}
-                    maxLength={authPolicy.passwordMaxLength}
-                    required
-                    disabled={auth.busy}
-                    aria-invalid={invalid || undefined}
-                    onChange={() => {
-                      setMismatch(false);
-                      auth.clearError();
-                    }}
-                  />
-                </Field>
+                <PasswordField
+                  key={name}
+                  label={t(name)}
+                  id={`${id}-${name}`}
+                  name={name}
+                  newPassword={name === "newPassword"}
+                  autoComplete={name === "currentPassword" ? "current-password" : "new-password"}
+                  minLength={name === "currentPassword" ? 1 : authPolicy.passwordMinLength}
+                  maxLength={authPolicy.passwordMaxLength}
+                  required
+                  disabled={auth.busy}
+                  aria-invalid={invalid || undefined}
+                  onChange={() => {
+                    setMismatch(false);
+                    auth.clearError();
+                  }}
+                />
               );
             })}
             <Field orientation="horizontal" data-disabled={auth.busy}>

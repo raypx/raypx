@@ -278,6 +278,24 @@ describe("menu permissions", () => {
 });
 
 describe("authentication routes", () => {
+  it.each([
+    { url: "/login", field: "Email address" },
+    { url: "/signup", field: "Email address" },
+    { url: "/forgot-password", field: "Email address" },
+    { url: "/reset-password?token=test", field: "New password" },
+  ])("changes theme in the shared authentication header at $url", async ({ url, field }) => {
+    const router = await page(url);
+    const input = screen.getByLabelText(field);
+    fireEvent.change(input, { target: { value: "ada@example.test" } });
+    fireEvent.click(screen.getByRole("button", { name: "Appearance" }));
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "Dark" }));
+    await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark"));
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(localStorage.getItem("theme")).toBe("dark");
+    expect(input).toHaveValue("ada@example.test");
+    expect(router.state.location.pathname).toBe(url.split("?")[0]);
+    expect(mocks.signIn).not.toHaveBeenCalled();
+  });
   it("switches language without losing credentials or the return destination", async () => {
     mocks.signIn.mockResolvedValue({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
     const router = await page("/login?returnTo=%2Fapprovals");
@@ -587,7 +605,7 @@ describe("authentication routes", () => {
       expect(mocks.requestPasswordReset).toHaveBeenCalledWith({
         email: "ada+newsletter@example.test",
         redirectTo: "https://raypx.example/reset-password",
-        fetchOptions: { headers: { "Accept-Language": "en" } },
+        fetchOptions: { headers: { "Accept-Language": "en" }, onError: expect.any(Function) },
       }),
     );
     expect(await screen.findByRole("status")).toBeTruthy();

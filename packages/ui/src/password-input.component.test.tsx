@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
@@ -82,4 +82,42 @@ it("keeps controlled updates and disables both the input and toggle", async () =
   await user.click(toggle);
   expect(input).toHaveAttribute("type", "text");
   expect(change).not.toHaveBeenCalled();
+});
+
+it("announces Caps Lock, preserves descriptions and forwards keyboard and blur handlers", () => {
+  const onKeyDown = vi.fn();
+  const onKeyUp = vi.fn();
+  const onBlur = vi.fn();
+  render(
+    <>
+      <p id="requirements">Use at least 8 characters.</p>
+      <PasswordInput
+        id="password"
+        aria-label="Password"
+        aria-describedby="requirements"
+        labels={{ ...labels, capsLock: "Caps Lock is on" }}
+        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
+        onBlur={onBlur}
+      />
+    </>,
+  );
+  const input = screen.getByLabelText("Password");
+  function key(type: "keydown" | "keyup", capsLock: boolean) {
+    const event = new KeyboardEvent(type, { key: "CapsLock", bubbles: true });
+    Object.defineProperty(event, "getModifierState", { value: () => capsLock });
+    fireEvent(input, event);
+  }
+  key("keydown", true);
+  expect(screen.getByRole("status")).toHaveTextContent("Caps Lock is on");
+  expect(input).toHaveAttribute("aria-describedby", "requirements password-caps-lock");
+  key("keyup", false);
+  expect(screen.queryByRole("status")).toBeNull();
+  expect(input).toHaveAttribute("aria-describedby", "requirements");
+  key("keydown", true);
+  fireEvent.blur(input);
+  expect(screen.queryByRole("status")).toBeNull();
+  expect(onKeyDown).toHaveBeenCalledTimes(2);
+  expect(onKeyUp).toHaveBeenCalledTimes(1);
+  expect(onBlur).toHaveBeenCalledTimes(1);
 });

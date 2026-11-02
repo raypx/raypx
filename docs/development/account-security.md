@@ -26,6 +26,14 @@ retains the draft. Explicitly saved drafts retain their existing local storage b
 - Shared auth forms recover missing/expired reset links with a new-link action and
   replace completed resets with sign-in. Failed post-login navigation retries only
   the application follow-up. Shared hooks and form tests live in Auth.
+- Authentication pages share theme and language menus. Password inputs warn about
+  Caps Lock; registration, reset and password changes show live length feedback from
+  the shared password policy. This is a length check, not a strength estimate.
+- Verification and reset mail forms disable repeat sends for 60 seconds after success.
+  HTTP 429 uses Better Auth's `X-Retry-After` or standard `Retry-After` when available,
+  with a 60-second default. API CORS exposes these delays to trusted browser origins.
+  Other failures remain immediately retryable; countdowns stay in component memory
+  and never replace server rate limits.
 - The current session is identified explicitly and cannot be revoked from its
   own list row. The existing Sign out action handles the current session.
 - Other sessions can be signed out individually or together, after confirmation.

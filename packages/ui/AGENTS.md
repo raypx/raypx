@@ -39,6 +39,8 @@ packages own page layout, forms, navigation and product behavior.
   Callers supply translated `labels.show`/`labels.hide`; input props and refs target
   the input, while `className` sizes the whole control. Visibility starts hidden
   and stays in component memory. Disabled inputs also disable the toggle.
+  Optional `labels.capsLock` enables a keyboard-state warning while the input is focused;
+  caller keyboard/blur handlers and descriptions are preserved.
 - `confirmation` exposes useConfirmation for asynchronous shadcn confirmation
   dialogs. Render its dialog, await confirm, and retain mutation fences after the
   answer. Escape and dismissal cancel the active request; distinct requests queue, explicit requestKey identities share a promise, and unmount cancels every pending request.

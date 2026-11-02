@@ -130,6 +130,32 @@ describe("HTTP foundation", () => {
     ).toBeNull();
   });
 
+  it("lets trusted browser origins read authentication retry delays", async () => {
+    const limited = createApiApp({
+      authHandler: async () =>
+        Response.json(
+          { message: "Too many requests" },
+          {
+            status: 429,
+            headers: { "X-Retry-After": "90" },
+          },
+        ),
+      readSession: async () => null,
+      allowedOrigins: ["https://web.example.com"],
+    });
+    const response = await limited.request("/api/auth/request-password-reset", {
+      method: "POST",
+      headers: { origin: "https://web.example.com" },
+    });
+    expect(response.status).toBe(429);
+    expect(response.headers.get("x-retry-after")).toBe("90");
+    const exposed = response.headers
+      .get("access-control-expose-headers")
+      ?.toLowerCase()
+      .split(/,\s*/);
+    expect(exposed).toEqual(expect.arrayContaining(["retry-after", "x-retry-after"]));
+  });
+
   it("sends security headers without blocking cross-origin API reads", async () => {
     const response = await app.request("/health", {
       headers: { origin: "https://web.example.com" },

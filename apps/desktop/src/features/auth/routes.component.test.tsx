@@ -176,7 +176,7 @@ describe("Desktop authentication routes", () => {
       expect(mocks.requestPasswordReset).toHaveBeenCalledWith({
         email: "ada+newsletter@example.test",
         redirectTo: "https://raypx.example/reset-password",
-        fetchOptions: { headers: { "Accept-Language": "en" } },
+        fetchOptions: { headers: { "Accept-Language": "en" }, onError: expect.any(Function) },
       }),
     );
     expect(await screen.findByRole("status")).toBeTruthy();

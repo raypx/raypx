@@ -456,6 +456,7 @@ export default {
     signIn: "Sign in",
     signOut: "Sign out",
     showPassword: "Show password",
+    capsLockOn: "Caps Lock is on",
     hidePassword: "Hide password",
     desktopOnly: "Open the desktop app to use local tools.",
     working: "Working…",
@@ -472,6 +473,9 @@ export default {
     skipped: "Skipped",
   },
   auth: {
+    passwordRequirements: "Use {min}–{max} characters.",
+    passwordRequirementsMet: "Password length meets the requirements.",
+    resendIn: "Resend in {seconds}s",
     invalidName: "Use a display name of 1–80 characters.",
     passwordLong: "Use no more than 128 characters for your password.",
     signInCompletionFailed: "You’re signed in, but the page could not load. Retry to continue.",

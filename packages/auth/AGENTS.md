@@ -50,6 +50,10 @@ authentication or transport errors. Never retain credentials or server diagnosti
 in hook state.
 `retryCompletion` repeats only a successful action's failed follow-up. Credential
 forms clear passwords on success and never resubmit them to recover a refresh.
+Mail errors recognize HTTP 429 and expose only a parsed retry delay. Shared DOM
+mail forms wait 60 seconds after success, or the server's retry delay after a limit;
+ordinary failures remain retryable. Password fields show Caps Lock state and use
+shared policy for new-password length feedback without retaining credentials.
 `usePasswordChange` verifies the current password through the injected client and
 keeps the password-change interface separate from sign-in clients.
 
