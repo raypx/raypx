@@ -1,0 +1,60 @@
+apps/cli/AGENTS.md
+  s_4bb210c03525dd::t_3e5e527c50b4e9 157-160
+apps/desktop/tests/native/smoke/agents-run.ts
+  s_4bb210c03525dd::t_3af9bb3614730f 1,10,14-15,22,42,71-88
+packages/contracts/AGENTS.md
+  s_4bb210c03525dd::t_3e5e527c50b4e9 52-53
+apps/desktop/scripts/native/agent-options.ts
+  s_4bb210c03525dd::t_3af9bb3614730f 1-18
+apps/desktop/AGENTS.md
+  s_4bb210c03525dd::t_3e5e527c50b4e9 147-150
+  s_4bb210c03525dd::t_edac0f49d76098 146
+apps/cli/src/runtime/agents/index.ts
+  s_4bb210c03525dd::t_1e48f1bb93e060 21
+  s_4bb210c03525dd::t_3af9bb3614730f 37,131-145,148,151
+packages/contracts/src/local-client.ts
+  s_4bb210c03525dd::t_3af9bb3614730f 26,103
+apps/cli/tests/integration/runtime/agents/run-projection.test.ts
+  s_4bb210c03525dd::t_3e5e527c50b4e9 1-79
+  s_4bb210c03525dd::t_106dc9f0e1d552 80-99
+apps/desktop/tests/renderer/unit/features/tasks/local-client.test.ts
+  s_4bb210c03525dd::t_3af9bb3614730f 78-79
+apps/desktop/tests/native/smoke/owner.ts
+  s_4bb210c03525dd::t_cccb5ccb7db93d 21,55-58
+  s_4bb210c03525dd::t_5d9763a184d2ed 59
+apps/cli/tests/integration/runtime/agents/host.test.ts
+  s_4bb210c03525dd::t_3e5e527c50b4e9 139,150,179
+apps/desktop/tests/scripts/native/smoke-owner.test.ts
+  s_4bb210c03525dd::t_cccb5ccb7db93d 3
+  s_4bb210c03525dd::t_64913ab3897417 4-7,19-21,40
+apps/desktop/tests/native/smoke/agents.ts
+  s_4bb210c03525dd::t_0e9c968fe06ba8 100,118
+  s_4bb210c03525dd::t_3af9bb3614730f 6-7,12,17-18,105,117,218
+  s_4bb210c03525dd::t_cccb5ccb7db93d 8,101-104,160,162-164,204
+docs/roadmap.md
+  s_4bb210c03525dd::t_e5ed0df13d5f7c 3,21,25-26,28,33-37,43-46,48
+packages/contracts/tests/core-composition.test.ts
+  s_4bb210c03525dd::t_3af9bb3614730f 49
+  s_4bb210c03525dd::t_1e48f1bb93e060 68-72
+apps/desktop/tests/scripts/native/agent-options.test.ts
+  s_4bb210c03525dd::t_3af9bb3614730f 1-21
+docs/development/agent-quality.md
+  s_4bb210c03525dd::t_c2cec57d70ecaa 59-65,80-101
+  s_4bb210c03525dd::t_3537f6c22df9a8 102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0554b671ac54fe92960ba07df34c4552ea8e6830",
+  "prompts": {},
+  "sessions": {
+    "s_4bb210c03525dd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a18-b0e1-74d3-9acd-ef4d3dfb508e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
