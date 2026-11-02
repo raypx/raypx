@@ -1,6 +1,6 @@
 import type { InstanceBinding } from "@raypx/instances";
 import type { EnrollmentRecord } from "@raypx/instances/server";
-import { expect, it } from "vite-plus/test";
+import { expect, it, vi } from "vite-plus/test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -270,3 +270,43 @@ it.skipIf(process.platform !== "linux")(
     }
   },
 );
+
+it("revokes the original remote session before rejecting a different instance account", async () => {
+  const { createHost } = await import("../../../src/runtime/host");
+  const directory = await mkdtemp(join(tmpdir(), "raypx-instance-account-"));
+  const binding: InstanceBinding = {
+    version: 1,
+    instanceId: crypto.randomUUID(),
+    origin: "https://original.example",
+    accountId: "original-owner",
+    publicKey: "synthetic-public-key".repeat(3),
+    name: "Fixture",
+    platform: "test",
+    appVersion: "0.1.0",
+    revision: 1,
+    status: "registered",
+    issuedAt: new Date().toISOString(),
+  };
+  const host = createHost({
+    owner: "foreground",
+    dataDir: directory,
+    instanceAccess: {
+      assert: async () => {},
+      status: async () => ({ state: "registered", binding }),
+    },
+  });
+  const request = vi.spyOn(host.control, "request").mockResolvedValue(true);
+  try {
+    await expect(
+      host.request("host.session", { accountId: "another-owner", apiUrl: "https://other.example" }),
+    ).rejects.toMatchObject({ code: "INSTANCE_OWNER_MISMATCH" });
+    expect(request).toHaveBeenCalledExactlyOnceWith("host.session", {
+      accountId: null,
+      apiUrl: binding.origin,
+    });
+  } finally {
+    request.mockRestore();
+    await host.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});

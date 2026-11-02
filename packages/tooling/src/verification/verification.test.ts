@@ -214,6 +214,8 @@ describe("affected verification", () => {
     ["packages/contracts/src/local.ts", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/terminal.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/daemon/endpoint.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/runtime/host.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/runtime/index.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/process/windows.ts", ["windows-latest"]],
     ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
     [".github/workflows/native.yml", ["macos-latest", "windows-latest"]],

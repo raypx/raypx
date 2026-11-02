@@ -99,8 +99,10 @@ export function createHost(options: {
           status.binding &&
           (status.binding.accountId !== input.accountId ||
             status.binding.origin !== instanceOrigin(input.apiUrl))
-        )
+        ) {
+          await owner.request("host.session", { accountId: null, apiUrl: status.binding.origin });
           throw new InstanceError("INSTANCE_OWNER_MISMATCH");
+        }
       }
       let result =
         method.startsWith("host.") || method === "observed.remote"
