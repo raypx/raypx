@@ -15,10 +15,19 @@ describe("Agent Run transitions", () => {
     ["running", { type: "wait", reason: "approval" }, "waiting_approval"],
     ["running", { type: "wait", reason: "input" }, "waiting_input"],
     ["running", { type: "wait", reason: "host" }, "waiting_host"],
-    ["waiting_approval", { type: "resume" }, "queued"],
-    ["waiting_input", { type: "resume" }, "queued"],
+    ["waiting_approval", { type: "resume" }, "running"],
+    ["waiting_input", { type: "resume" }, "running"],
     ["waiting_host", { type: "resume" }, "queued"],
     ["running", { type: "cancel" }, "cancelling"],
+    ["waiting_approval", { type: "cancel" }, "cancelling"],
+    ["waiting_input", { type: "cancel" }, "cancelling"],
+    ["waiting_host", { type: "cancel" }, "cancelled"],
+    ["queued", { type: "owner_lost" }, "interrupted"],
+    ["running", { type: "owner_lost" }, "interrupted"],
+    ["waiting_approval", { type: "owner_lost" }, "interrupted"],
+    ["waiting_input", { type: "owner_lost" }, "interrupted"],
+    ["waiting_host", { type: "owner_lost" }, "interrupted"],
+    ["cancelling", { type: "owner_lost" }, "interrupted"],
     ["queued", { type: "cancel" }, "cancelled"],
     ["cancelling", { type: "cancelled" }, "cancelled"],
     ["running", { type: "succeeded" }, "succeeded"],
@@ -32,6 +41,30 @@ describe("Agent Run transitions", () => {
   ] as const)("transitions %s via %j to %s", (from, transition, to) => {
     expect(transitionAgentRun(from, transition)).toBe(to);
   });
+
+  it.each(["succeeded", "failed", "cancelled", "interrupted", "uncertain"] as const)(
+    "does not replace durable %s outcomes when the owner is lost",
+    (status) => {
+      expect(() => transitionAgentRun(status, { type: "owner_lost" })).toThrow(
+        AgentRunTransitionError,
+      );
+    },
+  );
+
+  it.each(["permission", "plan", "question"] as const)(
+    "matches local wait, resume and cancellation for a %s request",
+    (kind) => {
+      const waiting = projectTaskStatusToRunStatus({ status: "waiting" }, kind);
+      expect(transitionAgentRun(waiting, { type: "resume" })).toBe(
+        projectTaskStatusToRunStatus({ status: "running" }),
+      );
+      const cancelling = transitionAgentRun(waiting, { type: "cancel" });
+      expect(cancelling).toBe(projectTaskStatusToRunStatus({ status: "cancelling" }));
+      expect(transitionAgentRun(cancelling, { type: "cancelled" })).toBe(
+        projectTaskStatusToRunStatus({ status: "cancelled" }),
+      );
+    },
+  );
 
   it("does not retry an uncertain external effect before reconciliation", () => {
     expect(() => transitionAgentRun("uncertain", { type: "retry" })).toThrow(

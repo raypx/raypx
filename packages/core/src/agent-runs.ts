@@ -101,6 +101,7 @@ export const agentRunTransitionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("succeeded") }),
   z.object({ type: z.literal("failed") }),
   z.object({ type: z.literal("interrupted") }),
+  z.object({ type: z.literal("owner_lost") }),
   z.object({ type: z.literal("effect_uncertain") }),
   z.object({ type: z.literal("retry") }),
   z.object({ type: z.literal("reconcile"), outcome: z.enum(["succeeded", "failed"]) }),
@@ -139,12 +140,13 @@ export function transitionAgentRun(
       }
       break;
     case "resume":
-      if (status === "waiting_approval" || status === "waiting_input" || status === "waiting_host")
-        return "queued";
+      if (status === "waiting_approval" || status === "waiting_input") return "running";
+      if (status === "waiting_host") return "queued";
       break;
     case "cancel":
-      if (status === "queued" || status.startsWith("waiting_")) return "cancelled";
-      if (status === "running") return "cancelling";
+      if (status === "queued" || status === "waiting_host") return "cancelled";
+      if (status === "running" || status === "waiting_approval" || status === "waiting_input")
+        return "cancelling";
       break;
     case "cancelled":
       if (status === "cancelling") return "cancelled";
@@ -153,6 +155,15 @@ export function transitionAgentRun(
     case "failed":
     case "interrupted":
       if (status === "running" || status === "cancelling") return transition.type;
+      break;
+    case "owner_lost":
+      if (
+        status === "queued" ||
+        status === "running" ||
+        status === "cancelling" ||
+        status.startsWith("waiting_")
+      )
+        return "interrupted";
       break;
     case "effect_uncertain":
       if (status === "running" || status === "cancelling") return "uncertain";
