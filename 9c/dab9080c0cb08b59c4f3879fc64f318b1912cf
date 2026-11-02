@@ -1,0 +1,21 @@
+apps/api/Dockerfile
+  s_b1d06560260ce6::t_021d91f926dd99 25,51
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_b1d06560260ce6::t_021d91f926dd99 104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9cdab9080c0cb08b59c4f3879fc64f318b1912cf",
+  "prompts": {},
+  "sessions": {
+    "s_b1d06560260ce6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a53-77d7-7591-9ba6-d73547de66ec",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
