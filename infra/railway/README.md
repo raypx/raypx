@@ -29,3 +29,10 @@ The scripts select the installed `@railway/cli` package explicitly because the
 gateway image; application Dockerfiles remain in `apps/api` and `apps/web`.
 Variable references, migrations and the raypx.com domain cutover are documented
 in [the deployment guide](../../docs/development/railway.md).
+
+Moving these files or pushing `railway.ts` does not update Railway's live build
+settings. Use `plan`, review the complete application partial, then `deploy` to
+apply configuration changes; runtime variables remain operator-managed. Gateway
+must build from the repository root using `infra/railway/Dockerfile`. For stale
+paths, missing upstreams or failed healthchecks, follow the
+[Gateway recovery checklist](../../docs/development/railway.md#recover-gateway-after-a-configuration-move).
