@@ -1,11 +1,16 @@
+import { publicConfigurationQuery } from "../features/configuration/client";
 import {
-  configurationAccessQuery,
-  publicConfigurationQuery,
-} from "../features/configuration/client";
+  accountAccessQuery,
+  canAccessWebPage,
+  webPagePermissions,
+  type WebPath,
+} from "../features/auth/access";
+import { hasPermission } from "@raypx/account/access";
+import { PermissionBoundary } from "../features/auth/components/permission-boundary";
 import { analytics } from "../features/analytics/client";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { guestReturnTo } from "../features/tasks/guest-draft";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
@@ -32,16 +37,7 @@ import {
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
-
-type WebPath =
-  | "/"
-  | "/account"
-  | "/settings"
-  | "/tasks"
-  | "/approvals"
-  | "/automations"
-  | "/memory"
-  | "/admin/settings";
+import { QuickSettingsModal } from "../features/settings/quick-settings-modal";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath>) {
   return (
@@ -58,11 +54,17 @@ export function WebShell() {
   const session = authClient.useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const accountId = session.error ? null : (session.data?.user.id ?? null);
+  const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   const previousAccount = useRef(accountId);
-  const access = useQuery(configurationAccessQuery(accountId));
+  const accessQuery = useQuery(accountAccessQuery(accountId));
+  const access =
+    !accessQuery.isError && accessQuery.data?.accountId === accountId
+      ? accessQuery.data
+      : undefined;
   const site = useQuery(publicConfigurationQuery());
   const siteName = site.data?.siteName ?? "Raypx";
+  const [quickSettingsOpen, setQuickSettingsOpen] = useState(false);
+
   useEffect(() => {
     taskClient.setAccount?.(accountId);
     if (previousAccount.current !== accountId) {
@@ -77,6 +79,10 @@ export function WebShell() {
   const c = useTranslations("common");
   const memory = useTranslations("memory");
   const href = useRouterState({ select: (state) => state.location.href });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pagePermission = Object.hasOwn(webPagePermissions, pathname)
+    ? webPagePermissions[pathname as WebPath]
+    : null;
   const page = useMatches({
     select: (matches) =>
       matches.reduce<StaticDataRouteOption["page"]>(
@@ -90,32 +96,36 @@ export function WebShell() {
       to: "/approvals",
       label: c("approvals"),
       icon: <Inbox />,
-      badge: accountId ? (
-        <PendingCount key={accountId ?? "signed-out"} client={taskClient} accountId={accountId} />
-      ) : undefined,
+      badge:
+        accountId && hasPermission(access, "approvals.read") ? (
+          <PendingCount key={accountId ?? "signed-out"} client={taskClient} accountId={accountId} />
+        ) : undefined,
     },
   ];
   const secondaryNavigation: ShellNavItem<WebPath>[] = [
     { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
     { to: "/memory", label: memory("title"), icon: <BookOpen /> },
   ];
-  if (access.data?.allowed)
-    secondaryNavigation.push({
-      to: "/admin/settings",
-      label: c("adminSettings"),
-      icon: <SlidersHorizontal />,
-    });
+  secondaryNavigation.push({
+    to: "/admin/settings",
+    label: c("adminSettings"),
+    icon: <SlidersHorizontal />,
+  });
   return (
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />
       <AppShell
         brand={{ to: "/", label: siteName }}
-        navigation={[navigation]}
+        navigation={[navigation.filter((item) => canAccessWebPage(access, item.to))]}
         navigationLabels={[c("workspace")]}
         contextNavigation={
-          accountId ? <RemoteProjectNavigation key={accountId} accountId={accountId} /> : undefined
+          accountId && hasPermission(access, "projects.read") ? (
+            <RemoteProjectNavigation key={accountId} accountId={accountId} />
+          ) : undefined
         }
-        secondaryNavigation={secondaryNavigation}
+        secondaryNavigation={secondaryNavigation.filter((item) =>
+          canAccessWebPage(access, item.to),
+        )}
         breadcrumbs={page ? [t(!accountId && page.guestTitle ? page.guestTitle : page.title)] : []}
         layout={page?.layout ?? "document"}
         LinkComponent={ShellLink}
@@ -123,10 +133,11 @@ export function WebShell() {
           <Tooltip>
             <TooltipTrigger
               render={
-                <Link
-                  to="/settings"
+                <button
+                  type="button"
                   aria-label={c("settings")}
-                  className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                  onClick={() => setQuickSettingsOpen(true)}
+                  className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 />
               }
             >
@@ -164,8 +175,15 @@ export function WebShell() {
           />
         }
       >
-        <Outlet />
+        {accountId && pagePermission ? (
+          <PermissionBoundary key={accountId} accountId={accountId} permission={pagePermission}>
+            <Outlet />
+          </PermissionBoundary>
+        ) : (
+          <Outlet />
+        )}
       </AppShell>
+      <QuickSettingsModal open={quickSettingsOpen} onOpenChange={setQuickSettingsOpen} />
     </>
   );
 }
