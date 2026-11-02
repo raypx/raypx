@@ -18,7 +18,11 @@ function AuthLayout({ children }: { children: ReactNode }) {
           <Logo />
         </Link>
       </header>
-      <main id="main" tabIndex={-1} className="flex-1 outline-none">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex flex-1 items-center justify-center px-6 outline-none"
+      >
         {children}
       </main>
     </div>

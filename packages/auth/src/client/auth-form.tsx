@@ -1,6 +1,9 @@
 import { useState, type ComponentType, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, CircleCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
@@ -58,7 +61,7 @@ export function AuthForm({
         : t(auth.error.key);
   const [message, setMessage] = useState("");
   const params = new URLSearchParams(search);
-  const verified = params.get("verified") === "1";
+  const verified = mode === "verify-email" && params.get("verified") === "1";
   const title =
     mode === "signup"
       ? t("signup")
@@ -100,160 +103,166 @@ export function AuthForm({
         ),
       );
   }
+  const linkClassName =
+    "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
   return (
-    <section className="w-full max-w-md px-6 py-10 lg:px-8">
-      {/* Card container */}
-      <div className="rounded-xl border border-border bg-card p-8 shadow-soft lg:p-10">
-        <LinkComponent
-          to="account"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft size={16} />
-          {backLabel ?? c("account")}
-        </LinkComponent>
-        <div className="space-y-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          {mode === "login" || mode === "signup" ? (
-            <p className="text-sm leading-relaxed text-muted-foreground">{t("intro")}</p>
-          ) : null}
-          {mode === "forgot-password" && (
-            <p className="text-sm leading-relaxed text-muted-foreground">{t("resetIntro")}</p>
-          )}
-          {mode === "verify-email" && (
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {verified ? t("verified") : t("verifyIntro")}
-            </p>
-          )}
-        </div>
+    <section
+      aria-labelledby="auth-title"
+      className="mx-auto w-full max-w-sm px-6 py-10 sm:px-0 sm:py-14"
+    >
+      <LinkComponent
+        to="account"
+        className="mb-10 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ArrowLeft size={16} aria-hidden="true" />
+        {backLabel ?? c("account")}
+      </LinkComponent>
+      <header className="mb-8 flex flex-col gap-3">
+        <h1 id="auth-title" className="text-3xl font-semibold tracking-tight">
+          {title}
+        </h1>
+        {mode === "login" || mode === "signup" ? (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {t(mode === "signup" ? "signupIntro" : "intro")}
+          </p>
+        ) : null}
+        {mode === "forgot-password" && (
+          <p className="text-sm leading-relaxed text-muted-foreground">{t("resetIntro")}</p>
+        )}
+        {mode === "verify-email" && (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {verified ? t("verified") : t("verifyIntro")}
+          </p>
+        )}
+      </header>
+      <div className="flex flex-col gap-5">
         {params.has("error") && (
-          <div
-            role="alert"
-            className="mt-6 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive [overflow-wrap:anywhere]"
-          >
-            {t("invalidLink")}
-          </div>
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>{t("invalidLink")}</AlertDescription>
+          </Alert>
         )}
         {message && (
-          <div
-            role="status"
-            className="mt-6 flex items-start gap-2.5 rounded-lg border border-border bg-muted px-4 py-3 text-sm [overflow-wrap:anywhere]"
-          >
-            <CircleCheck size={18} className="mt-0.5 shrink-0 text-success" />
-            {message}
-          </div>
+          <Alert role="status">
+            <CircleCheck aria-hidden="true" />
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
         )}
         {error && (
-          <div
-            role="alert"
-            className="mt-6 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive [overflow-wrap:anywhere]"
-          >
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
         {!verified && (
-          <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
-            {mode === "signup" && (
-              <label htmlFor="auth-name" className="flex flex-col gap-2 text-sm font-medium">
-                {t("name")}
-                <Input
-                  id="auth-name"
-                  name="name"
-                  autoComplete="name"
-                  required
-                  maxLength={120}
-                  disabled={busy}
-                  className="h-11 transition-shadow focus-visible:ring-2"
-                />
-              </label>
-            )}
-            {mode !== "reset-password" && (
-              <label htmlFor="auth-email" className="flex flex-col gap-2 text-sm font-medium">
-                {t("email")}
-                <Input
-                  id="auth-email"
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  defaultValue={params.get("email") ?? ""}
-                  required
-                  disabled={busy}
-                  className="h-11 transition-shadow focus-visible:ring-2"
-                />
-              </label>
-            )}
-            {(mode === "login" || mode === "signup" || mode === "reset-password") && (
-              <label htmlFor="auth-password" className="flex flex-col gap-2 text-sm font-medium">
-                {t(mode === "reset-password" ? "newPassword" : "password")}
-                <Input
-                  id="auth-password"
-                  type="password"
-                  name="password"
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  minLength={mode === "login" ? 1 : 8}
-                  maxLength={128}
-                  required
-                  disabled={busy}
-                  className="h-11 transition-shadow focus-visible:ring-2"
-                />
-              </label>
-            )}
-            {mode === "login" && (
-              <LinkComponent
-                to="forgot-password"
-                className="-mt-2 self-end text-sm font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-current"
+          <form onSubmit={submit} aria-busy={busy}>
+            <FieldGroup>
+              {mode === "signup" && (
+                <Field data-disabled={busy}>
+                  <FieldLabel htmlFor="auth-name">{t("name")}</FieldLabel>
+                  <Input
+                    id="auth-name"
+                    name="name"
+                    autoComplete="name"
+                    required
+                    maxLength={120}
+                    disabled={busy}
+                    className="h-11"
+                  />
+                </Field>
+              )}
+              {mode !== "reset-password" && (
+                <Field data-disabled={busy}>
+                  <FieldLabel htmlFor="auth-email">{t("email")}</FieldLabel>
+                  <Input
+                    id="auth-email"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    defaultValue={params.get("email") ?? ""}
+                    required
+                    disabled={busy}
+                    className="h-11"
+                  />
+                </Field>
+              )}
+              {(mode === "login" || mode === "signup" || mode === "reset-password") && (
+                <Field data-disabled={busy}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <FieldLabel htmlFor="auth-password">
+                      {t(mode === "reset-password" ? "newPassword" : "password")}
+                    </FieldLabel>
+                    {mode === "login" && (
+                      <LinkComponent to="forgot-password" className={linkClassName}>
+                        {t("forgot")}
+                      </LinkComponent>
+                    )}
+                  </div>
+                  <Input
+                    id="auth-password"
+                    type="password"
+                    name="password"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    minLength={mode === "login" ? 1 : 8}
+                    maxLength={128}
+                    required
+                    disabled={busy}
+                    className="h-11"
+                  />
+                </Field>
+              )}
+              <Button
+                type="submit"
+                size="lg"
+                className="mt-1 h-11 w-full"
+                disabled={busy || (mode === "reset-password" && !params.get("token"))}
               >
-                {t("forgot")}
-              </LinkComponent>
-            )}
-            <Button
-              type="submit"
-              size="lg"
-              className="mt-2 h-11 font-medium shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
-              disabled={busy || (mode === "reset-password" && !params.get("token"))}
-            >
-              {busy
-                ? c("working")
-                : mode === "login"
-                  ? c("signIn")
-                  : mode === "signup"
-                    ? t("create")
-                    : mode === "forgot-password"
-                      ? t("sendReset")
-                      : mode === "reset-password"
-                        ? t("reset")
-                        : t("resend")}
-              <ArrowRight size={16} />
-            </Button>
+                {busy ? (
+                  <LoaderCircle
+                    data-icon="inline-start"
+                    className="motion-safe:animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {busy
+                  ? c("working")
+                  : mode === "login"
+                    ? c("signIn")
+                    : mode === "signup"
+                      ? t("create")
+                      : mode === "forgot-password"
+                        ? t("sendReset")
+                        : mode === "reset-password"
+                          ? t("reset")
+                          : t("resend")}
+                {!busy && <ArrowRight data-icon="inline-end" aria-hidden="true" />}
+              </Button>
+            </FieldGroup>
           </form>
         )}
-        {mode === "login" && (
-          <LinkComponent
-            to="verify-email"
-            className="mt-6 inline-block text-sm font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-current"
-          >
-            {t("resend")}
-          </LinkComponent>
-        )}
-        <div className="mt-6 text-sm text-muted-foreground">
+        <Separator className="my-1" />
+        <footer className="flex flex-col items-center gap-4 text-center text-sm">
           {mode === "login" ? (
             <>
-              {t("noAccount")}{" "}
-              <LinkComponent
-                to="signup"
-                className="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-current"
-              >
-                {t("create")}
+              <p className="text-muted-foreground">
+                {t("noAccount")}{" "}
+                <LinkComponent to="signup" className={linkClassName + " text-foreground"}>
+                  {t("create")}
+                </LinkComponent>
+              </p>
+              <LinkComponent to="verify-email" className={linkClassName + " text-muted-foreground"}>
+                {t("resend")}
               </LinkComponent>
             </>
           ) : (
-            <LinkComponent
-              to="login"
-              className="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-current"
-            >
+            <LinkComponent to="login" className={linkClassName}>
               {c("signIn")}
             </LinkComponent>
           )}
-        </div>
+        </footer>
       </div>
     </section>
   );

@@ -472,6 +472,13 @@ describe("authentication routes", () => {
     expect(await screen.findByRole("status")).toBeTruthy();
   });
 
+  it("keeps the login form available when a verification query is present", async () => {
+    await page("/login?verified=1");
+    expect(screen.getByLabelText("Email address")).toBeTruthy();
+    expect(screen.getByLabelText("Password")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+  });
+
   it("shows the verification result without a resend form for verified=1", async () => {
     await page("/verify-email?verified=1");
     expect(screen.getByText("Your email is verified. You can sign in now.")).toBeTruthy();

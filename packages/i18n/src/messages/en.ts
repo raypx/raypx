@@ -492,6 +492,7 @@ export default {
     mailUnavailable: "Email delivery is unavailable right now. Please try again later.",
     title: "Your account, across devices.",
     intro: "Sign in to access your Raypx account.",
+    signupIntro: "Create an account to access your connected projects.",
     login: "Welcome back",
     signup: "Create your account",
     email: "Email address",
@@ -527,8 +528,8 @@ export default {
     brandIntro:
       "Project-centered workspace with device-local execution and optional remote access.",
     featureLocal: "Secure device-local execution",
-    featureSync: "Optional cloud synchronization",
-    featureCollaboration: "Real-time collaboration",
+    featureRemote: "Access connected projects remotely",
+    featureApprovals: "Review and approve Agent actions",
   },
   settings: {
     preferencesSaveFailed: "Your appearance and language changes could not be saved. Try again.",

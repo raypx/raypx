@@ -453,6 +453,7 @@ export default {
     mailUnavailable: "邮件发送暂不可用，请稍后重试。",
     title: "在各个设备上使用你的账号。",
     intro: "登录以访问你的 Raypx 账号。",
+    signupIntro: "创建账号，访问已连接的项目。",
     login: "欢迎回来",
     signup: "创建账号",
     email: "邮箱地址",
@@ -485,8 +486,8 @@ export default {
     brandTitle: "你的开发工作台",
     brandIntro: "项目为中心的工作区，支持本地执行和可选的远程访问。",
     featureLocal: "安全的本地设备执行",
-    featureSync: "可选的云端同步",
-    featureCollaboration: "实时协作",
+    featureRemote: "远程访问已连接的项目",
+    featureApprovals: "查看并审批 Agent 操作",
   },
   settings: {
     preferencesSaveFailed: "外观和语言更改未能保存，请重试。",
