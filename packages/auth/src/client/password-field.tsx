@@ -5,30 +5,30 @@ import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { PasswordInput, type PasswordInputProps } from "@raypx/ui/password-input";
 import { authPolicy } from "../policy";
 
-/** Keep only the length for feedback; the input owns the credential. */
+/** Own credential constraints and keep only validation feedback in state. */
 export function PasswordField({
   label,
   labelAction,
-  newPassword = false,
+  purpose,
   id,
   onChange,
   "aria-invalid": invalid,
   "aria-describedby": describedBy,
   ...props
-}: Omit<PasswordInputProps, "labels"> & {
+}: Omit<PasswordInputProps, "labels" | "autoComplete" | "minLength" | "maxLength"> & {
   label: string;
   labelAction?: ReactNode;
-  newPassword?: boolean;
+  purpose: "current" | "new" | "confirm";
 }) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const requirementsId = `${inputId}-requirements`;
   const t = useTranslations("auth");
   const c = useTranslations("common");
-  const [length, setLength] = useState(0);
-  const valid = length >= authPolicy.passwordMinLength && length <= authPolicy.passwordMaxLength;
-  const lengthInvalid = newPassword && length > 0 && !valid;
-  const isInvalid = invalid || lengthInvalid || undefined;
+  const [validLength, setValidLength] = useState<boolean | null>(null);
+  const showRequirements = purpose === "new";
+  const valid = validLength === true;
+  const isInvalid = invalid || (showRequirements && validLength === false) || undefined;
   const Icon = valid ? Check : Circle;
   return (
     <Field data-disabled={props.disabled} data-invalid={isInvalid}>
@@ -39,18 +39,28 @@ export function PasswordField({
       <PasswordInput
         {...props}
         id={inputId}
+        autoComplete={purpose === "current" ? "current-password" : "new-password"}
+        minLength={purpose === "current" ? 1 : authPolicy.passwordMinLength}
+        maxLength={authPolicy.passwordMaxLength}
         labels={{ show: c("showPassword"), hide: c("hidePassword"), capsLock: c("capsLockOn") }}
         aria-invalid={isInvalid}
         aria-describedby={
-          [describedBy, newPassword ? requirementsId : undefined].filter(Boolean).join(" ") ||
+          [describedBy, showRequirements ? requirementsId : undefined].filter(Boolean).join(" ") ||
           undefined
         }
         onChange={(event) => {
-          setLength(event.currentTarget.value.length);
+          if (showRequirements) {
+            const length = event.currentTarget.value.length;
+            setValidLength(
+              length === 0
+                ? null
+                : length >= authPolicy.passwordMinLength && length <= authPolicy.passwordMaxLength,
+            );
+          }
           onChange?.(event);
         }}
       />
-      {newPassword && (
+      {showRequirements && (
         <p
           id={requirementsId}
           className="flex items-center gap-2 text-sm text-muted-foreground [&>svg]:size-4 [&>svg]:shrink-0"

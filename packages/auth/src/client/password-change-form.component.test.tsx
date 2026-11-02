@@ -32,6 +32,15 @@ function fixture(onChanged = vi.fn(async () => {})) {
 
 it("changes the password once, defaults to revoking other sessions and clears every credential", async () => {
   const app = fixture();
+  expect([app.current.minLength, app.next.minLength, app.confirm.minLength]).toEqual([1, 8, 8]);
+  expect([app.current.maxLength, app.next.maxLength, app.confirm.maxLength]).toEqual([
+    128, 128, 128,
+  ]);
+  expect([app.current.autocomplete, app.next.autocomplete, app.confirm.autocomplete]).toEqual([
+    "current-password",
+    "new-password",
+    "new-password",
+  ]);
   fireEvent.submit(app.form);
   fireEvent.submit(app.form);
   await screen.findByText("Password changed.");

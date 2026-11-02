@@ -264,10 +264,14 @@ describe("shared authentication actions", () => {
     expect(result.current.error).toEqual({ kind: "auth", key });
   });
 
-  it("recognizes a rate-limit response without an error code", async () => {
+  it.each([
+    { status: 429 },
+    { status: 429, code: "INVALID_EMAIL_OR_PASSWORD" },
+    { code: "TOO_MANY_REQUESTS" },
+  ])("normalizes a rate-limit response %j", async (error) => {
     const { result, client } = actions();
     client.requestPasswordReset.mockResolvedValueOnce({
-      error: { status: 429, message: "private diagnostic" },
+      error: { ...error, message: "private diagnostic" },
     });
     await act(async () => {
       await result.current.requestPasswordReset({ email: "user@example.test" });

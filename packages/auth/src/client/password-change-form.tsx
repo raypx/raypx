@@ -6,9 +6,15 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { usePasswordChange, type AuthActionSuccess, type PasswordChangeClient } from "../hooks";
-import { authPolicy } from "../policy";
 import { formText } from "./form-text";
 import { PasswordField } from "./password-field";
+import { useAuthErrorMessage } from "./use-auth-error-message";
+
+const fields = [
+  { name: "currentPassword", purpose: "current" },
+  { name: "newPassword", purpose: "new" },
+  { name: "confirmPassword", purpose: "confirm" },
+] as const;
 
 export function PasswordChangeForm({
   client,
@@ -24,17 +30,8 @@ export function PasswordChangeForm({
   const [changed, setChanged] = useState(false);
   const [mismatch, setMismatch] = useState(false);
   const [revokeOthers, setRevokeOthers] = useState(true);
-  const error = mismatch
-    ? t("passwordMismatch")
-    : !auth.error
-      ? ""
-      : auth.error.kind === "completion"
-        ? t("passwordChangeRefresh")
-        : auth.error.kind === "network"
-          ? c("networkError")
-          : auth.error.key === "generic"
-            ? c("error")
-            : t(auth.error.key);
+  const authError = useAuthErrorMessage(auth.error, "passwordChangeRefresh");
+  const error = mismatch ? t("passwordMismatch") : authError;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (auth.busy || changed) return;
@@ -90,7 +87,7 @@ export function PasswordChangeForm({
       ) : (
         <form onSubmit={(event) => void submit(event)} aria-busy={auth.busy} className="max-w-sm">
           <FieldGroup>
-            {(["currentPassword", "newPassword", "confirmPassword"] as const).map((name) => {
+            {fields.map(({ name, purpose }) => {
               const invalid =
                 name === "confirmPassword"
                   ? mismatch
@@ -103,10 +100,7 @@ export function PasswordChangeForm({
                   label={t(name)}
                   id={`${id}-${name}`}
                   name={name}
-                  newPassword={name === "newPassword"}
-                  autoComplete={name === "currentPassword" ? "current-password" : "new-password"}
-                  minLength={name === "currentPassword" ? 1 : authPolicy.passwordMinLength}
-                  maxLength={authPolicy.passwordMaxLength}
+                  purpose={purpose}
                   required
                   disabled={auth.busy}
                   aria-invalid={invalid || undefined}

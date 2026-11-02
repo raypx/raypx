@@ -72,7 +72,8 @@ export interface PasswordChangeClient {
   }): Promise<AuthActionResponse>;
 }
 
-function authErrorKey(code?: string): AuthErrorKey {
+function authErrorKey({ code, status }: NonNullable<AuthActionResponse["error"]>): AuthErrorKey {
+  if (status === 429 || code === "TOO_MANY_REQUESTS") return "rateLimited";
   if (code === "REGISTRATION_DISABLED") return "registrationDisabled";
   if (code === "MAIL_NOT_CONFIGURED") return "mailUnavailable";
   if (code === "INVALID_EMAIL_OR_PASSWORD" || code === "INVALID_PASSWORD")
@@ -86,7 +87,6 @@ function authErrorKey(code?: string): AuthErrorKey {
   if (code === "CURRENT_PASSWORD_INVALID") return "currentPasswordInvalid";
   if (code === "CREDENTIAL_ACCOUNT_NOT_FOUND") return "passwordUnavailable";
   if (code === "UNAUTHORIZED" || code === "SESSION_EXPIRED") return "sessionUnauthorized";
-  if (code === "TOO_MANY_REQUESTS") return "rateLimited";
   if (code === "INVALID_TOKEN" || code === "TOKEN_EXPIRED") return "invalidLink";
   return "generic";
 }
@@ -95,13 +95,11 @@ async function mailRequest(
   request: (fetchOptions: RequestOptions["fetchOptions"]) => Promise<AuthActionResponse>,
   fetchOptions: RequestOptions["fetchOptions"],
 ): Promise<AuthActionResponse> {
-  let limited = false;
   let retryAfterSeconds: number | undefined;
   const result = await request({
     ...fetchOptions,
     onError: ({ response }) => {
       if (response.status !== 429) return;
-      limited = true;
       // Better Auth 1.7 uses X-Retry-After; standard Retry-After also accepts an HTTP date.
       const value = response.headers.get("Retry-After") ?? response.headers.get("X-Retry-After");
       if (!value) return;
@@ -111,12 +109,7 @@ async function mailRequest(
       if (Number.isSafeInteger(seconds) && seconds >= 0) retryAfterSeconds = Math.max(1, seconds);
     },
   });
-  return limited
-    ? {
-        error: { code: "TOO_MANY_REQUESTS" },
-        ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
-      }
-    : result;
+  return retryAfterSeconds === undefined ? result : { ...result, retryAfterSeconds };
 }
 
 function useAuthRequest() {
@@ -155,7 +148,7 @@ function useAuthRequest() {
         if (result.error)
           return fail({
             kind: "auth",
-            key: result.error.status === 429 ? "rateLimited" : authErrorKey(result.error.code),
+            key: authErrorKey(result.error),
             ...(result.retryAfterSeconds === undefined
               ? {}
               : { retryAfterSeconds: result.retryAfterSeconds }),

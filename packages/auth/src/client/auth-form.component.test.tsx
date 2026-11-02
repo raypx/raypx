@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { BrowserLanguageProvider, useLanguagePreference } from "@raypx/i18n/browser";
+import { messages } from "@raypx/i18n/messages";
 import { AuthForm, type AuthFormLinkProps, type AuthMode } from "./auth-form";
 import type { AuthActionClient, AuthActionResponse } from "../hooks";
 
@@ -12,6 +13,15 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
 });
+
+function LanguageSwitch() {
+  const { setPreference } = useLanguagePreference();
+  return (
+    <button type="button" onClick={() => setPreference("zh")}>
+      中文
+    </button>
+  );
+}
 
 function fixture(mode: AuthMode, search = "", onSignedIn = vi.fn(async () => {})) {
   const action = () => vi.fn(async (): Promise<AuthActionResponse> => ({ error: null }));
@@ -30,6 +40,7 @@ function fixture(mode: AuthMode, search = "", onSignedIn = vi.fn(async () => {})
   );
   render(
     <BrowserLanguageProvider>
+      <LanguageSwitch />
       <AuthForm
         mode={mode}
         search={search}
@@ -68,6 +79,35 @@ it("clears credentials and replaces a completed reset with sign-in", async () =>
     expect.objectContaining({ token: "reset-token", newPassword: " new password " }),
   );
 });
+
+it.each([
+  { mode: "signup", message: "verifyIntro" },
+  { mode: "forgot-password", message: "resetSent" },
+  { mode: "reset-password", message: "resetSaved" },
+  { mode: "verify-email", message: "verifySent" },
+] as const)(
+  "updates a successful $mode notice when the language changes",
+  async ({ mode, message }) => {
+    fixture(mode, "?token=reset-token");
+    const email = screen.queryByLabelText("Email address");
+    if (email) fireEvent.change(email, { target: { value: "user@example.test" } });
+    const password = screen.queryByLabelText("New password") ?? screen.queryByLabelText("Password");
+    if (password) fireEvent.change(password, { target: { value: "new password" } });
+    const name = screen.queryByLabelText("Your name");
+    if (name) fireEvent.change(name, { target: { value: "Ada" } });
+    const form = screen
+      .getByLabelText(mode === "reset-password" ? "New password" : "Email address")
+      .closest("form")!;
+    fireEvent.submit(form);
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toBe(messages.en.auth[message]),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "中文" }));
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toBe(messages.zh.auth[message]),
+    );
+  },
+);
 
 it("turns a rejected reset token into a new-link action", async () => {
   const { client } = fixture("reset-password", "?token=expired");
@@ -109,6 +149,9 @@ it.each(["signup", "reset-password"] as const)(
       mode === "signup" ? "Password" : "New password",
     );
     const description = screen.getByText("Use 8–128 characters.");
+    expect(input.minLength).toBe(8);
+    expect(input.maxLength).toBe(128);
+    expect(input.autocomplete).toBe("new-password");
     expect(input.getAttribute("aria-describedby")).toBe(description.id);
     fireEvent.change(input, { target: { value: "short" } });
     expect(input.getAttribute("aria-invalid")).toBe("true");
@@ -120,6 +163,26 @@ it.each(["signup", "reset-password"] as const)(
     expect(input.getAttribute("aria-invalid")).toBeNull();
   },
 );
+
+it("keeps current-password inputs free of new-password validation", () => {
+  fixture("login");
+  const input = screen.getByLabelText<HTMLInputElement>("Password");
+  expect(input.minLength).toBe(1);
+  expect(input.maxLength).toBe(128);
+  expect(input.autocomplete).toBe("current-password");
+  fireEvent.change(input, { target: { value: "short" } });
+  expect(input.getAttribute("aria-invalid")).toBeNull();
+  expect(screen.queryByText("Use 8–128 characters.")).toBeNull();
+});
+
+it("renders unknown authentication errors with the shared generic message", async () => {
+  const { client } = fixture("login");
+  client.signIn.email.mockResolvedValueOnce({ error: { code: "PRIVATE_FAILURE" } });
+  const input = screen.getByLabelText("Password");
+  fireEvent.change(input, { target: { value: "password" } });
+  fireEvent.submit(input.closest("form")!);
+  await waitFor(() => expect(screen.getByRole("alert").textContent).toBe(messages.en.common.error));
+});
 
 it.each(["forgot-password", "verify-email"] as const)(
   "prevents repeated %s mail sends until the cooldown expires",
@@ -170,6 +233,7 @@ it("keeps failed mail sends retryable without starting a cooldown", async () => 
   const button = screen.getByRole<HTMLButtonElement>("button", { name: "Send reset link" });
   fireEvent.submit(button.closest("form")!);
   await screen.findByRole("alert");
+  expect(screen.getByRole("alert").textContent).toBe(messages.en.common.networkError);
   expect(button.disabled).toBe(false);
   expect(document.body.textContent).not.toContain("private diagnostic");
 });

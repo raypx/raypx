@@ -11,13 +11,14 @@ import { authPolicy } from "../policy";
 import { formText } from "./form-text";
 import { PasswordField } from "./password-field";
 import { useMailCooldown } from "./use-mail-cooldown";
+import { useAuthErrorMessage } from "./use-auth-error-message";
 
 const modeLabels = {
-  login: { title: "login", submit: "login" },
-  signup: { title: "signup", submit: "create" },
-  "forgot-password": { title: "reset", submit: "sendReset" },
-  "reset-password": { title: "reset", submit: "reset" },
-  "verify-email": { title: "verify", submit: "resend" },
+  login: { title: "login", submit: "login", success: null },
+  signup: { title: "signup", submit: "create", success: "verifyIntro" },
+  "forgot-password": { title: "reset", submit: "sendReset", success: "resetSent" },
+  "reset-password": { title: "reset", submit: "reset", success: "resetSaved" },
+  "verify-email": { title: "verify", submit: "resend", success: "verifySent" },
 } as const;
 
 export type AuthMode = "login" | "signup" | "forgot-password" | "reset-password" | "verify-email";
@@ -59,18 +60,11 @@ export function AuthForm({
     ...(callbackURLs ? { callbackURLs } : {}),
   });
   const { busy } = auth;
-  const error = !auth.error
-    ? ""
-    : auth.error.kind === "completion"
-      ? t("signInCompletionFailed")
-      : auth.error.kind === "network"
-        ? c("networkError")
-        : auth.error.key === "generic"
-          ? c("error")
-          : t(auth.error.key);
-  const [message, setMessage] = useState("");
-  const [signedIn, setSignedIn] = useState(false);
-  const [resetSaved, setResetSaved] = useState(false);
+  const error = useAuthErrorMessage(auth.error, "signInCompletionFailed");
+  const [succeeded, setSucceeded] = useState(false);
+  const signedIn = succeeded && mode === "login";
+  const complete = succeeded && (mode === "login" || mode === "reset-password");
+  const messageKey = succeeded ? modeLabels[mode].success : null;
   const cooldown = useMailCooldown();
   const mailMode = mode === "forgot-password" || mode === "verify-email";
   const params = new URLSearchParams(search);
@@ -85,29 +79,33 @@ export function AuthForm({
   const title = t(modeLabels[mode].title);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || signedIn || resetSaved || invalidReset || (mailMode && cooldown.isActive())) return;
+    if (busy || complete || invalidReset || (mailMode && cooldown.isActive())) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const email = formText(data, "email");
     const password = formText(data, "password");
-    setMessage("");
+    setSucceeded(false);
+    async function onSuccess() {
+      if (mode === "login" || mode === "reset-password") form.reset();
+      setSucceeded(true);
+      if (mode === "login") await onSignedIn();
+    }
     const result =
       mode === "signup"
-        ? await auth.signUp({ name: formText(data, "name"), email, password })
+        ? await auth.signUp({ name: formText(data, "name"), email, password }, onSuccess)
         : mode === "login"
-          ? await auth.signIn({ email, password }, async () => {
-              form.reset();
-              setSignedIn(true);
-              await onSignedIn();
-            })
+          ? await auth.signIn({ email, password }, onSuccess)
           : mode === "forgot-password"
-            ? await auth.requestPasswordReset({ email })
+            ? await auth.requestPasswordReset({ email }, onSuccess)
             : mode === "reset-password"
-              ? await auth.resetPassword({
-                  newPassword: password,
-                  token,
-                })
-              : await auth.sendVerificationEmail({ email });
+              ? await auth.resetPassword(
+                  {
+                    newPassword: password,
+                    token,
+                  },
+                  onSuccess,
+                )
+              : await auth.sendVerificationEmail({ email }, onSuccess);
     if (result.status !== "success") {
       if (
         mailMode &&
@@ -119,21 +117,6 @@ export function AuthForm({
       return;
     }
     if (mailMode) cooldown.start();
-    if (mode === "reset-password") {
-      form.reset();
-      setResetSaved(true);
-    }
-    if (mode === "signup") setMessage(t("verifyIntro"));
-    else if (mode !== "login")
-      setMessage(
-        t(
-          mode === "forgot-password"
-            ? "resetSent"
-            : mode === "reset-password"
-              ? "resetSaved"
-              : "verifySent",
-        ),
-      );
   }
   const linkClassName =
     "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -175,10 +158,10 @@ export function AuthForm({
             <AlertDescription>{t("invalidLink")}</AlertDescription>
           </Alert>
         )}
-        {message && (
+        {messageKey && (
           <Alert role="status">
             <CircleCheck aria-hidden="true" />
-            <AlertDescription>{message}</AlertDescription>
+            <AlertDescription>{t(messageKey)}</AlertDescription>
           </Alert>
         )}
         {error && !invalidReset && (
@@ -197,7 +180,7 @@ export function AuthForm({
             {t("sendReset")}
           </LinkComponent>
         )}
-        {!verified && !signedIn && !resetSaved && !invalidReset && (
+        {!verified && !complete && !invalidReset && (
           <form onSubmit={submit} aria-busy={busy}>
             <FieldGroup>
               {mode === "signup" && (
@@ -242,11 +225,8 @@ export function AuthForm({
                     ) : undefined
                   }
                   id="auth-password"
-                  newPassword={mode !== "login"}
+                  purpose={mode === "login" ? "current" : "new"}
                   name="password"
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  minLength={mode === "login" ? 1 : authPolicy.passwordMinLength}
-                  maxLength={authPolicy.passwordMaxLength}
                   required
                   disabled={busy}
                   className="h-11"

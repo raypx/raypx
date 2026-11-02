@@ -54,6 +54,8 @@ Mail errors recognize HTTP 429 and expose only a parsed retry delay. Shared DOM
 mail forms wait 60 seconds after success, or the server's retry delay after a limit;
 ordinary failures remain retryable. Password fields show Caps Lock state and use
 shared policy for new-password length feedback without retaining credentials.
+The shared password field owns current/new/confirmation constraints. Forms derive
+success copy from their mode and action outcome, translating notices during render.
 `usePasswordChange` verifies the current password through the injected client and
 keeps the password-change interface separate from sign-in clients.
 
