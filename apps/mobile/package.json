@@ -38,7 +38,9 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/react": "catalog:dev",
-    "tailwindcss": "catalog:"
+    "@vitest/coverage-v8": "catalog:dev",
+    "tailwindcss": "catalog:",
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",

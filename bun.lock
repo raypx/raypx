@@ -167,7 +167,9 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@types/react": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
         "tailwindcss": "catalog:",
+        "vite-plus": "catalog:dev",
       },
     },
     "apps/storybook": {
@@ -609,7 +611,7 @@
         "happy-dom": "catalog:dev",
         "react": "catalog:",
         "react-dom": "catalog:",
-        "vite": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.1",

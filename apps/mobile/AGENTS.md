@@ -11,6 +11,7 @@ Expo Router owns `app/` routes. The root session boundary protects `(app)` and
 exposes `/login` only while signed out. Session restoration, refresh failures,
 expiry and verification must fail closed before protected screens mount.
 The first authenticated screen is the account shell; task/push features are later work.
+OTA updates are not configured; keep updates.enabled false until an update service is established.
 
 `EXPO_PUBLIC_API_URL` selects one HTTPS gateway origin (default `https://raypx.com`).
 It is public build configuration, never a credential. SecureStore namespaces
