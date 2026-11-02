@@ -154,7 +154,15 @@ func TestBuiltCLIUsesPrivateDaemonProtocol(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if _, err := engine.Request(ctx, "roots.list", host.JSON{}); err != nil {
-		t.Fatal("real CLI roots request failed")
+	status, err := engine.Request(ctx, "instance.status", host.JSON{})
+	if err != nil {
+		t.Fatal("real CLI instance status request failed")
+	}
+	identity, ok := status.(map[string]any)
+	if !ok || identity["state"] != "unregistered" {
+		t.Fatal("fresh CLI profile must require enrollment")
+	}
+	if _, err := engine.Request(ctx, "roots.list", host.JSON{}); err == nil || err.Error() != "INSTANCE_ENROLLMENT_REQUIRED" {
+		t.Fatal("unregistered CLI profile admitted local work")
 	}
 }

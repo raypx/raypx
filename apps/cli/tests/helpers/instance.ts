@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { profilePath } from "../../src/runtime/state";
 import {
   enrollmentBeginSchema,
@@ -6,7 +7,12 @@ import {
   instanceCheckProof,
   type InstanceBinding,
 } from "@raypx/instances";
-import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
+import {
+  createInstanceSigner,
+  createInstanceKey,
+  instanceDigest,
+  verifyProof,
+} from "@raypx/instances/crypto";
 
 /** Enroll an owned temporary profile over HTTP; exercise production identity/key storage. */
 export async function enrollTestProfile(
@@ -72,6 +78,22 @@ export async function enrollTestProfile(
       await Bun.secrets.delete({ service: "pro.raypx.instance", name: instanceDigest(directory) });
   };
   try {
+    if (process.platform === "darwin") {
+      // Bun's headless macOS tests require an unrestricted ACL. This synthetic key
+      // belongs only to the owned temporary profile; production keeps secure defaults.
+      // https://github.com/oven-sh/bun/blob/bun-v1.4.4/test/js/bun/secrets-ci-setup.md
+      await mkdir(directory, { recursive: true, mode: 0o700 });
+      await writeFile(join(directory, "instance-id"), crypto.randomUUID(), {
+        mode: 0o600,
+        flag: "wx",
+      });
+      await Bun.secrets.set({
+        service: "pro.raypx.instance",
+        name: instanceDigest(directory),
+        value: createInstanceKey().privateKey,
+        allowUnrestrictedAccess: true,
+      });
+    }
     // Let the same executable that consumes the identity own its OS credential.
     const child = Bun.spawn(
       [
