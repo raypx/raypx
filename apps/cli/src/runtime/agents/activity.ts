@@ -1,40 +1,33 @@
-import type { ConversationSink, TokenTotals } from "@raypx/provider-core";
-import { recordCodexActivity } from "@raypx/provider-codex";
-import { recordClaudeActivity } from "@raypx/provider-claude";
+import type { ConversationEvent, TokenTotals } from "@raypx/provider-core";
 import { taskText } from "@raypx/core/task-text";
 
-import type { AgentProvider, TaskActivity } from "@raypx/core/tasks";
+import type { TaskActivity } from "@raypx/core/tasks";
 import type { ActivityDraft } from "./store";
 
-const object = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-const text = (value: unknown) => (typeof value === "string" ? value : "");
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;
 export type { TokenTotals } from "@raypx/provider-core";
 
 /** Select public conversation fields; reasoning, tool output and provider envelopes stay private. */
-export class ConversationRecorder implements ConversationSink {
-  readonly entries = new Map<string, ActivityDraft>();
+export class ConversationRecorder {
+  private readonly entries = new Map<string, ActivityDraft>();
   private readonly dirty = new Set<string>();
-  readonly streamedMessages = new Set<string>();
+  private readonly streamedMessages = new Set<string>();
   private timer: ReturnType<typeof setTimeout> | undefined;
-  turn = 0;
+  private turn = 0;
   private startedAt = Date.now();
-  currentMessage = "";
+  private currentMessage = "";
   private stopped = false;
-  totals: TokenTotals | undefined;
-  turnUsage: TokenTotals = {
+  private totals: TokenTotals | undefined;
+  private turnUsage: TokenTotals = {
     inputTokens: 0,
     outputTokens: 0,
     cachedInputTokens: 0,
     cacheWriteInputTokens: 0,
   };
-  usageKnown = true;
-  codexTurn = "";
-  blockIndex = 0;
+  private usageKnown = true;
+  private providerTurn = "";
+  private blockIndex = 0;
   constructor(
     private readonly taskId: string,
     private readonly write: (entry: ActivityDraft) => TaskActivity,
@@ -45,11 +38,85 @@ export class ConversationRecorder implements ConversationSink {
     this.totals = value;
   }
   setTurnId(value: string) {
-    this.codexTurn = value;
+    this.providerTurn = value;
   }
-  record(provider: AgentProvider, message: Record<string, unknown>) {
-    if (provider === "codex") this.codex(text(message.method), object(message.params));
-    else this.claude(message);
+  record(event: ConversationEvent) {
+    if (this.stopped) return;
+    if (event.type === "turn") this.providerTurn = event.id;
+    else if (event.type === "message-start") {
+      this.currentMessage = event.id;
+      this.blockIndex = 0;
+    } else if (event.type === "message-delta") {
+      const key = event.id ?? this.currentMessage,
+        previous = this.entries.get(key);
+      this.streamedMessages.add(key);
+      this.message(
+        key,
+        (event.block !== undefined &&
+        previous?.kind === "message" &&
+        previous.text &&
+        event.block !== this.blockIndex
+          ? "\n"
+          : "") + event.text,
+        false,
+        true,
+      );
+      if (event.block !== undefined) this.blockIndex = event.block;
+    } else if (event.type === "message-end") {
+      const entry = this.entries.get(this.currentMessage);
+      if (entry?.kind === "message") this.message(this.currentMessage, entry.text, true);
+    } else if (event.type === "message") {
+      const key = event.id ?? this.currentMessage;
+      if (event.unlessStreamed && this.streamedMessages.has(key)) return;
+      if (event.unlessPresent && this.entries.has(key)) return;
+      this.message(key, event.text, event.complete);
+    } else if (event.type === "tool") this.tool(event.id, event.name, event.status);
+    else if (event.type === "tool-result") {
+      const previous = this.entries.get(`tool:${event.id}`);
+      if (previous?.kind === "tool")
+        this.tool(event.id, previous.name, event.failed ? "failed" : "succeeded");
+    } else if (event.type === "usage") {
+      if (event.turnId && this.providerTurn && event.turnId !== this.providerTurn) return;
+      const value = event.totals;
+      if (!event.cumulative) {
+        this.usage(
+          value.inputTokens,
+          value.outputTokens,
+          value.cachedInputTokens,
+          value.cacheWriteInputTokens,
+          event.durationMs,
+          event.known,
+        );
+        return;
+      }
+      if (!this.turn && event.known) {
+        this.totals = value;
+        this.persistTotals?.(value);
+        return;
+      }
+      if (!event.known) {
+        this.usageKnown = false;
+        this.usage(0, 0, 0, 0, undefined, false);
+        return;
+      }
+      const keys = Object.keys(value) as (keyof TokenTotals)[];
+      if (this.totals && keys.some((key) => value[key] < this.totals![key]))
+        this.usageKnown = false;
+      else if (this.totals) {
+        if (keys.every((key) => value[key] === this.totals![key])) return;
+        for (const key of keys) this.turnUsage[key] += value[key] - this.totals[key];
+      } else this.usageKnown = false;
+      this.totals = value;
+      this.persistTotals?.(value);
+      this.usage(
+        this.turnUsage.inputTokens,
+        this.turnUsage.outputTokens,
+        this.turnUsage.cachedInputTokens,
+        this.turnUsage.cacheWriteInputTokens,
+        undefined,
+        this.usageKnown,
+      );
+    }
   }
   private base() {
     const now = new Date().toISOString();
@@ -59,7 +126,7 @@ export class ConversationRecorder implements ConversationSink {
     this.turn++;
     this.startedAt = Date.now();
     this.currentMessage = `turn:${this.turn}`;
-    this.codexTurn = "";
+    this.providerTurn = "";
     this.usageKnown = this.totals !== undefined;
     this.turnUsage = {
       inputTokens: 0,
@@ -90,7 +157,7 @@ export class ConversationRecorder implements ConversationSink {
     }
     this.dirty.clear();
   }
-  message(key: string, value: string, complete: boolean, append = false) {
+  private message(key: string, value: string, complete: boolean, append = false) {
     this.currentMessage = key;
     let entry = this.entries.get(key) as Message | undefined;
     const created = !entry;
@@ -112,7 +179,7 @@ export class ConversationRecorder implements ConversationSink {
     entry.status = complete ? "complete" : "streaming";
     this.save(key, created || complete);
   }
-  tool(id: string, name: string, status: Tool["status"]) {
+  private tool(id: string, name: string, status: Tool["status"]) {
     const key = `tool:${id}`;
     let entry = this.entries.get(key) as Tool | undefined;
     if (!entry) {
@@ -121,7 +188,7 @@ export class ConversationRecorder implements ConversationSink {
     } else if (entry.status === "running" || status !== "running") entry.status = status;
     this.save(key, true);
   }
-  usage(
+  private usage(
     inputTokens: number,
     outputTokens: number,
     cachedInputTokens: number,
@@ -142,12 +209,6 @@ export class ConversationRecorder implements ConversationSink {
       known,
     });
     this.save(key, true);
-  }
-  codex(method: string, params: Record<string, unknown>) {
-    recordCodexActivity(this, method, params);
-  }
-  claude(message: Record<string, unknown>) {
-    recordClaudeActivity(this, message);
   }
   endTurn(status: "complete" | "interrupted") {
     for (const [key, entry] of this.entries) {

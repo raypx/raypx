@@ -1,3 +1,5 @@
+import { decodeCodexActivity } from "@raypx/provider-codex";
+import { decodeClaudeActivity } from "@raypx/provider-claude";
 import { expect, it } from "vite-plus/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -76,8 +78,10 @@ it.each(["claude", "codex"] as const)(
     });
     recorder.startTurn();
     for (const record of value.records) {
-      if (provider === "claude") recorder.claude(record);
-      else recorder.codex(String(record.method), object(record.params));
+      for (const event of provider === "claude"
+        ? decodeClaudeActivity(record)
+        : decodeCodexActivity(String(record.method), object(record.params)))
+        recorder.record(event);
     }
     recorder.stop("complete");
     const messages = [...entries.values()].filter((entry) => entry.kind === "message");

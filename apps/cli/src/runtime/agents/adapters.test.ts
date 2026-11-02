@@ -84,7 +84,7 @@ it("keeps Codex output and approval callbacks fenced to their execution owner", 
   f.receive({ method: "turn/completed", params: { turn: { status: "completed" } } });
   expect(provider.summary).toBe("Current");
   expect(emit).toHaveBeenCalledTimes(1);
-  expect(emit.mock.calls[0]?.[0]).toMatchObject({ type: "record" });
+  expect(emit.mock.calls[0]?.[0]).toMatchObject({ type: "activity" });
   expect(ask).not.toHaveBeenCalled();
   expect(f.send).not.toHaveBeenCalled();
 });
@@ -109,7 +109,6 @@ it("ignores session and result notifications from a replaced Claude process", ()
   current = false;
   f.receive({ type: "system", session_id: "old" });
   f.receive({ type: "result", is_error: true, result: "Old process failed" });
-  expect(emit).toHaveBeenCalledTimes(2);
-  expect(emit.mock.calls[0]?.[0]).toMatchObject({ type: "record" });
-  expect(emit.mock.calls[1]?.[0]).toMatchObject({ type: "session", id: "current" });
+  expect(emit).toHaveBeenCalledTimes(1);
+  expect(emit.mock.calls[0]?.[0]).toMatchObject({ type: "session", id: "current" });
 });

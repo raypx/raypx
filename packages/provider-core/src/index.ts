@@ -1,14 +1,14 @@
 import type { AgentTask } from "@raypx/core/tasks";
 import type { AskApproval, TransportFactory } from "./transport";
 
-/** A process lifetime that the execution coordinator can observe and stop. */
+/** A session lifetime, including SDK streams, that must drain before releasing ownership. */
 export interface ExecutionHandle {
-  readonly completed: Promise<number>;
+  readonly completed: Promise<void>;
   kill(): Promise<void>;
 }
 
 /** Provider-neutral capabilities exposed by every agent adapter. */
-export interface ExecutionDriver {
+export interface ProviderSession {
   readonly handle: ExecutionHandle;
   readonly input: "steer" | "interrupt";
   readonly holdPlanOnExit: boolean;
@@ -23,10 +23,7 @@ export interface ExecutionDriver {
   interrupt(sessionId?: string | null): Promise<void>;
 }
 
-/** A concrete adapter exposes the driver consumed by ManagedExecution. */
-export type AgentAdapter = ExecutionDriver;
-
-export interface AdapterStart {
+export interface ProcessSessionStart {
   executable: string;
   directory: string;
   mode: AgentTask["mode"];
@@ -41,7 +38,7 @@ export interface AdapterPorts {
 }
 
 export type AdapterEvent =
-  | { type: "record"; handle: ExecutionHandle; message: Record<string, unknown> }
+  | { type: "activity"; handle: ExecutionHandle; event: import("./conversation").ConversationEvent }
   | { type: "session"; handle: ExecutionHandle; id: string }
   | { type: "turn-id"; handle: ExecutionHandle; id: string }
   | {
@@ -54,13 +51,21 @@ export type AdapterEvent =
     }
   | { type: "failed"; handle: ExecutionHandle };
 
-export type AgentAdapterFactory = (
-  start: AdapterStart,
+export type ProcessAdapterFactory = (
+  start: ProcessSessionStart,
   ports: AdapterPorts,
   transportFactory: TransportFactory,
-) => AgentAdapter;
+) => ProviderSession;
 
 export type { AgentTransport, TransportFactory, AskApproval } from "./transport";
 export { object } from "./transport";
 
-export type { ConversationSink, ConversationEntry, TokenTotals } from "./conversation";
+export type { ConversationEvent, ConversationEntry, TokenTotals } from "./conversation";
+
+export interface SessionStart {
+  directory: string;
+  mode: AgentTask["mode"];
+  environment: Record<string, string | undefined>;
+  sessionId?: string;
+}
+export type SessionFactory = (start: SessionStart, ports: AdapterPorts) => ProviderSession;

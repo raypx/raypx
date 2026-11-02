@@ -1,10 +1,11 @@
+import { decodeCodexActivity } from "./activity";
 import { taskText } from "@raypx/core/task-text";
 import { type AgentTask } from "@raypx/core/tasks";
 import {
   object,
   type AdapterPorts,
-  type AdapterStart,
-  type AgentAdapter,
+  type ProcessSessionStart,
+  type ProviderSession,
   type ExecutionHandle,
   type AgentTransport,
   type TransportFactory,
@@ -13,7 +14,7 @@ import {
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? taskText(value, max) : "";
 /** Private app-server protocol. Task/approval policy belongs to ManagedExecution. */
-export class CodexAdapter implements AgentAdapter {
+export class CodexAdapter implements ProviderSession {
   readonly input = "steer" as const;
   readonly holdPlanOnExit = false;
   readonly planContinuation = "turn" as const;
@@ -26,7 +27,7 @@ export class CodexAdapter implements AgentAdapter {
   summary = "";
   preview = "";
   constructor(
-    start: AdapterStart,
+    start: ProcessSessionStart,
     private readonly ports: AdapterPorts,
     transportFactory: TransportFactory,
   ) {
@@ -40,7 +41,10 @@ export class CodexAdapter implements AgentAdapter {
       (message) => (ready ? this.message(message) : pending.push(message)),
       start.environment,
     );
-    this.handle = { completed: this.transport.completed, kill: () => this.transport.kill() };
+    this.handle = {
+      completed: this.transport.completed.then(() => {}),
+      kill: () => this.transport.kill(),
+    };
     ready = true;
     queueMicrotask(() => {
       for (const message of pending) this.message(message);
@@ -51,7 +55,8 @@ export class CodexAdapter implements AgentAdapter {
     if (!this.ports.current(this.handle)) return;
     const method = text(message.method),
       params = object(message.params);
-    this.ports.emit({ type: "record", handle: this.handle, message });
+    for (const event of decodeCodexActivity(method, params))
+      this.ports.emit({ type: "activity", handle: this.handle, event });
     if (method === "turn/started") this.currentTurnId = text(object(params.turn).id, 500);
     if (method === "item/started") {
       const item = object(params.item);
@@ -215,4 +220,4 @@ export class CodexAdapter implements AgentAdapter {
   }
 }
 
-export { recordCodexActivity } from "./activity";
+export { decodeCodexActivity } from "./activity";

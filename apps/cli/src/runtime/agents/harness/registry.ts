@@ -5,9 +5,9 @@ import { join } from "node:path";
 import type { AgentCapability, AgentProvider } from "@raypx/core/tasks";
 import {
   type AdapterPorts,
-  type AdapterStart,
-  type AgentAdapterFactory,
-  type ExecutionDriver,
+  type ProcessSessionStart,
+  type ProcessAdapterFactory,
+  type ProviderSession,
 } from "@raypx/provider-core";
 import { ClaudeAdapter } from "@raypx/provider-claude";
 import { CodexAdapter } from "@raypx/provider-codex";
@@ -15,7 +15,7 @@ import { createTransport, type TransportFactory } from "./transport";
 
 type Registration = {
   supported(major: number, minor: number, patch: number): boolean;
-  create: AgentAdapterFactory;
+  create: ProcessAdapterFactory;
 };
 const adapters: Record<AgentProvider, Registration> = {
   codex: {
@@ -30,10 +30,10 @@ const adapters: Record<AgentProvider, Registration> = {
 };
 export function createAdapter(
   provider: AgentProvider,
-  start: AdapterStart,
+  start: ProcessSessionStart,
   ports: AdapterPorts,
   transportFactory: TransportFactory = createTransport,
-): ExecutionDriver {
+): ProviderSession {
   return adapters[provider].create(start, ports, transportFactory);
 }
 

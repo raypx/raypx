@@ -1,3 +1,4 @@
+import type { SessionFactory } from "@raypx/provider-core";
 import { readFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 
@@ -41,7 +42,7 @@ function late(provider: AgentProvider): ReplayRecord {
         : { type: "system", session_id: "stale-session" },
   };
 }
-function fixture(provider: AgentProvider, records = recording(provider)) {
+function fixture(provider: AgentProvider, records = recording(provider), factory?: SessionFactory) {
   const replay = new ProviderReplay(records),
     id = crypto.randomUUID();
   const local: LocalAgentTask = {
@@ -118,10 +119,12 @@ function fixture(provider: AgentProvider, records = recording(provider)) {
       },
       ended,
     },
+    factory ??
+      ((start, ports) =>
+        createAdapter(provider, { ...start, executable: provider }, ports, replay.factory)),
     10_000,
-    (name, start, ports) => createAdapter(name, start, ports, replay.factory),
   );
-  const running = execution.run(provider, "/synthetic-project");
+  const running = execution.run("/synthetic-project");
   async function finished() {
     await replay.drain();
     await Promise.all(completions);
@@ -425,3 +428,63 @@ it.each(["item/commandExecution/requestApproval", "item/tool/requestUserInput"])
     expect(failed).not.toHaveBeenCalled();
   },
 );
+
+it("runs an in-process SDK session and holds its project lock until effects drain", async () => {
+  let drain!: () => void, closing!: () => void;
+  const drained = new Promise<void>((resolve) => {
+    drain = resolve;
+  });
+  const closeStarted = new Promise<void>((resolve) => {
+    closing = resolve;
+  });
+  const factory: SessionFactory = (start, ports) => {
+    expect(start.directory).toBe("/synthetic-project");
+    expect("executable" in start).toBe(false);
+    const handle = {
+      completed: drained,
+      kill: async () => {
+        closing();
+        await drained;
+      },
+    };
+    return {
+      handle,
+      input: "steer",
+      holdPlanOnExit: false,
+      planContinuation: "turn",
+      planTitle: "SDK fixture",
+      turnId: "sdk-turn",
+      preview: "",
+      summary: "",
+      initialize: async () => "synthetic-session",
+      sendTurn: async () => {
+        ports.emit({
+          type: "activity",
+          handle,
+          event: { type: "message", id: "sdk-message", text: "SDK result", complete: true },
+        });
+        ports.emit({
+          type: "completed",
+          handle,
+          status: "completed",
+          summary: "SDK result",
+          preview: "SDK result",
+          turnId: "sdk-turn",
+        });
+      },
+      steer: async () => {},
+      interrupt: async () => {},
+    };
+  };
+  const f = fixture("codex", [], factory);
+  await f.running;
+  await closeStarted;
+  expect(f.unlock).not.toHaveBeenCalled();
+  expect([...f.activity.values()]).toEqual(
+    expect.arrayContaining([expect.objectContaining({ kind: "message", text: "SDK result" })]),
+  );
+  drain();
+  await f.finished();
+  expect(f.unlock).toHaveBeenCalledTimes(1);
+  expect(f.local.task.status).toBe("succeeded");
+});

@@ -38,7 +38,7 @@ it.skipIf(process.platform === "win32")(
         },
         ports,
       );
-      expect(await driver.handle.completed).toBe(0);
+      await expect(driver.handle.completed).resolves.toBeUndefined();
       expect(readFileSync(output, "utf8")).toBe("/bundled/bun");
     }
   },

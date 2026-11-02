@@ -1,5 +1,5 @@
+import { createAdapter, discoverProviders } from "./harness/registry";
 import { respondToClaudeHook } from "@raypx/provider-claude";
-import { discoverProviders } from "./harness/registry";
 import type { RecordDiagnostic } from "../../diagnostics";
 import { existsSync, realpathSync } from "node:fs";
 import { hostname } from "node:os";
@@ -83,6 +83,7 @@ export class AgentRuntime {
     private readonly changed: (pendingRequest?: string, change?: TaskChange) => void,
     private readonly options: {
       executables?: Partial<Record<AgentProvider, string>>;
+      assertInstance?: () => Promise<void>;
       recordDiagnostic?: RecordDiagnostic;
       /** How long an interrupted turn may run before its pending input expires. */
       interruptTimeoutMs?: number;
@@ -515,9 +516,10 @@ export class AgentRuntime {
     return { accepted: true };
   }
   async start(binding: string, commandId: string, task: AgentTask, deadline: string) {
+    const version = this.bindingVersions.get(binding) ?? 0;
+    if (this.options.assertInstance) await this.options.assertInstance();
     if (this.store.seen(commandId)) return { accepted: true };
     if (this.closing) throw new LocalError("CLOSING", "Agent host is closing");
-    const version = this.bindingVersions.get(binding) ?? 0;
     const local: LocalAgentTask = { task: { ...task }, binding, sessionId: null };
     const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
     initialExecutionPrompt(task, undefined, Boolean(executionSession(local, parent)));
@@ -605,12 +607,13 @@ export class AgentRuntime {
           this.active.delete(task.id);
         },
       },
+      (start, ports) => createAdapter(task.provider, { ...start, executable }, ports),
       this.options.interruptTimeoutMs,
     );
     this.active.set(task.id, execution);
     this.status(local, "running");
     void execution
-      .run(executable, directory)
+      .run(directory)
       .catch((error: unknown) =>
         execution.finish(
           "failed",

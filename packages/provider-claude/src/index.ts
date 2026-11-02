@@ -1,16 +1,17 @@
+import { decodeClaudeActivity } from "./activity";
 import type { AgentTask } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import {
   type AdapterPorts,
-  type AdapterStart,
-  type AgentAdapter,
+  type ProcessSessionStart,
+  type ProviderSession,
   type ExecutionHandle,
   type AgentTransport,
   type TransportFactory,
 } from "@raypx/provider-core";
 
 /** Private stream-json protocol; the coordinator decides what a result means. */
-export class ClaudeAdapter implements AgentAdapter {
+export class ClaudeAdapter implements ProviderSession {
   readonly input = "interrupt" as const;
   readonly holdPlanOnExit = true;
   readonly planContinuation = "process" as const;
@@ -21,7 +22,7 @@ export class ClaudeAdapter implements AgentAdapter {
   readonly transport: AgentTransport;
   readonly handle: ExecutionHandle;
   constructor(
-    start: AdapterStart,
+    start: ProcessSessionStart,
     private readonly ports: AdapterPorts,
     transportFactory: TransportFactory,
   ) {
@@ -64,7 +65,10 @@ export class ClaudeAdapter implements AgentAdapter {
       (message) => (ready ? this.message(message) : pending.push(message)),
       { ...start.environment, RAYPX_AGENT_HOOK_TOKEN: hook.token },
     );
-    this.handle = { completed: this.transport.completed, kill: () => this.transport.kill() };
+    this.handle = {
+      completed: this.transport.completed.then(() => {}),
+      kill: () => this.transport.kill(),
+    };
     ready = true;
     queueMicrotask(() => {
       for (const message of pending) this.message(message);
@@ -73,7 +77,8 @@ export class ClaudeAdapter implements AgentAdapter {
   }
   private message(message: Record<string, unknown>) {
     if (!this.ports.current(this.handle)) return;
-    this.ports.emit({ type: "record", handle: this.handle, message });
+    for (const event of decodeClaudeActivity(message))
+      this.ports.emit({ type: "activity", handle: this.handle, event });
     if (message.type === "system" && typeof message.session_id === "string")
       this.ports.emit({ type: "session", handle: this.handle, id: message.session_id });
     if (message.type === "result") {
@@ -111,4 +116,4 @@ export class ClaudeAdapter implements AgentAdapter {
 
 export { respondToClaudeHook, type ClaudeHookApprovalPort } from "./hooks";
 
-export { recordClaudeActivity } from "./activity";
+export { decodeClaudeActivity } from "./activity";

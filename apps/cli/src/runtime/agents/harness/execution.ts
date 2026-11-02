@@ -10,8 +10,12 @@ import {
 import { LocalError } from "../../errors";
 import type { AgentStore, LocalAgentTask } from "../store";
 import type { ConversationRecorder } from "../activity";
-import { createAdapter } from "./registry";
-import type { AdapterEvent, ExecutionDriver, ExecutionHandle } from "@raypx/provider-core";
+import type {
+  AdapterEvent,
+  ProviderSession,
+  ExecutionHandle,
+  SessionFactory,
+} from "@raypx/provider-core";
 
 export function initialExecutionPrompt(
   task: AgentTask,
@@ -70,7 +74,7 @@ type Pending = {
 /** Single owner for turn/input/approval state and the project lock through process draining. */
 export class ManagedExecution {
   private process: ExecutionHandle | undefined;
-  private adapter: ExecutionDriver | undefined;
+  private adapter: ProviderSession | undefined;
   private readonly pending = new Map<string, Pending>();
   private cancelled = false;
   private finished = false;
@@ -92,8 +96,8 @@ export class ManagedExecution {
     private readonly unlock: () => void,
     private readonly store: ExecutionStore,
     private readonly effects: ExecutionEffects,
+    private readonly adapterFactory: SessionFactory,
     private readonly interruptTimeoutMs = 10_000,
-    private readonly adapterFactory: typeof createAdapter = createAdapter,
   ) {}
   hasPending(id: string) {
     return this.pending.has(id);
@@ -281,7 +285,7 @@ export class ManagedExecution {
     if (!this.cancelled && !this.finished) this.effects.status("running");
     return result;
   }
-  async run(executable: string, directory: string, continuationPrompt?: string) {
+  async run(directory: string, continuationPrompt?: string) {
     const task = this.local.task;
     const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
     const sessionId = executionSession(this.local, parent);
@@ -296,9 +300,7 @@ export class ManagedExecution {
       throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
     this.planRequestHandled = false;
     const adapter = this.adapterFactory(
-      task.provider,
       {
-        executable,
         directory,
         mode: task.mode,
         environment: this.effects.environment(),
@@ -307,7 +309,7 @@ export class ManagedExecution {
       {
         approval: { ask: (...args) => this.ask(...args), hook: () => this.effects.hook() },
         current: (handle) => !this.finished && this.process === handle,
-        emit: (event) => this.adapterEvent(event, executable, directory, sessionId),
+        emit: (event) => this.adapterEvent(event, directory, sessionId),
       },
     );
     this.adapter = adapter;
@@ -345,15 +347,10 @@ export class ManagedExecution {
     } else await this.serial(start);
   }
 
-  private adapterEvent(
-    event: AdapterEvent,
-    executable: string,
-    directory: string,
-    expectedSessionId?: string,
-  ) {
+  private adapterEvent(event: AdapterEvent, directory: string, expectedSessionId?: string) {
     if (this.finished || this.process !== event.handle) return;
-    if (event.type === "record") {
-      this.conversation.record(this.local.task.provider, event.message);
+    if (event.type === "activity") {
+      this.conversation.record(event.event);
       return;
     }
     if (event.type === "session") {
@@ -373,7 +370,7 @@ export class ManagedExecution {
       this.finish("failed", "AGENT_PROTOCOL_FAILED");
       return;
     }
-    this.completed(event, executable, directory);
+    this.completed(event, directory);
   }
 
   private watch(runner: ExecutionHandle, holdPlanOnExit: boolean) {
@@ -400,11 +397,7 @@ export class ManagedExecution {
     this.completedTurn = turn;
     return true;
   }
-  private completed(
-    event: Extract<AdapterEvent, { type: "completed" }>,
-    executable: string,
-    directory: string,
-  ) {
+  private completed(event: Extract<AdapterEvent, { type: "completed" }>, directory: string) {
     const turn = this.turnVersion;
     void this.serial(async () => {
       if (event.turnId && this.adapter?.turnId && event.turnId !== this.adapter.turnId) return;
@@ -435,7 +428,7 @@ export class ManagedExecution {
       ) {
         if (this.adapter?.planContinuation === "process") {
           this.awaitingPlan = true;
-          await this.continuePlanProcess(event.handle, executable, directory, event.preview);
+          await this.continuePlanProcess(event.handle, directory, event.preview);
         } else {
           const decision = await this.planDecision(
             this.adapter?.planTitle ?? "Agent",
@@ -469,12 +462,7 @@ export class ManagedExecution {
     return decision.type === "deny" && decision.note.trim() ? decision.note : undefined;
   }
 
-  private async continuePlanProcess(
-    runner: ExecutionHandle,
-    executable: string,
-    directory: string,
-    plan: string,
-  ) {
+  private async continuePlanProcess(runner: ExecutionHandle, directory: string, plan: string) {
     await runner.kill();
     await runner.completed.catch(() => {});
     if (this.finished) return;
@@ -507,7 +495,7 @@ export class ManagedExecution {
     this.summary = "";
     this.awaitingPlan = false;
     this.store.put(this.local);
-    await this.run(executable, directory, prompt);
+    await this.run(directory, prompt);
   }
   cancel() {
     this.cancelled = true;

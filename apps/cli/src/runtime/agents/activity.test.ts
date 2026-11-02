@@ -1,3 +1,5 @@
+import { decodeCodexActivity } from "@raypx/provider-codex";
+import { decodeClaudeActivity } from "@raypx/provider-claude";
 import { bounded } from ".";
 import { expect, it, vi } from "vite-plus/test";
 import { ConversationRecorder } from "./activity";
@@ -30,7 +32,7 @@ it("accumulates total usage across calls, rejects duplicate or old-turn updates 
   r.startTurn();
   r.setTurnId("one");
   const update = (inputTokens: number, outputTokens: number, turnId = "one") =>
-    r.codex("thread/tokenUsage/updated", {
+    codex(r, "thread/tokenUsage/updated", {
       turnId,
       tokenUsage: {
         total: { inputTokens, outputTokens },
@@ -48,13 +50,13 @@ it("accumulates total usage across calls, rejects duplicate or old-turn updates 
     outputTokens: 5,
     known: true,
   });
-  r.codex("item/agentMessage/delta", { delta: "x".repeat(40_000) });
+  codex(r, "item/agentMessage/delta", { delta: "x".repeat(40_000) });
   r.flush();
   const boundedCalls = write.mock.calls.length;
-  r.codex("item/agentMessage/delta", { delta: "more" });
+  codex(r, "item/agentMessage/delta", { delta: "more" });
   r.flush();
   expect(write).toHaveBeenCalledTimes(boundedCalls);
-  r.codex("item/completed", { item: { type: "agentMessage", text: "x".repeat(32_000) } });
+  codex(r, "item/completed", { item: { type: "agentMessage", text: "x".repeat(32_000) } });
   expect([...entries.values()].filter((entry) => entry.kind === "message")).toHaveLength(1);
   r.endTurn("complete");
   r.startTurn();
@@ -70,19 +72,19 @@ it("accumulates total usage across calls, rejects duplicate or old-turn updates 
 it("joins streaming and final Claude messages by identity and excludes reasoning, child runs and tool content", () => {
   const { recorder: r, entries } = recorder();
   r.startTurn();
-  r.claude({ type: "stream_event", event: { type: "message_start", message: { id: "m" } } });
-  r.claude({
+  claude(r, { type: "stream_event", event: { type: "message_start", message: { id: "m" } } });
+  claude(r, {
     type: "stream_event",
     event: {
       type: "content_block_delta",
       delta: { type: "thinking_delta", thinking: "PRIVATE_REASONING" },
     },
   });
-  r.claude({
+  claude(r, {
     type: "stream_event",
     event: { type: "content_block_delta", delta: { type: "text_delta", text: "Hello" } },
   });
-  r.claude({
+  claude(r, {
     type: "assistant",
     message: {
       id: "m",
@@ -92,25 +94,25 @@ it("joins streaming and final Claude messages by identity and excludes reasoning
       ],
     },
   });
-  r.claude({
+  claude(r, {
     type: "stream_event",
     event: { type: "content_block_delta", index: 2, delta: { type: "text_delta", text: " world" } },
   });
-  r.claude({
+  claude(r, {
     type: "assistant",
     message: { id: "m", content: [{ type: "text", text: " world" }] },
   });
-  r.claude({ type: "stream_event", event: { type: "message_stop" } });
-  r.claude({
+  claude(r, { type: "stream_event", event: { type: "message_stop" } });
+  claude(r, {
     type: "user",
     message: { content: [{ type: "tool_result", tool_use_id: "t", content: "PRIVATE_STDOUT" }] },
   });
-  r.claude({
+  claude(r, {
     type: "assistant",
     parent_tool_use_id: "t",
     message: { content: [{ type: "text", text: "PRIVATE_CHILD" }] },
   });
-  r.claude({
+  claude(r, {
     type: "result",
     usage: {
       input_tokens: 10,
@@ -145,7 +147,7 @@ it("joins streaming and final Claude messages by identity and excludes reasoning
 it("retains bounded Codex text, finalizes cancellation and never includes command output or reasoning tokens", () => {
   const { recorder: r, entries, write } = recorder();
   r.startTurn();
-  r.codex("item/started", {
+  codex(r, "item/started", {
     item: {
       type: "commandExecution",
       id: "c",
@@ -153,10 +155,10 @@ it("retains bounded Codex text, finalizes cancellation and never includes comman
       aggregatedOutput: "PRIVATE_STDOUT",
     },
   });
-  r.codex("item/started", {
+  codex(r, "item/started", {
     item: { type: "reasoning", id: "private", text: "PRIVATE_REASONING" },
   });
-  r.codex("item/agentMessage/delta", { itemId: "m", delta: "x".repeat(40_000) });
+  codex(r, "item/agentMessage/delta", { itemId: "m", delta: "x".repeat(40_000) });
   r.stop("interrupted");
   const calls = write.mock.calls.length;
   r.stop("interrupted");
@@ -187,7 +189,7 @@ it("marks a cumulative counter reset unknown, then counts subsequent updates fro
   r.startTurn();
   r.setTurnId("reset");
   const update = (inputTokens: number) =>
-    r.codex("thread/tokenUsage/updated", {
+    codex(r, "thread/tokenUsage/updated", {
       turnId: "reset",
       tokenUsage: { total: { inputTokens, outputTokens: 5, cachedInputTokens: 1 } },
     });
@@ -214,8 +216,8 @@ it("marks a cumulative counter reset unknown, then counts subsequent updates fro
 it("never appends into a partially filled Unicode truncation boundary", () => {
   const { recorder: r, entries } = recorder();
   r.startTurn();
-  r.codex("item/agentMessage/delta", { itemId: "unicode", delta: "x".repeat(31999) + "😀" });
-  r.codex("item/agentMessage/delta", { itemId: "unicode", delta: "later" });
+  codex(r, "item/agentMessage/delta", { itemId: "unicode", delta: "x".repeat(31999) + "😀" });
+  codex(r, "item/agentMessage/delta", { itemId: "unicode", delta: "later" });
   r.stop("complete");
   expect([...entries.values()].find((entry) => entry.kind === "message")).toMatchObject({
     text: "x".repeat(31999),
@@ -229,3 +231,10 @@ it("keeps oversized local records from stalling replay or hiding approvals", () 
   expect(bounded(["small", large, "after"])).toEqual(["small"]);
   expect(bounded(["small", large, "after"], true)).toEqual(["small", "after"]);
 });
+
+function codex(r: ConversationRecorder, method: string, params: Record<string, unknown>) {
+  for (const event of decodeCodexActivity(method, params)) r.record(event);
+}
+function claude(r: ConversationRecorder, message: Record<string, unknown>) {
+  for (const event of decodeClaudeActivity(message)) r.record(event);
+}
