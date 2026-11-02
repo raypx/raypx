@@ -24,6 +24,17 @@ export async function enrollTestProfile(
   const token = crypto.randomUUID().replaceAll("-", "").repeat(2);
   const id = crypto.randomUUID();
   let binding: InstanceBinding | undefined;
+  let stage = "before begin";
+  let ownsMacKey = false;
+  const credential = { service: "pro.raypx.instance", name: instanceDigest(directory) };
+  const security = async (args: string[]) => {
+    const child = Bun.spawn(["/usr/bin/security", ...args], {
+      stdout: "ignore",
+      stderr: "ignore",
+      timeout: 15_000,
+    });
+    if (await child.exited) throw new Error("Synthetic Keychain fixture operation failed");
+  };
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -32,6 +43,7 @@ export async function enrollTestProfile(
       const value = input.json,
         method = new URL(request.url).pathname.split("/").at(-1);
       if (method === "begin") {
+        stage = "begin received";
         const { proof, ...identity } = enrollmentBeginSchema.parse(value);
         if (!verifyProof(identity.publicKey, enrollmentProof(server.url.origin, identity), proof))
           return new Response(null, { status: 403 });
@@ -54,8 +66,10 @@ export async function enrollTestProfile(
           },
         });
       }
-      if (method === "poll" && binding && value.id === id && value.token === token)
+      if (method === "poll" && binding && value.id === id && value.token === token) {
+        stage = "poll received";
         return Response.json({ json: { status: "approved", receipt: signer.issue(binding) } });
+      }
       if (
         method === "check" &&
         binding &&
@@ -74,25 +88,33 @@ export async function enrollTestProfile(
   });
   const close = async () => {
     await server.stop(true);
-    if (process.platform === "darwin" || process.platform === "win32")
-      await Bun.secrets.delete({ service: "pro.raypx.instance", name: instanceDigest(directory) });
+    if (process.platform === "darwin" && ownsMacKey) {
+      await security(["delete-generic-password", "-a", credential.name, "-s", credential.service]);
+      ownsMacKey = false;
+    } else if (process.platform === "win32") {
+      await Bun.secrets.delete(credential);
+    }
   };
   try {
     if (process.platform === "darwin") {
-      // Bun's headless macOS tests require an unrestricted ACL. This synthetic key
-      // belongs only to the owned temporary profile; production keeps secure defaults.
-      // https://github.com/oven-sh/bun/blob/bun-v1.4.4/test/js/bun/secrets-ci-setup.md
+      // The system tool grants the synthetic test item a real all-apps ACL without
+      // prompting on hosted runners. Production still uses Bun's secure defaults.
       await mkdir(directory, { recursive: true, mode: 0o700 });
       await writeFile(join(directory, "instance-id"), crypto.randomUUID(), {
         mode: 0o600,
         flag: "wx",
       });
-      await Bun.secrets.set({
-        service: "pro.raypx.instance",
-        name: instanceDigest(directory),
-        value: createInstanceKey().privateKey,
-        allowUnrestrictedAccess: true,
-      });
+      await security([
+        "add-generic-password",
+        "-a",
+        credential.name,
+        "-s",
+        credential.service,
+        "-w",
+        createInstanceKey().privateKey,
+        "-A",
+      ]);
+      ownsMacKey = true;
     }
     // Let the same executable that consumes the identity own its OS credential.
     const child = Bun.spawn(
@@ -113,7 +135,8 @@ export async function enrollTestProfile(
     );
     const timer = setTimeout(() => child.kill(), 30_000);
     try {
-      if ((await child.exited) !== 0) throw new Error("Test instance enrollment failed");
+      if ((await child.exited) !== 0)
+        throw new Error("Test instance enrollment failed (" + stage + ")");
     } finally {
       clearTimeout(timer);
     }

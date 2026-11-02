@@ -218,6 +218,7 @@ describe("affected verification", () => {
     ["packages/cli/src/runtime/index.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/process/windows.ts", ["windows-latest"]],
     ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/tests/helpers/instance.ts", ["macos-latest", "windows-latest"]],
     [".github/workflows/native.yml", ["macos-latest", "windows-latest"]],
     [".gitattributes", ["macos-latest", "windows-latest"]],
   ])("selects native runners from the changed input %s", (file, runners) => {
