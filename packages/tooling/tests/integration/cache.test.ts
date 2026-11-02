@@ -146,6 +146,134 @@ function pass(result: ReturnType<typeof execute>) {
   return result;
 }
 
+function validationProject() {
+  const root = project();
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  manifest.devEngines = {
+    packageManager: { name: "bun", version: "1.4.4", onFail: "error" },
+    runtime: { name: "bun", version: "1.4.4", onFail: "error" },
+  };
+  writeFileSync(join(root, "package.json"), JSON.stringify(manifest));
+  writeFileSync(
+    join(root, "mise.toml"),
+    '[settings]\nidiomatic_version_file_enable_tools = ["bun"]\n',
+  );
+  writeFileSync(
+    join(root, "vite.config.ts"),
+    `import { repositoryTaskConfig } from ${JSON.stringify(configUrl)}; export default repositoryTaskConfig(import.meta.url);`,
+  );
+  const tooling = join(root, "packages/tooling");
+  const toolingManifest = JSON.parse(readFileSync(join(tooling, "package.json"), "utf8"));
+  toolingManifest.dependencies = { "@raypx-kit/devkit": "1.0.0", "@raypx-kit/intl": "1.0.0" };
+  writeFileSync(join(tooling, "package.json"), JSON.stringify(toolingManifest));
+  symlinkSync(
+    join(repository, "packages/tooling/node_modules/@raypx-kit/intl"),
+    join(root, "node_modules/@raypx-kit/intl"),
+    "dir",
+  );
+  for (const file of [
+    "policy.ts",
+    "validation/toolchain.ts",
+    "validation/deployment.ts",
+    "build/deployment.ts",
+    "verification/prechecks.ts",
+  ]) {
+    mkdirSync(join(tooling, "src", file, ".."), { recursive: true });
+    copyFileSync(join(repository, "packages/tooling/src", file), join(tooling, "src", file));
+  }
+  writeFileSync(
+    join(tooling, "src/repository.ts"),
+    'import { discover as read } from "@raypx-kit/devkit/workspaces"; export const discover = (root: string) => read(root, { metadataKey: "raypx" });',
+  );
+  writeFileSync(
+    join(tooling, "src/cli.ts"),
+    'import { runPrecheck } from "./verification/prechecks.ts"; runPrecheck(process.cwd(), process.argv[3] ?? "");',
+  );
+  const i18n = member(root, "i18n", { extra: { exports: { "./config": "./src/config.ts" } } });
+  writeFileSync(
+    join(root, i18n, "src/config.ts"),
+    'export default { locales: { en: "English", zh: "中文" }, defaultLocale: "en" };',
+  );
+  const feature = member(root, "feature");
+  mkdirSync(join(root, feature, "src/messages"));
+  for (const locale of ["en", "zh"])
+    writeFileSync(
+      join(root, feature, `src/messages/${locale}.ts`),
+      'export default { label: "Label" };',
+    );
+  for (const path of ["packages/tooling", i18n, feature])
+    writeFileSync(join(root, path, "AGENTS.md"), "Fixture instructions.\n");
+  return root;
+}
+
+it("caches policy while rejecting new violations and deleted required inputs", () => {
+  const root = validationProject();
+  const run = () => execute(root, "policy", {}, "cache-fixture#task:policy");
+  pass(run());
+  const timing = join(root, ".artifacts/verification/prechecks/policy.json");
+  const evidence = readFileSync(timing, "utf8");
+  expect(JSON.parse(evidence).durationMs).toBeGreaterThanOrEqual(0);
+  rmSync(timing);
+  expect(pass(run()).log).toContain("cache hit");
+  expect(readFileSync(timing, "utf8")).toBe(evidence);
+  writeFileSync(join(root, "packages/feature/src/new.ts"), "export const value = 1;");
+  expect(pass(run()).log).toContain("cache miss");
+  expect(pass(run()).log).toContain("cache hit");
+  writeFileSync(join(root, "packages/feature/src/new.ts"), 'import "undeclared-library";');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const invalid = run();
+    expect(invalid.code).not.toBe(0);
+    expect(invalid.log).toContain("undeclared runtime dependency");
+  }
+  writeFileSync(join(root, "packages/feature/src/new.ts"), "export const value = 2;");
+  pass(run());
+  rmSync(join(root, "packages/feature/AGENTS.md"));
+  const deleted = run();
+  expect(deleted.code).not.toBe(0);
+  expect(deleted.log).toContain("missing AGENTS.md");
+  writeFileSync(join(root, "packages/feature/AGENTS.md"), "Fixture instructions.\n");
+  pass(run());
+  writeFileSync(join(root, ".nvmrc"), "24\n");
+  const pin = run();
+  expect(pin.code).not.toBe(0);
+  expect(pin.log).toContain("only runtime pin");
+}, 60000);
+
+it("caches locale parity while tracking changed, new and deleted catalogs and language policy", () => {
+  const root = validationProject();
+  const run = () => execute(root, "locales", {}, "cache-fixture#task:locales");
+  pass(run());
+  expect(pass(run()).log).toContain("cache hit");
+  const english = join(root, "packages/feature/src/messages/en.ts");
+  writeFileSync(english, 'export default { label: "Label", added: "Added" };');
+  expect(run().code).not.toBe(0);
+  writeFileSync(
+    join(root, "packages/feature/src/messages/zh.ts"),
+    'export default { label: "标签", added: "新增" };',
+  );
+  pass(run());
+  expect(pass(run()).log).toContain("cache hit");
+  rmSync(english);
+  expect(run().code).not.toBe(0);
+  writeFileSync(english, 'export default { label: "Label", added: "Added" };');
+  pass(run());
+  const folder = join(root, "packages/i18n/src/messages");
+  mkdirSync(folder);
+  writeFileSync(join(folder, "en.json"), '{"label":"Label"}');
+  const added = run();
+  expect(added.code).not.toBe(0);
+  expect(added.log).toContain("missing zh catalog");
+  rmSync(folder, { recursive: true });
+  pass(run());
+  writeFileSync(
+    join(root, "packages/i18n/src/config.ts"),
+    'export default { locales: { en: "English", zh: "中文", fr: "Français" }, defaultLocale: "en" };',
+  );
+  const config = run();
+  expect(config.code).not.toBe(0);
+  expect(config.log).toContain("missing fr catalog");
+}, 60000);
+
 it("runs a delegated package runner once with literal arguments scoped to the public task", () => {
   const root = project();
   const directory = checked(
@@ -236,6 +364,36 @@ it("restores cached build outputs and scopes literal argv and public build envir
   expect(changed.log).toContain("1 cache hit");
   expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(["two", literal]);
 }, 30000);
+
+it.each([true, false])(
+  "ignores dependency coverage and reports while tracking authored inputs (automatic inputs: %s)",
+  (automaticInputs) => {
+    const root = project(automaticInputs);
+    const tokens = checked(root, "tokens");
+    checked(root, "consumer", { "@raypx/tokens": "workspace:*" });
+    const selector = "@raypx/consumer#task:check";
+    pass(execute(root, "check", {}, selector));
+    expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+    for (const directory of ["coverage", ".artifacts", "test-results", "playwright-report"]) {
+      mkdirSync(join(tokens, directory), { recursive: true });
+      const report = join(tokens, directory, "result.json");
+      writeFileSync(report, "{}");
+      expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+      writeFileSync(report, '{"changed":true}');
+      expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+      rmSync(join(tokens, directory), { recursive: true });
+      expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+    }
+    // A source folder named coverage is authored input, not a workspace report directory.
+    mkdirSync(join(tokens, "src/coverage"));
+    writeFileSync(join(tokens, "src/coverage/value.ts"), "export const value = 1;");
+    expect(pass(execute(root, "check", {}, selector)).log).toContain("cache miss");
+    const config = join(tokens, "tsconfig.json");
+    writeFileSync(config, readFileSync(config, "utf8") + "\n");
+    expect(pass(execute(root, "check", {}, selector)).log).toContain("cache miss");
+  },
+  60000,
+);
 
 it.each([true, false])(
   "tracks dependency declarations while excluding owned outputs (automatic inputs: %s)",

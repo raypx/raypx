@@ -107,7 +107,7 @@ describe("local related test selection", () => {
     write("packages/consumer/src/changed.ts");
     expect(localTests(root, plan(["packages/consumer/src/changed.ts"]))[0]?.mode).toBe("all");
   });
-  it("narrows private verification edits while retaining all affected typechecks and the canonical CI tasks", () => {
+  it("limits private verification edits to Tooling in local and canonical CI tasks", () => {
     const { root, write, plan } = project();
     member(root, "tooling", {
       metadata: { kind: "tooling", target: "bun" },
@@ -119,9 +119,9 @@ describe("local related test selection", () => {
     const selected = localTests(root, canonical);
     const refs = executionTasks(canonical, "fixture", selected);
     expect(selected.find((test) => test.workspace === "@raypx/tooling")?.mode).toBe("related");
-    expect(refs).toContain("@raypx/feature#task:check");
-    expect(refs).not.toContain("@raypx/feature#task:test");
-    expect(canonical.tasks).toContain("@raypx/feature#task:test");
+    expect(refs).toContain("@raypx/tooling#task:check");
+    expect(canonical.workspaces).toEqual(["@raypx/tooling"]);
+    expect(canonical.tasks).not.toContain("@raypx/feature#task:check");
     expect(argumentKey("@raypx/tooling#test")).toBe(argumentKey("@raypx/tooling#task:test"));
   });
 });

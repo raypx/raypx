@@ -25,20 +25,7 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
   const model = taskModel(root),
     index = discover(root);
   const changed = plan.files.filter((file) => !documentation.test(file));
-  // Private verification/policy edits broaden typechecks, but do not alter product test runners.
-  const privateTooling =
-    changed.length > 0 &&
-    changed.every((file) =>
-      /^packages\/tooling\/(?:src\/(?:verification\/|validation\/|policy(?:\.|\/))|tests\/)/.test(
-        file,
-      ),
-    );
-  const broad =
-    plan.full ||
-    plan.reasons.some(
-      (reason) =>
-        !(privateTooling && reason.startsWith("Shared verification input: packages/tooling/")),
-    );
+  const broad = plan.full || plan.reasons.length > 0;
   const parsed = new Map<string, { paths: string[]; opaque: boolean }>();
   function edges(file: string) {
     const cached = parsed.get(file);
@@ -111,11 +98,11 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
         return all(plan.full ? "Full verification" : "Shared or unknown verification inputs");
       const own = changed.filter((file) => file.startsWith(member.path + "/"));
       if (!own.length)
-        return privateTooling || changed.every((file) => testOnly.test(file))
+        return changed.every((file) => testOnly.test(file))
           ? {
               ...entry,
               mode: "none",
-              reasons: ["Only private verification code or another workspace's tests changed"],
+              reasons: ["Only another workspace's tests changed"],
             }
           : all("Affected consumer: run its complete suite");
       if (own.some((file) => !existsSync(join(root, file)))) return all("Deleted or renamed input");

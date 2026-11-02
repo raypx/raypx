@@ -16,7 +16,7 @@ import { ciGate, verify, verifyOptions } from "./index.js";
 import * as execution from "./execution.js";
 import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.js";
 import { assertCiResult } from "./result.js";
-import { completionReport } from "./report.js";
+import { completionReport, precheckTimings } from "./report.js";
 import { executionTasks } from "./execution.js";
 import { distributionRequested } from "./events.js";
 
@@ -551,15 +551,34 @@ it("rejects missing or incomplete VP completion reports", () => {
       tasks: [{ package_name: "api", task_name: "task:check", result: { CacheHit: {} } }],
     }),
   );
-  expect(completionReport(root, ["api#task:check"])).toBe(1);
+  expect(completionReport(root, ["api#task:check"])).toEqual({
+    cacheHits: 1,
+    cachedTasks: ["api#task:check"],
+  });
 });
 
-it("keeps repository-wide Knip and lint in explicit full verification", () => {
+it("records cached checks without replaying their previous execution times", () => {
+  const { root } = project();
+  const directory = join(root, ".artifacts/verification/prechecks");
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(join(directory, "policy.json"), JSON.stringify({ durationMs: 120 }));
+  writeFileSync(join(directory, "locales.json"), JSON.stringify({ durationMs: 35 }));
+  expect(precheckTimings(root, "fixture", ["fixture#task:policy"])).toEqual({
+    policyMs: 0,
+    localesMs: 35,
+    cachedChecks: ["policy"],
+  });
+  writeFileSync(join(directory, "locales.json"), JSON.stringify({ durationMs: -1 }));
+  expect(() => precheckTimings(root, "fixture", [])).toThrow("Invalid locales timing evidence");
+});
+
+it("always selects repository policy/locales and reserves Knip for full verification", () => {
   const { root } = project();
   for (const full of [false, true]) {
     const plan = verificationPlan(taskModel(root), ["packages/tokens/src/index.ts"], { full });
     expect(executionTasks(plan, "fixture").includes("fixture#task:knip")).toBe(full);
-    expect(executionTasks(plan, "fixture").includes("fixture#task:lint")).toBe(full);
+    expect(executionTasks(plan, "fixture")).toContain("fixture#task:policy");
+    expect(executionTasks(plan, "fixture")).toContain("fixture#task:locales");
   }
 });
 

@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { VerificationPlan } from "./plan.js";
+import { taskRef } from "../tasks/model.js";
 
 /** An empty or partial VP graph must never appear as successful verification. */
 export function completionReport(root: string, references: string[]) {
@@ -20,13 +21,36 @@ export function completionReport(root: string, references: string[]) {
   );
   if (references.some((ref) => !completed.has(ref)))
     throw new Error("VP did not execute every selected verification task");
-  return summary.tasks.filter((entry) => "CacheHit" in entry.result).length;
+  const cachedTasks = summary.tasks
+    .filter((entry) => "CacheHit" in entry.result)
+    .map((entry) => `${entry.package_name}#${entry.task_name}`);
+  return { cacheHits: cachedTasks.length, cachedTasks };
+}
+
+export function precheckTimings(root: string, rootName: string, cachedTasks: string[]) {
+  const timings = { policyMs: 0, localesMs: 0 };
+  const cachedChecks: string[] = [];
+  for (const name of ["policy", "locales"] as const) {
+    const evidence = JSON.parse(
+      readFileSync(join(root, `.artifacts/verification/prechecks/${name}.json`), "utf8"),
+    ) as { durationMs: number };
+    if (!Number.isFinite(evidence.durationMs) || evidence.durationMs < 0)
+      throw new Error(`Invalid ${name} timing evidence`);
+    if (cachedTasks.includes(taskRef(rootName, name))) cachedChecks.push(name);
+    else timings[`${name}Ms`] = evidence.durationMs;
+  }
+  return { ...timings, cachedChecks };
 }
 
 export function reportTiming(
   plan: VerificationPlan,
   metrics: {
-    checksMs: number;
+    styleMs: number;
+    policyMs: number;
+    localesMs: number;
+    formatMs: number;
+    lintMs: number;
+    cachedChecks: string[];
     tasksMs: number;
     artifactsMs: number;
     cacheHits: number;
@@ -35,6 +59,6 @@ export function reportTiming(
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,
-      `Verification scope: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces. Checks ${metrics.checksMs}ms; tasks ${metrics.tasksMs}ms; artifacts ${metrics.artifactsMs}ms; cache hits ${metrics.cacheHits}.\n`,
+      `Verification scope: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces. Policy ${metrics.policyMs}ms; locales ${metrics.localesMs}ms; format ${metrics.formatMs}ms; lint ${metrics.lintMs}ms; cached checks: ${metrics.cachedChecks.join(", ") || "none"}. Format/lint stage ${metrics.styleMs}ms; VP graph (including policy/locales) ${metrics.tasksMs}ms; artifacts ${metrics.artifactsMs}ms; cache hits ${metrics.cacheHits}.\n`,
     );
 }

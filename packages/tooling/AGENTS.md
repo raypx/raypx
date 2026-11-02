@@ -30,6 +30,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   assertions; indirect consumers and unknown/configuration/deleted inputs use complete
   suites. CI and `--full` always run complete selected workspace suites. File arguments
   use the existing per-task argument keys, never aggregate dependency arguments.
+  Private Tooling gates/tests select Tooling only; exported helpers follow their static
+  entry dependencies and actual import consumers. Task machinery, unknown/deleted inputs
+  and unresolved export graphs retain all source checks.
 - CI consumes the same planner through private `ci:plan`/`ci:gate` entries. It emits
   one versioned plan bound to `GITHUB_SHA`; workers consume `RAYPX_CI_PLAN`
   instead of recomputing scope. `verification/gates.ts` owns CI gate registration and
@@ -107,6 +110,13 @@ directory enumeration can otherwise invalidate JS tasks when those paths first a
 Type checks explicitly fingerprint source/config files in the transitive workspace
 dependency closure, retaining dependency declarations under build outputs; Bun's
 native typechecker reads are not fully covered by automatic tracing on Linux.
+Workspace coverage and validation/browser reports are excluded across that closure;
+authored source folders with the same names remain inputs. Root policy/locale tasks use
+VP caching with explicit discovery/source/catalog/config inputs plus automatic tracing.
+Policy/locales run in the same VP graph as source tasks and restore timing evidence
+with their cached outputs. Verification records per-check execution times (zero on a
+cache hit), format/lint wall times and VP graph wall time including runner overhead.
+Timing evidence never controls cache reuse. Failed checks never publish success.
 Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
 roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.

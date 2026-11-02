@@ -19,6 +19,7 @@ import { readGithubPlan } from "./verification/plan.js";
 import { ciOutputs } from "./verification/gates.js";
 import { cacheSnapshot } from "./verification/cache.js";
 import { smokeDeployment } from "./validation/deployment-smoke.js";
+import { runPrecheck } from "./verification/prechecks.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -34,6 +35,9 @@ function option(name: string, fallback: string) {
 
 async function main() {
   switch (command) {
+    case "verify:check":
+      runPrecheck(root, args[0] ?? "");
+      break;
     case "knip":
       checkKnip(root);
       break;

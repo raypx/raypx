@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { distributionRequested } from "./events.js";
 import { browserReach } from "./platform.js";
+import { toolingImpact } from "./tooling.js";
 
 type Artifact = "api" | "web" | "relay" | "cli";
 export interface VerificationPlan {
@@ -38,7 +39,7 @@ function documentation(file: string) {
   );
 }
 function globalInput(file: string) {
-  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/|packages\/tooling\/)/.test(
+  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
     file,
   );
 }
@@ -97,9 +98,22 @@ export function verificationPlan(
     return true;
   };
   let reach: ReturnType<typeof browserReach> | undefined;
+  let tooling: ReturnType<typeof toolingImpact> | undefined;
+  const isolated = new Set<string>();
   const platforms = () => (reach ??= browserReach(model.root));
   for (const file of files) {
     if (documentation(file)) continue;
+    if (file.startsWith("packages/tooling/")) {
+      const impact = (tooling ??= toolingImpact(model.root))(file);
+      if (impact.global) {
+        allSources = true;
+        reasons.push(`Shared verification input: ${file}`);
+      } else {
+        isolated.add("@raypx/tooling");
+        for (const consumer of impact.consumers) mark(consumer, "all");
+      }
+      continue;
+    }
     if (globalInput(file)) {
       allSources = true;
       reasons.push(`Shared verification input: ${file}`);
@@ -139,6 +153,7 @@ export function verificationPlan(
   });
   affected.clear();
   for (const [name, scope] of reached) affected.set(name, scope);
+  for (const name of isolated) affected.set(name, "all");
   const workspaces = [...affected.keys()].sort();
   const includeArtifacts = options.artifacts ?? full;
   const artifacts = includeArtifacts
@@ -180,7 +195,7 @@ export function verificationPlan(
           /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
             file,
           ) ||
-          /^packages\/tooling\/src\/(?:build\/|validation\/deployment|verification\/)/.test(file)
+          /^packages\/tooling\/src\/(?:build\/|validation\/deployment)/.test(file)
         )
           return true;
         const owner = model.members.find((member) => file.startsWith(member.path + "/"));

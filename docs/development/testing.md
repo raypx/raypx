@@ -15,6 +15,9 @@ in each task's `cache.env`; `untrackedEnv` preserves the inherited environment.
 Browser argument
 payloads are scoped to the uncached browser leaf. Build outputs are explicit, and
 Vitest/Vite temporary caches are excluded from task input/output tracking.
+Typecheck dependency fingerprints also exclude each workspace's generated coverage,
+validation and browser reports. Dependency declarations under build outputs remain
+tracked, as do authored source folders named `coverage`.
 Tooling's full suite includes independent VP cache fixtures and always executes:
 VP's filesystem tracer cannot be nested on macOS. `raypx.uncachedTasks: ["test"]`
 records this exception; its unit-only suite and other workspaces retain caching.
@@ -33,8 +36,15 @@ The Start environment adapter uses `@raypx-kit/devkit/vite` with injected Vite `
 Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture repositories
 cannot inherit another checkout's task list.
 
-Use `bun run verify` for daily feedback: policy and locales are always checked;
-changed files select formatting/lint and affected workspace types through reverse
+Use `bun run verify` for daily feedback: policy and locales are always selected as VP
+tasks; unchanged inputs can reuse successful results. Explicit source, manifest,
+document and catalog patterns cover newly added/deleted files alongside automatic
+tracing. Policy/locales share the source task graph, avoiding extra runner launches.
+Verification prints and records their execution times (zero when cached), format/lint
+wall times and VP graph wall time including runner overhead. VP restores timing
+evidence with cached outputs; this evidence does not decide cache reuse.
+
+Changed files select formatting/lint and affected workspace types through reverse
 dependency graphs. Local test selection follows transitive source imports and changed
 test files, retaining affected integration suites and filesystem/subprocess assertions.
 Indirect consumers run complete suites. Configuration, fixtures, deletions, unresolved
@@ -49,6 +59,10 @@ source checks to all workspaces. This does not request release builds, Knip, bro
 acceptance or database jobs. An unavailable Git base also selects native checks
 conservatively because the native inputs are unknown. `bun run knip` remains an
 explicit maintenance command.
+Private Tooling verification/validation code and tests select only Tooling. Public
+helpers follow their exported entry's transitive source dependencies and actual
+workspace imports, then propagate to downstream consumers. Changes to task machinery,
+unknown/deleted Tooling inputs or unresolved public graphs retain all source checks.
 Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
 browser code or import a browser entry, including type-only and test imports. If a workspace's
 non-browser, non-test sources import browser code, its consumers are selected as before.

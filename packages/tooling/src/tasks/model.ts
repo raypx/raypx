@@ -1,5 +1,6 @@
 import { join, relative } from "node:path";
 import { readFileSync } from "node:fs";
+import { workspacePatterns } from "@raypx-kit/devkit/workspaces";
 import {
   createTaskModel,
   argumentKey,
@@ -18,6 +19,15 @@ interface TaskMember extends Member {
   uncachedTasks: string[];
 }
 export type TaskModel = Model<TaskMember>;
+function reportDirectories(context: TaskContext<TaskMember>) {
+  return workspacePatterns(context.manifest as { workspaces?: unknown })
+    .filter((path) => !path.startsWith("!"))
+    .flatMap((path) =>
+      ["coverage", ".artifacts", "test-results", "playwright-report"].map(
+        (directory) => `${path}/${directory}`,
+      ),
+    );
+}
 function platform(root: string) {
   const { packageManager } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   return `${process.platform}-${process.arch}-${String(packageManager).replace("@", "")}`;
@@ -56,6 +66,7 @@ function cachedTask(
     "**/.wrangler/**",
     "**/.tanstack/**",
     ".artifacts/**",
+    ...reportDirectories(context).map((directory) => `${directory}/**`),
     ...(build || name === "check"
       ? [
           "target/**",
@@ -114,6 +125,57 @@ function cachedTask(
     input,
     output:
       name === "build:renderer" ? ["artifacts/browser/**"] : build ? ["dist/**", ".output/**"] : [],
+  };
+}
+
+function validationCache(context: TaskContext<TaskMember>, locales: boolean): TaskCache {
+  const patterns = locales
+    ? context.members.flatMap((member) => {
+        const manifest = JSON.parse(
+          readFileSync(join(context.root, member.path, "package.json"), "utf8"),
+        );
+        const config = manifest.exports?.["./config"];
+        return [
+          `${member.path}/package.json`,
+          `${member.path}/src/messages/*.{ts,json}`,
+          ...(typeof config === "string" && config.startsWith("./")
+            ? [`${member.path}/${config.slice(2)}`]
+            : []),
+        ];
+      })
+    : [
+        "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc,md,toml,yml,yaml}",
+        "**/Dockerfile",
+        "**/Caddyfile",
+        "**/.env.example",
+        ".nvmrc",
+        ".node-version",
+        ".bun-version",
+        ".tool-versions",
+        "**/go.{mod,sum}",
+      ];
+  return {
+    input: [
+      { auto: true },
+      ...["package.json", "bun.lock", "bunfig.toml", ...patterns].map((pattern) => ({
+        pattern,
+        base: "workspace" as const,
+      })),
+      ...[
+        "**/node_modules",
+        "**/node_modules/**",
+        ".git",
+        ".git/**",
+        ".artifacts",
+        ".artifacts/**",
+        ".agents/**",
+        ".claude/**",
+        ...reportDirectories(context).flatMap((directory) => [directory, `${directory}/**`]),
+      ].map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
+    ],
+    output: [`.artifacts/verification/prechecks/${locales ? "locales" : "policy"}.json`],
+    env: ["CI", "LANG", "TZ", "RAYPX_CACHE_PLATFORM"],
+    untrackedEnv: ["*"],
   };
 }
 
@@ -188,7 +250,17 @@ export function taskModel(
         cache: cachedTask(member, name, context),
       }),
       aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
-      rootTasks: () => ({
+      rootTasks: (context) => ({
+        policy: {
+          command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
+          dependsOn: [],
+          cache: validationCache(context, false),
+        },
+        locales: {
+          command: `bun packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(root))}`,
+          dependsOn: [],
+          cache: validationCache(context, true),
+        },
         lint: { command: "bun --bun vp lint", dependsOn: [], cache: false },
         knip: { command: "bun run knip", dependsOn: [], cache: false },
       }),
