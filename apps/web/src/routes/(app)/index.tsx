@@ -18,6 +18,7 @@ function Home() {
     t = useTranslations("tasks"),
     c = useTranslations("common");
   const { account } = Route.useRouteContext();
+  if (account.status === "signed-out") return <GuestHome />;
   if (account.status === "unavailable")
     return (
       <div className="space-y-3 py-8">

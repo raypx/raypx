@@ -32,6 +32,8 @@ application is an independent composition root and is never imported by another 
 - `(app)/route.tsx` resolves account context with `queryClient.fetchQuery(accountQuery())`
   while keeping the application shell public. Guests can browse home, tasks, approvals
   and preferences; `SessionBoundary` mounts private views only after a confirmed session.
+  Home renders its public guest page directly from the route's signed-out account
+  snapshot so SSR does not wait for the browser session hook.
   An unavailable API renders retryable feedback rather than a signed-out state. Only a
   signed-in result stays fresh; sign-out handlers call `queryClient.clear()` before
   `router.invalidate()`. The account page reads the result from route context.

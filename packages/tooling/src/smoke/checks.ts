@@ -45,8 +45,11 @@ export async function checkApi(base: string, options: { origin?: string; gateway
 
 export async function checkWeb(base: string) {
   // Guests receive public HTML without a session cookie or private account data.
-  const home = await fetch(base, { headers: { accept: "text/html" }, redirect: "manual" });
-  if (!home.ok || !(await home.text()).includes("Remote tasks and approvals"))
+  const home = await fetch(base, {
+    headers: { accept: "text/html", "accept-language": "en" },
+    redirect: "manual",
+  });
+  if (!home.ok || !(await home.text()).includes("<h1>Remote sessions and approvals</h1>"))
     throw new Error("Web did not render its public guest page");
   const admin = await fetch(`${base}/admin/settings`, { redirect: "manual" });
   if (!isSignInRedirect(admin)) throw new Error("Administrator pages must require sign-in");
@@ -54,12 +57,12 @@ export async function checkWeb(base: string) {
     headers: { accept: "text/html", "accept-language": "zh" },
   });
   const html = await login.text();
-  if (!login.ok || !html.includes('<html lang="zh"') || !html.includes("欢迎回来</h2>"))
+  if (!login.ok || !html.includes('<html lang="zh"') || !html.includes("欢迎回来</h1>"))
     throw new Error("Web did not server-render sign-in in the request language");
   const reset = await fetch(`${base}/forgot-password`, {
     headers: { accept: "text/html", cookie: "locale=en; theme=dark" },
   });
-  if (!reset.ok || !(await reset.text()).includes("Reset password</h2>"))
+  if (!reset.ok || !(await reset.text()).includes("Reset password</h1>"))
     throw new Error("Web did not render deep navigation with device preferences");
   const asset = /\/assets\/[^"]+\.js/.exec(html)?.[0];
   if (!asset || !(await fetch(`${base}${asset}`)).ok)
