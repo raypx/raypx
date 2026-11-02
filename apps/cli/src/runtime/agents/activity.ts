@@ -2,14 +2,15 @@ import type { ConversationEvent, TokenTotals } from "@raypx/provider-core";
 import { taskText } from "@raypx/core/task-text";
 
 import type { TaskActivity } from "@raypx/core/tasks";
-import type { ActivityDraft } from "./store";
+import type { ActivityDraft } from "./model";
+import type { ExecutionConversation } from "./harness/ports";
 
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;
 export type { TokenTotals } from "@raypx/provider-core";
 
 /** Select public conversation fields; reasoning, tool output and provider envelopes stay private. */
-export class ConversationRecorder {
+export class ConversationRecorder implements ExecutionConversation {
   private readonly entries = new Map<string, ActivityDraft>();
   private readonly dirty = new Set<string>();
   private readonly streamedMessages = new Set<string>();

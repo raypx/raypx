@@ -31,11 +31,18 @@ import type {
   TaskActivity,
 } from "@raypx/core/tasks";
 import { LocalError } from "../errors";
+import {
+  tokenUsageSchema,
+  localAgentTaskSchema,
+  isDesktopBinding,
+  type ActivityDraft,
+  type LocalAgentTask,
+} from "./model";
+import type { ExecutionStore } from "./harness/ports";
 
 import {
   activeTaskStatuses,
   taskActivitySchema,
-  taskSchema,
   agentEventSchema,
   humanRequestSchema,
   agentProviderSchema,
@@ -54,18 +61,6 @@ import {
   tasks,
 } from "../sqlite/schema";
 
-const tokenUsageSchema = z.object({
-  inputTokens: z.number().nonnegative(),
-  outputTokens: z.number().nonnegative(),
-  cachedInputTokens: z.number().nonnegative(),
-  cacheWriteInputTokens: z.number().nonnegative(),
-});
-const localAgentTaskSchema = z.object({
-  task: taskSchema,
-  binding: z.string().min(1),
-  sessionId: z.string().nullable(),
-  tokenUsage: tokenUsageSchema.optional(),
-});
 const commandPayloadSchema = z.object({ request: relayRequestSchema });
 const commandResultSchema = z.discriminatedUnion("ok", [
   z.object({ ok: z.literal(true), value: z.unknown() }),
@@ -83,13 +78,7 @@ const forgottenCommand = (payload: string) =>
   JSON.stringify({ forgotten: createHash("sha256").update(payload).digest("hex") });
 const forgottenResult = JSON.stringify({ ok: false, code: "NOT_FOUND" });
 
-type Draft<T> = T extends unknown ? Omit<T, "order" | "revision"> : never;
-export type ActivityDraft = Draft<TaskActivity>;
-
-export type LocalAgentTask = z.output<typeof localAgentTaskSchema>;
-export const desktopBinding = (accountId: string) => `desktop:${accountId}`;
-export const isDesktopBinding = (binding: string) => binding.startsWith("desktop:");
-export class AgentStore {
+export class AgentStore implements ExecutionStore {
   private readonly database: LocalDatabase;
   readonly streamId: string;
   // Relay replay keeps a rolling window per binding; tests pass a small window.

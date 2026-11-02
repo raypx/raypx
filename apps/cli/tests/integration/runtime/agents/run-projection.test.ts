@@ -3,7 +3,8 @@ import type { HumanRequest } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { localResults } from "@raypx/contracts/local-client";
 import { agentFixtures } from "../../../helpers/agents";
-import { AgentStore, desktopBinding } from "../../../../src/runtime/agents/store";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { desktopBinding } from "../../../../src/runtime/agents/model";
 
 const { host } = agentFixtures();
 

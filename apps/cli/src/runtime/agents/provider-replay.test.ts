@@ -3,11 +3,12 @@ import { readFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 
 import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { ManagedExecution, type ExecutionStore } from "./harness/execution";
+import { ManagedExecution } from "./harness/execution";
+import type { ExecutionStore } from "./harness/ports";
 import { CodexAdapter } from "@raypx/provider-codex";
 import { createAdapter } from "./harness/registry";
 import { ConversationRecorder } from "./activity";
-import type { LocalAgentTask } from "./store";
+import type { LocalAgentTask } from "./model";
 import {
   parseProviderReplay,
   ProviderReplay,

@@ -7,7 +7,8 @@ import { join } from "node:path";
 
 import type { HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore, type LocalAgentTask } from "../../../../src/runtime/agents/store";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import type { LocalAgentTask } from "../../../../src/runtime/agents/model";
 import { StateStore } from "../../../../src/runtime/state";
 
 const uuid = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;

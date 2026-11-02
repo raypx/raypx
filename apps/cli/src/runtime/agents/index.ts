@@ -29,7 +29,8 @@ import {
 } from "@raypx/core/tasks";
 import { type StateStore, acquireLock } from "../state";
 import { LocalError } from "../errors";
-import { AgentStore, desktopBinding, isDesktopBinding, type LocalAgentTask } from "./store";
+import { AgentStore } from "./store";
+import { desktopBinding, isDesktopBinding, type LocalAgentTask } from "./model";
 import { ManagedExecution, initialExecutionPrompt, executionSession } from "./harness/execution";
 import { ConversationRecorder } from "./activity";
 import manifest from "../../../package.json";

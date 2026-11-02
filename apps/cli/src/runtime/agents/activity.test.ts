@@ -3,7 +3,7 @@ import { decodeClaudeActivity } from "@raypx/provider-claude";
 import { bounded } from ".";
 import { expect, it, vi } from "vite-plus/test";
 import { ConversationRecorder } from "./activity";
-import type { ActivityDraft } from "./store";
+import type { ActivityDraft } from "./model";
 
 import type { TaskActivity } from "@raypx/core/tasks";
 

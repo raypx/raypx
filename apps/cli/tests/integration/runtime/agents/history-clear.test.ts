@@ -8,7 +8,8 @@ import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { RelayCommand } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskContextSnapshot } from "@raypx/core/tasks";
 import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore, desktopBinding } from "../../../../src/runtime/agents/store";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { desktopBinding } from "../../../../src/runtime/agents/model";
 import { StateStore } from "../../../../src/runtime/state";
 
 const cleanups: (() => Promise<void>)[] = [];

@@ -8,8 +8,8 @@ import {
   type TaskInput,
 } from "@raypx/core/tasks";
 import { LocalError } from "../../errors";
-import type { AgentStore, LocalAgentTask } from "../store";
-import type { ConversationRecorder } from "../activity";
+import { isDesktopBinding, type LocalAgentTask } from "../model";
+import type { ExecutionConversation, ExecutionEffects, ExecutionStore } from "./ports";
 import type {
   AdapterEvent,
   ProviderSession,
@@ -51,21 +51,6 @@ export function executionSession(
   return undefined;
 }
 
-/** One execution uses persistence without owning SQLite or its lifecycle. */
-export type ExecutionStore = Pick<
-  AgentStore,
-  "get" | "put" | "recordActivity" | "request" | "getRequest" | "tokenUsage"
->;
-interface ExecutionEffects {
-  status(status: AgentTask["status"], summary?: string): void;
-  changed(pendingRequest?: string): void;
-  resolved(requestId: string): void;
-  hook(): { url: string; token: string };
-  /** Adapter transports inherit this, including the bundled `bun` PATH entry. */
-  environment(): Record<string, string | undefined>;
-  track(completion: Promise<void>): void;
-  ended(): void;
-}
 type Pending = {
   request: HumanRequest;
   resolve(decision: HumanDecision): void;
@@ -92,7 +77,7 @@ export class ManagedExecution {
   private sendTurn: ((prompt: string) => Promise<void>) | undefined;
   constructor(
     readonly local: LocalAgentTask,
-    private readonly conversation: ConversationRecorder,
+    private readonly conversation: ExecutionConversation,
     private readonly unlock: () => void,
     private readonly store: ExecutionStore,
     private readonly effects: ExecutionEffects,
@@ -280,7 +265,7 @@ export class ManagedExecution {
       );
       this.pending.set(request.id, { request, resolve, timer });
     });
-    this.effects.changed(this.local.binding.startsWith("desktop:") ? request.id : undefined);
+    this.effects.changed(isDesktopBinding(this.local.binding) ? request.id : undefined);
     const result = await answer;
     if (!this.cancelled && !this.finished) this.effects.status("running");
     return result;

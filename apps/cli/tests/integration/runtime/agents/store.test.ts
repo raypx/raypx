@@ -3,11 +3,8 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  AgentStore,
-  desktopBinding,
-  type LocalAgentTask,
-} from "../../../../src/runtime/agents/store";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { desktopBinding, type LocalAgentTask } from "../../../../src/runtime/agents/model";
 import { AgentRuntime } from "../../../../src/runtime/agents";
 import { StateStore } from "../../../../src/runtime/state";
 

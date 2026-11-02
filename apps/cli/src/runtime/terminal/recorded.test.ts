@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { hookDecision, parseHookInvocation } from "./protocol";
 import { ConversationRecorder } from "../agents/activity";
-import type { ActivityDraft } from "../agents/store";
+import type { ActivityDraft } from "../agents/model";
 
 import type { AgentProvider, HumanDecision, TaskActivity } from "@raypx/core/tasks";
 
