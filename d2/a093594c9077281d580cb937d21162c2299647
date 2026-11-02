@@ -1,0 +1,79 @@
+DESIGN.md
+  s_b76297079ed048::t_18981843802ad6 15-27
+apps/desktop/src/components/shell.tsx
+  s_b1d06560260ce6::t_43931980889555 115,119,160
+apps/desktop/src/features/tasks/project-tools.tsx
+  s_b76297079ed048::t_dd0496c6a6c4ac 2,4-9,11-14,26-52,54-71,73-74,76-93,95-101
+apps/desktop/src/features/tasks/remote-navigation.tsx
+  s_b1d06560260ce6::t_0cbbb6783ff005 3,6,17,20-22,29-38,40-42,47-56,61,66,70,78
+apps/desktop/src/features/tasks/workspace.tsx
+  s_b76297079ed048::t_be62b85fafc79c 6,120,155-160,218
+apps/desktop/src/routes/(local)/automations.tsx
+  s_b76297079ed048::t_3722852107b205 12,127-132
+apps/desktop/src/routes/memory.tsx
+  s_b76297079ed048::t_c9e9bf12aa9315 16,101-106
+apps/desktop/tests/renderer/component/routes/account.test.tsx
+  s_b76297079ed048::t_e2632494c0aaf3 188
+apps/web/src/components/shell.tsx
+  s_b76297079ed048::t_064f81946605d9 14,25,88,98-101,115-116,118-119,146,153
+apps/web/src/features/auth/components/account-sessions.tsx
+  s_b76297079ed048::t_8394c6afbb27a7 2,7,103-104,113-117,119
+apps/web/src/features/tasks/guest.tsx
+  s_b76297079ed048::t_3edb0b386d3a50 65,74
+apps/web/src/features/tasks/project-navigation.tsx
+  s_b76297079ed048::t_f46b35196875e4 1-81
+apps/web/src/features/tasks/project-tools.tsx
+  s_b76297079ed048::t_a5b994e475cb8a 2,4-11,23-36,40-68,70-74,77,80,83,85,87
+apps/web/src/routes/(app)/tasks.tsx
+  s_b76297079ed048::t_46fcc1386bbc5a 14,100
+bun.lock
+  s_b76297079ed048::t_692ba80c6cd415 316
+e2e/tests/access.spec.ts
+  s_b76297079ed048::t_bd5dee0b4a54c6 68-70,230-232,235-236
+e2e/tests/devtools-production.spec.ts
+  s_b76297079ed048::t_0a980a82ea294f 19
+e2e/tests/navigation.spec.ts
+  s_b76297079ed048::t_956bd7c9a9d806 77,183-186,192,230-233
+e2e/tests/settings.spec.ts
+  s_b76297079ed048::t_e55716f304d26e 9,16,54-56,65,84
+packages/account/src/client/account.tsx
+  s_b76297079ed048::t_f19a475e591151 2,56-57,60,62-65,68,70-74
+packages/account/src/client/menu.tsx
+  s_b76297079ed048::t_0724f46e948b4c 2,13,22,39-62,71,74,76,91-107,114-116,118-119
+packages/blocks/AGENTS.md
+  s_b76297079ed048::t_f9cc4e420b5103 36-38
+packages/blocks/package.json
+  s_b76297079ed048::t_ed2966e45fa86b 34-35
+packages/blocks/src/components/shell.tsx
+  s_b76297079ed048::t_5243664754ea6a 3-5,8,14,110-143,191-204,234,326-332,334-351,364
+packages/i18n/src/messages/en.ts
+  s_b76297079ed048::t_e7808837287639 473,512
+packages/i18n/src/messages/zh.ts
+  s_b76297079ed048::t_3d40acda58a868 435,472
+packages/tasks/src/client/workspace.tsx
+  s_b76297079ed048::t_00ed108d978cc3 6-13,58-59,91,210-237,240-269,272-274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d2a093594c9077281d580cb937d21162c2299647",
+  "prompts": {},
+  "sessions": {
+    "s_b1d06560260ce6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a53-77d7-7591-9ba6-d73547de66ec",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_b76297079ed048": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c160bfb7-095d-4ecb-9492-d634186f7005",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
