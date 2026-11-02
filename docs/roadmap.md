@@ -1,6 +1,6 @@
 # Persistent Agent Platform Roadmap
 
-Status: Planning baseline. Phases are ordered proposals, not dated release commitments; Phase 0 confirms the product and data-ownership decisions below.
+Status: In progress. Updated 2026-11-02. Phase 0 decisions are recorded; Phase 1 is being closed against the local acceptance flow below. Phase dates beyond the first delivery goal remain planning estimates.
 
 This roadmap describes the target product, not currently shipped behavior. The first phases intentionally reuse proven CLI, Desktop, storage, memory and scheduling components; later architecture remains open to evidence from those workflows. `PRODUCT.md` remains the description of the current product until the target product specification and first implementation decision are accepted.
 
@@ -15,6 +15,33 @@ Each Agent has exactly one authority. During the local-first phase, the local CL
 ## First Delivery Goal
 
 By 2026-11-10, validate one account-free local flow through the existing Raypx CLI daemon: select a granted project, start a Codex-backed Run, read a project file, request and approve one file write, continue the provider session, then close/reopen Desktop or reconnect the daemon without losing committed state. Raypx Agent Runtime and Run ownership stay local. Cloud migration, local/server pairing, and container/VM isolation are outside this acceptance; Codex CLI may itself use its configured model service.
+
+## Progress Snapshot (2026-11-02)
+
+These percentages are rough effort estimates, not issue-count metrics. The complete six-phase product is about one-third implemented. The local-first delivery slice is about 75-85% implemented and covered by deterministic tests; its real-provider acceptance has not been recorded as passed.
+
+| Phase                                    | Progress | Status                                                                                                                                                                                                                     |
+| ---------------------------------------- | -------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. Deployment and ownership contracts    |     ~75% | Local ownership, Run mapping and transition contracts are documented and tested as pure rules. Runtime integration and the full failure-injection matrix remain open.                                                      |
+| 1. Personal local vertical slice         |     ~80% | Local CLI execution, approvals, follow-up and restart recovery have synthetic integration coverage. The opt-in native real-provider acceptance is implemented but still needs a recorded run.                              |
+| 2. Local tools, effects and approval     |     ~60% | Project grants, approval hooks, command receipts and duplicate-delivery protection exist. A consistent durable effect intent/result/uncertainty and reconciliation path remains incomplete.                                |
+| 3. Desktop-backed computer and memory    |     ~75% | The local daemon, granted project roots and revisioned memory UI are in place. Real Desktop/daemon acceptance and any missing restore checks remain.                                                                       |
+| 4. Automations and continuous local work |     ~40% | Local schedules support Cron, timezone, pause, preview and history, but local scheduled actions do not yet create Agent Runs through `AgentRuntime`. Cloud Agent schedules are separate and do not close this local phase. |
+| 5. Explicit cloud migration              |     ~10% | Existing relay pieces may be reusable. Reviewed export/import, ownership transfer and headless server execution of the same CLI Runtime are not implemented.                                                               |
+| 6. Clients and extensibility             |     ~20% | Web/Desktop and multiple provider adapters exist. Client parity, mobile flows, MCP/connectors and safe configuration import remain.                                                                                        |
+
+The local synthetic lifecycle test is in `apps/cli/tests/integration/runtime/agents/host.test.ts`; it passed locally on 2026-11-02 (17 tests). The opt-in native gate in `apps/desktop/tests/native/smoke/agents.ts` exercises real provider reads, approval and writes, daemon-owner restart, session continuation and process cancellation. A test implementation is not evidence that the live gate passed; record the provider and platform result when it is run.
+
+## Near-Term Plan
+
+The 2026-11-10 target is the local first-delivery flow, not completion of all roadmap phases. Keep the scope to one granted project and Codex CLI; do not start cloud migration, Host pairing, container isolation, MCP or mobile work before this gate passes.
+
+1. **Close the local acceptance gate.** The targeted deterministic Agent Runtime integration suite is green (17 tests). Next, run the isolated native real-provider gate with Codex. Record the OS, provider version and result. The current native gate also exercises Claude, which is useful additional coverage but is not required by the first-delivery goal.
+2. **Connect the Run contract at read boundaries.** Use the existing Core task-to-Run projection for local task inspection, including pending request kind for `waiting`; preserve `AgentTask` as the only persisted lifecycle record. Add focused runtime-level tests for the mapped states and ambiguous waits.
+3. **Resolve acceptance failures and recovery gaps.** Fix issues found by the gate. Verify approval denial prevents writes, approved work is visible after daemon restart, follow-up resumes the same provider session, and interrupted or ambiguous effects are never replayed silently. Add durable effect records only where this flow demonstrates a concrete gap.
+4. **Finish with a release check.** Rerun affected CLI/Desktop checks and the acceptance gate, then update this snapshot with actual results. If the live-provider gate cannot run by 2026-11-10, report the local implementation as ready for acceptance but leave the delivery goal unverified.
+
+After the local gate passes, the next product increment is Phase 4's local Agent automation: add one scheduled Agent trigger through the same `AgentRuntime`, with idempotent delivery, visible run history, pause/resume and an explicit missed-trigger policy. Expand to migration and client extensibility only after that local workflow is proven.
 
 ## Architecture Target
 
