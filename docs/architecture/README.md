@@ -216,16 +216,19 @@ with a durable sequenced journal for reconnect replay and snapshot recovery.
 cloud opt-in, terminal approval leases and migration boundary. Each profile owns
 one Bun/TypeScript execution Host. Foreground and daemon transports use the same
 `runtime/host.ts` composition for routing, cloud restore and teardown.
-Local tasks, connectors and approvals require
-no account; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
+Local tasks, connectors and approvals require initial instance enrollment and then work offline; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
 [ADR 0036](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
 token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks run through shared verification.
 
 ## Persistent Agent platform target
 
 [ADR 0039](0039-local-server-agent-platform.md) defines the greenfield target:
-an account-free local Agent platform, a server-owned Agent platform, and an
+a registered, offline-capable local Agent platform, a server-owned Agent platform, and an
 explicitly linked mode where the server owns shared Agent Runs and the local Host
 provides scoped project tools. The rollout order is recorded in the
 [roadmap](../roadmap.md); the current sections above continue to describe shipped
 architecture until each target phase is implemented.
+
+## Registered instances and providers
+
+[ADR 0040](0040-instance-enrollment-and-providers.md) defines account-bound enrollment, offline identity, revocation and provider package boundaries. Registration does not grant remote Host access or upload local history.

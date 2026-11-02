@@ -2,7 +2,7 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createRuntime } from "../../../../src/runtime";
+import { createRuntime } from "../../../helpers/enrolled";
 import { LocalTerminalControl } from "../../../../src/runtime/daemon/terminal-control";
 import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host";
 import type { ObservedProjection, TerminalRequest } from "@raypx/contracts/terminal";

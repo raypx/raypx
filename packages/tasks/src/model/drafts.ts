@@ -1,4 +1,5 @@
 import {
+  agentProviderSchema,
   taskContextSelectionSchema,
   type AgentProvider,
   type TaskContextSelection,
@@ -40,7 +41,7 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
       ids.has(draft.id as string) ||
       !(draft.prompt as string).trim() ||
       !Number.isFinite(Date.parse(draft.updatedAt as string)) ||
-      (draft.provider !== "claude" && draft.provider !== "codex") ||
+      !agentProviderSchema.safeParse(draft.provider).success ||
       (draft.mode !== "run" && draft.mode !== "plan")
     )
       throw new Error("Invalid draft value");

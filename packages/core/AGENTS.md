@@ -9,7 +9,7 @@ execution hosts and product views. Schemas are the single source of inferred typ
 
 - `.` exports the task models and pure activity/text rules.
 - `/tasks` exports normalized task, activity, human-request/decision schemas,
-  inferred types, provider capabilities, active statuses and decision validation.
+  inferred types, provider capabilities, pure provider presentation metadata, active statuses and decision validation.
   Task contexts freeze up to eight explicit source revisions. `taskExecutionPrompt`
   marks references separately and rejects combined prompts above 32,000 characters;
   preserve raw bodies with deterministic collision-checked boundaries; never truncate

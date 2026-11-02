@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import {
   useCallback,
   useEffect,
@@ -179,7 +180,7 @@ export function TaskList({
                   </span>
                 </span>
                 <span className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  <span>{task.provider === "claude" ? "Claude Code" : "Codex"}</span>
+                  <span>{agentProviderMetadata[task.provider].label}</span>
                   <span className="truncate">
                     {devices
                       .find((device) => device.id === task.deviceId)

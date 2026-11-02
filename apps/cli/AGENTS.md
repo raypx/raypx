@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The standalone Raypx local execution host. It runs without login, Node or a global Bun installation.
+The standalone Raypx local execution host. It embeds Bun and requires no global runtime. Execution requires first-time instance enrollment; its signed identity permits offline work after online logout.
 
 ## Interface
 
@@ -109,7 +109,7 @@ without credentials in the default suite. Never commit the private raw captures.
 ## Agent host
 
 `runtime/memory` owns the context tables in the shared profile database and injects the shared
-context-library service. Private `memory.*` IPC needs no account and never migrates
+context-library service. Private `memory.*` IPC needs a registered instance but no active online session and never migrates
 on login/logout. Validate project targets against this device and granted Agent
 projects. Immutable history and current documents commit atomically with revision
 checks; archived entries remain in the 100-document quota. Local tasks resolve
@@ -202,3 +202,7 @@ plan policy and persistence; provider libraries parse raw conversation records t
 the shared ConversationSink interface. ConversationRecorder owns bounded activity
 aggregation, revisions and persistence callbacks. Lifecycle
 code sees execution handles and adapter events, never transport controls.
+
+## Instance enrollment
+
+`raypx login` uses `RAYPX_API_URL` (default `https://raypx.pro`) and an expiring browser-approved code; `RAYPX_WEB_URL` selects a separate account-page origin. The polling token never leaves the host. `runtime/instances` verifies signed receipts and key possession before local execution; direct Agent starts and scheduled jobs enforce the same gate. Refresh at startup and every five minutes; transport failures preserve the offline identity, successful revocation cancels and drains work. Remote Host grants remain separate. macOS/Windows keys use Bun.secrets; Linux stores protected binary DER (0600) in the local profile. Receipts contain public identity only. Never auto-import or rebind a profile.

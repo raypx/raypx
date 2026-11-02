@@ -1,6 +1,6 @@
 import { profileStorage } from "../../helpers/sqlite";
 import { describe, expect, it } from "vite-plus/test";
-import { createRuntime } from "../../../src/runtime/index.js";
+import { createRuntime } from "../../helpers/enrolled";
 import { runtimeFixtures } from "../../helpers/runtime.js";
 import { StateStore } from "../../../src/runtime/state/index.js";
 

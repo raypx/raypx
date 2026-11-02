@@ -128,6 +128,7 @@ beforeEach(() => {
   mocks.listeners.clear();
   mocks.isDesktop.mockReturnValue(true);
   mocks.localRequest.mockImplementation(async (method, params) => {
+    if (method.startsWith("instance.")) return { state: "registered" };
     if (method === "jobs.list" || method === "jobs.history") return [];
     if (method === "roots.list") return grants;
     if (method === "files.list") {
@@ -190,6 +191,7 @@ describe("Files route and workspace", () => {
   it("opens the recent authorized directory and keeps a revoked directory explicit", async () => {
     const other = { ...grants[0]!, id: "other", name: "Other", path: "/other" };
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "roots.list") return [...grants, other];
       if (method === "files.list") return { entries: [], total: 0, offset: 0 };
       throw new Error(`Unexpected local request: ${method}`);
@@ -402,6 +404,7 @@ describe("Files route and workspace", () => {
 
   it("preserves version and confirmation checks for create, move and delete", async () => {
     mocks.localRequest.mockImplementation(async (method, params) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "roots.list") return grants;
       if (method === "files.list") return listing();
       if (method === "files.read" || method === "files.write")

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { deviceCommandSchema, relayCommandSchema, relayRequestSchema } from "./tasks.js";
 import {
   taskSchema,
+  agentProviders,
   agentProviderSchema,
   taskContextSelectionSchema,
   taskContextTargetSchema,
@@ -41,6 +42,10 @@ export const fileEntrySchema = z.object({
 export type FileEntry = z.infer<typeof fileEntrySchema>;
 import { commandSchema, jobInputSchema } from "@raypx/jobs";
 export const localParams = {
+  "instance.status": z.strictObject({}),
+  "instance.begin": z.strictObject({ origin: z.string().url() }),
+  "instance.poll": z.strictObject({}),
+  "instance.refresh": z.strictObject({}),
   "memory.list": z.strictObject({}),
   "memory.get": z.strictObject({ id: z.uuid() }),
   "memory.create": contextCreateSchema,
@@ -151,7 +156,7 @@ export const localParams = {
   "agents.projects": z.object({}),
   "agents.configure": z.object({
     rootId: z.string().uuid(),
-    providers: z.array(agentProviderSchema).max(2),
+    providers: z.array(agentProviderSchema).max(agentProviders.length),
   }),
   "agents.start": z.object({
     binding: z.string().min(1).max(300),

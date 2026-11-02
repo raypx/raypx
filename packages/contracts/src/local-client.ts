@@ -1,3 +1,4 @@
+import { instanceStatusSchema } from "@raypx/instances";
 import { z } from "zod";
 import {
   localParams,
@@ -50,6 +51,14 @@ const cancelled = z.object({ cancelled: z.boolean() });
 
 /** Methods used by the renderer, with replies owned by the local protocol rather than callers. */
 export const localResults = {
+  "instance.status": instanceStatusSchema,
+  "instance.begin": z.object({
+    registered: z.boolean(),
+    code: z.string().optional(),
+    expiresAt: z.iso.datetime().optional(),
+  }),
+  "instance.poll": z.object({ status: z.enum(["pending", "approved"]) }),
+  "instance.refresh": instanceStatusSchema,
   "memory.list": z.array(contextDocumentSummarySchema),
   "memory.get": contextDocumentSchema,
   "memory.create": contextDocumentSchema,

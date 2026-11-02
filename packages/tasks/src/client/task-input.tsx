@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import { useEffect, useId, useRef, useState } from "react";
 
 import type { AgentTask, TaskActivity, TaskInput } from "@raypx/core/tasks";
@@ -103,7 +104,7 @@ export function TaskInputComposer({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        {t(task.provider === "claude" ? "claudeInputHint" : "codexInputHint")}
+        {t(agentProviderMetadata[task.provider].inputHint)}
       </p>
       {waiting && <p className="text-xs text-muted-foreground">{t("inputWaitingHint")}</p>}
       <div className="flex flex-wrap gap-2">

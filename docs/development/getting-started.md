@@ -157,3 +157,9 @@ hashes; `skills/` and `.claude/skills/` link them for each agent. Run `bun run s
 to pull upstream versions, review the diff, and never edit them by hand. A skill removed
 upstream stays installed until you remove it explicitly. `skills/raypx` is maintained in
 this repository. Lint skips vendored skills because they are upstream content.
+
+## Register local execution
+
+Before using local files, commands, automations or Agent sessions, register the local instance once. Desktop offers registration after sign-in. For the standalone CLI, run `raypx login` and approve the displayed code on the account page. `RAYPX_API_URL` selects a deployment and `RAYPX_WEB_URL` selects a separate Web origin; HTTPS is required outside loopback. CLI `--profile` selects a distinct local profile when needed.
+
+The signed identity remains usable offline and after online logout. Registration enables no remote Host grant and uploads no project content. Account/origin changes cannot take over the profile. The account page lists and revokes registered instances; a successfully synced revocation blocks local execution and preserves stored history. See [the instance decision](../architecture/0040-instance-enrollment-and-providers.md).

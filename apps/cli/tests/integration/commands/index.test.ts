@@ -1,3 +1,4 @@
+import { enrolledInstance } from "../../helpers/enrolled";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vite-plus/test";
 import { access, mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -28,7 +29,7 @@ afterEach(async () => {
 
 async function invoke<T>(args: string[], options: { dataDir?: string; profile?: string } = {}) {
   output.mockClear();
-  await runCommand(parseCliArgs(args), { dataDir, ...options });
+  await runCommand(parseCliArgs(args), { dataDir, ...options, instanceAccess: enrolledInstance });
   expect(output).toHaveBeenCalledTimes(1);
   return JSON.parse(String(output.mock.calls[0]?.[0])) as T;
 }
@@ -146,7 +147,10 @@ describe("CLI command adapter", () => {
       confirmed: true,
     });
     await expect(
-      runCommand(parseCliArgs(["files", "delete", payload, "--json"]), { dataDir }),
+      runCommand(parseCliArgs(["files", "delete", payload, "--json"]), {
+        dataDir,
+        instanceAccess: enrolledInstance,
+      }),
     ).rejects.toMatchObject({ code: "CONFIRMATION_REQUIRED" });
     expect(await readFile(join(authorized, path), "utf8")).toBe("keep until confirmed");
     expect(await invoke(["files", "delete", payload, "--json", "--yes"])).toEqual({
@@ -161,7 +165,9 @@ describe("CLI command adapter", () => {
     ["jobs", "list", "{}", "unexpected"],
     ["tools", "run", "{}", "unexpected"],
   ])("rejects extra operands in %j", async (...args) => {
-    await expect(runCommand(parseCliArgs(args), { dataDir })).rejects.toThrow(Error);
+    await expect(
+      runCommand(parseCliArgs(args), { dataDir, instanceAccess: enrolledInstance }),
+    ).rejects.toThrow(Error);
     await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
 
@@ -171,7 +177,9 @@ describe("CLI command adapter", () => {
     ["terminal", "open", "{}"],
     ["runtime", "info"],
   ])("rejects unknown or private commands in %j", async (...args) => {
-    await expect(runCommand(parseCliArgs(args), { dataDir })).rejects.toThrow(Error);
+    await expect(
+      runCommand(parseCliArgs(args), { dataDir, instanceAccess: enrolledInstance }),
+    ).rejects.toThrow(Error);
     await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
 
@@ -192,14 +200,17 @@ describe("CLI command adapter", () => {
     "treats %s after the delimiter as a directory operand instead of a global option",
     async (operand) => {
       await expect(
-        runCommand(parseCliArgs(["files", "authorize", "--", operand]), { dataDir }),
+        runCommand(parseCliArgs(["files", "authorize", "--", operand]), {
+          dataDir,
+          instanceAccess: enrolledInstance,
+        }),
       ).rejects.toThrow(Error);
       expect(output).not.toHaveBeenCalled();
     },
   );
 
   it("prints the standalone version without creating a profile", async () => {
-    await runCommand(parseCliArgs(["--version"]), { dataDir });
+    await runCommand(parseCliArgs(["--version"]), { dataDir, instanceAccess: enrolledInstance });
     expect(output).toHaveBeenCalledExactlyOnceWith(manifest.version);
     await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -210,14 +221,18 @@ describe("CLI command adapter", () => {
   ])(
     "rejects the version option when combined with positional arguments in %j",
     async (...args) => {
-      await expect(runCommand(parseCliArgs(args), { dataDir })).rejects.toThrow(Error);
+      await expect(
+        runCommand(parseCliArgs(args), { dataDir, instanceAccess: enrolledInstance }),
+      ).rejects.toThrow(Error);
       expect(output).not.toHaveBeenCalled();
       await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });
     },
   );
 
   it("rejects an empty extra operand to stdio instead of starting the protocol", async () => {
-    await expect(runCommand(parseCliArgs(["stdio", ""]), { dataDir })).rejects.toThrow(Error);
+    await expect(
+      runCommand(parseCliArgs(["stdio", ""]), { dataDir, instanceAccess: enrolledInstance }),
+    ).rejects.toThrow(Error);
     expect(output).not.toHaveBeenCalled();
     await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -227,13 +242,18 @@ describe("CLI command adapter", () => {
     ["tui", "--yes"],
     ["tui", "unexpected"],
   ])("rejects invalid interactive invocation %j before opening a profile", async (...args) => {
-    await expect(runCommand(parseCliArgs(args), { dataDir })).rejects.toThrow(Error);
+    await expect(
+      runCommand(parseCliArgs(args), { dataDir, instanceAccess: enrolledInstance }),
+    ).rejects.toThrow(Error);
     expect(output).not.toHaveBeenCalled();
     await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
 
   it("prints TUI help without starting an interactive session", async () => {
-    await runCommand(parseCliArgs(["tui", "--help"]), { dataDir });
+    await runCommand(parseCliArgs(["tui", "--help"]), {
+      dataDir,
+      instanceAccess: enrolledInstance,
+    });
     expect(output).toHaveBeenCalledOnce();
     expect(String(output.mock.calls[0]?.[0])).toContain("tui");
     await expect(access(dataDir)).rejects.toMatchObject({ code: "ENOENT" });

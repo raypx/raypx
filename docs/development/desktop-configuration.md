@@ -83,10 +83,9 @@ unreadable configuration stops startup with a native error dialog; Raypx does
 not fall back to another server.
 
 The normalized API origin scopes the persistent WebView/cookie partition,
-remote opt-in and device binding, and local account-specific Agent history.
+remote opt-in and device binding. The local CLI profile has an immutable instance account/origin binding after first enrollment.
 Ports count as distinct origins. Switching back restores that server's saved
-state. Theme/language preferences and device-local CLI file grants/jobs remain
-on the same computer.
+state. Theme/language preferences and device-local CLI data remain on the same computer. A different API origin cannot use the original registered profile; switching back restores its offline identity. CLI users can explicitly select a separate local profile for another account/origin. Desktop connection profiles select endpoints only and never transfer local identity.
 
 Earlier versions did not scope their login/remote settings to a server. Those
 unscoped sessions and opt-ins are not imported: sign in and enable remote tasks

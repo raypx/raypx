@@ -1,3 +1,4 @@
+import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -44,7 +45,7 @@ export function LocalWelcome() {
     try {
       const root = await pickDirectory();
       if (root) {
-        await localRequest("agents.configure", { rootId: root.id, providers: ["claude", "codex"] });
+        await localRequest("agents.configure", { rootId: root.id, providers: [...agentProviders] });
         rememberProject(root.id);
         await setup.refetch();
         await queryClient.invalidateQueries({ queryKey: ["desktop-project-navigation"] });
@@ -97,7 +98,7 @@ export function LocalWelcome() {
                   agent.available ? "bg-foreground" : "bg-muted-foreground/40",
                 )}
               />
-              <span>{agent.provider === "claude" ? "Claude Code" : "Codex"}</span>
+              <span>{agentProviderMetadata[agent.provider].label}</span>
               <span className="text-muted-foreground">{tasks(agent.reason)}</span>
             </li>
           ))}

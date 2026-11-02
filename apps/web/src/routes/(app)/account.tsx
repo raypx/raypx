@@ -1,3 +1,4 @@
+import { InstanceRegistration } from "../../features/auth/components/instance-registration";
 import { SignInGate } from "../../features/auth/components/session-boundary";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { AccountDetails } from "@raypx/account/client";
@@ -72,6 +73,10 @@ function AccountPage() {
             })
           }
         >
+          <InstanceRegistration
+            key={`instances:${state.account.id}`}
+            accountId={state.account.id}
+          />
           <ProfileSettings
             key={`profile:${state.account.id}`}
             client={authClient}

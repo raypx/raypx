@@ -1,3 +1,4 @@
+import { enrollTestProfile } from "../helpers/instance";
 import assert from "node:assert/strict";
 import { chmod, copyFile, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -30,6 +31,7 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
   assert.equal(typeof events[0]?.elapsedMs, "number");
   assert.equal(events[0]?.level, outcome === "failed" ? "error" : "info");
 }
+const closeInstance = await enrollTestProfile({ dataDir });
 try {
   // Only the executable leaves dist: lazy imports must be inside this one file.
   await copyFile(builtBinary, binary);
@@ -173,6 +175,8 @@ try {
         probeBinary,
         "ai",
         "complete",
+        "--data-dir",
+        dataDir,
         JSON.stringify({
           provider,
           model: models[0].id,
@@ -226,6 +230,8 @@ try {
         binary,
         "ai",
         "complete",
+        "--data-dir",
+        dataDir,
         JSON.stringify({
           provider: "artifact",
           model: "fixture-model",
@@ -272,6 +278,8 @@ try {
           binary,
           "ai",
           "complete",
+          "--data-dir",
+          dataDir,
           JSON.stringify({
             provider: "artifact",
             model: "fixture-model",
@@ -565,5 +573,6 @@ try {
     "Copied standalone CLI smoke passed outside the repository with an empty PATH, including Pi AI HTTP streaming.",
   );
 } finally {
+  await closeInstance();
   await rm(dataDir, { recursive: true, force: true });
 }

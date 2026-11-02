@@ -4,6 +4,7 @@
 - [Architecture and runtime boundaries](architecture/README.md)
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
+- [Instance enrollment and provider boundaries](architecture/0040-instance-enrollment-and-providers.md)
 - [Local and server Agent platform decision](architecture/0039-local-server-agent-platform.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
 - [Account settings and session management](development/account-security.md)

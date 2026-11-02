@@ -30,6 +30,7 @@
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/memory": "workspace:*",

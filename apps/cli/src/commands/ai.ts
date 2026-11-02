@@ -1,3 +1,5 @@
+import { InstanceRuntime, type InstanceAccess } from "../runtime/instances";
+import { profilePath } from "../runtime/state";
 import { readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
@@ -37,7 +39,10 @@ function defineAiCommand(definition: CommandDef) {
   return defineCommand(definition);
 }
 
-export function createAiCommands(invocation: CliArgs) {
+export function createAiCommands(
+  invocation: CliArgs,
+  options: { dataDir?: string; profile?: string; instanceAccess?: InstanceAccess } = {},
+) {
   const leaves = new Map<string, CommandDef>();
   for (const [action, description] of Object.entries({
     providers: "List built-in AI providers without resolving credentials",
@@ -59,6 +64,8 @@ export function createAiCommands(invocation: CliArgs) {
         async run({ args }) {
           if (args._.length > 1)
             throw new LocalError("INVALID_INPUT", "Expected at most one JSON input.");
+          if (action === "complete")
+            await (options.instanceAccess ?? new InstanceRuntime(profilePath(options))).assert();
           await runAiCommand(action, input(args._[0]), invocation);
         },
       }),

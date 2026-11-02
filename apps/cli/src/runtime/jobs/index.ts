@@ -11,6 +11,7 @@ import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "../../d
 export class JobRuntime {
   private schedules: Cron[] = [];
   private revision = -1;
+  private closing = false;
   private interval: ReturnType<typeof setInterval> | undefined;
   private releaseScheduler: (() => void) | undefined;
   private readonly active = new Map<
@@ -23,6 +24,7 @@ export class JobRuntime {
     private readonly processes: ProcessRuntime,
     private readonly emit: (event: LocalEvent) => void,
     private readonly record?: RecordDiagnostic,
+    private readonly assertInstance?: () => Promise<void>,
   ) {}
   validate(input: JobInput) {
     try {
@@ -64,6 +66,8 @@ export class JobRuntime {
     return { deleted: true };
   }
   async run(id: string): Promise<JobRun> {
+    if (this.assertInstance) await this.assertInstance();
+    if (this.closing) throw new LocalError("CLOSING", "Job runtime is stopping");
     const startedAt = performance.now();
     const job = this.state.job(id);
     const release = acquireLock(this.state.directory, `job-${id}`);
@@ -180,6 +184,7 @@ export class JobRuntime {
     }
   }
   async close() {
+    this.closing = true;
     if (this.interval) clearInterval(this.interval);
     for (const cron of this.schedules) cron.stop();
     this.schedules = [];

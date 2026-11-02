@@ -154,6 +154,15 @@ try {
   const profile = await api.account.get({});
   assert.equal(profile.id, config.userId);
   await current.request("runtime.info", {});
+  const enrollment = await current.request<{ registered: boolean; code?: string }>(
+    "instance.begin",
+    { origin: apiUrl.origin },
+  );
+  if (!enrollment.registered) {
+    assert.ok(enrollment.code);
+    await api.instances.approve({ code: enrollment.code });
+    await current.request("instance.poll", {});
+  }
   await current.request("host.session", { apiUrl: apiUrl.origin, accountId: profile.id });
   const info = await current.request<ControlInfo>("host.info", {
     apiUrl: apiUrl.origin,

@@ -1,3 +1,6 @@
+import { InstanceService } from "@raypx/instances/server";
+import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
+import { createInstanceRepository } from "../instances/repository.js";
 import { createConfigurationRepository } from "../configuration/repository.js";
 import { createAccessPolicy } from "../access.js";
 import { createConfigurationService } from "../configuration/service.js";
@@ -70,6 +73,15 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       resources,
       db,
     );
+    const signer = createInstanceSigner(environment.AUTH_SECRET);
+    const instances = new InstanceService({
+      origin: environment.AUTH_URL,
+      repository: createInstanceRepository(db),
+      digest: instanceDigest,
+      verify: verifyProof,
+      issue: (binding) => signer.issue(binding),
+      issuerKey: signer.publicKey,
+    });
     const access = createAccessPolicy();
     const configuration = createConfigurationService({
       repository: (resources.createConfigurationRepository ?? createConfigurationRepository)(db),
@@ -129,6 +141,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        instances,
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,

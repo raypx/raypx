@@ -64,8 +64,8 @@ function RootComponent() {
     <ClientOnly fallback={<ShellSkeleton />}>
       <DesktopPreferencesProvider>
         <AppAnalytics>
-          <RemoteCoordinator />
           <SessionGate>
+            <RemoteCoordinator />
             <DesktopShell />
           </SessionGate>
           {Devtools && (

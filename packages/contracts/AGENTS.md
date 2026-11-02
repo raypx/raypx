@@ -46,7 +46,7 @@ host-authorization schemas. `/api` exposes account-scoped observed summaries/det
 and host bootstrap/grant/revoke. `/local` keeps host and connector methods private. Plain content is explicitly encoded;
 request revision/epoch and decision receipts fence stale or duplicate answers.
 Private `agents.local.*` methods require the reserved `LOCAL_WORKSPACE_ID` owner.
-Device-profile work is independent of login and Native preserves this ID.
+Device-profile work requires a registered instance, remains independent of online sessions, and Native preserves this ID.
 Domain schemas and helpers are imported directly from Core.
 They reuse normalized task/decision DTOs without publishing a local HTTP endpoint.
 Local task detail also requires the Core `runStatus` projection; the persisted task
@@ -77,7 +77,9 @@ prompt for complete budget validation; the server derives the account from sessi
 `memory.delete` uses an expected revision and is available only for archived references.
 Its acknowledgement is idempotent; accepted task snapshots remain separate.
 
-Local terminal IPC uses account-free strict `approvals.local.*` schemas. Private
+Local terminal IPC uses registered-instance, online-session-free strict `approvals.local.*` schemas. Private
 `observed.settings/configure/list/get/decide` no longer exist. Public cloud HTTP
 `observed.list/get`, relay `observed.decide`, and private `observed.remote` remain.
 `host.terminal.*` is Native-only; it scopes cloud opt-in to origin/account.
+
+`/api` composes `instances.*` enrollment, ownership and signed status contracts from `@raypx/instances`. Device polling and possession checks are host-only in native transport. Renderer-safe `instance.*` IPC returns status and a public enrollment code, never polling tokens or private keys. Native overwrites enrollment origin with its configured API origin.

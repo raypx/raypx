@@ -1,3 +1,4 @@
+import { enrolledInstance } from "../../helpers/enrolled";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -36,7 +37,7 @@ async function invoke(action: string, value?: unknown) {
         ...(value === undefined ? [] : [JSON.stringify(value)]),
         "--json",
       ]),
-      {},
+      { instanceAccess: enrolledInstance },
     );
     expect(output).toHaveBeenCalledTimes(1);
     return JSON.parse(String(output.mock.calls[0]?.[0]));

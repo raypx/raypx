@@ -68,3 +68,5 @@ compacted unknown-delivery receipts remain outside replay/body maintenance scans
 
 `context_deletion` stores body-free owner/revision receipts. API deletion removes the
 source and cascades its versions atomically; the reserved canonical ID prevents reuse.
+
+`runtime_instance` stores account/origin-bound public instance identities and revocation revisions. `instance_enrollment` stores ten-minute pending records with hashed approval codes and host tokens. API serializes ownership with instance advisory locks. These are registration records, separate from remote Host grants and local Agent persistence.

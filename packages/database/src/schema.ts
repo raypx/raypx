@@ -303,7 +303,31 @@ export const contextVersion = foundation.table(
   ],
 );
 
+export const runtimeInstance = foundation.table(
+  "runtime_instance",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    body: jsonb("body").notNull(),
+  },
+  (table) => [index("runtime_instance_owner_idx").on(table.userId, table.id)],
+);
+export const instanceEnrollment = foundation.table(
+  "instance_enrollment",
+  {
+    id: text("id").primaryKey(),
+    codeHash: text("code_hash").notNull().unique(),
+    expiresAt: date("expires_at").notNull(),
+    body: jsonb("body").notNull(),
+  },
+  (table) => [index("instance_enrollment_expiry_idx").on(table.expiresAt)],
+);
+
 export const schema = {
+  runtimeInstance,
+  instanceEnrollment,
   contextDocument,
   contextDeletion,
   contextVersion,

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { Database } from "bun:sqlite";
 import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
-import { createRuntime } from "../../../src/runtime";
+import { createRuntime } from "../../helpers/enrolled";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { ContextDocument, ContextDocumentInput } from "@raypx/memory";
 import { ContextLibraryService } from "@raypx/memory/server";

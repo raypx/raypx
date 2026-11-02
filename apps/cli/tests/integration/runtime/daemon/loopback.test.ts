@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../../../src/runtime/daemon/server";
+import { startDaemon } from "../../../helpers/enrolled";
 import {
   connectDaemon,
   daemonFetch,

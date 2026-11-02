@@ -8,7 +8,7 @@ import type {
   TerminalDecision,
   TerminalRequest,
 } from "@raypx/contracts/terminal";
-import { startDaemon } from "../../src/runtime/daemon/server";
+import { startDaemon } from "./enrolled";
 import { daemonFetch } from "../../src/runtime/daemon/endpoint";
 import { readTerminalEndpoint, startTerminalHost } from "../../src/runtime/terminal/host";
 import { daemonEventLines } from "../../src/transport/daemon-stdio";

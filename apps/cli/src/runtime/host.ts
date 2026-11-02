@@ -1,4 +1,6 @@
-import type { LocalEvent, LocalMethod } from "@raypx/contracts/local";
+import type { InstanceAccess } from "./instances";
+import { InstanceError, instanceOrigin } from "@raypx/instances";
+import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 
 import type { AgentProvider } from "@raypx/core/tasks";
 import type { RecordDiagnostic } from "../diagnostics";
@@ -11,6 +13,7 @@ import { LocalError } from "./errors";
 /** Shared execution, terminal and cloud ownership behind each local transport. */
 export function createHost(options: {
   owner: "foreground" | "daemon";
+  instanceAccess?: InstanceAccess;
   dataDir?: string;
   profile?: string;
   emit?: (event: LocalEvent) => void;
@@ -31,8 +34,19 @@ export function createHost(options: {
     )
       void control?.wake().catch(backgroundFailure);
   };
-  const runtime = createRuntime({ ...options, scheduler: true, exclusiveOwner: true, emit });
   let terminal: LocalTerminalControl | undefined;
+  const runtime = createRuntime({
+    ...options,
+    scheduler: true,
+    exclusiveOwner: true,
+    emit,
+    onInstanceRevoked: async () => {
+      await Promise.allSettled([
+        ...(control ? [control.close()] : []),
+        ...(terminal ? [terminal.close()] : []),
+      ]);
+    },
+  });
   try {
     terminal = new LocalTerminalControl(runtime.state.directory, runtime, emit);
     control = new DaemonControl(
@@ -58,13 +72,36 @@ export function createHost(options: {
   let closing: Promise<void> | undefined;
   return {
     restore() {
-      void owner.restore().catch(backgroundFailure);
+      void runtime.instanceAccess
+        .assert()
+        .then(() => owner.restore())
+        .catch((error: unknown) => {
+          if (!(error instanceof InstanceError)) backgroundFailure();
+        });
     },
     runtime,
     control: owner,
     terminal: terminalHost,
     async request(method: LocalMethod, params: unknown, clientId = "stdio"): Promise<unknown> {
       if (closing) throw new LocalError("CLOSING", "Execution host is stopping");
+      if (
+        method !== "runtime.info" &&
+        !method.startsWith("instance.") &&
+        method !== "host.session" &&
+        !["tools.cancel", "terminal.close"].includes(method)
+      )
+        await runtime.instanceAccess.assert();
+      if (method === "host.session") {
+        const input = localParams["host.session"].parse(params);
+        const status = await runtime.instanceAccess.status();
+        if (
+          input.accountId &&
+          status.binding &&
+          (status.binding.accountId !== input.accountId ||
+            status.binding.origin !== instanceOrigin(input.apiUrl))
+        )
+          throw new InstanceError("INSTANCE_OWNER_MISMATCH");
+      }
       let result =
         method.startsWith("host.") || method === "observed.remote"
           ? await owner.request(method, params)

@@ -1,3 +1,4 @@
+import type { InstanceAccess } from "../runtime/instances";
 import { createInterface } from "node:readline/promises";
 import { defineCommand, renderUsage, runCommand as runCittyCommand, type CommandDef } from "citty";
 import type { LocalMethod } from "@raypx/contracts/local";
@@ -51,7 +52,12 @@ const operations = {
   },
 } satisfies Record<string, Record<string, Operation>>;
 
-type RuntimeOptions = { dataDir?: string; profile?: string; recordDiagnostic?: RecordDiagnostic };
+type RuntimeOptions = {
+  dataDir?: string;
+  profile?: string;
+  recordDiagnostic?: RecordDiagnostic;
+  instanceAccess?: InstanceAccess;
+};
 
 // The registry contains heterogeneous commands, so give their definitions a
 // common contextual type rather than retaining incompatible literal generics.
@@ -93,7 +99,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
       }),
     });
   }
-  groups.set("ai", createAiCommands(invocation));
+  groups.set("ai", createAiCommands(invocation, options));
   groups.set("daemon", createDaemonCommands(invocation, options));
   groups.set("connectors", createConnectorCommands(invocation, options));
   const stdio = defineCliCommand({
@@ -116,6 +122,10 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
       process.exitCode = await runTui(options);
     },
   });
+  const login = defineCliCommand({
+    meta: { name: "login", description: "Bind this instance to a Raypx account" },
+    args: globalArgs,
+  });
   const root = defineCliCommand({
     meta: { name: "raypx", version: manifest.version, description: "Raypx local CLI" },
     args: globalArgs,
@@ -123,9 +133,20 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
       ...Object.fromEntries([...groups].map(([name, group]) => [name, group.command])),
       stdio,
       tui,
+      login,
     },
   });
   const [group, action, ...inputs] = invocation.positionals;
+  if (group === "login" && !invocation.help && !invocation.version) {
+    if (action || inputs.length || invocation.json)
+      throw new LocalError(
+        "INVALID_INPUT",
+        "login takes no operands and requires human confirmation in a browser",
+      );
+    const { loginInstance } = await import("./instance");
+    await loginInstance(options);
+    return;
+  }
   if (invocation.version) {
     if (invocation.positionals.length || invocation.help)
       throw new Error("--version must be used without a command or --help");
@@ -144,11 +165,13 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     if (path[0]) {
       const entry = groups.get(path[0]);
       target =
-        path[0] === "stdio"
-          ? stdio
-          : path[0] === "tui"
-            ? tui
-            : (entry?.command ?? unknownCommand());
+        path[0] === "login"
+          ? login
+          : path[0] === "stdio"
+            ? stdio
+            : path[0] === "tui"
+              ? tui
+              : (entry?.command ?? unknownCommand());
       if (path[1]) target = entry?.leaves.get(path[1]) ?? unknownCommand();
     }
     console.log(

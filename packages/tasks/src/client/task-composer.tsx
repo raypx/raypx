@@ -1,4 +1,10 @@
 import {
+  agentProviderMetadata,
+  type AgentTask,
+  type AgentProvider,
+  type TaskContextSelection,
+} from "@raypx/core/tasks";
+import {
   useEffect,
   useEffectEvent,
   useId,
@@ -8,7 +14,6 @@ import {
   type RefObject,
 } from "react";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import { type AgentTask, type AgentProvider, type TaskContextSelection } from "@raypx/core/tasks";
 
 import {
   ContextPicker,
@@ -688,7 +693,7 @@ function TaskComposerView({
                           .find((item) => item.id === draft.deviceId)
                           ?.projects.find((item) => item.id === draft.projectId)?.name ??
                           t("chooseProject")}{" "}
-                        · {draft.provider === "claude" ? "Claude Code" : "Codex"}
+                        · {agentProviderMetadata[draft.provider].label}
                       </span>
                     </span>
                   </Button>

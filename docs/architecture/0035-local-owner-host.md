@@ -3,7 +3,7 @@
 Status: accepted, 2026-10-27. Incremental implementation from `c3020e4`.
 
 Each profile has one Owner and one Bun + TypeScript Host. Local tasks, project
-grants, connectors, SQLite, terminal settings and broker work without login.
+grants, connectors, SQLite, terminal settings and broker work without an active online session after initial instance enrollment (ADR 0040).
 Cloud control owns origin/account credentials, grant renewal, relay and opted-in
 projections. Cloud restore runs in the background; local RPC never joins its
 serial queue. Signing in does not enable remote execution or upload local history.

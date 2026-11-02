@@ -30,6 +30,7 @@
         "@raypx/database": "workspace:*",
         "@raypx/email": "workspace:*",
         "@raypx/env": "workspace:*",
+        "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
@@ -65,6 +66,7 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/host": "workspace:*",
+        "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
@@ -99,6 +101,7 @@
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
+        "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/tasks": "workspace:*",
@@ -201,6 +204,7 @@
         "@raypx/client": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
+        "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/tasks": "workspace:*",
@@ -431,6 +435,7 @@
         "@orpc/contract": "catalog:",
         "@raypx/auth": "workspace:*",
         "@raypx/core": "workspace:*",
+        "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
         "zod": "catalog:",
@@ -608,6 +613,19 @@
       },
       "peerDependencies": {
         "react": "^19.3.1",
+      },
+    },
+    "packages/instances": {
+      "name": "@raypx/instances",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+        "@types/node": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/jobs": {
@@ -1763,6 +1781,8 @@
     "@raypx/icons": ["@raypx/icons@workspace:packages/icons"],
 
     "@raypx/infra-railway": ["@raypx/infra-railway@workspace:infra/railway"],
+
+    "@raypx/instances": ["@raypx/instances@workspace:packages/instances"],
 
     "@raypx/jobs": ["@raypx/jobs@workspace:packages/jobs"],
 

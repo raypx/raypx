@@ -1,3 +1,4 @@
+import { InstanceError } from "@raypx/instances";
 import { ContextError } from "@raypx/memory";
 
 import { TaskContextError } from "@raypx/core/tasks";
@@ -13,6 +14,7 @@ export class LocalError extends Error {
 export function errorPayload(error: unknown) {
   return {
     code:
+      error instanceof InstanceError ||
       error instanceof LocalError ||
       error instanceof ContextError ||
       error instanceof TaskContextError

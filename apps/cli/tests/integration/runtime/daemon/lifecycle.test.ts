@@ -9,7 +9,7 @@ import {
   readDaemon,
   daemonFetch,
 } from "../../../../src/runtime/daemon/endpoint";
-import { startDaemon } from "../../../../src/runtime/daemon/server";
+import { startDaemon } from "../../../helpers/enrolled";
 
 it.each([undefined, 1.5])("rejects daemon metadata with invalid build identity %s", (builtAt) => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-daemon-format-"));

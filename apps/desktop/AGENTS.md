@@ -34,7 +34,7 @@ work or reads remote/account-owned projects. Account and settings share the foot
 `src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group, like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
 SSR for native route lifecycles, provides the desktop capability in `beforeLoad` and shares root grants between Files and Jobs. Refresh grants when entering this
 branch (`shouldReload` with cause enter), and reuse them between its child pages. Explicit invalidation still refreshes the cache. Engine-ready events invalidate
-the local branch; job-finished events refresh only the active Jobs route. These tools are available without login; the CLI engine remains independent of account sessions.
+the local branch; job-finished events refresh only the active Jobs route. These tools require initial instance enrollment and then work offline; the CLI engine remains independent of online account sessions.
 
 `/automations` defaults to device schedules; `scope=cloud` mounts the account-gated
 `@raypx/jobs/client` view. Preserve local form/history state across tabs and account

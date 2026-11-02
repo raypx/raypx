@@ -3,7 +3,7 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../../../src/runtime/daemon/server";
+import { startDaemon } from "../../../helpers/enrolled";
 import type { HostVault } from "../../../../src/runtime/daemon/vault";
 import { profilePath } from "../../../../src/runtime/state";
 import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host";

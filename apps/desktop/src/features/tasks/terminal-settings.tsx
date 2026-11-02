@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import type { LocalResult } from "@raypx/contracts/local-client";
 import { useEffect, useId, useState, useRef } from "react";
 import type { DeviceProject } from "@raypx/contracts/tasks";
@@ -139,7 +140,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
           >
             <div>
               <p className="text-sm font-medium">
-                {connector.provider === "claude" ? "Claude Code" : "Codex"}
+                {agentProviderMetadata[connector.provider].label}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {t(connector.installed ? "terminalInstalled" : "terminalNotInstalled")}

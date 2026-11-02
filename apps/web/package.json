@@ -23,6 +23,7 @@
     "@raypx/client": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
+    "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/tasks": "workspace:*",

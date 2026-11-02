@@ -1,3 +1,4 @@
+import type { InstanceAccess } from "../instances";
 import { chmodSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { localParams, localRequestSchema, type LocalEvent } from "@raypx/contracts/local";
@@ -26,6 +27,7 @@ type Client = {
 export async function startDaemon(
   options: ProfileOptions & {
     vault?: HostVault;
+    instanceAccess?: InstanceAccess;
     agentExecutables?: Partial<Record<AgentProvider, string>>;
   } = {},
 ) {

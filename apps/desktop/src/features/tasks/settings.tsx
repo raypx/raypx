@@ -1,3 +1,4 @@
+import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
@@ -118,7 +119,7 @@ export function AgentSettings() {
                 capability.available ? "bg-foreground" : "bg-muted-foreground/40",
               )}
             />
-            <span>{capability.provider === "claude" ? "Claude Code" : "Codex"}</span>
+            <span>{agentProviderMetadata[capability.provider].label}</span>
             <span className="text-muted-foreground">
               {capability.version} · {t(capability.reason)}
             </span>
@@ -139,7 +140,7 @@ export function AgentSettings() {
               if (root)
                 await localRequest("agents.configure", {
                   rootId: root.id,
-                  providers: ["claude", "codex"],
+                  providers: [...agentProviders],
                 });
             })
           }
@@ -163,7 +164,7 @@ export function AgentSettings() {
                   rootId: root.id,
                   providers: projects.some((project) => project.id === root.id)
                     ? []
-                    : ["claude", "codex"],
+                    : [...agentProviders],
                 }),
               )
             }

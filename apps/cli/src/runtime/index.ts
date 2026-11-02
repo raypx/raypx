@@ -1,3 +1,4 @@
+import { InstanceRuntime, type InstanceAccess } from "./instances";
 import { join } from "node:path";
 import {
   localParams,
@@ -31,6 +32,8 @@ import { ProfileStorage } from "./sqlite";
 
 export function createRuntime(
   options: {
+    instanceAccess?: InstanceAccess;
+    onInstanceRevoked?: () => Promise<void>;
     dataDir?: string;
     profile?: string;
     emit?: (event: LocalEvent) => void;
@@ -41,6 +44,8 @@ export function createRuntime(
   } = {},
 ) {
   const emit = options.emit ?? (() => {});
+  const instances = new InstanceRuntime(profilePath(options));
+  const instanceAccess = options.instanceAccess ?? instances;
   const storage = new ProfileStorage(profilePath(options));
   let state: StateStore;
   try {
@@ -77,6 +82,7 @@ export function createRuntime(
         resolveContext: (selection, target, prompt) =>
           getMemory().resolve(selection, target, prompt),
         environment,
+        assertInstance: () => instanceAccess.assert(),
         ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
         ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
       },
@@ -89,12 +95,36 @@ export function createRuntime(
     environment,
     state.directory,
   );
-  const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
+  const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic, () =>
+    instanceAccess.assert(),
+  );
   let memory: MemoryRuntime | undefined;
   const getMemory = () => (memory ??= new MemoryRuntime(state.db, getAgents));
   let closing = false;
   let closingPromise: Promise<void> | undefined;
   const pending = new Set<Promise<unknown>>();
+  let refreshing: Promise<import("@raypx/instances").InstanceStatus> | undefined;
+  const refreshInstance = () => {
+    if (refreshing) return refreshing;
+    refreshing = (async () => {
+      const status = await instances.refresh();
+      if (status.state === "revoked") {
+        await Promise.allSettled([
+          jobs.close(),
+          processes.close(),
+          ...(agentHost ? [agentHost.close()] : []),
+          ...(options.onInstanceRevoked ? [options.onInstanceRevoked()] : []),
+        ]);
+      }
+      return status;
+    })().finally(() => {
+      refreshing = undefined;
+    });
+    return refreshing;
+  };
+  const syncInstance = () => {
+    if (!closing) void refreshInstance().catch(() => {});
+  };
   try {
     if (options.exclusiveOwner) ownAgents();
     if (options.scheduler) jobs.startScheduler();
@@ -103,8 +133,14 @@ export function createRuntime(
     storage.close();
     throw error;
   }
+  const instanceTimer = options.instanceAccess ? undefined : setInterval(syncInstance, 300_000);
+  instanceTimer?.unref();
+  if (!options.instanceAccess) syncInstance();
+
   return {
     state,
+    instances,
+    instanceAccess,
     files,
     jobs,
     processes,
@@ -116,7 +152,24 @@ export function createRuntime(
         return Promise.reject(new LocalError("CLOSING", "Local engine is shutting down"));
       const operation = (async () => {
         // Narrow each schema independently to preserve method-specific types.
+        if (
+          method !== "runtime.info" &&
+          !method.startsWith("instance.") &&
+          !["tools.cancel", "terminal.close"].includes(method)
+        )
+          await instanceAccess.assert();
         switch (method) {
+          case "instance.status":
+            localParams[method].parse(raw);
+            return instanceAccess.status();
+          case "instance.begin":
+            return instances.begin(localParams[method].parse(raw).origin);
+          case "instance.poll":
+            localParams[method].parse(raw);
+            return instances.poll();
+          case "instance.refresh":
+            localParams[method].parse(raw);
+            return refreshInstance();
           case "memory.list":
             contextParams(localParams[method], raw);
             return getMemory().service.list(LOCAL_WORKSPACE_ID);
@@ -352,6 +405,7 @@ export function createRuntime(
     close() {
       if (closingPromise) return closingPromise;
       closing = true;
+      if (instanceTimer) clearInterval(instanceTimer);
       closingPromise = (async () => {
         // Stop producers and cancel execution first. File requests already
         // accepted must finish their state lookups before SQLite is closed.
@@ -360,7 +414,7 @@ export function createRuntime(
           processes.close(),
           ...(agentHost ? [agentHost.close()] : []),
         ]);
-        await Promise.allSettled(pending);
+        await Promise.allSettled([...pending, ...(refreshing ? [refreshing] : [])]);
         storage.close();
         releaseOwner?.();
       })();

@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Approval } from "./approval.js";
 
 import { ContextSnapshot } from "@raypx/memory/client";
@@ -175,7 +176,7 @@ export function TaskDetail({
         )}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border pb-5 text-xs text-muted-foreground">
-        <span>{data.task.provider === "claude" ? "Claude Code" : "Codex"}</span>
+        <span>{agentProviderMetadata[data.task.provider].label}</span>
         <span>{devices.find((device) => device.id === data.task.deviceId)?.name}</span>
         <span>
           {

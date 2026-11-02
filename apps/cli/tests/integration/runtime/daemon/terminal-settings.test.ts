@@ -7,7 +7,7 @@ import {
   readTerminalConfiguration,
   writeTerminalConfiguration,
 } from "../../../../src/runtime/daemon/terminal-settings";
-import { startDaemon } from "../../../../src/runtime/daemon/server";
+import { startDaemon } from "../../../helpers/enrolled";
 import { profilePath } from "../../../../src/runtime/state";
 
 afterEach(() => vi.unstubAllEnvs());

@@ -127,6 +127,7 @@ beforeEach(() => {
   mocks.listeners.clear();
   mocks.isDesktop.mockReturnValue(true);
   mocks.localRequest.mockImplementation(async (method) => {
+    if (method.startsWith("instance.")) return { state: "registered" };
     if (method === "jobs.list" || method === "jobs.history") return [];
     if (method === "roots.list") return grants;
     if (method === "files.list") return { entries: [], total: 0, offset: 0 };
@@ -243,6 +244,7 @@ describe("Desktop local file routes", () => {
   it("defaults new automations to the open project and keeps unassigned schedules globally accessible", async () => {
     const existing = job("Unassigned scan");
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.list")
         return [existing, { ...job("Project scan"), id: "project-job", projectId: "work" }];
       if (method === "roots.list") return grants;
@@ -344,6 +346,7 @@ describe("Desktop local file routes", () => {
       const updatedRoots = deferred<RootGrant[]>();
       let authorized = false;
       mocks.localRequest.mockImplementation(async (method) => {
+        if (method.startsWith("instance.")) return { state: "registered" };
         if (method === "roots.list") return authorized ? updatedRoots.promise : [];
         if (method === "jobs.list") return [];
         if (method === "files.list") return { entries: [], total: 0, offset: 0 };
@@ -379,6 +382,7 @@ describe("Desktop local file routes", () => {
   it("shows a safe jobs error and recovers through the refresh button without an event", async () => {
     let failed = true;
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.list") {
         if (failed) throw new Error("private jobs diagnostic");
         return [job("Recovered automation")];
@@ -423,6 +427,7 @@ describe("Desktop local file routes", () => {
   it("invalidates jobs for relevant events and cleans listeners when leaving local routes", async () => {
     let jobs = [job("Before event")];
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.list") return jobs;
       if (method === "roots.list") return grants;
       throw new Error(`Unexpected local request: ${method}`);
@@ -459,6 +464,7 @@ describe("Desktop local file routes", () => {
     let jobs = [job()];
     let failed = false;
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.history") return [];
       if (failed) throw new Error("private refresh diagnostic");
       if (method === "jobs.list") return jobs;
@@ -494,6 +500,7 @@ describe("Desktop local file routes", () => {
   it("opens run output with a keyboard-accessible history disclosure", async () => {
     const user = userEvent.setup();
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.list") return [job()];
       if (method === "roots.list") return grants;
       if (method === "jobs.history")
@@ -524,6 +531,7 @@ describe("Desktop local file routes", () => {
     const lateJobs = deferred<JobDefinition[]>();
     let refreshing = false;
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.list") return refreshing ? lateJobs.promise : [job()];
       if (method === "roots.list") return grants;
       throw new Error(`Unexpected local request: ${method}`);
@@ -548,6 +556,7 @@ describe("Desktop local file routes", () => {
   it("reloads route data after creating, updating and deleting an automation", async () => {
     let jobs: JobDefinition[] = [];
     mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
       if (method === "jobs.list") return jobs;
       if (method === "roots.list") return grants;
       if (method === "jobs.create") {

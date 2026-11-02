@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Bounded read-only scroll regions need keyboard focus for scrolling. */
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/react-virtual";
@@ -195,7 +196,7 @@ function ConversationViewport({
       return (
         <article className="space-y-2 py-2" aria-busy={entry.status === "streaming"}>
           <p className="text-xs font-medium text-muted-foreground">
-            {task.provider === "claude" ? "Claude" : "Codex"}{" "}
+            {agentProviderMetadata[task.provider].shortLabel}{" "}
             {entry.status !== "complete" && (
               <span>· {t(entry.status === "streaming" ? "streaming" : "interrupted")}</span>
             )}

@@ -14,7 +14,13 @@ export {
   type TaskContextSelection,
   type TaskContextSnapshot,
 } from "./task-context.js";
-export { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
+export {
+  agentProviderSchema,
+  agentProviders,
+  agentProviderMetadata,
+  questionSchema,
+  decisionSchema,
+} from "./human.js";
 
 export const capabilitySchema = z.object({
   provider: agentProviderSchema,

@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import type { ReactNode } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
@@ -130,9 +131,7 @@ export function ProjectList({
                           >
                             <span>
                               {project.providers
-                                .map((provider) =>
-                                  provider === "claude" ? "Claude Code" : "Codex",
-                                )
+                                .map((provider) => agentProviderMetadata[provider].label)
                                 .join(" · ")}
                             </span>
                             {project.dirty && (

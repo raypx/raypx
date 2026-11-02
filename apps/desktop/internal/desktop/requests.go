@@ -18,6 +18,9 @@ func (d *Desktop) RendererParams(method string, params any) (any, error) {
 	}
 	if input, ok := params.(map[string]any); ok {
 		input = clone(input)
+		if method == "instance.begin" {
+			input["origin"] = d.Config.APIURL
+		}
 		if strings.HasPrefix(method, "agents.local.") {
 			if id, exists := input["accountId"]; exists && id != "device:local-workspace:v1" {
 				return nil, errors.New("Local workspace owner is invalid")

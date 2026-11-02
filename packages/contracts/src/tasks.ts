@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  agentProviders,
   agentProviderSchema,
   capabilitySchema,
   decisionSchema,
@@ -22,7 +23,7 @@ export const RELAY_VERSION = 4;
 export const deviceProjectSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(120),
-  providers: z.array(agentProviderSchema).max(2),
+  providers: z.array(agentProviderSchema).max(agentProviders.length),
   dirty: z.boolean(),
 });
 export const deviceSchema = z.object({
@@ -134,7 +135,7 @@ export const relayClientSchema = z.discriminatedUnion("type", [
     streamId: z.string().uuid(),
     instanceId: z.string().uuid(),
     projects: z.array(deviceProjectSchema).max(200),
-    capabilities: z.array(capabilitySchema).max(2),
+    capabilities: z.array(capabilitySchema).max(agentProviders.length),
   }),
   z.object({
     type: z.literal("snapshot"),

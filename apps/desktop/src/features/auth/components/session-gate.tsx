@@ -1,3 +1,4 @@
+import { InstanceGate } from "./instance-gate";
 import type { ReactNode } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Logo } from "@raypx/ui/logo";
@@ -37,5 +38,5 @@ export function SessionGate({ children }: { children: ReactNode }) {
         <Outlet />
       </AuthLayout>
     );
-  return children;
+  return <InstanceGate>{children}</InstanceGate>;
 }

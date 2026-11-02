@@ -1,4 +1,26 @@
 export default {
+  instances: {
+    title: "Register this instance",
+    intro:
+      "Sign in once to register this computer. Local work then remains available offline. Registration does not enable remote access or upload project files.",
+    register: "Sign in and register",
+    bind: "Register this computer",
+    unavailable: "Instance identity is unavailable. Retry or sign in to the original instance.",
+    mismatch:
+      "This instance belongs to another account or server. Sign in with its owner or use another local profile.",
+    revoked: "This instance was revoked. Existing local records are preserved.",
+    code: "Instance code",
+    inspect: "Review instance",
+    approve: "Approve registration",
+    approved: "Instance registered",
+    instances: "Registered instances",
+    revoke: "Revoke instance",
+    revokedLabel: "Revoked",
+    revokeConfirm: "Revoke this instance when it next connects? Local records will be preserved.",
+    error: "Unable to complete instance registration. Check the code and connection, then retry.",
+    pending: "Waiting for registration",
+    refresh: "Refresh status",
+  },
   legal: {
     navigation: "Legal information",
     privacy: "Privacy",
@@ -54,12 +76,11 @@ export default {
   localWorkspace: {
     localMode: "Local workspace",
     welcome: "Start on this computer",
-    welcomeHint: "No account needed. Set up once, then send your first message.",
+    welcomeHint: "Register this instance once, then set up your first local project.",
     ownershipHint:
       "Local sessions and drafts stay on this computer. Signing in or out never moves, uploads or stops them.",
     remoteSignIn: "Sign in for remote access",
-    remoteSignInHint:
-      "Sign in to connect computers and handle remote approvals. Local tools work without it.",
+    remoteSignInHint: "Sign in for remote access. Registered local tools stay available offline.",
     backToLocal: "Back to local tools",
     getStarted: "Open setup guide",
     chooseProject: "Authorize a project folder",
@@ -376,7 +397,7 @@ export default {
     selectTask: "Select a session to see details.",
     nothingWaiting: "Nothing needs your answer.",
     signIn: "Sign in to connect your devices",
-    signInHint: "Local files, automations and terminal work without signing in.",
+    signInHint: "Registered local files, automations and terminals stay available offline.",
     device: "Computer",
     project: "Project",
     agent: "Agent",
@@ -424,6 +445,7 @@ export default {
     noDevices: "Connect a computer from Desktop Settings.",
     revoked: "Disconnected",
     revoke: "Disconnect computer",
+    revokedLabel: "Revoked",
     revokeConfirm:
       "Disconnect this computer and stop its remote sessions? Its synced terminal approvals will be deleted. Managed session history, local files and changes will be preserved.",
     connect: "Enable remote sessions",
@@ -588,7 +610,7 @@ export default {
     accountTitle: "Account",
     signedOut: "You’re not signed in",
     signedOutIntro:
-      "Sign in to access your account. Your local files and automations are always available on desktop.",
+      "Sign in to access your account. Registered Desktop tools stay available offline.",
     verifiedLabel: "Email verified",
     invalidCredentials: "The email or password is incorrect.",
     emailNotVerified: "Verify your email before signing in.",
@@ -783,7 +805,7 @@ export default {
     conflictHint:
       "This schedule changed elsewhere. Your edits are still here. Refresh the list and reopen Edit to use the current revision.",
     viewTask: "Open related agent session",
-    signInHint: "Sign in to manage cloud automations. Local automations need no account.",
+    signInHint: "Sign in to manage cloud automations. Registered local automations run offline.",
     unknownHint:
       "Delivery is uncertain. The schedule is paused and this occurrence will not be sent again automatically. Check the computer and related session before creating new work.",
     manual: "Manual run",

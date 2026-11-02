@@ -20,8 +20,10 @@ The accepted foundation design supersedes documents in docs/history.
 - Auth receives its database adapter, configuration and mail interface from API.
 - Remote contracts and local device contracts have separate public entries.
 - Desktop launches the bundled CLI by absolute path. Do not import CLI source.
-- Desktop local tools and its device-profile workspace require no account. Gate remote
-  data and host authorization on login. Only device-owned local work is supported.
+- Desktop and CLI execution require one account/origin-bound instance enrollment.
+  A signed local identity permits indefinite offline work; online logout preserves it.
+  Gate remote data and Host authorization separately on login. Never transfer a profile
+  to another account/origin. Only device-owned local work is supported.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
 - Core owns task domain schemas and pure rules; contracts composes wire schemas and

@@ -1,3 +1,4 @@
+import { enrolledInstance } from "../../helpers/enrolled";
 import { expect, it } from "vite-plus/test";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -84,7 +85,13 @@ function fixture() {
       stored = undefined;
     },
   };
-  const open = () => createForegroundHost({ dataDir, vault, emit: (event) => events.push(event) });
+  const open = () =>
+    createForegroundHost({
+      dataDir,
+      vault,
+      instanceAccess: enrolledInstance,
+      emit: (event) => events.push(event),
+    });
   let host = open();
   const scope = { accountId, apiUrl: api.url.origin };
   return {

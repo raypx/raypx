@@ -1,3 +1,4 @@
+import { instancesContract } from "./instances.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { accountAccessSchema } from "./access.js";
@@ -43,6 +44,7 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  instances: instancesContract,
   memory: memoryContract,
   jobs: jobsContract,
   hosts: {
@@ -127,6 +129,15 @@ type NativeExposure<C> = {
   [Group in keyof C]: { [Method in keyof C[Group]]: "renderer" | "native" | "host" };
 };
 export const apiExposure = {
+  instances: {
+    begin: "host",
+    inspect: "renderer",
+    approve: "renderer",
+    poll: "host",
+    check: "host",
+    list: "renderer",
+    revoke: "renderer",
+  },
   account: { get: "renderer", access: "renderer" },
   devices: { register: "renderer", refreshGrant: "renderer", list: "renderer", revoke: "renderer" },
   tasks: { list: "renderer", get: "renderer" },

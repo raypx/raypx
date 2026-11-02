@@ -1,3 +1,4 @@
+import { enrollTestProfile } from "../helpers/instance";
 import assert from "node:assert/strict";
 import { chmod, copyFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -18,7 +19,18 @@ const builtBinary = resolve(import.meta.dirname, "../../dist/raypx");
 // the actual terminal attributes after the standalone executable has exited.
 const driver = resolve(import.meta.dirname, "../fixtures/tui/driver.py");
 
+const closeInstances: (() => Promise<void>)[] = [];
 try {
+  for (const profile of [
+    "tui-empty",
+    "tui-with-desktop",
+    "tui-success",
+    "tui-quit-active",
+    "tui-ctrl-c-active",
+    "tui-sigint-active",
+    "tui-sigterm-active",
+  ])
+    closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }));
   await copyFile(builtBinary, binary);
   await chmod(binary, 0o700);
   const child = Bun.spawn([python, driver, binary, directory], {
@@ -29,5 +41,6 @@ try {
   });
   assert.equal(await child.exited, 0, "Standalone TUI PTY smoke failed");
 } finally {
+  await Promise.all(closeInstances.map((close) => close()));
   await rm(directory, { recursive: true, force: true });
 }

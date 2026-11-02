@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { createRuntime } from "../../../src/runtime/index.js";
+import { createRuntime } from "../../helpers/enrolled";
 import { acquireLock } from "../../../src/runtime/state/index.js";
 import type { Diagnostic } from "../../../src/diagnostics.js";
 import { LocalError } from "../../../src/runtime/errors.js";

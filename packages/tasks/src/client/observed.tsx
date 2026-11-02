@@ -1,3 +1,4 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import { terminalPermissionSupported } from "@raypx/contracts/terminal";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type {
@@ -109,7 +110,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">
                       {session?.projectName ?? request.title} ·{" "}
-                      {request.provider === "claude" ? "Claude Code" : "Codex"}
+                      {agentProviderMetadata[request.provider].label}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
                       {session?.deviceName ?? ""} · {request.title}

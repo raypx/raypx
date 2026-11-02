@@ -301,7 +301,7 @@ func TestEngineHandshakeAndShutdown(t *testing.T) {
 }
 func TestRendererPolicyKeepsPrivilegedMethodsNative(t *testing.T) {
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), "/unstarted-cli", "0.1.0", nil, true, &keys{}, []string{"host.authorize", "roots.register", "agents.local.list", "connectors.install", "observed.remote", "approvals.local.watch", "files.list"})
+	desktop, err := host.New(config, t.TempDir(), "/unstarted-cli", "0.1.0", nil, true, &keys{}, []string{"instance.begin", "host.authorize", "roots.register", "agents.local.list", "connectors.install", "observed.remote", "approvals.local.watch", "files.list"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,6 +317,11 @@ func TestRendererPolicyKeepsPrivilegedMethodsNative(t *testing.T) {
 	value, err := desktop.RendererParams("agents.local.list", host.JSON{"accountId": "device:local-workspace:v1"})
 	if err != nil || value.(map[string]any)["accountId"] != "device:local-workspace:v1" {
 		t.Fatal("device workspace owner changed")
+	}
+	input := host.JSON{"origin": "https://attacker.test"}
+	enrollment, err := desktop.RendererParams("instance.begin", input)
+	if err != nil || enrollment.(map[string]any)["origin"] != config.APIURL || input["origin"] != "https://attacker.test" {
+		t.Fatal("renderer controlled the enrollment origin or input was mutated")
 	}
 	value, err = desktop.RendererParams("connectors.install", host.JSON{"configDirs": host.JSON{"codex": "/attacker"}})
 	if err != nil || value.(map[string]any)["configDirs"].(map[string]any)["codex"] == "/attacker" {
