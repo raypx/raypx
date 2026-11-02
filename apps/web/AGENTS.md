@@ -43,6 +43,10 @@ application is an independent composition root and is never imported by another 
   client render use the same locale and catalog; browser storage is restored only
   after hydration. Language switches use `useLanguagePreference`, never a second
   locale state or route navigation.
+  Authentication pages expose an icon-triggered `LanguageMenu` in their top-right header;
+  language changes preserve form drafts and the current return destination.
+  Public header menus live in `src/components/`; the landing header shares
+  `LanguageMenu` and adds `ThemeMenu` using UI's existing theme provider.
 - `src/features/auth/client.ts` creates the Better Auth client; `src/features/tasks/client.ts`
   creates the oRPC relay task client so sign-in pages never load relay schemas.
   `src/features/auth/account.ts` adapts `@raypx/account` reads to SSR cookies and

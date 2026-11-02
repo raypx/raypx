@@ -4,6 +4,8 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Logo } from "@raypx/ui/logo";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { publicConfigurationQuery } from "../../configuration/client";
+import { LanguageMenu } from "../../../components/language-menu";
+import { ThemeMenu } from "../../../components/theme-menu";
 
 export function LandingLayout() {
   const c = useTranslations("common");
@@ -25,13 +27,20 @@ export function LandingLayout() {
           >
             <Logo label={siteName} className="max-w-full [&>span]:truncate" />
           </Link>
-          <nav aria-label={c("home")} className="flex flex-wrap items-center gap-2">
+          <nav
+            aria-label={c("home")}
+            className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2"
+          >
             <Link to="/projects" className={buttonVariants({ variant: "ghost" })}>
               {c("projects")}
             </Link>
             <Link to="/login" className={buttonVariants()}>
               {c("signIn")}
             </Link>
+            <div className="flex shrink-0 items-center gap-1">
+              <ThemeMenu />
+              <LanguageMenu />
+            </div>
           </nav>
         </div>
       </header>

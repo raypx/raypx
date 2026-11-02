@@ -18,6 +18,7 @@ import {
   vi,
 } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { ThemeProvider } from "@raypx/ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/tasks";
 import { accessForRole, type AccountRole } from "@raypx/account/access";
@@ -131,6 +132,7 @@ beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
+  localStorage.setItem("theme", "system");
   mocks.loadAccount.mockResolvedValue({ status: "signed-out" });
   mocks.role = "member";
   mocks.access
@@ -150,9 +152,11 @@ async function page(url: string) {
   await router.load();
   render(
     <QueryClientProvider client={queryClient}>
-      <BrowserLanguageProvider>
-        <RouterProvider router={router} />
-      </BrowserLanguageProvider>
+      <ThemeProvider>
+        <BrowserLanguageProvider>
+          <RouterProvider router={router} />
+        </BrowserLanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>,
   );
   return router;
@@ -179,6 +183,41 @@ it("renders the landing page without account or private workspace reads", async 
   expect(mocks.approvals).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("link", { name: "Projects" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
+});
+
+it("changes theme and language on the landing page without account reads", async () => {
+  const router = await page("/");
+  fireEvent.click(screen.getByRole("button", { name: "Appearance" }));
+  const dark = await screen.findByRole("menuitemradio", { name: "Dark" });
+  expect(screen.getByRole("menuitemradio", { name: "Follow system" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  fireEvent.click(dark);
+  await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark"));
+  expect(localStorage.getItem("theme")).toBe("dark");
+  await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "Language" }));
+  fireEvent.click(await screen.findByRole("menuitemradio", { name: "简体中文" }));
+  await screen.findByRole("button", { name: "语言" });
+  await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+  expect(localStorage.getItem("raypx_locale")).toBe("zh");
+  expect(localStorage.getItem("theme")).toBe("dark");
+  expect(document.documentElement.lang).toBe("zh");
+  fireEvent.click(screen.getByRole("button", { name: "外观" }));
+  expect(await screen.findByRole("menuitemradio", { name: "深色" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "跟随系统" }));
+  await waitFor(() => expect(localStorage.getItem("theme")).toBe("system"));
+  expect(localStorage.getItem("raypx_locale")).toBe("zh");
+  expect(router.state.location.pathname).toBe("/");
+  expect(mocks.loadAccount).not.toHaveBeenCalled();
+  expect(mocks.access).not.toHaveBeenCalled();
+  expect(mocks.tasks).not.toHaveBeenCalled();
+  expect(mocks.devices).not.toHaveBeenCalled();
+  expect(mocks.approvals).not.toHaveBeenCalled();
 });
 
 describe("menu permissions", () => {
@@ -239,6 +278,42 @@ describe("menu permissions", () => {
 });
 
 describe("authentication routes", () => {
+  it("switches language without losing credentials or the return destination", async () => {
+    mocks.signIn.mockResolvedValue({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
+    const router = await page("/login?returnTo=%2Fapprovals");
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "ada@example.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    const chinese = await screen.findByRole("menuitemradio", { name: "简体中文" });
+    expect(screen.getByRole("menuitemradio", { name: "English" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    fireEvent.click(chinese);
+    await screen.findByRole("heading", { level: 1, name: "欢迎回来" });
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: "语言" }));
+    const selected = await screen.findByRole("menuitemradio", { name: "简体中文" });
+    expect(selected).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(selected);
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(screen.getByLabelText("邮箱地址")).toHaveValue("ada@example.test");
+    expect(screen.getByLabelText("密码")).toHaveValue("password123");
+    expect(localStorage.getItem("raypx_locale")).toBe("zh");
+    expect(router.state.location.pathname).toBe("/login");
+    expect(router.state.location.search).toMatchObject({ returnTo: "/approvals" });
+    expect(mocks.signIn).not.toHaveBeenCalled();
+    fireEvent.submit(screen.getByRole("button", { name: "登录" }).closest("form")!);
+    await screen.findByRole("alert");
+    expect(mocks.signIn).toHaveBeenCalledExactlyOnceWith({
+      email: "ada@example.test",
+      password: "password123",
+      fetchOptions: { headers: { "Accept-Language": "zh" } },
+    });
+  });
+
   it("replaces closed registration with a sign-in link", async () => {
     mocks.registrationEnabled = false;
     await page("/signup");
