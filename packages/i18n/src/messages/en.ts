@@ -470,7 +470,7 @@ export default {
     profileSaved: "Display name saved.",
     profileRefresh: "Your name was saved. Refresh the page to update the account details.",
     sessionsTitle: "Signed-in sessions",
-    sessionsHint: "Sign out sessions you don't recognize or use.",
+    sessionsHint: "Sign out sessions you don’t recognize or use.",
     sessionsEmpty: "No active sessions found. Sign in again to refresh your account.",
     currentSession: "This session",
     unknownSession: "Unknown browser or device",
@@ -519,6 +519,12 @@ export default {
     emailTaken: "An account with this email already exists.",
     passwordShort: "Use at least 8 characters for your password.",
     rateLimited: "Too many attempts. Please try again later.",
+    brandTitle: "Your development workbench",
+    brandIntro:
+      "Project-centered workspace with device-local execution and optional remote access.",
+    featureLocal: "Secure device-local execution",
+    featureSync: "Optional cloud synchronization",
+    featureCollaboration: "Real-time collaboration",
   },
   settings: {
     preferencesSaveFailed: "Your appearance and language changes could not be saved. Try again.",

@@ -478,6 +478,11 @@ export default {
     emailTaken: "该邮箱已注册。",
     passwordShort: "密码至少需要 8 个字符。",
     rateLimited: "尝试次数过多，请稍后重试。",
+    brandTitle: "你的开发工作台",
+    brandIntro: "项目为中心的工作区，支持本地执行和可选的远程访问。",
+    featureLocal: "安全的本地设备执行",
+    featureSync: "可选的云端同步",
+    featureCollaboration: "实时协作",
   },
   settings: {
     preferencesSaveFailed: "外观和语言更改未能保存，请重试。",

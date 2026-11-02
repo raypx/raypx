@@ -207,7 +207,7 @@ function ShellContents<To extends string>({
       <SidebarMenuItem key={item.to}>
         <SidebarMenuButton
           tooltip={item.label}
-          className="relative min-h-9 gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground max-[760px]:min-h-11 [&_svg]:size-5 [&_svg]:stroke-[1.75]"
+          className="relative min-h-9 gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent/80 hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:shadow-sm max-[760px]:min-h-11 [&_svg]:size-5 [&_svg]:stroke-[1.75]"
           render={
             <LinkComponent
               to={item.to}
@@ -243,7 +243,7 @@ function ShellContents<To extends string>({
         role="complementary"
         collapsible="icon"
         className={cn(
-          "min-h-0 overflow-hidden border-border bg-sidebar px-2 pb-2 sidebar-icon:px-1.5 max-[420px]:sidebar-icon:px-1",
+          "min-h-0 overflow-hidden border-border bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 px-2 pb-2 shadow-sm sidebar-icon:px-1.5 max-[420px]:sidebar-icon:px-1",
           windowed ? "pt-10" : "pt-2",
         )}
       >
@@ -252,12 +252,12 @@ function ShellContents<To extends string>({
             to={brand.to}
             markActive={false}
             aria-label={brand.label}
-            className="mx-2.5 flex min-h-9 w-fit max-w-full min-w-0 items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
+            className="mx-2.5 flex min-h-9 w-fit max-w-full min-w-0 items-center rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
           >
             <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
           </LinkComponent>
           {brand.description && (
-            <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground sidebar-icon:hidden">
+            <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground opacity-70 sidebar-icon:hidden">
               {brand.description}
             </p>
           )}
@@ -270,7 +270,7 @@ function ShellContents<To extends string>({
                   {navigation.length > 1 && navigationLabels?.[index] && (
                     <SidebarGroupLabel
                       aria-hidden="true"
-                      className="mb-1.5 h-auto px-2.5 text-xs font-medium text-muted-foreground"
+                      className="mb-1.5 h-auto px-2.5 text-xs font-medium text-muted-foreground opacity-60"
                     >
                       {navigationLabels[index]}
                     </SidebarGroupLabel>
