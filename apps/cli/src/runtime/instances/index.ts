@@ -20,6 +20,13 @@ import {
 } from "@raypx/instances/crypto";
 import { acquireLock } from "../state";
 import manifest from "../../../package.json";
+export type InstanceEnrollmentPhase =
+  | "starting"
+  | "key-read"
+  | "key-ready"
+  | "request"
+  | "approval"
+  | "registered";
 export interface InstanceAccess {
   assert(): Promise<void>;
   status(): Promise<InstanceStatus>;
@@ -77,10 +84,18 @@ export class InstanceRuntime implements InstanceAccess {
     readonly directory: string,
     private readonly options: {
       keys?: InstanceKeyStore;
+      onProgress?: (phase: InstanceEnrollmentPhase) => void;
       client?: (origin: string) => ApiClient;
     } = {},
   ) {
     this.keys = options.keys ?? keyStore(directory);
+  }
+  private progress(phase: InstanceEnrollmentPhase) {
+    try {
+      this.options.onProgress?.(phase);
+    } catch {
+      /* Observability cannot change enrollment. */
+    }
   }
   private async read(): Promise<InstanceReceipt | undefined> {
     try {
@@ -156,6 +171,7 @@ export class InstanceRuntime implements InstanceAccess {
     return this.options.client?.(origin) ?? createApiClient({ baseUrl: origin });
   }
   async begin(rawOrigin: string) {
+    this.progress("starting");
     const origin = instanceOrigin(rawOrigin);
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
     const release = acquireLock(this.directory, "instance-enrollment");
@@ -189,6 +205,7 @@ export class InstanceRuntime implements InstanceAccess {
       instanceId = crypto.randomUUID();
       await writeFile(identityFile, instanceId, { mode: 0o600, flag: "wx" });
     }
+    this.progress("key-read");
     let privateKey = await this.keys.get(instanceId);
     if (!privateKey) {
       const pair = createInstanceKey();
@@ -201,6 +218,7 @@ export class InstanceRuntime implements InstanceAccess {
     )
       .export({ type: "spki", format: "der" })
       .toString("base64");
+    this.progress("key-ready");
     const identity = {
       instanceId,
       publicKey,
@@ -208,6 +226,7 @@ export class InstanceRuntime implements InstanceAccess {
       platform: process.platform,
       appVersion: manifest.version,
     };
+    this.progress("request");
     const result = await this.client(origin).instances.begin(
       {
         ...identity,
@@ -215,6 +234,7 @@ export class InstanceRuntime implements InstanceAccess {
       },
       { signal: AbortSignal.timeout(10_000) },
     );
+    this.progress("approval");
     this.pending = {
       id: result.id,
       token: result.token,
@@ -246,6 +266,7 @@ export class InstanceRuntime implements InstanceAccess {
         throw new InstanceError("INSTANCE_INVALID_RECEIPT");
       await this.save(receipt);
       this.pending = undefined;
+      this.progress("registered");
     }
     return { status: result.status };
   }

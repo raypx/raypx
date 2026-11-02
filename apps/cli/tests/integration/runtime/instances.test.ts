@@ -142,7 +142,11 @@ it("enrolls with a private host token and retains the signed identity across res
       stored.set(id, key);
     },
   };
-  const runtime = new InstanceRuntime(directory, { keys });
+  const phases: string[] = [];
+  const runtime = new InstanceRuntime(directory, {
+    keys,
+    onProgress: (phase) => phases.push(phase),
+  });
   try {
     const pending = await runtime.begin(api.url.origin);
     if (pending.registered) throw new Error("Expected pending enrollment");
@@ -151,6 +155,14 @@ it("enrolls with a private host token and retains the signed identity across res
     expect(await runtime.poll()).toEqual({ status: "pending" });
     await service.approve("owner", pending.code);
     expect(await runtime.poll()).toEqual({ status: "approved" });
+    expect(phases).toEqual([
+      "starting",
+      "key-read",
+      "key-ready",
+      "request",
+      "approval",
+      "registered",
+    ]);
     const restarted = new InstanceRuntime(directory, { keys });
     await expect(restarted.assert()).resolves.toBeUndefined();
     const status = await restarted.status();

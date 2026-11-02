@@ -18,7 +18,7 @@ import { LocalError } from "./errors";
 import manifest from "../../package.json";
 
 import type { AgentProvider } from "@raypx/core/tasks";
-import type { RecordDiagnostic } from "../diagnostics";
+import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics";
 
 const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown): T => {
   try {
@@ -44,7 +44,10 @@ export function createRuntime(
   } = {},
 ) {
   const emit = options.emit ?? (() => {});
-  const instances = new InstanceRuntime(profilePath(options));
+  const instances = new InstanceRuntime(profilePath(options), {
+    onProgress: (status) =>
+      recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status }),
+  });
   const instanceAccess = options.instanceAccess ?? instances;
   const storage = new ProfileStorage(profilePath(options));
   let state: StateStore;

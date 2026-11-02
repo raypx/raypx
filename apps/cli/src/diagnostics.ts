@@ -1,7 +1,10 @@
+import { InstanceError } from "@raypx/instances";
+import type { InstanceEnrollmentPhase } from "./runtime/instances";
 import type { JobRun } from "@raypx/jobs";
 import { LocalError } from "./runtime/errors";
 
 export type Diagnostic =
+  | { operation: "instance.enrollment"; status: InstanceEnrollmentPhase }
   | {
       operation: "cli.completed";
       mode: "command" | "stdio" | "version" | "tui";
@@ -32,7 +35,8 @@ export function recordDiagnostic(record: RecordDiagnostic | undefined, event: Di
 }
 
 export function diagnosticCode(error: unknown) {
-  return error instanceof LocalError && /^[A-Z][A-Z0-9_]{0,63}$/.test(error.code)
+  return (error instanceof LocalError || error instanceof InstanceError) &&
+    /^[A-Z][A-Z0-9_]{0,63}$/.test(error.code)
     ? error.code
     : "LOCAL_ERROR";
 }

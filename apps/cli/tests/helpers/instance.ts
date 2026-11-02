@@ -129,14 +129,31 @@ export async function enrollTestProfile(
       {
         env: { ...process.env, RAYPX_API_URL: server.url.origin, RAYPX_WEB_URL: server.url.origin },
         stdout: "ignore",
-        stderr: "ignore",
+        stderr: "pipe",
         windowsHide: true,
       },
     );
     const timer = setTimeout(() => child.kill(), 30_000);
     try {
-      if ((await child.exited) !== 0)
-        throw new Error("Test instance enrollment failed (" + stage + ")");
+      const [code, diagnostics] = await Promise.all([
+        child.exited,
+        new Response(child.stderr).text(),
+      ]);
+      let phase = "not-started";
+      for (const line of diagnostics.split("\n")) {
+        try {
+          const event = JSON.parse(line);
+          if (
+            event.operation === "instance.enrollment" &&
+            /^(starting|key-read|key-ready|request|approval|registered)$/.test(event.status)
+          )
+            phase = event.status;
+        } catch {
+          /* Ignore non-diagnostic output; never echo it. */
+        }
+      }
+      if (code !== 0)
+        throw new Error("Test instance enrollment failed (" + stage + "; " + phase + ")");
     } finally {
       clearTimeout(timer);
     }
