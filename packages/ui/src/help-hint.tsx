@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { InfoIcon } from "@raypx/icons/info";
 import { Button } from "./components/ui/button";
 import {
   Popover,
@@ -15,7 +15,7 @@ export function HelpHint({ label, description }: { label: string; description: s
         data-slot="button"
         render={<Button aria-label={label} size="icon-sm" variant="ghost" />}
       >
-        <Info aria-hidden="true" />
+        <InfoIcon aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent>
         <PopoverTitle>{label}</PopoverTitle>

@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
-import { Check, Circle } from "lucide-react";
+import { CheckIcon } from "@raypx/icons/check";
+import { CircleIcon } from "@raypx/icons/circle";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { PasswordInput, type PasswordInputProps } from "@raypx/ui/password-input";
@@ -29,7 +30,7 @@ export function PasswordField({
   const showRequirements = purpose === "new";
   const valid = validLength === true;
   const isInvalid = invalid || (showRequirements && validLength === false) || undefined;
-  const Icon = valid ? Check : Circle;
+  const Icon = valid ? CheckIcon : CircleIcon;
   return (
     <Field data-disabled={props.disabled} data-invalid={isInvalid}>
       <div className="flex flex-wrap items-center justify-between gap-2">

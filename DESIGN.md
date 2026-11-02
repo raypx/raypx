@@ -1,7 +1,7 @@
 # Raypx visual system
 
-Keep original logos and icons. Use neutral light/dark semantic tokens, Base UI
-for DOM primitives, Tailwind v4, Lucide icons and the existing system font stack.
+Keep original logos and brand artwork. Use neutral light/dark semantic tokens, Base UI
+for DOM primitives, Tailwind v4, Hugeicons Free through `@raypx/icons` and the existing system font stack.
 Primary actions are dark on light backgrounds and light on dark backgrounds.
 Express feature styles and responsive states with Tailwind utilities in components.
 CSS entry points register sources and shared styles; avoid feature-specific selectors.
@@ -16,7 +16,7 @@ after authentication. Native task views and push notifications are later work.
 
 Desktop and Web share one sidebar order: Projects and the pending inbox, then project
 shortcuts, then Automations and Memory above one fixed footer row for the account and
-the settings shortcut. Use consistent 20px Lucide icons, visible keyboard focus and
+the settings shortcut. Use consistent 20px icons with 1.75 strokes, visible keyboard focus and
 labelled tooltips in the collapsed rail; keep pending counts visible. Desktop separates
 local projects, with bounded recent shortcuts and searchable expansion, from connected
 computers, which appear only after sign-in. Guests get a direct sign-in action; the

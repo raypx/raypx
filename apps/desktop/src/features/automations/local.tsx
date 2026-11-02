@@ -1,6 +1,12 @@
 import { formText } from "../../form-data";
 import { useState, type FormEvent } from "react";
-import { ChevronRight, Clock, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
+import { ClockIcon } from "@raypx/icons/clock";
+import { PauseIcon } from "@raypx/icons/pause";
+import { EditIcon } from "@raypx/icons/edit";
+import { PlayIcon } from "@raypx/icons/play";
+import { PlusIcon } from "@raypx/icons/plus";
+import { DeleteIcon } from "@raypx/icons/delete";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -169,7 +175,7 @@ export function LocalJobsPage({
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
         </div>
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
-          <Plus size={16} />
+          <PlusIcon size={16} />
           {t("create")}
         </Button>
       </header>
@@ -346,7 +352,7 @@ export function LocalJobsPage({
       )}
       {shown?.length === 0 && editing === false ? (
         <div className="flex flex-col items-center px-6 py-20 text-center">
-          <Clock size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
+          <ClockIcon size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
           <h2 className="text-xl">{t("empty")}</h2>
           <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">{t("emptyHint")}</p>
         </div>
@@ -358,7 +364,7 @@ export function LocalJobsPage({
               key={job.id}
             >
               <div className="grid size-9.5 shrink-0 place-items-center rounded-[9px] border border-border text-muted-foreground">
-                <Clock size={21} />
+                <ClockIcon size={21} />
               </div>
               <div className="min-w-30 flex-1">
                 <div className="mb-2 flex items-center gap-2.5">
@@ -388,7 +394,7 @@ export function LocalJobsPage({
               </div>
               <div className="flex max-w-82.5 flex-wrap items-center justify-end gap-0.75 @max-4xl/main:ml-13.5 @max-4xl/main:max-w-none">
                 <Button variant="outline" disabled={busy} onClick={() => void run(job)}>
-                  <Play size={14} />
+                  <PlayIcon size={14} />
                   {t("run")}
                 </Button>
                 <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
@@ -401,7 +407,7 @@ export function LocalJobsPage({
                   aria-label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}
                   onClick={() => void update(job)}
                 >
-                  {job.enabled ? <Pause /> : <Play />}
+                  {job.enabled ? <PauseIcon /> : <PlayIcon />}
                 </Button>
                 <Button
                   variant="ghost"
@@ -410,7 +416,7 @@ export function LocalJobsPage({
                   aria-label={`${c("edit")}: ${job.name}`}
                   onClick={() => edit(job)}
                 >
-                  <Pencil />
+                  <EditIcon />
                 </Button>
                 <Button
                   variant="ghost"
@@ -419,7 +425,7 @@ export function LocalJobsPage({
                   aria-label={c("deleteNamed", { name: job.name })}
                   onClick={() => void remove(job)}
                 >
-                  <Trash2 />
+                  <DeleteIcon />
                 </Button>
               </div>
             </article>
@@ -450,7 +456,10 @@ export function LocalJobsPage({
                     />
                   }
                 >
-                  <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
+                  <ChevronRightIcon
+                    aria-hidden="true"
+                    className="group-data-panel-open:rotate-90"
+                  />
                   <span>{date(jobRun.startedAt)}</span>
                   <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
                     {c(jobRun.status)}

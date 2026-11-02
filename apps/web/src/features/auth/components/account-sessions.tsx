@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Monitor, RefreshCw } from "lucide-react";
+import { MonitorIcon } from "@raypx/icons/monitor";
+import { RefreshIcon } from "@raypx/icons/refresh";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -110,7 +111,7 @@ export function AccountSessions({
             setRevision((value) => value + 1);
           }}
         >
-          <RefreshCw
+          <RefreshIcon
             aria-hidden="true"
             className={loading ? "animate-spin motion-reduce:animate-none" : undefined}
           />
@@ -134,7 +135,7 @@ export function AccountSessions({
       <ul className="mt-3 divide-y divide-border">
         {sessions?.map((session) => (
           <li key={session.id} className="flex flex-wrap items-center gap-3 py-4">
-            <Monitor aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+            <MonitorIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1 basis-40">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-medium">

@@ -8,7 +8,10 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { cn } from "@raypx/ui/lib/utils";
-import { Folder, GitBranch, Laptop, MonitorSmartphone } from "lucide-react";
+import { FolderIcon } from "@raypx/icons/folder";
+import { GitBranchIcon } from "@raypx/icons/git-branch";
+import { LaptopIcon } from "@raypx/icons/laptop";
+import { DevicesIcon } from "@raypx/icons/devices";
 
 /** Project selection is navigation only; it never creates work. */
 export function ProjectList({
@@ -61,7 +64,7 @@ export function ProjectList({
         ) : (
           <EmptyState
             className="py-10"
-            icon={<MonitorSmartphone aria-hidden="true" />}
+            icon={<DevicesIcon aria-hidden="true" />}
             title={t("noRemoteProjects")}
             description={t("remoteProjectsEmpty")}
             action={connectionAction}
@@ -72,7 +75,9 @@ export function ProjectList({
         .map((device) => (
           <section key={device.id} className={compact ? "space-y-2" : "space-y-3"}>
             <h2 className="flex items-center gap-2 text-sm font-medium">
-              {!compact && <Laptop aria-hidden="true" className="size-4 text-muted-foreground" />}
+              {!compact && (
+                <LaptopIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+              )}
               <span className="min-w-0 truncate">{device.name}</span>
               <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                 <span
@@ -94,7 +99,7 @@ export function ProjectList({
                     className="h-auto min-h-10 justify-start gap-3 whitespace-normal text-left"
                     onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
                   >
-                    <Folder aria-hidden="true" className="shrink-0" />
+                    <FolderIcon aria-hidden="true" className="shrink-0" />
                     <span className="min-w-0 break-words">{project.name}</span>
                   </Button>
                 ))}
@@ -113,7 +118,7 @@ export function ProjectList({
                         onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
                       >
                         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                          <Folder aria-hidden="true" />
+                          <FolderIcon aria-hidden="true" />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span id={`${key}-name`} className="block font-medium break-words">
@@ -132,7 +137,7 @@ export function ProjectList({
                             </span>
                             {project.dirty && (
                               <span className="flex items-center gap-1">
-                                <GitBranch aria-hidden="true" className="size-3" />
+                                <GitBranchIcon aria-hidden="true" className="size-3" />
                                 {t("uncommitted")}
                               </span>
                             )}

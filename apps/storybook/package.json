@@ -9,8 +9,8 @@
     "check": "bun --check --tsconfig-override tsconfig.json"
   },
   "dependencies": {
+    "@raypx/icons": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

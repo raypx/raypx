@@ -17,6 +17,7 @@
 - [Development environment and commands](development/getting-started.md)
 - [Expo mobile development and login](development/mobile.md)
 - [Development page DevTools and diagnostic snapshots](development/devtools.md)
+- [Shared Hugeicons package](development/icons.md)
 - [Desktop connection configuration](development/desktop-configuration.md)
 - [Native cloud oRPC transport](development/desktop-orpc.md)
 - [Pi AI model calls](development/ai.md)

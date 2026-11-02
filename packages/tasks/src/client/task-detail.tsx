@@ -11,7 +11,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { Badge } from "@raypx/ui/components/ui/badge";
 
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -232,7 +232,7 @@ export function TaskDetail({
           <CollapsibleTrigger
             render={<Button type="button" variant="ghost" size="sm" className="group" />}
           >
-            <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
+            <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
             {t("viewConversation")}
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-3">
@@ -265,7 +265,7 @@ export function TaskDetail({
       )}
       <Collapsible>
         <CollapsibleTrigger render={<Button variant="ghost" size="sm" className="group" />}>
-          <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
+          <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
           {t("activity")}
         </CollapsibleTrigger>
         <CollapsibleContent>

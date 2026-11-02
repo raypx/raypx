@@ -1,7 +1,10 @@
 import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ArrowRight, Plus, Settings, Trash2 } from "lucide-react";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { PlusIcon } from "@raypx/icons/plus";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { DeleteIcon } from "@raypx/icons/delete";
 
 const meta = {
   title: "Primitives/Button",
@@ -69,12 +72,12 @@ export const WithIcons: Story = {
   render: (args) => (
     <div className="flex flex-wrap items-center gap-3">
       <Button {...args}>
-        <Plus aria-hidden="true" data-icon="inline-start" />
+        <PlusIcon aria-hidden="true" data-icon="inline-start" />
         New task
       </Button>
       <Button {...args} variant="outline">
         Next
-        <ArrowRight aria-hidden="true" data-icon="inline-end" />
+        <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
       </Button>
     </div>
   ),
@@ -84,16 +87,16 @@ export const IconButtons: Story = {
   render: () => (
     <div className="flex items-center gap-2">
       <IconButton label="Settings">
-        <Settings aria-hidden="true" />
+        <SettingsIcon aria-hidden="true" />
       </IconButton>
       <IconButton label="Delete" hint="Delete this device permanently" variant="destructive">
-        <Trash2 aria-hidden="true" />
+        <DeleteIcon aria-hidden="true" />
       </IconButton>
       <IconButton label="Add" variant="outline" size="icon-sm">
-        <Plus aria-hidden="true" />
+        <PlusIcon aria-hidden="true" />
       </IconButton>
       <IconButton label="Unavailable" disabled>
-        <Settings aria-hidden="true" />
+        <SettingsIcon aria-hidden="true" />
       </IconButton>
     </div>
   ),

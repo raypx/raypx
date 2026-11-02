@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
-import { ArrowLeft, Folder } from "lucide-react";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { FolderIcon } from "@raypx/icons/folder";
 import { apiUrl, authClient } from "../auth/client";
 import { taskClient } from "./client";
 
@@ -48,12 +49,12 @@ export function ProjectTools({
               />
             }
           >
-            <ArrowLeft aria-hidden="true" className="size-4" />
+            <ArrowLeftIcon aria-hidden="true" className="size-4" />
           </TooltipTrigger>
           <TooltipContent side="bottom">{t("allProjects")}</TooltipContent>
         </Tooltip>
         <span className="flex min-w-0 shrink-0 items-center gap-2 text-sm font-medium text-foreground">
-          <Folder
+          <FolderIcon
             aria-hidden="true"
             className="size-4 shrink-0 text-muted-foreground max-[760px]:hidden"
           />

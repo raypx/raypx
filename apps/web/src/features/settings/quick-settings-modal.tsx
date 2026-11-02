@@ -9,7 +9,7 @@ import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Settings } from "lucide-react";
+import { SettingsIcon } from "@raypx/icons/settings";
 import { Link } from "@tanstack/react-router";
 import { useQuickSettingsStore } from "./quick-settings-store";
 
@@ -44,7 +44,7 @@ export function QuickSettingsModal() {
             className="mt-6 w-full"
             render={<Link to="/settings" onClick={closeModal} />}
           >
-            <Settings data-icon="inline-start" aria-hidden="true" />
+            <SettingsIcon data-icon="inline-start" aria-hidden="true" />
             {c("settings")}
           </Button>
         </div>

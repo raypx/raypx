@@ -6,7 +6,12 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { cn } from "@raypx/ui/lib/utils";
-import { Check, FolderOpen, PenLine, RefreshCw, Settings, SquareTerminal } from "lucide-react";
+import { CheckIcon } from "@raypx/icons/check";
+import { FolderOpenIcon } from "@raypx/icons/folder-open";
+import { EditIcon } from "@raypx/icons/edit";
+import { RefreshIcon } from "@raypx/icons/refresh";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import { isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
 import { recentProjects, rememberProject } from "../tasks/project-history";
 
@@ -69,7 +74,7 @@ export function LocalWelcome() {
           disabled={busy || !isDesktop()}
           onClick={() => void chooseProject()}
         >
-          <FolderOpen aria-hidden="true" />
+          <FolderOpenIcon aria-hidden="true" />
           {t(busy ? "authorizing" : configured ? "chooseAnotherProject" : "chooseProject")}
         </Button>
       ),
@@ -104,7 +109,7 @@ export function LocalWelcome() {
           disabled={busy || setup.isFetching || !isDesktop()}
           onClick={() => void setup.refetch()}
         >
-          <RefreshCw aria-hidden="true" />
+          <RefreshIcon aria-hidden="true" />
           {t("checkAgain")}
         </Button>
       ),
@@ -124,7 +129,7 @@ export function LocalWelcome() {
             })
           }
         >
-          <PenLine aria-hidden="true" />
+          <EditIcon aria-hidden="true" />
           {t("writeTask")}
         </Button>
       ),
@@ -151,7 +156,7 @@ export function LocalWelcome() {
                 step.done && "border-foreground bg-foreground text-background",
               )}
             >
-              {step.done ? <Check className="size-4" /> : index + 1}
+              {step.done ? <CheckIcon className="size-4" /> : index + 1}
             </span>
             <div className="min-w-0">
               <h2 className="text-base font-semibold">{step.title}</h2>
@@ -169,11 +174,11 @@ export function LocalWelcome() {
       )}
       <div className="mt-5 flex flex-wrap gap-2">
         <Link to="/terminal" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-          <SquareTerminal aria-hidden="true" />
+          <TerminalWindowIcon aria-hidden="true" />
           {t("exploreLocal")}
         </Link>
         <Link to="/settings" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-          <Settings aria-hidden="true" />
+          <SettingsIcon aria-hidden="true" />
           {t("remoteLater")}
         </Link>
       </div>

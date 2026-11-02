@@ -7,7 +7,8 @@ import { taskClient } from "../../features/tasks/client";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { ShellActions } from "@raypx/blocks/shell";
 import { EmptyState } from "@raypx/ui/empty-state";
-import { Settings, WifiOff } from "lucide-react";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { OfflineIcon } from "@raypx/icons/offline";
 
 export const Route = createFileRoute("/(app)/projects")({
   staticData: {
@@ -27,7 +28,7 @@ function Projects() {
     return (
       <div role="alert">
         <EmptyState
-          icon={<WifiOff aria-hidden="true" />}
+          icon={<OfflineIcon aria-hidden="true" />}
           title={c("networkError")}
           action={
             <Button variant="outline" onClick={() => void router.invalidate()}>
@@ -43,7 +44,7 @@ function Projects() {
         <>
           <ShellActions>
             <Link to="/settings" className={buttonVariants({ variant: "outline" })}>
-              <Settings data-icon="inline-start" aria-hidden="true" />
+              <SettingsIcon data-icon="inline-start" aria-hidden="true" />
               {t("agentSettings")}
             </Link>
           </ShellActions>

@@ -10,22 +10,20 @@ import {
   EmptyTitle,
 } from "@raypx/ui/components/ui/empty";
 import { cn } from "@raypx/ui/lib/utils";
-import {
-  ArrowRight,
-  ChevronRight,
-  FilePenLine,
-  Inbox,
-  MonitorSmartphone,
-  Palette,
-  Laptop,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
+import { FileEditIcon } from "@raypx/icons/file-edit";
+import { InboxIcon } from "@raypx/icons/inbox";
+import { DevicesIcon } from "@raypx/icons/devices";
+import { PaletteIcon } from "@raypx/icons/palette";
+import { LaptopIcon } from "@raypx/icons/laptop";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 
 export function LandingHome() {
   const t = useTranslations("guest");
   const entries = [
-    { key: "approvals", to: "/approvals", icon: Inbox },
-    { key: "preferences", to: "/settings", icon: Palette },
+    { key: "approvals", to: "/approvals", icon: InboxIcon },
+    { key: "preferences", to: "/settings", icon: PaletteIcon },
   ] as const;
   return (
     <section
@@ -39,7 +37,7 @@ export function LandingHome() {
             className="pointer-events-none absolute -top-24 -right-24 -z-10 size-80 rounded-full border border-border/60 bg-linear-to-br from-muted/80 to-transparent"
           />
           <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <FilePenLine aria-hidden="true" className="size-4" />
+            <FileEditIcon aria-hidden="true" className="size-4" />
             {t("draft")}
           </span>
           <div className="flex max-w-lg flex-col gap-4">
@@ -61,16 +59,16 @@ export function LandingHome() {
                 "group min-h-11 max-w-full whitespace-normal motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0",
               )}
             >
-              <FilePenLine data-icon="inline-start" aria-hidden="true" />
+              <FileEditIcon data-icon="inline-start" aria-hidden="true" />
               {t("writeDraft")}
-              <ArrowRight
+              <ArrowRightIcon
                 data-icon="inline-end"
                 aria-hidden="true"
                 className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1"
               />
             </Link>
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <ShieldCheck aria-hidden="true" className="size-3.5 shrink-0" />
+              <ShieldCheckIcon aria-hidden="true" className="size-3.5 shrink-0" />
               {t("draftHint")}
             </span>
           </div>
@@ -87,13 +85,13 @@ export function LandingHome() {
                 className="absolute inset-3 rounded-full border border-border/60"
               />
               <span className="relative grid size-16 place-items-center rounded-2xl border border-border bg-background shadow-sm">
-                <MonitorSmartphone aria-hidden="true" className="size-8 text-muted-foreground" />
+                <DevicesIcon aria-hidden="true" className="size-8 text-muted-foreground" />
               </span>
               <span
                 aria-hidden="true"
                 className="absolute right-2 bottom-0 grid size-9 place-items-center rounded-xl border border-border bg-background shadow-sm"
               >
-                <Laptop className="size-4 text-muted-foreground" />
+                <LaptopIcon className="size-4 text-muted-foreground" />
               </span>
             </EmptyMedia>
             <EmptyTitle>
@@ -137,7 +135,7 @@ export function LandingHome() {
                   {t(`${key}Hint`)}
                 </span>
               </span>
-              <ChevronRight
+              <ChevronRightIcon
                 aria-hidden="true"
                 className="mt-3 size-4 shrink-0 text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-0.5 motion-safe:group-focus-visible:translate-x-0.5"
               />

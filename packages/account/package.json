@@ -20,8 +20,8 @@
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/i18n": "workspace:*",
-    "@raypx/ui": "workspace:*",
-    "lucide-react": "catalog:"
+    "@raypx/icons": "workspace:*",
+    "@raypx/ui": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",

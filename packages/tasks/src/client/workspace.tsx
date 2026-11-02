@@ -18,7 +18,13 @@ import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
-import { ArrowLeft, ArrowUpRight, Inbox, ListTodo, Plus, RefreshCw, X } from "lucide-react";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { ArrowUpRightIcon } from "@raypx/icons/arrow-up-right";
+import { InboxIcon } from "@raypx/icons/inbox";
+import { TaskListIcon } from "@raypx/icons/task-list";
+import { PlusIcon } from "@raypx/icons/plus";
+import { RefreshIcon } from "@raypx/icons/refresh";
+import { CloseIcon } from "@raypx/icons/close";
 import { IconButton } from "@raypx/ui/icon-button";
 
 import { TaskComposer, type TaskComposerDraft } from "./task-composer.js";
@@ -215,7 +221,7 @@ function Workspace({
         onClick={refresh}
         disabled={refreshing}
       >
-        <RefreshCw
+        <RefreshIcon
           aria-hidden="true"
           className={refreshing ? "animate-spin motion-reduce:animate-none" : undefined}
         />
@@ -229,7 +235,7 @@ function Workspace({
             requestAnimationFrame(() => composer.current?.focus());
           }}
         >
-          <Plus aria-hidden="true" />
+          <PlusIcon aria-hidden="true" />
           <span className="max-[760px]:sr-only">{t("create")}</span>
         </Button>
       )}
@@ -261,7 +267,7 @@ function Workspace({
                   <span className="max-w-48 truncate">
                     {selectedProject?.name ?? t("projectUnavailable")}
                   </span>
-                  <X aria-hidden="true" />
+                  <CloseIcon aria-hidden="true" />
                 </Button>
               )}
             </div>
@@ -299,7 +305,7 @@ function Workspace({
               {data.requests.length === 0 ? (
                 <EmptyState
                   className="py-10"
-                  icon={<Inbox aria-hidden="true" />}
+                  icon={<InboxIcon aria-hidden="true" />}
                   title={t(client.observed ? "managedNothingWaiting" : "nothingWaiting")}
                 />
               ) : (
@@ -379,7 +385,7 @@ function Workspace({
                     {data.tasks.length === 0 ? (
                       <EmptyState
                         className="py-10"
-                        icon={<ListTodo aria-hidden="true" />}
+                        icon={<TaskListIcon aria-hidden="true" />}
                         title={t("empty")}
                         description={t(local ? "localEmptyHint" : "emptyHint")}
                       />
@@ -470,7 +476,7 @@ function Workspace({
                         setReturnToList((value) => value + 1);
                       }}
                     >
-                      <ArrowLeft aria-hidden="true" />
+                      <ArrowLeftIcon aria-hidden="true" />
                       {t("backToTasks")}
                     </Button>
                   )}
@@ -495,7 +501,7 @@ function Workspace({
                     />
                   ) : (
                     <div className="flex min-h-72 flex-col items-center justify-center gap-2 px-5 text-center text-muted-foreground">
-                      <ListTodo aria-hidden="true" className="size-8" />
+                      <TaskListIcon aria-hidden="true" className="size-8" />
                       <h2 className="text-sm font-normal">{t("selectTask")}</h2>
                     </div>
                   )}
@@ -554,7 +560,7 @@ function PendingSessionRequest({
             {onOpenTask && (
               <Button variant="ghost" size="xs" onClick={() => onOpenTask(data.task)}>
                 {t("viewSession")}
-                <ArrowUpRight aria-hidden="true" />
+                <ArrowUpRightIcon aria-hidden="true" />
               </Button>
             )}
           </div>

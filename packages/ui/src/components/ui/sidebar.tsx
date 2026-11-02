@@ -4,7 +4,7 @@ import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "#lib/utils";
-import { PanelLeft } from "lucide-react";
+import { SidebarIcon } from "@raypx/icons/sidebar";
 
 import { useIsMobile } from "#hooks/use-mobile";
 import { Button } from "#components/ui/button";
@@ -276,7 +276,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      {children ?? <PanelLeft className="rtl:rotate-180" />}
+      {children ?? <SidebarIcon className="rtl:rotate-180" />}
     </Button>
   );
 }

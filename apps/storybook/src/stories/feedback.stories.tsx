@@ -5,7 +5,9 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { AsyncToaster, toast } from "@raypx/ui/toast";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CircleAlert, Inbox, Info } from "lucide-react";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { InboxIcon } from "@raypx/icons/inbox";
+import { InfoIcon } from "@raypx/icons/info";
 
 const meta = {
   title: "Patterns/Feedback",
@@ -19,12 +21,12 @@ export const Alerts: Story = {
   render: () => (
     <div className="flex max-w-md flex-col gap-3">
       <Alert>
-        <Info aria-hidden="true" />
+        <InfoIcon aria-hidden="true" />
         <AlertTitle>Desktop connected</AlertTitle>
         <AlertDescription>Remote tasks now run on this device.</AlertDescription>
       </Alert>
       <Alert variant="destructive">
-        <CircleAlert aria-hidden="true" />
+        <AlertCircleIcon aria-hidden="true" />
         <AlertTitle>Unable to reach the API</AlertTitle>
         <AlertDescription>Check your connection and try again.</AlertDescription>
       </Alert>
@@ -35,7 +37,7 @@ export const Alerts: Story = {
 export const Empty: Story = {
   render: () => (
     <EmptyState
-      icon={<Inbox aria-hidden="true" />}
+      icon={<InboxIcon aria-hidden="true" />}
       title="No tasks yet"
       description="Tasks you start from the desktop app appear here."
       action={<Button>Open desktop app</Button>}

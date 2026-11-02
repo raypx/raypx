@@ -13,7 +13,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { sidebarPreference } from "./sidebar-preference";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { SidebarCollapseIcon } from "@raypx/icons/sidebar-collapse";
+import { SidebarExpandIcon } from "@raypx/icons/sidebar-expand";
 import { useTranslations } from "@raypx/i18n/browser";
 import { cn } from "@raypx/ui/lib/utils";
 import { Logo } from "@raypx/ui/logo";
@@ -316,9 +317,9 @@ function ShellContents<To extends string>({
               }
             >
               {collapsed ? (
-                <PanelLeftOpen className="size-[18px]" />
+                <SidebarExpandIcon className="size-[18px]" />
               ) : (
-                <PanelLeftClose className="size-[18px]" />
+                <SidebarCollapseIcon className="size-[18px]" />
               )}
             </TooltipTrigger>
             <TooltipContent side="bottom">{toggleLabel}</TooltipContent>

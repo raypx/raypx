@@ -18,8 +18,8 @@
   "dependencies": {
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
+    "@raypx/icons": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "lucide-react": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

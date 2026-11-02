@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronDown, Folder, Plus, Search } from "lucide-react";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
+import { FolderIcon } from "@raypx/icons/folder";
+import { PlusIcon } from "@raypx/icons/plus";
+import { SearchIcon } from "@raypx/icons/search";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -93,7 +96,7 @@ export function ProjectNavigation() {
                 />
               }
             >
-              <Folder aria-hidden="true" className="shrink-0 stroke-[1.75]" />
+              <FolderIcon aria-hidden="true" className="shrink-0 stroke-[1.75]" />
               <span className="truncate">{project.name}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -116,7 +119,7 @@ export function ProjectNavigation() {
           aria-label={t("authorize")}
           render={<Link to="/welcome" />}
         >
-          <Plus aria-hidden="true" />
+          <PlusIcon aria-hidden="true" />
         </Button>
       </div>
       <SidebarGroupContent>
@@ -147,12 +150,12 @@ export function ProjectNavigation() {
                 />
               }
             >
-              <ChevronDown aria-hidden="true" className="group-data-panel-open:rotate-180" />
+              <ChevronDownIcon aria-hidden="true" className="group-data-panel-open:rotate-180" />
               {t("allProjects")}
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2 space-y-2">
               <div className="relative mx-1">
-                <Search
+                <SearchIcon
                   aria-hidden="true"
                   className="pointer-events-none absolute top-2.5 left-2.5 size-4 text-muted-foreground"
                 />

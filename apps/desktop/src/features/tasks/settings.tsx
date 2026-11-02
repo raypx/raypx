@@ -20,7 +20,7 @@ import { TerminalSettings } from "./terminal-settings";
 import { ReauthorizeHost } from "./reauthorize";
 import { RemoteBoundary } from "../auth/components/remote-boundary";
 import { Link } from "@tanstack/react-router";
-import { Compass } from "lucide-react";
+import { CompassIcon } from "@raypx/icons/compass";
 
 export function AgentSettings() {
   const t = useTranslations("tasks");
@@ -98,7 +98,7 @@ export function AgentSettings() {
           <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("localSetupHint")}</p>
         </div>
         <Link to="/welcome" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-          <Compass aria-hidden="true" />
+          <CompassIcon aria-hidden="true" />
           {localText("getStarted")}
         </Link>
       </div>

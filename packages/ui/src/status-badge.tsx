@@ -1,4 +1,8 @@
-import { Circle, CircleAlert, CircleCheck, Info, type LucideIcon } from "lucide-react";
+import { CircleIcon } from "@raypx/icons/circle";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { InfoIcon } from "@raypx/icons/info";
+import type { IconComponent } from "@raypx/icons";
 
 import { Badge, type BadgeProps } from "./components/ui/badge";
 import { cn } from "./lib/utils";
@@ -13,13 +17,13 @@ export interface StatusBadgeProps {
 
 const toneConfig: Record<
   StatusTone,
-  { icon: LucideIcon; variant: NonNullable<BadgeProps["variant"]> }
+  { icon: IconComponent; variant: NonNullable<BadgeProps["variant"]> }
 > = {
-  neutral: { icon: Circle, variant: "outline" },
-  info: { icon: Info, variant: "secondary" },
-  warning: { icon: CircleAlert, variant: "secondary" },
-  success: { icon: CircleCheck, variant: "secondary" },
-  danger: { icon: CircleAlert, variant: "destructive" },
+  neutral: { icon: CircleIcon, variant: "outline" },
+  info: { icon: InfoIcon, variant: "secondary" },
+  warning: { icon: AlertCircleIcon, variant: "secondary" },
+  success: { icon: CheckCircleIcon, variant: "secondary" },
+  danger: { icon: AlertCircleIcon, variant: "destructive" },
 };
 
 export function StatusBadge({ label, tone = "neutral", className }: StatusBadgeProps) {

@@ -31,7 +31,12 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { ChevronDown, FilePenLine, Plus, Save, Send, Trash2 } from "lucide-react";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
+import { FileEditIcon } from "@raypx/icons/file-edit";
+import { PlusIcon } from "@raypx/icons/plus";
+import { SaveIcon } from "@raypx/icons/save";
+import { SendIcon } from "@raypx/icons/send";
+import { DeleteIcon } from "@raypx/icons/delete";
 import { isTaskActive } from "../index.js";
 import { failureCode } from "./failure.js";
 import { useTaskDrafts } from "./use-task-drafts.js";
@@ -421,11 +426,11 @@ function TaskComposerView({
             />
           }
         >
-          <Send aria-hidden="true" className="shrink-0 text-muted-foreground" />
+          <SendIcon aria-hidden="true" className="shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate text-sm">
             {expanded ? t("create") : prompt.trim() || t("composerPreview")}
           </span>
-          <ChevronDown
+          <ChevronDownIcon
             aria-hidden="true"
             className="shrink-0 text-muted-foreground group-data-panel-open:rotate-180"
           />
@@ -465,7 +470,7 @@ function TaskComposerView({
                   />
                 }
               >
-                <ChevronDown
+                <ChevronDownIcon
                   aria-hidden="true"
                   className="shrink-0 group-data-panel-open:rotate-180"
                 />
@@ -604,7 +609,7 @@ function TaskComposerView({
                   disabled={busy || (!prompt && !draftId)}
                   onClick={() => void newDraft()}
                 >
-                  <Plus aria-hidden="true" />
+                  <PlusIcon aria-hidden="true" />
                 </IconButton>
                 <IconButton
                   size="icon-sm"
@@ -614,7 +619,7 @@ function TaskComposerView({
                   disabled={busy || !draftReady || !prompt.trim()}
                   onClick={saveDraft}
                 >
-                  <Save aria-hidden="true" />
+                  <SaveIcon aria-hidden="true" />
                 </IconButton>
               </div>
               <Button
@@ -623,7 +628,7 @@ function TaskComposerView({
                   (!guest && (!available || occupied)) || busy || !prompt.trim() || !budgetReady
                 }
               >
-                <Send aria-hidden="true" />
+                <SendIcon aria-hidden="true" />
                 {t(busy ? "sending" : guest ? "signInToSend" : "send")}
               </Button>
             </div>
@@ -655,10 +660,13 @@ function TaskComposerView({
               />
             }
           >
-            <FilePenLine aria-hidden="true" />
+            <FileEditIcon aria-hidden="true" />
             {t("drafts")}
             <span className="text-xs tabular-nums">{drafts.length}</span>
-            <ChevronDown aria-hidden="true" className="ml-auto group-data-panel-open:rotate-180" />
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="ml-auto group-data-panel-open:rotate-180"
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <ul className="divide-y divide-border rounded-lg border border-border">
@@ -672,7 +680,7 @@ function TaskComposerView({
                     disabled={busy}
                     onClick={() => void openDraft(draft)}
                   >
-                    <FilePenLine aria-hidden="true" className="shrink-0 text-muted-foreground" />
+                    <FileEditIcon aria-hidden="true" className="shrink-0 text-muted-foreground" />
                     <span className="min-w-0">
                       <span className="line-clamp-1 text-sm">{draft.prompt}</span>
                       <span className="block truncate text-xs text-muted-foreground">
@@ -692,7 +700,7 @@ function TaskComposerView({
                     disabled={busy}
                     onClick={() => deleteDraft(draft.id)}
                   >
-                    <Trash2 aria-hidden="true" />
+                    <DeleteIcon aria-hidden="true" />
                   </Button>
                 </li>
               ))}

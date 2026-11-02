@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { ShellToolbar } from "@raypx/blocks/shell";
-import { Folder } from "lucide-react";
+import { FolderIcon } from "@raypx/icons/folder";
 import { apiUrl, authClient } from "../auth/client";
 import { isDesktop } from "../../lib/desktop";
 import { taskClient } from "./client";
@@ -53,7 +53,7 @@ export function ProjectTools({
   return (
     <ShellToolbar>
       <span className="flex min-w-0 shrink-0 items-center gap-2 text-sm font-medium text-foreground">
-        <Folder
+        <FolderIcon
           aria-hidden="true"
           className="size-4 shrink-0 text-muted-foreground max-[760px]:hidden"
         />

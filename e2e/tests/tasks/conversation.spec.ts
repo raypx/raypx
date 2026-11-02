@@ -218,7 +218,20 @@ for (const [surface, base] of surfaces) {
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true);
       await page.getByRole("main").evaluate((element) => element.scrollTo(0, element.scrollHeight));
-      await page.getByRole("link", { name: "Settings", exact: true }).click();
+      if (surface === "Web") {
+        await page
+          .getByRole("complementary")
+          .getByRole("button", { name: "Settings", exact: true })
+          .click();
+        const settings = page.getByRole("dialog");
+        await expect(
+          settings.getByRole("heading", { name: "Settings", exact: true }),
+        ).toBeVisible();
+        await settings.getByRole("button", { name: "Settings", exact: true }).click();
+        await expect(settings).toBeHidden();
+      } else {
+        await page.getByRole("link", { name: "Settings", exact: true }).click();
+      }
       await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
       await expect
         .poll(() => page.getByRole("main").evaluate((element) => element.scrollTop))

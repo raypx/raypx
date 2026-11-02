@@ -23,9 +23,9 @@
   },
   "dependencies": {
     "@raypx/i18n": "workspace:*",
+    "@raypx/icons": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "better-auth": "catalog:",
-    "lucide-react": "catalog:"
+    "better-auth": "catalog:"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",

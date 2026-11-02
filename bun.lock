@@ -98,6 +98,7 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/tasks": "workspace:*",
@@ -107,7 +108,6 @@
         "@tanstack/react-start": "catalog:",
         "@xterm/addon-fit": "catalog:",
         "@xterm/xterm": "catalog:",
-        "lucide-react": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
         "zustand": "catalog:",
@@ -171,8 +171,8 @@
       "name": "ui-storybook",
       "version": "0.0.0",
       "dependencies": {
+        "@raypx/icons": "workspace:*",
         "@raypx/ui": "workspace:*",
-        "lucide-react": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
       },
@@ -200,6 +200,7 @@
         "@raypx/blocks": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/tasks": "workspace:*",
@@ -208,7 +209,6 @@
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-router-ssr-query": "catalog:",
         "@tanstack/react-start": "catalog:",
-        "lucide-react": "catalog:",
         "nitro": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
@@ -239,6 +239,7 @@
       "version": "0.0.0",
       "devDependencies": {
         "@playwright/test": "catalog:dev",
+        "@raypx/account": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
@@ -308,8 +309,8 @@
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/ui": "workspace:*",
-        "lucide-react": "catalog:",
       },
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
@@ -362,9 +363,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/ui": "workspace:*",
         "better-auth": "catalog:",
-        "lucide-react": "catalog:",
       },
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
@@ -388,8 +389,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/ui": "workspace:*",
-        "lucide-react": "catalog:",
       },
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
@@ -586,16 +587,39 @@
         "react": "^19.3.1",
       },
     },
+    "packages/icons": {
+      "name": "@raypx/icons",
+      "version": "0.0.0",
+      "dependencies": {
+        "@hugeicons/core-free-icons": "catalog:",
+        "@hugeicons/react": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+        "@testing-library/react": "catalog:dev",
+        "@types/react": "catalog:dev",
+        "@types/react-dom": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "happy-dom": "catalog:dev",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "vite": "catalog:dev",
+      },
+      "peerDependencies": {
+        "react": "^19.3.1",
+      },
+    },
     "packages/jobs": {
       "name": "@raypx/jobs",
       "version": "0.0.0",
       "dependencies": {
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/ui": "workspace:*",
         "croner": "catalog:",
-        "lucide-react": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -632,8 +656,8 @@
       "dependencies": {
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/ui": "workspace:*",
-        "lucide-react": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -706,11 +730,11 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-virtual": "catalog:",
         "diff": "catalog:",
-        "lucide-react": "catalog:",
         "react-markdown": "catalog:",
         "remark-gfm": "catalog:",
       },
@@ -766,9 +790,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@base-ui/react": "catalog:",
+        "@raypx/icons": "workspace:*",
         "class-variance-authority": "catalog:",
         "cn": "catalog:",
-        "lucide-react": "catalog:",
         "tailwindcss": "catalog:",
         "tw-animate-css": "catalog:",
       },
@@ -814,6 +838,8 @@
     "@cloudflare/containers": "0.3.7",
     "@earendil-works/pi-agent-core": "1.4.0",
     "@earendil-works/pi-ai": "1.4.0",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "@orpc/client": "2.0.0-beta.46",
     "@orpc/contract": "2.0.0-beta.46",
     "@orpc/evlog": "2.0.0-beta.46",
@@ -850,7 +876,6 @@
     "expo-web-browser": "~58.0.7",
     "hono": "^4.13.14",
     "ioredis": "^6.0.0",
-    "lucide-react": "^1.63.0",
     "nitro": "3.0.261029-rc",
     "postgres": "4.0.0",
     "react": "19.3.1",
@@ -1321,6 +1346,10 @@
 
     "@graphql-typed-document-node/core": ["@graphql-typed-document-node/core@3.2.0", "", { "peerDependencies": { "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0" } }, "sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ=="],
 
+    "@hugeicons/core-free-icons": ["@hugeicons/core-free-icons@4.4.0", "", {}, "sha512-7Mz8bmGoY6tZ6l3C2TXwNMLVSr0I8HPwjjFIERAuJFj3rWwLxdF2ZLkDqdrVuEE1dx5b/VXyIsP4WoSU6Q40KQ=="],
+
+    "@hugeicons/react": ["@hugeicons/react@1.1.10", "", { "peerDependencies": { "react": ">=16.0.0" } }, "sha512-9tAsd92yMVVGP+E+d8cM+wc0VnXuYZHNbWQi7TOe8k2neawmhiaFmVFbzyruejhOMa197/LbgvSED32ayUo3ZA=="],
+
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
     "@img/sharp-darwin-arm64": ["@img/sharp-darwin-arm64@0.35.5", "", { "optionalDependencies": { "@img/sharp-libvips-darwin-arm64": "1.3.4" }, "os": "darwin", "cpu": "arm64" }, "sha512-QRUlFQ0WxvdWyqqG/WtI3iupfD5rBzmCHXSdPsY91sAtVtTo7Q4cb6zOccZ3gqEqkr0f1As1ehLqmEpDsRf+lg=="],
@@ -1730,6 +1759,8 @@
     "@raypx/host": ["@raypx/host@workspace:packages/host"],
 
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
+
+    "@raypx/icons": ["@raypx/icons@workspace:packages/icons"],
 
     "@raypx/infra-railway": ["@raypx/infra-railway@workspace:infra/railway"],
 
@@ -2744,8 +2775,6 @@
     "loupe": ["loupe@3.2.1", "", {}, "sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ=="],
 
     "lru-cache": ["lru-cache@11.5.3", "", {}, "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg=="],
-
-    "lucide-react": ["lucide-react@1.65.0", "", { "peerDependencies": { "@types/react": "*", "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" }, "optionalPeers": ["@types/react"] }, "sha512-roSdtzudEY39i2hn5LLjA8toYfhF2z4S10WSqZF4ubXpHlOmNTvaxMxZLdJfQDi6pEifQWX+cRmYihKSsvAxfA=="],
 
     "lz-string": ["lz-string@1.5.0", "", { "bin": { "lz-string": "bin/bin.js" } }, "sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ=="],
 

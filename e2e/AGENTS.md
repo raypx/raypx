@@ -25,8 +25,10 @@ Ordinary cases live in access/auth/settings/navigation/analytics and feature sui
 task conversation/history/drafts use `tests/tasks/`. Access owns private memory/job
 guards, while their feature suites own signed-in journeys. Run both for boundary
 changes (for example `-- 'access|memory'`). Shared response fixtures are per case;
-never reuse an authenticated context across cases. Named steps identify checks
-within a combined journey. See docs/development/test-cases.md for the coverage map.
+never reuse an authenticated context across cases. `signedInAccount` supplies the
+member `account.access` projection for its own account ID; custom signed-in cases
+use `accountAccessFixture`. The automatic public fixture defaults to guest access.
+Named steps identify checks within a combined journey. See docs/development/test-cases.md for the coverage map.
 
 ## Constraints
 

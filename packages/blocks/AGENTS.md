@@ -55,7 +55,7 @@ Code outside `src/components/` stays private.
 
 ## Constraints
 
-- Depend only on UI, i18n and Lucide. Never import account, auth, tasks, analytics,
+- Depend only on UI, i18n and Icons. Never import account, auth, tasks, analytics,
   a router or a remote client; take them as props or children.
 - Add a block when at least two applications render the same composition.
   Single-application layouts stay in that application.

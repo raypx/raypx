@@ -6,7 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 export function ContextSnapshot({ snapshot }: { snapshot: TaskContextSnapshot }) {
   const t = useTranslations("memory");
   const format = useFormatter();
@@ -26,7 +26,10 @@ export function ContextSnapshot({ snapshot }: { snapshot: TaskContextSnapshot })
               />
             }
           >
-            <ChevronRight aria-hidden="true" className="shrink-0 group-data-panel-open:rotate-90" />
+            <ChevronRightIcon
+              aria-hidden="true"
+              className="shrink-0 group-data-panel-open:rotate-90"
+            />
             <span className="min-w-0 wrap-anywhere">{source.name}</span>
             <span className="text-xs text-muted-foreground">
               {t(source.kind)} · {t("revision", { revision: String(source.revision) })} ·{" "}

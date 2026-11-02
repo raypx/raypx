@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { FolderCode, Monitor, ShieldCheck, type LucideIcon } from "lucide-react";
+import { CodeFolderIcon } from "@raypx/icons/code-folder";
+import { MonitorIcon } from "@raypx/icons/monitor";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
+import type { IconComponent } from "@raypx/icons";
 import { Logo } from "@raypx/ui/logo";
 import { useTranslations } from "@raypx/i18n/browser";
 
@@ -24,7 +27,7 @@ export function AuthBrandSection({ siteName }: AuthBrandSectionProps) {
           aria-hidden="true"
           className="flex size-14 items-center justify-center rounded-2xl border border-border bg-background"
         >
-          <FolderCode size={28} strokeWidth={1.5} />
+          <CodeFolderIcon size={28} strokeWidth={1.5} />
         </div>
         <h2 className="text-3xl font-semibold leading-tight tracking-tight xl:text-4xl">
           {t("brandTitle")}
@@ -32,15 +35,15 @@ export function AuthBrandSection({ siteName }: AuthBrandSectionProps) {
         <p className="text-sm leading-7 text-muted-foreground">{t("brandIntro")}</p>
       </div>
       <ul className="flex flex-col gap-5">
-        <FeatureItem icon={Monitor} text={t("featureLocal")} />
-        <FeatureItem icon={FolderCode} text={t("featureRemote")} />
-        <FeatureItem icon={ShieldCheck} text={t("featureApprovals")} />
+        <FeatureItem icon={MonitorIcon} text={t("featureLocal")} />
+        <FeatureItem icon={CodeFolderIcon} text={t("featureRemote")} />
+        <FeatureItem icon={ShieldCheckIcon} text={t("featureApprovals")} />
       </ul>
     </aside>
   );
 }
 
-function FeatureItem({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
+function FeatureItem({ icon: Icon, text }: { icon: IconComponent; text: string }) {
   return (
     <li className="flex items-center gap-3 text-sm text-muted-foreground">
       <Icon size={18} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />

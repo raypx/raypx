@@ -1,4 +1,6 @@
-import { Monitor, Moon, Sun } from "lucide-react";
+import { MonitorIcon } from "@raypx/icons/monitor";
+import { MoonIcon } from "@raypx/icons/moon";
+import { SunIcon } from "@raypx/icons/sun";
 import { use } from "react";
 import { cn } from "../lib/utils";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
@@ -33,9 +35,9 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
     >
       {(
         [
-          ["light", Sun],
-          ["dark", Moon],
-          ["system", Monitor],
+          ["light", SunIcon],
+          ["dark", MoonIcon],
+          ["system", MonitorIcon],
         ] as const
       ).map(([theme, Icon]) => (
         <label

@@ -1,5 +1,8 @@
 import type { ComponentType, ReactNode } from "react";
-import { ArrowRight, CircleCheck, CircleUserRound, LogOut } from "lucide-react";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { UserCircleIcon } from "@raypx/icons/user-circle";
+import { LogoutIcon } from "@raypx/icons/logout";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { AccountProfile } from "../index";
@@ -19,7 +22,7 @@ export function SignedOutAccount({
   const c = useTranslations("common");
   return (
     <div className="py-8">
-      <CircleUserRound className="mb-5 text-muted-foreground" size={48} strokeWidth={1} />
+      <UserCircleIcon className="mb-5 text-muted-foreground" size={48} strokeWidth={1} />
       <h2 className="text-[22px]">{t("signedOut")}</h2>
       <p className="mt-2.5 mb-7 max-w-[52ch] text-muted-foreground">{t("signedOutIntro")}</p>
       <div className="flex flex-wrap items-center gap-5">
@@ -28,7 +31,7 @@ export function SignedOutAccount({
           className="inline-flex min-h-[38px] items-center gap-2.5 rounded-lg bg-primary px-[15px] font-medium text-primary-foreground hover:opacity-85"
         >
           {c("signIn")}
-          <ArrowRight size={16} />
+          <ArrowRightIcon size={16} />
         </LinkComponent>
         <LinkComponent
           to="signup"
@@ -62,13 +65,13 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
           <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <span className="truncate">{account.email}</span>
             <span className="inline-flex items-center gap-1 text-xs">
-              <CircleCheck aria-hidden="true" size={14} />
+              <CheckCircleIcon aria-hidden="true" size={14} />
               {t("verifiedLabel")}
             </span>
           </p>
         </div>
         <Button variant="outline" disabled={busy} onClick={() => void onSignOut()}>
-          <LogOut aria-hidden="true" />
+          <LogoutIcon aria-hidden="true" />
           {busy ? c("working") : c("signOut")}
         </Button>
       </div>

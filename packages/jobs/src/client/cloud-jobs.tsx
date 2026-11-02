@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  CalendarClock,
-  ChevronRight,
-  Pause,
-  Pencil,
-  Play,
-  Plus,
-  RefreshCw,
-  Trash2,
-} from "lucide-react";
+import { ScheduleIcon } from "@raypx/icons/schedule";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
+import { PauseIcon } from "@raypx/icons/pause";
+import { EditIcon } from "@raypx/icons/edit";
+import { PlayIcon } from "@raypx/icons/play";
+import { PlusIcon } from "@raypx/icons/plus";
+import { RefreshIcon } from "@raypx/icons/refresh";
+import { DeleteIcon } from "@raypx/icons/delete";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
@@ -302,7 +300,7 @@ function CloudJobs({
               void load();
             }}
           >
-            <RefreshCw aria-hidden="true" />
+            <RefreshIcon aria-hidden="true" />
           </IconButton>
           <Button
             disabled={!data || busy}
@@ -312,7 +310,7 @@ function CloudJobs({
               setError(undefined);
             }}
           >
-            <Plus aria-hidden="true" />
+            <PlusIcon aria-hidden="true" />
             {t("create")}
           </Button>
         </div>
@@ -349,7 +347,7 @@ function CloudJobs({
       {!data && loading && <LoadingState label={c("loading")} />}
       {shown?.length === 0 && editing === false && (
         <div className="py-14 text-center">
-          <CalendarClock className="mx-auto mb-4 size-9 text-muted-foreground" />
+          <ScheduleIcon className="mx-auto mb-4 size-9 text-muted-foreground" />
           <h2 className="text-lg">{t("empty")}</h2>
           <p className="mx-auto mt-2 max-w-[55ch] text-sm text-muted-foreground">
             {t("emptyHint")}
@@ -389,7 +387,7 @@ function CloudJobs({
                 disabled={busy || !data.enabled}
                 onClick={() => void runNow(job)}
               >
-                <Play aria-hidden="true" />
+                <PlayIcon aria-hidden="true" />
                 {pendingRuns.includes(job.id) ? t("checkRun") : j("run")}
               </Button>
               <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
@@ -402,7 +400,7 @@ function CloudJobs({
                 disabled={busy}
                 onClick={() => void toggle(job)}
               >
-                {job.enabled ? <Pause /> : <Play />}
+                {job.enabled ? <PauseIcon /> : <PlayIcon />}
               </Button>
               <Button
                 variant="ghost"
@@ -414,7 +412,7 @@ function CloudJobs({
                   setError(undefined);
                 }}
               >
-                <Pencil />
+                <EditIcon />
               </Button>
               <Button
                 variant="ghost"
@@ -423,7 +421,7 @@ function CloudJobs({
                 disabled={busy}
                 onClick={() => void remove(job)}
               >
-                <Trash2 />
+                <DeleteIcon />
               </Button>
             </div>
           </article>
@@ -458,7 +456,7 @@ function CloudJobs({
                   />
                 }
               >
-                <ChevronRight className="group-data-panel-open:rotate-90" aria-hidden="true" />
+                <ChevronRightIcon className="group-data-panel-open:rotate-90" aria-hidden="true" />
                 <span>{date(run.startedAt)}</span>
                 <span>{t(`status_${run.status}`)}</span>
                 <span>{t(run.trigger === "manual" ? "manual" : "scheduled")}</span>

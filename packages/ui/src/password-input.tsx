@@ -1,5 +1,7 @@
 import { useId, useState, type ComponentProps } from "react";
-import { ArrowBigUpDash, Eye, EyeOff } from "lucide-react";
+import { CapsLockIcon } from "@raypx/icons/caps-lock";
+import { EyeIcon } from "@raypx/icons/eye";
+import { EyeOffIcon } from "@raypx/icons/eye-off";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group";
 import { IconButton } from "./icon-button";
 
@@ -60,7 +62,7 @@ export function PasswordInput({
             title={labels.capsLock}
             className="inline-flex [&>svg]:size-4"
           >
-            <ArrowBigUpDash aria-hidden="true" />
+            <CapsLockIcon aria-hidden="true" />
             <span className="sr-only">{labels.capsLock}</span>
           </span>
         )}
@@ -73,7 +75,7 @@ export function PasswordInput({
           disabled={disabled}
           onClick={() => setVisible((value) => !value)}
         >
-          {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+          {visible ? <EyeOffIcon aria-hidden="true" /> : <EyeIcon aria-hidden="true" />}
         </IconButton>
       </InputGroupAddon>
     </InputGroup>

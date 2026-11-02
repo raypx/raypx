@@ -77,6 +77,11 @@ schemas, privacy policies and destinations. Its safe/managed entries are univers
 while context and stream entries remain Node/Bun-only. Keep it local while the
 product workflow settles; no Kit release or archive is required.
 
+`@raypx/icons` is the shared browser icon library consumed by UI, Blocks, feature
+views, Web, Desktop and Storybook. It owns the Hugeicons Free renderer and explicit
+per-icon exports; UI registers its styles without an Icons → UI dependency. See
+[shared icons](icons.md).
+
 ## Agent domain and page boundaries
 
 `@raypx/core` is the universal source of task-domain schemas, inferred types and

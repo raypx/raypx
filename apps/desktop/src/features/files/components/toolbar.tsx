@@ -1,5 +1,8 @@
 import type { RootGrant } from "@raypx/contracts/local";
-import { ArrowUp, Folder, Plus, RefreshCw } from "lucide-react";
+import { ArrowUpIcon } from "@raypx/icons/arrow-up";
+import { FolderIcon } from "@raypx/icons/folder";
+import { PlusIcon } from "@raypx/icons/plus";
+import { RefreshIcon } from "@raypx/icons/refresh";
 import { Button } from "@raypx/ui/components/ui/button";
 import { SelectField } from "@raypx/ui/select-field";
 import { IconButton } from "@raypx/ui/icon-button";
@@ -46,18 +49,18 @@ export function FilesToolbar({
           disabled={!path || busy}
           onClick={() => void onDirectory(rootId, path.split("/").slice(0, -1).join("/"))}
         >
-          <ArrowUp aria-hidden="true" />
+          <ArrowUpIcon aria-hidden="true" />
         </IconButton>
         <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "file" })}>
-          <Plus size={16} />
+          <PlusIcon size={16} />
           {t("createFile")}
         </Button>
         <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "folder" })}>
-          <Folder size={16} />
+          <FolderIcon size={16} />
           {t("createFolder")}
         </Button>
         <IconButton label={c("refresh")} disabled={busy} onClick={() => void onRefresh()}>
-          <RefreshCw aria-hidden="true" />
+          <RefreshIcon aria-hidden="true" />
         </IconButton>
       </div>
     </div>

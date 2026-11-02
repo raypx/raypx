@@ -1,6 +1,11 @@
 import { styledSlot } from "#lib/styled-slot";
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
-import { CircleCheck, CircleX, Info, LoaderCircle, TriangleAlert, X } from "lucide-react";
+import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { CloseCircleIcon } from "@raypx/icons/close-circle";
+import { InfoIcon } from "@raypx/icons/info";
+import { SpinnerIcon } from "@raypx/icons/spinner";
+import { WarningIcon } from "@raypx/icons/warning";
+import { CloseIcon } from "@raypx/icons/close";
 import type { ReactNode } from "react";
 
 import { cn } from "#lib/utils";
@@ -90,17 +95,17 @@ function ToastClose({
       )}
       {...props}
     >
-      {children ?? <X aria-hidden="true" />}
+      {children ?? <CloseIcon aria-hidden="true" />}
     </ToastPrimitive.Close>
   );
 }
 
 const toastIcons: Readonly<Record<string, ReactNode>> = {
-  success: <CircleCheck aria-hidden="true" />,
-  info: <Info aria-hidden="true" />,
-  warning: <TriangleAlert aria-hidden="true" />,
-  error: <CircleX aria-hidden="true" className="text-destructive" />,
-  loading: <LoaderCircle aria-hidden="true" className="animate-spin" />,
+  success: <CheckCircleIcon aria-hidden="true" />,
+  info: <InfoIcon aria-hidden="true" />,
+  warning: <WarningIcon aria-hidden="true" />,
+  error: <CloseCircleIcon aria-hidden="true" className="text-destructive" />,
+  loading: <SpinnerIcon aria-hidden="true" className="animate-spin" />,
 };
 
 function ToastIcon({ type }: { type: string | undefined }) {

@@ -1,5 +1,9 @@
 import { useState, type ComponentType, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { SpinnerIcon } from "@raypx/icons/spinner";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -130,7 +134,7 @@ export function AuthForm({
         to="account"
         className="mb-10 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <ArrowLeft size={16} aria-hidden="true" />
+        <ArrowLeftIcon size={16} aria-hidden="true" />
         {backLabel ?? c("account")}
       </LinkComponent>
       <header className="mb-8 flex flex-col gap-3">
@@ -154,19 +158,19 @@ export function AuthForm({
       <div className="flex flex-col gap-5">
         {(params.has("error") || invalidReset) && (
           <Alert variant="destructive">
-            <CircleAlert aria-hidden="true" />
+            <AlertCircleIcon aria-hidden="true" />
             <AlertDescription>{t("invalidLink")}</AlertDescription>
           </Alert>
         )}
         {messageKey && (
           <Alert role="status">
-            <CircleCheck aria-hidden="true" />
+            <CheckCircleIcon aria-hidden="true" />
             <AlertDescription>{t(messageKey)}</AlertDescription>
           </Alert>
         )}
         {error && !invalidReset && (
           <Alert variant="destructive">
-            <CircleAlert aria-hidden="true" />
+            <AlertCircleIcon aria-hidden="true" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -239,7 +243,7 @@ export function AuthForm({
                 disabled={busy || (mailMode && cooldown.remaining > 0)}
               >
                 {busy ? (
-                  <LoaderCircle
+                  <SpinnerIcon
                     data-icon="inline-start"
                     className="motion-safe:animate-spin"
                     aria-hidden="true"
@@ -253,7 +257,7 @@ export function AuthForm({
                       ? c("signIn")
                       : t(modeLabels[mode].submit)}
                 {!busy && !(mailMode && cooldown.remaining > 0) && (
-                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                  <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
                 )}
               </Button>
             </FieldGroup>

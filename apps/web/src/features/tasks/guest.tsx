@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
-import { History } from "lucide-react";
+import { HistoryIcon } from "@raypx/icons/history";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
 import type { TaskWorkspacePort } from "@raypx/tasks/model";
@@ -64,7 +64,7 @@ export function GuestTasks({
         )}
         <div className="min-w-0 rounded-xl border border-border p-5">
           <span className="grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground">
-            <History aria-hidden="true" className="size-4.5" />
+            <HistoryIcon aria-hidden="true" className="size-4.5" />
           </span>
           <h2 className="mt-3 text-base font-semibold">{g("history")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{g("historyHint")}</p>

@@ -12,7 +12,7 @@ import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Bot } from "lucide-react";
+import { AgentIcon } from "@raypx/icons/agent";
 import { Badge } from "@raypx/ui/components/ui/badge";
 
 export function TaskList({
@@ -172,7 +172,7 @@ export function TaskList({
                     aria-hidden="true"
                     className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground"
                   >
-                    <Bot className="size-4" />
+                    <AgentIcon className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1 line-clamp-2 text-sm font-medium [overflow-wrap:anywhere]">
                     {task.prompt}

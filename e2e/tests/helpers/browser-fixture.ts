@@ -1,10 +1,11 @@
 import { test as base } from "@playwright/test";
-import { authResponse } from "./account-fixture.js";
+import { accountAccessFixture, authResponse } from "./account-fixture.js";
 
 /** Browser response fixtures; real authentication remains in the PostgreSQL gate. */
 export const test = base.extend<{ publicApi: undefined }>({
   publicApi: [
     async ({ page }, use) => {
+      await accountAccessFixture(page, null);
       await page.route("**/rpc/configuration/public", (route) =>
         authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
       );

@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { ChevronsUpDown, CircleUserRound, LogIn, LogOut } from "lucide-react";
+import { ChevronsUpDownIcon } from "@raypx/icons/chevrons-up-down";
+import { UserCircleIcon } from "@raypx/icons/user-circle";
+import { LoginIcon } from "@raypx/icons/login";
+import { LogoutIcon } from "@raypx/icons/logout";
 import { Avatar } from "@raypx/ui/avatar";
 import {
   DropdownMenu,
@@ -52,7 +55,7 @@ export function AccountMenu({
             />
           }
         >
-          <LogIn aria-hidden="true" className="size-4.5 shrink-0 text-muted-foreground" />
+          <LoginIcon aria-hidden="true" className="size-4.5 shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate sidebar-icon:hidden">
             {c(pending ? "loading" : "signIn")}
           </span>
@@ -75,7 +78,7 @@ export function AccountMenu({
           </span>
           <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
         </span>
-        <ChevronsUpDown
+        <ChevronsUpDownIcon
           aria-hidden="true"
           size={15}
           className="shrink-0 text-muted-foreground sidebar-icon:hidden"
@@ -106,7 +109,7 @@ export function AccountMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="min-h-10 gap-2.5 px-2.5" onClick={() => onNavigate("account")}>
-          <CircleUserRound />
+          <UserCircleIcon />
           {c("account")}
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -115,7 +118,7 @@ export function AccountMenu({
           closeOnClick={false}
           onClick={() => void signOut()}
         >
-          <LogOut />
+          <LogoutIcon />
           {c(busy ? "working" : "signOut")}
         </DropdownMenuItem>
         {error && (

@@ -9,7 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import type { MemoryClientPort } from "./port.js";
 import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
 interface Props {
@@ -118,7 +118,7 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
       <CollapsibleTrigger
         render={<Button type="button" variant="ghost" size="sm" className="group gap-2 px-0" />}
       >
-        <ChevronDown aria-hidden="true" className="group-data-panel-open:rotate-180" />
+        <ChevronDownIcon aria-hidden="true" className="group-data-panel-open:rotate-180" />
         {t("chooseContext")} ({value.sources.length}/8)
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-3">

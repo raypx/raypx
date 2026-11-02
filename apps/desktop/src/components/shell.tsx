@@ -23,7 +23,11 @@ import {
   useRouterState,
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
-import { CalendarClock, FolderOpen, Inbox, Settings, BookOpen } from "lucide-react";
+import { ScheduleIcon } from "@raypx/icons/schedule";
+import { FolderOpenIcon } from "@raypx/icons/folder-open";
+import { InboxIcon } from "@raypx/icons/inbox";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { BookOpenIcon } from "@raypx/icons/book-open";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { EngineNotice } from "../features/engine/notice";
 import { desktopStorageKey } from "../lib/storage";
@@ -122,11 +126,11 @@ export function DesktopShell() {
         navigationLabels={[c("workspace")]}
         navigation={[
           [
-            { to: "/", label: c("projects"), icon: <FolderOpen />, exact: true },
+            { to: "/", label: c("projects"), icon: <FolderOpenIcon />, exact: true },
             {
               to: "/approvals",
               label: c("approvals"),
-              icon: <Inbox />,
+              icon: <InboxIcon />,
               badge: (
                 <PendingCount
                   key={accountId ?? "signed-out"}
@@ -138,8 +142,8 @@ export function DesktopShell() {
           ],
         ]}
         secondaryNavigation={[
-          { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
-          { to: "/memory", label: memory("title"), icon: <BookOpen /> },
+          { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
+          { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
         ]}
         accountAction={
           <Tooltip>
@@ -152,7 +156,7 @@ export function DesktopShell() {
                 />
               }
             >
-              <Settings aria-hidden="true" className="size-5 stroke-[1.75]" />
+              <SettingsIcon aria-hidden="true" className="size-5 stroke-[1.75]" />
             </TooltipTrigger>
             <TooltipContent side="top">{c("settings")}</TooltipContent>
           </Tooltip>

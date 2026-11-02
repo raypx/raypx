@@ -2,7 +2,12 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./helpers/browser-fixture.js";
 import { web, desktop } from "./helpers/surfaces.js";
 import { capture } from "./helpers/capture.js";
-import { authResponse, connectedProject, signedInAccount } from "./helpers/account-fixture.js";
+import {
+  accountAccessFixture,
+  authResponse,
+  connectedProject,
+  signedInAccount,
+} from "./helpers/account-fixture.js";
 import { selectOption } from "./helpers/select.js";
 
 async function expectPrivatePages(page: Page, surface: "Web" | "Desktop", reads: string[]) {
@@ -135,8 +140,9 @@ test(
     await page.route("**/api/auth/get-session**", (route) =>
       authResponse(route, signedIn ? { user, session } : null),
     );
-    await page.route("**/api/auth/sign-in/email", (route) => {
+    await page.route("**/api/auth/sign-in/email", async (route) => {
       signedIn = true;
+      await accountAccessFixture(page, user.id);
       return authResponse(route, { user, token: "synthetic-browser-fixture" });
     });
     await page.route("**/rpc/configuration/public", (route) =>

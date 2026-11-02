@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from "react";
-import { Languages } from "lucide-react";
+import { LanguagesIcon } from "@raypx/icons/languages";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
@@ -94,7 +94,7 @@ export function LanguageSettings() {
         onValueChange={(value) => setPreference(parseLocalePreference(value))}
       >
         <SelectTrigger aria-label={t("language")} className="w-52 max-w-full">
-          <Languages aria-hidden="true" className="text-muted-foreground" />
+          <LanguagesIcon aria-hidden="true" className="text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
         <SelectContent align="end" alignItemWithTrigger={false}>

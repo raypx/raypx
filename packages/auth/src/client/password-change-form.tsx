@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
-import { CircleAlert, CircleCheck } from "lucide-react";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -60,13 +61,13 @@ export function PasswordChangeForm({
       </h2>
       {changed && (
         <Alert role="status" className="mb-4">
-          <CircleCheck aria-hidden="true" />
+          <CheckCircleIcon aria-hidden="true" />
           <AlertDescription>{t("passwordChanged")}</AlertDescription>
         </Alert>
       )}
       {error && (
         <Alert variant="destructive" className="mb-4">
-          <CircleAlert aria-hidden="true" />
+          <AlertCircleIcon aria-hidden="true" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

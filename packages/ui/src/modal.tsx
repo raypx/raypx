@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { CloseIcon } from "@raypx/icons/close";
 import type { ReactElement, ReactNode } from "react";
 import { Button } from "./components/ui/button";
 import {
@@ -49,7 +49,7 @@ export function Modal({
             aria-label={closeLabel}
             disabled={busy}
           >
-            <X aria-hidden="true" />
+            <CloseIcon aria-hidden="true" />
           </Button>
         }
       />

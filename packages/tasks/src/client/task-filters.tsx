@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react";
+import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import {
   Collapsible,
   CollapsibleContent,
@@ -100,7 +100,7 @@ export function TaskFilterBar({
               <Button type="button" variant="outline" size="icon" aria-label={t("filters")} />
             }
           >
-            <SlidersHorizontal aria-hidden="true" />
+            <AdjustmentsIcon aria-hidden="true" />
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="grid grid-cols-2 gap-3">

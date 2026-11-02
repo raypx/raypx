@@ -1,4 +1,6 @@
-import { ALargeSmall, Languages, Monitor } from "lucide-react";
+import { TextSizeIcon } from "@raypx/icons/text-size";
+import { LanguagesIcon } from "@raypx/icons/languages";
+import { MonitorIcon } from "@raypx/icons/monitor";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
@@ -11,14 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components/ui/dropdown-menu";
 
-const localeIcons = { en: ALargeSmall, zh: Languages };
+const localeIcons = { en: TextSizeIcon, zh: LanguagesIcon };
 
 export function LanguageMenu() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
   const { preference, setPreference } = useLanguagePreference();
   const items = [
-    { value: "system", label: c("system"), icon: Monitor },
+    { value: "system", label: c("system"), icon: MonitorIcon },
     ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({
       value,
       label: nativeName,
@@ -28,7 +30,7 @@ export function LanguageMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<IconButton label={t("language")} />}>
-        <Languages aria-hidden="true" />
+        <LanguagesIcon aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" aria-label={t("language")} className="w-44">
         <DropdownMenuRadioGroup

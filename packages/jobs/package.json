@@ -18,10 +18,10 @@
   "dependencies": {
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
+    "@raypx/icons": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/ui": "workspace:*",
     "croner": "catalog:",
-    "lucide-react": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

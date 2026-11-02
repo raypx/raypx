@@ -39,6 +39,7 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
+    "@raypx/icons": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/tasks": "workspace:*",
@@ -48,7 +49,6 @@
     "@tanstack/react-start": "catalog:",
     "@xterm/addon-fit": "catalog:",
     "@xterm/xterm": "catalog:",
-    "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zustand": "catalog:"

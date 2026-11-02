@@ -13,17 +13,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import {
-  Archive,
-  ArchiveRestore,
-  BookOpen,
-  ChevronRight,
-  History,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Trash2,
-} from "lucide-react";
+import { ArchiveIcon } from "@raypx/icons/archive";
+import { ArchiveRestoreIcon } from "@raypx/icons/archive-restore";
+import { BookOpenIcon } from "@raypx/icons/book-open";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
+import { HistoryIcon } from "@raypx/icons/history";
+import { EditIcon } from "@raypx/icons/edit";
+import { PlusIcon } from "@raypx/icons/plus";
+import { RefreshIcon } from "@raypx/icons/refresh";
+import { DeleteIcon } from "@raypx/icons/delete";
 import type {
   ContextDocument,
   ContextDocumentInput,
@@ -322,7 +320,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               void load();
             }}
           >
-            <RefreshCw aria-hidden="true" />
+            <RefreshIcon aria-hidden="true" />
           </IconButton>
           <Button
             disabled={busy}
@@ -333,7 +331,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               setError(undefined);
             }}
           >
-            <Plus aria-hidden="true" />
+            <PlusIcon aria-hidden="true" />
             {t("create")}
           </Button>
         </div>
@@ -377,7 +375,11 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
       </div>
       {!documents && loading && <LoadingState label={c("loading")} />}
       {shown?.length === 0 && (
-        <EmptyState className="py-10" icon={<BookOpen aria-hidden="true" />} title={t("empty")} />
+        <EmptyState
+          className="py-10"
+          icon={<BookOpenIcon aria-hidden="true" />}
+          title={t("empty")}
+        />
       )}
       {shown?.map((document) => (
         <article
@@ -401,7 +403,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           </div>
           <div className="flex flex-wrap items-center gap-1">
             <IconButton label={t("history")} disabled={busy} onClick={() => void history(document)}>
-              <History aria-hidden="true" />
+              <HistoryIcon aria-hidden="true" />
             </IconButton>
             <IconButton
               label={t("editNamed", { name: document.name })}
@@ -409,7 +411,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               disabled={busy}
               onClick={() => void edit(document)}
             >
-              <Pencil aria-hidden="true" />
+              <EditIcon aria-hidden="true" />
             </IconButton>
             <IconButton
               label={t(document.archived ? "unarchiveNamed" : "archiveNamed", {
@@ -420,9 +422,9 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               onClick={() => void archive(document)}
             >
               {document.archived ? (
-                <ArchiveRestore aria-hidden="true" />
+                <ArchiveRestoreIcon aria-hidden="true" />
               ) : (
-                <Archive aria-hidden="true" />
+                <ArchiveIcon aria-hidden="true" />
               )}
             </IconButton>
             {document.archived && (
@@ -433,7 +435,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                 className="text-destructive-text"
                 aria-label={t("deleteNamed", { name: document.name })}
               >
-                <Trash2 aria-hidden="true" />
+                <DeleteIcon aria-hidden="true" />
                 {t("deletePermanently")}
               </Button>
             )}
@@ -466,7 +468,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                   />
                 }
               >
-                <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
+                <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
                 {t("revision", { revision: String(version.revision) })}{" "}
                 <span className="text-xs text-muted-foreground">
                   {t(

@@ -1,6 +1,11 @@
 import type { FileEntry, FileListing } from "@raypx/contracts/local";
 import { Await } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, FileText, Folder, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { FileTextIcon } from "@raypx/icons/file-text";
+import { FolderIcon } from "@raypx/icons/folder";
+import { EditIcon } from "@raypx/icons/edit";
+import { DeleteIcon } from "@raypx/icons/delete";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store";
@@ -86,7 +91,11 @@ function LoadedFileTable({
                     disabled={busy || !["file", "directory"].includes(entry.kind)}
                     onClick={() => void onOpen(entry)}
                   >
-                    {entry.kind === "directory" ? <Folder size={18} /> : <FileText size={18} />}{" "}
+                    {entry.kind === "directory" ? (
+                      <FolderIcon size={18} />
+                    ) : (
+                      <FileTextIcon size={18} />
+                    )}{" "}
                     {entry.name}
                   </Button>
                 </td>
@@ -109,7 +118,7 @@ function LoadedFileTable({
                     disabled={busy}
                     onClick={() => setOperation({ type: "move", entry })}
                   >
-                    <Pencil />
+                    <EditIcon />
                   </Button>
                   <Button
                     variant="ghost"
@@ -118,7 +127,7 @@ function LoadedFileTable({
                     disabled={busy}
                     onClick={() => void onDelete(entry)}
                   >
-                    <Trash2 />
+                    <DeleteIcon />
                   </Button>
                 </td>
               </tr>
@@ -138,7 +147,7 @@ function LoadedFileTable({
             onClick={() => void onPage(Math.max(0, offset - 100))}
             aria-label={c("previous")}
           >
-            <ArrowLeft />
+            <ArrowLeftIcon />
           </Button>
           <span>
             {offset + 1}–{Math.min(offset + 100, listing.total)} / {listing.total}
@@ -150,7 +159,7 @@ function LoadedFileTable({
             onClick={() => void onPage(offset + 100)}
             aria-label={c("next")}
           >
-            <ArrowRight />
+            <ArrowRightIcon />
           </Button>
         </div>
       )}

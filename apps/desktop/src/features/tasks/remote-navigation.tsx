@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
-import { Folder } from "lucide-react";
+import { FolderIcon } from "@raypx/icons/folder";
 import { cn } from "@raypx/ui/lib/utils";
 import {
   SidebarGroup,
@@ -67,7 +67,7 @@ export function RemoteProjectNavigation({ accountId }: { accountId: string }) {
                     />
                   }
                 >
-                  <Folder aria-hidden="true" className="shrink-0 stroke-[1.75]" />
+                  <FolderIcon aria-hidden="true" className="shrink-0 stroke-[1.75]" />
                   <span className="truncate">{project.name}</span>
                 </SidebarMenuButton>
               ))}

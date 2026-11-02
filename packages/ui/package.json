@@ -52,9 +52,9 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
+    "@raypx/icons": "workspace:*",
     "class-variance-authority": "catalog:",
     "cn": "catalog:",
-    "lucide-react": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:"
   },

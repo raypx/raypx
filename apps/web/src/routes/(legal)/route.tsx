@@ -3,7 +3,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { IconButton } from "@raypx/ui/icon-button";
 import { Logo } from "@raypx/ui/logo";
 import { Separator } from "@raypx/ui/components/ui/separator";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { LegalFooter } from "../../components/legal-footer";
 import { LanguageMenu } from "../../components/language-menu";
 import { ThemeMenu } from "../../components/theme-menu";
@@ -24,7 +24,7 @@ function LegalLayout() {
         </Link>
         <div className="flex items-center gap-3">
           <IconButton label={t("backHome")} render={<Link to="/" />} nativeButton={false}>
-            <ArrowLeft aria-hidden="true" />
+            <ArrowLeftIcon aria-hidden="true" />
           </IconButton>
           <ThemeMenu />
           <LanguageMenu />

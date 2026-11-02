@@ -15,7 +15,8 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { ChevronDown, Terminal } from "lucide-react";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
+import { TerminalIcon } from "@raypx/icons/terminal";
 import { useRemoteQuery } from "./remote-query.js";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { ApprovalBody } from "./approval-body.js";
@@ -66,7 +67,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
           <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
-            <Terminal className="size-4" aria-hidden="true" />
+            <TerminalIcon className="size-4" aria-hidden="true" />
             {t("terminalRequests")}
             {pending.length > 0 && <Badge variant="secondary">{pending.length}</Badge>}
           </h2>
@@ -126,7 +127,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
                               ? "terminalUnknown"
                               : request.status,
                     )}
-                    <ChevronDown
+                    <ChevronDownIcon
                       className="size-4 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
                       aria-hidden="true"
                     />

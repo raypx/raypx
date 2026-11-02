@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@raypx/i18n": "workspace:*",
-    "@raypx/ui": "workspace:*",
-    "lucide-react": "catalog:"
+    "@raypx/icons": "workspace:*",
+    "@raypx/ui": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",

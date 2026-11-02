@@ -4,7 +4,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { LockKeyhole } from "lucide-react";
+import { LockIcon } from "@raypx/icons/lock";
 import { guestReturnTo } from "../../tasks/guest-draft";
 import { authClient, apiUrl } from "../client";
 import { safeReturnTo } from "../return-to";
@@ -53,7 +53,7 @@ export function SignInGate({
   return (
     <section className="flex flex-col items-start gap-4 py-8">
       <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-muted to-muted/50 text-muted-foreground ring-1 ring-border/50">
-        <LockKeyhole aria-hidden="true" className="size-5" />
+        <LockIcon aria-hidden="true" className="size-5" />
       </div>
       <div className="space-y-2">
         <Heading className={Heading === "h1" ? undefined : "text-lg font-semibold"}>
@@ -81,7 +81,7 @@ export function SessionBoundary({
     return (
       <div className="flex flex-col items-start gap-4 py-8">
         <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-destructive/10 to-destructive/5 text-destructive ring-1 ring-destructive/20">
-          <LockKeyhole aria-hidden="true" className="size-5" />
+          <LockIcon aria-hidden="true" className="size-5" />
         </div>
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">{c("networkError")}</h2>

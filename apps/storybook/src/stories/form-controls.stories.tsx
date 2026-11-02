@@ -16,7 +16,8 @@ import { Switch } from "@raypx/ui/components/ui/switch";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { HelpHint } from "@raypx/ui/help-hint";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Mail, Search } from "lucide-react";
+import { MailIcon } from "@raypx/icons/mail";
+import { SearchIcon } from "@raypx/icons/search";
 
 const meta = {
   title: "Primitives/Form controls",
@@ -55,14 +56,14 @@ export const InputGroups: Story = {
     <div className="flex max-w-sm flex-col gap-4">
       <InputGroup>
         <InputGroupAddon>
-          <Search aria-hidden="true" />
+          <SearchIcon aria-hidden="true" />
         </InputGroupAddon>
         <InputGroupInput aria-label="Search tasks" placeholder="Search tasks" />
       </InputGroup>
       <InputGroup>
         <InputGroupInput aria-label="Email" placeholder="you@example.com" type="email" />
         <InputGroupAddon align="inline-end">
-          <Mail aria-hidden="true" />
+          <MailIcon aria-hidden="true" />
         </InputGroupAddon>
       </InputGroup>
     </div>

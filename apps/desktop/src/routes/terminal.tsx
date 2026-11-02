@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { formText } from "../form-data";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Terminal as TerminalIcon, Square } from "lucide-react";
+import { TerminalIcon } from "@raypx/icons/terminal";
+import { StopIcon } from "@raypx/icons/stop";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
@@ -361,7 +362,7 @@ function TerminalPage() {
           <div className="flex min-h-[34px] flex-wrap items-center gap-5 self-end">
             {running ? (
               <Button variant="outline" onClick={() => void close()}>
-                <Square size={15} />
+                <StopIcon size={15} />
                 {t("stop")}
               </Button>
             ) : (

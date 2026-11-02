@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi, useBlocker, useRouter } from "@tanstack/react-router";
-import { FolderOpen } from "lucide-react";
+import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -155,7 +155,7 @@ function FilesPage() {
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
         </div>
         <Button onClick={() => void chooseFolder()} disabled={busy || !desktopAvailable}>
-          <FolderOpen size={16} />
+          <FolderOpenIcon size={16} />
           {t("addRoot")}
         </Button>
       </header>
@@ -187,7 +187,7 @@ function FilesPage() {
       )}
       {!roots?.length && !data.rootId ? (
         <div className="flex flex-col items-center px-6 py-20 text-center">
-          <FolderOpen size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
+          <FolderOpenIcon size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
           <h2 className="text-xl">{t("noRoots")}</h2>
           <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">{t("noRootsHint")}</p>
         </div>

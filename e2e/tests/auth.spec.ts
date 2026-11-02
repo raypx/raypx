@@ -69,6 +69,11 @@ test(
     await page.getByRole("link", { name: "Forgot password?", exact: true }).click();
     await expect(page.getByRole("button", { name: "Send reset link", exact: true })).toBeVisible();
     await page.goto(`${web}/reset-password`);
-    await expect(page.getByRole("button", { name: "Reset password", exact: true })).toBeDisabled();
+    await expect(page.getByRole("alert")).toHaveText(
+      "This link is invalid or has expired. Request a new email.",
+    );
+    await expect(page.getByRole("button", { name: "Reset password", exact: true })).toHaveCount(0);
+    await page.getByRole("link", { name: "Send reset link", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Send reset link", exact: true })).toBeVisible();
   },
 );

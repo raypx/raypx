@@ -2,7 +2,12 @@ import { expect } from "@playwright/test";
 import { test } from "./helpers/browser-fixture.js";
 import { surfaces } from "./helpers/surfaces.js";
 import { capture } from "./helpers/capture.js";
-import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
+import {
+  accountAccessFixture,
+  authResponse,
+  signedInAccount,
+  webShellFixture,
+} from "./helpers/account-fixture.js";
 
 import type { HumanRequest } from "@raypx/core/tasks";
 
@@ -30,9 +35,10 @@ for (const [surface, base] of surfaces) {
           ],
         }),
       );
-      await page.goto(`${base}/settings`);
+      await page.goto(`${base}${surface === "Web" ? "/projects" : "/"}`);
       const sidebar = page.getByRole("complementary");
-      const workspace = sidebar.getByRole("group", { name: "Workspace", exact: true });
+      const navigation = sidebar.getByRole("navigation", { name: "Raypx", exact: true });
+      const workspace = navigation.getByRole("group", { name: "Workspace", exact: true });
       await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
       const waiting = workspace.getByRole("link", { name: /^Waiting/ });
       await expect(waiting).toContainText("1");
@@ -43,7 +49,11 @@ for (const [surface, base] of surfaces) {
         ).toBeVisible();
         await expect(local.getByRole("link", { name: "Automations", exact: true })).toBeVisible();
       }
-      await expect(sidebar.locator('[aria-current="page"]')).toHaveCount(1);
+      await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+      await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1);
       const expanded = (await sidebar.boundingBox())!;
       await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
       const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
@@ -115,6 +125,7 @@ for (const [surface, base] of surfaces) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+      await accountAccessFixture(page, user.id);
       await page.route("**/rpc/approvals/list", (route) => authResponse(route, { json: [] }));
       await page.route("**/rpc/devices/list", (route) => authResponse(route, { json: [] }));
       await page.route("**/api/auth/get-session**", (route) =>
@@ -182,13 +193,20 @@ for (const [surface, base] of surfaces) {
         await expect(trigger).toBeFocused();
         await page
           .getByRole("complementary")
-          .getByRole("link", { name: "Settings", exact: true })
+          .getByRole(surface === "Web" ? "button" : "link", { name: "Settings", exact: true })
           .click();
         await expect(page).toHaveURL(`${base}/settings`);
-        await page.getByRole("radio", { name: "Dark", exact: true }).check();
-        await page.getByRole("combobox", { name: "Language", exact: true }).click();
+        const settings = surface === "Web" ? page.getByRole("dialog") : page.getByRole("main");
+        await expect(settings).toBeVisible();
+        await settings.getByText("Dark", { exact: true }).click();
+        await settings.getByRole("combobox", { name: "Language", exact: true }).click();
         await page.getByRole("option", { name: "简体中文", exact: true }).click();
-        await page.getByRole("button", { name: "账号菜单", exact: true }).click();
+        if (surface === "Web") {
+          await page.keyboard.press("Escape");
+          await expect(settings).toBeHidden();
+        }
+        await page.getByRole("button", { name: "账号菜单", exact: true }).focus();
+        await page.keyboard.press("Enter");
         await expect(page.getByRole("menuitem", { name: "账号", exact: true })).toBeVisible();
         await expect(page.getByRole("menuitem", { name: "退出登录", exact: true })).toBeVisible();
         await capture(page, {
@@ -199,7 +217,7 @@ for (const [surface, base] of surfaces) {
         await page.keyboard.press("Escape");
         await page.getByRole("combobox", { name: "语言", exact: true }).click();
         await page.getByRole("option", { name: "English", exact: true }).click();
-        await page.getByRole("radio", { name: "Light", exact: true }).check();
+        await page.getByText("Light", { exact: true }).click();
         if (surface === "Web") await page.setViewportSize({ width: 1280, height: 720 });
       });
       await test.step("avatar and failed sign-out recovery", async () => {

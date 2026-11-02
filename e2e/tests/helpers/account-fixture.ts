@@ -1,4 +1,5 @@
 import type { Page, Route } from "@playwright/test";
+import { accessForRole, type AccountRole } from "@raypx/account/access";
 
 const web = "http://127.0.0.1:4173";
 
@@ -14,6 +15,19 @@ export async function authResponse(route: Route, body: unknown, status = 200) {
     },
     body: status === 204 ? "" : JSON.stringify(body),
   });
+}
+
+/** Supply the same account-scoped permission projection as the API. */
+export async function accountAccessFixture(
+  page: Page,
+  accountId: string | null,
+  role: AccountRole = accountId ? "member" : "guest",
+) {
+  await page.route("**/rpc/account/access", (route) =>
+    route.request().method() === "OPTIONS"
+      ? authResponse(route, null, 204)
+      : authResponse(route, { json: accessForRole(role, accountId) }),
+  );
 }
 
 export async function webShellFixture(page: Page) {
@@ -36,6 +50,7 @@ export async function signedInAccount(page: Page) {
     email: "desktop@example.test",
     emailVerified: true,
   };
+  await accountAccessFixture(page, user.id);
   await page.route("**/api/auth/get-session**", (route) =>
     authResponse(route, {
       user,

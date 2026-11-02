@@ -26,14 +26,12 @@ import {
   useRouterState,
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
-import {
-  FolderOpen,
-  Inbox,
-  Settings,
-  SlidersHorizontal,
-  CalendarClock,
-  BookOpen,
-} from "lucide-react";
+import { FolderOpenIcon } from "@raypx/icons/folder-open";
+import { InboxIcon } from "@raypx/icons/inbox";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { AdjustmentsIcon } from "@raypx/icons/adjustments";
+import { ScheduleIcon } from "@raypx/icons/schedule";
+import { BookOpenIcon } from "@raypx/icons/book-open";
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -92,11 +90,11 @@ export function WebShell() {
       ),
   });
   const navigation: ShellNavItem<WebPath>[] = [
-    { to: "/projects", label: c("projects"), icon: <FolderOpen />, exact: true },
+    { to: "/projects", label: c("projects"), icon: <FolderOpenIcon />, exact: true },
     {
       to: "/approvals",
       label: c("approvals"),
-      icon: <Inbox />,
+      icon: <InboxIcon />,
       badge:
         accountId && hasPermission(access, "approvals.read") ? (
           <PendingCount key={accountId ?? "signed-out"} client={taskClient} accountId={accountId} />
@@ -104,13 +102,13 @@ export function WebShell() {
     },
   ];
   const secondaryNavigation: ShellNavItem<WebPath>[] = [
-    { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
-    { to: "/memory", label: memory("title"), icon: <BookOpen /> },
+    { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
+    { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
   ];
   secondaryNavigation.push({
     to: "/admin/settings",
     label: c("adminSettings"),
-    icon: <SlidersHorizontal />,
+    icon: <AdjustmentsIcon />,
   });
   return (
     <>
@@ -142,7 +140,7 @@ export function WebShell() {
                 />
               }
             >
-              <Settings aria-hidden="true" className="size-5 stroke-[1.75]" />
+              <SettingsIcon aria-hidden="true" className="size-5 stroke-[1.75]" />
             </TooltipTrigger>
             <TooltipContent side="top">{c("settings")}</TooltipContent>
           </Tooltip>
