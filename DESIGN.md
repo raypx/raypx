@@ -12,14 +12,19 @@ account details live at `/account`. Local work remains available before login.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers;
 the planned Expo iOS app is a separate delivery phase.
 
-The sidebar concentrates on projects and the global pending inbox.
-Account and settings stay at the bottom. Use consistent 20px Lucide icons, visible
-keyboard focus and labelled tooltips in the collapsed rail; keep pending counts visible.
-Desktop separates local projects from connected computers, with bounded recent
-shortcuts and searchable expansion. Project headers provide Sessions, Files,
-References, Automations and Terminal; remote projects expose only supported tools.
-The session editor consumes the chosen computer/project without repeating selectors.
-The account menu and settings shortcut share one fixed footer row.
+Desktop and Web share one sidebar order: Projects and the pending inbox, then project
+shortcuts, then Automations and Memory above one fixed footer row for the account and
+the settings shortcut. Use consistent 20px Lucide icons, visible keyboard focus and
+labelled tooltips in the collapsed rail; keep pending counts visible. Desktop separates
+local projects, with bounded recent shortcuts and searchable expansion, from connected
+computers, which appear only after sign-in. Guests get a direct sign-in action; the
+account menu manages an existing account only.
+
+The top bar carries page context through the shell toolbar slots. Project pages show
+the project name and its Sessions, Files, References, Automations and Terminal tabs there;
+remote projects expose only supported tools. Page actions and scope switches sit at the
+end of the top bar instead of above page titles. The session editor consumes the chosen
+computer/project without repeating selectors.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.

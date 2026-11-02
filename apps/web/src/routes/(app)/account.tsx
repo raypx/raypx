@@ -51,7 +51,6 @@ function AccountPage() {
     <section>
       <header className="mb-8">
         <h1>{t("accountTitle")}</h1>
-        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("accountIntro")}</p>
       </header>
       {state.status === "unavailable" || session.error ? (
         <div className="flex flex-wrap items-center gap-4 py-9">

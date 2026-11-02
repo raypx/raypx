@@ -74,7 +74,7 @@ for (const [surface, base] of surfaces) {
       await expect(account.getByText(user.email, { exact: true })).toBeHidden();
       await account.click();
       const menu = page.getByRole("menu", { name: "Account menu", exact: true });
-      await expect(menu.getByRole("menuitem", { name: "Settings", exact: true })).toBeVisible();
+      await expect(menu.getByRole("menuitem", { name: "Account", exact: true })).toBeVisible();
       const menuBox = (await menu.boundingBox())!;
       expect(menuBox.x).toBeGreaterThanOrEqual(0);
       expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -180,14 +180,16 @@ for (const [surface, base] of surfaces) {
         await page.keyboard.press("Escape");
         await expect(menu).not.toBeVisible();
         await expect(trigger).toBeFocused();
-        await trigger.click();
-        await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
+        await page
+          .getByRole("complementary")
+          .getByRole("link", { name: "Settings", exact: true })
+          .click();
         await expect(page).toHaveURL(`${base}/settings`);
         await page.getByRole("radio", { name: "Dark", exact: true }).check();
         await page.getByRole("combobox", { name: "Language", exact: true }).click();
         await page.getByRole("option", { name: "简体中文", exact: true }).click();
         await page.getByRole("button", { name: "账号菜单", exact: true }).click();
-        await expect(page.getByRole("menuitem", { name: "设置", exact: true })).toBeVisible();
+        await expect(page.getByRole("menuitem", { name: "账号", exact: true })).toBeVisible();
         await expect(page.getByRole("menuitem", { name: "退出登录", exact: true })).toBeVisible();
         await capture(page, {
           path: test.info().outputPath("account-menu-dark-zh.png"),
@@ -225,7 +227,10 @@ for (const [surface, base] of surfaces) {
             exact: true,
           }),
         ).toBeVisible();
-        if (surface === "Desktop") await expect(trigger).toBeVisible();
+        if (surface === "Desktop")
+          await expect(
+            page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
+          ).toBeVisible();
         expect(attempts).toBe(2);
       });
     },

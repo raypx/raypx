@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { ArrowRight, CircleCheck, CircleUserRound } from "lucide-react";
+import { ArrowRight, CircleCheck, CircleUserRound, LogOut } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { AccountProfile } from "../index";
@@ -53,38 +53,26 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
   const c = useTranslations("common");
   return (
     <div>
-      <div className="mb-8 flex items-center gap-3">
-        <span className="grid size-12 place-items-center rounded-full border border-border bg-muted text-lg font-medium">
+      <div className="mb-8 flex flex-wrap items-center gap-4 rounded-xl border border-border p-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-full border border-border bg-muted text-lg font-medium">
           {account.name.slice(0, 1).toUpperCase()}
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h2 className="truncate">{account.name}</h2>
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">{account.email}</p>
-        </div>
-      </div>
-      <dl className="mb-8 [&>div]:flex [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-border [&>div]:py-3.5 [&_dd]:m-0 [&_dd]:min-w-0 [&_dd]:[overflow-wrap:anywhere] [&_dt]:w-28 [&_dt]:shrink-0 [&_dt]:text-sm [&_dt]:text-muted-foreground @max-sm/main:[&>div]:flex-col @max-sm/main:[&>div]:items-start @max-sm/main:[&>div]:gap-1">
-        <div>
-          <dt>{t("name")}</dt>
-          <dd>{account.name}</dd>
-        </div>
-        <div>
-          <dt>{t("email")}</dt>
-          <dd>{account.email}</dd>
-        </div>
-        <div>
-          <dt>{c("status")}</dt>
-          <dd>
-            <span className="inline-flex items-center gap-1.5">
-              <CircleCheck size={16} />
+          <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+            <span className="truncate">{account.email}</span>
+            <span className="inline-flex items-center gap-1 text-xs">
+              <CircleCheck aria-hidden="true" size={14} />
               {t("verifiedLabel")}
             </span>
-          </dd>
+          </p>
         </div>
-      </dl>
+        <Button variant="outline" disabled={busy} onClick={() => void onSignOut()}>
+          <LogOut aria-hidden="true" />
+          {busy ? c("working") : c("signOut")}
+        </Button>
+      </div>
       {children}
-      <Button variant="outline" disabled={busy} onClick={() => void onSignOut()}>
-        {busy ? c("working") : c("signOut")}
-      </Button>
     </div>
   );
 }

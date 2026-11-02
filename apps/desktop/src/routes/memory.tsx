@@ -13,6 +13,7 @@ import {
 import { isDesktop } from "../lib/desktop";
 import { useLocalProjectContext } from "../features/tasks/project-context";
 import { ProjectTools } from "../features/tasks/project-tools";
+import { ShellActions } from "@raypx/blocks/shell";
 import { LoadingState } from "@raypx/ui/loading-state";
 export const Route = createFileRoute("/memory")({
   staticData: { page: { title: "memory.title", layout: "workbench" } },
@@ -97,10 +98,12 @@ function Page() {
       }
       className="gap-6"
     >
-      <TabsList aria-label={t("scope")}>
-        <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
-        <TabsTrigger value="account">{t("accountScope")}</TabsTrigger>
-      </TabsList>
+      <ShellActions>
+        <TabsList aria-label={t("scope")}>
+          <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
+          <TabsTrigger value="account">{t("accountScope")}</TabsTrigger>
+        </TabsList>
+      </ShellActions>
       <TabsContent value="local" keepMounted>
         {localPage}
       </TabsContent>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronsUpDown, CircleUserRound, LogIn, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, CircleUserRound, LogIn, LogOut } from "lucide-react";
 import { Avatar } from "@raypx/ui/avatar";
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@raypx/ui/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { AccountProfile } from "../index";
 
@@ -18,7 +19,7 @@ export interface AccountMenuProps {
   pending: boolean;
   busy: boolean;
   error: boolean;
-  onNavigate: (destination: "account" | "settings" | "login") => void;
+  onNavigate: (destination: "account" | "login") => void;
   onSignOut: () => Promise<boolean>;
 }
 
@@ -35,6 +36,30 @@ export function AccountMenu({
   async function signOut() {
     if (await onSignOut()) setOpen(false);
   }
+  // Guests get a direct sign-in action; the menu only manages an existing account.
+  if (!user)
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              aria-label={c(pending ? "loading" : "signIn")}
+              aria-busy={pending || busy}
+              disabled={pending || busy}
+              onClick={() => onNavigate("login")}
+              className="flex min-h-10 w-full items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 text-left text-[13px] font-medium text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 motion-reduce:transition-none sidebar-icon:size-10 sidebar-icon:justify-center sidebar-icon:border-transparent sidebar-icon:bg-transparent sidebar-icon:px-0"
+            />
+          }
+        >
+          <LogIn aria-hidden="true" className="size-4.5 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate sidebar-icon:hidden">
+            {c(pending ? "loading" : "signIn")}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top">{c("signIn")}</TooltipContent>
+      </Tooltip>
+    );
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
@@ -43,23 +68,12 @@ export function AccountMenu({
         disabled={pending || busy}
         className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-sidebar-accent motion-reduce:transition-none sidebar-icon:justify-center sidebar-icon:px-0"
       >
-        {user ? (
-          <Avatar
-            name={user.name || user.email}
-            {...(user.image ? { imageUrl: user.image } : {})}
-          />
-        ) : (
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-            <CircleUserRound size={20} aria-hidden="true" />
-          </span>
-        )}
+        <Avatar name={user.name || user.email} {...(user.image ? { imageUrl: user.image } : {})} />
         <span className="min-w-0 flex-1 sidebar-icon:hidden">
           <span className="block truncate text-[13px] font-medium">
-            {pending ? c("loading") : user?.name || c("signIn")}
+            {pending ? c("loading") : user.name || user.email}
           </span>
-          {user && (
-            <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
-          )}
+          <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
         </span>
         <ChevronsUpDown
           aria-hidden="true"
@@ -74,55 +88,36 @@ export function AccountMenu({
         aria-label={c("accountMenu")}
         className="w-72 max-w-[calc(100vw-1.5rem)] [&_[data-slot=dropdown-menu-item]>svg]:text-muted-foreground [&_[data-slot=dropdown-menu-item]>svg]:stroke-[1.75] motion-reduce:animate-none"
       >
-        {user && (
-          <>
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-3">
-                <span aria-hidden="true" className="shrink-0">
-                  <Avatar
-                    name={user.name || user.email}
-                    {...(user.image ? { imageUrl: user.image } : {})}
-                  />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-foreground">
-                    {user.name || user.email}
-                  </span>
-                  <span className="mt-0.5 block truncate font-normal">{user.email}</span>
-                </span>
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-          </>
-        )}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-3">
+            <span aria-hidden="true" className="shrink-0">
+              <Avatar
+                name={user.name || user.email}
+                {...(user.image ? { imageUrl: user.image } : {})}
+              />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium text-foreground">
+                {user.name || user.email}
+              </span>
+              <span className="mt-0.5 block truncate font-normal">{user.email}</span>
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
         <DropdownMenuItem className="min-h-10 gap-2.5 px-2.5" onClick={() => onNavigate("account")}>
           <CircleUserRound />
           {c("account")}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="min-h-10 gap-2.5 px-2.5"
-          onClick={() => onNavigate("settings")}
+          disabled={busy}
+          closeOnClick={false}
+          onClick={() => void signOut()}
         >
-          <Settings />
-          {c("settings")}
+          <LogOut />
+          {c(busy ? "working" : "signOut")}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {user ? (
-          <DropdownMenuItem
-            className="min-h-10 gap-2.5 px-2.5"
-            disabled={busy}
-            closeOnClick={false}
-            onClick={() => void signOut()}
-          >
-            <LogOut />
-            {c(busy ? "working" : "signOut")}
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem className="min-h-10 gap-2.5 px-2.5" onClick={() => onNavigate("login")}>
-            <LogIn />
-            {c("signIn")}
-          </DropdownMenuItem>
-        )}
         {error && (
           <p role="alert" className="px-2.5 py-2 text-xs text-destructive">
             {c("networkError")}

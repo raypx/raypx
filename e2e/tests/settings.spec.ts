@@ -6,14 +6,14 @@ import { signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 
 async function preferencesPersist(page: Page, base: string) {
   await page.goto(`${base}/settings`);
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
   // The visible theme card activates its visually hidden radio.
   await page.getByText("Dark", { exact: true }).click();
   await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("combobox", { name: "Language", exact: true }).click();
   await page.getByRole("option", { name: "简体中文", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "按你的习惯设置" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "设置", exact: true })).toBeVisible();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -51,8 +51,9 @@ test(
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
-    await page.getByRole("link", { name: "Account", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Your account", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Account menu", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Account", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
   },
 );
 
@@ -61,7 +62,7 @@ test(
   { tag: "@desktop" },
   async ({ page }) => {
     const user = await signedInAccount(page);
-    await page.goto(desktop);
+    await page.goto(`${desktop}/files`);
     await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
     await expect(
       page.getByText("Open the desktop app to use local tools.", { exact: true }),
@@ -80,7 +81,7 @@ test(
     await expect(page.getByRole("button", { name: "New automation", exact: true })).toBeDisabled();
     await page.getByRole("button", { name: "Account menu", exact: true }).click();
     await page.getByRole("menuitem", { name: "Account", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Your account", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: user.name, exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Settings", exact: true }).click();
     await preferencesPersist(page, desktop);

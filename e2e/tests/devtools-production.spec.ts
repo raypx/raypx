@@ -16,7 +16,7 @@ for (const [surface, base] of surfaces) {
           diagnosticRequests.push(request.url());
       });
       await page.goto(`${base}/settings`);
-      await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
       await page.keyboard.press("Shift+Alt+d");
       await expect(page.locator("[data-raypx-devtools-panel]")).toHaveCount(0);
       await expect(page.locator("script[data-raypx-devtools-client]")).toHaveCount(0);

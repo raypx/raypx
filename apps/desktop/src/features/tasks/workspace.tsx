@@ -3,6 +3,7 @@ import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../analytics/client";
 import { Link, useRouter, useLocation } from "@tanstack/react-router";
 import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
+import { ShellActions } from "@raypx/blocks/shell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { useTranslations } from "@raypx/i18n/browser";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -116,6 +117,7 @@ export function DesktopTaskWorkspace({
               client={remote}
               scope={remoteScope}
               contextLibrary={accountMemory}
+              actionsSlot={ShellActions}
               persistEditor
               storageNamespace={apiUrl}
               projectId={projectId}
@@ -150,10 +152,12 @@ export function DesktopTaskWorkspace({
         })
       }
     >
-      <TabsList aria-label={t("taskScope")}>
-        <TabsTrigger value="local">{t("thisComputer")}</TabsTrigger>
-        <TabsTrigger value="remote">{t("connectedComputers")}</TabsTrigger>
-      </TabsList>
+      <ShellActions>
+        <TabsList aria-label={t("taskScope")}>
+          <TabsTrigger value="local">{t("thisComputer")}</TabsTrigger>
+          <TabsTrigger value="remote">{t("connectedComputers")}</TabsTrigger>
+        </TabsList>
+      </ShellActions>
       <TabsContent value="local">{localView}</TabsContent>
       <TabsContent value="remote">{remoteView}</TabsContent>
     </Tabs>
@@ -211,6 +215,7 @@ function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
         client={local}
         scope={localScope}
         contextLibrary={localMemory}
+        actionsSlot={ShellActions}
         persistEditor
         storageNamespace={apiUrl}
         projectId={projectId}

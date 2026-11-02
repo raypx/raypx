@@ -11,6 +11,7 @@ import { apiUrl } from "../../features/auth/client";
 import { taskClient } from "../../features/tasks/client";
 import { accountMemory } from "../../features/memory/client";
 import { ProjectTools } from "../../features/tasks/project-tools";
+import { ShellActions } from "@raypx/blocks/shell";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const Route = createFileRoute("/(app)/tasks")({
@@ -96,6 +97,7 @@ function SignedInTasks({ accountId }: { accountId: string }) {
       {device && (
         <TaskWorkspace
           contextLibrary={accountMemory}
+          actionsSlot={ShellActions}
           client={reportedClient}
           scope={scope}
           persistEditor

@@ -112,11 +112,11 @@ export function DesktopShell() {
       <AppShell
         storageKey={desktopStorageKey("raypx_sidebar_open")}
         frame="window"
-        brand={{ to: "/", label: "Raypx", description: c("deviceWorkspace") }}
+        brand={{ to: "/", label: "Raypx" }}
         contextNavigation={
           <div className="space-y-6">
             <ProjectNavigation />
-            <RemoteProjectNavigation key={accountId ?? "signed-out"} accountId={accountId} />
+            {accountId && <RemoteProjectNavigation key={accountId} accountId={accountId} />}
           </div>
         }
         navigationLabels={[c("workspace")]}
@@ -157,7 +157,7 @@ export function DesktopShell() {
             <TooltipContent side="top">{c("settings")}</TooltipContent>
           </Tooltip>
         }
-        breadcrumbs={page ? ["Raypx", t(page.title)] : ["Raypx"]}
+        breadcrumbs={page ? [t(page.title)] : []}
         layout={page?.layout ?? "document"}
         LinkComponent={ShellLink}
         notice={

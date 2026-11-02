@@ -65,7 +65,9 @@ test(
       await page.goto(web + path);
       await expect(page).toHaveURL(web + path);
       await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+      await expect(
+        page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
+      ).toBeVisible();
       if (path === "/") {
         await expectGuestShell(page);
         await capture(page, {
@@ -225,11 +227,13 @@ test(
       await page.goto(desktop + path);
       await expect(page).toHaveURL(desktop + path);
       await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+      await expect(
+        page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
+      ).toBeVisible();
     }
     expect(privateReads).toEqual([]);
-    await page.goto(desktop + "/tasks");
-    await page.getByRole("link", { name: "Browse remote projects", exact: true }).click();
+    // Guests have no connected-computer shortcuts; remote views stay reachable by URL.
+    await page.goto(desktop + "/tasks?scope=remote");
     await expect(
       page.getByRole("heading", { name: "Sign in for remote access", exact: true }),
     ).toBeVisible();

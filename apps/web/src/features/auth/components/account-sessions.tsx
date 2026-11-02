@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Monitor } from "lucide-react";
+import { Monitor, RefreshCw } from "lucide-react";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
+import { IconButton } from "@raypx/ui/icon-button";
 import { Modal } from "@raypx/ui/modal";
 import type { authClient } from "../client";
 
@@ -99,7 +100,8 @@ export function AccountSessions({
         <h2 id="account-sessions-title" className="text-base">
           {t("sessionsTitle")}
         </h2>
-        <Button
+        <IconButton
+          label={c(loading ? "loading" : "refresh")}
           variant="outline"
           disabled={loading}
           onClick={() => {
@@ -108,10 +110,13 @@ export function AccountSessions({
             setRevision((value) => value + 1);
           }}
         >
-          {c(loading ? "loading" : "refresh")}
-        </Button>
+          <RefreshCw
+            aria-hidden="true"
+            className={loading ? "animate-spin motion-reduce:animate-none" : undefined}
+          />
+        </IconButton>
       </div>
-      <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("sessionsHint")}</p>
+      <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("sessionsHint")}</p>
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive-text">
           {error === "network" ? c("networkError") : t(error)}

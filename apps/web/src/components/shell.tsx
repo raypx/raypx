@@ -11,6 +11,7 @@ import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { apiUrl, authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
+import { RemoteProjectNavigation } from "../features/tasks/project-navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Link,
@@ -21,7 +22,7 @@ import {
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
 import {
-  ListTodo,
+  FolderOpen,
   Inbox,
   Settings,
   SlidersHorizontal,
@@ -74,7 +75,6 @@ export function WebShell() {
   const auth = useAuthActions({ client: authClient, webUrl });
   const t = useTranslations();
   const c = useTranslations("common");
-  const g = useTranslations("guest");
   const memory = useTranslations("memory");
   const href = useRouterState({ select: (state) => state.location.href });
   const page = useMatches({
@@ -85,9 +85,7 @@ export function WebShell() {
       ),
   });
   const navigation: ShellNavItem<WebPath>[] = [
-    { to: "/", label: c("projects"), icon: <ListTodo />, exact: true },
-    { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
-    { to: "/memory", label: memory("title"), icon: <BookOpen /> },
+    { to: "/", label: c("projects"), icon: <FolderOpen />, exact: true },
     {
       to: "/approvals",
       label: c("approvals"),
@@ -97,7 +95,10 @@ export function WebShell() {
       ) : undefined,
     },
   ];
-  const secondaryNavigation: ShellNavItem<WebPath>[] = [];
+  const secondaryNavigation: ShellNavItem<WebPath>[] = [
+    { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
+    { to: "/memory", label: memory("title"), icon: <BookOpen /> },
+  ];
   if (access.data?.allowed)
     secondaryNavigation.push({
       to: "/admin/settings",
@@ -111,12 +112,11 @@ export function WebShell() {
         brand={{ to: "/", label: siteName }}
         navigation={[navigation]}
         navigationLabels={[c("workspace")]}
-        secondaryNavigation={secondaryNavigation}
-        breadcrumbs={
-          page
-            ? [siteName, t(!accountId && page.guestTitle ? page.guestTitle : page.title)]
-            : [siteName]
+        contextNavigation={
+          accountId ? <RemoteProjectNavigation key={accountId} accountId={accountId} /> : undefined
         }
+        secondaryNavigation={secondaryNavigation}
+        breadcrumbs={page ? [t(!accountId && page.guestTitle ? page.guestTitle : page.title)] : []}
         layout={page?.layout ?? "document"}
         LinkComponent={ShellLink}
         accountAction={
@@ -135,13 +135,6 @@ export function WebShell() {
             <TooltipContent side="top">{c("settings")}</TooltipContent>
           </Tooltip>
         }
-        notice={
-          !session.isPending && !session.error && !accountId ? (
-            <p className="shrink-0 border-b border-border bg-sidebar px-6 py-2 text-sm leading-relaxed text-muted-foreground @max-2xl/main:px-5">
-              {g("visitorNotice")}
-            </p>
-          ) : undefined
-        }
         account={
           <AccountMenu
             key={accountId ?? "signed-out"}
@@ -150,15 +143,14 @@ export function WebShell() {
             busy={auth.busy}
             error={Boolean(auth.error)}
             onNavigate={(destination) => {
-              if (destination === "login" || (destination === "account" && !accountId))
+              if (destination === "login" || !accountId)
                 void router.navigate({
                   to: "/login",
                   search: {
                     returnTo: guestReturnTo(apiUrl, destination === "account" ? "/account" : href),
                   },
                 });
-              else
-                void router.navigate({ to: destination === "account" ? "/account" : "/settings" });
+              else void router.navigate({ to: "/account" });
             }}
             onSignOut={async () => {
               const result = await auth.signOut(async () => {

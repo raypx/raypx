@@ -3,7 +3,14 @@ import { TaskDetail } from "./task-detail.js";
 import { Approval } from "./approval.js";
 import { PersistentTaskComposer } from "./persistent-task-composer.js";
 import { type MemoryClientPort } from "@raypx/memory/client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import { useRemoteQuery } from "./remote-query.js";
 import type { TaskWorkspacePort } from "../model/port.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
@@ -48,6 +55,8 @@ interface Props {
   onTaskChange?: ((taskId: string | undefined) => void) | undefined;
   onOpenTask?: ((task: AgentTask) => void) | undefined;
   contextLibrary?: MemoryClientPort | undefined;
+  /** Hosts a project's actions in application chrome, such as the shell top bar. */
+  actionsSlot?: ComponentType<{ children: ReactNode }> | undefined;
 }
 export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
   if (!props.scope || props.pending)
@@ -79,6 +88,7 @@ function Workspace({
   onTaskChange,
   onOpenTask,
   contextLibrary,
+  actionsSlot: ActionsSlot,
 }: Props & { view?: "tasks" | "approvals"; scope: WorkspaceScope }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
@@ -197,61 +207,71 @@ function Workspace({
   const targetUnavailable = Boolean(
     projectId && data && (!selectedProject || !targetDevice?.online || targetDevice.revoked),
   );
+  const actions = (
+    <div className="flex items-center gap-2">
+      <IconButton
+        label={c(refreshing ? "loading" : "refresh")}
+        variant="outline"
+        onClick={refresh}
+        disabled={refreshing}
+      >
+        <RefreshCw
+          aria-hidden="true"
+          className={refreshing ? "animate-spin motion-reduce:animate-none" : undefined}
+        />
+      </IconButton>
+      {view === "tasks" && data && (
+        <Button
+          onClick={() => {
+            setOptionsOpen(true);
+            setEditorOpen(true);
+            setDetailVisible(false);
+            requestAnimationFrame(() => composer.current?.focus());
+          }}
+        >
+          <Plus aria-hidden="true" />
+          <span className="max-[760px]:sr-only">{t("create")}</span>
+        </Button>
+      )}
+    </div>
+  );
   return (
     <section data-tasks className="@container">
-      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1>
-              {view === "tasks" && projectId
-                ? (selectedProject?.name ?? t("projectUnavailable"))
-                : t(view === "approvals" ? "inbox" : "title")}
-            </h1>
-            {activeFilters.project && !projectId && (
-              <Button
-                variant="secondary"
-                size="sm"
-                aria-label={t("clearProjectFilter")}
-                onClick={() => changeFilters({ ...activeFilters, project: "" })}
-              >
-                <span className="max-w-48 truncate">
-                  {selectedProject?.name ?? t("projectUnavailable")}
-                </span>
-                <X aria-hidden="true" />
-              </Button>
+      {ActionsSlot && view === "tasks" && projectId ? (
+        <>
+          <h1 className="sr-only">{selectedProject?.name ?? t("projectUnavailable")}</h1>
+          <ActionsSlot>{actions}</ActionsSlot>
+        </>
+      ) : (
+        <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1>
+                {view === "tasks" && projectId
+                  ? (selectedProject?.name ?? t("projectUnavailable"))
+                  : t(view === "approvals" ? "inbox" : "title")}
+              </h1>
+              {activeFilters.project && !projectId && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  aria-label={t("clearProjectFilter")}
+                  onClick={() => changeFilters({ ...activeFilters, project: "" })}
+                >
+                  <span className="max-w-48 truncate">
+                    {selectedProject?.name ?? t("projectUnavailable")}
+                  </span>
+                  <X aria-hidden="true" />
+                </Button>
+              )}
+            </div>
+            {view === "approvals" && (
+              <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("inboxHint")}</p>
             )}
           </div>
-          {view === "approvals" && (
-            <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("inboxHint")}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <IconButton
-            label={c(refreshing ? "loading" : "refresh")}
-            variant="outline"
-            onClick={refresh}
-            disabled={refreshing}
-          >
-            <RefreshCw
-              aria-hidden="true"
-              className={refreshing ? "animate-spin motion-reduce:animate-none" : undefined}
-            />
-          </IconButton>
-          {view === "tasks" && data && (
-            <Button
-              onClick={() => {
-                setOptionsOpen(true);
-                setEditorOpen(true);
-                setDetailVisible(false);
-                requestAnimationFrame(() => composer.current?.focus());
-              }}
-            >
-              <Plus aria-hidden="true" />
-              {t("create")}
-            </Button>
-          )}
-        </div>
-      </header>
+          {actions}
+        </header>
+      )}
       {view === "approvals" && <ObservedApprovals client={client} accountId={accountId} />}
       {targetUnavailable && (
         <p role="alert" className="mb-4 max-w-[65ch] text-sm text-destructive-text">

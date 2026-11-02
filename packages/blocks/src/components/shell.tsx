@@ -1,12 +1,17 @@
 import {
   Fragment,
+  createContext,
+  useContext,
+  useEffect,
   useId,
   useMemo,
+  useState,
   useSyncExternalStore,
   type ComponentType,
   type ReactNode,
   type CSSProperties,
 } from "react";
+import { createPortal } from "react-dom";
 import { sidebarPreference } from "./sidebar-preference";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -102,6 +107,40 @@ export interface AppShellProps<To extends string> {
   children: ReactNode;
 }
 
+interface ToolbarSlots {
+  start: HTMLElement | null;
+  end: HTMLElement | null;
+  claim: () => () => void;
+}
+const ToolbarContext = createContext<ToolbarSlots | null>(null);
+
+/**
+ * Renders page chrome in the top bar: `start` replaces the page title with the page's
+ * own context and navigation, `end` holds page-level actions and scope switches.
+ * Content mounts after hydration because portals need the client-side slot; outside
+ * an AppShell it renders inline.
+ */
+export function ShellToolbar({
+  side = "start",
+  children,
+}: {
+  side?: "start" | "end";
+  children: ReactNode;
+}) {
+  const slots = useContext(ToolbarContext);
+  const claim = slots?.claim;
+  useEffect(() => (side === "start" && claim ? claim() : undefined), [claim, side]);
+  // Outside the shell (isolated views and tests) the content stays inline.
+  if (!slots) return <>{children}</>;
+  const target = slots[side];
+  return target ? createPortal(children, target) : null;
+}
+
+/** Page-level actions and scope switches at the end of the top bar. */
+export function ShellActions({ children }: { children: ReactNode }) {
+  return <ShellToolbar side="end">{children}</ShellToolbar>;
+}
+
 export function AppShell<To extends string>(props: AppShellProps<To>) {
   const preference = useMemo(() => sidebarPreference(props.storageKey), [props.storageKey]);
   const open = useSyncExternalStore(preference.subscribe, preference.snapshot, () => true);
@@ -149,6 +188,20 @@ function ShellContents<To extends string>({
   const sidebarId = useId();
   const toggleLabel = c(collapsed ? "expandSidebar" : "collapseSidebar");
   const windowed = frame === "window";
+  const [toolbarStart, setToolbarStart] = useState<HTMLElement | null>(null);
+  const [toolbarEnd, setToolbarEnd] = useState<HTMLElement | null>(null);
+  const [claims, setClaims] = useState(0);
+  const toolbar = useMemo<ToolbarSlots>(
+    () => ({
+      start: toolbarStart,
+      end: toolbarEnd,
+      claim: () => {
+        setClaims((value) => value + 1);
+        return () => setClaims((value) => value - 1);
+      },
+    }),
+    [toolbarStart, toolbarEnd],
+  );
   function renderItem(item: ShellNavItem<To>) {
     return (
       <SidebarMenuItem key={item.to}>
@@ -178,7 +231,7 @@ function ShellContents<To extends string>({
     );
   }
   return (
-    <>
+    <ToolbarContext.Provider value={toolbar}>
       <a
         href="#main"
         className="fixed top-2 left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0"
@@ -270,23 +323,32 @@ function ShellContents<To extends string>({
             </TooltipTrigger>
             <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
           </Tooltip>
-          {breadcrumbs.map((crumb, index) => (
-            <Fragment key={index}>
-              {index > 0 && (
-                <span aria-hidden="true" className="opacity-45">
-                  /
-                </span>
-              )}
-              <span
-                className={cn(
-                  "max-w-48 truncate",
-                  index === breadcrumbs.length - 1 && "font-medium text-foreground",
+          {claims === 0 &&
+            breadcrumbs.map((crumb, index) => (
+              <Fragment key={index}>
+                {index > 0 && (
+                  <span aria-hidden="true" className="opacity-45">
+                    /
+                  </span>
                 )}
-              >
-                {crumb}
-              </span>
-            </Fragment>
-          ))}
+                <span
+                  className={cn(
+                    "max-w-48 truncate",
+                    index === breadcrumbs.length - 1 && "font-medium text-foreground",
+                  )}
+                >
+                  {crumb}
+                </span>
+              </Fragment>
+            ))}
+          <div
+            ref={setToolbarStart}
+            className="flex h-full min-w-0 items-center gap-3 empty:hidden [-webkit-app-region:no-drag]"
+          />
+          <div
+            ref={setToolbarEnd}
+            className="ml-auto flex shrink-0 items-center gap-2 empty:hidden [-webkit-app-region:no-drag]"
+          />
         </header>
         {notice}
         <main
@@ -299,6 +361,6 @@ function ShellContents<To extends string>({
           </div>
         </main>
       </div>
-    </>
+    </ToolbarContext.Provider>
   );
 }

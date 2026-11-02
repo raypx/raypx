@@ -39,7 +39,6 @@ export default {
     computersHint: "Sign in to see computers connected from Desktop.",
     privateTitle: "Sign in to continue",
     privateHint: "Your account data is available after you sign in.",
-    visitorNotice: "Browsing as a guest.",
     tasksHint: "Drafts stay on this device until you sign in and send.",
     history: "Your session history",
     historyHint: "Sign in to see your sessions.",
@@ -416,7 +415,6 @@ export default {
   common: {
     projects: "Projects",
     projectTools: "Project tools",
-    deviceWorkspace: "Local workspace",
     home: "Home",
     adminSettings: "Site settings",
     tasks: "Sessions",
@@ -472,8 +470,7 @@ export default {
     profileSaved: "Display name saved.",
     profileRefresh: "Your name was saved. Refresh the page to update the account details.",
     sessionsTitle: "Signed-in sessions",
-    sessionsHint:
-      "Review where your account is signed in. Sign out sessions you no longer recognize or use.",
+    sessionsHint: "Sign out sessions you don't recognize or use.",
     sessionsEmpty: "No active sessions found. Sign in again to refresh your account.",
     currentSession: "This session",
     unknownSession: "Unknown browser or device",
@@ -512,8 +509,7 @@ export default {
     verifySent: "Verification email sent. Check your inbox.",
     verified: "Your email is verified. You can sign in now.",
     invalidLink: "This link is invalid or has expired. Request a new email.",
-    accountTitle: "Your account",
-    accountIntro: "Review your profile and manage account access.",
+    accountTitle: "Account",
     signedOut: "You’re not signed in",
     signedOutIntro:
       "Sign in to access your account. Your local files and automations are always available on desktop.",

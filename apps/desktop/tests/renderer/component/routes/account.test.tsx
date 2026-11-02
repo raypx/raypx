@@ -185,7 +185,7 @@ describe("Desktop account route", () => {
     const router = await page("/account", true);
     expect(router.state.location.pathname).toBe("/account");
     expect(screen.getByRole("heading", { name: ada.name })).toBeTruthy();
-    expect(screen.getAllByText(ada.email)).toHaveLength(2);
+    expect(screen.getByText(ada.email)).toBeTruthy();
     expect(mocks.account).toHaveBeenCalledTimes(1);
     const [input, options] = mocks.account.mock.calls[0]!;
     expect(input).toEqual({});

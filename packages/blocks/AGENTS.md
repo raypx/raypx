@@ -33,6 +33,9 @@ Code outside `src/components/` stays private.
   `brand.description` adds a compact workspace subtitle. Applications can insert
   `contextNavigation` after the primary group and an `accountAction` beside the
   account menu; Blocks never loads project or account data itself.
+  `ShellToolbar` (start) and `ShellActions` (end) portal page context, tabs, actions and
+  scope switches into the top bar; a start toolbar replaces the page title. Outside an
+  AppShell they render inline, so isolated views and tests keep their controls.
   `layout` selects the page template that owns content width, gutters and vertical
   rhythm: `document` (reading width for settings, account and onboarding),
   `workbench` (wide list/detail workspaces) or `tool` (the whole main region).

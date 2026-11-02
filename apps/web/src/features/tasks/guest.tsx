@@ -62,7 +62,7 @@ export function GuestTasks({
             />
           </div>
         )}
-        <aside className="min-w-0 rounded-xl border border-border p-5">
+        <div className="min-w-0 rounded-xl border border-border p-5">
           <span className="grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground">
             <History aria-hidden="true" className="size-4.5" />
           </span>
@@ -71,7 +71,7 @@ export function GuestTasks({
           <div className="mt-4">
             <SignInLink>{g("viewTasks")}</SignInLink>
           </div>
-        </aside>
+        </div>
       </div>
     </section>
   );

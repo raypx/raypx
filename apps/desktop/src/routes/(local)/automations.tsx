@@ -9,6 +9,7 @@ import { RemoteBoundary } from "../../features/auth/components/remote-boundary";
 import { cloudJobs, jobDevices } from "../../features/automations/client";
 import { accountMemory } from "../../features/memory/client";
 import { ProjectTools } from "../../features/tasks/project-tools";
+import { ShellActions } from "@raypx/blocks/shell";
 
 const localRoute = getRouteApi("/(local)");
 export const Route = createFileRoute("/(local)/automations")({
@@ -123,10 +124,12 @@ function JobsPage() {
         })
       }
     >
-      <TabsList aria-label={t("scope")}>
-        <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
-        <TabsTrigger value="cloud">{t("cloudScope")}</TabsTrigger>
-      </TabsList>
+      <ShellActions>
+        <TabsList aria-label={t("scope")}>
+          <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
+          <TabsTrigger value="cloud">{t("cloudScope")}</TabsTrigger>
+        </TabsList>
+      </ShellActions>
       <TabsContent value="local" keepMounted>
         {localPage}
       </TabsContent>
