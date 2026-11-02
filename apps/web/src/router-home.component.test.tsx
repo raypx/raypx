@@ -16,19 +16,26 @@ vi.mock("./features/auth/client", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: session },
 }));
-import { Route } from "./routes/(app)/index";
+import { Route as LandingRoute } from "./routes/(landing)/index";
+import { Route as ProjectsRoute } from "./routes/(app)/projects";
 
-async function html(account: AccountState) {
+async function html(account: AccountState, path = "/") {
   const root = createRootRouteWithContext<{ account: AccountState }>()({ component: Outlet });
   const app = createRoute({ getParentRoute: () => root, id: "(app)", component: Outlet });
+  const landing = createRoute({ getParentRoute: () => root, id: "(landing)", component: Outlet });
   const home = createRoute({
-    getParentRoute: () => app,
+    getParentRoute: () => landing,
     path: "/",
-    component: Route.options.component!,
+    component: LandingRoute.options.component!,
+  });
+  const projects = createRoute({
+    getParentRoute: () => app,
+    path: "/projects",
+    component: ProjectsRoute.options.component!,
   });
   const router = createRouter({
-    routeTree: root.addChildren([app.addChildren([home])]),
-    history: createMemoryHistory({ initialEntries: ["/"] }),
+    routeTree: root.addChildren([landing.addChildren([home]), app.addChildren([projects])]),
+    history: createMemoryHistory({ initialEntries: [path] }),
     context: { account },
     isServer: true,
   });
@@ -40,16 +47,22 @@ async function html(account: AccountState) {
   );
 }
 
-it("server-renders the confirmed guest page before the browser session resolves", async () => {
+it("server-renders the landing page before the browser session resolves", async () => {
   const page = await html({ status: "signed-out" });
-  expect(page).toContain("<h1>Remote sessions and approvals</h1>");
+  expect(page).toMatch(/<h1[^>]*>Remote sessions and approvals<\/h1>/);
   expect(page).toContain("Write a session draft");
   expect(page).not.toContain('role="status"');
   expect(session).not.toHaveBeenCalled();
 });
 
 it("keeps an unavailable account distinct from a confirmed guest during SSR", async () => {
-  const page = await html({ status: "unavailable" });
+  const page = await html({ status: "unavailable" }, "/projects");
   expect(page).toContain("Unable to connect. Check your connection and try again.");
   expect(page).not.toContain("Remote sessions and approvals");
+});
+
+it("server-renders the landing page even when account access is unavailable", async () => {
+  const page = await html({ status: "unavailable" });
+  expect(page).toContain("Remote sessions and approvals");
+  expect(page).not.toContain("Unable to connect.");
 });

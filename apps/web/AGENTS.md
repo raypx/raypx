@@ -29,10 +29,12 @@ application is an independent composition root and is never imported by another 
 - `src/router.tsx` creates one TanStack QueryClient per router (per request on the
   server), passes it as route context and connects SSR dehydration through `@tanstack/react-router-ssr-query`.
 - `(app)/route.tsx` resolves account context with `queryClient.fetchQuery(accountQuery())`
-  while keeping the application shell public. Guests can browse home, tasks, approvals
+  while keeping the application shell public. Guests can browse projects, tasks, approvals
   and preferences; `SessionBoundary` mounts private views only after a confirmed session.
-  Home renders its public guest page directly from the route's signed-out account
-  snapshot so SSR does not wait for the browser session hook.
+  `src/routes/(landing)/` owns the public `/` homepage with its own header and
+  document layout, without account loaders or the workspace shell. Landing views
+  live under `features/landing/components/`. The `(app)/projects` route owns
+  `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Only a
   signed-in result stays fresh; sign-out handlers call `queryClient.clear()` before
   `router.invalidate()`. The account page reads the result from route context.
@@ -49,7 +51,7 @@ application is an independent composition root and is never imported by another 
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.
 - The account page composes `ProfileSettings` and `AccountSessions` from
-  `/account`; the signed-in home lists authorized remote projects grouped by computer.
+  `/account`; the `/projects` page lists authorized remote projects grouped by computer.
   Project/session selection lives in validated URL search. The composer consumes
   that target and never executes on navigation or guest draft restoration.
   The account page composes its views from
@@ -64,8 +66,9 @@ application is an independent composition root and is never imported by another 
   the shared form. The auth layout validates an application-page `returnTo` allowlist;
   login, signup and email callbacks preserve it. Login restores editing state, never
   an execution or approval intent. `/admin/settings` still redirects guests to login.
-  Public URLs stay flat, and changing routes remounts the form so inputs and
-  request feedback reset.
+  Sign-in without a return destination opens `/projects`; an explicit allowed
+  destination is preserved. Public URLs stay flat, and changing routes remounts the
+  form so inputs and request feedback reset.
 - `/health` is a server route for process liveness; it never calls the API.
 - `/automations` composes `@raypx/jobs/client` with API adapters. Guests see a
   contextual sign-in gate with return navigation; only a confirmed account mounts

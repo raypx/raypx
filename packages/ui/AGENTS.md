@@ -33,6 +33,10 @@ packages own page layout, forms, navigation and product behavior.
 - `select-field` composes the shadcn Select for labelled string options, including
   disabled options, placeholders and named form values. Prefer it to NativeSelect
   in feature UI so popup appearance and keyboard behavior are shared.
+- `password-input` exposes `PasswordInput`, composing InputGroup and IconButton.
+  Callers supply translated `labels.show`/`labels.hide`; input props and refs target
+  the input, while `className` sizes the whole control. Visibility starts hidden
+  and stays in component memory. Disabled inputs also disable the toggle.
 - `confirmation` exposes useConfirmation for asynchronous shadcn confirmation
   dialogs. Render its dialog, await confirm, and retain mutation fences after the
   answer. Escape and dismissal cancel the active request; distinct requests queue, explicit requestKey identities share a promise, and unmount cancels every pending request.

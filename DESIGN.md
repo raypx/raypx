@@ -7,7 +7,8 @@ Express feature styles and responsive states with Tailwind utilities in componen
 CSS entry points register sources and shared styles; avoid feature-specific selectors.
 
 Desktop opens the most recent valid local project, with project authorization,
-Agent readiness and the first message as its empty state. Web opens remote projects;
+Agent readiness and the first message as its empty state. Web uses a public landing
+page at `/` and opens remote projects at `/projects`;
 account details live at `/account`. Local work remains available before login.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers;
 the planned Expo iOS app is a separate delivery phase.

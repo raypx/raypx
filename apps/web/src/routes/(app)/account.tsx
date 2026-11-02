@@ -1,4 +1,4 @@
-import { GuestHome } from "../../features/auth/components/guest-home";
+import { SignInGate } from "../../features/auth/components/session-boundary";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { AccountDetails } from "@raypx/account/client";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import { AccountSessions } from "../../features/auth/components/account-sessions
 import { ProfileSettings } from "../../features/auth/components/profile-settings";
 
 export const Route = createFileRoute("/(app)/account")({
-  staticData: { page: { title: "common.account", guestTitle: "common.home", layout: "document" } },
+  staticData: { page: { title: "common.account", layout: "document" } },
   loader: ({ context }) => context.account,
   component: AccountPage,
 });
@@ -40,7 +40,7 @@ function AccountPage() {
     state.status === "signed-out" ||
     (state.status === "signed-in" && !session.isPending && !session.error && !session.data)
   )
-    return <GuestHome />;
+    return <SignInGate heading="h1" title={t("signedOut")} description={t("signedOutIntro")} />;
   if (
     state.status === "signed-in" &&
     !session.error &&

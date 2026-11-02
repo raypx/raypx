@@ -61,21 +61,33 @@ test(
       )
         privateReads.push(request.url());
     });
-    for (const path of ["/", "/settings", "/tasks", "/approvals"]) {
+    await page.goto(web + "/");
+    await expect(
+      page.getByRole("heading", { name: "Remote sessions and approvals", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
+      "href",
+      "/projects",
+    );
+    expect(privateReads).toEqual([]);
+    await capture(page, {
+      path: test.info().outputPath("web-landing-home.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+    await page.setViewportSize({ width: 1280, height: 720 });
+    for (const path of ["/projects", "/settings", "/tasks", "/approvals"]) {
       await page.goto(web + path);
       await expect(page).toHaveURL(web + path);
       await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
       await expect(
         page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
       ).toBeVisible();
-      if (path === "/") {
-        await expectGuestShell(page);
-        await capture(page, {
-          path: test.info().outputPath("web-guest-home.png"),
-          fullPage: true,
-          animations: "disabled",
-        });
-      }
       if (path === "/tasks") {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({ colorScheme: "dark" });

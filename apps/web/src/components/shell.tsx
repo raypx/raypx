@@ -40,7 +40,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { QuickSettingsModal } from "../features/settings/quick-settings-modal";
 import { useQuickSettingsStore } from "../features/settings/quick-settings-store";
 
-function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath>) {
+function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath | "/">) {
   return (
     <Link
       to={to}
@@ -92,7 +92,7 @@ export function WebShell() {
       ),
   });
   const navigation: ShellNavItem<WebPath>[] = [
-    { to: "/", label: c("projects"), icon: <FolderOpen />, exact: true },
+    { to: "/projects", label: c("projects"), icon: <FolderOpen />, exact: true },
     {
       to: "/approvals",
       label: c("approvals"),

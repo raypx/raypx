@@ -29,6 +29,11 @@ describe("application shell pages", () => {
         .sort((a, b) => a.localeCompare(b)),
     ).toEqual(Object.keys(webPagePermissions).sort((a, b) => a.localeCompare(b)));
   });
+  it("keeps the public homepage in its own landing group", () => {
+    const routes = pages();
+    expect(routes.find((route) => route.fullPath === "/")?.id).toBe("/(landing)/");
+    expect(routes.find((route) => route.fullPath === "/projects")?.id).toBe("/(app)/projects");
+  });
   it("declare a translated title and page template for every shell route", () => {
     const shellPages = pages().filter((route) => route.id.startsWith("/(app)"));
     expect(
@@ -36,8 +41,8 @@ describe("application shell pages", () => {
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
       ),
     ).toEqual({
-      "/": { title: "common.projects", guestTitle: "common.home", layout: "workbench" },
-      "/account": { title: "common.account", guestTitle: "common.home", layout: "document" },
+      "/projects": { title: "common.projects", layout: "workbench" },
+      "/account": { title: "common.account", layout: "document" },
       "/admin/settings": { title: "common.adminSettings", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },

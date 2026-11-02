@@ -164,9 +164,23 @@ function signIn(role: AccountRole = "member", accountId = "user-1") {
   mocks.loadAccount.mockResolvedValue({ status: "signed-in", account: mocks.session.user });
 }
 
+it("renders the landing page without account or private workspace reads", async () => {
+  mocks.sessionPending = true;
+  const router = await page("/");
+  expect(router.state.location.pathname).toBe("/");
+  expect(screen.getByRole("heading", { name: "Remote sessions and approvals" })).toBeTruthy();
+  expect(mocks.loadAccount).not.toHaveBeenCalled();
+  expect(mocks.access).not.toHaveBeenCalled();
+  expect(mocks.tasks).not.toHaveBeenCalled();
+  expect(mocks.devices).not.toHaveBeenCalled();
+  expect(mocks.approvals).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("link", { name: "Projects" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
+});
+
 describe("menu permissions", () => {
   it("keeps private menu links and their queries hidden for guests", async () => {
-    await page("/");
+    await page("/projects");
     expect(screen.queryByRole("link", { name: "Waiting" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Memory and templates" })).toBeNull();
@@ -211,7 +225,7 @@ describe("menu permissions", () => {
 
   it("never carries administrator navigation into another account while grants are pending", async () => {
     signIn("admin");
-    const router = await page("/");
+    const router = await page("/projects");
     expect(await screen.findByRole("link", { name: "Site settings" })).toBeTruthy();
     signIn("member", "user-2");
     mocks.access.mockImplementation(() => new Promise(() => {}));
@@ -278,8 +292,8 @@ describe("authentication routes", () => {
 
   it("keeps application routes when the API is unavailable", async () => {
     mocks.loadAccount.mockResolvedValue({ status: "unavailable" });
-    const router = await page("/");
-    expect(router.state.location.pathname).toBe("/");
+    const router = await page("/projects");
+    expect(router.state.location.pathname).toBe("/projects");
     expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
   });
 
@@ -322,7 +336,7 @@ describe("authentication routes", () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it("returns to the account route after successful sign-in", async () => {
+  it("opens projects after successful sign-in without a return destination", async () => {
     mocks.signIn.mockImplementation(async () => {
       mocks.loadAccount.mockResolvedValue({
         status: "signed-in",
@@ -336,7 +350,7 @@ describe("authentication routes", () => {
     });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
     fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
-    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
     await waitFor(() => expect(screen.queryByLabelText("Password")).toBeNull());
   });
 
@@ -501,6 +515,8 @@ describe("authentication routes", () => {
       target: { value: "ada@example.test" },
     });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "incorrect" } });
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "text");
     fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
     expect(await screen.findByRole("alert")).toBeTruthy();
     fireEvent.click(screen.getByRole("link", { name: "Create account" }));
@@ -508,6 +524,7 @@ describe("authentication routes", () => {
     expect(await screen.findByLabelText("Your name")).toBeTruthy();
     expect(screen.getByLabelText("Email address")).toHaveValue("");
     expect(screen.getByLabelText("Password")).toHaveValue("");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });

@@ -417,6 +417,8 @@ export default {
     dark: "深色",
     signIn: "登录",
     signOut: "退出登录",
+    showPassword: "显示密码",
+    hidePassword: "隐藏密码",
     desktopOnly: "请打开桌面应用以使用本地工具。",
     working: "处理中…",
     confirmDelete: "确认删除此项？此操作无法撤销。",

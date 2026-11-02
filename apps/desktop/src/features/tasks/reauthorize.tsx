@@ -3,6 +3,7 @@ import { useAuthActions } from "@raypx/auth/hooks";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
+import { PasswordInput } from "@raypx/ui/password-input";
 import {
   Dialog,
   DialogContent,
@@ -67,9 +68,9 @@ export function ReauthorizeHost({ email }: { email: string }) {
           </div>
           <div className="grid gap-2">
             <label htmlFor={`${id}-password`}>{a("password")}</label>
-            <Input
+            <PasswordInput
               id={`${id}-password`}
-              type="password"
+              labels={{ show: c("showPassword"), hide: c("hidePassword") }}
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}

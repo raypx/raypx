@@ -14,6 +14,7 @@
     "./empty-state": "./src/empty-state.tsx",
     "./status-badge": "./src/status-badge.tsx",
     "./select-field": "./src/select-field.tsx",
+    "./password-input": "./src/password-input.tsx",
     "./confirmation": "./src/confirmation.tsx",
     ".": "./src/index.ts",
     "./avatar": "./src/avatar.tsx",

@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
+import { PasswordInput } from "@raypx/ui/password-input";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
 
@@ -201,9 +202,9 @@ export function AuthForm({
                       </LinkComponent>
                     )}
                   </div>
-                  <Input
+                  <PasswordInput
                     id="auth-password"
-                    type="password"
+                    labels={{ show: c("showPassword"), hide: c("hidePassword") }}
                     name="password"
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
                     minLength={mode === "login" ? 1 : 8}

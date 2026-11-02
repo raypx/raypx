@@ -61,7 +61,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         }
         router.options.context.queryClient.clear();
         await router.invalidate();
-        await navigate({ to: returnTo });
+        await navigate({
+          to: new URLSearchParams(search).has("returnTo") ? returnTo : "/projects",
+        });
       }}
       LinkComponent={AuthLink}
     />

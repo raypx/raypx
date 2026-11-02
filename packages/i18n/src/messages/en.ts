@@ -455,6 +455,8 @@ export default {
     dark: "Dark",
     signIn: "Sign in",
     signOut: "Sign out",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     desktopOnly: "Open the desktop app to use local tools.",
     working: "Working…",
     confirmDelete: "Delete this item? This cannot be undone.",

@@ -11,12 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
+import { Route as landingRouteRouteImport } from './routes/(landing)/route'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as appIndexRouteImport } from './routes/(app)/index'
 import { Route as appAccountRouteImport } from './routes/(app)/account'
 import { Route as appApprovalsRouteImport } from './routes/(app)/approvals'
 import { Route as appAutomationsRouteImport } from './routes/(app)/automations'
 import { Route as appMemoryRouteImport } from './routes/(app)/memory'
+import { Route as appProjectsRouteImport } from './routes/(app)/projects'
 import { Route as appSettingsRouteImport } from './routes/(app)/settings'
 import { Route as appTasksRouteImport } from './routes/(app)/tasks'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
@@ -24,6 +25,7 @@ import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
+import { Route as landingIndexRouteImport } from './routes/(landing)/index'
 import { Route as appAdminSettingsRouteImport } from './routes/(app)/admin/settings'
 
 const appRouteRoute = appRouteRouteImport.update({
@@ -34,15 +36,14 @@ const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
+const landingRouteRoute = landingRouteRouteImport.update({
+  id: '/(landing)',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
   getParentRoute: () => rootRouteImport,
-} as any)
-const appIndexRoute = appIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => appRouteRoute,
 } as any)
 const appAccountRoute = appAccountRouteImport.update({
   id: '/account',
@@ -62,6 +63,11 @@ const appAutomationsRoute = appAutomationsRouteImport.update({
 const appMemoryRoute = appMemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appProjectsRoute = appProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appSettingsRoute = appSettingsRouteImport.update({
@@ -99,6 +105,11 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => authRouteRoute,
 } as any)
+const landingIndexRoute = landingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => landingRouteRoute,
+} as any)
 const appAdminSettingsRoute = appAdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
@@ -111,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof appApprovalsRoute
   '/automations': typeof appAutomationsRoute
   '/memory': typeof appMemoryRoute
+  '/projects': typeof appProjectsRoute
   '/settings': typeof appSettingsRoute
   '/tasks': typeof appTasksRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -118,7 +130,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/': typeof appIndexRoute
+  '/': typeof landingIndexRoute
   '/admin/settings': typeof appAdminSettingsRoute
 }
 export interface FileRoutesByTo {
@@ -127,6 +139,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof appApprovalsRoute
   '/automations': typeof appAutomationsRoute
   '/memory': typeof appMemoryRoute
+  '/projects': typeof appProjectsRoute
   '/settings': typeof appSettingsRoute
   '/tasks': typeof appTasksRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -134,18 +147,20 @@ export interface FileRoutesByTo {
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/': typeof appIndexRoute
+  '/': typeof landingIndexRoute
   '/admin/settings': typeof appAdminSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(app)': typeof appRouteRouteWithChildren
   '/(auth)': typeof authRouteRouteWithChildren
+  '/(landing)': typeof landingRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/(app)/account': typeof appAccountRoute
   '/(app)/approvals': typeof appApprovalsRoute
   '/(app)/automations': typeof appAutomationsRoute
   '/(app)/memory': typeof appMemoryRoute
+  '/(app)/projects': typeof appProjectsRoute
   '/(app)/settings': typeof appSettingsRoute
   '/(app)/tasks': typeof appTasksRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
@@ -153,7 +168,7 @@ export interface FileRoutesById {
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
-  '/(app)/': typeof appIndexRoute
+  '/(landing)/': typeof landingIndexRoute
   '/(app)/admin/settings': typeof appAdminSettingsRoute
 }
 export interface FileRouteTypes {
@@ -164,6 +179,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/automations'
     | '/memory'
+    | '/projects'
     | '/settings'
     | '/tasks'
     | '/forgot-password'
@@ -180,6 +196,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/automations'
     | '/memory'
+    | '/projects'
     | '/settings'
     | '/tasks'
     | '/forgot-password'
@@ -193,11 +210,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/(app)'
     | '/(auth)'
+    | '/(landing)'
     | '/health'
     | '/(app)/account'
     | '/(app)/approvals'
     | '/(app)/automations'
     | '/(app)/memory'
+    | '/(app)/projects'
     | '/(app)/settings'
     | '/(app)/tasks'
     | '/(auth)/forgot-password'
@@ -205,13 +224,14 @@ export interface FileRouteTypes {
     | '/(auth)/reset-password'
     | '/(auth)/signup'
     | '/(auth)/verify-email'
-    | '/(app)/'
+    | '/(landing)/'
     | '/(app)/admin/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
+  landingRouteRoute: typeof landingRouteRouteWithChildren
   HealthRoute: typeof HealthRoute
 }
 
@@ -231,19 +251,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(landing)': {
+      id: '/(landing)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof landingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/health': {
       id: '/health'
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/(app)/': {
-      id: '/(app)/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof appIndexRouteImport
-      parentRoute: typeof appRouteRoute
     }
     '/(app)/account': {
       id: '/(app)/account'
@@ -271,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/memory'
       fullPath: '/memory'
       preLoaderRoute: typeof appMemoryRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/projects': {
+      id: '/(app)/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof appProjectsRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/settings': {
@@ -322,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authVerifyEmailRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(landing)/': {
+      id: '/(landing)/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof landingIndexRouteImport
+      parentRoute: typeof landingRouteRoute
+    }
     '/(app)/admin/settings': {
       id: '/(app)/admin/settings'
       path: '/admin/settings'
@@ -337,9 +371,9 @@ interface appRouteRouteChildren {
   appApprovalsRoute: typeof appApprovalsRoute
   appAutomationsRoute: typeof appAutomationsRoute
   appMemoryRoute: typeof appMemoryRoute
+  appProjectsRoute: typeof appProjectsRoute
   appSettingsRoute: typeof appSettingsRoute
   appTasksRoute: typeof appTasksRoute
-  appIndexRoute: typeof appIndexRoute
   appAdminSettingsRoute: typeof appAdminSettingsRoute
 }
 
@@ -348,9 +382,9 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appApprovalsRoute: appApprovalsRoute,
   appAutomationsRoute: appAutomationsRoute,
   appMemoryRoute: appMemoryRoute,
+  appProjectsRoute: appProjectsRoute,
   appSettingsRoute: appSettingsRoute,
   appTasksRoute: appTasksRoute,
-  appIndexRoute: appIndexRoute,
   appAdminSettingsRoute: appAdminSettingsRoute,
 }
 
@@ -378,9 +412,22 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface landingRouteRouteChildren {
+  landingIndexRoute: typeof landingIndexRoute
+}
+
+const landingRouteRouteChildren: landingRouteRouteChildren = {
+  landingIndexRoute: landingIndexRoute,
+}
+
+const landingRouteRouteWithChildren = landingRouteRoute._addFileChildren(
+  landingRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
+  landingRouteRoute: landingRouteRouteWithChildren,
   HealthRoute: HealthRoute,
 }
 export const routeTree = rootRouteImport

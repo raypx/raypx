@@ -1,5 +1,6 @@
 const destinations = new Set([
   "/",
+  "/projects",
   "/account",
   "/tasks",
   "/approvals",

@@ -19,7 +19,7 @@ export function accountAccessQuery(accountId: string | null) {
 
 /** Public pages stay public; private menu entries declare their capability here. */
 export const webPagePermissions = {
-  "/": null,
+  "/projects": null,
   "/settings": null,
   "/account": "account.manage",
   "/tasks": "tasks.read",
