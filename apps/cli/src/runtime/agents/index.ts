@@ -1,3 +1,4 @@
+import { respondToClaudeHook } from "@raypx/provider-claude";
 import { discoverProviders } from "./harness/registry";
 import type { RecordDiagnostic } from "../../diagnostics";
 import { existsSync, realpathSync } from "node:fs";
@@ -40,8 +41,6 @@ const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
-const text = (value: unknown, max = 128_000) =>
-  typeof value === "string" ? taskText(value, max) : "";
 // The first record always passes so cursors advance past oversized events.
 // Unordered sets skip a record that does not fit instead of hiding the rest.
 export function bounded<T>(records: T[], skip = false, budget = 256 * 1024): T[] {
@@ -643,71 +642,7 @@ export class AgentRuntime {
           const raw = await request.text();
           if (Buffer.byteLength(raw) > 256 * 1024) return new Response(null, { status: 413 });
           const input = object(JSON.parse(raw));
-          const name = text(input.tool_name, 500);
-          const tool = object(input.tool_input);
-          const question = name === "AskUserQuestion";
-          const plan = name === "ExitPlanMode";
-          if (plan) execution.markPlanHandled();
-          const questions =
-            question && Array.isArray(tool.questions)
-              ? tool.questions.map((item: unknown, index: number) => {
-                  const q = object(item);
-                  return {
-                    id: String(index),
-                    text: text(q.question, 8000),
-                    multiSelect: q.multiSelect === true,
-                    options: Array.isArray(q.options)
-                      ? q.options.map((option: unknown) => ({
-                          label: text(object(option).label, 1000),
-                          description: text(object(option).description, 8000),
-                        }))
-                      : [],
-                  };
-                })
-              : [];
-          const decision = await execution.ask(
-            question ? "question" : plan ? "plan" : "permission",
-            name,
-            plan
-              ? typeof tool.plan === "string"
-                ? tool.plan
-                : ""
-              : question
-                ? ""
-                : JSON.stringify(tool, null, 2),
-            questions,
-          );
-          if (plan && decision.type === "allow") execution.approveHookPlan();
-          if (input.hook_event_name === "PermissionRequest")
-            return Response.json({
-              hookSpecificOutput: {
-                hookEventName: "PermissionRequest",
-                decision:
-                  decision.type === "allow"
-                    ? { behavior: "allow" }
-                    : {
-                        behavior: "deny",
-                        message: decision.type === "deny" ? decision.note : "Denied",
-                      },
-              },
-            });
-          const updatedInput =
-            question && decision.type === "answer"
-              ? {
-                  ...tool,
-                  answers: Object.fromEntries(
-                    questions.map((q) => [q.text, (decision.answers[q.id] ?? []).join(", ")]),
-                  ),
-                }
-              : tool;
-          return Response.json({
-            hookSpecificOutput: {
-              hookEventName: "PreToolUse",
-              permissionDecision: decision.type === "deny" ? "deny" : "allow",
-              permissionDecisionReason: decision.type === "deny" ? decision.note : "",
-              updatedInput,
-            },
-          });
+          return await respondToClaudeHook(input, execution);
         } catch {
           return Response.json({ continue: false, stopReason: "Approval unavailable" });
         }

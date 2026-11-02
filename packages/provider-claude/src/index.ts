@@ -108,3 +108,5 @@ export class ClaudeAdapter implements AgentAdapter {
     await this.transport.control({ subtype: "interrupt" });
   }
 }
+
+export { respondToClaudeHook, type ClaudeHookApprovalPort } from "./hooks";
