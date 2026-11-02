@@ -31,7 +31,14 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   if (plan.full || files.length)
     await run(
       process.execPath,
-      ["--bun", "vp", "fmt", "--check", ...(plan.full ? [] : files)],
+      [
+        "--bun",
+        "vp",
+        "fmt",
+        "--check",
+        "--no-error-on-unmatched-pattern",
+        ...(plan.full ? [] : files),
+      ],
       root,
     );
   timings.formatMs = Math.round(performance.now() - formatStarted);

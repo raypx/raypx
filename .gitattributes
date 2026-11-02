@@ -3,3 +3,7 @@ packages/ui/src/styles/theme.css text eol=lf
 # Generators emit LF; checkout must match their bytes for cross-job task caches.
 **/routeTree.gen.ts text eol=lf
 apps/desktop/generated/*.json text eol=lf
+
+# SQLite embeds these exact bytes; PostgreSQL also hashes migration SQL.
+**/migration.sql text eol=lf
+apps/cli/src/runtime/sqlite/migrations.generated.json text eol=lf

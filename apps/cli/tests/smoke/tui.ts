@@ -21,6 +21,8 @@ const driver = resolve(import.meta.dirname, "../fixtures/tui/driver.py");
 
 const closeInstances: (() => Promise<void>)[] = [];
 try {
+  await copyFile(builtBinary, binary);
+  await chmod(binary, 0o700);
   for (const profile of [
     "tui-empty",
     "tui-with-desktop",
@@ -30,9 +32,7 @@ try {
     "tui-sigint-active",
     "tui-sigterm-active",
   ])
-    closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }));
-  await copyFile(builtBinary, binary);
-  await chmod(binary, 0o700);
+    closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }, [binary]));
   const child = Bun.spawn([python, driver, binary, directory], {
     cwd: directory,
     stdin: "ignore",

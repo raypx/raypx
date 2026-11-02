@@ -16,20 +16,26 @@ export function deploymentSmokePlatform(args: string[]): string {
   throw new Error("Usage: raypx-dev deployment:smoke [--platform linux/amd64|linux/arm64]");
 }
 
-async function docker(args: string[]): Promise<string> {
+class DeploymentDockerError extends Error {
+  constructor(operation: string, code: number) {
+    super("Docker " + operation + " failed (" + code + ")");
+  }
+}
+
+async function docker(args: string[], timeoutMs = 30_000): Promise<string> {
   const child = Bun.spawn(["docker", ...args], {
     env: process.env,
     stdout: "pipe",
     stderr: "pipe",
   });
-  const timer = setTimeout(() => child.kill(), 30_000);
+  const timer = setTimeout(() => child.kill(), timeoutMs);
   try {
     const [code, output] = await Promise.all([
       child.exited,
       new Response(child.stdout).text(),
       new Response(child.stderr).text(),
     ]);
-    if (code) throw new Error(`Docker ${args[0]} failed (${code})`);
+    if (code) throw new DeploymentDockerError(args[0]!, code);
     return output.trim();
   } finally {
     clearTimeout(timer);
@@ -125,6 +131,7 @@ export async function smokeDeployment(root: string, args: string[]) {
     const cleanup: string[] = [];
     let failed = false;
     let failure: unknown;
+    let failureLabel = "";
     try {
       await docker(["info", "--format", "{{.OSType}}"]);
       await docker([
@@ -335,6 +342,8 @@ export async function smokeDeployment(root: string, args: string[]) {
     } catch (error) {
       failed = true;
       failure = error;
+      failureLabel =
+        error instanceof DeploymentDockerError ? error.message : "Deployment probe failed";
       for (const name of containers) {
         try {
           await evidence.command(`${name}-logs`, ["docker", "logs", "--tail", "80", name]);
@@ -363,7 +372,7 @@ export async function smokeDeployment(root: string, args: string[]) {
       }
       if (ownedBuilder) {
         try {
-          await docker(["buildx", "rm", "--force", builder]);
+          await docker(["buildx", "rm", "--force", builder], 120_000);
         } catch {
           cleanup.push("builder");
         }
@@ -382,13 +391,19 @@ export async function smokeDeployment(root: string, args: string[]) {
       }
       await writeFile(
         join(evidence.directory, "results.json"),
-        JSON.stringify({ platform, outcomes, cleanup }, null, 2),
+        JSON.stringify(
+          { platform, outcomes, cleanup, ...(failed ? { failure: failureLabel } : {}) },
+          null,
+          2,
+        ),
       );
     }
     if (cleanup.length)
       throw new AggregateError(
         failed ? [failure] : [],
-        `Deployment validation cleanup failed; see ${evidence.directory}`,
+        (failed ? failureLabel + "; " : "") +
+          "Deployment validation cleanup failed; see " +
+          evidence.directory,
       );
     if (failed) throw failure;
   });

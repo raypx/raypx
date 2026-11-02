@@ -1,3 +1,4 @@
+import { enrollTestProfile } from "./instance";
 import assert from "node:assert/strict";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
@@ -12,6 +13,7 @@ type Message = {
 
 /** Exercise default runtime admission over real CLI stdio, including owner EOF. */
 export async function herdrRpc(launch: string[], root: string, binary: string, command: unknown) {
+  const closeInstance = await enrollTestProfile({ dataDir: root, profile: "herdr-rpc" }, launch);
   const child = Bun.spawn([...launch, "stdio", "--data-dir", root, "--profile", "herdr-rpc"], {
     env: { ...process.env, RAYPX_HERDR_BINARY: binary },
     stdin: "pipe",
@@ -58,5 +60,6 @@ export async function herdrRpc(launch: string[], root: string, binary: string, c
     child.kill();
     await child.exited;
     await reader;
+    await closeInstance();
   }
 }

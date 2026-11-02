@@ -49,7 +49,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
   const runners = ["macos-latest", "windows-latest"];
   const paths = files.filter((file) => {
     if (documentation(file)) return false;
-    if (file === ".github/workflows/native.yml") return true;
+    if (file === ".gitattributes" || file === ".github/workflows/native.yml") return true;
     const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
     if (!member) return false;
     const relative = file.slice(member.path.length + 1);

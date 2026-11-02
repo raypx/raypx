@@ -1,4 +1,4 @@
-import { InstanceRuntime } from "../../src/runtime/instances";
+import { resolve } from "node:path";
 import { profilePath } from "../../src/runtime/state";
 import {
   enrollmentBeginSchema,
@@ -9,7 +9,10 @@ import {
 import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
 
 /** Enroll an owned temporary profile over HTTP; exercise production identity/key storage. */
-export async function enrollTestProfile(options: { dataDir: string; profile?: string }) {
+export async function enrollTestProfile(
+  options: { dataDir: string; profile?: string },
+  launch: string[] = [process.execPath, resolve(import.meta.dirname, "../../src/main.ts")],
+) {
   const directory = profilePath(options);
   const signer = createInstanceSigner("isolated-packaged-acceptance");
   const token = crypto.randomUUID().replaceAll("-", "").repeat(2);
@@ -69,10 +72,29 @@ export async function enrollTestProfile(options: { dataDir: string; profile?: st
       await Bun.secrets.delete({ service: "pro.raypx.instance", name: instanceDigest(directory) });
   };
   try {
-    const instance = new InstanceRuntime(directory);
-    await instance.begin(server.url.origin);
-    await instance.poll();
-    await instance.assert();
+    // Let the same executable that consumes the identity own its OS credential.
+    const child = Bun.spawn(
+      [
+        ...launch,
+        "login",
+        "--data-dir",
+        options.dataDir,
+        "--profile",
+        options.profile ?? "default",
+      ],
+      {
+        env: { ...process.env, RAYPX_API_URL: server.url.origin, RAYPX_WEB_URL: server.url.origin },
+        stdout: "ignore",
+        stderr: "ignore",
+        windowsHide: true,
+      },
+    );
+    const timer = setTimeout(() => child.kill(), 30_000);
+    try {
+      if ((await child.exited) !== 0) throw new Error("Test instance enrollment failed");
+    } finally {
+      clearTimeout(timer);
+    }
     return close;
   } catch (error) {
     await close();

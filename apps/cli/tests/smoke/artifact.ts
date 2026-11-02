@@ -31,11 +31,12 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
   assert.equal(typeof events[0]?.elapsedMs, "number");
   assert.equal(events[0]?.level, outcome === "failed" ? "error" : "info");
 }
-const closeInstance = await enrollTestProfile({ dataDir });
+let closeInstance = async () => {};
 try {
   // Only the executable leaves dist: lazy imports must be inside this one file.
   await copyFile(builtBinary, binary);
   if (process.platform !== "win32") await chmod(binary, 0o700);
+  closeInstance = await enrollTestProfile({ dataDir }, [binary]);
   const version = Bun.spawn([binary, "--version"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
