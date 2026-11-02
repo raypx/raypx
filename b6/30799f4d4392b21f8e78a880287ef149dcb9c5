@@ -2,8 +2,10 @@ apps/web/src/components/legal-footer.tsx
   s_45109f95901754::t_b44616da7c4644 1-19
 apps/web/AGENTS.md
   s_45109f95901754::t_b44616da7c4644 26-29
+  s_45109f95901754::t_9ac27ae0acb6cc 30-31
 apps/web/src/routes/(legal)/route.tsx
   s_45109f95901754::t_b44616da7c4644 1,2-4,5,7,10-14,15-25,31-45
+  s_45109f95901754::t_9ac27ae0acb6cc 6,8-9,26-30
 apps/web/src/routes/(legal)/privacy.tsx
   s_45109f95901754::t_b44616da7c4644 1-15,17-85
   s_45109f95901754::t_d654eefb911562 16
@@ -19,6 +21,8 @@ apps/web/src/router-auth.component.test.tsx
   s_45109f95901754::t_22bd3af33b78ab 280-308
 apps/web/src/routeTree.gen.ts
   s_4143ab41883cbd::t_d817e696e231ff 15,30,45-48,119-123,144,162,171,185,205,223,231,245,254,281-287,386-392,461-472,477
+apps/web/src/features/landing/components/layout.tsx
+  s_45109f95901754::t_9ac27ae0acb6cc 9,55
 ---
 {
   "schema_version": "authorship/3.0.0",
