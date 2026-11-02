@@ -9,6 +9,7 @@ import {
   type AuthMode,
 } from "@raypx/auth/client";
 import { apiUrl, authClient, webUrl } from "../client";
+import { useRef } from "react";
 
 function AuthLink({ to, className, children }: AuthFormLinkProps) {
   const search = useLocation({ select: (location) => location.searchStr });
@@ -28,6 +29,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const g = useTranslations("guest");
   const router = useRouter();
   const navigate = useNavigate();
+  const signInReported = useRef(false);
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = safeReturnTo(new URLSearchParams(search).get("returnTo"));
   const destination = encodeURIComponent(returnTo);
@@ -48,16 +50,18 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       search={search}
       callbackURLs={callbackURLs}
       onSignedIn={async () => {
-        analytics.capture("sign_in_succeeded");
+        if (!signInReported.current) {
+          analytics.capture("sign_in_succeeded");
+          signInReported.current = true;
+        }
         const session = await authClient.getSession({
           fetchOptions: { signal: AbortSignal.timeout(10_000) },
         });
-        if (session.data) {
-          try {
-            claimGuestDraft(apiUrl, session.data.user.id);
-          } catch {
-            /* A failed handoff remains recoverable in the original tab. */
-          }
+        if (session.error || !session.data) throw new Error("Session refresh failed");
+        try {
+          claimGuestDraft(apiUrl, session.data.user.id);
+        } catch {
+          /* A failed handoff remains recoverable in the original tab. */
         }
         router.options.context.queryClient.clear();
         await router.invalidate();

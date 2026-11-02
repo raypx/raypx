@@ -25,7 +25,7 @@ export function QuickSettingsModal() {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl sm:p-6">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
@@ -33,20 +33,20 @@ export function QuickSettingsModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="flex min-w-0 flex-col py-2">
           <AppearanceSettings />
           <LanguageSettings />
           <AnalyticsSettings />
 
-          {/* Link to full settings page */}
-          <div className="border-t border-border pt-6">
-            <Link to="/settings" onClick={closeModal}>
-              <Button variant="outline" className="w-full">
-                <Settings className="size-4" />
-                {c("settings")}
-              </Button>
-            </Link>
-          </div>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            className="mt-6 w-full"
+            render={<Link to="/settings" onClick={closeModal} />}
+          >
+            <Settings data-icon="inline-start" aria-hidden="true" />
+            {c("settings")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

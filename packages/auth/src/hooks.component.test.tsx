@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { useAuthActions } from "@raypx/auth/hooks";
+import { useAuthActions } from "./hooks";
 
 type AuthResponse = { error: null | { code?: string; message?: string } };
 
@@ -202,6 +202,30 @@ describe("shared authentication actions", () => {
     expect(result.current.busy).toBe(false);
     expect(client.signOut).toHaveBeenCalledTimes(1);
     expect(onSuccess).toHaveBeenCalledTimes(1);
+    onSuccess.mockResolvedValueOnce(undefined);
+    await act(async () => {
+      expect(await result.current.retryCompletion()).toEqual({ status: "success" });
+      expect(await result.current.retryCompletion()).toEqual({ status: "ignored" });
+    });
+    expect(client.signOut).toHaveBeenCalledTimes(1);
+    expect(onSuccess).toHaveBeenCalledTimes(2);
+    expect(result.current.error).toBeNull();
+  });
+
+  it.each([
+    ["PASSWORD_TOO_LONG", "passwordLong"],
+    ["INVALID_NAME", "invalidName"],
+  ])("maps %s to safe feedback", async (code, key) => {
+    const { result, client } = actions();
+    client.signUp.email.mockResolvedValueOnce({ error: { code } });
+    await act(async () => {
+      await result.current.signUp({
+        name: "Name",
+        email: "user@example.test",
+        password: "password",
+      });
+    });
+    expect(result.current.error).toEqual({ kind: "auth", key });
   });
 
   it("reduces unknown server errors to a safe key without exposing diagnostic text", async () => {

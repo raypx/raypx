@@ -11,10 +11,13 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   authentication, query and navigation adapters.
   Optional back-link text and application-owned verification/reset callback URLs
   preserve Web return destinations; omitted values retain the Desktop defaults.
+  `PasswordChangeForm` takes a credential client and optional refresh callback;
+  applications own where account settings are available.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.
 - `/types`: pure public account/session types.
+- `/policy`: pure name/password limits shared by endpoints and forms.
 - `/permissions`: framework-free role names and application permission vocabulary.
 - `/access`: Better Auth's shared access controller and member/admin roles. The Admin
   plugin and permission projections consume this same ACL. Admin grants user list,
@@ -45,6 +48,10 @@ Hooks own request status, safe error keys and duplicate-submit protection. Keep
 success callbacks inside the busy lifecycle and distinguish their failures from
 authentication or transport errors. Never retain credentials or server diagnostics
 in hook state.
+`retryCompletion` repeats only a successful action's failed follow-up. Credential
+forms clear passwords on success and never resubmit them to recover a refresh.
+`usePasswordChange` verifies the current password through the injected client and
+keeps the password-change interface separate from sign-in clients.
 
 Only the browser `/client` entry may reach DOM form components and browser i18n.
 Keep `/hooks` platform-neutral and `/server` and `/types` free of DOM
@@ -53,6 +60,9 @@ applications provide links, callbacks and query data so Web SSR and Desktop hash
 routing retain their own behavior.
 
 ## Verification
+
+Auth owns its source-adjacent hooks and form component tests in a separate
+happy-dom project; endpoint integration tests use the memory adapter in Node.
 
 ```sh
 bun run --cwd packages/auth check

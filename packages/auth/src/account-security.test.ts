@@ -28,11 +28,11 @@ function fixture() {
   });
   const get = (path: string, cookie = "") =>
     auth.handler(new Request(`${baseURL}/api/auth/${path}`, { headers: { cookie } }));
-  const post = (path: string, body: object, cookie = "") =>
+  const post = (path: string, body: object, cookie = "", origin: string | null = baseURL) =>
     auth.handler(
       new Request(`${baseURL}/api/auth/${path}`, {
         method: "POST",
-        headers: { "content-type": "application/json", origin: baseURL, cookie },
+        headers: { "content-type": "application/json", ...(origin ? { origin } : {}), cookie },
         body: JSON.stringify(body),
       }),
     );
@@ -49,8 +49,8 @@ function fixture() {
     const response = await auth.handler(new Request(verification!.url));
     expect([200, 302]).toContain(response.status);
   };
-  const signIn = async (email: string) => {
-    const response = await post("sign-in/email", { email, password });
+  const signIn = async (email: string, suppliedPassword = password) => {
+    const response = await post("sign-in/email", { email, password: suppliedPassword });
     expect(response.status).toBe(200);
     const cookie = response.headers
       .getSetCookie()
@@ -66,8 +66,65 @@ function fixture() {
     expect(response.status).toBe(200);
     return response.json();
   };
-  return { get, post, session, sessions, register, signIn };
+  return { get, post, session, sessions, register, signIn, password };
 }
+
+it.each([true, false])(
+  "changes a verified account password with revokeOtherSessions=%s",
+  async (revokeOtherSessions) => {
+    const app = fixture();
+    await app.register("owner@example.com", "Owner");
+    await app.register("other@example.com", "Other");
+    const current = await app.signIn("owner@example.com");
+    const second = await app.signIn("owner@example.com");
+    const other = await app.signIn("other@example.com");
+    const input = {
+      currentPassword: app.password,
+      newPassword: "replacement-password-456",
+      revokeOtherSessions,
+    };
+    for (const origin of [null, "https://untrusted.example"]) {
+      expect((await app.post("change-password", input, current.cookie, origin)).status).toBe(403);
+    }
+    expect(
+      (
+        await app.post(
+          "change-password",
+          { ...input, currentPassword: "wrong-password" },
+          current.cookie,
+        )
+      ).status,
+    ).toBe(400);
+    for (const newPassword of ["short", "x".repeat(129)]) {
+      expect(
+        (await app.post("change-password", { ...input, newPassword }, current.cookie)).status,
+      ).toBe(400);
+    }
+    expect(await app.sessions(current.cookie)).toHaveLength(2);
+
+    const changed = await app.post("change-password", input, current.cookie);
+    expect(changed.status).toBe(200);
+    const cookie = revokeOtherSessions
+      ? changed.headers
+          .getSetCookie()
+          .map((value) => value.split(";")[0])
+          .join("; ")
+      : current.cookie;
+    expect((await app.session(cookie))?.user.id).toBe(current.user.id);
+    expect((await app.session(second.cookie))?.user.id ?? null).toBe(
+      revokeOtherSessions ? null : current.user.id,
+    );
+    expect((await app.session(other.cookie))?.user.id).toBe(other.user.id);
+    expect(
+      (await app.post("sign-in/email", { email: "owner@example.com", password: app.password }))
+        .status,
+    ).toBe(401);
+    expect((await app.signIn("owner@example.com", input.newPassword)).user.id).toBe(
+      current.user.id,
+    );
+  },
+  30000,
+);
 
 it("persists a display name across sessions without changing another account", async () => {
   const app = fixture();
@@ -141,6 +198,11 @@ it.each([
   { path: "revoke-session", method: "POST", body: { token: "unknown-session" } },
   { path: "revoke-other-sessions", method: "POST", body: {} },
   { path: "update-user", method: "POST", body: { name: "Anonymous" } },
+  {
+    path: "change-password",
+    method: "POST",
+    body: { currentPassword: "password", newPassword: "replacement-password" },
+  },
 ])("rejects anonymous $method /$path", async ({ path, method, body }) => {
   const app = fixture();
   const response = method === "GET" ? await app.get(path) : await app.post(path, body);

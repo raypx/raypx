@@ -58,7 +58,10 @@ vi.mock("./features/auth/client", () => ({
       error: mocks.sessionError ? new Error("offline") : null,
       refetch: mocks.refetch,
     }),
-    getSession: async () => ({ data: mocks.session, error: null }),
+    getSession: async () => ({
+      data: mocks.session,
+      error: mocks.sessionError ? { code: "OFFLINE" } : null,
+    }),
     signIn: { email: mocks.signIn },
     signUp: { email: mocks.signUp },
     sendVerificationEmail: mocks.resend,
@@ -338,6 +341,10 @@ describe("authentication routes", () => {
 
   it("opens projects after successful sign-in without a return destination", async () => {
     mocks.signIn.mockImplementation(async () => {
+      mocks.session = {
+        user: { id: "user-1", name: "Ada", email: "ada@example.test" },
+        session: { id: "session-1" },
+      };
       mocks.loadAccount.mockResolvedValue({
         status: "signed-in",
         account: { id: "user-1", email: "ada@example.test", name: "Ada" },
@@ -352,6 +359,31 @@ describe("authentication routes", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
     await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
     await waitFor(() => expect(screen.queryByLabelText("Password")).toBeNull());
+  });
+
+  it("retries a failed session refresh after login without submitting credentials again", async () => {
+    mocks.signIn.mockImplementation(async () => {
+      mocks.session = {
+        user: { id: "user-1", name: "Ada", email: "ada@example.test" },
+        session: { id: "session-1" },
+      };
+      mocks.sessionError = true;
+      mocks.loadAccount.mockResolvedValue({ status: "signed-in", account: mocks.session.user });
+      return { data: {}, error: null };
+    });
+    const router = await page("/login?returnTo=%2Fsettings");
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "ada@example.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
+    await screen.findByText(/You’re signed in, but the page could not load/);
+    expect(router.state.location.pathname).toBe("/login");
+    expect(screen.queryByLabelText("Password")).toBeNull();
+    mocks.sessionError = false;
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/settings"));
+    expect(mocks.signIn).toHaveBeenCalledTimes(1);
   });
 
   it("restores a guest draft after failed then successful sign-in without sending", async () => {

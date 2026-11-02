@@ -6,6 +6,7 @@ import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
 import { normalizeTrustedOrigins } from "./origins.js";
+import { authPolicy } from "./policy.js";
 
 export interface AuthMailInput {
   email: string;
@@ -63,7 +64,7 @@ export function createAuth({
   const origins = normalizeTrustedOrigins([config.baseURL, ...config.trustedOrigins]);
   const name = (value: string) => {
     const result = value.trim();
-    if (!result || result.length > 80)
+    if (!result || result.length > authPolicy.nameMaxLength)
       throw new APIError("BAD_REQUEST", { code: "INVALID_NAME", message: "Invalid display name" });
     return result;
   };
@@ -86,6 +87,7 @@ export function createAuth({
             !["/admin/list-users", "/admin/get-user"].includes(ctx.path)) ||
           [
             "/update-user",
+            "/change-password",
             "/revoke-session",
             "/revoke-other-sessions",
             "/revoke-sessions",
@@ -186,6 +188,8 @@ export function createAuth({
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      minPasswordLength: authPolicy.passwordMinLength,
+      maxPasswordLength: authPolicy.passwordMaxLength,
       revokeSessionsOnPasswordReset: true,
       customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
         ...coreFields,

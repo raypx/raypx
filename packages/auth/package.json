@@ -7,6 +7,7 @@
     "./server": "./src/server.ts",
     "./client": "./src/client.ts",
     "./hooks": "./src/hooks.ts",
+    "./policy": "./src/policy.ts",
     "./types": "./src/types.ts",
     "./access": "./src/access.ts",
     "./permissions": "./src/permissions.ts",
@@ -16,6 +17,7 @@
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run --project component",
     "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
     "test:coverage": "bun --bun vp test --run --coverage"
   },
@@ -28,9 +30,12 @@
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
+    "@testing-library/react": "catalog:dev",
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "react": "catalog:"
+    "happy-dom": "catalog:dev",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
     "react": "^19.3.1"

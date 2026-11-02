@@ -4,6 +4,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import type { authClient } from "../client";
+import { authPolicy } from "@raypx/auth/policy";
 
 export function ProfileSettings({
   client,
@@ -61,7 +62,7 @@ export function ProfileSettings({
           id={id}
           autoComplete="name"
           required
-          maxLength={80}
+          maxLength={authPolicy.nameMaxLength}
           value={draft}
           disabled={busy}
           onChange={(event) => {

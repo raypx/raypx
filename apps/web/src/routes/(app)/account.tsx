@@ -6,6 +6,7 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
+import { PasswordChangeForm } from "@raypx/auth/client";
 import { authClient, webUrl } from "../../features/auth/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { AccountSessions } from "../../features/auth/components/account-sessions";
@@ -76,6 +77,17 @@ function AccountPage() {
             client={authClient}
             name={state.account.name}
             onSaved={reload}
+          />
+          <PasswordChangeForm
+            key={`password:${state.account.id}`}
+            client={authClient}
+            onChanged={async () => {
+              const result = await authClient.getSession({
+                fetchOptions: { signal: AbortSignal.timeout(10_000) },
+              });
+              if (result.error || !result.data) throw new Error("Session refresh failed");
+              await reload();
+            }}
           />
           {session.data?.session.id ? (
             <AccountSessions

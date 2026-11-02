@@ -1,7 +1,7 @@
 # Account settings and sessions
 
-The Web account page supports editing the display name and reviewing active
-sign-in sessions. These use the existing Better Auth endpoints; no schema change
+The Web account page supports editing the display name, changing the password and
+reviewing active sign-in sessions. These use the existing Better Auth endpoints; no schema change
 or additional service is required.
 
 Web's shell, guest task editor and device preferences are public. Private account,
@@ -18,6 +18,14 @@ retains the draft. Explicitly saved drafts retain their existing local storage b
 
 - Name saves trim whitespace, retain drafts on failure and refresh the cached
   account projection after success.
+- Password changes require the current password and default to signing out other
+  sessions. Better Auth rotates the current session when this option is selected.
+  Password changes invalidate remote device credentials through Control's security
+  version; local work is unaffected. Password fields clear after success. A failed
+  account refresh retries only that refresh, never the password mutation.
+- Shared auth forms recover missing/expired reset links with a new-link action and
+  replace completed resets with sign-in. Failed post-login navigation retries only
+  the application follow-up. Shared hooks and form tests live in Auth.
 - The current session is identified explicitly and cannot be revoked from its
   own list row. The existing Sign out action handles the current session.
 - Other sessions can be signed out individually or together, after confirmation.
@@ -38,7 +46,8 @@ apply to the current cursor page. The UI states that scope and preserves paginat
 when no tasks match. It does not download the entire history or change task data.
 
 Name creation and updates trim whitespace and enforce 1–80 UTF-16 characters on
-the server. Profile and session-revocation mutations require an exact trusted
+the server. Shared policy also fixes password limits at 8–128 characters. Profile,
+password-change and session-revocation mutations require an exact trusted
 Origin, including the native `views://main` origin; missing/external origins fail.
 
 Desktop local tools do not require an account. Remote pages request contextual login

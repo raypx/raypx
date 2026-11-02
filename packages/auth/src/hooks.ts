@@ -7,6 +7,11 @@ export type AuthErrorKey =
   | "emailNotVerified"
   | "emailTaken"
   | "passwordShort"
+  | "passwordLong"
+  | "invalidName"
+  | "currentPasswordInvalid"
+  | "passwordUnavailable"
+  | "sessionUnauthorized"
   | "rateLimited"
   | "invalidLink"
   | "generic";
@@ -52,6 +57,15 @@ export interface AuthActionClient {
   signOut(): Promise<AuthActionResponse>;
 }
 
+export interface PasswordChangeClient {
+  changePassword(input: {
+    currentPassword: string;
+    newPassword: string;
+    revokeOtherSessions: boolean;
+    fetchOptions: { signal: AbortSignal };
+  }): Promise<AuthActionResponse>;
+}
+
 function authErrorKey(code?: string): AuthErrorKey {
   if (code === "REGISTRATION_DISABLED") return "registrationDisabled";
   if (code === "MAIL_NOT_CONFIGURED") return "mailUnavailable";
@@ -61,28 +75,27 @@ function authErrorKey(code?: string): AuthErrorKey {
   if (code === "USER_ALREADY_EXISTS" || code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL")
     return "emailTaken";
   if (code === "PASSWORD_TOO_SHORT") return "passwordShort";
+  if (code === "PASSWORD_TOO_LONG") return "passwordLong";
+  if (code === "INVALID_NAME") return "invalidName";
+  if (code === "CURRENT_PASSWORD_INVALID") return "currentPasswordInvalid";
+  if (code === "CREDENTIAL_ACCOUNT_NOT_FOUND") return "passwordUnavailable";
+  if (code === "UNAUTHORIZED" || code === "SESSION_EXPIRED") return "sessionUnauthorized";
   if (code === "TOO_MANY_REQUESTS") return "rateLimited";
   if (code === "INVALID_TOKEN" || code === "TOKEN_EXPIRED") return "invalidLink";
   return "generic";
 }
 
-/** Shared auth actions; navigation, translations and session ownership stay with callers. */
-export function useAuthActions({
-  client,
-  webUrl,
-  locale,
-  callbackURLs,
-}: {
-  client: AuthActionClient;
-  webUrl: string;
-  locale?: string;
-  callbackURLs?: { verify: string; reset: string };
-}) {
+function useAuthRequest() {
   const active = useRef(false);
+  // Only retain the follow-up, never the request closure that contains credentials.
+  const completion = useRef<AuthActionSuccess | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AuthActionError | null>(null);
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => {
+    completion.current = null;
+    setError(null);
+  }, []);
   const run = useCallback(
     async (
       request: () => Promise<AuthActionResponse>,
@@ -91,6 +104,7 @@ export function useAuthActions({
       // React state alone cannot prevent two actions started in the same event tick.
       if (active.current) return { status: "ignored" };
       active.current = true;
+      completion.current = null;
       setBusy(true);
       setError(null);
       const fail = (failure: AuthActionError): AuthActionResult => {
@@ -109,6 +123,7 @@ export function useAuthActions({
           await onSuccess?.();
         } catch {
           // The authentication succeeded; a failed follow-up must not repeat it.
+          completion.current = onSuccess ?? null;
           return fail({ kind: "completion" });
         }
         return { status: "success" };
@@ -119,15 +134,33 @@ export function useAuthActions({
     },
     [],
   );
+  const retryCompletion = useCallback((): Promise<AuthActionResult> => {
+    if (!completion.current) return Promise.resolve({ status: "ignored" });
+    return run(async () => ({}), completion.current);
+  }, [run]);
+  return { busy, error, clearError, run, retryCompletion };
+}
+
+/** Shared auth actions; navigation, translations and session ownership stay with callers. */
+export function useAuthActions({
+  client,
+  webUrl,
+  locale,
+  callbackURLs,
+}: {
+  client: AuthActionClient;
+  webUrl: string;
+  locale?: string;
+  callbackURLs?: { verify: string; reset: string };
+}) {
+  const { run, ...state } = useAuthRequest();
   const fetchOptions: RequestOptions["fetchOptions"] = {
     headers: locale ? { "Accept-Language": locale } : {},
   };
   const callbackURL = callbackURLs?.verify ?? `${webUrl}/verify-email?verified=1`;
 
   return {
-    busy,
-    error,
-    clearError,
+    ...state,
     signIn(input: Credentials, onSuccess?: AuthActionSuccess) {
       return run(
         () =>
@@ -183,6 +216,28 @@ export function useAuthActions({
     },
     signOut(onSuccess?: AuthActionSuccess) {
       return run(() => client.signOut(), onSuccess);
+    },
+  };
+}
+
+/** Kept separate so email/password login clients do not need account-setting methods. */
+export function usePasswordChange(client: PasswordChangeClient) {
+  const { run, ...state } = useAuthRequest();
+  return {
+    ...state,
+    changePassword(
+      input: { currentPassword: string; newPassword: string; revokeOtherSessions: boolean },
+      onSuccess?: AuthActionSuccess,
+    ) {
+      return run(async () => {
+        const response = await client.changePassword({
+          ...input,
+          fetchOptions: { signal: AbortSignal.timeout(15_000) },
+        });
+        return response.error?.code === "INVALID_PASSWORD"
+          ? { error: { code: "CURRENT_PASSWORD_INVALID" } }
+          : response;
+      }, onSuccess);
     },
   };
 }
