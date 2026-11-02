@@ -1,0 +1,23 @@
+apps/web/src/features/auth/components/session-boundary.tsx
+  s_111b7c22ceea5c::t_dedc8c037d67f3 54-55,57-59,82-91
+apps/web/src/routes/(auth)/route.tsx
+  s_111b7c22ceea5c::t_149e4ed4cc0b77 16-18,20,22-46
+packages/auth/src/client/auth-form.tsx
+  s_111b7c22ceea5c::t_e5748e7d8934eb 104,107,112-125,129,137,139,146,152,198,206,227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9eb81387d3fe358ac71dc9e3a69ec5f9612e0e09",
+  "prompts": {},
+  "sessions": {
+    "s_111b7c22ceea5c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e404052-da5e-413a-bdc3-4f900e98bf0e",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
