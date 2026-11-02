@@ -5,8 +5,9 @@ import {
   type AdapterStart,
   type AgentAdapter,
   type ExecutionHandle,
-} from "../adapter";
-import { createTransport, type AgentTransport, type TransportFactory } from "../transport";
+  type AgentTransport,
+  type TransportFactory,
+} from "@raypx/provider-core";
 
 /** Private stream-json protocol; the coordinator decides what a result means. */
 export class ClaudeAdapter implements AgentAdapter {
@@ -22,7 +23,7 @@ export class ClaudeAdapter implements AgentAdapter {
   constructor(
     start: AdapterStart,
     private readonly ports: AdapterPorts,
-    transportFactory: TransportFactory = createTransport,
+    transportFactory: TransportFactory,
   ) {
     const hook = ports.approval.hook();
     const hookConfiguration = {

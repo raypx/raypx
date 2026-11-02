@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { CodexAdapter } from "./harness/adapters/codex";
-import { ClaudeAdapter } from "./harness/adapters/claude";
+import { CodexAdapter } from "@raypx/provider-codex";
+import { ClaudeAdapter } from "@raypx/provider-claude";
 import { initialExecutionPrompt } from "./harness/execution";
 import type { AgentTransport, TransportFactory } from "./harness/transport";
 

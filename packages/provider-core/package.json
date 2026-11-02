@@ -1,0 +1,23 @@
+{
+  "name": "@raypx/provider-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json"
+  },
+  "dependencies": {
+    "@raypx/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
+  }
+}

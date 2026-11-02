@@ -59,3 +59,6 @@ export type AgentAdapterFactory = (
   ports: AdapterPorts,
   transportFactory: TransportFactory,
 ) => AgentAdapter;
+
+export type { AgentTransport, TransportFactory, AskApproval } from "./transport";
+export { object } from "./transport";

@@ -170,7 +170,7 @@ they retain the executable's diagnostic completion lifecycle.
 The private Agent harness stays inside CLI. `AgentRuntime` owns task lookup,
 command receipts, replay and the active execution registry. `ManagedExecution`
 owns each run's turns, input queue, approvals, cancellation and lock release after
-process draining. Claude and Codex adapters translate their private protocols
+process draining. The provider-claude and provider-codex libraries translate their private protocols
 through a narrow process port. The shared host package owns remote connection and
 synchronization; it does not own provider execution policy.
 `raypx tui` adds a lazy line-oriented task browser with a session-owned in-process

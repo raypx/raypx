@@ -68,6 +68,9 @@
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
+        "@raypx/provider-claude": "workspace:*",
+        "@raypx/provider-codex": "workspace:*",
+        "@raypx/provider-core": "workspace:*",
         "citty": "catalog:",
         "croner": "catalog:",
         "drizzle-orm": "catalog:",
@@ -646,6 +649,41 @@
       },
       "peerDependencies": {
         "react": "^19.3.1",
+      },
+    },
+    "packages/provider-claude": {
+      "name": "@raypx/provider-claude",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/provider-core": "workspace:*",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+      },
+    },
+    "packages/provider-codex": {
+      "name": "@raypx/provider-codex",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/provider-core": "workspace:*",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+      },
+    },
+    "packages/provider-core": {
+      "name": "@raypx/provider-core",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
       },
     },
     "packages/storage": {
@@ -1702,6 +1740,12 @@
     "@raypx/memory": ["@raypx/memory@workspace:packages/memory"],
 
     "@raypx/mobile": ["@raypx/mobile@workspace:apps/mobile"],
+
+    "@raypx/provider-claude": ["@raypx/provider-claude@workspace:packages/provider-claude"],
+
+    "@raypx/provider-codex": ["@raypx/provider-codex@workspace:packages/provider-codex"],
+
+    "@raypx/provider-core": ["@raypx/provider-core@workspace:packages/provider-core"],
 
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
 

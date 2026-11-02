@@ -11,7 +11,7 @@ import { LocalError } from "../../errors";
 import type { AgentStore, LocalAgentTask } from "../store";
 import type { ConversationRecorder } from "../activity";
 import { createAdapter } from "./registry";
-import type { AdapterEvent, ExecutionDriver, ExecutionHandle } from "./adapter";
+import type { AdapterEvent, ExecutionDriver, ExecutionHandle } from "@raypx/provider-core";
 
 export function initialExecutionPrompt(
   task: AgentTask,

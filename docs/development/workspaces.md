@@ -116,7 +116,7 @@ labelled; unknown structures retain the original request rather than disappearin
 behind a partially parsed preview.
 
 The execution harness currently lives in `apps/cli/src/runtime/agents/harness`.
-Its coordinator owns one task lifecycle; provider adapters own private wire formats;
+Its coordinator owns one task lifecycle; provider libraries own private wire formats;
 SQLite and process implementations remain at their existing CLI boundaries. Keep
 page queries, drafts and authentication navigation in tasks/apps. A separate
 `@raypx/harness` workspace is justified when another execution host consumes this
@@ -134,3 +134,12 @@ API supplies SQL/relay adapters, while CLI supplies local scheduling and executi
 Import job models directly from `@raypx/jobs`; Contracts owns only wire definitions.
 Cloud schedules do not
 claim local plans or move them between accounts. See [server jobs](server-jobs.md).
+
+## Provider libraries
+
+`@raypx/provider-core` defines the injected execution and process I/O ports.
+`@raypx/provider-codex` and `@raypx/provider-claude` implement native protocol
+adapters. CLI supplies the process transport and owns task policy, approval
+arbitration, persistence and draining. Provider libraries never import CLI source.
+This first extraction preserves the current process-shaped contract; normalized
+conversation events, SDK sessions and instance enrollment remain subsequent work.

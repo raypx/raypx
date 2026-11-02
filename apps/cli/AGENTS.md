@@ -119,7 +119,7 @@ the first provider prompt, rejecting excess total size before launching executio
 
 `runtime/agents/index.ts` is the local/replay/receipt facade. `harness/execution.ts`
 owns each task's turn queue, approvals, cancellation and lock release through
-process draining. Adapters in `harness/adapters/` translate provider protocols
+process draining. The `@raypx/provider-codex` and `@raypx/provider-claude` libraries translate provider protocols
 into lifecycle events without owning task storage or relay transport.
 `harness/transport.ts` defines protocol I/O; its process implementation is
 `runtime/agents/transport.ts`. Fence callbacks to the current execution handle.

@@ -1,12 +1,14 @@
 import { taskText } from "@raypx/core/task-text";
 import { type AgentTask } from "@raypx/core/tasks";
 import {
+  object,
   type AdapterPorts,
   type AdapterStart,
   type AgentAdapter,
   type ExecutionHandle,
-} from "../adapter";
-import { createTransport, object, type AgentTransport, type TransportFactory } from "../transport";
+  type AgentTransport,
+  type TransportFactory,
+} from "@raypx/provider-core";
 
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? taskText(value, max) : "";
@@ -26,7 +28,7 @@ export class CodexAdapter implements AgentAdapter {
   constructor(
     start: AdapterStart,
     private readonly ports: AdapterPorts,
-    transportFactory: TransportFactory = createTransport,
+    transportFactory: TransportFactory,
   ) {
     this.directory = start.directory;
     const pending: Record<string, unknown>[] = [];

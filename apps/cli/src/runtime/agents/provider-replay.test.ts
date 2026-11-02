@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 
 import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { ManagedExecution, type ExecutionStore } from "./harness/execution";
-import { CodexAdapter } from "./harness/adapters/codex";
+import { CodexAdapter } from "@raypx/provider-codex";
 import { createAdapter } from "./harness/registry";
 import { ConversationRecorder } from "./activity";
 import type { LocalAgentTask } from "./store";

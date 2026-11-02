@@ -8,9 +8,9 @@ import {
   type AdapterStart,
   type AgentAdapterFactory,
   type ExecutionDriver,
-} from "./adapter";
-import { ClaudeAdapter } from "./adapters/claude";
-import { CodexAdapter } from "./adapters/codex";
+} from "@raypx/provider-core";
+import { ClaudeAdapter } from "@raypx/provider-claude";
+import { CodexAdapter } from "@raypx/provider-codex";
 import { createTransport, type TransportFactory } from "./transport";
 
 type Registration = {
