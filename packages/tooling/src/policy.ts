@@ -9,7 +9,20 @@ import { discover } from "./repository.js";
 import { checkToolchain } from "./validation/toolchain.js";
 import { checkDeployment } from "./validation/deployment.js";
 
-const MAX_WORKSPACE_AGENTS_LINES = 500;
+const MAX_MARKDOWN_LINES = 500;
+
+export function checkMarkdownLength(root: string): string[] {
+  return globSync("**/*.md", {
+    cwd: root,
+    exclude: ["docs/history/**", "**/node_modules/**", ".agents/**", ".claude/**", "**/dist/**"],
+  }).flatMap((file) => {
+    const lines = readFileSync(join(root, file), "utf8").split(/\r?\n/);
+    if (lines.at(-1) === "") lines.pop();
+    return lines.length > MAX_MARKDOWN_LINES
+      ? [`${file}: Markdown document exceeds ${MAX_MARKDOWN_LINES} lines`]
+      : [];
+  });
+}
 
 export function policy(root: string): string[] {
   const index = discover(root);
@@ -18,8 +31,6 @@ export function policy(root: string): string[] {
   for (const workspace of index.workspaces) {
     const file = join(root, workspace.path, "AGENTS.md");
     if (!existsSync(file)) findings.push(`${workspace.path}: missing AGENTS.md`);
-    else if (readFileSync(file, "utf8").split("\n").length > MAX_WORKSPACE_AGENTS_LINES)
-      findings.push(`${workspace.path}: AGENTS.md exceeds ${MAX_WORKSPACE_AGENTS_LINES} lines`);
     if (
       workspace.manifest.scripts?.test &&
       !existsSync(join(root, workspace.path, "vitest.config.ts"))
@@ -35,6 +46,7 @@ export function policy(root: string): string[] {
     ],
     { cwd: root, exclude: ["docs/history/**"] },
   );
+  findings.push(...checkMarkdownLength(root));
   findings.push(...checkDocumentLinks(root, documents));
   // Acceptance and review records describe the release they ran on and are not rewritten on upgrade.
   const records = new Set(["docs/development/foundation-acceptance.md"]);
