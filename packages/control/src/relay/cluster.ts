@@ -13,7 +13,7 @@ const actorSchema = z.object({
   expiresAt: z.iso.datetime(),
   connectionId: z.string(),
 });
-export const deviceResultSchema = z.discriminatedUnion("ok", [
+const deviceResultSchema = z.discriminatedUnion("ok", [
   z.object({ ok: z.literal(true), value: z.unknown() }),
   z.object({ ok: z.literal(false), code: z.string().max(80) }),
 ]);

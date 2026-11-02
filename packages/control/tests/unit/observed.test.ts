@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { ControlService } from "../../server/control/service.js";
+import { ControlService } from "@raypx/control";
 import { connected, controlAuth, memoryControlRepository, observed } from "../helpers/control.js";
 
 it("projects external sessions separately, excludes tool bodies from lists and routes only a matching receipt/revision", async () => {

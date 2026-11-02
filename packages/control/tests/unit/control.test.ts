@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { ControlService } from "../../server/control/service.js";
+import { ControlService } from "@raypx/control";
 import {
   connected,
   controlAuth,

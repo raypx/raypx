@@ -4,10 +4,10 @@ import {
   type RelayClientFrame,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
-import { RelayHub } from "../../server/relay/hub.js";
+import { RelayHub } from "@raypx/control/relay";
 import { createApiApp } from "../../server/api.js";
-import { ControlService } from "../../server/control/service.js";
-import { controlAuth, memoryControlRepository } from "./control.js";
+import { ControlService } from "@raypx/control";
+import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 
 export async function relaySocket(
   base: string,

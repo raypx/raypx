@@ -1,14 +1,14 @@
 /** Explicit real-backend browser fixture. Never imported by production routes. */
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { serve } from "bun";
-import { RelayHub } from "../../server/relay/hub.js";
+import { RelayHub } from "@raypx/control/relay";
 import { user, schema } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiApp } from "../../server/api.js";
-import { ControlService } from "../../server/control/service.js";
-import { createControlRepository } from "../../server/control/repository.js";
+import { ControlService } from "@raypx/control";
+import { createControlRepository } from "@raypx/control/postgres";
 const url = process.env.TEST_DATABASE_URL;
 const port = Number(process.env.CONTROL_E2E_PORT);
 if (

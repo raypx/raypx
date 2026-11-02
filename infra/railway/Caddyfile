@@ -13,7 +13,14 @@
 }
 
 :{$PORT:8080} {
-	@api path /api/* /rpc/* /relay /health /ready
+  @relay path /relay
+  handle @relay {
+    reverse_proxy {$RELAY_UPSTREAM} {
+      header_up -Cookie
+      header_up -Authorization
+    }
+  }
+  @api path /api/* /rpc/* /health /ready
 	handle @api {
 		reverse_proxy {$API_UPSTREAM} {
 			header_up X-Forwarded-Proto https

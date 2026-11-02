@@ -1,13 +1,13 @@
 import { expect, it, vi } from "vite-plus/test";
 import { createHash } from "node:crypto";
-import { ControlService } from "../../server/control/service.js";
+import { ControlService } from "@raypx/control";
 import {
   connected,
   controlAuth,
   memoryControlRepository,
   observed,
   running,
-} from "../helpers/control.js";
+} from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../server/api.js";
 

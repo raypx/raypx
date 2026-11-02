@@ -7,7 +7,12 @@ compose config --quiet
 # Index-only foundation migrations are generated inside a transaction. Run them
 # in a maintenance window so CREATE INDEX cannot stall the old API's writers.
 previous_api=$(compose ps -q api)
+previous_relay=$(compose ps -a -q relay)
 previous_web=$(compose ps -q web)
+if [ -n "$previous_api" ] && [ -z "$previous_relay" ]; then
+  printf '%s\n' 'Existing deployment has no independent Relay. Follow the split-service cutover guide before using update.sh.' >&2
+  exit 1
+fi
 rollback=$(mktemp "${TMPDIR:-/tmp}/raypx-rollback.XXXXXXXX")
 phase=prepare
 restore_services=
@@ -28,11 +33,16 @@ finish() {
   status=$?
   trap - EXIT HUP INT TERM
   if [ "$status" -ne 0 ]; then
-    if [ "$phase" = migrate ] && [ -n "$previous_api" ]; then
-      compose start api || printf '%s\n' 'Unable to restart the previous API; follow deployment recovery documentation.' >&2
+    if [ "$phase" = migrate ]; then
+      if [ -n "$previous_api" ]; then
+        compose start api || printf '%s\n' 'Unable to restart the previous API; follow deployment recovery documentation.' >&2
+      fi
+      if [ -n "$previous_relay" ]; then
+        compose start relay || printf '%s\n' 'Unable to restart the previous Relay; follow deployment recovery documentation.' >&2
+      fi
     elif [ "$phase" = replace ]; then
       # Stop a failed first deployment too, rather than leaving it restarting.
-      compose stop api web || true
+      compose stop api relay web || true
       if [ -n "$restore_services" ]; then
         # Deliberately split only the fixed service names captured above.
         # shellcheck disable=SC2086
@@ -48,12 +58,14 @@ trap 'exit 130' INT
 trap 'exit 143' HUP TERM
 printf 'services:\n' > "$rollback"
 capture_image api "$previous_api"
+capture_image relay "$previous_relay"
 capture_image web "$previous_web"
 compose up -d postgres
 phase=migrate
-compose stop api
+compose stop api relay
 compose run --rm migrate
 phase=replace
+compose up -d --no-deps --wait relay
 compose up -d --no-deps --wait api
 compose up -d --no-deps --wait web
 phase=complete

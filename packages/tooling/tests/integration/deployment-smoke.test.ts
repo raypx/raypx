@@ -14,7 +14,12 @@ it("cleans only its owned builder and network when an image build fails", async 
   const root = mkdtempSync(join(tmpdir(), "raypx-smoke-failure-"));
   const repository = resolve(import.meta.dirname, "../../../..");
   try {
-    for (const file of ["deploy/build.sh", "apps/api/Dockerfile", "apps/web/Dockerfile"]) {
+    for (const file of [
+      "deploy/build.sh",
+      "apps/api/Dockerfile",
+      "apps/web/Dockerfile",
+      "infra/relay/Dockerfile",
+    ]) {
       mkdirSync(dirname(join(root, file)), { recursive: true });
       copyFileSync(join(repository, file), join(root, file));
     }

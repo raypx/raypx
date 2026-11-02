@@ -17,11 +17,6 @@ export class ControlError extends Error {
   }
 }
 export type Device = ControlRecords["device"];
-export type Grant = ControlRecords["grant"];
-export type HostCredential = ControlRecords["credential"];
-export type ObservedSession = ControlRecords["observed_session"];
-export type ObservedRequest = ControlRecords["observed_request"];
-export type Task = ControlRecords["task"];
 export type ContextCommand = ControlRecords["command"];
 export type RoutedCommand = RelayCommand & { recoveredTask?: AgentTask };
 export type ResolveTaskContext = (
@@ -30,8 +25,6 @@ export type ResolveTaskContext = (
   target: TaskContextTarget,
   prompt: string,
 ) => Promise<TaskContextSnapshot>;
-export type Project = ControlRecords["project"];
-export type StoredRequest = ControlRecords["request"];
 export type Event = ControlRecords["event"];
 export interface RelayActor {
   role: "viewer" | "device";

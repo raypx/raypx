@@ -1,6 +1,6 @@
 import { JobError, type CloudJobAction, type CloudJobRun } from "@raypx/jobs";
 import type { CloudJobExecutor, JobDispatchResult } from "@raypx/jobs/server";
-import { ControlError, type ControlService } from "../control/service.js";
+import { ControlError, type ControlService } from "../service.js";
 
 export interface RelayJobTransport {
   dispatch(

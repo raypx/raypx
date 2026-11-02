@@ -4,8 +4,8 @@ import { createConfigurationService } from "../configuration/service.js";
 import type { ConfigurationRepository } from "../configuration/types.js";
 import type { Cache } from "../cache/types.js";
 import type { ObjectStorage } from "@raypx/storage";
-import { createControlRepository } from "../control/repository.js";
-import { ControlService } from "../control/service.js";
+import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
+import { ControlService } from "@raypx/control";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
@@ -27,7 +27,6 @@ import { JobError } from "@raypx/jobs";
 import { createCloudJobsRepository } from "../jobs/repository.js";
 import { createScheduleTick } from "../jobs/tick.js";
 import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
-import { createContextRepository } from "../memory/repository.js";
 
 export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */

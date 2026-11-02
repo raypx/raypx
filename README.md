@@ -18,14 +18,16 @@ Desktop includes its own native host and compiled CLI; users do not install Bun.
 bun install
 cp .env.example .env
 # Starts a NEW database on 5433; does not reuse the old volume.
-docker compose up -d postgres
+docker compose up -d postgres valkey
 bun run db:migrate
 bun run dev
 ```
 
-Web (TanStack Start SSR) runs on 3000 and API on 3002. They deploy as separate
+Web (TanStack Start SSR) runs on 3000, API on 3002 and independent Relay on 3003.
+They deploy as separate
 Bun services: `bun apps/web/.output/server/index.mjs` and
 `bun apps/api/.output/server/index.mjs`. Web bakes `VITE_API_URL` at build time.
+Relay starts with `bun infra/relay/dist/main.js`; the gateway sends `/relay` to it.
 Its server rendering needs the session cookie: serve both from one origin, or set
 `AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
 Local desktop files, automations and terminals do not require login. Close-to-tray

@@ -6,9 +6,9 @@ import {
   controlListQuery,
   createControlRepository,
   eventWindowPrune,
-} from "../../../server/control/repository.js";
-import { ControlService } from "../../../server/control/service.js";
-import { connected, controlAuth, humanRequest, running, observed } from "../../helpers/control.js";
+} from "@raypx/control/postgres";
+import { ControlService } from "@raypx/control";
+import { connected, controlAuth, humanRequest, running, observed } from "@raypx/control/testing";
 import { createApiApp } from "../../../server/api.js";
 import { createApiClient } from "@raypx/client";
 

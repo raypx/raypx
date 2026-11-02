@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { RelayHub } from "../../server/relay/hub.js";
-import { ControlService } from "../../server/control/service.js";
+import { RelayHub } from "@raypx/control/relay";
+import { ControlService } from "@raypx/control";
 import { connected, memoryControlRepository } from "../helpers/control.js";
 it.each([undefined, 1, 2, 3, "4", 5])(
   "rejects unsupported relay version %s with a terminal upgrade code",

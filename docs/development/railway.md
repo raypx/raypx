@@ -7,7 +7,7 @@ of the Dokploy Beta and Production projects.
 ## Services and configuration
 
 The named IaC partial in [infra/railway/railway.ts](../../infra/railway/railway.ts) manages
-api, web and gateway. Existing Postgres and Redis services and their volumes
+api, web, relay and gateway. Existing Postgres and Redis services and their volumes
 remain outside this partial. Both were inspected and empty before the initial
 foundation migration. Keep their images and persistent storage intact.
 
@@ -18,14 +18,15 @@ through the root manifest's `infra/*` pattern.
 
 Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
 Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`,
-/relay, /health and /ready to API; other paths go to Web. Caddy proxies WebSocket
+/health and /ready to API; `/relay` goes to Relay and other paths go to Web. Caddy proxies WebSocket
 upgrades; API and Web have no public domains, and database connections use private
 references. Access logging is
 disabled and the error log removes request details.
 
-API and Web bind to :: for Railway private networking. IaC defaults to one API
-replica. Relay supports multiple replicas sharing the same PostgreSQL, Redis and
-AUTH_SECRET; keep broker channels private to this deployment. All three application services
+API, Web and Relay bind to :: for Railway private networking. IaC defaults to one API
+replica. Relay replicas share PostgreSQL and Redis; API replicas also share
+AUTH_SECRET. Relay never receives that secret. Keep broker channels private to
+this deployment. All four application services
 stay awake. Forwarded client IP headers remain untrusted until explicit, verified
 proxy CIDRs are configured; the API uses its socket peer by default.
 
@@ -33,13 +34,14 @@ Runtime variables are deliberately unmanaged by IaC. This preserves secrets and
 operator settings on Railway. Configure references in the dashboard or with
 railway variable set --skip-deploys; never commit decrypted variables.
 
-| Service  | Variables                                                                                                                                                                                          |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                         |
-| api      | NODE_ENV=production; HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters |
-| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                         |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                  |
-| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                          |
+| Service  | Variables                                                                                                                                                                                                         |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000; RELAY_UPSTREAM=${{relay.RAILWAY_PRIVATE_DOMAIN}}:3003 |
+| api      | NODE_ENV=production; HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters                |
+| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                        |
+| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                 |
+| relay    | NODE_ENV=production; HOST=::; PORT=3003; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; ALLOWED_ORIGINS matches API                                                                     |
+| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                         |
 
 Optional mail, administrator, storage and analytics settings remain explicit
 per-environment settings. Without RESEND_API_KEY and a verified MAIL_FROM, mail
@@ -52,12 +54,15 @@ policy checks Caddy and Compose against the same ingress contract.
 
 ## Apply and deploy
 
-API, Web and Gateway use the raypx/raypx GitHub repository's canary branch.
+API, Web, Relay and Gateway use the raypx/raypx GitHub repository's canary branch.
 Matching pushes trigger automatic deployments using the shared
 `apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
 Shared package or manifest changes rebuild API and Web;
 both services also watch `deploy/*.ts` for shared build-context preparation changes.
-Gateway watches its proxy configuration and the IaC file.
+Relay uses `infra/relay/Dockerfile`, watches `infra/relay/**` and shared build inputs,
+and probes `/ready`. Gateway watches its proxy configuration and the IaC file.
+Provision Relay and set `RELAY_UPSTREAM` before publishing the split gateway/API;
+see [the independent service](../../infra/relay/README.md).
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
 
@@ -110,9 +115,9 @@ stage explicitly; Web defaults to runtime on both platforms.
 Railway runs bun run --cwd packages/database migrate
 in its isolated pre-deploy container. A failure blocks the new deployment.
 For future updates, back up the database first. If pending migrations require
-transactional indexes or otherwise block writers, stop the existing API for an
+transactional indexes or otherwise block writers, stop the existing API and Relay for an
 agreed maintenance window before migration; ordinary rolling pre-deploy execution
-does not stop the old API. Preserve migration history and storage on rollback.
+does not stop the old API or Relay. Preserve migration history and storage on rollback.
 
 The shared application Dockerfiles use manifest/dependency layer caching without
 cache mounts. Railway requires literal service-specific cache mount IDs, so those

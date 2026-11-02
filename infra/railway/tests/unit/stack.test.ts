@@ -17,6 +17,7 @@ it("owns only application services and leaves operator variables and storage unm
     resources: [
       { address: "service.api", name: "api" },
       { address: "service.web", name: "web" },
+      { address: "service.relay", name: "relay" },
       { address: "service.gateway", name: "gateway" },
     ],
   });
@@ -53,6 +54,13 @@ it("uses shared application images, migration hooks and health paths after reloc
         ]),
       },
       deploy: { healthcheckPath: deploymentServices.web.health },
+    },
+    {
+      build: {
+        dockerfilePath: "infra/relay/Dockerfile",
+        watchPatterns: expect.arrayContaining(["infra/relay/**", "infra/railway/railway.ts"]),
+      },
+      deploy: { healthcheckPath: deploymentServices.relay.ready },
     },
     {
       build: {

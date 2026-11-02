@@ -27,8 +27,8 @@ The rules below apply to the Compose host workflow.
   or reuse another project's volume automatically.
 - Only Traefik publishes application traffic. Database and application containers
   have no published host ports; the management panel stays behind SSH.
-- Keep one API process because Relay routing has process-local authority.
-- Run additive, backward-compatible migrations against that environment's isolated database before replacing API. Use update.sh; migration failure must preserve the old API.
+- Keep one API and Relay instance by default; the private Redis broker links their lifecycles.
+- Run additive, backward-compatible migrations against that environment's isolated database before replacing API or Relay. Use update.sh; migration failure must preserve the old API and Relay.
 - Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
 - Build versioned images sequentially with a bounded container builder. Preserve
   previous image versions and persistent volumes for rollbacks.

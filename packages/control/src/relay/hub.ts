@@ -11,7 +11,7 @@ import {
 import { normalizeTaskJson } from "@raypx/core/task-text";
 import { taskSchema, humanRequestSchema } from "@raypx/core/tasks";
 import { terminalRequestSchema } from "@raypx/contracts/terminal";
-import { ControlError, type ControlService, type RelayActor } from "../control/service.js";
+import { ControlError, type ControlService, type RelayActor } from "../service.js";
 import type { RelayCluster, RelayNotice, RelayOperation, RelayReply } from "./cluster.js";
 export interface RelayPeer {
   id: string;

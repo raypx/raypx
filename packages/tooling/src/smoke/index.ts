@@ -1,12 +1,16 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { run } from "@raypx-kit/devkit/process";
-import { probeApi, probeWeb } from "./artifacts.js";
+import { probeApi, probeWeb, probeRelay } from "./artifacts.js";
 
-export async function smoke(root: string, selected: readonly string[] = ["api", "web", "cli"]) {
+export async function smoke(
+  root: string,
+  selected: readonly string[] = ["api", "web", "relay", "cli"],
+) {
   const outcomes = await Promise.allSettled([
     ...(selected.includes("api") ? [probeApi(root)] : []),
     ...(selected.includes("web") ? [probeWeb(root)] : []),
+    ...(selected.includes("relay") ? [probeRelay(root)] : []),
     ...(selected.includes("cli")
       ? [
           (async () => {

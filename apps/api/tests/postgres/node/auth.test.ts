@@ -7,8 +7,8 @@ import { eq } from "drizzle-orm";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../../server/api.js";
 import type { AuthMailInput } from "@raypx/auth/server";
-import { ControlService } from "../../../server/control/service.js";
-import { createControlRepository } from "../../../server/control/repository.js";
+import { ControlService } from "@raypx/control";
+import { createControlRepository } from "@raypx/control/postgres";
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 if (!databaseURL || !new URL(databaseURL).pathname.endsWith("_test"))

@@ -3,9 +3,8 @@ import type { CloudJob, CloudJobAction, CloudJobRun } from "@raypx/jobs";
 import { CloudJobsService, type CloudJobsRepository } from "@raypx/jobs/server";
 import type { RelayServerFrame } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
-import { ControlService } from "../../server/control/service.js";
-import { RelayHub } from "../../server/relay/hub.js";
-import { createRelayJobExecutor } from "../../server/relay/jobs.js";
+import { ControlService } from "@raypx/control";
+import { RelayHub, createRelayJobExecutor } from "@raypx/control/relay";
 import { connected, memoryControlRepository } from "../helpers/control.js";
 
 const cleanups: (() => Promise<void>)[] = [];

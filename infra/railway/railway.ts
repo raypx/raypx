@@ -20,6 +20,7 @@ export default defineRailway((context) => {
   const source = github("raypx/raypx", { branch: "canary" });
   const sharedInputs = [
     "deploy/*.ts",
+    "infra/*/package.json",
     "packages/**",
     "package.json",
     "bun.lock",
@@ -53,6 +54,18 @@ export default defineRailway((context) => {
     healthcheckTimeout: 180,
     deploy: deployment,
   });
+  const relay = service("relay", {
+    source,
+    replicas,
+    build: {
+      builder: "DOCKERFILE",
+      dockerfilePath: "infra/relay/Dockerfile",
+      watchPatterns: ["infra/relay/**", "infra/railway/railway.ts", ...sharedInputs],
+    },
+    healthcheck: deploymentServices.relay.ready,
+    healthcheckTimeout: 180,
+    deploy: deployment,
+  });
   const gateway = service("gateway", {
     source,
     replicas,
@@ -75,7 +88,7 @@ export default defineRailway((context) => {
   const configuration = {
     // Runtime secrets and origin references are managed through Railway variables.
     variables: { managed: false },
-    resources: [api, web, gateway],
+    resources: [api, web, relay, gateway],
   };
   return project("raypx", configuration);
 });

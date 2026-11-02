@@ -1,5 +1,4 @@
-import { RelayHub, type RelayPeer } from "../relay/hub.js";
-import { RedisRelayCluster } from "../relay/redis.js";
+import { createRemoteRelay, RedisRelayCluster, createRelayJobExecutor } from "@raypx/control/relay";
 import { connectDatabase } from "@raypx/database/connection";
 import { createStreamDrain } from "@raypx/logger/stream";
 import { getApiEnvironment, type ApiEnvironment } from "../env.js";
@@ -8,12 +7,11 @@ import { errorReports } from "../error-reports.js";
 import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.js";
 import { connectRedis } from "./redis.js";
 import { createClientIpReader } from "../app/client-ip.js";
-import { createRelayJobExecutor } from "../relay/jobs.js";
 
 /** Socket address written by the server entry; the default auth rate-limit key. */
 export const CLIENT_IP_HEADER = "x-raypx-client-ip";
 type ServerRuntime = ApiRuntime & {
-  relay: RelayHub;
+  relay: Awaited<ReturnType<typeof createRemoteRelay>>;
   clientIp: ReturnType<typeof createClientIpReader>;
 };
 
@@ -50,11 +48,10 @@ export async function createApiRuntime(
         : {}),
     },
   );
-  const relay = new RelayHub(async (run) => run(runtime.control));
-  // HTTP liveness remains available during a broker outage. Configured Relay stays closed
-  // until its subscriptions recover; it never silently becomes a process-local router.
-  if (environment.REDIS_URL)
-    await relay.attachCluster(new RedisRelayCluster(environment.REDIS_URL)).catch(() => {});
+  const relay = await createRemoteRelay(
+    runtime.control,
+    environment.REDIS_URL ? new RedisRelayCluster(environment.REDIS_URL) : undefined,
+  );
   let closing: Promise<void> | undefined;
   return {
     ...runtime,
@@ -72,21 +69,6 @@ export async function createApiRuntime(
 }
 
 let runtimePromise: Promise<ServerRuntime> | undefined;
-export const serverRelay = {
-  async open(peer: RelayPeer) {
-    try {
-      (await getApiRuntime()).relay.open(peer);
-    } catch {
-      peer.close(1013, "Relay unavailable");
-    }
-  },
-  async receive(id: string, data: string) {
-    await (await getApiRuntime()).relay.receive(id, data);
-  },
-  async close(id: string) {
-    await (await runtimePromise)?.relay.close(id);
-  },
-};
 export function getApiRuntime(): Promise<ServerRuntime> {
   return (runtimePromise ??= Promise.resolve().then(() => createApiRuntime(getApiEnvironment())));
 }

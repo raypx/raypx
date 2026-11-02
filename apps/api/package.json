@@ -25,6 +25,7 @@
     "@raypx/account": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/control": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",

@@ -17,7 +17,7 @@ import {
 const record = { id: z.string().min(1), deviceId: z.string().min(1) };
 const epoch = z.number().int().positive();
 const timestamp = z.iso.datetime();
-export const controlRecordSchemas = {
+const controlRecordSchemas = {
   device: z.object({
     ...record,
     installationId: z.uuid(),
@@ -82,7 +82,7 @@ export type ControlRecords = {
   [K in keyof typeof controlRecordSchemas]: z.output<(typeof controlRecordSchemas)[K]>;
 };
 export type RecordKind = keyof ControlRecords;
-export const observedSummarySchema = terminalRequestSummarySchema.extend(record);
+const observedSummarySchema = terminalRequestSummarySchema.extend(record);
 export type ObservedSummary = z.output<typeof observedSummarySchema>;
 
 export function decodeControlRecord<K extends RecordKind>(

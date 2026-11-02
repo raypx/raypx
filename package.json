@@ -97,7 +97,7 @@
     "workspace:new": "raypx-dev workspace new",
     "policy": "raypx-dev policy",
     "i18n:check": "raypx-dev i18n",
-    "dev": "raypx-dev tasks dev --filter web --filter api --concurrency-limit=3",
+    "dev": "raypx-dev tasks dev --filter web --filter api --filter relay --concurrency-limit=3",
     "dev:desktop": "raypx-dev tasks dev --filter desktop",
     "dev:storybook": "raypx-dev tasks dev --filter ui-storybook",
     "build": "raypx-dev tasks build",
@@ -125,7 +125,8 @@
     "analytics:sourcemaps": "raypx-dev analytics sourcemaps",
     "knip": "raypx-dev knip",
     "perf:tasks": "raypx-dev tasks perf:tasks",
-    "eval:agents": "raypx-dev tasks cli#eval:agents --"
+    "eval:agents": "raypx-dev tasks cli#eval:agents --",
+    "build:relay": "raypx-dev tasks build --filter relay"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",

@@ -55,7 +55,7 @@ Deleting a plan removes its run log, while existing managed tasks remain unchang
 
 `memory.*` requires an account session on every read and write; mutations also require
 trusted Origin, CAS and account limits. `@raypx/memory/server` owns shared use cases;
-`server/memory/repository.ts` atomically stores current documents and immutable
+`@raypx/control/postgres` atomically stores current documents and immutable
 versions. Resolve joins current eligibility with selected revisions without account
 write locking. Sources are frozen on task creation and obey core's full prompt budget.
 Context command replay bodies expire after 24 hours and are limited to 4096 rows/8 MiB
@@ -104,7 +104,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   must declare exactly its keys; tooling reads this data without importing API runtime.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
 - Close the PostgreSQL pool idempotently through Nitro's close hook.
-- No old business endpoints, worker, local execution endpoints or second server.
+- No old business endpoints, worker or local execution endpoints. API starts one listener;
+  independent Relay sockets belong to `infra/relay`.
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
 - Never import another app. Local CLI execution stays outside the HTTP API.
@@ -127,12 +128,18 @@ TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/
 
 ## Remote tasks
 
-`server/control` owns device credentials and account-scoped read projections. Its service composes credential fencing, command routing, task projection and observed projection modules. Private record schemas own stored validation and inferred types; repository kinds determine return types and query options. Observed summaries have a separate typed read. Account authorization mutations take an exclusive owner lock; device projection transactions take a shared owner security fence and a device advisory lock. Read-only reads take neither lock.
-`server/relay` authenticates and routes typed WebSocket messages; execution and
-first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
-and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
-Each runtime owns RelayHub. REDIS_URL enables a private bounded cross-instance bus; PostgreSQL owns connection identity. Without Redis use one instance. Broker loss closes clients and fails readiness until subscriptions recover; never fall back or retry uncertain delivery. Keep credentials out of the bus, URLs and diagnostics.
-`test:cluster` requires isolated TEST_DATABASE_URL and TEST_REDIS_URL; it verifies two real socket servers. See docs/architecture/remote-tasks.md.
+`@raypx/control` owns shared device credentials, command routing and account-scoped
+read projections. `/postgres` provides the control/context adapters. Account
+mutations take an exclusive owner lock; device projection transactions take a
+shared security fence and device advisory lock. Read-only reads take neither lock.
+HTTP RPC exposes reads, device management and one-time viewer tickets. Relay v4
+sockets run in the independent `infra/relay` app; API never imports that app or
+hosts peers. Execution and first-answer decisions belong to the CLI.
+Each API runtime owns only a private Redis broker client for scheduling and
+revocation. Without REDIS_URL, login remains available but remote execution is
+unavailable. PostgreSQL owns connection identity. Never retry uncertain delivery
+or put credentials on the bus. `test:cluster` uses owned PostgreSQL/Redis and
+includes cross-process Relay dispatch, revocation and independent lifecycle checks.
 Relay v4 requires an explicit protocol version. Preserve full activity checkpoints
 and bounded incremental replay; a missing revision requests a snapshot. Keep the latest
 activity projection until explicit history removal. Missing entries in partial snapshots

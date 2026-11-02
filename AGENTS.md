@@ -9,8 +9,8 @@ The accepted foundation design supersedes documents in docs/history.
 ## Workspaces and boundaries
 
 - Discover workspaces from root package.json; never maintain a package-name allowlist.
-- Provider infrastructure lives in private tooling workspaces under `infra/*`;
-  keep deployment dependencies and commands there, outside application runtime imports.
+- Infrastructure services and provider tooling live under `infra/*`; declare each
+  workspace's actual app/tooling kind and keep composition roots out of cross-workspace imports.
 - Applications are composition roots and cannot be imported by another workspace.
 - Libraries expose explicit package.json exports; do not import private source paths.
 - Every workspace declares raypx.kind and raypx.target. Mixed workspaces declare
@@ -116,9 +116,11 @@ Opted-in remote Agent tasks use explicit API projections and device-scoped grant
 On macOS and Windows the independent CLI daemon owns execution, approval arbitration, the
 durable replay journal, the outbound WebSocket and restricted device credentials.
 Desktop connects over authenticated private IPC (Unix socket, or token-guarded loopback
-on Windows; see ADR 0037); GUI Quit does not stop daemon tasks. API relays messages and stores read
+on Windows; see ADR 0037); GUI Quit does not stop daemon tasks. Relay routes messages; API stores read
 projections. Native handles initial opt-in without exporting cookies or host secrets
-to the renderer. Explicit logout/account changes revoke the affected binding. Never publish the
+to the renderer. Explicit logout/account changes revoke the affected binding. The independent
+`infra/relay` service owns socket peers; API reaches it over the private Redis broker.
+Shared `@raypx/control` services own authorization and projection rules. Never publish the
 local method router or provider credentials. Desktop connection settings are
 user-level runtime TOML; server origins isolate sessions, remote settings and
 remote authorization.

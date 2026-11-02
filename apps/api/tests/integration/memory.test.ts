@@ -3,7 +3,7 @@ import { createApiClient } from "@raypx/client";
 import { ContextError, type ContextDocument, type ContextVersion } from "@raypx/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";
 import { createApiApp } from "../../server/api.js";
-import { controlAuth } from "../helpers/control.js";
+import { controlAuth } from "@raypx/control/testing";
 
 function fixture() {
   const auth = controlAuth("memory-owner");

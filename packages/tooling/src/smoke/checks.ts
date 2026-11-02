@@ -21,6 +21,11 @@ export async function checkApi(base: string, options: { origin?: string; gateway
   const unavailable = (await signup.json()) as { code?: string };
   if (signup.status !== 503 || unavailable.code !== "MAIL_NOT_CONFIGURED")
     throw new Error("Unconfigured mail must reject signup before any database or delivery attempt");
+  if (!options.gateway) {
+    if ((await fetch(`${base}/relay`)).status !== 404)
+      throw new Error("The API artifact must not host Relay sockets");
+    return;
+  }
   await new Promise<void>((resolve, reject) => {
     const url = new URL("/relay", base);
     url.protocol = "ws:";
@@ -29,7 +34,7 @@ export async function checkApi(base: string, options: { origin?: string; gateway
       socket.close();
       reject(new Error("Relay WebSocket handshake timed out"));
     }, 5000);
-    // An unauthenticated frame exercises the real Nitro upgrade without a database.
+    // An unauthenticated frame exercises the independent Relay through the gateway.
     socket.addEventListener("open", () => socket.send(JSON.stringify({ type: "ping" })));
     socket.addEventListener("error", () => {
       clearTimeout(timer);

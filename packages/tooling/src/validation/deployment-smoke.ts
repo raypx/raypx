@@ -57,8 +57,10 @@ export async function smokeDeployment(root: string, args: string[]) {
     composeMigrate: `raypx/api-migrate:${release}`,
     composeApi: `raypx/api:${release}`,
     composeWeb: `raypx/web:${release}`,
+    composeRelay: `raypx/relay:${release}`,
     railwayApi: `${project}/api:smoke`,
     railwayWeb: `${project}/web:smoke`,
+    railwayRelay: `${project}/relay:smoke`,
     gateway: `${project}/gateway:smoke`,
     fixture: `${project}/fixture:smoke`,
   };
@@ -165,6 +167,7 @@ export async function smokeDeployment(root: string, args: string[]) {
       for (const [label, file, image, target] of [
         ["railway-api", "apps/api/Dockerfile", images.railwayApi, ""],
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ""],
+        ["railway-relay", "infra/relay/Dockerfile", images.railwayRelay, ""],
         ["gateway", "infra/railway/Dockerfile", images.gateway, ""],
         ["fixture", "apps/api/Dockerfile", images.fixture, "build"],
       ]) {
@@ -250,6 +253,7 @@ export async function smokeDeployment(root: string, args: string[]) {
             ["bun", "run", "--cwd", "apps/api", "deployment:fixture"],
           );
         const api = `${project}-api`,
+          relay = `${project}-relay`,
           web = `${project}-web`,
           gateway = `${project}-gateway`;
         await start(
@@ -263,9 +267,22 @@ export async function smokeDeployment(root: string, args: string[]) {
             ALLOWED_ORIGINS: origin,
             JOBS_ENABLED: "false",
             HOST: profile === "railway" ? "::" : "0.0.0.0",
-            ...(profile === "railway" ? { REDIS_URL: `redis://${project}-redis:6379` } : {}),
+            REDIS_URL: `redis://${project}-redis:6379`,
           },
           ["--memory", "768m"],
+        );
+        await start(
+          relay,
+          profile === "compose" ? images.composeRelay : images.railwayRelay,
+          {
+            NODE_ENV: "production",
+            DATABASE_URL: database,
+            REDIS_URL: `redis://${project}-redis:6379`,
+            ALLOWED_ORIGINS: origin,
+            PORT: String(deploymentServices.relay.port),
+            HOST: profile === "railway" ? "::" : "0.0.0.0",
+          },
+          ["--memory", "512m"],
         );
         await start(
           web,
@@ -279,6 +296,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           {
             PORT: String(deploymentServices.gateway.port),
             API_UPSTREAM: `${api}:${deploymentServices.api.port}`,
+            RELAY_UPSTREAM: `${relay}:${deploymentServices.relay.port}`,
             WEB_UPSTREAM: `${web}:${deploymentServices.web.port}`,
           },
           ["-p", `127.0.0.1::${deploymentServices.gateway.port}`, "--memory", "128m"],
@@ -297,10 +315,7 @@ export async function smokeDeployment(root: string, args: string[]) {
         const ready = (await (await fetch(`${base}/ready`)).json()) as {
           checks: Record<string, string>;
         };
-        if (
-          ready.checks.database !== "ok" ||
-          (profile === "railway" && ready.checks.redis !== "ok")
-        )
+        if (ready.checks.database !== "ok" || ready.checks.redis !== "ok")
           throw new Error("Deployment dependency readiness failed");
         await checkWeb(base);
         await checkApi(base, { origin, gateway: true });
@@ -315,7 +330,7 @@ export async function smokeDeployment(root: string, args: string[]) {
         console.log(
           `${profile}: migration, readiness, SSR, assets, login, cookie and Relay passed`,
         );
-        for (const name of [gateway, web, api]) await stop(name);
+        for (const name of [gateway, web, api, relay]) await stop(name);
       }
     } catch (error) {
       failed = true;

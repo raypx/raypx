@@ -19,6 +19,7 @@ function fixture() {
     "infra/railway/Dockerfile",
     "apps/api/Dockerfile",
     "apps/web/Dockerfile",
+    "infra/relay/Dockerfile",
     "apps/api/server/env.contract.ts",
   ]) {
     mkdirSync(dirname(join(root, file)), { recursive: true });

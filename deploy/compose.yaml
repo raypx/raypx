@@ -54,7 +54,7 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       MAIL_DEFAULT_LOCALE: ${MAIL_DEFAULT_LOCALE:-en}
       AUTH_DOMAIN: ${AUTH_DOMAIN:-}
-      REDIS_URL: ${REDIS_URL:-}
+      REDIS_URL: ${REDIS_URL:?Set the private Redis/Valkey endpoint for Relay}
       S3_ENDPOINT: ${S3_ENDPOINT:-}
       S3_REGION: ${S3_REGION:-auto}
       S3_BUCKET: ${S3_BUCKET:-}
@@ -82,11 +82,51 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/relay`) || Path(`/health`) || Path(`/ready`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/health`) || Path(`/ready`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
       - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-api.loadbalancer.server.port=3002"
+
+  relay:
+    image: raypx/relay:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      REDIS_URL: ${REDIS_URL:?Set the private Redis/Valkey endpoint for Relay}
+      ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend, proxy]
+    mem_limit: ${RELAY_MEMORY:-512m}
+    cpus: ${RELAY_CPUS:-0.75}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://127.0.0.1:3003/ready', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.rule=Host(`${APP_HOST:?}`) && Path(`/relay`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.priority=110"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.middlewares=${COMPOSE_PROJECT_NAME:?}-relay-headers"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-relay-headers.headers.customrequestheaders.Cookie="
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-relay-headers.headers.customrequestheaders.Authorization="
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-relay.loadbalancer.server.port=3003"
 
   web:
     image: raypx/web:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../server/api.js";
-import type { ControlService } from "../../server/control/service.js";
+import type { ControlService } from "@raypx/control";
 import type { AuthSession } from "@raypx/auth/types";
 
 const session: AuthSession = {

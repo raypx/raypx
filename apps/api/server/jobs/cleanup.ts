@@ -3,7 +3,7 @@ import { rateLimit, session, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
 import type { ConfigurationReader } from "../configuration/types.js";
-import { contextCommandPrune } from "../control/repository.js";
+import { contextCommandPrune } from "@raypx/control/postgres";
 
 export function createCleanupJob({
   db,

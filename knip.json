@@ -71,6 +71,12 @@
     },
     "infra/railway": {
       "entry": ["railway.ts", "scripts/iac-preload.ts"]
+    },
+    "infra/relay": {
+      "entry": ["src/main.ts", "vite.app.config.ts"]
+    },
+    "packages/control": {
+      "entry": ["tests/helpers/control.ts"]
     }
   }
 }

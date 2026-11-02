@@ -4,7 +4,7 @@ import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { distributionRequested } from "./events.js";
 import { browserReach } from "./platform.js";
 
-type Artifact = "api" | "web" | "cli";
+type Artifact = "api" | "web" | "relay" | "cli";
 export interface VerificationPlan {
   full: boolean;
   reasons: string[];
@@ -142,7 +142,7 @@ export function verificationPlan(
   const workspaces = [...affected.keys()].sort();
   const includeArtifacts = options.artifacts ?? full;
   const artifacts = includeArtifacts
-    ? (["api", "web", "cli"] as const).filter(
+    ? (["api", "web", "relay", "cli"] as const).filter(
         (name) =>
           affected.has(name) &&
           model.members.some((member) => member.name === name && member.scripts.build),

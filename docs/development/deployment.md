@@ -12,7 +12,7 @@ exact value as `COMPOSE_PROJECT_NAME` when prebuilding images. For a manual
 installation, choose a unique project name and keep it stable across updates.
 
 - Image tags are `raypx/api:<project>-<release>`, `raypx/web:<project>-<release>`
-  and `raypx/api-migrate:<project>-<release>`.
+  `raypx/relay:<project>-<release>` and `raypx/api-migrate:<project>-<release>`.
 - Traefik routers/services use the Compose project name.
 - Backend networks and PostgreSQL volumes are scoped to that project.
 - Domain, database password, authentication secret, administrators, mail and
@@ -49,7 +49,8 @@ password-reset mail. Otherwise the explicit mail guard remains active.
 `JOBS_ENABLED` controls maintenance scheduling.
 
 The template also forwards optional `AUTH_DOMAIN`, `MAIL_DEFAULT_LOCALE`,
-`REDIS_URL`, S3 storage settings and server `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`.
+S3 storage settings and server `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`.
+`REDIS_URL` is required for the private broker shared by API and Relay.
 Empty optional values keep the corresponding integration disabled. These settings
 do not provision Redis, storage or mail services; supply the intended environment's
 endpoints and credentials. Browser analytics uses its separate public build values.
@@ -65,7 +66,7 @@ missing from Compose or the environment template.
 COMPOSE_PROJECT_NAME=raypx-app APP_HOST=app.example.com RAYPX_RELEASE=git-sha sh deploy/build.sh
 ```
 
-The script builds migration, API and Web sequentially. It creates
+The script builds migration, API, Relay and Web sequentially. It creates
 `RAYPX_BUILD_BUILDER` (default `raypx-builder`) on first use. Creation limits default
 to two CPUs, 3 GiB memory and 4 GiB memory plus swap. `BUILD_MEMORY`,
 `BUILD_MEMORY_SWAP` and `BUILD_CPU_QUOTA` override creation settings; the fixed CPU
@@ -74,7 +75,8 @@ limits explicitly or choose a new builder name. A stopped builder starts on the
 next build. Reuse one bounded builder for the shared manifest and dependency image layers.
 
 Build and runtime stages use the pinned `oven/bun` images; Bun is the only runtime.
-Compose and Railway both use `apps/api/Dockerfile` and `apps/web/Dockerfile`.
+Compose and Railway use `apps/api/Dockerfile`, `apps/web/Dockerfile` and
+`infra/relay/Dockerfile`. Relay bundles its Bun entry with Vite.
 These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
 local Bun install and VP task cache mounts to a temporary Dockerfile and removes
 it on exit, including build failure. All install/build commands remain in the
@@ -111,7 +113,7 @@ firewalls must block public management access. Allow TCP 22, 80 and 443; UDP 443
 optional for HTTP/3. Only Traefik publishes application traffic.
 
 Point `APP_HOST` at the host. `TRAEFIK_NETWORK` defaults to `<COMPOSE_PROJECT_NAME>-ingress`, which
-must already exist and contain only this project's Web/API containers and Traefik.
+must already exist and contain only this project's Web/API/Relay containers and Traefik.
 Create a distinct network for each project and explicitly connect Traefik with a
 stable address. Do not attach application containers to the shared Dokploy network. Set the certificate account email before requesting TLS using
 `TRAEFIK_CERT_RESOLVER` (default `letsencrypt`). Check public HTTPS
@@ -135,13 +137,14 @@ one; disable automatic image cleanup for this local-image strategy. Keep prior
 release tags and the migration image until explicitly retired.
 
 PostgreSQL becomes healthy, migration exits successfully, then API and Web start.
-Without `REDIS_URL`, keep one API instance. Shared PostgreSQL and Redis enable
-cross-instance Relay routing, with no offline queue or automatic delivery retry.
+The independent Relay and API share an explicit private `REDIS_URL` and PostgreSQL.
+Gateway `/relay` traffic reaches Relay directly; API owns HTTP authentication and
+RPC. The broker has no offline queue or automatic delivery retry.
 Configured Redis outages disconnect Relay clients and fail its readiness probe;
 `/health` remains liveness-only. Keep the broker private to this deployment.
 The provided Compose update script still manages one API container.
 `POSTGRES_MEMORY`/`POSTGRES_CPUS`, `MIGRATE_MEMORY`/`MIGRATE_CPUS`,
-`API_MEMORY`/`API_CPUS` and `WEB_MEMORY`/`WEB_CPUS` configure runtime limits. Budget
+`API_MEMORY`/`API_CPUS`, `RELAY_MEMORY`/`RELAY_CPUS` and `WEB_MEMORY`/`WEB_CPUS` configure runtime limits. Budget
 for all projects, Dokploy and builds on a shared host.
 
 Check `/health`, database-aware `/ready`, signed-out redirects, real login,
@@ -175,9 +178,9 @@ shape only after every consumer has migrated. The current control indexes are
 additive. An image rollback must not require reversing a migration.
 
 After backup and image builds, use `sh deploy/update.sh /absolute/path/to/.env`.
-It validates Compose without printing secrets, records the running API/Web image
-digests, waits for PostgreSQL, **stops API**, runs the isolated migration and then
-replaces API and Web with health waits. Schedule a maintenance window for the whole
+It validates Compose without printing secrets, records the running API/Relay/Web image
+digests, waits for PostgreSQL, **stops API and Relay**, runs the isolated migration and then
+replaces Relay, API and Web with health waits. Schedule a maintenance window for the whole
 operation: the generated index migrations use transactional `CREATE INDEX` and
 cannot serve device writes concurrently. Do not run a separate old API against
 this database during migration. Migration connections use a ten-second lock timeout;
@@ -189,8 +192,8 @@ redeploy and run the update script on the host during the agreed maintenance
 window. An ordinary Compose reconciliation alone does not stop the old writer
 before starting the migration job.
 
-On migration failure the script restarts the untouched previous API container. On
-API or Web replacement/health failure it stops the failed services and recreates
+On migration failure the script restarts the untouched previous API and Relay containers. On
+Relay, API or Web replacement/health failure it stops the failed services and recreates
 the previous running images by their immutable local digests. It returns failure
 even if recovery succeeds. A first deployment has no previous image to restore;
 failed services remain stopped. The script removes its protected temporary Compose
@@ -202,7 +205,7 @@ to the update; it cannot recover secrets or settings overwritten outside the scr
 If automatic recovery fails, inspect `docker compose ... logs --tail 100 api migrate`
 in a protected terminal, validate the previous environment with `config --quiet`,
 then use a protected Compose override specifying the captured `sha256:` images and
-`up -d --no-deps --wait api web`. Keep the same project name and volume. Verify
+`up -d --no-deps --wait api relay web`. Keep the same project name and volume. Verify
 `/health`, `/ready`, login and relay before ending maintenance. Retain additive
 migrations when reverting an application image; never delete migrations or volumes.
 

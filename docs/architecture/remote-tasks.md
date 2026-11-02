@@ -4,11 +4,11 @@ Web and Desktop connect to an authenticated WebSocket relay. On macOS and Window
 CLI daemon is the execution authority; Desktop is its private IPC client.
 The owner creates tasks, owns Agent sessions,
 resolves approvals and decides final status. API stores account-scoped read projections and
-routes commands; a server clock cannot declare a local execution finished.
+dispatches scheduling over private Redis; independent Relay routes socket commands. A server clock cannot declare a local execution finished.
 
 ## Communication
 
-Web / Desktop UI ↔ API relay ↔ CLI daemon ↔ Claude Code / Codex (macOS, Windows).
+Web / Desktop UI ↔ Relay service ↔ CLI daemon ↔ Claude Code / Codex (macOS, Windows).
 Desktop native ↔ private daemon proxy for local views on both platforms.
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
 Relay v4 is the only supported version. Context and authoritative snapshot sync
@@ -75,18 +75,24 @@ session revocation and credential expiry. Account changes, logout, disabling rem
 access cancel affected managed tasks; transient network loss does not. macOS GUI
 Quit preserves tasks, while explicit daemon stop and Windows GUI Quit cancel them.
 
-Bun uses Nitro's WebSocket adapter. With `REDIS_URL`, API instances share a private
-bounded Redis request/reply bus. PostgreSQL stores the active node/connection
-identity; each delivery revalidates that identity and its actor. Viewers and job
-workers can reach a host on another instance. Reconnect/revoke and committed
-projection notices reach the other instances. The bus carries no bearer credentials.
-Without Redis, use one API instance. A configured broker outage closes Relay
-connections until subscriptions recover; HTTP liveness remains available and
-readiness reports Relay unavailable. Redis does not queue offline commands or
-retry uncertain delivery. Losing a response after publish remains uncertain and
-never causes automatic task recreation. `test:cluster` verifies two socket
-servers against isolated PostgreSQL and Redis, including reconnect, revoke,
-subscription loss and correlated snapshot completion.
+`infra/relay` uses Bun's WebSocket server independently of API's Nitro listener.
+The gateway sends `/relay` to Relay and HTTP authentication/RPC to API; clients
+keep one public origin. Vite supplies the same forwarding during development.
+Both services use `@raypx/control` public entries for credential, context and
+projection rules and PostgreSQL adapters. Neither imports the other application.
+
+API owns a private broker client for scheduling and revocation. Relay instances
+share the bounded Redis request/reply bus. PostgreSQL stores the active node and
+connection identity; every delivery revalidates that identity and its actor.
+Reconnect, revoke and committed projection notices reach other instances. The
+bus carries no bearer credentials. Relay requires a broker; an API without Redis
+keeps login available but cannot dispatch remote work. Broker loss closes socket
+peers and fails readiness until subscriptions recover. Redis does not queue offline
+commands or retry uncertain delivery. Losing a reply after publish remains
+uncertain and never causes automatic task recreation. `test:cluster` verifies
+cross-instance and cross-process dispatch, revoke, subscription loss and correlated
+snapshot completion against owned temporary PostgreSQL and Redis. See
+[the Relay service](../../infra/relay/README.md).
 
 ## Commands and host authority
 

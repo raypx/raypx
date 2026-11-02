@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readStaticCatalog } from "@raypx-kit/devkit/catalogs";
-import { apiIngress, deploymentServices } from "../build/deployment.js";
+import { apiIngress, relayIngress, deploymentServices } from "../build/deployment.js";
 
 interface ComposeService {
   environment?: Record<string, string>;
@@ -32,16 +32,16 @@ export function checkDeployment(root: string): string[] {
       if (source === "input" && !template.has(key))
         findings.push(`deploy/.env.example: missing API setting ${key}`);
     }
-    for (const app of ["api", "web"] as const) {
+    for (const app of ["api", "web", "relay"] as const) {
       const service = deploymentServices[app];
-      const file = `apps/${app}/Dockerfile`;
+      const file = app === "relay" ? "infra/relay/Dockerfile" : `apps/${app}/Dockerfile`;
       const source = read(file);
       const stages = dockerStages(source);
       if (
         ![stages.runtime, stages.final].every(
           (stage) =>
-            stage?.environment.get("NITRO_PORT") === String(service.port) &&
-            stage.ports.has(String(service.port)),
+            stage?.environment.get(app === "relay" ? "PORT" : "NITRO_PORT") ===
+              String(service.port) && stage.ports.has(String(service.port)),
         )
       )
         findings.push(`${file}: runtime port must be ${service.port}`);
@@ -87,6 +87,28 @@ export function checkDeployment(root: string): string[] {
       ])
     )
       findings.push("deploy/compose.yaml: API ingress routes differ from the deployment contract");
+    const relayPaths =
+      caddySource
+        .match(/@relay path ([^\n]+)/)?.[1]
+        ?.trim()
+        .split(/\s+/) ?? [];
+    if (!same(relayPaths, [...relayIngress.paths]))
+      findings.push(
+        "infra/railway/Caddyfile: Relay ingress routes differ from the deployment contract",
+      );
+    const relayRule = services.relay?.labels?.find((line) => /-relay.rule=/.test(line)) ?? "";
+    if (
+      !same(
+        [...relayRule.matchAll(/Path\(`([^`]+)`\)/g)].map((match) => match[1]!),
+        [...relayIngress.paths],
+      )
+    )
+      findings.push(
+        "deploy/compose.yaml: Relay ingress routes differ from the deployment contract",
+      );
+    for (const key of ["DATABASE_URL", "REDIS_URL", "ALLOWED_ORIGINS"])
+      if (!services.relay?.environment?.[key])
+        findings.push(`deploy/compose.yaml: Relay does not forward ${key}`);
   } catch {
     findings.push(
       "Deployment contract could not be read; check Compose, Dockerfiles and API environment declarations",

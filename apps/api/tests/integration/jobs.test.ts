@@ -9,7 +9,7 @@ import {
 } from "@raypx/jobs";
 import type { CloudJobsService } from "@raypx/jobs/server";
 import { createApiApp } from "../../server/api.js";
-import { controlAuth } from "../helpers/control.js";
+import { controlAuth } from "@raypx/control/testing";
 
 function fixture() {
   const auth = controlAuth("job-owner");

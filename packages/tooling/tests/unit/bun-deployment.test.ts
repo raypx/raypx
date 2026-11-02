@@ -88,6 +88,6 @@ it("probes Compose health with Bun instead of Node", () => {
   const probes = [...compose.matchAll(/test:\n\s+- CMD\n\s+- (\S+)\n\s+- -e/g)].map(
     (match) => match[1],
   );
-  expect(probes).toEqual(["bun", "bun"]);
+  expect(probes).toEqual(["bun", "bun", "bun"]);
   expect(compose).not.toMatch(/^\s+- node$/m);
 });

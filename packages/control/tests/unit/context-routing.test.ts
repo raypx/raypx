@@ -1,9 +1,9 @@
 import { expect, it, vi } from "vite-plus/test";
 import { ContextError } from "@raypx/memory";
 import { taskExecutionPrompt, type TaskContextSnapshot } from "@raypx/core/tasks";
-import { ControlService } from "../../server/control/service.js";
+import { ControlService } from "@raypx/control";
 import { connected, memoryControlRepository } from "../helpers/control.js";
-import { RelayHub } from "../../server/relay/hub.js";
+import { RelayHub } from "@raypx/control/relay";
 import type { RelayServerFrame } from "@raypx/contracts/tasks";
 
 function snapshot(): TaskContextSnapshot {

@@ -26,6 +26,7 @@
 - [Test case ownership and consolidation](development/test-cases.md)
 - [Shared deployment per project](development/deployment.md)
 - [Infrastructure workspaces](../infra/README.md)
+- [Independent Relay service](../infra/relay/README.md)
 - [Railway deployment and domain setup](development/railway.md)
 - [Existing beta environment](development/beta.md)
 - [Production environment](development/production.md)

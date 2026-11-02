@@ -1,6 +1,6 @@
 import { ConfigurationError } from "./configuration/service.js";
 import type { ConfigurationService } from "./configuration/types.js";
-import { ControlError, type ControlService } from "./control/service.js";
+import { ControlError, type ControlService } from "@raypx/control";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";

@@ -25,6 +25,7 @@
         "@raypx/account": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/control": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/email": "workspace:*",
@@ -227,6 +228,26 @@
         "vite-plus": "catalog:dev",
       },
     },
+    "infra/relay": {
+      "name": "relay",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/auth": "workspace:*",
+        "@raypx/contracts": "workspace:*",
+        "@raypx/control": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "@raypx/env": "workspace:*",
+        "@raypx/memory": "workspace:*",
+        "drizzle-orm": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "vite-plus": "catalog:dev",
+      },
+    },
     "packages/account": {
       "name": "@raypx/account",
       "version": "0.0.0",
@@ -362,6 +383,28 @@
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+      },
+    },
+    "packages/control": {
+      "name": "@raypx/control",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/auth": "workspace:*",
+        "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
+        "drizzle-orm": "catalog:",
+        "ioredis": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/core": {
@@ -1236,6 +1279,8 @@
     "@raypx/client": ["@raypx/client@workspace:packages/client"],
 
     "@raypx/contracts": ["@raypx/contracts@workspace:packages/contracts"],
+
+    "@raypx/control": ["@raypx/control@workspace:packages/control"],
 
     "@raypx/core": ["@raypx/core@workspace:packages/core"],
 
@@ -2224,6 +2269,8 @@
     "redent": ["redent@3.0.0", "", { "dependencies": { "indent-string": "^4.0.0", "strip-indent": "^3.0.0" } }, "sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg=="],
 
     "redis-errors": ["redis-errors@1.2.0", "", {}, "sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w=="],
+
+    "relay": ["relay@workspace:infra/relay"],
 
     "remark-gfm": ["remark-gfm@4.0.1", "", { "dependencies": { "@types/mdast": "^4.0.0", "mdast-util-gfm": "^3.0.0", "micromark-extension-gfm": "^3.0.0", "remark-parse": "^11.0.0", "remark-stringify": "^11.0.0", "unified": "^11.0.0" } }, "sha512-1quofZ2RQ9EWdeN34S79+KExV1764+wCUGop5CPL1WGdD0ocPpu91lzPGbwWMECpEpd42kJGQwzRfyov9j4yNg=="],
 

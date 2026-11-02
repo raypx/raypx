@@ -29,17 +29,21 @@ dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp 
 oxfmt and oxlint fixes on staged files only. Check it with `bun --bun vp hooks status`;
 `VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun run verify`.
 
-Redis is optional. `docker compose up -d valkey` starts Valkey on 6380; set
+Remote tasks require Redis. `docker compose up -d valkey` starts Valkey on 6380; set
 `REDIS_URL=redis://localhost:6380` to cache sessions and keep rate limits in Redis
-instead of PostgreSQL. Node API sessions remain persisted in PostgreSQL.
+instead of PostgreSQL. API sessions remain persisted in PostgreSQL.
 
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
-Start the separate compose database on 5433, then bun run db:migrate and bun run dev.
+Start `docker compose up -d postgres valkey` (PostgreSQL on 5433, Valkey on 6380),
+then bun run db:migrate and bun run dev.
 Never point these migration commands at the retired database or volume.
 bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation schema of DATABASE_URL.
 
-bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop starts Desktop development;
+bun run dev starts Web (Start SSR on 3000), API (3002) and Relay (3003). The API Vite
+development proxy forwards `/relay` to the independent service; production uses
+the shared gateway. See [Relay](../../infra/relay/README.md).
+bun run dev:desktop starts Desktop development;
 bun run package:desktop packages it with its version-matched CLI. Phones use the Web
 application; a native mobile app is deferred until it needs native capabilities.
 Desktop reads its connection at runtime from `~/.raypx/config.toml`, defaulting

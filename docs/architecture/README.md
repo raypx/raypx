@@ -28,7 +28,11 @@ Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
 on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.
 
-Web and API are separate services with Bun as their only deployment target.
+Web, API and Relay are separate services with Bun as their only deployment target.
+Relay lives in `infra/relay` and owns WebSocket connections. API issues tickets
+and grants, stores read projections and dispatches scheduling through private Redis.
+Both use `@raypx/control` for shared authorization and persistence. The gateway
+keeps `/relay` at the same public origin; the built API owns no WebSocket listener.
 Their outputs run outside the repository.
 See [deployment](../development/deployment.md).
 API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,

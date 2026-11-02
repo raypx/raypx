@@ -10,7 +10,6 @@ export default defineConfig({
   plugins: [
     nitro({
       ...nitroTarget(),
-      features: { websocket: true },
       experimental: { tasks: true },
       tasks: {
         "maintenance:cleanup": {
@@ -26,7 +25,6 @@ export default defineConfig({
       },
       plugins: ["./server/runtime/plugin.ts"],
       routes: {
-        "/relay": { handler: "./server/relay/server.ts", format: "web" },
         "/api/auth/**": { handler, format: "web" },
         "/rpc/**": { handler, format: "web" },
         [deploymentServices.api.health]: { handler, format: "web" },
@@ -35,5 +33,20 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: deploymentServices.api.port, strictPort: true },
+  server: {
+    port: deploymentServices.api.port,
+    strictPort: true,
+    proxy: {
+      "/relay": {
+        target: `http://localhost:${deploymentServices.relay.port}`,
+        ws: true,
+        configure(proxy) {
+          proxy.on("proxyReqWs", (request) => {
+            request.removeHeader("cookie");
+            request.removeHeader("authorization");
+          });
+        },
+      },
+    },
+  },
 });
