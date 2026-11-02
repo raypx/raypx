@@ -3,6 +3,10 @@
 This directory owns Dokploy Compose and the Railway gateway deployment.
 Build from the repository root with `build.sh`; Compose and Railway share the
 Dockerfiles in apps/api and apps/web. Keep install/build commands in those files.
+`workspaces.ts` discovers packages from the root manifest without installed dependencies.
+`sources.ts` materializes a workspace's production dependency source tree; API's
+`migration-payload` combines it with production dependencies and canonical SQL for
+both Compose and Railway. Keep tests, tooling sources and secrets outside that tree.
 `build.sh` adds Compose-only cache mounts to temporary copies and removes them on exit.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`
 checks static adapters and API environment forwarding. Run `smoke:deployment`

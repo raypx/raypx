@@ -89,6 +89,7 @@ console.log(JSON.stringify(project.resources));`,
     const file = `apps/${app}/Dockerfile`;
     expect(service.build.dockerfilePath).toBe(file);
     expect(service.build.watchPatterns).toContain(`apps/${app}/**`);
+    expect(service.build.watchPatterns).toContain("deploy/*.ts");
     expect(read(file)).not.toContain("--mount=type=cache");
   }
   const api = services.find(({ name }) => name === "api")!;
@@ -99,14 +100,17 @@ console.log(JSON.stringify(project.resources));`,
   expect([...all.keys()].at(-1)).toBe("deploy");
   expect(all.get("deploy")).toEqual({
     from: "runtime",
-    lines: [
-      "COPY --from=migrate-dependencies --chown=bun:bun /app/ ./",
-      "COPY --chown=bun:bun packages/env/src/ ./packages/env/src/",
-      "COPY --chown=bun:bun packages/database/src/ ./packages/database/src/",
-      "COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/",
-    ],
+    lines: ["COPY --from=migration-payload --chown=bun:bun /app/ ./"],
   });
   expect(all.get("migrate")!.from).toBe("bun");
+  expect(all.get("migrate")!.lines).toContain("COPY --from=migration-payload /app/ ./");
+  expect(all.get("migration-payload")).toEqual({
+    from: "migrate-dependencies",
+    lines: [
+      "COPY --from=migration-sources /migration-sources/ ./",
+      "COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/",
+    ],
+  });
 });
 
 it("probes Compose health with Bun instead of Node", () => {

@@ -73,6 +73,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Dockerfile is shared by Compose and Railway. Its default deploy stage carries
   database production dependencies and migration sources for pre-deploy migration.
   Compose selects the runtime and independent migrate targets explicitly.
+  Both migration-capable targets copy the shared migration-payload stage, whose
+  workspace sources follow database's transitive production dependencies.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address

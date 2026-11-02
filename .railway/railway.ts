@@ -19,6 +19,7 @@ export default defineRailway((context) => {
   const replicas = { "asia-southeast1-eqsg3a": 1 };
   const source = github("raypx/raypx", { branch: "canary" });
   const sharedInputs = [
+    "deploy/*.ts",
     "packages/**",
     "package.json",
     "bun.lock",
@@ -33,7 +34,7 @@ export default defineRailway((context) => {
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "apps/api/Dockerfile",
-      watchPatterns: ["apps/api/**", "deploy/manifests.ts", ".railway/railway.ts", ...sharedInputs],
+      watchPatterns: ["apps/api/**", ".railway/railway.ts", ...sharedInputs],
     },
     preDeploy: "bun run --cwd packages/database migrate",
     healthcheck: deploymentServices.api.ready,
@@ -46,7 +47,7 @@ export default defineRailway((context) => {
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "apps/web/Dockerfile",
-      watchPatterns: ["apps/web/**", "deploy/manifests.ts", ".railway/railway.ts", ...sharedInputs],
+      watchPatterns: ["apps/web/**", ".railway/railway.ts", ...sharedInputs],
     },
     healthcheck: deploymentServices.web.health,
     healthcheckTimeout: 180,

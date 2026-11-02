@@ -51,6 +51,7 @@ API, Web and Gateway use the raypx/raypx GitHub repository's canary branch.
 Matching pushes trigger automatic deployments using the shared
 `apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
 Shared package or manifest changes rebuild API and Web;
+both services also watch `deploy/*.ts` for shared build-context preparation changes.
 Gateway watches its proxy configuration and the IaC file.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
@@ -92,7 +93,10 @@ logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v4.
 
 Railway and Compose share apps/api/Dockerfile and apps/web/Dockerfile. The default
 API `deploy` stage extends the runtime stage with database production dependencies
-and canonical migrations. Compose selects runtime and the independent migrate
+and canonical migrations. Its shared `migration-payload` stage discovers the
+database workspace's production dependency sources automatically through
+`deploy/sources.ts`; Compose's migration image copies the same payload.
+Compose selects runtime and the independent migrate
 stage explicitly; Web defaults to runtime on both platforms.
 Railway runs bun run --cwd packages/database migrate
 in its isolated pre-deploy container. A failure blocks the new deployment.

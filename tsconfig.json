@@ -4,6 +4,7 @@
     "vite.config.ts",
     "vitest.config.ts",
     ".railway/railway.ts",
+    "deploy/*.ts",
     "deploy/railway/iac-preload.ts"
   ]
 }

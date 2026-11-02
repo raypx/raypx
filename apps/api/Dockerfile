@@ -19,12 +19,16 @@ WORKDIR /app
 COPY --from=manifests /manifests/ ./
 RUN bun install --frozen-lockfile --production --filter @raypx/database --ignore-scripts
 
+FROM manifests AS migration-sources
+RUN bun deploy/sources.ts /app /migration-sources @raypx/database
+
+FROM migrate-dependencies AS migration-payload
+COPY --from=migration-sources /migration-sources/ ./
+COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
+
 FROM bun AS migrate
 WORKDIR /app
-COPY --from=migrate-dependencies /app/ ./
-COPY packages/env/src/ ./packages/env/src/
-COPY packages/database/src/ ./packages/database/src/
-COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
+COPY --from=migration-payload /app/ ./
 USER bun
 CMD ["bun", "run", "--cwd", "packages/database", "migrate"]
 
@@ -47,7 +51,4 @@ CMD ["bun", ".output/server/index.mjs"]
 # The default image supports pre-deploy migrations. Select runtime for an API-only
 # image, or migrate for an isolated migration job without the API build.
 FROM runtime AS deploy
-COPY --from=migrate-dependencies --chown=bun:bun /app/ ./
-COPY --chown=bun:bun packages/env/src/ ./packages/env/src/
-COPY --chown=bun:bun packages/database/src/ ./packages/database/src/
-COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
+COPY --from=migration-payload --chown=bun:bun /app/ ./

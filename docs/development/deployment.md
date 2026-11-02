@@ -86,6 +86,14 @@ extracts package manifests and `bun.lock`, so source edits reuse the installed
 dependencies and only manifest or lockfile changes reinstall. The script
 supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`. Migration images
 install only database production dependencies and run as the `bun` user.
+`deploy/workspaces.ts` supplies dependency-free workspace discovery to manifest
+extraction and `deploy/sources.ts`. Source staging follows database's production
+workspace dependencies (including optional and peer dependencies), copying their
+manifests and `src/` trees at their original paths. Development dependencies and
+unrelated source trees are excluded. Database's `drizzle-foundation` remains an
+explicit asset in the shared `migration-payload` stage. Both migration-capable
+image targets copy that same stage, so adding a production workspace dependency
+does not require another Dockerfile source-copy entry.
 
 The API provides three deployable targets: `migrate` is an isolated database job,
 `runtime` contains only the API output, and the default `deploy` target extends
