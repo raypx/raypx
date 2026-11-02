@@ -1,0 +1,27 @@
+apps/web/src/routes/(auth)/route.tsx
+  s_111b7c22ceea5c::t_a00752936153fb 6,16-17,19,21-35,37-41,43,46-51,55,57,62-66,73-81
+packages/auth/src/client/auth-form.tsx
+  s_111b7c22ceea5c::t_fb0425c9ad2e67 104-109,111-120,122-125,127-131,133-212,214-229,231-232,234,237-256
+packages/blocks/src/components/shell.tsx
+  s_111b7c22ceea5c::t_47d1324324e906 210,246,255,260,273
+packages/i18n/src/messages/en.ts
+  s_111b7c22ceea5c::t_83adca6584629f 473,522-527
+packages/i18n/src/messages/zh.ts
+  s_111b7c22ceea5c::t_c5aafbc494bdaa 481-485
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0f16966b23b5cb5fe5c47c67da436da67271afae",
+  "prompts": {},
+  "sessions": {
+    "s_111b7c22ceea5c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e404052-da5e-413a-bdc3-4f900e98bf0e",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
