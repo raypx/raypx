@@ -2,7 +2,7 @@
 
 Status: In progress. Updated 2026-11-02. The Phase 1 first-delivery flow passed real Codex acceptance on macOS arm64; other platforms and the broader recovery matrix remain open. Phase dates beyond the first delivery goal remain planning estimates.
 
-This roadmap describes the target product, not currently shipped behavior. The first phases intentionally reuse proven CLI, Desktop, storage, memory and scheduling components; later architecture remains open to evidence from those workflows. `PRODUCT.md` remains the description of the current product until the target product specification and first implementation decision are accepted.
+This roadmap describes the target product, not currently shipped behavior. The first phases intentionally reuse proven CLI, Desktop, storage, memory and scheduling components; later architecture remains open to evidence from those workflows. `PRODUCT.md` remains the description of the current product; [ADR 0039](architecture/0039-local-server-agent-platform.md) records the accepted target, and `PRODUCT.md` changes only as that target ships.
 
 ## Product Direction
 
@@ -14,21 +14,21 @@ Each Agent has exactly one authority. During the local-first phase, the local CL
 
 ## First Delivery Goal
 
-By 2026-11-10, validate one account-free local flow through the existing Raypx CLI daemon: select a granted project, start a Codex-backed Run, read a project file, request and approve one file write, continue the provider session, then close/reopen Desktop or reconnect the daemon without losing committed state. Raypx Agent Runtime and Run ownership stay local. Cloud migration, local/server pairing, and container/VM isolation are outside this acceptance; Codex CLI may itself use its configured model service.
+By 2026-11-10, validate one account-free local flow through the existing Raypx CLI daemon on macOS or Windows: select a granted project, start a Codex-backed Run, read a project file, reject one read-only plan without any write, approve another plan before the provider writes and tests files, restart the daemon owner and reconnect Desktop, then continue the provider session without losing committed state. Plan approval is the write boundary for this flow: Codex enforces the read-only plan phase in its sandbox, and its run mode then writes inside the granted project without per-write prompts; only escalations it requests reach provider permission hooks. Raypx Agent Runtime and Run ownership stay local. Closing the Desktop window during a Run (Phase 3), cloud migration, local/server pairing, and container/VM isolation are outside this acceptance; Codex CLI may itself use its configured model service.
 
 ## Progress Snapshot (2026-11-02)
 
 These percentages are rough effort estimates, not issue-count metrics. The complete six-phase product is about one-third implemented. The local-first delivery slice is about 90-95% implemented, with deterministic coverage and a passing real-provider acceptance on macOS. This does not establish Windows, foreground UI or the full effect-recovery matrix as passed.
 
-| Phase                                    | Progress | Status                                                                                                                                                                                                                     |
-| ---------------------------------------- | -------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0. Deployment and ownership contracts    |     ~80% | Local ownership and Run rules are documented; local task inspection now derives the Core Run status from persisted tasks and requests. The full failure-injection matrix remains open.                                     |
-| 1. Personal local vertical slice         |     ~95% | Synthetic lifecycle and read-projection coverage pass. Real Codex acceptance passed on macOS arm64, including approved work, daemon restart, session continuation and cancellation; Windows remains unverified.            |
-| 2. Local tools, effects and approval     |     ~60% | Project grants, approval hooks, command receipts and duplicate-delivery protection exist. A consistent durable effect intent/result/uncertainty and reconciliation path remains incomplete.                                |
-| 3. Desktop-backed computer and memory    |     ~80% | The local daemon, granted project roots and revisioned memory UI are in place. Real macOS daemon restart preserves approved work; separate Desktop close/reopen and memory backup/restore checks remain.                   |
-| 4. Automations and continuous local work |     ~40% | Local schedules support Cron, timezone, pause, preview and history, but local scheduled actions do not yet create Agent Runs through `AgentRuntime`. Cloud Agent schedules are separate and do not close this local phase. |
-| 5. Explicit cloud migration              |     ~10% | Existing relay pieces may be reusable. Reviewed export/import, ownership transfer and headless server execution of the same CLI Runtime are not implemented.                                                               |
-| 6. Clients and extensibility             |     ~20% | Web/Desktop and multiple provider adapters exist. Client parity, mobile flows, MCP/connectors and safe configuration import remain.                                                                                        |
+| Phase                                    | Progress | Status                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------- | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. Deployment and ownership contracts    |     ~55% | Local ownership is documented, and local task inspection derives the Core Run status from persisted tasks and requests. Core transition rules still reject the local `waiting` to `cancelling` and `running` transitions, the Run manifest requires revisions local tasks lack, and the threat model, Attempt/effect state machines and failure-injection matrix remain open. |
+| 1. Personal local vertical slice         |     ~95% | Synthetic lifecycle and read-projection coverage pass. Real Codex acceptance passed on macOS arm64, including plan rejection, plan-approved writes, daemon restart, session continuation and cancellation; Windows remains unverified.                                                                                                                                        |
+| 2. Local tools, effects and approval     |     ~60% | Project grants, approval hooks, command receipts and duplicate-delivery protection exist; Codex run mode writes inside the granted project without per-write prompts. A consistent durable effect intent/result/uncertainty and reconciliation path remains incomplete.                                                                                                       |
+| 3. Desktop-backed computer and memory    |     ~80% | The local daemon, granted project roots and revisioned memory UI are in place. Real macOS daemon restart preserves finished work; window close or restart during a running or waiting Run, and memory backup/restore checks, remain.                                                                                                                                          |
+| 4. Automations and continuous local work |     ~40% | Local schedules support Cron, timezone, pause, preview and history, but local scheduled actions do not yet create Agent Runs through `AgentRuntime`. Cloud Agent schedules are separate and do not close this local phase.                                                                                                                                                    |
+| 5. Explicit cloud migration              |     ~10% | Existing relay pieces may be reusable. Reviewed export/import, ownership transfer and headless server execution of the same CLI Runtime are not implemented.                                                                                                                                                                                                                  |
+| 6. Clients and extensibility             |     ~20% | Web/Desktop and multiple provider adapters exist. Client parity, mobile flows, MCP/connectors and safe configuration import remain.                                                                                                                                                                                                                                           |
 
 The local synthetic lifecycle suite in `apps/cli/tests/integration/runtime/agents/host.test.ts` and the read-projection suite in `run-projection.test.ts` passed locally on 2026-11-02 (29 tests). Local detail returns `runStatus` without changing the persisted `AgentTask`; missing or mixed waiting request kinds fail explicitly.
 
@@ -44,8 +44,9 @@ The 2026-11-10 target is the local first-delivery flow, not completion of all ro
 2. **Run read contract: connected.** `agents.local.get` uses Core's task-to-Run projection with the persisted pending/decided request kind. Runtime tests cover all mapped statuses, resolved and foreign requests, and ambiguous waits. `AgentTask` remains the sole stored lifecycle record.
 3. **Acceptance defects: resolved for this flow.** The gate now uses the reserved device owner, waits for Desktop's existing engine startup and restarts its owned daemon through the CLI command. It preserves the product's version-mismatch replacement guard. Live denial, approved writes, restart/history, session continuation and cancellation passed. Broader uncertain-effect reconciliation remains Phase 2 work; this gate does not claim that matrix is complete.
 4. **Affected delivery checks: passed.** The native gate and affected CLI/Desktop/contracts/Go checks passed. Distribution signing, Windows and foreground UI remain separate release gates.
+5. **Reconcile the Core Run contract with the local lifecycle.** `transitionAgentRun` still rejects transitions the local runtime performs: cancelling a waiting task passes through `cancelling`, and a decided request returns the task directly to `running`. Add a conformance test that applies Core's rules to each projected `AgentTask` transition, then change the rules or document the local compression. Reduce `agentRunManifestSchema` to fields local tasks capture, or mark its revision and Host fields as linked-phase drafts. No runtime or store enforces either until it conforms.
 
-With the macOS local gate passing, the next product increment is Phase 4's local Agent automation: add one scheduled Agent trigger through the same `AgentRuntime`, with idempotent delivery, visible run history, pause/resume and an explicit missed-trigger policy. Expand to migration and client extensibility only after that local workflow is proven.
+With the macOS local gate passing and the Run contract reconciled, the next product increment is Phase 4's local Agent automation: add one scheduled Agent trigger through the same `AgentRuntime`, with idempotent delivery, visible run history, pause/resume and an explicit missed-trigger policy. Expand to migration and client extensibility only after that local workflow is proven.
 
 ## Architecture Target
 
@@ -97,7 +98,7 @@ Exit criteria: the CLI daemon is the sole local authority; Run, approval, effect
 - Use the existing local task and follow-up flow as the first conversation/Run experience; preserve provider session continuity and project locking.
 - Project the existing task lifecycle into the Core Agent Run vocabulary at read boundaries; keep `AgentTask` as the sole persisted status. Map `pending` to `queued` and `delivery_failed` to `failed`; resolve `waiting` from its pending request kind (`question` to input, `permission`/`plan` to approval), and reject ambiguous waits instead of guessing. Keep receipts, activity, approvals and replay in the existing SQLite journal.
 - Verify Desktop-to-daemon create, stream, inspect, follow-up, disconnect and restart flows against synthetic providers before live-provider acceptance.
-- Limit first acceptance to one configured provider, one granted project, a project read and an explicitly approved write through existing provider approval hooks. Track usage through existing activity/provider paths where available.
+- Limit first acceptance to one configured provider, one granted project, a project read and a plan-approved write; the provider sandbox, not the prompt, keeps the plan phase read-only. Track usage through existing activity/provider paths where available.
 
 Exit criteria: by 2026-11-10, the existing CLI daemon can complete the first delivery flow above without login or a server dependency; committed local state survives Desktop reconnect and daemon restart; ambiguous provider/effect outcomes are not replayed invisibly.
 
@@ -115,6 +116,7 @@ Exit criteria: every local action is authorized by the local Agent instance; pen
 
 - Treat the existing CLI profile, daemon and explicitly granted project root as the first durable Computer. Its stable identity is the profile/project binding; its workspace is the user's existing directory.
 - Keep the daemon independent from the Desktop window so closing the UI does not stop a Run. Reconnect and process restart recover the binding and Run history; they do not claim snapshot or VM restore semantics.
+- The first-delivery gate restarts the daemon only after its Runs finish. Add live checks that a running Run continues while the Desktop window is closed and reconnects with its history, and that an owner restart during a running or waiting Run marks it interrupted without replaying effects.
 - Reuse `packages/memory` and CLI `runtime/memory` for revisioned local context; add Agent-specific scope only when the local workflow requires it.
 - Reuse existing profile backup/retention mechanisms for local records and artifacts; add missing restore checks without introducing object storage.
 
@@ -143,7 +145,7 @@ Exit criteria: the same CLI Runtime can recover a migrated server-owned Agent af
 ### 6. Clients and Extensibility
 
 - Complete Web and Desktop parity across local and server instances; add mobile control and notification flows.
-- Add MCP and selected application connectors through the Tool Gateway, with credentials isolated from model context.
+- Introduce the deferred Tool Gateway for MCP and selected application connectors, with credentials isolated from model context.
 - Add import from common Agent configuration formats with preview, explicit selection, and executable content disabled by default.
 - Add more model and Computer providers through conformance-tested adapters.
 
