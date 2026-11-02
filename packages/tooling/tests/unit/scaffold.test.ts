@@ -12,9 +12,10 @@ describe("workspace scaffolding", () => {
   it("discovers a scaffolded package without editing any central list and refuses overwrite", () => {
     const root = fixture();
     member(root, "tooling", { metadata: { kind: "tooling", target: "bun" } });
+    member(root, "tsconfig");
     const preview = scaffold(root, "feature-kit", { kind: "library", target: "universal" });
     expect(preview).toContain("packages/feature-kit/src/index.ts");
-    expect(discover(root).workspaces).toHaveLength(1);
+    expect(discover(root).workspaces).toHaveLength(2);
     scaffold(root, "feature-kit", {
       kind: "library",
       target: "universal",

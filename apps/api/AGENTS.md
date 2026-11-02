@@ -70,9 +70,9 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   Common target options come from `@raypx/tooling/build/nitro`; API owns routes and runtime plugins.
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
-- The final railway target in apps/api/Dockerfile additionally carries the database's production
-  dependencies and migration sources for an isolated pre-deploy migration.
-  Compose selects its existing runtime and separate migrate targets explicitly.
+- Dockerfile is shared by Compose and Railway. Its default deploy stage carries
+  database production dependencies and migration sources for pre-deploy migration.
+  Compose selects the runtime and independent migrate targets explicitly.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address

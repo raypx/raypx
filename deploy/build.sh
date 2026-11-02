@@ -46,7 +46,7 @@ cached_dockerfile() {
 }
 
 # Run image builds sequentially; the container builder owns the CPU/memory budget.
-# The API and Web Dockerfiles share identical manifest and dependency stages, so
+# Compose and Railway share the application Dockerfiles. Identical dependency stages mean
 # the later builds reuse the first install unless package manifests or bun.lock change.
 cached_dockerfile apps/api/Dockerfile
 docker buildx build --builder "$builder" --load \

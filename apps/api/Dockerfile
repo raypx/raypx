@@ -43,9 +43,9 @@ USER bun
 EXPOSE 3002
 CMD ["bun", ".output/server/index.mjs"]
 
-# Railway builds the final target for its isolated pre-deploy migration.
-# Compose selects runtime or migrate explicitly.
-FROM runtime AS railway
+# The default image supports pre-deploy migrations. Select runtime for an API-only
+# image, or migrate for an isolated migration job without the API build.
+FROM runtime AS deploy
 COPY --from=migrate-dependencies --chown=bun:bun /app/ ./
 COPY --chown=bun:bun packages/database/src/ ./packages/database/src/
 COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/

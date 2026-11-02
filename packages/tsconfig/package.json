@@ -33,12 +33,16 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "devDependencies": {
+    "@raypx-kit/devkit": "catalog:dev",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "library",
-    "target": "universal"
+    "target": "universal",
+    "sourceTargets": {
+      "scripts/**": "node"
+    }
   }
 }

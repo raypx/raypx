@@ -40,6 +40,9 @@ Actual file reads determine incremental invalidation; source-only libraries need
 build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
 in `vite.app.config.ts`, while independent Vitest configs keep test initialization
 separate. Scaffolding creates the task config and declares its Tooling dev dependency.
+The TypeScript presets are Tooling's own dependency, so their bootstrap config
+registers uncached `task:*` entries directly from package scripts and uses Devkit's
+leaf runner for argument forwarding. It must not depend on Tooling.
 Use `raypx.uncachedTasks` for scripts whose process side effects must always execute;
 entries must name existing scripts. Database/browser integration tasks are uncached
 by default.

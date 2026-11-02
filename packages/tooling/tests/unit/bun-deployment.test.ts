@@ -96,8 +96,8 @@ console.log(JSON.stringify(project.resources));`,
   expect(api.deploy.healthcheckPath).toBe("/ready");
   expect(services.find(({ name }) => name === "web")!.deploy.healthcheckPath).toBe("/health");
   const all = stages("apps/api/Dockerfile");
-  expect([...all.keys()].at(-1)).toBe("railway");
-  expect(all.get("railway")).toEqual({
+  expect([...all.keys()].at(-1)).toBe("deploy");
+  expect(all.get("deploy")).toEqual({
     from: "runtime",
     lines: [
       "COPY --from=migrate-dependencies --chown=bun:bun /app/ ./",

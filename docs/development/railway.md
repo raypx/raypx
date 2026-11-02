@@ -90,20 +90,25 @@ deployments for normal canary updates after connecting the repository.
 Detached upload completion is not a health result: inspect deployment status and
 logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v4.
 
-The shared API Dockerfile's final `railway` stage carries the database's production dependencies and
-canonical migrations. Railway runs bun run --cwd packages/database migrate
+Railway and Compose share apps/api/Dockerfile and apps/web/Dockerfile. The default
+API `deploy` stage extends the runtime stage with database production dependencies
+and canonical migrations. Compose selects runtime and the independent migrate
+stage explicitly; Web defaults to runtime on both platforms.
+Railway runs bun run --cwd packages/database migrate
 in its isolated pre-deploy container. A failure blocks the new deployment.
 For future updates, back up the database first. If pending migrations require
 transactional indexes or otherwise block writers, stop the existing API for an
 agreed maintenance window before migration; ordinary rolling pre-deploy execution
 does not stop the old API. Preserve migration history and storage on rollback.
 
-API and Web each have one Dockerfile for both deployment platforms. The shared
-files omit cache mounts because Railway requires literal service IDs in mount
-IDs and does not support variables there. Their manifest/dependency layers still
-cache installs. Compose's `deploy/build.sh` adds Bun/VP cache mounts to a temporary
-copy of these same files and explicitly selects `migrate`/`runtime`; it does not
-build the API's final Railway stage. The temporary copies are removed on exit.
+The shared application Dockerfiles use manifest/dependency layer caching without
+cache mounts. Railway requires literal service-specific cache mount IDs, so those
+mounts would prevent portable files. Source-only changes reuse installed layers;
+manifest or lockfile changes can require a fresh download. Compose retains its
+bounded builder and reuses the same image layers. Its `deploy/build.sh` adds Bun/VP
+cache mounts to temporary copies of these Dockerfiles and explicitly selects
+`migrate`/`runtime`; it does not build the API's final `deploy` stage. The temporary
+copies are removed on exit.
 `bun run smoke:deployment` exercises both image profiles with an isolated temporary
 database and Redis. This local gate does not apply IaC or contact Railway services.
 

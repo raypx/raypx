@@ -604,6 +604,7 @@
       "name": "@raypx/tsconfig",
       "version": "0.0.0",
       "devDependencies": {
+        "@raypx-kit/devkit": "catalog:dev",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "vite-plus": "catalog:dev",

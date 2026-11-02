@@ -71,7 +71,7 @@ to two CPUs, 3 GiB memory and 4 GiB memory plus swap. `BUILD_MEMORY`,
 `BUILD_MEMORY_SWAP` and `BUILD_CPU_QUOTA` override creation settings; the fixed CPU
 period is 100000 microseconds, so quota 200000 means two CPUs. Change existing
 limits explicitly or choose a new builder name. A stopped builder starts on the
-next build. Reuse one bounded builder for the shared Bun download and VP task cache.
+next build. Reuse one bounded builder for the shared manifest and dependency image layers.
 
 Build and runtime stages use the pinned `oven/bun` images; Bun is the only runtime.
 Compose and Railway both use `apps/api/Dockerfile` and `apps/web/Dockerfile`.
@@ -79,13 +79,21 @@ These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
 local Bun install and VP task cache mounts to a temporary Dockerfile and removes
 it on exit, including build failure. All install/build commands remain in the
 application Dockerfiles. Compose explicitly selects the API's `migrate` and
-`runtime` targets; the final `railway` target additionally carries migration
+`runtime` targets; the default `deploy` target additionally carries migration
 dependencies for Railway's isolated pre-deploy command.
 API and Web share identical manifest and dependency stages: `deploy/manifests.ts`
 extracts package manifests and `bun.lock`, so source edits reuse the installed
 dependencies and only manifest or lockfile changes reinstall. The script
 supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`. Migration images
 install only database production dependencies and run as the `bun` user.
+
+The API provides three deployable targets: `migrate` is an isolated database job,
+`runtime` contains only the API output, and the default `deploy` target extends
+`runtime` with production database dependencies and migration sources for pre-deploy
+hooks. Railway builds that default target; Web defaults to `runtime` on both
+platforms. The shared Dockerfiles use layer caching without cache mounts, whose
+service-specific IDs would tie the files to Railway. Manifest or lockfile changes
+can require a fresh download; source-only changes reuse the installed dependency layer.
 
 ## Host and deploy
 

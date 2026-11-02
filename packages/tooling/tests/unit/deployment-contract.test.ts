@@ -102,8 +102,8 @@ it("ignores build-stage settings and checks the inherited Railway runtime", () =
   replace(
     inherited,
     "apps/api/Dockerfile",
-    "FROM runtime AS railway",
-    "FROM runtime AS railway\nENV NITRO_PORT=30020",
+    "FROM runtime AS deploy",
+    "FROM runtime AS deploy\nENV NITRO_PORT=30020",
   );
   expect(checkDeployment(inherited)).toContain("apps/api/Dockerfile: runtime port must be 3002");
 });

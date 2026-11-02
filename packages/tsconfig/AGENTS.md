@@ -34,6 +34,9 @@ README documents every preset and compiler guarantee.
 - Treat any option that can add consumer type errors as a breaking change.
 - Tests under `tests/` read the preset files directly; the packaged consumer check loads
   each exported preset through package exports.
+- Register uncached VP `task:*` entries directly from package scripts. Tooling depends
+  on these presets, so do not add a reverse workspace dependency on Tooling.
+  `scripts/task.ts` uses Devkit's leaf runner to preserve forwarded task arguments.
 
 ## Verification
 

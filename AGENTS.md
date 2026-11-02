@@ -38,8 +38,10 @@ The accepted foundation design supersedes documents in docs/history.
   Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
   `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
-  `vite.app.config.ts`. Cache actual file inputs, explicit build outputs and
-  outcome-affecting environment variables. Preserve inherited environment for leaf commands.
+  `vite.app.config.ts`. The TypeScript presets register uncached bootstrap tasks
+  directly to avoid a dependency cycle with Tooling. Cache actual file inputs,
+  explicit build outputs and outcome-affecting environment variables. Preserve
+  inherited environment for leaf commands.
   mise is the recommended runtime manager; mise.toml
   only enables reading package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
