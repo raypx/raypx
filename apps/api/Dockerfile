@@ -22,6 +22,7 @@ RUN bun install --frozen-lockfile --production --filter @raypx/database --ignore
 FROM bun AS migrate
 WORKDIR /app
 COPY --from=migrate-dependencies /app/ ./
+COPY packages/env/src/ ./packages/env/src/
 COPY packages/database/src/ ./packages/database/src/
 COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
 USER bun
@@ -47,5 +48,6 @@ CMD ["bun", ".output/server/index.mjs"]
 # image, or migrate for an isolated migration job without the API build.
 FROM runtime AS deploy
 COPY --from=migrate-dependencies --chown=bun:bun /app/ ./
+COPY --chown=bun:bun packages/env/src/ ./packages/env/src/
 COPY --chown=bun:bun packages/database/src/ ./packages/database/src/
 COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/

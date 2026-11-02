@@ -101,6 +101,7 @@ console.log(JSON.stringify(project.resources));`,
     from: "runtime",
     lines: [
       "COPY --from=migrate-dependencies --chown=bun:bun /app/ ./",
+      "COPY --chown=bun:bun packages/env/src/ ./packages/env/src/",
       "COPY --chown=bun:bun packages/database/src/ ./packages/database/src/",
       "COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/",
     ],
