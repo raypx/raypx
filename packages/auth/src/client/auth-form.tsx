@@ -101,30 +101,32 @@ export function AuthForm({
       );
   }
   return (
-    <section className="mx-auto w-full max-w-sm px-6 pt-10 pb-16">
+    <section className="mx-auto w-full max-w-md px-6 py-10 lg:px-12 lg:py-16">
       <LinkComponent
         to="account"
-        className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+        className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft size={16} />
         {backLabel ?? c("account")}
       </LinkComponent>
-      <h1>{title}</h1>
-      {mode === "login" || mode === "signup" ? (
-        <p className="mt-2 text-sm text-muted-foreground">{t("intro")}</p>
-      ) : null}
-      {mode === "forgot-password" && (
-        <p className="mt-2 text-sm text-muted-foreground">{t("resetIntro")}</p>
-      )}
-      {mode === "verify-email" && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          {verified ? t("verified") : t("verifyIntro")}
-        </p>
-      )}
+      <div className="space-y-2">
+        <h1 className="text-2xl">{title}</h1>
+        {mode === "login" || mode === "signup" ? (
+          <p className="text-sm text-muted-foreground">{t("intro")}</p>
+        ) : null}
+        {mode === "forgot-password" && (
+          <p className="text-sm text-muted-foreground">{t("resetIntro")}</p>
+        )}
+        {mode === "verify-email" && (
+          <p className="text-sm text-muted-foreground">
+            {verified ? t("verified") : t("verifyIntro")}
+          </p>
+        )}
+      </div>
       {params.has("error") && (
         <p
           role="alert"
-          className="mt-6 flex items-center gap-2 rounded-lg bg-destructive/8 px-3.5 py-3 text-sm text-destructive [overflow-wrap:anywhere]"
+          className="mt-6 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive [overflow-wrap:anywhere]"
         >
           {t("invalidLink")}
         </p>
@@ -132,22 +134,22 @@ export function AuthForm({
       {message && (
         <p
           role="status"
-          className="mt-6 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-sm [overflow-wrap:anywhere]"
+          className="mt-6 flex items-start gap-2.5 rounded-lg border border-border bg-muted px-4 py-3 text-sm [overflow-wrap:anywhere]"
         >
-          <CircleCheck size={18} />
+          <CircleCheck size={18} className="mt-0.5 shrink-0" />
           {message}
         </p>
       )}
       {error && (
         <p
           role="alert"
-          className="mt-6 flex items-center gap-2 rounded-lg bg-destructive/8 px-3.5 py-3 text-sm text-destructive [overflow-wrap:anywhere]"
+          className="mt-6 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive [overflow-wrap:anywhere]"
         >
           {error}
         </p>
       )}
       {!verified && (
-        <form onSubmit={submit} className="mt-8 flex flex-col gap-4">
+        <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
           {mode === "signup" && (
             <label htmlFor="auth-name" className="flex flex-col gap-1.5 text-sm font-medium">
               {t("name")}
@@ -193,7 +195,7 @@ export function AuthForm({
           {mode === "login" && (
             <LinkComponent
               to="forgot-password"
-              className="self-end text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-current"
+              className="-mt-1 self-end text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-current"
             >
               {t("forgot")}
             </LinkComponent>
@@ -201,6 +203,7 @@ export function AuthForm({
           <Button
             type="submit"
             size="lg"
+            className="mt-1"
             disabled={busy || (mode === "reset-password" && !params.get("token"))}
           >
             {busy
@@ -221,7 +224,7 @@ export function AuthForm({
       {mode === "login" && (
         <LinkComponent
           to="verify-email"
-          className="mt-4 inline-block text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-current"
+          className="mt-5 inline-block text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-current"
         >
           {t("resend")}
         </LinkComponent>
