@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 
 import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { ManagedExecution } from "./harness/execution";
-import type { ExecutionStore } from "./harness/ports";
+import type { ExecutionConversation, ExecutionStore } from "./harness/ports";
 import { CodexAdapter } from "@raypx/provider-codex";
 import { createAdapter } from "./harness/registry";
 import { ConversationRecorder } from "./activity";
@@ -43,7 +43,21 @@ function late(provider: AgentProvider): ReplayRecord {
         : { type: "system", session_id: "stale-session" },
   };
 }
-function fixture(provider: AgentProvider, records = recording(provider), factory?: SessionFactory) {
+function memoryConversation() {
+  return {
+    record: vi.fn<ExecutionConversation["record"]>(),
+    setTokenBaseline: vi.fn<ExecutionConversation["setTokenBaseline"]>(),
+    setTurnId: vi.fn<ExecutionConversation["setTurnId"]>(),
+    startTurn: vi.fn<ExecutionConversation["startTurn"]>(),
+    endTurn: vi.fn<ExecutionConversation["endTurn"]>(),
+    stop: vi.fn<ExecutionConversation["stop"]>(),
+  } satisfies ExecutionConversation;
+}
+function fixture(
+  provider: AgentProvider,
+  records = recording(provider),
+  options: { factory?: SessionFactory; conversation?: ExecutionConversation } = {},
+) {
   const replay = new ProviderReplay(records),
     id = crypto.randomUUID();
   const local: LocalAgentTask = {
@@ -76,7 +90,7 @@ function fixture(provider: AgentProvider, records = recording(provider), factory
       : new Promise<void>((resolve) => activityWaiters.push({ id: inputId, status, resolve }));
   const store: ExecutionStore = {
     get: vi.fn(() => local),
-    put: vi.fn(),
+    put: vi.fn(() => undefined),
     tokenUsage: vi.fn(() => undefined),
     recordActivity: vi.fn((_binding, entry) => {
       const value = {
@@ -92,12 +106,13 @@ function fixture(provider: AgentProvider, records = recording(provider), factory
     }),
     request: vi.fn((_binding, request) => {
       requests.set(request.id, request);
+      return undefined;
     }),
     getRequest: vi.fn((_binding, requestId) => requests.get(requestId)),
   };
-  const conversation = new ConversationRecorder(id, (entry) =>
-    store.recordActivity(local.binding, entry),
-  );
+  const conversation =
+    options.conversation ??
+    new ConversationRecorder(id, (entry) => store.recordActivity(local.binding, entry));
   const unlock = vi.fn(),
     ended = vi.fn();
   const completions: Promise<void>[] = [];
@@ -120,7 +135,7 @@ function fixture(provider: AgentProvider, records = recording(provider), factory
       },
       ended,
     },
-    factory ??
+    options.factory ??
       ((start, ports) =>
         createAdapter(provider, { ...start, executable: provider }, ports, replay.factory)),
     10_000,
@@ -431,6 +446,7 @@ it.each(["item/commandExecution/requestApproval", "item/tool/requestUserInput"])
 );
 
 it("runs an in-process SDK session and holds its project lock until effects drain", async () => {
+  const conversation = memoryConversation();
   let drain!: () => void, closing!: () => void;
   const drained = new Promise<void>((resolve) => {
     drain = resolve;
@@ -477,15 +493,85 @@ it("runs an in-process SDK session and holds its project lock until effects drai
       interrupt: async () => {},
     };
   };
-  const f = fixture("codex", [], factory);
+  const f = fixture("codex", [], { factory, conversation });
   await f.running;
   await closeStarted;
   expect(f.unlock).not.toHaveBeenCalled();
-  expect([...f.activity.values()]).toEqual(
-    expect.arrayContaining([expect.objectContaining({ kind: "message", text: "SDK result" })]),
-  );
+  expect(conversation.record).toHaveBeenCalledWith({
+    type: "message",
+    id: "sdk-message",
+    text: "SDK result",
+    complete: true,
+  });
   drain();
   await f.finished();
   expect(f.unlock).toHaveBeenCalledTimes(1);
+  expect(f.local.task.status).toBe("succeeded");
+});
+
+it("commits an SDK approval before inference resumes through in-memory ports", async () => {
+  const conversation = memoryConversation();
+  let drained!: () => void, requested!: () => void;
+  const completed = new Promise<void>((resolve) => {
+    drained = resolve;
+  });
+  const waiting = new Promise<void>((resolve) => {
+    requested = resolve;
+  });
+  let observed:
+    | { status: string | undefined; decision: unknown; savedDecision: unknown }
+    | undefined;
+  const factory: SessionFactory = (_start, ports) => {
+    const handle = {
+      completed,
+      kill: async () => {
+        drained();
+      },
+    };
+    return {
+      handle,
+      input: "steer",
+      holdPlanOnExit: false,
+      planContinuation: "turn",
+      planTitle: "SDK fixture",
+      turnId: "sdk-approval-turn",
+      preview: "",
+      summary: "",
+      initialize: async () => "synthetic-session",
+      sendTurn: async () => {
+        const answer = ports.approval.ask(
+          "permission",
+          "SDK permission",
+          "Allow a synthetic action?",
+        );
+        requested();
+        const decision = await answer;
+        const request = [...f.requests.values()][0];
+        observed = { status: request?.status, decision, savedDecision: request?.decision };
+        ports.emit({
+          type: "completed",
+          handle,
+          status: "completed",
+          summary: "SDK approved",
+          preview: "",
+          turnId: "sdk-approval-turn",
+        });
+      },
+      steer: async () => {},
+      interrupt: async () => {},
+    };
+  };
+  const f = fixture("codex", [], { factory, conversation });
+  await waiting;
+  const request = [...f.requests.values()][0]!;
+  expect(request.status).toBe("pending");
+  expect(f.local.task.status).toBe("waiting");
+  const decision = { type: "allow" as const };
+  f.execution.applyDecision(request.id, decision);
+  await f.running;
+  await f.finished();
+  expect(observed).toEqual({ status: "applied", decision, savedDecision: decision });
+  expect(conversation.startTurn).toHaveBeenCalledTimes(1);
+  expect(conversation.stop).toHaveBeenCalledWith("complete");
   expect(f.local.task.status).toBe("succeeded");
 });

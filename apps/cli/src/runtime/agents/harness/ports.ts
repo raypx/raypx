@@ -2,12 +2,13 @@ import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import type { ConversationEvent, TokenTotals } from "@raypx/provider-core";
 import type { ActivityDraft, LocalAgentTask } from "../model";
 
-/** Borrow persistence without depending on SQLite or owning its lifetime. */
+/** Borrow synchronous persistence without depending on SQLite or owning its lifetime. */
 export interface ExecutionStore {
   get(id: string): LocalAgentTask | undefined;
-  put(value: LocalAgentTask): void;
+  /** Returning undefined prevents an async writer from satisfying this port. */
+  put(value: LocalAgentTask): undefined;
   recordActivity(binding: string, draft: ActivityDraft): TaskActivity;
-  request(binding: string, value: HumanRequest): void;
+  request(binding: string, value: HumanRequest): undefined;
   getRequest(binding: string, id: string): HumanRequest | undefined;
   tokenUsage(sessionId: string): TokenTotals | undefined;
 }

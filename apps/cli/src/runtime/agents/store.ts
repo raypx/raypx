@@ -242,7 +242,7 @@ export class AgentStore implements ExecutionStore {
         .get(),
     );
   }
-  put(value: LocalAgentTask) {
+  put(value: LocalAgentTask): undefined {
     // Preserve REPLACE's rowid semantics for callers enumerating task records.
     this.database.run(
       sql`INSERT OR REPLACE INTO ${tasks} (id,value) VALUES (${value.task.id},${JSON.stringify(normalizeTaskJson(value))})`,
@@ -752,7 +752,7 @@ export class AgentStore implements ExecutionStore {
       }
     });
   }
-  request(binding: string, value: HumanRequest) {
+  request(binding: string, value: HumanRequest): undefined {
     this.database.transaction(() => {
       // Approval enumeration and snapshot ordering depend on REPLACE's new rowid.
       this.database.run(

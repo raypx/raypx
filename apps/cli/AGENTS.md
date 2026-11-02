@@ -123,7 +123,11 @@ process draining. The `@raypx/provider-codex` and `@raypx/provider-claude` libra
 into lifecycle events without owning task storage or relay transport.
 `harness/transport.ts` defines protocol I/O; its process implementation is
 `runtime/agents/transport.ts`. Fence callbacks to the current execution handle.
-Keep a persistence subset and lifecycle effects, never the full runtime.
+The private harness ports declare synchronous persistence, conversation recording and
+lifecycle effects independently of AgentStore and ConversationRecorder. The outer
+implementations satisfy those ports; agents/model.ts owns the shared local record
+schemas and draft types. Never derive harness ports from concrete classes or pass
+the full runtime. SDK conformance uses in-memory persistence and recording ports.
 
 `harness/providers/pi.ts` is a private SDK experiment, not a registered provider.
 Callers supply tools, approval, model streaming and a revision-checked context store.
