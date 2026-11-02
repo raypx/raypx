@@ -10,7 +10,7 @@ import { PermissionBoundary } from "../features/auth/components/permission-bound
 import { analytics } from "../features/analytics/client";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { guestReturnTo } from "../features/tasks/guest-draft";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
@@ -38,6 +38,7 @@ import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
 import { QuickSettingsModal } from "../features/settings/quick-settings-modal";
+import { useQuickSettingsStore } from "../features/settings/quick-settings-store";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath>) {
   return (
@@ -63,7 +64,7 @@ export function WebShell() {
       : undefined;
   const site = useQuery(publicConfigurationQuery());
   const siteName = site.data?.siteName ?? "Raypx";
-  const [quickSettingsOpen, setQuickSettingsOpen] = useState(false);
+  const { openModal } = useQuickSettingsStore();
 
   useEffect(() => {
     taskClient.setAccount?.(accountId);
@@ -79,7 +80,9 @@ export function WebShell() {
   const c = useTranslations("common");
   const memory = useTranslations("memory");
   const href = useRouterState({ select: (state) => state.location.href });
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname.replace(/\/+$/, "") || "/",
+  });
   const pagePermission = Object.hasOwn(webPagePermissions, pathname)
     ? webPagePermissions[pathname as WebPath]
     : null;
@@ -136,7 +139,7 @@ export function WebShell() {
                 <button
                   type="button"
                   aria-label={c("settings")}
-                  onClick={() => setQuickSettingsOpen(true)}
+                  onClick={openModal}
                   className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 />
               }
@@ -183,7 +186,7 @@ export function WebShell() {
           <Outlet />
         )}
       </AppShell>
-      <QuickSettingsModal open={quickSettingsOpen} onOpenChange={setQuickSettingsOpen} />
+      <QuickSettingsModal />
     </>
   );
 }

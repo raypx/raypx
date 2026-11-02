@@ -33,7 +33,8 @@
     "lucide-react": "catalog:",
     "nitro": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@raypx/devtools": "workspace:*",
