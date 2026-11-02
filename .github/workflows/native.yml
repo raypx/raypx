@@ -93,7 +93,7 @@ jobs:
           RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution && '3' || '1' }}
         shell: bash
         run: |
-          bun - <<'TS'
+          bun packages/tooling/src/validation/macos-test-keychain.ts bun - <<'TS'
           const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
           for (let attempt = 0; attempt < runs; attempt++) {
             const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {

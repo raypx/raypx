@@ -1,5 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { profilePath } from "../../src/runtime/state";
 import {
   enrollmentBeginSchema,
@@ -7,12 +6,7 @@ import {
   instanceCheckProof,
   type InstanceBinding,
 } from "@raypx/instances";
-import {
-  createInstanceSigner,
-  createInstanceKey,
-  instanceDigest,
-  verifyProof,
-} from "@raypx/instances/crypto";
+import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
 
 /** Enroll an owned temporary profile over HTTP; exercise production identity/key storage. */
 export async function enrollTestProfile(
@@ -25,7 +19,6 @@ export async function enrollTestProfile(
   const id = crypto.randomUUID();
   let binding: InstanceBinding | undefined;
   let stage = "before begin";
-  let ownsMacKey = false;
   const credential = { service: "pro.raypx.instance", name: instanceDigest(directory) };
   const security = async (args: string[]) => {
     const child = Bun.spawn(["/usr/bin/security", ...args], {
@@ -88,34 +81,13 @@ export async function enrollTestProfile(
   });
   const close = async () => {
     await server.stop(true);
-    if (process.platform === "darwin" && ownsMacKey) {
+    if (process.platform === "darwin" && !process.env.RAYPX_TEST_KEYCHAIN) {
       await security(["delete-generic-password", "-a", credential.name, "-s", credential.service]);
-      ownsMacKey = false;
     } else if (process.platform === "win32") {
       await Bun.secrets.delete(credential);
     }
   };
   try {
-    if (process.platform === "darwin") {
-      // The system tool grants the synthetic test item a real all-apps ACL without
-      // prompting on hosted runners. Production still uses Bun's secure defaults.
-      await mkdir(directory, { recursive: true, mode: 0o700 });
-      await writeFile(join(directory, "instance-id"), crypto.randomUUID(), {
-        mode: 0o600,
-        flag: "wx",
-      });
-      await security([
-        "add-generic-password",
-        "-a",
-        credential.name,
-        "-s",
-        credential.service,
-        "-w",
-        createInstanceKey().privateKey,
-        "-A",
-      ]);
-      ownsMacKey = true;
-    }
     // Let the same executable that consumes the identity own its OS credential.
     const child = Bun.spawn(
       [

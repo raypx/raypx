@@ -49,7 +49,7 @@
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
     },
     "packages/tooling": {
-      "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
+      "entry": ["src/cli.ts", "src/tasks/leaf.ts", "src/validation/macos-test-keychain.ts"]
     },
     "packages/tsconfig": {
       "entry": ["scripts/task.ts"]
