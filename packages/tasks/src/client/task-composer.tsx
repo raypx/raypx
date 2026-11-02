@@ -23,6 +23,8 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { SelectField } from "@raypx/ui/select-field";
+import { IconButton } from "@raypx/ui/icon-button";
+import { cn } from "@raypx/ui/lib/utils";
 import {
   Collapsible,
   CollapsibleContent,
@@ -403,7 +405,11 @@ function TaskComposerView({
       <Collapsible
         open={expanded}
         onOpenChange={expandEditor}
-        className="rounded-xl border border-border bg-sidebar"
+        className={cn(
+          "rounded-xl border border-border bg-sidebar",
+          // The page's New session action opens an empty editor; a collapsed draft stays visible.
+          !expanded && !prompt.trim() && onEditorOpenChange && "hidden",
+        )}
       >
         <CollapsibleTrigger
           aria-label={t(expanded ? "collapseComposer" : "openComposer")}
@@ -430,30 +436,6 @@ function TaskComposerView({
             onSubmit={(event) => void submit(event)}
             className="@container space-y-4 border-t border-border p-4"
           >
-            <div className="flex items-center justify-end gap-3">
-              <div className="flex items-center gap-1">
-                <Button
-                  size="icon-sm"
-                  type="button"
-                  variant="ghost"
-                  aria-label={t("newDraft")}
-                  disabled={busy || (!prompt && !draftId)}
-                  onClick={() => void newDraft()}
-                >
-                  <Plus aria-hidden="true" />
-                </Button>
-                <Button
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                  disabled={busy || !draftReady || !prompt.trim()}
-                  onClick={saveDraft}
-                >
-                  <Save aria-hidden="true" />
-                  {t("saveDraft")}
-                </Button>
-              </div>
-            </div>
             <Field>
               <FieldLabel htmlFor={`${fieldId}-prompt`}>{t("prompt")}</FieldLabel>
               <Textarea
@@ -593,7 +575,9 @@ function TaskComposerView({
                     changed({ contextSelection: selection });
                   }}
                 />
-                <p className="text-xs text-muted-foreground">{memoryText("selectionReset")}</p>
+                {!fixedProjectId && (
+                  <p className="text-xs text-muted-foreground">{memoryText("selectionReset")}</p>
+                )}
               </>
             )}
             {occupied && prompt.trim() && (
@@ -612,7 +596,27 @@ function TaskComposerView({
               </p>
             )}
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-              <p className="text-xs text-muted-foreground">{t("draftDeviceOnly")}</p>
+              <div className="flex items-center gap-1">
+                <IconButton
+                  size="icon-sm"
+                  type="button"
+                  label={t("newDraft")}
+                  disabled={busy || (!prompt && !draftId)}
+                  onClick={() => void newDraft()}
+                >
+                  <Plus aria-hidden="true" />
+                </IconButton>
+                <IconButton
+                  size="icon-sm"
+                  type="button"
+                  label={t("saveDraft")}
+                  hint={t("draftDeviceOnly")}
+                  disabled={busy || !draftReady || !prompt.trim()}
+                  onClick={saveDraft}
+                >
+                  <Save aria-hidden="true" />
+                </IconButton>
+              </div>
               <Button
                 type="submit"
                 disabled={

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 import type { HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
+import { HelpHint } from "@raypx/ui/help-hint";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { approvalChanges } from "./approval-changes.js";
 import { TaskMarkdown } from "./markdown.js";
@@ -18,12 +19,14 @@ export function ApprovalBody({ request }: { request: Pick<HumanRequest, "kind" |
   if (!files.length) return <pre className={rawContentClassName}>{request.body}</pre>;
   return (
     <Tabs defaultValue="diff">
-      <TabsList aria-label={t("requestView")}>
-        <TabsTrigger value="diff">{t("changes")}</TabsTrigger>
-        <TabsTrigger value="raw">{t("rawRequest")}</TabsTrigger>
-      </TabsList>
+      <div className="flex items-center gap-1">
+        <TabsList aria-label={t("requestView")}>
+          <TabsTrigger value="diff">{t("changes")}</TabsTrigger>
+          <TabsTrigger value="raw">{t("rawRequest")}</TabsTrigger>
+        </TabsList>
+        <HelpHint label={t("changesHelp")} description={t("diffHint")} />
+      </div>
       <TabsContent value="diff" className="space-y-3">
-        <p className="text-xs text-muted-foreground">{t("diffHint")}</p>
         {files.map((file, index) => (
           <section
             key={`${file.path}:${index}`}

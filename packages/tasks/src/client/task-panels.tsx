@@ -108,7 +108,7 @@ export function TaskPanels({
     >
       <div
         data-task-pane="list"
-        className={`min-w-0 space-y-5 @min-[58rem]:flex @min-[58rem]:h-[var(--task-pane-height)] @min-[58rem]:min-h-0 @min-[58rem]:flex-col @min-[58rem]:gap-5 @min-[58rem]:space-y-0 @min-[58rem]:overflow-y-auto @min-[58rem]:overscroll-contain @min-[58rem]:pr-3 @min-[58rem]:[&>[data-task-composer]]:max-h-[60%] @min-[58rem]:[&>[data-task-composer]]:shrink-0 @min-[58rem]:[&>[data-task-composer]]:overflow-y-auto ${detailVisible ? "hidden @min-[58rem]:flex" : ""}`}
+        className={`min-w-0 space-y-5 @min-[58rem]:flex @min-[58rem]:h-[var(--task-pane-height)] @min-[58rem]:min-h-0 @min-[58rem]:flex-col @min-[58rem]:gap-5 @min-[58rem]:space-y-0 @min-[58rem]:overflow-y-auto @min-[58rem]:overscroll-contain @min-[58rem]:pr-3 @min-[58rem]:[&>[data-task-composer]]:shrink-0 ${detailVisible ? "hidden @min-[58rem]:flex" : ""}`}
       >
         {list}
       </div>

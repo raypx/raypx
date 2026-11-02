@@ -250,7 +250,7 @@ describe("Desktop account route", () => {
       await loading;
     });
     expect(requestSignal?.aborted).toBe(true);
-    expect(await screen.findByRole("heading", { name: "Make it yours" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Settings" })).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 

@@ -34,7 +34,7 @@ export function TaskOverview({
     },
   ] as const;
   return (
-    <div className="mb-4 space-y-2">
+    <div className="mb-3 space-y-2">
       <h2 className="text-base">{t("taskHistory")}</h2>
       <div role="group" aria-label={t("pageOverview")} className="flex flex-wrap gap-1">
         {groups.map((group) => (
@@ -53,7 +53,6 @@ export function TaskOverview({
           </Button>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">{t("pageOverviewHint")}</p>
     </div>
   );
 }

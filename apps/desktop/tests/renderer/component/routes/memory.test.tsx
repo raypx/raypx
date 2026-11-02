@@ -75,7 +75,7 @@ async function page() {
 }
 it("keeps local references login-free and preserves a local form through the account gate", async () => {
   await page();
-  expect(await screen.findByText(/No references match/)).toBeVisible();
+  expect(await screen.findByText(/No matching references/)).toBeVisible();
   expect(mocks.request).toHaveBeenCalledWith("memory.list", {});
   expect(mocks.fetch).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "New reference" }));

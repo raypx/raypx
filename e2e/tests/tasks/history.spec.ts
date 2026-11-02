@@ -30,7 +30,7 @@ test(
     });
     await page.getByRole("link", { name: "Browse remote projects", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
-    await expect(page.getByText(/Sign in to Desktop with the same account/)).toBeVisible();
+    await expect(page.getByText(/Turn on remote access in Desktop/)).toBeVisible();
     expect(remoteReads).toBe(0);
     await page.goto(desktop + "/settings");
     await page.getByRole("radio", { name: "Dark", exact: true }).check();

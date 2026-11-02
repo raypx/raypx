@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { CalendarClock, ChevronRight, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  ChevronRight,
+  Pause,
+  Pencil,
+  Play,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
@@ -9,6 +18,8 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { LoadingState } from "@raypx/ui/loading-state";
+import { HelpHint } from "@raypx/ui/help-hint";
+import { IconButton } from "@raypx/ui/icon-button";
 import type { CloudJob, CloudJobInput, CloudJobRun } from "../model.js";
 import type { CloudJobsPort, JobDevicesPort, JobDevice, JobReadOptions } from "./ports.js";
 import { JobForm } from "./job-form.js";
@@ -273,13 +284,17 @@ function CloudJobs({
   );
   return (
     <section>
-      <header className="mb-7 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1>{t("title")}</h1>
-          <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("intro")}</p>
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1">
+            <h1>{t("title")}</h1>
+            <HelpHint label={t("help")} description={t("ownership")} />
+          </div>
+          <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("intro")}</p>
         </div>
-        <div className="flex gap-2">
-          <Button
+        <div className="flex items-center gap-2">
+          <IconButton
+            label={c("refresh")}
             variant="outline"
             disabled={loading || busy}
             onClick={() => {
@@ -287,8 +302,8 @@ function CloudJobs({
               void load();
             }}
           >
-            {c("refresh")}
-          </Button>
+            <RefreshCw aria-hidden="true" />
+          </IconButton>
           <Button
             disabled={!data || busy}
             onClick={() => {
@@ -302,9 +317,6 @@ function CloudJobs({
           </Button>
         </div>
       </header>
-      <p className="mb-5 max-w-[75ch] text-xs leading-relaxed text-muted-foreground">
-        {t("ownership")}
-      </p>
       {data && !data.enabled && (
         <p role="status" className="mb-5 rounded-md bg-muted p-3 text-sm">
           {t("JOBS_DISABLED")}

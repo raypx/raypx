@@ -217,7 +217,7 @@ it("keeps earlier account-owned drafts isolated instead of adopting them into th
 it("collapses an unsent editor without losing its text or creating a task", async () => {
   runningTask();
   await page();
-  fireEvent.click(await screen.findByRole("button", { name: "Write a session" }));
+  fireEvent.click(await screen.findByRole("button", { name: "New session" }));
   const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
   fireEvent.change(editor, { target: { value: "Keep this unsent investigation" } });
   fireEvent.click(screen.getByRole("button", { name: "Collapse session editor" }));

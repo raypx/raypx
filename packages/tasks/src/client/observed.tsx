@@ -8,6 +8,7 @@ import type {
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
+import { HelpHint } from "@raypx/ui/help-hint";
 import {
   Collapsible,
   CollapsibleContent,
@@ -61,20 +62,22 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
   const shown = history ? requests : pending,
     active = selected === undefined ? pending[0]?.id : selected;
   return (
-    <section aria-labelledby={id} className="mb-7 border-b border-border pb-6">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
-          <Terminal className="size-4" aria-hidden="true" />
-          {t("terminalRequests")}
-          {pending.length > 0 && <Badge variant="secondary">{pending.length}</Badge>}
-        </h2>
+    <section aria-labelledby={id} className="mb-6 border-b border-border pb-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1">
+          <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
+            <Terminal className="size-4" aria-hidden="true" />
+            {t("terminalRequests")}
+            {pending.length > 0 && <Badge variant="secondary">{pending.length}</Badge>}
+          </h2>
+          <HelpHint label={t("terminalHelp")} description={t("terminalHint")} />
+        </div>
         {requests.length > pending.length && (
           <Button variant="ghost" size="sm" onClick={() => setHistory(!history)}>
             {t(history ? "terminalPendingOnly" : "terminalHistory")}
           </Button>
         )}
       </div>
-      <p className="mb-4 max-w-[65ch] text-sm text-muted-foreground">{t("terminalHint")}</p>
       {error && (
         <p role="alert" className="mb-3 text-sm text-destructive-text">
           {t("terminalUnavailable")}{" "}

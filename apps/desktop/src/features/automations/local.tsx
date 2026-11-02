@@ -163,10 +163,10 @@ export function LocalJobsPage({
   const shown = projectId ? jobs?.filter((job) => job.projectId === projectId) : jobs;
   return (
     <section>
-      <header className="mb-10 flex items-start justify-between gap-6 @max-4xl/main:flex-col @max-4xl/main:gap-5">
-        <div>
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1>{t("title")}</h1>
-          <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
         </div>
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
           <Plus size={16} />

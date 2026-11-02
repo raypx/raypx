@@ -302,9 +302,9 @@ function TerminalPage() {
           {tasks("projectUnavailableHint")}
         </p>
       )}
-      <header className="mb-10">
+      <header className="mb-6">
         <h1>{t("title")}</h1>
-        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
+        <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
       </header>
       {!isDesktop() && (
         <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">

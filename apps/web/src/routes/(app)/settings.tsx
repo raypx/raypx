@@ -15,14 +15,14 @@ function SettingsRoute() {
   const t = useTranslations("settings");
   const g = useTranslations("guest");
   return (
-    <SettingsPage title={t("title")} description={t("intro")} footnote={t("localHint")}>
+    <SettingsPage title={t("title")} footnote={t("localHint")}>
       <AppearanceSettings />
       <LanguageSettings />
       <AnalyticsSettings />
       <section aria-label={g("computers")}>
         <SessionBoundary
           guest={
-            <div className="mt-8 border-t border-border">
+            <div className="pt-2">
               <SignInGate title={g("computers")} description={g("computersHint")} />
             </div>
           }

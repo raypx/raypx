@@ -206,7 +206,7 @@ describe("Files route and workspace", () => {
     mocks.localRequest.mockClear();
     await act(() => router.navigate({ to: "/files", search: { rootId: "revoked" } }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "This project is unavailable or its authorization was revoked.",
+      "This project is unavailable. Authorize it again; the directory stays the same.",
     );
     expect(router.state.location.search.rootId).toBe("revoked");
     expect(mocks.localRequest.mock.calls.some(([method]) => method === "files.list")).toBe(false);
@@ -255,7 +255,7 @@ describe("Files route and workspace", () => {
     await act(async () => router.history.forward());
     await waitFor(() => expect(router.state.location.search.path).toBe("docs"));
     await act(async () => router.navigate({ to: "/automations" }));
-    expect(await screen.findByRole("heading", { name: "Keep things moving" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Automations" })).toBeTruthy();
     expect(mocks.localRequest.mock.calls.filter(([m]) => m === "roots.list")).toHaveLength(1);
   });
 

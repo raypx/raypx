@@ -76,7 +76,7 @@ it("does not read account references for a guest and returns to the original lib
 it("loads reference metadata only after a confirmed account", async () => {
   mocks.account = "one";
   await page();
-  expect(await screen.findByText(/No references match/)).toBeVisible();
+  expect(await screen.findByText(/No matching references/)).toBeVisible();
   expect(mocks.list).toHaveBeenCalledTimes(1);
   expect(mocks.projects).toHaveBeenCalledTimes(1);
   expect(mocks.usage).not.toHaveBeenCalled();

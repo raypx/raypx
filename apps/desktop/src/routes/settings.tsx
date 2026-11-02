@@ -19,7 +19,7 @@ function SettingsRoute() {
   const session = authClient.useSession();
   const accountId = session.isPending || session.error ? null : session.data?.user.id;
   return (
-    <SettingsPage title={t("title")} description={t("intro")} footnote={t("localHint")}>
+    <SettingsPage title={t("title")} footnote={t("localHint")}>
       <AppearanceSettings />
       <LanguageSettings />
       <AgentSettings />

@@ -119,9 +119,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     await page
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .fill(taskPrompt);
-    await expect(
-      page.getByText("This project has uncommitted changes.", { exact: false }),
-    ).toBeVisible();
+    await expect(page.getByText("Uncommitted changes present.", { exact: false })).toBeVisible();
     await page.getByRole("button", { name: "Send session", exact: true }).click();
     const start = await take("command");
     if (start.command.request.method !== "tasks.create")

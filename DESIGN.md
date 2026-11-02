@@ -26,6 +26,14 @@ pending-state controls. Empty and unavailable states explain real capabilities.
 Theme and language follow the device by default and retain explicit local choices.
 Respect reduced motion, narrow screens, long Chinese/English content and large fonts.
 
+Let icons, layout and interaction carry meaning before prose. Page titles use the
+navigation name; add at most one short subtitle, only for what the controls cannot show.
+Move secondary explanations into tooltips, empty states, disabled-state reasons or
+contextual help (`HelpHint`). Keep inline text for errors, permissions, destructive or
+irreversible actions and privacy disclosures. Icon-only controls use `IconButton`, which
+carries an accessible label and a tooltip. Chinese and English copy stay equally short
+and change together.
+
 Application chrome composes the shadcn Sidebar, with a persistent icon rail on
 narrow screens. Session workspaces pair a persistent composer and project-scoped drafts
 with a session list and a separate detail column. Completed sessions lead with the

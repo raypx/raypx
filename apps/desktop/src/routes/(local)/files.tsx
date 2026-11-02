@@ -149,10 +149,10 @@ function FilesPage() {
           {tasks("projectUnavailableHint")}
         </p>
       )}
-      <header className="mb-10 flex items-start justify-between gap-6 @max-4xl/main:flex-col @max-4xl/main:gap-5">
-        <div>
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1>{t("title")}</h1>
-          <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
         </div>
         <Button onClick={() => void chooseFolder()} disabled={busy || !desktopAvailable}>
           <FolderOpen size={16} />

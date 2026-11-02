@@ -13,14 +13,14 @@ export function AnalyticsSettings() {
         {t("title")}
       </h2>
       <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("hint")}</p>
-      <div className="mt-4 max-w-md space-y-4">
+      <div className="mt-4 space-y-4">
         {(["usage", "errors"] as const).map((key) => (
           <div key={key} className="flex items-start justify-between gap-6">
             <div>
               <label htmlFor={`${id}-${key}`} className="text-sm font-medium">
                 {t(key)}
               </label>
-              <p id={`${id}-${key}-hint`} className="mt-1 text-sm text-muted-foreground">
+              <p id={`${id}-${key}-hint`} className="mt-1 max-w-md text-sm text-muted-foreground">
                 {t(`${key}Hint`)}
               </p>
             </div>

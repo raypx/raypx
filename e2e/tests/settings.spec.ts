@@ -6,7 +6,7 @@ import { signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 
 async function preferencesPersist(page: Page, base: string) {
   await page.goto(`${base}/settings`);
-  await expect(page.getByRole("heading", { name: "Make it yours" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
   // The visible theme card activates its visually hidden radio.
   await page.getByText("Dark", { exact: true }).click();
   await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
@@ -62,9 +62,7 @@ test(
   async ({ page }) => {
     const user = await signedInAccount(page);
     await page.goto(desktop);
-    await expect(
-      page.getByRole("heading", { name: "Your local files", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
     await expect(
       page.getByText("Open the desktop app to use local tools.", { exact: true }),
     ).toBeVisible();
@@ -75,9 +73,7 @@ test(
     expect(await page.evaluate(() => "__TAURI_INTERNALS__" in window)).toBe(false);
     await page.getByRole("link", { name: "Automations", exact: true }).click();
     await expect(page).toHaveURL(`${desktop}/automations`);
-    await expect(
-      page.getByRole("heading", { name: "Keep things moving", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Automations", exact: true })).toBeVisible();
     await expect(
       page.getByText("Open the desktop app to use local tools.", { exact: true }),
     ).toBeVisible();

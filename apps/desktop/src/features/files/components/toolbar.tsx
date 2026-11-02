@@ -1,7 +1,8 @@
 import type { RootGrant } from "@raypx/contracts/local";
-import { ArrowUp, Folder, Plus } from "lucide-react";
+import { ArrowUp, Folder, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { SelectField } from "@raypx/ui/select-field";
+import { IconButton } from "@raypx/ui/icon-button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store";
 
@@ -40,26 +41,24 @@ export function FilesToolbar({
         {path || "/"}
       </span>
       <div className="ml-auto flex flex-wrap items-center gap-1.25 @max-4xl/main:ml-0">
-        <Button
-          variant="ghost"
-          size="icon"
+        <IconButton
+          label={t("up")}
           disabled={!path || busy}
           onClick={() => void onDirectory(rootId, path.split("/").slice(0, -1).join("/"))}
-          aria-label={t("up")}
         >
-          <ArrowUp />
-        </Button>
+          <ArrowUp aria-hidden="true" />
+        </IconButton>
         <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "file" })}>
           <Plus size={16} />
           {t("createFile")}
         </Button>
-        <Button variant="ghost" disabled={busy} onClick={() => setOperation({ type: "folder" })}>
+        <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "folder" })}>
           <Folder size={16} />
           {t("createFolder")}
         </Button>
-        <Button variant="ghost" disabled={busy} onClick={() => void onRefresh()}>
-          {c("refresh")}
-        </Button>
+        <IconButton label={c("refresh")} disabled={busy} onClick={() => void onRefresh()}>
+          <RefreshCw aria-hidden="true" />
+        </IconButton>
       </div>
     </div>
   );

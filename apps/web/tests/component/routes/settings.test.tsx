@@ -43,9 +43,7 @@ describe("device settings", () => {
     const chinese = await screen.findByRole("option", { name: "简体中文" });
     fireEvent.pointerDown(chinese, { pointerType: "mouse" });
     fireEvent.click(chinese);
-    await waitFor(() =>
-      expect(screen.getByRole("heading", { name: "按你的习惯设置" })).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByRole("heading", { name: "设置" })).toBeTruthy());
     expect(localStorage.getItem("raypx_locale")).toBe("zh");
     expect(document.documentElement.lang).toBe("zh");
   });

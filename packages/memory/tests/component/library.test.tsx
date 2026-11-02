@@ -379,7 +379,7 @@ it("permanently deletes an archived reference only after confirmation and keeps 
   client.list.mockResolvedValue([archived]);
   client.delete.mockRejectedValueOnce(new Error("private deletion error"));
   render(language(<MemoryLibraryPage client={client} ownerKey="owner" scope="device" />));
-  await screen.findByText(/No references match/);
+  await screen.findByText(/No matching references/);
   await userEvent.click(screen.getByRole("checkbox", { name: "Include archived" }));
   await userEvent.click(
     screen.getByRole("button", { name: "Permanently delete Project conventions" }),

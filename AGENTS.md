@@ -83,6 +83,8 @@ The accepted foundation design supersedes documents in docs/history.
   Compose product-specific controls in Blocks or the owning feature package.
   Use Select, RadioGroup and Collapsible for feature interaction instead of
   native select/radio/details controls; keep semantic form grouping and labels.
+- Prefer icons and UI affordances over explanatory copy: `IconButton` and `HelpHint`
+  from `@raypx/ui`, empty states and disabled reasons. Follow the copy rules in DESIGN.md.
 - Use Tailwind utilities for feature layout and styling. Keep CSS entry points for
   imports, source registration, shared theme tokens and necessary global/library rules;
   do not add feature-specific CSS selectors.

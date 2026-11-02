@@ -2,11 +2,13 @@ import type { ReactNode } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
 import { useRemoteQuery } from "./remote-query.js";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { Folder } from "lucide-react";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { cn } from "@raypx/ui/lib/utils";
+import { Folder, GitBranch, Laptop, MonitorSmartphone } from "lucide-react";
 
 /** Project selection is navigation only; it never creates work. */
 export function ProjectList({
@@ -24,6 +26,7 @@ export function ProjectList({
 }) {
   const t = useTranslations("tasks"),
     c = useTranslations("common");
+  const id = useId();
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
   const { data, error, refresh, refreshing } = useRemoteQuery(
     ["projects", workspaceScopeKey(scope)],
@@ -36,7 +39,7 @@ export function ProjectList({
       {!compact && (
         <header>
           <h1>{t("projectsTitle")}</h1>
-          <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("projectEntryHint")}</p>
+          <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("projectEntryHint")}</p>
         </header>
       )}
       {!data && !error && <LoadingState label={c("loading")} />}
@@ -48,35 +51,99 @@ export function ProjectList({
           </Button>
         </div>
       )}
-      {data && !data.some((device) => !device.revoked && device.projects.length) && (
-        <div className="space-y-3">
-          <p className="max-w-[65ch] text-sm text-muted-foreground">{t("remoteProjectsEmpty")}</p>
-          {connectionAction}
-        </div>
-      )}
+      {data &&
+        !data.some((device) => !device.revoked && device.projects.length) &&
+        (compact ? (
+          <div className="space-y-3">
+            <p className="max-w-[65ch] text-sm text-muted-foreground">{t("remoteProjectsEmpty")}</p>
+            {connectionAction}
+          </div>
+        ) : (
+          <EmptyState
+            className="py-10"
+            icon={<MonitorSmartphone aria-hidden="true" />}
+            title={t("noRemoteProjects")}
+            description={t("remoteProjectsEmpty")}
+            action={connectionAction}
+          />
+        ))}
       {data
         ?.filter((device) => !device.revoked)
         .map((device) => (
-          <section key={device.id} className="space-y-2">
-            <h2 className="text-sm font-medium">
-              {device.name}
-              <span className="ml-2 text-xs font-normal text-muted-foreground">
+          <section key={device.id} className={compact ? "space-y-2" : "space-y-3"}>
+            <h2 className="flex items-center gap-2 text-sm font-medium">
+              {!compact && <Laptop aria-hidden="true" className="size-4 text-muted-foreground" />}
+              <span className="min-w-0 truncate">{device.name}</span>
+              <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    device.online ? "bg-foreground" : "bg-muted-foreground/40",
+                  )}
+                />
                 {t(device.online ? "online" : "offline")}
               </span>
             </h2>
-            <div className="flex flex-col gap-1">
-              {device.projects.map((project) => (
-                <Button
-                  key={project.id}
-                  variant="ghost"
-                  className="h-auto min-h-10 justify-start gap-3 whitespace-normal text-left"
-                  onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
-                >
-                  <Folder aria-hidden="true" className="shrink-0" />
-                  <span className="min-w-0 break-words">{project.name}</span>
-                </Button>
-              ))}
-            </div>
+            {compact ? (
+              <div className="flex flex-col gap-1">
+                {device.projects.map((project) => (
+                  <Button
+                    key={project.id}
+                    variant="ghost"
+                    className="h-auto min-h-10 justify-start gap-3 whitespace-normal text-left"
+                    onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
+                  >
+                    <Folder aria-hidden="true" className="shrink-0" />
+                    <span className="min-w-0 break-words">{project.name}</span>
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <ul className="grid gap-3 @2xl/main:grid-cols-2 @5xl/main:grid-cols-3">
+                {device.projects.map((project) => {
+                  const key = `${id}-${device.id}-${project.id}`;
+                  return (
+                    <li key={project.id}>
+                      <Button
+                        variant="outline"
+                        aria-labelledby={`${key}-name`}
+                        aria-describedby={`${key}-meta`}
+                        className="h-auto w-full items-start justify-start gap-3 rounded-xl p-4 text-left whitespace-normal"
+                        onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
+                      >
+                        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+                          <Folder aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span id={`${key}-name`} className="block font-medium break-words">
+                            {project.name}
+                          </span>
+                          <span
+                            id={`${key}-meta`}
+                            className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs font-normal text-muted-foreground"
+                          >
+                            <span>
+                              {project.providers
+                                .map((provider) =>
+                                  provider === "claude" ? "Claude Code" : "Codex",
+                                )
+                                .join(" · ")}
+                            </span>
+                            {project.dirty && (
+                              <span className="flex items-center gap-1">
+                                <GitBranch aria-hidden="true" className="size-3" />
+                                {t("uncommitted")}
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </section>
         ))}
     </section>

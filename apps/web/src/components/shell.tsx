@@ -24,12 +24,12 @@ import {
   ListTodo,
   Inbox,
   Settings,
-  CircleUserRound,
   SlidersHorizontal,
   CalendarClock,
   BookOpen,
 } from "lucide-react";
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
 
 type WebPath =
@@ -97,10 +97,7 @@ export function WebShell() {
       ) : undefined,
     },
   ];
-  const secondaryNavigation: ShellNavItem<WebPath>[] = [
-    { to: "/account", label: c("account"), icon: <CircleUserRound /> },
-    { to: "/settings", label: c("settings"), icon: <Settings /> },
-  ];
+  const secondaryNavigation: ShellNavItem<WebPath>[] = [];
   if (access.data?.allowed)
     secondaryNavigation.push({
       to: "/admin/settings",
@@ -122,6 +119,22 @@ export function WebShell() {
         }
         layout={page?.layout ?? "document"}
         LinkComponent={ShellLink}
+        accountAction={
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  to="/settings"
+                  aria-label={c("settings")}
+                  className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                />
+              }
+            >
+              <Settings aria-hidden="true" className="size-5 stroke-[1.75]" />
+            </TooltipTrigger>
+            <TooltipContent side="top">{c("settings")}</TooltipContent>
+          </Tooltip>
+        }
         notice={
           !session.isPending && !session.error && !accountId ? (
             <p className="shrink-0 border-b border-border bg-sidebar px-6 py-2 text-sm leading-relaxed text-muted-foreground @max-2xl/main:px-5">

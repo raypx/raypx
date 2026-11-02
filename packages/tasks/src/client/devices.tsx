@@ -35,7 +35,7 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
     client,
   );
   return (
-    <section className="mt-8 border-t border-border pt-7" data-tasks>
+    <section className="pt-6" data-tasks>
       <h2 className="text-base">{t("devices")}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{t("devicesHint")}</p>
       {error && (

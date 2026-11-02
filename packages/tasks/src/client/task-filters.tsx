@@ -79,11 +79,13 @@ export function TaskFilterBar({
     filters.provider !== "" ||
     (!fixedTarget && (filters.device !== "" || filters.project !== ""));
   return (
-    <div className="@container mb-5 space-y-3">
+    <div className="@container mb-4 space-y-3">
       <Collapsible className="space-y-3">
         <div className="flex items-end gap-2">
           <Field className="min-w-0 flex-1">
-            <FieldLabel htmlFor={`${id}-search`}>{t("searchTasks")}</FieldLabel>
+            <FieldLabel htmlFor={`${id}-search`} className="sr-only">
+              {t("searchTasks")}
+            </FieldLabel>
             <Input
               id={`${id}-search`}
               type="search"
@@ -170,16 +172,20 @@ export function TaskFilterBar({
           )}
         </CollapsibleContent>
       </Collapsible>
-      <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
-        <p role="status" className="text-xs text-muted-foreground">
-          {t("filteredCount", { count: String(count), total: String(total) })}
-        </p>
-        {active && (
+      {active ? (
+        <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
+          <p role="status" className="text-xs text-muted-foreground">
+            {t("filteredCount", { count: String(count), total: String(total) })}
+          </p>
           <Button size="sm" variant="ghost" onClick={() => onChange(emptyTaskFilters)}>
             {t("clearFilters")}
           </Button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <p role="status" className="sr-only">
+          {t("filteredCount", { count: String(count), total: String(total) })}
+        </p>
+      )}
     </div>
   );
 }

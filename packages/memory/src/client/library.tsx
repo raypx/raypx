@@ -5,12 +5,25 @@ import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { LoadingState } from "@raypx/ui/loading-state";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { HelpHint } from "@raypx/ui/help-hint";
+import { IconButton } from "@raypx/ui/icon-button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { Archive, ChevronRight, History, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  BookOpen,
+  ChevronRight,
+  History,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import type {
   ContextDocument,
   ContextDocumentInput,
@@ -289,15 +302,19 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
   );
   return (
     <section>
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1>{t("title")}</h1>
-          <p className="mt-2 max-w-[70ch] text-sm text-muted-foreground">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1">
+            <h1>{t("title")}</h1>
+            <HelpHint label={t("help")} description={`${t("referenceHint")} ${t("quotaHint")}`} />
+          </div>
+          <p className="mt-1 max-w-[70ch] text-sm text-muted-foreground">
             {t(scope === "device" ? "deviceHint" : "accountHint")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
+        <div className="flex items-center gap-2">
+          <IconButton
+            label={c("refresh")}
             variant="outline"
             disabled={loading || busy}
             onClick={() => {
@@ -305,8 +322,8 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               void load();
             }}
           >
-            {c("refresh")}
-          </Button>
+            <RefreshCw aria-hidden="true" />
+          </IconButton>
           <Button
             disabled={busy}
             onClick={() => {
@@ -321,8 +338,6 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           </Button>
         </div>
       </header>
-      <p className="mb-6 max-w-[75ch] text-xs text-muted-foreground">{t("referenceHint")}</p>
-      <p className="mb-5 max-w-[75ch] text-xs text-muted-foreground">{t("quotaHint")}</p>
       {error && (
         <p role="alert" className="mb-5 text-sm text-destructive-text">
           {t(error)}
@@ -343,8 +358,9 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           }}
         />
       )}
-      <div className="mb-5 flex flex-wrap items-center gap-5">
+      <div className="mb-3 flex flex-wrap items-center gap-4">
         <SelectField
+          className="w-44 max-w-full"
           aria-label={t("kind")}
           value={kind}
           onValueChange={setKind}
@@ -360,11 +376,13 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
         </label>
       </div>
       {!documents && loading && <LoadingState label={c("loading")} />}
-      {shown?.length === 0 && <p className="py-10 text-sm text-muted-foreground">{t("empty")}</p>}
+      {shown?.length === 0 && (
+        <EmptyState className="py-10" icon={<BookOpen aria-hidden="true" />} title={t("empty")} />
+      )}
       {shown?.map((document) => (
         <article
           key={document.id}
-          className="flex flex-wrap items-start gap-4 border-t border-border py-4"
+          className="flex flex-wrap items-center gap-4 border-t border-border py-3"
         >
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-medium wrap-anywhere">{document.name}</h2>
@@ -381,31 +399,32 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                 : t("global")}
             </p>
           </div>
-          <div className="flex flex-wrap gap-1">
-            <Button variant="ghost" disabled={busy} onClick={() => void history(document)}>
+          <div className="flex flex-wrap items-center gap-1">
+            <IconButton label={t("history")} disabled={busy} onClick={() => void history(document)}>
               <History aria-hidden="true" />
-              {t("history")}
-            </Button>
-            <Button
-              variant="ghost"
+            </IconButton>
+            <IconButton
+              label={t("editNamed", { name: document.name })}
+              hint={c("edit")}
               disabled={busy}
               onClick={() => void edit(document)}
-              aria-label={t("editNamed", { name: document.name })}
             >
               <Pencil aria-hidden="true" />
-              {c("edit")}
-            </Button>
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => void archive(document)}
-              aria-label={t(document.archived ? "unarchiveNamed" : "archiveNamed", {
+            </IconButton>
+            <IconButton
+              label={t(document.archived ? "unarchiveNamed" : "archiveNamed", {
                 name: document.name,
               })}
+              hint={t(document.archived ? "unarchive" : "archive")}
+              disabled={busy}
+              onClick={() => void archive(document)}
             >
-              <Archive aria-hidden="true" />
-              {t(document.archived ? "unarchive" : "archive")}
-            </Button>
+              {document.archived ? (
+                <ArchiveRestore aria-hidden="true" />
+              ) : (
+                <Archive aria-hidden="true" />
+              )}
+            </IconButton>
             {document.archived && (
               <Button
                 variant="ghost"

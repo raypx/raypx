@@ -13,10 +13,11 @@ export const Route = createFileRoute("/(app)/approvals")({
 });
 function Page() {
   const g = useTranslations("guest");
+  const c = useTranslations("common");
   const router = useRouter();
   return (
     <SessionBoundary
-      guest={<SignInGate heading="h1" title={g("approvals")} description={g("approvalsHint")} />}
+      guest={<SignInGate heading="h1" title={c("approvals")} description={g("approvalsHint")} />}
     >
       {(accountId) => (
         <TaskWorkspace

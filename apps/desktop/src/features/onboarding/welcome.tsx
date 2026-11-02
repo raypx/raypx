@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { useTranslations } from "@raypx/i18n/browser";
-import { Button } from "@raypx/ui/components/ui/button";
+import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { Check, FolderOpen, RefreshCw } from "lucide-react";
+import { cn } from "@raypx/ui/lib/utils";
+import { Check, FolderOpen, PenLine, RefreshCw, Settings, SquareTerminal } from "lucide-react";
 import { isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
 import { recentProjects, rememberProject } from "../tasks/project-history";
 
@@ -49,116 +50,130 @@ export function LocalWelcome() {
       setBusy(false);
     }
   }
+  const projectId =
+    setup.data?.projects.find((project) => project.id === recentProjects()[0])?.id ??
+    setup.data?.projects[0]?.id;
+  const steps = [
+    {
+      done: configured,
+      title: t("chooseProject"),
+      hint: t("projectHint"),
+      detail: setup.data?.projects.length ? (
+        <p className="mt-1 text-sm break-words">
+          {setup.data.projects.map((project) => project.name).join(" · ")}
+        </p>
+      ) : undefined,
+      action: (
+        <Button
+          variant="outline"
+          disabled={busy || !isDesktop()}
+          onClick={() => void chooseProject()}
+        >
+          <FolderOpen aria-hidden="true" />
+          {t(busy ? "authorizing" : configured ? "chooseAnotherProject" : "chooseProject")}
+        </Button>
+      ),
+    },
+    {
+      done: available,
+      title: t("checkAgent"),
+      hint: t("agentHint"),
+      detail: setup.data?.agents.length ? (
+        <ul className="mt-2 flex flex-wrap gap-2">
+          {setup.data.agents.map((agent) => (
+            <li
+              key={agent.provider}
+              className="flex items-center gap-2 rounded-md border border-border px-2 py-1 text-xs"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-1.5 rounded-full",
+                  agent.available ? "bg-foreground" : "bg-muted-foreground/40",
+                )}
+              />
+              <span>{agent.provider === "claude" ? "Claude Code" : "Codex"}</span>
+              <span className="text-muted-foreground">{tasks(agent.reason)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : undefined,
+      action: (
+        <Button
+          variant="outline"
+          disabled={busy || setup.isFetching || !isDesktop()}
+          onClick={() => void setup.refetch()}
+        >
+          <RefreshCw aria-hidden="true" />
+          {t("checkAgain")}
+        </Button>
+      ),
+    },
+    {
+      done: false,
+      title: t("firstTask"),
+      hint: t("firstTaskHint"),
+      detail: undefined,
+      action: (
+        <Button
+          disabled={!configured || !available || busy}
+          onClick={() =>
+            void navigate({
+              to: "/tasks",
+              search: { scope: "local", ...(projectId ? { project: projectId } : {}) },
+            })
+          }
+        >
+          <PenLine aria-hidden="true" />
+          {t("writeTask")}
+        </Button>
+      ),
+    },
+  ];
   return (
-    <section className="mx-auto max-w-240">
-      <header className="mb-9">
+    <section className="mx-auto max-w-200">
+      <header className="mb-6">
         <h1>{t("welcome")}</h1>
-        <p className="mt-3 max-w-[65ch] text-muted-foreground">{t("welcomeHint")}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{t("welcomeHint")}</p>
       </header>
       {!isDesktop() && <p className="mb-5 text-sm text-muted-foreground">{c("desktopOnly")}</p>}
       {setup.isLoading && <LoadingState label={c("loading")} />}
-      <ol className="divide-y divide-border border-y border-border">
-        <li className="grid gap-4 py-6 @xl/main:grid-cols-[2rem_1fr]">
-          <span
-            aria-hidden="true"
-            className="flex size-8 items-center justify-center rounded-full border border-border text-sm"
+      <ol className="divide-y divide-border rounded-xl border border-border">
+        {steps.map((step, index) => (
+          <li
+            key={step.title}
+            className="grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 p-5 @2xl/main:grid-cols-[2rem_minmax(0,1fr)_auto]"
           >
-            {configured ? <Check className="size-4" /> : "1"}
-          </span>
-          <div>
-            <h2 className="text-base font-semibold">{t("chooseProject")}</h2>
-            <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("projectHint")}</p>
-            {setup.data?.projects.map((project) => (
-              <p key={project.id} className="mt-2 break-words text-sm">
-                {project.name}
-              </p>
-            ))}
-            <Button
-              className="mt-4"
-              variant="outline"
-              disabled={busy || !isDesktop()}
-              onClick={() => void chooseProject()}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "flex size-8 items-center justify-center rounded-full border border-border text-sm tabular-nums",
+                step.done && "border-foreground bg-foreground text-background",
+              )}
             >
-              <FolderOpen className="size-4" />
-              {t(busy ? "authorizing" : configured ? "chooseAnotherProject" : "chooseProject")}
-            </Button>
-          </div>
-        </li>
-        <li className="grid gap-4 py-6 @xl/main:grid-cols-[2rem_1fr]">
-          <span
-            aria-hidden="true"
-            className="flex size-8 items-center justify-center rounded-full border border-border text-sm"
-          >
-            {available ? <Check className="size-4" /> : "2"}
-          </span>
-          <div>
-            <h2 className="text-base font-semibold">{t("checkAgent")}</h2>
-            <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("agentHint")}</p>
-            <ul className="mt-3 space-y-2">
-              {setup.data?.agents.map((agent) => (
-                <li key={agent.provider} className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-                  <span>{agent.provider === "claude" ? "Claude Code" : "Codex"}</span>
-                  <span className="text-muted-foreground">{tasks(agent.reason)}</span>
-                </li>
-              ))}
-            </ul>
-            <Button
-              className="mt-4"
-              variant="outline"
-              disabled={busy || setup.isFetching || !isDesktop()}
-              onClick={() => void setup.refetch()}
-            >
-              <RefreshCw className="size-4" />
-              {t("checkAgain")}
-            </Button>
-          </div>
-        </li>
-        <li className="grid gap-4 py-6 @xl/main:grid-cols-[2rem_1fr]">
-          <span
-            aria-hidden="true"
-            className="flex size-8 items-center justify-center rounded-full border border-border text-sm"
-          >
-            3
-          </span>
-          <div>
-            <h2 className="text-base font-semibold">{t("firstTask")}</h2>
-            <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("firstTaskHint")}</p>
-            <Button
-              className="mt-4"
-              disabled={!configured || !available || busy}
-              onClick={() =>
-                void navigate({
-                  to: "/tasks",
-                  search: {
-                    scope: "local",
-                    ...(setup.data?.projects[0]
-                      ? {
-                          project:
-                            setup.data.projects.find(
-                              (project) => project.id === recentProjects()[0],
-                            )?.id ?? setup.data.projects[0].id,
-                        }
-                      : {}),
-                  },
-                })
-              }
-            >
-              {t("writeTask")}
-            </Button>
-          </div>
-        </li>
+              {step.done ? <Check className="size-4" /> : index + 1}
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold">{step.title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{step.hint}</p>
+              {step.detail}
+            </div>
+            <div className="col-start-2 @2xl/main:col-start-3">{step.action}</div>
+          </li>
+        ))}
       </ol>
       {(error || setup.isError) && (
         <p role="alert" className="mt-4 text-sm text-destructive-text">
           {tasks("LOCAL_UNAVAILABLE")}
         </p>
       )}
-      <p className="mt-6 max-w-[75ch] text-sm text-muted-foreground">{t("ownershipHint")}</p>
-      <div className="mt-5 flex flex-wrap gap-5 text-sm">
-        <Link to="/terminal" className="underline underline-offset-4">
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Link to="/terminal" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+          <SquareTerminal aria-hidden="true" />
           {t("exploreLocal")}
         </Link>
-        <Link to="/settings" className="underline underline-offset-4">
+        <Link to="/settings" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+          <Settings aria-hidden="true" />
           {t("remoteLater")}
         </Link>
       </div>

@@ -17,7 +17,7 @@ export function EmptyState({
   className,
 }: {
   title: string;
-  description: string;
+  description?: string | undefined;
   action?: ReactNode;
   icon?: ReactNode;
   className?: string;
@@ -29,7 +29,7 @@ export function EmptyState({
         <EmptyTitle>
           <h2>{title}</h2>
         </EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
       </EmptyHeader>
       {action ? <EmptyContent>{action}</EmptyContent> : null}
     </Empty>

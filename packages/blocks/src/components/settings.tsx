@@ -24,7 +24,7 @@ export interface SettingsPageProps {
 export function SettingsPage({ title, description, footnote, children }: SettingsPageProps) {
   return (
     <section>
-      <header className="mb-8">
+      <header className="mb-6">
         <h1>{title}</h1>
         {description && (
           <p className="mt-2 max-w-prose text-sm text-muted-foreground">{description}</p>
@@ -68,7 +68,7 @@ export function AppearanceSettings() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
   return (
-    <SettingsSection title={t("appearance")} description={t("appearanceHint")}>
+    <SettingsSection title={t("appearance")}>
       <ThemePicker
         label={t("appearance")}
         labels={{ light: c("light"), dark: c("dark"), system: c("system") }}
@@ -87,7 +87,7 @@ export function LanguageSettings() {
     ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({ value, label: nativeName })),
   ];
   return (
-    <SettingsSection title={t("language")} description={t("languageHint")}>
+    <SettingsSection title={t("language")}>
       <Select
         items={items}
         value={preference}

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
-import { Button } from "@raypx/ui/components/ui/button";
+import { History } from "lucide-react";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
 import type { TaskWorkspacePort } from "@raypx/tasks/model";
@@ -24,7 +24,7 @@ export function GuestTasks({
   const resume = useGuestDraft(namespace);
   return (
     <section className="@container">
-      <header className="mb-8">
+      <header className="mb-6">
         <h1>{t("title")}</h1>
         <p className="mt-2 max-w-prose text-sm text-muted-foreground">{g("tasksHint")}</p>
       </header>
@@ -62,23 +62,16 @@ export function GuestTasks({
             />
           </div>
         )}
-        <section className="min-w-0 border-t border-border pt-6 @3xl/main:border-t-0 @3xl/main:border-l @3xl/main:pl-6 @3xl/main:pt-0">
-          <h2 className="text-base font-semibold">{g("history")}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{g("historyHint")}</p>
+        <aside className="min-w-0 rounded-xl border border-border p-5">
+          <span className="grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground">
+            <History aria-hidden="true" className="size-4.5" />
+          </span>
+          <h2 className="mt-3 text-base font-semibold">{g("history")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{g("historyHint")}</p>
           <div className="mt-4">
             <SignInLink>{g("viewTasks")}</SignInLink>
           </div>
-          <div className="mt-6 space-y-3 border-t border-border pt-6">
-            <h3 className="text-sm font-medium">{g("computers")}</h3>
-            <p className="text-sm text-muted-foreground">{g("computersHint")}</p>
-            <Button
-              variant="outline"
-              render={<Link to="/login" search={{ returnTo: "/settings" }} />}
-            >
-              {g("connect")}
-            </Button>
-          </div>
-        </section>
+        </aside>
       </div>
     </section>
   );

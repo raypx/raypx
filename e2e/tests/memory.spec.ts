@@ -296,7 +296,7 @@ for (const [surface, base] of [
         .getByRole("button", { name: "Delete permanently", exact: true })
         .click();
       await expect.poll(() => document).toBeUndefined();
-      await expect(page.getByText(/No references match/)).toBeVisible();
+      await expect(page.getByText(/No matching references/)).toBeVisible();
       await page.goto(
         `${base}${tasksPath}${tasksPath.includes("?") ? "&" : "?"}taskId=${task!.id}`,
       );

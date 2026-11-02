@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
-import { Button } from "@raypx/ui/components/ui/button";
+import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
+import { HelpHint } from "@raypx/ui/help-hint";
+import { cn } from "@raypx/ui/lib/utils";
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import type { AgentCapability } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID, type RootGrant } from "@raypx/contracts/local";
@@ -18,6 +20,7 @@ import { TerminalSettings } from "./terminal-settings";
 import { ReauthorizeHost } from "./reauthorize";
 import { RemoteBoundary } from "../auth/components/remote-boundary";
 import { Link } from "@tanstack/react-router";
+import { Compass } from "lucide-react";
 
 export function AgentSettings() {
   const t = useTranslations("tasks");
@@ -85,28 +88,45 @@ export function AgentSettings() {
   }
   if (!isDesktop()) return null;
   return (
-    <section data-tasks className="mt-8 border-t border-border pt-7">
-      <h2 className="text-base">{t("agentSettings")}</h2>
-      <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("localSetupHint")}</p>
-      <p className="mt-3 text-xs text-muted-foreground">{t("cliHint")}</p>
-      <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">
-        {localText("ownershipHint")}
-      </p>
-      <Link to="/welcome" className="mt-3 inline-block text-sm underline underline-offset-4">
-        {localText("getStarted")}
-      </Link>
+    <section data-tasks className="border-b border-border py-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1">
+            <h2 className="text-base">{t("agentSettings")}</h2>
+            <HelpHint label={t("localWorkHelp")} description={localText("ownershipHint")} />
+          </div>
+          <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("localSetupHint")}</p>
+        </div>
+        <Link to="/welcome" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+          <Compass aria-hidden="true" />
+          {localText("getStarted")}
+        </Link>
+      </div>
       {info?.daemon && (
         <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">{t("daemonHint")}</p>
       )}
-      <ul className="mt-3 space-y-2">
+      <ul aria-label={t("agent")} className="mt-4 flex flex-wrap gap-2">
         {capabilities.map((capability) => (
-          <li key={capability.provider} className="flex flex-wrap gap-3 text-sm">
+          <li
+            key={capability.provider}
+            className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-sm"
+          >
+            <span
+              aria-hidden="true"
+              className={cn(
+                "size-1.5 rounded-full",
+                capability.available ? "bg-foreground" : "bg-muted-foreground/40",
+              )}
+            />
             <span>{capability.provider === "claude" ? "Claude Code" : "Codex"}</span>
             <span className="text-muted-foreground">
               {capability.version} · {t(capability.reason)}
             </span>
           </li>
         ))}
+        <li className="flex items-center">
+          <HelpHint label={t("agentHelp")} description={t("cliHint")} />
+        </li>
       </ul>
       <div className="mt-6 flex items-center justify-between">
         <h3 className="text-sm font-medium">{t("projects")}</h3>
@@ -159,7 +179,7 @@ export function AgentSettings() {
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h3 className="text-sm font-medium">{t("localHistory")}</h3>
-          <p className="mt-1 max-w-[65ch] text-xs text-muted-foreground">{t("clearHistoryHint")}</p>
+          <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("clearHistoryHint")}</p>
         </div>
         <Button
           variant={confirmClear ? "destructive" : "outline"}

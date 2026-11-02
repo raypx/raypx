@@ -219,7 +219,7 @@ for (const [surface, base] of surfaces) {
       ).toBe(true);
       await page.getByRole("main").evaluate((element) => element.scrollTo(0, element.scrollHeight));
       await page.getByRole("link", { name: "Settings", exact: true }).click();
-      await expect(page.getByRole("heading", { name: "Make it yours", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
       await expect
         .poll(() => page.getByRole("main").evaluate((element) => element.scrollTop))
         .toBe(0);

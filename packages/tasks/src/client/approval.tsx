@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
 
 import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/core/tasks";
@@ -19,11 +19,14 @@ export function Approval({
   client,
   request,
   task,
+  context,
   onChanged,
 }: {
   client: TaskWorkspacePort;
   request: HumanRequest;
   task?: AgentTask | undefined;
+  /** Where the request comes from, shown in the card header. */
+  context?: ReactNode;
   onChanged: () => void;
 }) {
   const t = useTranslations("tasks");
@@ -56,8 +59,13 @@ export function Approval({
   return (
     <section className="rounded-lg border border-border p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-sm font-medium">{request.title || t(request.kind)}</h3>
-        <span className="text-xs text-muted-foreground">{t(request.status)}</span>
+        <div className="min-w-0 space-y-1">
+          <h3 className="text-sm font-medium">{request.title || t(request.kind)}</h3>
+          {context}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {t(request.status === "pending" ? "waiting" : request.status)}
+        </span>
       </div>
       {task && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{task.prompt}</p>}
       {request.body && <ApprovalBody request={request} />}

@@ -11,7 +11,8 @@ import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
-import { ArrowLeft, ListTodo, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Inbox, ListTodo, Plus, RefreshCw, X } from "lucide-react";
+import { IconButton } from "@raypx/ui/icon-button";
 
 import { TaskComposer, type TaskComposerDraft } from "./task-composer.js";
 import { TaskOverview } from "./task-overview.js";
@@ -198,8 +199,8 @@ function Workspace({
   );
   return (
     <section data-tasks className="@container">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
             <h1>
               {view === "tasks" && projectId
@@ -220,14 +221,22 @@ function Workspace({
               </Button>
             )}
           </div>
-          <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">
-            {t(local ? "localHint" : view === "approvals" ? "inboxHint" : "intro")}
-          </p>
+          {view === "approvals" && (
+            <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("inboxHint")}</p>
+          )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={refresh} disabled={refreshing}>
-            {c(refreshing ? "loading" : "refresh")}
-          </Button>
+        <div className="flex items-center gap-2">
+          <IconButton
+            label={c(refreshing ? "loading" : "refresh")}
+            variant="outline"
+            onClick={refresh}
+            disabled={refreshing}
+          >
+            <RefreshCw
+              aria-hidden="true"
+              className={refreshing ? "animate-spin motion-reduce:animate-none" : undefined}
+            />
+          </IconButton>
           {view === "tasks" && data && (
             <Button
               onClick={() => {
@@ -268,9 +277,11 @@ function Workspace({
                 <h2 className="text-base font-semibold">{t("managedRequests")}</h2>
               )}
               {data.requests.length === 0 ? (
-                <p className="py-10 text-sm text-muted-foreground">
-                  {t(client.observed ? "managedNothingWaiting" : "nothingWaiting")}
-                </p>
+                <EmptyState
+                  className="py-10"
+                  icon={<Inbox aria-hidden="true" />}
+                  title={t(client.observed ? "managedNothingWaiting" : "nothingWaiting")}
+                />
               ) : (
                 data.requests.map((request) => (
                   <PendingSessionRequest
@@ -346,12 +357,12 @@ function Workspace({
                       />
                     )}
                     {data.tasks.length === 0 ? (
-                      <div className="py-10">
-                        <h2>{t("empty")}</h2>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {t(local ? "localEmptyHint" : "emptyHint")}
-                        </p>
-                      </div>
+                      <EmptyState
+                        className="py-10"
+                        icon={<ListTodo aria-hidden="true" />}
+                        title={t("empty")}
+                        description={t(local ? "localEmptyHint" : "emptyHint")}
+                      />
                     ) : filtered.length === 0 ? (
                       <EmptyState
                         title={t("noMatches")}
@@ -463,10 +474,9 @@ function Workspace({
                       }
                     />
                   ) : (
-                    <div className="flex min-h-72 flex-col items-center justify-center gap-3 px-5 text-center">
-                      <ListTodo aria-hidden="true" className="size-8 text-muted-foreground" />
-                      <h2 className="text-base">{t("taskDetails")}</h2>
-                      <p className="max-w-72 text-sm text-muted-foreground">{t("selectTask")}</p>
+                    <div className="flex min-h-72 flex-col items-center justify-center gap-2 px-5 text-center text-muted-foreground">
+                      <ListTodo aria-hidden="true" className="size-8" />
+                      <h2 className="text-sm font-normal">{t("selectTask")}</h2>
                     </div>
                   )}
                 </div>
@@ -507,27 +517,29 @@ function PendingSessionRequest({
   );
   const device = devices.find((candidate) => candidate.id === data?.task.deviceId);
   return (
-    <section className="space-y-2">
-      {data && (
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span>{device?.name ?? t("device")}</span>
-          <span>
-            {device?.projects.find((project) => project.id === data.task.projectId)?.name ??
-              t("projectUnavailable")}
-          </span>
-          {onOpenTask && (
-            <Button variant="ghost" size="sm" onClick={() => onOpenTask(data.task)}>
-              {t("viewSession")}
-            </Button>
-          )}
-        </div>
-      )}
-      <Approval
-        client={client}
-        request={request}
-        {...(data ? { task: data.task } : {})}
-        onChanged={onChanged}
-      />
-    </section>
+    <Approval
+      client={client}
+      request={request}
+      {...(data ? { task: data.task } : {})}
+      onChanged={onChanged}
+      context={
+        data && (
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <span className="truncate">{device?.name ?? t("device")}</span>
+            <span aria-hidden="true">·</span>
+            <span className="truncate">
+              {device?.projects.find((project) => project.id === data.task.projectId)?.name ??
+                t("projectUnavailable")}
+            </span>
+            {onOpenTask && (
+              <Button variant="ghost" size="xs" onClick={() => onOpenTask(data.task)}>
+                {t("viewSession")}
+                <ArrowUpRight aria-hidden="true" />
+              </Button>
+            )}
+          </div>
+        )
+      }
+    />
   );
 }

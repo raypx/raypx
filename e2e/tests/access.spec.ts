@@ -22,9 +22,7 @@ async function expectPrivatePages(page: Page, surface: "Web" | "Desktop", reads:
           "true",
         );
         await page.getByRole("tab", { name: "This computer", exact: true }).click();
-        await expect(
-          page.getByRole("heading", { name: "Keep things moving", exact: true }),
-        ).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Automations", exact: true })).toBeVisible();
         await page.getByRole("tab", { name: "Cloud", exact: true }).click();
       }
       await login.click();

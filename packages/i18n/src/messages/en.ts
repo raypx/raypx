@@ -2,27 +2,23 @@ export default {
   localWorkspace: {
     localMode: "Local workspace",
     welcome: "Start on this computer",
-    welcomeHint:
-      "Run local sessions without a Raypx account. Set up a project and an agent, then write your first message.",
+    welcomeHint: "No account needed. Set up once, then send your first message.",
     ownershipHint:
-      "Local sessions and drafts belong to this computer's workspace. Signing in, switching accounts or signing out does not move, upload or stop them.",
+      "Local sessions and drafts stay on this computer. Signing in or out never moves, uploads or stops them.",
     remoteSignIn: "Sign in for remote access",
     remoteSignInHint:
-      "Use an account to connect computers, read synced history and handle remote approvals. Local tools remain available without signing in.",
+      "Sign in to connect computers and handle remote approvals. Local tools work without it.",
     backToLocal: "Back to local tools",
     getStarted: "Open setup guide",
     chooseProject: "Authorize a project folder",
     chooseAnotherProject: "Authorize another folder",
     authorizing: "Authorizing…",
-    projectHint:
-      "Choose a folder for local agent sessions. This grants access on this computer and does not enable remote access.",
+    projectHint: "Grants access on this computer only.",
     checkAgent: "Check Claude Code or Codex",
-    agentHint:
-      "Install and sign in to at least one agent CLI, then check again. Its provider account is separate from your Raypx account.",
+    agentHint: "Install and sign in to Claude Code or Codex.",
     checkAgain: "Check agents again",
     firstTask: "Write your first message",
-    firstTaskHint:
-      "Choose the project and agent, describe the work, then send when ready. Setup never starts a session automatically.",
+    firstTaskHint: "Nothing runs until you send.",
     writeTask: "Write a message",
     exploreLocal: "Explore the local terminal",
     remoteLater: "Set up remote access later",
@@ -30,28 +26,23 @@ export default {
   guest: {
     visitor: "Guest",
     title: "Remote sessions and approvals",
-    intro:
-      "Write a draft before signing in. Sign in to connect your computer, send sessions and review approvals.",
+    intro: "Write a draft now; sign in to send it.",
     writeDraft: "Write a session draft",
     connect: "Sign in to connect a computer",
     draft: "Session drafts",
-    draftHint:
-      "Write and save drafts on this device. Choose a computer and send when you are signed in.",
-    approvals: "Approvals",
-    approvalsHint: "Sign in to view private requests and allow, deny or answer them.",
+    draftHint: "Saved on this device.",
+    approvals: "Waiting",
+    approvalsHint: "Sign in to answer requests.",
     preferences: "Appearance and language",
-    preferencesHint:
-      "Choose your theme and language without an account. These preferences stay on this device.",
+    preferencesHint: "Theme and language, no account needed.",
     computers: "Connected computers",
-    computersHint:
-      "Sign in to view your computers. Use Desktop to authorize a computer and its projects.",
+    computersHint: "Sign in to see computers connected from Desktop.",
     privateTitle: "Sign in to continue",
     privateHint: "Your account data is available after you sign in.",
-    visitorNotice: "Browsing as a guest. Sign in to access your computers, sessions and approvals.",
-    tasksHint:
-      "Prepare a session here. Your text stays on this device until you sign in, select a computer and send.",
+    visitorNotice: "Browsing as a guest.",
+    tasksHint: "Drafts stay on this device until you sign in and send.",
     history: "Your session history",
-    historyHint: "Sign in to view your private sessions and conversations.",
+    historyHint: "Sign in to see your sessions.",
     viewTasks: "Sign in to view sessions",
     restoring: "Restoring your draft",
     restoreFailed: "The temporary draft could not be restored. No session has been sent.",
@@ -102,26 +93,23 @@ export default {
   analytics: {
     retrySave: "Retry saving",
     title: "Diagnostics",
-    hint: "Optional on this device. Session content, files, terminal output and credentials are never included. Session recording is off.",
+    hint: "Off by default. Never includes session content, files, terminal output or credentials. No session replay.",
     usage: "Usage statistics",
-    usageHint:
-      "Share feature usage and operation results, linked across Web and Desktop by your internal account ID.",
+    usageHint: "Feature usage and results, linked across Web and Desktop by internal account ID.",
     errors: "Error reports",
     errorsHint:
-      "Share error codes, app version and application code locations. Reports are anonymous when usage statistics are off. Error messages and local paths are removed.",
-    unavailable: "Diagnostics are not configured in this build. No data is collected.",
+      "Error codes, app version and code locations, without messages or local paths. Anonymous when statistics are off.",
+    unavailable: "Not configured in this build; nothing is collected.",
     saveError: "Unable to save this choice. Newly enabled collection remains off. Try again.",
     viewError: "Unable to open this view. Reload the app and try again.",
   },
   tasks: {
     projectsTitle: "Projects",
-    projectEntryHint:
-      "Open an authorized project to start or continue a session. Opening never starts execution.",
-    remoteProjectsEmpty:
-      "Sign in to Desktop with the same account, enable remote access and authorize a project. Connected projects appear here.",
+    projectEntryHint: "Opening a project never starts a session.",
+    remoteProjectsEmpty: "Turn on remote access in Desktop with this account.",
     remoteProjectEntry: "Browse remote projects",
     projectUnavailableHint:
-      "This project is unavailable or its authorization was revoked. Authorize it again; the execution directory will not change.",
+      "This project is unavailable. Authorize it again; the directory stays the same.",
     sessionOutsideProject: "This session belongs to another project. Open it from its project.",
     chooseProjectForDraft:
       "Your draft is saved. Choose a project to keep editing; execution waits for Send.",
@@ -146,8 +134,7 @@ export default {
     noTaskResult: "This session has no result summary.",
     viewConversation: "View full conversation",
     signInToSend: "Sign in to send",
-    guestSendHint:
-      "Sign in to choose a computer and project. Signing in will not send this session.",
+    guestSendHint: "Sign in to choose a computer. Signing in won't send anything.",
     signInDraftFailed:
       "Could not continue to sign-in. Your text is still in the editor. Try again.",
 
@@ -158,10 +145,10 @@ export default {
       "{count, plural, one {A terminal request needs your answer.} other {# terminal requests need your answer.}}",
     terminalRequests: "Terminal requests",
     terminalPendingOnly: "Pending only",
-    managedRequests: "Managed session requests",
+    managedRequests: "Session requests",
     managedNothingWaiting: "No managed sessions need your answer.",
     terminalHint: "Requests from connected terminal sessions. Tool output stays on the computer.",
-    terminalEmpty: "No terminal requests. Connect Claude or Codex in Desktop settings.",
+    terminalEmpty: "No terminal requests. Connect agents in Settings.",
     terminalUnavailable:
       "Terminal requests are unavailable. Check the computer and server connection.",
     terminalHistory: "Show recent requests",
@@ -241,7 +228,6 @@ export default {
     taskHistory: "Session history",
     taskDetails: "Session details",
     pageOverview: "Sessions on this page",
-    pageOverviewHint: "Counts apply to this page. Search and filters refine the list below.",
     allTasks: "All",
     needsYou: "Needs you",
     workingTasks: "Running or queued",
@@ -262,7 +248,7 @@ export default {
     loadedFullText: "Show all loaded messages",
     virtualConversation: "Use virtual scrolling",
     loadedConversationScope:
-      "All loaded messages are shown for selection and browser search. Load earlier messages to include more history.",
+      "All loaded messages are shown. Load earlier messages for more history.",
     you: "You",
     streaming: "Writing…",
     olderMessages: "Load earlier messages",
@@ -274,7 +260,7 @@ export default {
     changes: "Changes",
     rawRequest: "Original request",
     diffHint:
-      "Review the proposed changes before allowing this operation. Replacement snippets use snippet line numbers. Up to 20 files are shown; the original request contains the full proposal.",
+      "Up to 20 files are shown. Snippet line numbers are relative to each snippet; Original request has the full proposal.",
     diffTruncated: "Preview shortened. Review the original request for the full change.",
     writeOriginalUnknown: "Write or overwrite. The original contents are unavailable.",
     historyGap: "Some messages are missing here. Load the missing history.",
@@ -287,12 +273,9 @@ export default {
     queue: "Queue next turn",
     inputQueued: "Queued",
     inputSent: "Sent",
-    claudeInputHint:
-      "Send now interrupts Claude’s current turn and sends your instruction in the same session. Queue waits for the current turn to finish.",
-    codexInputHint:
-      "Send now adds to Codex’s current turn. Queue waits for the current turn to finish.",
-    inputWaitingHint:
-      "Answer the pending request first to send immediately. You can still queue the next turn.",
+    claudeInputHint: "Send now interrupts Claude’s current turn; Queue waits for it to finish.",
+    codexInputHint: "Send now joins Codex’s current turn; Queue waits for it to finish.",
+    inputWaitingHint: "Answer the pending request to send now, or queue the next turn.",
     TASK_NOT_READY: "The agent is still starting. Wait a moment and try again.",
     TASK_STOPPED: "This session has stopped. Use Follow up to continue in the same session.",
     INPUT_WAITING_APPROVAL: "Answer the pending request first, or queue this instruction.",
@@ -311,7 +294,7 @@ export default {
     filteredCount: "{count} of {total} sessions on this page",
     clearFilters: "Clear filters",
     noMatches: "No matching sessions",
-    noMatchesHint: "Change your filters, or browse another page to search older sessions.",
+    noMatchesHint: "Change filters or try another page.",
     notification: "A session needs your answer",
     title: "Agent sessions",
     taskScope: "Session location",
@@ -323,26 +306,22 @@ export default {
     thisComputer: "This computer",
     connectedComputers: "Connected computers",
     agentSettings: "Agent settings",
-    localHint:
-      "Run agents on this computer. Session history and answers stay here and are not synced to Raypx.",
-    localEmptyHint: "Authorize a project in Agent settings, then create your first session.",
+    localEmptyHint: "Write your first message above.",
     localSetupHint: "Authorize projects for local execution. Remote access is optional.",
     localHistory: "Local session history",
-    clearHistoryHint:
-      "Delete finished sessions and approvals stored on this computer. Running sessions are kept.",
+    clearHistoryHint: "Deletes finished local sessions and approvals. Running sessions are kept.",
     clearHistory: "Clear finished sessions",
     confirmClearHistory: "Confirm clear",
     LOCAL_UNAVAILABLE: "Unable to reach the local engine. Restart it and try again.",
-    intro: "Run sessions on your connected computers and answer when an agent needs you.",
     inbox: "Waiting for you",
-    inboxHint: "Answer requests from either Web or Desktop. The first answer takes effect.",
+    inboxHint: "Answer from Web or Desktop; the first answer wins.",
     create: "New session",
     empty: "No agent sessions yet",
-    emptyHint: "Connect Desktop and authorize a project in Settings, then send your first message.",
-    selectTask: "Select a session to see its progress and requests.",
+    emptyHint: "Authorize a project in Desktop settings to start.",
+    selectTask: "Select a session to see details.",
     nothingWaiting: "Nothing needs your answer.",
     signIn: "Sign in to connect your devices",
-    signInHint: "Your local files, automations and terminal remain available without signing in.",
+    signInHint: "Local files, automations and terminal work without signing in.",
     device: "Computer",
     project: "Project",
     agent: "Agent",
@@ -352,10 +331,9 @@ export default {
     prompt: "What should the agent do?",
     chooseDevice: "Choose an online computer",
     chooseProject: "Choose an authorized project",
-    dirty: "This project has uncommitted changes. The session uses the current working directory.",
-    executionHint:
-      "The agent modifies and validates the current project. Raypx does not automatically commit, merge or push.",
-    availabilityHint: "Choose an online computer, authorized project and an available agent.",
+    dirty: "Uncommitted changes present. The session uses the current working tree.",
+    executionHint: "Raypx never commits, merges or pushes for you.",
+    availabilityHint: "Choose an online computer, a project and an available agent.",
     sending: "Sending…",
     send: "Send session",
     online: "Online",
@@ -387,7 +365,7 @@ export default {
     deny: "Deny",
     awaitingDevice: "Waiting for the computer to apply your answer.",
     devices: "Connected computers",
-    devicesHint: "Manage remote access. Removing a connection preserves local files and changes.",
+    devicesHint: "Disconnecting keeps local files and changes.",
     noDevices: "Connect a computer from Desktop Settings.",
     revoked: "Disconnected",
     revoke: "Disconnect computer",
@@ -397,14 +375,14 @@ export default {
     disconnect: "Disable remote sessions",
     remoteTitle: "Remote sessions on this computer",
     remoteHint:
-      "Allow connected devices to send remote sessions and answers. Sessions created under This computer stay local.",
+      "Let connected devices send sessions here. Sessions under This computer stay local.",
     projects: "Authorized projects",
     authorize: "Choose a project",
     enableProject: "Enable project",
     disableProject: "Disable project",
     noProjects: "Choose a folder in Files, then authorize it here.",
     cliHint:
-      "Install and sign in to Claude Code or Codex on this computer. Unsupported versions must be upgraded.",
+      "Requires Claude Code or Codex, installed and signed in. Unsupported versions need an upgrade.",
     ready: "Ready",
     missing: "Not installed",
     unsupported: "Upgrade required",
@@ -428,6 +406,12 @@ export default {
     CONTEXT_UNAVAILABLE: "The reference library is unavailable. Your session draft is still here.",
     CONTEXT_REQUEST_EXPIRED:
       "The delivery recovery window has expired. Check the original session status before taking another action; no execution was resent.",
+    noRemoteProjects: "No remote projects yet",
+    uncommitted: "Uncommitted changes",
+    changesHelp: "About this preview",
+    terminalHelp: "About terminal requests",
+    localWorkHelp: "About local work",
+    agentHelp: "Agent requirements",
   },
   common: {
     projects: "Projects",
@@ -542,18 +526,15 @@ export default {
   },
   settings: {
     preferencesSaveFailed: "Your appearance and language changes could not be saved. Try again.",
-    title: "Make it yours",
-    intro: "Preferences are saved on this device.",
+    title: "Settings",
     appearance: "Appearance",
-    appearanceHint: "Choose a theme, or follow your device.",
     language: "Language",
-    languageHint: "Choose the language used in Raypx.",
     device: "Device preferences",
-    localHint: "These settings stay on this device when you sign out.",
+    localHint: "Stored on this device and kept after sign-out.",
   },
   files: {
-    title: "Your local files",
-    intro: "Choose a folder to browse and edit files on this device.",
+    title: "Files",
+    intro: "Browse and edit files in authorized folders.",
     addRoot: "Choose folder",
     roots: "Folders",
     noRoots: "Start with a folder",
@@ -582,7 +563,7 @@ export default {
     deleteHint:
       "Permanently delete this reference and all its versions. This cannot be undone. Existing session snapshots stay available; schedules using this reference must choose another reference.",
     quotaHint:
-      "Keep up to 100 references, including archived references. Permanently delete archived references to free space.",
+      "Up to 100 references, including archived ones. Delete archived references to free space.",
     promptBudget: "Reference and session budget",
     budgetCount: "References and session: {used} / {limit} characters",
     budgetLoading: "Calculating the selected reference budget…",
@@ -612,22 +593,20 @@ export default {
     uncategorized: "Uncategorized",
     projectUnavailable: "Project unavailable",
     invalid: "Check the reference fields and try again.",
-    deviceHint: "References stay on this computer and remain available after sign-out.",
-    accountHint:
-      "References belong to this account on this server. Local references remain separate.",
+    deviceHint: "Stored on this computer; kept after sign-out.",
+    accountHint: "Stored in this account on this server, separate from local references.",
     referenceHint:
-      "Select references when creating a session. Templates supply reference text; they do not enable tools or execute automatically.",
+      "Choose references when creating a session. Templates are reference text; they never enable tools or run.",
     contentHint:
       "Up to 8,000 characters. Save project conventions, decisions or reusable session instructions.",
     scope: "Reference location",
     localScope: "This computer",
     accountScope: "Account",
-    signInHint: "Sign in to manage this account’s memory and session templates.",
+    signInHint: "Sign in to manage this account’s memory and templates.",
     desktopOnly: "Open Raypx Desktop to manage this computer’s references.",
     includeArchived: "Include archived",
     archived: "Archived",
-    empty:
-      "No references match. Create project memory or a session template to use in a future session.",
+    empty: "No matching references",
     history: "Version timeline",
     revision: "Revision {revision}",
     archive: "Archive",
@@ -657,8 +636,7 @@ export default {
       "This creates a new current revision from the selected version’s content and fields, preserving the reference’s current archived state. Later versions remain in the timeline.",
     olderVersions: "Load older versions",
     chooseContext: "Memory and templates",
-    pickerHint:
-      "Choose up to 8 references for this session. Each selected revision is frozen when the session is created.",
+    pickerHint: "Up to 8. Revisions are fixed when the session is created.",
     pickerEmpty: "No active references are available for this project.",
     preview: "Preview",
     previewNamed: "Preview: {name}",
@@ -666,7 +644,7 @@ export default {
     selectionUnavailable:
       "Some saved references are archived, moved or unavailable. Remove them or refresh before sending.",
     removeRevision: "Remove saved revision {revision}",
-    selectionReset: "Changing the computer or project clears the reference selection.",
+    selectionReset: "Switching computer or project clears selected references.",
     snapshot: "Session context",
     snapshotHint:
       "These are the exact reference revisions captured when this session was created. Later edits do not change this snapshot.",
@@ -689,13 +667,14 @@ export default {
       "This reference changed. Refresh and reopen it before saving; your edits are still here.",
     NOT_FOUND: "This reference is unavailable.",
     NETWORK_UNAVAILABLE: "Unable to complete the request. Check your connection and try again.",
+    help: "About references",
   },
   cloudJobs: {
     title: "Cloud automations",
-    intro:
-      "Schedule device synchronization or agent sessions from your account. Missed occurrences are skipped.",
+    intro: "Schedule device syncs or agent sessions from your account. Missed runs are skipped.",
+    help: "About cloud automations",
     ownership:
-      "Cloud schedules belong to this account on this server. This computer’s local automations remain separate and available after sign-out.",
+      "Cloud schedules belong to this account. Local automations stay separate and work after sign-out.",
     create: "New cloud automation",
     edit: "Edit cloud automation",
     empty: "No cloud automations yet",
@@ -726,8 +705,7 @@ export default {
     conflictHint:
       "This schedule changed elsewhere. Your edits are still here. Refresh the list and reopen Edit to use the current revision.",
     viewTask: "Open related agent session",
-    signInHint:
-      "Sign in to view and manage your private cloud automations. Local Desktop automations do not require an account.",
+    signInHint: "Sign in to manage cloud automations. Local automations need no account.",
     unknownHint:
       "Delivery is uncertain. The schedule is paused and this occurrence will not be sent again automatically. Check the computer and related session before creating new work.",
     manual: "Manual run",
@@ -805,8 +783,8 @@ export default {
     scope: "Automation location",
     localScope: "This computer",
     cloudScope: "Cloud",
-    title: "Keep things moving",
-    intro: "Automations run while Raypx is in the tray. Missed runs are skipped.",
+    title: "Automations",
+    intro: "Runs while Raypx is in the tray. Missed runs are skipped.",
     create: "New automation",
     empty: "Nothing scheduled yet",
     emptyHint: "Scan a folder or run a command on a schedule.",
@@ -838,8 +816,8 @@ export default {
     relativePath: "Relative path",
   },
   terminal: {
-    title: "A terminal on this device",
-    intro: "Launch an executable with an interactive terminal.",
+    title: "Terminal",
+    intro: "Run a program in an interactive terminal.",
     start: "Open terminal",
     stop: "Close terminal",
     executable: "Executable path",

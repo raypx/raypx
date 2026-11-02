@@ -390,7 +390,7 @@ describe("Desktop local file routes", () => {
     expect(router.state.location.pathname).toBe("/automations");
     expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong. Please try again.");
     expect(screen.queryByText("private jobs diagnostic")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Keep things moving" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Automations" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "New automation" }));
     expect(screen.getByRole("combobox", { name: "Folder" })).toHaveTextContent("Work");
     failed = false;
@@ -537,10 +537,10 @@ describe("Desktop local file routes", () => {
       ).toHaveLength(2);
     });
     await act(async () => router.navigate({ to: "/settings" }));
-    expect(await screen.findByRole("heading", { name: "Make it yours" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Settings" })).toBeTruthy();
     await act(async () => lateJobs.resolve([job("Late automation")]));
     expect(router.state.location.pathname).toBe("/settings");
-    expect(screen.getByRole("heading", { name: "Make it yours" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Settings" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Late automation" })).toBeNull();
     expect(mocks.listeners.size).toBe(0);
   });
