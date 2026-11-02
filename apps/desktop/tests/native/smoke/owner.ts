@@ -18,7 +18,7 @@ const run: Run = async (binary, args) => {
   }
 };
 
-async function command(action: "status" | "stop", directory: string, options: Options) {
+async function command(action: "status" | "stop" | "restart", directory: string, options: Options) {
   const platform = options.platform ?? process.platform;
   if (platform !== "darwin" && platform !== "win32") return;
   const binary = resolve(
@@ -51,4 +51,9 @@ export async function assertSmokeOwnerRunning(directory: string, options: Option
 export async function stopSmokeOwner(directory: string, options: Options = {}) {
   const result = await command("stop", directory, options);
   return !result || result.code === 0;
+}
+
+export async function restartSmokeOwner(directory: string, options: Options = {}) {
+  const result = await command("restart", directory, options);
+  return result !== undefined && result.code === 0;
 }

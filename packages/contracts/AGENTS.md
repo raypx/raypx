@@ -49,6 +49,8 @@ Private `agents.local.*` methods require the reserved `LOCAL_WORKSPACE_ID` owner
 Device-profile work is independent of login and Native preserves this ID.
 Domain schemas and helpers are imported directly from Core.
 They reuse normalized task/decision DTOs without publishing a local HTTP endpoint.
+Local task detail also requires the Core `runStatus` projection; the persisted task
+status remains unchanged and remote task detail keeps its existing contract.
 
 `/api` also exports configuration DTOs and administrator RPC contracts. Public
 settings are an explicit projection; write values reject unknown keys. No secrets.

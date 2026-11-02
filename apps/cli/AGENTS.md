@@ -154,7 +154,10 @@ exclude reasoning, child-agent content, tool arguments and stdout. Activity entr
 keep stable IDs and increasing revisions; throttle deltas and flush on termination.
 
 `agents.local.*` exposes device-workspace task reads, direct commands, device metadata
-and detach through private stdio only. Local tasks use a persistent device identity
+and detach through private stdio only. Task inspection derives `runStatus` from the
+persisted task and its pending/decided request kind; missing or mixed wait kinds fail
+with `INVALID_AGENT_RUN_PROJECTION`. Never persist a second Run lifecycle record.
+Local tasks use a persistent device identity
 and a `desktop:` binding, share the same execution locks and approval arbitration,
 and keep status/request journal history without a cloud outbox. Activity lives only in its latest projection. Never include these bindings in
 remote snapshots or replay. Local activity survives relay compaction. Local pages, pending

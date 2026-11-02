@@ -23,6 +23,7 @@ import {
   contextDeleteResultSchema,
 } from "@raypx/memory";
 import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs";
+import { agentRunStatusSchema } from "@raypx/core/agent-runs";
 
 const settings = localParams["approvals.local.configure"];
 const connector = z.object({
@@ -99,6 +100,7 @@ export const localResults = {
   "agents.local.list": z.array(taskSchema),
   "agents.local.get": z.object({
     task: taskSchema,
+    runStatus: agentRunStatusSchema,
     events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
     requests: z.array(humanRequestSchema),
     activity: z.array(taskActivitySchema),

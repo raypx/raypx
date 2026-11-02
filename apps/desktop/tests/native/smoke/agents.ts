@@ -3,16 +3,19 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { RelayRequest, SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentProvider, AgentTask, HumanRequest } from "@raypx/core/tasks";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
+import { nativeAgentProviders } from "../../../scripts/native/agent-options";
+import { restartSmokeOwner } from "./owner";
 
 // Explicit gate: existing provider credentials/configuration are used and inference is billed.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
-  throw new Error("Set RAYPX_LIVE_AGENTS=1 to run real Claude and Codex inference");
+  throw new Error("Set RAYPX_LIVE_AGENTS=1 to run real provider inference");
 const smokeDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 if (!smokeDirectory) throw new Error("Live Agent smoke requires an isolated native data directory");
 const directory = smokeDirectory;
 const { engine, quitDesktop } = await import("./host");
-const accountId = "live-agent-acceptance";
-const results: { provider: AgentProvider; checks: string[] }[] = [];
+const accountId = LOCAL_WORKSPACE_ID;
+const results: { provider: AgentProvider; version: string; checks: string[] }[] = [];
 const activeStatuses = ["pending", "running", "waiting", "cancelling"];
 let stage = "engine startup";
 
@@ -94,8 +97,12 @@ async function ownerEpoch() {
 }
 
 try {
-  assert.equal(await engine.start(), true);
-  for (const provider of ["claude", "codex"] as const) {
+  // Desktop already starts its owner; wait for that startup before renderer RPCs.
+  await waitFor(
+    async () => (engine.status.status === "ready" ? true : undefined),
+    "engine startup",
+  );
+  for (const provider of nativeAgentProviders(process.env)) {
     const checks: string[] = [];
     const project = join(directory, provider);
     await mkdir(project);
@@ -107,11 +114,8 @@ try {
     const root = (await engine.request("roots.register", { path: project })) as { id: string };
     await engine.request("agents.configure", { rootId: root.id, providers: [provider] });
     const device = (await engine.request("agents.local.device", { accountId })) as SyncDevice;
-    assert.equal(
-      device.capabilities.find((item) => item.provider === provider)?.available,
-      true,
-      `${provider} CLI is unavailable`,
-    );
+    const capability = device.capabilities.find((item) => item.provider === provider);
+    assert.equal(capability?.available, true, `${provider} CLI is unavailable`);
     const create = async (prompt: string, mode: "run" | "plan" = "run") => {
       const id = crypto.randomUUID();
       await execute({
@@ -153,16 +157,11 @@ try {
     checks.push("approve-plan", "write-and-test");
 
     stage = `${provider}: process restart and session resume`;
-    const previousOwner = process.platform === "darwin" ? await ownerEpoch() : undefined;
+    const previousOwner = await ownerEpoch();
     await engine.stop();
-    if (process.platform === "darwin") {
-      assert.equal(await engine.replaceOwner(), true, "Independent owner restart failed");
-      assert.notEqual(
-        await ownerEpoch(),
-        previousOwner,
-        "Restart only reconnected the daemon proxy",
-      );
-    } else assert.equal(await engine.start(), true);
+    assert.equal(await restartSmokeOwner(directory), true, "Independent owner restart failed");
+    assert.equal(await engine.start(), true, "Desktop proxy reconnection failed");
+    assert.notEqual(await ownerEpoch(), previousOwner, "Restart only reconnected the daemon proxy");
     assert.equal((await readTask(planned)).task.status, "succeeded");
     const follow = crypto.randomUUID();
     await execute({
@@ -202,7 +201,7 @@ try {
     assert.throws(() => process.kill(pid, 0), "Cancelled child process is still alive");
     assert.equal(await Bun.file(join(project, "should-not-exist.txt")).exists(), false);
     checks.push("cancel-process-tree");
-    results.push({ provider, checks });
+    results.push({ provider, version: capability.version, checks });
     console.info(`Live Agent ${provider} passed: ${checks.join(", ")}`);
   }
 } catch (error) {
@@ -216,3 +215,4 @@ try {
   }
 }
 console.info(JSON.stringify({ status: "passed", results }));
+await writeFile(join(directory, "agents-result.json"), JSON.stringify({ results }));

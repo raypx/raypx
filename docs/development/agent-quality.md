@@ -56,6 +56,13 @@ not a secure erase of storage media or a cleanup of external providers' own hist
 
 ## Deterministic lifecycle tests
 
+Local task inspection also projects the persisted lifecycle into Core's Run status.
+`agents.local.get` returns `runStatus`; `waiting` is resolved from the task's
+pending or decided request kind. Missing or mixed kinds return
+`INVALID_AGENT_RUN_PROJECTION`. This is a read projection over `AgentTask`, with
+no second Run table, journal or persisted status. Runtime coverage lives in
+`apps/cli/tests/integration/runtime/agents/run-projection.test.ts`.
+
 Client and Host accept the same optional `RelayScheduler` for time, jitter and
 timers. Manual-clock/socket tests cover exact backoff, renewal, heartbeat, ACK
 deadlines and drains; actual loopback integration tests continue to verify the
@@ -69,6 +76,29 @@ events; draining waits for queued and in-flight work. Tests inject only a privat
 execution driver factory and provider process port. Codex and Claude share the
 same execution lifecycle scenarios, with separate steer/interrupt assertions.
 These fixtures contain synthetic protocol data, not unreviewed private recordings.
+
+## Local native Agent acceptance
+
+Run the first-delivery flow on macOS or Windows with an installed, configured Codex
+CLI. This gate consumes real provider inference and uses a separate native test
+application, temporary profile and synthetic project without a Raypx account:
+
+```sh
+RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents
+```
+
+Codex is the default. `RAYPX_LIVE_AGENT_PROVIDERS=claude,codex` explicitly expands
+the gate when both providers are configured. Invalid selections fail before
+packaging or inference. The flow checks a project read, rejected plan with no
+write, approved implementation and generated tests, owner-process restart with
+history and provider-session continuation, and cancellation of a running child.
+macOS quiet mode does not activate a window; foreground interaction remains a
+separate acceptance check.
+
+Only a successful complete run, including owned-process and session cleanup,
+writes evidence under `.artifacts/native-agents/`. Reports contain the platform,
+architecture, timestamp, provider version and completed checks. A passing synthetic
+test or build does not count as a live-provider or unrun-platform result.
 
 ## Policy Evals
 

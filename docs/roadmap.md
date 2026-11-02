@@ -1,6 +1,6 @@
 # Persistent Agent Platform Roadmap
 
-Status: In progress. Updated 2026-11-02. Phase 0 decisions are recorded; Phase 1 is being closed against the local acceptance flow below. Phase dates beyond the first delivery goal remain planning estimates.
+Status: In progress. Updated 2026-11-02. The Phase 1 first-delivery flow passed real Codex acceptance on macOS arm64; other platforms and the broader recovery matrix remain open. Phase dates beyond the first delivery goal remain planning estimates.
 
 This roadmap describes the target product, not currently shipped behavior. The first phases intentionally reuse proven CLI, Desktop, storage, memory and scheduling components; later architecture remains open to evidence from those workflows. `PRODUCT.md` remains the description of the current product until the target product specification and first implementation decision are accepted.
 
@@ -18,30 +18,34 @@ By 2026-11-10, validate one account-free local flow through the existing Raypx C
 
 ## Progress Snapshot (2026-11-02)
 
-These percentages are rough effort estimates, not issue-count metrics. The complete six-phase product is about one-third implemented. The local-first delivery slice is about 75-85% implemented and covered by deterministic tests; its real-provider acceptance has not been recorded as passed.
+These percentages are rough effort estimates, not issue-count metrics. The complete six-phase product is about one-third implemented. The local-first delivery slice is about 90-95% implemented, with deterministic coverage and a passing real-provider acceptance on macOS. This does not establish Windows, foreground UI or the full effect-recovery matrix as passed.
 
 | Phase                                    | Progress | Status                                                                                                                                                                                                                     |
 | ---------------------------------------- | -------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0. Deployment and ownership contracts    |     ~75% | Local ownership, Run mapping and transition contracts are documented and tested as pure rules. Runtime integration and the full failure-injection matrix remain open.                                                      |
-| 1. Personal local vertical slice         |     ~80% | Local CLI execution, approvals, follow-up and restart recovery have synthetic integration coverage. The opt-in native real-provider acceptance is implemented but still needs a recorded run.                              |
+| 0. Deployment and ownership contracts    |     ~80% | Local ownership and Run rules are documented; local task inspection now derives the Core Run status from persisted tasks and requests. The full failure-injection matrix remains open.                                     |
+| 1. Personal local vertical slice         |     ~95% | Synthetic lifecycle and read-projection coverage pass. Real Codex acceptance passed on macOS arm64, including approved work, daemon restart, session continuation and cancellation; Windows remains unverified.            |
 | 2. Local tools, effects and approval     |     ~60% | Project grants, approval hooks, command receipts and duplicate-delivery protection exist. A consistent durable effect intent/result/uncertainty and reconciliation path remains incomplete.                                |
-| 3. Desktop-backed computer and memory    |     ~75% | The local daemon, granted project roots and revisioned memory UI are in place. Real Desktop/daemon acceptance and any missing restore checks remain.                                                                       |
+| 3. Desktop-backed computer and memory    |     ~80% | The local daemon, granted project roots and revisioned memory UI are in place. Real macOS daemon restart preserves approved work; separate Desktop close/reopen and memory backup/restore checks remain.                   |
 | 4. Automations and continuous local work |     ~40% | Local schedules support Cron, timezone, pause, preview and history, but local scheduled actions do not yet create Agent Runs through `AgentRuntime`. Cloud Agent schedules are separate and do not close this local phase. |
 | 5. Explicit cloud migration              |     ~10% | Existing relay pieces may be reusable. Reviewed export/import, ownership transfer and headless server execution of the same CLI Runtime are not implemented.                                                               |
 | 6. Clients and extensibility             |     ~20% | Web/Desktop and multiple provider adapters exist. Client parity, mobile flows, MCP/connectors and safe configuration import remain.                                                                                        |
 
-The local synthetic lifecycle test is in `apps/cli/tests/integration/runtime/agents/host.test.ts`; it passed locally on 2026-11-02 (17 tests). The opt-in native gate in `apps/desktop/tests/native/smoke/agents.ts` exercises real provider reads, approval and writes, daemon-owner restart, session continuation and process cancellation. A test implementation is not evidence that the live gate passed; record the provider and platform result when it is run.
+The local synthetic lifecycle suite in `apps/cli/tests/integration/runtime/agents/host.test.ts` and the read-projection suite in `run-projection.test.ts` passed locally on 2026-11-02 (29 tests). Local detail returns `runStatus` without changing the persisted `AgentTask`; missing or mixed waiting request kinds fail explicitly.
+
+Real acceptance passed on **2026-11-02 at 11:33 SGT**, on **macOS arm64**, using **codex-cli 0.165.0-alpha.1.2**. The separate native test application exercised read, reject-plan, approve-plan, write-and-test, restart-history, resume-session and cancel-process-tree. The daemon epoch changed across the explicit restart, and owned processes/session cleanup completed. Generated evidence is `.artifacts/native-agents/1793590421488.json`; it contains safe metadata and check names, without prompts or credentials. Claude, Windows and foreground interaction were not run.
+
+`bun run verify` passed on the same source changes (24 successful tasks), including CLI's 385 tests, Desktop's 231 tests, the contracts consumer suite and the selected Go host checks. See [Agent acceptance commands](development/agent-quality.md#local-native-agent-acceptance).
 
 ## Near-Term Plan
 
 The 2026-11-10 target is the local first-delivery flow, not completion of all roadmap phases. Keep the scope to one granted project and Codex CLI; do not start cloud migration, Host pairing, container isolation, MCP or mobile work before this gate passes.
 
-1. **Close the local acceptance gate.** The targeted deterministic Agent Runtime integration suite is green (17 tests). Next, run the isolated native real-provider gate with Codex. Record the OS, provider version and result. The current native gate also exercises Claude, which is useful additional coverage but is not required by the first-delivery goal.
-2. **Connect the Run contract at read boundaries.** Use the existing Core task-to-Run projection for local task inspection, including pending request kind for `waiting`; preserve `AgentTask` as the only persisted lifecycle record. Add focused runtime-level tests for the mapped states and ambiguous waits.
-3. **Resolve acceptance failures and recovery gaps.** Fix issues found by the gate. Verify approval denial prevents writes, approved work is visible after daemon restart, follow-up resumes the same provider session, and interrupted or ambiguous effects are never replayed silently. Add durable effect records only where this flow demonstrates a concrete gap.
-4. **Finish with a release check.** Rerun affected CLI/Desktop checks and the acceptance gate, then update this snapshot with actual results. If the live-provider gate cannot run by 2026-11-10, report the local implementation as ready for acceptance but leave the delivery goal unverified.
+1. **Local acceptance: passed on macOS.** The gate defaults to Codex; `RAYPX_LIVE_AGENT_PROVIDERS` optionally selects other configured providers. The recorded result above closes the first-delivery gate for this platform.
+2. **Run read contract: connected.** `agents.local.get` uses Core's task-to-Run projection with the persisted pending/decided request kind. Runtime tests cover all mapped statuses, resolved and foreign requests, and ambiguous waits. `AgentTask` remains the sole stored lifecycle record.
+3. **Acceptance defects: resolved for this flow.** The gate now uses the reserved device owner, waits for Desktop's existing engine startup and restarts its owned daemon through the CLI command. It preserves the product's version-mismatch replacement guard. Live denial, approved writes, restart/history, session continuation and cancellation passed. Broader uncertain-effect reconciliation remains Phase 2 work; this gate does not claim that matrix is complete.
+4. **Affected delivery checks: passed.** The native gate and affected CLI/Desktop/contracts/Go checks passed. Distribution signing, Windows and foreground UI remain separate release gates.
 
-After the local gate passes, the next product increment is Phase 4's local Agent automation: add one scheduled Agent trigger through the same `AgentRuntime`, with idempotent delivery, visible run history, pause/resume and an explicit missed-trigger policy. Expand to migration and client extensibility only after that local workflow is proven.
+With the macOS local gate passing, the next product increment is Phase 4's local Agent automation: add one scheduled Agent trigger through the same `AgentRuntime`, with idempotent delivery, visible run history, pause/resume and an explicit missed-trigger policy. Expand to migration and client extensibility only after that local workflow is proven.
 
 ## Architecture Target
 

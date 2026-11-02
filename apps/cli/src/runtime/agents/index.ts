@@ -18,6 +18,7 @@ import {
   type AgentProvider,
   type AgentCapability,
   type AgentEvent,
+  type HumanRequest,
   type TaskInput,
   validDecision,
   TaskContextError,
@@ -33,6 +34,7 @@ import { ConversationRecorder } from "./activity";
 import manifest from "../../../package.json";
 import { ContextError } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
+import { projectTaskStatusToRunStatus } from "@raypx/core/agent-runs";
 
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -126,11 +128,27 @@ export class AgentRuntime {
     const binding = desktopBinding(accountId),
       local = this.store.get(id);
     if (!local || local.binding !== binding) throw new LocalError("NOT_FOUND", "Task unavailable");
+    const requests = this.store.requests(binding, id).reverse();
+    let pendingKind: HumanRequest["kind"] | undefined;
+    if (local.task.status === "waiting") {
+      const kinds = new Set(
+        requests
+          .filter((request) => request.status === "pending" || request.status === "decided")
+          .map((request) => request.kind),
+      );
+      if (kinds.size !== 1)
+        throw new LocalError(
+          "INVALID_AGENT_RUN_PROJECTION",
+          "Waiting task has no unambiguous pending request kind",
+        );
+      pendingKind = [...kinds][0];
+    }
     return {
       task: local.task,
+      runStatus: projectTaskStatusToRunStatus(local.task, pendingKind),
       ...this.store.activityPage(binding, id, beforeActivity),
       events: bounded(this.store.taskEvents(binding, id, after)),
-      requests: bounded(this.store.requests(binding, id).reverse(), true),
+      requests: bounded(requests, true),
     };
   }
   localApprovals(accountId: string) {

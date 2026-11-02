@@ -1,6 +1,10 @@
 import { expect, it, vi } from "vite-plus/test";
 import { basename } from "node:path";
-import { assertSmokeOwnerRunning, stopSmokeOwner } from "../../native/smoke/owner";
+import {
+  assertSmokeOwnerRunning,
+  restartSmokeOwner,
+  stopSmokeOwner,
+} from "../../native/smoke/owner";
 
 it.each(["darwin", "win32"] as const)(
   "checks the preserved %s daemon and explicitly stops only the smoke profile",
@@ -12,8 +16,9 @@ it.each(["darwin", "win32"] as const)(
     const directory = "/isolated smoke profile";
     await assertSmokeOwnerRunning(directory, { platform, run });
     expect(await stopSmokeOwner(directory, { platform, run })).toBe(true);
-    expect(run).toHaveBeenCalledTimes(2);
-    for (const [index, action] of ["status", "stop"].entries()) {
+    expect(await restartSmokeOwner(directory, { platform, run })).toBe(true);
+    expect(run).toHaveBeenCalledTimes(3);
+    for (const [index, action] of ["status", "stop", "restart"].entries()) {
       const [binary, args] = run.mock.calls[index]!;
       expect(basename(binary)).toBe(platform === "win32" ? "raypx.exe" : "raypx");
       expect(args).toEqual([
@@ -32,6 +37,7 @@ it.each(["darwin", "win32"] as const)(
 it("does not authorize data removal when stopping the Windows owner fails", async () => {
   const run = vi.fn(async () => ({ code: 1, output: "" }));
   expect(await stopSmokeOwner("/isolated", { platform: "win32", run })).toBe(false);
+  expect(await restartSmokeOwner("/isolated", { platform: "win32", run })).toBe(false);
 });
 
 it("rejects a disappeared owner instead of treating GUI Quit as preserving it", async () => {

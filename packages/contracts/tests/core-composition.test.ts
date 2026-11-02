@@ -46,6 +46,7 @@ it("requires complete provider capabilities and task history across transports",
   ).toEqual([]);
   const id = "11111111-1111-4111-8111-111111111111";
   const history = {
+    runStatus: "running",
     task: {
       id,
       deviceId: id,
@@ -64,6 +65,11 @@ it("requires complete provider capabilities and task history across transports",
   };
   const remote = apiContract.tasks.get["~orpc"].outputSchemas?.[0];
   if (!remote) throw new Error("Missing remote task history schema");
+  expect(localResults["agents.local.get"].shape.runStatus).toBe(core.agentRunStatusSchema);
+  expect(
+    localResults["agents.local.get"].safeParse({ ...history, activity: [], runStatus: undefined })
+      .success,
+  ).toBe(false);
   for (const schema of [remote, localResults["agents.local.get"]]) {
     expect((await schema["~standard"].validate(history)).issues).toBeDefined();
     expect(await schema["~standard"].validate({ ...history, activity: [] })).toMatchObject({

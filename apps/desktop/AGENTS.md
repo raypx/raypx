@@ -143,6 +143,9 @@ interactive mode adds focus/close/resize acceptance on isolated CI. Windows host
 CI installs/uninstalls the actual per-user NSIS package and verifies payload hashes.
 
 native:agents and native:beta are opt-in real-provider/account gates. They require
-RAYPX_LIVE_AGENTS=1 and isolated data and consume provider inference. HTTPS session
-persistence must use a real or synthetic HTTPS API; loopback HTTP is not proof of
+RAYPX_LIVE_AGENTS=1 and isolated data and consume provider inference.
+The Agent gate defaults to Codex; RAYPX_LIVE_AGENT_PROVIDERS optionally selects
+codex, claude or both. Successful native Agent results, including provider versions,
+are recorded under the repository's .artifacts/native-agents directory after cleanup.
+HTTPS session persistence must use a real or synthetic HTTPS API; loopback HTTP is not proof of
 production cookie persistence. Never count an unrun native platform as passed.

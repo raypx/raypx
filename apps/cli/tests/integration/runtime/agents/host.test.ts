@@ -136,6 +136,7 @@ it("completes a local Codex run through approved work, follow-up and runtime res
   await expect.poll(() => runtime.localApprovals(accountId).length).toBe(1);
   const approval = runtime.localApprovals(accountId)[0]!;
   expect(approval.kind).toBe("permission");
+  expect(runtime.localTask(accountId, id, 0).runStatus).toBe("waiting_approval");
   expect(existsSync(join(directory, "report.txt"))).toBe(false);
   expect(
     await runtime.localExecute(accountId, crypto.randomUUID(), {
@@ -146,6 +147,7 @@ it("completes a local Codex run through approved work, follow-up and runtime res
   await expect.poll(() => runtime.localTask(accountId, id, 0).task.status).toBe("succeeded");
   expect(readFileSync(join(directory, "report.txt"), "utf8")).toBe("LOCAL_RUN_SEED\napproved\n");
   expect(runtime.localTask(accountId, id, 0).task.summary).toContain("LOCAL_RUN_SEED");
+  expect(runtime.localTask(accountId, id, 0).runStatus).toBe("succeeded");
 
   const followUpId = crypto.randomUUID();
   expect(
@@ -174,6 +176,7 @@ it("completes a local Codex run through approved work, follow-up and runtime res
       "succeeded",
     ]);
     expect(restarted.localTask(accountId, followUpId, 0).task.parentTaskId).toBe(id);
+    expect(restarted.localTask(accountId, followUpId, 0).runStatus).toBe("succeeded");
   } finally {
     await restarted.close();
   }

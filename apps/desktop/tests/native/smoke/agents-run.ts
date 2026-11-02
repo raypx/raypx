@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
@@ -7,16 +7,19 @@ import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import type { SmokeInstallation } from "./launch";
 import { stopSmokeOwner } from "./owner";
+import { nativeAgentProviders } from "../../../scripts/native/agent-options";
 
 // Building or importing the scenario must never start paid inference implicitly.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
-  throw new Error("Set RAYPX_LIVE_AGENTS=1 to run real Claude and Codex inference");
+  throw new Error("Set RAYPX_LIVE_AGENTS=1 to run real provider inference");
+nativeAgentProviders(process.env);
 
 const directory = await mkdtemp(join(tmpdir(), "raypx-live-agents-"));
 const config = join(directory, "config");
 let cleanupSucceeded = false;
 let cleanupError: Error | undefined;
 let installation: SmokeInstallation | undefined;
+let results: unknown;
 
 try {
   await prepareSmokeDirectory(directory);
@@ -36,6 +39,7 @@ try {
     RAYPX_NATIVE_SMOKE_UI: "quiet",
     RAYPX_NATIVE_SMOKE_CLEANUP_SESSIONS: "true",
   });
+  results = JSON.parse(await readFile(join(directory, "agents-result.json"), "utf8"));
 } finally {
   try {
     cleanupSucceeded = await stopSmokeOwner(directory);
@@ -64,3 +68,21 @@ try {
   }
 }
 if (cleanupError) throw cleanupError;
+const evidence = resolve(import.meta.dirname, "../../../../../.artifacts/native-agents");
+await mkdir(evidence, { recursive: true });
+const report = join(evidence, `${Date.now()}.json`);
+await writeFile(
+  report,
+  JSON.stringify(
+    {
+      status: "passed",
+      completedAt: new Date().toISOString(),
+      platform: process.platform,
+      arch: process.arch,
+      acceptance: results,
+    },
+    null,
+    2,
+  ),
+);
+console.info(`Live Agent acceptance evidence: ${report}`);
