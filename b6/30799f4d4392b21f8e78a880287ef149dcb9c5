@@ -1,0 +1,46 @@
+apps/web/src/components/legal-footer.tsx
+  s_45109f95901754::t_b44616da7c4644 1-19
+apps/web/AGENTS.md
+  s_45109f95901754::t_b44616da7c4644 26-29
+apps/web/src/routes/(legal)/route.tsx
+  s_45109f95901754::t_b44616da7c4644 1,2-4,5,7,10-14,15-25,31-45
+apps/web/src/routes/(legal)/privacy.tsx
+  s_45109f95901754::t_b44616da7c4644 1-15,17-85
+  s_45109f95901754::t_d654eefb911562 16
+apps/web/src/features/auth/components/auth-form-section.tsx
+  s_45109f95901754::t_b44616da7c4644 6,36
+packages/i18n/src/messages/en.ts
+  s_45109f95901754::t_4133f3d7f3e6f4 2-50,52-53
+  s_45109f95901754::t_22bd3af33b78ab 51
+packages/i18n/src/messages/zh.ts
+  s_45109f95901754::t_4133f3d7f3e6f4 2-50,52-53
+  s_45109f95901754::t_22bd3af33b78ab 51
+apps/web/src/router-auth.component.test.tsx
+  s_45109f95901754::t_22bd3af33b78ab 280-308
+apps/web/src/routeTree.gen.ts
+  s_4143ab41883cbd::t_d817e696e231ff 15,30,45-48,119-123,144,162,171,185,205,223,231,245,254,281-287,386-392,461-472,477
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b630799f4d4392b21f8e78a880287ef149dcb9c5",
+  "prompts": {},
+  "sessions": {
+    "s_4143ab41883cbd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19b4b-2991-72e3-a4ae-68b93aa6721d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_45109f95901754": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19c60-d7ac-7bc3-8003-5a44e8048e4b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
