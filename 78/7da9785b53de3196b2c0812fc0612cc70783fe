@@ -1,0 +1,181 @@
+apps/web/src/features/auth/client.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 6-9
+  s_0fc40799f2bf44::t_64611b62c568f1 1-2
+apps/api/server/configuration/service.ts
+  s_0fc40799f2bf44::t_2d6b45e9ecc684 57
+  s_0fc40799f2bf44::t_f62bf35c9f6007 1-2,24,35,56
+packages/account/tests/access.test.ts
+  s_0fc40799f2bf44::t_184e0b58e45ad2 13-15
+  s_0fc40799f2bf44::t_86afa87f3e0872 1,3-4,10-12,16-31
+  s_0fc40799f2bf44::t_d2d7db74e26084 2,5-9
+packages/auth/src/client.ts
+  s_0fc40799f2bf44::t_f32c8430aba038 2
+packages/auth/tests/roles.test.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 7-12,19-40,44-51,53-66,75-78,85-86,88-97,99-101,103-113,118-126,133-134,139-143,145-147,150-152
+  s_0fc40799f2bf44::t_f37e0a21e4894d 1-6,13-16,42-43,52,68-74,79-84,87,98,102,114-117,127-132,135-138,148-149,153
+  s_0fc40799f2bf44::t_4b4016e14339a7 17-18,41
+  s_0fc40799f2bf44::t_77f7b64b079214 144
+  s_0fc40799f2bf44::t_2dc9c456d5b3fb 67
+packages/auth/package.json
+  s_0fc40799f2bf44::t_d2d7db74e26084 12
+  s_0fc40799f2bf44::t_64611b62c568f1 11
+apps/api/tests/integration/runtime-providers.test.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 55-61
+packages/auth/src/permissions.ts
+  s_0fc40799f2bf44::t_d2d7db74e26084 1-14
+packages/database/tests/schema.test.ts
+  s_0fc40799f2bf44::t_f32c8430aba038 5
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 20-22
+packages/contracts/AGENTS.md
+  s_0fc40799f2bf44::t_3499f5818546eb 57-60
+packages/account/src/access.ts
+  s_0fc40799f2bf44::t_64611b62c568f1 2,8-10,15-16
+  s_0fc40799f2bf44::t_42a5c4c1f114a5 1,3-7,22-30
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 11-14,17-21
+docs/README.md
+  s_0fc40799f2bf44::t_0151434cc815eb 10
+packages/contracts/src/access.ts
+  s_0fc40799f2bf44::t_d2d7db74e26084 2,4,7
+  s_0fc40799f2bf44::t_42a5c4c1f114a5 1,3,5-6,8-16
+apps/api/tests/integration/access.test.ts
+  s_0fc40799f2bf44::t_f1012365f4d5fc 57-62
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 32-38
+  s_0fc40799f2bf44::t_6fdcfd166f1503 19
+  s_0fc40799f2bf44::t_4df38b792255df 63-64,69
+  s_0fc40799f2bf44::t_86afa87f3e0872 1-11,13-18,20,29-31,39-46,48-56,65-68,73-86,91-95,98
+  s_0fc40799f2bf44::t_d2d7db74e26084 70-72
+  s_0fc40799f2bf44::t_f32c8430aba038 12,47
+  s_0fc40799f2bf44::t_184e0b58e45ad2 21-28,87-90,96-97
+packages/contracts/package.json
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 25
+apps/web/src/features/auth/access.ts
+  s_0fc40799f2bf44::t_3c7e52e030918a 1-36
+apps/api/AGENTS.md
+  s_0fc40799f2bf44::t_3499f5818546eb 159-166
+apps/api/server/api.ts
+  s_0fc40799f2bf44::t_2d6b45e9ecc684 305-308,314,334,369,473,511-513,516-518,529-532,535,545-549,561-566,571,577,580,589-591,594,601-603
+  s_0fc40799f2bf44::t_a6a6483e1fe96e 14-15,25,95,249,253,304,608,612-614
+apps/api/server/access.ts
+  s_0fc40799f2bf44::t_64611b62c568f1 1,7,11,16
+  s_0fc40799f2bf44::t_42a5c4c1f114a5 2-6,8-10,12-15,17-18
+apps/web/src/components/shell.tsx
+  s_0fc40799f2bf44::t_6a3b4e98218790 83
+apps/api/tests/unit/configuration/service.test.ts
+  s_0fc40799f2bf44::t_2d6b45e9ecc684 37-38,40
+  s_0fc40799f2bf44::t_f32c8430aba038 39,87,114,126
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 15-21
+  s_0fc40799f2bf44::t_2f4f0a742c8adb 7
+packages/auth/src/types.ts
+  s_0fc40799f2bf44::t_64611b62c568f1 7-9
+packages/account/AGENTS.md
+  s_0fc40799f2bf44::t_3499f5818546eb 12-15,27-28
+apps/api/tests/helpers/control.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 229-235
+apps/web/src/features/auth/components/permission-boundary.tsx
+  s_0fc40799f2bf44::t_3c7e52e030918a 1-32,38-39
+  s_0fc40799f2bf44::t_184e0b58e45ad2 33-37
+packages/auth/tests/server.test.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 16-26
+  s_0fc40799f2bf44::t_f37e0a21e4894d 5,13-14
+apps/web/tests/component/routes/pages.test.ts
+  s_0fc40799f2bf44::t_d5a1ed2bd411b3 6,24-31
+apps/api/tests/postgres/node/auth.test.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 101-103,105-111
+  s_0fc40799f2bf44::t_77f7b64b079214 99-100,104,112
+apps/api/server/administration/bootstrap.ts
+  s_0fc40799f2bf44::t_f37e0a21e4894d 1,14,16,19-21
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 5-8,11-13,43-45
+  s_0fc40799f2bf44::t_f32c8430aba038 2-4,9-10,15,17-18,22-42,46-48
+apps/web/AGENTS.md
+  s_d865119810acc0::t_46179baab889cd 157-162
+apps/api/server/runtime/shared.ts
+  s_0fc40799f2bf44::t_64611b62c568f1 2,74,77,120,133
+docs/development/configuration.md
+  s_0fc40799f2bf44::t_3499f5818546eb 13-19,130
+apps/web/tests/component/routes/auth.test.tsx
+  s_0fc40799f2bf44::t_6a3b4e98218790 177
+  s_0fc40799f2bf44::t_f1012365f4d5fc 23,27-29,71,78-85,132-136,158-176,178-222
+  s_0fc40799f2bf44::t_e48cc0973fae71 223
+apps/api/tests/unit/bootstrap-admins.test.ts
+  s_0fc40799f2bf44::t_4df38b792255df 1-6,23-24,36-40,44-49,53,57-58,62-63
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 7-22,25-28,30-35,41-43,50-52,54-56,59-61
+  s_0fc40799f2bf44::t_2dc9c456d5b3fb 29
+packages/auth/AGENTS.md
+  s_0fc40799f2bf44::t_3499f5818546eb 18-21,33-39
+apps/api/tests/integration/api.test.ts
+  s_0fc40799f2bf44::t_f32c8430aba038 8
+packages/database/src/schema.ts
+  s_0fc40799f2bf44::t_64611b62c568f1 27-30,41
+packages/auth/src/access.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 14-21
+  s_0fc40799f2bf44::t_64611b62c568f1 1-2,5-13,22-29,32-44
+  s_0fc40799f2bf44::t_d2d7db74e26084 3-4,31
+  s_0fc40799f2bf44::t_3499f5818546eb 30
+docs/development/access-control.md
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 6-10
+  s_0fc40799f2bf44::t_0151434cc815eb 1-2,5,30-31,33,48-49,51-65,68
+  s_0fc40799f2bf44::t_f1a6f8f1fb7a9a 3-4,11-29,32,34-47,66-67,69-70
+  s_0fc40799f2bf44::t_a84e86dafccd68 50
+apps/api/tests/integration/configuration-runtime.test.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 53-59
+packages/account/package.json
+  s_0fc40799f2bf44::t_64611b62c568f1 8,19
+packages/auth/src/server.ts
+  s_0fc40799f2bf44::t_64611b62c568f1 2,80,190-198,286-287,291,293,296-297,301
+  s_0fc40799f2bf44::t_77f7b64b079214 3,101-102,104,112-115,125,130,139-140,145
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 84-86,103,105-111,116-124,126-129,131-138,141-144,276-278,298-300
+  s_0fc40799f2bf44::t_399d5667087008 146
+apps/api/tests/integration/logging.test.ts
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 25-31
+apps/api/package.json
+  s_0fc40799f2bf44::t_f32c8430aba038 7
+apps/api/tests/integration/configuration.test.ts
+  s_0fc40799f2bf44::t_f32c8430aba038 6-7,36,39,43,81
+  s_0fc40799f2bf44::t_1f5cd5b84b7d79 19-25,167-170
+packages/database/AGENTS.md
+  s_0fc40799f2bf44::t_3499f5818546eb 24-27
+apps/desktop/internal/desktop/rpc_paths.generated.go
+  s_0fc40799f2bf44::t_5e00666fad652c 6
+bun.lock
+  s_0fc40799f2bf44::t_cc091fe79acd56 179,220,341
+packages/account/src/index.ts
+  s_0fc40799f2bf44::t_dce2b7534909d2 12
+packages/client/src/tasks.ts
+  s_0fc40799f2bf44::t_2bd5bdb6c57c8d 18-19
+packages/contracts/src/api.ts
+  s_0fc40799f2bf44::t_972b71edba188c 3-4,121,130
+packages/contracts/tests/api.test.ts
+  s_0fc40799f2bf44::t_3cb21aace3c181 21
+packages/database/drizzle-foundation/20261102061616_good_mephisto/migration.sql
+  s_0fc40799f2bf44::t_1076f01dff8386 1-5
+packages/database/drizzle-foundation/20261102061616_good_mephisto/snapshot.json
+  s_0fc40799f2bf44::t_26005b8b9d57ce 1-3522
+packages/i18n/src/messages/en.ts
+  s_0fc40799f2bf44::t_c653c594706ed8 50-53
+packages/i18n/src/messages/zh.ts
+  s_0fc40799f2bf44::t_899a6ba94316a4 48-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "787da9785b53de3196b2c0812fc0612cc70783fe",
+  "prompts": {},
+  "sessions": {
+    "s_0fc40799f2bf44": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ad3-4075-7941-aceb-b5dc81e71036",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_d865119810acc0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ae8-8b2d-7ee1-837c-54b1c1726478",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
