@@ -3,7 +3,6 @@ import {
   cpSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   rmSync,
   writeFileSync,
   existsSync,
@@ -27,11 +26,9 @@ it.skipIf(process.platform === "win32")(
     mkdirSync(project);
     mkdirSync(bin);
     cpSync(join(import.meta.dirname, "../../../fixtures/agents"), bin, { recursive: true });
-    writeFileSync(
-      join(bin, "codex"),
-      `#!${process.execPath}\n${readFileSync(join(bin, "codex-interactive.mjs"), "utf8")}`,
-      { mode: 0o700 },
-    );
+    writeFileSync(join(bin, "codex"), `#!${process.execPath}\nimport "./codex-interactive.ts";`, {
+      mode: 0o700,
+    });
     const host = await startDaemon({ dataDir, agentExecutables: { codex: join(bin, "codex") } });
     const controllers: AbortController[] = [];
     const connect = async () => {

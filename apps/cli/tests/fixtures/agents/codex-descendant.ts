@@ -4,8 +4,8 @@ import { exitForVersion } from "./version";
 
 exitForVersion("codex");
 writeFileSync("parent-pid", String(process.pid));
-Bun.spawn([process.execPath, join(import.meta.dirname, "descendant.mjs")], {
+Bun.spawn([process.execPath, join(import.meta.dirname, "descendant.ts")], {
   stdout: "ignore",
   stderr: "ignore",
 });
-await import("./codex.mjs");
+await import("./codex");

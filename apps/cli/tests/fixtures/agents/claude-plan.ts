@@ -1,8 +1,13 @@
 import { exitForVersion } from "./version";
 
 exitForVersion("claude");
-const settings = JSON.parse(process.argv[process.argv.indexOf("--settings") + 1]);
-const hook = settings.hooks.PreToolUse[0].hooks[0];
+const settingsArgument = process.argv[process.argv.indexOf("--settings") + 1];
+if (!settingsArgument) throw new Error("Expected Claude settings argument");
+const settings = JSON.parse(settingsArgument) as {
+  hooks: { PreToolUse: { hooks: { url: string }[] }[] };
+};
+const hook = settings.hooks.PreToolUse[0]?.hooks[0];
+if (!hook) throw new Error("Expected Claude PreToolUse hook");
 const response = await fetch(hook.url, {
   method: "POST",
   headers: {
@@ -15,7 +20,9 @@ const response = await fetch(hook.url, {
     tool_input: { plan: "x".repeat(129000) },
   }),
 });
-const decision = await response.json();
+const decision = (await response.json()) as {
+  hookSpecificOutput: { permissionDecision: string };
+};
 console.log(
   JSON.stringify({
     type: "result",

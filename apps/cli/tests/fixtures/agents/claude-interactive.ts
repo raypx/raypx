@@ -2,7 +2,7 @@ import { appendFileSync, existsSync, unlinkSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { exitForVersion } from "./version";
 exitForVersion("claude");
-const send = (value) => process.stdout.write(JSON.stringify(value) + "\n");
+const send = (value: Record<string, unknown>) => process.stdout.write(JSON.stringify(value) + "\n");
 let turn = 0,
   active = false;
 const resume = process.argv.includes("--resume")

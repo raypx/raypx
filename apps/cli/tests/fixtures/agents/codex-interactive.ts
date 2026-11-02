@@ -1,10 +1,17 @@
 import { appendFileSync, existsSync, unlinkSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { exitForVersion } from "./version";
+
+type RpcMessage = {
+  id?: string | number;
+  method?: string;
+  params?: { expectedTurnId?: string };
+};
+
 exitForVersion("codex");
-const send = (value) => process.stdout.write(JSON.stringify(value) + "\n");
-let turn = 0,
-  active = false;
+const send = (value: Record<string, unknown>) => process.stdout.write(JSON.stringify(value) + "\n");
+let turn = 0;
+let active = false;
 setInterval(() => {
   if (!active || !existsSync("complete")) return;
   unlinkSync("complete");
@@ -26,9 +33,9 @@ setInterval(() => {
   send({ method: "turn/completed", params: { turn: { id: `turn-${turn}`, status: "completed" } } });
 }, 10);
 for await (const line of createInterface({ input: process.stdin })) {
-  const message = JSON.parse(line);
+  const message = JSON.parse(line) as RpcMessage;
   if (message.method === "initialize") send({ id: message.id, result: {} });
-  if (["thread/start", "thread/resume"].includes(message.method)) {
+  if (message.method === "thread/start" || message.method === "thread/resume") {
     appendFileSync("sessions", JSON.stringify(message) + "\n");
     if (message.method === "thread/resume" && existsSync("resume-failed")) {
       send({ id: message.id, error: { code: -1, message: "Session unavailable" } });
@@ -75,7 +82,7 @@ for await (const line of createInterface({ input: process.stdin })) {
     }
     send({
       id: message.id,
-      ...(active && message.params.expectedTurnId === `turn-${turn}`
+      ...(active && message.params?.expectedTurnId === `turn-${turn}`
         ? { result: { turnId: `turn-${turn}` } }
         : { error: { code: -1 } }),
     });

@@ -7,7 +7,9 @@ for await (const chunk of process.stdin) {
   input += chunk;
   if (input.includes("\n")) break;
 }
-const prompt = JSON.parse(input.split("\n")[0]).message.content;
+const firstLine = input.split("\n")[0];
+if (!firstLine) throw new Error("Expected a Claude prompt line");
+const prompt = (JSON.parse(firstLine) as { message: { content: string } }).message.content;
 const mode = process.argv[process.argv.indexOf("--permission-mode") + 1];
 const resume = process.argv.includes("--resume")
   ? process.argv[process.argv.indexOf("--resume") + 1]

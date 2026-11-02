@@ -1,6 +1,6 @@
 import { profileStorage, removeProfileDirectory } from "./sqlite";
 import { afterEach } from "vite-plus/test";
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StateStore } from "../../src/runtime/state";
@@ -38,10 +38,7 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
     const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
     const file = join(directory, provider);
     cpSync(join(import.meta.dirname, "../fixtures/agents"), directory, { recursive: true });
-    const source =
-      fixture === "codex-local-workflow"
-        ? `import "./${fixture}.ts";`
-        : readFileSync(join(directory, fixture + ".mjs"), "utf8");
+    const source = `import "./${fixture}.ts";`;
     writeFileSync(file, `#!${process.execPath}\n${source}`, { mode: 0o700 });
     const state = new StateStore(profileStorage(directory));
     const rootId = crypto.randomUUID();
