@@ -1,0 +1,27 @@
+apps/web/AGENTS.md
+  s_b1d06560260ce6::t_5797b5a067a724 35-36
+packages/tooling/src/smoke/checks.ts
+  s_b1d06560260ce6::t_3eb6229b64ed4d 60,65
+  s_b1d06560260ce6::t_5797b5a067a724 48-52
+apps/web/tests/component/routes/home.test.tsx
+  s_b1d06560260ce6::t_019bfc59dcc289 37
+  s_b1d06560260ce6::t_4203b907d861ae 1-36,38-55
+apps/web/src/routes/(app)/index.tsx
+  s_b1d06560260ce6::t_5797b5a067a724 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5a1afa37e580a9ec8c98d7f4795ade8cef6e8442",
+  "prompts": {},
+  "sessions": {
+    "s_b1d06560260ce6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a53-77d7-7591-9ba6-d73547de66ec",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
