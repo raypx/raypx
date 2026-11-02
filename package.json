@@ -52,7 +52,22 @@
       "@earendil-works/pi-ai": "1.4.0",
       "@earendil-works/pi-agent-core": "1.4.0",
       "diff": "9.0.0",
-      "@cloudflare/containers": "0.3.7"
+      "@cloudflare/containers": "0.3.7",
+      "expo": "58.0.22",
+      "expo-router": "~58.0.29",
+      "expo-secure-store": "~58.0.2",
+      "expo-localization": "~58.0.5",
+      "expo-linking": "~58.0.15",
+      "expo-network": "~58.0.4",
+      "expo-constants": "~58.0.14",
+      "expo-web-browser": "~58.0.7",
+      "expo-status-bar": "~58.0.4",
+      "react-native": "0.88.1",
+      "react-native-screens": "~4.30.1",
+      "react-native-safe-area-context": "~5.10.1",
+      "@better-auth/expo": "1.7.14",
+      "expo-system-ui": "~58.0.7",
+      "uniwind": "1.13.1"
     },
     "catalogs": {
       "dev": {
@@ -129,7 +144,8 @@
     "knip": "raypx-dev knip",
     "perf:tasks": "raypx-dev tasks perf:tasks",
     "eval:agents": "raypx-dev tasks cli#eval:agents --",
-    "build:relay": "raypx-dev tasks build --filter relay"
+    "build:relay": "raypx-dev tasks build --filter relay",
+    "dev:mobile": "raypx-dev tasks dev --filter mobile"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",

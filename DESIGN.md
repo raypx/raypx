@@ -10,8 +10,9 @@ Desktop opens the most recent valid local project, with project authorization,
 Agent readiness and the first message as its empty state. Web uses a public landing
 page at `/` and opens remote projects at `/projects`;
 account details live at `/account`. Local work remains available before login.
-Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers;
-the planned Expo iOS app is a separate delivery phase.
+Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.
+The Expo iOS/Android app requires login by default and opens its account screen
+after authentication. Native task views and push notifications are later work.
 
 Desktop and Web share one sidebar order: Projects and the pending inbox, then project
 shortcuts, then Automations and Memory above one fixed footer row for the account and

@@ -24,8 +24,11 @@ keeps account details at `/account`. URL selection never dispatches execution.
 TaskWorkspacePort list targets flow through HTTP/private IPC into storage filters
 before cursor/limit. Query keys, page probes and draft identities use the same
 target; unavailable targets are explicit and never redirect execution elsewhere.
-Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
-capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
+Phone browsers use Web. The Expo iOS/Android application in `apps/mobile` requires
+login by default and currently provides email/password login, secure session
+restoration and an account screen. Native task views and push notifications remain
+later work. See [mobile development](../development/mobile.md).
+API uses Vite + Nitro + Hono + oRPC, deployed
 on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.
 
 Web, API and Relay are separate services with Bun as their only deployment target.

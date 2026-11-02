@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "uniwind";
+@import "@raypx/ui/themes/native.css";
+
+@source "../app";
+@source "./";
+@source not "./**/*.test.ts";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}

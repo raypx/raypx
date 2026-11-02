@@ -26,6 +26,8 @@ packages own page layout, forms, navigation and product behavior.
   Never render `theme-color` through React: the script inserts it and the provider
   updates it, because React 19 hydrates head meta by content and would duplicate it.
 - `styles.css`: DOM Tailwind entry and generated theme values.
+- `themes/native.css`: pure generated light/dark tokens for Uniwind's native
+  Tailwind theme layer. It contains no DOM rules or component code.
 - `styles/app.css`: imports the Tailwind entry once and supplies layered app base
   defaults. Layout and control utilities live in their owning components.
 - Other explicit subpaths expose reusable visual patterns and the original logo.
@@ -53,7 +55,7 @@ red that keeps WCAG AA; `destructive` stays the fill and border color.
 - No account, file, task or API behavior in this package.
 - No DOM imports in `themes/config`, `tokens.ts` or `script.ts`.
 - Edit `src/themes/tokens.ts`, then run `generate:theme`; the generated DOM CSS
-  must stay identical to that source.
+  and native CSS must stay identical to that source.
 - Use Base UI and Lucide icons; do not introduce Radix or another icon library.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns
   stay flat under `src`. Consumers use explicit package exports.

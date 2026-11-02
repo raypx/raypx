@@ -40,10 +40,11 @@
     "./components/ui/popover": "./src/components/ui/popover.tsx",
     "./icon-button": "./src/icon-button.tsx",
     "./help-hint": "./src/help-hint.tsx",
-    "./styles/app.css": "./src/styles/app.css"
+    "./styles/app.css": "./src/styles/app.css",
+    "./themes/native.css": "./src/styles/native.css"
   },
   "scripts": {
-    "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json",
+    "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json && bun --check --tsconfig-override scripts/tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:component": "bun --bun vp test --run .component.test.",
     "test:coverage": "bun --bun vp test --run --coverage",
@@ -63,6 +64,7 @@
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
     "@testing-library/user-event": "catalog:dev",
+    "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
@@ -79,13 +81,15 @@
     "target": "browser",
     "entryTargets": {
       "./logo-mark.webp": "universal",
-      "./themes/config": "universal"
+      "./themes/config": "universal",
+      "./themes/native.css": "universal"
     },
     "sourceTargets": {
       "src/themes/config.ts": "universal",
       "src/themes/tokens.ts": "universal",
       "src/themes/script.ts": "universal",
-      "scripts/**": "node"
+      "scripts/**": "node",
+      "src/styles/native.css": "universal"
     }
   }
 }

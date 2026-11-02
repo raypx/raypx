@@ -1,0 +1,57 @@
+{
+  "name": "@raypx/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "bun --bun expo start",
+    "build": "bun --bun expo export --platform ios --platform android",
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run"
+  },
+  "dependencies": {
+    "@better-auth/expo": "catalog:",
+    "@raypx/auth": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "better-auth": "catalog:",
+    "expo": "catalog:",
+    "expo-constants": "catalog:",
+    "expo-linking": "catalog:",
+    "expo-localization": "catalog:",
+    "expo-network": "catalog:",
+    "expo-router": "catalog:",
+    "expo-secure-store": "catalog:",
+    "expo-status-bar": "catalog:",
+    "expo-system-ui": "catalog:",
+    "expo-web-browser": "catalog:",
+    "react": "catalog:",
+    "react-native": "catalog:",
+    "react-native-safe-area-context": "catalog:",
+    "react-native-screens": "catalog:",
+    "uniwind": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "tailwindcss": "catalog:"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "native",
+    "sourceTargets": {
+      "vite.config.ts": "node",
+      "vitest.config.ts": "node",
+      "metro.config.ts": "node",
+      "metro.config.cjs": "node",
+      "src/**/*.test.ts": "node"
+    },
+    "uncachedTasks": [
+      "build"
+    ]
+  }
+}
