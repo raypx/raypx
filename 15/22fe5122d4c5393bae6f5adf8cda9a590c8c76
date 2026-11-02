@@ -1,0 +1,278 @@
+packages/control/tests/unit/control.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-534
+apps/api/tests/postgres/node/control.test.ts
+  s_d865119810acc0::t_6a320c52aa9891 11
+  s_d865119810acc0::t_1d62f29e1459d9 9-10
+packages/control/src/schemas.ts
+  s_d865119810acc0::t_cff1afd537a939 20,85
+  s_d865119810acc0::t_1d62f29e1459d9 1-19,21-84,86-101
+packages/control/tests/unit/relay-client.test.ts
+  s_d865119810acc0::t_a4aeeb975f717f 52,58,62,98
+  s_d865119810acc0::t_bbbf9c596d2c70 19-20
+  s_d865119810acc0::t_99c8c4a4f3df1b 1-15,17-18,21-41,43-48,51,53-57,60-61,63-68,70-75,77,79-89,91-93,95-97,99-100,102-107,109-112,114-115
+  s_d865119810acc0::t_098b9040c42d73 16,42,49-50,59,69,76,78,90,94,101,108,113
+infra/relay/vitest.config.ts
+  s_d865119810acc0::t_4a2eb852565c24 1-8,11
+  s_d865119810acc0::t_19b07c7930c1eb 9-10
+apps/api/tests/cluster/relay.test.ts
+  s_d865119810acc0::t_cff1afd537a939 15,264,273,284
+  s_d865119810acc0::t_8f5706a4700ae4 76,257
+  s_d865119810acc0::t_bbbf9c596d2c70 3,176,199-205,207-211,213-224,226-234,236-237,240-241,244-250,252,254-256,258-263,265-270,272,274-283,285-289,292-299
+  s_d865119810acc0::t_1d62f29e1459d9 16-17,20
+  s_1af469ca4ae7e1::t_82f6941c0e5687 206,212,225,235,238-239,242-243,251,253,271,290-291,300-301
+apps/api/tests/integration/api.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 4
+packages/control/src/repository.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-344
+infra/relay/src/server.ts
+  s_d865119810acc0::t_cff1afd537a939 32
+  s_d865119810acc0::t_4a2eb852565c24 1-23,25-31,33-53,55-106
+  s_1af469ca4ae7e1::t_5ff76af824c6a8 24,54
+packages/tooling/tests/unit/deployment-contract.test.ts
+  s_d865119810acc0::t_72f1bb02b93b26 22
+docs/development/railway.md
+  s_d865119810acc0::t_72e9a06f1234b3 27-29
+  s_d865119810acc0::t_d8bd58b1d817c9 26
+  s_d865119810acc0::t_229c1f99710bf4 10,21,37-44,57,62-65,118,120
+apps/api/tests/integration/relay.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 4
+infra/relay/vite.app.config.ts
+  s_d865119810acc0::t_4a2eb852565c24 1-11
+packages/tooling/tests/integration/deployment-smoke.test.ts
+  s_d865119810acc0::t_72f1bb02b93b26 17-20,22
+  s_d865119810acc0::t_faefbce2b6b877 21
+packages/control/src/context-repository.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-355
+packages/control/src/postgres.ts
+  s_d865119810acc0::t_02eb0df6857c81 1-14
+deploy/.env.example
+  s_d865119810acc0::t_14d54fdd58d8b8 20,47-48
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_d865119810acc0::t_72f1bb02b93b26 91
+packages/control/src/observed-projection.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-136
+infra/relay/.env.example
+  s_d865119810acc0::t_4a2eb852565c24 1-6
+packages/control/tests/helpers/control.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-378
+apps/api/tests/integration/jobs-relay.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 5-6
+packages/control/src/relay/cluster.ts
+  s_d865119810acc0::t_cff1afd537a939 16
+  s_d865119810acc0::t_1d62f29e1459d9 1-15,17-79
+packages/control/src/context-receipts.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-34
+package.json
+  s_d865119810acc0::t_28a8c2ce539a37 100,128-129
+infra/relay/AGENTS.md
+  s_d865119810acc0::t_4a2eb852565c24 1-19
+deploy/update.sh
+  s_d865119810acc0::t_72f1bb02b93b26 36-42,45,61,65,68
+  s_d865119810acc0::t_bd871d69f0fad1 10
+  s_d865119810acc0::t_7c48756490862c 12-15
+packages/control/src/service.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-158
+apps/api/server/api.ts
+  s_d865119810acc0::t_1d62f29e1459d9 3
+infra/relay/package.json
+  s_d865119810acc0::t_4a2eb852565c24 1-35
+docs/architecture/README.md
+  s_d865119810acc0::t_8f5706a4700ae4 31-35
+packages/tooling/src/smoke/index.ts
+  s_d865119810acc0::t_5db6d366fd252f 4,6-7,9,13
+  s_d865119810acc0::t_235d8f560a9c28 8
+infra/railway/Dockerfile
+  s_d865119810acc0::t_14d54fdd58d8b8 3
+infra/README.md
+  s_d865119810acc0::t_8f5706a4700ae4 10
+  s_d865119810acc0::t_43c735020b57af 7-9
+apps/api/tests/helpers/control-server.ts
+  s_d865119810acc0::t_1d62f29e1459d9 4,10-11
+AGENTS.md
+  s_d865119810acc0::t_8f5706a4700ae4 121-123
+  s_d865119810acc0::t_72f1bb02b93b26 12-13
+  s_d865119810acc0::t_5405ed22234059 119
+deploy/compose.yaml
+  s_d865119810acc0::t_0303ed8df8de70 124-126
+  s_d865119810acc0::t_14d54fdd58d8b8 57,85,91-123,127-129
+  s_1af469ca4ae7e1::t_944a6450d29619 130
+packages/control/tsconfig.json
+  s_d865119810acc0::t_1d62f29e1459d9 1-7
+infra/railway/tests/unit/stack.test.ts
+  s_d865119810acc0::t_72f1bb02b93b26 20,58-63
+  s_d865119810acc0::t_cfac41cd212b89 64
+README.md
+  s_d865119810acc0::t_8f5706a4700ae4 21,26-27,30
+infra/relay/tsconfig.json
+  s_d865119810acc0::t_4a2eb852565c24 1-5
+apps/api/tests/helpers/relay.ts
+  s_d865119810acc0::t_1d62f29e1459d9 7,9-10
+packages/control/src/task-projection.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-352
+apps/api/tests/integration/jobs.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 12
+packages/control/src/commands.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-269
+apps/api/vite.app.config.ts
+  s_d865119810acc0::t_0303ed8df8de70 40-49
+  s_d865119810acc0::t_4a2eb852565c24 36-39,50-51
+packages/control/src/credentials.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-356
+infra/relay/Dockerfile
+  s_d865119810acc0::t_7c48756490862c 16-19
+  s_d865119810acc0::t_14d54fdd58d8b8 1-15,20-28
+infra/relay/tests/unit/env.test.ts
+  s_d865119810acc0::t_8f5706a4700ae4 11-12,14
+  s_d865119810acc0::t_cff1afd537a939 18,20,28
+  s_d865119810acc0::t_99c8c4a4f3df1b 1-10,15-17,21-27,29
+  s_1af469ca4ae7e1::t_c3885205d3dec5 13,19
+docs/development/getting-started.md
+  s_d865119810acc0::t_8f5706a4700ae4 32,38-39,43-46
+  s_d865119810acc0::t_bd871d69f0fad1 34
+infra/relay/src/main.ts
+  s_d865119810acc0::t_4a2eb852565c24 1-8,10-17
+  s_d865119810acc0::t_e93a44688f6b41 9
+packages/tooling/src/smoke/artifacts.ts
+  s_d865119810acc0::t_5db6d366fd252f 36,38,45-69,71
+  s_d865119810acc0::t_ec7a2a83fe4bd1 37,70,72
+packages/control/package.json
+  s_d865119810acc0::t_1d62f29e1459d9 1-39
+packages/tooling/tests/unit/artifact-probes.test.ts
+  s_d865119810acc0::t_5db6d366fd252f 6,15,25-26
+infra/AGENTS.md
+  s_d865119810acc0::t_72f1bb02b93b26 4-7
+apps/api/tests/integration/memory.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 6
+packages/tooling/src/smoke/checks.ts
+  s_d865119810acc0::t_bbbf9c596d2c70 24-28,37
+packages/control/vite.config.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-3
+packages/control/src/relay/client.ts
+  s_d865119810acc0::t_02eb0df6857c81 1-17,19-25,27-39,41-73
+  s_d865119810acc0::t_24bb35a210822e 18,26,40
+apps/api/tests/postgres/node/memory.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 7
+packages/control/tests/unit/context-routing.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-295
+apps/api/server/runtime/shared.ts
+  s_d865119810acc0::t_1d62f29e1459d9 8
+  s_d865119810acc0::t_cff1afd537a939 7
+packages/control/vitest.config.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-5,7
+  s_d865119810acc0::t_57ec8c1ffdc0a0 6
+packages/control/src/relay/index.ts
+  s_d865119810acc0::t_02eb0df6857c81 1-6,8-10
+  s_d865119810acc0::t_92064af5dd57b9 7
+infra/railway/railway.ts
+  s_d865119810acc0::t_14d54fdd58d8b8 23,57-68,91
+packages/tooling/tests/integration/deployment.test.ts
+  s_d865119810acc0::t_bd871d69f0fad1 11-12,14-16,19-21,23-24,29-31,213,225
+  s_d865119810acc0::t_7c48756490862c 8-10,13,17-18,22,25-28,32
+  s_d865119810acc0::t_23d14904b2b17d 58,60,63,75,78,80,153-156,158,163-166,169,209-211,228,232,236-255
+  s_d865119810acc0::t_6b09541b0d012b 59,157,212,214-220,256-260
+packages/control/tests/unit/relay-jobs.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-6,8-410
+  s_d865119810acc0::t_cff1afd537a939 7
+packages/control/src/records.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-55
+apps/api/tests/postgres/node/auth.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 10-11
+infra/railway/Caddyfile
+  s_d865119810acc0::t_14d54fdd58d8b8 16-17,22-23
+  s_d865119810acc0::t_0303ed8df8de70 18-21
+infra/relay/src/env.ts
+  s_d865119810acc0::t_4a2eb852565c24 1-20,22,24-28
+  s_d865119810acc0::t_8f5706a4700ae4 21,23
+packages/tooling/src/verification/plan.ts
+  s_d865119810acc0::t_5db6d366fd252f 7,145
+infra/relay/src/runtime.ts
+  s_d865119810acc0::t_4a2eb852565c24 1-14,16-30,32-42,44-53
+  s_d865119810acc0::t_f550243f666ac7 15,31,43
+knip.json
+  s_d865119810acc0::t_28a8c2ce539a37 74-79
+packages/control/src/relay/jobs.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-49
+packages/tooling/src/validation/deployment.ts
+  s_d865119810acc0::t_72f1bb02b93b26 4,35,37,43-44,90-96,98-101,106,108-111
+  s_d865119810acc0::t_abaa722c79e3e4 97,102-105,107
+infra/relay/vite.config.ts
+  s_d865119810acc0::t_4a2eb852565c24 1-3
+packages/control/tests/unit/relay.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-73
+apps/api/tests/unit/hosts.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 3,10
+.env.example
+  s_d865119810acc0::t_14d54fdd58d8b8 19-20
+infra/relay/README.md
+  s_d865119810acc0::t_7c48756490862c 51-59
+  s_d865119810acc0::t_5db6d366fd252f 76-77
+  s_d865119810acc0::t_8f5706a4700ae4 1-8,10-13,16-50,60-75
+  s_d865119810acc0::t_0303ed8df8de70 14-15
+  s_d865119810acc0::t_de7158b99ce878 9
+deploy/build.sh
+  s_d865119810acc0::t_14d54fdd58d8b8 60-62,64
+  s_d865119810acc0::t_7c48756490862c 63
+infra/relay/tests/integration/server.test.ts
+  s_d865119810acc0::t_99c8c4a4f3df1b 1-20,22-32,34-46,48-56,58-60,62-103
+  s_d865119810acc0::t_2ae3e5a9573589 21,33,47,57,61
+packages/control/src/relay/redis.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-322
+apps/api/server/jobs/cleanup.ts
+  s_d865119810acc0::t_1d62f29e1459d9 6
+packages/control/tests/unit/observed.test.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-136
+packages/control/AGENTS.md
+  s_d865119810acc0::t_02eb0df6857c81 1-14
+packages/tooling/src/build/deployment.ts
+  s_d865119810acc0::t_4a2eb852565c24 4,11,13-14
+packages/control/src/relay/hub.ts
+  s_d865119810acc0::t_1d62f29e1459d9 1-808
+packages/tooling/src/validation/deployment-smoke.ts
+  s_d865119810acc0::t_72f1bb02b93b26 60,63,170,256,270,274-286,299,318,333
+docs/README.md
+  s_d865119810acc0::t_8f5706a4700ae4 29
+apps/api/server/runtime/server.ts
+  s_d865119810acc0::t_4a2eb852565c24 1,14,51-54
+apps/api/AGENTS.md
+  s_d865119810acc0::t_ee78054be75263 58,107-108,131-142
+apps/api/package.json
+  s_d865119810acc0::t_ffb3fa6621abf5 28
+apps/api/tests/postgres/node/context-commands.test.ts
+  s_d865119810acc0::t_2ee294298f08cd 5
+bun.lock
+  s_d865119810acc0::t_8d21c54d9bd8ea 28,231-250,388-409,1283-1284,2273-2274
+deploy/AGENTS.md
+  s_d865119810acc0::t_33cc6f6e952135 30-31
+docs/architecture/remote-tasks.md
+  s_d865119810acc0::t_4caf3f29baa12e 7,11,78-95
+docs/development/deployment.md
+  s_d865119810acc0::t_07a8a0748ae678 15,52-53,69,78-79,116,140-142,147,181-183,195-196,208
+infra/railway/AGENTS.md
+  s_d865119810acc0::t_62bf815f7834e1 9,14
+infra/railway/README.md
+  s_d865119810acc0::t_1f3dc4ade969ae 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1522fe5122d4c5393bae6f5adf8cda9a590c8c76",
+  "prompts": {},
+  "sessions": {
+    "s_1af469ca4ae7e1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a71-7e9c-7500-a120-516965fd9fd2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_d865119810acc0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ae8-8b2d-7ee1-837c-54b1c1726478",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
