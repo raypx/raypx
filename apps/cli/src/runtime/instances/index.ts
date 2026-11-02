@@ -23,6 +23,7 @@ import manifest from "../../../package.json";
 export type InstanceEnrollmentPhase =
   | "starting"
   | "key-read"
+  | "key-write"
   | "key-ready"
   | "request"
   | "approval"
@@ -84,7 +85,7 @@ export class InstanceRuntime implements InstanceAccess {
     readonly directory: string,
     private readonly options: {
       keys?: InstanceKeyStore;
-      onProgress?: (phase: InstanceEnrollmentPhase) => void;
+      onProgress?: (phase: InstanceEnrollmentPhase, keyId: string) => void;
       client?: (origin: string) => ApiClient;
     } = {},
   ) {
@@ -92,7 +93,7 @@ export class InstanceRuntime implements InstanceAccess {
   }
   private progress(phase: InstanceEnrollmentPhase) {
     try {
-      this.options.onProgress?.(phase);
+      this.options.onProgress?.(phase, instanceDigest(this.directory));
     } catch {
       /* Observability cannot change enrollment. */
     }
@@ -208,6 +209,7 @@ export class InstanceRuntime implements InstanceAccess {
     this.progress("key-read");
     let privateKey = await this.keys.get(instanceId);
     if (!privateKey) {
+      this.progress("key-write");
       const pair = createInstanceKey();
       await this.keys.set(instanceId, pair.privateKey);
       privateKey = pair.privateKey;

@@ -45,8 +45,8 @@ export function createRuntime(
 ) {
   const emit = options.emit ?? (() => {});
   const instances = new InstanceRuntime(profilePath(options), {
-    onProgress: (status) =>
-      recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status }),
+    onProgress: (status, id) =>
+      recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status, id }),
   });
   const instanceAccess = options.instanceAccess ?? instances;
   const storage = new ProfileStorage(profilePath(options));

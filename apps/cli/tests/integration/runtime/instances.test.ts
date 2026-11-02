@@ -158,6 +158,7 @@ it("enrolls with a private host token and retains the signed identity across res
     expect(phases).toEqual([
       "starting",
       "key-read",
+      "key-write",
       "key-ready",
       "request",
       "approval",

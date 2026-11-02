@@ -139,21 +139,28 @@ export async function enrollTestProfile(
         child.exited,
         new Response(child.stderr).text(),
       ]);
-      let phase = "not-started";
+      let phase = "not-started",
+        scope = "unknown-slot";
       for (const line of diagnostics.split("\n")) {
         try {
           const event = JSON.parse(line);
           if (
             event.operation === "instance.enrollment" &&
-            /^(starting|key-read|key-ready|request|approval|registered)$/.test(event.status)
-          )
+            /^(starting|key-read|key-write|key-ready|request|approval|registered)$/.test(
+              event.status,
+            )
+          ) {
             phase = event.status;
+            scope = event.id === credential.name ? "same-slot" : "different-slot";
+          }
         } catch {
           /* Ignore non-diagnostic output; never echo it. */
         }
       }
       if (code !== 0)
-        throw new Error("Test instance enrollment failed (" + stage + "; " + phase + ")");
+        throw new Error(
+          "Test instance enrollment failed (" + stage + "; " + phase + "; " + scope + ")",
+        );
     } finally {
       clearTimeout(timer);
     }

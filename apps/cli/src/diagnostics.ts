@@ -4,7 +4,7 @@ import type { JobRun } from "@raypx/jobs";
 import { LocalError } from "./runtime/errors";
 
 export type Diagnostic =
-  | { operation: "instance.enrollment"; status: InstanceEnrollmentPhase }
+  | { operation: "instance.enrollment"; status: InstanceEnrollmentPhase; id: string }
   | {
       operation: "cli.completed";
       mode: "command" | "stdio" | "version" | "tui";

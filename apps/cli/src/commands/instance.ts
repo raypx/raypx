@@ -10,8 +10,8 @@ export async function loginInstance(options: {
   const origin = instanceOrigin(process.env.RAYPX_API_URL ?? "https://raypx.pro");
   const webOrigin = instanceOrigin(process.env.RAYPX_WEB_URL ?? origin);
   const instance = new InstanceRuntime(profilePath(options), {
-    onProgress: (status) =>
-      recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status }),
+    onProgress: (status, id) =>
+      recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status, id }),
   });
   const result = await instance.begin(origin);
   if (result.registered) {
