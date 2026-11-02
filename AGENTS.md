@@ -35,6 +35,8 @@ The accepted foundation design supersedes documents in docs/history.
 - Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
   `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
   and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
+- The optional Cloudflare Relay ingress runs in the provider-managed Workers
+  runtime; its container and all local tooling still use the pinned Bun runtime.
 - Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
   the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
   Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.

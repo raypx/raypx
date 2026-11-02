@@ -53,6 +53,7 @@ function cachedTask(
     "**/node_modules/.vite/**",
     "**/node_modules/.vite-temp/**",
     "**/node_modules/.cache/**",
+    "**/.wrangler/**",
     "**/.tanstack/**",
     ".artifacts/**",
     ...(build || name === "check"
@@ -72,6 +73,7 @@ function cachedTask(
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
+    { pattern: "!**/.wrangler.*.json", base: "workspace" },
     // Tool caches appear in node_modules after a first run, so a fresh CI runner lists it
     // differently. Dependency changes still reach every task through bun.lock below.
     { pattern: "!**/node_modules", base: "workspace" },

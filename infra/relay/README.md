@@ -1,6 +1,8 @@
 # Independent Relay
 
 `relay` is a private Bun application workspace, deployed independently on Railway.
+An optional [Cloudflare Workers + Containers adapter](../cloudflare/README.md)
+deploys the same Bun image with managed edge ingress.
 It owns WebSocket connections and relay v4 message routing. API owns login,
 device/host grants, one-time viewer tickets, HTTP read models and scheduling.
 Device-local execution stays in the CLI daemon.

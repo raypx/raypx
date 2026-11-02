@@ -75,6 +75,9 @@
     "infra/relay": {
       "entry": ["src/main.ts", "vite.app.config.ts"]
     },
+    "infra/cloudflare": {
+      "entry": ["src/index.ts", "vite.app.config.ts", "scripts/wrangler.ts"]
+    },
     "packages/control": {
       "entry": ["tests/helpers/control.ts"]
     }

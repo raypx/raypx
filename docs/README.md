@@ -27,6 +27,7 @@
 - [Shared deployment per project](development/deployment.md)
 - [Infrastructure workspaces](../infra/README.md)
 - [Independent Relay service](../infra/relay/README.md)
+- [Cloudflare Relay deployment](../infra/cloudflare/README.md)
 - [Railway deployment and domain setup](development/railway.md)
 - [Existing beta environment](development/beta.md)
 - [Production environment](development/production.md)

@@ -114,7 +114,7 @@ it("changing browser selectors or workers preserves dependency task definitions"
   }
 });
 
-it("full verification contains only the active Bun deployment target", () => {
+it("full verification builds Bun services and the optional edge without deploying providers", () => {
   const result = spawnSync(process.execPath, ["run", "verify", "--full", "--dry-run"], {
     cwd: root,
     env: process.env,
@@ -127,5 +127,7 @@ it("full verification contains only the active Bun deployment target", () => {
   );
   expect(tasks).toContain("api#build");
   expect(tasks).toContain("web#build");
-  expect(tasks.some((task) => /cloudflare|wrangler|workerd/.test(task))).toBe(false);
+  expect(tasks).toContain("relay#build");
+  expect(tasks).toContain("relay-cloudflare#build");
+  expect(tasks.some((task) => /#(?:deploy|plan(?::[^#]+)?|dev)$/.test(task))).toBe(false);
 });

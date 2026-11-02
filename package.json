@@ -51,7 +51,8 @@
       "@raypx-kit/analytics": "0.0.0-alpha.3",
       "@earendil-works/pi-ai": "1.4.0",
       "@earendil-works/pi-agent-core": "1.4.0",
-      "diff": "9.0.0"
+      "diff": "9.0.0",
+      "@cloudflare/containers": "0.3.7"
     },
     "catalogs": {
       "dev": {
@@ -84,7 +85,9 @@
         "@storybook/react-vite": "^10.6.5",
         "skills": "^1.7.4",
         "storybook": "^10.6.5",
-        "@railway/cli": "5.71.0"
+        "@railway/cli": "5.71.0",
+        "@cloudflare/workers-types": "5.20261102.1",
+        "wrangler": "4.156.1"
       }
     }
   },

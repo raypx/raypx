@@ -336,3 +336,21 @@ it("reuses VP pack results after validation writes ignored artifacts", () => {
   writeFileSync(join(root, ".artifacts/validation/result.json"), "fixture");
   expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
 }, 30000);
+
+it("ignores Wrangler state and generated configs while tracking authored configuration", () => {
+  const root = project();
+  const folder = checked(root, "edge");
+  const config = join(folder, "wrangler.json");
+  writeFileSync(config, '{"name":"edge"}');
+  const selector = "@raypx/edge#task:check";
+  pass(execute(root, "check", {}, selector));
+  expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+  mkdirSync(join(folder, ".wrangler/state"), { recursive: true });
+  writeFileSync(join(folder, ".wrangler/state/local.json"), "{}");
+  writeFileSync(join(folder, ".wrangler.1234.json"), '{"image_vars":{"VITE_APP_RELEASE":"test"}}');
+  expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+  rmSync(join(folder, ".wrangler.1234.json"));
+  expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+  writeFileSync(config, '{"name":"changed"}');
+  expect(pass(execute(root, "check", {}, selector)).log).toContain("cache miss");
+}, 30000);

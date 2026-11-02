@@ -6,6 +6,9 @@
 out
 **/.env
 **/.env.*
+**/.dev.vars
+**/.dev.vars.*
+**/.wrangler.*.json
 !.env.example
 **/node_modules
 **/dist
