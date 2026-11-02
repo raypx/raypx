@@ -5,6 +5,7 @@
     "packages": [
       "apps/*",
       "packages/*",
+      "infra/*",
       "e2e"
     ],
     "catalog": {
@@ -82,7 +83,8 @@
         "@storybook/addon-docs": "^10.6.5",
         "@storybook/react-vite": "^10.6.5",
         "skills": "^1.7.4",
-        "storybook": "^10.6.5"
+        "storybook": "^10.6.5",
+        "@railway/cli": "5.71.0"
       }
     }
   },
@@ -131,7 +133,6 @@
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
     "knip": "catalog:dev",
-    "railway": "catalog:dev",
     "skills": "catalog:dev",
     "typescript": "catalog:dev",
     "vite-plus": "catalog:dev"

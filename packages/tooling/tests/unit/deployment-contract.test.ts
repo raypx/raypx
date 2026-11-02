@@ -15,8 +15,8 @@ function fixture() {
   for (const file of [
     "deploy/compose.yaml",
     "deploy/.env.example",
-    "deploy/railway/Caddyfile",
-    "deploy/railway/Dockerfile",
+    "infra/railway/Caddyfile",
+    "infra/railway/Dockerfile",
     "apps/api/Dockerfile",
     "apps/web/Dockerfile",
     "apps/api/server/env.contract.ts",
@@ -55,14 +55,14 @@ it("rejects silent port, readiness and ingress route drift", () => {
     ".loadbalancer.server.port=3002",
     ".loadbalancer.server.port=9999",
   );
-  replace(root, "deploy/railway/Caddyfile", " /ready", "");
+  replace(root, "infra/railway/Caddyfile", " /ready", "");
   replace(root, "apps/web/Dockerfile", "EXPOSE 3000", "EXPOSE 9999");
   expect(checkDeployment(root)).toEqual(
     expect.arrayContaining([
       "deploy/compose.yaml: api healthcheck must use 3002/ready",
       "deploy/compose.yaml: api proxy port must be 3002",
       "apps/web/Dockerfile: runtime port must be 3000",
-      "deploy/railway/Caddyfile: API ingress routes differ from the deployment contract",
+      "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
     ]),
   );
 });

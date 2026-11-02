@@ -34,7 +34,7 @@ export default defineRailway((context) => {
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "apps/api/Dockerfile",
-      watchPatterns: ["apps/api/**", ".railway/railway.ts", ...sharedInputs],
+      watchPatterns: ["apps/api/**", "infra/railway/railway.ts", ...sharedInputs],
     },
     preDeploy: "bun run --cwd packages/database migrate",
     healthcheck: deploymentServices.api.ready,
@@ -47,7 +47,7 @@ export default defineRailway((context) => {
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "apps/web/Dockerfile",
-      watchPatterns: ["apps/web/**", ".railway/railway.ts", ...sharedInputs],
+      watchPatterns: ["apps/web/**", "infra/railway/railway.ts", ...sharedInputs],
     },
     healthcheck: deploymentServices.web.health,
     healthcheckTimeout: 180,
@@ -58,11 +58,11 @@ export default defineRailway((context) => {
     replicas,
     build: {
       builder: "DOCKERFILE",
-      dockerfilePath: "deploy/railway/Dockerfile",
+      dockerfilePath: "infra/railway/Dockerfile",
       watchPatterns: [
-        "deploy/railway/Dockerfile",
-        "deploy/railway/Caddyfile",
-        ".railway/railway.ts",
+        "infra/railway/Dockerfile",
+        "infra/railway/Caddyfile",
+        "infra/railway/railway.ts",
         ".dockerignore",
       ],
     },

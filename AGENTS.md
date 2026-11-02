@@ -9,6 +9,8 @@ The accepted foundation design supersedes documents in docs/history.
 ## Workspaces and boundaries
 
 - Discover workspaces from root package.json; never maintain a package-name allowlist.
+- Provider infrastructure lives in private tooling workspaces under `infra/*`;
+  keep deployment dependencies and commands there, outside application runtime imports.
 - Applications are composition roots and cannot be imported by another workspace.
 - Libraries expose explicit package.json exports; do not import private source paths.
 - Every workspace declares raypx.kind and raypx.target. Mixed workspaces declare

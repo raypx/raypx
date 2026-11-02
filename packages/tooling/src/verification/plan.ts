@@ -177,7 +177,7 @@ export function verificationPlan(
         if (documentation(file) || /\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file))
           return false;
         if (
-          /^(?:deploy\/|apps\/(?:api|web)\/Dockerfile$|\.railway\/|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
+          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
             file,
           ) ||
           /^packages\/tooling\/src\/(?:build\/|validation\/deployment|verification\/)/.test(file)

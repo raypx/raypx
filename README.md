@@ -57,4 +57,5 @@ Use `bun run test --help` or the [test command guide](docs/development/test-comm
 for root suites, package-local commands and optional backend/browser gates.
 
 See [documentation](docs/README.md), [architecture](docs/architecture/README.md),
+[infrastructure](infra/README.md),
 [workspace extension](docs/development/workspaces.md) and [verification](docs/development/testing.md).

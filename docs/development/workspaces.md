@@ -3,6 +3,10 @@
 Bun workspaces below cover TypeScript applications and libraries. Desktop also owns
 a Go module in apps/desktop; see the [Desktop guide](desktop-release.md).
 
+Provider infrastructure lives under `infra/*` as private tooling workspaces with
+their own manifests, dependencies, deployment commands and checks. These are
+discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).
+
 ```sh
 bun run workspace:list
 bun run workspace:new feature-kit --kind library --target universal

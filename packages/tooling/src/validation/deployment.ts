@@ -59,14 +59,14 @@ export function checkDeployment(root: string): string[] {
     }
     const same = (left: string[], right: string[]) =>
       JSON.stringify(left.sort()) === JSON.stringify(right.sort());
-    const caddySource = read("deploy/railway/Caddyfile");
+    const caddySource = read("infra/railway/Caddyfile");
     if (
       !caddySource.includes(`:{$PORT:${deploymentServices.gateway.port}}`) ||
-      !read("deploy/railway/Dockerfile")
+      !read("infra/railway/Dockerfile")
         .split("\n")
         .includes(`EXPOSE ${deploymentServices.gateway.port}`)
     )
-      findings.push("deploy/railway: gateway port differs from the deployment contract");
+      findings.push("infra/railway: gateway port differs from the deployment contract");
     const caddy =
       caddySource
         .match(/@api path ([^\n]+)/)?.[1]
@@ -74,7 +74,7 @@ export function checkDeployment(root: string): string[] {
         .split(/\s+/) ?? [];
     if (!same(caddy, [...apiIngress.prefixes.map((path) => `${path}*`), ...apiIngress.paths]))
       findings.push(
-        "deploy/railway/Caddyfile: API ingress routes differ from the deployment contract",
+        "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
       );
     const rule = services.api?.labels?.find((line) => /-api.rule=/.test(line)) ?? "";
     const traefik = [...rule.matchAll(/(PathPrefix|Path)\(`([^`]+)`\)/g)].map(

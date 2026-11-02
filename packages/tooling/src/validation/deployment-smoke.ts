@@ -165,7 +165,7 @@ export async function smokeDeployment(root: string, args: string[]) {
       for (const [label, file, image, target] of [
         ["railway-api", "apps/api/Dockerfile", images.railwayApi, ""],
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ""],
-        ["gateway", "deploy/railway/Dockerfile", images.gateway, ""],
+        ["gateway", "infra/railway/Dockerfile", images.gateway, ""],
         ["fixture", "apps/api/Dockerfile", images.fixture, "build"],
       ]) {
         await evidence.command(`${label}-build`, [

@@ -8,7 +8,13 @@ Runtime variables are unmanaged. Keep secret values on Railway, preserve referen
 variables and never print decrypted variables in logs or source. Gateway supplies
 one public HTTPS origin; API, Web and databases use private networking.
 
-Use the Bun-scoped IaC preload documented in docs/development/railway.md. Review
-the plan before applying. Keep one API replica and preserve the separate
+This private Bun tooling workspace exports `railway.ts`. Keep the Railway SDK
+and CLI dependencies here, with versions in the root development catalog.
+`plan` and `deploy` explicitly select that file and use `scripts/iac-preload.ts`;
+both must remain uncached. Review the plan before applying. Keep one API replica and preserve the separate
 Compose runtime/migration image targets. Use the shared apps/api and apps/web
 Dockerfiles; API's default deploy target includes pre-deploy migration dependencies.
+
+Keep tests in `tests/unit/` and independent of credentials or live Railway state.
+Run `bun run --cwd infra/railway check` and `test`, then root `bun run verify`.
+See `docs/development/railway.md` for operator commands.

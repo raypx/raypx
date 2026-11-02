@@ -1,6 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "project": ["apps/**/*.{js,mjs,ts,tsx}", "packages/**/*.{js,mjs,ts,tsx}", "e2e/**/*.ts"],
+  "project": [
+    "apps/**/*.{js,mjs,ts,tsx}",
+    "packages/**/*.{js,mjs,ts,tsx}",
+    "e2e/**/*.ts",
+    "infra/**/*.ts"
+  ],
   "ignoreFiles": [
     "**/*.d.ts",
     "**/*.gen.ts",
@@ -12,7 +17,7 @@
   ],
   "workspaces": {
     ".": {
-      "entry": ["deploy/manifests.ts", ".railway/railway.ts", "deploy/railway/iac-preload.ts"],
+      "entry": ["deploy/manifests.ts", "deploy/sources.ts"],
       "ignoreDependencies": ["skills"]
     },
     "apps/api": {
@@ -63,6 +68,9 @@
         "playwright.live.config.ts",
         "playwright.devtools.config.ts"
       ]
+    },
+    "infra/railway": {
+      "entry": ["railway.ts", "scripts/iac-preload.ts"]
     }
   }
 }

@@ -1,6 +1,6 @@
 # Deployment
 
-This directory owns Dokploy Compose and the Railway gateway deployment.
+This directory owns Dokploy Compose deployment and shared image source staging.
 Build from the repository root with `build.sh`; Compose and Railway share the
 Dockerfiles in apps/api and apps/web. Keep install/build commands in those files.
 `workspaces.ts` discovers packages from the root manifest without installed dependencies.
@@ -13,7 +13,7 @@ checks static adapters and API environment forwarding. Run `smoke:deployment`
 for isolated image acceptance; its fixture account and database must remain owned
 and synthetic. Do not convert that fixture into an operator account command.
 Read `docs/development/deployment.md` before changing deployment behavior.
-Railway uses `.railway/railway.ts` and `deploy/railway/`; see
+Railway infrastructure and the gateway belong to the `infra/railway` workspace; see
 `docs/development/railway.md`. Its gateway publishes the shared origin while API,
 Web, Postgres and Redis communicate over Railway's private network. Keep existing
 database services and volumes outside the application's named IaC partial.

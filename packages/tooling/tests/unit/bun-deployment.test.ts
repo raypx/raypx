@@ -1,7 +1,5 @@
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { expect, it } from "vite-plus/test";
 import { nitroTarget } from "../../src/build/nitro.js";
 
@@ -65,37 +63,9 @@ it("shares identical dependency stages so one builder reuses the install", () =>
   );
 });
 
-it("shares portable Dockerfiles with Railway and retains isolated pre-deploy migrations", () => {
-  const configuration = pathToFileURL(join(root, ".railway/railway.ts")).href;
-  const result = spawnSync(
-    process.execPath,
-    [
-      "--no-env-file",
-      "-e",
-      `import program from ${JSON.stringify(configuration)};
-const project = program({projectId:"766ffb45-d60f-4e4d-83b1-135443ff0b51",environment:"production"});
-console.log(JSON.stringify(project.resources));`,
-    ],
-    { encoding: "utf8", env: { ...process.env, RAILWAY_IAC_CONTEXT: "" } },
-  );
-  expect(result.status).toBe(0);
-  const services = JSON.parse(result.stdout) as {
-    name: string;
-    build: { dockerfilePath: string; watchPatterns: string[] };
-    deploy: { preDeployCommand?: string[]; healthcheckPath: string };
-  }[];
-  for (const app of ["api", "web"]) {
-    const service = services.find(({ name }) => name === app)!;
-    const file = `apps/${app}/Dockerfile`;
-    expect(service.build.dockerfilePath).toBe(file);
-    expect(service.build.watchPatterns).toContain(`apps/${app}/**`);
-    expect(service.build.watchPatterns).toContain("deploy/*.ts");
-    expect(read(file)).not.toContain("--mount=type=cache");
-  }
-  const api = services.find(({ name }) => name === "api")!;
-  expect(api.deploy.preDeployCommand).toEqual(["bun run --cwd packages/database migrate"]);
-  expect(api.deploy.healthcheckPath).toBe("/ready");
-  expect(services.find(({ name }) => name === "web")!.deploy.healthcheckPath).toBe("/health");
+it("keeps portable Dockerfiles and isolated pre-deploy migration payloads", () => {
+  for (const app of ["api", "web"])
+    expect(read(`apps/${app}/Dockerfile`)).not.toContain("--mount=type=cache");
   const all = stages("apps/api/Dockerfile");
   expect([...all.keys()].at(-1)).toBe("deploy");
   expect(all.get("deploy")).toEqual({

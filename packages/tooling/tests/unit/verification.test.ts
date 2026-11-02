@@ -475,6 +475,9 @@ it("selects deployment acceptance for Docker, runtime and shared dependency inpu
   const { model } = project();
   for (const file of [
     "deploy/compose.yaml",
+    "infra/railway/railway.ts",
+    "infra/railway/Dockerfile",
+    "infra/railway/Caddyfile",
     "apps/api/Dockerfile",
     "packages/api/src/server.ts",
     "bun.lock",

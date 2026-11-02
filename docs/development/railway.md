@@ -6,12 +6,17 @@ of the Dokploy Beta and Production projects.
 
 ## Services and configuration
 
-The named IaC partial in [.railway/railway.ts](../../.railway/railway.ts) manages
+The named IaC partial in [infra/railway/railway.ts](../../infra/railway/railway.ts) manages
 api, web and gateway. Existing Postgres and Redis services and their volumes
 remain outside this partial. Both were inspected and empty before the initial
 foundation migration. Keep their images and persistent storage intact.
 
-Gateway uses the pinned Caddy image and [Caddyfile](../../deploy/railway/Caddyfile).
+The private `@raypx/infra-railway` Bun workspace owns the SDK/CLI dependencies,
+IaC entry, gateway assets and offline tests. Run `bun run --cwd infra/railway check`
+and `test` for focused validation; root `check`, `test` and `verify` discover it
+through the root manifest's `infra/*` pattern.
+
+Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
 Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`,
 /relay, /health and /ready to API; other paths go to Web. Caddy proxies WebSocket
 upgrades; API and Web have no public domains, and database connections use private
@@ -56,10 +61,10 @@ Gateway watches its proxy configuration and the IaC file.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
 
-API and Web require `apps/api/Dockerfile` and `apps/web/Dockerfile`; the former
-`deploy/railway/{api,web}/Dockerfile` paths are no longer provided.
+API and Web require `apps/api/Dockerfile` and `apps/web/Dockerfile`; Gateway requires
+`infra/railway/Dockerfile`. Its Docker build context remains the repository root.
 
-For that configuration cutover, pause API/Web GitHub autodeploys, review
+For a Dockerfile path cutover, pause the affected service's GitHub autodeploys, review
 `config plan`, then apply the new paths and watch patterns. Keep any
 `RAILWAY_DOCKERFILE_PATH` variable aligned with the same shared path. Deploy the
 latest commit for API, wait for readiness, then deploy Web and verify it before
@@ -69,20 +74,24 @@ Install the repository dependencies with the pinned Bun. CLI 5.71.0 and SDK 3.16
 were used for the initial deployment. Railway's legacy railway.toml configuration
 has been replaced by its [current IaC interface](https://docs.railway.com/infrastructure-as-code).
 
-Run these commands from the repository root:
+Run these commands from the repository root. The CLI version is pinned in the
+development catalog and installed by the infrastructure workspace:
 
 ```sh
-mise exec -- bunx --bun @railway/cli@5.71.0 link --project 766ffb45-d60f-4e4d-83b1-135443ff0b51 --environment production
-BUN_OPTIONS=--preload=./deploy/railway/iac-preload.ts mise exec -- bunx --bun @railway/cli@5.71.0 config plan
-BUN_OPTIONS=--preload=./deploy/railway/iac-preload.ts mise exec -- bunx --bun @railway/cli@5.71.0 config apply --yes
-mise exec -- bunx --bun @railway/cli@5.71.0 up --service api --detach
-mise exec -- bunx --bun @railway/cli@5.71.0 up --service web --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js link --project 766ffb45-d60f-4e4d-83b1-135443ff0b51 --environment production
+mise exec -- bun run --cwd infra/railway plan
+# Review the plan before applying; the deploy command runs config apply.
+mise exec -- bun run --cwd infra/railway deploy
+# Uploads use the repository root as their build context.
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service api --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service web --detach
 # Wait for API and Web to become healthy before publishing Gateway.
-mise exec -- bunx --bun @railway/cli@5.71.0 up --service gateway --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service gateway --detach
 ```
 
+The workspace scripts select `infra/railway/railway.ts` explicitly with `--file`.
 The scoped preload restores Railway's Node-style evaluator file argument when
-bunx loses it. It only runs in the IaC child process; application builds and
+Bun loses it. It only runs in the IaC child process; application builds and
 production processes continue to use Bun. No Node installation or pin is needed.
 Review plans for application changes and no unrelated service or volume deletion.
 Upload from a clean checkout plus the reviewed deployment configuration.
