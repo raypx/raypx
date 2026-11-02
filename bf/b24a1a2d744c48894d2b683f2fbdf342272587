@@ -1,0 +1,41 @@
+.railway/railway.ts
+  s_b1d06560260ce6::t_55bf0229f7e06b 22,37,50
+apps/api/AGENTS.md
+  s_b1d06560260ce6::t_5eae5fa6503052 76-77
+apps/api/Dockerfile
+  s_b1d06560260ce6::t_32554774f4a503 22-28,31,54
+deploy/AGENTS.md
+  s_b1d06560260ce6::t_74b430599f8978 6-9
+deploy/manifests.ts
+  s_b1d06560260ce6::t_a5eb6c15b0a21f 5,10-14
+deploy/sources.ts
+  s_b1d06560260ce6::t_db4836445679d8 1-17
+deploy/workspaces.ts
+  s_b1d06560260ce6::t_d18071273ce182 1-57
+docs/development/deployment.md
+  s_b1d06560260ce6::t_dedcfa3dd515e6 89-96
+docs/development/railway.md
+  s_b1d06560260ce6::t_bff0ce177341df 54,96-99
+packages/tooling/tests/integration/deployment-sources.test.ts
+  s_b1d06560260ce6::t_6a3ef62a2d5a76 1-106
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_b1d06560260ce6::t_e9b4a3cf888fd2 92,103-108,110-111
+tsconfig.json
+  s_b1d06560260ce6::t_a61bf088e19c8f 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bfb24a1a2d744c48894d2b683f2fbdf342272587",
+  "prompts": {},
+  "sessions": {
+    "s_b1d06560260ce6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a53-77d7-7591-9ba6-d73547de66ec",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
