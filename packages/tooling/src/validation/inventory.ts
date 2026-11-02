@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { discover } from "../repository.js";
+import { testLayer, testSources, type TestLayer } from "./test-sources.js";
 
 export interface CaseIdentity {
   workspace: string;
@@ -14,7 +15,7 @@ interface TestCase extends CaseIdentity {
 interface Source {
   workspace: string;
   file: string;
-  layer: "unit" | "component" | "integration" | "external";
+  layer: TestLayer;
 }
 export interface Inventory {
   version: 1;
@@ -92,20 +93,11 @@ export async function collectInventory(root: string, reportNames: string[]): Pro
     const external = Boolean(
       workspace.manifest.scripts?.e2e && !existsSync(join(directory, "vitest.config.ts")),
     );
-    for await (const file of new Bun.Glob("tests/**/*.{test,spec}.{ts,tsx}").scan({
-      cwd: directory,
-    }))
+    for (const file of testSources(directory))
       sources.push({
         workspace: workspace.manifest.name,
         file: join(workspace.path, file).replaceAll("\\", "/"),
-        layer:
-          external || /^tests\/(postgres|redis|cluster)\//.test(file)
-            ? "external"
-            : file.includes("/component/")
-              ? "component"
-              : file.includes("/integration/")
-                ? "integration"
-                : "unit",
+        layer: testLayer(file, external),
       });
     if (!workspace.manifest.scripts?.test) continue;
     for (const name of reportNames) {

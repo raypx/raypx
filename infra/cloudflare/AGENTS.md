@@ -14,5 +14,5 @@ externally reachable with verified TLS. Migrations stay with API.
 
 VP builds the Worker; Wrangler consumes its bundle and the existing Relay
 Dockerfile with repository-root context. Keep all state, .dev.vars and generated
-configs ignored and excluded from Docker context. Tests live under tests/.
+configs ignored and excluded from Docker context. Unit tests live beside source.
 Docker/real Cloudflare acceptance is separate from source checks and dry-run.

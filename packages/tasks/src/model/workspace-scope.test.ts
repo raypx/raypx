@@ -1,0 +1,52 @@
+import { expect, it } from "vite-plus/test";
+import {
+  isLocalWorkspace,
+  workspaceDraftKey,
+  workspaceOwner,
+  workspaceScopeKey,
+  type WorkspaceScope,
+} from "../model.js";
+
+it("isolates device and remote draft ownership", () => {
+  const namespace = "https://api.example.test";
+  const scopes: WorkspaceScope[] = [
+    { kind: "device", namespace, workspaceId: "device:local-workspace:v1" },
+    { kind: "remote", namespace, accountId: "account-a" },
+  ];
+  expect(scopes.map(workspaceOwner)).toEqual(["device:local-workspace:v1", "account-a"]);
+  expect(scopes.map(isLocalWorkspace)).toEqual([true, false]);
+  expect(scopes.map((scope) => workspaceDraftKey(scope))).toEqual([
+    JSON.stringify(["raypx.task-drafts.v1", namespace, "device:local-workspace:v1", true]),
+    JSON.stringify(["raypx.task-drafts.v1", namespace, "account-a", false]),
+  ]);
+  expect(new Set(scopes.map(workspaceScopeKey)).size).toBe(2);
+});
+
+it("isolates server/account changes without making the device owner account-dependent", () => {
+  const local = { kind: "device", namespace: "server-a", workspaceId: "device-profile" } as const;
+  const remote = { kind: "remote", namespace: "server-a", accountId: "account-a" } as const;
+  expect(workspaceOwner(local)).toBe("device-profile");
+  expect(workspaceDraftKey({ ...remote, accountId: "account-b" })).not.toBe(
+    workspaceDraftKey(remote),
+  );
+  expect(workspaceDraftKey({ ...remote, namespace: "server-b" })).not.toBe(
+    workspaceDraftKey(remote),
+  );
+  expect(workspaceScopeKey({ ...local, namespace: "server-b" })).not.toBe(workspaceScopeKey(local));
+});
+
+it("isolates unsent text and references by project, computer and remote owner", () => {
+  const scope = { kind: "remote", namespace: "server", accountId: "account-a" } as const;
+  const keys = [
+    workspaceDraftKey(scope, "project-a", "computer-a"),
+    workspaceDraftKey(scope, "project-b", "computer-a"),
+    workspaceDraftKey(scope, "project-a", "computer-b"),
+    workspaceDraftKey({ ...scope, accountId: "account-b" }, "project-a", "computer-a"),
+    workspaceDraftKey(
+      { kind: "device", namespace: "server", workspaceId: "profile" },
+      "project-a",
+      "computer-a",
+    ),
+  ];
+  expect(new Set(keys).size).toBe(keys.length);
+});

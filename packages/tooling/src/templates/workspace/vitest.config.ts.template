@@ -4,6 +4,6 @@ import defaults from "../../test.config";
 export default mergeConfig(
   defaults,
   defineConfig({
-    test: { include: ["tests/**/*.{test,spec}.{ts,tsx}"] },
+    test: { include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/integration/**/*.{test,spec}.{ts,tsx}"] },
   }),
 );

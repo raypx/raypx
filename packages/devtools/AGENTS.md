@@ -9,6 +9,6 @@ Never serialize query keys/hashes, query data, loader data, URLs, errors or nati
 state. Never send diagnostics to the dev server or other tabs. Production imports
 must be eliminated through `import.meta.env.DEV`. No native clipboard interface.
 Use existing UI primitives and bilingual development-only copy. Dispose subscriptions
-and portal targets on unmount and HMR. Tests live in `tests/unit` and `tests/component`.
+and portal targets on unmount and HMR. Tests live beside source; DOM suites use `*.component.test.tsx`.
 
 Run this workspace's check/test, the explicit `e2e:devtools` browser gate and root verify.

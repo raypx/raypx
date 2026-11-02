@@ -74,8 +74,8 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
 
 ## Verification
 
-Tests live under `tests/unit/` and `tests/integration/`, then mirror runtime,
-commands and TUI. Pure parsers, injected provider ports and SDK loops stay in unit;
+Unit tests live beside runtime, command and TUI source; integration suites stay in
+`tests/integration/`, grouped by capability. Pure parsers, injected provider ports and SDK loops stay in unit;
 filesystem/SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
 Agent integration suites separate lifecycle/approvals, inputs and context/resume.
 Injected suites separate Pi tool durability and provider gate/drain replay (`tests/helpers/provider-replay.ts`).

@@ -61,7 +61,7 @@ red that keeps WCAG AA; `destructive` stays the fill and border color.
   base layer so component utilities can override defaults.
 - Keep an independent Vitest config so Vite application plugins never enter tests.
 
-Component suites live under `tests/component/`, grouped by feature when needed.
+Component suites live beside source as `*.component.test.ts(x)`.
 Keep shared test setup in `tests/setup.ts`.
 
 ## Verification

@@ -59,8 +59,8 @@ Style components with Tailwind utilities. The client CSS entry only registers
 the shared source directory for both application builds.
 If a create receipt is lost, recover the same submitted task from its authoritative
 read projection instead of blocking its approval behind the creation form.
-Tests live in `tests/unit/` for pure rules and `tests/component/` for shared views,
-grouped by composer, conversation, observed requests and workspace management.
+Pure tests live beside `src/model/` source; shared-view suites use
+`*.component.test.tsx` beside `src/client/` modules, grouped by responsibility.
 Run this workspace's check/test, focused `test:unit`/`test:component`, then repository verify.
 Application auth, routing and IPC adapter tests remain with Web/Desktop.
 

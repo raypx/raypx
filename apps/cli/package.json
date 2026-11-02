@@ -10,7 +10,7 @@
     "dev": "bun run src/main.ts",
     "check": "bun scripts/generate-sqlite.ts --check && bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run tests/unit",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
     "test:integration": "bun --bun vp test --run tests/integration",
     "build": "bun scripts/generate-sqlite.ts --check && bun --bun vp pack",
     "smoke": "bun run tests/smoke/artifact.ts",

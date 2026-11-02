@@ -26,7 +26,7 @@ function setup() {
   const directory = member(root, "feature", {
     extra: { scripts: { test: "fixture", "test:unit": "fixture", "test:component": "fixture" } },
   });
-  const files = ["tests/unit/model.test.ts", "tests/component/view.test.tsx"];
+  const files = ["src/model.test.ts", "src/view.component.test.tsx"];
   for (const file of [
     ...files,
     "tests/postgres/node/storage.test.ts",

@@ -11,8 +11,8 @@
     "typecheck": "bun --check --tsconfig-override tsconfig.json",
     "typecheck:node": "bun --check --tsconfig-override tsconfig.node.json",
     "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run tests/renderer/unit tests/native tests/scripts --exclude \"**/integration/**\"",
-    "test:component": "bun --bun vp test --run tests/renderer/component",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:component": "bun --bun vp test --run .component.test.",
     "test:coverage": "bun --bun vp test --run --coverage",
     "native:dev": "bun run scripts/native/task.ts dev",
     "native:build": "bun run scripts/native/task.ts native:build",
@@ -86,7 +86,6 @@
       "api.ts": "universal",
       "config.ts": "universal",
       "scripts/**": "bun",
-      "tests/scripts/**": "bun",
       "vite.app.config.ts": "bun",
       "mygo.config.ts": "bun",
       "bridge.ts": "universal"

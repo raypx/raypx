@@ -9,14 +9,18 @@ export default mergeConfig(
       projects: [
         {
           extends: true,
-          test: { name: "unit", include: ["tests/unit/**/*.{test,spec}.{ts,tsx}"] },
+          test: {
+            name: "unit",
+            include: ["src/**/*.{test,spec}.{ts,tsx}"],
+            exclude: ["**/*.component.test.*"],
+          },
         },
         {
           extends: true,
           test: {
             name: "component",
             environment: "happy-dom",
-            include: ["tests/component/**/*.{test,spec}.{ts,tsx}"],
+            include: ["src/**/*.component.test.{ts,tsx}"],
             setupFiles: ["./tests/setup.ts"],
           },
         },

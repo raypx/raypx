@@ -3,12 +3,5 @@
   "compilerOptions": {
     "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "tests/renderer/**/*.ts",
-    "tests/renderer/**/*.tsx",
-    "tests/helpers/**/*.ts",
-    "tests/helpers/**/*.tsx"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/helpers/**/*.ts", "tests/helpers/**/*.tsx"]
 }

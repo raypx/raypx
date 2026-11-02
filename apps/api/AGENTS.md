@@ -15,10 +15,9 @@ this fixture against an operator database or bypass real-user verification.
 contract. `/health` reports process liveness without querying PostgreSQL.
 Every other path is a JSON 404; Web is a separate service.
 
-All API tests live in `tests/`; keep `server/` for runtime modules. `unit/` and
-`integration/` form the default database-free gate. `postgres/node/` uses the
-`postgres` mode of `vitest.config.ts` for real-database tests.
-Use directories for test kind; filenames describe the behavior under test.
+Unit tests live beside `server/` source; `tests/integration/` and these unit tests
+form the default database-free gate. `tests/postgres/node/` uses the `postgres`
+mode of `vitest.config.ts` for real-database tests. Shared fixtures stay in `tests/`.
 
 ## Ownership
 

@@ -11,7 +11,7 @@
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run tests/component"
+    "test:component": "bun --bun vp test --run .component.test."
   },
   "dependencies": {
     "@raypx/i18n": "workspace:*",

@@ -5,12 +5,20 @@ import { checkLocales, policy } from "../policy.js";
 import { runTasks } from "../repository.js";
 import { smoke } from "../smoke/index.js";
 import { taskRef, taskModel } from "../tasks/model.js";
+import { argumentKey } from "../tasks/arguments.js";
 import type { VerificationPlan } from "./plan.js";
+import type { TestSelection } from "./tests.js";
 import { completionReport, reportTiming } from "./report.js";
 
-export function executionTasks(plan: VerificationPlan, rootName: string) {
+export function executionTasks(
+  plan: VerificationPlan,
+  rootName: string,
+  tests: TestSelection[] = [],
+) {
   return [
-    ...plan.tasks,
+    ...plan.tasks.filter(
+      (task) => !tests.some((test) => test.task === task && test.mode === "none"),
+    ),
     ...(plan.full ? [taskRef(rootName, "knip"), taskRef(rootName, "lint")] : []),
   ];
 }
@@ -31,16 +39,26 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   }
 }
 
-export async function sourceChecks(root: string, plan: VerificationPlan) {
+export async function sourceChecks(
+  root: string,
+  plan: VerificationPlan,
+  tests: TestSelection[] = [],
+) {
   const started = performance.now();
   await sourceStyle(root, plan);
-  const refs = executionTasks(plan, taskModel(root).rootName);
+  const refs = executionTasks(plan, taskModel(root).rootName, tests);
   const checksMs = Math.round(performance.now() - started),
     taskStarted = performance.now();
   if (refs.length)
     await runTasks(root, "verify:run", [], {
       RAYPX_VERIFY_TASKS: JSON.stringify(refs),
       RAYPX_VERIFY_ROOT: root,
+      ...Object.fromEntries(
+        tests.map((test) => [
+          argumentKey(test.task),
+          JSON.stringify(test.mode === "related" ? test.files : []),
+        ]),
+      ),
     });
   const tasksMs = Math.round(performance.now() - taskStarted);
   const cacheHits = refs.length ? completionReport(root, refs) : 0;

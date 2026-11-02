@@ -27,7 +27,7 @@ Run this workspace's `check`, `test`, `test:unit` and `test:integration` command
 regressions live in `tests/integration/`, grouped by renewal, replay and snapshots;
 `tests/helpers/control.ts` owns a fresh loopback relay and temporary state per case.
 CLI retains daemon integration tests for its application-specific lifecycle.
-`tests/unit/scheduler.test.ts` uses injected sockets and the client's manual scheduler
+`src/scheduler.test.ts` uses injected sockets and the client's manual scheduler
 for exact retry, renewal-drain and acknowledgement deadlines. RemoteControl forwards
 one scheduler to RelayConnection so clocks, jitter and all timers share one source.
 Keep loopback coverage for actual authentication, command delivery and renewal.

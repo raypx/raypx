@@ -31,6 +31,6 @@ Preserve the source notice and license. No compiled library artifact is required
 
 ## Verification
 
-Unit tests live under `tests/unit`; `tests/types/public.ts` checks public types
+Unit tests live beside source; `tests/types/public.ts` checks public types
 without running. Run this workspace's check/test, API logging tests, then root
 `bun run verify` for actual Node/Worker outputs and the relocated standalone CLI.

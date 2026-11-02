@@ -52,24 +52,3 @@ export function QuickSettingsModal() {
     </Dialog>
   );
 }
-
-/**
- * Trigger button for quick settings modal.
- * Uses Zustand store to control modal state.
- */
-export function QuickSettingsTrigger() {
-  const c = useTranslations("common");
-  const { openModal } = useQuickSettingsStore();
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label={c("settings")}
-      onClick={openModal}
-      className="text-muted-foreground hover:text-foreground"
-    >
-      <Settings className="size-5" />
-    </Button>
-  );
-}

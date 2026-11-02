@@ -195,10 +195,10 @@ external inference and unavailable platforms remain separate gates.
 
 ## Ownership follow-up, 2026-10-27
 
-Shared task-view cases now live in `packages/tasks/tests/component/`, grouped by
+Shared task-view cases live beside `packages/tasks/src/client/` modules, grouped by
 composer, conversation, observed requests and workspace. Web keeps auth, routes and
 guest handoff tests; Desktop keeps its local IPC adapter, drafts and account/device
-ownership tests. Pure Tasks rules live in `tests/unit/`. This lets a Tasks change
+ownership tests. Pure Tasks rules live beside `src/model/` source. This lets a Tasks change
 run its own UI regressions without requiring an application test command.
 
 Host's renewal, replay and snapshot suites now live in `packages/host/tests/integration/`.

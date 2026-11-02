@@ -13,5 +13,5 @@ Consumers import /client/styles.css to include shared settings in Tailwind scann
 observation. Applications inject their client, store, surface and router pathname;
 this entry must not import routers, environment readers or native adapters.
 
-Tests separate pure policy/ports under `tests/unit/` from consent UI and browser
-storage under `tests/component/`; only the latter opts into happy-dom.
+Tests live beside source; consent UI/browser storage suites use the
+`*.component.test.ts(x)` suffix and happy-dom, while pure policy tests use `*.test.ts`.

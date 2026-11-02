@@ -1,11 +1,16 @@
 import { distributionRequested } from "./events.js";
+import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.js";
 
 type Job = { result: string; outputs?: Record<string, string> };
-export function assertCiResult(needs: Record<string, Job>, distribution?: boolean) {
+export function assertCiResult(
+  needs: Record<string, Job>,
+  distribution?: boolean,
+  revision?: string,
+) {
   if (needs.changes?.result !== "success") throw new Error("Change analysis did not succeed");
   const flags = needs.changes.outputs ?? {};
   if (
-    ["native", "backend", "browser", "distribution", "deployment"].some(
+    [...gateDefinitions.flatMap(({ flag }) => (flag ? [flag] : [])), "distribution"].some(
       (name) => !["true", "false"].includes(flags[name] ?? ""),
     )
   )
@@ -14,13 +19,16 @@ export function assertCiResult(needs: Record<string, Job>, distribution?: boolea
     throw new Error("Distribution gate selection does not match the event");
   if (flags.distribution === "true" && flags.native !== "true")
     throw new Error("Distribution acceptance requires native gates");
-  for (const [name, required] of Object.entries({
-    javascript: true,
-    deployment: flags.deployment === "true",
-    backend: flags.backend === "true",
-    browser: flags.browser === "true",
-    desktop: flags.native === "true",
-  })) {
+  if (revision !== undefined) {
+    const expected = ciOutputs(parseCiPlan(flags.plan ?? "{}", revision), revision);
+    for (const [key, value] of Object.entries(expected))
+      if (flags[key] !== value)
+        throw new Error(`CI output ${key} does not match the analyzed plan`);
+  }
+  const registered = new Set<string>(["changes", ...gateDefinitions.map(({ name }) => name)]);
+  for (const name of Object.keys(needs))
+    if (!registered.has(name)) throw new Error(`Unregistered CI gate ${name}`);
+  for (const { name, required } of requiredGates(flags)) {
     const result = needs[name]?.result;
     if (required && result === "abandoned")
       throw new Error(
@@ -38,6 +46,7 @@ if (import.meta.main) {
       process.env.GITHUB_REF ?? "",
       process.env.RAYPX_DISTRIBUTION_REQUEST,
     ),
+    process.env.GITHUB_SHA ?? "",
   );
   console.log("All required CI gates passed; unrelated gates were skipped");
 }

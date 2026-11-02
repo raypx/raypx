@@ -16,6 +16,7 @@ import { browserTestArguments } from "./browser-tests.js";
 import { packageTestArguments, runTests } from "./test-command.js";
 import { verify, ciGate } from "./verification/index.js";
 import { readGithubPlan } from "./verification/plan.js";
+import { ciOutputs } from "./verification/gates.js";
 import { cacheSnapshot } from "./verification/cache.js";
 import { smokeDeployment } from "./validation/deployment-smoke.js";
 
@@ -104,10 +105,13 @@ async function main() {
     case "ci:plan": {
       const plan = readGithubPlan(root);
       console.log(JSON.stringify(plan, null, 2));
+      const outputs = ciOutputs(plan, process.env.GITHUB_SHA ?? "");
       if (process.env.GITHUB_OUTPUT)
         appendFileSync(
           process.env.GITHUB_OUTPUT,
-          `go=${plan.native}\nnative=${plan.nativeRunners.length > 0}\nnative_runners=${JSON.stringify(plan.nativeRunners)}\ndeployment=${plan.deployment}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\ndistribution=${plan.distribution}\n`,
+          Object.entries(outputs)
+            .map(([key, value]) => `${key}=${value}\n`)
+            .join(""),
         );
       break;
     }

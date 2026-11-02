@@ -129,7 +129,7 @@ curl -X POST http://localhost:3002/_nitro/tasks/maintenance:cleanup
 `/_nitro/tasks/maintenance:cleanup` returns 404.
 
 ```sh
-bun run --cwd apps/api test -- tests/unit/jobs
+bun run --cwd apps/api test -- server/jobs
 NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres
 bun run verify
 ```

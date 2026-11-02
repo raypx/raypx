@@ -1,5 +1,5 @@
-import { existsSync, globSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, globSync, readFileSync, realpathSync } from "node:fs";
+import { join, relative } from "node:path";
 import { checkArchitecture } from "@raypx-kit/devkit/architecture";
 import { readStaticCatalog, type CatalogTree } from "@raypx-kit/devkit/catalogs";
 import { checkDocumentLinks } from "@raypx-kit/devkit/docs";
@@ -16,6 +16,9 @@ export function checkMarkdownLength(root: string): string[] {
     cwd: root,
     exclude: ["docs/history/**", "**/node_modules/**", ".agents/**", ".claude/**", "**/dist/**"],
   }).flatMap((file) => {
+    // Skill aliases must retain the same vendored exclusion as their canonical directory.
+    const canonical = relative(root, realpathSync(join(root, file))).replaceAll("\\", "/");
+    if (/^(?:\.agents|\.claude)\//.test(canonical)) return [];
     const lines = readFileSync(join(root, file), "utf8").split(/\r?\n/);
     if (lines.at(-1) === "") lines.pop();
     return lines.length > MAX_MARKDOWN_LINES

@@ -35,7 +35,7 @@ Public entries live directly under `src/` through the workspace exports. The REA
 - `createEnv` uses `VITE_` as its public prefix; `defineEnv` allows a custom prefix.
 - Preserve explicit `runtimeEnv`, `isServer`, validation skip and callback behavior.
 - Applications own their environment loading, client value injection and secrets.
-- Keep tests under `tests/`, importing `src/`; workspace consumers use the public exports.
+- Keep tests beside their source; workspace consumers use the public exports.
 - Widen the Zod version only after the runtime and type compatibility checks pass.
 
 ## Verification

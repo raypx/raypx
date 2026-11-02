@@ -8,14 +8,18 @@ export default mergeConfig(
       projects: [
         {
           extends: true,
-          test: { name: "server", include: ["tests/node/**/*.{test,spec}.{ts,tsx}"] },
+          test: {
+            name: "server",
+            include: ["src/**/*.{test,spec}.{ts,tsx}"],
+            exclude: ["**/*.component.test.*"],
+          },
         },
         {
           extends: true,
           test: {
             name: "browser",
             environment: "happy-dom",
-            include: ["tests/browser/**/*.{test,spec}.{ts,tsx}"],
+            include: ["src/**/*.component.test.{ts,tsx}"],
           },
         },
       ],

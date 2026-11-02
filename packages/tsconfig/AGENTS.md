@@ -32,8 +32,8 @@ README documents every preset and compiler guarantee.
 - Keep Bun, Deno, Vite and other runtime-specific types in consuming projects.
   `node.json` describes Node-compatible resolution and standard API types.
 - Treat any option that can add consumer type errors as a breaking change.
-- Tests under `tests/` read the preset files directly; the packaged consumer check loads
-  each exported preset through package exports.
+- Tests beside the preset JSON files read those files directly. The independent
+  Vitest config merges root test defaults for coverage without depending on Tooling.
 - Register uncached VP `task:*` entries directly from package scripts. Tooling depends
   on these presets, so do not add a reverse workspace dependency on Tooling.
   `scripts/task.ts` uses Devkit's leaf runner to preserve forwarded task arguments.

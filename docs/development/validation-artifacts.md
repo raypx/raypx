@@ -33,7 +33,7 @@ explicit mapping from a baseline file to its new workspace name:
 
 ```json
 {
-  "apps/web/tests/component/features/example.test.tsx": "@raypx/tasks"
+  "apps/web/src/features/example.component.test.tsx": "@raypx/tasks"
 }
 ```
 

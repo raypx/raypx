@@ -34,8 +34,13 @@ Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture reposito
 cannot inherit another checkout's task list.
 
 Use `bun run verify` for daily feedback: policy and locales are always checked;
-changed files select formatting/lint and affected workspace types/tests through
-reverse dependency graphs. Native inputs independently select Go host tasks.
+changed files select formatting/lint and affected workspace types through reverse
+dependency graphs. Local test selection follows transitive source imports and changed
+test files, retaining affected integration suites and filesystem/subprocess assertions.
+Indirect consumers run complete suites. Configuration, fixtures, deletions, unresolved
+imports or sources without a test dependency fall back to complete suites. Test arguments
+are scoped to each existing package test task and participate in its VP cache key.
+CI and `--full` run complete suites for selected workspaces. Native inputs independently select Go host tasks.
 The default base is the merge-base
 with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
@@ -55,6 +60,20 @@ and Go 1.27.3 for Desktop; no Rust toolchain is needed. `verify` and `verify --f
 are the verification entry points.
 
 GitHub uses the same change planner:
+
+The `changes` job emits one versioned plan bound to the workflow's commit SHA.
+Source, database, browser and deployment workers execute that plan through
+`RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
+Missing plans, unsupported versions, mismatched commits and an invocation of an
+unselected gate fail. Native workers use the same plan's runner matrix and
+distribution selection. `verification/gates.ts` registers the required CI jobs;
+the final `foundation` job verifies the plan outputs and every registered result.
+An unknown dependency job must be registered before it can pass the final gate.
+
+Local `.artifacts/verification/latest.json` records `running` before executing
+checks, then `passed` or `failed`. Cancellation can leave `running`; it is not
+success. Local success covers source checks and the selected current-platform
+artifact probes, not separate database, browser, Docker or macOS/Windows CI gates.
 
 | Change                                                                            | Daily acceptance                                                                            |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -145,27 +164,27 @@ Reusable validation and evidence cleanup are documented in
 [validation artifacts](validation-artifacts.md): `test inventory`, `test backends`
 and `clean:artifacts`. Scripts belong in Tooling; `.artifacts/` holds generated output only.
 
-Every workspace keeps test suites, test-only setup and fixtures under `tests/`.
-Use directories for test kind: Web has `tests/unit/` and `tests/component/`,
-UI has `tests/component/`, and Tooling has `tests/unit/` and `tests/integration/`.
-Tasks owns its pure `tests/unit/` and shared `tests/component/` views (composer,
-conversation, observed requests, workspace). Web/Desktop retain application auth,
+Unit suites live beside source as `*.test.ts(x)`. DOM suites use
+`*.component.test.ts(x)`; the suffix selects their layer independently of syntax.
+Integration/acceptance suites, shared setup and fixtures stay in `tests/`.
+Tasks owns pure tests beside its model and component tests beside shared views
+(composer, conversation, observed requests, workspace). Web/Desktop retain application auth,
 routes and IPC adapters. Host owns loopback relay `tests/integration/` for renewal,
 replay and snapshots, with fresh transport/storage resources per case.
 Keep filenames focused on the subject (`auth.test.tsx`, `cache.test.ts`).
-The `test:unit`, `test:component` and `test:integration` scripts select these directories.
+The `test:unit`, `test:component` and `test:integration` scripts select these layers.
 Declare a focused command when that layer has real suites; empty placeholder gates
 are rejected by Tooling's inventory test. A new scaffold with test support fails
 until actual cases are written. The inventory check also rejects committed `.only`.
-Desktop separates `tests/renderer/`, `tests/native/` and `tests/scripts/` and checks
-each against its platform types. Renderer suites use `unit/` and `component/`
-subdirectories. Native policy, subprocess and OS-lock tests now live in
+Desktop colocates renderer and native-script tests with source and checks each
+against its platform types. Route composition suites stay beside the router,
+outside `src/routes/` discovery. Native policy, subprocess and OS-lock tests live in
 `apps/desktop/tests/native/host/` and run with Go; the deleted Bun native
 integration layer has no placeholder `test:integration` script.
 Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/native/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
-CLI suites separate `tests/unit/` and `tests/integration/`, then group by capability.
+CLI unit suites live beside source; `tests/integration/` stays grouped by capability.
 Agent lifecycle/approvals, input races and context/resume have separate suites sharing
 per-case host fixtures. Their real ten-second deadline tests remain in integration;
 injected Pi cases separate lifecycle, tool durability and completion in unit.
@@ -176,8 +195,8 @@ Ordinary browser cases are grouped by access, auth, settings, navigation, analyt
 and feature journeys; task conversation/history/drafts live under `e2e/tests/tasks/`.
 See [case ownership and consolidation](test-cases.md) for the coverage map and rules
 for combining cases without replacing independent safety or platform checks.
-i18n separates `tests/node/` from `tests/browser/` to preserve independent React
-renderer environments, with provider components under `tests/browser/component/`.
+i18n separates pure/SSR tests from `*.component.test.tsx` through Vitest projects
+to preserve independent React renderer environments.
 DOM tests run in happy-dom. The shared setup in `packages/tooling/tests/setup/dom.ts`
 disables Base UI animation waits and keeps Web Storage methods on `Storage.prototype`
 so existing spies behave as in a browser. Web, Tasks and i18n declare native Vitest
@@ -190,8 +209,8 @@ or coverage settings directly in that workspace's `vitest.config.ts`; no shared
 factory or custom option interface needs to change. Native config merging also
 preserves shared React deduplication when a workspace adds aliases.
 
-API tests use `apps/api/tests/unit/` and `tests/integration/` for the default gate.
-`test:unit` and `test:integration` select these directories. Database suites live
+API tests use source-adjacent `server/**/*.test.ts` and `tests/integration/` for the default gate.
+`test:unit` and `test:integration` select these layers. Database suites live
 under `tests/postgres/node/`, selected only by the `postgres` mode in
 `vitest.config.ts`.
 The existing script names select the mode; the default test command never connects to a database.
@@ -201,7 +220,8 @@ Database seeding and behavior assertions stay in each suite.
 
 Run `bun run knip` for the full report. `knip.json` declares Vite app configs,
 spawned fixtures, native smoke entries, type assertions and command-loaded tools
-as entries. Drizzle config is analyzed statically, without loading database
+as entries, including the TypeScript presets' VP-invoked `scripts/task.ts`.
+Drizzle config is analyzed statically, without loading database
 credentials. The Vitest scaffold is a static `.template` file copied into each new
 workspace, so its workspace-relative imports need no Knip resolution exception.
 The read-only JSON adapter recognizes only catalog findings backed by actual Bun

@@ -60,7 +60,8 @@ The accepted foundation design supersedes documents in docs/history.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
   `test --package` and package-local scripts must select the same suites and prerequisites.
-- Put test suites and test-only setup/fixtures in each workspace's `tests/` directory.
+- Colocate unit tests with their source. Name DOM suites `*.component.test.ts(x)`;
+  keep integration/acceptance suites and shared test-only setup/fixtures in `tests/`.
   Root test.config.ts exports runner defaults as a plain Vitest config. Each workspace
   owns include patterns, projects and overrides using native defineConfig/mergeConfig;
   do not introduce custom config factories or option schemas. Application Vite plugins

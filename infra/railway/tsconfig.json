@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["bun"]
   },
-  "include": ["railway.ts", "scripts/**/*.ts", "tests/**/*.ts"]
+  "include": ["railway.ts", "scripts/**/*.ts", "tests/**/*.ts", "*.test.ts"]
 }

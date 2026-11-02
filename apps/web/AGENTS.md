@@ -12,11 +12,10 @@ application is an independent composition root and is never imported by another 
 - Shared feature components live under `src/features/<feature>/components/`;
   keep reusable non-route modules outside `src/routes/`.
 - Application-wide layout components live under `src/components/`.
-- Tests live under `tests/`, alongside shared test setup; keep test files
-  outside `src/routes/` so route discovery needs no test-specific exclusions.
-  Use `tests/unit/` and `tests/component/` for test kind, then feature directories.
-  Independent unit/component projects use the `node` environment for pure cases and load happy-dom,
-  DOM matchers and motion setup only for component cases.
+- Unit tests live beside source; DOM suites use `*.component.test.ts(x)`.
+  Route composition tests live beside `src/router.tsx`, outside route discovery.
+  Shared setup/fixtures stay in `tests/`. Independent unit/component projects use
+  `node` for pure cases and happy-dom, DOM matchers and motion setup for components.
 - `src/router.tsx` exports `getRouter`. `src/routes/__root.tsx` renders only the document,
   theme script and preference providers; keep layout and feature dependencies out of it.
 - Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate

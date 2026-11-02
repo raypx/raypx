@@ -14,6 +14,6 @@ Only explicit deployment environment variables select resources. Never log
 credentials, message bodies, SQL or context content. Database migrations stay in API.
 
 `vite.config.ts` registers VP tasks; `vite.app.config.ts` builds the Bun entry.
-Tests live in `tests/unit` and `tests/integration`, with injectable owned resources.
+Unit tests live beside source; `tests/integration` contains boundary suites, with injectable owned resources.
 Run package check/test/build and root `bun run verify`. Live PostgreSQL/Redis and
 Docker acceptance remain separate; never run against an operator database.

@@ -11,4 +11,4 @@ tickets, bounded replay, owner-scoped transactions and uncertain delivery semant
 Credentials and task/context bodies must not enter logs. SQL/schema migrations
 remain owned by Database; this extraction changes no persisted formats.
 
-Tests live in `tests/unit`; run local `check`, `test`, and root `bun run verify`.
+Unit tests live beside source; run local `check`, `test`, and root `bun run verify`.

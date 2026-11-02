@@ -5,7 +5,12 @@ export default mergeConfig(
   defaults,
   defineConfig({
     test: {
-      include: ["tests/**/*.{test,spec}.{ts,tsx}"],
+      include: [
+        "src/**/*.{test,spec}.{ts,tsx}",
+        "scripts/**/*.{test,spec}.{ts,tsx}",
+        "*.test.ts",
+        "tests/**/*.{test,spec}.{ts,tsx}",
+      ],
       maxWorkers: 3,
       // Native and script fixtures launch real subprocesses.
       testTimeout: 30_000,

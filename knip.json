@@ -51,6 +51,9 @@
     "packages/tooling": {
       "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
     },
+    "packages/tsconfig": {
+      "entry": ["scripts/task.ts"]
+    },
     "packages/email": {
       "entry": ["vite.app.config.ts"]
     },

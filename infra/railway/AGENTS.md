@@ -15,6 +15,6 @@ both must remain uncached. Review the plan before applying. Keep one API and one
 Compose runtime/migration image targets. Use the shared apps/api and apps/web
 Dockerfiles; API's default deploy target includes pre-deploy migration dependencies.
 
-Keep tests in `tests/unit/` and independent of credentials or live Railway state.
+Keep tests beside the infrastructure entry and independent of credentials or live Railway state.
 Run `bun run --cwd infra/railway check` and `test`, then root `bun run verify`.
 See `docs/development/railway.md` for operator commands.

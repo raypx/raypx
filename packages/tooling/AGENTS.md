@@ -25,9 +25,18 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
 - `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
   all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
-  base; `--dry-run` prints the plan and expanded VP graph.
-- CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Shared or unknown
-  inputs broaden source checks without requesting release builds/audits. Missing Git
+  base; `--dry-run` prints the plan, local test selection/reasons and expanded VP graph.
+  Local tests follow source imports, retaining integration and filesystem/process
+  assertions; indirect consumers and unknown/configuration/deleted inputs use complete
+  suites. CI and `--full` always run complete selected workspace suites. File arguments
+  use the existing per-task argument keys, never aggregate dependency arguments.
+- CI consumes the same planner through private `ci:plan`/`ci:gate` entries. It emits
+  one versioned plan bound to `GITHUB_SHA`; workers consume `RAYPX_CI_PLAN`
+  instead of recomputing scope. `verification/gates.ts` owns CI gate registration and
+  selection. The final gate rejects unregistered jobs, inconsistent plan outputs,
+  failed/cancelled jobs and unexplained skips. Local evidence records running,
+  passed or failed status so a failed run cannot retain a previous success.
+  Shared or unknown inputs broaden source checks without requesting release builds/audits. Missing Git
   bases also select native checks conservatively. Browser-target frontend
   changes reach only browser consumers (`src/verification/platform.ts`). Required results
   distinguish intentional skips from missing/cancelled/failed gates. Deployment inputs,
@@ -68,7 +77,8 @@ Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
 Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
 Its read-only JSON adapter recognizes catalog entries
 used by Bun root overrides, which Knip currently misses; all other findings fail.
-Native Go-launched TS fixtures are explicit entries. Vendored skills are excluded;
+Native Go-launched TS fixtures and the presets' dynamically invoked task leaf are
+explicit Knip entries. Vendored skills are excluded;
 the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
 evidence only. Inventory compares case multiplicity and checks exact file selection.
@@ -81,7 +91,7 @@ The shared setup lives in `tests/setup/dom.ts`. Root `test.config.ts` is a plain
 Vitest defaults object; workspace configs use native `defineConfig`/`mergeConfig`
 and own their include patterns, projects and overrides. Do not wrap Vitest options
 in another factory or restricted interface. Scaffolded test workspaces include
-`tests/` in strict checking and merge these defaults in their own config.
+source-adjacent tests and `tests/` fixtures in strict checking and merge these defaults in their own config.
 `./tasks` exposes Node-compatible, lightweight task configuration. Its model derives
 all members and scripts from manifests, registers private `task:*` definitions and
 explicit dependencies; VP alone schedules them. Leaf scripts stay available for
@@ -109,7 +119,7 @@ smaller hosts use one or two, and CI defaults to two. Explicit Playwright flags 
 `./browser-server` serves only compiled Desktop client assets on loopback with
 HTML deep-link fallback; never run Vite configuration or simulate backend/Native IPC there.
 Smoke orchestration and artifact probes live in
-`src/smoke/`. Unit and integration tests live in `tests/unit/` and `tests/integration/`.
+`src/smoke/`. Unit tests live beside source; integration tests stay in `tests/integration/`.
 Keep scaffold and locale policy suites separate; shared temporary workspace fixtures
 live in `tests/helpers/workspace.ts` and register cleanup for each suite.
 The inventory regression requires a focused command for each active test layer,

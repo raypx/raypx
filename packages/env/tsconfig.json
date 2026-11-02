@@ -1,5 +1,4 @@
 {
   "extends": "@raypx/tsconfig/library.json",
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vite.config.ts", "vitest.config.ts"],
-  "exclude": ["tests/fixtures/consumer/**"]
+  "include": ["src/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

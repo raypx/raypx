@@ -27,6 +27,8 @@ VP task metadata; package scripts remain direct leaf commands.
 ## Constraints
 
 Use public workspace entries and keep dependencies acyclic.
+Place unit tests beside their source and name DOM suites *.component.test.ts(x).
+Keep shared fixtures and integration/acceptance suites in tests/.
 
 ## Verification
 

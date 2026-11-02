@@ -11,7 +11,7 @@
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run tests",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {

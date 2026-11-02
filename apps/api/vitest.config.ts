@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
         defineConfig({
           test: {
             include: [
-              "tests/unit/**/*.{test,spec}.{ts,tsx}",
+              "server/**/*.{test,spec}.{ts,tsx}",
               "tests/integration/**/*.{test,spec}.{ts,tsx}",
             ],
           },

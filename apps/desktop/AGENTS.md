@@ -62,15 +62,14 @@ Own native directory authorization and local UX. Runtime implementations live ex
 `src/features/auth/components/form.tsx` adapts the shared `@raypx/auth/client` form
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
-`tests/renderer/unit/` and `tests/renderer/component/`, mirroring feature and route directories.
+source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites.
 Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. MyGo transport/policy tests live in `tests/native/host/`.
 These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
-Native scripts/tests live in `scripts/native/` and `tests/scripts/native/` with Bun types.
+Native scripts and their adjacent tests live in `scripts/native/` with Bun types.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
-Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`; exported symbols retain feature context. Test scripts select `component/` and
-`integration/` directories; `test:unit` explicitly selects renderer unit, native fixtures and
-script cases. File extensions
+Use short feature-local filenames such as `form.tsx` and `form.component.test.tsx`; exported symbols retain feature context. Route composition suites live beside the router.
+Test scripts select components by suffix; `test:unit` excludes components and integration suites and includes native/script cases. File extensions
 describe source syntax, and each suite declares its required test environment.
 
 The account route reads its remote projection in a client-only loader; auth

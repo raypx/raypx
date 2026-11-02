@@ -5,7 +5,7 @@ export default mergeConfig(
   defaults,
   defineConfig({
     test: {
-      include: ["tests/**/*.{test,spec}.{ts,tsx}"],
+      include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],
       maxWorkers: 3,
       // Subprocess and daemon integration tests need time to start on busy hosts.
       testTimeout: 30_000,

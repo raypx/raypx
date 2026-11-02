@@ -44,7 +44,7 @@
   "scripts": {
     "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run tests/component",
+    "test:component": "bun --bun vp test --run .component.test.",
     "test:coverage": "bun --bun vp test --run --coverage",
     "generate:theme": "bun run scripts/generate-theme.ts"
   },
