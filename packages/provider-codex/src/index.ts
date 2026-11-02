@@ -214,3 +214,5 @@ export class CodexAdapter implements AgentAdapter {
     });
   }
 }
+
+export { recordCodexActivity } from "./activity";

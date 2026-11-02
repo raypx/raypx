@@ -1,3 +1,6 @@
+import type { ConversationSink, TokenTotals } from "@raypx/provider-core";
+import { recordCodexActivity } from "@raypx/provider-codex";
+import { recordClaudeActivity } from "@raypx/provider-claude";
 import { taskText } from "@raypx/core/task-text";
 
 import type { AgentProvider, TaskActivity } from "@raypx/core/tasks";
@@ -8,42 +11,35 @@ const object = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 const text = (value: unknown) => (typeof value === "string" ? value : "");
-const count = (value: unknown) =>
-  typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0;
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;
-export type TokenTotals = {
-  inputTokens: number;
-  outputTokens: number;
-  cachedInputTokens: number;
-  cacheWriteInputTokens: number;
-};
+export type { TokenTotals } from "@raypx/provider-core";
 
 /** Select public conversation fields; reasoning, tool output and provider envelopes stay private. */
-export class ConversationRecorder {
-  private readonly entries = new Map<string, ActivityDraft>();
+export class ConversationRecorder implements ConversationSink {
+  readonly entries = new Map<string, ActivityDraft>();
   private readonly dirty = new Set<string>();
-  private readonly streamedMessages = new Set<string>();
+  readonly streamedMessages = new Set<string>();
   private timer: ReturnType<typeof setTimeout> | undefined;
-  private turn = 0;
+  turn = 0;
   private startedAt = Date.now();
-  private currentMessage = "";
+  currentMessage = "";
   private stopped = false;
-  private totals: TokenTotals | undefined;
-  private turnUsage: TokenTotals = {
+  totals: TokenTotals | undefined;
+  turnUsage: TokenTotals = {
     inputTokens: 0,
     outputTokens: 0,
     cachedInputTokens: 0,
     cacheWriteInputTokens: 0,
   };
-  private usageKnown = true;
-  private codexTurn = "";
-  private blockIndex = 0;
+  usageKnown = true;
+  codexTurn = "";
+  blockIndex = 0;
   constructor(
     private readonly taskId: string,
     private readonly write: (entry: ActivityDraft) => TaskActivity,
     private readonly interval = 250,
-    private readonly persistTotals?: (value: TokenTotals) => void,
+    readonly persistTotals?: (value: TokenTotals) => void,
   ) {}
   setTokenBaseline(value: TokenTotals | undefined) {
     this.totals = value;
@@ -94,7 +90,7 @@ export class ConversationRecorder {
     }
     this.dirty.clear();
   }
-  private message(key: string, value: string, complete: boolean, append = false) {
+  message(key: string, value: string, complete: boolean, append = false) {
     this.currentMessage = key;
     let entry = this.entries.get(key) as Message | undefined;
     const created = !entry;
@@ -116,7 +112,7 @@ export class ConversationRecorder {
     entry.status = complete ? "complete" : "streaming";
     this.save(key, created || complete);
   }
-  private tool(id: string, name: string, status: Tool["status"]) {
+  tool(id: string, name: string, status: Tool["status"]) {
     const key = `tool:${id}`;
     let entry = this.entries.get(key) as Tool | undefined;
     if (!entry) {
@@ -125,7 +121,7 @@ export class ConversationRecorder {
     } else if (entry.status === "running" || status !== "running") entry.status = status;
     this.save(key, true);
   }
-  private usage(
+  usage(
     inputTokens: number,
     outputTokens: number,
     cachedInputTokens: number,
@@ -148,172 +144,10 @@ export class ConversationRecorder {
     this.save(key, true);
   }
   codex(method: string, params: Record<string, unknown>) {
-    if (method === "turn/started") this.codexTurn = text(object(params.turn).id);
-    if (method === "item/agentMessage/delta") {
-      const key = params.itemId ? `codex:${text(params.itemId)}` : this.currentMessage;
-      this.message(key, text(params.delta), false, true);
-    }
-    if (method === "item/started" || method === "item/completed") {
-      const item = object(params.item),
-        id = text(item.id),
-        kind = text(item.type);
-      if (kind === "agentMessage")
-        this.message(
-          id ? `codex:${id}` : this.currentMessage,
-          text(item.text),
-          method === "item/completed",
-        );
-      const names: Record<string, string> = {
-        commandExecution: "Shell",
-        fileChange: "Edit",
-        mcpToolCall: text(item.tool),
-        dynamicToolCall: text(item.tool),
-        webSearch: "WebSearch",
-        imageView: "ViewImage",
-        contextCompaction: "Compact",
-      };
-      if (Object.hasOwn(names, kind))
-        this.tool(
-          id || `${kind}:${this.turn}`,
-          names[kind] || kind,
-          method === "item/started"
-            ? "running"
-            : ["failed", "declined"].includes(text(item.status))
-              ? "failed"
-              : "succeeded",
-        );
-    }
-    if (method === "thread/tokenUsage/updated") {
-      if (params.turnId && this.codexTurn && params.turnId !== this.codexTurn) return;
-      const total = object(object(params.tokenUsage).total);
-      const usage: TokenTotals = {
-        inputTokens: count(total.inputTokens),
-        outputTokens: count(total.outputTokens),
-        cachedInputTokens: count(total.cachedInputTokens),
-        cacheWriteInputTokens: count(total.cacheWriteInputTokens),
-      };
-      if (!this.turn && Object.keys(total).length) {
-        this.totals = usage;
-        this.persistTotals?.(usage);
-        return;
-      }
-      if (!Object.keys(total).length) {
-        this.usageKnown = false;
-        this.usage(0, 0, 0, 0, undefined, false);
-        return;
-      }
-      if (this.totals) {
-        if (
-          (Object.keys(usage) as (keyof TokenTotals)[]).some(
-            (key) => usage[key] < this.totals![key],
-          )
-        ) {
-          // A resumed provider can reset any cumulative counter. Do not fabricate
-          // the missing interval; use the new totals as the next baseline.
-          this.totals = usage;
-          this.persistTotals?.(usage);
-          this.usageKnown = false;
-          this.usage(
-            this.turnUsage.inputTokens,
-            this.turnUsage.outputTokens,
-            this.turnUsage.cachedInputTokens,
-            this.turnUsage.cacheWriteInputTokens,
-            undefined,
-            false,
-          );
-          return;
-        }
-        if (
-          (Object.keys(usage) as (keyof TokenTotals)[]).every(
-            (key) => usage[key] === this.totals![key],
-          )
-        )
-          return;
-        for (const key of Object.keys(usage) as (keyof TokenTotals)[])
-          this.turnUsage[key] += usage[key] - this.totals[key];
-      } else this.usageKnown = false;
-      this.totals = usage;
-      this.persistTotals?.(usage);
-      this.usage(
-        this.turnUsage.inputTokens,
-        this.turnUsage.outputTokens,
-        this.turnUsage.cachedInputTokens,
-        this.turnUsage.cacheWriteInputTokens,
-        undefined,
-        this.usageKnown,
-      );
-    }
+    recordCodexActivity(this, method, params);
   }
   claude(message: Record<string, unknown>) {
-    if (message.parent_tool_use_id) return;
-    const body = object(message.message);
-    if (message.type === "stream_event") {
-      const event = object(message.event),
-        block = object(event.content_block),
-        delta = object(event.delta);
-      if (event.type === "message_start") {
-        this.currentMessage = `claude:${text(object(event.message).id) || crypto.randomUUID()}`;
-        this.blockIndex = 0;
-      }
-      if (event.type === "content_block_delta" && delta.type === "text_delta") {
-        this.streamedMessages.add(this.currentMessage);
-        const index = count(event.index),
-          previous = this.entries.get(this.currentMessage);
-        this.message(
-          this.currentMessage,
-          (previous?.kind === "message" && previous.text && index !== this.blockIndex ? "\n" : "") +
-            text(delta.text),
-          false,
-          true,
-        );
-        this.blockIndex = index;
-      }
-      if (event.type === "message_stop") {
-        const entry = this.entries.get(this.currentMessage);
-        if (entry?.kind === "message") this.message(this.currentMessage, entry.text, true);
-      }
-      if (event.type === "content_block_start" && block.type === "tool_use")
-        this.tool(text(block.id), text(block.name), "running");
-    }
-    if (message.type === "assistant" && Array.isArray(body.content)) {
-      const key = body.id ? `claude:${text(body.id)}` : this.currentMessage;
-      const content = body.content.map(object);
-      const value = content
-        .filter((block) => block.type === "text")
-        .map((block) => text(block.text))
-        .join("\n");
-      // With partial messages enabled, assistant records can repeat only one
-      // content block. The streamed text already contains every preceding block.
-      if (value && !this.streamedMessages.has(key)) this.message(key, value, true);
-      for (const block of content)
-        if (block.type === "tool_use") this.tool(text(block.id), text(block.name), "running");
-    }
-    if (message.type === "user" && Array.isArray(body.content))
-      for (const block of body.content.map(object))
-        if (block.type === "tool_result") {
-          const old = this.entries.get(`tool:${text(block.tool_use_id)}`) as Tool | undefined;
-          if (old)
-            this.tool(
-              text(block.tool_use_id),
-              old.name,
-              block.is_error === true ? "failed" : "succeeded",
-            );
-        }
-    if (message.type === "result") {
-      if (text(message.result) && !this.entries.has(this.currentMessage))
-        this.message(this.currentMessage, text(message.result), true);
-      const usage = object(message.usage),
-        read = count(usage.cache_read_input_tokens),
-        write = count(usage.cache_creation_input_tokens);
-      if (Object.keys(usage).length)
-        this.usage(
-          count(usage.input_tokens) + read + write,
-          count(usage.output_tokens),
-          read,
-          write,
-          count(message.duration_ms),
-        );
-    }
+    recordClaudeActivity(this, message);
   }
   endTurn(status: "complete" | "interrupted") {
     for (const [key, entry] of this.entries) {

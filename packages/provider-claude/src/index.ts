@@ -110,3 +110,5 @@ export class ClaudeAdapter implements AgentAdapter {
 }
 
 export { respondToClaudeHook, type ClaudeHookApprovalPort } from "./hooks";
+
+export { recordClaudeActivity } from "./activity";

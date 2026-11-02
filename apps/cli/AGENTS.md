@@ -198,5 +198,7 @@ leases make the local approval channel reachable. Remote eligibility is frozen p
 request; independent projection withdrawal revisions never alter broker revisions.
 Cloud settings are explicit `host.terminal.*` Native RPCs. See ADR 0035.
 Registry interfaces own adapter construction and bounded probes. Execution owns
-plan policy and persistence; ConversationRecorder parses raw records. Lifecycle
+plan policy and persistence; provider libraries parse raw conversation records through
+the shared ConversationSink interface. ConversationRecorder owns bounded activity
+aggregation, revisions and persistence callbacks. Lifecycle
 code sees execution handles and adapter events, never transport controls.

@@ -62,3 +62,5 @@ export type AgentAdapterFactory = (
 
 export type { AgentTransport, TransportFactory, AskApproval } from "./transport";
 export { object } from "./transport";
+
+export type { ConversationSink, ConversationEntry, TokenTotals } from "./conversation";
