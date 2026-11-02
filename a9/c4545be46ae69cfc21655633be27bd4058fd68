@@ -1,0 +1,19 @@
+docs/roadmap.md
+  s_be0cafefd5c0be::t_21cc29ed73a179 5,17,23-31,47,49,101,119,148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a9c4545be46ae69cfc21655633be27bd4058fd68",
+  "prompts": {},
+  "sessions": {
+    "s_be0cafefd5c0be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a176ee-3d90-7a50-b1c2-93b35b041162",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
