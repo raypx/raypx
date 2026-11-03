@@ -1,3 +1,5 @@
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite";
 import { AgentRuntime } from "../../../../src/runtime/agents";
 import { expect, it, afterEach, vi } from "vite-plus/test";
 import { writeFile } from "node:fs/promises";
@@ -27,6 +29,16 @@ it("runs Pi through the task owner, persists model/context, and resumes only the
     available: true,
     inputModes: ["queue"],
   });
+  const memory = (await f.runtime.request("memory.create", {
+    requestId: crypto.randomUUID(),
+    document: {
+      kind: "memory",
+      name: "Pi conventions",
+      category: "Project",
+      content: "Pinned Pi reference",
+      project: null,
+    },
+  })) as { id: string; revision: number };
   const id = crypto.randomUUID();
   expect(
     await f.runtime.agents.localExecute(LOCAL_WORKSPACE_ID, id, {
@@ -38,6 +50,7 @@ it("runs Pi through the task owner, persists model/context, and resumes only the
         provider: "pi",
         mode: "run",
         prompt: "Synthetic task",
+        contextSelection: { sources: [{ id: memory.id, revision: memory.revision }] },
       },
     }),
   ).toMatchObject({ ok: true });
@@ -64,6 +77,8 @@ it("runs Pi through the task owner, persists model/context, and resumes only the
     .toMatchObject({ status: "succeeded", summary: "PI_AI_READY" });
   expect(f.runtime.agents.localTask(LOCAL_WORKSPACE_ID, id, 0).piContinuation?.blocked).toBe(true);
   expect(server.requests).toHaveLength(2);
+  expect(JSON.stringify(server.requests[0]?.body)).toContain("Pinned Pi reference");
+  expect(JSON.stringify(server.requests[1]?.body).split("Pinned Pi reference")).toHaveLength(2);
   await expect(
     f.runtime.agents.start(
       "remote-binding",
@@ -294,4 +309,63 @@ it("cancels an admitted Pi task before creating its session when cancellation ar
     release();
     await host.close();
   }
+});
+
+it("rejects continuation of an allocated Pi context that never received its first prompt", async () => {
+  const f = await fixture();
+  vi.stubEnv("RAYPX_HOME", f.dir);
+  const server = aiFixture();
+  servers.push(server);
+  await writeFile(
+    join(f.dir, "config.toml"),
+    `[ai]\nprovider = "local"\nmodel = "fixture-model"\napi = "openai-completions"\nbase_url = "${server.url}"\n`,
+  );
+  f.runtime.agents.configure(f.grant.id, ["pi"]);
+  const device = await f.runtime.agents.localDevice(LOCAL_WORKSPACE_ID);
+  const catalog = (await f.runtime.request(
+    "agents.models.list",
+    {},
+  )) as import("@raypx/core/tasks").ModelCatalog;
+  const model = catalog.models.find((entry) => entry.provider === "local")!.selection;
+  const id = crypto.randomUUID(),
+    binding = "desktop:" + LOCAL_WORKSPACE_ID,
+    sessionId = "pi:v1:" + crypto.randomUUID();
+  const task: import("@raypx/core/tasks").AgentTask = {
+    id,
+    deviceId: device.id,
+    projectId: f.grant.id,
+    provider: "pi",
+    mode: "run",
+    model,
+    prompt: "Never delivered",
+    status: "cancelled",
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  new AgentStore(f.runtime.state.db).accept({ task, binding, sessionId }, id);
+  const context = new SqlitePiContextStore(f.runtime.state.db, sessionId);
+  await context.commit(0, {
+    status: "idle",
+    messages: [],
+    identity: { version: 1, binding, projectId: task.projectId, ownerTaskId: id, model },
+  });
+  context.close();
+  const detail = f.runtime.agents.localTask(LOCAL_WORKSPACE_ID, id, 0);
+  expect(detail.piContinuation?.blocked).toBe(true);
+  const next = crypto.randomUUID();
+  await f.runtime.agents.localExecute(LOCAL_WORKSPACE_ID, next, {
+    method: "tasks.followUp",
+    input: {
+      id: next,
+      parentTaskId: id,
+      prompt: "Continue",
+      contextRevision: detail.piContinuation!.revision,
+    },
+  });
+  expect(f.runtime.agents.localTask(LOCAL_WORKSPACE_ID, next, 0).task.summary).toBe(
+    "SESSION_UNAVAILABLE",
+  );
+  expect(server.requests).toHaveLength(0);
 });

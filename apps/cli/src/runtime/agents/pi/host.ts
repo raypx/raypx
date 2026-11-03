@@ -44,7 +44,8 @@ export class PiHost implements PiExecutionServices {
         revision: context.revision,
         model: context.identity.model,
         blocked:
-          (context.pendingEffect && !activeTaskStatuses.includes(local.task.status)) ||
+          ((context.pendingEffect || context.messages.length === 0) &&
+            !activeTaskStatuses.includes(local.task.status)) ||
           context.status === "uncertain" ||
           context.identity.ownerTaskId !== local.task.id,
         ...(context.pendingEffect ? { pendingEffect: context.pendingEffect } : {}),
@@ -67,6 +68,7 @@ export class PiHost implements PiExecutionServices {
       if (parent) {
         const identity = checkpoint.identity;
         if (
+          checkpoint.messages.length === 0 ||
           !sessionId.startsWith("pi:v1:") ||
           !identity ||
           identity.binding !== local.binding ||

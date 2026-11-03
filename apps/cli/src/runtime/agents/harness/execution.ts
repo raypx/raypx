@@ -276,6 +276,10 @@ export class ManagedExecution {
     const task = this.local.task;
     const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
     const sessionId = executionSession(this.local, parent);
+    // SDKs may allocate a session before its first prompt. An id alone does not
+    // prove that the frozen task context has already entered the conversation.
+    const resumed =
+      sessionId !== undefined && (parent !== undefined || continuationPrompt !== undefined);
     if (
       task.parentTaskId &&
       (!sessionId ||
@@ -324,7 +328,7 @@ export class ManagedExecution {
       await adapter.sendTurn(prompt, this.local.sessionId, task.mode);
     };
     const start = async () => {
-      await this.sendTurn!(initialExecutionPrompt(task, continuationPrompt, Boolean(sessionId)));
+      await this.sendTurn!(initialExecutionPrompt(task, continuationPrompt, resumed));
       this.ready = true;
     };
     // Some adapters replace their process after a plan is approved.
