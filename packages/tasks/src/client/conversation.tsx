@@ -126,10 +126,16 @@ function ConversationViewport({
           }
         } else {
           const offset = virtualizer.getOffsetForIndex(index, "start");
-          if (offset)
-            virtualizer.scrollToOffset(
-              offset[0] + (node.firstElementChild as HTMLElement).offsetTop - saved.offset,
-            );
+          if (offset) {
+            const content = node.firstElementChild as HTMLElement;
+            // offsetTop belongs to the offset parent, which may be outside this viewport.
+            const contentStart =
+              content.getBoundingClientRect().top -
+              node.getBoundingClientRect().top -
+              node.clientTop +
+              node.scrollTop;
+            virtualizer.scrollToOffset(offset[0] + contentStart - saved.offset);
+          }
         }
       }
     }
