@@ -4,7 +4,7 @@ import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-g
 import { SessionBoundary, SignInGate } from "../../../features/auth/components/session-boundary";
 import { Users } from "../../../features/users/components/users";
 
-export const Route = createFileRoute("/(app)/admin/users")({
+export const Route = createFileRoute("/(admin)/admin/users")({
   staticData: { page: { title: "common.users", layout: "workbench" } },
   beforeLoad: webPageGuard("/admin/users"),
   errorComponent: PageAccessFeedback,

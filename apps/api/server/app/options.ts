@@ -1,3 +1,5 @@
+import type { AuditService } from "../administration/audit.js";
+import type { AdministrationQueries } from "../administration/types.js";
 import type { InstanceService } from "@raypx/instances/server";
 import type { ConfigurationService } from "../configuration/types.js";
 import type { ControlService } from "@raypx/control";
@@ -9,6 +11,8 @@ import type { CloudJobsService } from "@raypx/jobs/server";
 import type { ContextLibraryService } from "@raypx/memory/server";
 export interface ApiAppOptions {
   instances?: InstanceService;
+  audit?: AuditService;
+  administration?: AdministrationQueries;
   access?: AccessPolicy;
   configuration?: ConfigurationService;
   jobsEnabled?: boolean;

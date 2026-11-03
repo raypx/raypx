@@ -138,6 +138,18 @@ one; disable automatic image cleanup for this local-image strategy. Keep prior
 release tags and the migration image until explicitly retired.
 
 PostgreSQL becomes healthy, migration exits successfully, then API and Web start.
+API startup also applies pending migrations by default. Its output bundles the SQL
+as private Nitro server assets, so this works with the standalone runtime image and
+a relocated `.output` directory. Set `DATABASE_MIGRATE_ON_START=false` to skip the
+API startup step. This switch does not disable explicit migration jobs or Railway's
+pre-deploy hook: these remain in place before Relay/API replacement. Repeated startup
+checks apply only pending migrations. All entry points share a transaction-scoped
+PostgreSQL advisory lock before reading the migration ledger, waiting up to 120 seconds
+for another migrator; subsequent DDL lock waits remain capped at ten seconds.
+Any migration failure aborts API startup without opening the application runtime.
+The SQL staging directory is removed after each attempt, and startup errors expose
+neither connection details nor SQL. Existing database backups and maintenance-window
+requirements still apply.
 The independent Relay and API share an explicit private `REDIS_URL` and PostgreSQL.
 Gateway `/relay` traffic reaches Relay directly; API owns HTTP authentication and
 RPC. The broker has no offline queue or automatic delivery retry.

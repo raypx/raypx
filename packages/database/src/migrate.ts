@@ -9,11 +9,18 @@ export async function migrateDatabase(
 ): Promise<void> {
   const connection = connectDatabase(databaseUrl, { max: 1 });
   try {
-    // Bound waiting for any operator-held table lock during the maintenance window.
-    await connection.db.execute(sql`set lock_timeout = '10s'`);
-    await migrate(connection.db, {
-      migrationsFolder,
-      migrationsSchema: "raypx_foundation_migrations",
+    await connection.db.transaction(async (tx) => {
+      // Hold one transaction/connection across Drizzle's ledger read and all DDL.
+      // Startup instances and explicit migration jobs share this database-scoped lock.
+      await tx.execute(sql`set local lock_timeout = '120s'`);
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext('raypx_foundation_migrations'), 0)`,
+      );
+      await tx.execute(sql`set local lock_timeout = '10s'`);
+      await migrate(tx, {
+        migrationsFolder,
+        migrationsSchema: "raypx_foundation_migrations",
+      });
     });
   } finally {
     await connection.close();

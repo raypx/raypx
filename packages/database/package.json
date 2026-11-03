@@ -30,9 +30,6 @@
   },
   "raypx": {
     "kind": "library",
-    "target": "node",
-    "entryConsumers": {
-      ".": "The PostgreSQL acceptance harness connects and migrates its isolated database here; production migrates through this package's own db commands."
-    }
+    "target": "node"
   }
 }

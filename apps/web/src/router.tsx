@@ -29,6 +29,9 @@ export function getRouter() {
 }
 /** Message keys that title shell pages; each translates without values. */
 type PageTitle =
+  | "common.adminConsole"
+  | "common.overview"
+  | "common.auditLog"
   | "common.users"
   | "common.account"
   | "common.adminSettings"

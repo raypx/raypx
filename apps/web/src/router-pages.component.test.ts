@@ -24,8 +24,8 @@ describe("application shell pages", () => {
   it("requires an explicit public or private permission policy for every shell page", () => {
     expect(
       pages()
-        .filter((route) => route.id.startsWith("/(app)"))
-        .map((route) => route.fullPath)
+        .filter((route) => route.id.startsWith("/(app)") || route.id.startsWith("/(admin)"))
+        .map((route) => route.fullPath.replace(/\/$/, ""))
         .sort((a, b) => a.localeCompare(b)),
     ).toEqual(Object.keys(webPages).sort((a, b) => a.localeCompare(b)));
   });
@@ -35,7 +35,9 @@ describe("application shell pages", () => {
     expect(routes.find((route) => route.fullPath === "/projects")?.id).toBe("/(app)/projects");
   });
   it("declare a translated title and page template for every shell route", () => {
-    const shellPages = pages().filter((route) => route.id.startsWith("/(app)"));
+    const shellPages = pages().filter(
+      (route) => route.id.startsWith("/(app)") || route.id.startsWith("/(admin)"),
+    );
     expect(
       Object.fromEntries(
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
@@ -43,6 +45,8 @@ describe("application shell pages", () => {
     ).toEqual({
       "/projects": { title: "common.projects", layout: "workbench" },
       "/account": { title: "common.account", layout: "document" },
+      "/admin/": { title: "common.overview", layout: "workbench" },
+      "/admin/audit": { title: "common.auditLog", layout: "workbench" },
       "/admin/users": { title: "common.users", layout: "workbench" },
       "/admin/settings": { title: "common.adminSettings", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },

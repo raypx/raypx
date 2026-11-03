@@ -17,6 +17,10 @@ const server = {
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  DATABASE_MIGRATE_ON_START: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
   DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
   AUTH_URL: z.url().default("http://localhost:3002"),
   AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),

@@ -187,6 +187,10 @@ Compose selects runtime and the independent migrate
 stage explicitly; Web defaults to runtime on both platforms.
 Railway runs bun run --cwd packages/database migrate
 in its isolated pre-deploy container. A failure blocks the new deployment.
+API startup also checks pending migrations by default from private bundled SQL assets.
+`DATABASE_MIGRATE_ON_START=false` skips the startup check when the pre-deploy hook
+owns migration. Both paths share the same database advisory lock and migration ledger;
+the switch does not disable the explicit pre-deploy command.
 For future updates, back up the database first. If pending migrations require
 transactional indexes or otherwise block writers, stop the existing API and Relay for an
 agreed maintenance window before migration; ordinary rolling pre-deploy execution

@@ -1,3 +1,4 @@
+import { createAdministrationHandlers } from "./administration.js";
 import { createRpcBoundary } from "./boundary.js";
 import type { ApiAppOptions } from "../app/options.js";
 import { createInstancesHandlers } from "./instances.js";
@@ -14,6 +15,7 @@ import { createAccountHandlers } from "./account.js";
 export function createRpcRouter(options: ApiAppOptions) {
   const boundary = createRpcBoundary(options);
   return boundary.os.router({
+    admin: createAdministrationHandlers(boundary),
     instances: createInstancesHandlers(boundary),
     memory: createMemoryHandlers(boundary),
     jobs: createJobsHandlers(boundary),

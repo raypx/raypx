@@ -9,7 +9,6 @@ import { DropdownMenuItem } from "@raypx/ui/components/ui/dropdown-menu";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { IconButton } from "@raypx/ui/icon-button";
 import { SettingsIcon } from "@raypx/icons/settings";
-import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { authClient, apiUrl, webUrl } from "../features/auth/client";
@@ -44,9 +43,12 @@ function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
   const auth = useAuthActions({ client: authClient, webUrl });
   useEffect(() => {
     if (previous.current !== accountId) {
+      const oldAccount = previous.current;
       previous.current = accountId;
       cache.removeQueries({ queryKey: ["account"] });
-      cache.removeQueries({ queryKey: ["admin-users"] });
+      if (oldAccount)
+        for (const key of ["admin-users", "admin-overview", "admin-health", "admin-audit"])
+          cache.removeQueries({ queryKey: [key, apiUrl, oldAccount] });
     }
   }, [accountId, cache]);
   if (session.isPending)
@@ -92,16 +94,10 @@ function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
         <SettingsIcon />
         {c("settings")}
       </DropdownMenuItem>
-      {hasPermission(access, "users.read") && (
-        <DropdownMenuItem onClick={() => void router.navigate({ to: "/admin/users" })}>
-          <UserCircleIcon />
-          {c("users")}
-        </DropdownMenuItem>
-      )}
-      {hasPermission(access, "configuration.read") && (
-        <DropdownMenuItem onClick={() => void router.navigate({ to: "/admin/settings" })}>
+      {hasPermission(access, "admin.read") && (
+        <DropdownMenuItem onClick={() => void router.navigate({ to: "/admin" })}>
           <AdjustmentsIcon />
-          {c("adminSettings")}
+          {c("adminConsole")}
         </DropdownMenuItem>
       )}
     </AccountMenu>

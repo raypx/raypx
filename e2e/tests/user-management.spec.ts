@@ -41,7 +41,7 @@ for (const width of [360, 768, 1440])
           await page.keyboard.press("Enter");
           await expect(
             page.getByRole("menuitem", {
-              name: locale === "zh" ? "用户管理" : "Users",
+              name: locale === "zh" ? "管理控制台" : "Admin console",
               exact: true,
             }),
           ).toBeVisible();
@@ -105,7 +105,8 @@ for (const width of [360, 1440]) {
     });
     await page.goto(web);
     await page.getByRole("button", { name: "Account menu", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Users", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Admin console", exact: true }).click();
+    await page.getByRole("link", { name: "Users", exact: true }).click();
     const table = page.getByRole("table", { name: "Users", exact: true });
     await expect(table).toBeVisible();
     await expect(
@@ -154,6 +155,7 @@ test(
       return authResponse(route, { users: [], total: 0 });
     });
     await page.goto(`${web}/admin/users`);
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
     await expect(page.getByRole("alert")).toContainText("You do not have permission");
     expect(reads).toBe(0);
   },

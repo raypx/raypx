@@ -15,6 +15,19 @@ it("requires explicit production configuration", () => {
   expect(getApiEnvironment({ NODE_ENV: "test" }).DATABASE_URL).toContain(":5433/raypx_foundation");
 });
 
+it("migrates on startup by default and accepts only an explicit boolean switch", () => {
+  expect(getApiEnvironment({ NODE_ENV: "test" }).DATABASE_MIGRATE_ON_START).toBe(true);
+  expect(getApiEnvironment({ DATABASE_MIGRATE_ON_START: "true" }).DATABASE_MIGRATE_ON_START).toBe(
+    true,
+  );
+  expect(getApiEnvironment({ DATABASE_MIGRATE_ON_START: "false" }).DATABASE_MIGRATE_ON_START).toBe(
+    false,
+  );
+  expect(() => getApiEnvironment({ DATABASE_MIGRATE_ON_START: "0" })).toThrow(
+    "Invalid environment variables",
+  );
+});
+
 it("treats unconfigured optional Compose settings as absent", () => {
   const environment = getApiEnvironment({
     REDIS_URL: "",

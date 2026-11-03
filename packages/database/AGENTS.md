@@ -17,8 +17,12 @@ PostgreSQL persistence for the new account foundation.
 
 Use postgres.js and Drizzle. Active tables are in raypx_foundation; migration history uses raypx_foundation_migrations. Only drizzle-foundation is retained; retired migration histories are available in Git history. No reset/drop command. Generate new migrations with drizzle-kit; never edit generated SQL or snapshots. No runtime dependency on auth, tooling or apps.
 `studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
-Node defaults to a process pool of ten connections. `/connection` keeps runtime
+Bun defaults to a process pool of ten connections. `/connection` keeps runtime
 connections separate from filesystem-based migrations in `migrate.ts`.
+API startup and explicit commands share the migrator's transaction-scoped advisory lock
+before any ledger/schema access. Lock acquisition waits at most 120 seconds; subsequent
+DDL lock waits are bounded to ten seconds. Migration, ledger and lock release commit or
+roll back together. Keep the official Drizzle migrator inside that transaction.
 Session and verification expiry indexes support API maintenance batches; retention
 and scheduling policy belongs to the API, not this persistence package.
 Better Auth Admin uses `user.role/banned/ban_reason/ban_expires` and
@@ -70,3 +74,9 @@ compacted unknown-delivery receipts remain outside replay/body maintenance scans
 source and cascades its versions atomically; the reserved canonical ID prevents reuse.
 
 `runtime_instance` stores account/origin-bound public instance identities and revocation revisions. `instance_enrollment` stores ten-minute pending records with hashed approval codes and host tokens. API serializes ownership with instance advisory locks. These are registration records, separate from remote Host grants and local Agent persistence.
+
+`admin_audit` stores durable administration intents and terminal outcomes, with
+bounded non-secret change snapshots. Actor/target IDs deliberately have no cascading
+foreign keys: historical evidence survives account deletion. API owns transaction
+coupling, result classification, access control and long-term retention. Time and
+identity indexes support cursor queries. `user.created_at` indexes registration trends.

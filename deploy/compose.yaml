@@ -43,6 +43,7 @@ services:
     init: true
     environment:
       NODE_ENV: production
+      DATABASE_MIGRATE_ON_START: ${DATABASE_MIGRATE_ON_START:-true}
       DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       AUTH_URL: https://${APP_HOST:?Set the application hostname}
       AUTH_SECRET: ${AUTH_SECRET:?Set the authentication secret}

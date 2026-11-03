@@ -4,7 +4,7 @@ import { SessionBoundary, SignInGate } from "../../../features/auth/components/s
 import { useTranslations } from "@raypx/i18n/browser";
 import { ConfigurationSettings } from "../../../features/configuration/components/settings";
 
-export const Route = createFileRoute("/(app)/admin/settings")({
+export const Route = createFileRoute("/(admin)/admin/settings")({
   beforeLoad: webPageGuard("/admin/settings"),
   errorComponent: PageAccessFeedback,
   staticData: { page: { title: "common.adminSettings", layout: "document" } },

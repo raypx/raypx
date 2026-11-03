@@ -95,3 +95,58 @@ A pending guest draft handoff finishes in the browser, never during SSR or prelo
 The homepage resolves its compact account button after hydration without blocking
 public content. Its menu and the sidebar share Account, Settings, permission-filtered
 administration links and sign-out behavior.
+
+## Dedicated administration area
+
+`/admin` is a Web-only route group with an independent shell. Its overview, user
+management, site settings and audit pages never mount personal project, task,
+notification or approval queries. The workspace and public account menus link to
+one Admin console entry. `admin.read` admits administrators and protects overview
+and dependency status; `audit.read` protects history. Existing user/configuration
+permissions still protect their feature requests. These are fixed admin grants,
+not custom roles. The HTTP `admin.overview`, `admin.health` and `admin.audit` methods
+are explicitly `web` in the native exposure policy and enter no Desktop allowlist.
+
+Overview counts come from the foundation user table, including unverified accounts
+in the total. The selected seven/thirty-day UTC window includes today; missing
+registration dates are real zeroes only after a successful read. Statistics and
+three-second dependency probes fail independently. Dependency status describes the
+responding API instance, not a fleet-wide uptime guarantee. No model/provider
+credentials, connection addresses or another person's project content are returned.
+
+### Durable audit
+
+The `admin_audit` table keeps management history independently of account lifetimes.
+Authenticated, admitted role/configuration mutation requests first write a durable
+intent using the server's request ID and fresh session actor. A separate admission
+limit bounds audited HTTP writes to 60/minute per account; anonymous and pre-admission
+traffic remains in sanitized diagnostics. No request bodies, cookies, passwords,
+tokens, IP addresses or diagnostic prose enter history. Only supported role values
+and non-secret site settings appear in change snapshots.
+
+The API-owned Better Auth database adapter wraps actual role writes and their
+success audit in one PostgreSQL transaction. Better Auth retains validation,
+self-change protection and session-cache updates. Explicit bootstrap uses the same
+adapter with an operator identity. Configuration CAS updates write their success
+history in their transaction as well; direct service writes create their own intent.
+Custom runtime configuration repositories receive the runtime audit service and
+must provide the same atomic contract. They cannot silently disable audit.
+
+Audit failure prevents the mutation or rolls its transaction back. Known permission
+refusals and execution failures finalize only pending entries. A success record is
+never overwritten when response delivery or a post-commit cache refresh fails.
+A timed-out request can finish after its response: its pending intent becomes
+Unconfirmed after 30 seconds until the real transaction result arrives. History
+never guesses that a timeout rolled back a write. Terminal records have no update
+or delete interface and are excluded from background cleanup.
+
+History is retained indefinitely. Queries default to 30 days, support historical
+windows of up to 366 days, and use (startedAt, id) cursors with 50 rows by default
+and a 100-row upper bound. All filters apply before pagination. Deleted actors and
+targets retain stable identifiers. There is no export, login/security-event audit,
+or general cross-account content access in this delivery.
+
+Deploy the generated foundation migration before the API and Web changes. An
+unmigrated or unavailable audit store blocks administration writes; it never falls
+back to unaudited updates. Use an isolated `_test` PostgreSQL database for the
+administration acceptance suite. Do not apply this migration to retired databases.

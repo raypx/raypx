@@ -18,6 +18,9 @@ import type { InstanceService } from "@raypx/instances/server";
 import { InstanceError } from "@raypx/instances";
 // Per-account limits for procedures that create grants, devices or relay tickets.
 const rpcLimits = {
+  "admin.overview": { window: 60, max: 60 },
+  "admin.health": { window: 60, max: 60 },
+  "admin.audit": { window: 60, max: 60 },
   "devices.register": { window: 60, max: 10 },
   "devices.refreshGrant": { window: 60, max: 30 },
   "hosts.authorize": { window: 60, max: 5 },

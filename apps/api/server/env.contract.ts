@@ -3,6 +3,7 @@ export default {
   NODE_ENV: "derived",
   ADMIN_EMAILS: "input",
   JOBS_ENABLED: "input",
+  DATABASE_MIGRATE_ON_START: "input",
   DATABASE_URL: "derived",
   AUTH_URL: "derived",
   AUTH_SECRET: "input",

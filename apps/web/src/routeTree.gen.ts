@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as adminRouteRouteImport } from './routes/(admin)/route'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as landingRouteRouteImport } from './routes/(landing)/route'
@@ -28,9 +29,15 @@ import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as landingIndexRouteImport } from './routes/(landing)/index'
 import { Route as legalPrivacyRouteImport } from './routes/(legal)/privacy'
-import { Route as appAdminSettingsRouteImport } from './routes/(app)/admin/settings'
-import { Route as appAdminUsersRouteImport } from './routes/(app)/admin/users'
+import { Route as adminAdminIndexRouteImport } from './routes/(admin)/admin/index'
+import { Route as adminAdminAuditRouteImport } from './routes/(admin)/admin/audit'
+import { Route as adminAdminSettingsRouteImport } from './routes/(admin)/admin/settings'
+import { Route as adminAdminUsersRouteImport } from './routes/(admin)/admin/users'
 
+const adminRouteRoute = adminRouteRouteImport.update({
+  id: '/(admin)',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
   getParentRoute: () => rootRouteImport,
@@ -122,15 +129,25 @@ const legalPrivacyRoute = legalPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => legalRouteRoute,
 } as any)
-const appAdminSettingsRoute = appAdminSettingsRouteImport.update({
+const adminAdminIndexRoute = adminAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => adminRouteRoute,
+} as any)
+const adminAdminAuditRoute = adminAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => adminRouteRoute,
+} as any)
+const adminAdminSettingsRoute = adminAdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
-  getParentRoute: () => appRouteRoute,
+  getParentRoute: () => adminRouteRoute,
 } as any)
-const appAdminUsersRoute = appAdminUsersRouteImport.update({
+const adminAdminUsersRoute = adminAdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
-  getParentRoute: () => appRouteRoute,
+  getParentRoute: () => adminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -149,8 +166,10 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof authVerifyEmailRoute
   '/privacy': typeof legalPrivacyRoute
   '/': typeof landingIndexRoute
-  '/admin/settings': typeof appAdminSettingsRoute
-  '/admin/users': typeof appAdminUsersRoute
+  '/admin/audit': typeof adminAdminAuditRoute
+  '/admin/settings': typeof adminAdminSettingsRoute
+  '/admin/users': typeof adminAdminUsersRoute
+  '/admin/': typeof adminAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/health': typeof HealthRoute
@@ -168,11 +187,14 @@ export interface FileRoutesByTo {
   '/verify-email': typeof authVerifyEmailRoute
   '/privacy': typeof legalPrivacyRoute
   '/': typeof landingIndexRoute
-  '/admin/settings': typeof appAdminSettingsRoute
-  '/admin/users': typeof appAdminUsersRoute
+  '/admin/audit': typeof adminAdminAuditRoute
+  '/admin/settings': typeof adminAdminSettingsRoute
+  '/admin/users': typeof adminAdminUsersRoute
+  '/admin': typeof adminAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/(admin)': typeof adminRouteRouteWithChildren
   '/(app)': typeof appRouteRouteWithChildren
   '/(auth)': typeof authRouteRouteWithChildren
   '/(landing)': typeof landingRouteRouteWithChildren
@@ -192,8 +214,10 @@ export interface FileRoutesById {
   '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/(legal)/privacy': typeof legalPrivacyRoute
   '/(landing)/': typeof landingIndexRoute
-  '/(app)/admin/settings': typeof appAdminSettingsRoute
-  '/(app)/admin/users': typeof appAdminUsersRoute
+  '/(admin)/admin/audit': typeof adminAdminAuditRoute
+  '/(admin)/admin/settings': typeof adminAdminSettingsRoute
+  '/(admin)/admin/users': typeof adminAdminUsersRoute
+  '/(admin)/admin/': typeof adminAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -213,8 +237,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/privacy'
     | '/'
+    | '/admin/audit'
     | '/admin/settings'
     | '/admin/users'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/health'
@@ -232,10 +258,13 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/privacy'
     | '/'
+    | '/admin/audit'
     | '/admin/settings'
     | '/admin/users'
+    | '/admin'
   id:
     | '__root__'
+    | '/(admin)'
     | '/(app)'
     | '/(auth)'
     | '/(landing)'
@@ -255,11 +284,14 @@ export interface FileRouteTypes {
     | '/(auth)/verify-email'
     | '/(legal)/privacy'
     | '/(landing)/'
-    | '/(app)/admin/settings'
-    | '/(app)/admin/users'
+    | '/(admin)/admin/audit'
+    | '/(admin)/admin/settings'
+    | '/(admin)/admin/users'
+    | '/(admin)/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  adminRouteRoute: typeof adminRouteRouteWithChildren
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
   landingRouteRoute: typeof landingRouteRouteWithChildren
@@ -269,6 +301,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/(admin)': {
+      id: '/(admin)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof adminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(app)': {
       id: '/(app)'
       path: ''
@@ -402,22 +441,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof legalPrivacyRouteImport
       parentRoute: typeof legalRouteRoute
     }
-    '/(app)/admin/settings': {
-      id: '/(app)/admin/settings'
+    '/(admin)/admin/': {
+      id: '/(admin)/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof adminAdminIndexRouteImport
+      parentRoute: typeof adminRouteRoute
+    }
+    '/(admin)/admin/audit': {
+      id: '/(admin)/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof adminAdminAuditRouteImport
+      parentRoute: typeof adminRouteRoute
+    }
+    '/(admin)/admin/settings': {
+      id: '/(admin)/admin/settings'
       path: '/admin/settings'
       fullPath: '/admin/settings'
-      preLoaderRoute: typeof appAdminSettingsRouteImport
-      parentRoute: typeof appRouteRoute
+      preLoaderRoute: typeof adminAdminSettingsRouteImport
+      parentRoute: typeof adminRouteRoute
     }
-    '/(app)/admin/users': {
-      id: '/(app)/admin/users'
+    '/(admin)/admin/users': {
+      id: '/(admin)/admin/users'
       path: '/admin/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof appAdminUsersRouteImport
-      parentRoute: typeof appRouteRoute
+      preLoaderRoute: typeof adminAdminUsersRouteImport
+      parentRoute: typeof adminRouteRoute
     }
   }
 }
+
+interface adminRouteRouteChildren {
+  adminAdminAuditRoute: typeof adminAdminAuditRoute
+  adminAdminSettingsRoute: typeof adminAdminSettingsRoute
+  adminAdminUsersRoute: typeof adminAdminUsersRoute
+  adminAdminIndexRoute: typeof adminAdminIndexRoute
+}
+
+const adminRouteRouteChildren: adminRouteRouteChildren = {
+  adminAdminAuditRoute: adminAdminAuditRoute,
+  adminAdminSettingsRoute: adminAdminSettingsRoute,
+  adminAdminUsersRoute: adminAdminUsersRoute,
+  adminAdminIndexRoute: adminAdminIndexRoute,
+}
+
+const adminRouteRouteWithChildren = adminRouteRoute._addFileChildren(
+  adminRouteRouteChildren,
+)
 
 interface appRouteRouteChildren {
   appAccountRoute: typeof appAccountRoute
@@ -427,8 +498,6 @@ interface appRouteRouteChildren {
   appProjectsRoute: typeof appProjectsRoute
   appSettingsRoute: typeof appSettingsRoute
   appTasksRoute: typeof appTasksRoute
-  appAdminSettingsRoute: typeof appAdminSettingsRoute
-  appAdminUsersRoute: typeof appAdminUsersRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
@@ -439,8 +508,6 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appProjectsRoute: appProjectsRoute,
   appSettingsRoute: appSettingsRoute,
   appTasksRoute: appTasksRoute,
-  appAdminSettingsRoute: appAdminSettingsRoute,
-  appAdminUsersRoute: appAdminUsersRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
@@ -492,6 +559,7 @@ const legalRouteRouteWithChildren = legalRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  adminRouteRoute: adminRouteRouteWithChildren,
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
   landingRouteRoute: landingRouteRouteWithChildren,

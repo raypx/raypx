@@ -24,6 +24,7 @@ export async function probeApi(root: string): Promise<void> {
     "api",
     (base) => ({
       NODE_ENV: "test",
+      DATABASE_MIGRATE_ON_START: "false",
       DATABASE_URL: "postgres://raypx:raypx@127.0.0.1:1/raypx_artifact_test",
       AUTH_URL: base,
       AUTH_SECRET: "raypx-artifact-test-secret-32-characters",

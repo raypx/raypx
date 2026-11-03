@@ -10,6 +10,15 @@ export default defineConfig({
   plugins: [
     nitro({
       ...nitroTarget(),
+      serverAssets: [
+        {
+          baseName: "database-migrations",
+          dir: fileURLToPath(
+            new URL("../../packages/database/drizzle-foundation", import.meta.url),
+          ),
+          pattern: "*/migration.sql",
+        },
+      ],
       experimental: { tasks: true },
       tasks: {
         "maintenance:cleanup": {

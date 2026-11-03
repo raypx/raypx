@@ -1,7 +1,7 @@
 # Administrator configuration
 
 Web exposes `/admin/settings` to verified administrators. It uses the existing API
-and PostgreSQL foundation on Node; there is no second admin
+and PostgreSQL foundation on Bun; there is no second admin
 server or configuration package.
 
 ## First setup
@@ -46,9 +46,9 @@ user ID and update timestamp. Defaults apply only when the migrated table has no
 row. Missing tables or failed queries return a safe unavailable error.
 
 The public projection, the sign-up pre-check and mail site names read through a
-5-second [server cache](caching.md): Redis when configured, otherwise memory per Node
+5-second [server cache](caching.md): Redis when configured, otherwise memory per Bun
 process, so other replicas apply a change within that window.
-Failed reads are never cached, and a save refreshes the cache it uses (every Node
+Failed reads are never cached, and a save refreshes the cache it uses (every Bun
 process within a second with Redis, otherwise only the instance that handled it). Admin reads, saves, cleanup runs and the
 Better Auth user-create hook always read the database. That hook is the
 authoritative registration gate for every sign-in method, so a closed policy
@@ -60,7 +60,7 @@ Every save includes its read revision. Concurrent first saves and later edits us
 database compare-and-swap, returning a conflict instead of silently overwriting.
 The page retains the draft until the administrator loads the latest version,
 which keeps the fields they edited and takes every other field from the new
-revision. Writes require a valid session, verified allowlisted email and an Origin
+revision. Writes require a valid session, verified administrator role and an Origin
 in `ALLOWED_ORIGINS`, and are limited to 10 per administrator per minute. DTOs
 reject extra configuration keys.
 
@@ -135,9 +135,9 @@ Platform entry points accept the same typed `RuntimeProviders` as an optional
 second argument. For example, in a custom composition root:
 
 ```ts
-// Node: own one runtime for the process and close it on shutdown.
+// Bun: own one runtime for the process and close it on shutdown.
 const runtime = await createApiRuntime(environment, {
-  createConfigurationRepository: (db) => repositoryFor(db),
+  createConfigurationRepository: (db, audit) => repositoryFor(db, audit),
 });
 ```
 
@@ -145,7 +145,7 @@ Alternatively, pass the factory in `createRuntime`'s resources when composing al
 dependencies yourself. The default is PostgreSQL. The factory runs once per
 runtime, receives its database connection and must not capture another runtime's
 connection. Runtime close owns that connection; custom repositories should not
-allocate independent resources without arranging their cleanup. Node keeps its
+allocate independent resources without arranging their cleanup. Bun keeps its
 process runtime, closed on shutdown. Consumers must not retain a service past that lifecycle.
 
 These interfaces are API-internal. Other apps use the typed RPC client rather than
@@ -164,3 +164,9 @@ bun run verify
 The database gate requires an isolated `_test` database and an empty settings
 table. It checks competing first saves, revision conflicts and persistence across
 clients; it removes only its own fixture row afterward.
+
+Administrative writes also require the durable audit store introduced with the
+console. The default runtime couples configuration CAS and success history in one
+transaction; custom repository factories receive AuditService and must keep this
+contract. See [administration audit](access-control.md#durable-audit) for migration,
+uncertainty and permanent-retention behavior.

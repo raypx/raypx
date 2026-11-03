@@ -230,7 +230,7 @@ describe("menu permissions", () => {
     expect(screen.queryByRole("link", { name: "Waiting" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Memory and templates" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Admin console" })).toBeNull();
     expect(mocks.access).not.toHaveBeenCalled();
   });
 
@@ -240,9 +240,9 @@ describe("menu permissions", () => {
       signIn();
       await page(path);
       expect(await screen.findByRole("alert")).toHaveTextContent("You do not have permission");
-      expect(await screen.findByRole("link", { name: "Automations" })).toBeTruthy();
-      expect(screen.getByRole("link", { name: "Memory and templates" })).toBeTruthy();
-      expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "Memory and templates" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "Admin console" })).toBeNull();
       expect(mocks.configurationGet).not.toHaveBeenCalled();
     },
   );
@@ -250,10 +250,10 @@ describe("menu permissions", () => {
   it("removes administrator navigation when the server downgrades the same account", async () => {
     signIn("admin");
     const router = await page("/approvals");
-    expect(await screen.findByRole("link", { name: "Site settings" })).toBeTruthy();
+    expect(await screen.findByRole("link", { name: "Admin console" })).toBeTruthy();
     mocks.role = "member";
     await router.options.context.queryClient.invalidateQueries({ queryKey: ["account-access"] });
-    await waitFor(() => expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Admin console" })).toBeNull());
   });
 
   it("fails closed on permission lookup errors and lets the user retry", async () => {
@@ -261,7 +261,7 @@ describe("menu permissions", () => {
     mocks.access.mockRejectedValue(new Error("private diagnostic"));
     await page("/admin/settings");
     expect(await screen.findByRole("alert")).toHaveTextContent("Unable to verify permissions");
-    expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Admin console" })).toBeNull();
     expect(screen.queryByText("private diagnostic")).toBeNull();
     expect(mocks.configurationGet).not.toHaveBeenCalled();
     mocks.access.mockResolvedValue(accessForRole("member", "user-1"));
@@ -272,11 +272,11 @@ describe("menu permissions", () => {
   it("never carries administrator navigation into another account while grants are pending", async () => {
     signIn("admin");
     const router = await page("/projects");
-    expect(await screen.findByRole("link", { name: "Site settings" })).toBeTruthy();
+    expect(await screen.findByRole("link", { name: "Admin console" })).toBeTruthy();
     signIn("member", "user-2");
     mocks.access.mockImplementation(() => new Promise(() => {}));
-    await router.navigate({ to: "/admin/settings" });
-    await waitFor(() => expect(screen.queryByRole("link", { name: "Site settings" })).toBeNull());
+    void router.navigate({ to: "/admin/settings" });
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Admin console" })).toBeNull());
     expect(mocks.configurationGet).not.toHaveBeenCalled();
   });
 });
@@ -739,12 +739,12 @@ it("uses the same account menu on the homepage and in the workspace", async () =
   signIn("admin");
   const router = await page("/");
   fireEvent.click(await screen.findByRole("button", { name: "Account menu" }));
-  expect(await screen.findByRole("menuitem", { name: "Users" })).toBeTruthy();
-  expect(screen.getByRole("menuitem", { name: "Site settings" })).toBeTruthy();
+  expect(await screen.findByRole("menuitem", { name: "Admin console" })).toBeTruthy();
+  expect(screen.queryByRole("menuitem", { name: "Site settings" })).toBeNull();
   fireEvent.click(screen.getByRole("menuitem", { name: "Settings" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/settings"));
   fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
-  expect(await screen.findByRole("menuitem", { name: "Users" })).toBeTruthy();
+  expect(await screen.findByRole("menuitem", { name: "Admin console" })).toBeTruthy();
 });
 it("blocks a member's user-management navigation before the page mounts", async () => {
   signIn();

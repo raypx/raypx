@@ -100,16 +100,7 @@ export function WebShell() {
     { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
     { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
   ];
-  secondaryNavigation.push({
-    to: "/admin/users",
-    label: c("users"),
-    icon: <AdjustmentsIcon />,
-  });
-  secondaryNavigation.push({
-    to: "/admin/settings",
-    label: c("adminSettings"),
-    icon: <AdjustmentsIcon />,
-  });
+  secondaryNavigation.push({ to: "/admin", label: c("adminConsole"), icon: <AdjustmentsIcon /> });
   return (
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />

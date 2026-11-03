@@ -30,6 +30,11 @@ Platform entry modules live in `app/`; runtime composition and adapters live in 
 PostgreSQL/memory/unavailable) and builds the auth config; `runtime/lifecycle.ts` closes
 owned resources in reverse order, every one even after a failure, and only once.
 `runtime/server.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
+Before allocating runtime resources it applies pending foundation migrations by default.
+`DATABASE_MIGRATE_ON_START=false` skips only API startup migration. Nitro bundles private
+SQL assets; startup stages them temporarily for the database package's Drizzle migrator
+and removes the temporary directory on success or failure. Migration errors stop startup
+with a safe message. Never log driver errors or expose migration assets over HTTP.
 Account RPC uses `@raypx/account/server` with an injected session reader. The
 service projects public fields; API owns HTTP and unauthorized/error mapping.
 
@@ -74,6 +79,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Dockerfile is shared by Compose and Railway. Its default deploy stage carries
   database production dependencies and migration sources for pre-deploy migration.
   Compose selects the runtime and independent migrate targets explicitly.
+  The runtime output also includes private SQL assets for default startup migration.
   Both migration-capable targets copy the shared migration-payload stage, whose
   workspace sources follow database's transitive production dependencies.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
@@ -215,3 +221,19 @@ cleanup drains old revoked-device projections in batches of 1000 per table. Serv
 uses a projection marker and never increments host-owned request revisions.
 
 server/rpc contains feature handlers and their shared authentication/error boundary. server/app/options.ts owns composition options; RPC handlers never import the HTTP application entry. Runtime composes project validation before Memory and control commands.
+
+## Administration
+
+`server/administration` owns overview queries, cursor-based audit history, request
+scopes and the audited Better Auth adapter. Runtime injects one AuditService into
+HTTP, the Auth adapter and configuration persistence. Audited mutations must write
+a durable intent first and commit success alongside their business change in the
+same PostgreSQL transaction. Failed finalization leaves visible uncertainty;
+post-commit failures cannot rewrite success. Preserve authenticated actor scopes
+across concurrent requests and direct-service/operator calls. Custom configuration
+repository factories receive AuditService and must keep this atomic contract.
+The Hono boundary audits admitted, identified role/configuration requests including
+refusals, applies a bounded admission rate, and exposes only safe errors.
+`admin.*` reads require fresh permissions. Dependency checks reuse `/ready` probes;
+statistics and audit expose no task content, addresses, secrets or raw HTTP bodies.
+Audit records survive account deletion and are never removed by cleanup jobs.

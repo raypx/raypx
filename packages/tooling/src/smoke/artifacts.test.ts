@@ -37,6 +37,7 @@ it("probes the API without a database or mail provider", async () => {
   };
   expect(environment("http://127.0.0.1:1234")).toMatchObject({
     NODE_ENV: "test",
+    DATABASE_MIGRATE_ON_START: "false",
     AUTH_URL: "http://127.0.0.1:1234",
     ALLOWED_ORIGINS: "http://127.0.0.1:1234",
     RESEND_API_KEY: "",

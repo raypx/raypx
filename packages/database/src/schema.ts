@@ -18,18 +18,22 @@ const timestamps = () => ({
   createdAt: date("created_at").notNull().defaultNow(),
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
-export const user = foundation.table("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  image: text("image"),
-  role: text("role").notNull().default("member"),
-  banned: boolean("banned").notNull().default(false),
-  banReason: text("ban_reason"),
-  banExpires: date("ban_expires"),
-  ...timestamps(),
-});
+export const user = foundation.table(
+  "user",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    role: text("role").notNull().default("member"),
+    banned: boolean("banned").notNull().default(false),
+    banReason: text("ban_reason"),
+    banExpires: date("ban_expires"),
+    ...timestamps(),
+  },
+  (table) => [index("user_created_at_idx").on(table.createdAt)],
+);
 export const session = foundation.table(
   "session",
   {
@@ -325,7 +329,32 @@ export const instanceEnrollment = foundation.table(
   (table) => [index("instance_enrollment_expiry_idx").on(table.expiresAt)],
 );
 
+// Independent of account lifetimes: immutable terminal management history.
+export const adminAudit = foundation.table(
+  "admin_audit",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    actorId: text("actor_id"),
+    source: text("source").notNull(),
+    action: text("action").notNull(),
+    targetId: text("target_id"),
+    outcome: text("outcome").notNull().default("pending"),
+    errorCode: text("error_code"),
+    before: jsonb("before"),
+    after: jsonb("after"),
+    startedAt: date("started_at").notNull().defaultNow(),
+    completedAt: date("completed_at"),
+  },
+  (table) => [
+    index("admin_audit_time_idx").on(table.startedAt, table.id),
+    index("admin_audit_actor_time_idx").on(table.actorId, table.startedAt, table.id),
+    index("admin_audit_target_time_idx").on(table.targetId, table.startedAt, table.id),
+  ],
+);
+
 export const schema = {
+  adminAudit,
   runtimeInstance,
   instanceEnrollment,
   contextDocument,

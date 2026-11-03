@@ -108,7 +108,8 @@ it("registers, verifies, signs in, resets password and revokes the session", asy
   });
   expect(
     (await request("admin/set-role", { userId: currentUser.id, role: "member" }, cookie)).status,
-  ).toBe(200);
+  ).toBe(403);
+  await (await auth.$context).internalAdapter.updateUser(currentUser.id, { role: "member" });
   expect(await client.account.access({})).toMatchObject({ role: "member" });
   expect(
     (

@@ -9,10 +9,14 @@ import type { Cache } from "../cache/types.js";
 import type { ObjectStorage } from "@raypx/storage";
 import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
 import { ControlService, ControlProjects } from "@raypx/control";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { createAuditedAuthAdapter } from "../administration/auth-adapter.js";
+import {
+  createAdministrationRepository,
+  type AdministrationRepository,
+} from "../administration/repository.js";
+import { AuditService } from "../administration/audit.js";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
-import { schema } from "@raypx/database/schema";
 import { configurationDefaults } from "@raypx/contracts/api";
 import type { ApiLogging } from "../logging.js";
 import { createApiApp } from "../api.js";
@@ -33,7 +37,8 @@ import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/mem
 
 export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
-  createConfigurationRepository?: (db: Database) => ConfigurationRepository;
+  createConfigurationRepository?: (db: Database, audit: AuditService) => ConfigurationRepository;
+  createAdministrationRepository?: (db: Database) => AdministrationRepository;
   createJobsRepository?: (db: Database) => CloudJobsRepository;
   createContextRepository?: (db: Database) => ContextLibraryRepository;
   /**
@@ -83,8 +88,16 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       issuerKey: signer.publicKey,
     });
     const access = createAccessPolicy();
+    const administration = (
+      resources.createAdministrationRepository ?? createAdministrationRepository
+    )(db);
+    const audit = new AuditService(administration);
     const configuration = createConfigurationService({
-      repository: (resources.createConfigurationRepository ?? createConfigurationRepository)(db),
+      repository: (resources.createConfigurationRepository ?? createConfigurationRepository)(
+        db,
+        audit,
+      ),
+      audit,
       access,
       cache,
     });
@@ -122,7 +135,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
           (snapshot) => snapshot.values.siteName,
           () => configurationDefaults.siteName,
         ),
-      database: drizzleAdapter(db, { provider: "pg", schema }),
+      database: createAuditedAuthAdapter(db, audit),
       mailer,
       ...(secondaryStorage ? { secondaryStorage } : {}),
       config: createAuthConfig(environment),
@@ -132,6 +145,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
     return {
       auth,
+      audit,
+      administration,
       cache,
       storage,
       control,
@@ -145,6 +160,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       },
       app: createApiApp({
         instances,
+        audit,
+        administration,
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,

@@ -7,6 +7,8 @@ const destinations = new Set([
   "/automations",
   "/memory",
   "/settings",
+  "/admin",
+  "/admin/audit",
   "/admin/settings",
   "/admin/users",
 ]);

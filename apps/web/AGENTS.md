@@ -204,3 +204,17 @@ clear, without invalidating the auth route mid-completion.
 `/admin/users` composes the account-keyed users feature through Better Auth's existing
 Admin client. Lists use server searches and 20-row pagination. Role changes require
 confirmation, prevent self-editing, and retry a completed mutation's refresh separately.
+
+## Administration console
+
+`src/routes/(admin)` owns `/admin`, `/admin/users`, `/admin/settings` and `/admin/audit`
+under the independent AdminShell. The group resolves fresh account and admin.read
+before loading; feature guards and live boundaries remain authoritative for mounting.
+Never mount task clients, remote project navigation or pending counts in this shell.
+Public configuration reads stay in their existing lightweight module. Account menus
+link to one console entry and preserve account-dialog return history.
+`features/administration` owns account/origin-keyed overview, dependency and audit
+queries. Statistics distinguish failed reads from zeroes and use explicit UTC dates.
+Audit searches are bounded by date range and use server cursor pagination; there are
+no edit/delete/export actions. Unknown outcomes remain unknown until the server
+confirms them. Clear private administration state across identity changes.

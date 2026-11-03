@@ -36,8 +36,10 @@ instead of PostgreSQL. API sessions remain persisted in PostgreSQL.
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
 Start `docker compose up -d postgres valkey` (PostgreSQL on 5433, Valkey on 6380),
-then bun run db:migrate and bun run dev.
-Never point these migration commands at the retired database or volume.
+then run `bun run dev`. API startup applies pending foundation migrations before
+initializing its runtime. Set `DATABASE_MIGRATE_ON_START=false` to skip this step
+when migrations are managed separately; `bun run db:migrate` remains available explicitly.
+Never point API startup or migration commands at the retired database or volume.
 bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation schema of DATABASE_URL.
 
 bun run dev starts Web (Start SSR on 3000), API (3002) and Relay (3003). The API Vite

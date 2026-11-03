@@ -1,3 +1,4 @@
+import type { AuditService } from "../administration/audit.js";
 import { hasPermission } from "@raypx/account/access";
 import type { AccessPolicy } from "../access.js";
 import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";
@@ -21,6 +22,7 @@ export class ConfigurationError extends Error {
 
 export interface ConfigurationServiceOptions {
   repository: ConfigurationRepository;
+  audit?: AuditService;
   access: AccessPolicy;
   /** Pass a longer-lived or shared cache; defaults to one private to this service. */
   cache?: Cache;
@@ -32,6 +34,7 @@ const CACHE_KEY = "configuration:snapshot";
 
 export function createConfigurationService({
   repository,
+  audit,
   access,
   cache = createCache(createMemoryStore()),
   cacheTtlMs = 5_000,
@@ -43,7 +46,7 @@ export function createConfigurationService({
       throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
     }
   }
-  return {
+  const service: ConfigurationService = {
     read,
     readCached: () =>
       cache.getOrLoad(
@@ -73,4 +76,21 @@ export function createConfigurationService({
       return saved;
     },
   };
+  return !audit
+    ? service
+    : {
+        ...service,
+        update: (input, auth) =>
+          !auth
+            ? service.update(input, auth)
+            : audit.run(
+                {
+                  action: "configuration.update",
+                  actorId: auth.user.id,
+                  source: "service",
+                  requestId: crypto.randomUUID(),
+                },
+                () => service.update(input, auth),
+              ),
+      };
 }

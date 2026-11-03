@@ -1,3 +1,5 @@
+import { administrationContract } from "./administration.js";
+export * from "./administration.js";
 import { instancesContract } from "./instances.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
@@ -44,6 +46,7 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  admin: administrationContract,
   instances: instancesContract,
   memory: memoryContract,
   jobs: jobsContract,
@@ -126,9 +129,10 @@ export const apiContract = {
 
 /** Native transport policy. Every HTTP procedure must explicitly select its consumer. */
 type NativeExposure<C> = {
-  [Group in keyof C]: { [Method in keyof C[Group]]: "renderer" | "native" | "host" };
+  [Group in keyof C]: { [Method in keyof C[Group]]: "renderer" | "native" | "host" | "web" };
 };
 export const apiExposure = {
+  admin: { overview: "web", health: "web", audit: "web" },
   instances: {
     begin: "host",
     inspect: "renderer",

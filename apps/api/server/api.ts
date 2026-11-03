@@ -1,3 +1,5 @@
+import { AuditUnavailable } from "./administration/audit.js";
+import { checkReadiness } from "./app/readiness.js";
 import type { ApiEventLogger } from "./logging.js";
 import type { ApiAppOptions } from "./app/options.js";
 import { createRpcRouter } from "./rpc/router.js";
@@ -71,27 +73,58 @@ export function createApiApp(options: ApiAppOptions) {
       maxAge: 600,
     }),
   );
+  app.use("*", async (c, next) => {
+    const path = decodeURIComponent(c.req.path).replace(/\/+$/, "");
+    const action =
+      c.req.method !== "POST"
+        ? null
+        : path === "/api/auth/admin/set-role"
+          ? "user.role.update"
+          : path === "/rpc/configuration/update"
+            ? "configuration.update"
+            : null;
+    if (!action || !options.audit) return next();
+    try {
+      const session = await options.readSession(c.req.raw.headers);
+      if (!session) return next();
+      if (
+        options.rateLimit &&
+        !(await options.rateLimit(`admin.audit:${session.user.id}`, { window: 60, max: 60 }))
+      )
+        return c.json({ code: "RATE_LIMITED", message: "Too many administration requests" }, 429);
+      await options.audit.run(
+        { action, actorId: session.user.id, source: "http", requestId: c.get("requestId") },
+        async () => {
+          await next();
+          return c.res;
+        },
+      );
+    } catch (error) {
+      if (error instanceof AuditUnavailable && path.startsWith("/rpc/"))
+        return c.json(
+          {
+            json: {
+              defined: false,
+              code: "SERVICE_UNAVAILABLE",
+              message: "Administration audit is unavailable",
+              data: { error: { code: "AUDIT_UNAVAILABLE" }, requestId: c.get("requestId") },
+            },
+          },
+          503,
+        );
+      if (error instanceof AuditUnavailable)
+        return c.json(
+          { code: "AUDIT_UNAVAILABLE", message: "Administration audit is unavailable" },
+          503,
+        );
+      throw error;
+    }
+  });
   app.get("/health", (c) => c.json({ status: "ok" }));
   // Readiness, unlike liveness, checks dependencies so platforms can drain an instance
   // that cannot reach PostgreSQL or Redis. Results name dependencies, never errors.
   app.get("/ready", async (c) => {
-    const checks = Object.fromEntries(
-      await Promise.all(
-        Object.entries(options.readiness ?? {}).map(async ([name, probe]) => {
-          const timeout = AbortSignal.timeout(3000);
-          const ok = await Promise.race([
-            probe().then(
-              () => true,
-              () => false,
-            ),
-            new Promise<boolean>((resolve) =>
-              timeout.addEventListener("abort", () => resolve(false), { once: true }),
-            ),
-          ]);
-          return [name, ok ? "ok" : "unavailable"] as const;
-        }),
-      ),
-    );
+    const checks = await checkReadiness(options.readiness ?? {});
     const ready = Object.values(checks).every((value) => value === "ok");
     return c.json({ status: ready ? "ok" : "unavailable", checks }, ready ? 200 : 503);
   });

@@ -18,9 +18,19 @@ it("scopes injected repositories to each runtime and shares the service with HTT
       return { db, close };
     },
     closeLogger: async () => {},
+    createAdministrationRepository: () => ({
+      begin: async () => crypto.randomUUID(),
+      finish: async () => {},
+      overview: async () => {
+        throw new Error("Unused");
+      },
+      list: async () => {
+        throw new Error("Unused");
+      },
+    }),
     createConfigurationRepository: vi.fn<
       NonNullable<RuntimeResources["createConfigurationRepository"]>
-    >(() => {
+    >((_db, audit) => {
       let snapshot = {
         values: { ...configurationDefaults, cleanupEnabled: false },
         revision: 0,
@@ -31,6 +41,8 @@ it("scopes injected repositories to each runtime and shares the service with HTT
         update: async (values, revision) => {
           if (snapshot.revision !== revision) return null;
           snapshot = { values, revision: revision + 1, updatedAt: new Date().toISOString() };
+          const scope = audit.current();
+          if (scope) scope.committed = true;
           return structuredClone(snapshot);
         },
       };
@@ -44,8 +56,16 @@ it("scopes injected repositories to each runtime and shares the service with HTT
   const first = await createRuntime(env, resources);
   const second = await createRuntime(env, resources);
   try {
-    expect(resources.createConfigurationRepository).toHaveBeenNthCalledWith(1, connections[0]);
-    expect(resources.createConfigurationRepository).toHaveBeenNthCalledWith(2, connections[1]);
+    expect(resources.createConfigurationRepository).toHaveBeenNthCalledWith(
+      1,
+      connections[0],
+      expect.anything(),
+    );
+    expect(resources.createConfigurationRepository).toHaveBeenNthCalledWith(
+      2,
+      connections[1],
+      expect.anything(),
+    );
     const initial = await first.configuration.read();
     await first.configuration.update(
       { revision: initial.revision, values: { ...initial.values, siteName: "First runtime" } },

@@ -4,6 +4,7 @@ import { accountProfileSchema, apiContract } from "./api.js";
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
     expect(Object.keys(apiContract)).toEqual([
+      "admin",
       "instances",
       "memory",
       "jobs",

@@ -54,3 +54,9 @@ Terminal requests have a separate section from managed tasks. Load tool inputs o
 on expansion; show waiting, decided, delivered and uncertain outcomes accurately.
 Keep receipt identity on retry, hide expired actions and retain the processed item
 when an answer succeeds. Use explicit project and Away opt-in in Desktop settings.
+
+Web administration has its own /admin shell with Overview, Users, Site settings and
+Audit log. A single console link leaves the personal workspace navigation uncluttered.
+Use actual account aggregates and dependency observations, with explicit UTC dates
+and independent unavailable states. Audit rows distinguish applied, rejected, failed,
+in-progress and unconfirmed outcomes; change details never contain secrets.

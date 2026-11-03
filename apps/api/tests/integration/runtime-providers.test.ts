@@ -10,7 +10,9 @@ import type { RuntimeProviders } from "../../server/runtime/shared.js";
 const mocks = vi.hoisted(() => ({
   connect: vi.fn<() => DatabaseConnection>(),
   readSession: vi.fn<(auth: unknown, headers: Headers) => Promise<AuthSession | null>>(),
+  migrate: vi.fn(async (_environment: unknown) => {}),
 }));
+vi.mock("../../server/runtime/migrations.js", () => ({ migrateApiDatabase: mocks.migrate }));
 vi.mock("@raypx/database/connection", () => ({ connectDatabase: mocks.connect }));
 vi.mock("@raypx/auth/server", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@raypx/auth/server")>()),
@@ -27,7 +29,17 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
   });
   const ownedDatabases: Database[] = [];
   const providers: RuntimeProviders = {
-    createConfigurationRepository(db) {
+    createAdministrationRepository: () => ({
+      begin: async () => crypto.randomUUID(),
+      finish: async () => {},
+      overview: async () => {
+        throw new Error("Unused");
+      },
+      list: async () => {
+        throw new Error("Unused");
+      },
+    }),
+    createConfigurationRepository(db, audit) {
       ownedDatabases.push(db);
       let snapshot: ConfigurationSnapshot = {
         values: { ...configurationDefaults },
@@ -39,6 +51,8 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
         update: async (values, revision) => {
           if (snapshot.revision !== revision) return null;
           snapshot = { values, revision: revision + 1, updatedAt: new Date().toISOString() };
+          const scope = audit.current();
+          if (scope) scope.committed = true;
           return structuredClone(snapshot);
         },
       };
@@ -49,6 +63,8 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
   const first = await create();
   const second = await create();
   try {
+    expect(mocks.migrate).toHaveBeenCalledTimes(2);
+    expect(mocks.migrate.mock.calls[0]![0]).toMatchObject({ DATABASE_MIGRATE_ON_START: true });
     expect(ownedDatabases).toEqual(connections.map(({ db }) => db));
     expect(ownedDatabases[0]).not.toBe(ownedDatabases[1]);
     const auth: AuthSession = {
@@ -96,4 +112,12 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
     await Promise.all([first.close(), second.close()]);
   }
   for (const connection of connections) expect(connection.close).toHaveBeenCalledOnce();
+});
+
+it("does not allocate the runtime database when startup migration fails", async () => {
+  mocks.migrate.mockRejectedValueOnce(new Error("API database migration failed"));
+  await expect(createApiRuntime(getApiEnvironment({ NODE_ENV: "test" }))).rejects.toThrow(
+    "API database migration failed",
+  );
+  expect(mocks.connect).not.toHaveBeenCalled();
 });
