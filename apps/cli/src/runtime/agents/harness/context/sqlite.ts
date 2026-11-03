@@ -65,7 +65,7 @@ export class SqlitePiContextStore implements PiContextStore {
     try {
       if (typeof row.value !== "string") fail("PI_CONTEXT_INVALID");
       const record = piStoredContextSchema.parse(JSON.parse(row.value));
-      // Tool declarations persist JSON Schema; TypeBox's live symbol brand is not JSON.
+      // Tool declarations persist plain JSON Schema rather than live schema builders.
       return { ...record, revision: row.revision } as PiContext;
     } catch {
       return fail("PI_CONTEXT_INVALID");

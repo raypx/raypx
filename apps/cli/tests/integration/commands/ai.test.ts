@@ -3,7 +3,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { createAiClient, createCompatibleProvider, Type } from "@raypx/ai";
+import { createAiClient, createCompatibleProvider } from "@raypx/ai";
+import { z } from "zod";
 import { parseCliArgs } from "../../../src/commands/args";
 import { runCommand } from "../../../src/commands";
 import { aiFixture } from "../../helpers/ai";
@@ -142,7 +143,7 @@ it("parses streamed tool-call arguments through the real Pi SDK", async () => {
         {
           name: "read_file",
           description: "Read",
-          parameters: Type.Object({ path: Type.String() }),
+          parameters: z.toJSONSchema(z.object({ path: z.string() })),
         },
       ],
     },

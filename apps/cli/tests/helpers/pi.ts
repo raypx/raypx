@@ -1,12 +1,12 @@
 import {
   createAssistantMessageEventStream,
-  Type,
   type AssistantMessage,
   type Model,
   type Api,
 } from "@raypx/ai";
 import type { AgentTool, StreamFn } from "@earendil-works/pi-agent-core";
 import type { PiContext, PiContextStore } from "@raypx/provider-pi";
+import { z } from "zod";
 
 export const piModel: Model<Api> = {
   id: "offline",
@@ -78,7 +78,7 @@ export function piTool(execute: AgentTool["execute"]): AgentTool {
     name: "fixture_tool",
     label: "Fixture tool",
     description: "Offline fixture only",
-    parameters: Type.Object({ value: Type.String() }),
+    parameters: z.toJSONSchema(z.object({ value: z.string() })),
     execute,
   };
 }

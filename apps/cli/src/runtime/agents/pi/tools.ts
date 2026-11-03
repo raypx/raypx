@@ -1,4 +1,4 @@
-import { Type } from "@raypx/ai";
+import { z } from "zod";
 import type { AgentTool } from "@raypx/provider-pi";
 import type { AgentTask } from "@raypx/core/tasks";
 import { localParams } from "@raypx/contracts/local";
@@ -6,65 +6,65 @@ import type { AskApproval } from "@raypx/provider-core";
 import type { FileRuntime } from "../../files";
 import type { ProcessRuntime } from "../../process";
 
-const path = { path: Type.String() };
+const path = { path: z.string() };
 const definitions = [
   {
     name: "files_list",
     description: "List a granted project directory. Paths are relative to the project.",
-    parameters: Type.Object({
+    parameters: z.object({
       ...path,
-      offset: Type.Optional(Type.Integer({ minimum: 0 })),
-      limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 500 })),
+      offset: z.int().min(0).optional(),
+      limit: z.int().min(1).max(500).optional(),
     }),
   },
   {
     name: "files_stat",
     description: "Inspect project path metadata and current version.",
-    parameters: Type.Object(path),
+    parameters: z.object(path),
   },
   {
     name: "files_read",
     description: "Read a UTF-8 project file and its version.",
-    parameters: Type.Object(path),
+    parameters: z.object(path),
   },
   {
     name: "files_write",
     description:
       "Write a project file after approval. Supply its current version or null for a new file.",
-    parameters: Type.Object({
+    parameters: z.object({
       ...path,
-      text: Type.String({ maxLength: 1_048_576 }),
-      version: Type.Union([Type.String(), Type.Null()]),
+      text: z.string().max(1_048_576),
+      version: z.string().nullable(),
     }),
   },
   {
     name: "files_mkdir",
     description: "Create a project directory after approval.",
-    parameters: Type.Object(path),
+    parameters: z.object(path),
   },
   {
     name: "files_move",
     description: "Move a project path after approval with its current version.",
-    parameters: Type.Object({ ...path, to: Type.String(), version: Type.String() }),
+    parameters: z.object({ ...path, to: z.string(), version: z.string() }),
   },
   {
     name: "files_delete",
     description:
       "Permanently delete a project path after explicit approval with its current version.",
-    parameters: Type.Object({ ...path, version: Type.String() }),
+    parameters: z.object({ ...path, version: z.string() }),
   },
   {
     name: "command_run",
     description:
       "Execute an absolute program with explicit arguments after approval. cwd is project-relative. Commands have the OS user's permissions.",
-    parameters: Type.Object({
-      executable: Type.String(),
-      args: Type.Array(Type.String()),
-      cwd: Type.String(),
-      timeoutMs: Type.Optional(Type.Integer({ minimum: 100, maximum: 600_000 })),
+    parameters: z.object({
+      executable: z.string(),
+      args: z.array(z.string()),
+      cwd: z.string(),
+      timeoutMs: z.int().min(100).max(600_000).optional(),
     }),
   },
-];
+].map((tool) => ({ ...tool, parameters: z.toJSONSchema(tool.parameters) }));
 const readOnly = new Set(["files_list", "files_stat", "files_read"]);
 export function createPiTools(
   rootId: string,

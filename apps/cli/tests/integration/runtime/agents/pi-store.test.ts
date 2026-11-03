@@ -29,24 +29,28 @@ function fixture() {
 }
 const idle = () => ({ status: "idle" as const, messages: [] });
 
-it("isolates context ids, retains revisions on reopen and returns independent snapshots", async () => {
-  const f = fixture(),
-    first = f.open("one"),
-    second = f.open("two");
-  expect(await first.load()).toEqual({ revision: 0, ...idle() });
-  const message = piMessage([{ type: "text", text: "Completed" }]);
-  expect(await first.commit(0, { status: "succeeded", messages: [message] })).toBe(1);
-  expect(await second.load()).toEqual({ revision: 0, ...idle() });
-  expect(await second.commit(0, { status: "failed", messages: [] })).toBe(1);
-  first.close();
-  second.close();
-  const reopened = f.open("one");
-  const snapshot = await reopened.load();
-  expect(snapshot).toEqual({ revision: 1, status: "succeeded", messages: [message] });
-  snapshot.messages.length = 0;
-  expect((await reopened.load()).messages).toHaveLength(1);
-  expect((await f.open("two").load()).status).toBe("failed");
-});
+it.each([true, false, undefined])(
+  "retains isolated contexts and cost provenance %s on reopen",
+  async (totalFromProvider) => {
+    const f = fixture(),
+      first = f.open("one"),
+      second = f.open("two");
+    expect(await first.load()).toEqual({ revision: 0, ...idle() });
+    const message = piMessage([{ type: "text", text: "Completed" }]);
+    if (totalFromProvider !== undefined) message.usage.cost.totalFromProvider = totalFromProvider;
+    expect(await first.commit(0, { status: "succeeded", messages: [message] })).toBe(1);
+    expect(await second.load()).toEqual({ revision: 0, ...idle() });
+    expect(await second.commit(0, { status: "failed", messages: [] })).toBe(1);
+    first.close();
+    second.close();
+    const reopened = f.open("one");
+    const snapshot = await reopened.load();
+    expect(snapshot).toEqual({ revision: 1, status: "succeeded", messages: [message] });
+    snapshot.messages.length = 0;
+    expect((await reopened.load()).messages).toHaveLength(1);
+    expect((await f.open("two").load()).status).toBe("failed");
+  },
+);
 
 it.skipIf(process.platform === "win32")(
   "protects the transcript database with private POSIX permissions",

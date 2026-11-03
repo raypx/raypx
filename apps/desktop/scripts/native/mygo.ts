@@ -183,7 +183,7 @@ if (import.meta.main) {
     }
     case "dev":
       await prepare(false);
-      await run(["go", "run", "github.com/egoist/mygo/cmd/mygo@v0.7.3", "dev", ...args]);
+      await run(["go", "run", "github.com/egoist/mygo/cmd/mygo@v0.7.4", "dev", ...args]);
       break;
     case undefined:
     default:

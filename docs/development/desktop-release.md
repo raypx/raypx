@@ -2,7 +2,7 @@
 
 See [Desktop commands](../../apps/desktop/README.md) and [ADR 0038](../architecture/0038-mygo-desktop-host.md).
 
-Bun 1.4.4 owns renderer and compiled CLI builds. Go 1.27.3 owns the MyGo v0.7.3 host,
+Bun 1.4.4 owns renderer and compiled CLI builds. Go 1.27.3 owns the MyGo v0.7.4 host,
 built with CGO_ENABLED=0. `bun run package:desktop` stages frontend/manifests,
 version-matched standalone CLI and the complete Herdr runtime, then invokes the
 pinned MyGo packager. Outputs live under `apps/desktop/build/<os>-<arch>`.

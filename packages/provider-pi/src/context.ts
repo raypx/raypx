@@ -39,6 +39,7 @@ const usage = z.strictObject({
     cacheRead: count,
     cacheWrite: count,
     total: count,
+    totalFromProvider: z.boolean().optional(),
   }),
 });
 const tool = z.strictObject({
@@ -148,7 +149,7 @@ const message = z.discriminatedUnion("role", [
   }),
 ]);
 
-/** Pinned SDK transcript JSON, without live TypeBox symbols or provider objects. */
+/** Pinned SDK transcript JSON, without schema builders or provider objects. */
 export const piStoredContextSchema = z.strictObject({
   identity: z
     .strictObject({

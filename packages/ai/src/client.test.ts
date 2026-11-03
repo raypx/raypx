@@ -3,7 +3,6 @@ import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "@earendil-work
 import {
   AiError,
   createAiClient,
-  Type,
   type AiClient,
   type Context,
   type CredentialStore,
@@ -69,7 +68,11 @@ it("preserves structured tool calls without executing a tool", async () => {
       {
         name: "read_file",
         description: "Read a granted file",
-        parameters: Type.Object({ path: Type.String() }),
+        parameters: {
+          type: "object",
+          properties: { path: { type: "string" } },
+          required: ["path"],
+        },
       },
     ],
   });

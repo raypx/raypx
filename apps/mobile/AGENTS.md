@@ -31,6 +31,8 @@ platform-neutral hooks and i18n catalogs. System language and appearance are def
 ## Verification
 
 Use Bun 1.4.4 for scripts. VP registers check/test/build; Expo owns Metro bundling.
+React and React DOM use the shared root catalog at Expo's supported version.
+Check dependency alignment with `bun --bun expo install --check` in this workspace.
 Build exports both native JS bundles and is uncached because Expo consumes public
 environment variables. Generated native projects, Expo caches and bundles are not source.
 Prefer TypeScript for handwritten code and executable configuration. Keep static

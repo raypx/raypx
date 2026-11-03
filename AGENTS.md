@@ -55,10 +55,14 @@ The accepted foundation design supersedes documents in docs/history.
   only enables reading package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
   Keep external versions there and use workspace:* for internal dependencies.
+- Keep coverage aligned with Vite+'s bundled Vitest and native modules within
+  Expo's bundled version ranges.
+- React and React DOM share the same exact Expo-supported version across all
+  applications; shared React peers must include that version.
 - Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
-- Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.3 and Go 1.27.3.
+- Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.4 and Go 1.27.3.
   Native builds require `CGO_ENABLED=0`; `internal/app` owns framework APIs and
   `internal/desktop` owns native policy and CLI transport. Bun/VP owns JS builds.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.

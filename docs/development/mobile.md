@@ -22,6 +22,12 @@ scan its QR code in a compatible Expo Go version. The build task exports both
 native JavaScript bundles into `apps/mobile/dist`; it does not compile, sign or
 publish native application binaries. Linux cannot verify iOS simulator behavior.
 
+React and React DOM are pinned together in the root catalog to Expo's supported
+version (currently 19.3.0). Web, Desktop and shared packages use the same version;
+shared peer ranges include it. After dependency changes, run
+`bun --bun expo install --check` from `apps/mobile` to check the installed SDK
+dependencies. Keep native modules within Expo's bundled version ranges.
+
 Copy `apps/mobile/.env.example` to `.env.local` in that workspace to override
 `EXPO_PUBLIC_API_URL`. The default is `https://raypx.com`. Supply an HTTPS gateway
 origin without a path, query or credentials; a development device must be able to

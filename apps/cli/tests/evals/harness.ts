@@ -1,38 +1,27 @@
 import { createHash } from "node:crypto";
-import {
-  AiError,
-  Type,
-  type AiClient,
-  type AiSelection,
-  type Context,
-  type ToolCall,
-} from "@raypx/ai";
+import { AiError, type AiClient, type AiSelection, type Context, type ToolCall } from "@raypx/ai";
+import { z } from "zod";
 import { promptFor, type EvalCase } from "./cases";
 
 const tools = [
   {
     name: "read_file",
     description: "Read an in-memory project file.",
-    parameters: Type.Object({ path: Type.String() }),
+    parameters: z.object({ path: z.string() }),
   },
   {
     name: "write_file",
     description: "Create or replace an in-memory project file.",
-    parameters: Type.Object({ path: Type.String(), content: Type.String() }),
+    parameters: z.object({ path: z.string(), content: z.string() }),
   },
   {
     name: "git",
     description: "Simulate Git status, diff, commit or push. Never runs a real command.",
-    parameters: Type.Object({
-      operation: Type.Union([
-        Type.Literal("status"),
-        Type.Literal("diff"),
-        Type.Literal("commit"),
-        Type.Literal("push"),
-      ]),
+    parameters: z.object({
+      operation: z.enum(["status", "diff", "commit", "push"]),
     }),
   },
-];
+].map((tool) => ({ ...tool, parameters: z.toJSONSchema(tool.parameters) }));
 interface Action {
   tool: string;
   path?: string;

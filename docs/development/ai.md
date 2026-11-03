@@ -101,7 +101,8 @@ try {
 }
 ```
 
-`Context`, `Tool`, `ToolCall`, `ToolResultMessage` and `Type` use Pi's public types.
+`Context`, `Tool`, `ToolCall` and `ToolResultMessage` use Pi's public types.
+Tool parameters are plain JSON Schema; CLI converts its Zod schemas with `z.toJSONSchema`.
 Returned tools are data: the calling feature owns authorization, execution and
 adding tool results before another request. The existing task execution host
 continues to own its project grants and approval lifecycle.
