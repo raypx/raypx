@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 import { createTaskClient } from "./tasks.js";
-import type { ApiClient } from "./index.js";
+import type { ApiClient } from "./api.js";
 
 import { taskSchema } from "@raypx/core/tasks";
 

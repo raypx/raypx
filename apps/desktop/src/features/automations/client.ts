@@ -1,4 +1,4 @@
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import type { CloudJobsPort, JobDevicesPort } from "@raypx/jobs/client";
 import { apiUrl, desktopFetch } from "../auth/client";
 

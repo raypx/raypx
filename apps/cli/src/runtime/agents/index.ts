@@ -30,8 +30,12 @@ import manifest from "../../../package.json";
 
 import { AgentCommandService } from "./application/commands";
 import { AgentQueries } from "./application/queries";
+import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports";
+import { DecisionRejected } from "./domain/decider";
 export class AgentRuntime {
-  readonly instanceId = crypto.randomUUID();
+  readonly instanceId: string;
+  private readonly clock: Clock;
+  private readonly ids: Ids;
   private readonly store: AgentStore;
   private readonly queries: AgentQueries;
   private readonly providers: ProviderRegistry;
@@ -54,6 +58,12 @@ export class AgentRuntime {
       /** How long an interrupted turn may run before its pending input expires. */
       interruptTimeoutMs?: number;
       environment?: () => Record<string, string | undefined>;
+      /** Determinism ports for tests that compare replayed or projected output. */
+      clock?: Clock;
+      transport?: import("./harness/transport").TransportFactory;
+      /** Tests supply explicit executables and never discover a real installation. */
+      explicitExecutables?: boolean;
+      ids?: Ids;
       resolveContext?: (
         selection: TaskContextSelection,
         target: TaskContextTarget,
@@ -61,8 +71,16 @@ export class AgentRuntime {
       ) => Promise<TaskContextSnapshot>;
     } = {},
   ) {
-    this.store = new AgentStore(state.db);
-    this.providers = createProviderRegistry(options.executables, options.pi);
+    this.clock = options.clock ?? systemClock;
+    this.ids = options.ids ?? cryptoIds;
+    this.instanceId = this.ids.generate();
+    this.store = new AgentStore(state.db, 4096, 8 * 1024 * 1024, this.clock, this.ids);
+    this.providers = createProviderRegistry(
+      options.executables,
+      options.pi,
+      options.transport,
+      options.explicitExecutables,
+    );
     this.projectsService = new LocalExecutionProjects(state, this.store);
     const hooks = new ClaudeApprovalServer((id) => this.execution.get(id));
     this.execution = new ExecutionCoordinator(
@@ -71,7 +89,7 @@ export class AgentRuntime {
       this.projectsService,
       hooks,
       changed,
-      options,
+      { ...options, clock: this.clock, ids: this.ids },
     );
     this.queries = new AgentQueries(this.store, (local) => this.providers.inspect(local));
     this.commands = new AgentCommandService(
@@ -85,13 +103,32 @@ export class AgentRuntime {
           return execution.enqueue(input);
         },
         cancel: (local, starting) => this.execution.cancelTask(local, starting),
-        decide: (binding, id, taskId, requestId, decision) =>
-          this.command(binding, { id, type: "decision", taskId, requestId, decision }),
+        decide: async (binding, id, taskId, requestId, decision) => {
+          const result = this.store.submit(
+            {
+              type: "decision",
+              binding,
+              commandId: id,
+              taskId,
+              requestId,
+              decision,
+              recordDecided: true,
+            },
+            this.execution.live(),
+          );
+          this.execution.runEffects(result.effects);
+          this.store.receipt(id);
+          return result.result;
+        },
       },
       () => this.execution.isClosing(),
       options.resolveContext,
+      this.clock,
     );
 
+    // Startup sweep: effects addressed a process that no longer exists, so they are
+    // abandoned rather than replayed, and every task still active is interrupted.
+    this.store.recoverEffects();
     for (const local of this.store.tasks({ activeOnly: true }))
       this.execution.status(local, "interrupted", undefined, "HOST_RESTARTED");
   }
@@ -106,7 +143,7 @@ export class AgentRuntime {
       appVersion: manifest.version,
       epoch: 1,
       revoked: false,
-      lastSeenAt: new Date().toISOString(),
+      lastSeenAt: this.clock.now().toISOString(),
       online: true,
       projects: await this.projects(),
       capabilities: await this.capabilities(),
@@ -137,7 +174,7 @@ export class AgentRuntime {
       id,
       deviceId,
       request,
-      expiresAt: new Date(Date.now() + 15_000).toISOString(),
+      expiresAt: new Date(this.clock.now().getTime() + 15_000).toISOString(),
     });
   }
   // Local history has no cloud copy, so finished tasks are removed only on request.
@@ -201,17 +238,18 @@ export class AgentRuntime {
   snapshot(binding: string, id?: string, offset = 0) {
     if (!id) {
       for (const [key, value] of this.snapshots)
-        if (value.binding === binding || value.expires < Date.now()) this.snapshots.delete(key);
-      id = crypto.randomUUID();
+        if (value.binding === binding || value.expires < this.clock.now().getTime())
+          this.snapshots.delete(key);
+      id = this.ids.generate();
       const snapshot = this.store.snapshot(binding);
       this.snapshots.set(id, {
         binding,
-        expires: Date.now() + 120_000,
+        expires: this.clock.now().getTime() + 120_000,
         ...snapshot,
       });
     }
     const snapshot = this.snapshots.get(id);
-    if (!snapshot || snapshot.binding !== binding || snapshot.expires < Date.now())
+    if (!snapshot || snapshot.binding !== binding || snapshot.expires < this.clock.now().getTime())
       throw new LocalError("NOT_FOUND", "Snapshot unavailable");
     const records: SnapshotRecord[] = [];
     let bytes = 0;
@@ -240,6 +278,11 @@ export class AgentRuntime {
     this.store.ack(binding, ids);
     return { accepted: true };
   }
+  /**
+   * Device commands are a thin shell: the decider validates against committed
+   * records and live facts, the sink commits, then the worker runs the effects.
+   * A device command that no longer applies is acknowledged without a change.
+   */
   async command(binding: string, command: DeviceCommand) {
     if (this.store.seen(command.id)) return { accepted: true };
     if (command.type === "start")
@@ -248,9 +291,25 @@ export class AgentRuntime {
     if (execution && execution.local.binding !== binding)
       throw new LocalError("NOT_FOUND", "Task does not belong to binding");
     if (command.type === "cancel") {
+      // Cancellation drains through the execution's own state machine today.
       if (execution) execution.cancel();
     } else if (execution) {
-      execution.applyDecision(command.requestId, command.decision);
+      try {
+        const decision = this.store.submit(
+          {
+            type: "decision",
+            binding,
+            commandId: command.id,
+            taskId: command.taskId,
+            requestId: command.requestId,
+            decision: command.decision,
+          },
+          this.execution.live(),
+        );
+        this.execution.runEffects(decision.effects);
+      } catch (error) {
+        if (!(error instanceof DecisionRejected)) throw error;
+      }
     }
     this.store.receipt(command.id);
     return { accepted: true };

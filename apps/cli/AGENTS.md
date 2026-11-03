@@ -123,11 +123,31 @@ process draining. The `@raypx/provider-codex` and `@raypx/provider-claude` libra
 into lifecycle events without owning task storage or relay transport.
 `harness/transport.ts` defines protocol I/O; its process implementation is
 `runtime/agents/transport.ts`. Fence callbacks to the current execution handle.
-The private harness ports declare synchronous persistence, conversation recording and
-lifecycle effects independently of AgentStore and ConversationRecorder. The outer
-implementations satisfy those ports; agents/model.ts owns the shared local record
-schemas and draft types. Never derive harness ports from concrete classes or pass
-the full runtime. SDK conformance uses in-memory persistence and recording ports.
+The private harness ports declare synchronous command submission, conversation
+recording, provider ingestion and lifecycle effects independently of AgentStore and
+ConversationRecorder. The outer implementations satisfy those ports; the record
+schemas and draft types live in `agents/domain/state.ts` (re-exported by
+agents/model.ts). Never derive harness ports from concrete classes or pass the full
+runtime. SDK conformance uses in-memory persistence and recording ports.
+
+Orchestration is event-sourced (ADR 0044). Private `agents/domain/` holds the zod
+events, commands, `decide(state, command, facts)`, the pure projector, `fold` and
+the `wire.ts` projection to today's `AgentEvent`s; it may import only
+`@raypx/core/*`, zod and its own files (the `orchestration-domain` source layer).
+`infrastructure/store/sink.ts` commits the receipt, events, task/request/activity
+projections, relay journal/outbox and effect intents in one synchronous SQLite
+transaction, which stands in for a per-task lock. `AgentStore.submit` decides and
+commits; AgentCommandService and `AgentRuntime.command` are thin shells over it.
+`application/ingest.ts` is the only writer for provider and recorder reports; the
+harness keeps the turn queue and handle fencing. Inject `Clock`/`Ids` from
+`domain/ports.ts`; never call `new Date()` or `crypto.randomUUID()` inline.
+Apply a decision (`request.applied`) before the worker answers the provider.
+Effects (`execution.start|cancel`, `provider.request.respond|input.deliver`) are
+process-bound and never retried: startup marks open ones `abandoned` before
+interrupting active tasks with HOST_RESTARTED. `task_events` stores every
+non-activity event; activity stays a latest-value projection. The goldens in
+`tests/integration/runtime/agents/orchestration.test.ts` pin the wire sequence;
+regenerate them only for a deliberate wire change (`ORCHESTRATION_GOLDENS=write`).
 
 Managed Pi uses `@raypx/provider-pi`; private `runtime/agents/pi` owns its
 granted file/command bridge, model admission and context ownership. Local models use
@@ -209,4 +229,4 @@ code sees execution handles and adapter events, never transport controls.
 
 `raypx login` uses `RAYPX_API_URL` (default `https://raypx.pro`) and an expiring browser-approved code; `RAYPX_WEB_URL` selects a separate account-page origin. The polling token never leaves the host. `runtime/instances` verifies signed receipts and key possession before local execution; direct Agent starts and scheduled jobs enforce the same gate. Refresh at startup and every five minutes; transport failures preserve the offline identity, successful revocation cancels and drains work. Remote Host grants remain separate. Enrollment diagnostics expose only bounded phase names and safe error codes, never key material, codes or host tokens. macOS/Windows keys use Bun.secrets; Linux stores protected binary DER (0600) in the local profile. Receipts contain public identity only. Never auto-import or rebind a profile.
 
-AgentCommandService and AgentQueries own use cases and reads. ExecutionCoordinator is the only active execution owner. ProviderRegistry receives drivers; concrete adapters, approval HTTP and OS locks live in infrastructure. `agents/store.ts` is the AgentStore facade and owns transactions spanning record families; each SQLite family (tasks, activity, requests, command receipts, event journal, snapshot, clear) lives in `agents/infrastructure/store/`. runtime/router.ts owns local method dispatch. Memory receives project validation, not AgentRuntime.
+AgentCommandService and AgentQueries own use cases and reads. ExecutionCoordinator is the only active execution owner. ProviderRegistry receives drivers; concrete adapters, approval HTTP and OS locks live in infrastructure. `agents/store.ts` is the AgentStore facade over the orchestration sink; each SQLite family (tasks, activity, requests, command receipts, event journal, task events, effects, snapshot, clear) lives in `agents/infrastructure/store/`. runtime/router.ts owns local method dispatch. Memory receives project validation, not AgentRuntime.

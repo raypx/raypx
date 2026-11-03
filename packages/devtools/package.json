@@ -6,7 +6,6 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/client.tsx",
-    "./snapshot": "./src/snapshot.ts",
     "./vite": "./src/vite.ts",
     "./renderer": "./src/renderer.ts",
     "./styles.css": "./src/styles.css"
@@ -46,6 +45,9 @@
     },
     "sourceTargets": {
       "src/vite.ts": "node"
+    },
+    "entryConsumers": {
+      "./renderer": "The Vite plugin injects this module path as a string into the generated overlay, so no file imports it statically."
     }
   }
 }

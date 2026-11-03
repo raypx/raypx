@@ -1,7 +1,7 @@
 import type { Query, QueryClient } from "@tanstack/react-query";
 import type { AnyRouter } from "@tanstack/react-router";
 
-export interface PagePreferences {
+interface PagePreferences {
   locale: string;
   localePreference: string;
   theme: string;

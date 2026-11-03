@@ -8,7 +8,9 @@ Shared job models, calendar rules, cloud scheduling use cases and injected Web/D
 
 The universal root owns local-compatible job/command schemas, cloud schedule/run
 schemas and pure calendar calculation. `/server` owns injected
-cloud use cases without HTTP, SQL, environment or relay implementations. Recurring
+cloud use cases without HTTP, SQL, environment or relay implementations. It is a node
+entry (`./server`, `src/server.ts`, `src/server/**`), so browser code cannot reach a
+scheduling implementation through a universal import. Recurring
 platform timers belong to apps; dispatch deadlines remain bounded within the use case.
 `/client` owns DOM views and their injected ports; apps own routing, authentication and concrete adapters.
 

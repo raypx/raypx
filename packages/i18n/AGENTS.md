@@ -7,7 +7,7 @@ Translation and formatting use the independently released `@raypx-kit/intl` faca
 
 ## Interface
 
-- Root/server/types: pure locale negotiation, formatting and translation helpers.
+- Root/types: pure locale negotiation, formatting and translation helpers.
 - `config`: static default locale and language names, shared with repository checks.
 - `messages`: static English and Chinese foundation catalogs.
 - `preferences`: pure system/en/zh preference parsing and resolution.
@@ -15,7 +15,6 @@ Translation and formatting use the independently released `@raypx-kit/intl` faca
   Language controls belong to Blocks, composed from UI primitives and these hooks.
   This package does not depend on UI or an icon library.
 - `vite`: build plugin choosing static or lazy browser catalog delivery.
-- `testing`: test-only catalog checks.
 
 ## Ownership
 

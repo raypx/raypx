@@ -13,6 +13,9 @@ The accepted foundation design supersedes documents in docs/history.
   workspace's actual app/tooling kind and keep composition roots out of cross-workspace imports.
 - Applications are composition roots and cannot be imported by another workspace.
 - Libraries expose explicit package.json exports; do not import private source paths.
+- Every public entry has an established consumer in another workspace. An entry nobody
+  imports is removed rather than kept for a possible future use; a deliberate exception
+  records `raypx.entryConsumers` with its reason and is validated by `policy`.
 - Every workspace declares raypx.kind and raypx.target. Mixed workspaces declare
   entryTargets and sourceTargets. Keep platform constraints transitive.
 - Runtime code cannot import tooling or test-only modules. Declare direct dependencies.

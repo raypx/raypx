@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createApiApp } from "../../server/api.js";

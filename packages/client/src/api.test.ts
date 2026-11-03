@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { createApiClient, isMissingProcedure } from "./index.js";
+import { createApiClient, isMissingProcedure } from "./api.js";
 
 it("reads headers again after a credential change and always uses POST", async () => {
   let cookie = "session=first";

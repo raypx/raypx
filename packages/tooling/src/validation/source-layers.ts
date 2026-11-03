@@ -9,6 +9,8 @@ export interface SourceNode {
   requests: string[];
 }
 function layer(path: string) {
+  if (path.startsWith("packages/contracts/src/")) return "contracts";
+  if (path.includes("/agents/domain/")) return "orchestration-domain";
   if (path.includes("/application/")) return "application";
   if (path.includes("/src/model/")) return "model";
   if (path.includes("/server/rpc/")) return "rpc";
@@ -16,6 +18,24 @@ function layer(path: string) {
   return undefined;
 }
 function forbidden(owner: string, target: string, request: string) {
+  // Contracts are wire-only: no presentation or platform-server surface, plus the
+  // infrastructure rule below that every layered owner shares.
+  if (
+    owner === "contracts" &&
+    (/^react(?:-dom)?(?:\/|$)/.test(request) ||
+      /^@raypx\/(?:ui|i18n|icons|client|host|auth)(?:\/|$)/.test(request) ||
+      /^@raypx\/[^/]+\/(?:server|client|crypto)(?:\/|$)/.test(request))
+  )
+    return true;
+  // The Agent orchestration domain is pure: Core schemas, zod and its own files
+  // only. A relative import stays legal while it resolves inside the domain or
+  // inside an allowed package's own source (Core's internal modules).
+  if (owner === "orchestration-domain") {
+    if (/^@raypx\/core(?:\/|$)/.test(request) || /^zod(?:\/|$)/.test(request)) return false;
+    if (/^\.{1,2}\//.test(request))
+      return Boolean(target) && !/\/agents\/domain\/|^packages\/core\//.test(target);
+    return true;
+  }
   if (owner === "rpc" && /\/server\/api\.[jt]s$/.test(target)) return true;
   if (owner === "adapter") return /\/runtime\/index\.[cm]?[jt]s$/.test(target);
   const infrastructure =

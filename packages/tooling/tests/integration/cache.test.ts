@@ -175,6 +175,7 @@ function validationProject() {
     "policy.ts",
     "validation/toolchain.ts",
     "validation/source-layers.ts",
+    "validation/entries.ts",
     "validation/deployment.ts",
     "build/deployment.ts",
     "verification/prechecks.ts",
@@ -190,12 +191,26 @@ function validationProject() {
     join(tooling, "src/cli.ts"),
     'import { runPrecheck } from "./verification/prechecks.ts"; runPrecheck(process.cwd(), process.argv[3] ?? "");',
   );
-  const i18n = member(root, "i18n", { extra: { exports: { "./config": "./src/config.ts" } } });
+  // Fixture workspaces model a repository snapshot, not a product graph: their
+  // entries exist so policy has something to inspect, not for an importer.
+  const scaffold = (entries: Record<string, string>) => ({
+    kind: "library",
+    target: "universal",
+    entryConsumers: entries,
+  });
+  const i18n = member(root, "i18n", {
+    extra: {
+      exports: { "./config": "./src/config.ts" },
+      raypx: scaffold({ "./config": "read by the fixture precheck" }),
+    },
+  });
   writeFileSync(
     join(root, i18n, "src/config.ts"),
     'export default { locales: { en: "English", zh: "中文" }, defaultLocale: "en" };',
   );
-  const feature = member(root, "feature");
+  const feature = member(root, "feature", {
+    extra: { raypx: scaffold({ ".": "fixture workspace" }) },
+  });
   mkdirSync(join(root, feature, "src/messages"));
   for (const locale of ["en", "zh"])
     writeFileSync(

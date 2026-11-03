@@ -17,8 +17,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
-    "./runtime": "./src/runtime.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

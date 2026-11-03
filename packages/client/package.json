@@ -5,7 +5,9 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    "./api": "./src/api.ts",
+    "./relay": "./src/relay.ts",
+    "./tasks": "./src/tasks.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

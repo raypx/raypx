@@ -2,7 +2,7 @@ import { beforeAll, afterAll, expect, it } from "vite-plus/test";
 import { eq, inArray } from "drizzle-orm";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { user, instanceEnrollment } from "@raypx/database/schema";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { InstanceService } from "@raypx/instances/server";
 import { enrollmentProof, instanceCheckProof } from "@raypx/instances";
 import {

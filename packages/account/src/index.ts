@@ -1,4 +1,4 @@
-import type { ApiClient } from "@raypx/client";
+import type { ApiClient } from "@raypx/client/api";
 import type { AccountProfile } from "@raypx/contracts/api";
 
 export type { AccountProfile } from "@raypx/contracts/api";

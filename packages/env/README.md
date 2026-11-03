@@ -2,7 +2,7 @@
 
 Typed environment validation with Zod schemas, composable presets and browser access guards.
 
-This private workspace exports `@raypx/env` and `@raypx/env/runtime`. It uses the
+This private workspace exports `@raypx/env`. It uses the
 root Zod catalog; application presets and environment loading stay with consumers.
 The package is ESM-only and supports Bun, Node-compatible runtimes and browser
 builds that supply runtime values explicitly.
@@ -11,10 +11,8 @@ builds that supply runtime values explicitly.
 
 ```ts
 import { createEnv, z } from "@raypx/env";
-import { runtimeEnv } from "@raypx/env/runtime";
 
 const env = createEnv({
-  extends: [runtimeEnv],
   shared: { APP_NAME: z.string().default("Example") },
   server: { PORT: z.coerce.number().int().positive().default(3000) },
   client: { VITE_API_ORIGIN: z.url() },
@@ -22,7 +20,6 @@ const env = createEnv({
 });
 
 env.PORT; // number
-env.NODE_ENV; // "development" | "production" | "test"
 ```
 
 `createEnv` defaults to `process.env` and Vite's `import.meta.env` when available.
@@ -121,8 +118,8 @@ normal validated path; runtime values may remain untransformed.
 The root exports `createEnv`, `defineEnv`, `EnvError` and `z`, plus
 `CreateEnvOptions`, `ClientFormat`, `DefineEnv`, `EnvOptions`, `ExtendsFormat`,
 `FinalSchema`, `Preset`, `Schema`, `ServerFormat` and `SharedFormat` types.
-`@raypx/env/runtime` exports `runtimeEnv`, whose `NODE_ENV` schema defaults to
-`development` and accepts `development`, `production` or `test`.
+Each consumer declares its own `NODE_ENV` schema; the package publishes no shared
+runtime preset.
 
 The library performs no `.env` loading, filesystem access or CLI work. Consumers
 own environment loading, application presets and browser-safe value injection.

@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import type { AuthSession } from "@raypx/auth/types";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
 import { createApiRuntime } from "../../server/runtime/server.js";
 import { getApiEnvironment } from "../../server/env.js";

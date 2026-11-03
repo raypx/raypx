@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import type { TaskClient } from "@raypx/client";
+import type { TaskClient } from "@raypx/client/tasks";
 type AgentTask = Awaited<ReturnType<TaskClient["tasks"]["create"]>>;
 import { createNoopAnalytics } from "@raypx-kit/analytics";
 import { eventPolicy, parseAnalyticsConsent, analyticsPage } from "./index";

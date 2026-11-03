@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DeviceSettings } from "@raypx/tasks/client";
-import type { SyncDevice } from "@raypx/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { DeviceManagementPort } from "../../model/port.js";
 
 beforeEach(() => {

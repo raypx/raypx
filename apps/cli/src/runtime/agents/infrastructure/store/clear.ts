@@ -1,6 +1,14 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { LocalDatabase } from "../../../sqlite";
-import { activity, journal, piContexts, requests, tasks } from "../../../sqlite/schema";
+import {
+  activity,
+  journal,
+  piContexts,
+  requests,
+  taskEffects,
+  taskEvents,
+  tasks,
+} from "../../../sqlite/schema";
 import type { HumanRequest } from "@raypx/core/tasks";
 import type { CommandReceipts } from "./commands";
 import { journalTaskId, requestTaskId, taskBinding } from "./queries";
@@ -60,6 +68,15 @@ export function clearTasks(
       database
         .delete(journal)
         .where(and(eq(journal.binding, binding), eq(journalTaskId, id)))
+        .run();
+      // Forgotten tasks keep no orchestration history or effect intents.
+      database
+        .delete(taskEvents)
+        .where(and(eq(taskEvents.binding, binding), eq(taskEvents.taskId, id)))
+        .run();
+      database
+        .delete(taskEffects)
+        .where(and(eq(taskEffects.binding, binding), eq(taskEffects.taskId, id)))
         .run();
     }
     database.run(sql`DELETE FROM ${piContexts}

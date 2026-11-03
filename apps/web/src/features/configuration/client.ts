@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from "@raypx/client";
+import { createApiClient, type ApiClient } from "@raypx/client/api";
 import { apiUrl } from "../auth/client";
 
 export const configurationClient = createApiClient({

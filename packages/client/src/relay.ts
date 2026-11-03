@@ -7,6 +7,8 @@ import {
   type RelayServerFrame,
 } from "@raypx/contracts/api";
 
+export { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
+
 export type RelaySocketFactory = (url: string) => WebSocket;
 export function relayUrl(baseUrl: string, accountId?: string) {
   const url = new URL("/relay", baseUrl);

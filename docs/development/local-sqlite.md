@@ -9,8 +9,20 @@ repositories can share one Drizzle transaction. Independent profile owners in
 other processes still use separate connections. The database is private on POSIX.
 
 `apps/cli/src/runtime/sqlite/schema/` owns the table definitions by feature;
-`schema.ts` exports the complete profile schema. A single generated initial
-migration under `apps/cli/drizzle/` creates the current tables and indexes.
+`schema.ts` exports the complete profile schema. Generated migrations under
+`apps/cli/drizzle/` create the current tables and indexes:
+
+1. The initial migration creates the state, Memory, Agent, Terminal and Pi tables.
+2. The second migration adds the Agent orchestration tables from
+   `schema/orchestration.ts` ([ADR 0044](../architecture/0044-event-sourced-cli-orchestration.md)):
+   `task_events` (durable non-activity domain events, indexed by binding, task and
+   sequence) and `task_effects` (effect intents and their `open`, `done`,
+   `failed` or `abandoned` status, indexed by task, status and settle time).
+   It creates tables only and never backfills: tasks from before it stay
+   projection-only, and their records remain readable. Activity is never stored in
+   `task_events`. Startup marks open effects abandoned and prunes settled effects
+   older than seven days; clearing local history deletes both tables' rows for the
+   forgotten tasks.
 
 ```sh
 bun run --cwd apps/cli db:generate

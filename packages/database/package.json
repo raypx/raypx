@@ -6,7 +6,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./connection": "./src/connection.ts",
-    "./env": "./src/env.ts",
     "./schema": "./src/schema.ts"
   },
   "scripts": {
@@ -31,6 +30,9 @@
   },
   "raypx": {
     "kind": "library",
-    "target": "node"
+    "target": "node",
+    "entryConsumers": {
+      ".": "The PostgreSQL acceptance harness connects and migrates its isolated database here; production migrates through this package's own db commands."
+    }
   }
 }

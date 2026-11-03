@@ -4,6 +4,7 @@ import { taskText } from "@raypx/core/task-text";
 import type { TaskActivity } from "@raypx/core/tasks";
 import type { ActivityDraft } from "./model";
 import type { ExecutionConversation } from "./harness/ports";
+import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports";
 
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;
@@ -34,6 +35,8 @@ export class ConversationRecorder implements ExecutionConversation {
     private readonly write: (entry: ActivityDraft) => TaskActivity,
     private readonly interval = 250,
     readonly persistTotals?: (value: TokenTotals) => void,
+    private readonly clock: Clock = systemClock,
+    private readonly ids: Ids = cryptoIds,
   ) {}
   setTokenBaseline(value: TokenTotals | undefined) {
     this.totals = value;
@@ -120,8 +123,8 @@ export class ConversationRecorder implements ExecutionConversation {
     }
   }
   private base() {
-    const now = new Date().toISOString();
-    return { id: crypto.randomUUID(), taskId: this.taskId, createdAt: now, updatedAt: now };
+    const now = this.clock.now().toISOString();
+    return { id: this.ids.generate(), taskId: this.taskId, createdAt: now, updatedAt: now };
   }
   startTurn() {
     this.turn++;
@@ -141,7 +144,7 @@ export class ConversationRecorder implements ExecutionConversation {
     if (this.stopped) return;
     const entry = this.entries.get(key);
     if (!entry) return;
-    entry.updatedAt = new Date().toISOString();
+    entry.updatedAt = this.clock.now().toISOString();
     this.dirty.add(key);
     if (immediate) this.flush();
     else if (!this.timer) {

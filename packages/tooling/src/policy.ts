@@ -9,6 +9,7 @@ import { discover } from "./repository.js";
 import { checkToolchain } from "./validation/toolchain.js";
 import { checkSourceLayers } from "./validation/source-layers.js";
 import { checkDeployment } from "./validation/deployment.js";
+import { checkEntryConsumers } from "./validation/entries.js";
 
 const MAX_MARKDOWN_LINES = 500;
 
@@ -32,6 +33,7 @@ export function policy(root: string): string[] {
   const index = discover(root);
   const findings = checkArchitecture(index);
   findings.push(...checkSourceLayers(root, index));
+  findings.push(...checkEntryConsumers(root, index));
   findings.push(...checkDeployment(root));
   for (const workspace of index.workspaces) {
     const file = join(root, workspace.path, "AGENTS.md");

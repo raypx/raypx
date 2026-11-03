@@ -7,7 +7,7 @@ import type {
 } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { DraftInput } from "./drafts.js";
-import { isTaskActive } from "../index.js";
+import { isTaskActive } from "./task.js";
 
 export function taskSelection(
   devices: SyncDevice[],

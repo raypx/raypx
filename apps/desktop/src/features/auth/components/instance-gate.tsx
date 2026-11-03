@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";

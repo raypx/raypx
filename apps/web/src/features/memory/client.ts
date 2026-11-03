@@ -1,4 +1,4 @@
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "@raypx/memory/client";
 import { apiUrl } from "../auth/client";
 let api: ReturnType<typeof createApiClient> | undefined;

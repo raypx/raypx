@@ -1,4 +1,4 @@
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { hasPermission, type AccountAccess, type AccountPermission } from "@raypx/account/access";
 import { apiUrl } from "./client";
 

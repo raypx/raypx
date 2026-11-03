@@ -12,12 +12,16 @@ import type { TokenTotals } from "@raypx/provider-core";
 import type { LocalAgentTask } from "../model";
 import { isDesktopBinding } from "../model";
 import type { ExecutionStore } from "../harness/ports";
+import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports";
+import type { Effect, LiveFacts } from "../domain/commands";
 import { ManagedExecution, initialExecutionPrompt, executionSession } from "../harness/execution";
 import { ConversationRecorder } from "../activity";
 import { LocalError } from "../../errors";
 import type { ProviderRegistry } from "./providers";
+import { ProviderEventIngestor } from "./ingest";
 
 export interface ExecutionRepository extends ExecutionStore {
+  settleEffect(id: string, status: "done" | "failed"): void;
   event(binding: string, event: AgentEvent): void;
   seen(id: string): boolean;
   accept(value: LocalAgentTask, commandId: string): void;
@@ -39,6 +43,9 @@ export interface ExecutionOptions {
   assertInstance?: (() => Promise<void>) | undefined;
   environment?: (() => Record<string, string | undefined>) | undefined;
   interruptTimeoutMs?: number | undefined;
+  /** Determinism ports; production uses the wall clock and random UUIDs. */
+  clock?: Clock | undefined;
+  ids?: Ids | undefined;
 }
 /** One owner for active handles, startup fences, drain and project locks. */
 export class ExecutionCoordinator {
@@ -55,6 +62,12 @@ export class ExecutionCoordinator {
     private readonly changed: (pendingRequest?: string, change?: TaskChange) => void,
     private readonly options: ExecutionOptions,
   ) {}
+  private get clock() {
+    return this.options.clock ?? systemClock;
+  }
+  private get ids() {
+    return this.options.ids ?? cryptoIds;
+  }
   get(id: string) {
     return this.active.get(id);
   }
@@ -100,10 +113,10 @@ export class ExecutionCoordinator {
       ...local.task,
       status,
       summary: taskText(summary, 32_000),
-      updatedAt: new Date().toISOString(),
+      updatedAt: this.clock.now().toISOString(),
     };
     const event: AgentEvent = {
-      id: crypto.randomUUID(),
+      id: this.ids.generate(),
       taskId: task.id,
       kind: "status",
       status,
@@ -135,7 +148,10 @@ export class ExecutionCoordinator {
     initialExecutionPrompt(task, undefined, Boolean(executionSession(local, parent)));
     // Persist the receipt before spawning. An ambiguous crash is interrupted, never replayed.
     this.store.accept(local, commandId);
-    if (!Number.isFinite(Date.parse(deadline)) || Date.parse(deadline) <= Date.now()) {
+    if (
+      !Number.isFinite(Date.parse(deadline)) ||
+      Date.parse(deadline) <= this.clock.now().getTime()
+    ) {
       this.status(local, "delivery_failed");
       return { accepted: true };
     }
@@ -199,24 +215,19 @@ export class ExecutionCoordinator {
       this.status(local, "cancelled");
       return { accepted: true };
     }
+    // Provider and recorder reports reach storage only through the ingestor.
+    const ingest = new ProviderEventIngestor(this.store, local, this.ids, (event) =>
+      this.changedFor(local, event),
+    );
     const execution = new ManagedExecution(
       local,
       new ConversationRecorder(
         task.id,
-        (entry) => {
-          const value = this.store.recordActivity(binding, entry);
-          this.changedFor(local, {
-            id: crypto.randomUUID(),
-            taskId: value.taskId,
-            kind: "activity",
-            entry: value,
-          });
-          return value;
-        },
+        (entry) => ingest.activity(entry),
         isDesktopBinding(binding) ? 250 : 1000,
-        (totals) => {
-          this.store.recordTokenUsage(local, totals);
-        },
+        (totals) => ingest.usage(totals),
+        this.clock,
+        this.ids,
       ),
       unlock,
       this.store,
@@ -225,7 +236,7 @@ export class ExecutionCoordinator {
         changed: (pendingRequest) => this.changed(pendingRequest),
         resolved: (requestId) =>
           this.emit(local, {
-            id: crypto.randomUUID(),
+            id: this.ids.generate(),
             taskId: local.task.id,
             kind: "resolved",
             requestId,
@@ -244,6 +255,9 @@ export class ExecutionCoordinator {
       },
       factory,
       this.options.interruptTimeoutMs,
+      this.clock,
+      this.ids,
+      ingest,
     );
     this.active.set(task.id, execution);
     this.status(local, "running");
@@ -259,6 +273,34 @@ export class ExecutionCoordinator {
         ),
       );
     return { accepted: true };
+  }
+  /** Live process facts the decider reads; it never touches a handle itself. */
+  live(): LiveFacts {
+    return {
+      closing: this.closing,
+      active: (taskId) => this.active.has(taskId),
+      pending: (taskId, requestId) => this.active.get(taskId)?.hasPending(requestId) ?? false,
+      ready: (taskId) => this.active.has(taskId),
+      queueLength: () => 0,
+    };
+  }
+  /**
+   * The effect worker. Each effect runs after the commit that produced it, and is
+   * never retried: the provider process it addresses does not survive a restart.
+   */
+  runEffects(effects: readonly (Effect & { effectId?: string })[]) {
+    for (const effect of effects) {
+      let ran = false;
+      if (effect.type === "provider.request.respond")
+        ran = this.active.get(effect.taskId)?.respond(effect.requestId, effect.decision) ?? false;
+      else if (effect.type === "execution.cancel") {
+        const execution = this.active.get(effect.taskId);
+        execution?.cancel();
+        ran = Boolean(execution);
+      }
+      // A missing handle means the process is gone; the effect cannot be delivered.
+      if (effect.effectId) this.store.settleEffect(effect.effectId, ran ? "done" : "failed");
+    }
   }
   async detach(binding: string) {
     this.bindingVersions.set(binding, (this.bindingVersions.get(binding) ?? 0) + 1);

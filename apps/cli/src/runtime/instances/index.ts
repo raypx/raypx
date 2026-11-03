@@ -1,7 +1,7 @@
 import { chmod, lstat, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { hostname } from "node:os";
-import { createApiClient, type ApiClient } from "@raypx/client";
+import { createApiClient, type ApiClient } from "@raypx/client/api";
 import {
   instanceOrigin,
   instanceReceiptSchema,

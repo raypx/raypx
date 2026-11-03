@@ -10,9 +10,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./config": "./src/config.ts",
-    "./server": "./src/server.ts",
     "./types": "./src/types-entry.ts",
-    "./testing": "./src/testing.ts",
     "./messages": "./src/messages/index.ts",
     "./preferences": "./src/preferences.ts",
     "./browser": "./src/browser.tsx",
@@ -49,14 +47,16 @@
     "target": "universal",
     "entryTargets": {
       "./browser": "browser",
-      "./vite": "node",
-      "./testing": "universal"
+      "./vite": "node"
     },
     "sourceTargets": {
       "src/browser.tsx": "browser",
       "src/catalogs/lazy.ts": "browser",
       "src/vite.ts": "node",
       "src/testing.ts": "universal"
+    },
+    "entryConsumers": {
+      "./config": "Tooling reads the static language policy by package path (locales/policy defaults); it is data, not an import."
     }
   }
 }

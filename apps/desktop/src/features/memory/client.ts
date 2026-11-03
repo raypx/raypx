@@ -1,4 +1,4 @@
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import type {
   MemoryClientPort,
   MemoryProjectsPort,

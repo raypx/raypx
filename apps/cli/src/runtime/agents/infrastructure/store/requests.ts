@@ -4,17 +4,14 @@ import { normalizeTaskJson } from "@raypx/core/task-text";
 import type { LocalDatabase } from "../../../sqlite";
 import { storedRecord } from "../../../sqlite/records";
 import { requests, tasks } from "../../../sqlite/schema";
-import type { AppendEvent } from "./journal";
+import type { RequestOpened } from "../../domain/events";
 import { activeTaskFilter, requestTaskId, taskBinding } from "./queries";
 
 const pendingRequestFilter = sql`json_extract(${requests.value},'$.status') IN ('pending','decided')`;
 
-/** Human requests raised by tasks; every write is journaled for the binding. */
+/** Human requests raised by tasks. The caller projects each write as an event. */
 export class RequestRecords {
-  constructor(
-    private readonly database: LocalDatabase,
-    private readonly append: AppendEvent,
-  ) {}
+  constructor(private readonly database: LocalDatabase) {}
 
   list(binding: string, taskId?: string): HumanRequest[] {
     return this.database
@@ -65,18 +62,21 @@ export class RequestRecords {
       .all()
       .map((row) => storedRecord(humanRequestSchema, row.value));
   }
-  record(binding: string, value: HumanRequest): undefined {
+  /** Upsert the request and return the event describing the write. */
+  record(binding: string, value: HumanRequest, eventId: string, at: string): RequestOpened {
     this.database.transaction(() => {
       // Approval enumeration and snapshot ordering depend on REPLACE's new rowid.
       this.database.run(
         sql`INSERT OR REPLACE INTO ${requests} (id,binding,value) VALUES (${value.id},${binding},${JSON.stringify(normalizeTaskJson(value))})`,
       );
-      this.append(binding, {
-        id: crypto.randomUUID(),
-        taskId: value.taskId,
-        kind: "request",
-        request: value,
-      });
     });
+    return {
+      type: "request.opened",
+      id: eventId,
+      binding,
+      taskId: value.taskId,
+      at,
+      request: value,
+    };
   }
 }

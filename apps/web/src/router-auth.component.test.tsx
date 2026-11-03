@@ -20,7 +20,7 @@ import {
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { SyncDevice } from "@raypx/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
 import { accessForRole, type AccountRole } from "@raypx/account/access";
 import { routeTree } from "./routeTree.gen.ts";
 

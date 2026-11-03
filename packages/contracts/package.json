@@ -5,13 +5,10 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
     "./api": "./src/api.ts",
     "./local": "./src/local.ts",
     "./tasks": "./src/tasks.ts",
     "./terminal": "./src/terminal.ts",
-    "./jobs": "./src/jobs.ts",
-    "./memory": "./src/memory.ts",
     "./local-client": "./src/local-client.ts"
   },
   "scripts": {
@@ -22,7 +19,6 @@
   },
   "dependencies": {
     "@orpc/contract": "catalog:",
-    "@raypx/auth": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",

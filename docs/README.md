@@ -1,7 +1,9 @@
 # Raypx documentation
 
 - [Persistent Agent Platform roadmap](roadmap.md)
+- [Event-sourced CLI orchestration](architecture/0044-event-sourced-cli-orchestration.md)
 - [Application services and adapters](architecture/0042-application-layering.md)
+- [Package surfaces](architecture/0043-package-surfaces.md)
 - [Architecture and runtime boundaries](architecture/README.md)
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)

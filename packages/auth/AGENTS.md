@@ -21,10 +21,11 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   and Web callback origin.
 - `/types`: pure public account/session types.
 - `/policy`: pure name/password limits shared by endpoints and forms.
-- `/permissions`: framework-free role names and application permission vocabulary.
-- `/access`: Better Auth's shared access controller and member/admin roles. The Admin
-  plugin and permission projections consume this same ACL. Admin grants user list,
-  get and set-role only; other account administration operations remain denied.
+- `/access`: Better Auth's shared access controller and member/admin roles, built on
+  Core's `/permissions` vocabulary. Auth imports the role names and permissions from
+  `@raypx/core/permissions`; it never defines a second copy. The Admin plugin and
+  permission projections consume this same ACL. Admin grants user list, get and
+  set-role only; other account administration operations remain denied.
 
 ## Ownership
 

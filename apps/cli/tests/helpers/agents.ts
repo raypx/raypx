@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StateStore } from "../../src/runtime/state";
 import { AgentRuntime } from "../../src/runtime/agents";
+import type { Clock, Ids } from "../../src/runtime/agents/domain/ports";
+import type { TaskChange } from "@raypx/contracts/tasks";
 
 import type {
   AgentTask,
@@ -14,7 +16,13 @@ import type {
   TaskContextTarget,
 } from "@raypx/core/tasks";
 
-export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = {}) {
+export interface AgentFixtureOptions {
+  interruptTimeoutMs?: number;
+  clock?: Clock;
+  ids?: Ids;
+}
+
+export function agentFixtures(runtimeOptions: AgentFixtureOptions = {}) {
   const cleanups: (() => Promise<void>)[] = [];
   afterEach(async () => {
     for (const cleanup of cleanups.splice(0)) await cleanup();
@@ -29,11 +37,13 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
       | "claude-interactive"
       | "claude-question"
       | "claude-plan"
-      | "claude-headless-plan",
+      | "claude-headless-plan"
+      | "orchestration",
     resolveContext?: (
       selection: TaskContextSelection,
       target: TaskContextTarget,
     ) => Promise<TaskContextSnapshot>,
+    ports: { clock?: Clock; ids?: Ids } = {},
   ) {
     const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
     const file = join(directory, provider);
@@ -49,13 +59,20 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
       createdAt: new Date().toISOString(),
     });
     const pending: string[] = [];
+    const notifications: { pendingRequest?: string; change?: TaskChange }[] = [];
     const runtime = new AgentRuntime(
       state,
-      (request) => {
+      (request, change) => {
+        notifications.push({
+          ...(request ? { pendingRequest: request } : {}),
+          ...(change ? { change } : {}),
+        });
         if (request) pending.push(request);
       },
       {
         ...runtimeOptions,
+        ...ports,
+        explicitExecutables: true,
         executables: { [provider]: file },
         ...(resolveContext ? { resolveContext } : {}),
       },
@@ -79,7 +96,7 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    return { runtime, task, directory, state, pending };
+    return { runtime, task, directory, state, pending, notifications };
   }
   return { host };
 }

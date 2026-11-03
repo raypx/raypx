@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import {
   JobError,
   type CloudJob,

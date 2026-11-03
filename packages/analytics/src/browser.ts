@@ -1,6 +1,6 @@
 import { createBrowserAnalytics } from "@raypx-kit/analytics/browser";
 import type { AnalyticsClient, AnalyticsProperties } from "@raypx-kit/analytics";
-import type { TaskClient } from "@raypx/client";
+import type { TaskClient } from "@raypx/client/tasks";
 import {
   ANALYTICS_PREFERENCE_KEY,
   parseAnalyticsConsent,

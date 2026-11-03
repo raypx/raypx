@@ -4,7 +4,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import type { AgentTask, SyncDevice } from "@raypx/tasks";
+import type { AgentTask } from "@raypx/core/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
 import { createTaskClient } from "../../../tests/helpers/client.js";
 import { selectOption } from "../../../tests/helpers/select.js";
 

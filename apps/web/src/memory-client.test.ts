@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 const mocks = vi.hoisted(() => ({ list: vi.fn() }));
-vi.mock("@raypx/client", () => ({ createApiClient: () => ({ jobs: { list: mocks.list } }) }));
+vi.mock("@raypx/client/api", () => ({ createApiClient: () => ({ jobs: { list: mocks.list } }) }));
 vi.mock("./features/auth/client", () => ({ apiUrl: "https://api.example.test" }));
 import { memoryUsage } from "./features/memory/client";
 it("adapts only referencing agent schedules to the memory usage port", async () => {

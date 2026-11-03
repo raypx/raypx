@@ -1,6 +1,5 @@
 import {
   activeTaskStatuses,
-  validDecision,
   TaskContextError,
   type AgentTask,
   type TaskCommand,
@@ -17,6 +16,8 @@ import { ContextError } from "@raypx/memory";
 import { LocalError } from "../../errors";
 import { desktopBinding, type LocalAgentTask } from "../model";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
+import { systemClock, type Clock } from "../domain/ports";
+import { DecisionRejected } from "../domain/decider";
 
 export interface CommandEnvelope {
   id: string;
@@ -67,6 +68,7 @@ export class AgentCommandService {
     private readonly execution: CommandExecutionPort,
     private readonly isClosing: () => boolean,
     private readonly resolveContext?: ResolveContext,
+    private readonly clock: Clock = systemClock,
   ) {}
   pendingIds() {
     return new Set(this.remoteCommands.keys());
@@ -141,12 +143,12 @@ export class AgentCommandService {
         return existing.task;
       }
     }
-    if (Date.parse(command.expiresAt) <= Date.now())
+    if (Date.parse(command.expiresAt) <= this.clock.now().getTime())
       throw new LocalError("DELIVERY_EXPIRED", "Command expired");
     if (request.method === "tasks.create" || request.method === "tasks.followUp") {
       const requestInput = request.input;
       let task: AgentTask;
-      const now = new Date().toISOString();
+      const now = this.clock.now().toISOString();
       if (request.method === "tasks.create") {
         const { contextSelection, ...input } = request.input;
         let context = command.context;
@@ -206,37 +208,22 @@ export class AgentCommandService {
       await this.execution.cancel(local, this.remoteCommands.get(local.task.id));
       return getTask(local.task.id).task;
     }
+    // A thin shell: binding ownership is checked here, the decider owns the rest.
     const requestValue = this.store.getRequest(binding, request.input.id);
     if (!requestValue) throw new LocalError("NOT_FOUND", "Request unavailable");
     const local = getTask(requestValue.taskId);
-    if (!validDecision(requestValue, request.input.decision))
-      throw new LocalError("INVALID_ANSWER", "Invalid answer");
-    if (
-      ["decided", "applied"].includes(requestValue.status) &&
-      JSON.stringify(requestValue.decision) === JSON.stringify(request.input.decision)
-    )
-      return requestValue;
-    if (requestValue.status !== "pending")
-      throw new LocalError("ALREADY_RESOLVED", "Request already answered");
-    if (!activeTaskStatuses.includes(local.task.status) || local.task.status === "cancelling")
-      throw new LocalError("REQUEST_CLOSED", "Task stopped");
-    if (Date.parse(requestValue.expiresAt) <= Date.now())
-      throw new LocalError("REQUEST_EXPIRED", "Request expired");
-    const execution = this.execution.get(local.task.id);
-    if (!execution?.hasPending(requestValue.id))
-      throw new LocalError("REQUEST_CLOSED", "Request unavailable");
-    this.store.request(binding, {
-      ...requestValue,
-      status: "decided",
-      decision: request.input.decision,
-    });
-    await this.execution.decide(
-      binding,
-      command.id,
-      local.task.id,
-      requestValue.id,
-      request.input.decision,
-    );
+    try {
+      await this.execution.decide(
+        binding,
+        command.id,
+        local.task.id,
+        requestValue.id,
+        request.input.decision,
+      );
+    } catch (error) {
+      if (error instanceof DecisionRejected) throw new LocalError(error.code, error.message);
+      throw error;
+    }
     return this.store.getRequest(binding, requestValue.id)!;
   }
 }

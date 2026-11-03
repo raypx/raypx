@@ -5,11 +5,11 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
     "./agent-runs": "./src/agent-runs.ts",
     "./tasks": "./src/tasks.ts",
     "./activity": "./src/activity.ts",
-    "./task-text": "./src/task-text.ts"
+    "./task-text": "./src/task-text.ts",
+    "./permissions": "./src/permissions.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

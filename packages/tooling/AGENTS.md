@@ -17,6 +17,12 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | knip | verify | doctor | clean | clean:artifacts
+  `policy` also checks public entries (`src/validation/entries.ts`): every exports key
+  of a library or tooling workspace needs an importer in another workspace, found in
+  TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig `extends` (root config
+  included). Suites, `tests/` files and `e2e` are test importers: they keep `./testing*`
+  entries and tooling surfaces alive; other entries need production use. `raypx.entryConsumers` is the declared-exception escape hatch and is
+  validated against the exported keys.
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside

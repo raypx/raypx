@@ -6,15 +6,13 @@ import { LocalError } from "../../../errors";
 import type { LocalDatabase } from "../../../sqlite";
 import { storedRecord } from "../../../sqlite/records";
 import { activity } from "../../../sqlite/schema";
-import { isDesktopBinding, type ActivityDraft } from "../../model";
-import type { AppendEvent } from "./journal";
+import type { ActivityRecorded } from "../../domain/events";
+import { isDesktopBinding } from "../../domain/state";
+import type { ActivityDraft } from "../../model";
 
-/** Revisioned task activity entries; relay bindings also journal each change. */
+/** Revisioned task activity entries. The caller projects each change as an event. */
 export class ActivityLog {
-  constructor(
-    private readonly database: LocalDatabase,
-    private readonly append: AppendEvent,
-  ) {}
+  constructor(private readonly database: LocalDatabase) {}
 
   list(binding: string, taskId: string): TaskActivity[] {
     return this.database
@@ -44,7 +42,17 @@ export class ActivityLog {
       before,
     );
   }
-  record(binding: string, draft: ActivityDraft): TaskActivity {
+  /**
+   * Upsert one entry and return it with the event that records the change. The
+   * delta shape for a streaming message is decided here, where the previous
+   * revision is known; the caller journals it through `wire.ts`.
+   */
+  record(
+    binding: string,
+    draft: ActivityDraft,
+    eventId: string,
+    at: string,
+  ): { entry: TaskActivity; event: ActivityRecorded } {
     return this.database.transaction(() => {
       const old = this.database
         .select({
@@ -84,33 +92,32 @@ export class ActivityLog {
         .set({ value: JSON.stringify(entry) })
         .where(eq(activity.id, entry.id))
         .run();
-      if (!isDesktopBinding(binding))
-        this.append(
+      const delta =
+        previous?.kind === "message" &&
+        entry.kind === "message" &&
+        previous.status === "streaming" &&
+        entry.status === "streaming" &&
+        entry.text.startsWith(previous.text)
+          ? {
+              entryId: entry.id,
+              baseRevision: previous.revision,
+              revision: entry.revision,
+              append: entry.text.slice(previous.text.length),
+              truncated: entry.truncated,
+            }
+          : undefined;
+      return {
+        entry,
+        event: {
+          type: "activity.recorded",
+          id: eventId,
           binding,
-          previous?.kind === "message" &&
-            entry.kind === "message" &&
-            previous.status === "streaming" &&
-            entry.status === "streaming" &&
-            entry.text.startsWith(previous.text)
-            ? {
-                id: crypto.randomUUID(),
-                taskId: entry.taskId,
-                kind: "activity_delta",
-                entryId: entry.id,
-                baseRevision: previous.revision,
-                revision: entry.revision,
-                append: entry.text.slice(previous.text.length),
-                updatedAt: entry.updatedAt,
-                truncated: entry.truncated,
-              }
-            : {
-                id: crypto.randomUUID(),
-                taskId: entry.taskId,
-                kind: "activity",
-                entry,
-              },
-        );
-      return entry;
+          taskId: entry.taskId,
+          at,
+          entry,
+          ...(delta && !isDesktopBinding(binding) ? { delta } : {}),
+        },
+      };
     });
   }
 }

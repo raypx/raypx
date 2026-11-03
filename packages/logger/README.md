@@ -4,14 +4,12 @@ Private ESM source workspace for Raypx's shared structured logging. API and CLI
 depend on it through `workspace:*`; no package publication or archive is needed.
 The implementation retains evlog as an external catalog dependency.
 
-| Entry                    | Responsibility                                          |
-| ------------------------ | ------------------------------------------------------- |
-| `@raypx/logger`          | Native evlog logger, configuration and error APIs/types |
-| `@raypx/logger/context`  | Node/Bun asynchronous logger context                    |
-| `@raypx/logger/pipeline` | evlog batching, retry and flushing APIs                 |
-| `@raypx/logger/safe`     | Field allowlists, redaction and bounded safe events     |
-| `@raypx/logger/managed`  | Bounded delivery, concurrency, statistics and shutdown  |
-| `@raypx/logger/stream`   | Ordered JSON lines on stderr or another Node writable   |
+| Entry                   | Responsibility                                          |
+| ----------------------- | ------------------------------------------------------- |
+| `@raypx/logger`         | Native evlog logger, configuration and error APIs/types |
+| `@raypx/logger/safe`    | Field allowlists, redaction and bounded safe events     |
+| `@raypx/logger/managed` | Bounded delivery, concurrency, statistics and shutdown  |
+| `@raypx/logger/stream`  | Ordered JSON lines on stderr or another Node writable   |
 
 Applications configure evlog globally once per process/isolate. Importing the
 workspace or creating a managed drain does not initialize logging. API retains

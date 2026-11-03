@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   list: vi.fn(),
   revoke: vi.fn(),
 }));
-vi.mock("@raypx/client", () => ({ createApiClient: () => ({ instances: mocks }) }));
+vi.mock("@raypx/client/api", () => ({ createApiClient: () => ({ instances: mocks }) }));
 vi.mock("./auth/client", () => ({ apiUrl: "https://account.example" }));
 beforeEach(() => {
   vi.resetAllMocks();

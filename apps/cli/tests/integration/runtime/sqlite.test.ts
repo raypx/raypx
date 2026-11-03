@@ -30,11 +30,11 @@ function fixture() {
   return { directory: root, path, client, db: drizzle({ client }) };
 }
 
-it("initializes the single profile migration once and reopens the recorded schema", () => {
+it("applies each embedded profile migration once and reopens the recorded schema", () => {
   const f = fixture();
   migrateLocalDatabase(f.db);
   const applied = f.client.query("SELECT * FROM __drizzle_migrations").all();
-  expect(applied).toHaveLength(1);
+  expect(applied).toHaveLength(migrations.length);
   const reopened = new Database(f.path);
   try {
     migrateLocalDatabase(drizzle({ client: reopened }));
@@ -42,6 +42,21 @@ it("initializes the single profile migration once and reopens the recorded schem
   } finally {
     reopened.close();
   }
+});
+
+it("adds orchestration tables in a second migration without backfilling existing tasks", () => {
+  const f = fixture();
+  // Apply only the initial migration and record a task, as a profile from before.
+  const initial = drizzle({ client: f.client });
+  migrateLocalDatabase(initial);
+  const statement = migrations.at(-1)!.sql;
+  expect(migrations.at(-1)!.name).not.toBe(migrations[0]!.name);
+  expect(statement).toContain("CREATE TABLE `task_events`");
+  expect(statement).toContain("CREATE TABLE `task_effects`");
+  // Tables only: the migration never copies or rewrites existing task rows.
+  expect(statement).not.toMatch(/\bINSERT\b|\bUPDATE\b|\bDELETE\b/i);
+  expect(f.client.query("SELECT count(*) AS count FROM task_events").get()).toEqual({ count: 0 });
+  expect(f.client.query("SELECT count(*) AS count FROM task_effects").get()).toEqual({ count: 0 });
 });
 
 it("shares one profile writer and transaction across every repository", async () => {
@@ -88,7 +103,7 @@ it("shares one profile writer and transaction across every repository", async ()
       context_id: "shared",
     });
     expect(f.client.query("SELECT count(*) AS count FROM __drizzle_migrations").get()).toEqual({
-      count: 1,
+      count: migrations.length,
     });
     expect(terminal.projectId(f.directory)).toBe(projectId);
     expect((await memory.get("device", id)).content).toBe("Reference");
@@ -233,7 +248,7 @@ it("serializes fresh initialization across independent CLI processes", async () 
     expect(new Set(results.map((result) => result.streamId)).size).toBe(1);
     expect(results.every((result) => result.revision === 0)).toBe(true);
     expect(f.client.query("SELECT count(*) AS count FROM __drizzle_migrations").get()).toEqual({
-      count: 1,
+      count: migrations.length,
     });
   } finally {
     for (const child of children) child.kill();

@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { Database } from "@raypx/database/connection";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults } from "@raypx/contracts/api";
 import { getApiEnvironment } from "../../server/env.js";
 import { createApiLogging } from "../../server/logging.js";

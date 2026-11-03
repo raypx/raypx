@@ -22,7 +22,7 @@ import { Badge } from "@raypx/ui/components/ui/badge";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { isTaskActive } from "../index.js";
+import { isTaskActive } from "../model/task.js";
 
 import { failureCode } from "./failure.js";
 import { Conversation } from "./conversation.js";

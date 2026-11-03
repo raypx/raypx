@@ -1,4 +1,4 @@
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { readAccount, type AccountState } from "@raypx/account";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";

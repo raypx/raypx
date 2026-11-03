@@ -30,6 +30,9 @@
     "uncachedTasks": [
       "plan",
       "deploy"
-    ]
+    ],
+    "entryConsumers": {
+      ".": "The Railway CLI loads railway.ts through scripts/iac-preload.ts as an IaC program; no workspace imports it."
+    }
   }
 }

@@ -2,15 +2,27 @@ import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import type { ConversationEvent, TokenTotals } from "@raypx/provider-core";
 import type { ActivityDraft, LocalAgentTask } from "../model";
 
-/** Borrow synchronous persistence without depending on SQLite or owning its lifetime. */
+/**
+ * Synchronous command submission for the turn and approval state machine. Each
+ * method commits through the orchestration sink; `undefined` returns prevent an
+ * async writer from satisfying this port.
+ */
 export interface ExecutionStore {
   get(id: string): LocalAgentTask | undefined;
-  /** Returning undefined prevents an async writer from satisfying this port. */
+  /** Session binding for the task, or a mode change, as a committed command. */
   put(value: LocalAgentTask): undefined;
   recordActivity(binding: string, draft: ActivityDraft): TaskActivity;
   request(binding: string, value: HumanRequest): undefined;
   getRequest(binding: string, id: string): HumanRequest | undefined;
   tokenUsage(sessionId: string): TokenTotals | undefined;
+}
+
+/**
+ * Provider reports the harness forwards for a current handle. The application
+ * ingestor commits them; the harness never writes storage for provider events.
+ */
+export interface ExecutionIngest {
+  session(sessionId: string): void;
 }
 
 /** Recording policy stays outside the turn and approval state machine. */

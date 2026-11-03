@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createApiClient, isMissingProcedure } from "@raypx/client";
+import { createApiClient, isMissingProcedure } from "@raypx/client/api";
 import { RemoteControl, serverOrigin, type ControlInfo } from "@raypx/host";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import { hostAuthorizationSchema, type HostAuthorization } from "@raypx/contracts/terminal";

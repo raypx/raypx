@@ -7,7 +7,7 @@ import {
   systemRelayScheduler,
   type RelayScheduler,
   type RelaySocketFactory,
-} from "@raypx/client";
+} from "@raypx/client/relay";
 import {
   RELAY_VERSION,
   deviceGrantSchema,

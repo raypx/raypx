@@ -2,9 +2,8 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
 import type { apiContract } from "@raypx/contracts/api";
+
 export { isMissingProcedure } from "./response.js";
-export { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.js";
-export { createTaskClient, type TaskClient } from "./tasks.js";
 
 export type ApiClient = ContractRouterClient<typeof apiContract>;
 export type ApiHeaders = Record<string, string | undefined>;
@@ -35,12 +34,3 @@ export function createApiClient(options: CreateApiClientOptions = {}): ApiClient
   });
   return createORPCClient(link);
 }
-
-export type {
-  RelayClientFrame,
-  RelayServerFrame,
-  RelayCommand,
-  TaskChange,
-} from "@raypx/contracts/api";
-
-export { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";

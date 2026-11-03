@@ -7,7 +7,9 @@ execution hosts and product views. Schemas are the single source of inferred typ
 
 ## Interface
 
-- `.` exports the task models and pure activity/text rules.
+- `/permissions` exports the framework-free role names and application permission
+  vocabulary shared by the wire schemas and Auth's ACL. It is vocabulary, not policy:
+  Better Auth owns role grants.
 - `/tasks` exports normalized task, activity, human-request/decision schemas,
   inferred types, provider capabilities, pure provider presentation metadata, active statuses and decision validation.
   Task contexts freeze up to eight explicit source revisions. `taskExecutionPrompt`

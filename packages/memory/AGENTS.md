@@ -7,7 +7,8 @@ Versioned user-selected memory and task templates, shared by device and account 
 ## Interface
 
 The universal root owns document schemas. `/server` owns injected library use cases
-and repository ports. `/client` owns browser management, context selection, immutable
+and repository ports; it is a node entry (`./server`, `src/server.ts`, `src/server/**`),
+so browser code cannot import a use case and inherit a database or filesystem adapter. `/client` owns browser management, context selection, immutable
 task-context views and browser-only ports. Concrete SQLite/PostgreSQL, identity,
 authentication, routing and device authorization remain in applications.
 

@@ -1,5 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import * as core from "@raypx/core";
+import * as core from "@raypx/core/tasks";
+import { agentRunStatusSchema } from "@raypx/core/agent-runs";
 import * as tasks from "./tasks.js";
 import { apiContract } from "./api.js";
 import { localResults } from "./local-client.js";
@@ -79,7 +80,7 @@ it("requires complete provider capabilities and task history across transports",
   };
   const remote = apiContract.tasks.get["~orpc"].outputSchemas?.[0];
   if (!remote) throw new Error("Missing remote task history schema");
-  expect(localResults["agents.local.get"].shape.runStatus).toBe(core.agentRunStatusSchema);
+  expect(localResults["agents.local.get"].shape.runStatus).toBe(agentRunStatusSchema);
   expect(
     localResults["agents.local.get"].safeParse({ ...history, activity: [], runStatus: undefined })
       .success,

@@ -10,7 +10,6 @@
     "./policy": "./src/policy.ts",
     "./types": "./src/types.ts",
     "./access": "./src/access.ts",
-    "./permissions": "./src/permissions.ts",
     "./client/styles.css": "./src/client/styles.css",
     "./origins": "./src/origins.ts"
   },
@@ -22,6 +21,7 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
+    "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
     "@raypx/ui": "workspace:*",

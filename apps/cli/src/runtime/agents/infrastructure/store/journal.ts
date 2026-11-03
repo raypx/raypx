@@ -8,9 +8,6 @@ import { agentMeta, journal, outbox } from "../../../sqlite/schema";
 import { isDesktopBinding } from "../../model";
 import { journalTaskId } from "./queries";
 
-/** Records one event for a binding; other record families journal their changes through it. */
-export type AppendEvent = (binding: string, event: AgentEvent) => void;
-
 /** Ordered task events per binding, the relay outbox and its rolling replay window. */
 export class EventJournal {
   readonly streamId: string;

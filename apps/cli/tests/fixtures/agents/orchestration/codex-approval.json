@@ -1,0 +1,408 @@
+{
+  "task": {
+    "id": "task",
+    "deviceId": "uuid:0",
+    "projectId": "uuid:1",
+    "provider": "codex",
+    "mode": "run",
+    "prompt": "Task with private text",
+    "status": "succeeded",
+    "summary": "gp result",
+    "parentTaskId": null,
+    "createdAt": "time:15",
+    "updatedAt": "time:16"
+  },
+  "journal": [
+    {
+      "id": "uuid:2",
+      "taskId": "task",
+      "kind": "status",
+      "status": "running",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "running",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:15",
+        "updatedAt": "time:16"
+      }
+    },
+    {
+      "id": "uuid:3",
+      "taskId": "task",
+      "kind": "status",
+      "status": "waiting",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "waiting",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:15",
+        "updatedAt": "time:16"
+      }
+    },
+    {
+      "id": "uuid:4",
+      "taskId": "task",
+      "kind": "request",
+      "request": {
+        "id": "uuid:5",
+        "taskId": "task",
+        "kind": "permission",
+        "title": "Run tests",
+        "body": "{\n  \"command\": \"bun test\"\n}",
+        "questions": [],
+        "expiresAt": "time:17",
+        "status": "pending",
+        "decision": null
+      }
+    },
+    {
+      "id": "uuid:6",
+      "taskId": "task",
+      "kind": "request",
+      "request": {
+        "id": "uuid:5",
+        "taskId": "task",
+        "kind": "permission",
+        "title": "Run tests",
+        "body": "{\n  \"command\": \"bun test\"\n}",
+        "questions": [],
+        "expiresAt": "time:17",
+        "status": "applied",
+        "decision": {
+          "type": "allow"
+        }
+      }
+    },
+    {
+      "id": "uuid:7",
+      "taskId": "task",
+      "kind": "resolved",
+      "requestId": "uuid:5"
+    },
+    {
+      "id": "uuid:8",
+      "taskId": "task",
+      "kind": "status",
+      "status": "running",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "running",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:15",
+        "updatedAt": "time:16"
+      }
+    },
+    {
+      "id": "uuid:9",
+      "taskId": "task",
+      "kind": "activity",
+      "entry": {
+        "id": "uuid:10",
+        "taskId": "task",
+        "order": 1,
+        "revision": 1,
+        "createdAt": "time:16",
+        "updatedAt": "time:16",
+        "kind": "message",
+        "text": "gp result",
+        "status": "streaming",
+        "truncated": false
+      }
+    },
+    {
+      "id": "uuid:11",
+      "taskId": "task",
+      "kind": "activity",
+      "entry": {
+        "id": "uuid:10",
+        "taskId": "task",
+        "order": 1,
+        "revision": 2,
+        "createdAt": "time:16",
+        "updatedAt": "time:16",
+        "kind": "message",
+        "text": "gp result",
+        "status": "complete",
+        "truncated": false
+      }
+    },
+    {
+      "id": "uuid:12",
+      "taskId": "task",
+      "kind": "status",
+      "status": "succeeded",
+      "summary": "gp result",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "succeeded",
+        "summary": "gp result",
+        "parentTaskId": null,
+        "createdAt": "time:15",
+        "updatedAt": "time:16"
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:13",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:10",
+                "taskId": "task",
+                "order": 1,
+                "revision": 1,
+                "createdAt": "time:16",
+                "updatedAt": "time:16",
+                "kind": "message",
+                "text": "gp result",
+                "status": "streaming",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:14",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:10",
+                "taskId": "task",
+                "order": 1,
+                "revision": 2,
+                "createdAt": "time:16",
+                "updatedAt": "time:16",
+                "kind": "message",
+                "text": "gp result",
+                "status": "complete",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:7",
+              "taskId": "task",
+              "kind": "resolved",
+              "requestId": "uuid:5"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:2",
+              "taskId": "task",
+              "kind": "status",
+              "status": "running",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "running",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:15",
+                "updatedAt": "time:16"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:8",
+              "taskId": "task",
+              "kind": "status",
+              "status": "running",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "running",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:15",
+                "updatedAt": "time:16"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:12",
+              "taskId": "task",
+              "kind": "status",
+              "status": "succeeded",
+              "summary": "gp result",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "succeeded",
+                "summary": "gp result",
+                "parentTaskId": null,
+                "createdAt": "time:15",
+                "updatedAt": "time:16"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:3",
+              "taskId": "task",
+              "kind": "status",
+              "status": "waiting",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "waiting",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:15",
+                "updatedAt": "time:16"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {},
+    {}
+  ],
+  "requests": [
+    {
+      "id": "uuid:5",
+      "taskId": "task",
+      "kind": "permission",
+      "title": "Run tests",
+      "body": "{\n  \"command\": \"bun test\"\n}",
+      "questions": [],
+      "expiresAt": "time:17",
+      "status": "applied",
+      "decision": {
+        "type": "allow"
+      }
+    }
+  ],
+  "activity": [
+    {
+      "id": "uuid:10",
+      "taskId": "task",
+      "order": 1,
+      "revision": 2,
+      "createdAt": "time:16",
+      "updatedAt": "time:16",
+      "kind": "message",
+      "text": "gp result",
+      "status": "complete",
+      "truncated": false
+    }
+  ]
+}

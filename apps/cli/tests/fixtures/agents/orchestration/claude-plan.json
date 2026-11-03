@@ -1,0 +1,388 @@
+{
+  "task": {
+    "id": "task",
+    "deviceId": "uuid:0",
+    "projectId": "uuid:1",
+    "provider": "claude",
+    "mode": "run",
+    "prompt": "Task with private text",
+    "status": "succeeded",
+    "summary": "Implemented approved plan",
+    "parentTaskId": null,
+    "createdAt": "time:14",
+    "updatedAt": "time:15"
+  },
+  "journal": [
+    {
+      "id": "uuid:2",
+      "taskId": "task",
+      "kind": "status",
+      "status": "running",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "claude",
+        "mode": "plan",
+        "prompt": "Task with private text",
+        "status": "running",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:14",
+        "updatedAt": "time:15"
+      }
+    },
+    {
+      "id": "uuid:3",
+      "taskId": "task",
+      "kind": "status",
+      "status": "waiting",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "claude",
+        "mode": "plan",
+        "prompt": "Task with private text",
+        "status": "waiting",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:14",
+        "updatedAt": "time:15"
+      }
+    },
+    {
+      "id": "uuid:4",
+      "taskId": "task",
+      "kind": "request",
+      "request": {
+        "id": "uuid:5",
+        "taskId": "task",
+        "kind": "plan",
+        "title": "Claude Code",
+        "body": "Initial implementation plan",
+        "questions": [],
+        "expiresAt": "time:16",
+        "status": "pending",
+        "decision": null
+      }
+    },
+    {
+      "id": "uuid:6",
+      "taskId": "task",
+      "kind": "request",
+      "request": {
+        "id": "uuid:5",
+        "taskId": "task",
+        "kind": "plan",
+        "title": "Claude Code",
+        "body": "Initial implementation plan",
+        "questions": [],
+        "expiresAt": "time:16",
+        "status": "applied",
+        "decision": {
+          "type": "allow"
+        }
+      }
+    },
+    {
+      "id": "uuid:7",
+      "taskId": "task",
+      "kind": "resolved",
+      "requestId": "uuid:5"
+    },
+    {
+      "id": "uuid:8",
+      "taskId": "task",
+      "kind": "status",
+      "status": "running",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "claude",
+        "mode": "plan",
+        "prompt": "Task with private text",
+        "status": "running",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:14",
+        "updatedAt": "time:15"
+      }
+    },
+    {
+      "id": "uuid:9",
+      "taskId": "task",
+      "kind": "status",
+      "status": "succeeded",
+      "summary": "Implemented approved plan",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "claude",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "succeeded",
+        "summary": "Implemented approved plan",
+        "parentTaskId": null,
+        "createdAt": "time:14",
+        "updatedAt": "time:15"
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:10",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:11",
+                "taskId": "task",
+                "order": 1,
+                "revision": 1,
+                "createdAt": "time:15",
+                "updatedAt": "time:15",
+                "kind": "message",
+                "text": "Initial implementation plan",
+                "status": "complete",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:12",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:13",
+                "taskId": "task",
+                "order": 2,
+                "revision": 1,
+                "createdAt": "time:15",
+                "updatedAt": "time:15",
+                "kind": "message",
+                "text": "Implemented approved plan",
+                "status": "complete",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:7",
+              "taskId": "task",
+              "kind": "resolved",
+              "requestId": "uuid:5"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:2",
+              "taskId": "task",
+              "kind": "status",
+              "status": "running",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "claude",
+                "mode": "plan",
+                "prompt": "Task with private text",
+                "status": "running",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:14",
+                "updatedAt": "time:15"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:8",
+              "taskId": "task",
+              "kind": "status",
+              "status": "running",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "claude",
+                "mode": "plan",
+                "prompt": "Task with private text",
+                "status": "running",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:14",
+                "updatedAt": "time:15"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:9",
+              "taskId": "task",
+              "kind": "status",
+              "status": "succeeded",
+              "summary": "Implemented approved plan",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "claude",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "succeeded",
+                "summary": "Implemented approved plan",
+                "parentTaskId": null,
+                "createdAt": "time:14",
+                "updatedAt": "time:15"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:3",
+              "taskId": "task",
+              "kind": "status",
+              "status": "waiting",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "claude",
+                "mode": "plan",
+                "prompt": "Task with private text",
+                "status": "waiting",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:14",
+                "updatedAt": "time:15"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "pendingRequest": "uuid:5"
+    },
+    {}
+  ],
+  "requests": [
+    {
+      "id": "uuid:5",
+      "taskId": "task",
+      "kind": "plan",
+      "title": "Claude Code",
+      "body": "Initial implementation plan",
+      "questions": [],
+      "expiresAt": "time:16",
+      "status": "applied",
+      "decision": {
+        "type": "allow"
+      }
+    }
+  ],
+  "activity": [
+    {
+      "id": "uuid:11",
+      "taskId": "task",
+      "order": 1,
+      "revision": 1,
+      "createdAt": "time:15",
+      "updatedAt": "time:15",
+      "kind": "message",
+      "text": "Initial implementation plan",
+      "status": "complete",
+      "truncated": false
+    },
+    {
+      "id": "uuid:13",
+      "taskId": "task",
+      "order": 2,
+      "revision": 1,
+      "createdAt": "time:15",
+      "updatedAt": "time:15",
+      "kind": "message",
+      "text": "Implemented approved plan",
+      "status": "complete",
+      "truncated": false
+    }
+  ]
+}

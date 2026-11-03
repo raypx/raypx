@@ -1,4 +1,5 @@
-import { createApiClient, createTaskClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
+import { createTaskClient } from "@raypx/client/tasks";
 import { apiUrl, desktopFetch } from "../auth/client";
 
 /** Remote task client: oRPC reads plus relay commands and the account binding. */

@@ -1,6 +1,6 @@
 import { memoryControlRepository } from "@raypx/control/testing";
 import { describe, expect, it, vi } from "vite-plus/test";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "../../server/api.js";
 import { ControlService } from "@raypx/control";
 import type { AuthSession } from "@raypx/auth/types";

@@ -11,7 +11,7 @@ vi.mock("../client", () => ({
   desktopFetch: vi.fn(),
   authClient: { useSession: mocks.session },
 }));
-vi.mock("@raypx/client", () => ({
+vi.mock("@raypx/client/api", () => ({
   createApiClient: () => ({ instances: { approve: mocks.approve } }),
 }));
 vi.mock("@tanstack/react-router", () => ({

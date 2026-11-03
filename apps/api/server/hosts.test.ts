@@ -8,7 +8,7 @@ import {
   observed,
   running,
 } from "@raypx/control/testing";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "./api.js";
 
 it("limits host grants before credential lookup without retaining bearer secrets", async () => {

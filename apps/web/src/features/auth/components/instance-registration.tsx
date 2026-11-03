@@ -2,7 +2,7 @@ import { useConfirmation } from "@raypx/ui/confirmation";
 import { Field, FieldGroup } from "@raypx/ui/components/ui/field";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import type { InstanceIdentity } from "@raypx/instances";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 import { createEnv, defineEnv, EnvError, z, type InferEnv } from "@raypx/env";
-import { runtimeEnv } from "@raypx/env/runtime";
+import { runtimeEnv } from "./runtime.js";
 import externalZod from "zod";
 
 describe("public workspace entries", () => {

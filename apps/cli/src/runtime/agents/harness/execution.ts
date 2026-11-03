@@ -9,7 +9,13 @@ import {
 } from "@raypx/core/tasks";
 import { LocalError } from "../../errors";
 import { isDesktopBinding, type LocalAgentTask } from "../model";
-import type { ExecutionConversation, ExecutionEffects, ExecutionStore } from "./ports";
+import type {
+  ExecutionConversation,
+  ExecutionEffects,
+  ExecutionIngest,
+  ExecutionStore,
+} from "./ports";
+import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports";
 import type {
   AdapterEvent,
   ProviderSession,
@@ -83,6 +89,15 @@ export class ManagedExecution {
     private readonly effects: ExecutionEffects,
     private readonly adapterFactory: SessionFactory,
     private readonly interruptTimeoutMs = 10_000,
+    private readonly clock: Clock = systemClock,
+    private readonly ids: Ids = cryptoIds,
+    /** Provider session reports go through the ingestor, not a direct store write. */
+    private readonly ingest: ExecutionIngest = {
+      session: (sessionId) => {
+        this.local.sessionId = sessionId;
+        this.store.put(this.local);
+      },
+    },
   ) {}
   hasPending(id: string) {
     return this.pending.has(id);
@@ -94,15 +109,29 @@ export class ManagedExecution {
     this.local.task.mode = "run";
     this.store.put(this.local);
   }
+  /**
+   * Commit an applied decision, then answer the provider. A failed commit leaves
+   * the request pending and the provider unanswered.
+   */
   applyDecision(id: string, decision: HumanDecision) {
     const pending = this.pending.get(id);
-    if (pending && Date.parse(pending.request.expiresAt) > Date.now()) {
+    if (pending && Date.parse(pending.request.expiresAt) > this.clock.now().getTime()) {
       this.store.request(this.local.binding, { ...pending.request, status: "applied", decision });
-      clearTimeout(pending.timer);
-      this.pending.delete(id);
-      pending.resolve(decision);
-      this.effects.resolved(id);
+      this.respond(id, decision);
     }
+  }
+  /**
+   * The `provider.request.respond` effect: resolve the adapter's approval promise
+   * for a decision whose `request.applied` event has already committed.
+   */
+  respond(id: string, decision: HumanDecision) {
+    const pending = this.pending.get(id);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.pending.delete(id);
+    pending.resolve(decision);
+    this.effects.resolved(id);
+    return true;
   }
   enqueue(request: { id: string; mode: TaskInput["mode"]; prompt: string }) {
     if (this.finished || this.cancelled) throw new LocalError("TASK_STOPPED", "Task stopped");
@@ -114,7 +143,7 @@ export class ManagedExecution {
     if (this.inputs.length >= 20) throw new LocalError("INPUT_QUEUE_FULL", "Input queue is full");
     if (request.mode === "steer" && this.inputs.some((entry) => entry.mode === "steer"))
       throw new LocalError("INPUT_IN_PROGRESS", "A steer is being delivered");
-    const now = new Date().toISOString();
+    const now = this.clock.now().toISOString();
     const entry = this.store.recordActivity(this.local.binding, {
       id: request.id,
       taskId: this.local.task.id,
@@ -191,7 +220,7 @@ export class ManagedExecution {
         ...entry,
         status,
         ...(code ? { code } : {}),
-        updatedAt: new Date().toISOString(),
+        updatedAt: this.clock.now().toISOString(),
       }),
     );
     this.effects.changed();
@@ -241,9 +270,10 @@ export class ManagedExecution {
         type: "deny",
         note: "Request exceeds remote approval limits. No approval was granted.",
       };
-    const expiresAt = new Date(Math.min(Date.now() + 600_000, deadline ?? Infinity)).toISOString();
+    const now = this.clock.now().getTime();
+    const expiresAt = new Date(Math.min(now + 600_000, deadline ?? Infinity)).toISOString();
     const request = humanRequestSchema.parse({
-      id: crypto.randomUUID(),
+      id: this.ids.generate(),
       taskId: this.local.task.id,
       kind,
       title: taskText(title, 500),
@@ -263,7 +293,7 @@ export class ManagedExecution {
           this.effects.changed();
           resolve({ type: "deny", note: "Request expired" });
         },
-        Math.max(1, Date.parse(expiresAt) - Date.now()),
+        Math.max(1, Date.parse(expiresAt) - this.clock.now().getTime()),
       );
       this.pending.set(request.id, { request, resolve, timer });
     });
@@ -349,8 +379,7 @@ export class ManagedExecution {
         this.finish("failed", "SESSION_UNAVAILABLE");
         return;
       }
-      this.local.sessionId = event.id;
-      this.store.put(this.local);
+      this.ingest.session(event.id);
       return;
     }
     if (event.type === "turn-id") {

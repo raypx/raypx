@@ -28,3 +28,4 @@ export type {
   TaskReadOptions,
   TaskWorkspacePort,
 } from "./model/port.js";
+export { isTaskActive, taskCursor } from "./model/task.js";

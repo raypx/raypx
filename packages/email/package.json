@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./server": "./src/server.ts",
-    "./types": "./src/types.ts"
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "email:dev": "bun --bun vp dev --config vite.app.config.ts",
@@ -34,9 +33,7 @@
   "raypx": {
     "kind": "library",
     "target": "node",
-    "entryTargets": {
-      "./types": "universal"
-    },
+    "entryTargets": {},
     "sourceTargets": {
       "src/types.ts": "universal",
       "vite.app.config.ts": "node"

@@ -12,7 +12,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import { SelectField } from "@raypx/ui/select-field";
-import { isTaskActive } from "../index.js";
+import { isTaskActive } from "../model/task.js";
 
 export interface TaskFilters {
   query: string;

@@ -25,7 +25,20 @@ raypx.kind is app, library or tooling. raypx.target is universal, browser, nativ
 node or bun. entryTargets overrides the default by exports key. sourceTargets
 maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Bun can consume node code;
-other platform crossings require a compatible explicit public entry.
+other platform crossings require a compatible explicit public entry. A server use
+case behind a universal entry is not safe merely because the runtime happens to be
+node today: `memory`, `jobs` and `instances` mark `./server` and `src/server.ts` /
+`src/server/**` as node, following `account`, so a browser import of a server use
+case fails policy instead of reaching a bundled dependency by accident.
+
+Every public entry has an established consumer in another workspace. `policy`
+finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig
+`extends`, including repository-root configuration. Suites, files under `tests/` and
+the `e2e` workspace are test importers: they keep `./testing*` entries and tooling
+surfaces alive, but a library's production entry needs a production importer.
+Remove an entry nobody imports, or record a reason in `raypx.entryConsumers` — the
+exception list is validated against the exported keys, so a pruned entry cannot leave
+a stale reason behind.
 
 Applications cannot be imported. Runtime code cannot import tooling or /testing
 entries. Production imports need dependencies/peerDependencies, type imports may

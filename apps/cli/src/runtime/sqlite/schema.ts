@@ -4,3 +4,4 @@ export * from "./schema/state";
 export * from "./schema/agents";
 export * from "./schema/terminal";
 export * from "./schema/pi";
+export * from "./schema/orchestration";

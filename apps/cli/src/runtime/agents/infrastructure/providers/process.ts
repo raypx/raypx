@@ -51,9 +51,15 @@ export function createAdapter(
 }
 
 /** Discovery is bounded in both time and output, including incompatible installations. */
+export interface DiscoveryOptions {
+  /** Skip PATH/HOME lookup and use only an explicit executable per provider. */
+  explicitOnly?: boolean;
+}
+
 export async function discoverProviders(
   overrides: Partial<Record<AgentProvider, string>>,
   available: Map<AgentProvider, string>,
+  options: DiscoveryOptions = {},
 ): Promise<AgentCapability[]> {
   return Promise.all(
     (Object.keys(adapters) as AgentProvider[]).map(async (provider): Promise<AgentCapability> => {
@@ -68,13 +74,16 @@ export async function discoverProviders(
           inputModes: [],
         };
       const suffix = process.platform === "win32" ? ".exe" : "";
-      const executable = [
-        overrides[provider],
-        Bun.which(provider),
-        join(homedir(), ".local", "bin", provider + suffix),
-        join(homedir(), ".bun", "bin", provider + suffix),
-        join("/opt/homebrew/bin", provider),
-      ].find((path) => path && existsSync(path));
+      const candidates = options.explicitOnly
+        ? [overrides[provider]]
+        : [
+            overrides[provider],
+            Bun.which(provider),
+            join(homedir(), ".local", "bin", provider + suffix),
+            join(homedir(), ".bun", "bin", provider + suffix),
+            join("/opt/homebrew/bin", provider),
+          ];
+      const executable = candidates.find((path) => path && existsSync(path));
       if (!executable)
         return {
           definition: adapters[provider].definition,

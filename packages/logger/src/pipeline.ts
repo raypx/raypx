@@ -1,2 +1,2 @@
 export { createDrainPipeline } from "evlog/pipeline";
-export type { DrainPipelineOptions, PipelineDrainFn } from "evlog/pipeline";
+export type { PipelineDrainFn } from "evlog/pipeline";

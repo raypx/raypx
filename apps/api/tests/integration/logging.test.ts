@@ -1,6 +1,6 @@
 import type { ApiAppOptions } from "../../server/app/options.js";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import type { AuthSession } from "@raypx/auth/types";
 import type { SafeEvent } from "@raypx/logger/safe";
 import { createApiApp } from "../../server/api.js";

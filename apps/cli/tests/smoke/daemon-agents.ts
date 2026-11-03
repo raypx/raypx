@@ -11,7 +11,8 @@ import {
 } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
-import { createApiClient, createTaskClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
+import { createTaskClient } from "@raypx/client/tasks";
 import { localResponseSchema, type LocalMethod } from "@raypx/contracts/local";
 import type { ControlInfo, TerminalDecision, TerminalRequest } from "@raypx/contracts/terminal";
 import type { DeviceGrant } from "@raypx/contracts/tasks";

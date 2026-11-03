@@ -53,6 +53,10 @@ filesystem or database dependency.
 Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
 domain consumers import Core directly, without contract re-export aliases.
 There is one domain schema source and the dependency direction is contracts → core.
+Packages expose surfaces rather than barrels ([ADR 0043](0043-package-surfaces.md)):
+`@raypx/contracts` has no root and composes the jobs and memory schemas internally,
+`@raypx/client` offers `/api`, `/relay` and `/tasks`, and `@raypx/tasks` keeps its
+model helpers on `/model`. Every public entry has a consumer outside its workspace.
 
 Tasks separates its pure `/model` entry from its browser `/client` entry. The model
 owns explicit workspace scopes, compatible draft identities, conversation history
@@ -173,6 +177,13 @@ owns each run's turns, input queue, approvals, cancellation and lock release aft
 process draining. The provider-claude and provider-codex libraries translate their private protocols
 through a narrow process port. The shared host package owns remote connection and
 synchronization; it does not own provider execution policy.
+Agent orchestration is event-sourced inside the CLI ([ADR 0044](0044-event-sourced-cli-orchestration.md)).
+A pure decider in `runtime/agents/domain/` turns commands and live process facts
+into events and effects; one sink commits the receipt, events, projections, relay
+journal/outbox and effect intents in a single SQLite transaction. The wire
+projection keeps today's `AgentEvent` sequence, so relay, Desktop, replay and
+snapshot formats are unchanged. Effects are process-bound: restart abandons open
+effects and interrupts active tasks instead of replaying them.
 `raypx tui` adds a lazy line-oriented task browser with a session-owned in-process
 runtime and scheduling disabled. It shares the local request boundary, confirms
 manual execution, and closes its own runtime on quit/EOF/signals. Both input and

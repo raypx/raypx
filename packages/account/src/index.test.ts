@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { createApiClient } from "@raypx/client";
+import { createApiClient } from "@raypx/client/api";
 import { readAccount } from "./index";
 
 const profile = { id: "u1", email: "a@example.test", name: "Ada" };

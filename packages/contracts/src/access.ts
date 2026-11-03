@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { applicationPermissions, authRoleNames } from "@raypx/auth/permissions";
+import { applicationPermissions, authRoleNames } from "@raypx/core/permissions";
 
 export const accountRoleSchema = z.enum(["guest", ...authRoleNames]);
 export type AccountRole = z.infer<typeof accountRoleSchema>;
