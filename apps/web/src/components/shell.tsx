@@ -2,19 +2,17 @@ import { publicConfigurationQuery } from "../features/configuration/client";
 import {
   accountAccessQuery,
   canAccessWebPage,
-  webPagePermissions,
+  webPages,
   type WebPath,
 } from "../features/auth/access";
 import { hasPermission } from "@raypx/account/access";
 import { PermissionBoundary } from "../features/auth/components/permission-boundary";
 import { analytics } from "../features/analytics/client";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
-import { guestReturnTo } from "../features/tasks/guest-draft";
 import { useEffect, useRef } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
-import { AccountMenu } from "@raypx/account/client";
-import { useAuthActions } from "@raypx/auth/hooks";
-import { apiUrl, authClient, webUrl } from "../features/auth/client";
+import { UserButton } from "./user-button";
+import { authClient } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
 import { RemoteProjectNavigation } from "../features/tasks/project-navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +21,6 @@ import {
   Outlet,
   useMatches,
   useRouter,
-  useRouterState,
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
 import { FolderOpenIcon } from "@raypx/icons/folder-open";
@@ -73,14 +70,12 @@ export function WebShell() {
     }
     return () => taskClient.setAccount?.(null);
   }, [accountId, queryClient, router]);
-  const auth = useAuthActions({ client: authClient, webUrl });
   const t = useTranslations();
   const c = useTranslations("common");
   const memory = useTranslations("memory");
-  const href = useRouterState({ select: (state) => state.location.href });
   const pathname = useMatches({ select: (matches) => matches.at(-1)?.fullPath ?? "/" });
-  const pagePermission = Object.hasOwn(webPagePermissions, pathname)
-    ? webPagePermissions[pathname as WebPath]
+  const pagePermission = Object.hasOwn(webPages, pathname)
+    ? webPages[pathname as WebPath].permission
     : null;
   const page = useMatches({
     select: (matches) =>
@@ -105,6 +100,11 @@ export function WebShell() {
     { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
     { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
   ];
+  secondaryNavigation.push({
+    to: "/admin/users",
+    label: c("users"),
+    icon: <AdjustmentsIcon />,
+  });
   secondaryNavigation.push({
     to: "/admin/settings",
     label: c("adminSettings"),
@@ -145,35 +145,7 @@ export function WebShell() {
             <TooltipContent side="top">{c("settings")}</TooltipContent>
           </Tooltip>
         }
-        account={
-          <AccountMenu
-            key={accountId ?? "signed-out"}
-            user={accountId ? (session.data?.user ?? null) : null}
-            pending={session.isPending}
-            busy={auth.busy}
-            error={Boolean(auth.error)}
-            onNavigate={(destination) => {
-              if (destination === "login" || !accountId)
-                void router.navigate({
-                  to: "/login",
-                  search: {
-                    returnTo: guestReturnTo(apiUrl, destination === "account" ? "/account" : href),
-                  },
-                });
-              else if (!href.startsWith("/account"))
-                void router.navigate({ to: "/account", state: { settingsReturnTo: href } });
-            }}
-            onSignOut={async () => {
-              const result = await auth.signOut(async () => {
-                analytics.reset();
-                queryClient.clear();
-                await router.invalidate();
-                await router.navigate({ to: "/" });
-              });
-              return result.status === "success";
-            }}
-          />
-        }
+        account={<UserButton variant="sidebar" />}
       >
         {accountId && pagePermission ? (
           <PermissionBoundary key={accountId} accountId={accountId} permission={pagePermission}>

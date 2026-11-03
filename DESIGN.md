@@ -9,7 +9,9 @@ CSS entry points register sources and shared styles; avoid feature-specific sele
 Desktop opens the most recent valid local project, with project authorization,
 Agent readiness and the first message as its empty state. Web uses a public landing
 page at `/` and opens remote projects at `/projects`;
-account details live at `/account`. Local work remains available before login.
+account details live at `/account`. The landing header uses a compact account avatar
+with the same account, settings and permission-filtered administration menu as the
+sidebar. Its footer groups brand copyright with privacy and GitHub links. Local work remains available before login.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.
 The Expo iOS/Android app requires login by default and opens its account screen
 after authentication. Native task views and push notifications are later work.

@@ -3,7 +3,7 @@ import { createMemoryHistory, createRouter, type AnyRoute } from "@tanstack/reac
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vite-plus/test";
 import { routeTree } from "./routeTree.gen.ts";
-import { webPagePermissions } from "./features/auth/access";
+import { webPages } from "./features/auth/access";
 
 function leaves(route: AnyRoute): AnyRoute[] {
   const children = Object.values((route.children ?? {}) as Record<string, AnyRoute>);
@@ -27,7 +27,7 @@ describe("application shell pages", () => {
         .filter((route) => route.id.startsWith("/(app)"))
         .map((route) => route.fullPath)
         .sort((a, b) => a.localeCompare(b)),
-    ).toEqual(Object.keys(webPagePermissions).sort((a, b) => a.localeCompare(b)));
+    ).toEqual(Object.keys(webPages).sort((a, b) => a.localeCompare(b)));
   });
   it("keeps the public homepage in its own landing group", () => {
     const routes = pages();
@@ -43,6 +43,7 @@ describe("application shell pages", () => {
     ).toEqual({
       "/projects": { title: "common.projects", layout: "workbench" },
       "/account": { title: "common.account", layout: "document" },
+      "/admin/users": { title: "common.users", layout: "workbench" },
       "/admin/settings": { title: "common.adminSettings", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },

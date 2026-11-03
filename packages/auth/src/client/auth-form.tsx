@@ -112,6 +112,7 @@ export interface AuthFormLinkProps {
 
 export interface AuthFormProps {
   mode: AuthMode;
+  completeOnMount?: boolean;
   socialLogin?:
     | { providers: readonly SocialProvider[]; callbackURL: string; errorCallbackURL: string }
     | undefined;
@@ -126,6 +127,7 @@ export interface AuthFormProps {
 
 export function AuthForm({
   mode,
+  completeOnMount = false,
   socialLogin,
   backLabel,
   client,
@@ -153,18 +155,19 @@ export function AuthForm({
   const completeSocialSignIn = auth.completeSocialSignIn;
   useEffect(() => {
     if (
-      !socialLogin ||
-      mode !== "login" ||
-      new URLSearchParams(search).get("oauth") !== "success" ||
+      (!completeOnMount &&
+        (!socialLogin ||
+          mode !== "login" ||
+          new URLSearchParams(search).get("oauth") !== "success")) ||
       socialCompleted.current
     )
       return;
     socialCompleted.current = true;
     setSucceeded(true);
     void completeSocialSignIn(onSignedIn);
-  }, [mode, search, onSignedIn, completeSocialSignIn, socialLogin]);
-  const signedIn = succeeded && mode === "login";
-  const complete = succeeded && config.completes === true;
+  }, [mode, search, onSignedIn, completeSocialSignIn, socialLogin, completeOnMount]);
+  const signedIn = succeeded && (mode === "login" || completeOnMount);
+  const complete = succeeded && (config.completes === true || completeOnMount);
   const messageKey = succeeded ? config.success : null;
   const link = readAuthLink(mode, search, auth.error);
   const showForm = !link.verified && !link.invalidReset && !complete;

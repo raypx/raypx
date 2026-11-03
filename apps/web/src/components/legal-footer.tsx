@@ -2,17 +2,49 @@ import { Link } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { cn } from "@raypx/ui/lib/utils";
 
-export function LegalFooter({ className }: { className?: string }) {
+const copyrightYear = new Date().getUTCFullYear();
+const linkClass =
+  "rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+export function LegalFooter({
+  className,
+  expanded = false,
+  siteName = "Raypx",
+}: {
+  className?: string;
+  expanded?: boolean;
+  siteName?: string;
+}) {
   const t = useTranslations("legal");
   return (
-    <footer className={cn("text-sm text-muted-foreground", className)}>
-      <nav aria-label={t("navigation")}>
-        <Link
-          to="/privacy"
-          className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
+    <footer
+      className={cn(
+        "text-sm text-muted-foreground",
+        expanded && "flex flex-wrap items-center justify-between gap-4",
+        className,
+      )}
+    >
+      {expanded && (
+        <span>
+          © {copyrightYear} {siteName}
+        </span>
+      )}
+      <nav
+        aria-label={t("navigation")}
+        className={expanded ? "flex flex-wrap items-center gap-5" : undefined}
+      >
+        <Link to="/privacy" className={linkClass}>
           {t("privacy")}
         </Link>
+        {expanded && (
+          <a
+            href="https://github.com/raypx/raypx"
+            target="_blank"
+            rel="noreferrer"
+            className={linkClass}
+          >
+            GitHub
+          </a>
+        )}
       </nav>
     </footer>
   );

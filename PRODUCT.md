@@ -24,7 +24,7 @@ Web runs in desktop and phone browsers. Desktop runs on macOS and Windows throug
 
 ## Capabilities and Constraints
 
-Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Local Pi tasks add model selection, device defaults, approved file/command tools and deliberate model changes between Runs. Verified administrators can manage site identity, registration, and background cleanup in Web.
+Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Local Pi tasks add model selection, device defaults, approved file/command tools and deliberate model changes between Runs. Verified administrators can manage site identity, registration, background cleanup and the fixed member/admin account assignments in Web. Administrators cannot change their own role.
 
 Guests can browse, change preferences, and prepare session drafts. Local projects, sessions, requests and tools require first-time instance registration. After registration they remain usable offline and after online logout. Remote history, computer connections, execution and approvals require login. After login, return to the original page and restore drafts without sending them. Local runtime state and device preferences survive logout.
 
@@ -36,7 +36,7 @@ macOS can install Claude and Codex terminal hooks. Per-project Away mode forward
 
 The CLI, application features, and shared contracts use Bun and TypeScript. Desktop uses a MyGo policy host and system WKWebView or WebView2. Native development and packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
 
-Retired business projects, research, cloud file delivery, and general role management stay outside this scope. Configuration sync, local Web, a standalone Server, native mobile, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. Shared packages are added only when a real consumer needs them.
+Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, native mobile, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. Shared packages are added only when a real consumer needs them.
 
 Show real execution, permission failures, and retry state. Never fabricate data.
 

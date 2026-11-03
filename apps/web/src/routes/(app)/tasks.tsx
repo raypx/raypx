@@ -1,3 +1,4 @@
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../../features/analytics/client";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
@@ -15,6 +16,8 @@ import { ShellActions } from "@raypx/blocks/shell";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const Route = createFileRoute("/(app)/tasks")({
+  beforeLoad: webPageGuard("/tasks"),
+  errorComponent: PageAccessFeedback,
   staticData: { page: { title: "common.tasks", layout: "workbench" } },
   validateSearch: (
     search: Record<string, unknown>,

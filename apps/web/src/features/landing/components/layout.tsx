@@ -1,3 +1,4 @@
+import { UserButton } from "../../../components/user-button";
 import { Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -23,8 +24,8 @@ export function LandingLayout() {
       >
         {c("skipNavigation")}
       </a>
-      <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-10">
+      <header className="sticky top-0 z-20 border-b border-border bg-background">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-10">
           <Link
             to="/"
             aria-label={siteName}
@@ -39,13 +40,11 @@ export function LandingLayout() {
             <Link to="/projects" className={buttonVariants({ variant: "ghost" })}>
               {c("projects")}
             </Link>
-            <Link to="/login" className={buttonVariants()}>
-              {c("signIn")}
-            </Link>
             <div className="flex shrink-0 items-center gap-1">
               <ThemeToggle />
               <LanguageMenu />
             </div>
+            <UserButton />
           </nav>
         </div>
       </header>
@@ -57,7 +56,11 @@ export function LandingLayout() {
         <Outlet />
       </main>
       <div className="border-t border-border">
-        <LegalFooter className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-10" />
+        <LegalFooter
+          expanded
+          siteName={siteName}
+          className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-10"
+        />
       </div>
     </div>
   );

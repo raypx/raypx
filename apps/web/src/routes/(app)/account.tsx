@@ -1,3 +1,4 @@
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
 import { InstanceRegistration } from "../../features/auth/components/instance-registration";
 import { SignInGate } from "../../features/auth/components/session-boundary";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -18,6 +19,8 @@ import {
 } from "../../features/settings/account-settings";
 
 export const Route = createFileRoute("/(app)/account")({
+  beforeLoad: webPageGuard("/account"),
+  errorComponent: PageAccessFeedback,
   staticData: { page: { title: "common.account", layout: "document" } },
   loader: ({ context }) => context.account,
   component: AccountPage,

@@ -1,3 +1,4 @@
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CloudJobsPage } from "@raypx/jobs/client";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -7,6 +8,8 @@ import { accountMemory } from "../../features/memory/client";
 import { ProjectTools } from "../../features/tasks/project-tools";
 
 export const Route = createFileRoute("/(app)/automations")({
+  beforeLoad: webPageGuard("/automations"),
+  errorComponent: PageAccessFeedback,
   staticData: { page: { title: "common.jobs", layout: "workbench" } },
   validateSearch: (search: Record<string, unknown>): { project?: string; device?: string } => ({
     ...(typeof search.project === "string" && /^[0-9a-f-]{36}$/i.test(search.project)

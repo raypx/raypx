@@ -15,7 +15,10 @@ Desktop and API. Auth continues to own authentication and credentials.
   roles; its shared `/access` ACL supplies all grants, including composed assignments.
 - `/client`: `AccountDetails`, `SignedOutAccount`, `AccountSkeleton`, `AccountMenu` and their types.
   Applications inject links, sign-out actions and feedback through props/children.
-  The sidebar menu receives session identity and delegates navigation and logout to applications.
+  The menu receives session identity and delegates navigation and logout to applications.
+  Optional `variant="header"` uses a compact trigger and bottom-aligned popup; the
+  default sidebar presentation stays unchanged. Applications inject additional menu
+  items as children; Account never imports routing or permission-loading code.
 - `/client/styles.css`: registers Tailwind sources for shared DOM account views.
 - `/server`: `createAccountService({ readSession }).get(headers)` returns a fresh
   `{ id, email, name }` projection or null for each request.

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { ChevronsUpDownIcon } from "@raypx/icons/chevrons-up-down";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { LoginIcon } from "@raypx/icons/login";
@@ -15,9 +15,12 @@ import {
 } from "@raypx/ui/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
+import { cn } from "@raypx/ui/lib/utils";
 import type { AccountProfile } from "../index";
 
 export interface AccountMenuProps {
+  variant?: "sidebar" | "header";
+  children?: ReactNode;
   user: (Pick<AccountProfile, "name" | "email"> & { image?: string | null | undefined }) | null;
   pending: boolean;
   busy: boolean;
@@ -27,6 +30,8 @@ export interface AccountMenuProps {
 }
 
 export function AccountMenu({
+  variant = "sidebar",
+  children,
   user,
   pending,
   busy,
@@ -69,24 +74,31 @@ export function AccountMenu({
         aria-label={c("accountMenu")}
         aria-busy={pending || busy}
         disabled={pending || busy}
-        className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-sidebar-accent motion-reduce:transition-none sidebar-icon:justify-center sidebar-icon:px-0"
+        className={cn(
+          "flex items-center rounded-lg text-left text-foreground outline-none transition-colors duration-150 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent motion-reduce:transition-none",
+          variant === "header"
+            ? "size-10 justify-center"
+            : "min-h-12 w-full gap-2.5 px-2 py-2 sidebar-icon:justify-center sidebar-icon:px-0",
+        )}
       >
         <Avatar name={user.name || user.email} {...(user.image ? { imageUrl: user.image } : {})} />
-        <span className="min-w-0 flex-1 sidebar-icon:hidden">
+        <span className={variant === "header" ? "hidden" : "min-w-0 flex-1 sidebar-icon:hidden"}>
           <span className="block truncate text-[13px] font-medium">
             {pending ? c("loading") : user.name || user.email}
           </span>
           <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
         </span>
-        <ChevronsUpDownIcon
-          aria-hidden="true"
-          size={15}
-          className="shrink-0 text-muted-foreground sidebar-icon:hidden"
-        />
+        {variant === "sidebar" && (
+          <ChevronsUpDownIcon
+            aria-hidden="true"
+            size={15}
+            className="shrink-0 text-muted-foreground sidebar-icon:hidden"
+          />
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        side="top"
-        align="start"
+        side={variant === "header" ? "bottom" : "top"}
+        align={variant === "header" ? "end" : "start"}
         sideOffset={8}
         aria-label={c("accountMenu")}
         className="w-72 max-w-[calc(100vw-1.5rem)] [&_[data-slot=dropdown-menu-item]>svg]:text-muted-foreground [&_[data-slot=dropdown-menu-item]>svg]:stroke-[1.75] motion-reduce:animate-none"
@@ -108,19 +120,28 @@ export function AccountMenu({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="min-h-10 gap-2.5 px-2.5" onClick={() => onNavigate("account")}>
-          <UserCircleIcon />
-          {c("account")}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="min-h-10 gap-2.5 px-2.5"
-          disabled={busy}
-          closeOnClick={false}
-          onClick={() => void signOut()}
-        >
-          <LogoutIcon />
-          {c(busy ? "working" : "signOut")}
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="min-h-10 gap-2.5 px-2.5"
+            onClick={() => onNavigate("account")}
+          >
+            <UserCircleIcon />
+            {c("account")}
+          </DropdownMenuItem>
+          {children}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="min-h-10 gap-2.5 px-2.5"
+            disabled={busy}
+            closeOnClick={false}
+            onClick={() => void signOut()}
+          >
+            <LogoutIcon />
+            {c(busy ? "working" : "signOut")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         {error && (
           <p role="alert" className="px-2.5 py-2 text-xs text-destructive">
             {c("networkError")}

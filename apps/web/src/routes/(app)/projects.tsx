@@ -1,3 +1,4 @@
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ProjectList } from "@raypx/tasks/client";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -11,6 +12,8 @@ import { SettingsIcon } from "@raypx/icons/settings";
 import { OfflineIcon } from "@raypx/icons/offline";
 
 export const Route = createFileRoute("/(app)/projects")({
+  beforeLoad: webPageGuard("/projects"),
+  errorComponent: PageAccessFeedback,
   staticData: {
     page: { title: "common.projects", layout: "workbench" },
   },

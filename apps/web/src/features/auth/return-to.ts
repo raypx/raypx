@@ -8,6 +8,7 @@ const destinations = new Set([
   "/memory",
   "/settings",
   "/admin/settings",
+  "/admin/users",
 ]);
 
 /** Only application pages may be resumed after authentication. Never execute an intent here. */

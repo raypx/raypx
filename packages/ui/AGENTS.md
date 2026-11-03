@@ -7,7 +7,7 @@ packages own page layout, forms, navigation and product behavior.
 
 ## Interface
 
-- `components/ui/*`: Base UI and shadcn primitives.
+- `components/ui/*`: Base UI and shadcn primitives, including Table for the Web user list.
 - `components/ui/sidebar`: shadcn base-nova Sidebar composition and context.
   SidebarProvider supports a persistent mobile rail via `mobileBehavior="rail"`;
   the default is a Sheet. Callers supply translated trigger labels and own persistence.

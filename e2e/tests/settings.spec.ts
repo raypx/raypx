@@ -7,6 +7,7 @@ import { signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 async function preferencesPersist(page: Page, base: string) {
   await page.goto(`${base}/settings`);
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
   // The visible theme card activates its visually hidden radio.
   await page.getByText("Dark", { exact: true }).click();
   await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
@@ -46,6 +47,7 @@ test(
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${web}/settings`);
     await expect(page.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
     await page.getByText("Light", { exact: true }).click();
     await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
     expect(

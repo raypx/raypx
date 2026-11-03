@@ -172,6 +172,11 @@ export function createAuth({
             !roles.some((role) => accountRoles[role].authorize({ user: [action] }).success)
           )
             throw new APIError("FORBIDDEN", { code: "FORBIDDEN", message: "Access denied" });
+          if (ctx.path === "/admin/set-role" && String(ctx.body?.userId) === profile.id)
+            throw new APIError("FORBIDDEN", {
+              code: "SELF_ROLE_CHANGE_FORBIDDEN",
+              message: "Cannot change your own role",
+            });
         }
         if (
           revokeHostAuthorizations &&

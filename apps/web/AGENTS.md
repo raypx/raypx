@@ -38,11 +38,11 @@ application is an independent composition root and is never imported by another 
   while keeping the application shell public. Guests can browse projects, tasks, approvals
   and preferences; `SessionBoundary` mounts private views only after a confirmed session.
   `src/routes/(landing)/` owns the public `/` homepage with its own header and
-  document layout, without account loaders or the workspace shell. Landing views
+  document layout, without account loaders or the workspace shell. A client-only `UserButton` shares
+  the sidebar account menu, with a fixed-size SSR placeholder and retryable session errors. Landing views
   live under `features/landing/components/`. The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
-  An unavailable API renders retryable feedback rather than a signed-out state. Only a
-  signed-in result stays fresh; sign-out handlers call `queryClient.clear()` before
+  An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before
   `router.invalidate()`. The account page reads the result from route context.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
   The root passes this request snapshot to the language provider so SSR and the first
@@ -191,3 +191,16 @@ Guests retain public pages and contextual sign-in gates; Desktop local tools req
 Keep editable drafts through network failures and revision conflicts, with explicit
 reload/discard actions. No configuration secrets or deployment credentials enter
 the browser. Public settings supply the shell label and signup availability.
+
+## Account access and administration
+
+`features/auth/access.ts` owns the page policy for navigation and `beforeLoad`
+guards. Private routes use `webPageGuard` and `PageAccessFeedback`; public guest
+workspaces remain available. Permission reads use the isomorphic account-access
+adapter with filtered SSR cookies. Keep live PermissionBoundary checks for revocation.
+Auth's group redirects confirmed accounts from login/signup while preserving callback,
+recovery and browser-only draft completion. A successful login navigates after cache
+clear, without invalidating the auth route mid-completion.
+`/admin/users` composes the account-keyed users feature through Better Auth's existing
+Admin client. Lists use server searches and 20-row pagination. Role changes require
+confirmation, prevent self-editing, and retry a completed mutation's refresh separately.

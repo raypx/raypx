@@ -29,6 +29,7 @@ import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-emai
 import { Route as landingIndexRouteImport } from './routes/(landing)/index'
 import { Route as legalPrivacyRouteImport } from './routes/(legal)/privacy'
 import { Route as appAdminSettingsRouteImport } from './routes/(app)/admin/settings'
+import { Route as appAdminUsersRouteImport } from './routes/(app)/admin/users'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -126,6 +127,11 @@ const appAdminSettingsRoute = appAdminSettingsRouteImport.update({
   path: '/admin/settings',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appAdminUsersRoute = appAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => appRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof legalPrivacyRoute
   '/': typeof landingIndexRoute
   '/admin/settings': typeof appAdminSettingsRoute
+  '/admin/users': typeof appAdminUsersRoute
 }
 export interface FileRoutesByTo {
   '/health': typeof HealthRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof legalPrivacyRoute
   '/': typeof landingIndexRoute
   '/admin/settings': typeof appAdminSettingsRoute
+  '/admin/users': typeof appAdminUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/(legal)/privacy': typeof legalPrivacyRoute
   '/(landing)/': typeof landingIndexRoute
   '/(app)/admin/settings': typeof appAdminSettingsRoute
+  '/(app)/admin/users': typeof appAdminUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/'
     | '/admin/settings'
+    | '/admin/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/health'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/'
     | '/admin/settings'
+    | '/admin/users'
   id:
     | '__root__'
     | '/(app)'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/(legal)/privacy'
     | '/(landing)/'
     | '/(app)/admin/settings'
+    | '/(app)/admin/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAdminSettingsRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/admin/users': {
+      id: '/(app)/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof appAdminUsersRouteImport
+      parentRoute: typeof appRouteRoute
+    }
   }
 }
 
@@ -409,6 +428,7 @@ interface appRouteRouteChildren {
   appSettingsRoute: typeof appSettingsRoute
   appTasksRoute: typeof appTasksRoute
   appAdminSettingsRoute: typeof appAdminSettingsRoute
+  appAdminUsersRoute: typeof appAdminUsersRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
@@ -420,6 +440,7 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appSettingsRoute: appSettingsRoute,
   appTasksRoute: appTasksRoute,
   appAdminSettingsRoute: appAdminSettingsRoute,
+  appAdminUsersRoute: appAdminUsersRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(

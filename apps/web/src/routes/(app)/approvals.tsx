@@ -1,3 +1,4 @@
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../../features/analytics/client";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -8,6 +9,8 @@ import { taskClient } from "../../features/tasks/client";
 import { apiUrl } from "../../features/auth/client";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 export const Route = createFileRoute("/(app)/approvals")({
+  beforeLoad: webPageGuard("/approvals"),
+  errorComponent: PageAccessFeedback,
   staticData: { page: { title: "common.approvals", layout: "workbench" } },
   component: Page,
 });

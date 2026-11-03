@@ -15,6 +15,8 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   Optional `socialLogin` supplies enabled providers and application-owned success/error
   callbacks. OAuth completion refreshes through `onSignedIn` without resubmitting login.
   Provider buttons use Google's and GitHub's Hugeicons through `@raypx/icons`.
+  `completeOnMount` completes an application-confirmed session handoff, with the same
+  retry lifecycle and no credential submission.
   `PasswordChangeForm` takes a credential client and optional refresh callback;
   applications own where account settings are available.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.
@@ -42,7 +44,7 @@ Keep account types free from credentials and retired product status fields. The
 Admin plugin persists `member`/`admin` roles; multiple supported roles compose grants.
 Missing/unknown assignments grant no remote access. `readAuthSession` reloads the
 user record even with secondary session storage. Admin HTTP operations also check
-the fresh verified, unbanned user's ACL before plugin dispatch. Client role checks
+the fresh verified, unbanned user's ACL before plugin dispatch. HTTP role changes cannot target the current user. Client role checks
 are display hints only; mutations require a trusted Origin. Preserve synthetic
 signup responses so Admin fields do not disclose account existence.
 The injected host-revocation callback runs only after successful session-security

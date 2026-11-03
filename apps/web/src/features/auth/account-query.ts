@@ -6,7 +6,7 @@ export function accountQuery() {
   return queryOptions({
     queryKey: ["account"],
     queryFn: () => loadAccount(),
-    // Reuse a signed-in account across navigations; re-read signed-out and unavailable states.
-    staleTime: (query) => (query.state.data?.status === "signed-in" ? Infinity : 0),
+    // A navigation must observe expiry or an account switch, even in a long-lived tab.
+    staleTime: 0,
   });
 }

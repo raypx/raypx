@@ -1,3 +1,4 @@
+import { useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { hasPermission, type AccountPermission } from "@raypx/account/access";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +17,7 @@ export function PermissionBoundary({
   permission: AccountPermission;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const query = useQuery(accountAccessQuery(accountId));
   const t = useTranslations("access");
   const c = useTranslations("common");
@@ -24,7 +26,11 @@ export function PermissionBoundary({
     return (
       <div className="flex flex-col items-start gap-4 py-8">
         <p role="alert">{t("unavailable")}</p>
-        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
+        <Button
+          variant="outline"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch().then(() => router.invalidate())}
+        >
           {c("retry")}
         </Button>
       </div>

@@ -2,7 +2,7 @@ import { claimGuestDraft } from "../../tasks/guest-draft";
 import { safeReturnTo } from "../return-to";
 import { useTranslations } from "@raypx/i18n/browser";
 import { analytics } from "../../analytics/client";
-import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate, useRouter, useRouteContext } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
   type AuthFormLinkProps,
@@ -28,6 +28,7 @@ function AuthLink({ to, className, children }: AuthFormLinkProps) {
 }
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
+  const { completeSignIn } = useRouteContext({ from: "/(auth)" });
   const g = useTranslations("guest");
   const router = useRouter();
   const navigate = useNavigate();
@@ -59,7 +60,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <SharedAuthForm
       key={mode}
-      mode={mode}
+      mode={completeSignIn ? "login" : mode}
+      completeOnMount={completeSignIn}
       backLabel={g("back")}
       client={authClient}
       webUrl={webUrl}
@@ -85,7 +87,6 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           /* A failed handoff remains recoverable in the original tab. */
         }
         router.options.context.queryClient.clear();
-        await router.invalidate();
         await navigate({
           to: new URLSearchParams(search).has("returnTo") ? returnTo : "/projects",
         });

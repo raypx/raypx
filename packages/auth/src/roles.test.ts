@@ -151,3 +151,37 @@ it("reads authoritative roles and bans even when secondary storage retains an ad
     403,
   );
 }, 30_000);
+
+it("denies self role changes and member user reads while allowing administrator listing", async () => {
+  const f = fixture();
+  const admin = await f.register("manager@example.test");
+  const member = await f.register("reader@example.test");
+  await (await f.auth.$context).internalAdapter.updateUser(String(admin.id), { role: "admin" });
+  const cookie = await f.signIn("manager@example.test");
+  const memberCookie = await f.signIn("reader@example.test");
+  const list = (session: string) =>
+    f.auth.handler(
+      new Request("http://localhost:3002/api/auth/admin/list-users?limit=20&offset=0", {
+        headers: { cookie: session },
+      }),
+    );
+  expect((await list(memberCookie)).status).toBe(403);
+  const response = await list(cookie);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({ total: 2 });
+  for (const role of ["member", "admin", ["member", "admin"]]) {
+    const change = await f.post("admin/set-role", { userId: admin.id, role }, cookie);
+    expect(change.status).toBe(403);
+    expect(await change.json()).toMatchObject({ code: "SELF_ROLE_CHANGE_FORBIDDEN" });
+  }
+  expect((await readAuthSession(f.auth, new Headers({ cookie })))?.user.role).toBe("admin");
+  expect(
+    (await f.post("admin/set-role", { userId: member.id, role: "admin" }, cookie)).status,
+  ).toBe(200);
+  expect(
+    accountRoles.member.authorize({ raypx: ["users.read", "users.roles.update"] }).success,
+  ).toBe(false);
+  expect(
+    accountRoles.admin.authorize({ raypx: ["users.read", "users.roles.update"] }).success,
+  ).toBe(true);
+}, 30_000);
