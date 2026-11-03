@@ -12,7 +12,11 @@ interface AuthFormSectionProps {
 
 export function AuthFormSection({ siteName, children }: AuthFormSectionProps) {
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col bg-background">
+    <div className="relative isolate flex min-h-dvh min-w-0 flex-col bg-background">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,var(--color-muted),transparent_70%)]"
+      />
       <header className="flex min-w-0 items-center justify-end gap-4 px-6 py-6 lg:px-10">
         <Link
           to="/"

@@ -3,7 +3,11 @@ import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { LockIcon } from "@raypx/icons/lock";
+import { LoginIcon } from "@raypx/icons/login";
+import { MailIcon } from "@raypx/icons/mail";
 import { SpinnerIcon } from "@raypx/icons/spinner";
+import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -23,6 +27,14 @@ const modeLabels = {
   "forgot-password": { title: "reset", submit: "sendReset", success: "resetSent" },
   "reset-password": { title: "reset", submit: "reset", success: "resetSaved" },
   "verify-email": { title: "verify", submit: "resend", success: "verifySent" },
+} as const;
+
+const modeIcons = {
+  login: LoginIcon,
+  signup: UserCircleIcon,
+  "forgot-password": LockIcon,
+  "reset-password": LockIcon,
+  "verify-email": MailIcon,
 } as const;
 
 export type AuthMode = "login" | "signup" | "forgot-password" | "reset-password" | "verify-email";
@@ -81,6 +93,7 @@ export function AuthForm({
   const verified =
     mode === "verify-email" && params.get("verified") === "1" && !params.has("error");
   const title = t(modeLabels[mode].title);
+  const ModeIcon = modeIcons[mode];
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || complete || invalidReset || (mailMode && cooldown.isActive())) return;
@@ -128,16 +141,26 @@ export function AuthForm({
   return (
     <section
       aria-labelledby="auth-title"
-      className="mx-auto w-full max-w-sm px-6 py-10 sm:px-0 sm:py-14"
+      className="mx-auto w-full max-w-sm px-6 py-10 sm:px-0 sm:py-12"
     >
       <LinkComponent
         to="account"
-        className="mb-10 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group mb-8 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <ArrowLeftIcon size={16} aria-hidden="true" />
+        <ArrowLeftIcon
+          size={16}
+          aria-hidden="true"
+          className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:-translate-x-0.5"
+        />
         {backLabel ?? c("account")}
       </LinkComponent>
       <header className="mb-8 flex flex-col gap-3">
+        <span
+          aria-hidden="true"
+          className="mb-1 grid size-12 place-items-center rounded-2xl border border-border bg-card text-foreground shadow-sm"
+        >
+          <ModeIcon className="size-5" />
+        </span>
         <h1 id="auth-title" className="text-3xl font-semibold tracking-tight">
           {title}
         </h1>
