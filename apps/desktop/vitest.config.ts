@@ -4,6 +4,8 @@ import defaults from "../../test.config.js";
 export default mergeConfig(
   defaults,
   defineConfig({
+    // Shared task views and fixture providers must use the same Query context.
+    resolve: { dedupe: ["@tanstack/react-query"] },
     test: {
       include: [
         "src/**/*.{test,spec}.{ts,tsx}",
