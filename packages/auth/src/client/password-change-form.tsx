@@ -1,6 +1,8 @@
 import { useId, useState, type FormEvent } from "react";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { LockIcon } from "@raypx/icons/lock";
+import { SpinnerIcon } from "@raypx/icons/spinner";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -56,7 +58,8 @@ export function PasswordChangeForm({
   }
   return (
     <section aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`} className="mb-4 text-sm font-medium">
+      <h2 id={`${id}-title`} className="mb-5 flex items-center gap-2 text-sm font-medium">
+        <LockIcon aria-hidden="true" className="size-4 text-muted-foreground" />
         {t("changePassword")}
       </h2>
       {changed && (
@@ -86,7 +89,7 @@ export function PasswordChangeForm({
           {c(auth.busy ? "working" : auth.error?.kind === "completion" ? "retry" : "edit")}
         </Button>
       ) : (
-        <form onSubmit={(event) => void submit(event)} aria-busy={auth.busy} className="max-w-sm">
+        <form onSubmit={(event) => void submit(event)} aria-busy={auth.busy} className="max-w-lg">
           <FieldGroup>
             {fields.map(({ name, purpose }) => {
               const invalid =
@@ -123,6 +126,15 @@ export function PasswordChangeForm({
             </Field>
             <p className="text-sm text-muted-foreground">{t("passwordChangeHint")}</p>
             <Button type="submit" variant="outline" disabled={auth.busy}>
+              {auth.busy ? (
+                <SpinnerIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                  className="animate-spin motion-reduce:animate-none"
+                />
+              ) : (
+                <LockIcon aria-hidden="true" data-icon="inline-start" />
+              )}
               {auth.busy ? c("working") : t("changePassword")}
             </Button>
           </FieldGroup>

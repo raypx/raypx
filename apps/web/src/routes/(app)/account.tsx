@@ -84,10 +84,7 @@ function AccountPage() {
               />
             </AccountDetails>
           </AccountSettingsContent>
-          <AccountSettingsContent
-            value="instances"
-            className="rounded-xl border border-border bg-background p-5"
-          >
+          <AccountSettingsContent value="instances">
             <InstanceRegistration
               key={`instances:${state.account.id}`}
               accountId={state.account.id}

@@ -1,9 +1,11 @@
 import type { ComponentType, ReactNode } from "react";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
-import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { MailIcon } from "@raypx/icons/mail";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { LogoutIcon } from "@raypx/icons/logout";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Avatar } from "@raypx/ui/avatar";
+import { StatusBadge } from "@raypx/ui/status-badge";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { AccountProfile } from "../index";
 
@@ -56,22 +58,22 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
   const c = useTranslations("common");
   return (
     <div>
-      <div className="mb-8 flex flex-wrap items-center gap-4 rounded-xl border border-border p-4">
-        <span className="grid size-12 shrink-0 place-items-center rounded-full border border-border bg-muted text-lg font-medium">
-          {account.name.slice(0, 1).toUpperCase()}
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate">{account.name}</h2>
-          <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-            <span className="truncate">{account.email}</span>
-            <span className="inline-flex items-center gap-1 text-xs">
-              <CheckCircleIcon aria-hidden="true" size={14} />
-              {t("verifiedLabel")}
-            </span>
+      <div className="mb-5 flex flex-wrap items-start gap-4 rounded-xl border border-border bg-background p-5">
+        <Avatar name={account.name} size="large" />
+        <div className="flex min-w-0 flex-1 basis-48 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="min-w-0 text-base font-semibold [overflow-wrap:anywhere]">
+              {account.name}
+            </h2>
+            <StatusBadge label={t("verifiedLabel")} tone="success" />
+          </div>
+          <p className="flex min-w-0 items-start gap-2 text-sm text-muted-foreground">
+            <MailIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span className="[overflow-wrap:anywhere]">{account.email}</span>
           </p>
         </div>
         <Button variant="outline" disabled={busy} onClick={() => void onSignOut()}>
-          <LogoutIcon aria-hidden="true" />
+          <LogoutIcon aria-hidden="true" data-icon="inline-start" />
           {busy ? c("working") : c("signOut")}
         </Button>
       </div>

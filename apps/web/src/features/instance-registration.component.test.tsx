@@ -67,7 +67,8 @@ it("confirms revocation and updates only after the server acknowledgement", asyn
   await waitFor(() =>
     expect(mocks.revoke).toHaveBeenCalledWith({ instanceId: "fixture-instance" }),
   );
-  expect(await screen.findByRole("button", { name: "Revoked" })).toBeDisabled();
+  await screen.findByText("Revoked");
+  expect(screen.queryByRole("button", { name: "Revoke instance" })).not.toBeInTheDocument();
 });
 it("does not display private server diagnostics for a failed inspection", async () => {
   mocks.inspect.mockRejectedValue(new Error("private-account-diagnostic"));

@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { MonitorIcon } from "@raypx/icons/monitor";
 import { RefreshIcon } from "@raypx/icons/refresh";
+import { ClockIcon } from "@raypx/icons/clock";
+import { GlobalIcon } from "@raypx/icons/global";
+import { LogoutIcon } from "@raypx/icons/logout";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { IconButton } from "@raypx/ui/icon-button";
 import { Modal } from "@raypx/ui/modal";
+import { StatusBadge } from "@raypx/ui/status-badge";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import type { authClient } from "../client";
 
 type Client = Pick<typeof authClient, "listSessions" | "revokeSession" | "revokeOtherSessions">;
@@ -95,9 +103,13 @@ export function AccountSessions({
   return (
     <section aria-labelledby="account-sessions-title">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="account-sessions-title" className="text-base">
-          {t("sessionsTitle")}
-        </h2>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <ShieldCheckIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+          <h2 id="account-sessions-title" className="text-sm font-medium">
+            {t("sessionsTitle")}
+          </h2>
+          {sessions && <Badge variant="outline">{sessions.length}</Badge>}
+        </div>
         <IconButton
           label={c(loading ? "loading" : "refresh")}
           variant="outline"
@@ -116,39 +128,62 @@ export function AccountSessions({
       </div>
       <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("sessionsHint")}</p>
       {error && (
-        <p role="alert" className="mt-4 text-sm text-destructive-text">
-          {error === "network" ? c("networkError") : t(error)}
-          {error === "sessionUnauthorized" && (
-            <a className="ml-2 underline" href="/login">
-              {c("signIn")}
-            </a>
-          )}
-        </p>
+        <Alert variant="destructive" className="mt-4">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertDescription>
+            {error === "network" ? c("networkError") : t(error)}
+            {error === "sessionUnauthorized" && (
+              <a className="ml-2 underline" href="/login">
+                {c("signIn")}
+              </a>
+            )}
+          </AlertDescription>
+        </Alert>
       )}
       {!sessions && loading && <LoadingState label={c("loading")} />}
       {sessions?.length === 0 && (
-        <p className="mt-4 text-sm text-muted-foreground">{t("sessionsEmpty")}</p>
+        <EmptyState
+          title={t("sessionsEmpty")}
+          icon={<MonitorIcon aria-hidden="true" />}
+          className="py-8"
+        />
       )}
-      <ul className="mt-3 divide-y divide-border">
+      <ul className="mt-5 flex flex-col gap-3">
         {sessions?.map((session) => (
-          <li key={session.id} className="flex flex-wrap items-center gap-3 py-4">
-            <MonitorIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+          <li
+            key={session.id}
+            className="flex flex-wrap items-start gap-3 rounded-lg border border-border p-4"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+              <MonitorIcon aria-hidden="true" className="size-5" />
+            </span>
             <div className="min-w-0 flex-1 basis-40">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-medium">
                   {sessionLabel(session.userAgent) ?? t("unknownSession")}
                 </h3>
                 {session.id === currentSessionId && (
-                  <Badge variant="secondary">{t("currentSession")}</Badge>
+                  <StatusBadge label={t("currentSession")} tone="success" />
                 )}
               </div>
+              <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+                <ClockIcon aria-hidden="true" className="size-3.5 shrink-0" />
+                <span>
+                  {t("sessionCreated", {
+                    date: format.dateTime(new Date(session.createdAt), "timestamp"),
+                  })}
+                </span>
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("sessionCreated", {
-                  date: format.dateTime(new Date(session.createdAt), "timestamp"),
+                {t("sessionExpires", {
+                  date: format.dateTime(new Date(session.expiresAt), "timestamp"),
                 })}
               </p>
               {session.ipAddress && (
-                <p className="mt-1 break-all text-xs text-muted-foreground">{session.ipAddress}</p>
+                <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <GlobalIcon aria-hidden="true" className="size-3.5 shrink-0" />
+                  <span className="break-all">{session.ipAddress}</span>
+                </p>
               )}
             </div>
             {session.id !== currentSessionId && (
@@ -173,7 +208,7 @@ export function AccountSessions({
         ))}
       </ul>
       {others.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-5 flex flex-wrap justify-end border-t border-border pt-5">
           <RevokeSession
             title={t("revokeOtherSessions")}
             description={t("revokeOtherSessionsHint")}
@@ -238,7 +273,12 @@ function RevokeSession({
       title={title}
       description={description}
       closeLabel={c("close")}
-      trigger={<Button variant="outline">{title}</Button>}
+      trigger={
+        <Button variant="outline" className="ml-auto">
+          <LogoutIcon aria-hidden="true" data-icon="inline-start" />
+          {title}
+        </Button>
+      }
       open={open}
       busy={busy}
       onOpenChange={(value) => {

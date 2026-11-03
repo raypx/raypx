@@ -1,4 +1,5 @@
 import { TextSizeIcon } from "@raypx/icons/text-size";
+import { GlobalIcon } from "@raypx/icons/global";
 import { LanguagesIcon } from "@raypx/icons/languages";
 import { MonitorIcon } from "@raypx/icons/monitor";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
@@ -30,7 +31,7 @@ export function LanguageMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<IconButton label={t("language")} />}>
-        <LanguagesIcon aria-hidden="true" />
+        <GlobalIcon aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" aria-label={t("language")} className="w-44">
         <DropdownMenuRadioGroup

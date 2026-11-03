@@ -88,11 +88,15 @@ it("keeps unknown budgets blocked until a deliberate retry succeeds", async () =
     ),
   );
   await screen.findByRole("alert");
-  expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ status: "error" }));
+  await waitFor(() =>
+    expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ status: "error" })),
+  );
   expect(screen.queryByText("private service details")).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Recalculate budget" }));
   await screen.findByLabelText("Reference and session budget");
-  expect(changed).toHaveBeenLastCalledWith(
-    expect.objectContaining({ status: "ready", exceeded: false }),
+  await waitFor(() =>
+    expect(changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "ready", exceeded: false }),
+    ),
   );
 });

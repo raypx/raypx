@@ -42,6 +42,9 @@
     "./folder": "./src/icons/folder.ts",
     "./folder-open": "./src/icons/folder-open.ts",
     "./git-branch": "./src/icons/git-branch.ts",
+    "./github": "./src/icons/github.ts",
+    "./global": "./src/icons/global.ts",
+    "./google": "./src/icons/google.ts",
     "./history": "./src/icons/history.ts",
     "./inbox": "./src/icons/inbox.ts",
     "./info": "./src/icons/info.ts",
@@ -75,7 +78,6 @@
     "./terminal": "./src/icons/terminal.ts",
     "./terminal-window": "./src/icons/terminal-window.ts",
     "./text-size": "./src/icons/text-size.ts",
-    "./theme": "./src/icons/theme.ts",
     "./user-circle": "./src/icons/user-circle.ts",
     "./warning": "./src/icons/warning.ts"
   },

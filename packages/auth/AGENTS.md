@@ -14,6 +14,7 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   preserve Web return destinations; omitted values retain the Desktop defaults.
   Optional `socialLogin` supplies enabled providers and application-owned success/error
   callbacks. OAuth completion refreshes through `onSignedIn` without resubmitting login.
+  Provider buttons use Google's and GitHub's Hugeicons through `@raypx/icons`.
   `PasswordChangeForm` takes a credential client and optional refresh callback;
   applications own where account settings are available.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.

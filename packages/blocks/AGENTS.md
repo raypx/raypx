@@ -47,7 +47,7 @@ Code outside `src/components/` stays private.
   declare `staticData.page` with a value-free message key, an optional `guestTitle`
   and the layout, and derive breadcrumbs and `layout` from the deepest match.
 - `settings`: `SettingsPage` (header and sections inside a `document` template),
-  `SettingsSection` (heading-labelled row with a control), and the device preference
+  `SettingsSection` (heading-labelled row with a control and optional icon), and the device preference
   sections `AppearanceSettings` (needs UI's ThemeProvider) and `LanguageSettings`
   (needs i18n's BrowserLanguageProvider). LanguageSettings
   composes UI's shadcn Select with i18n's preference hook and locale options.

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu } from "../../../components/language-menu";
-import { ThemeMenu } from "../../../components/theme-menu";
+import { ThemeToggle } from "../../../components/theme-toggle";
 import type { ReactNode } from "react";
 import { LegalFooter } from "../../../components/legal-footer";
 
@@ -26,7 +26,7 @@ export function AuthFormSection({ siteName, children }: AuthFormSectionProps) {
           <Logo label={siteName} className="max-w-full [&>span]:truncate" />
         </Link>
         <div className="flex shrink-0 items-center gap-1">
-          <ThemeMenu />
+          <ThemeToggle />
           <LanguageMenu />
         </div>
       </header>

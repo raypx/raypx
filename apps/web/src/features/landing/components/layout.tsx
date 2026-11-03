@@ -5,7 +5,7 @@ import { Logo } from "@raypx/ui/logo";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { publicConfigurationQuery } from "../../configuration/client";
 import { LanguageMenu } from "../../../components/language-menu";
-import { ThemeMenu } from "../../../components/theme-menu";
+import { ThemeToggle } from "../../../components/theme-toggle";
 import { LegalFooter } from "../../../components/legal-footer";
 
 export function LandingLayout() {
@@ -43,7 +43,7 @@ export function LandingLayout() {
               {c("signIn")}
             </Link>
             <div className="flex shrink-0 items-center gap-1">
-              <ThemeMenu />
+              <ThemeToggle />
               <LanguageMenu />
             </div>
           </nav>

@@ -1,5 +1,7 @@
 import { useId, type ReactNode } from "react";
-import { LanguagesIcon } from "@raypx/icons/languages";
+import { GlobalIcon } from "@raypx/icons/global";
+import { PaletteIcon } from "@raypx/icons/palette";
+import type { IconComponent } from "@raypx/icons";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
@@ -39,11 +41,17 @@ export function SettingsPage({ title, description, footnote, children }: Setting
 export interface SettingsSectionProps {
   title: string;
   description?: string;
+  icon?: IconComponent;
   /** The control placed beside the heading. */
   children: ReactNode;
 }
 
-export function SettingsSection({ title, description, children }: SettingsSectionProps) {
+export function SettingsSection({
+  title,
+  description,
+  icon: Icon,
+  children,
+}: SettingsSectionProps) {
   const id = useId();
   return (
     <section
@@ -51,7 +59,8 @@ export function SettingsSection({ title, description, children }: SettingsSectio
       className="grid grid-cols-1 items-start gap-3 border-b border-border py-5 @min-xl/settings:grid-cols-[9rem_minmax(0,1fr)] @min-xl/settings:gap-6"
     >
       <div className="min-w-0 pt-1.5">
-        <h2 id={id} className="text-sm font-medium">
+        <h2 id={id} className="flex items-center gap-2 text-sm font-medium">
+          {Icon && <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />}
           {title}
         </h2>
         {description && (
@@ -68,7 +77,7 @@ export function AppearanceSettings() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
   return (
-    <SettingsSection title={t("appearance")}>
+    <SettingsSection title={t("appearance")} icon={PaletteIcon}>
       <ThemePicker
         label={t("appearance")}
         labels={{ light: c("light"), dark: c("dark"), system: c("system") }}
@@ -87,14 +96,14 @@ export function LanguageSettings() {
     ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({ value, label: nativeName })),
   ];
   return (
-    <SettingsSection title={t("language")}>
+    <SettingsSection title={t("language")} icon={GlobalIcon}>
       <Select
         items={items}
         value={preference}
         onValueChange={(value) => setPreference(parseLocalePreference(value))}
       >
         <SelectTrigger aria-label={t("language")} className="w-52 max-w-full">
-          <LanguagesIcon aria-hidden="true" className="text-muted-foreground" />
+          <GlobalIcon aria-hidden="true" className="text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
         <SelectContent align="end" alignItemWithTrigger={false}>

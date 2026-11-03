@@ -27,7 +27,7 @@ application is an independent composition root and is never imported by another 
   `/privacy` is account-free and does not load the app shell or account queries.
   Keep privacy disclosures aligned with local storage, remote projections and opt-in
   diagnostics; English and Chinese copy live in the `legal` catalog namespace.
-  The header shares `ThemeMenu` and `LanguageMenu` with the other public layouts.
+  The header shares `ThemeToggle` and `LanguageMenu` with the other public layouts.
   `src/components/legal-footer.tsx` provides the shared entry from landing and auth pages.
 - Every `(app)` route declares `staticData.page` (title key from `PageTitle` in
   `src/router.tsx` and a Blocks page layout). The shell derives breadcrumbs and the
@@ -49,10 +49,12 @@ application is an independent composition root and is never imported by another 
   client render use the same locale and catalog; browser storage is restored only
   after hydration. Language switches use `useLanguagePreference`, never a second
   locale state or route navigation.
-  Authentication pages expose icon-triggered `ThemeMenu` and `LanguageMenu` in their top-right header;
+  Authentication pages expose `ThemeToggle` and `LanguageMenu` in their top-right header;
   language changes preserve form drafts and the current return destination.
-  Public header menus live in `src/components/`; the landing header shares
-  `LanguageMenu` and adds `ThemeMenu` using UI's existing theme provider.
+  Public header controls live in `src/components/`; the landing header shares
+  `LanguageMenu` and `ThemeToggle` using UI's existing theme provider.
+  Theme clicks cycle light → dark → system → light; the icon and accessible label
+  reflect the current preference, and the tooltip shows the next one.
 - `src/features/auth/client.ts` creates the Better Auth client; `src/features/tasks/client.ts`
   creates the oRPC relay task client so sign-in pages never load relay schemas.
   `src/features/auth/account.ts` adapts `@raypx/account` reads to SSR cookies and
@@ -70,8 +72,11 @@ application is an independent composition root and is never imported by another 
   its category. Enter opens the first result, Escape clears a query before closing,
   and clearing search preserves drafts. Cmd/Ctrl+K focuses search; arrows and Home/End
   move through results without opening them. Nested menus own their Escape handling.
-  Closing discards unsaved inputs directly. Narrow screens use a category Select. The `/projects`
-  page lists authorized remote projects grouped by computer.
+  Closing discards unsaved inputs directly. Narrow screens use a category Select. The
+  dialog keeps the category icon and account/device scope visible above its scrolling
+  content. Profile edits, sessions, registration states and diagnostics use shared
+  icon and badge primitives; registration never implies a computer is online.
+  The `/projects` page lists authorized remote projects grouped by computer.
   Project/session selection lives in validated URL search. The composer consumes
   that target and never executes on navigation or guest draft restoration.
   The account page composes its views from

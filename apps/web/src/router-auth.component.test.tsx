@@ -190,16 +190,18 @@ it("renders the landing page without account or private workspace reads", async 
 
 it("changes theme and language on the landing page without account reads", async () => {
   const router = await page("/");
-  fireEvent.click(screen.getByRole("button", { name: "Appearance" }));
-  const dark = await screen.findByRole("menuitemradio", { name: "Dark" });
-  expect(screen.getByRole("menuitemradio", { name: "Follow system" })).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
-  fireEvent.click(dark);
+  const themeToggle = screen.getByRole("button", { name: "Appearance: Follow system" });
+  expect(themeToggle).toHaveAccessibleDescription("Follow system → Light");
+  fireEvent.click(themeToggle);
+  await waitFor(() => expect(document.documentElement.dataset.theme).toBe("light"));
+  expect(localStorage.getItem("theme")).toBe("light");
+  expect(themeToggle).toHaveAccessibleName("Appearance: Light");
+  expect(screen.queryByRole("menu")).toBeNull();
+  fireEvent.click(themeToggle);
   await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark"));
   expect(localStorage.getItem("theme")).toBe("dark");
-  await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+  expect(themeToggle).toHaveAccessibleName("Appearance: Dark");
+  expect(screen.queryByRole("menu")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Language" }));
   fireEvent.click(await screen.findByRole("menuitemradio", { name: "简体中文" }));
   await screen.findByRole("button", { name: "语言" });
@@ -207,13 +209,12 @@ it("changes theme and language on the landing page without account reads", async
   expect(localStorage.getItem("raypx_locale")).toBe("zh");
   expect(localStorage.getItem("theme")).toBe("dark");
   expect(document.documentElement.lang).toBe("zh");
-  fireEvent.click(screen.getByRole("button", { name: "外观" }));
-  expect(await screen.findByRole("menuitemradio", { name: "深色" })).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
-  fireEvent.click(screen.getByRole("menuitemradio", { name: "跟随系统" }));
+  expect(themeToggle).toHaveAccessibleName("外观: 深色");
+  expect(themeToggle).toHaveAccessibleDescription("深色 → 跟随系统");
+  fireEvent.click(themeToggle);
   await waitFor(() => expect(localStorage.getItem("theme")).toBe("system"));
+  expect(themeToggle).toHaveAccessibleName("外观: 跟随系统");
+  expect(screen.queryByRole("menu")).toBeNull();
   expect(localStorage.getItem("raypx_locale")).toBe("zh");
   expect(router.state.location.pathname).toBe("/");
   expect(mocks.loadAccount).not.toHaveBeenCalled();
@@ -319,8 +320,8 @@ describe("authentication routes", () => {
     const router = await page(url);
     const input = screen.getByLabelText(field);
     fireEvent.change(input, { target: { value: "ada@example.test" } });
-    fireEvent.click(screen.getByRole("button", { name: "Appearance" }));
-    fireEvent.click(await screen.findByRole("menuitemradio", { name: "Dark" }));
+    fireEvent.click(screen.getByRole("button", { name: "Appearance: Follow system" }));
+    fireEvent.click(screen.getByRole("button", { name: "Appearance: Light" }));
     await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark"));
     await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
     expect(localStorage.getItem("theme")).toBe("dark");

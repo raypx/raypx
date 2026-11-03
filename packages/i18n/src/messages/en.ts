@@ -16,6 +16,8 @@ export default {
     instances: "Registered instances",
     revoke: "Revoke instance",
     revokedLabel: "Revoked",
+    registeredLabel: "Registered",
+    empty: "No registered instances",
     revokeConfirm: "Revoke this instance when it next connects? Local records will be preserved.",
     error: "Unable to complete instance registration. Check the code and connection, then retry.",
     pending: "Waiting for registration",
@@ -167,6 +169,9 @@ export default {
     signIn: "Sign in",
   },
   analytics: {
+    enabled: "On",
+    disabled: "Off",
+    unconfigured: "Not configured",
     retrySave: "Retry saving",
     title: "Diagnostics",
     hint: "Off by default. Never includes session content, files, terminal output or credentials. No session replay.",
@@ -596,6 +601,7 @@ export default {
     currentSession: "This session",
     unknownSession: "Unknown browser or device",
     sessionCreated: "Signed in {date}",
+    sessionExpires: "Expires {date}",
     revokeSession: "Sign out session",
     revokeSessionHint:
       "This session will lose account access. Signing in again will require your password.",
@@ -649,6 +655,8 @@ export default {
     featureApprovals: "Review and approve Agent actions",
   },
   settings: {
+    accountScope: "Account-wide",
+    unsavedChanges: "Unsaved changes",
     search: "Search settings",
     clearSearch: "Clear search",
     searchResults: "Matching settings",

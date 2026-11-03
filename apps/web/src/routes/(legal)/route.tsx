@@ -6,7 +6,7 @@ import { Separator } from "@raypx/ui/components/ui/separator";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { LegalFooter } from "../../components/legal-footer";
 import { LanguageMenu } from "../../components/language-menu";
-import { ThemeMenu } from "../../components/theme-menu";
+import { ThemeToggle } from "../../components/theme-toggle";
 
 export const Route = createFileRoute("/(legal)")({ component: LegalLayout });
 
@@ -26,7 +26,7 @@ function LegalLayout() {
           <IconButton label={t("backHome")} render={<Link to="/" />} nativeButton={false}>
             <ArrowLeftIcon aria-hidden="true" />
           </IconButton>
-          <ThemeMenu />
+          <ThemeToggle />
           <LanguageMenu />
         </div>
       </header>

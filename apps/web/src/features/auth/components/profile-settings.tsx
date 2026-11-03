@@ -1,8 +1,17 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { StatusBadge } from "@raypx/ui/status-badge";
+import { SaveIcon } from "@raypx/icons/save";
+import { EditIcon } from "@raypx/icons/edit";
+import { UserCircleIcon } from "@raypx/icons/user-circle";
+import { SpinnerIcon } from "@raypx/icons/spinner";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { InfoIcon } from "@raypx/icons/info";
 import type { authClient } from "../client";
 import { authPolicy } from "@raypx/auth/policy";
 
@@ -17,12 +26,14 @@ export function ProfileSettings({
 }) {
   const t = useTranslations("auth");
   const c = useTranslations("common");
+  const s = useTranslations("settings");
   const id = useId();
   const [draft, setDraft] = useState(name);
   const [savedName, setSavedName] = useState(name);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<"saved" | "failed" | "refresh" | null>(null);
   const active = useRef(false);
+  const dirty = draft.trim() !== savedName;
   async function save(event: FormEvent) {
     event.preventDefault();
     const next = draft.trim();
@@ -59,46 +70,71 @@ export function ProfileSettings({
       onSubmit={(event) => void save(event)}
       className="rounded-xl border border-border bg-background p-5"
     >
-      <Field className="md:flex-row md:items-center md:justify-between md:gap-6">
-        <FieldLabel htmlFor={id}>{t("displayName")}</FieldLabel>
-        <Input
-          id={id}
-          className="md:max-w-xs"
-          autoComplete="name"
-          required
-          maxLength={authPolicy.nameMaxLength}
-          value={draft}
-          disabled={busy}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            setFeedback(null);
-          }}
-        />
-      </Field>
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor={id}>
+            <UserCircleIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+            {t("displayName")}
+          </FieldLabel>
+          <Input
+            id={id}
+            className="max-w-lg"
+            autoComplete="name"
+            required
+            maxLength={authPolicy.nameMaxLength}
+            value={draft}
+            disabled={busy}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              setFeedback(null);
+            }}
+          />
+        </Field>
+      </FieldGroup>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {dirty && (
+            <Badge variant="outline">
+              <EditIcon aria-hidden="true" data-icon="inline-start" />
+              {s("unsavedChanges")}
+            </Badge>
+          )}
+          {feedback === "saved" && (
+            <p role="status">
+              <StatusBadge label={t("profileSaved")} tone="success" />
+            </p>
+          )}
+        </div>
         <Button
           type="submit"
           variant="outline"
-          disabled={busy || !draft.trim() || draft.trim() === savedName}
+          className="ml-auto"
+          disabled={busy || !draft.trim() || !dirty}
         >
+          {busy ? (
+            <SpinnerIcon
+              aria-hidden="true"
+              data-icon="inline-start"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          ) : (
+            <SaveIcon aria-hidden="true" data-icon="inline-start" />
+          )}
           {c(busy ? "working" : "save")}
         </Button>
-        {feedback === "saved" && (
-          <p role="status" className="text-sm text-muted-foreground">
-            {t("profileSaved")}
-          </p>
-        )}
-        {feedback === "failed" && (
-          <p role="alert" className="text-sm text-destructive-text">
-            {c("networkError")}
-          </p>
-        )}
-        {feedback === "refresh" && (
-          <p role="status" className="text-sm text-muted-foreground">
-            {t("profileRefresh")}
-          </p>
-        )}
       </div>
+      {feedback === "failed" && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertDescription>{c("networkError")}</AlertDescription>
+        </Alert>
+      )}
+      {feedback === "refresh" && (
+        <Alert role="status" className="mt-4">
+          <InfoIcon aria-hidden="true" />
+          <AlertDescription>{t("profileRefresh")}</AlertDescription>
+        </Alert>
+      )}
     </form>
   );
 }

@@ -11,6 +11,8 @@ import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CheckCircleIcon } from "@raypx/icons/check-circle";
+import { GithubIcon } from "@raypx/icons/github";
+import { GoogleIcon } from "@raypx/icons/google";
 import { LockIcon } from "@raypx/icons/lock";
 import { LoginIcon } from "@raypx/icons/login";
 import { MailIcon } from "@raypx/icons/mail";
@@ -261,6 +263,11 @@ export function AuthForm({
                     })
                   }
                 >
+                  {provider === "google" ? (
+                    <GoogleIcon data-icon="inline-start" />
+                  ) : (
+                    <GithubIcon data-icon="inline-start" />
+                  )}
                   {t(provider === "google" ? "continueGoogle" : "continueGithub")}
                 </Button>
               ))}
