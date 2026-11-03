@@ -1,264 +1,91 @@
-import { z } from "zod";
-import { storedRecord } from "../sqlite/records";
-import { normalizeTaskJson } from "@raypx/core/task-text";
-import { createHash } from "node:crypto";
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  exists,
-  gt,
-  inArray,
-  isNull,
-  lt,
-  notInArray,
-  or,
-  sql,
-} from "drizzle-orm";
-import {
-  relayRequestSchema,
-  type RelayCommand,
-  type SequencedEvent,
-  type SnapshotRecord,
-} from "@raypx/contracts/tasks";
-import type {
-  AgentEvent,
-  AgentProvider,
-  AgentTask,
-  HumanRequest,
-  TaskActivity,
-} from "@raypx/core/tasks";
-import { LocalError } from "../errors";
-import {
-  tokenUsageSchema,
-  localAgentTaskSchema,
-  isDesktopBinding,
-  type ActivityDraft,
-  type LocalAgentTask,
-} from "./model";
-import type { ExecutionStore } from "./harness/ports";
-
+import type { RelayCommand } from "@raypx/contracts/tasks";
 import {
   activeTaskStatuses,
-  taskActivitySchema,
-  agentEventSchema,
-  humanRequestSchema,
-  agentProviderSchema,
-  agentProviders,
+  type AgentEvent,
+  type AgentProvider,
+  type HumanRequest,
+  type TaskActivity,
 } from "@raypx/core/tasks";
-import { taskActivityPage } from "@raypx/core/activity";
-import { iterateRows, type LocalDatabase } from "../sqlite";
-import {
-  activity,
-  agentMeta,
-  piContexts,
-  commands,
-  journal,
-  outbox,
-  projects,
-  receipts,
-  requests,
-  tasks,
-} from "../sqlite/schema";
+import type { LocalDatabase } from "../sqlite";
+import type { ActivityDraft, LocalAgentTask } from "./model";
+import type { ExecutionStore } from "./harness/ports";
+import { ActivityLog } from "./infrastructure/store/activity";
+import { clearTasks } from "./infrastructure/store/clear";
+import { CommandReceipts } from "./infrastructure/store/commands";
+import { EventJournal } from "./infrastructure/store/journal";
+import { ProfileSettings } from "./infrastructure/store/profile";
+import { RequestRecords } from "./infrastructure/store/requests";
+import { taskSnapshot } from "./infrastructure/store/snapshot";
+import { TaskRecords } from "./infrastructure/store/tasks";
 
-const commandPayloadSchema = z.object({ request: relayRequestSchema });
-const commandResultSchema = z.discriminatedUnion("ok", [
-  z.object({ ok: z.literal(true), value: z.unknown() }),
-  z.object({ ok: z.literal(false), code: z.string() }),
-]);
-const taskBinding = sql<string>`json_extract(${tasks.value},'$.binding')`;
-const taskCreatedAt = sql<string>`json_extract(${tasks.value},'$.task.createdAt')`;
-const taskPageCursor = sql<string>`${taskCreatedAt} || ':' || ${tasks.id}`;
-const activeTaskFilter = sql`json_extract(${tasks.value},'$.task.status') IN (${sql.raw(activeTaskStatuses.map((status) => `'${status}'`).join(","))})`;
-const activeActivityFilter = sql`json_extract(${activity.value},'$.status') IN ('streaming','running','queued','sending')`;
-const pendingRequestFilter = sql`json_extract(${requests.value},'$.status') IN ('pending','decided')`;
-const requestTaskId = sql<string>`json_extract(${requests.value},'$.taskId')`;
-const journalTaskId = sql<string>`json_extract(${journal.value},'$.taskId')`;
-const forgottenCommand = (payload: string) =>
-  JSON.stringify({ forgotten: createHash("sha256").update(payload).digest("hex") });
-const forgottenResult = JSON.stringify({ ok: false, code: "NOT_FOUND" });
-
+/**
+ * The agent persistence facade. Each record family lives in `infrastructure/store`;
+ * this class keeps the shared surface and the transactions that span families.
+ */
 export class AgentStore implements ExecutionStore {
-  private readonly database: LocalDatabase;
   readonly streamId: string;
+  private readonly journal: EventJournal;
+  private readonly profile: ProfileSettings;
+  private readonly taskRecords: TaskRecords;
+  private readonly activityLog: ActivityLog;
+  private readonly requestRecords: RequestRecords;
+  private readonly commands: CommandReceipts;
   // Relay replay keeps a rolling window per binding; tests pass a small window.
   constructor(
-    database: LocalDatabase,
-    private readonly retained = 4096,
-    private readonly retainedBytes = 8 * 1024 * 1024,
+    private readonly database: LocalDatabase,
+    retained = 4096,
+    retainedBytes = 8 * 1024 * 1024,
   ) {
-    this.database = database;
-    this.database
-      .insert(agentMeta)
-      .values({ id: "stream", value: crypto.randomUUID() })
-      .onConflictDoNothing()
-      .run();
-    this.streamId = this.database
-      .select({ value: agentMeta.value })
-      .from(agentMeta)
-      .where(eq(agentMeta.id, "stream"))
-      .get()!.value;
-    for (const row of this.database
-      .selectDistinct({ binding: journal.binding })
-      .from(journal)
-      .where(sql`${journal.binding} NOT GLOB 'desktop:*'`)
-      .all())
-      this.compact(row.binding);
+    this.journal = new EventJournal(database, retained, retainedBytes);
+    this.streamId = this.journal.streamId;
+    this.profile = new ProfileSettings(database);
+    this.taskRecords = new TaskRecords(database);
+    const append = (binding: string, event: AgentEvent) => this.event(binding, event);
+    this.activityLog = new ActivityLog(database, append);
+    this.requestRecords = new RequestRecords(database, append);
+    this.commands = new CommandReceipts(database);
   }
 
-  projects(): { id: string; providers: AgentProvider[] }[] {
-    return this.database
-      .select()
-      .from(projects)
-      .orderBy(projects.id)
-      .all()
-      .map((row) => ({
-        id: row.id,
-        providers: storedRecord(
-          z.array(agentProviderSchema).max(agentProviders.length),
-          row.providers,
-        ),
-      }));
-  }
-  tokenUsage(sessionId: string): LocalAgentTask["tokenUsage"] {
-    const row = this.database
-      .select({ value: agentMeta.value })
-      .from(agentMeta)
-      .where(eq(agentMeta.id, `usage:codex:${sessionId}`))
-      .get();
-    return row ? storedRecord(tokenUsageSchema, row.value) : undefined;
-  }
-  recordTokenUsage(local: LocalAgentTask, totals: NonNullable<LocalAgentTask["tokenUsage"]>) {
-    this.database.transaction(() => {
-      local.tokenUsage = totals;
-      this.put(local);
-      if (local.sessionId)
-        this.database
-          .insert(agentMeta)
-          .values({ id: `usage:codex:${local.sessionId}`, value: JSON.stringify(totals) })
-          .onConflictDoUpdate({ target: agentMeta.id, set: { value: JSON.stringify(totals) } })
-          .run();
-    });
-  }
-  deviceId(binding: string) {
-    const key = `device:${binding}`;
-    this.database
-      .insert(agentMeta)
-      .values({ id: key, value: crypto.randomUUID() })
-      .onConflictDoNothing()
-      .run();
-    return this.database
-      .select({ value: agentMeta.value })
-      .from(agentMeta)
-      .where(eq(agentMeta.id, key))
-      .get()!.value;
-  }
-  taskEvents(binding: string, id: string, after: number) {
-    const rows = this.database
-      .select({ sequence: journal.sequence, value: journal.value })
-      .from(journal)
-      .where(
-        and(
-          eq(journal.binding, binding),
-          gt(journal.sequence, after),
-          eq(journalTaskId, id),
-          notInArray(sql`json_extract(${journal.value},'$.kind')`, ["activity", "activity_delta"]),
-        ),
-      )
-      .orderBy(journal.sequence)
-      .limit(100)
-      .all();
-    return rows.map((row) => ({
-      cursor: row.sequence,
-      event: storedRecord(agentEventSchema, row.value),
-    }));
+  projects() {
+    return this.profile.projects();
   }
   configure(id: string, providers: AgentProvider[]) {
-    this.database
-      .insert(projects)
-      .values({ id, providers: JSON.stringify(providers) })
-      .onConflictDoUpdate({ target: projects.id, set: { providers: JSON.stringify(providers) } })
-      .run();
+    this.profile.configure(id, providers);
   }
-  get(id: string): LocalAgentTask | undefined {
-    const row = this.database
-      .select({ value: tasks.value })
-      .from(tasks)
-      .where(eq(tasks.id, id))
-      .get();
-    return row ? storedRecord(localAgentTaskSchema, row.value) : undefined;
+  deviceId(binding: string) {
+    return this.profile.deviceId(binding);
   }
-  tasks(options: { binding?: string; activeOnly?: boolean } = {}): LocalAgentTask[] {
-    return this.database
-      .select({ value: tasks.value })
-      .from(tasks)
-      .where(
-        and(
-          options.binding === undefined ? undefined : eq(taskBinding, options.binding),
-          options.activeOnly ? activeTaskFilter : undefined,
-        ),
-      )
-      .all()
-      .map((row) => storedRecord(localAgentTaskSchema, row.value));
+
+  get(id: string) {
+    return this.taskRecords.get(id);
   }
-  taskPage(
-    binding: string,
-    limit: number,
-    before?: string,
-    projectId?: string,
-    deviceId?: string,
-  ): AgentTask[] {
-    before ||= undefined;
-    return this.database
-      .select({ value: tasks.value })
-      .from(tasks)
-      .where(
-        and(
-          eq(taskBinding, binding),
-          deviceId === undefined
-            ? undefined
-            : eq(sql`json_extract(${tasks.value},'$.task.deviceId')`, deviceId),
-          before === undefined ? undefined : lt(taskPageCursor, before),
-          projectId === undefined
-            ? undefined
-            : eq(sql`json_extract(${tasks.value},'$.task.projectId')`, projectId),
-        ),
-      )
-      .orderBy(desc(taskPageCursor))
-      .limit(limit)
-      .all()
-      .map((row) => storedRecord(localAgentTaskSchema, row.value).task);
+  tasks(options: { binding?: string; activeOnly?: boolean } = {}) {
+    return this.taskRecords.list(options);
+  }
+  taskPage(binding: string, limit: number, before?: string, projectId?: string, deviceId?: string) {
+    return this.taskRecords.page(binding, limit, before, projectId, deviceId);
   }
   hasActiveSession(provider: AgentProvider, sessionId: string) {
-    return Boolean(
-      this.database
-        .select({ id: tasks.id })
-        .from(tasks)
-        .where(
-          and(
-            activeTaskFilter,
-            eq(sql`json_extract(${tasks.value},'$.task.provider')`, provider),
-            eq(sql`json_extract(${tasks.value},'$.sessionId')`, sessionId),
-          ),
-        )
-        .limit(1)
-        .get(),
-    );
+    return this.taskRecords.hasActiveSession(provider, sessionId);
   }
   put(value: LocalAgentTask): undefined {
-    // Preserve REPLACE's rowid semantics for callers enumerating task records.
-    this.database.run(
-      sql`INSERT OR REPLACE INTO ${tasks} (id,value) VALUES (${value.task.id},${JSON.stringify(normalizeTaskJson(value))})`,
-    );
+    return this.taskRecords.put(value);
   }
+  tokenUsage(sessionId: string) {
+    return this.taskRecords.tokenUsage(sessionId);
+  }
+  recordTokenUsage(local: LocalAgentTask, totals: NonNullable<LocalAgentTask["tokenUsage"]>) {
+    this.taskRecords.recordTokenUsage(local, totals);
+  }
+  // Operations spanning record families go through this facade's own methods, so each
+  // step stays one observable seam inside the shared transaction.
   accept(value: LocalAgentTask, id: string) {
     this.database.transaction(() => {
       this.receipt(id);
       this.put(value);
     });
   }
+  /** Saves a task change; a task leaving the active statuses settles its open work. */
   transition(
     value: LocalAgentTask,
     event: AgentEvent,
@@ -291,547 +118,77 @@ export class AgentStore implements ExecutionStore {
       this.event(value.binding, event);
     });
   }
-  activity(binding: string, taskId: string): TaskActivity[] {
-    return this.database
-      .select({ value: activity.value })
-      .from(activity)
-      .where(and(eq(activity.binding, binding), eq(activity.taskId, taskId)))
-      .orderBy(sql`rowid`)
-      .all()
-      .map((row) => storedRecord(taskActivitySchema, row.value));
-  }
-  activityPage(binding: string, taskId: string, before?: number) {
-    const rows = this.database
-      .select({ value: activity.value })
-      .from(activity)
-      .where(
-        and(
-          eq(activity.binding, binding),
-          eq(activity.taskId, taskId),
-          before === undefined ? undefined : lt(sql`rowid`, before),
-        ),
-      )
-      .orderBy(desc(sql`rowid`))
-      .limit(65)
-      .all();
-    return taskActivityPage(
-      rows.map((row) => storedRecord(taskActivitySchema, row.value)),
-      before,
+  forget(binding: string, ids: string[], pendingCommands: ReadonlySet<string> = new Set()) {
+    clearTasks(
+      {
+        database: this.database,
+        commands: this.commands,
+        getRequest: (owner, id) => this.getRequest(owner, id),
+      },
+      binding,
+      ids,
+      pendingCommands,
     );
   }
-  private *snapshotActivityRows(binding: string, taskId: string) {
-    const seen = new Set<string>();
-    for (const active of [true, false]) {
-      const rows = iterateRows(
-        this.database,
-        this.database
-          .select({ id: activity.id, value: activity.value })
-          .from(activity)
-          .where(
-            and(
-              eq(activity.binding, binding),
-              eq(activity.taskId, taskId),
-              active ? activeActivityFilter : undefined,
-            ),
-          )
-          .orderBy(desc(sql`rowid`))
-          .limit(64),
-      );
-      let bytes = 0;
-      let rowsRead = 0;
-      try {
-        for (const row of rows) {
-          if (!active) {
-            const size = Buffer.byteLength(row.value);
-            if (rowsRead && bytes + size > 192 * 1024) break;
-            rowsRead++;
-            bytes += size;
-          }
-          if (!seen.has(row.id)) {
-            seen.add(row.id);
-            yield row;
-          }
-        }
-      } finally {
-        rows.return();
-      }
-    }
+  snapshot(binding: string) {
+    return taskSnapshot(this.database, binding, () => this.sequence(binding));
   }
 
-  snapshot(binding: string) {
-    // The first task read fixes the WAL view for rows, counts and the journal watermark.
-    return this.database.transaction(() => {
-      const recent = this.database
-        .$with("recent")
-        .as(
-          this.database
-            .select({ id: tasks.id })
-            .from(tasks)
-            .where(eq(taskBinding, binding))
-            .orderBy(desc(taskCreatedAt), asc(tasks.id))
-            .limit(100),
-        );
-      const selectedIds = this.database.$with("selected").as(
-        this.database
-          .with(recent)
-          .select({ id: recent.id })
-          .from(recent)
-          // SQLite needs this hint to avoid scanning a binding's entire task history.
-          // Drizzle has no SQLite INDEXED BY API, so keep this source as a SQL fragment.
-          .union(
-            this.database
-              .select({ id: sql<string>`${tasks.id}`.as("id") })
-              .from(sql`${tasks} INDEXED BY ${sql.identifier("tasks_binding_active")}`)
-              .where(and(eq(taskBinding, binding), activeTaskFilter)),
-          ),
-      );
-      const selected = this.database
-        .with(selectedIds)
-        .select({ value: tasks.value })
-        .from(tasks)
-        .innerJoin(selectedIds, eq(tasks.id, selectedIds.id))
-        .orderBy(desc(taskCreatedAt), asc(tasks.id))
-        .all()
-        .map((row) => storedRecord(localAgentTaskSchema, row.value));
-      const ids = selected.map((local) => local.task.id);
-      const selectedTaskIds = this.database
-        .select({ value: sql<string>`value` })
-        .from(sql`json_each(${JSON.stringify(ids)})`);
-      const records: SnapshotRecord[] = selected.map((local) => ({
-        kind: "task",
-        // Reserve the completion flag before computing the byte budget (false is longer than true).
-        task: { ...local.task, activityIncomplete: false },
-      }));
-      for (const row of iterateRows(
-        this.database,
-        this.database
-          .select({ value: requests.value })
-          .from(requests)
-          .where(and(eq(requests.binding, binding), inArray(requestTaskId, selectedTaskIds)))
-          .orderBy(sql`rowid`),
-      ))
-        records.push({ kind: "request", request: storedRecord(humanRequestSchema, row.value) });
-      const totals = new Map(
-        this.database
-          .select({ taskId: activity.taskId, count: count() })
-          .from(activity)
-          .where(and(eq(activity.binding, binding), inArray(activity.taskId, selectedTaskIds)))
-          .groupBy(activity.taskId)
-          .all()
-          .map((row) => [row.taskId, row.count]),
-      );
-      const included = new Map<string, number>();
-      let remaining = 32 * 1024 * 1024 - 64 * 1024 - Buffer.byteLength(JSON.stringify(records));
-      if (remaining > 128 * 1024) {
-        const pages = selected.map((local) => this.snapshotActivityRows(binding, local.task.id));
-        try {
-          let pending = true;
-          let exhausted = false;
-          while (pending && !exhausted) {
-            pending = false;
-            for (const page of pages) {
-              const row = page.next();
-              if (row.done) continue;
-              pending = true;
-              const size =
-                Buffer.byteLength(row.value.value) +
-                Buffer.byteLength(',{"kind":"activity","entry":}');
-              if (size > remaining) {
-                exhausted = true;
-                break;
-              }
-              const entry = storedRecord(taskActivitySchema, row.value.value);
-              records.push({ kind: "activity", entry });
-              remaining -= size;
-              included.set(entry.taskId, (included.get(entry.taskId) ?? 0) + 1);
-            }
-          }
-        } finally {
-          for (const page of pages) page.return();
-        }
-      }
-      for (const record of records)
-        if (record.kind === "task")
-          record.task = {
-            ...record.task,
-            activityIncomplete:
-              (included.get(record.task.id) ?? 0) < (totals.get(record.task.id) ?? 0),
-          };
-      return { records, sequence: this.sequence(binding) };
-    });
+  activity(binding: string, taskId: string) {
+    return this.activityLog.list(binding, taskId);
   }
-  recordActivity(binding: string, draft: ActivityDraft): TaskActivity {
-    return this.database.transaction(() => {
-      const old = this.database
-        .select({
-          rowid: sql<number>`rowid`,
-          binding: activity.binding,
-          taskId: activity.taskId,
-          value: activity.value,
-        })
-        .from(activity)
-        .where(eq(activity.id, draft.id))
-        .get();
-      if (old && (old.binding !== binding || old.taskId !== draft.taskId))
-        throw new LocalError("IDEMPOTENCY_CONFLICT", "Activity identity changed");
-      if (!old)
-        this.database
-          .insert(activity)
-          .values({ id: draft.id, binding, taskId: draft.taskId, value: "{}" })
-          .run();
-      const order =
-        old?.rowid ??
-        this.database
-          .select({ rowid: sql<number>`rowid` })
-          .from(activity)
-          .where(eq(activity.id, draft.id))
-          .get()!.rowid;
-      const previous = old ? storedRecord(taskActivitySchema, old.value) : undefined;
-      const entry = taskActivitySchema.parse(
-        normalizeTaskJson({
-          ...draft,
-          createdAt: previous?.createdAt ?? draft.createdAt,
-          order,
-          revision: (previous?.revision ?? 0) + 1,
-        }),
-      );
-      this.database
-        .update(activity)
-        .set({ value: JSON.stringify(entry) })
-        .where(eq(activity.id, entry.id))
-        .run();
-      if (!isDesktopBinding(binding))
-        this.event(
-          binding,
-          previous?.kind === "message" &&
-            entry.kind === "message" &&
-            previous.status === "streaming" &&
-            entry.status === "streaming" &&
-            entry.text.startsWith(previous.text)
-            ? {
-                id: crypto.randomUUID(),
-                taskId: entry.taskId,
-                kind: "activity_delta",
-                entryId: entry.id,
-                baseRevision: previous.revision,
-                revision: entry.revision,
-                append: entry.text.slice(previous.text.length),
-                updatedAt: entry.updatedAt,
-                truncated: entry.truncated,
-              }
-            : {
-                id: crypto.randomUUID(),
-                taskId: entry.taskId,
-                kind: "activity",
-                entry,
-              },
-        );
-      return entry;
-    });
+  activityPage(binding: string, taskId: string, before?: number) {
+    return this.activityLog.page(binding, taskId, before);
   }
-  seen(id: string) {
-    return Boolean(
-      this.database.select({ id: receipts.id }).from(receipts).where(eq(receipts.id, id)).get(),
-    );
+  recordActivity(binding: string, draft: ActivityDraft) {
+    return this.activityLog.record(binding, draft);
   }
-  receipt(id: string) {
-    this.database.insert(receipts).values({ id }).onConflictDoNothing().run();
+
+  requests(binding: string, taskId?: string) {
+    return this.requestRecords.list(binding, taskId);
   }
-  event(binding: string, event: AgentEvent) {
-    this.database.transaction(() => {
-      const value = JSON.stringify(normalizeTaskJson(event)),
-        local = isDesktopBinding(binding);
-      if (!local) this.database.insert(outbox).values({ id: event.id, binding, value: "" }).run();
-      this.database.insert(journal).values({ id: event.id, binding, value }).run();
-      // Local history has no cloud copy; only relay replay is a rolling cache.
-      if (!local) this.compact(binding);
-    });
+  getRequest(binding: string, id: string) {
+    return this.requestRecords.get(binding, id);
   }
-  private compact(binding: string) {
-    this.database.transaction(() => {
-      const window = this.database
-        .select({
-          sequence: journal.sequence,
-          position: sql<number>`row_number() OVER (ORDER BY ${journal.sequence} DESC)`.as(
-            "position",
-          ),
-          bytes:
-            sql<number>`sum(length(CAST(${journal.value} AS BLOB))) OVER (ORDER BY ${journal.sequence} DESC)`.as(
-              "bytes",
-            ),
-        })
-        .from(journal)
-        .where(eq(journal.binding, binding))
-        .as("replay_window");
-      this.database
-        .delete(journal)
-        .where(
-          and(
-            eq(journal.binding, binding),
-            inArray(
-              journal.sequence,
-              this.database
-                .select({ sequence: window.sequence })
-                .from(window)
-                .where(
-                  or(gt(window.position, this.retained), gt(window.bytes, this.retainedBytes)),
-                ),
-            ),
-          ),
-        )
-        .run();
-      this.database
-        .delete(outbox)
-        .where(
-          and(
-            eq(outbox.binding, binding),
-            notInArray(
-              outbox.id,
-              this.database
-                .select({ id: journal.id })
-                .from(journal)
-                .where(eq(journal.binding, binding)),
-            ),
-          ),
-        )
-        .run();
-    });
-  }
-  sequence(binding: string) {
-    return this.database
-      .select({ value: sql<number>`COALESCE(MAX(${journal.sequence}),0)` })
-      .from(journal)
-      .where(eq(journal.binding, binding))
-      .get()!.value;
-  }
-  replay(binding: string, after: number) {
-    const floor = this.database
-      .select({ value: sql<number>`COALESCE(MIN(${journal.sequence}),0)` })
-      .from(journal)
-      .where(eq(journal.binding, binding))
-      .get()!.value;
-    const rows = this.database
-      .select({ sequence: journal.sequence, value: journal.value })
-      .from(journal)
-      .where(and(eq(journal.binding, binding), gt(journal.sequence, after)))
-      .orderBy(journal.sequence)
-      .limit(50)
-      .all();
-    const events: SequencedEvent[] = [];
-    let bytes = 0;
-    for (const row of rows) {
-      bytes += Buffer.byteLength(row.value);
-      if (bytes > 768 * 1024) break;
-      events.push({ sequence: row.sequence, event: storedRecord(agentEventSchema, row.value) });
-    }
-    return { streamId: this.streamId, sequence: this.sequence(binding), floor, events };
-  }
-  checkpoint(binding: string, sequence: number) {
-    this.database
-      .delete(outbox)
-      .where(
-        and(
-          eq(outbox.binding, binding),
-          or(
-            inArray(
-              outbox.id,
-              this.database
-                .select({ id: journal.id })
-                .from(journal)
-                .where(and(eq(journal.binding, binding), sql`${journal.sequence}<=${sequence}`)),
-            ),
-            notInArray(
-              outbox.id,
-              this.database
-                .select({ id: journal.id })
-                .from(journal)
-                .where(eq(journal.binding, binding)),
-            ),
-          ),
-        ),
-      )
-      .run();
-  }
-  requests(binding: string, taskId?: string): HumanRequest[] {
-    return this.database
-      .select({ value: requests.value })
-      .from(requests)
-      .where(
-        and(
-          eq(requests.binding, binding),
-          taskId === undefined ? undefined : eq(requestTaskId, taskId),
-        ),
-      )
-      .orderBy(sql`rowid`)
-      .all()
-      .map((row) => storedRecord(humanRequestSchema, row.value));
-  }
-  getRequest(binding: string, id: string): HumanRequest | undefined {
-    const row = this.database
-      .select({ value: requests.value })
-      .from(requests)
-      .where(and(eq(requests.binding, binding), eq(requests.id, id)))
-      .get();
-    return row ? storedRecord(humanRequestSchema, row.value) : undefined;
-  }
-  pendingRequests(binding: string): HumanRequest[] {
-    return this.database
-      .select({ value: requests.value })
-      .from(requests)
-      .where(
-        and(
-          eq(requests.binding, binding),
-          pendingRequestFilter,
-          exists(
-            this.database
-              .select({ id: tasks.id })
-              .from(tasks)
-              .where(
-                and(
-                  eq(tasks.id, requestTaskId),
-                  eq(taskBinding, requests.binding),
-                  activeTaskFilter,
-                ),
-              ),
-          ),
-        ),
-      )
-      .orderBy(sql`json_extract(${requests.value},'$.expiresAt')`, sql`rowid`)
-      .all()
-      .map((row) => storedRecord(humanRequestSchema, row.value));
-  }
-  forget(binding: string, ids: string[], pendingCommands: ReadonlySet<string> = new Set()) {
-    this.database.transaction(() => {
-      const removed = new Set(ids);
-      // Include orphaned receipts from earlier clears. Read this binding once, before
-      // deleting requests needed to associate approval decisions with their task.
-      const savedCommands = this.database
-        .select({ id: commands.id, payload: commands.payload })
-        .from(commands)
-        .where(eq(sql`json_extract(${commands.payload},'$.binding')`, binding))
-        .all();
-      for (const command of savedCommands) {
-        const { request } = storedRecord(commandPayloadSchema, command.payload);
-        if (request.method === "observed.decide") continue;
-        const taskId =
-          request.method === "approvals.decide"
-            ? this.getRequest(binding, request.input.id)?.taskId
-            : request.method === "tasks.input"
-              ? request.input.taskId
-              : request.input.id;
-        if (!taskId || !removed.has(taskId)) {
-          if (pendingCommands.has(command.id)) continue;
-          if (
-            taskId &&
-            this.database
-              .select({ id: tasks.id })
-              .from(tasks)
-              .where(and(eq(tasks.id, taskId), eq(taskBinding, binding)))
-              .get()
-          )
-            continue;
-        }
-        this.database
-          .update(commands)
-          .set({ payload: forgottenCommand(command.payload), result: forgottenResult })
-          .where(eq(commands.id, command.id))
-          .run();
-      }
-      for (const id of ids) {
-        this.database
-          .delete(tasks)
-          .where(and(eq(tasks.id, id), eq(taskBinding, binding)))
-          .run();
-        this.database
-          .delete(activity)
-          .where(and(eq(activity.binding, binding), eq(activity.taskId, id)))
-          .run();
-        this.database
-          .delete(requests)
-          .where(and(eq(requests.binding, binding), eq(requestTaskId, id)))
-          .run();
-        this.database
-          .delete(journal)
-          .where(and(eq(journal.binding, binding), eq(journalTaskId, id)))
-          .run();
-      }
-      this.database.run(sql`DELETE FROM ${piContexts}
-        WHERE ${piContexts.contextId} LIKE 'pi:v1:%'
-        AND NOT EXISTS (SELECT 1 FROM ${tasks}
-          WHERE json_extract(${tasks.value},'$.sessionId')=${piContexts.contextId})`);
-    });
+  pendingRequests(binding: string) {
+    return this.requestRecords.pending(binding);
   }
   request(binding: string, value: HumanRequest): undefined {
-    this.database.transaction(() => {
-      // Approval enumeration and snapshot ordering depend on REPLACE's new rowid.
-      this.database.run(
-        sql`INSERT OR REPLACE INTO ${requests} (id,binding,value) VALUES (${value.id},${binding},${JSON.stringify(normalizeTaskJson(value))})`,
-      );
-      this.event(binding, {
-        id: crypto.randomUUID(),
-        taskId: value.taskId,
-        kind: "request",
-        request: value,
-      });
-    });
+    return this.requestRecords.record(binding, value);
   }
-  reserve(
-    binding: string,
-    command: RelayCommand,
-  ): { ok: true; value: unknown } | { ok: false; code: string } | null {
-    const payload = JSON.stringify({
-      binding,
-      request: command.request,
-      ...(command.context ? { context: command.context } : {}),
-    });
-    const old = this.database
-      .select({ payload: commands.payload, result: commands.result })
-      .from(commands)
-      .where(eq(commands.id, command.id))
-      .get();
-    if (old) {
-      if (old.payload !== payload && old.payload !== forgottenCommand(payload))
-        throw new LocalError("IDEMPOTENCY_CONFLICT", "Command identity changed");
-      return old.result ? storedRecord(commandResultSchema, old.result) : null;
-    }
-    this.database.insert(commands).values({ id: command.id, payload, result: null }).run();
-    return null;
+
+  seen(id: string) {
+    return this.commands.seen(id);
+  }
+  receipt(id: string) {
+    this.commands.receipt(id);
+  }
+  reserve(binding: string, command: RelayCommand) {
+    return this.commands.reserve(binding, command);
   }
   complete(id: string, result: { ok: true; value: unknown } | { ok: false; code: string }) {
-    // A completion racing an explicit clear must not restore a private result.
-    this.database
-      .update(commands)
-      .set({ result: JSON.stringify(result) })
-      .where(and(eq(commands.id, id), isNull(sql`json_extract(${commands.payload},'$.forgotten')`)))
-      .run();
+    this.commands.complete(id, result);
   }
-  events(binding: string): AgentEvent[] {
-    const values = this.database
-      .select({ value: journal.value })
-      .from(outbox)
-      .innerJoin(journal, and(eq(journal.id, outbox.id), eq(journal.binding, outbox.binding)))
-      .where(eq(outbox.binding, binding))
-      .orderBy(journal.sequence)
-      .limit(50)
-      .all()
-      .map((row) => storedRecord(agentEventSchema, row.value));
-    const batch: AgentEvent[] = [];
-    let bytes = 0;
-    for (const value of values) {
-      const size = Buffer.byteLength(JSON.stringify(normalizeTaskJson(value)));
-      if (bytes + size > 256 * 1024) break;
-      bytes += size;
-      batch.push(value);
-    }
-    return batch;
+
+  event(binding: string, event: AgentEvent) {
+    this.journal.append(binding, event);
+  }
+  sequence(binding: string) {
+    return this.journal.sequence(binding);
+  }
+  replay(binding: string, after: number) {
+    return this.journal.replay(binding, after);
+  }
+  taskEvents(binding: string, id: string, after: number) {
+    return this.journal.taskEvents(binding, id, after);
+  }
+  checkpoint(binding: string, sequence: number) {
+    this.journal.checkpoint(binding, sequence);
+  }
+  events(binding: string) {
+    return this.journal.unsent(binding);
   }
   ack(binding: string, ids: string[]) {
-    this.database.transaction(() => {
-      for (const id of ids)
-        this.database
-          .delete(outbox)
-          .where(and(eq(outbox.binding, binding), eq(outbox.id, id)))
-          .run();
-    });
+    this.journal.ack(binding, ids);
   }
 }
