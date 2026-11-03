@@ -76,6 +76,8 @@ application is an independent composition root and is never imported by another 
   the shared form. The auth layout validates an application-page `returnTo` allowlist;
   login, signup and email callbacks preserve it. Login restores editing state, never
   an execution or approval intent. `/admin/settings` still redirects guests to login.
+  Configured Google/GitHub OAuth returns through login to refresh the account and
+  restore visitor drafts; failed authorization retains the destination and safe feedback.
   Sign-in without a return destination opens `/projects`; an explicit allowed
   destination is preserved. Public URLs stay flat, and changing routes remounts the
   form so inputs and request feedback reset.

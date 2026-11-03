@@ -6,11 +6,14 @@ Account authentication, platform-specific session adapters and shared DOM forms.
 
 ## Interface
 
-- `/server`: injected Better Auth factory and safe projection.
+- `/server`: injected Better Auth factory and safe projection. Optional Google/GitHub
+  credentials enable OAuth; `/api/auth/social-providers` exposes only enabled names.
 - `/client`: browser `createAuthClient` and shared DOM `AuthForm` with injected
   authentication, query and navigation adapters.
   Optional back-link text and application-owned verification/reset callback URLs
   preserve Web return destinations; omitted values retain the Desktop defaults.
+  Optional `socialLogin` supplies enabled providers and application-owned success/error
+  callbacks. OAuth completion refreshes through `onSignedIn` without resubmitting login.
   `PasswordChangeForm` takes a credential client and optional refresh callback;
   applications own where account settings are available.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.

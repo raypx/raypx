@@ -11,7 +11,9 @@ It requires the explicit fixture flag, an owned `raypx_deployment_*_test` databa
 and an `example.invalid` account. Verification mail stays in-process; never reuse
 this fixture against an operator database or bypass real-user verification.
 
-`/api/auth/*` delegates to Better Auth. `/rpc/*` serves the explicit oRPC account
+`/api/auth/*` delegates to Better Auth, including Google/GitHub OAuth and public
+provider discovery. API injects optional paired `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
+and `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; neither secret reaches Web. `/rpc/*` serves the explicit oRPC account
 contract. `/health` reports process liveness without querying PostgreSQL.
 Every other path is a JSON 404; Web is a separate service.
 

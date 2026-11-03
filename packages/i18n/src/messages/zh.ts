@@ -526,6 +526,9 @@ export default {
     skipped: "已跳过",
   },
   auth: {
+    continueGoogle: "使用 Google 继续",
+    continueGithub: "使用 GitHub 继续",
+    socialFailed: "登录已取消或失败，请重试。",
     passwordRequirements: "使用 {min}–{max} 个字符。",
     passwordRequirementsMet: "密码长度符合要求。",
     resendIn: "{seconds} 秒后可重新发送",

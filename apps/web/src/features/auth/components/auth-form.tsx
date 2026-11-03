@@ -10,6 +10,8 @@ import {
 } from "@raypx/auth/client";
 import { apiUrl, authClient, webUrl } from "../client";
 import { useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { SocialProvider } from "@raypx/auth/types";
 
 function AuthLink({ to, className, children }: AuthFormLinkProps) {
   const search = useLocation({ select: (location) => location.searchStr });
@@ -33,6 +35,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = safeReturnTo(new URLSearchParams(search).get("returnTo"));
   const destination = encodeURIComponent(returnTo);
+  const providers = useQuery({
+    queryKey: ["auth", "social-providers", apiUrl],
+    queryFn: async ({ signal }) => {
+      const result = await authClient.$fetch<{ providers: SocialProvider[] }>("/social-providers", {
+        signal,
+      });
+      if (result.error || !result.data) throw new Error("Login providers unavailable");
+      return result.data.providers;
+    },
+    staleTime: 60_000,
+    enabled: mode === "login" || mode === "signup",
+  });
+  const oauthReturnTo = new URLSearchParams(search).has("returnTo") ? returnTo : "/projects";
+  const oauthDestination = encodeURIComponent(oauthReturnTo);
   const callbackURLs =
     returnTo === "/"
       ? undefined
@@ -49,6 +65,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       webUrl={webUrl}
       search={search}
       callbackURLs={callbackURLs}
+      socialLogin={{
+        providers: providers.data ?? [],
+        callbackURL: `${webUrl}/login?oauth=success&returnTo=${oauthDestination}`,
+        errorCallbackURL: `${webUrl}/login?returnTo=${oauthDestination}`,
+      }}
       onSignedIn={async () => {
         if (!signInReported.current) {
           analytics.capture("sign_in_succeeded");

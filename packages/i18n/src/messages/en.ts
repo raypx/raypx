@@ -568,6 +568,9 @@ export default {
     skipped: "Skipped",
   },
   auth: {
+    continueGoogle: "Continue with Google",
+    continueGithub: "Continue with GitHub",
+    socialFailed: "Sign-in was cancelled or failed. Try again.",
     passwordRequirements: "Use {min}–{max} characters.",
     passwordRequirementsMet: "Password length meets the requirements.",
     resendIn: "Resend in {seconds}s",

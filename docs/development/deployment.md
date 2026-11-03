@@ -49,6 +49,7 @@ password-reset mail. Otherwise the explicit mail guard remains active.
 `JOBS_ENABLED` controls maintenance scheduling.
 
 The template also forwards optional `AUTH_DOMAIN`, `MAIL_DEFAULT_LOCALE`,
+Google/GitHub OAuth credentials (see [social login](social-login.md)),
 S3 storage settings and server `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`.
 `REDIS_URL` is required for the private broker shared by API and Relay.
 Empty optional values keep the corresponding integration disabled. These settings

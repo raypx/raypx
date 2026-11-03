@@ -1,3 +1,5 @@
+export type SocialProvider = "google" | "github";
+
 /** Public account fields only. These types never infer server/database internals. */
 export interface AuthUser {
   id: string;

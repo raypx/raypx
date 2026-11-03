@@ -20,6 +20,10 @@ const server = {
   DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
   AUTH_URL: z.url().default("http://localhost:3002"),
   AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  GITHUB_CLIENT_ID: z.string().min(1).optional(),
+  GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
   ALLOWED_ORIGINS: z
     .string()
     .default("http://localhost:3000,http://localhost:5173,views://main,raypx://"),
@@ -61,6 +65,12 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
       throw new Error("Production AUTH_SECRET must be explicitly configured");
     if (new URL(env.AUTH_URL).protocol !== "https:")
       throw new Error("Production AUTH_URL must use HTTPS");
+  }
+  for (const provider of ["GOOGLE", "GITHUB"] as const) {
+    if (Boolean(env[`${provider}_CLIENT_ID`]) !== Boolean(env[`${provider}_CLIENT_SECRET`]))
+      throw new Error(
+        `${provider} login requires both ${provider}_CLIENT_ID and ${provider}_CLIENT_SECRET`,
+      );
   }
   const s3 = [env.S3_ENDPOINT, env.S3_BUCKET, env.S3_ACCESS_KEY_ID, env.S3_SECRET_ACCESS_KEY];
   if (s3.some(Boolean) && !s3.every(Boolean))

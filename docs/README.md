@@ -9,6 +9,7 @@
 - [Instance enrollment and provider boundaries](architecture/0040-instance-enrollment-and-providers.md)
 - [Local and server Agent platform decision](architecture/0039-local-server-agent-platform.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
+- [Google and GitHub login](development/social-login.md)
 - [Account settings and session management](development/account-security.md)
 - [Account roles and menu permissions](development/access-control.md)
 - [Adding and extracting packages](development/workspaces.md)

@@ -1,4 +1,11 @@
-import { useState, type ComponentType, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import type { IconComponent } from "@raypx/icons";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
@@ -16,6 +23,7 @@ import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
+import type { SocialProvider } from "../types";
 import { authPolicy } from "../policy";
 import { readAuthLink, type AuthMode } from "./auth-link";
 import { formText } from "./form-text";
@@ -102,6 +110,9 @@ export interface AuthFormLinkProps {
 
 export interface AuthFormProps {
   mode: AuthMode;
+  socialLogin?:
+    | { providers: readonly SocialProvider[]; callbackURL: string; errorCallbackURL: string }
+    | undefined;
   backLabel?: string | undefined;
   client: AuthActionClient;
   webUrl: string;
@@ -113,6 +124,7 @@ export interface AuthFormProps {
 
 export function AuthForm({
   mode,
+  socialLogin,
   backLabel,
   client,
   webUrl,
@@ -135,6 +147,20 @@ export function AuthForm({
   const [succeeded, setSucceeded] = useState(false);
   const cooldown = useMailCooldown();
   const config = modes[mode];
+  const socialCompleted = useRef(false);
+  const completeSocialSignIn = auth.completeSocialSignIn;
+  useEffect(() => {
+    if (
+      !socialLogin ||
+      mode !== "login" ||
+      new URLSearchParams(search).get("oauth") !== "success" ||
+      socialCompleted.current
+    )
+      return;
+    socialCompleted.current = true;
+    setSucceeded(true);
+    void completeSocialSignIn(onSignedIn);
+  }, [mode, search, onSignedIn, completeSocialSignIn, socialLogin]);
   const signedIn = succeeded && mode === "login";
   const complete = succeeded && config.completes === true;
   const messageKey = succeeded ? config.success : null;
@@ -203,6 +229,7 @@ export function AuthForm({
           invalidLink={link.failed || link.invalidReset}
           success={messageKey}
           error={link.invalidReset ? "" : error}
+          socialError={(mode === "login" || mode === "signup") && link.failed}
         />
         {signedIn && (auth.error?.kind === "completion" || busy) && (
           <Button disabled={busy} onClick={() => void auth.retryCompletion()}>
@@ -214,6 +241,32 @@ export function AuthForm({
             {t("sendReset")}
           </LinkComponent>
         )}
+        {showForm &&
+          (mode === "login" || mode === "signup") &&
+          socialLogin &&
+          socialLogin.providers.length > 0 && (
+            <div className="flex flex-col gap-3">
+              {socialLogin.providers.map((provider) => (
+                <Button
+                  key={provider}
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  disabled={busy}
+                  onClick={() =>
+                    void auth.signInSocial({
+                      provider,
+                      callbackURL: socialLogin.callbackURL,
+                      errorCallbackURL: socialLogin.errorCallbackURL,
+                    })
+                  }
+                >
+                  {t(provider === "google" ? "continueGoogle" : "continueGithub")}
+                </Button>
+              ))}
+              <Separator />
+            </div>
+          )}
         {showForm && (
           <form onSubmit={submit} aria-busy={busy}>
             <FieldGroup>
@@ -319,10 +372,12 @@ function requestMode(
 
 function AuthFormNotices({
   invalidLink,
+  socialError,
   success,
   error,
 }: {
   invalidLink: boolean;
+  socialError: boolean;
   success: ModeConfig["success"];
   error: string;
 }) {
@@ -332,7 +387,7 @@ function AuthFormNotices({
       {invalidLink && (
         <Alert variant="destructive">
           <AlertCircleIcon aria-hidden="true" />
-          <AlertDescription>{t("invalidLink")}</AlertDescription>
+          <AlertDescription>{t(socialError ? "socialFailed" : "invalidLink")}</AlertDescription>
         </Alert>
       )}
       {success && (

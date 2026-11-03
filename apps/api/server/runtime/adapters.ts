@@ -64,6 +64,24 @@ export function createAuthConfig(environment: ApiEnvironment) {
     secret: environment.AUTH_SECRET,
     trustedOrigins: environment.allowedOrigins,
     production: environment.NODE_ENV === "production",
+    socialProviders: {
+      ...(environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET
+        ? {
+            google: {
+              clientId: environment.GOOGLE_CLIENT_ID,
+              clientSecret: environment.GOOGLE_CLIENT_SECRET,
+            },
+          }
+        : {}),
+      ...(environment.GITHUB_CLIENT_ID && environment.GITHUB_CLIENT_SECRET
+        ? {
+            github: {
+              clientId: environment.GITHUB_CLIENT_ID,
+              clientSecret: environment.GITHUB_CLIENT_SECRET,
+            },
+          }
+        : {}),
+    },
     ...(environment.AUTH_DOMAIN ? { cookieDomain: environment.AUTH_DOMAIN } : {}),
     ...(environment.ipAddressHeaders.length
       ? { ipAddressHeaders: environment.ipAddressHeaders }

@@ -46,6 +46,10 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       AUTH_URL: https://${APP_HOST:?Set the application hostname}
       AUTH_SECRET: ${AUTH_SECRET:?Set the authentication secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       AUTH_IP_HEADERS: ${AUTH_IP_HEADERS:-x-forwarded-for}

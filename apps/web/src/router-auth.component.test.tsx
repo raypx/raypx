@@ -40,6 +40,8 @@ const mocks = vi.hoisted(() => ({
   devices: vi.fn(async (): Promise<SyncDevice[]> => []),
   approvals: vi.fn(async () => []),
   create: vi.fn(),
+  social: vi.fn(async () => ({ error: null })),
+  providers: vi.fn(async () => ({ data: { providers: ["google", "github"] }, error: null })),
   signIn: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
@@ -63,7 +65,8 @@ vi.mock("./features/auth/client", () => ({
       data: mocks.session,
       error: mocks.sessionError ? { code: "OFFLINE" } : null,
     }),
-    signIn: { email: mocks.signIn },
+    $fetch: mocks.providers,
+    signIn: { email: mocks.signIn, social: mocks.social },
     signUp: { email: mocks.signUp },
     sendVerificationEmail: mocks.resend,
     requestPasswordReset: mocks.requestPasswordReset,
@@ -694,4 +697,24 @@ describe("authentication routes", () => {
     expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
     expect(screen.queryByRole("alert")).toBeNull();
   });
+});
+
+it("preserves a validated return destination through Google OAuth", async () => {
+  await page("/login?returnTo=%2Ftasks%3FtaskId%3Done");
+  fireEvent.click(await screen.findByRole("button", { name: "Continue with Google" }));
+  await waitFor(() =>
+    expect(mocks.social).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "google",
+        callbackURL: "https://raypx.example/login?oauth=success&returnTo=%2Ftasks%3FtaskId%3Done",
+        errorCallbackURL: "https://raypx.example/login?returnTo=%2Ftasks%3FtaskId%3Done",
+      }),
+    ),
+  );
+});
+
+it("refreshes the account and restores navigation on an OAuth callback", async () => {
+  signIn();
+  const router = await page("/login?oauth=success&returnTo=%2Faccount");
+  await waitFor(() => expect(router.state.location.pathname).toBe("/account"));
 });

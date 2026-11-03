@@ -1,10 +1,15 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { admin } from "better-auth/plugins/admin";
 import { accountAccessControl, accountRoles, assignedRoles } from "./access.js";
-import { APIError, createAuthMiddleware, getAuthoritativeSessionFromCtx } from "better-auth/api";
+import {
+  APIError,
+  createAuthEndpoint,
+  createAuthMiddleware,
+  getAuthoritativeSessionFromCtx,
+} from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
-import type { AuthSession, AuthUser } from "./types.js";
+import type { AuthSession, AuthUser, SocialProvider } from "./types.js";
 import { normalizeTrustedOrigins } from "./origins.js";
 import { authPolicy } from "./policy.js";
 
@@ -24,6 +29,7 @@ export interface AuthConfiguration {
   secret: string;
   trustedOrigins: string[];
   production: boolean;
+  socialProviders?: Partial<Record<SocialProvider, { clientId: string; clientSecret: string }>>;
   /** Parent domain shared by separately hosted Web and API, e.g. "example.com". */
   cookieDomain?: string;
   /** Headers set by the trusted edge that carry the client IP, in priority order. */
@@ -78,7 +84,28 @@ export function createAuth({
     basePath: "/api/auth",
     secret: config.secret,
     trustedOrigins: origins,
-    plugins: [admin({ defaultRole: "member", ac: accountAccessControl, roles: accountRoles })],
+    socialProviders: {
+      ...(config.socialProviders?.google
+        ? { google: { ...config.socialProviders.google, requireEmailVerification: true } }
+        : {}),
+      ...(config.socialProviders?.github
+        ? { github: { ...config.socialProviders.github, requireEmailVerification: true } }
+        : {}),
+    },
+    // Link only identities whose email is verified by the provider; never trust a
+    // provider name as a substitute for verification.
+    account: { accountLinking: { enabled: true, trustedProviders: [] } },
+    plugins: [
+      admin({ defaultRole: "member", ac: accountAccessControl, roles: accountRoles }),
+      {
+        id: "raypx-social-providers",
+        endpoints: {
+          socialProviders: createAuthEndpoint("/social-providers", { method: "GET" }, async (ctx) =>
+            ctx.json({ providers: Object.keys(config.socialProviders ?? {}) }),
+          ),
+        },
+      },
+    ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         if (

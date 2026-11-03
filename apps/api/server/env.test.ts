@@ -53,3 +53,22 @@ it("enables object storage only with a complete S3 configuration", () => {
     secretAccessKey: "secret",
   });
 });
+
+it.each(["GOOGLE", "GITHUB"] as const)("requires complete %s OAuth credentials", (provider) => {
+  expect(() => getApiEnvironment({ [`${provider}_CLIENT_ID`]: "id" })).toThrow(
+    `${provider} login requires both`,
+  );
+  expect(() => getApiEnvironment({ [`${provider}_CLIENT_SECRET`]: "secret" })).toThrow(
+    `${provider} login requires both`,
+  );
+  const environment = getApiEnvironment({
+    [`${provider}_CLIENT_ID`]: "id",
+    [`${provider}_CLIENT_SECRET`]: "secret",
+  });
+  expect(environment[`${provider}_CLIENT_ID`]).toBe("id");
+  expect(
+    getApiEnvironment({ [`${provider}_CLIENT_ID`]: "", [`${provider}_CLIENT_SECRET`]: "" })[
+      `${provider}_CLIENT_ID`
+    ],
+  ).toBeUndefined();
+});

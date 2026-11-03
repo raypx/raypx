@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider, useLanguagePreference } from "@raypx/i18n/browser";
 import { messages } from "@raypx/i18n/messages";
-import { AuthForm, type AuthFormLinkProps, type AuthMode } from "./auth-form";
+import { AuthForm, type AuthFormProps, type AuthFormLinkProps, type AuthMode } from "./auth-form";
 import type { AuthActionClient, AuthActionResponse } from "../hooks";
 
 beforeEach(() => {
@@ -23,10 +23,15 @@ function LanguageSwitch() {
   );
 }
 
-function fixture(mode: AuthMode, search = "", onSignedIn = vi.fn(async () => {})) {
+function fixture(
+  mode: AuthMode,
+  search = "",
+  onSignedIn = vi.fn(async () => {}),
+  socialLogin?: AuthFormProps["socialLogin"],
+) {
   const action = () => vi.fn(async (): Promise<AuthActionResponse> => ({ error: null }));
   const client = {
-    signIn: { email: action() },
+    signIn: { email: action(), social: action() },
     signUp: { email: action() },
     requestPasswordReset: action(),
     resetPassword: action(),
@@ -43,6 +48,7 @@ function fixture(mode: AuthMode, search = "", onSignedIn = vi.fn(async () => {})
       <LanguageSwitch />
       <AuthForm
         mode={mode}
+        socialLogin={socialLogin}
         search={search}
         webUrl="https://raypx.example"
         client={client}
@@ -263,4 +269,49 @@ it("uses the server retry delay for mail rate limits and hides diagnostic messag
   expect(screen.getByRole<HTMLButtonElement>("button", { name: "Send reset link" }).disabled).toBe(
     false,
   );
+});
+
+const socialLogin = {
+  providers: ["google", "github"] as const,
+  callbackURL: "https://raypx.example/login?oauth=success&returnTo=%2Ftasks",
+  errorCallbackURL: "https://raypx.example/login?returnTo=%2Ftasks",
+};
+
+it("starts a configured provider without submitting credentials and reports failures safely", async () => {
+  const { client } = fixture("login", "", undefined, socialLogin);
+  client.signIn.social.mockResolvedValueOnce({ error: { code: "PROVIDER_NOT_FOUND" } });
+  fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+  await screen.findByRole("alert");
+  expect(client.signIn.social).toHaveBeenCalledExactlyOnceWith({
+    provider: "google",
+    callbackURL: socialLogin.callbackURL,
+    errorCallbackURL: socialLogin.errorCallbackURL,
+    fetchOptions: { headers: { "Accept-Language": "en" } },
+  });
+  expect(client.signIn.email).not.toHaveBeenCalled();
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Continue with GitHub" }).disabled,
+  ).toBe(false);
+});
+
+it("completes the OAuth return once and retries failed completion without restarting OAuth", async () => {
+  const onSignedIn = vi.fn(async (): Promise<void> => {
+    throw new Error("private diagnostic");
+  });
+  const { client } = fixture("login", "?oauth=success", onSignedIn, socialLogin);
+  await screen.findByRole("button", { name: "Try again" });
+  expect(onSignedIn).toHaveBeenCalledOnce();
+  expect(client.signIn.social).not.toHaveBeenCalled();
+  expect(screen.queryByLabelText("Password")).toBeNull();
+  onSignedIn.mockResolvedValueOnce();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  await waitFor(() => expect(onSignedIn).toHaveBeenCalledTimes(2));
+  expect(client.signIn.social).not.toHaveBeenCalled();
+});
+
+it("offers another attempt after cancelled OAuth without rendering provider diagnostics", () => {
+  fixture("login", "?error=private-diagnostic", undefined, socialLogin);
+  expect(screen.getByRole("alert").textContent).toContain("Sign-in was cancelled or failed");
+  expect(screen.getByRole("alert").textContent).not.toContain("private-diagnostic");
+  expect(screen.getByRole("button", { name: "Continue with Google" })).toBeTruthy();
 });

@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import type { SocialProvider } from "./types";
 
 export type AuthErrorKey =
   | "registrationDisabled"
@@ -45,6 +46,13 @@ type Credentials = { email: string; password: string };
 export interface AuthActionClient {
   signIn: {
     email(input: Credentials & RequestOptions): Promise<AuthActionResponse>;
+    social?(
+      input: {
+        provider: SocialProvider;
+        callbackURL: string;
+        errorCallbackURL: string;
+      } & RequestOptions,
+    ): Promise<AuthActionResponse>;
   };
   signUp: {
     email(
@@ -260,6 +268,18 @@ export function useAuthActions({
         onSuccess,
       );
     },
+    signInSocial(input: {
+      provider: SocialProvider;
+      callbackURL: string;
+      errorCallbackURL: string;
+    }) {
+      return run(() =>
+        client.signIn.social
+          ? client.signIn.social({ ...input, fetchOptions })
+          : Promise.resolve({ error: { code: "PROVIDER_NOT_FOUND" } }),
+      );
+    },
+    completeSocialSignIn: (onSuccess: AuthActionSuccess) => run(async () => ({}), onSuccess),
     signOut(onSuccess?: AuthActionSuccess) {
       return run(() => client.signOut(), onSuccess);
     },
