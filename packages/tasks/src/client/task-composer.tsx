@@ -1,3 +1,10 @@
+import {
+  taskSelection,
+  canCreateTask,
+  projectOccupied,
+  prepareTaskSubmission,
+  type TaskSubmission,
+} from "../model/composition.js";
 import { ModelPicker } from "./model-picker.js";
 import {
   agentProviderMetadata,
@@ -45,12 +52,10 @@ import { PlusIcon } from "@raypx/icons/plus";
 import { SaveIcon } from "@raypx/icons/save";
 import { SendIcon } from "@raypx/icons/send";
 import { DeleteIcon } from "@raypx/icons/delete";
-import { isTaskActive } from "../index.js";
 import { failureCode } from "./failure.js";
 import { useTaskDrafts } from "./use-task-drafts.js";
 import {
   MAX_TASK_DRAFTS,
-  readTaskDrafts,
   createTaskDraft,
   sameDraft,
   type TaskDraft,
@@ -186,18 +191,14 @@ function TaskComposerView({
       contextBudget.status === "ready" &&
       !contextBudget.exceeded);
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
-  const submission = useRef<{
-    key: string;
-    id: string;
-    input: DraftInput;
-    draftId: string | null;
-  } | null>(null);
+  const submission = useRef<TaskSubmission | null>(null);
   const submitting = useRef(false);
   const {
     drafts,
     ready: draftReady,
     failed: draftLoadFailed,
     write: writeDrafts,
+    read: readDrafts,
   } = useTaskDrafts(draftKey);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<
@@ -209,13 +210,14 @@ function TaskComposerView({
     | null
   >(null);
   const { confirm, dialog } = useConfirmation();
+  const targetSelection = taskSelection(devices, deviceId, projectId, provider);
   const snapshot: DraftInput = {
     deviceId,
     projectId,
     provider,
     prompt,
     mode,
-    ...(provider === "pi" && model ? { model } : {}),
+    ...(targetSelection.requiresModel && model ? { model } : {}),
     ...(contextSelection ? { contextSelection } : {}),
   };
   useEffect(() => {
@@ -246,7 +248,7 @@ function TaskComposerView({
   }
   function saveDraft() {
     try {
-      const latest = readTaskDrafts(localStorage.getItem(draftKey));
+      const latest = readDrafts();
       if (!latest.some((draft) => draft.id === draftId) && latest.length >= MAX_TASK_DRAFTS) {
         setDraftStatus("draftLimit");
         return;
@@ -318,12 +320,7 @@ function TaskComposerView({
   }
   function deleteDraft(id: string) {
     try {
-      if (
-        persist(
-          readTaskDrafts(localStorage.getItem(draftKey)).filter((draft) => draft.id !== id),
-        ) &&
-        draftId === id
-      )
+      if (persist(readDrafts().filter((draft) => draft.id !== id)) && draftId === id)
         setDraftId(null);
     } catch {
       setDraftStatus("draftSaveFailed");
@@ -334,7 +331,7 @@ function TaskComposerView({
     let cleaned = true;
     if (receipt?.draftId) {
       try {
-        const latest = readTaskDrafts(localStorage.getItem(draftKey));
+        const latest = readDrafts();
         const sent = latest.find((draft) => draft.id === receipt.draftId);
         // Preserve edits saved from another window while delivery was in flight.
         if (sent && sameDraft(sent, receipt.input))
@@ -362,23 +359,9 @@ function TaskComposerView({
     const recovered = tasks.find((task) => task.id === submission.current?.id);
     if (recovered) recover(recovered);
   }, [error, tasks]);
-  const device = devices.find((item) => item.id === deviceId);
-  const project = device?.projects.find((item) => item.id === projectId);
-  const occupied = tasks.some(
-    (task) => task.deviceId === deviceId && task.projectId === projectId && isTaskActive(task),
-  );
-  const available = Boolean(
-    (provider !== "pi" || (modelReady && Boolean(model))) &&
-    device?.online &&
-    !device.revoked &&
-    project?.providers.includes(provider) &&
-    device.capabilities.some(
-      (capability) =>
-        capability.provider === provider &&
-        capability.available &&
-        capability.definition.modes.includes(mode),
-    ),
-  );
+  const { device, project } = targetSelection;
+  const occupied = projectOccupied(tasks, deviceId, projectId);
+  const available = canCreateTask(targetSelection, mode, model, modelReady);
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (submitting.current || !prompt.trim()) return;
@@ -397,14 +380,12 @@ function TaskComposerView({
     }
     if (!available || occupied || !budgetReady) return;
     submitting.current = true;
-    const key = JSON.stringify(snapshot);
-    if (submission.current?.key !== key)
-      submission.current = {
-        key,
-        id: crypto.randomUUID(),
-        input: snapshot,
-        draftId: draftId ?? savedDraft?.id ?? null,
-      };
+    submission.current = prepareTaskSubmission(
+      submission.current,
+      snapshot,
+      draftId ?? savedDraft?.id ?? null,
+      () => crypto.randomUUID(),
+    );
     setBusy(true);
     setError(undefined);
     try {
@@ -585,7 +566,7 @@ function TaskComposerView({
                 <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
               </CollapsibleContent>
             </Collapsible>
-            {provider === "pi" && local && client.models && (
+            {targetSelection.requiresModel && local && client.models && (
               <ModelPicker
                 client={client.models}
                 value={model}

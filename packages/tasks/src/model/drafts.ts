@@ -79,3 +79,9 @@ export function sameDraft(a: DraftInput, b: DraftInput) {
       JSON.stringify(b.contextSelection?.sources ?? [])
   );
 }
+
+/** Device persistence is supplied by the browser adapter, not owned by the editor. */
+export interface TaskDraftStore {
+  read(this: void): TaskDraft[];
+  write(this: void, drafts: TaskDraft[]): void;
+}

@@ -1,5 +1,6 @@
 import type {
   AgentEvent,
+  TaskCommand,
   ModelCatalog,
   ModelSelection,
   TaskContinuation,
@@ -16,13 +17,13 @@ export interface TaskReadOptions {
 }
 export interface TaskHistoryPage {
   task: AgentTask;
-  piContinuation?: TaskContinuation | undefined;
+  continuation?: TaskContinuation | undefined;
   events: { cursor: number; event: AgentEvent }[];
   requests: HumanRequest[];
   activity: TaskActivity[];
   activityBefore?: number | undefined;
 }
-type CommandInput<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];
+type CommandInput<M extends TaskCommand["method"]> = Extract<TaskCommand, { method: M }>["input"];
 
 export interface TaskChangeSource {
   subscribe(listener: (change?: TaskChange) => void): () => void;
@@ -70,7 +71,7 @@ export interface TaskWorkspacePort extends TaskChangeSource {
     list(input?: {}, options?: TaskReadOptions): Promise<ObservedProjection>;
     get(input: { id: string }, options?: TaskReadOptions): Promise<TerminalRequest>;
     decide(
-      input: CommandInput<"observed.decide">,
+      input: Extract<RelayRequest, { method: "observed.decide" }>["input"],
       options?: TaskReadOptions,
     ): Promise<TerminalRequest>;
   };

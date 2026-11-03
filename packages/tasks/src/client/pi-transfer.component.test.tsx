@@ -61,7 +61,7 @@ it("asks before sending a Pi conversation to a different connection and binds th
         events: [],
         requests: [],
         activity: [],
-        piContinuation: { revision: 7, model, blocked: false },
+        continuation: { revision: 7, model, blocked: false },
       }),
       followUp,
     },

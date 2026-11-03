@@ -1,11 +1,14 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { readTaskDrafts, type TaskDraft } from "../model/drafts.js";
+import { readTaskDrafts, type TaskDraft, type TaskDraftStore } from "../model/drafts.js";
 
 const empty = { drafts: [] as TaskDraft[], ready: false, failed: false };
 const failed = { ...empty, ready: true, failed: true };
 const changed = "raypx:task-drafts";
 
-function createDraftStore(key: string) {
+function createDraftStore(key: string): TaskDraftStore & {
+  getSnapshot(this: void): { drafts: TaskDraft[]; ready: boolean; failed: boolean };
+  subscribe(this: void, notify: () => void): () => void;
+} {
   let raw: string | null | undefined;
   let snapshot = empty;
   const getSnapshot = () => {
@@ -23,6 +26,7 @@ function createDraftStore(key: string) {
   };
   return {
     getSnapshot,
+    read: () => readTaskDrafts(localStorage.getItem(key)),
     subscribe: (notify: () => void) => {
       const storage = (event: StorageEvent) => {
         if (event.key === key || event.key === null) notify();
@@ -48,5 +52,5 @@ function createDraftStore(key: string) {
 export function useTaskDrafts(key: string) {
   const store = useMemo(() => createDraftStore(key), [key]);
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, () => empty);
-  return { ...snapshot, write: store.write };
+  return { ...snapshot, read: store.read, write: store.write };
 }

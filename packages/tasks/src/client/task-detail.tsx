@@ -1,3 +1,4 @@
+import { canContinueTask, followUpPlan, taskSelection } from "../model/composition.js";
 import { ModelPicker } from "./model-picker.js";
 import type { ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -71,22 +72,12 @@ export function TaskDetail({
     scope,
     setFailure,
   );
-  const targetDevice = data
-    ? devices.find((device) => device.id === data.task.deviceId)
-    : undefined;
+  const requiresModel = data
+    ? taskSelection(devices, data.task.deviceId, data.task.projectId, data.task.provider)
+        .requiresModel
+    : false;
   const canContinue = Boolean(
-    data &&
-    !data.piContinuation?.blocked &&
-    (data.task.provider !== "pi" || (Boolean(data.piContinuation) && modelReady)) &&
-    targetDevice?.online &&
-    !targetDevice.revoked &&
-    targetDevice.projects.some(
-      (project) =>
-        project.id === data.task.projectId && project.providers.includes(data.task.provider),
-    ) &&
-    targetDevice.capabilities.some(
-      (capability) => capability.provider === data.task.provider && capability.available,
-    ),
+    data && canContinueTask(data.task, data.continuation, devices, modelReady),
   );
   async function cancel() {
     if (active.current) return;
@@ -114,11 +105,10 @@ export function TaskDetail({
     try {
       if (!followId.current.input) {
         const selected = model ?? data?.task.model;
-        const context = data?.piContinuation;
-        if (data?.task.provider === "pi" && (!selected || !context))
-          throw new Error("SESSION_UNAVAILABLE");
-        const transfer =
-          selected && context && selected.connectionId !== context.model.connectionId;
+        const context = data?.continuation;
+        if (requiresModel && (!selected || !context)) throw new Error("SESSION_UNAVAILABLE");
+        const plan = followUpPlan(followId.current.id, id, prompt, selected, context);
+        const transfer = plan.transfer;
         if (
           transfer &&
           !(await confirm({
@@ -129,21 +119,7 @@ export function TaskDetail({
           }))
         )
           return;
-        followId.current.input = {
-          id: followId.current.id,
-          parentTaskId: id,
-          prompt,
-          ...(selected ? { model: selected } : {}),
-          ...(context ? { contextRevision: context.revision } : {}),
-          ...(transfer
-            ? {
-                contextTransfer: {
-                  revision: context.revision,
-                  connectionId: selected.connectionId,
-                },
-              }
-            : {}),
-        };
+        followId.current.input = plan.input;
       }
       const task = await client.tasks.followUp(followId.current.input, {
         signal: AbortSignal.timeout(15_000),
@@ -256,7 +232,7 @@ export function TaskDetail({
           {data.task.model.provider} · {data.task.model.model}
         </p>
       )}
-      {data.piContinuation?.blocked && (
+      {data.continuation?.blocked && (
         <p role="alert" className="text-sm text-destructive">
           {t("PI_RECOVERY_REQUIRED")}
         </p>
@@ -343,7 +319,7 @@ export function TaskDetail({
           {data.task.model.provider} · {data.task.model.model}
         </p>
       )}
-      {data.piContinuation?.blocked && (
+      {data.continuation?.blocked && (
         <p role="alert" className="text-sm text-destructive">
           {t("PI_RECOVERY_REQUIRED")}
         </p>
@@ -361,7 +337,7 @@ export function TaskDetail({
               onChange={(event) => setPrompt(event.target.value)}
             />
           </Field>
-          {data.task.provider === "pi" && local && client.models && (
+          {requiresModel && local && client.models && (
             <ModelPicker
               client={client.models}
               value={model ?? data.task.model}

@@ -109,7 +109,10 @@ export function createLocalTaskClient(
             request("agents.local.get", {
               ...input,
               accountId,
-            }),
+            }).then(({ piContinuation, ...detail }) => ({
+              ...detail,
+              ...(piContinuation ? { continuation: piContinuation } : {}),
+            })),
           options?.signal,
         ),
       create: async (input, options) =>
