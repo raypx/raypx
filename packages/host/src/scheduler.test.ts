@@ -1,3 +1,4 @@
+import { agentPort } from "../tests/helpers/agent-port.js";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -35,7 +36,7 @@ async function fixture() {
     return { ok: true, value: {} };
   });
   const required = vi.fn();
-  const value = new RemoteControl(directory, { request }, () => {}, required, {
+  const value = new RemoteControl(directory, agentPort(request), () => {}, required, {
     scheduler,
     renewGrant,
     socket: () => {

@@ -260,3 +260,11 @@ export function validDecision(
     })
   );
 }
+
+/** Task use cases; relay and IPC own their surrounding delivery envelopes. */
+export type TaskCommand =
+  | { method: "tasks.create"; input: TaskCreate }
+  | { method: "tasks.followUp"; input: TaskFollowUp }
+  | { method: "tasks.cancel"; input: TaskCancel }
+  | { method: "tasks.input"; input: z.infer<typeof taskInputSchema> }
+  | { method: "approvals.decide"; input: ApprovalDecisionInput };

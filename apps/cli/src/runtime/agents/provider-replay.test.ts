@@ -6,7 +6,7 @@ import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/task
 import { ManagedExecution } from "./harness/execution";
 import type { ExecutionConversation, ExecutionStore } from "./harness/ports";
 import { CodexAdapter } from "@raypx/provider-codex";
-import { createAdapter } from "./harness/registry";
+import { createAdapter } from "./infrastructure/providers/process";
 import { ConversationRecorder } from "./activity";
 import type { LocalAgentTask } from "./model";
 import {

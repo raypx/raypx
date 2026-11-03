@@ -12,13 +12,9 @@ import {
   RELAY_VERSION,
   deviceGrantSchema,
   type DeviceGrant,
-  type DeviceProject,
   type RelayServerFrame,
-  type SequencedEvent,
-  type SnapshotRecord,
 } from "@raypx/contracts/tasks";
-import { type AgentCapability } from "@raypx/core/tasks";
-import type { LocalMethod } from "@raypx/contracts/local";
+import type { HostAgentPort } from "./agent-port.js";
 import { serverOrigin } from "./origin.js";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 export type { ControlInfo } from "@raypx/contracts/terminal";
@@ -85,7 +81,7 @@ export class RemoteControl {
   }
   constructor(
     private readonly directory: string,
-    private readonly engine: { request(method: LocalMethod, params: unknown): Promise<unknown> },
+    private readonly engine: HostAgentPort,
     private readonly notify: () => void,
     private readonly grantRequired: () => void,
     private readonly options: {
@@ -362,31 +358,19 @@ export class RemoteControl {
       this.options.observedAck?.(frame.epoch, frame.revision);
     } else if (frame.type === "ready") {
       const [replay, projects, capabilities] = await Promise.all([
-        this.engine.request("agents.replay", { binding, after: 0 }) as Promise<{
-          streamId: string;
-          sequence: number;
-        }>,
-        this.engine.request("agents.projects", {}) as Promise<DeviceProject[]>,
-        this.engine.request("agents.capabilities", {}) as Promise<AgentCapability[]>,
+        this.engine.replay({ binding, after: 0 }),
+        this.engine.projects({}),
+        this.engine.capabilities({}),
       ]);
       if (generation !== this.generation) return;
-      const info = (await this.engine.request("agents.events", { binding })) as {
-        instanceId: string;
-      };
+      const info = await this.engine.events({ binding });
       if (generation !== this.generation) return;
       this.connection?.send({
         type: "announce",
         streamId: replay.streamId,
         instanceId: info.instanceId,
-        projects: projects.map((project) => ({
-          ...project,
-          providers: project.providers.filter((provider) => provider !== "pi"),
-        })),
-        capabilities: capabilities.map((capability) =>
-          capability.provider === "pi"
-            ? { ...capability, available: false, reason: "unsupported", inputModes: [] }
-            : capability,
-        ),
+        projects,
+        capabilities,
       });
     } else if (frame.type === "resume") {
       if (frame.syncId) {
@@ -422,21 +406,17 @@ export class RemoteControl {
       }
       const result =
         frame.command.request.method === "observed.decide"
-          ? await this.engine
-              .request("observed.remote", { binding, decision: frame.command.request.input })
-              .then(
-                (value) => ({ ok: true as const, value }),
-                (error: unknown) => ({
-                  ok: false as const,
-                  code:
-                    error && typeof error === "object" && "code" in error
-                      ? String(error.code)
-                      : "REQUEST_CLOSED",
-                }),
-              )
-          : ((await this.engine.request("agents.remote", { binding, command: frame.command })) as
-              | { ok: true; value: unknown }
-              | { ok: false; code: string });
+          ? await this.engine.observed({ binding, decision: frame.command.request.input }).then(
+              (value) => ({ ok: true as const, value }),
+              (error: unknown) => ({
+                ok: false as const,
+                code:
+                  error && typeof error === "object" && "code" in error
+                    ? String(error.code)
+                    : "REQUEST_CLOSED",
+              }),
+            )
+          : await this.engine.remote({ binding, command: frame.command });
       if (generation !== this.generation) return;
       await this.wake();
       while (this.syncing && generation === this.generation) await this.syncing;
@@ -499,18 +479,11 @@ export class RemoteControl {
           offset = 0,
           ack: Promise<void> | undefined;
         for (;;) {
-          const page = (await this.engine.request("agents.snapshot", {
+          const page = await this.engine.snapshot({
             binding,
             ...(id ? { id } : {}),
             offset,
-          })) as {
-            id: string;
-            streamId: string;
-            sequence: number;
-            records: SnapshotRecord[];
-            next: number;
-            done: boolean;
-          };
+          });
           if (generation !== this.generation) return;
           if (!id) {
             id = page.id;
@@ -536,10 +509,10 @@ export class RemoteControl {
           }
         }
       }
-      const replay = (await this.engine.request("agents.replay", {
+      const replay = await this.engine.replay({
         binding,
         after: this.cursor,
-      })) as { streamId: string; sequence: number; floor: number; events: SequencedEvent[] };
+      });
       if (generation !== this.generation) return;
       if (
         replay.streamId !== this.streamId ||
@@ -550,7 +523,7 @@ export class RemoteControl {
         continue;
       }
       if (!replay.events.length) {
-        await this.engine.request("agents.checkpoint", { binding, sequence: this.cursor });
+        await this.engine.checkpoint({ binding, sequence: this.cursor });
         if (generation !== this.generation) return;
         this.connection?.send({ type: "available" });
         this.connected = true;
@@ -568,7 +541,7 @@ export class RemoteControl {
       this.connection?.send({ type: "events", streamId: this.streamId, events: replay.events });
       await ack;
       this.cursor = last.sequence;
-      await this.engine.request("agents.checkpoint", { binding, sequence: this.cursor });
+      await this.engine.checkpoint({ binding, sequence: this.cursor });
       for (const { event } of replay.events)
         if (
           event.kind === "request" &&
@@ -589,7 +562,7 @@ export class RemoteControl {
     const binding = this.binding;
     this.detaching = true;
     if (binding) {
-      await this.engine.request("agents.detach", { binding }).catch(() => {});
+      await this.engine.detach({ binding }).catch(() => {});
       if (this.ready) {
         let cancel: (() => void) | undefined;
         try {

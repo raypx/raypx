@@ -1,11 +1,10 @@
 import type { PiExecutionServices } from "./pi/ports";
-import { createAdapter, discoverProviders } from "./harness/registry";
-import { respondToClaudeHook } from "@raypx/provider-claude";
+import { createProviderRegistry } from "./infrastructure/providers/builtins";
+import type { ProviderRegistry } from "./application/providers";
+import { ClaudeApprovalServer } from "./infrastructure/claude-hook";
 import type { RecordDiagnostic } from "../../diagnostics";
-import { existsSync, realpathSync } from "node:fs";
 import { hostname } from "node:os";
 import {
-  type DeviceProject,
   type DeviceCommand,
   type RelayCommand,
   type SnapshotRecord,
@@ -13,68 +12,32 @@ import {
   type SyncDevice,
   type TaskChange,
 } from "@raypx/contracts/tasks";
-import { taskText } from "@raypx/core/task-text";
 import {
   activeTaskStatuses,
-  type AgentTask,
   type AgentProvider,
   type AgentCapability,
-  type AgentEvent,
-  type HumanRequest,
-  type TaskInput,
-  validDecision,
-  TaskContextError,
   type TaskContextSelection,
   type TaskContextTarget,
   type TaskContextSnapshot,
 } from "@raypx/core/tasks";
-import { type StateStore, acquireLock } from "../state";
+import { type StateStore } from "../state";
 import { LocalError } from "../errors";
 import { AgentStore } from "./store";
-import { desktopBinding, isDesktopBinding, type LocalAgentTask } from "./model";
-import { ManagedExecution, initialExecutionPrompt, executionSession } from "./harness/execution";
-import { ConversationRecorder } from "./activity";
+import { desktopBinding } from "./model";
+import { ExecutionCoordinator } from "./application/execution";
+import { LocalExecutionProjects } from "./infrastructure/projects";
 import manifest from "../../../package.json";
-import { ContextError } from "@raypx/memory";
-import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { projectTaskStatusToRunStatus } from "@raypx/core/agent-runs";
 
-const object = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-// The first record always passes so cursors advance past oversized events.
-// Unordered sets skip a record that does not fit instead of hiding the rest.
-export function bounded<T>(records: T[], skip = false, budget = 256 * 1024): T[] {
-  let bytes = 0;
-  const result: T[] = [];
-  for (const record of records) {
-    const size = Buffer.byteLength(JSON.stringify(record));
-    if (result.length && bytes + size > budget) {
-      if (skip) continue;
-      break;
-    }
-    result.push(record);
-    bytes += size;
-  }
-  return result;
-}
+import { AgentCommandService } from "./application/commands";
+import { AgentQueries } from "./application/queries";
 export class AgentRuntime {
   readonly instanceId = crypto.randomUUID();
   private readonly store: AgentStore;
-  private readonly active = new Map<string, ManagedExecution>();
-  private readonly bindingVersions = new Map<string, number>();
-  private readonly executables = new Map<AgentProvider, string>();
-  private capabilitiesCache: AgentCapability[] | undefined;
-  private server: ReturnType<typeof Bun.serve> | undefined;
-  private readonly hookTokens = new Map<string, string>();
-  private closing = false;
-  private readonly completions = new Set<Promise<void>>();
-  private readonly remoteCommands = new Map<
-    string,
-    Promise<{ ok: true; value: unknown } | { ok: false; code: string }>
-  >();
-  private readonly cancelledStarts = new Set<string>();
+  private readonly queries: AgentQueries;
+  private readonly providers: ProviderRegistry;
+  private readonly execution: ExecutionCoordinator;
+  private readonly projectsService: LocalExecutionProjects;
+  private readonly commands: AgentCommandService;
   private readonly snapshots = new Map<
     string,
     { binding: string; expires: number; sequence: number; records: SnapshotRecord[] }
@@ -83,7 +46,7 @@ export class AgentRuntime {
     private readonly state: StateStore,
     // A pending request id is passed only for local work; relay delivery notifies separately.
     private readonly changed: (pendingRequest?: string, change?: TaskChange) => void,
-    private readonly options: {
+    options: {
       executables?: Partial<Record<AgentProvider, string>>;
       pi?: PiExecutionServices;
       assertInstance?: () => Promise<void>;
@@ -99,8 +62,41 @@ export class AgentRuntime {
     } = {},
   ) {
     this.store = new AgentStore(state.db);
+    this.providers = createProviderRegistry(options.executables, options.pi);
+    this.projectsService = new LocalExecutionProjects(state, this.store);
+    const hooks = new ClaudeApprovalServer((id) => this.execution.get(id));
+    this.execution = new ExecutionCoordinator(
+      this.store,
+      this.providers,
+      this.projectsService,
+      hooks,
+      changed,
+      options,
+    );
+    this.queries = new AgentQueries(this.store, (local) => this.providers.inspect(local));
+    this.commands = new AgentCommandService(
+      this.store,
+      {
+        get: (id) => this.execution.get(id),
+        start: (...args) => this.start(...args),
+        input: (id, input) => {
+          const execution = this.execution.get(id);
+          if (!execution) throw new LocalError("TASK_STOPPED", "Task stopped");
+          return execution.enqueue(input);
+        },
+        cancel: (local, starting) => this.execution.cancelTask(local, starting),
+        decide: (binding, id, taskId, requestId, decision) =>
+          this.command(binding, { id, type: "decision", taskId, requestId, decision }),
+      },
+      () => this.execution.isClosing(),
+      options.resolveContext,
+    );
+
     for (const local of this.store.tasks({ activeOnly: true }))
-      this.status(local, "interrupted", undefined, "HOST_RESTARTED");
+      this.execution.status(local, "interrupted", undefined, "HOST_RESTARTED");
+  }
+  validateProject(target: TaskContextTarget) {
+    this.projectsService.validate(target);
   }
   async localDevice(accountId: string): Promise<SyncDevice> {
     return {
@@ -116,50 +112,15 @@ export class AgentRuntime {
       capabilities: await this.capabilities(),
     };
   }
-  localTasks(
-    accountId: string,
-    limit: number,
-    before?: string,
-    projectId?: string,
-    deviceId?: string,
-  ) {
-    return bounded(
-      this.store.taskPage(desktopBinding(accountId), limit, before, projectId, deviceId),
-    );
+  localTasks(...args: Parameters<AgentQueries["localTasks"]>) {
+    return this.queries.localTasks(...args);
   }
-  localTask(accountId: string, id: string, after: number, beforeActivity?: number) {
-    const binding = desktopBinding(accountId),
-      local = this.store.get(id);
-    if (!local || local.binding !== binding) throw new LocalError("NOT_FOUND", "Task unavailable");
-    const requests = this.store.requests(binding, id).reverse();
-    let pendingKind: HumanRequest["kind"] | undefined;
-    if (local.task.status === "waiting") {
-      const kinds = new Set(
-        requests
-          .filter((request) => request.status === "pending" || request.status === "decided")
-          .map((request) => request.kind),
-      );
-      if (kinds.size !== 1)
-        throw new LocalError(
-          "INVALID_AGENT_RUN_PROJECTION",
-          "Waiting task has no unambiguous pending request kind",
-        );
-      pendingKind = [...kinds][0];
-    }
-    return {
-      task: local.task,
-      ...(local.task.provider === "pi" && this.options.pi
-        ? { piContinuation: this.options.pi.inspect(local) }
-        : {}),
-      runStatus: projectTaskStatusToRunStatus(local.task, pendingKind),
-      ...this.store.activityPage(binding, id, beforeActivity),
-      events: bounded(this.store.taskEvents(binding, id, after)),
-      requests: bounded(requests, true),
-    };
+  localTask(...args: Parameters<AgentQueries["localTask"]>) {
+    const { continuation, ...detail } = this.queries.localTask(...args);
+    return { ...detail, ...(continuation ? { piContinuation: continuation } : {}) };
   }
-  localApprovals(accountId: string) {
-    const binding = desktopBinding(accountId);
-    return bounded(this.store.pendingRequests(binding), true);
+  localApprovals(...args: Parameters<AgentQueries["localApprovals"]>) {
+    return this.queries.localApprovals(...args);
   }
   async localExecute(accountId: string, id: string, request: RelayRequest) {
     const binding = desktopBinding(accountId),
@@ -185,72 +146,31 @@ export class AgentRuntime {
       tasks = this.store.tasks({ binding }).map((local) => local.task),
       kept = new Set(
         tasks
-          .filter((task) => activeTaskStatuses.includes(task.status) || this.active.has(task.id))
+          .filter((task) => activeTaskStatuses.includes(task.status) || this.execution.has(task.id))
           .flatMap((task) => [task.id, ...(task.parentTaskId ? [task.parentTaskId] : [])]),
       ),
       removed = tasks.filter((task) => !kept.has(task.id)).map((task) => task.id);
-    this.store.forget(binding, removed, new Set(this.remoteCommands.keys()));
+    this.store.forget(binding, removed, this.commands.pendingIds());
     this.changed();
     return { removed: removed.length };
   }
   localDetach(accountId: string) {
     return this.detach(desktopBinding(accountId));
   }
-  private emit(local: LocalAgentTask, event: AgentEvent) {
-    this.store.event(local.binding, event);
-    this.changedFor(local, event);
-  }
-  private changedFor(local: LocalAgentTask, event: AgentEvent) {
-    this.changed(undefined, {
-      type: "events",
-      local: isDesktopBinding(local.binding),
-      deviceId: local.task.deviceId,
-      events: [{ sequence: 1, event }],
-    });
-  }
-  private status(
-    local: LocalAgentTask,
-    status: AgentTask["status"],
-    summary = "",
-    inputCode?: TaskInput["code"],
-  ) {
-    const task = {
-      ...local.task,
-      status,
-      summary: taskText(summary, 32_000),
-      updatedAt: new Date().toISOString(),
-    };
-    const event: AgentEvent = {
-      id: crypto.randomUUID(),
-      taskId: task.id,
-      kind: "status",
-      status,
-      summary: task.summary,
-      task,
-    };
-    this.store.transition(
-      { ...local, task },
-      event,
-      inputCode ?? (summary === "INPUT_DELIVERY_FAILED" ? "INPUT_DELIVERY_FAILED" : "TASK_STOPPED"),
-    );
-    Object.assign(local.task, task);
-    this.changedFor(local, event);
-  }
   async capabilities(): Promise<AgentCapability[]> {
-    this.capabilitiesCache ??= await discoverProviders(
-      this.options.executables ?? {},
-      this.executables,
-    );
-    const available = (await this.options.pi?.available()) ?? false;
-    return this.capabilitiesCache.map((capability) =>
-      capability.provider === "pi"
-        ? {
-            ...capability,
-            available,
-            reason: available ? "ready" : "unconfigured",
-            inputModes: available ? ["queue"] : [],
-          }
-        : capability,
+    return this.providers.discover();
+  }
+  async remoteProjects() {
+    return (await this.projects()).map((project) => ({
+      ...project,
+      providers: project.providers.filter((provider) => this.providers.allowsRemote(provider)),
+    }));
+  }
+  async remoteCapabilities() {
+    return (await this.capabilities()).map((capability) =>
+      this.providers.allowsRemote(capability.provider)
+        ? capability
+        : { ...capability, available: false, reason: "unsupported" as const, inputModes: [] },
     );
   }
   configure(rootId: string, providers: AgentProvider[]) {
@@ -265,29 +185,8 @@ export class AgentRuntime {
   projectProviders(rootId: string) {
     return this.store.projects().find((project) => project.id === rootId)?.providers ?? [];
   }
-  async projects(): Promise<DeviceProject[]> {
-    const roots = this.state.roots();
-    const result: DeviceProject[] = [];
-    for (const project of this.store.projects()) {
-      const root = roots.find((item) => item.id === project.id);
-      if (!root || !project.providers.length || !existsSync(root.path)) continue;
-      let dirty = false;
-      try {
-        const child = Bun.spawn(["git", "status", "--porcelain", "--untracked-files=no"], {
-          cwd: root.path,
-          stdout: "pipe",
-          stderr: "ignore",
-        });
-        const timer = setTimeout(() => child.kill(), 2000);
-        dirty = Boolean((await new Response(child.stdout).text()).trim());
-        await child.exited;
-        clearTimeout(timer);
-      } catch {
-        /* non-Git folders are still valid */
-      }
-      result.push({ id: root.id, name: root.name, providers: project.providers, dirty });
-    }
-    return result;
+  projects() {
+    return this.projectsService.list();
   }
   events(binding: string) {
     return { instanceId: this.instanceId, events: this.store.events(binding) };
@@ -333,190 +232,9 @@ export class AgentRuntime {
     };
   }
   async remote(binding: string, command: RelayCommand) {
-    try {
-      if (command.request.method === "observed.decide")
-        throw new LocalError("INVALID_METHOD", "Observed approvals belong to the terminal broker");
-      const old = this.store.reserve(binding, command);
-      if (old) return old;
-      const pending = this.remoteCommands.get(command.id);
-      if (pending) return pending;
-      const operation = this.applyRemote(binding, command).then(
-        (value) => ({ ok: true as const, value }),
-        (error) => ({
-          ok: false as const,
-          code:
-            error instanceof LocalError ||
-            error instanceof TaskContextError ||
-            error instanceof ContextError
-              ? error.code
-              : "AGENT_UNAVAILABLE",
-        }),
-      );
-      this.remoteCommands.set(command.id, operation);
-      try {
-        const result = await operation;
-        this.store.complete(command.id, result);
-        return result;
-      } finally {
-        this.remoteCommands.delete(command.id);
-      }
-    } catch (error) {
-      return {
-        ok: false as const,
-        code:
-          error instanceof LocalError ||
-          error instanceof TaskContextError ||
-          error instanceof ContextError
-            ? error.code
-            : "AGENT_UNAVAILABLE",
-      };
-    }
-  }
-  private async applyRemote(binding: string, command: RelayCommand) {
-    if (this.closing) throw new LocalError("CLOSING", "Agent host is closing");
-    const getTask = (id: string) => {
-      const local = this.store.get(id);
-      if (!local || local.binding !== binding || local.task.deviceId !== command.deviceId)
-        throw new LocalError("NOT_FOUND", "Task unavailable");
-      return local;
-    };
-    const request = command.request;
-    if (request.method === "observed.decide")
-      throw new LocalError("INVALID_METHOD", "Observed approvals belong to the terminal broker");
-    if (
-      (request.method === "tasks.create" ||
-        request.method === "tasks.followUp" ||
-        request.method === "tasks.input") &&
-      request.input.id !== command.id
-    )
-      throw new LocalError("IDEMPOTENCY_CONFLICT", "Command identity changed");
-    if (request.method === "tasks.input") {
-      const local = getTask(request.input.taskId);
-      const old = this.store
-        .activity(binding, local.task.id)
-        .find((entry) => entry.id === request.input.id);
-      // A recorded receipt is never redispatched, including after a host restart.
-      if (old?.kind === "input") return old;
-      if (old) throw new LocalError("IDEMPOTENCY_CONFLICT", "Input identity changed");
-    }
-    if (request.method === "tasks.create" || request.method === "tasks.followUp") {
-      const existing = this.store.get(request.input.id);
-      if (existing) {
-        getTask(existing.task.id);
-        return existing.task;
-      }
-    }
-    if (Date.parse(command.expiresAt) <= Date.now())
-      throw new LocalError("DELIVERY_EXPIRED", "Command expired");
-    if (request.method === "tasks.create" || request.method === "tasks.followUp") {
-      const requestInput = request.input;
-      let task: AgentTask;
-      const now = new Date().toISOString();
-      if (request.method === "tasks.create") {
-        const { contextSelection, ...input } = request.input;
-        let context = command.context;
-        if (!context && contextSelection?.sources.length) {
-          if (binding !== desktopBinding(LOCAL_WORKSPACE_ID) || !this.options.resolveContext)
-            throw new ContextError("CONTEXT_UNAVAILABLE");
-          context = await this.options.resolveContext(
-            contextSelection,
-            {
-              deviceId: input.deviceId,
-              projectId: input.projectId,
-            },
-            input.prompt,
-          );
-        }
-        task = {
-          ...input,
-          ...(context ? { context } : {}),
-          parentTaskId: null,
-          status: "pending",
-          summary: "",
-          createdAt: now,
-          updatedAt: now,
-        };
-      } else {
-        const parent = getTask(request.input.parentTaskId);
-        if (activeTaskStatuses.includes(parent.task.status))
-          throw new LocalError("PROJECT_BUSY", "Parent task is still active");
-        task = {
-          ...parent.task,
-          id: requestInput.id,
-          parentTaskId: parent.task.id,
-          prompt: requestInput.prompt,
-          ...(request.input.model ? { model: request.input.model } : {}),
-          mode: "run",
-          status: "pending",
-          summary: "",
-          createdAt: now,
-          updatedAt: now,
-        };
-      }
-      await this.start(
-        binding,
-        command.id,
-        task,
-        command.expiresAt,
-        request.method === "tasks.followUp" ? request.input : undefined,
-      );
-      return getTask(task.id).task;
-    }
-    if (request.method === "tasks.input") {
-      const local = getTask(request.input.taskId);
-      const execution = this.active.get(local.task.id);
-      if (!execution) throw new LocalError("TASK_STOPPED", "Task stopped");
-      return execution.enqueue(request.input);
-    }
-    if (request.method === "tasks.cancel") {
-      const local = getTask(request.input.id);
-      if (activeTaskStatuses.includes(local.task.status)) {
-        this.cancelledStarts.add(local.task.id);
-        const execution = this.active.get(local.task.id);
-        if (execution) {
-          this.status(local, "cancelling");
-          execution.cancel();
-          await Promise.allSettled(this.completions);
-        } else {
-          await this.remoteCommands.get(local.task.id);
-          if (activeTaskStatuses.includes(local.task.status)) this.status(local, "cancelled");
-        }
-        this.cancelledStarts.delete(local.task.id);
-      }
-      return getTask(local.task.id).task;
-    }
-    const requestValue = this.store.getRequest(binding, request.input.id);
-    if (!requestValue) throw new LocalError("NOT_FOUND", "Request unavailable");
-    const local = getTask(requestValue.taskId);
-    if (!validDecision(requestValue, request.input.decision))
-      throw new LocalError("INVALID_ANSWER", "Invalid answer");
-    if (
-      ["decided", "applied"].includes(requestValue.status) &&
-      JSON.stringify(requestValue.decision) === JSON.stringify(request.input.decision)
-    )
-      return requestValue;
-    if (requestValue.status !== "pending")
-      throw new LocalError("ALREADY_RESOLVED", "Request already answered");
-    if (!activeTaskStatuses.includes(local.task.status) || local.task.status === "cancelling")
-      throw new LocalError("REQUEST_CLOSED", "Task stopped");
-    if (Date.parse(requestValue.expiresAt) <= Date.now())
-      throw new LocalError("REQUEST_EXPIRED", "Request expired");
-    const execution = this.active.get(local.task.id);
-    if (!execution?.hasPending(requestValue.id))
-      throw new LocalError("REQUEST_CLOSED", "Request unavailable");
-    this.store.request(binding, {
-      ...requestValue,
-      status: "decided",
-      decision: request.input.decision,
-    });
-    await this.command(binding, {
-      id: command.id,
-      type: "decision",
-      taskId: local.task.id,
-      requestId: requestValue.id,
-      decision: request.input.decision,
-    });
-    return this.store.getRequest(binding, requestValue.id)!;
+    if (command.request.method === "observed.decide")
+      return { ok: false as const, code: "INVALID_METHOD" };
+    return this.commands.remote(binding, { ...command, request: command.request });
   }
   ack(binding: string, ids: string[]) {
     this.store.ack(binding, ids);
@@ -526,7 +244,7 @@ export class AgentRuntime {
     if (this.store.seen(command.id)) return { accepted: true };
     if (command.type === "start")
       return this.start(binding, command.id, command.task, command.deadline);
-    const execution = this.active.get(command.taskId);
+    const execution = this.execution.get(command.taskId);
     if (execution && execution.local.binding !== binding)
       throw new LocalError("NOT_FOUND", "Task does not belong to binding");
     if (command.type === "cancel") {
@@ -537,205 +255,13 @@ export class AgentRuntime {
     this.store.receipt(command.id);
     return { accepted: true };
   }
-  async start(
-    binding: string,
-    commandId: string,
-    task: AgentTask,
-    deadline: string,
-    follow?: Extract<RelayRequest, { method: "tasks.followUp" }>["input"],
-  ) {
-    if (task.provider === "pi" && binding !== desktopBinding(LOCAL_WORKSPACE_ID))
-      throw new LocalError(
-        "UNSUPPORTED_CAPABILITY",
-        "Pi currently supports device-owned local tasks only",
-      );
-    const version = this.bindingVersions.get(binding) ?? 0;
-    if (this.options.assertInstance) await this.options.assertInstance();
-    if (this.store.seen(commandId)) return { accepted: true };
-    if (this.closing) throw new LocalError("CLOSING", "Agent host is closing");
-    const local: LocalAgentTask = { task: { ...task }, binding, sessionId: null };
-    const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
-    initialExecutionPrompt(task, undefined, Boolean(executionSession(local, parent)));
-    // Persist the receipt before spawning. An ambiguous crash is interrupted, never replayed.
-    this.store.accept(local, commandId);
-    if (!Number.isFinite(Date.parse(deadline)) || Date.parse(deadline) <= Date.now()) {
-      this.status(local, "delivery_failed");
-      return { accepted: true };
-    }
-    const project = this.store
-      .projects()
-      .find((p) => p.id === task.projectId && p.providers.includes(task.provider));
-    const root = this.state.roots().find((r) => r.id === task.projectId);
-    const capability = (await this.capabilities()).find((item) => item.provider === task.provider);
-    if (
-      !capability?.available ||
-      !capability.definition.modes.includes(task.mode) ||
-      (task.model !== undefined && !capability.definition.modelSelection)
-    ) {
-      this.status(local, "failed", "UNSUPPORTED_CAPABILITY");
-      return { accepted: true };
-    }
-    const executable = this.executables.get(task.provider);
-    if (!project || !root || (task.provider !== "pi" && !executable)) {
-      this.status(local, "failed", "AGENT_UNAVAILABLE");
-      return { accepted: true };
-    }
-    let directory: string;
-    try {
-      directory = realpathSync(root.path);
-    } catch {
-      this.status(local, "failed", "PROJECT_UNAVAILABLE");
-      return { accepted: true };
-    }
-    const lockName = `agent-${Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(directory))), (b) => b.toString(16).padStart(2, "0")).join("")}`;
-    if (
-      this.closing ||
-      version !== (this.bindingVersions.get(binding) ?? 0) ||
-      this.cancelledStarts.has(task.id)
-    ) {
-      this.status(local, "cancelled");
-      return { accepted: true };
-    }
-    const unlock = acquireLock(this.state.directory, lockName);
-    if (!unlock) {
-      this.status(local, "failed", "PROJECT_BUSY");
-      return { accepted: true };
-    }
-    let factory: import("@raypx/provider-core").SessionFactory;
-    let dispose: (() => void) | undefined;
-    try {
-      if (task.provider === "pi") {
-        if (!this.options.pi)
-          throw new LocalError("AGENT_UNAVAILABLE", "Pi execution is unavailable");
-        const prepared = await this.options.pi.prepare(local, parent, follow);
-        factory = prepared.factory;
-        dispose = prepared.dispose;
-        this.store.put(local);
-      } else {
-        factory = (start, ports) =>
-          createAdapter(task.provider, { ...start, executable: executable! }, ports);
-      }
-    } catch (error) {
-      dispose?.();
-      unlock();
-      this.status(local, "failed", error instanceof LocalError ? error.code : "AI_INVALID_CONFIG");
-      return { accepted: true };
-    }
-    if (
-      this.closing ||
-      version !== (this.bindingVersions.get(binding) ?? 0) ||
-      this.cancelledStarts.has(task.id)
-    ) {
-      dispose?.();
-      unlock();
-      this.status(local, "cancelled");
-      return { accepted: true };
-    }
-    const execution = new ManagedExecution(
-      local,
-      new ConversationRecorder(
-        task.id,
-        (entry) => {
-          const value = this.store.recordActivity(binding, entry);
-          this.changedFor(local, {
-            id: crypto.randomUUID(),
-            taskId: value.taskId,
-            kind: "activity",
-            entry: value,
-          });
-          return value;
-        },
-        isDesktopBinding(binding) ? 250 : 1000,
-        (totals) => {
-          this.store.recordTokenUsage(local, totals);
-        },
-      ),
-      unlock,
-      this.store,
-      {
-        status: (status, summary) => this.status(local, status, summary),
-        changed: (pendingRequest) => this.changed(pendingRequest),
-        resolved: (requestId) =>
-          this.emit(local, {
-            id: crypto.randomUUID(),
-            taskId: local.task.id,
-            kind: "resolved",
-            requestId,
-          }),
-        hook: () => {
-          this.ensureHookServer();
-          const token = crypto.randomUUID() + crypto.randomUUID();
-          this.hookTokens.set(task.id, token);
-          return { url: `http://127.0.0.1:${this.server!.port}/hook/${task.id}`, token };
-        },
-        environment: () => this.options.environment?.() ?? process.env,
-        track: (completion) => {
-          this.completions.add(completion);
-          void completion.finally(() => this.completions.delete(completion));
-        },
-        ended: () => {
-          dispose?.();
-          this.hookTokens.delete(task.id);
-          this.active.delete(task.id);
-        },
-      },
-      factory,
-      this.options.interruptTimeoutMs,
-    );
-    this.active.set(task.id, execution);
-    this.status(local, "running");
-    void execution
-      .run(directory)
-      .catch((error: unknown) =>
-        execution.finish(
-          "failed",
-          error instanceof TaskContextError ||
-            (error instanceof LocalError && error.code === "SESSION_UNAVAILABLE")
-            ? error.code
-            : "AGENT_PROTOCOL_FAILED",
-        ),
-      );
-    return { accepted: true };
+  start(...args: Parameters<ExecutionCoordinator["start"]>) {
+    return this.execution.start(...args);
   }
-  private ensureHookServer() {
-    this.server ??= Bun.serve({
-      hostname: "127.0.0.1",
-      port: 0,
-      idleTimeout: 0,
-      fetch: async (request) => {
-        const id = new URL(request.url).pathname.split("/")[2] ?? "";
-        const execution = this.active.get(id);
-        if (
-          request.method !== "POST" ||
-          !execution ||
-          request.headers.get("authorization") !== `Bearer ${this.hookTokens.get(id)}`
-        )
-          return new Response(null, { status: 403 });
-        try {
-          if (Number(request.headers.get("content-length") ?? 0) > 256 * 1024)
-            return new Response(null, { status: 413 });
-          const raw = await request.text();
-          if (Buffer.byteLength(raw) > 256 * 1024) return new Response(null, { status: 413 });
-          const input = object(JSON.parse(raw));
-          return await respondToClaudeHook(input, execution);
-        } catch {
-          return Response.json({ continue: false, stopReason: "Approval unavailable" });
-        }
-      },
-    });
+  detach(binding: string) {
+    return this.execution.detach(binding);
   }
-  async detach(binding: string) {
-    this.bindingVersions.set(binding, (this.bindingVersions.get(binding) ?? 0) + 1);
-    for (const execution of this.active.values())
-      if (execution.local.binding === binding) execution.cancel();
-    await Promise.allSettled(this.completions);
-    return { detached: true };
-  }
-  async close() {
-    this.closing = true;
-    const executions = [...this.active.values()];
-    for (const execution of executions) execution.cancel();
-    await Promise.allSettled(this.completions);
-    await this.server?.stop(true);
+  close() {
+    return this.execution.close();
   }
 }

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { createAdapter } from "../../../../src/runtime/agents/harness/registry";
+import { createAdapter } from "../../../../src/runtime/agents/infrastructure/providers/process";
 
 const roots: string[] = [];
 afterEach(() => {

@@ -18,8 +18,8 @@ execution hosts and product views. Schemas are the single source of inferred typ
 - `/activity` applies activity checkpoints/deltas and bounds activity pages.
 - `/task-text` clips UTF-16 budgets without splitting code points and normalizes
   JSON strings for persistence.
-- `/agent-runs` exports platform-neutral Agent Run status, immutable execution
-  target/manifest schemas, transition events and the pure Run state machine.
+- `/agent-runs` exports the read-only task-to-Run status projection; AgentTask remains
+  the sole persisted lifecycle. Future manifests and transitions belong in design docs.
 
 ## Constraints
 

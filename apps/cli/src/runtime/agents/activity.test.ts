@@ -1,6 +1,6 @@
 import { decodeCodexActivity } from "@raypx/provider-codex";
 import { decodeClaudeActivity } from "@raypx/provider-claude";
-import { bounded } from ".";
+import { bounded } from "./projection";
 import { expect, it, vi } from "vite-plus/test";
 import { ConversationRecorder } from "./activity";
 import type { ActivityDraft } from "./model";

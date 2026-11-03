@@ -1,3 +1,4 @@
+import { agentPort } from "../helpers/agent-port.js";
 import { expect, it } from "vite-plus/test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -19,7 +20,7 @@ it("persists installation identity and account intent while keeping credentials 
   });
   const restored = new RemoteControl(
     f.directory,
-    { request: async () => ({}) },
+    agentPort(async () => ({})),
     () => {},
     () => {},
   );
@@ -78,7 +79,7 @@ it("keeps startup available when local connection metadata is corrupt", async ()
   try {
     const value = new RemoteControl(
       directory,
-      { request: async () => ({}) },
+      agentPort(async () => ({})),
       () => {},
       () => {},
     );

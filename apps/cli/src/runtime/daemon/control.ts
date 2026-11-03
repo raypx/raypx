@@ -99,13 +99,26 @@ export class DaemonControl {
     const key = bindingKey(scope.apiUrl, scope.accountId),
       old = this.controls.get(key);
     if (old) return old;
+    const withAgent = async <T>(
+      run: (agents: LocalRuntime["agents"]) => T | Promise<T>,
+    ): Promise<T> => {
+      await this.runtime.instanceAccess.assert();
+      return run(this.runtime.agents);
+    };
     const control = new RemoteControl(
       this.path(scope),
       {
-        request: (method, params) =>
-          method === "observed.remote"
-            ? this.request(method, params)
-            : this.runtime.request(method, params),
+        observed: (input) => this.request("observed.remote", input),
+        projects: () => withAgent((agents) => agents.remoteProjects()),
+        capabilities: () => withAgent((agents) => agents.remoteCapabilities()),
+        events: ({ binding }) => withAgent((agents) => agents.events(binding)),
+        replay: ({ binding, after }) => withAgent((agents) => agents.replay(binding, after)),
+        snapshot: ({ binding, id, offset }) =>
+          withAgent((agents) => agents.snapshot(binding, id, offset)),
+        remote: ({ binding, command }) => withAgent((agents) => agents.remote(binding, command)),
+        checkpoint: ({ binding, sequence }) =>
+          withAgent((agents) => agents.checkpoint(binding, sequence)),
+        detach: ({ binding }) => withAgent((agents) => agents.detach(binding)),
       },
       () =>
         this.emit({

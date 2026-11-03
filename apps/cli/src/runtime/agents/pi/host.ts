@@ -1,7 +1,7 @@
 import { activeTaskStatuses } from "@raypx/core/tasks";
 import { prepareModelContext } from "@raypx/ai";
 import { PiAdapter, type PiSessionOptions } from "@raypx/provider-pi";
-import type { RelayRequest } from "@raypx/contracts/tasks";
+import type { TaskFollowUp } from "@raypx/core/tasks";
 import type { StateStore } from "../../state";
 import type { FileRuntime } from "../../files";
 import type { ProcessRuntime } from "../../process";
@@ -12,7 +12,7 @@ import type { LocalAgentTask } from "../model";
 import type { PiExecutionServices, PreparedPiSession } from "./ports";
 import { createPiTools } from "./tools";
 
-type FollowUp = Extract<RelayRequest, { method: "tasks.followUp" }>["input"];
+type FollowUp = TaskFollowUp;
 export class PiHost implements PiExecutionServices {
   readonly models: PiModels;
   constructor(

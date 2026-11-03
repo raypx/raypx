@@ -1,5 +1,4 @@
-import type { TaskContinuation } from "@raypx/core/tasks";
-import type { RelayRequest } from "@raypx/contracts/tasks";
+import type { TaskContinuation, TaskFollowUp } from "@raypx/core/tasks";
 import type { SessionFactory } from "@raypx/provider-core";
 import type { LocalAgentTask } from "../model";
 
@@ -14,6 +13,6 @@ export interface PiExecutionServices {
   prepare(
     local: LocalAgentTask,
     parent?: LocalAgentTask,
-    follow?: Extract<RelayRequest, { method: "tasks.followUp" }>["input"],
+    follow?: TaskFollowUp,
   ): Promise<PreparedPiSession>;
 }

@@ -1,3 +1,4 @@
+import { agentPort } from "./agent-port.js";
 import { afterEach, expect, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -120,7 +121,7 @@ export function hostFixtures() {
     );
     const notify = vi.fn(),
       renew = vi.fn(),
-      value = new RemoteControl(directory, { request }, notify, renew, options);
+      value = new RemoteControl(directory, agentPort(request), notify, renew, options);
     const grant = {
       deviceId: crypto.randomUUID(),
       epoch: 1,
