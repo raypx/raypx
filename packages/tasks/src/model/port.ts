@@ -1,5 +1,8 @@
 import type {
   AgentEvent,
+  ModelCatalog,
+  ModelSelection,
+  PiContinuation,
   AgentTask,
   HumanRequest,
   TaskActivity,
@@ -13,6 +16,7 @@ export interface TaskReadOptions {
 }
 export interface TaskHistoryPage {
   task: AgentTask;
+  piContinuation?: PiContinuation | undefined;
   events: { cursor: number; event: AgentEvent }[];
   requests: HumanRequest[];
   activity: TaskActivity[];
@@ -26,6 +30,13 @@ export interface TaskChangeSource {
 
 /** The view needs task use cases, not an HTTP client or a native transport. */
 export interface TaskWorkspacePort extends TaskChangeSource {
+  models?: {
+    list(input?: {}, options?: TaskReadOptions): Promise<ModelCatalog>;
+    setDefault(
+      input: { model: ModelSelection | null },
+      options?: TaskReadOptions,
+    ): Promise<{ default: ModelSelection | null }>;
+  };
   devices: {
     list(input?: {}, options?: TaskReadOptions): Promise<SyncDevice[]>;
   };

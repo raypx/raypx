@@ -51,7 +51,12 @@ beforeEach(() => {
       ];
     if (method === "agents.configure") {
       projects = [
-        { id: params.rootId, name: "My project", providers: ["claude", "codex"], dirty: false },
+        {
+          id: params.rootId,
+          name: "My project",
+          providers: ["claude", "codex", "pi"],
+          dirty: false,
+        },
       ];
       return projects;
     }
@@ -94,7 +99,7 @@ it("authorizes a project and checks a provider before opening the editor, withou
   await screen.findByText("My project");
   expect(mocks.request).toHaveBeenCalledWith("agents.configure", {
     rootId: "root-one",
-    providers: ["claude", "codex"],
+    providers: ["claude", "codex", "pi"],
   });
   expect(screen.getByRole("button", { name: "Write a message" })).toBeDisabled();
   available = true;

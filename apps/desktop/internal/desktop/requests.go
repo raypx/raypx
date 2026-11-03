@@ -9,7 +9,7 @@ import (
 )
 
 func (d *Desktop) RendererParams(method string, params any) (any, error) {
-	if method == "" || len(method) > 128 || strings.Trim(method, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.") != "" || !d.methods[method] || strings.HasPrefix(method, "host.") || method == "observed.remote" || method == "approvals.local.watch" || method == "roots.register" || (strings.HasPrefix(method, "agents.") && !strings.HasPrefix(method, "agents.local.") && !contains([]string{"agents.projects", "agents.capabilities", "agents.configure"}, method)) {
+	if method == "" || len(method) > 128 || strings.Trim(method, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.") != "" || !d.methods[method] || strings.HasPrefix(method, "host.") || method == "observed.remote" || method == "approvals.local.watch" || method == "roots.register" || (strings.HasPrefix(method, "agents.") && !strings.HasPrefix(method, "agents.local.") && !contains([]string{"agents.projects", "agents.capabilities", "agents.configure", "agents.models.list", "agents.models.default", "agents.models.setDefault"}, method)) {
 		return nil, errors.New("Local method is not permitted")
 	}
 	b, err := json.Marshal(params)

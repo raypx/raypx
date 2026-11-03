@@ -1,6 +1,6 @@
 # ADR 0040: Instance enrollment and provider boundaries
 
-Status: Accepted on 2026-11-02; foundation implemented on 2026-11-03. Supersedes earlier account-free startup statements in ADR 0035/0039. Server-owned Agents, migration and the Raypx Pi engine remain later roadmap deliveries.
+Status: Accepted on 2026-11-02; foundation implemented on 2026-11-03. Supersedes earlier account-free startup statements in ADR 0035/0039. Server-owned Agents and migration remain later deliveries. [ADR 0041](0041-provider-capabilities-and-pi.md) adds managed local Pi.
 
 ## Instance authority
 
@@ -24,7 +24,7 @@ Core owns pure provider identifiers and presentation metadata. `@raypx/provider-
 
 A session factory can start either an external process or an in-process SDK stream. The coordinator does not require an executable or process exit code. Its private CLI ports declare persistence, conversation recording and lifecycle effects without importing concrete stores or recorders. Local record schemas and activity drafts live in the private Agent model; SQLite storage and the conversation recorder implement those ports. Persistence commits synchronously before an approval can resume inference; async writers cannot satisfy the write port. Session completion and kill drain all owned activity before releasing the project lock; deterministic replay covers late events, approvals, queued inputs, continuation, cancellation and SDK drain. Raw provider envelopes never enter the coordinator.
 
-`AgentTask` remains the only persisted Run record. Core Run transitions conform to local waiting/resume/cancelling and owner-loss behavior. No parallel Runtime, Run table or receipt store is introduced. The current Pi SDK loop remains private and experimental; a future `provider-pi` is justified only when it implements the same approval, recovery, cancellation, usage and session conformance contract. It is not selectable in this foundation.
+`AgentTask` remains the only persisted Run record. Core Run transitions conform to local waiting/resume/cancelling and owner-loss behavior. No parallel Runtime, Run table or receipt store is introduced. The foundation kept Pi private and experimental. ADR 0041 adds selectable local `provider-pi` through the same approval, recovery, cancellation, usage and session conformance contract.
 
 ## Validation
 

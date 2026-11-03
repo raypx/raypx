@@ -114,3 +114,5 @@ explains deletion of synced terminal approvals and preservation of managed histo
 
 The injected memory budget view shares Core's exact formatter and gates submission
 until selected revisions are measured. Never persist fetched reference bodies in drafts.
+
+Optional models ports enable local Pi selection/defaults. Follow-ups retain model/revision/transfer confirmation in one retry payload; remote clients omit the port. Model references may persist in validated drafts; credentials never do.

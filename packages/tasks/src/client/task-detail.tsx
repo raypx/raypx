@@ -1,3 +1,6 @@
+import { ModelPicker } from "./model-picker.js";
+import type { ModelSelection } from "@raypx/core/tasks";
+import { useConfirmation } from "@raypx/ui/confirmation";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Approval } from "./approval.js";
 
@@ -52,8 +55,15 @@ export function TaskDetail({
   const local = isLocalWorkspace(scope);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
+  const { confirm, dialog } = useConfirmation();
+  const [model, setModel] = useState<ModelSelection>();
+  const [modelReady, setModelReady] = useState(false);
   const [prompt, setPrompt] = useState("");
-  const followId = useRef<{ prompt: string; id: string } | null>(null);
+  const followId = useRef<{
+    prompt: string;
+    id: string;
+    input?: Parameters<TaskWorkspacePort["tasks"]["followUp"]>[0];
+  } | null>(null);
   const active = useRef(false);
   const { data, error, errorCode, refresh, loadingOlder, loadGap, loadOlder } = useTaskConversation(
     client,
@@ -66,6 +76,8 @@ export function TaskDetail({
     : undefined;
   const canContinue = Boolean(
     data &&
+    !data.piContinuation?.blocked &&
+    (data.task.provider !== "pi" || (Boolean(data.piContinuation) && modelReady)) &&
     targetDevice?.online &&
     !targetDevice.revoked &&
     targetDevice.projects.some(
@@ -100,10 +112,42 @@ export function TaskDetail({
     if (followId.current?.prompt !== prompt) followId.current = { prompt, id: crypto.randomUUID() };
     setBusy(true);
     try {
-      const task = await client.tasks.followUp(
-        { id: followId.current.id, parentTaskId: id, prompt },
-        { signal: AbortSignal.timeout(15_000) },
-      );
+      if (!followId.current.input) {
+        const selected = model ?? data?.task.model;
+        const context = data?.piContinuation;
+        if (data?.task.provider === "pi" && (!selected || !context))
+          throw new Error("SESSION_UNAVAILABLE");
+        const transfer =
+          selected && context && selected.connectionId !== context.model.connectionId;
+        if (
+          transfer &&
+          !(await confirm({
+            title: t("contextTransfer"),
+            description: t("contextTransferHint"),
+            confirmLabel: t("contextTransferConfirm"),
+            cancelLabel: c("cancel"),
+          }))
+        )
+          return;
+        followId.current.input = {
+          id: followId.current.id,
+          parentTaskId: id,
+          prompt,
+          ...(selected ? { model: selected } : {}),
+          ...(context ? { contextRevision: context.revision } : {}),
+          ...(transfer
+            ? {
+                contextTransfer: {
+                  revision: context.revision,
+                  connectionId: selected.connectionId,
+                },
+              }
+            : {}),
+        };
+      }
+      const task = await client.tasks.followUp(followId.current.input, {
+        signal: AbortSignal.timeout(15_000),
+      });
       followId.current = null;
       setPrompt("");
       onChanged();
@@ -148,6 +192,7 @@ export function TaskDetail({
     );
   return (
     <div className="space-y-5">
+      {dialog}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 space-y-3">
           <Badge
@@ -204,6 +249,16 @@ export function TaskDetail({
       {data.task.activityIncomplete && (
         <p role="status" className="text-xs text-muted-foreground">
           {t("snapshotIncomplete")}
+        </p>
+      )}
+      {data.task.model && (
+        <p className="text-xs text-muted-foreground">
+          {data.task.model.provider} · {data.task.model.model}
+        </p>
+      )}
+      {data.piContinuation?.blocked && (
+        <p role="alert" className="text-sm text-destructive">
+          {t("PI_RECOVERY_REQUIRED")}
         </p>
       )}
       {!isTaskActive(data.task) && (
@@ -283,6 +338,16 @@ export function TaskDetail({
           </ol>
         </CollapsibleContent>
       </Collapsible>
+      {data.task.model && (
+        <p className="text-xs text-muted-foreground">
+          {data.task.model.provider} · {data.task.model.model}
+        </p>
+      )}
+      {data.piContinuation?.blocked && (
+        <p role="alert" className="text-sm text-destructive">
+          {t("PI_RECOVERY_REQUIRED")}
+        </p>
+      )}
       {!isTaskActive(data.task) && (
         <form onSubmit={(event) => void follow(event)} className="space-y-3">
           <Field>
@@ -296,6 +361,18 @@ export function TaskDetail({
               onChange={(event) => setPrompt(event.target.value)}
             />
           </Field>
+          {data.task.provider === "pi" && local && client.models && (
+            <ModelPicker
+              client={client.models}
+              value={model ?? data.task.model}
+              onReady={setModelReady}
+              disabled={busy}
+              onChange={(value) => {
+                setModel(value);
+                followId.current = null;
+              }}
+            />
+          )}
           {!canContinue && (
             <p role="status" className="text-sm text-muted-foreground">
               {t("projectUnavailable")}

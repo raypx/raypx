@@ -12,9 +12,10 @@ or OpenAI Responses endpoint. Provider SDK implementations load lazily.
 
 ## CLI
 
-The standalone CLI includes the SDK and catalogs; it does not need Node, a global
-Pi installation or a Raypx account. Catalog commands read local data without
-resolving credentials or contacting a model provider:
+The standalone CLI embeds Bun, the SDK and catalogs. `ai providers` and `ai models`
+read local data without enrollment, resolving credentials or contacting a provider.
+Completion and managed tasks require initial instance enrollment; subsequent use
+is independent of the online Raypx session:
 
 ```sh
 raypx ai providers --json
@@ -176,3 +177,25 @@ remain request defaults. Custom endpoints without an explicit key remain keyless
 The standalone smoke compiles the production JS behind an offline fetch harness
 and initializes all four provider SDKs. `.artifacts/cli/provider-smoke.json` records provider
 coverage and executable/JS sizes; it contains no prompts or credentials.
+
+## Managed Pi tasks
+
+Desktop and `raypx tasks` run Pi through the existing CLI daemon, using granted
+projects and the same `[ai]` TOML/environment configuration. Run `raypx tasks models
+--json` to inspect configured models and copy a selection reference. Desktop can
+save a profile default, select a model for one Run and reload the catalog after
+configuration changes. Credentials stay on the execution device.
+
+An explicit Run selection overrides the profile default, then TOML. Follow-ups
+keep the previous model unless changed. A model/connection change never silently
+falls back; moving history to another connection needs revision-bound consent.
+Switch models between Runs, preserving canonical history.
+
+Plan exposes file inspection only. File mutations and exec-form commands each need
+an explicit approval. Unknown tool outcomes block continuation; inspect them and
+start a new session. Closing the CLI or Desktop preserves daemon-owned tasks.
+Use `tasks cancel` to stop them. The TUI continues to manage Jobs.
+
+[ADR 0041](../architecture/0041-provider-capabilities-and-pi.md) lists the command
+tree, JSON examples, durability limits and the local-only scope. Web remote Pi
+and mobile controls remain later work.

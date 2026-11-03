@@ -20,11 +20,11 @@ Local work stays on the device unless that person explicitly opts a host in. Dev
 
 ## Operating Context
 
-Web runs in desktop and phone browsers. Desktop runs on macOS and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
+Web runs in desktop and phone browsers. Desktop runs on macOS and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Device-owned Pi tasks run through Desktop and the public task CLI. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
 
 ## Capabilities and Constraints
 
-Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Verified administrators can manage site identity, registration, and background cleanup in Web.
+Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Local Pi tasks add model selection, device defaults, approved file/command tools and deliberate model changes between Runs. Verified administrators can manage site identity, registration, and background cleanup in Web.
 
 Guests can browse, change preferences, and prepare session drafts. Local projects, sessions, requests and tools require first-time instance registration. After registration they remain usable offline and after online logout. Remote history, computer connections, execution and approvals require login. After login, return to the original page and restore drafts without sending them. Local runtime state and device preferences survive logout.
 

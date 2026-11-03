@@ -1,5 +1,7 @@
 import {
   agentProviderSchema,
+  modelSelectionSchema,
+  type ModelSelection,
   taskContextSelectionSchema,
   type AgentProvider,
   type TaskContextSelection,
@@ -12,6 +14,7 @@ export interface DraftInput {
   provider: AgentProvider;
   prompt: string;
   mode: "run" | "plan";
+  model?: ModelSelection | undefined;
   contextSelection?: TaskContextSelection | undefined;
 }
 export interface TaskDraft extends DraftInput {
@@ -60,6 +63,7 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
       provider: draft.provider,
       mode: draft.mode,
       ...(contextSelection ? { contextSelection } : {}),
+      ...(draft.model === undefined ? {} : { model: modelSelectionSchema.parse(draft.model) }),
     } as TaskDraft;
   });
 }
@@ -70,6 +74,7 @@ export function sameDraft(a: DraftInput, b: DraftInput) {
     a.provider === b.provider &&
     a.prompt === b.prompt &&
     a.mode === b.mode &&
+    JSON.stringify(a.model) === JSON.stringify(b.model) &&
     JSON.stringify(a.contextSelection?.sources ?? []) ===
       JSON.stringify(b.contextSelection?.sources ?? [])
   );

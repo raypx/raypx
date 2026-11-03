@@ -60,6 +60,11 @@ export function createLocalTaskClient(
     return result.value;
   };
   return {
+    models: {
+      list: (_input, options) => read(() => request("agents.models.list", {}), options?.signal),
+      setDefault: (input, options) =>
+        read(() => request("agents.models.setDefault", input), options?.signal),
+    },
     ...(hasTerminalHooks()
       ? {
           observed: {

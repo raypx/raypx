@@ -1,5 +1,8 @@
+import { ModelPicker } from "./model-picker.js";
 import {
   agentProviderMetadata,
+  agentProviders,
+  type ModelSelection,
   type AgentTask,
   type AgentProvider,
   type TaskContextSelection,
@@ -55,7 +58,7 @@ import {
 } from "../model/drafts.js";
 
 export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode"> &
-  Partial<Pick<DraftInput, "deviceId" | "projectId" | "contextSelection">>;
+  Partial<Pick<DraftInput, "deviceId" | "projectId" | "contextSelection" | "model">>;
 
 export function TaskComposer(props: Parameters<typeof TaskComposerView>[0]) {
   return (
@@ -154,6 +157,8 @@ function TaskComposerView({
       )?.provider ??
       "claude",
   );
+  const [model, setModel] = useState<ModelSelection | undefined>(initialDraft?.model);
+  const [modelReady, setModelReady] = useState(false);
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
   const [mode, setMode] = useState<"run" | "plan">(initialDraft?.mode ?? "run");
   const [contextSelection, setContextSelection] = useState<TaskContextSelection | undefined>(
@@ -210,6 +215,7 @@ function TaskComposerView({
     provider,
     prompt,
     mode,
+    ...(provider === "pi" && model ? { model } : {}),
     ...(contextSelection ? { contextSelection } : {}),
   };
   useEffect(() => {
@@ -300,6 +306,7 @@ function TaskComposerView({
     setDeviceId(restored.deviceId);
     setProjectId(restored.projectId);
     setProvider(draft.provider);
+    setModel(draft.model);
     setMode(draft.mode);
     setPrompt(draft.prompt);
     setContextSelection(restored.contextSelection);
@@ -361,11 +368,15 @@ function TaskComposerView({
     (task) => task.deviceId === deviceId && task.projectId === projectId && isTaskActive(task),
   );
   const available = Boolean(
+    (provider !== "pi" || (modelReady && Boolean(model))) &&
     device?.online &&
     !device.revoked &&
     project?.providers.includes(provider) &&
     device.capabilities.some(
-      (capability) => capability.provider === provider && capability.available,
+      (capability) =>
+        capability.provider === provider &&
+        capability.available &&
+        capability.definition.modes.includes(mode),
     ),
   );
   async function submit(event: FormEvent) {
@@ -545,10 +556,12 @@ function TaskComposerView({
                         setProvider(value);
                         changed({ provider: value });
                       }}
-                      options={[
-                        { value: "claude", label: "Claude Code" },
-                        { value: "codex", label: "Codex" },
-                      ]}
+                      options={agentProviders
+                        .filter((candidate) => local || candidate !== "pi")
+                        .map((candidate) => ({
+                          value: candidate,
+                          label: agentProviderMetadata[candidate].label,
+                        }))}
                     />
                   </Field>
                   <Field>
@@ -572,6 +585,18 @@ function TaskComposerView({
                 <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
               </CollapsibleContent>
             </Collapsible>
+            {provider === "pi" && local && client.models && (
+              <ModelPicker
+                client={client.models}
+                value={model}
+                disabled={busy}
+                onReady={setModelReady}
+                onChange={(value) => {
+                  setModel(value);
+                  changed({ model: value });
+                }}
+              />
+            )}
             {!guest && contextLibrary && deviceId && projectId && (
               <>
                 <ContextPicker
