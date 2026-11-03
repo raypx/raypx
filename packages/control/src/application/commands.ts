@@ -11,10 +11,10 @@ import {
 
 import { type RelayRequest } from "@raypx/contracts/tasks";
 
-import type { ControlRepository, ControlReader } from "./repository.js";
-import { CONTEXT_COMMAND_TTL_MS } from "./repository.js";
+import type { ControlRepository, ControlReader } from "../ports.js";
 
 import {
+  CONTEXT_COMMAND_TTL_MS,
   ControlError,
   type ContextCommand,
   type RoutedCommand,
@@ -23,7 +23,7 @@ import {
   required,
   hash,
   canonical,
-} from "./records.js";
+} from "../records.js";
 import type { ControlCredentials } from "./credentials.js";
 export class ControlCommands {
   constructor(
@@ -57,13 +57,6 @@ export class ControlCommands {
     });
     if (action.type === "agent.run" && action.contextSelection?.sources.length)
       await this.contextFor(userId, action.contextSelection, action, action.prompt);
-  }
-  validateContextProject(userId: string, target: TaskContextTarget) {
-    return this.repository.read(userId, async (tx) => {
-      const device = required(await tx.get("device", target.deviceId));
-      if (device.revoked) throw new ControlError("DEVICE_REVOKED");
-      required(await tx.get("project", `${device.id}:${target.projectId}`));
-    });
   }
   private async contextFor(
     userId: string,

@@ -1,6 +1,6 @@
 import { type RelayRequest } from "@raypx/contracts/tasks";
 import { type AgentTask } from "@raypx/core/tasks";
-import type { ControlTransaction } from "./repository.js";
+import type { ControlTransaction } from "./ports.js";
 
 import { canonical, hash } from "./records.js";
 export async function releaseContextCommand(tx: ControlTransaction, task: AgentTask) {

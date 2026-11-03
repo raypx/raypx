@@ -44,7 +44,7 @@ it("reads committed projections while a different connection holds the account w
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const result = await Promise.race([
-      service.getTask(auth.user.id, task.id, 0),
+      service.tasks.getTask(auth.user.id, task.id, 0),
       new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => reject(new Error("Read waited for the owner write lock")), 3000);
       }),
@@ -86,12 +86,12 @@ it("uses bounded task indexes with thousands of unrelated conversation entries",
     updatedAt: now,
   };
   try {
-    await service.events(f.actor, f.announce.streamId, [
+    await service.tasks.events(f.actor, f.announce.streamId, [
       { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
     ]);
-    expect((await service.getTask(auth.user.id, task.id, 0)).activity).toEqual([entry]);
-    expect((await service.getTask(auth.user.id, task.id, 0, 1)).activity).toEqual([]);
-    expect((await service.getTask(auth.user.id, task.id, 0, 2)).activity).toEqual([entry]);
+    expect((await service.tasks.getTask(auth.user.id, task.id, 0)).activity).toEqual([entry]);
+    expect((await service.tasks.getTask(auth.user.id, task.id, 0, 1)).activity).toEqual([]);
+    expect((await service.tasks.getTask(auth.user.id, task.id, 0, 2)).activity).toEqual([entry]);
     await connection.db.execute(sql`analyze ${controlEvent}`);
     const activity = controlListQuery(connection.db, "event", auth.user.id, f.grant.deviceId, {
       taskId: task.id,
@@ -194,16 +194,18 @@ it("persists host projections across API instances and invalidates the device se
     task = await running(service, f),
     request = humanRequest(task);
   const event = { id: crypto.randomUUID(), taskId: task.id, kind: "request" as const, request };
-  await service.events(f.actor, f.announce.streamId, [{ sequence: 2, event }]);
+  await service.tasks.events(f.actor, f.announce.streamId, [{ sequence: 2, event }]);
   const otherInstance = new ControlService(createControlRepository(connection.db));
-  expect((await otherInstance.listApprovals(auth.user.id))[0]?.id).toBe(request.id);
-  await otherInstance.events(f.actor, f.announce.streamId, [{ sequence: 2, event }]);
-  expect((await service.getTask(auth.user.id, task.id, 0)).events).toHaveLength(2);
-  await expect(otherInstance.getTask(otherAuth.user.id, task.id, 0)).rejects.toMatchObject({
+  expect((await otherInstance.tasks.listApprovals(auth.user.id))[0]?.id).toBe(request.id);
+  await otherInstance.tasks.events(f.actor, f.announce.streamId, [{ sequence: 2, event }]);
+  expect((await service.tasks.getTask(auth.user.id, task.id, 0)).events).toHaveLength(2);
+  await expect(otherInstance.tasks.getTask(otherAuth.user.id, task.id, 0)).rejects.toMatchObject({
     code: "NOT_FOUND",
   });
   await connection.db.delete(session).where(eq(session.id, auth.session.id));
-  await expect(service.validate(f.actor)).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
+  await expect(service.credentials.validate(f.actor)).rejects.toMatchObject({
+    code: "AUTH_REQUIRED",
+  });
 });
 it("uses real HTTP contracts for one-time relay tickets and rejects anonymous reads", async () => {
   await connection.db
@@ -228,9 +230,9 @@ it("uses real HTTP contracts for one-time relay tickets and rejects anonymous re
   });
   expect((await client.devices.list({})).length).toBeGreaterThan(0);
   const ticket = await client.relay.ticket({});
-  await service.authenticate("viewer", ticket.token, crypto.randomUUID());
+  await service.credentials.authenticate("viewer", ticket.token, crypto.randomUUID());
   await expect(
-    service.authenticate("viewer", ticket.token, crypto.randomUUID()),
+    service.credentials.authenticate("viewer", ticket.token, crypto.randomUUID()),
   ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
 });
 
@@ -251,15 +253,15 @@ it("accepts malformed legacy Unicode at the repository boundary and continues ac
     updatedAt: now,
   };
   expect(
-    await service.events(f.actor, f.announce.streamId, [
+    await service.tasks.events(f.actor, f.announce.streamId, [
       { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
     ]),
   ).toBe(2);
-  expect((await service.getTask(auth.user.id, task.id, 0)).activity[0]).toMatchObject({
+  expect((await service.tasks.getTask(auth.user.id, task.id, 0)).activity[0]).toMatchObject({
     text: "x".repeat(31999) + "�",
   });
   expect(
-    await service.events(f.actor, f.announce.streamId, [
+    await service.tasks.events(f.actor, f.announce.streamId, [
       {
         sequence: 3,
         event: {
@@ -272,7 +274,7 @@ it("accepts malformed legacy Unicode at the repository boundary and continues ac
       },
     ]),
   ).toBe(3);
-  expect((await service.getTask(auth.user.id, task.id, 0)).task.summary).toBe("��");
+  expect((await service.tasks.getTask(auth.user.id, task.id, 0)).task.summary).toBe("��");
 });
 
 it("prunes the actual SQL replay window without evicting activity and pages tasks/approvals in SQL", async () => {
@@ -296,7 +298,7 @@ it("prunes the actual SQL replay window without evicting activity and pages task
     createdAt: now,
     updatedAt: now,
   };
-  await service.events(f.actor, f.announce.streamId, [
+  await service.tasks.events(f.actor, f.announce.streamId, [
     { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
   ]);
   await connection.db.insert(controlEvent).select(
@@ -366,12 +368,12 @@ it("prunes the actual SQL replay window without evicting activity and pages task
     .from(controlEvent)
     .where(and(scope, statusEvents));
   expect(retained!.count).toBe(4096);
-  expect((await service.getTask(auth.user.id, task.id, 5003)).activity).toEqual([entry]);
-  const first = await service.listTasks(auth.user.id, { limit: 1 });
+  expect((await service.tasks.getTask(auth.user.id, task.id, 5003)).activity).toEqual([entry]);
+  const first = await service.tasks.listTasks(auth.user.id, { limit: 1 });
   expect(first).toHaveLength(1);
   expect(
     (
-      await service.listTasks(auth.user.id, {
+      await service.tasks.listTasks(auth.user.id, {
         limit: 1,
         before: `${first[0]!.createdAt}:${first[0]!.id}`,
       })
@@ -381,16 +383,20 @@ it("prunes the actual SQL replay window without evicting activity and pages task
   await repository.transaction(auth.user.id, (tx) =>
     tx.put("request", { ...request, deviceId: task.deviceId }),
   );
-  expect((await service.listApprovals(auth.user.id)).some((item) => item.id === request.id)).toBe(
-    true,
-  );
+  expect(
+    (await service.tasks.listApprovals(auth.user.id)).some((item) => item.id === request.id),
+  ).toBe(true);
 });
 
 it("invalidates actual PostgreSQL credentials after password updates and security revocation", async () => {
   const host = await connected(service, auth);
-  const key = await service.authorizeHost(auth, host.grant);
-  const grant = await service.hostGrant(key.credential);
-  const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
+  const key = await service.credentials.authorizeHost(auth, host.grant);
+  const grant = await service.credentials.hostGrant(key.credential);
+  const actor = await service.credentials.authenticate(
+    "device",
+    grant.grant.token,
+    crypto.randomUUID(),
+  );
   const id = crypto.randomUUID();
   await connection.db.insert(account).values({
     id,
@@ -399,12 +405,14 @@ it("invalidates actual PostgreSQL credentials after password updates and securit
     providerId: "credential",
     password: "synthetic-changed-password-hash",
   });
-  await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
-  const next = await service.authorizeHost(auth, host.grant);
-  await service.revokeHostAuthorizations(auth.user.id);
-  await expect(service.hostGrant(next.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.authorizeHost(auth, host.grant)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const next = await service.credentials.authorizeHost(auth, host.grant);
+  await service.credentials.revokeHostAuthorizations(auth.user.id);
+  await expect(service.credentials.hostGrant(next.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.authorizeHost(auth, host.grant)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
 });
 
 it("rejects invalid task projections at the repository boundary without rewriting them", async () => {
@@ -485,7 +493,7 @@ it("keeps account revocation exclusive against device writes and rejects cross-d
   });
   await ready;
   let revoked = false;
-  const revocation = control.revoke(auth.user.id, first.grant).then(() => {
+  const revocation = control.credentials.revoke(auth.user.id, first.grant).then(() => {
     revoked = true;
   });
   try {
@@ -498,8 +506,8 @@ it("keeps account revocation exclusive against device writes and rejects cross-d
     await Promise.all([writer, revocation]);
   }
   try {
-    await expect(control.touch(first.actor)).rejects.toThrow("DEVICE_REVOKED");
-    await control.touch(second.actor);
+    await expect(control.tasks.touch(first.actor)).rejects.toThrow("DEVICE_REVOKED");
+    await control.tasks.touch(second.actor);
     await expect(
       repo.deviceTransaction(auth.user.id, first.grant.deviceId, async (tx) => {
         const device = (await tx.get("device", second.grant.deviceId))!;

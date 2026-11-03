@@ -1,13 +1,13 @@
+import { CONTEXT_COMMAND_TTL_MS } from "../../src/records.js";
 import { terminalRequestSchema, terminalSessionSchema } from "@raypx/contracts/terminal";
 import { decodeControlRecord, decodeObservedSummary } from "../../src/schemas.js";
 import type { AuthSession } from "@raypx/auth/types";
 import {
-  CONTEXT_COMMAND_TTL_MS,
   type ControlRecord,
   type ControlRepository,
   type ControlTransaction,
   type RecordKind,
-} from "../../src/repository.js";
+} from "../../src/ports.js";
 import type { ControlService } from "../../src/service.js";
 
 import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
@@ -60,7 +60,7 @@ export function memoryControlRepository(): ControlRepository & {
       async list<K extends RecordKind>(
         kind: K,
         deviceId?: string,
-        query: import("../../src/repository.js").ControlQuery = {},
+        query: import("../../src/ports.js").ControlQuery = {},
       ) {
         const rows = [...draft.entries()]
           .filter(
@@ -243,14 +243,14 @@ export function controlAuth(userId = "user-a"): AuthSession {
 }
 export async function connected(service: ControlService, auth = controlAuth()) {
   const installationId = crypto.randomUUID();
-  const grant = await service.register(auth, {
+  const grant = await service.credentials.register(auth, {
     installationId,
     name: "Computer",
     platform: "darwin",
     appVersion: "0.1.0",
     reconnect: false,
   });
-  const actor = await service.authenticate("device", grant.token, crypto.randomUUID());
+  const actor = await service.credentials.authenticate("device", grant.token, crypto.randomUUID());
   const projectId = crypto.randomUUID();
   const announce = {
     type: "announce" as const,
@@ -281,9 +281,9 @@ export async function connected(service: ControlService, auth = controlAuth()) {
       },
     ],
   };
-  await service.announce(actor, announce);
-  await service.snapshot(actor, announce.streamId, 0, []);
-  await service.touch(actor);
+  await service.tasks.announce(actor, announce);
+  await service.tasks.snapshot(actor, announce.streamId, 0, []);
+  await service.tasks.touch(actor);
   const input = {
     id: crypto.randomUUID(),
     deviceId: grant.deviceId,
@@ -306,7 +306,7 @@ export async function running(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  await service.events(fixture.actor, fixture.announce.streamId, [
+  await service.tasks.events(fixture.actor, fixture.announce.streamId, [
     {
       sequence: 1,
       event: {

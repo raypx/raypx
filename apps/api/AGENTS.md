@@ -211,3 +211,5 @@ its credentials. Ordinary expiry is independent. Device revocation deletes its
 observed sessions/requests transactionally, preserving managed history. Background
 cleanup drains old revoked-device projections in batches of 1000 per table. Server cancellation
 uses a projection marker and never increments host-owned request revisions.
+
+server/rpc contains feature handlers and their shared authentication/error boundary. server/app/options.ts owns composition options; RPC handlers never import the HTTP application entry. Runtime composes project validation before Memory and control commands.

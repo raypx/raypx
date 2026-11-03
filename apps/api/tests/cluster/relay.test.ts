@@ -118,16 +118,16 @@ async function fixture() {
   const a = await node(prefix),
     b = await node(prefix);
   const f = await connected(a.control, auth);
-  const credential = await a.control.authorizeHost(auth, f.grant);
-  const host = await a.control.hostGrant(credential.credential);
+  const credential = await a.control.credentials.authorizeHost(auth, f.grant);
+  const host = await a.control.credentials.hostGrant(credential.credential);
   const device = await wire(b, "device", host.grant.token);
   device.send(f.announce);
   await device.take("resume");
   device.send({ type: "available" });
   await expect
-    .poll(async () => (await a.control.connection(auth.user.id, f.grant.deviceId))?.ready)
+    .poll(async () => (await a.control.tasks.connection(auth.user.id, f.grant.deviceId))?.ready)
     .toBe(true);
-  const ticket = await a.control.ticket(auth);
+  const ticket = await a.control.credentials.ticket(auth);
   const viewer = await wire(a, "viewer", ticket.token);
   return { ...f, auth, a, b, device, viewer, token: host.grant.token };
 }
@@ -213,8 +213,8 @@ it("dispatches and revokes through the API broker while sockets run in a separat
   );
   cleanups.push(runtime.close);
   const f = await connected(runtime.control, auth);
-  const credential = await runtime.control.authorizeHost(auth, f.grant);
-  const host = await runtime.control.hostGrant(credential.credential);
+  const credential = await runtime.control.credentials.authorizeHost(auth, f.grant);
+  const host = await runtime.control.credentials.hostGrant(credential.credential);
   const listener = serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
   const port = listener.port!;
   await listener.stop(true);
@@ -259,7 +259,9 @@ it("dispatches and revokes through the API broker while sockets run in a separat
   await device.take("resume");
   device.send({ type: "available" });
   await expect
-    .poll(async () => (await runtime.control.connection(auth.user.id, f.grant.deviceId))?.ready)
+    .poll(
+      async () => (await runtime.control.tasks.connection(auth.user.id, f.grant.deviceId))?.ready,
+    )
     .toBe(true);
   const jobAction: CloudJobAction = {
     type: "agent.run",
@@ -291,7 +293,10 @@ it("dispatches and revokes through the API broker while sockets run in a separat
     },
   });
   expect(await pending).toEqual({ type: "task", taskId: job.id, status: "running" });
-  await runtime.control.revoke(auth.user.id, { deviceId: f.grant.deviceId, epoch: f.grant.epoch });
+  await runtime.control.credentials.revoke(auth.user.id, {
+    deviceId: f.grant.deviceId,
+    epoch: f.grant.epoch,
+  });
   await runtime.relay.revoke(auth.user.id, f.grant.deviceId);
   await expect.poll(() => device.closed).toContain(4003);
   await runtime.close();
@@ -335,7 +340,7 @@ it("routes a viewer command and committed task/observed changes across two socke
   await expect
     .poll(() => f.viewer.history.some((frame) => frame.type === "changed" && frame.sequence === 1))
     .toBe(true);
-  expect((await f.a.control.getTask(f.auth.user.id, value.id, 0)).task.id).toBe(value.id);
+  expect((await f.a.control.tasks.getTask(f.auth.user.id, value.id, 0)).task.id).toBe(value.id);
   const observation = observed(f.input.projectId);
   f.device.send(observation.frame);
   await f.device.take("observed_ack");
@@ -355,7 +360,7 @@ it("dispatches jobs without browser sessions and completes sync only after the c
   const value = task(f, job.id);
   f.device.send({ type: "result", routeId: command.routeId, result: { ok: true, value } });
   expect(await pending).toEqual({ type: "task", taskId: job.id, status: "running" });
-  expect(await f.a.control.jobTask(f.auth.user.id, job.id)).toBeNull();
+  expect(await f.a.control.commands.jobTask(f.auth.user.id, job.id)).toBeNull();
   const sync = run({ type: "device.sync", deviceId: f.grant.deviceId, epoch: f.grant.epoch });
   let complete = false;
   const synced = f.a.hub.sync(f.auth.user.id, sync, signal).then((syncedValue) => {
@@ -375,25 +380,25 @@ it("dispatches jobs without browser sessions and completes sync only after the c
   f.device.send({ type: "ping" });
   await f.device.take("pong");
   expect(complete).toBe(false);
-  expect(await f.a.control.jobTask(f.auth.user.id, job.id)).toBeNull();
+  expect(await f.a.control.commands.jobTask(f.auth.user.id, job.id)).toBeNull();
   f.device.send({ ...snapshot, records: [], done: true });
   await f.device.take("ack");
   expect(await synced).toEqual({ type: "synced", streamId: snapshot.streamId, sequence: 7 });
-  expect(await f.a.control.jobTask(f.auth.user.id, job.id)).toEqual({ status: "running" });
+  expect(await f.a.control.commands.jobTask(f.auth.user.id, job.id)).toEqual({ status: "running" });
 });
 
 it("fences the previous node after reconnect and propagates revocation from another node", async () => {
   const f = await fixture();
-  const previous = await f.a.control.connection(f.auth.user.id, f.grant.deviceId);
+  const previous = await f.a.control.tasks.connection(f.auth.user.id, f.grant.deviceId);
   const replacement = await wire(f.a, "device", f.token);
   replacement.send(f.announce);
   await replacement.take("resume");
   replacement.send({ type: "available" });
   await expect
-    .poll(async () => (await f.b.control.connection(f.auth.user.id, f.grant.deviceId))?.ready)
+    .poll(async () => (await f.b.control.tasks.connection(f.auth.user.id, f.grant.deviceId))?.ready)
     .toBe(true);
   await expect.poll(() => f.device.closed).toContain(4002);
-  const current = await f.b.control.connection(f.auth.user.id, f.grant.deviceId);
+  const current = await f.b.control.tasks.connection(f.auth.user.id, f.grant.deviceId);
   expect(current?.id).not.toBe(previous?.id);
   await expect(
     f.a.cluster.invoke(
@@ -407,7 +412,10 @@ it("fences the previous node after reconnect and propagates revocation from anot
       new AbortController().signal,
     ),
   ).rejects.toMatchObject({ code: "DEVICE_OFFLINE", uncertain: false });
-  await f.b.control.revoke(f.auth.user.id, { deviceId: f.grant.deviceId, epoch: f.grant.epoch });
+  await f.b.control.credentials.revoke(f.auth.user.id, {
+    deviceId: f.grant.deviceId,
+    epoch: f.grant.epoch,
+  });
   await f.b.hub.revoke(f.auth.user.id, f.grant.deviceId);
   await expect.poll(() => replacement.closed).toContain(4003);
   await expect(
@@ -451,13 +459,17 @@ it.each(["subscriber", "publisher"])(
 
 it("revalidates the originating viewer on the owning node before sending a forwarded command", async () => {
   const f = await fixture();
-  const ticket = await f.a.control.ticket(f.auth);
-  const viewer = await f.a.control.authenticate("viewer", ticket.token, crypto.randomUUID());
-  const command = await f.a.control.route(f.auth.user.id, f.input.id, {
+  const ticket = await f.a.control.credentials.ticket(f.auth);
+  const viewer = await f.a.control.credentials.authenticate(
+    "viewer",
+    ticket.token,
+    crypto.randomUUID(),
+  );
+  const command = await f.a.control.commands.route(f.auth.user.id, f.input.id, {
     method: "tasks.create",
     input: f.input,
   });
-  const connection = await f.a.control.connection(f.auth.user.id, f.grant.deviceId);
+  const connection = await f.a.control.tasks.connection(f.auth.user.id, f.grant.deviceId);
   await database.db.delete(session).where(eq(session.id, f.auth.session.id));
   await expect(
     f.a.cluster.invoke(

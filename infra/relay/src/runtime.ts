@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { connectDatabase } from "@raypx/database/connection";
-import { ControlService } from "@raypx/control";
+import { ControlService, ControlProjects } from "@raypx/control";
 import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ContextLibraryService } from "@raypx/memory/server";
@@ -9,16 +9,19 @@ import type { RelayEnvironment } from "./env.js";
 
 export async function createRelayRuntime(environment: RelayEnvironment) {
   const connection = connectDatabase(environment.DATABASE_URL);
-  const control = new ControlService(
-    createControlRepository(connection.db),
-    Date.now,
-    (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
-  );
+  const repository = createControlRepository(connection.db);
+  const projects = new ControlProjects(repository);
   const memory = new ContextLibraryService({
     repository: createContextRepository(connection.db),
     scope: "account",
-    validateProject: (owner, target) => control.validateContextProject(owner, target),
+    validateProject: (owner, target) => projects.validateContextProject(owner, target),
   });
+  const control = new ControlService(
+    repository,
+    Date.now,
+    (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
+    projects,
+  );
   const hub = new RelayHub(async (run) => run(control));
   try {
     // A configured broker outage leaves liveness available but readiness closed.

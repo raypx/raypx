@@ -33,7 +33,7 @@ it("freezes the first authoritative context before dispatch and reuses it on ret
     contextSelection: { sources: captured.sources.map(({ id, revision }) => ({ id, revision })) },
   };
   const request = { method: "tasks.create" as const, input };
-  const first = await control.route(f.auth.user.id, input.id, request);
+  const first = await control.commands.route(f.auth.user.id, input.id, request);
   expect(first.context).toEqual(captured);
   expect(resolve).toHaveBeenCalledWith(
     f.auth.user.id,
@@ -45,16 +45,16 @@ it("freezes the first authoritative context before dispatch and reuses it on ret
     input.prompt,
   );
   resolve.mockRejectedValue(new ContextError("CONTEXT_ARCHIVED"));
-  const repeat = await control.route(f.auth.user.id, input.id, request);
+  const repeat = await control.commands.route(f.auth.user.id, input.id, request);
   expect(repeat.context).toEqual(first.context);
   expect(resolve).toHaveBeenCalledTimes(1);
   await expect(
-    control.route(f.auth.user.id, input.id, {
+    control.commands.route(f.auth.user.id, input.id, {
       method: "tasks.create",
       input: { ...input, prompt: "Changed request" },
     }),
   ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
-  await expect(control.route("another-account", input.id, request)).rejects.toMatchObject({
+  await expect(control.commands.route("another-account", input.id, request)).rejects.toMatchObject({
     code: "CONTEXT_ARCHIVED",
   });
   expect(resolve).toHaveBeenLastCalledWith(
@@ -78,7 +78,7 @@ it("refuses unavailable or oversized context before reserving any command", asyn
     contextSelection: { sources: [{ id: captured.sources[0]!.id, revision: 1 }] },
   };
   await expect(
-    control.route(f.auth.user.id, input.id, { method: "tasks.create", input }),
+    control.commands.route(f.auth.user.id, input.id, { method: "tasks.create", input }),
   ).rejects.toMatchObject({ code: "CONTEXT_UNAVAILABLE" });
   const resolver = new ControlService(
     repository,
@@ -89,7 +89,7 @@ it("refuses unavailable or oversized context before reserving any command", asyn
     },
   );
   await expect(
-    resolver.route(f.auth.user.id, input.id, {
+    resolver.commands.route(f.auth.user.id, input.id, {
       method: "tasks.create",
       input: { ...input, prompt: "x".repeat(32_000) },
     }),
@@ -100,15 +100,25 @@ it("refuses unavailable or oversized context before reserving any command", asyn
 it("validates context projects by account and keeps revoked targets ineligible", async () => {
   const control = new ControlService(memoryControlRepository());
   const f = await connected(control);
-  await expect(control.validateContextProject(f.auth.user.id, f.input)).resolves.toBeUndefined();
-  await expect(control.validateContextProject("other", f.input)).rejects.toMatchObject({
+  await expect(
+    control.projects.validateContextProject(f.auth.user.id, f.input),
+  ).resolves.toBeUndefined();
+  await expect(control.projects.validateContextProject("other", f.input)).rejects.toMatchObject({
     code: "NOT_FOUND",
   });
   await expect(
-    control.validateContextProject(f.auth.user.id, { ...f.input, projectId: crypto.randomUUID() }),
+    control.projects.validateContextProject(f.auth.user.id, {
+      ...f.input,
+      projectId: crypto.randomUUID(),
+    }),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
-  await control.revoke(f.auth.user.id, { deviceId: f.input.deviceId, epoch: f.grant.epoch });
-  await expect(control.validateContextProject(f.auth.user.id, f.input)).rejects.toMatchObject({
+  await control.credentials.revoke(f.auth.user.id, {
+    deviceId: f.input.deviceId,
+    epoch: f.grant.epoch,
+  });
+  await expect(
+    control.projects.validateContextProject(f.auth.user.id, f.input),
+  ).rejects.toMatchObject({
     code: "DEVICE_REVOKED",
   });
 });
@@ -133,7 +143,7 @@ it("reclaims an accepted command snapshot and recovers the task without another 
     );
     await hub.receive(host, JSON.stringify(f.announce));
     await hub.receive(host, JSON.stringify({ type: "available" }));
-    const ticket = await control.ticket(f.auth);
+    const ticket = await control.credentials.ticket(f.auth);
     await hub.receive(
       viewer,
       JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: ticket.token }),
@@ -196,7 +206,7 @@ it("reclaims an accepted command snapshot and recovers the task without another 
     expect(frames.filter((item) => item.type === "command")).toHaveLength(1);
     expect(resolve).toHaveBeenCalledTimes(1);
     await expect(
-      control.route(f.auth.user.id, task.id, {
+      control.commands.route(f.auth.user.id, task.id, {
         method: "tasks.create",
         input: { ...input, prompt: "Different task" },
       }),
@@ -218,18 +228,18 @@ it("compacts unknown delivery into a private-content-free receipt and never reso
     contextSelection: { sources: captured.sources.map(({ id, revision }) => ({ id, revision })) },
   };
   const request = { method: "tasks.create" as const, input };
-  await control.route(f.auth.user.id, input.id, request);
+  await control.commands.route(f.auth.user.id, input.id, request);
   now += 25 * 60 * 60 * 1000;
   await repository.transaction(f.auth.user.id, (tx) => tx.pruneCommands(new Date(now)));
   const receipt = await repository.read(f.auth.user.id, (tx) => tx.get("command", input.id));
   expect(receipt).toMatchObject({ id: input.id, compacted: true });
   expect(JSON.stringify(receipt)).not.toContain(captured.sources[0]!.content);
   expect(JSON.stringify(receipt)).not.toContain(input.prompt);
-  await expect(control.route(f.auth.user.id, input.id, request)).rejects.toMatchObject({
+  await expect(control.commands.route(f.auth.user.id, input.id, request)).rejects.toMatchObject({
     code: "CONTEXT_REQUEST_EXPIRED",
   });
   await expect(
-    control.route(f.auth.user.id, input.id, {
+    control.commands.route(f.auth.user.id, input.id, {
       method: "tasks.create",
       input: { ...input, prompt: "Changed" },
     }),
@@ -255,7 +265,7 @@ it("forwards context to every current-protocol host", async () => {
     );
     await hub.receive(deviceId, JSON.stringify(f.announce));
     await hub.receive(deviceId, JSON.stringify({ type: "available" }));
-    const ticket = await control.ticket(f.auth);
+    const ticket = await control.credentials.ticket(f.auth);
     await hub.receive(
       viewerId,
       JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: ticket.token }),

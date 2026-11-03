@@ -25,7 +25,7 @@ it("drains in-flight device frames before disconnecting on shutdown", async () =
   const control = new ControlService(memoryControlRepository()),
     f = await connected(control),
     id = crypto.randomUUID(),
-    actor = await control.authenticate("device", f.grant.token, id);
+    actor = await control.credentials.authenticate("device", f.grant.token, id);
   let blocked = false,
     release!: () => void,
     entered!: () => void;
@@ -49,7 +49,7 @@ it("drains in-flight device frames before disconnecting on shutdown", async () =
   const stopped = hub.shutdown();
   release();
   await Promise.all([announce, stopped]);
-  await expect(control.events(actor, f.announce.streamId, [])).rejects.toMatchObject({
+  await expect(control.tasks.events(actor, f.announce.streamId, [])).rejects.toMatchObject({
     code: "DEVICE_REPLACED",
   });
 });

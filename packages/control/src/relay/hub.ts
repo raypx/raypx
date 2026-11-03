@@ -95,7 +95,7 @@ export class RelayHub {
   }
   private async remote(userId: string, deviceId: string) {
     if (!this.ready()) throw new JobError("SERVER_UNAVAILABLE");
-    const connection = await this.use((control) => control.connection(userId, deviceId));
+    const connection = await this.use((control) => control.tasks.connection(userId, deviceId));
     if (!connection?.ready) throw new JobError("DEVICE_OFFLINE");
     return connection;
   }
@@ -111,7 +111,7 @@ export class RelayHub {
         peer.actor.connectionId === connectionId,
     );
     if (!client?.actor) throw new JobError("DEVICE_OFFLINE");
-    await this.use((control) => control.validate(client.actor!));
+    await this.use((control) => control.credentials.validate(client.actor!));
     const current = await this.remote(userId, deviceId);
     if (current.id !== connectionId) throw new JobError("DEVICE_REPLACED");
     if (this.peers.get(client.peer.id) !== client || !client.ready)
@@ -129,7 +129,7 @@ export class RelayHub {
         return this.dispatch(userId, operation.run, signal, operation.connectionId);
       if (operation.type === "sync")
         return this.sync(userId, operation.run, signal, operation.connectionId);
-      await this.use((control) => control.validate(operation.viewer));
+      await this.use((control) => control.credentials.validate(operation.viewer));
       if (Date.parse(operation.command.expiresAt) <= Date.now())
         throw new JobError("DELIVERY_EXPIRED");
       if (this.pending.size >= 1024) throw new JobError("TOO_MANY_REQUESTS");
@@ -181,7 +181,7 @@ export class RelayHub {
         if (client.actor?.userId !== notice.userId || client.actor.deviceId !== notice.deviceId)
           continue;
         try {
-          await this.use((control) => control.validate(client.actor!));
+          await this.use((control) => control.credentials.validate(client.actor!));
         } catch (error) {
           if (error instanceof ControlError) client.peer.close(4003, "Device revoked");
           else throw error;
@@ -189,7 +189,9 @@ export class RelayHub {
       }
       return;
     }
-    const current = await this.use((control) => control.connection(notice.userId, notice.deviceId));
+    const current = await this.use((control) =>
+      control.tasks.connection(notice.userId, notice.deviceId),
+    );
     if (current?.id !== notice.connectionId) return; // Late notices cannot fence the newer owner.
     for (const client of this.peers.values())
       if (
@@ -300,7 +302,11 @@ export class RelayHub {
     if (!client.actor) {
       if (frame.type !== "auth") throw new ControlError("AUTH_REQUIRED");
       const actor = await this.use((control) =>
-        control.authenticate(frame.role, frame.token, this.connectionId(client.peer.id)),
+        control.credentials.authenticate(
+          frame.role,
+          frame.token,
+          this.connectionId(client.peer.id),
+        ),
       );
       if (!this.inRoom(actor.userId)) throw new ControlError("FORBIDDEN");
       client.actor = actor;
@@ -327,16 +333,16 @@ export class RelayHub {
       });
       if (actor.role === "viewer")
         for (const event of await this.use((control) =>
-          control.replay(actor.userId, frame.cursors ?? []),
+          control.tasks.replay(actor.userId, frame.cursors ?? []),
         ))
           this.send(client, event);
       return;
     }
     const actor = client.actor;
-    await this.use((control) => control.validate(actor));
+    await this.use((control) => control.credentials.validate(actor));
     if (frame.type === "ping") {
       if (actor.role === "device" && client.ready)
-        await this.use((control) => control.touch(actor));
+        await this.use((control) => control.tasks.touch(actor));
       this.send(client, { type: "pong" });
       return;
     }
@@ -344,7 +350,7 @@ export class RelayHub {
       if (frame.type !== "request") throw new ControlError("FORBIDDEN");
       try {
         const command = await this.use((control) =>
-          control.route(actor.userId, frame.id, frame.request),
+          control.commands.route(actor.userId, frame.id, frame.request),
         );
         if (command.recoveredTask) {
           this.send(client, {
@@ -368,7 +374,7 @@ export class RelayHub {
             client.abort.signal,
           );
           if (reply.type !== "command") throw new JobError("INVALID_DEVICE_RESULT", true);
-          await this.use((control) => control.validate(actor));
+          await this.use((control) => control.credentials.validate(actor));
           if (this.peers.get(client.peer.id) === client)
             this.send(client, {
               type: "result",
@@ -417,14 +423,14 @@ export class RelayHub {
     }
     if (frame.type === "observed") {
       if (!client.ready) throw new ControlError("FORBIDDEN");
-      await this.use((control) => control.observed(actor, frame));
+      await this.use((control) => control.observed.observed(actor, frame));
       this.send(client, { type: "observed_ack", epoch: frame.epoch, revision: frame.revision });
       await this.broadcast(actor, { type: "observed_changed", deviceId: actor.deviceId });
       return;
     }
     if (frame.type === "announce") {
       client.ready = false;
-      const resume = await this.use((control) => control.announce(actor, frame));
+      const resume = await this.use((control) => control.tasks.announce(actor, frame));
       await this.cluster?.notify({
         type: "connected",
         userId: actor.userId,
@@ -457,7 +463,7 @@ export class RelayHub {
       snapshot.records.push(...frame.records);
       if (frame.done) {
         await this.use((control) =>
-          control.snapshot(actor, snapshot.streamId, snapshot.sequence, snapshot.records),
+          control.tasks.snapshot(actor, snapshot.streamId, snapshot.sequence, snapshot.records),
         );
         delete client.snapshot;
         client.cursor = { streamId: frame.streamId, sequence: frame.sequence };
@@ -488,7 +494,7 @@ export class RelayHub {
     }
     if (frame.type === "events") {
       const sequence = await this.use((control) =>
-        control.events(actor, frame.streamId, frame.events),
+        control.tasks.events(actor, frame.streamId, frame.events),
       );
       client.cursor = { streamId: frame.streamId, sequence };
       this.send(client, { type: "ack", streamId: frame.streamId, sequence });
@@ -504,7 +510,7 @@ export class RelayHub {
     if (frame.type === "available") {
       if (client.ready) return;
       client.ready = true;
-      await this.use((control) => control.touch(actor));
+      await this.use((control) => control.tasks.touch(actor));
       if (client.cursor)
         await this.broadcast(actor, {
           type: "changed",
@@ -524,7 +530,7 @@ export class RelayHub {
       }
       const viewer = this.peers.get(pending.viewer);
       if (!viewer?.actor) return;
-      await this.use((control) => control.validate(viewer.actor!));
+      await this.use((control) => control.credentials.validate(viewer.actor!));
       const result = this.result(pending.method, frame.result);
       this.send(viewer, { type: "result", id: pending.id, result });
       return;
@@ -541,7 +547,7 @@ export class RelayHub {
     if (!this.ready()) throw new JobError("SERVER_UNAVAILABLE");
     if (!this.inRoom(userId)) throw new JobError("FORBIDDEN");
     try {
-      await this.use((control) => control.validateJobTarget(userId, run.action));
+      await this.use((control) => control.commands.validateJobTarget(userId, run.action));
       const device = [...this.peers.values()]
         .reverse()
         .find(
@@ -555,7 +561,7 @@ export class RelayHub {
       if (!device?.actor) throw new JobError("DEVICE_OFFLINE");
       if (expectedConnection && device.actor.connectionId !== expectedConnection)
         throw new JobError("DEVICE_REPLACED");
-      await this.use((control) => control.validateJobPeer(device.actor!, run.action));
+      await this.use((control) => control.commands.validateJobPeer(device.actor!, run.action));
       if (this.peers.get(device.peer.id) !== device || !device.ready)
         throw new JobError("DEVICE_OFFLINE");
       if (signal.aborted) throw new JobError("REQUEST_TIMEOUT");
@@ -575,7 +581,7 @@ export class RelayHub {
     if (!this.inRoom(userId)) throw new JobError("FORBIDDEN");
     if (!this.cluster) return;
     try {
-      await this.use((control) => control.validateJobTarget(userId, run.action));
+      await this.use((control) => control.commands.validateJobTarget(userId, run.action));
     } catch (error) {
       throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
     }
@@ -603,10 +609,10 @@ export class RelayHub {
     }
     const device = await this.jobDevice(userId, run, signal, expectedConnection),
       action = run.action;
-    let command: Awaited<ReturnType<ControlService["route"]>>;
+    let command: Awaited<ReturnType<ControlService["commands"]["route"]>>;
     try {
       command = await this.use((control) =>
-        control.route(
+        control.commands.route(
           userId,
           run.id,
           {
@@ -630,7 +636,7 @@ export class RelayHub {
           taskId: command.recoveredTask.id,
           status: command.recoveredTask.status,
         };
-      await this.use((control) => control.validateJobPeer(device.actor!, run.action));
+      await this.use((control) => control.commands.validateJobPeer(device.actor!, run.action));
     } catch (error) {
       throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
     }
@@ -769,7 +775,7 @@ export class RelayHub {
       await client.chain;
       clearTimeout(client.timer);
       if (client.actor?.role === "device") {
-        await this.use((control) => control.disconnect(client.actor!));
+        await this.use((control) => control.tasks.disconnect(client.actor!));
         if (client.cursor)
           await this.broadcast(client.actor, {
             type: "changed",

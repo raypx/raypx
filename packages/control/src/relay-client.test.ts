@@ -10,14 +10,14 @@ async function fixture() {
     control = new ControlService(repository);
   const f = await connected(control),
     nodeId = crypto.randomUUID();
-  const actor = await control.authenticate(
+  const actor = await control.credentials.authenticate(
     "device",
     f.grant.token,
     `${nodeId}:${crypto.randomUUID()}`,
   );
-  await control.announce(actor, f.announce);
-  await control.snapshot(actor, f.announce.streamId, 0, []);
-  await control.touch(actor);
+  await control.tasks.announce(actor, f.announce);
+  await control.tasks.snapshot(actor, f.announce.streamId, 0, []);
+  await control.tasks.touch(actor);
   const now = new Date().toISOString(),
     id = crypto.randomUUID();
   const run: CloudJobRun = {
@@ -89,7 +89,10 @@ it("rejects cancellation and revoked targets before publishing any operation", a
     code: "REQUEST_TIMEOUT",
     uncertain: false,
   });
-  await f.control.revoke(f.auth.user.id, { deviceId: f.grant.deviceId, epoch: f.grant.epoch });
+  await f.control.credentials.revoke(f.auth.user.id, {
+    deviceId: f.grant.deviceId,
+    epoch: f.grant.epoch,
+  });
   await expect(
     f.remote.dispatch(f.auth.user.id, f.run, new AbortController().signal),
   ).rejects.toMatchObject({ code: "DEVICE_REVOKED" });

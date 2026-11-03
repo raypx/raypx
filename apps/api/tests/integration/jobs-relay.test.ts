@@ -27,8 +27,8 @@ function jobRun(action: CloudJobAction): CloudJobRun {
 it("dispatches a scheduled task and commits a correlated sync over an actual relay socket without a browser session", async () => {
   const f = await relayFixture(),
     device = await connected(f.control, f.auth);
-  const authorization = await f.control.authorizeHost(f.auth, device.grant),
-    grant = await f.control.hostGrant(authorization.credential);
+  const authorization = await f.control.credentials.authorizeHost(f.auth, device.grant),
+    grant = await f.control.credentials.hostGrant(authorization.credential);
   f.repository.validSession = false;
   const host = await relaySocket(f.base, f.auth.user.id, {
     type: "auth",

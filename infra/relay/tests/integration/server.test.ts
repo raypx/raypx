@@ -60,13 +60,13 @@ it("rejects disallowed origins before upgrade and permits authenticated native c
     (await fetch(new URL("/relay", f.url), { headers: { origin: "https://app.example.test" } }))
       .status,
   ).toBe(426);
-  const ticket = await f.control.ticket(f.auth),
+  const ticket = await f.control.credentials.ticket(f.auth),
     viewer = await socket(f.url, "viewer", ticket.token);
   await expect.poll(() => viewer.frames.some((frame) => frame.type === "ready")).toBe(true);
 });
 it("consumes viewer tickets once and rejects invalid or expired device credentials", async () => {
   const f = fixture(),
-    ticket = await f.control.ticket(f.auth);
+    ticket = await f.control.credentials.ticket(f.auth);
   const first = await socket(f.url, "viewer", ticket.token);
   await expect.poll(() => first.frames.some((frame) => frame.type === "ready")).toBe(true);
   const replay = await socket(f.url, "viewer", ticket.token);
@@ -88,12 +88,12 @@ it("keeps liveness during database/broker outages and does not expose failure de
 });
 it("rejects binary frames, closes authenticated peers on shutdown and makes close idempotent", async () => {
   const f = fixture(),
-    ticket = await f.control.ticket(f.auth),
+    ticket = await f.control.credentials.ticket(f.auth),
     viewer = await socket(f.url, "viewer", ticket.token);
   await expect.poll(() => viewer.frames.some((frame) => frame.type === "ready")).toBe(true);
   viewer.client.send(new Uint8Array([1, 2]));
   await expect.poll(() => viewer.closed).toContain(4000);
-  const next = await f.control.ticket(f.auth),
+  const next = await f.control.credentials.ticket(f.auth),
     peer = await socket(f.url, "viewer", next.token);
   await expect.poll(() => peer.frames.some((frame) => frame.type === "ready")).toBe(true);
   const closing = f.close();

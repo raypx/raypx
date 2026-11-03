@@ -21,7 +21,7 @@ export function createRelayJobExecutor(
 ): CloudJobExecutor {
   const validate = async (userId: string, action: CloudJobAction) => {
     try {
-      await control.validateJobTarget(userId, action);
+      await control.commands.validateJobTarget(userId, action);
     } catch (error) {
       throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
     }
@@ -40,7 +40,7 @@ export function createRelayJobExecutor(
     },
     async task(userId, taskId) {
       try {
-        return await control.jobTask(userId, taskId);
+        return await control.commands.jobTask(userId, taskId);
       } catch (error) {
         throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
       }

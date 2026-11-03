@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vite-plus/test";
+import { memoryControlRepository } from "@raypx/control/testing";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../server/api.js";
-import type { ControlService } from "@raypx/control";
+import { ControlService } from "@raypx/control";
 import type { AuthSession } from "@raypx/auth/types";
 
 const session: AuthSession = {
@@ -197,15 +198,14 @@ describe("HTTP foundation", () => {
   });
 
   it("answers slow procedures with a timeout and rejects prototype-polluting input", async () => {
+    const control = new ControlService(memoryControlRepository());
+    vi.spyOn(control.credentials, "listDevices").mockImplementation(() => new Promise(() => {}));
     const slow = createApiApp({
       authHandler: async () => Response.json({}),
       readSession: async () => session,
       allowedOrigins: [],
       rpcTimeoutMs: 50,
-      control: {
-        listDevices: () => new Promise(() => {}),
-        register: async () => ({}),
-      } as unknown as ControlService,
+      control,
     });
     const api = createApiClient({
       baseUrl: "https://api.example.com",

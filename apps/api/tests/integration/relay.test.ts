@@ -174,7 +174,7 @@ it("resumes device events and replays the viewer cursor after reconnect", async 
 it("rejects cross-account commands and closes an authenticated device when revoked", async () => {
   const f = await setup(),
     other = controlAuth("other"),
-    ticket = await f.control.ticket(other);
+    ticket = await f.control.credentials.ticket(other);
   const viewer = await relaySocket(f.base, other.user.id, {
     type: "auth",
     protocolVersion: 4,

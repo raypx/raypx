@@ -51,19 +51,23 @@ it("rejects credentials missing bootstrap attribution before grants or relay acc
   const repository = memoryControlRepository(),
     service = new ControlService(repository),
     host = await connected(service);
-  const key = await service.authorizeHost(host.auth, host.grant),
-    grant = await service.hostGrant(key.credential);
-  const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
+  const key = await service.credentials.authorizeHost(host.auth, host.grant),
+    grant = await service.credentials.hostGrant(key.credential);
+  const actor = await service.credentials.authenticate(
+    "device",
+    grant.grant.token,
+    crypto.randomUUID(),
+  );
   await repository.transaction(host.auth.user.id, async (tx) => {
     for (const row of await tx.list("credential")) {
       delete row.bootstrapSessionId;
       await tx.put("credential", row);
     }
   });
-  await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
-  const fresh = await service.authorizeHost(host.auth, host.grant);
-  await expect(service.hostGrant(fresh.credential)).resolves.toHaveProperty(
+  await expect(service.credentials.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const fresh = await service.credentials.authorizeHost(host.auth, host.grant);
+  await expect(service.credentials.hostGrant(fresh.credential)).resolves.toHaveProperty(
     "accountId",
     host.auth.user.id,
   );
@@ -75,9 +79,9 @@ it("purges only the revoked device's terminal content and preserves managed hist
     second = await connected(service, first.auth);
   for (const host of [first, second]) {
     await running(service, host);
-    await service.observed(host.actor, observed(host.input.projectId).frame);
+    await service.observed.observed(host.actor, observed(host.input.projectId).frame);
   }
-  await service.revoke(first.auth.user.id, first.grant);
+  await service.credentials.revoke(first.auth.user.id, first.grant);
   await repository.read(first.auth.user.id, async (tx) => {
     for (const kind of ["observed_session", "observed_request"] as const) {
       expect(await tx.list(kind, first.grant.deviceId)).toEqual([]);
@@ -85,7 +89,7 @@ it("purges only the revoked device's terminal content and preserves managed hist
     }
     expect(await tx.list("task")).toHaveLength(2);
   });
-  await service.revoke(first.auth.user.id, first.grant);
+  await service.credentials.revoke(first.auth.user.id, first.grant);
 });
 
 it("requires a trusted origin before cookie-backed host authorization", async () => {
@@ -121,52 +125,68 @@ it("limits independent host credentials to one account/device and renews after t
   const service = new ControlService(repository, () => now),
     auth = controlAuth();
   const fixture = await connected(service, auth),
-    authorization = await service.authorizeHost(auth, fixture.grant);
+    authorization = await service.credentials.authorizeHost(auth, fixture.grant);
   repository.validSession = false;
   await expect(
-    service.authenticate("device", fixture.grant.token, crypto.randomUUID()),
+    service.credentials.authenticate("device", fixture.grant.token, crypto.randomUUID()),
   ).rejects.toThrow("AUTH_REQUIRED");
-  const first = await service.hostGrant(authorization.credential);
+  const first = await service.credentials.hostGrant(authorization.credential);
   expect(first.accountId).toBe(auth.user.id);
-  const actor = await service.authenticate("device", first.grant.token, crypto.randomUUID());
-  await expect(service.validate(actor)).resolves.toBeUndefined();
+  const actor = await service.credentials.authenticate(
+    "device",
+    first.grant.token,
+    crypto.randomUUID(),
+  );
+  await expect(service.credentials.validate(actor)).resolves.toBeUndefined();
   now += 20 * 60_000;
-  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
-  const renewed = await service.hostGrant(authorization.credential);
+  await expect(service.credentials.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const renewed = await service.credentials.hostGrant(authorization.credential);
   expect(renewed.grant.deviceId).toBe(fixture.grant.deviceId);
   expect(renewed.grant.token).not.toBe(first.grant.token);
   await expect(
-    service.authenticate("viewer", renewed.grant.token, crypto.randomUUID()),
+    service.credentials.authenticate("viewer", renewed.grant.token, crypto.randomUUID()),
   ).rejects.toThrow("AUTH_REQUIRED");
-  await service.revoke(auth.user.id, fixture.grant);
-  await expect(service.hostGrant(authorization.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await service.credentials.revoke(auth.user.id, fixture.grant);
+  await expect(service.credentials.hostGrant(authorization.credential)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
 });
 it("revokes a host credential and its outstanding grants without relying on cookies", async () => {
   const service = new ControlService(memoryControlRepository()),
     fixture = await connected(service);
-  const authorization = await service.authorizeHost(fixture.auth, fixture.grant),
-    response = await service.hostGrant(authorization.credential);
-  const actor = await service.authenticate("device", response.grant.token, crypto.randomUUID());
-  const second = await service.authorizeHost(fixture.auth, fixture.grant);
-  await expect(service.hostGrant(authorization.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await service.revokeHost(second.credential);
-  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.hostGrant(authorization.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.hostGrant(second.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.authorizeHost(controlAuth("other-user"), fixture.grant)).rejects.toThrow(
-    "NOT_FOUND",
+  const authorization = await service.credentials.authorizeHost(fixture.auth, fixture.grant),
+    response = await service.credentials.hostGrant(authorization.credential);
+  const actor = await service.credentials.authenticate(
+    "device",
+    response.grant.token,
+    crypto.randomUUID(),
   );
+  const second = await service.credentials.authorizeHost(fixture.auth, fixture.grant);
+  await expect(service.credentials.hostGrant(authorization.credential)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
+  await service.credentials.revokeHost(second.credential);
+  await expect(service.credentials.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.hostGrant(authorization.credential)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
+  await expect(service.credentials.hostGrant(second.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(
+    service.credentials.authorizeHost(controlAuth("other-user"), fixture.grant),
+  ).rejects.toThrow("NOT_FOUND");
 });
 
 it("replaces lost host keys atomically instead of exhausting an eight-key allowance", async () => {
   const service = new ControlService(memoryControlRepository()),
     host = await connected(service);
   const keys = await Promise.all(
-    Array.from({ length: 12 }, () => service.authorizeHost(host.auth, host.grant)),
+    Array.from({ length: 12 }, () => service.credentials.authorizeHost(host.auth, host.grant)),
   );
   for (const key of keys.slice(0, -1))
-    await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
-  expect((await service.hostGrant(keys.at(-1)!.credential)).accountId).toBe(host.auth.user.id);
+    await expect(service.credentials.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  expect((await service.credentials.hostGrant(keys.at(-1)!.credential)).accountId).toBe(
+    host.auth.user.id,
+  );
 });
 it("revokes only credentials bootstrapped by the selected browser session", async () => {
   const service = new ControlService(memoryControlRepository());
@@ -174,40 +194,42 @@ it("revokes only credentials bootstrapped by the selected browser session", asyn
   const other = controlAuth(first.auth.user.id);
   other.session.id = crypto.randomUUID();
   const second = await connected(service, other);
-  const firstKey = await service.authorizeHost(first.auth, first.grant);
-  const secondKey = await service.authorizeHost(other, second.grant);
-  const firstGrant = await service.hostGrant(firstKey.credential);
-  const secondGrant = await service.hostGrant(secondKey.credential);
-  const firstActor = await service.authenticate(
+  const firstKey = await service.credentials.authorizeHost(first.auth, first.grant);
+  const secondKey = await service.credentials.authorizeHost(other, second.grant);
+  const firstGrant = await service.credentials.hostGrant(firstKey.credential);
+  const secondGrant = await service.credentials.hostGrant(secondKey.credential);
+  const firstActor = await service.credentials.authenticate(
     "device",
     firstGrant.grant.token,
     crypto.randomUUID(),
   );
-  const secondActor = await service.authenticate(
+  const secondActor = await service.credentials.authenticate(
     "device",
     secondGrant.grant.token,
     crypto.randomUUID(),
   );
-  await service.revokeHostAuthorizations(first.auth.user.id, first.auth.session.id);
-  await expect(service.hostGrant(firstKey.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.validate(firstActor)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.hostGrant(secondKey.credential)).resolves.toHaveProperty(
+  await service.credentials.revokeHostAuthorizations(first.auth.user.id, first.auth.session.id);
+  await expect(service.credentials.hostGrant(firstKey.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.validate(firstActor)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.hostGrant(secondKey.credential)).resolves.toHaveProperty(
     "accountId",
     other.user.id,
   );
-  await expect(service.validate(secondActor)).resolves.toBeUndefined();
+  await expect(service.credentials.validate(secondActor)).resolves.toBeUndefined();
   // A no-op session revocation must not change the security epoch or surviving keys.
-  await service.revokeHostAuthorizations(first.auth.user.id, "unknown-session");
-  await expect(service.validate(secondActor)).resolves.toBeUndefined();
-  await service.revokeHostAuthorizations(first.auth.user.id);
-  await expect(service.hostGrant(secondKey.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await service.credentials.revokeHostAuthorizations(first.auth.user.id, "unknown-session");
+  await expect(service.credentials.validate(secondActor)).resolves.toBeUndefined();
+  await service.credentials.revokeHostAuthorizations(first.auth.user.id);
+  await expect(service.credentials.hostGrant(secondKey.credential)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
 });
 it("requires a recent session for bootstrap and invalidates grants after password/security revocation", async () => {
   const repository = memoryControlRepository(),
     service = new ControlService(repository),
     host = await connected(service);
   await expect(
-    service.authorizeHost(
+    service.credentials.authorizeHost(
       {
         ...host.auth,
         session: { ...host.auth.session, createdAt: new Date(Date.now() - 3600_000) },
@@ -215,15 +237,23 @@ it("requires a recent session for bootstrap and invalidates grants after passwor
       host.grant,
     ),
   ).rejects.toThrow("AUTH_REQUIRED");
-  const key = await service.authorizeHost(host.auth, host.grant),
-    grant = await service.hostGrant(key.credential);
-  const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
+  const key = await service.credentials.authorizeHost(host.auth, host.grant),
+    grant = await service.credentials.hostGrant(key.credential);
+  const actor = await service.credentials.authenticate(
+    "device",
+    grant.grant.token,
+    crypto.randomUUID(),
+  );
   repository.securityVersion = "password changed";
-  await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
-  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
-  const replacement = await service.authorizeHost(host.auth, host.grant);
-  await service.revokeHostAuthorizations(host.auth.user.id);
-  await expect(service.hostGrant(replacement.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const replacement = await service.credentials.authorizeHost(host.auth, host.grant);
+  await service.credentials.revokeHostAuthorizations(host.auth.user.id);
+  await expect(service.credentials.hostGrant(replacement.credential)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
   // The old cookie cannot mint another key in the interval before auth deletes sessions.
-  await expect(service.authorizeHost(host.auth, host.grant)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.credentials.authorizeHost(host.auth, host.grant)).rejects.toThrow(
+    "AUTH_REQUIRED",
+  );
 });

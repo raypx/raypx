@@ -3,12 +3,14 @@ export {
   controlListQuery,
   eventWindowPrune,
   contextCommandPrune,
-  CONTEXT_COMMAND_TTL_MS,
-  type ControlRepository,
-  type ControlReader,
-  type ControlTransaction,
-  type ControlQuery,
-  type ControlRecord,
-  type RecordKind,
 } from "./repository.js";
 export { createContextRepository } from "./context-repository.js";
+export type {
+  ControlRepository,
+  ControlReader,
+  ControlTransaction,
+  ControlQuery,
+  ControlRecord,
+  RecordKind,
+} from "./ports.js";
+export { CONTEXT_COMMAND_TTL_MS } from "./records.js";

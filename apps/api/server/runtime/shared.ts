@@ -8,7 +8,7 @@ import type { ConfigurationRepository } from "../configuration/types.js";
 import type { Cache } from "../cache/types.js";
 import type { ObjectStorage } from "@raypx/storage";
 import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
-import { ControlService } from "@raypx/control";
+import { ControlService, ControlProjects } from "@raypx/control";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
@@ -88,16 +88,19 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       access,
       cache,
     });
-    const control = new ControlService(
-      createControlRepository(db),
-      Date.now,
-      (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
-    );
+    const repository = createControlRepository(db);
+    const projects = new ControlProjects(repository);
     const memory = new ContextLibraryService({
       repository: (resources.createContextRepository ?? createContextRepository)(db),
       scope: "account",
-      validateProject: (owner, target) => control.validateContextProject(owner, target),
+      validateProject: (owner, target) => projects.validateContextProject(owner, target),
     });
+    const control = new ControlService(
+      repository,
+      Date.now,
+      (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
+      projects,
+    );
     const unavailable = async (): Promise<never> => {
       throw new JobError("CONTROL_UNAVAILABLE");
     };
@@ -112,7 +115,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     });
     const auth = createAuth({
       revokeHostAuthorizations: (userId, sessionId) =>
-        control.revokeHostAuthorizations(userId, sessionId),
+        control.credentials.revokeHostAuthorizations(userId, sessionId),
       registrationAllowed: async () => (await configuration.read()).values.registrationEnabled,
       siteName: () =>
         configuration.readCached().then(

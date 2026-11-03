@@ -53,3 +53,5 @@ export const canonical = (value: unknown) =>
       : item,
   );
 export const terminal = (task: AgentTask) => !activeTaskStatuses.includes(task.status);
+
+export const CONTEXT_COMMAND_TTL_MS = 24 * 60 * 60 * 1000;

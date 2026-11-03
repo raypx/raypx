@@ -34,8 +34,8 @@ async function fixture() {
   const repository = memoryControlRepository(),
     control = new ControlService(repository),
     f = await connected(control);
-  const credential = await control.authorizeHost(f.auth, f.grant),
-    hostGrant = await control.hostGrant(credential.credential);
+  const credential = await control.credentials.authorizeHost(f.auth, f.grant),
+    hostGrant = await control.credentials.hostGrant(credential.credential);
   const hub = new RelayHub(async (use) => use(control)),
     id = crypto.randomUUID(),
     frames: RelayServerFrame[] = [],
@@ -135,8 +135,12 @@ it("permits offline plans but rejects dispatch before sending, and revalidates o
 });
 it("never dispatches to a peer superseded by a newer persisted connection", async () => {
   const f = await fixture();
-  const replacement = await f.control.authenticate("device", f.hostToken, crypto.randomUUID());
-  await f.control.announce(replacement, f.announce);
+  const replacement = await f.control.credentials.authenticate(
+    "device",
+    f.hostToken,
+    crypto.randomUUID(),
+  );
+  await f.control.tasks.announce(replacement, f.announce);
   await expect(
     f.executor.execute(f.auth.user.id, run(f.action), new AbortController().signal),
   ).rejects.toMatchObject({ code: "DEVICE_REPLACED", uncertain: false });
@@ -201,8 +205,8 @@ it("resolves sync only after its correlated final snapshot commits and keeps com
     reached = new Promise<void>((resolve) => {
       entered = resolve;
     });
-  const original = f.control.snapshot.bind(f.control);
-  vi.spyOn(f.control, "snapshot").mockImplementation(async (...args) => {
+  const original = f.control.tasks.snapshot.bind(f.control.tasks);
+  vi.spyOn(f.control.tasks, "snapshot").mockImplementation(async (...args) => {
     entered();
     await gate;
     return original(...args);

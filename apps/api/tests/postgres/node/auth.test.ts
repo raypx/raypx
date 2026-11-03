@@ -19,7 +19,7 @@ const email = `foundation-${crypto.randomUUID()}@example.com`;
 const control = new ControlService(createControlRepository(connection.db));
 const auth = createAuth({
   revokeHostAuthorizations: (userId, sessionId) =>
-    control.revokeHostAuthorizations(userId, sessionId),
+    control.credentials.revokeHostAuthorizations(userId, sessionId),
   database: drizzleAdapter(connection.db, { provider: "pg", schema }),
   config: {
     baseURL: "http://localhost:3002",

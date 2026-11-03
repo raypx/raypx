@@ -2,14 +2,7 @@ import { sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import { rateLimit } from "@raypx/database/schema";
 
-export interface RateRule {
-  /** Window length in seconds. Keep it at or below Better Auth's longest window (60s),
-   * which prunes older rows from the shared table. */
-  window: number;
-  max: number;
-}
-/** Resolves true when the request fits the rule and has been counted. */
-export type RateLimiter = (key: string, rule: RateRule) => Promise<boolean>;
+import type { RateLimiter } from "./rate-limit/types.js";
 
 /**
  * One atomic upsert per check, with Better Auth's semantics: a request outside the

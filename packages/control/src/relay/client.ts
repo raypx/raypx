@@ -28,8 +28,8 @@ export async function createRemoteRelay(control: ControlService, cluster?: Relay
     if (signal.aborted) throw new JobError("REQUEST_TIMEOUT");
     if (!ready() || !cluster) throw new JobError("SERVER_UNAVAILABLE");
     try {
-      await control.validateJobTarget(userId, run.action);
-      const connection = await control.connection(userId, run.action.deviceId);
+      await control.commands.validateJobTarget(userId, run.action);
+      const connection = await control.tasks.connection(userId, run.action.deviceId);
       if (!connection?.ready) throw new JobError("DEVICE_OFFLINE");
       const nodeId = connection.id.split(":")[0]!;
       if (!/^[0-9a-f-]{36}$/i.test(nodeId) || !connection.id.startsWith(nodeId + ":"))
