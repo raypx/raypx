@@ -35,6 +35,13 @@ async function submission() {
         available: true,
         version: "test",
         reason: "ready",
+        definition: {
+          version: 1 as const,
+          runtime: "process" as const,
+          modes: ["plan" as const, "run" as const],
+          approvals: true,
+          modelSelection: false,
+        },
         inputModes: ["steer" as const, "queue" as const],
       },
     ],

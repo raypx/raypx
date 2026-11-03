@@ -22,7 +22,20 @@ export {
   decisionSchema,
 } from "./human.js";
 
+export const providerDefinitionSchema = z.object({
+  version: z.literal(1),
+  runtime: z.enum(["process", "sdk"]),
+  modes: z
+    .array(z.enum(["plan", "run"]))
+    .min(1)
+    .max(2),
+  approvals: z.boolean(),
+  modelSelection: z.boolean(),
+});
+export type ProviderDefinition = z.infer<typeof providerDefinitionSchema>;
+
 export const capabilitySchema = z.object({
+  definition: providerDefinitionSchema,
   provider: agentProviderSchema,
   available: z.boolean(),
   version: z.string().max(120),

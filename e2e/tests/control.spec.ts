@@ -78,6 +78,13 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
           available: true,
           version: "0.163.0",
           reason: "ready",
+          definition: {
+            version: 1 as const,
+            runtime: "process" as const,
+            modes: ["plan" as const, "run" as const],
+            approvals: true,
+            modelSelection: false,
+          },
           inputModes: ["steer" as const, "queue" as const],
         },
       ],

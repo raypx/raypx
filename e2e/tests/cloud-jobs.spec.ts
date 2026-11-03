@@ -68,6 +68,13 @@ for (const [surface, base] of [
                   available: true,
                   reason: "ready",
                   version: "fixture",
+                  definition: {
+                    version: 1 as const,
+                    runtime: "process" as const,
+                    modes: ["plan" as const, "run" as const],
+                    approvals: true,
+                    modelSelection: false,
+                  },
                   inputModes: ["steer" as const, "queue" as const],
                 },
                 {
@@ -75,6 +82,13 @@ for (const [surface, base] of [
                   available: true,
                   reason: "ready",
                   version: "fixture",
+                  definition: {
+                    version: 1 as const,
+                    runtime: "process" as const,
+                    modes: ["plan" as const, "run" as const],
+                    approvals: true,
+                    modelSelection: false,
+                  },
                   inputModes: ["steer" as const, "queue" as const],
                 },
               ],

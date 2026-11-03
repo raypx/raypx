@@ -2,27 +2,30 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import type { AgentCapability, AgentProvider } from "@raypx/core/tasks";
+import type { AgentCapability, AgentProvider, ProviderDefinition } from "@raypx/core/tasks";
 import {
   type AdapterPorts,
   type ProcessSessionStart,
   type ProcessAdapterFactory,
   type ProviderSession,
 } from "@raypx/provider-core";
-import { ClaudeAdapter } from "@raypx/provider-claude";
-import { CodexAdapter } from "@raypx/provider-codex";
+import { ClaudeAdapter, claudeDefinition } from "@raypx/provider-claude";
+import { CodexAdapter, codexDefinition } from "@raypx/provider-codex";
 import { createTransport, type TransportFactory } from "./transport";
 
 type Registration = {
+  definition: ProviderDefinition;
   supported(major: number, minor: number, patch: number): boolean;
   create: ProcessAdapterFactory;
 };
 const adapters: Record<AgentProvider, Registration> = {
   codex: {
+    definition: codexDefinition,
     supported: (major, minor) => major > 0 || minor >= 163,
     create: (start, ports, transportFactory) => new CodexAdapter(start, ports, transportFactory),
   },
   claude: {
+    definition: claudeDefinition,
     supported: (major, minor, patch) =>
       major > 2 || (major === 2 && (minor > 1 || (minor === 1 && patch >= 302))),
     create: (start, ports, transportFactory) => new ClaudeAdapter(start, ports, transportFactory),
@@ -53,7 +56,14 @@ export async function discoverProviders(
         join("/opt/homebrew/bin", provider),
       ].find((path) => path && existsSync(path));
       if (!executable)
-        return { provider, available: false, version: "", reason: "missing", inputModes: [] };
+        return {
+          definition: adapters[provider].definition,
+          provider,
+          available: false,
+          version: "",
+          reason: "missing",
+          inputModes: [],
+        };
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         const child = Bun.spawn([executable, "--version"], { stdout: "pipe", stderr: "ignore" });
@@ -87,6 +97,7 @@ export async function discoverProviders(
           );
         if (supported) available.set(provider, executable);
         return {
+          definition: adapters[provider].definition,
           provider,
           available: supported,
           version,
@@ -94,7 +105,14 @@ export async function discoverProviders(
           inputModes: supported ? ["steer", "queue"] : [],
         };
       } catch {
-        return { provider, available: false, version: "", reason: "unsupported", inputModes: [] };
+        return {
+          definition: adapters[provider].definition,
+          provider,
+          available: false,
+          version: "",
+          reason: "unsupported",
+          inputModes: [],
+        };
       } finally {
         clearTimeout(timer);
       }

@@ -534,7 +534,11 @@ export class AgentRuntime {
       .projects()
       .find((p) => p.id === task.projectId && p.providers.includes(task.provider));
     const root = this.state.roots().find((r) => r.id === task.projectId);
-    await this.capabilities();
+    const capability = (await this.capabilities()).find((item) => item.provider === task.provider);
+    if (!capability?.available || !capability.definition.modes.includes(task.mode)) {
+      this.status(local, "failed", "UNSUPPORTED_CAPABILITY");
+      return { accepted: true };
+    }
     const executable = this.executables.get(task.provider);
     if (!project || !root || !executable) {
       this.status(local, "failed", "AGENT_UNAVAILABLE");

@@ -39,6 +39,13 @@ beforeEach(() => {
           available,
           reason: available ? "ready" : "missing",
           version: "test",
+          definition: {
+            version: 1 as const,
+            runtime: "process" as const,
+            modes: ["plan" as const, "run" as const],
+            approvals: true,
+            modelSelection: false,
+          },
           inputModes: [],
         } satisfies AgentCapability,
       ];

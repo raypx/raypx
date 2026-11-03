@@ -523,7 +523,20 @@ describe("authentication routes", () => {
         lastSeenAt: null,
         projects: [{ id: projectId, name: "Remote project", providers: ["codex"], dirty: false }],
         capabilities: [
-          { provider: "codex", available: true, reason: "ready", version: "test", inputModes: [] },
+          {
+            provider: "codex",
+            available: true,
+            reason: "ready",
+            version: "test",
+            definition: {
+              version: 1,
+              runtime: "process",
+              modes: ["run"],
+              approvals: true,
+              modelSelection: false,
+            },
+            inputModes: [],
+          },
         ],
       },
     ]);

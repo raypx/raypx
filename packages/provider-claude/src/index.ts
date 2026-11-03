@@ -1,5 +1,5 @@
 import { decodeClaudeActivity } from "./activity";
-import type { AgentTask } from "@raypx/core/tasks";
+import type { AgentTask, ProviderDefinition } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import {
   type AdapterPorts,
@@ -9,6 +9,14 @@ import {
   type AgentTransport,
   type TransportFactory,
 } from "@raypx/provider-core";
+
+export const claudeDefinition = {
+  version: 1,
+  runtime: "process",
+  modes: ["plan", "run"],
+  approvals: true,
+  modelSelection: false,
+} satisfies ProviderDefinition;
 
 /** Private stream-json protocol; the coordinator decides what a result means. */
 export class ClaudeAdapter implements ProviderSession {

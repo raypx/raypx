@@ -29,3 +29,5 @@ A session factory can start either an external process or an in-process SDK stre
 ## Validation
 
 Focused provider/CLI tests cover process replay and an in-process session with delayed drain. Instance domain tests cover expiry, tampering, possession, ownership and revocation. HTTP/PostgreSQL acceptance runs against a newly created isolated test database; no migration is applied to an operator or retired database. DOM tests cover registration and offline/mismatched/revoked states. Repository policy and affected verification remain required. Real macOS Keychain, Windows Credential Manager and packaged native acceptance must be reported separately from Linux source checks.
+
+Provider availability includes a versioned definition for runtime kind, supported modes, approvals and model selection. Concrete adapters own their definitions; discovery supplies current availability/input modes. Execution validates capabilities independently of the UI.

@@ -106,6 +106,8 @@ export class ManagedExecution {
   }
   enqueue(request: { id: string; mode: TaskInput["mode"]; prompt: string }) {
     if (this.finished || this.cancelled) throw new LocalError("TASK_STOPPED", "Task stopped");
+    if (request.mode === "steer" && this.adapter?.input === "queue")
+      throw new LocalError("UNSUPPORTED_CAPABILITY", "Provider only supports queued input");
     if (!this.ready) throw new LocalError("TASK_NOT_READY", "Agent is starting");
     if (request.mode === "steer" && (this.pending.size || this.awaitingPlan))
       throw new LocalError("INPUT_WAITING_APPROVAL", "Answer the pending approval first");

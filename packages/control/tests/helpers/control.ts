@@ -270,6 +270,13 @@ export async function connected(service: ControlService, auth = controlAuth()) {
         available: true,
         version: "0.163.0",
         reason: "ready" as const,
+        definition: {
+          version: 1 as const,
+          runtime: "process" as const,
+          modes: ["plan" as const, "run" as const],
+          approvals: true,
+          modelSelection: false,
+        },
         inputModes: ["steer" as const, "queue" as const],
       },
     ],

@@ -28,6 +28,13 @@ it("requires complete provider capabilities and task history across transports",
     available: true,
     version: "0.163.0",
     reason: "ready",
+    definition: {
+      version: 1 as const,
+      runtime: "process" as const,
+      modes: ["plan" as const, "run" as const],
+      approvals: true,
+      modelSelection: false,
+    },
     inputModes: ["steer", "queue"],
   };
   expect(core.capabilitySchema.parse(capability)).toEqual(capability);
@@ -41,6 +48,13 @@ it("requires complete provider capabilities and task history across transports",
       ...capability,
       available: false,
       reason: "missing",
+      definition: {
+        version: 1 as const,
+        runtime: "process" as const,
+        modes: ["plan" as const, "run" as const],
+        approvals: true,
+        modelSelection: false,
+      },
       inputModes: [],
     }).inputModes,
   ).toEqual([]);

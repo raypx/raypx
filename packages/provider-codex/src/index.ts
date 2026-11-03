@@ -1,6 +1,6 @@
 import { decodeCodexActivity } from "./activity";
 import { taskText } from "@raypx/core/task-text";
-import { type AgentTask } from "@raypx/core/tasks";
+import type { AgentTask, ProviderDefinition } from "@raypx/core/tasks";
 import {
   object,
   type AdapterPorts,
@@ -13,6 +13,14 @@ import {
 
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? taskText(value, max) : "";
+export const codexDefinition = {
+  version: 1,
+  runtime: "process",
+  modes: ["plan", "run"],
+  approvals: true,
+  modelSelection: false,
+} satisfies ProviderDefinition;
+
 /** Private app-server protocol. Task/approval policy belongs to ManagedExecution. */
 export class CodexAdapter implements ProviderSession {
   readonly input = "steer" as const;

@@ -10,7 +10,7 @@ export interface ExecutionHandle {
 /** Provider-neutral capabilities exposed by every agent adapter. */
 export interface ProviderSession {
   readonly handle: ExecutionHandle;
-  readonly input: "steer" | "interrupt";
+  readonly input: "steer" | "interrupt" | "queue";
   readonly holdPlanOnExit: boolean;
   readonly planContinuation: "turn" | "process";
   readonly planTitle: string;
