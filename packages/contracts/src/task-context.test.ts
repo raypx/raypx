@@ -1,6 +1,7 @@
+import { taskCreateSchema } from "@raypx/core/tasks";
 import { expect, it } from "vite-plus/test";
 import { localParams } from "./local.js";
-import { taskCreateSchema, relayCommandSchema, relayClientSchema } from "./tasks.js";
+import { relayCommandSchema, relayClientSchema } from "./tasks.js";
 
 it("accepts selected revisions on public task creation and snapshots only on the internal command", () => {
   const id = "11111111-1111-4111-8111-111111111111",

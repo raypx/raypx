@@ -1,4 +1,4 @@
-import type { PiContinuation } from "@raypx/core/tasks";
+import type { TaskContinuation } from "@raypx/core/tasks";
 import type { RelayRequest } from "@raypx/contracts/tasks";
 import type { SessionFactory } from "@raypx/provider-core";
 import type { LocalAgentTask } from "../model";
@@ -10,7 +10,7 @@ export interface PreparedPiSession {
 
 export interface PiExecutionServices {
   available(): Promise<boolean>;
-  inspect(local: LocalAgentTask): PiContinuation | undefined;
+  inspect(local: LocalAgentTask): TaskContinuation | undefined;
   prepare(
     local: LocalAgentTask,
     parent?: LocalAgentTask,

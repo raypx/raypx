@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
-import { taskContextSnapshotSchema } from "./task-context.js";
+import { taskContextSelectionSchema, taskContextSnapshotSchema } from "./task-context.js";
 export {
   taskContextIdSchema,
   taskContextTargetSchema,
@@ -86,13 +86,47 @@ export const modelCatalogSchema = z.object({
   default: modelSelectionSchema.nullable(),
 });
 export type ModelCatalog = z.infer<typeof modelCatalogSchema>;
-export const piContinuationSchema = z.object({
+export const taskContinuationSchema = z.object({
   revision: z.number().int().nonnegative(),
   model: modelSelectionSchema,
   blocked: z.boolean(),
   pendingEffect: z.object({ id: z.string(), name: z.string() }).optional(),
 });
-export type PiContinuation = z.infer<typeof piContinuationSchema>;
+export type TaskContinuation = z.infer<typeof taskContinuationSchema>;
+export const taskCreateSchema = z.object({
+  id: z.string().uuid(),
+  deviceId: z.string().uuid(),
+  projectId: z.string().uuid(),
+  provider: agentProviderSchema,
+  mode: taskModeSchema.default("run"),
+  prompt: z.string().trim().min(1).max(32_000),
+  contextSelection: taskContextSelectionSchema.optional(),
+  model: modelSelectionSchema.optional(),
+});
+
+export const taskFollowUpSchema = z.object({
+  id: z.string().uuid(),
+  parentTaskId: z.string().uuid(),
+  model: modelSelectionSchema.optional(),
+  contextRevision: z.number().int().nonnegative().optional(),
+  contextTransfer: z
+    .object({
+      revision: z.number().int().nonnegative(),
+      connectionId: z.string().regex(/^[a-f0-9]{64}$/),
+    })
+    .optional(),
+  prompt: z.string().trim().min(1).max(32_000),
+});
+export const taskCancelSchema = z.object({ id: z.string().uuid() });
+export const approvalDecisionInputSchema = z.object({
+  id: z.string().uuid(),
+  decision: decisionSchema,
+});
+export type TaskCreate = z.infer<typeof taskCreateSchema>;
+export type TaskFollowUp = z.infer<typeof taskFollowUpSchema>;
+export type TaskCancel = z.infer<typeof taskCancelSchema>;
+export type ApprovalDecisionInput = z.infer<typeof approvalDecisionInputSchema>;
+
 export const taskSchema = z.object({
   id: z.string().uuid(),
   deviceId: z.string().uuid(),

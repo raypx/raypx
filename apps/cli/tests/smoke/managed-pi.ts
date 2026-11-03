@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { enrollTestProfile } from "../helpers/instance";
 import { aiFixture } from "../helpers/ai";
-import type { AgentTask, PiContinuation } from "@raypx/core/tasks";
+import type { AgentTask, TaskContinuation } from "@raypx/core/tasks";
 
 /** The production executable owns both IPC clients and a detached, enrolled Pi daemon. */
 export async function smokeManagedPi(binary: string, dataDir: string) {
@@ -62,7 +62,7 @@ export async function smokeManagedPi(binary: string, dataDir: string) {
     if (!failureAllowed) assert.equal(code, 0, "Compiled task command failed: " + stderr);
     return stdout.trim() ? JSON.parse(stdout) : undefined;
   };
-  const get = (id: string): Promise<{ task: AgentTask; piContinuation: PiContinuation }> =>
+  const get = (id: string): Promise<{ task: AgentTask; piContinuation: TaskContinuation }> =>
     invoke("tasks", ["get"], { id });
   const wait = async (test: () => Promise<boolean>) => {
     const deadline = Date.now() + 15_000;

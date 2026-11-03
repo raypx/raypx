@@ -3,15 +3,16 @@ import {
   agentProviders,
   agentProviderSchema,
   capabilitySchema,
-  modelSelectionSchema,
+  taskCreateSchema,
+  taskFollowUpSchema,
+  taskCancelSchema,
+  approvalDecisionInputSchema,
   decisionSchema,
-  taskModeSchema,
   taskSchema,
   humanRequestSchema,
   taskActivitySchema,
   taskInputSchema,
   agentEventSchema,
-  taskContextSelectionSchema,
   taskContextSnapshotSchema,
 } from "@raypx/core/tasks";
 import {
@@ -38,16 +39,6 @@ export const deviceSchema = z.object({
   online: z.boolean(),
   projects: z.array(deviceProjectSchema),
   capabilities: z.array(capabilitySchema),
-});
-export const taskCreateSchema = z.object({
-  id: z.string().uuid(),
-  deviceId: z.string().uuid(),
-  projectId: z.string().uuid(),
-  provider: agentProviderSchema,
-  mode: taskModeSchema.default("run"),
-  prompt: z.string().trim().min(1).max(32_000),
-  contextSelection: taskContextSelectionSchema.optional(),
-  model: modelSelectionSchema.optional(),
 });
 export const deviceCommandSchema = z.discriminatedUnion("type", [
   z.object({
@@ -82,24 +73,12 @@ export const relayRequestSchema = z.discriminatedUnion("method", [
   z.object({ method: z.literal("tasks.create"), input: taskCreateSchema }),
   z.object({
     method: z.literal("tasks.followUp"),
-    input: z.object({
-      id: z.string().uuid(),
-      parentTaskId: z.string().uuid(),
-      model: modelSelectionSchema.optional(),
-      contextRevision: z.number().int().nonnegative().optional(),
-      contextTransfer: z
-        .object({
-          revision: z.number().int().nonnegative(),
-          connectionId: z.string().regex(/^[a-f0-9]{64}$/),
-        })
-        .optional(),
-      prompt: z.string().trim().min(1).max(32_000),
-    }),
+    input: taskFollowUpSchema,
   }),
-  z.object({ method: z.literal("tasks.cancel"), input: z.object({ id: z.string().uuid() }) }),
+  z.object({ method: z.literal("tasks.cancel"), input: taskCancelSchema }),
   z.object({
     method: z.literal("approvals.decide"),
-    input: z.object({ id: z.string().uuid(), decision: decisionSchema }),
+    input: approvalDecisionInputSchema,
   }),
 ]);
 export const relayCommandSchema = z.object({

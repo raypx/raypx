@@ -12,7 +12,7 @@ it("composes wire envelopes with core models while retaining command normalizati
   expect(input?.shape.input).toBe(core.taskInputSchema);
   const id = "11111111-1111-4111-8111-111111111111";
   expect(
-    tasks.taskCreateSchema.parse({
+    core.taskCreateSchema.parse({
       id,
       deviceId: id,
       projectId: id,

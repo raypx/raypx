@@ -12,7 +12,7 @@ import {
   taskSchema,
   modelSelectionSchema,
   modelCatalogSchema,
-  piContinuationSchema,
+  taskContinuationSchema,
   capabilitySchema,
   agentEventSchema,
   humanRequestSchema,
@@ -116,7 +116,7 @@ export const localResults = {
   "agents.local.get": z.object({
     task: taskSchema,
     runStatus: agentRunStatusSchema,
-    piContinuation: piContinuationSchema.optional(),
+    piContinuation: taskContinuationSchema.optional(),
     events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
     requests: z.array(humanRequestSchema),
     activity: z.array(taskActivitySchema),

@@ -34,3 +34,6 @@ in adapters. Preserve current field limits, defaults and activity revision rules
 Run bun run --cwd packages/core check and test, then the contracts consumer suites.
 
 ModelSelection and ModelCatalog are pure domain metadata; connection fingerprints contain no credentials. TerminalProvider is narrower than AgentProvider.
+
+Task create/follow-up/cancel/decision inputs and TaskContinuation are domain schemas.
+Contracts composes them without domain re-export aliases. Wire field names remain transport-owned.
