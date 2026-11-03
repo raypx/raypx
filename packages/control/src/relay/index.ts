@@ -1,4 +1,5 @@
-export { RelayHub, type RelayPeer } from "./hub.js";
+export { RelayHub } from "./hub.js";
+export { type RelayPeer } from "./registry.js";
 export { RedisRelayCluster } from "./redis.js";
 export {
   type RelayCluster,

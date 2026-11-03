@@ -4,6 +4,9 @@ Shared account/device control-plane services for API and the independent Relay.
 The root exports ControlService and its injected context resolver. `/postgres`
 owns control and account-context persistence; `/relay` owns bounded private broker
 transport, socket routing and scheduling ports. `/testing` is test-only.
+Within `/relay`, `RelayHub` is the public facade, socket lifecycle and frame dispatcher;
+`registry.ts` owns shared socket/route state, `frames.ts` one handler per client frame
+in a role-keyed table, and `dispatch.ts` job dispatch and cluster-forwarded operations.
 
 Applications supply database connections, lifecycle and authorization entry points.
 Never import an application. Preserve device/session fencing, one-time viewer
