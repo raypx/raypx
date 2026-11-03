@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { modelSelectionSchema } from "@raypx/core/tasks";
 
 const id = z.string().min(1);
 const count = z.number().finite().nonnegative();
@@ -149,6 +150,15 @@ const message = z.discriminatedUnion("role", [
 
 /** Pinned SDK transcript JSON, without live TypeBox symbols or provider objects. */
 export const piStoredContextSchema = z.strictObject({
+  identity: z
+    .strictObject({
+      version: z.literal(1),
+      binding: id,
+      projectId: z.uuid(),
+      ownerTaskId: z.uuid(),
+      model: modelSelectionSchema,
+    })
+    .optional(),
   status: z.enum(["idle", "running", "succeeded", "failed", "cancelled", "uncertain"]),
   messages: z.array(message),
   pendingEffect: z.strictObject({ id, name: id }).optional(),

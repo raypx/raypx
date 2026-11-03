@@ -46,12 +46,14 @@ import {
   agentEventSchema,
   humanRequestSchema,
   agentProviderSchema,
+  agentProviders,
 } from "@raypx/core/tasks";
 import { taskActivityPage } from "@raypx/core/activity";
 import { iterateRows, type LocalDatabase } from "../sqlite";
 import {
   activity,
   agentMeta,
+  piContexts,
   commands,
   journal,
   outbox,
@@ -114,7 +116,10 @@ export class AgentStore implements ExecutionStore {
       .all()
       .map((row) => ({
         id: row.id,
-        providers: storedRecord(z.array(agentProviderSchema).max(2), row.providers),
+        providers: storedRecord(
+          z.array(agentProviderSchema).max(agentProviders.length),
+          row.providers,
+        ),
       }));
   }
   tokenUsage(sessionId: string): LocalAgentTask["tokenUsage"] {
@@ -750,6 +755,10 @@ export class AgentStore implements ExecutionStore {
           .where(and(eq(journal.binding, binding), eq(journalTaskId, id)))
           .run();
       }
+      this.database.run(sql`DELETE FROM ${piContexts}
+        WHERE ${piContexts.contextId} LIKE 'pi:v1:%'
+        AND NOT EXISTS (SELECT 1 FROM ${tasks}
+          WHERE json_extract(${tasks.value},'$.sessionId')=${piContexts.contextId})`);
     });
   }
   request(binding: string, value: HumanRequest): undefined {

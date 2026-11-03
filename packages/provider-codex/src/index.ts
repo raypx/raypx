@@ -1,4 +1,4 @@
-import { decodeCodexActivity } from "./activity";
+import { decodeCodexActivity } from "./activity.js";
 import { taskText } from "@raypx/core/task-text";
 import type { AgentTask, ProviderDefinition } from "@raypx/core/tasks";
 import {
@@ -228,4 +228,4 @@ export class CodexAdapter implements ProviderSession {
   }
 }
 
-export { decodeCodexActivity } from "./activity";
+export { decodeCodexActivity } from "./activity.js";

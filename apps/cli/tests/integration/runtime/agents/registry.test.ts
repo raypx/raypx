@@ -1,3 +1,5 @@
+import { agentFixtures } from "../../../helpers/agents";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -43,3 +45,22 @@ it.skipIf(process.platform === "win32")(
     }
   },
 );
+
+const { host } = agentFixtures();
+it("rejects an explicit model for a provider that owns its native model settings", async () => {
+  const f = await host("codex", "codex");
+  const task = {
+    ...f.task,
+    model: { provider: "fixture", model: "unsupported", connectionId: "a".repeat(64) },
+  };
+  await f.runtime.start(
+    "desktop:" + LOCAL_WORKSPACE_ID,
+    task.id,
+    task,
+    new Date(Date.now() + 15_000).toISOString(),
+  );
+  expect(f.runtime.localTask(LOCAL_WORKSPACE_ID, task.id, 0).task).toMatchObject({
+    status: "failed",
+    summary: "UNSUPPORTED_CAPABILITY",
+  });
+});

@@ -8,13 +8,13 @@ import { hookDecision, parseHookInvocation } from "./protocol";
 import { ConversationRecorder } from "../agents/activity";
 import type { ActivityDraft } from "../agents/model";
 
-import type { AgentProvider, HumanDecision, TaskActivity } from "@raypx/core/tasks";
+import type { TerminalProvider, HumanDecision, TaskActivity } from "@raypx/core/tasks";
 
 const directory = fileURLToPath(
   new URL("../../../tests/fixtures/terminal/recorded", import.meta.url),
 );
 type Fixture = {
-  provenance: { provider: AgentProvider; source: string; version: string };
+  provenance: { provider: TerminalProvider; source: string; version: string };
   records: Record<string, unknown>[];
   expectedMessage?: string;
 };

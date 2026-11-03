@@ -1,4 +1,4 @@
-import { decodeClaudeActivity } from "./activity";
+import { decodeClaudeActivity } from "./activity.js";
 import type { AgentTask, ProviderDefinition } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import {
@@ -122,6 +122,6 @@ export class ClaudeAdapter implements ProviderSession {
   }
 }
 
-export { respondToClaudeHook, type ClaudeHookApprovalPort } from "./hooks";
+export { respondToClaudeHook, type ClaudeHookApprovalPort } from "./hooks.js";
 
-export { decodeClaudeActivity } from "./activity";
+export { decodeClaudeActivity } from "./activity.js";

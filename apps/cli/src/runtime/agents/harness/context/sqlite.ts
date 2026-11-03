@@ -1,8 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import { type LocalDatabase } from "../../../sqlite";
 import { piContexts } from "../../../sqlite/schema";
-import type { PiContext, PiContextStore } from "../providers/pi";
-import { piStoredContextSchema } from "./schema";
+import type { PiContext, PiContextStore } from "@raypx/provider-pi";
+import { piStoredContextSchema } from "@raypx/provider-pi/context";
 
 export const PI_CONTEXT_MAX_BYTES = 8 * 1024 * 1024;
 type StoreCode =
@@ -82,7 +82,7 @@ export class SqlitePiContextStore implements PiContextStore {
       return fail("PI_CONTEXT_INVALID");
     }
   }
-  async load(): Promise<PiContext> {
+  snapshot(): PiContext {
     try {
       const row = this.row(this.open());
       return row ? this.decode(row) : { revision: 0, status: "idle", messages: [] };
@@ -90,6 +90,9 @@ export class SqlitePiContextStore implements PiContextStore {
       if (error instanceof PiContextStoreError) throw error;
       return fail("PI_STORE_UNAVAILABLE");
     }
+  }
+  async load(): Promise<PiContext> {
+    return this.snapshot();
   }
   async commit(expectedRevision: number, context: RecordContext): Promise<number> {
     if (!validRevision(expectedRevision) || expectedRevision === Number.MAX_SAFE_INTEGER)

@@ -1,5 +1,5 @@
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import { type AgentProvider, type HumanDecision } from "@raypx/core/tasks";
+import { type TerminalProvider, type HumanDecision } from "@raypx/core/tasks";
 import {
   terminalPermissionSupported,
   type TerminalRequest,
@@ -14,7 +14,7 @@ const bounded = (value: unknown, max: number): value is string =>
   typeof value === "string" && value.length > 0 && value.length <= max;
 
 export type HookInvocation = {
-  provider: AgentProvider;
+  provider: TerminalProvider;
   providerSessionId: string;
   cwd: string;
   event: "PermissionRequest" | "PreToolUse";
@@ -26,7 +26,7 @@ export type HookInvocation = {
 };
 
 export function terminalCapabilities(
-  provider: AgentProvider,
+  provider: TerminalProvider,
   verified: { question?: boolean; plan?: boolean } = {},
 ): TerminalSession["capabilities"] {
   return {
@@ -41,7 +41,7 @@ export function terminalCapabilities(
 
 /** Vendor input stays local. Never normalize a tool argument before deciding it. */
 export function parseHookInvocation(
-  provider: AgentProvider,
+  provider: TerminalProvider,
   payload: unknown,
   capabilities = terminalCapabilities(provider),
 ): HookInvocation | undefined {

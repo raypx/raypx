@@ -1,3 +1,4 @@
+import type { PiExecutionServices } from "./pi/ports";
 import { createAdapter, discoverProviders } from "./harness/registry";
 import { respondToClaudeHook } from "@raypx/provider-claude";
 import type { RecordDiagnostic } from "../../diagnostics";
@@ -84,6 +85,7 @@ export class AgentRuntime {
     private readonly changed: (pendingRequest?: string, change?: TaskChange) => void,
     private readonly options: {
       executables?: Partial<Record<AgentProvider, string>>;
+      pi?: PiExecutionServices;
       assertInstance?: () => Promise<void>;
       recordDiagnostic?: RecordDiagnostic;
       /** How long an interrupted turn may run before its pending input expires. */
@@ -146,6 +148,9 @@ export class AgentRuntime {
     }
     return {
       task: local.task,
+      ...(local.task.provider === "pi" && this.options.pi
+        ? { piContinuation: this.options.pi.inspect(local) }
+        : {}),
       runStatus: projectTaskStatusToRunStatus(local.task, pendingKind),
       ...this.store.activityPage(binding, id, beforeActivity),
       events: bounded(this.store.taskEvents(binding, id, after)),
@@ -232,12 +237,21 @@ export class AgentRuntime {
     this.changedFor(local, event);
   }
   async capabilities(): Promise<AgentCapability[]> {
-    if (this.capabilitiesCache) return this.capabilitiesCache;
-    this.capabilitiesCache = await discoverProviders(
+    this.capabilitiesCache ??= await discoverProviders(
       this.options.executables ?? {},
       this.executables,
     );
-    return this.capabilitiesCache;
+    const available = (await this.options.pi?.available()) ?? false;
+    return this.capabilitiesCache.map((capability) =>
+      capability.provider === "pi"
+        ? {
+            ...capability,
+            available,
+            reason: available ? "ready" : "unconfigured",
+            inputModes: available ? ["queue"] : [],
+          }
+        : capability,
+    );
   }
   configure(rootId: string, providers: AgentProvider[]) {
     this.state.root(rootId);
@@ -431,6 +445,7 @@ export class AgentRuntime {
           id: requestInput.id,
           parentTaskId: parent.task.id,
           prompt: requestInput.prompt,
+          ...(request.input.model ? { model: request.input.model } : {}),
           mode: "run",
           status: "pending",
           summary: "",
@@ -438,7 +453,13 @@ export class AgentRuntime {
           updatedAt: now,
         };
       }
-      await this.start(binding, command.id, task, command.expiresAt);
+      await this.start(
+        binding,
+        command.id,
+        task,
+        command.expiresAt,
+        request.method === "tasks.followUp" ? request.input : undefined,
+      );
       return getTask(task.id).task;
     }
     if (request.method === "tasks.input") {
@@ -516,7 +537,18 @@ export class AgentRuntime {
     this.store.receipt(command.id);
     return { accepted: true };
   }
-  async start(binding: string, commandId: string, task: AgentTask, deadline: string) {
+  async start(
+    binding: string,
+    commandId: string,
+    task: AgentTask,
+    deadline: string,
+    follow?: Extract<RelayRequest, { method: "tasks.followUp" }>["input"],
+  ) {
+    if (task.provider === "pi" && binding !== desktopBinding(LOCAL_WORKSPACE_ID))
+      throw new LocalError(
+        "UNSUPPORTED_CAPABILITY",
+        "Pi currently supports device-owned local tasks only",
+      );
     const version = this.bindingVersions.get(binding) ?? 0;
     if (this.options.assertInstance) await this.options.assertInstance();
     if (this.store.seen(commandId)) return { accepted: true };
@@ -535,12 +567,16 @@ export class AgentRuntime {
       .find((p) => p.id === task.projectId && p.providers.includes(task.provider));
     const root = this.state.roots().find((r) => r.id === task.projectId);
     const capability = (await this.capabilities()).find((item) => item.provider === task.provider);
-    if (!capability?.available || !capability.definition.modes.includes(task.mode)) {
+    if (
+      !capability?.available ||
+      !capability.definition.modes.includes(task.mode) ||
+      (task.model !== undefined && !capability.definition.modelSelection)
+    ) {
       this.status(local, "failed", "UNSUPPORTED_CAPABILITY");
       return { accepted: true };
     }
     const executable = this.executables.get(task.provider);
-    if (!project || !root || !executable) {
+    if (!project || !root || (task.provider !== "pi" && !executable)) {
       this.status(local, "failed", "AGENT_UNAVAILABLE");
       return { accepted: true };
     }
@@ -563,6 +599,36 @@ export class AgentRuntime {
     const unlock = acquireLock(this.state.directory, lockName);
     if (!unlock) {
       this.status(local, "failed", "PROJECT_BUSY");
+      return { accepted: true };
+    }
+    let factory: import("@raypx/provider-core").SessionFactory;
+    let dispose: (() => void) | undefined;
+    try {
+      if (task.provider === "pi") {
+        if (!this.options.pi)
+          throw new LocalError("AGENT_UNAVAILABLE", "Pi execution is unavailable");
+        const prepared = await this.options.pi.prepare(local, parent, follow);
+        factory = prepared.factory;
+        dispose = prepared.dispose;
+        this.store.put(local);
+      } else {
+        factory = (start, ports) =>
+          createAdapter(task.provider, { ...start, executable: executable! }, ports);
+      }
+    } catch (error) {
+      dispose?.();
+      unlock();
+      this.status(local, "failed", error instanceof LocalError ? error.code : "AI_INVALID_CONFIG");
+      return { accepted: true };
+    }
+    if (
+      this.closing ||
+      version !== (this.bindingVersions.get(binding) ?? 0) ||
+      this.cancelledStarts.has(task.id)
+    ) {
+      dispose?.();
+      unlock();
+      this.status(local, "cancelled");
       return { accepted: true };
     }
     const execution = new ManagedExecution(
@@ -608,11 +674,12 @@ export class AgentRuntime {
           void completion.finally(() => this.completions.delete(completion));
         },
         ended: () => {
+          dispose?.();
           this.hookTokens.delete(task.id);
           this.active.delete(task.id);
         },
       },
-      (start, ports) => createAdapter(task.provider, { ...start, executable }, ports),
+      factory,
       this.options.interruptTimeoutMs,
     );
     this.active.set(task.id, execution);

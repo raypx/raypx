@@ -10,6 +10,9 @@ import {
 import { deviceSchema, deviceProjectSchema } from "./tasks.js";
 import {
   taskSchema,
+  modelSelectionSchema,
+  modelCatalogSchema,
+  piContinuationSchema,
   capabilitySchema,
   agentEventSchema,
   humanRequestSchema,
@@ -102,6 +105,9 @@ export const localResults = {
   "terminal.scroll": acknowledged,
   "terminal.resize": acknowledged,
   "terminal.close": cancelled,
+  "agents.models.list": modelCatalogSchema,
+  "agents.models.default": z.object({ default: modelSelectionSchema.nullable() }),
+  "agents.models.setDefault": z.object({ default: modelSelectionSchema.nullable() }),
   "agents.projects": z.array(deviceProjectSchema),
   "agents.capabilities": z.array(capabilitySchema),
   "agents.configure": z.object({ configured: z.literal(true) }),
@@ -110,6 +116,7 @@ export const localResults = {
   "agents.local.get": z.object({
     task: taskSchema,
     runStatus: agentRunStatusSchema,
+    piContinuation: piContinuationSchema.optional(),
     events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
     requests: z.array(humanRequestSchema),
     activity: z.array(taskActivitySchema),

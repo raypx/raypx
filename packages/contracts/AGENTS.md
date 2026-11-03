@@ -83,3 +83,5 @@ Local terminal IPC uses registered-instance, online-session-free strict `approva
 `host.terminal.*` is Native-only; it scopes cloud opt-in to origin/account.
 
 `/api` composes `instances.*` enrollment, ownership and signed status contracts from `@raypx/instances`. Device polling and possession checks are host-only in native transport. Renderer-safe `instance.*` IPC returns status and a public enrollment code, never polling tokens or private keys. Native overwrites enrollment origin with its configured API origin.
+
+Private agents.models.* exposes only non-secret catalog/default metadata. Pi continuation projections carry revision and blocked state. Remote managed Pi admission remains disabled.

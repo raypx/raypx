@@ -2,6 +2,7 @@ export function aiFixture(
   options: {
     status?: number;
     tool?: boolean;
+    toolSequence?: ({ name: string; arguments: Record<string, unknown>; id?: string } | null)[];
     stall?: boolean;
     api?: "anthropic-messages" | "openai-responses";
   } = {},
@@ -138,27 +139,38 @@ export function aiFixture(
         model: "fixture-model",
         choices: [{ index: 0, delta, finish_reason }],
       });
-      const frames = options.tool
-        ? [
-            chunk({
-              role: "assistant",
-              tool_calls: [
-                {
-                  index: 0,
-                  id: "call-fixture",
-                  type: "function",
-                  function: { name: "read_file", arguments: '{"path":' },
-                },
-              ],
-            }),
-            chunk({ tool_calls: [{ index: 0, function: { arguments: '"fixture.txt"}' } }] }),
-            chunk({}, "tool_calls"),
-          ]
-        : [
-            chunk({ role: "assistant", content: "PI_" }),
-            chunk({ content: "AI_READY" }),
-            chunk({}, "stop"),
-          ];
+      const scripted = options.toolSequence?.[requests.length - 1];
+      const frames =
+        scripted || options.tool
+          ? [
+              chunk({
+                role: "assistant",
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: scripted
+                      ? (scripted.id ?? "call-fixture-" + requests.length)
+                      : "call-fixture",
+                    type: "function",
+                    function: {
+                      name: scripted?.name ?? "read_file",
+                      arguments: scripted ? JSON.stringify(scripted.arguments) : '{"path":',
+                    },
+                  },
+                ],
+              }),
+              chunk({
+                tool_calls: [
+                  { index: 0, function: { arguments: scripted ? "" : '"fixture.txt"}' } },
+                ],
+              }),
+              chunk({}, "tool_calls"),
+            ]
+          : [
+              chunk({ role: "assistant", content: "PI_" }),
+              chunk({ content: "AI_READY" }),
+              chunk({}, "stop"),
+            ];
       frames.push({
         id: "pi-fixture",
         object: "chat.completion.chunk",

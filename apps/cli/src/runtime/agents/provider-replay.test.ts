@@ -575,3 +575,50 @@ it("commits an SDK approval before inference resumes through in-memory ports", a
   expect(conversation.stop).toHaveBeenCalledWith("complete");
   expect(f.local.task.status).toBe("succeeded");
 });
+
+it("does not resolve an approval when its applied decision cannot be committed", async () => {
+  let drained!: () => void;
+  const factory: SessionFactory = () => ({
+    handle: {
+      completed: new Promise<void>((resolve) => {
+        drained = resolve;
+      }),
+      kill: async () => {
+        drained();
+      },
+    },
+    input: "queue",
+    holdPlanOnExit: false,
+    planContinuation: "turn",
+    planTitle: "SDK",
+    turnId: undefined,
+    preview: "",
+    summary: "",
+    initialize: async () => "synthetic-session",
+    sendTurn: async () => {},
+    steer: async () => {},
+    interrupt: async () => {},
+  });
+  const f = fixture("codex", [], { factory });
+  await f.running;
+  let allowed = false;
+  const answer = f.execution
+    .ask("permission", "Synthetic effect", "Synthetic approval")
+    .then((decision) => {
+      allowed = decision.type === "allow";
+      return decision;
+    });
+  const request = [...f.requests.values()][0]!;
+  vi.spyOn(f.store, "request").mockImplementationOnce(() => {
+    throw new Error("Synthetic write failure");
+  });
+  expect(() => f.execution.applyDecision(request.id, { type: "allow" })).toThrow(
+    "Synthetic write failure",
+  );
+  await Promise.resolve();
+  expect(allowed).toBe(false);
+  expect(f.requests.get(request.id)?.status).toBe("pending");
+  f.execution.cancel();
+  expect(await answer).toMatchObject({ type: "deny" });
+  await f.finished();
+});

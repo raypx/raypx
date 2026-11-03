@@ -180,6 +180,27 @@ export default {
     viewError: "Unable to open this view. Reload the app and try again.",
   },
   tasks: {
+    reloadModels: "Reload models",
+    unconfigured: "Not configured",
+    piInputHint: "Pi queues input until the current turn finishes.",
+    model: "Model",
+    chooseModel: "Choose a model",
+    saveModelDefault: "Use as device default",
+    modelConfigurationHint:
+      "Configure the model on this device with environment variables and config.toml.",
+    contextTransfer: "Send context to another service?",
+    contextTransferHint:
+      "This sends the conversation and tool results to the selected model connection.",
+    contextTransferConfirm: "Send context",
+    AI_INVALID_CONFIG: "Check the model configuration on this device.",
+    PI_RECOVERY_REQUIRED:
+      "This session cannot continue. Inspect unresolved operations, then start a new session.",
+    PI_CONTEXT_CONFLICT: "Context changed. Refresh before continuing.",
+    PI_CONTEXT_TRANSFER_REQUIRED: "Confirm sending context to the selected service.",
+    AI_AUTH_REQUIRED: "Configure credentials on the execution device.",
+    AI_MODEL_NOT_FOUND: "The model connection changed. Choose a model again.",
+    AI_NOT_CONFIGURED: "Choose a model before starting.",
+    UNSUPPORTED_CAPABILITY: "This provider does not support this operation.",
     projectsTitle: "Projects",
     projectEntryHint: "Opening a project never starts a session.",
     remoteProjectsEmpty: "Turn on remote access in Desktop with this account.",

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 
-import { decisionSchema, type AgentProvider } from "@raypx/core/tasks";
+import { decisionSchema, type TerminalProvider } from "@raypx/core/tasks";
 import { TERMINAL_HOOK_TIMEOUT_SECONDS } from "@raypx/contracts/terminal";
 import { hookDecision, parseHookInvocation } from "./protocol";
 import { localAddressSchema, localFetch } from "../local-http";
@@ -23,7 +23,7 @@ const responseSchema = z.object({
 /** Every connection/protocol failure is no decision, never a fabricated allow/deny. */
 export async function forwardTerminalHook(
   directory: string,
-  provider: AgentProvider,
+  provider: TerminalProvider,
   input: unknown,
 ) {
   try {

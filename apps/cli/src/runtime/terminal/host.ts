@@ -13,7 +13,7 @@ import { basename, isAbsolute, join, relative, sep } from "node:path";
 import { z } from "zod";
 
 import { taskText } from "@raypx/core/task-text";
-import { type AgentProvider } from "@raypx/core/tasks";
+import { type TerminalProvider } from "@raypx/core/tasks";
 import {
   terminalDecisionSchema,
   terminalSessionSchema,
@@ -61,8 +61,8 @@ type TerminalOptions = {
   admitted?: (request: TerminalRequest, session: TerminalSession) => void;
   setAway?: (enabled: boolean) => void;
   lockDirectory?: string;
-  authorizeProject?: (path: string, provider: AgentProvider) => boolean;
-  ignoreSession?: (provider: AgentProvider, sessionId: string) => boolean;
+  authorizeProject?: (path: string, provider: TerminalProvider) => boolean;
+  ignoreSession?: (provider: TerminalProvider, sessionId: string) => boolean;
   away?: boolean;
   waitSeconds?: number;
   changed?: (request: TerminalRequest) => void;

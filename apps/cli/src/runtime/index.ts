@@ -1,3 +1,4 @@
+import { PiHost } from "./agents/pi/host";
 import { InstanceRuntime, type InstanceAccess } from "./instances";
 import { join } from "node:path";
 import {
@@ -85,6 +86,7 @@ export function createRuntime(
         resolveContext: (selection, target, prompt) =>
           getMemory().resolve(selection, target, prompt),
         environment,
+        pi,
         assertInstance: () => instanceAccess.assert(),
         ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
         ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
@@ -98,6 +100,7 @@ export function createRuntime(
     environment,
     state.directory,
   );
+  const pi = new PiHost(state, files, processes);
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic, () =>
     instanceAccess.assert(),
   );
@@ -274,6 +277,14 @@ export function createRuntime(
             const p = localParams[method].parse(raw);
             return getAgents().snapshot(p.binding, p.id, p.offset);
           }
+          case "agents.models.list":
+            localParams[method].parse(raw);
+            return pi.models.list();
+          case "agents.models.default":
+            localParams[method].parse(raw);
+            return { default: pi.models.default() };
+          case "agents.models.setDefault":
+            return pi.models.setDefault(localParams[method].parse(raw).model);
           case "agents.capabilities":
             return getAgents().capabilities();
           case "agents.projects":

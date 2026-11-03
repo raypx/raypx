@@ -26,7 +26,6 @@
     "db:generate": "bun scripts/generate-sqlite.ts"
   },
   "dependencies": {
-    "@earendil-works/pi-agent-core": "catalog:",
     "@raypx/ai": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
@@ -39,12 +38,14 @@
     "@raypx/provider-claude": "workspace:*",
     "@raypx/provider-codex": "workspace:*",
     "@raypx/provider-core": "workspace:*",
+    "@raypx/provider-pi": "workspace:*",
     "citty": "catalog:",
     "croner": "catalog:",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@earendil-works/pi-agent-core": "catalog:",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",

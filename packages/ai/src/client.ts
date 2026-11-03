@@ -173,6 +173,13 @@ export function createAiClient(
     };
   };
   return {
+    resolveModel: (selection: AiSelection) => {
+      if (closed) throw new AiError("AI_CLOSED");
+      const model = models.getModel(selection.provider, selection.model);
+      if (!model) throw new AiError("AI_MODEL_NOT_FOUND");
+      return model;
+    },
+    authStatus: async (provider: string) => Boolean(await models.checkAuth(provider)),
     providers: () => models.getProviders().map(({ id, name }) => ({ id, name })),
     models: (provider?: string) =>
       models.getModels(provider).map((model) => ({

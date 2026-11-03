@@ -16,6 +16,8 @@ export {
 } from "./task-context.js";
 export {
   agentProviderSchema,
+  terminalProviderSchema,
+  type TerminalProvider,
   agentProviders,
   agentProviderMetadata,
   questionSchema,
@@ -39,7 +41,7 @@ export const capabilitySchema = z.object({
   provider: agentProviderSchema,
   available: z.boolean(),
   version: z.string().max(120),
-  reason: z.enum(["ready", "missing", "unsupported"]),
+  reason: z.enum(["ready", "missing", "unsupported", "unconfigured"]),
   inputModes: z.array(z.enum(["steer", "queue"])).max(2),
 });
 export type AgentCapability = z.infer<typeof capabilitySchema>;
@@ -59,6 +61,38 @@ export const taskStatusSchema = z.enum([
 export type AgentProvider = z.infer<typeof agentProviderSchema>;
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 export const activeTaskStatuses: TaskStatus[] = ["pending", "running", "waiting", "cancelling"];
+export const modelSelectionSchema = z.strictObject({
+  provider: z.string().min(1).max(120),
+  model: z.string().min(1).max(200),
+  connectionId: z.string().regex(/^[a-f0-9]{64}$/),
+});
+export type ModelSelection = z.infer<typeof modelSelectionSchema>;
+export const modelCatalogSchema = z.object({
+  models: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      provider: z.string(),
+      api: z.string(),
+      input: z.array(z.string()),
+      reasoning: z.boolean(),
+      contextWindow: z.number(),
+      maxTokens: z.number(),
+      selection: modelSelectionSchema,
+      configured: z.boolean(),
+      origin: z.string(),
+    }),
+  ),
+  default: modelSelectionSchema.nullable(),
+});
+export type ModelCatalog = z.infer<typeof modelCatalogSchema>;
+export const piContinuationSchema = z.object({
+  revision: z.number().int().nonnegative(),
+  model: modelSelectionSchema,
+  blocked: z.boolean(),
+  pendingEffect: z.object({ id: z.string(), name: z.string() }).optional(),
+});
+export type PiContinuation = z.infer<typeof piContinuationSchema>;
 export const taskSchema = z.object({
   id: z.string().uuid(),
   deviceId: z.string().uuid(),
@@ -67,6 +101,7 @@ export const taskSchema = z.object({
   mode: taskModeSchema,
   prompt: z.string().min(1).max(32_000),
   context: taskContextSnapshotSchema.optional(),
+  model: modelSelectionSchema.optional(),
   status: taskStatusSchema,
   summary: z.string().max(32_000),
   activityIncomplete: z.boolean().optional(),

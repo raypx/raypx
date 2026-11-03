@@ -1,0 +1,25 @@
+{
+  "name": "@raypx/provider-testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./conformance": "./src/conformance.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json"
+  },
+  "dependencies": {
+    "@raypx/provider-core": "workspace:*",
+    "vite-plus": "catalog:dev"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*"
+  },
+  "raypx": {
+    "kind": "tooling",
+    "target": "universal"
+  }
+}

@@ -6,7 +6,7 @@ import {
   type Api,
 } from "@raypx/ai";
 import type { AgentTool, StreamFn } from "@earendil-works/pi-agent-core";
-import type { PiContext, PiContextStore } from "../../src/runtime/agents/harness/providers/pi";
+import type { PiContext, PiContextStore } from "@raypx/provider-pi";
 
 export const piModel: Model<Api> = {
   id: "offline",

@@ -1,0 +1,33 @@
+{
+  "name": "@raypx/provider-pi",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./context": "./src/context.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "catalog:",
+    "@raypx/ai": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/provider-core": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/provider-testing": "workspace:*",
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "node"
+  }
+}

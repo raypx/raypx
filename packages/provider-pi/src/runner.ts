@@ -1,6 +1,8 @@
+import type { ConversationEvent } from "@raypx/provider-core";
 import { Agent, type AgentTool, type StreamFn } from "@earendil-works/pi-agent-core";
 import {
   createAssistantMessageEventStream,
+  prepareModelContext,
   type AssistantMessage,
   type Message,
   type Model,
@@ -18,10 +20,19 @@ type PiFailureCode =
   | "PI_TOOL_FAILED"
   | "PI_DUPLICATE_TOOL_CALL"
   | "PI_TIMEOUT"
-  | "PI_LIMIT_REACHED";
+  | "PI_LIMIT_REACHED"
+  | "PI_CONTEXT_TOO_LARGE"
+  | "PI_CONTEXT_INCOMPATIBLE";
 type PiStatus = "idle" | "running" | "succeeded" | "failed" | "cancelled" | "uncertain";
 export interface PiContext {
   revision: number;
+  identity?: {
+    version: 1;
+    binding: string;
+    projectId: string;
+    ownerTaskId: string;
+    model: import("@raypx/core/tasks").ModelSelection;
+  };
   status: PiStatus;
   messages: Message[];
   /** A committed intent with no committed outcome must never be replayed. */
@@ -39,7 +50,9 @@ export interface PiResult {
 }
 export interface PiRunnerOptions {
   model: Model<Api>;
-  stream: StreamFn;
+  stream: (
+    ...args: Parameters<StreamFn>
+  ) => import("@raypx/ai").AiStream | Promise<import("@raypx/ai").AiStream>;
   tools: AgentTool[];
   authorize(
     call: { id: string; name: string; arguments: unknown },
@@ -47,6 +60,8 @@ export interface PiRunnerOptions {
   ): Promise<"allow" | "deny">;
   store: PiContextStore;
   maxRequests?: number;
+  effectful?(name: string): boolean;
+  onActivity?(event: ConversationEvent): void;
 }
 export interface PiRunOptions {
   signal?: AbortSignal;
@@ -93,7 +108,7 @@ function failedMessage(model: Model<Api>, aborted: boolean): AssistantMessage {
   };
 }
 
-/** Experimental, caller-owned SDK loop. It is not a product provider or a task executor. */
+/** Bounded SDK loop. The injected host owns tools, durable context and authorization. */
 export class PiRunner {
   private pending: Promise<PiResult> | undefined;
   private controller: AbortController | undefined;
@@ -111,14 +126,25 @@ export class PiRunner {
       ? AbortSignal.any([controller.signal, options.signal])
       : controller.signal;
     let timedOut = false;
-    const timer = setTimeout(() => {
+    let remaining = timeoutMs;
+    let started = Date.now();
+    const expire = () => {
       if (signal.aborted) return;
       timedOut = true;
       controller.abort();
-    }, timeoutMs);
+    };
+    let timer = setTimeout(expire, remaining);
+    const pause = () => {
+      clearTimeout(timer);
+      remaining -= Date.now() - started;
+    };
+    const resume = () => {
+      started = Date.now();
+      if (!signal.aborted) timer = setTimeout(expire, Math.max(1, remaining));
+    };
     const abort = () => this.agent?.abort();
     signal.addEventListener("abort", abort, { once: true });
-    const pending = this.execute(prompt, signal, () => timedOut).finally(() => {
+    const pending = this.execute(prompt, signal, () => timedOut, pause, resume).finally(() => {
       clearTimeout(timer);
       signal.removeEventListener("abort", abort);
       this.agent = undefined;
@@ -140,6 +166,8 @@ export class PiRunner {
     prompt: string,
     signal: AbortSignal,
     timedOut: () => boolean,
+    pause: () => void,
+    resume: () => void,
   ): Promise<PiResult> {
     let checkpoint: PiContext;
     let failure: PiFailureCode | undefined;
@@ -151,7 +179,7 @@ export class PiRunner {
     const maxRequests = this.options.maxRequests ?? 8;
     if (
       !prompt.trim() ||
-      prompt.length > 32_000 ||
+      prompt.length > 34_000 ||
       !Number.isInteger(maxRequests) ||
       maxRequests < 1 ||
       maxRequests > 32
@@ -167,6 +195,7 @@ export class PiRunner {
       try {
         const record: Omit<PiContext, "revision"> = {
           status: next.status,
+          ...(checkpoint.identity ? { identity: checkpoint.identity } : {}),
           messages: next.messages,
           ...(next.pendingEffect ? { pendingEffect: next.pendingEffect } : {}),
         };
@@ -204,7 +233,7 @@ export class PiRunner {
             failure ||
             signal.aborted ||
             activeSignal?.aborted ||
-            checkpoint.pendingEffect?.id !== id
+            (this.options.effectful?.(tool.name) !== false && checkpoint.pendingEffect?.id !== id)
           )
             throw stop(failure ?? "PI_TOOL_DENIED");
           try {
@@ -257,6 +286,8 @@ export class PiRunner {
                 publish(await upstream.result());
                 return;
               }
+              if (event.type === "text_delta")
+                this.options.onActivity?.({ type: "message-delta", text: event.delta });
               output.push(event);
             }
             if (finalMessage) publish(finalMessage);
@@ -292,7 +323,20 @@ export class PiRunner {
             authoritative.status !== "running"
           )
             throw stop("PI_RECOVERY_REQUIRED");
-          return { context: { messages: structuredClone(authoritative.messages), tools } };
+          try {
+            const messages = prepareModelContext(
+              authoritative.messages,
+              this.options.model,
+              tools,
+            ).messages;
+            return { context: { messages, tools } };
+          } catch (error) {
+            throw stop(
+              error instanceof Error && error.message === "AI_CONTEXT_INCOMPATIBLE"
+                ? "PI_CONTEXT_INCOMPATIBLE"
+                : "PI_CONTEXT_TOO_LARGE",
+            );
+          }
         },
         beforeToolCall: async ({ toolCall, args }, activeSignal) => {
           if (failure || signal.aborted || activeSignal?.aborted)
@@ -306,6 +350,7 @@ export class PiRunner {
             return { block: true, terminate: true, reason: failure };
           }
           let decision: "allow" | "deny" = "deny";
+          pause();
           try {
             decision = await this.options.authorize(
               { id: toolCall.id, name: toolCall.name, arguments: structuredClone(args) },
@@ -313,17 +358,57 @@ export class PiRunner {
             );
           } catch {
             /* An unavailable approval is never authorization. */
+          } finally {
+            resume();
           }
           if (decision !== "allow" || signal.aborted || activeSignal?.aborted) {
             failure ??= "PI_TOOL_DENIED";
             return { block: true, terminate: true, reason: "PI_TOOL_DENIED" };
           }
-          await write({ ...checkpoint, pendingEffect: { id: toolCall.id, name: toolCall.name } });
+          if (this.options.effectful?.(toolCall.name) !== false)
+            await write({ ...checkpoint, pendingEffect: { id: toolCall.id, name: toolCall.name } });
           return undefined;
         },
       });
       this.agent = agent;
       agent.subscribe(async (event) => {
+        if (event.type === "tool_execution_start")
+          this.options.onActivity?.({
+            type: "tool",
+            id: event.toolCallId,
+            name: event.toolName,
+            status: "running",
+          });
+        if (event.type === "tool_execution_end")
+          this.options.onActivity?.({
+            type: "tool-result",
+            id: event.toolCallId,
+            failed: event.isError,
+          });
+        if (event.type === "message_end" && event.message.role === "assistant") {
+          const message = event.message;
+          const text = message.content
+            .filter((part) => part.type === "text")
+            .map((part) => part.text)
+            .join("\n\n");
+          this.options.onActivity?.({
+            type: "message",
+            text,
+            complete: true,
+            unlessStreamed: true,
+          });
+          this.options.onActivity?.({
+            type: "usage",
+            cumulative: false,
+            known: true,
+            totals: {
+              inputTokens: message.usage.input,
+              outputTokens: message.usage.output,
+              cachedInputTokens: message.usage.cacheRead,
+              cacheWriteInputTokens: message.usage.cacheWrite,
+            },
+          });
+        }
         if (event.type === "tool_execution_end" && event.isError && !signal.aborted)
           stop(failure ?? "PI_TOOL_FAILED");
         if (failure === "PI_PERSISTENCE_FAILED" || event.type !== "message_end") return;

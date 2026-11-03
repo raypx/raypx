@@ -16,7 +16,7 @@ import {
   type ContextBudgetState,
   type MemoryClientPort,
 } from "@raypx/memory/client";
-import type { TaskContextSelection } from "@raypx/core/tasks";
+import type { TaskContextSelection, AgentProvider } from "@raypx/core/tasks";
 
 const deviceKey = (device: { id: string; epoch: number }) => `${device.id}:${device.epoch}`;
 export function JobForm({
@@ -67,7 +67,7 @@ export function JobForm({
       ? job.action.projectId
       : (target?.projectId ?? defaultDevice?.projects[0]?.id ?? ""),
   );
-  const [provider, setProvider] = useState<"claude" | "codex">(
+  const [provider, setProvider] = useState<AgentProvider>(
     job?.action.type === "agent.run"
       ? job.action.provider
       : (defaultDevice?.capabilities.find((item) => item.available)?.provider ?? "codex"),
@@ -263,7 +263,7 @@ export function JobForm({
                   value={provider}
                   onValueChange={setProvider}
                   options={(device?.capabilities ?? [])
-                    .filter((item) => item.available)
+                    .filter((item) => item.available && item.provider !== "pi")
                     .map((item) => ({
                       value: item.provider,
                       label: item.provider === "claude" ? "Claude Code" : "Codex",

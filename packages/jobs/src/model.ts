@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { agentProviderSchema, taskModeSchema, taskContextSelectionSchema } from "@raypx/core/tasks";
+import {
+  terminalProviderSchema,
+  taskModeSchema,
+  taskContextSelectionSchema,
+} from "@raypx/core/tasks";
 
 // These local schemas preserve the established CLI/Desktop wire format.
 export const commandSchema = z.object({
@@ -51,7 +55,7 @@ export const cloudJobActionSchema = z.discriminatedUnion("type", [
     type: z.literal("agent.run"),
     ...target,
     projectId: z.uuid(),
-    provider: agentProviderSchema,
+    provider: terminalProviderSchema,
     mode: taskModeSchema,
     prompt: z.string().trim().min(1).max(32_000),
     contextSelection: taskContextSelectionSchema.optional(),

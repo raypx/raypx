@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 import { createAssistantMessageEventStream } from "@raypx/ai";
 import type { StreamFn } from "@earendil-works/pi-agent-core";
-import { PiRunner } from "../harness/providers/pi";
+import { PiRunner } from "@raypx/provider-pi";
 import {
   piModel,
   piScript,
@@ -427,4 +427,38 @@ it("cancel remains pending until the terminal context commit has settled", async
   await cancel;
   // Completion already crossed the terminal-commit boundary before cancellation.
   expect(await run).toMatchObject({ status: "succeeded" });
+});
+
+it("excludes human approval waiting from the active execution deadline", async () => {
+  vi.useFakeTimers();
+  let approve!: (decision: "allow") => void, waiting!: () => void;
+  const entered = new Promise<void>((resolve) => {
+    waiting = resolve;
+  });
+  try {
+    const memory = piStore(),
+      script = piScript([toolCall(), final()]);
+    const runner = new PiRunner({
+      model: piModel,
+      stream: script.stream,
+      store: memory.store,
+      tools: [piTool(async () => ({ content: [], details: {} }))],
+      authorize: async () => {
+        waiting();
+        return new Promise<"allow">((resolve) => {
+          approve = resolve;
+        });
+      },
+    });
+    const pending = runner.run("Synthetic task", { timeoutMs: 500 });
+    await entered;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(script.calls).toBe(1);
+    expect(memory.value.pendingEffect).toBeUndefined();
+    approve("allow");
+    expect(await pending).toMatchObject({ status: "succeeded" });
+    expect(script.calls).toBe(2);
+  } finally {
+    vi.useRealTimers();
+  }
 });

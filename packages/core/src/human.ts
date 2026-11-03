@@ -1,10 +1,13 @@
 import { z } from "zod";
 
-export const agentProviderSchema = z.enum(["claude", "codex"]);
+export const agentProviderSchema = z.enum(["claude", "codex", "pi"]);
+export const terminalProviderSchema = z.enum(["claude", "codex"]);
+export type TerminalProvider = z.infer<typeof terminalProviderSchema>;
 export const agentProviders = agentProviderSchema.options;
 /** Pure presentation metadata. Runtime availability is discovered independently. */
 export const agentProviderMetadata = {
   claude: { label: "Claude Code", shortLabel: "Claude", inputHint: "claudeInputHint" },
+  pi: { label: "Pi", shortLabel: "Pi", inputHint: "piInputHint" },
   codex: { label: "Codex", shortLabel: "Codex", inputHint: "codexInputHint" },
 } as const satisfies Record<
   z.infer<typeof agentProviderSchema>,

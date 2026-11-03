@@ -60,7 +60,6 @@
         "raypx": "./src/main.ts",
       },
       "dependencies": {
-        "@earendil-works/pi-agent-core": "catalog:",
         "@raypx/ai": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
@@ -73,12 +72,14 @@
         "@raypx/provider-claude": "workspace:*",
         "@raypx/provider-codex": "workspace:*",
         "@raypx/provider-core": "workspace:*",
+        "@raypx/provider-pi": "workspace:*",
         "citty": "catalog:",
         "croner": "catalog:",
         "drizzle-orm": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@earendil-works/pi-agent-core": "catalog:",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -270,6 +271,18 @@
         "@vitest/coverage-v8": "catalog:dev",
         "vite-plus": "catalog:dev",
         "wrangler": "catalog:dev",
+      },
+    },
+    "infra/provider-testing": {
+      "name": "@raypx/provider-testing",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/provider-core": "workspace:*",
+        "vite-plus": "catalog:dev",
+      },
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
       },
     },
     "infra/railway": {
@@ -704,8 +717,11 @@
         "@raypx/provider-core": "workspace:*",
       },
       "devDependencies": {
+        "@raypx/provider-testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
+        "@vitest/coverage-v8": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/provider-codex": {
@@ -716,8 +732,11 @@
         "@raypx/provider-core": "workspace:*",
       },
       "devDependencies": {
+        "@raypx/provider-testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
+        "@vitest/coverage-v8": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/provider-core": {
@@ -729,6 +748,24 @@
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
+      },
+    },
+    "packages/provider-pi": {
+      "name": "@raypx/provider-pi",
+      "version": "0.0.0",
+      "dependencies": {
+        "@earendil-works/pi-agent-core": "catalog:",
+        "@raypx/ai": "workspace:*",
+        "@raypx/core": "workspace:*",
+        "@raypx/provider-core": "workspace:*",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/provider-testing": "workspace:*",
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
+        "@vitest/coverage-v8": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/storage": {
@@ -1800,6 +1837,10 @@
     "@raypx/provider-codex": ["@raypx/provider-codex@workspace:packages/provider-codex"],
 
     "@raypx/provider-core": ["@raypx/provider-core@workspace:packages/provider-core"],
+
+    "@raypx/provider-pi": ["@raypx/provider-pi@workspace:packages/provider-pi"],
+
+    "@raypx/provider-testing": ["@raypx/provider-testing@workspace:infra/provider-testing"],
 
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
 

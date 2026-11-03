@@ -1,3 +1,4 @@
+import { smokeManagedPi } from "./managed-pi";
 import { enrollTestProfile } from "../helpers/instance";
 import assert from "node:assert/strict";
 import { chmod, copyFile, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
@@ -317,6 +318,7 @@ try {
       }
     }
   }
+  await smokeManagedPi(binary, dataDir);
   const invalid = Bun.spawn([binary, "--json", "--profile"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
@@ -571,7 +573,7 @@ try {
     child.kill();
   }
   console.log(
-    "Copied standalone CLI smoke passed outside the repository with an empty PATH, including Pi AI HTTP streaming.",
+    "Copied standalone CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.",
   );
 } finally {
   await closeInstance();

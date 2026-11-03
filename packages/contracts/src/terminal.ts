@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { agentProviderSchema, decisionSchema, questionSchema } from "@raypx/core/tasks";
+import { terminalProviderSchema, decisionSchema, questionSchema } from "@raypx/core/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
 
 export const TERMINAL_PROTOCOL_VERSION = 1 as const;
@@ -18,7 +18,7 @@ export const terminalCapabilitiesSchema = z.object({
 });
 export const terminalSessionSchema = z.object({
   id: z.string().uuid(),
-  provider: agentProviderSchema,
+  provider: terminalProviderSchema,
   providerSessionId: z.string().min(1).max(500).refine(wellFormed),
   projectId: z.string().min(1).max(200),
   projectName: z.string().max(120).optional(),
@@ -30,7 +30,7 @@ export const terminalRequestSchema = z.object({
   sessionId: z.string().uuid(),
   epoch: z.string().uuid(),
   revision: z.number().int().positive(),
-  provider: agentProviderSchema,
+  provider: terminalProviderSchema,
   invocationId: z.string().uuid(),
   kind: z.enum(["permission", "question", "plan"]),
   title: z.string().min(1).max(500).refine(wellFormed),

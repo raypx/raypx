@@ -2,6 +2,8 @@ import { z } from "zod";
 import { deviceCommandSchema, relayCommandSchema, relayRequestSchema } from "./tasks.js";
 import {
   taskSchema,
+  terminalProviderSchema,
+  modelSelectionSchema,
   agentProviders,
   agentProviderSchema,
   taskContextSelectionSchema,
@@ -98,7 +100,7 @@ export const localParams = {
       .optional(),
   }),
   "connectors.install": z.object({
-    provider: agentProviderSchema,
+    provider: terminalProviderSchema,
     recoverModified: z.boolean().default(false),
     configDirs: z
       .object({
@@ -108,7 +110,7 @@ export const localParams = {
       .optional(),
   }),
   "connectors.uninstall": z.object({
-    provider: agentProviderSchema,
+    provider: terminalProviderSchema,
     configDirs: z
       .object({
         claude: z.string().min(1).max(4096).optional(),
@@ -152,6 +154,9 @@ export const localParams = {
     id: z.string().uuid().optional(),
     offset: z.number().int().min(0).default(0),
   }),
+  "agents.models.list": z.strictObject({}),
+  "agents.models.default": z.strictObject({}),
+  "agents.models.setDefault": z.strictObject({ model: modelSelectionSchema.nullable() }),
   "agents.capabilities": z.object({}),
   "agents.projects": z.object({}),
   "agents.configure": z.object({

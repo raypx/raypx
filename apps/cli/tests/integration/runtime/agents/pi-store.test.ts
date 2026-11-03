@@ -9,7 +9,7 @@ import {
   SqlitePiContextStore,
   PI_CONTEXT_MAX_BYTES,
 } from "../../../../src/runtime/agents/harness/context/sqlite";
-import { PiRunner, type PiContext } from "../../../../src/runtime/agents/harness/providers/pi";
+import { PiRunner, type PiContext } from "@raypx/provider-pi";
 import { piMessage, piModel, piScript, piTool } from "../../../helpers/pi";
 
 const cleanups: (() => void)[] = [];

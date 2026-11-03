@@ -97,10 +97,10 @@ export class ManagedExecution {
   applyDecision(id: string, decision: HumanDecision) {
     const pending = this.pending.get(id);
     if (pending && Date.parse(pending.request.expiresAt) > Date.now()) {
+      this.store.request(this.local.binding, { ...pending.request, status: "applied", decision });
       clearTimeout(pending.timer);
       this.pending.delete(id);
       pending.resolve(decision);
-      this.store.request(this.local.binding, { ...pending.request, status: "applied", decision });
       this.effects.resolved(id);
     }
   }
@@ -436,8 +436,16 @@ export class ManagedExecution {
   }
 
   private async planDecision(title: string, plan: string): Promise<HumanDecision | undefined> {
-    const decision = await this.ask("plan", title, plan);
-    return this.finished ? undefined : decision;
+    const answer = this.ask("plan", title, plan);
+    const request = [...this.pending.values()].find(
+      (item) => item.request.kind === "plan",
+    )?.request;
+    const decision = await answer;
+    return this.finished ||
+      !request ||
+      this.store.getRequest(this.local.binding, request.id)?.status !== "applied"
+      ? undefined
+      : decision;
   }
 
   private planPrompt(decision: HumanDecision): string | undefined {

@@ -26,3 +26,5 @@ export type {
   ToolResultMessage,
   Usage,
 } from "@earendil-works/pi-ai";
+
+export { prepareModelContext } from "./context.js";

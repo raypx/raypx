@@ -129,15 +129,13 @@ implementations satisfy those ports; agents/model.ts owns the shared local recor
 schemas and draft types. Never derive harness ports from concrete classes or pass
 the full runtime. SDK conformance uses in-memory persistence and recording ports.
 
-`harness/providers/pi.ts` is a private SDK experiment, not a registered provider.
-Callers supply tools, approval, model streaming and a revision-checked context store.
-Persist tool intent before execution and result before further inference; never
-replay uncertain effects. `smoke:pi` verifies an isolated compiled offline fixture.
-Repeated tool IDs are fenced by committed history. Runs accept caller cancellation
-and a bounded deadline, then drain active effects before settling. The private
-`harness/context/sqlite.ts` store owns validated, size-bounded local contexts with
-atomic revision checks. Keep its database and lifecycle caller-owned; reopening
-never clears unresolved intents or authorizes replay.
+Managed Pi uses `@raypx/provider-pi`; private `runtime/agents/pi` owns its
+granted file/command bridge, model admission and context ownership. Local models use
+read-only user TOML/environment and profile defaults. Context CAS, revision-bound
+cross-connection consent, durable effects and SDK drain apply before continuation.
+`raypx tasks` controls daemon-owned Agent tasks and explicit approvals through authenticated IPC;
+client exit preserves tasks. The Jobs-only TUI retains its existing ownership.
+See ADR 0041 for command examples, limits and local-only Pi scope.
 
 Private `agents.*` methods own external CLI subprocesses, project authorization,
 canonical-directory locks, host-owned approvals and a durable SQLite replay journal. The Agent host is lazy so

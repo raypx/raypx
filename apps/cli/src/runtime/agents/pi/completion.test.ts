@@ -1,7 +1,7 @@
 import { expect, it } from "vite-plus/test";
 import { createAssistantMessageEventStream } from "@raypx/ai";
 import type { StreamFn } from "@earendil-works/pi-agent-core";
-import { PiRunner } from "../harness/providers/pi";
+import { PiRunner } from "@raypx/provider-pi";
 import {
   piMessage,
   piModel,

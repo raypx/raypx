@@ -3,6 +3,7 @@ import {
   agentProviders,
   agentProviderSchema,
   capabilitySchema,
+  modelSelectionSchema,
   decisionSchema,
   taskModeSchema,
   taskSchema,
@@ -46,6 +47,7 @@ export const taskCreateSchema = z.object({
   mode: taskModeSchema.default("run"),
   prompt: z.string().trim().min(1).max(32_000),
   contextSelection: taskContextSelectionSchema.optional(),
+  model: modelSelectionSchema.optional(),
 });
 export const deviceCommandSchema = z.discriminatedUnion("type", [
   z.object({
@@ -83,6 +85,14 @@ export const relayRequestSchema = z.discriminatedUnion("method", [
     input: z.object({
       id: z.string().uuid(),
       parentTaskId: z.string().uuid(),
+      model: modelSelectionSchema.optional(),
+      contextRevision: z.number().int().nonnegative().optional(),
+      contextTransfer: z
+        .object({
+          revision: z.number().int().nonnegative(),
+          connectionId: z.string().regex(/^[a-f0-9]{64}$/),
+        })
+        .optional(),
       prompt: z.string().trim().min(1).max(32_000),
     }),
   }),

@@ -378,8 +378,15 @@ export class RemoteControl {
         type: "announce",
         streamId: replay.streamId,
         instanceId: info.instanceId,
-        projects,
-        capabilities,
+        projects: projects.map((project) => ({
+          ...project,
+          providers: project.providers.filter((provider) => provider !== "pi"),
+        })),
+        capabilities: capabilities.map((capability) =>
+          capability.provider === "pi"
+            ? { ...capability, available: false, reason: "unsupported", inputModes: [] }
+            : capability,
+        ),
       });
     } else if (frame.type === "resume") {
       if (frame.syncId) {

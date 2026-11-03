@@ -17,7 +17,7 @@ import { homedir } from "node:os";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 
-import type { AgentProvider } from "@raypx/core/tasks";
+import type { TerminalProvider } from "@raypx/core/tasks";
 import {
   applyHookSettings,
   planHookSettings,
@@ -52,7 +52,7 @@ const cmdQuote = (value: string) => {
  */
 export function connectorCommand(
   directory: string,
-  provider: AgentProvider,
+  provider: TerminalProvider,
   platform: NodeJS.Platform = process.platform,
 ): HookCommand {
   const [binary, ...args] = [
@@ -78,7 +78,7 @@ const raypxHook = (handler: Record<string, unknown>) =>
       handler.args[0] === "connectors" &&
       handler.args[1] === "hook"));
 export function planConnectorSettings(
-  provider: AgentProvider,
+  provider: TerminalProvider,
   text: string | null,
   command: HookCommand,
   action: "install" | "uninstall",
@@ -100,7 +100,7 @@ export function planConnectorSettings(
   }
   return plan;
 }
-export type ConnectorDirectories = Partial<Record<AgentProvider, string | undefined>>;
+export type ConnectorDirectories = Partial<Record<TerminalProvider, string | undefined>>;
 function savedDirectories(directory: string): ConnectorDirectories {
   const file = join(directory, "connector-paths.json");
   if (!existsSync(file)) return {};
@@ -110,7 +110,7 @@ function savedDirectories(directory: string): ConnectorDirectories {
   return JSON.parse(text) as ConnectorDirectories;
 }
 export function connectorSettingsFile(
-  provider: AgentProvider,
+  provider: TerminalProvider,
   directory: string,
   requested: ConnectorDirectories = {},
 ) {
@@ -329,7 +329,7 @@ export async function connectorStatus(directory: string, requested: ConnectorDir
 }
 export async function connectorAction(
   directory: string,
-  provider: AgentProvider,
+  provider: TerminalProvider,
   action: "install" | "uninstall",
   requested: ConnectorDirectories = {},
   recoverModified = false,

@@ -29,7 +29,10 @@ function contextSnapshot(scope: "device" | "account" = "device"): TaskContextSna
     ],
   };
 }
-async function completedContextParent(provider: AgentProvider, context = contextSnapshot()) {
+async function completedContextParent(
+  provider: Exclude<AgentProvider, "pi">,
+  context = contextSnapshot(),
+) {
   const f = await host(provider, `${provider}-interactive`, async () => context);
   const device = await f.runtime.localDevice(LOCAL_WORKSPACE_ID);
   const input = {

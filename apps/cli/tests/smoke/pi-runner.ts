@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { copyFile, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { PiRunner, type PiRunnerOptions } from "../../src/runtime/agents/harness/providers/pi";
+import { PiRunner, type PiRunnerOptions } from "@raypx/provider-pi";
 import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite";
 import { piMessage, piModel, piScript, piTool } from "../helpers/pi";
 

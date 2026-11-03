@@ -45,3 +45,5 @@ another snapshot is in flight must retain its own authoritative checkpoint.
 
 All current hosts accept frozen task reference snapshots; the transport forwards
 them and never resolves device library entries.
+
+Remote announcements omit Pi from project grants and advertise its capability as unsupported; local discovery remains independent.

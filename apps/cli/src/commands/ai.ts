@@ -1,29 +1,11 @@
+import { loadAiSettings } from "../runtime/ai/settings";
 import { InstanceRuntime, type InstanceAccess } from "../runtime/instances";
 import { profilePath } from "../runtime/state";
-import { readFileSync, statSync } from "node:fs";
-import { homedir } from "node:os";
-import { isAbsolute, join } from "node:path";
 import { defineCommand, type CommandDef } from "citty";
-import { mergeAiSettings, parseAiSettings, type AiSettings } from "@raypx/ai/config";
+import { mergeAiSettings, parseAiSettings } from "@raypx/ai/config";
 import type { AiRequestOptions } from "@raypx/ai";
 import { LocalError } from "../runtime/errors";
 import { globalArgs, type CliArgs } from "./args";
-
-function loadSettings(): AiSettings {
-  const directory = process.env.RAYPX_HOME ?? join(homedir(), ".raypx");
-  if (!isAbsolute(directory))
-    throw new LocalError("AI_INVALID_CONFIG", "RAYPX_HOME must be absolute.");
-  const file = join(directory, "config.toml");
-  try {
-    const stat = statSync(file);
-    if (!stat.isFile() || stat.size > 16 * 1024) throw new Error();
-    const value = Bun.TOML.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
-    return parseAiSettings(value.ai);
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return {};
-    throw new LocalError("AI_INVALID_CONFIG", "Unable to read AI settings from config.toml.");
-  }
-}
 
 function input(source: string | undefined): Record<string, unknown> {
   try {
@@ -102,7 +84,7 @@ async function runAiCommand(action: string, value: Record<string, unknown>, invo
     if (action === "models" && Object.keys(configuration).some((key) => key !== "provider"))
       throw new LocalError("INVALID_INPUT", "ai models only accepts a provider filter.");
     const override = parseAiSettings(configuration);
-    const settings = action === "complete" ? mergeAiSettings(loadSettings(), override) : override;
+    const settings = action === "complete" ? mergeAiSettings(loadAiSettings(), override) : override;
     const custom = settings.base_url !== undefined;
     if (custom && (!settings.provider || !settings.model || !settings.api))
       throw new AiError("AI_INVALID_CONFIG");

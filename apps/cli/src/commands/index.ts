@@ -1,3 +1,4 @@
+import { createTaskCommands } from "./tasks";
 import type { InstanceAccess } from "../runtime/instances";
 import { createInterface } from "node:readline/promises";
 import { defineCommand, renderUsage, runCommand as runCittyCommand, type CommandDef } from "citty";
@@ -99,6 +100,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
       }),
     });
   }
+  groups.set("tasks", createTaskCommands(invocation, options));
   groups.set("ai", createAiCommands(invocation, options));
   groups.set("daemon", createDaemonCommands(invocation, options));
   groups.set("connectors", createConnectorCommands(invocation, options));
@@ -157,10 +159,12 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     !group ||
     group === "help" ||
     invocation.help ||
-    (!action && group !== "stdio" && group !== "tui")
+    (!action && group !== "stdio" && group !== "tui") ||
+    (group === "tasks" && (action === "approvals" || action === "defaults") && inputs.length === 0)
   ) {
     const path = group === "help" ? invocation.positionals.slice(1) : invocation.positionals;
-    if (path.length > 2) throw new Error("Help accepts a command group and action");
+    if (path.length > (path[0] === "tasks" ? 3 : 2))
+      throw new Error("Help accepts a command group and action");
     let target: CommandDef = root;
     if (path[0]) {
       const entry = groups.get(path[0]);
@@ -172,7 +176,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
             : path[0] === "tui"
               ? tui
               : (entry?.command ?? unknownCommand());
-      if (path[1]) target = entry?.leaves.get(path[1]) ?? unknownCommand();
+      if (path[1]) target = entry?.leaves.get(path.slice(1).join(" ")) ?? unknownCommand();
     }
     console.log(
       (await renderUsage(target, target === root ? undefined : root)) +
@@ -190,6 +194,14 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     if (invocation.positionals.length !== 1)
       throw new Error("tui does not accept positional arguments");
     await runCittyCommand(tui, { rawArgs: [] });
+    return;
+  }
+  if (group === "tasks") {
+    const nested = action === "approvals" || action === "defaults";
+    const key = nested ? action + " " + (inputs[0] ?? "") : (action ?? "");
+    const leaf = groups.get(group)?.leaves.get(key);
+    if (!leaf) unknownCommand();
+    await runCittyCommand(leaf, { rawArgs: ["--", ...(nested ? inputs.slice(1) : inputs)] });
     return;
   }
   if (!action || !groups.get(group)?.leaves.has(action)) unknownCommand();

@@ -9,27 +9,35 @@ import {
   type ProcessAdapterFactory,
   type ProviderSession,
 } from "@raypx/provider-core";
+import { piDefinition } from "@raypx/provider-pi";
 import { ClaudeAdapter, claudeDefinition } from "@raypx/provider-claude";
 import { CodexAdapter, codexDefinition } from "@raypx/provider-codex";
 import { createTransport, type TransportFactory } from "./transport";
 
 type Registration = {
+  kind: "process";
   definition: ProviderDefinition;
   supported(major: number, minor: number, patch: number): boolean;
   create: ProcessAdapterFactory;
 };
-const adapters: Record<AgentProvider, Registration> = {
+const adapters: Record<
+  AgentProvider,
+  Registration | { kind: "sdk"; definition: ProviderDefinition }
+> = {
   codex: {
+    kind: "process",
     definition: codexDefinition,
     supported: (major, minor) => major > 0 || minor >= 163,
     create: (start, ports, transportFactory) => new CodexAdapter(start, ports, transportFactory),
   },
   claude: {
+    kind: "process",
     definition: claudeDefinition,
     supported: (major, minor, patch) =>
       major > 2 || (major === 2 && (minor > 1 || (minor === 1 && patch >= 302))),
     create: (start, ports, transportFactory) => new ClaudeAdapter(start, ports, transportFactory),
   },
+  pi: { kind: "sdk", definition: piDefinition },
 };
 export function createAdapter(
   provider: AgentProvider,
@@ -37,7 +45,9 @@ export function createAdapter(
   ports: AdapterPorts,
   transportFactory: TransportFactory = createTransport,
 ): ProviderSession {
-  return adapters[provider].create(start, ports, transportFactory);
+  const registration = adapters[provider];
+  if (registration.kind !== "process") throw new Error("UNSUPPORTED_CAPABILITY");
+  return registration.create(start, ports, transportFactory);
 }
 
 /** Discovery is bounded in both time and output, including incompatible installations. */
@@ -47,6 +57,16 @@ export async function discoverProviders(
 ): Promise<AgentCapability[]> {
   return Promise.all(
     (Object.keys(adapters) as AgentProvider[]).map(async (provider): Promise<AgentCapability> => {
+      const registration = adapters[provider];
+      if (registration.kind === "sdk")
+        return {
+          definition: registration.definition,
+          provider,
+          available: false,
+          version: "1",
+          reason: "unconfigured",
+          inputModes: [],
+        };
       const suffix = process.platform === "win32" ? ".exe" : "";
       const executable = [
         overrides[provider],
@@ -92,8 +112,7 @@ export async function discoverProviders(
           size <= 4096 &&
           code === 0 &&
           Boolean(
-            match &&
-            adapters[provider].supported(Number(match[1]), Number(match[2]), Number(match[3])),
+            match && registration.supported(Number(match[1]), Number(match[2]), Number(match[3])),
           );
         if (supported) available.set(provider, executable);
         return {

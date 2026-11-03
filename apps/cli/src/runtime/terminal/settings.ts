@@ -6,7 +6,7 @@ import {
   terminalPermissionMatcher,
 } from "@raypx/contracts/terminal";
 
-import type { AgentProvider } from "@raypx/core/tasks";
+import type { TerminalProvider } from "@raypx/core/tasks";
 import { LocalError } from "../errors";
 import { terminalCapabilities } from "./protocol";
 
@@ -19,7 +19,7 @@ const hash = (value: string | null) =>
 /** Shell form (`command` only) or exec form (`command` executable plus `args`, no shell). */
 export type HookCommand = { command: string; args?: string[] };
 export type HookSettingsPlan = {
-  provider: AgentProvider;
+  provider: TerminalProvider;
   before: string | null;
   beforeHash: string;
   after: string;
@@ -30,7 +30,7 @@ export type HookSettingsPlan = {
 
 /** Strict JSON only: JSONC/TOML require an explicit reviewed increment, never a lossy rewrite. */
 export function planHookSettings(
-  provider: AgentProvider,
+  provider: TerminalProvider,
   source: string | null,
   command: HookCommand,
   action: "install" | "uninstall",
