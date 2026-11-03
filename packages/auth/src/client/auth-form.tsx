@@ -1,4 +1,5 @@
 import { useState, type ComponentType, type FormEvent, type ReactNode } from "react";
+import type { IconComponent } from "@raypx/icons";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
@@ -16,28 +17,82 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
 import { authPolicy } from "../policy";
+import { readAuthLink, type AuthMode } from "./auth-link";
 import { formText } from "./form-text";
 import { PasswordField } from "./password-field";
 import { useMailCooldown } from "./use-mail-cooldown";
 import { useAuthErrorMessage } from "./use-auth-error-message";
 
-const modeLabels = {
-  login: { title: "login", submit: "login", success: null },
-  signup: { title: "signup", submit: "create", success: "verifyIntro" },
-  "forgot-password": { title: "reset", submit: "sendReset", success: "resetSent" },
-  "reset-password": { title: "reset", submit: "reset", success: "resetSaved" },
-  "verify-email": { title: "verify", submit: "resend", success: "verifySent" },
-} as const;
+export type { AuthMode } from "./auth-link";
 
-const modeIcons = {
-  login: LoginIcon,
-  signup: UserCircleIcon,
-  "forgot-password": LockIcon,
-  "reset-password": LockIcon,
-  "verify-email": MailIcon,
-} as const;
+interface ModeConfig {
+  icon: IconComponent;
+  title: "login" | "signup" | "reset" | "verify";
+  intro: "intro" | "signupIntro" | "resetIntro" | "verifyIntro" | null;
+  /** Submit label; `null` reuses the common sign-in action. */
+  submit: "create" | "sendReset" | "reset" | "resend" | null;
+  success: "verifyIntro" | "resetSent" | "resetSaved" | "verifySent" | null;
+  name?: true;
+  email?: true;
+  password?: { purpose: "current" | "new"; label: "password" | "newPassword" };
+  /** Success clears and replaces the form instead of allowing another request. */
+  completes?: true;
+  /** Each request sends an email and starts the resend cooldown. */
+  mail?: true;
+}
 
-export type AuthMode = "login" | "signup" | "forgot-password" | "reset-password" | "verify-email";
+const modes: Record<AuthMode, ModeConfig> = {
+  login: {
+    icon: LoginIcon,
+    title: "login",
+    intro: "intro",
+    submit: null,
+    success: null,
+    email: true,
+    password: { purpose: "current", label: "password" },
+    completes: true,
+  },
+  signup: {
+    icon: UserCircleIcon,
+    title: "signup",
+    intro: "signupIntro",
+    submit: "create",
+    success: "verifyIntro",
+    name: true,
+    email: true,
+    password: { purpose: "new", label: "password" },
+  },
+  "forgot-password": {
+    icon: LockIcon,
+    title: "reset",
+    intro: "resetIntro",
+    submit: "sendReset",
+    success: "resetSent",
+    email: true,
+    mail: true,
+  },
+  "reset-password": {
+    icon: LockIcon,
+    title: "reset",
+    intro: null,
+    submit: "reset",
+    success: "resetSaved",
+    password: { purpose: "new", label: "newPassword" },
+    completes: true,
+  },
+  "verify-email": {
+    icon: MailIcon,
+    title: "verify",
+    intro: "verifyIntro",
+    submit: "resend",
+    success: "verifySent",
+    email: true,
+    mail: true,
+  },
+};
+
+const linkClassName =
+  "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export interface AuthFormLinkProps {
   to: "account" | "login" | "signup" | "forgot-password" | "verify-email";
@@ -78,65 +133,42 @@ export function AuthForm({
   const { busy } = auth;
   const error = useAuthErrorMessage(auth.error, "signInCompletionFailed");
   const [succeeded, setSucceeded] = useState(false);
-  const signedIn = succeeded && mode === "login";
-  const complete = succeeded && (mode === "login" || mode === "reset-password");
-  const messageKey = succeeded ? modeLabels[mode].success : null;
   const cooldown = useMailCooldown();
-  const mailMode = mode === "forgot-password" || mode === "verify-email";
-  const params = new URLSearchParams(search);
-  const token = params.get("token") ?? "";
-  const invalidReset =
-    mode === "reset-password" &&
-    (!token.trim() ||
-      params.has("error") ||
-      (auth.error?.kind === "auth" && auth.error.key === "invalidLink"));
-  const verified =
-    mode === "verify-email" && params.get("verified") === "1" && !params.has("error");
-  const title = t(modeLabels[mode].title);
-  const ModeIcon = modeIcons[mode];
+  const config = modes[mode];
+  const signedIn = succeeded && mode === "login";
+  const complete = succeeded && config.completes === true;
+  const messageKey = succeeded ? config.success : null;
+  const link = readAuthLink(mode, search, auth.error);
+  const showForm = !link.verified && !link.invalidReset && !complete;
+  const intro = link.verified ? "verified" : config.intro;
+  const coolingDown = config.mail === true && cooldown.remaining > 0;
+  const submitLabel = busy
+    ? c("working")
+    : coolingDown
+      ? t("resendIn", { seconds: String(cooldown.remaining) })
+      : config.submit
+        ? t(config.submit)
+        : c("signIn");
+  const ModeIcon = config.icon;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || complete || invalidReset || (mailMode && cooldown.isActive())) return;
+    if (!showForm || busy || (config.mail && cooldown.isActive())) return;
     const form = event.currentTarget;
-    const data = new FormData(form);
-    const email = formText(data, "email");
-    const password = formText(data, "password");
     setSucceeded(false);
-    async function onSuccess() {
-      if (mode === "login" || mode === "reset-password") form.reset();
+    const result = await requestMode(auth, mode, new FormData(form), link.token, async () => {
+      if (config.completes) form.reset();
       setSucceeded(true);
       if (mode === "login") await onSignedIn();
-    }
-    const result =
-      mode === "signup"
-        ? await auth.signUp({ name: formText(data, "name"), email, password }, onSuccess)
-        : mode === "login"
-          ? await auth.signIn({ email, password }, onSuccess)
-          : mode === "forgot-password"
-            ? await auth.requestPasswordReset({ email }, onSuccess)
-            : mode === "reset-password"
-              ? await auth.resetPassword(
-                  {
-                    newPassword: password,
-                    token,
-                  },
-                  onSuccess,
-                )
-              : await auth.sendVerificationEmail({ email }, onSuccess);
-    if (result.status !== "success") {
-      if (
-        mailMode &&
-        result.status === "error" &&
-        result.error.kind === "auth" &&
-        result.error.key === "rateLimited"
-      )
-        cooldown.start(result.error.retryAfterSeconds);
-      return;
-    }
-    if (mailMode) cooldown.start();
+    });
+    if (!config.mail) return;
+    if (result.status === "success") cooldown.start();
+    else if (
+      result.status === "error" &&
+      result.error.kind === "auth" &&
+      result.error.key === "rateLimited"
+    )
+      cooldown.start(result.error.retryAfterSeconds);
   }
-  const linkClassName =
-    "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     <section
@@ -162,55 +194,30 @@ export function AuthForm({
           <ModeIcon className="size-5" />
         </span>
         <h1 id="auth-title" className="text-3xl font-semibold tracking-tight">
-          {title}
+          {t(config.title)}
         </h1>
-        {mode === "login" || mode === "signup" ? (
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {t(mode === "signup" ? "signupIntro" : "intro")}
-          </p>
-        ) : null}
-        {mode === "forgot-password" && (
-          <p className="text-sm leading-relaxed text-muted-foreground">{t("resetIntro")}</p>
-        )}
-        {mode === "verify-email" && (
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {verified ? t("verified") : t("verifyIntro")}
-          </p>
-        )}
+        {intro && <p className="text-sm leading-relaxed text-muted-foreground">{t(intro)}</p>}
       </header>
       <div className="flex flex-col gap-5">
-        {(params.has("error") || invalidReset) && (
-          <Alert variant="destructive">
-            <AlertCircleIcon aria-hidden="true" />
-            <AlertDescription>{t("invalidLink")}</AlertDescription>
-          </Alert>
-        )}
-        {messageKey && (
-          <Alert role="status">
-            <CheckCircleIcon aria-hidden="true" />
-            <AlertDescription>{t(messageKey)}</AlertDescription>
-          </Alert>
-        )}
-        {error && !invalidReset && (
-          <Alert variant="destructive">
-            <AlertCircleIcon aria-hidden="true" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <AuthFormNotices
+          invalidLink={link.failed || link.invalidReset}
+          success={messageKey}
+          error={link.invalidReset ? "" : error}
+        />
         {signedIn && (auth.error?.kind === "completion" || busy) && (
           <Button disabled={busy} onClick={() => void auth.retryCompletion()}>
             {c(busy ? "working" : "retry")}
           </Button>
         )}
-        {invalidReset && (
+        {link.invalidReset && (
           <LinkComponent to="forgot-password" className={linkClassName}>
             {t("sendReset")}
           </LinkComponent>
         )}
-        {!verified && !complete && !invalidReset && (
+        {showForm && (
           <form onSubmit={submit} aria-busy={busy}>
             <FieldGroup>
-              {mode === "signup" && (
+              {config.name && (
                 <Field data-disabled={busy}>
                   <FieldLabel htmlFor="auth-name">{t("name")}</FieldLabel>
                   <Input
@@ -224,7 +231,7 @@ export function AuthForm({
                   />
                 </Field>
               )}
-              {mode !== "reset-password" && (
+              {config.email && (
                 <Field data-disabled={busy}>
                   <FieldLabel htmlFor="auth-email">{t("email")}</FieldLabel>
                   <Input
@@ -234,25 +241,25 @@ export function AuthForm({
                     autoComplete="email"
                     autoCapitalize="none"
                     spellCheck={false}
-                    defaultValue={params.get("email") ?? ""}
+                    defaultValue={link.email}
                     required
                     disabled={busy}
                     className="h-11"
                   />
                 </Field>
               )}
-              {(mode === "login" || mode === "signup" || mode === "reset-password") && (
+              {config.password && (
                 <PasswordField
-                  label={t(mode === "reset-password" ? "newPassword" : "password")}
+                  label={t(config.password.label)}
                   labelAction={
-                    mode === "login" ? (
+                    config.password.purpose === "current" ? (
                       <LinkComponent to="forgot-password" className={linkClassName}>
                         {t("forgot")}
                       </LinkComponent>
                     ) : undefined
                   }
                   id="auth-password"
-                  purpose={mode === "login" ? "current" : "new"}
+                  purpose={config.password.purpose}
                   name="password"
                   required
                   disabled={busy}
@@ -263,7 +270,7 @@ export function AuthForm({
                 type="submit"
                 size="lg"
                 className="mt-1 h-11 w-full"
-                disabled={busy || (mailMode && cooldown.remaining > 0)}
+                disabled={busy || coolingDown}
               >
                 {busy ? (
                   <SpinnerIcon
@@ -272,14 +279,8 @@ export function AuthForm({
                     aria-hidden="true"
                   />
                 ) : null}
-                {busy
-                  ? c("working")
-                  : mailMode && cooldown.remaining > 0
-                    ? t("resendIn", { seconds: String(cooldown.remaining) })
-                    : mode === "login"
-                      ? c("signIn")
-                      : t(modeLabels[mode].submit)}
-                {!busy && !(mailMode && cooldown.remaining > 0) && (
+                {submitLabel}
+                {!busy && !coolingDown && (
                   <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
                 )}
               </Button>
@@ -287,26 +288,97 @@ export function AuthForm({
           </form>
         )}
         <Separator className="my-1" />
-        <footer className="flex flex-col items-center gap-4 text-center text-sm">
-          {mode === "login" ? (
-            <>
-              <p className="text-muted-foreground">
-                {t("noAccount")}{" "}
-                <LinkComponent to="signup" className={linkClassName + " text-foreground"}>
-                  {t("create")}
-                </LinkComponent>
-              </p>
-              <LinkComponent to="verify-email" className={linkClassName + " text-muted-foreground"}>
-                {t("resend")}
-              </LinkComponent>
-            </>
-          ) : (
-            <LinkComponent to="login" className={linkClassName}>
-              {c("signIn")}
-            </LinkComponent>
-          )}
-        </footer>
+        <AuthFormFooter mode={mode} LinkComponent={LinkComponent} />
       </div>
     </section>
+  );
+}
+
+function requestMode(
+  auth: ReturnType<typeof useAuthActions>,
+  mode: AuthMode,
+  data: FormData,
+  token: string,
+  onSuccess: AuthActionSuccess,
+) {
+  const email = formText(data, "email");
+  const password = formText(data, "password");
+  switch (mode) {
+    case "login":
+      return auth.signIn({ email, password }, onSuccess);
+    case "signup":
+      return auth.signUp({ name: formText(data, "name"), email, password }, onSuccess);
+    case "forgot-password":
+      return auth.requestPasswordReset({ email }, onSuccess);
+    case "reset-password":
+      return auth.resetPassword({ newPassword: password, token }, onSuccess);
+    case "verify-email":
+      return auth.sendVerificationEmail({ email }, onSuccess);
+  }
+}
+
+function AuthFormNotices({
+  invalidLink,
+  success,
+  error,
+}: {
+  invalidLink: boolean;
+  success: ModeConfig["success"];
+  error: string;
+}) {
+  const t = useTranslations("auth");
+  return (
+    <>
+      {invalidLink && (
+        <Alert variant="destructive">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertDescription>{t("invalidLink")}</AlertDescription>
+        </Alert>
+      )}
+      {success && (
+        <Alert role="status">
+          <CheckCircleIcon aria-hidden="true" />
+          <AlertDescription>{t(success)}</AlertDescription>
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+    </>
+  );
+}
+
+function AuthFormFooter({
+  mode,
+  LinkComponent,
+}: {
+  mode: AuthMode;
+  LinkComponent: ComponentType<AuthFormLinkProps>;
+}) {
+  const t = useTranslations("auth");
+  const c = useTranslations("common");
+  return (
+    <footer className="flex flex-col items-center gap-4 text-center text-sm">
+      {mode === "login" ? (
+        <>
+          <p className="text-muted-foreground">
+            {t("noAccount")}{" "}
+            <LinkComponent to="signup" className={linkClassName + " text-foreground"}>
+              {t("create")}
+            </LinkComponent>
+          </p>
+          <LinkComponent to="verify-email" className={linkClassName + " text-muted-foreground"}>
+            {t("resend")}
+          </LinkComponent>
+        </>
+      ) : (
+        <LinkComponent to="login" className={linkClassName}>
+          {c("signIn")}
+        </LinkComponent>
+      )}
+    </footer>
   );
 }
