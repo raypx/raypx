@@ -160,7 +160,8 @@ export function WebShell() {
                     returnTo: guestReturnTo(apiUrl, destination === "account" ? "/account" : href),
                   },
                 });
-              else void router.navigate({ to: "/account" });
+              else if (!href.startsWith("/account"))
+                void router.navigate({ to: "/account", state: { settingsReturnTo: href } });
             }}
             onSignOut={async () => {
               const result = await auth.signOut(async () => {

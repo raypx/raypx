@@ -61,7 +61,17 @@ application is an independent composition root and is never imported by another 
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.
 - The account page composes `ProfileSettings` and `AccountSessions` from
-  `/account`; the `/projects` page lists authorized remote projects grouped by computer.
+  `/account` in a route-backed settings dialog with account, password, session and
+  instance categories, plus inline device preferences and diagnostics. Category panels
+  mount on first visit and retain drafts while switching. Close/Escape returns to the
+  validated local `settingsReturnTo` history state set by the account menu, falling back
+  to `/projects` for direct links. Local settings search matches category labels and
+  bilingual setting keywords without mounting private reads; choosing a result opens
+  its category. Enter opens the first result, Escape clears a query before closing,
+  and clearing search preserves drafts. Cmd/Ctrl+K focuses search; arrows and Home/End
+  move through results without opening them. Nested menus own their Escape handling.
+  Closing discards unsaved inputs directly. Narrow screens use a category Select. The `/projects`
+  page lists authorized remote projects grouped by computer.
   Project/session selection lives in validated URL search. The composer consumes
   that target and never executes on navigation or guest draft restoration.
   The account page composes its views from

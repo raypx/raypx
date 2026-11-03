@@ -36,7 +36,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
     }
   }
   return (
-    <section className="mt-8 flex flex-col gap-4" aria-label={t("instances")}>
+    <section className="flex flex-col gap-4" aria-label={t("instances")}>
       <div className="flex items-center justify-between gap-3">
         <h2>{t("instances")}</h2>
         <Button

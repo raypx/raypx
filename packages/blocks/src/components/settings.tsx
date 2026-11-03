@@ -23,15 +23,15 @@ export interface SettingsPageProps {
 
 export function SettingsPage({ title, description, footnote, children }: SettingsPageProps) {
   return (
-    <section>
-      <header className="mb-6">
-        <h1>{title}</h1>
+    <section className="@container/settings rounded-xl border border-border bg-card p-6 text-card-foreground @max-xl/main:p-4">
+      <header className="mb-5">
+        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
         {description && (
           <p className="mt-2 max-w-prose text-sm text-muted-foreground">{description}</p>
         )}
       </header>
       {children}
-      {footnote && <p className="mt-8 text-sm text-muted-foreground">{footnote}</p>}
+      {footnote && <p className="mt-6 text-xs leading-relaxed text-muted-foreground">{footnote}</p>}
     </section>
   );
 }
@@ -48,9 +48,9 @@ export function SettingsSection({ title, description, children }: SettingsSectio
   return (
     <section
       aria-labelledby={id}
-      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-b border-border py-6 first-of-type:pt-0"
+      className="grid grid-cols-1 items-start gap-3 border-b border-border py-5 @min-xl/settings:grid-cols-[9rem_minmax(0,1fr)] @min-xl/settings:gap-6"
     >
-      <div className="min-w-0 max-w-md">
+      <div className="min-w-0 pt-1.5">
         <h2 id={id} className="text-sm font-medium">
           {title}
         </h2>
@@ -58,7 +58,7 @@ export function SettingsSection({ title, description, children }: SettingsSectio
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      {children}
+      <div className="min-w-0">{children}</div>
     </section>
   );
 }

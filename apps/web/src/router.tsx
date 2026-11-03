@@ -40,6 +40,9 @@ type PageTitle =
   | "memory.title";
 
 declare module "@tanstack/react-router" {
+  interface HistoryState {
+    settingsReturnTo?: string;
+  }
   interface Register {
     router: ReturnType<typeof getRouter>;
   }

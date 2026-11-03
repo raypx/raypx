@@ -93,10 +93,7 @@ export function AccountSessions({
   }, [client, currentSessionId, revision]);
   const others = sessions?.filter((session) => session.id !== currentSessionId) ?? [];
   return (
-    <section
-      className="mt-8 mb-8 border-t border-border pt-6"
-      aria-labelledby="account-sessions-title"
-    >
+    <section aria-labelledby="account-sessions-title">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="account-sessions-title" className="text-base">
           {t("sessionsTitle")}

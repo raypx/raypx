@@ -55,11 +55,15 @@ export function ProfileSettings({
     }
   }
   return (
-    <form onSubmit={(event) => void save(event)} className="mb-7 border-t border-border pt-7">
-      <Field className="max-w-sm">
+    <form
+      onSubmit={(event) => void save(event)}
+      className="rounded-xl border border-border bg-background p-5"
+    >
+      <Field className="md:flex-row md:items-center md:justify-between md:gap-6">
         <FieldLabel htmlFor={id}>{t("displayName")}</FieldLabel>
         <Input
           id={id}
+          className="md:max-w-xs"
           autoComplete="name"
           required
           maxLength={authPolicy.nameMaxLength}
@@ -71,7 +75,7 @@ export function ProfileSettings({
           }}
         />
       </Field>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
         <Button
           type="submit"
           variant="outline"

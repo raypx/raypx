@@ -12,6 +12,10 @@ import { authClient, webUrl } from "../../features/auth/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { AccountSessions } from "../../features/auth/components/account-sessions";
 import { ProfileSettings } from "../../features/auth/components/profile-settings";
+import {
+  AccountSettingsContent,
+  AccountSettingsPanel,
+} from "../../features/settings/account-settings";
 
 export const Route = createFileRoute("/(app)/account")({
   staticData: { page: { title: "common.account", layout: "document" } },
@@ -51,9 +55,6 @@ function AccountPage() {
     return <LoadingState label={c("loading")} />;
   return (
     <section>
-      <header className="mb-8">
-        <h1>{t("accountTitle")}</h1>
-      </header>
       {state.status === "unavailable" || session.error ? (
         <div className="flex flex-wrap items-center gap-4 py-9">
           <p role="alert">{c("networkError")}</p>
@@ -62,65 +63,84 @@ function AccountPage() {
           </Button>
         </div>
       ) : (
-        <AccountDetails
-          account={state.account}
-          busy={busy}
-          onSignOut={() =>
-            auth.signOut(() => {
-              // Drop every account-scoped query before the guard re-reads the session.
-              queryClient.clear();
-              return router.invalidate();
-            })
-          }
-        >
-          <InstanceRegistration
-            key={`instances:${state.account.id}`}
-            accountId={state.account.id}
-          />
-          <ProfileSettings
-            key={`profile:${state.account.id}`}
-            client={authClient}
-            name={state.account.name}
-            onSaved={reload}
-          />
-          <PasswordChangeForm
-            key={`password:${state.account.id}`}
-            client={authClient}
-            onChanged={async () => {
-              const result = await authClient.getSession({
-                fetchOptions: { signal: AbortSignal.timeout(10_000) },
-              });
-              if (result.error || !result.data) throw new Error("Session refresh failed");
-              await reload();
-            }}
-          />
-          {session.data?.session.id ? (
-            <AccountSessions
-              key={`sessions:${state.account.id}`}
-              client={authClient}
-              currentSessionId={session.data.session.id}
+        <AccountSettingsPanel key={state.account.id}>
+          <AccountSettingsContent value="account">
+            <AccountDetails
+              account={state.account}
+              busy={busy}
+              onSignOut={() =>
+                auth.signOut(() => {
+                  // Drop every account-scoped query before the guard re-reads the session.
+                  queryClient.clear();
+                  return router.invalidate();
+                })
+              }
+            >
+              <ProfileSettings
+                key={`profile:${state.account.id}`}
+                client={authClient}
+                name={state.account.name}
+                onSaved={reload}
+              />
+            </AccountDetails>
+          </AccountSettingsContent>
+          <AccountSettingsContent
+            value="instances"
+            className="rounded-xl border border-border bg-background p-5"
+          >
+            <InstanceRegistration
+              key={`instances:${state.account.id}`}
+              accountId={state.account.id}
             />
-          ) : (
-            <section className="mt-8 border-t border-border pt-6" aria-label={t("sessionsTitle")}>
-              <p role={session.isPending ? "status" : "alert"}>
-                {session.error
-                  ? c("networkError")
-                  : session.isPending
-                    ? c("loading")
-                    : t("sessionUnauthorized")}
-              </p>
-              {!session.isPending && (
-                <Button variant="outline" onClick={() => void session.refetch()}>
-                  {c("retry")}
-                </Button>
-              )}
-              {!session.isPending && !session.error && (
-                <a href="/login" className="ml-3 underline">
-                  {c("signIn")}
-                </a>
-              )}
-            </section>
-          )}
+          </AccountSettingsContent>
+          <AccountSettingsContent
+            value="password"
+            className="rounded-xl border border-border bg-background p-5"
+          >
+            <PasswordChangeForm
+              key={`password:${state.account.id}`}
+              client={authClient}
+              onChanged={async () => {
+                const result = await authClient.getSession({
+                  fetchOptions: { signal: AbortSignal.timeout(10_000) },
+                });
+                if (result.error || !result.data) throw new Error("Session refresh failed");
+                await reload();
+              }}
+            />
+          </AccountSettingsContent>
+          <AccountSettingsContent
+            value="sessions"
+            className="rounded-xl border border-border bg-background p-5"
+          >
+            {session.data?.session.id ? (
+              <AccountSessions
+                key={`sessions:${state.account.id}`}
+                client={authClient}
+                currentSessionId={session.data.session.id}
+              />
+            ) : (
+              <section className="mt-8 border-t border-border pt-6" aria-label={t("sessionsTitle")}>
+                <p role={session.isPending ? "status" : "alert"}>
+                  {session.error
+                    ? c("networkError")
+                    : session.isPending
+                      ? c("loading")
+                      : t("sessionUnauthorized")}
+                </p>
+                {!session.isPending && (
+                  <Button variant="outline" onClick={() => void session.refetch()}>
+                    {c("retry")}
+                  </Button>
+                )}
+                {!session.isPending && !session.error && (
+                  <a href="/login" className="ml-3 underline">
+                    {c("signIn")}
+                  </a>
+                )}
+              </section>
+            )}
+          </AccountSettingsContent>
           {auth.error && (
             <p
               role="alert"
@@ -129,7 +149,7 @@ function AccountPage() {
               {c("networkError")}
             </p>
           )}
-        </AccountDetails>
+        </AccountSettingsPanel>
       )}
     </section>
   );

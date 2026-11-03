@@ -55,7 +55,7 @@ export function PasswordChangeForm({
     );
   }
   return (
-    <section aria-labelledby={`${id}-title`} className="mb-7 border-t border-border pt-7">
+    <section aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`} className="mb-4 text-sm font-medium">
         {t("changePassword")}
       </h2>

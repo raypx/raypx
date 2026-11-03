@@ -31,7 +31,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
       aria-label={label}
       value={current}
       onValueChange={(theme) => change?.(theme as UserTheme)}
-      className="flex w-auto gap-2"
+      className="grid w-full max-w-76 grid-cols-3 gap-2"
     >
       {(
         [
@@ -41,7 +41,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
         ] as const
       ).map(([theme, Icon]) => (
         <label
-          className="relative w-24 cursor-pointer has-[:focus-visible]:rounded-md has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2 max-[420px]:w-20"
+          className="relative min-w-0 cursor-pointer has-[:focus-visible]:rounded-md has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2"
           key={theme}
         >
           <RadioGroupItem
@@ -62,7 +62,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
             <span />
             <span />
           </span>
-          <span className="mt-2 flex items-center justify-center gap-1.5 text-xs">
+          <span className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-center text-xs">
             <Icon size={16} />
             {labels[theme]}
           </span>
