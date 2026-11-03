@@ -174,6 +174,7 @@ function validationProject() {
   for (const file of [
     "policy.ts",
     "validation/toolchain.ts",
+    "validation/source-layers.ts",
     "validation/deployment.ts",
     "build/deployment.ts",
     "verification/prechecks.ts",

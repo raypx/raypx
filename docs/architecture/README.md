@@ -48,7 +48,7 @@ to the parent domain of sibling Web/API hosts.
 ## Libraries
 
 Core owns the normalized task, activity, input and human-decision schemas,
-Agent Run manifests and pure state-transition rules. It has no transport, React,
+the task-to-Run read projection and pure task rules. It has no transport, React,
 filesystem or database dependency.
 Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
 domain consumers import Core directly, without contract re-export aliases.
@@ -232,3 +232,6 @@ architecture until each target phase is implemented.
 ## Registered instances and providers
 
 [ADR 0040](0040-instance-enrollment-and-providers.md) defines account-bound enrollment, offline identity, revocation and provider package boundaries. Registration does not grant remote Host access or upload local history.
+
+[ADR 0042](0042-application-layering.md) defines application services, driver preparation,
+source-layer enforcement and transport/view adapters for the current implementation.
