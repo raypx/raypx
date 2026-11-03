@@ -12,7 +12,11 @@ export function LandingLayout() {
   const c = useTranslations("common");
   const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="relative isolate flex min-h-dvh flex-col bg-background">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[40rem] bg-[radial-gradient(ellipse_at_top,var(--color-muted),transparent_70%)]"
+      />
       <a
         href="#main"
         className="sr-only rounded-md bg-background p-3 focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
@@ -52,7 +56,9 @@ export function LandingLayout() {
       >
         <Outlet />
       </main>
-      <LegalFooter className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-10" />
+      <div className="border-t border-border">
+        <LegalFooter className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-10" />
+      </div>
     </div>
   );
 }
