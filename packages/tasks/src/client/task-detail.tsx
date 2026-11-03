@@ -24,7 +24,7 @@ import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { isTaskActive } from "../model/task.js";
 
-import { failureCode } from "./failure.js";
+import { failureCode } from "../model/failure.js";
 import { Conversation } from "./conversation.js";
 import { TaskInputComposer } from "./task-input.js";
 

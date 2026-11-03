@@ -11,7 +11,7 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 
-import { failureCode } from "./failure.js";
+import { failureCode } from "../model/failure.js";
 
 import { ApprovalBody } from "./approval-body.js";
 

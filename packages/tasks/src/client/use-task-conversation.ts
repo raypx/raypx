@@ -3,7 +3,7 @@ import { ConversationState } from "../model/conversation.js";
 import type { AgentEvent } from "@raypx/core/tasks";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { workspaceOwner, workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
-import { failureCode } from "./failure.js";
+import { failureCode } from "../model/failure.js";
 import { useRemoteQuery } from "./remote-query.js";
 import { waitForRead } from "./read.js";
 

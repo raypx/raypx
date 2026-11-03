@@ -1,71 +1,26 @@
-import {
-  taskSelection,
-  canCreateTask,
-  projectOccupied,
-  prepareTaskSubmission,
-  type TaskSubmission,
-} from "../model/composition.js";
-import { ModelPicker } from "./model-picker.js";
-import {
-  agentProviderMetadata,
-  agentProviders,
-  type ModelSelection,
-  type AgentTask,
-  type AgentProvider,
-  type TaskContextSelection,
-} from "@raypx/core/tasks";
-import {
-  useEffect,
-  useEffectEvent,
-  useId,
-  useRef,
-  useState,
-  type FormEvent,
-  type RefObject,
-} from "react";
-import type { SyncDevice } from "@raypx/contracts/tasks";
-
-import {
-  ContextPicker,
-  ContextBudget,
-  contextBudgetKey,
-  type ContextBudgetState,
-  type MemoryClientPort,
-} from "@raypx/memory/client";
-import type { TaskWorkspacePort } from "../model/port.js";
+import { useId } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
-import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { SelectField } from "@raypx/ui/select-field";
-import { IconButton } from "@raypx/ui/icon-button";
-import { cn } from "@raypx/ui/lib/utils";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { useConfirmation } from "@raypx/ui/confirmation";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Textarea } from "@raypx/ui/components/ui/textarea";
+import { cn } from "@raypx/ui/lib/utils";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import { FileEditIcon } from "@raypx/icons/file-edit";
-import { PlusIcon } from "@raypx/icons/plus";
-import { SaveIcon } from "@raypx/icons/save";
 import { SendIcon } from "@raypx/icons/send";
-import { DeleteIcon } from "@raypx/icons/delete";
-import { failureCode } from "./failure.js";
-import { useTaskDrafts } from "./use-task-drafts.js";
-import {
-  MAX_TASK_DRAFTS,
-  createTaskDraft,
-  sameDraft,
-  type TaskDraft,
-  type DraftInput,
-} from "../model/drafts.js";
+import { ComposerContextFields } from "./composer/context-fields.js";
+import { ComposerDraftActions } from "./composer/draft-actions.js";
+import { ComposerDraftList } from "./composer/draft-list.js";
+import { ComposerTargetOptions } from "./composer/target-options.js";
+import { ModelPicker } from "./model-picker.js";
+import { useTaskComposer, type TaskComposerProps } from "./use-task-composer.js";
 
-export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode"> &
-  Partial<Pick<DraftInput, "deviceId" | "projectId" | "contextSelection" | "model">>;
+export type { ComposerDraft as TaskComposerDraft } from "../model/composer.js";
 
-export function TaskComposer(props: Parameters<typeof TaskComposerView>[0]) {
+export function TaskComposer(props: TaskComposerProps) {
   return (
     <TaskComposerView
       key={JSON.stringify([props.draftKey, props.fixedDeviceId, props.fixedProjectId])}
@@ -74,343 +29,21 @@ export function TaskComposer(props: Parameters<typeof TaskComposerView>[0]) {
   );
 }
 
-function TaskComposerView({
-  client,
-  devices,
-  tasks,
-  onCreated,
-  local,
-  draftKey,
-  promptRef,
-  optionsOpen,
-  onOptionsOpenChange,
-  guest,
-  initialDraft,
-  onDraftRestored,
-  onEditorChange,
-  fixedProjectId,
-  fixedDeviceId,
-  editorOpen,
-  onEditorOpenChange,
-  contextLibrary,
-}: {
-  editorOpen?: boolean;
-  contextLibrary?: MemoryClientPort | undefined;
-  onEditorOpenChange?: (open: boolean) => void;
-  onEditorChange?: (draft: DraftInput) => void;
-  /** When set by an enclosing project workspace, the target cannot be changed here. */
-  fixedProjectId?: string | undefined;
-  fixedDeviceId?: string | undefined;
-  guest?: {
-    signIn(draft: TaskComposerDraft): void | Promise<void>;
-    changed?(draft: TaskComposerDraft): void;
-  };
-  initialDraft?: TaskComposerDraft | undefined;
-  onDraftRestored?: (() => void) | undefined;
-  client: TaskWorkspacePort;
-  devices: SyncDevice[];
-  tasks: AgentTask[];
-  onCreated: (task: AgentTask) => void;
-  local: boolean;
-  draftKey: string;
-  optionsOpen: boolean;
-  onOptionsOpenChange: (open: boolean) => void;
-  promptRef: RefObject<HTMLTextAreaElement | null>;
-}) {
+function TaskComposerView(props: TaskComposerProps) {
+  const { client, devices, local, guest, promptRef, fixedProjectId } = props;
   const t = useTranslations("tasks");
-  const memoryText = useTranslations("memory");
-  const c = useTranslations("common");
   const fieldId = useId();
-  const [internalOpen, setInternalOpen] = useState(true);
-  const [dismissedRestore, setDismissedRestore] = useState(false);
-  const expanded =
-    (editorOpen ?? internalOpen) || (Boolean(initialDraft?.prompt) && !dismissedRestore);
-  const wasExpanded = useRef(expanded);
-  function expandEditor(open: boolean) {
-    setInternalOpen(open);
-    setDismissedRestore(!open);
-    onEditorOpenChange?.(open);
-  }
-  useEffect(() => {
-    const revealed = expanded && !wasExpanded.current;
-    wasExpanded.current = expanded;
-    if (!revealed) return;
-    const frame = requestAnimationFrame(() => promptRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
-  }, [expanded, promptRef]);
-  const localDevice = local ? devices[0] : undefined;
-  const initialDevice =
-    devices.find((device) => device.id === (fixedDeviceId ?? initialDraft?.deviceId)) ??
-    localDevice;
-  const initialProject = initialDevice?.projects.find(
-    (project) => project.id === (fixedProjectId ?? initialDraft?.projectId),
-  );
-  const [deviceId, setDeviceId] = useState(
-    fixedDeviceId ?? initialDraft?.deviceId ?? localDevice?.id ?? "",
-  );
-  const [projectId, setProjectId] = useState(
-    fixedProjectId ??
-      initialDraft?.projectId ??
-      (localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : ""),
-  );
-  const [provider, setProvider] = useState<AgentProvider>(
-    initialDraft?.provider ??
-      initialDevice?.capabilities.find(
-        (capability) =>
-          capability.available &&
-          (!initialProject || initialProject.providers.includes(capability.provider)),
-      )?.provider ??
-      "claude",
-  );
-  const [model, setModel] = useState<ModelSelection | undefined>(initialDraft?.model);
-  const [modelReady, setModelReady] = useState(false);
-  const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
-  const [mode, setMode] = useState<"run" | "plan">(initialDraft?.mode ?? "run");
-  const [contextSelection, setContextSelection] = useState<TaskContextSelection | undefined>(
-    guest ||
-      (fixedProjectId && initialDraft?.projectId !== fixedProjectId) ||
-      (fixedDeviceId && initialDraft?.deviceId !== fixedDeviceId)
-      ? undefined
-      : initialDraft?.contextSelection,
-  );
-  const [busy, setBusy] = useState(false);
-  const [contextBudget, setContextBudget] = useState<ContextBudgetState>();
-  const budgetProps =
-    !guest && contextLibrary && deviceId && projectId
-      ? {
-          client: contextLibrary,
-          ownerKey: draftKey,
-          target: { deviceId, projectId },
-          value: contextSelection ?? { sources: [] },
-          prompt: prompt.trim(),
-        }
-      : undefined;
-  const budgetReady =
-    !budgetProps ||
-    (contextBudget?.key === contextBudgetKey(budgetProps) &&
-      contextBudget.status === "ready" &&
-      !contextBudget.exceeded);
-  const [error, setError] = useState<ReturnType<typeof failureCode>>();
-  const submission = useRef<TaskSubmission | null>(null);
-  const submitting = useRef(false);
-  const {
-    drafts,
-    ready: draftReady,
-    failed: draftLoadFailed,
-    write: writeDrafts,
-    read: readDrafts,
-  } = useTaskDrafts(draftKey);
-  const [draftId, setDraftId] = useState<string | null>(null);
-  const [draftStatus, setDraftStatus] = useState<
-    | "draftSaved"
-    | "draftSaveFailed"
-    | "draftCleanupFailed"
-    | "draftLimit"
-    | "signInDraftFailed"
-    | null
-  >(null);
-  const { confirm, dialog } = useConfirmation();
-  const targetSelection = taskSelection(devices, deviceId, projectId, provider);
-  const snapshot: DraftInput = {
-    deviceId,
-    projectId,
-    provider,
-    prompt,
-    mode,
-    ...(targetSelection.requiresModel && model ? { model } : {}),
-    ...(contextSelection ? { contextSelection } : {}),
-  };
-  useEffect(() => {
-    if (initialDraft) onDraftRestored?.();
-  }, [initialDraft, onDraftRestored]);
-  function changed(next: Partial<DraftInput>) {
-    try {
-      guest?.changed?.({ prompt, provider, mode, ...next });
-      onEditorChange?.({ ...snapshot, ...next });
-      return true;
-    } catch {
-      setDraftStatus("draftSaveFailed");
-      return false;
-    }
-  }
-  const savedDraft =
-    drafts.find((draft) => draft.id === draftId) ??
-    drafts.find((draft) => sameDraft(draft, snapshot));
-  const dirty = Boolean(prompt.trim()) && (!savedDraft || !sameDraft(savedDraft, snapshot));
-  function persist(next: TaskDraft[]) {
-    try {
-      writeDrafts(next);
-      return true;
-    } catch {
-      setDraftStatus("draftSaveFailed");
-      return false;
-    }
-  }
-  function saveDraft() {
-    try {
-      const latest = readDrafts();
-      if (!latest.some((draft) => draft.id === draftId) && latest.length >= MAX_TASK_DRAFTS) {
-        setDraftStatus("draftLimit");
-        return;
-      }
-      const id = draftId ?? savedDraft?.id ?? crypto.randomUUID();
-      const next = [createTaskDraft(snapshot, id), ...latest.filter((draft) => draft.id !== id)];
-      if (persist(next)) {
-        setDraftId(id);
-        setDraftStatus("draftSaved");
-      }
-    } catch {
-      setDraftStatus("draftSaveFailed");
-    }
-  }
-  async function newDraft() {
-    if (
-      dirty &&
-      !(await confirm({
-        title: t("discardDraftChanges"),
-        description: t("discardDraftHint"),
-        confirmLabel: t("discardChanges"),
-        cancelLabel: c("cancel"),
-      }))
-    )
-      return;
-    setPrompt("");
-    setContextSelection(undefined);
-    changed({ prompt: "", contextSelection: undefined });
-    setDraftId(null);
-    setDraftStatus(null);
-    setError(undefined);
-    submission.current = null;
-    promptRef.current?.focus();
-  }
-  async function openDraft(draft: TaskDraft) {
-    if (
-      dirty &&
-      !(await confirm({
-        title: t("discardDraftChanges"),
-        description: t("discardDraftHint"),
-        confirmLabel: t("discardChanges"),
-        cancelLabel: c("cancel"),
-      }))
-    )
-      return;
-    expandEditor(true);
-    onOptionsOpenChange(true);
-    const targetMatches =
-      (!fixedDeviceId || fixedDeviceId === draft.deviceId) &&
-      (!fixedProjectId || fixedProjectId === draft.projectId);
-    const restored = {
-      ...draft,
-      deviceId: fixedDeviceId ?? draft.deviceId,
-      projectId: fixedProjectId ?? draft.projectId,
-      contextSelection: targetMatches ? draft.contextSelection : undefined,
-    };
-    setDeviceId(restored.deviceId);
-    setProjectId(restored.projectId);
-    setProvider(draft.provider);
-    setModel(draft.model);
-    setMode(draft.mode);
-    setPrompt(draft.prompt);
-    setContextSelection(restored.contextSelection);
-    changed(restored);
-    setDraftId(draft.id);
-    setDraftStatus(null);
-    setError(undefined);
-    promptRef.current?.focus();
-  }
-  function deleteDraft(id: string) {
-    try {
-      if (persist(readDrafts().filter((draft) => draft.id !== id)) && draftId === id)
-        setDraftId(null);
-    } catch {
-      setDraftStatus("draftSaveFailed");
-    }
-  }
-  function accepted(task: AgentTask) {
-    const receipt = submission.current;
-    let cleaned = true;
-    if (receipt?.draftId) {
-      try {
-        const latest = readDrafts();
-        const sent = latest.find((draft) => draft.id === receipt.draftId);
-        // Preserve edits saved from another window while delivery was in flight.
-        if (sent && sameDraft(sent, receipt.input))
-          cleaned = persist(latest.filter((draft) => draft.id !== sent.id));
-      } catch {
-        cleaned = false;
-      }
-    }
-    if (receipt?.key === JSON.stringify(snapshot)) {
-      setPrompt("");
-      setContextSelection(undefined);
-      if (!changed({ prompt: "", contextSelection: undefined })) cleaned = false;
-      setDraftId(null);
-      onOptionsOpenChange(false);
-    }
-    submission.current = null;
-    setDraftStatus(cleaned ? null : "draftCleanupFailed");
-    setError(undefined);
-    onCreated(task);
-  }
-  const recover = useEffectEvent(accepted);
-  useEffect(() => {
-    // Recover a lost receipt from its authoritative projection without resending.
-    if (!error || !submission.current) return;
-    const recovered = tasks.find((task) => task.id === submission.current?.id);
-    if (recovered) recover(recovered);
-  }, [error, tasks]);
-  const { device, project } = targetSelection;
-  const occupied = projectOccupied(tasks, deviceId, projectId);
-  const available = canCreateTask(targetSelection, mode, model, modelReady);
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (submitting.current || !prompt.trim()) return;
-    if (guest) {
-      submitting.current = true;
-      setBusy(true);
-      try {
-        await guest.signIn(snapshot);
-      } catch {
-        setDraftStatus("signInDraftFailed");
-      } finally {
-        submitting.current = false;
-        setBusy(false);
-      }
-      return;
-    }
-    if (!available || occupied || !budgetReady) return;
-    submitting.current = true;
-    submission.current = prepareTaskSubmission(
-      submission.current,
-      snapshot,
-      draftId ?? savedDraft?.id ?? null,
-      () => crypto.randomUUID(),
-    );
-    setBusy(true);
-    setError(undefined);
-    try {
-      accepted(
-        await client.tasks.create(
-          { id: submission.current.id, ...snapshot },
-          { signal: AbortSignal.timeout(15_000) },
-        ),
-      );
-    } catch (failure) {
-      setError(failureCode(failure));
-    } finally {
-      submitting.current = false;
-      setBusy(false);
-    }
-  }
+  const composer = useTaskComposer(props);
+  const { state, view, edit, expanded } = composer;
   return (
     <div data-task-composer className="space-y-4">
       <Collapsible
         open={expanded}
-        onOpenChange={expandEditor}
+        onOpenChange={composer.expand}
         className={cn(
           "rounded-xl border border-border bg-sidebar",
           // The page's New session action opens an empty editor; a collapsed draft stays visible.
-          !expanded && !prompt.trim() && onEditorOpenChange && "hidden",
+          !expanded && !view.prompted && props.onEditorOpenChange && "hidden",
         )}
       >
         <CollapsibleTrigger
@@ -425,7 +58,7 @@ function TaskComposerView({
         >
           <SendIcon aria-hidden="true" className="shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate text-sm">
-            {expanded ? t("create") : prompt.trim() || t("composerPreview")}
+            {expanded ? t("create") : state.prompt.trim() || t("composerPreview")}
           </span>
           <ChevronDownIcon
             aria-hidden="true"
@@ -435,7 +68,7 @@ function TaskComposerView({
         <CollapsibleContent keepMounted>
           <form
             aria-label={t("create")}
-            onSubmit={(event) => void submit(event)}
+            onSubmit={(event) => void composer.submit(event)}
             className="@container space-y-4 border-t border-border p-4"
           >
             <Field>
@@ -446,280 +79,80 @@ function TaskComposerView({
                 className="max-h-80 min-h-24 resize-y overflow-y-auto bg-background"
                 required
                 maxLength={32000}
-                value={prompt}
+                value={state.prompt}
                 placeholder={t("promptPlaceholder")}
-                disabled={busy}
-                onChange={(event) => {
-                  setPrompt(event.target.value);
-                  setDraftStatus(null);
-                  changed({ prompt: event.target.value });
-                }}
+                disabled={state.busy}
+                onChange={(event) => edit({ type: "prompt", prompt: event.target.value })}
               />
             </Field>
-            <Collapsible open={optionsOpen} onOpenChange={onOptionsOpenChange}>
-              <CollapsibleTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="group max-w-full justify-start gap-2 px-0"
-                  />
-                }
-              >
-                <ChevronDownIcon
-                  aria-hidden="true"
-                  className="shrink-0 group-data-panel-open:rotate-180"
-                />
-                {t("taskOptions")}
-                <span className="truncate font-normal text-muted-foreground">
-                  {project?.name ?? device?.name}
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-3 pt-3">
-                {!fixedProjectId && (
-                  <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
-                    <Field>
-                      <FieldLabel htmlFor={`${fieldId}-device`}>{t("device")}</FieldLabel>
-                      <SelectField
-                        id={`${fieldId}-device`}
-                        className="w-full"
-                        disabled={busy || Boolean(guest)}
-                        required={!guest}
-                        value={deviceId || null}
-                        placeholder={t("chooseDevice")}
-                        onValueChange={(value) => {
-                          setDeviceId(value);
-                          setProjectId("");
-                          setContextSelection(undefined);
-                          changed({ deviceId: value, projectId: "", contextSelection: undefined });
-                        }}
-                        options={devices
-                          .filter((d) => !d.revoked)
-                          .map((d) => ({
-                            value: d.id,
-                            label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
-                            disabled: !d.online,
-                          }))}
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor={`${fieldId}-project`}>{t("project")}</FieldLabel>
-                      <SelectField
-                        id={`${fieldId}-project`}
-                        className="w-full"
-                        disabled={busy || Boolean(guest)}
-                        required={!guest}
-                        value={projectId || null}
-                        placeholder={t("chooseProject")}
-                        onValueChange={(value) => {
-                          setProjectId(value);
-                          setContextSelection(undefined);
-                          changed({ projectId: value, contextSelection: undefined });
-                        }}
-                        options={
-                          device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []
-                        }
-                      />
-                    </Field>
-                  </div>
-                )}
-                {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
-                <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
-                  <Field>
-                    <FieldLabel htmlFor={`${fieldId}-agent`}>{t("agent")}</FieldLabel>
-                    <SelectField<AgentProvider>
-                      id={`${fieldId}-agent`}
-                      className="w-full"
-                      disabled={busy}
-                      value={provider}
-                      onValueChange={(value) => {
-                        setProvider(value);
-                        changed({ provider: value });
-                      }}
-                      options={agentProviders
-                        .filter((candidate) => local || candidate !== "pi")
-                        .map((candidate) => ({
-                          value: candidate,
-                          label: agentProviderMetadata[candidate].label,
-                        }))}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor={`${fieldId}-mode`}>{t("mode")}</FieldLabel>
-                    <SelectField<"run" | "plan">
-                      id={`${fieldId}-mode`}
-                      className="w-full"
-                      disabled={busy}
-                      value={mode}
-                      onValueChange={(value) => {
-                        setMode(value);
-                        changed({ mode: value });
-                      }}
-                      options={[
-                        { value: "run", label: t("runMode") },
-                        { value: "plan", label: t("planMode") },
-                      ]}
-                    />
-                  </Field>
-                </div>
-                <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
-              </CollapsibleContent>
-            </Collapsible>
-            {targetSelection.requiresModel && local && client.models && (
+            <ComposerTargetOptions
+              open={props.optionsOpen}
+              onOpenChange={props.onOptionsOpenChange}
+              devices={devices}
+              selection={view.selection}
+              value={state}
+              local={local}
+              guest={Boolean(guest)}
+              busy={state.busy}
+              targetFixed={Boolean(fixedProjectId)}
+              onChange={edit}
+            />
+            {view.selection.requiresModel && local && client.models && (
               <ModelPicker
                 client={client.models}
-                value={model}
-                disabled={busy}
-                onReady={setModelReady}
-                onChange={(value) => {
-                  setModel(value);
-                  changed({ model: value });
-                }}
+                value={state.model}
+                disabled={state.busy}
+                onReady={composer.modelReady}
+                onChange={(model) => edit({ type: "model", model })}
               />
             )}
-            {!guest && contextLibrary && deviceId && projectId && (
-              <>
-                <ContextPicker
-                  client={contextLibrary}
-                  ownerKey={draftKey}
-                  target={{ deviceId, projectId }}
-                  value={contextSelection ?? { sources: [] }}
-                  disabled={busy}
-                  onChange={(selection) => {
-                    setContextSelection(selection);
-                    changed({ contextSelection: selection });
-                  }}
-                />
-                {!fixedProjectId && (
-                  <p className="text-xs text-muted-foreground">{memoryText("selectionReset")}</p>
-                )}
-              </>
+            {composer.context && (
+              <ComposerContextFields
+                context={composer.context}
+                busy={state.busy}
+                targetFixed={Boolean(fixedProjectId)}
+                onSelect={(selection) => edit({ type: "context", selection })}
+                onBudget={composer.budget}
+              />
             )}
-            {occupied && prompt.trim() && (
+            {view.occupied && view.prompted && (
               <p role="status" className="text-sm">
                 {t("PROJECT_BUSY")}
               </p>
             )}
-            {budgetProps && <ContextBudget {...budgetProps} onChange={setContextBudget} />}
-            {!available && !guest && (
+            {!view.available && !guest && (
               <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>
             )}
             {guest && <p className="text-sm text-muted-foreground">{t("guestSendHint")}</p>}
-            {error && (
+            {state.error && (
               <p role="alert" className="text-sm text-destructive">
-                {t(error)}
+                {t(state.error)}
               </p>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-              <div className="flex items-center gap-1">
-                <IconButton
-                  size="icon-sm"
-                  type="button"
-                  label={t("newDraft")}
-                  disabled={busy || (!prompt && !draftId)}
-                  onClick={() => void newDraft()}
-                >
-                  <PlusIcon aria-hidden="true" />
-                </IconButton>
-                <IconButton
-                  size="icon-sm"
-                  type="button"
-                  label={t("saveDraft")}
-                  hint={t("draftDeviceOnly")}
-                  disabled={busy || !draftReady || !prompt.trim()}
-                  onClick={saveDraft}
-                >
-                  <SaveIcon aria-hidden="true" />
-                </IconButton>
-              </div>
-              <Button
-                type="submit"
-                disabled={
-                  (!guest && (!available || occupied)) || busy || !prompt.trim() || !budgetReady
-                }
-              >
-                <SendIcon aria-hidden="true" />
-                {t(busy ? "sending" : guest ? "signInToSend" : "send")}
-              </Button>
-            </div>
-            {(draftStatus || draftLoadFailed) && (
-              <p
-                role={draftStatus === "draftSaved" ? "status" : "alert"}
-                className={
-                  draftStatus === "draftSaved"
-                    ? "text-xs text-muted-foreground"
-                    : "text-xs text-destructive-text"
-                }
-              >
-                {t(draftStatus ?? "draftSaveFailed")}
-              </p>
-            )}
+            <ComposerDraftActions
+              busy={state.busy}
+              empty={!state.prompt && !state.draftId}
+              prompted={view.prompted}
+              sendable={view.sendable}
+              guest={Boolean(guest)}
+              draftsReady={composer.draftsReady}
+              status={state.draftStatus}
+              storageFailed={composer.draftsFailed}
+              onNew={() => void composer.newDraft()}
+              onSave={composer.saveDraft}
+            />
           </form>
         </CollapsibleContent>
       </Collapsible>
-      {drafts.length > 0 && (
-        <Collapsible render={<section aria-label={t("drafts")} />}>
-          <CollapsibleTrigger
-            aria-label={t("drafts")}
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="group mb-2 w-full justify-start gap-2 text-muted-foreground"
-              />
-            }
-          >
-            <FileEditIcon aria-hidden="true" />
-            {t("drafts")}
-            <span className="text-xs tabular-nums">{drafts.length}</span>
-            <ChevronDownIcon
-              aria-hidden="true"
-              className="ml-auto group-data-panel-open:rotate-180"
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <ul className="divide-y divide-border rounded-lg border border-border">
-              {drafts.map((draft) => (
-                <li key={draft.id} className="flex items-center gap-1 px-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    aria-pressed={draft.id === draftId}
-                    className="h-auto min-h-12 min-w-0 flex-1 justify-start gap-2.5 px-2 py-2 text-left whitespace-normal"
-                    disabled={busy}
-                    onClick={() => void openDraft(draft)}
-                  >
-                    <FileEditIcon aria-hidden="true" className="shrink-0 text-muted-foreground" />
-                    <span className="min-w-0">
-                      <span className="line-clamp-1 text-sm">{draft.prompt}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {devices
-                          .find((item) => item.id === draft.deviceId)
-                          ?.projects.find((item) => item.id === draft.projectId)?.name ??
-                          t("chooseProject")}{" "}
-                        · {agentProviderMetadata[draft.provider].label}
-                      </span>
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t("deleteDraft", { name: draft.prompt.slice(0, 80) })}
-                    disabled={busy}
-                    onClick={() => deleteDraft(draft.id)}
-                  >
-                    <DeleteIcon aria-hidden="true" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
-      {dialog}
+      <ComposerDraftList
+        drafts={composer.drafts}
+        devices={devices}
+        activeId={state.draftId}
+        busy={state.busy}
+        onOpen={(draft) => void composer.openDraft(draft)}
+        onDelete={composer.deleteDraft}
+      />
+      {composer.dialog}
     </div>
   );
 }

@@ -39,3 +39,4 @@ export function failureCode(error: unknown) {
   }
   return "NETWORK_UNAVAILABLE" as const;
 }
+export type TaskFailureCode = ReturnType<typeof failureCode>;

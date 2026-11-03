@@ -118,3 +118,6 @@ until selected revisions are measured. Never persist fetched reference bodies in
 Optional models ports enable local Pi selection/defaults. Follow-ups retain model/revision/transfer confirmation in one retry payload; remote clients omit the port. Model references may persist in validated drafts; credentials never do.
 
 Model composition owns capability-based create/continue rules and frozen submission/transfer inputs. Browser draft storage implements TaskDraftStore; views never read localStorage directly. Internal continuation maps from the unchanged piContinuation IPC field.
+The model composer reducer owns editor transitions, target/model/budget readiness and draft
+save/cleanup rules, tested without DOM. `useTaskComposer` adapts it to React, storage,
+confirmation and creation; `src/client/composer/` holds its focused subviews.
