@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { PasswordChangeForm } from "./password-change-form";
+import { PasswordChangeDialog } from "./password-change-dialog";
 
 beforeEach(() => {
   localStorage.clear();
@@ -15,9 +15,11 @@ function fixture(onChanged = vi.fn(async () => {})) {
   );
   render(
     <BrowserLanguageProvider>
-      <PasswordChangeForm client={{ changePassword }} onChanged={onChanged} />
+      <PasswordChangeDialog client={{ changePassword }} onChanged={onChanged} />
     </BrowserLanguageProvider>,
   );
+  expect(screen.queryByLabelText("Current password")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Change password" }));
   const current = screen.getByLabelText<HTMLInputElement>("Current password");
   const next = screen.getByLabelText<HTMLInputElement>("New password");
   const confirm = screen.getByLabelText<HTMLInputElement>("Confirm new password");
@@ -96,4 +98,60 @@ it("retries account refresh without repeating a successful password change", asy
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
   expect(app.changePassword).toHaveBeenCalledTimes(1);
   expect(onChanged).toHaveBeenCalledTimes(2);
+});
+
+it("discards credentials, validation and session choices when cancelled", async () => {
+  const app = fixture();
+  fireEvent.change(app.confirm, { target: { value: "different password" } });
+  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.submit(app.form);
+  expect(screen.getByRole("alert").textContent).toContain("do not match");
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect([app.current.value, app.next.value, app.confirm.value]).toEqual(["", "", ""]);
+  expect(app.changePassword).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+  expect(screen.getByLabelText<HTMLInputElement>("Current password").value).toBe("");
+  expect(screen.getByLabelText<HTMLInputElement>("New password").value).toBe("");
+  expect(screen.getByLabelText<HTMLInputElement>("Confirm new password").value).toBe("");
+  expect(screen.getByRole("checkbox").getAttribute("aria-checked")).toBe("true");
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("prevents dismissal until the password change and account refresh finish", async () => {
+  let finishChange!: (result: { error: null }) => void;
+  let finishRefresh!: () => void;
+  const onChanged = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        finishRefresh = resolve;
+      }),
+  );
+  const app = fixture(onChanged);
+  app.changePassword.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishChange = resolve;
+      }),
+  );
+  fireEvent.submit(app.form);
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: "Cancel" }).disabled).toBe(true);
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: "Close" }).disabled).toBe(true);
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  finishChange({ error: null });
+  await screen.findByText("Password changed.");
+  for (const button of screen.getAllByRole<HTMLButtonElement>("button", { name: "Close" }))
+    expect(button.disabled).toBe(true);
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  finishRefresh();
+  await waitFor(() => {
+    for (const button of screen.getAllByRole<HTMLButtonElement>("button", { name: "Close" }))
+      expect(button.disabled).toBe(false);
+  });
+  fireEvent.click(screen.getAllByRole("button", { name: "Close" })[0]!);
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(app.changePassword).toHaveBeenCalledTimes(1);
+  expect(onChanged).toHaveBeenCalledTimes(1);
 });

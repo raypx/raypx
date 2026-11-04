@@ -12,6 +12,7 @@ export function PasswordField({
   label,
   labelAction,
   orientation = "vertical",
+  showRequirementsIcon = true,
   purpose,
   id,
   onChange,
@@ -22,6 +23,7 @@ export function PasswordField({
   label: string;
   labelAction?: ReactNode;
   orientation?: FieldOrientation;
+  showRequirementsIcon?: boolean;
   purpose: "current" | "new" | "confirm";
 }) {
   const generatedId = useId();
@@ -88,7 +90,7 @@ export function PasswordField({
             id={requirementsId}
             className="flex items-center gap-2 text-sm text-muted-foreground [&>svg]:size-4 [&>svg]:shrink-0"
           >
-            <Icon aria-hidden="true" />
+            {showRequirementsIcon && <Icon aria-hidden="true" />}
             {t(valid ? "passwordRequirementsMet" : "passwordRequirements", {
               min: String(authPolicy.passwordMinLength),
               max: String(authPolicy.passwordMaxLength),

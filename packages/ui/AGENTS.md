@@ -8,6 +8,8 @@ packages own page layout, forms, navigation and product behavior.
 ## Interface
 
 - `components/ui/*`: Base UI and shadcn primitives, including Table for the Web user list.
+  DialogContent accepts Base UI `backdropProps`; nested dialogs can opt into their
+  own backdrop with `forceRender` for independent dimming and outside dismissal.
 - `components/ui/sidebar`: shadcn base-nova Sidebar composition and context.
   SidebarProvider supports a persistent mobile rail via `mobileBehavior="rail"`;
   the default is a Sheet. Callers supply translated trigger labels and own persistence.

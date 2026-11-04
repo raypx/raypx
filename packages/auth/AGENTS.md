@@ -17,7 +17,9 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   Provider buttons use Google's and GitHub's Hugeicons through `@raypx/icons`.
   `completeOnMount` completes an application-confirmed session handoff, with the same
   retry lifecycle and no credential submission.
-  `PasswordChangeForm` takes a credential client and optional refresh callback;
+  `PasswordChangeDialog` takes a credential client and optional refresh callback.
+  Its compact settings action opens a modal; closing clears drafts and feedback,
+  while in-flight password changes or refreshes prevent dismissal.
   applications own where account settings are available.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale

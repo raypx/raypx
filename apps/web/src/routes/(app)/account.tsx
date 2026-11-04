@@ -8,7 +8,7 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { PasswordChangeForm } from "@raypx/auth/client";
+import { PasswordChangeDialog } from "@raypx/auth/client";
 import { authClient, webUrl } from "../../features/auth/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { AccountSessions } from "../../features/auth/components/account-sessions";
@@ -97,7 +97,7 @@ function AccountPage() {
             value="password"
             className="rounded-xl border border-border bg-background p-5"
           >
-            <PasswordChangeForm
+            <PasswordChangeDialog
               key={`password:${state.account.id}`}
               client={authClient}
               onChanged={async () => {

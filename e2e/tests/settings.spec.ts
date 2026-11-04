@@ -89,3 +89,93 @@ test(
     await preferencesPersist(page, desktop);
   },
 );
+
+for (const layout of [
+  {
+    locale: "en",
+    width: 1280,
+    height: 800,
+    menu: "Account menu",
+    account: "Account",
+    settings: "Settings",
+    search: "Search settings",
+    results: "Matching settings",
+    password: "Change password",
+    current: "Current password",
+    cancel: "Cancel",
+  },
+  {
+    locale: "zh",
+    width: 390,
+    height: 700,
+    menu: "账号菜单",
+    account: "账号",
+    settings: "设置",
+    search: "搜索设置",
+    results: "匹配的设置",
+    password: "修改密码",
+    current: "当前密码",
+    cancel: "取消",
+  },
+] as const) {
+  test(
+    `Web password dialog preserves settings on dismissal (${layout.locale}, ${layout.width}px)`,
+    { tag: "@web" },
+    async ({ page }) => {
+      await page.setViewportSize({ width: layout.width, height: layout.height });
+      await page.addInitScript(
+        (locale) => localStorage.setItem("raypx_locale", locale),
+        layout.locale,
+      );
+      await webShellFixture(page);
+      await signedInAccount(page);
+      await page.goto(`${web}/settings`);
+      await page.getByRole("button", { name: layout.menu, exact: true }).click();
+      await page.getByRole("menuitem", { name: layout.account, exact: true }).click();
+      const settings = page.getByRole("dialog", { name: layout.settings, exact: true });
+      const search = settings.getByRole("searchbox", { name: layout.search, exact: true });
+      await search.fill("password");
+      await settings
+        .getByRole("navigation", { name: layout.results, exact: true })
+        .getByRole("button", { name: layout.password, exact: true })
+        .click();
+      const trigger = settings
+        .getByRole("tabpanel")
+        .getByRole("button", { name: layout.password, exact: true });
+      await expect(settings.getByLabel(layout.current, { exact: true })).toHaveCount(0);
+      await search.fill("password");
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: layout.password, exact: true });
+      const current = dialog.getByLabel(layout.current, { exact: true });
+      await expect(current).toBeFocused();
+      const bounds = await dialog.boundingBox();
+      expect(bounds?.width).toBeLessThanOrEqual(Math.min(448, layout.width - 32));
+      expect(bounds?.height).toBeLessThanOrEqual(layout.height * 0.9 + 1);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      ).toBe(true);
+      await capture(page, {
+        path: test.info().outputPath(`password-dialog-${layout.locale}-${layout.width}.png`),
+        fullPage: true,
+        animations: "disabled",
+      });
+      await current.fill("temporary browser fixture");
+      await current.press("Escape");
+      await expect(dialog).toHaveCount(0);
+      await expect(settings).toBeVisible();
+      await expect(search).toHaveValue("password");
+      await expect(trigger).toBeFocused();
+      await expect(page).toHaveURL(`${web}/account`);
+      await trigger.click();
+      await expect(current).toHaveValue("");
+      await dialog.getByRole("button", { name: layout.cancel, exact: true }).click();
+      await expect(dialog).toHaveCount(0);
+      await expect(settings).toBeVisible();
+      await trigger.click();
+      await page.mouse.click(8, 8);
+      await expect(dialog).toHaveCount(0);
+      await expect(settings).toBeVisible();
+      await expect(search).toHaveValue("password");
+    },
+  );
+}
