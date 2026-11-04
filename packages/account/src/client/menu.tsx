@@ -101,7 +101,7 @@ export function AccountMenu({
         align={variant === "header" ? "end" : "start"}
         sideOffset={8}
         aria-label={c("accountMenu")}
-        className="w-72 max-w-[calc(100vw-1.5rem)] [&_[data-slot=dropdown-menu-item]>svg]:text-muted-foreground [&_[data-slot=dropdown-menu-item]>svg]:stroke-[1.75] motion-reduce:animate-none"
+        className="w-72 max-w-[calc(100vw-1.5rem)] [&_[data-slot=dropdown-menu-item]]:min-h-10 [&_[data-slot=dropdown-menu-item]]:gap-2.5 [&_[data-slot=dropdown-menu-item]]:px-2.5 [&_[data-slot=dropdown-menu-item]>svg]:text-muted-foreground [&_[data-slot=dropdown-menu-item]>svg]:stroke-[1.75] motion-reduce:animate-none"
       >
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-3">
@@ -121,10 +121,7 @@ export function AccountMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem
-            className="min-h-10 gap-2.5 px-2.5"
-            onClick={() => onNavigate("account")}
-          >
+          <DropdownMenuItem onClick={() => onNavigate("account")}>
             <UserCircleIcon />
             {c("account")}
           </DropdownMenuItem>
@@ -132,12 +129,7 @@ export function AccountMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem
-            className="min-h-10 gap-2.5 px-2.5"
-            disabled={busy}
-            closeOnClick={false}
-            onClick={() => void signOut()}
-          >
+          <DropdownMenuItem disabled={busy} closeOnClick={false} onClick={() => void signOut()}>
             <LogoutIcon />
             {c(busy ? "working" : "signOut")}
           </DropdownMenuItem>
