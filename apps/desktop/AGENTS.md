@@ -109,13 +109,16 @@ Local tools render during session/network checks. Auth routes use a standalone l
   uses the bundled CLI and native-owned config directories. Validate external URLs.
 - Cookie/Set-Cookie and restricted host credentials never enter renderer responses.
   Keep allowlisted paths/headers, deadlines, cancellation, AES-GCM session-v2 and
-  OS key storage native. Sanitize errors. Persistence failure disables session
-  transport; temporary key-service failures preserve existing encrypted files.
+  SQLite key storage native. Sanitize errors. Persistence failure disables session
+  transport; temporary key-store failures preserve existing encrypted files.
 - Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx; invalid config
   stops startup. Only configured API origins are reachable. Isolate sessions,
   browser storage, remote settings and account-owned history by server origin.
-- SessionKeys uses MyGo Secrets on every platform with the current service/key
-  identity and raw bytes. Never read, rewrite or import retired keyring formats.
+- Native owns `credentials.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
+  Server-scoped Keys keep AES-GCM session-v2 keys out of the renderer and TOML.
+  POSIX files are private; Windows uses a restricted inheritable DACL.
+  Never read, delete or import old Keychain/credential files. `local_profile` selects
+  the CLI profile explicitly (default `default`); never reset or rebind an old profile.
 - Keep native data paths and the lifetime desktop-instance.sqlite exclusive lock
   stable; never unlink an owned lock. Preferences remain
   device-local. Native reports raw JSON and read/missing/unreadable; renderer

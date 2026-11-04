@@ -25,7 +25,10 @@ export function QuickSettingsModal() {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
-      <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl sm:p-6">
+      <DialogContent
+        closeLabel={c("close")}
+        className="max-h-[85dvh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl sm:p-6"
+      >
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">

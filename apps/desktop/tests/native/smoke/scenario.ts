@@ -20,7 +20,6 @@ import {
   tray,
   view,
   windowActions,
-  cleanupSessionKeys,
   measureNativeCors,
 } from "./host";
 
@@ -741,7 +740,6 @@ try {
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,
   );
   await fixtureServer?.stop(true);
-  await cleanupSessionKeys();
   await handleTrayAction("quit");
 } catch (error) {
   try {

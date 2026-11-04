@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -15,20 +15,11 @@ import { LocalWelcome } from "./welcome";
 import { useDesktopPlatform } from "../../lib/platform-context";
 
 export function LocalHome() {
-  const navigate = useNavigate(),
-    context = useLocalProjectContext();
+  const context = useLocalProjectContext();
   const platform = useDesktopPlatform();
   const c = useTranslations("common"),
     t = useTranslations("tasks"),
     local = useTranslations("localWorkspace");
-  useEffect(() => {
-    if (context.selectionInvalid || !context.project || !context.device) return;
-    void navigate({
-      to: "/tasks",
-      search: { scope: "local", project: context.project.id, device: context.device.id },
-      replace: true,
-    });
-  }, [context.project, context.device, context.selectionInvalid, navigate]);
   if (context.isError && !context.data)
     return (
       <Empty role="alert">
@@ -57,6 +48,26 @@ export function LocalHome() {
       </Empty>
     );
   if (!platform.isDesktop()) return <LocalWelcome />;
-  if (context.isPending || context.project) return <LoadingState label={c("loading")} />;
-  return <LocalWelcome />;
+  if (context.isPending) return <LoadingState label={c("loading")} />;
+  return <LocalHomeEntry context={context} />;
+}
+
+function LocalHomeEntry({ context }: { context: ReturnType<typeof useLocalProjectContext> }) {
+  const navigate = useNavigate();
+  const c = useTranslations("common");
+  // Capture the first loaded catalog. Authorizing a first project later must not skip setup.
+  const [restore] = useState(() =>
+    context.project && context.device
+      ? { project: context.project.id, device: context.device.id }
+      : null,
+  );
+  useEffect(() => {
+    if (restore)
+      void navigate({
+        to: "/tasks",
+        search: { scope: "local", ...restore },
+        replace: true,
+      });
+  }, [restore, navigate]);
+  return restore ? <LoadingState label={c("loading")} /> : <LocalWelcome />;
 }

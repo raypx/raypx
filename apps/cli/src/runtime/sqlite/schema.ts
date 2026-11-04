@@ -5,3 +5,4 @@ export * from "./schema/agents";
 export * from "./schema/terminal";
 export * from "./schema/pi";
 export * from "./schema/orchestration";
+export * from "./schema/credentials";

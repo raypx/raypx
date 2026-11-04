@@ -1,19 +1,27 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useRouter } from "@tanstack/react-router";
+import { useAuthActions } from "@raypx/auth/hooks";
 import { createApiClient } from "@raypx/client/api";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useDesktopPlatform } from "../../../lib/platform-context";
-import { apiUrl, authClient, desktopFetch } from "../client";
+import { apiUrl, webUrl, authClient, desktopFetch } from "../client";
+import { signOutDesktopHost } from "../../tasks/host-session";
+import { analytics } from "../../analytics/client";
 export function InstanceGate({ children }: { children: ReactNode }) {
-  const { localRequest, isDesktop } = useDesktopPlatform();
+  const platform = useDesktopPlatform();
+  const { localRequest, isDesktop } = platform;
+  const router = useRouter(),
+    queries = useQueryClient();
+  const auth = useAuthActions({ client: authClient, webUrl });
   const t = useTranslations("instances"),
     c = useTranslations("common");
   const session = authClient.useSession();
-  const [busy, setBusy] = useState(false),
+  const [registering, setBusy] = useState(false),
     [failed, setFailed] = useState(false);
+  const busy = registering || auth.busy;
   const status = useQuery({
     queryKey: ["instance", apiUrl],
     queryFn: () => localRequest("instance.status", {}),
@@ -46,6 +54,24 @@ export function InstanceGate({ children }: { children: ReactNode }) {
       (!session.error && session.data && binding.accountId !== session.data.user.id));
   if (status.data?.state === "registered" && !mismatch) return children;
   const canBind = status.data?.state === "unregistered";
+  async function recover(signIn: boolean) {
+    setFailed(false);
+    const complete = async () => {
+      await signOutDesktopHost(platform);
+      analytics.reset();
+      const accountId = session.data?.user.id;
+      if (accountId)
+        queries.removeQueries({ predicate: (query) => query.queryKey.includes(accountId) });
+      await status.refetch();
+      await router.invalidate();
+      if (signIn) await router.navigate({ to: "/login" });
+    };
+    const result =
+      auth.error?.kind === "completion"
+        ? await auth.retryCompletion()
+        : await auth.signOut(complete);
+    if (result.status === "error") setFailed(true);
+  }
   async function register() {
     const client = createApiClient({ baseUrl: apiUrl, fetch: desktopFetch });
     setBusy(true);
@@ -76,6 +102,23 @@ export function InstanceGate({ children }: { children: ReactNode }) {
               ? t("intro")
               : t("unavailable")}
       </p>
+      {binding && binding.origin !== apiUrl && (
+        <p>{t("originMismatch", { origin: binding.origin })}</p>
+      )}
+      {mismatch && !session.isPending && (
+        <>
+          {session.data && (
+            <Button variant="outline" disabled={busy} onClick={() => void recover(false)}>
+              {c("signOut")}
+            </Button>
+          )}
+          {binding?.origin === apiUrl && (
+            <Button disabled={busy} onClick={() => void recover(true)}>
+              {t("signInOriginal")}
+            </Button>
+          )}
+        </>
+      )}
       {canBind && session.data && !session.error && !session.isPending ? (
         <Button disabled={busy} onClick={() => void register()}>
           {t("bind")}

@@ -1,5 +1,8 @@
 export default {
   instances: {
+    signInOriginal: "Sign in with the original account",
+    originMismatch:
+      "To use this instance online, select its original server ({origin}) in Desktop connection settings.",
     title: "Register this instance",
     intro:
       "Sign in once to register this computer. Local work then remains available offline. Registration does not enable remote access or upload project files.",
@@ -597,6 +600,8 @@ export default {
     agentHelp: "Agent requirements",
   },
   common: {
+    sessionUnavailable:
+      "Unable to verify your session. Please check your connection and try again.",
     adminConsole: "Admin console",
     overview: "Overview",
     auditLog: "Audit log",
@@ -794,6 +799,10 @@ export default {
     deleteConfirm: "Delete this file or empty folder? This cannot be undone.",
   },
   memory: {
+    unsavedTitle: "Save your changes?",
+    unsavedHint: "Save this reference before continuing, or discard your changes.",
+    discardChanges: "Discard changes",
+    saveContinue: "Save and continue",
     CONTEXT_NOT_ARCHIVED: "Archive this reference before permanently deleting it.",
     deletePermanently: "Delete permanently",
     deleteNamed: "Permanently delete {name}",

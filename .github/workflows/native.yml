@@ -93,7 +93,7 @@ jobs:
           RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution && '3' || '1' }}
         shell: bash
         run: |
-          bun packages/tooling/src/validation/macos-test-keychain.ts bun - <<'TS'
+          bun - <<'TS'
           const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
           for (let attempt = 0; attempt < runs; attempt++) {
             const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
@@ -110,7 +110,7 @@ jobs:
         shell: bash
         run: |
           bun run --cwd apps/desktop mygo:check
-          bun packages/tooling/src/validation/macos-test-keychain.ts bun run --cwd apps/desktop mygo:test
+          bun run --cwd apps/desktop mygo:test
           cd apps/desktop
           CGO_ENABLED=0 go vet -tags native_smoke ./internal/... ./tests/native/host/...
           CGO_ENABLED=0 go test -tags native_smoke ./tests/native/host/... -run '^TestSmokeProtocol'

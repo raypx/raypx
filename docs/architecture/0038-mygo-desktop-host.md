@@ -8,7 +8,7 @@ renderer SDK and packager. Go 1.27.3 builds the native host with CGO_ENABLED=0.
 macOS uses WKWebView, Windows uses WebView2. Linux compiles but native acceptance
 is still required before claiming support.
 
-`apps/desktop/internal/app` adapts windows, tray, dialogs, OS secrets and trusted
+`apps/desktop/internal/app` adapts windows, tray, dialogs and trusted
 MyGo calls. `internal/desktop` implements framework-independent native policy,
 allowlisted HTTP/oRPC, encrypted cookies, preferences, event credit, instance locks
 and NDJSON transport. TS contracts remain the business schema authority.
@@ -22,9 +22,11 @@ The application embeds the built frontend and generated manifests. Resources
 include the compiled, version-matched CLI and complete verified Herdr runtime.
 GUI Quit releases UI approval leases and closes only its daemon proxy. The daemon
 continues running tasks. Data paths, the SQLite cross-version instance lock and
-session-v2 encryption/key service identity remain stable. The native adapter
-uses MyGo Secrets on every platform. Windows uses the current service/account
-identity and raw credential bytes; retired keyring formats are not imported.
+session-v2 AES-GCM cookie format remain stable. Go owns a separate `credentials.sqlite`
+with server-scoped session encryption keys; the lifetime `desktop-instance.sqlite`
+transaction never shares this writer. The injectable Keys port remains. Native storage
+uses private POSIX permissions or a restricted inheritable Windows DACL. Old credentials
+are never read, imported or deleted; an old cookie without its key requires sign-in.
 
 `native_smoke` is a separate Go build tag. Only that build exposes the private
 random-token test endpoint. Its renderer is built in `native-smoke` mode with a

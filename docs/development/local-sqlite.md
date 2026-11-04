@@ -1,12 +1,12 @@
 # Local SQLite storage
 
 Each CLI profile has one business database, `<profile>/profile.sqlite`. State,
-Memory, Agent, Terminal and Pi context repositories borrow the profile writer.
+Memory, Agent, Terminal, Pi context and credential repositories borrow the profile writer.
 The runtime owns `ProfileStorage`: it opens the database, runs migrations once,
 injects the writer and closes it after producers and pending requests drain.
 Repositories never migrate or close borrowed connections. Operations across
 repositories can share one Drizzle transaction. Independent profile owners in
-other processes still use separate connections. The database is private on POSIX.
+other processes still use separate connections. The database and auxiliaries use private POSIX permissions (directory 0700, files 0600) or a Windows DACL restricted to the current user and SYSTEM. The directory ACL is inheritable so newly created WAL/SHM/journal files remain private; unsupported paths and permission failures stop initialization.
 
 `apps/cli/src/runtime/sqlite/schema/` owns the table definitions by feature;
 `schema.ts` exports the complete profile schema. Generated migrations under
@@ -23,6 +23,13 @@ other processes still use separate connections. The database is private on POSIX
    `task_events`. Startup marks open effects abandoned and prunes settled effects
    older than seven days; clearing local history deletes both tables' rows for the
    forgotten tasks.
+
+3. The credential migration adds `instance_credentials` (instance UUID/private key) and
+   `host_authorizations` (origin/account/device/epoch-bound authorization). These tables
+   survive history clearing. Online logout/revocation removes only the affected Host
+   authorization; it never deletes the instance key. No old credential store is read or
+   migrated. Credential repositories borrow `ProfileStorage`, including `login` and
+   `ai complete`; offline `ai providers/models` never create a profile database.
 
 ```sh
 bun run --cwd apps/cli db:generate
@@ -56,3 +63,10 @@ Default integration tests exercise initialization, reopen, cross-store visibilit
 cross-repository rollback, owner closure, validated stored JSON, rejected formats and six processes starting at
 once. `apps/cli`'s `smoke` and `smoke:pi` commands additionally run copied compiled
 executables outside the repository.
+
+Desktop's Go host separately owns `credentials.sqlite` for server-scoped session
+AES-GCM keys. It never opens the CLI database or uses the lifetime exclusive
+`desktop-instance.sqlite` transaction for credentials. Keys/cookies remain native;
+SQLite storage is plaintext protected by filesystem permissions, not a system vault.
+The Cookie file retains its AES-GCM format. A failed key write cannot enable durable
+session persistence; Host authorization may explicitly report memory-only mode.

@@ -158,13 +158,14 @@ it("authorizes a project and checks a provider before opening the editor without
     fixture.device.projects = [project];
     return { configured: true };
   });
-  const { history } = await mount(fixture, <LocalWelcome />);
+  const { history } = await mount(fixture, <LocalHome />, "/");
   await screen.findByText("Codex");
   expect(screen.getByRole("button", { name: "Write a message" }).hasAttribute("disabled")).toBe(
     true,
   );
   fireEvent.click(screen.getByRole("button", { name: "Authorize a project folder" }));
   await screen.findByText(project.name);
+  expect(history.location.pathname).toBe("/");
   expect(fixture.calls.find((call) => call.method === "agents.configure")?.input).toEqual({
     rootId: project.id,
     providers: ["claude", "codex", "pi"],

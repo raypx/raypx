@@ -12,6 +12,8 @@ import {
   verifyProof,
 } from "@raypx/instances/crypto";
 import { createRuntime } from "../../../src/runtime";
+import { ProfileStorage } from "../../../src/runtime/sqlite";
+import { instanceKeys } from "../../../src/runtime/instances/keys";
 it("keeps an enrolled profile usable offline and rejects revocation and corrupted or missing keys", async () => {
   const dir = await mkdtemp(join(tmpdir(), "raypx-instance-")),
     keys = createInstanceKey(),
@@ -134,17 +136,10 @@ it("enrolls with a private host token and retains the signed identity across res
       list: async (owner) => [...instances.values()].filter((value) => value.accountId === owner),
     },
   });
-  // Injectable OS store avoids writing real Keychain/Credential Manager entries in tests.
-  const stored = new Map<string, string>();
-  const keys = {
-    get: async (id: string) => stored.get(id),
-    set: async (id: string, key: string) => {
-      stored.set(id, key);
-    },
-  };
+  let storage = new ProfileStorage(directory);
   const phases: string[] = [];
   const runtime = new InstanceRuntime(directory, {
-    keys,
+    keys: instanceKeys(storage.database),
     onProgress: (phase) => phases.push(phase),
   });
   try {
@@ -164,7 +159,9 @@ it("enrolls with a private host token and retains the signed identity across res
       "approval",
       "registered",
     ]);
-    const restarted = new InstanceRuntime(directory, { keys });
+    storage.close();
+    storage = new ProfileStorage(directory);
+    const restarted = new InstanceRuntime(directory, { keys: instanceKeys(storage.database) });
     await expect(restarted.assert()).resolves.toBeUndefined();
     const status = await restarted.status();
     expect(status.binding?.accountId).toBe("owner");
@@ -177,112 +174,109 @@ it("enrolls with a private host token and retains the signed identity across res
     expect((await restarted.status()).state).toBe("revoked");
   } finally {
     await api.stop(true);
+    storage.close();
     await rm(directory, { recursive: true, force: true });
   }
 });
 
-it.skipIf(process.platform !== "linux")(
-  "persists a signed revocation and drains a running command before releasing the profile",
-  async () => {
-    const { mkdir, readFile, stat } = await import("node:fs/promises");
-    const { profilePath } = await import("../../../src/runtime/state");
-    const dataDir = await mkdtemp(join(tmpdir(), "raypx-revocation-"));
-    const directory = profilePath({ dataDir });
-    await mkdir(directory, { recursive: true });
-    const key = createInstanceKey(),
-      signer = createInstanceSigner("revocation-fixture");
-    const id = crypto.randomUUID();
-    let revoked = false,
-      delayNext = false;
-    let captured!: () => void, releaseStale!: () => void;
-    const arrived = new Promise<void>((resolve) => {
-      captured = resolve;
-    });
-    const release = new Promise<void>((resolve) => {
-      releaseStale = resolve;
-    });
-    const api = Bun.serve({
-      hostname: "127.0.0.1",
-      port: 0,
-      async fetch(): Promise<Response> {
-        const receipt = signer.issue({
-          ...binding,
-          status: revoked ? "revoked" : "registered",
-          revision: revoked ? 2 : 1,
-        });
-        if (delayNext) {
-          delayNext = false;
-          captured();
-          await release;
-        }
-        return Response.json({ json: receipt });
-      },
-    });
-    const binding: InstanceBinding = {
-      version: 1 as const,
-      instanceId: id,
-      publicKey: key.publicKey,
-      name: "Linux fixture",
-      platform: "linux",
-      appVersion: "0.1.0",
-      accountId: "owner",
-      origin: api.url.origin,
-      revision: 1,
-      status: "registered" as const,
-      issuedAt: new Date().toISOString(),
-    };
-    await writeFile(join(directory, "instance.key"), Buffer.from(key.privateKey, "base64"), {
-      mode: 0o600,
-    });
-    await writeFile(join(directory, "instance.json"), JSON.stringify(signer.issue(binding)), {
-      mode: 0o600,
-    });
-    let drained = false;
-    const runtime = createRuntime({
-      dataDir,
-      onInstanceRevoked: async () => {
-        drained = true;
-      },
-    });
-    try {
-      await runtime.request("instance.refresh", {});
-      const marker = join(directory, "started");
-      const work = runtime.request("tools.run", {
-        id: crypto.randomUUID(),
-        executable: process.execPath,
-        args: [
-          "-e",
-          "await Bun.write(process.argv.at(-1), 'started'); setInterval(() => {}, 1000)",
-          marker,
-        ],
-        cwd: directory,
-        timeoutMs: 30_000,
+it("persists a signed revocation and drains a running command before releasing the profile", async () => {
+  const { mkdir, readFile } = await import("node:fs/promises");
+  const { profilePath } = await import("../../../src/runtime/state");
+  const dataDir = await mkdtemp(join(tmpdir(), "raypx-revocation-"));
+  const directory = profilePath({ dataDir });
+  await mkdir(directory, { recursive: true });
+  const key = createInstanceKey(),
+    signer = createInstanceSigner("revocation-fixture");
+  const id = crypto.randomUUID();
+  let revoked = false,
+    delayNext = false;
+  let captured!: () => void, releaseStale!: () => void;
+  const arrived = new Promise<void>((resolve) => {
+    captured = resolve;
+  });
+  const release = new Promise<void>((resolve) => {
+    releaseStale = resolve;
+  });
+  const api = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(): Promise<Response> {
+      const receipt = signer.issue({
+        ...binding,
+        status: revoked ? "revoked" : "registered",
+        revision: revoked ? 2 : 1,
       });
-      await expect.poll(() => Bun.file(marker).exists()).toBe(true);
-      delayNext = true;
-      const stale = runtime.instances.refresh().catch((error: unknown) => error);
-      await arrived;
-      revoked = true;
-      expect(await runtime.request("instance.refresh", {})).toMatchObject({ state: "revoked" });
-      releaseStale();
-      expect(await stale).toMatchObject({ code: "INSTANCE_INVALID_RECEIPT" });
-      expect(await work).toMatchObject({ cancelled: true });
-      expect(drained).toBe(true);
-      await expect(runtime.request("roots.list", {})).rejects.toMatchObject({
-        code: "INSTANCE_REVOKED",
-      });
-      expect(
-        JSON.parse(await readFile(join(directory, "instance.json"), "utf8")).binding.status,
-      ).toBe("revoked");
-      expect((await stat(join(directory, "instance.key"))).mode & 0o777).toBe(0o600);
-    } finally {
-      releaseStale();
-      await runtime.close();
-      await api.stop(true);
-      await rm(dataDir, { recursive: true, force: true });
-    }
-  },
-);
+      if (delayNext) {
+        delayNext = false;
+        captured();
+        await release;
+      }
+      return Response.json({ json: receipt });
+    },
+  });
+  const binding: InstanceBinding = {
+    version: 1 as const,
+    instanceId: id,
+    publicKey: key.publicKey,
+    name: "Linux fixture",
+    platform: "linux",
+    appVersion: "0.1.0",
+    accountId: "owner",
+    origin: api.url.origin,
+    revision: 1,
+    status: "registered" as const,
+    issuedAt: new Date().toISOString(),
+  };
+  const storage = new ProfileStorage(directory);
+  await instanceKeys(storage.database).set(id, key.privateKey);
+  storage.close();
+  await writeFile(join(directory, "instance.json"), JSON.stringify(signer.issue(binding)), {
+    mode: 0o600,
+  });
+  let drained = false;
+  const runtime = createRuntime({
+    dataDir,
+    onInstanceRevoked: async () => {
+      drained = true;
+    },
+  });
+  try {
+    await runtime.request("instance.refresh", {});
+    const marker = join(directory, "started");
+    const work = runtime.request("tools.run", {
+      id: crypto.randomUUID(),
+      executable: process.execPath,
+      args: [
+        "-e",
+        "await Bun.write(process.argv.at(-1), 'started'); setInterval(() => {}, 1000)",
+        marker,
+      ],
+      cwd: directory,
+      timeoutMs: 30_000,
+    });
+    await expect.poll(() => Bun.file(marker).exists()).toBe(true);
+    delayNext = true;
+    const stale = runtime.instances.refresh().catch((error: unknown) => error);
+    await arrived;
+    revoked = true;
+    expect(await runtime.request("instance.refresh", {})).toMatchObject({ state: "revoked" });
+    releaseStale();
+    expect(await stale).toMatchObject({ code: "INSTANCE_INVALID_RECEIPT" });
+    expect(await work).toMatchObject({ cancelled: true });
+    expect(drained).toBe(true);
+    await expect(runtime.request("roots.list", {})).rejects.toMatchObject({
+      code: "INSTANCE_REVOKED",
+    });
+    expect(
+      JSON.parse(await readFile(join(directory, "instance.json"), "utf8")).binding.status,
+    ).toBe("revoked");
+  } finally {
+    releaseStale();
+    await runtime.close();
+    await api.stop(true);
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
 
 it("revokes the original remote session before rejecting a different instance account", async () => {
   const { createHost } = await import("../../../src/runtime/host");

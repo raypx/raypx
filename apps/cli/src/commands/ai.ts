@@ -1,6 +1,8 @@
 import { loadAiSettings } from "../runtime/ai/settings";
 import { InstanceRuntime, type InstanceAccess } from "../runtime/instances";
 import { profilePath } from "../runtime/state";
+import { ProfileStorage } from "../runtime/sqlite";
+import { instanceKeys } from "../runtime/instances/keys";
 import { defineCommand, type CommandDef } from "citty";
 import { mergeAiSettings, parseAiSettings } from "@raypx/ai/config";
 import type { AiRequestOptions } from "@raypx/ai";
@@ -46,9 +48,21 @@ export function createAiCommands(
         async run({ args }) {
           if (args._.length > 1)
             throw new LocalError("INVALID_INPUT", "Expected at most one JSON input.");
-          if (action === "complete")
-            await (options.instanceAccess ?? new InstanceRuntime(profilePath(options))).assert();
-          await runAiCommand(action, input(args._[0]), invocation);
+          // Catalog reads stay offline and never open a profile.
+          let storage: ProfileStorage | undefined;
+          try {
+            if (action === "complete") {
+              const access =
+                options.instanceAccess ??
+                new InstanceRuntime(profilePath(options), {
+                  keys: instanceKeys((storage = new ProfileStorage(profilePath(options))).database),
+                });
+              await access.assert();
+            }
+            await runAiCommand(action, input(args._[0]), invocation);
+          } finally {
+            storage?.close();
+          }
         },
       }),
     );

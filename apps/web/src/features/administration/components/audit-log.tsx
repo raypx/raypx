@@ -22,19 +22,39 @@ import { administrationClient } from "../client";
 import { authClient, apiUrl } from "../../auth/client";
 
 type Cursor = NonNullable<AuditFilter["cursor"]>;
+function dateRange(from: string, to: string) {
+  const start = Date.parse(`${from}T00:00:00Z`),
+    end = Date.parse(`${to}T00:00:00Z`) + 86400000;
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    start >= end ||
+    end - start > 366 * 86400000
+  )
+    return undefined;
+  return { from: new Date(start).toISOString(), to: new Date(end).toISOString() };
+}
 export function AuditLog() {
   const c = useTranslations("common"),
     t = useTranslations("administration");
   const session = authClient.useSession();
-  const [from, setFrom] = useState(() =>
-    new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
-  );
-  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [initialRange] = useState(() => {
+    const now = Date.now();
+    return {
+      from: new Date(now - 30 * 86400000).toISOString().slice(0, 10),
+      to: new Date(now).toISOString().slice(0, 10),
+    };
+  });
+  const [from, setFrom] = useState(initialRange.from);
+  const [to, setTo] = useState(initialRange.to);
   const [actor, setActor] = useState("");
   const [target, setTarget] = useState("");
   const [action, setAction] = useState<"" | AuditEntry["action"]>("");
   const [outcome, setOutcome] = useState<"" | AuditEntry["outcome"]>("");
-  const [filters, setFilters] = useState<AuditFilter>({ limit: 50 });
+  const [filters, setFilters] = useState<AuditFilter>(() => ({
+    limit: 50,
+    ...dateRange(initialRange.from, initialRange.to),
+  }));
   const [cursors, setCursors] = useState<(Cursor | null)[]>([null]);
   const [selected, setSelected] = useState<AuditEntry | null>(null);
   const [invalid, setInvalid] = useState(false);
@@ -57,14 +77,8 @@ export function AuditLog() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          const start = Date.parse(`${from}T00:00:00Z`),
-            end = Date.parse(`${to}T00:00:00Z`) + 86400000;
-          if (
-            !Number.isFinite(start) ||
-            !Number.isFinite(end) ||
-            start >= end ||
-            end - start > 366 * 86400000
-          ) {
+          const range = dateRange(from, to);
+          if (!range) {
             setInvalid(true);
             return;
           }
@@ -72,8 +86,7 @@ export function AuditLog() {
           setCursors([null]);
           setFilters({
             limit: 50,
-            from: new Date(start).toISOString(),
-            to: new Date(end).toISOString(),
+            ...range,
             ...(actor.trim() ? { actorId: actor.trim() } : {}),
             ...(target.trim() ? { targetId: target.trim() } : {}),
             ...(action ? { action } : {}),
@@ -223,7 +236,7 @@ export function AuditLog() {
           if (!open) setSelected(null);
         }}
       >
-        <DialogContent className="max-h-[85dvh] overflow-auto">
+        <DialogContent closeLabel={c("close")} className="max-h-[85dvh] overflow-auto">
           <DialogHeader>
             <DialogTitle>{t("details")}</DialogTitle>
           </DialogHeader>

@@ -36,39 +36,6 @@ export interface InstanceKeyStore {
   get(id: string): Promise<string | undefined>;
   set(id: string, key: string): Promise<void>;
 }
-function keyStore(directory: string): InstanceKeyStore {
-  const service = "pro.raypx.instance",
-    name = instanceDigest(directory);
-  if (process.platform === "darwin" || process.platform === "win32")
-    return {
-      get: async () => (await Bun.secrets.get({ service, name })) ?? undefined,
-      set: async (_id, value) => {
-        await Bun.secrets.set({ service, name, value, persist: "local" });
-      },
-    };
-  const file = join(directory, "instance.key");
-  return {
-    get: async () => {
-      try {
-        const stat = await lstat(file);
-        if (
-          !stat.isFile() ||
-          stat.isSymbolicLink() ||
-          (stat.mode & 0o077) !== 0 ||
-          stat.size > 4096
-        )
-          throw new InstanceError("INSTANCE_KEY_UNAVAILABLE");
-        return (await readFile(file)).toString("base64");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
-        throw error;
-      }
-    },
-    set: async (_id, key) => {
-      await writeFile(file, Buffer.from(key, "base64"), { mode: 0o600, flag: "wx" });
-    },
-  };
-}
 export class InstanceRuntime implements InstanceAccess {
   private pending:
     | {
@@ -84,12 +51,12 @@ export class InstanceRuntime implements InstanceAccess {
   constructor(
     readonly directory: string,
     private readonly options: {
-      keys?: InstanceKeyStore;
+      keys: InstanceKeyStore;
       onProgress?: (phase: InstanceEnrollmentPhase, keyId: string) => void;
       client?: (origin: string) => ApiClient;
-    } = {},
+    },
   ) {
-    this.keys = options.keys ?? keyStore(directory);
+    this.keys = options.keys;
   }
   private progress(phase: InstanceEnrollmentPhase) {
     try {
@@ -106,6 +73,25 @@ export class InstanceRuntime implements InstanceAccess {
         throw new InstanceError("INSTANCE_INVALID_RECEIPT");
       const parsed = instanceReceiptSchema.parse(JSON.parse(await readFile(file, "utf8")));
       return verifyInstanceReceipt(parsed, parsed.issuerKey);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+      throw error;
+    }
+  }
+  private async identityId(): Promise<string | undefined> {
+    try {
+      const file = join(this.directory, "instance-id"),
+        stat = await lstat(file);
+      if (
+        !stat.isFile() ||
+        stat.isSymbolicLink() ||
+        stat.size > 100 ||
+        (process.platform !== "win32" && stat.mode & 0o077)
+      )
+        throw new InstanceError("INSTANCE_INVALID_ID");
+      const id = (await readFile(file, "utf8")).trim();
+      if (!/^[a-f0-9-]{36}$/.test(id)) throw new InstanceError("INSTANCE_INVALID_ID");
+      return id;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
       throw error;
@@ -141,7 +127,10 @@ export class InstanceRuntime implements InstanceAccess {
   async status(): Promise<InstanceStatus> {
     try {
       const receipt = await this.read();
-      if (!receipt) return { state: "unregistered" };
+      if (!receipt) {
+        const id = await this.identityId();
+        return { state: id && !(await this.keys.get(id)) ? "unavailable" : "unregistered" };
+      }
       const key = await this.keys.get(receipt.binding.instanceId);
       if (
         !key ||
@@ -192,28 +181,20 @@ export class InstanceRuntime implements InstanceAccess {
       return { registered: true as const };
     }
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
-    await chmod(this.directory, 0o700);
-    const identityFile = join(this.directory, "instance-id");
-    let instanceId: string;
-    try {
-      const stat = await lstat(identityFile);
-      if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 100 || stat.mode & 0o077)
-        throw new InstanceError("INSTANCE_INVALID_ID");
-      instanceId = (await readFile(identityFile, "utf8")).trim();
-      if (!/^[a-f0-9-]{36}$/.test(instanceId)) throw new InstanceError("INSTANCE_INVALID_ID");
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      instanceId = crypto.randomUUID();
-      await writeFile(identityFile, instanceId, { mode: 0o600, flag: "wx" });
-    }
+    if (process.platform !== "win32") await chmod(this.directory, 0o700);
+    const existingId = await this.identityId();
+    const instanceId = existingId ?? crypto.randomUUID();
     this.progress("key-read");
     let privateKey = await this.keys.get(instanceId);
     if (!privateKey) {
+      if (existingId) throw new InstanceError("INSTANCE_KEY_UNAVAILABLE");
       this.progress("key-write");
       const pair = createInstanceKey();
       await this.keys.set(instanceId, pair.privateKey);
       privateKey = pair.privateKey;
     }
+    if (!existingId)
+      await writeFile(join(this.directory, "instance-id"), instanceId, { mode: 0o600, flag: "wx" });
     const { createPublicKey, createPrivateKey } = await import("node:crypto");
     const publicKey = createPublicKey(
       createPrivateKey({ key: Buffer.from(privateKey, "base64"), type: "pkcs8", format: "der" }),

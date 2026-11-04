@@ -62,12 +62,6 @@ func enrollBuiltCLI(t *testing.T, binary, directory, profile string, args []stri
 	if origin == "" {
 		t.Fatal("instance API fixture returned no origin")
 	}
-	t.Cleanup(func() {
-		// The consuming compiled executable owns the Keychain item, so it also removes it.
-		cleanup := host.Command(binary, fixture, "cleanup", filepath.Join(directory, "profiles", profile))
-		cleanup.Env = append(os.Environ(), "BUN_BE_BUN=1")
-		runInstanceFixture(t, cleanup, "cleanup")
-	})
 	login := host.Command(binary, append([]string{"login"}, args...)...)
 	login.Env = append(os.Environ(), "RAYPX_API_URL="+origin, "RAYPX_WEB_URL="+origin)
 	runInstanceFixture(t, login, "enrollment")

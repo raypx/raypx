@@ -1,5 +1,7 @@
 export default {
   instances: {
+    signInOriginal: "登录原账号",
+    originMismatch: "如需在线使用此实例，请在 Desktop 连接配置中选择原服务器（{origin}）。",
     title: "登记本地实例",
     intro: "首次登录后登记此电脑，之后可离线工作。登记不会开启远程访问或上传项目文件。",
     register: "登录并登记",
@@ -554,6 +556,7 @@ export default {
     agentHelp: "Agent 要求",
   },
   common: {
+    sessionUnavailable: "无法验证登录状态，请检查网络连接后重试。",
     adminConsole: "管理控制台",
     overview: "概览",
     auditLog: "操作审计",
@@ -746,6 +749,10 @@ export default {
     deleteConfirm: "确认删除此文件或空文件夹？此操作无法撤销。",
   },
   memory: {
+    unsavedTitle: "要保存修改吗？",
+    unsavedHint: "继续前保存此参考文档，或放弃本次修改。",
+    discardChanges: "放弃修改",
+    saveContinue: "保存并继续",
     CONTEXT_NOT_ARCHIVED: "请先归档此资料，再永久删除。",
     deletePermanently: "永久删除",
     deleteNamed: "永久删除{name}",

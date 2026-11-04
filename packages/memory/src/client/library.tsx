@@ -4,6 +4,14 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@raypx/ui/components/ui/dialog";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { HelpHint } from "@raypx/ui/help-hint";
@@ -22,15 +30,16 @@ import { EditIcon } from "@raypx/icons/edit";
 import { PlusIcon } from "@raypx/icons/plus";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { DeleteIcon } from "@raypx/icons/delete";
-import type {
-  ContextDocument,
-  ContextDocumentInput,
-  ContextDocumentSummary,
-  ContextVersion,
+import {
+  contextDocumentInputSchema,
+  type ContextDocument,
+  type ContextDocumentSummary,
+  type ContextVersion,
 } from "../model.js";
 import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.js";
 import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
-import { DocumentForm } from "./form.js";
+import { DocumentForm, documentDraft } from "./form.js";
+type EditorDestination = "new" | "close" | ContextDocumentSummary;
 interface Props {
   client: MemoryClientPort;
   ownerKey: string;
@@ -71,6 +80,11 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
     viewGeneration = useRef(0),
     creation = useRef<string | undefined>(undefined);
   const [editing, setEditing] = useState<ContextDocument | null | false>(false);
+  const [draft, setDraft] = useState(() => documentDraft(null, target));
+  const [invalid, setInvalid] = useState(false);
+  const [destination, setDestination] = useState<EditorDestination>();
+  const dirty =
+    editing !== false && JSON.stringify(draft) !== JSON.stringify(documentDraft(editing, target));
   const [kind, setKind] = useState("all"),
     [archived, setArchived] = useState(false);
   const [timeline, setTimeline] = useState<{
@@ -100,14 +114,16 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
     void Promise.resolve().then(load);
   }, [load]);
   async function mutate(run: () => Promise<void>) {
-    if (locked.current) return;
+    if (locked.current) return false;
     locked.current = true;
     setBusy(true);
     setError(undefined);
     try {
       await run();
+      return isActive();
     } catch (failure) {
       if (isActive()) setError(memoryFailure(failure));
+      return false;
     } finally {
       locked.current = false;
       if (isActive()) setBusy(false);
@@ -136,20 +152,51 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
       await load();
     });
   }
-  async function edit(document: ContextDocumentSummary) {
+  async function moveEditor(next: EditorDestination) {
+    if (locked.current || !isActive()) return;
+    if (typeof next === "string") {
+      viewGeneration.current++;
+      creation.current = undefined;
+      setEditing(next === "new" ? null : false);
+      setDraft(documentDraft(null, target));
+      setInvalid(false);
+      setError(undefined);
+      return;
+    }
     const current = ++viewGeneration.current;
+    locked.current = true;
+    setBusy(true);
     try {
-      const value = await request((options) => client.get({ id: document.id }, options));
+      const value = await request((options) => client.get({ id: next.id }, options));
       if (isActive() && current === viewGeneration.current) {
+        creation.current = undefined;
         setEditing(value);
+        setDraft(documentDraft(value));
+        setInvalid(false);
         setError(undefined);
       }
     } catch (failure) {
       if (isActive() && current === viewGeneration.current) setError(memoryFailure(failure));
+    } finally {
+      locked.current = false;
+      if (isActive()) setBusy(false);
     }
   }
-  async function save(document: ContextDocumentInput) {
-    await mutate(async () => {
+  function edit(next: EditorDestination) {
+    if (locked.current || destination) return;
+    if (next === "new" && editing === null) return;
+    if (typeof next !== "string" && editing && editing.id === next.id) return;
+    // Cancel stale reads before asking; a late response must not replace this draft.
+    viewGeneration.current++;
+    if (dirty) setDestination(next);
+    else void moveEditor(next);
+  }
+  async function save() {
+    const parsed = contextDocumentInputSchema.safeParse(draft);
+    setInvalid(!parsed.success);
+    if (!parsed.success) return false;
+    const document = parsed.data;
+    const saved = await mutate(async () => {
       if (editing)
         await request((options) =>
           client.update({ id: editing.id, revision: editing.revision, document }, options),
@@ -164,6 +211,11 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
       setEditing(false);
       await load();
     });
+    if (saved && destination) {
+      setDestination(undefined);
+      await moveEditor(destination);
+    }
+    return saved;
   }
   async function archive(document: ContextDocumentSummary) {
     if (locked.current || !isActive()) return;
@@ -322,15 +374,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           >
             <RefreshIcon aria-hidden="true" />
           </IconButton>
-          <Button
-            disabled={busy}
-            onClick={() => {
-              if (editing === null) return;
-              viewGeneration.current++;
-              setEditing(null);
-              setError(undefined);
-            }}
-          >
+          <Button disabled={busy} onClick={() => edit("new")}>
             <PlusIcon aria-hidden="true" />
             {t("create")}
           </Button>
@@ -345,15 +389,13 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
         <DocumentForm
           key={editing ? `${editing.id}:${editing.revision}` : "new"}
           document={editing}
+          draft={draft}
+          onChange={setDraft}
+          invalid={invalid}
           projects={projects}
-          defaultProject={target}
           busy={busy}
           onSave={save}
-          onCancel={() => {
-            viewGeneration.current++;
-            if (editing === null) creation.current = undefined;
-            setEditing(false);
-          }}
+          onCancel={() => edit("close")}
         />
       )}
       <div className="mb-3 flex flex-wrap items-center gap-4">
@@ -409,7 +451,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               label={t("editNamed", { name: document.name })}
               hint={c("edit")}
               disabled={busy}
-              onClick={() => void edit(document)}
+              onClick={() => edit(document)}
             >
               <EditIcon aria-hidden="true" />
             </IconButton>
@@ -507,6 +549,43 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
         </section>
       )}
       {dialog}
+      <Dialog
+        open={destination !== undefined}
+        onOpenChange={(open) => {
+          if (!open && !busy) setDestination(undefined);
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>{t("unsavedTitle")}</DialogTitle>
+            <DialogDescription>{t("unsavedHint")}</DialogDescription>
+          </DialogHeader>
+          {(error || invalid) && (
+            <p role="alert" className="text-destructive-text">
+              {t(invalid ? "invalid" : error!)}
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" disabled={busy} onClick={() => setDestination(undefined)}>
+              {c("cancel")}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                if (!destination) return;
+                setDestination(undefined);
+                void moveEditor(destination);
+              }}
+            >
+              {t("discardChanges")}
+            </Button>
+            <Button disabled={busy} onClick={() => void save()}>
+              {t("saveContinue")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

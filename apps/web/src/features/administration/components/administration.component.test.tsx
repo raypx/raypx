@@ -12,12 +12,12 @@ vi.mock("../../auth/client", () => ({
 }));
 import { Overview } from "./overview";
 import { AuditLog } from "./audit-log";
-function page(view: ReactNode) {
+function page(view: ReactNode, locale: "en" | "zh" = "en") {
   return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <BrowserLanguageProvider initialPreference={locale} restorePreference={false}>
         {view}
       </BrowserLanguageProvider>
     </QueryClientProvider>,
@@ -54,6 +54,16 @@ beforeEach(() => {
     entries: [entry],
     next: { startedAt: entry.startedAt, id: entry.id },
   });
+});
+it.each(["en", "zh"] as const)("labels the audit dialog close button in %s", async (locale) => {
+  page(<AuditLog />, locale);
+  fireEvent.click(
+    await screen.findByRole("button", { name: locale === "en" ? "View details" : "查看详情" }),
+  );
+  const dialog = await screen.findByRole("dialog");
+  expect(
+    within(dialog).getByRole("button", { name: locale === "en" ? "Close" : "关闭" }),
+  ).toBeVisible();
 });
 it("shows real zeroes, independent dependency states, accessible daily data and period selection", async () => {
   page(<Overview />);
@@ -99,4 +109,28 @@ it("filters and pages audit entries without exposing arbitrary data and displays
   );
   fireEvent.click(await screen.findByRole("button", { name: "View details" }));
   expect(within(screen.getByRole("dialog")).getByText("server-request")).toBeTruthy();
+});
+it("uses the displayed UTC days on initial load, apply and refresh while keeping unapplied dates separate", async () => {
+  const clock = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-04T23:59:59.999Z"));
+  try {
+    page(<AuditLog />);
+    await screen.findByText("Unconfirmed");
+    const initial = { limit: 50, from: "2026-10-05T00:00:00.000Z", to: "2026-11-05T00:00:00.000Z" };
+    expect(mocks.audit).toHaveBeenLastCalledWith(initial, expect.anything());
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(mocks.audit).toHaveBeenLastCalledWith(initial, expect.anything()));
+    fireEvent.change(screen.getByLabelText("From (UTC)"), { target: { value: "2026-11-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(mocks.audit).toHaveBeenLastCalledWith(initial, expect.anything()));
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    await waitFor(() =>
+      expect(mocks.audit).toHaveBeenLastCalledWith(
+        { ...initial, from: "2026-11-01T00:00:00.000Z" },
+        expect.anything(),
+      ),
+    );
+  } finally {
+    clock.mockRestore();
+  }
 });

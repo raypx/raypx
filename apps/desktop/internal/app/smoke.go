@@ -119,8 +119,6 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, sho
 							// Let the response flush before the event loop shuts down.
 							go func() { time.Sleep(50 * time.Millisecond); action("quit") }()
 							return true, nil
-						case "cleanupSessionKeys":
-							return cleanupSmokeSessions(directory)
 						case "cors":
 							return smokeCors(ctx, input)
 						case "stream":
@@ -184,44 +182,6 @@ func ServeSmoke(conn net.Conn, token string, dispatch func(context.Context, stri
 			_ = json.NewEncoder(conn).Encode(response)
 		}()
 	}
-}
-
-func cleanupSmokeSessions(directory string) (int, error) {
-	plain := func(path string, directory bool) bool {
-		info, err := os.Lstat(path)
-		return err == nil && info.Mode()&os.ModeSymlink == 0 && info.IsDir() == directory
-	}
-	marker := filepath.Join(directory, ".native-smoke-session-owner")
-	data, err := host.ReadBounded(marker, 64)
-	if err != nil || !filepath.IsAbs(directory) || !plain(directory, true) || !plain(marker, false) || string(data) != "raypx-native-smoke-v1\n" {
-		return 0, errors.New("Unsafe smoke profile")
-	}
-	servers := filepath.Join(directory, "servers")
-	count := 0
-	if _, err := os.Stat(servers); err == nil {
-		if !plain(servers, true) {
-			return 0, errors.New("Unsafe server directory")
-		}
-		entries, err := os.ReadDir(servers)
-		if err != nil {
-			return 0, err
-		}
-		for _, entry := range entries {
-			name := entry.Name()
-			path := filepath.Join(servers, name)
-			if len(name) != 32 || strings.Trim(name, "0123456789abcdef") != "" || !plain(path, true) {
-				continue
-			}
-			err := (SessionKeys{}).Delete(host.Digest(filepath.Join(path, "session-v2.enc")))
-			if err != nil && !errors.Is(err, mygo.ErrSecretNotFound) {
-				return 0, err
-			}
-			count++
-		}
-	} else if !os.IsNotExist(err) {
-		return 0, err
-	}
-	return count, host.AtomicWrite(filepath.Join(directory, ".native-smoke-sessions-cleaned"), []byte("true"))
 }
 
 func smokeStream(ctx context.Context, window *mygo.Window, desktop *host.Desktop) (any, error) {

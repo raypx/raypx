@@ -8,5 +8,10 @@
     "name": "20261103080801_acoustic_doomsday",
     "timestamp": 1793693281000,
     "sql": "CREATE TABLE `task_effects` (\n\t`id` text PRIMARY KEY,\n\t`binding` text NOT NULL,\n\t`task_id` text NOT NULL,\n\t`type` text NOT NULL,\n\t`status` text NOT NULL,\n\t`value` text NOT NULL,\n\t`created_at` text NOT NULL,\n\t`settled_at` text\n);\n--> statement-breakpoint\nCREATE TABLE `task_events` (\n\t`sequence` integer PRIMARY KEY AUTOINCREMENT,\n\t`id` text NOT NULL UNIQUE,\n\t`binding` text NOT NULL,\n\t`task_id` text NOT NULL,\n\t`type` text NOT NULL,\n\t`value` text NOT NULL\n);\n--> statement-breakpoint\nCREATE INDEX `task_effects_task` ON `task_effects` (`binding`,`task_id`);--> statement-breakpoint\nCREATE INDEX `task_effects_open` ON `task_effects` (`status`);--> statement-breakpoint\nCREATE INDEX `task_effects_settled` ON `task_effects` (`settled_at`);--> statement-breakpoint\nCREATE INDEX `task_events_task` ON `task_events` (`binding`,`task_id`,`sequence`);"
+  },
+  {
+    "name": "20261104024215_dapper_the_captain",
+    "timestamp": 1793760135000,
+    "sql": "CREATE TABLE `host_authorizations` (\n\t`api_url` text NOT NULL,\n\t`account_id` text NOT NULL,\n\t`device_id` text NOT NULL,\n\t`epoch` integer NOT NULL,\n\t`authorization` text NOT NULL,\n\tCONSTRAINT `host_authorizations_pk` PRIMARY KEY(`api_url`, `account_id`, `device_id`, `epoch`),\n\tCONSTRAINT \"host_epoch_positive\" CHECK(\"epoch\" > 0)\n);\n--> statement-breakpoint\nCREATE TABLE `instance_credentials` (\n\t`instance_id` text PRIMARY KEY,\n\t`private_key` blob NOT NULL,\n\tCONSTRAINT \"instance_key_size\" CHECK(length(\"private_key\") BETWEEN 1 AND 4096)\n);\n"
   }
 ]

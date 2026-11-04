@@ -15,17 +15,15 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 
-it("marks fresh smoke data and preserves it across phases while invalidating stale cleanup receipts", async () => {
+it("marks fresh smoke data and preserves it across phases with its ownership receipt", async () => {
   const root = await directory();
   await prepareSmokeDirectory(root);
   await writeFile(join(root, "preferences.json"), "preserve");
-  await writeFile(join(root, ".native-smoke-sessions-cleaned"), "true");
   await prepareSmokeDirectory(root);
   expect(await readFile(join(root, ".native-smoke-session-owner"), "utf8")).toBe(
     "raypx-native-smoke-v1\n",
   );
   expect(await readFile(join(root, "preferences.json"), "utf8")).toBe("preserve");
-  expect(existsSync(join(root, ".native-smoke-sessions-cleaned"))).toBe(false);
 });
 
 it.each(["servers", "profiles"])(

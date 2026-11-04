@@ -1,6 +1,6 @@
 import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
-import { expect, it } from "vite-plus/test";
-import { mkdtempSync, mkdirSync } from "node:fs";
+import { expect, it, vi } from "vite-plus/test";
+import { existsSync, mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startDaemon } from "../../../helpers/enrolled";
@@ -165,6 +165,7 @@ async function fixture(seed = false) {
   await expect.poll(() => host.control.info(scope).connected).toBe(true);
   return {
     host,
+    vault,
     frames,
     reconnect: () => {
       autoAck = false;
@@ -189,6 +190,23 @@ async function fixture(seed = false) {
     },
   };
 }
+it("cannot restore a detached binding after its credential deletion fails", async () => {
+  const f = await fixture();
+  try {
+    vi.spyOn(f.vault, "remove").mockRejectedValueOnce(
+      new Error("Synthetic credential deletion failure"),
+    );
+    await expect(f.request("host.detach", f.scope)).rejects.toThrow(
+      "Synthetic credential deletion failure",
+    );
+    expect(f.host.control.info(f.scope).authorized).toBe(false);
+    expect(existsSync(join(profilePath({ dataDir: f.dataDir }), "host-binding.json"))).toBe(false);
+    await f.host.control.restore();
+    expect(f.host.control.info(f.scope).authorized).toBe(false);
+  } finally {
+    await f.close();
+  }
+});
 it.skipIf(process.platform === "win32")(
   "updates Away policy in place and only withdraws affected requests, then exposes expired authorization",
   async () => {

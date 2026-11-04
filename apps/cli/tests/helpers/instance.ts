@@ -19,15 +19,7 @@ export async function enrollTestProfile(
   const id = crypto.randomUUID();
   let binding: InstanceBinding | undefined;
   let stage = "before begin";
-  const credential = { service: "pro.raypx.instance", name: instanceDigest(directory) };
-  const security = async (args: string[]) => {
-    const child = Bun.spawn(["/usr/bin/security", ...args], {
-      stdout: "ignore",
-      stderr: "ignore",
-      timeout: 15_000,
-    });
-    if (await child.exited) throw new Error("Synthetic Keychain fixture operation failed");
-  };
+  const keyId = instanceDigest(directory);
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -81,14 +73,9 @@ export async function enrollTestProfile(
   });
   const close = async () => {
     await server.stop(true);
-    if (process.platform === "darwin" && !process.env.RAYPX_TEST_KEYCHAIN) {
-      await security(["delete-generic-password", "-a", credential.name, "-s", credential.service]);
-    } else if (process.platform === "win32") {
-      await Bun.secrets.delete(credential);
-    }
   };
   try {
-    // Let the same executable that consumes the identity own its OS credential.
+    // Enroll with the executable under test; credentials stay in this temporary profile.
     const child = Bun.spawn(
       [
         ...launch,
@@ -123,7 +110,7 @@ export async function enrollTestProfile(
             )
           ) {
             phase = event.status;
-            scope = event.id === credential.name ? "same-slot" : "different-slot";
+            scope = event.id === keyId ? "same-slot" : "different-slot";
           }
         } catch {
           /* Ignore non-diagnostic output; never echo it. */

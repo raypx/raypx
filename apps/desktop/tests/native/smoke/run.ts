@@ -1,7 +1,6 @@
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { existsSync } from "node:fs";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import { nativeSmokeOptions } from "../../../scripts/native/smoke-options";
 import { buildSmoke, runMyGoSmoke } from "./launch";
@@ -15,9 +14,6 @@ const { packageManager } = await Bun.file(
 const { phase, ui } = nativeSmokeOptions(process.argv.slice(2), process.env);
 
 async function run(smokePhase: string, directory: string, restoredServer = false) {
-  const final =
-    !["shell", "write", "beta"].includes(smokePhase) &&
-    (smokePhase !== "restore" || phase !== "shell" || restoredServer);
   if (!installation) throw new Error("Native smoke installation is unavailable");
   return runMyGoSmoke(installation, smokePhase, directory, {
     ...process.env,
@@ -30,7 +26,6 @@ async function run(smokePhase: string, directory: string, restoredServer = false
     RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
     RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
     RAYPX_NATIVE_SMOKE_BUN: packageManager,
-    RAYPX_NATIVE_SMOKE_CLEANUP_SESSIONS: String(final),
   });
 }
 if (
@@ -91,12 +86,7 @@ try {
       // GUI Quit preserves its independent owner on both macOS and Windows.
       ownerStopped = await stopSmokeOwner(directory);
       if (!phase.startsWith("beta")) {
-        if (
-          ownerStopped &&
-          (!existsSync(join(directory, "servers")) ||
-            existsSync(join(directory, ".native-smoke-sessions-cleaned")))
-        )
-          await removeSmokeDirectory(directory);
+        if (ownerStopped) await removeSmokeDirectory(directory);
         else {
           console.error(`Native smoke teardown incomplete; retained ${directory}`);
           process.exitCode = 1;

@@ -53,7 +53,7 @@ export const DialogExample: Story = {
   render: () => (
     <Dialog>
       <DialogTrigger render={<Button variant="outline" />}>Sign out everywhere</DialogTrigger>
-      <DialogContent>
+      <DialogContent closeLabel="Close">
         <DialogHeader>
           <DialogTitle>Sign out of all devices?</DialogTitle>
           <DialogDescription>

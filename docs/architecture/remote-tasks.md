@@ -58,7 +58,7 @@ by server/account. WebView partitions still isolate browser storage between depl
 
 ## Authentication and routing
 
-The account session bootstraps a restricted macOS host credential stored in Keychain.
+The account session bootstraps a restricted host credential stored in the CLI profile SQLite database, scoped to the account, origin, device and epoch.
 The daemon uses it to renew device grants valid for at most ten minutes independently
 of browser sessions. Native never exports this credential to the renderer. Windows
 continues cookie-backed Native renewal. Renewing the same binding reconnects without

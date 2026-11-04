@@ -38,7 +38,7 @@ RAYPX_MYGO_UPDATER_PUBLIC_KEY and an HTTPS RAYPX_MYGO_UPDATER_URL. MyGo generate
 its own update archives/manifests. Do not point it at a Tauri update manifest or
 reuse that protocol's signing settings.
 
-Before a public release, verify installed-app upgrade, OS key storage/session
+Before a public release, verify installed-app upgrade, SQLite credential/session
 migration, server-isolated WebView storage, sleep/wake reconnect, daemon task
 survival after GUI Quit, real account/provider flows, and distribution signatures.
 Local headless results do not count as platform GUI or signing acceptance.

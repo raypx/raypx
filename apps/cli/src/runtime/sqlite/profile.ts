@@ -1,26 +1,19 @@
 import { Database } from "bun:sqlite";
-import { chmodSync, existsSync, lstatSync, mkdirSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
+import { join } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { LocalError } from "../errors";
 import { migrateLocalDatabase } from "./migrate";
+import { protectProfile } from "./permissions";
 
 /** Only the profile owner opens and migrates the shared writer. */
 function openProfileDatabase(directory: string) {
-  if (!isAbsolute(directory))
-    throw new LocalError("INVALID_PROFILE", "Profile directory must be absolute");
+  protectProfile(directory);
   const path = join(directory, "profile.sqlite");
-  if (existsSync(path)) {
-    const info = lstatSync(path);
-    if (!info.isFile() || info.isSymbolicLink())
-      throw new LocalError("UNSUPPORTED_SCHEMA", "Profile database must be a regular file");
-  }
-  mkdirSync(directory, { recursive: true, mode: 0o700 });
   const client = new Database(path, { create: true, strict: true });
   try {
-    if (process.platform !== "win32") chmodSync(path, 0o600);
+    if (process.platform !== "win32") protectProfile(directory);
     const database = drizzle({ client });
     migrateLocalDatabase(database);
+    protectProfile(directory);
     return database;
   } catch (error) {
     client.close();

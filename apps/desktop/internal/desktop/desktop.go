@@ -57,6 +57,7 @@ type Desktop struct {
 	cli                CLIConfig
 	instance           *sql.Conn
 	database           *sql.DB
+	credentials        *Credentials
 	control            sync.Mutex
 	account            string
 	generation         atomic.Uint64
@@ -68,12 +69,31 @@ type Desktop struct {
 }
 
 func New(config Config, directory string, options Options) (*Desktop, error) {
+	if options.Keys == nil {
+		if err := protectCredentials(directory); err != nil {
+			return nil, err
+		}
+	}
 	db, instance, err := AcquireInstance(directory)
 	if err != nil {
 		return nil, err
 	}
-	jar, err := OpenCookies(filepath.Join(directory, "servers", config.Scope), config.APIURL, options.Keys)
+	var credentials *Credentials
+	keys := options.Keys
+	if keys == nil {
+		credentials, err = OpenCredentials(directory)
+		if err != nil {
+			instance.Close()
+			db.Close()
+			return nil, err
+		}
+		keys = credentials.Keys(config.Scope)
+	}
+	jar, err := OpenCookies(filepath.Join(directory, "servers", config.Scope), config.APIURL, keys)
 	if err != nil {
+		if credentials != nil {
+			credentials.Close()
+		}
 		instance.Close()
 		db.Close()
 		return nil, err
@@ -81,6 +101,13 @@ func New(config Config, directory string, options Options) (*Desktop, error) {
 	events := NewEvents()
 	cli := options.CLI
 	cli.Args = append([]string(nil), cli.Args...)
+	if len(cli.Args) == 0 {
+		profile := config.LocalProfile
+		if profile == "" {
+			profile = "default"
+		}
+		cli.Args = []string{"--profile", profile}
+	}
 	var engine EngineClient
 	if options.Engine != nil {
 		engine = options.Engine(events)
@@ -88,7 +115,7 @@ func New(config Config, directory string, options Options) (*Desktop, error) {
 		engine = NewEngine(cli.Binary, cli.Version, cli.Args, cli.Daemon, events)
 	}
 	lifetime, cancel := context.WithCancel(context.Background())
-	d := &Desktop{Config: config, Engine: engine, cli: cli, Events: events, API: NewAPI(config.APIURL, jar), Preferences: OpenPreferences(directory), methods: map[string]bool{}, database: db, instance: instance, lifetime: lifetime, cancel: cancel}
+	d := &Desktop{Config: config, Engine: engine, cli: cli, Events: events, API: NewAPI(config.APIURL, jar), Preferences: OpenPreferences(directory), methods: map[string]bool{}, database: db, credentials: credentials, instance: instance, lifetime: lifetime, cancel: cancel}
 	for _, method := range options.Methods {
 		d.methods[method] = true
 	}

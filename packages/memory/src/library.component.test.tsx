@@ -17,6 +17,81 @@ import {
 } from "../tests/helpers/client";
 setupMemoryClientTests();
 
+it.each(["switch", "new", "close"] as const)(
+  "protects unsaved reference edits before %s",
+  async (action) => {
+    const client = fixture(),
+      second = { ...document(), id: crypto.randomUUID(), name: "Second reference" };
+    client.list.mockResolvedValue([document(), second]);
+    client.get.mockImplementation(async ({ id: requested }) =>
+      requested === second.id ? second : document(),
+    );
+    render(language(<MemoryLibraryPage client={client} ownerKey="device" scope="device" />));
+    await screen.findByRole("heading", { name: "Project conventions" });
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Project conventions" }));
+    const content = await screen.findByLabelText("Reference content");
+    fireEvent.change(content, { target: { value: "Keep this draft" } });
+    const leave = () =>
+      fireEvent.click(
+        screen.getByRole("button", {
+          name:
+            action === "switch"
+              ? "Edit: Second reference"
+              : action === "new"
+                ? "New reference"
+                : "Cancel",
+        }),
+      );
+    leave();
+    let dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Save your changes?");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(content).toHaveValue("Keep this draft");
+    expect(client.get).toHaveBeenCalledTimes(1);
+    expect(client.update).not.toHaveBeenCalled();
+    leave();
+    dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Discard changes" }));
+    await waitFor(() => {
+      const expected = action === "close" ? null : action === "new" ? "" : second.name;
+      expect(screen.queryByLabelText<HTMLInputElement>("Name")?.value ?? null).toBe(expected);
+    });
+    expect(client.update).not.toHaveBeenCalled();
+  },
+);
+
+it("saves before switching and retains the draft and destination when saving fails", async () => {
+  const client = fixture(),
+    second = { ...document(), id: crypto.randomUUID(), name: "Second reference" };
+  client.list.mockResolvedValue([document(), second]);
+  client.get.mockImplementation(async ({ id: requested }) =>
+    requested === second.id ? second : document(),
+  );
+  client.update.mockRejectedValueOnce({ data: { error: { code: "CONTEXT_CONFLICT" } } });
+  render(language(<MemoryLibraryPage client={client} ownerKey="device" scope="device" />));
+  await screen.findByRole("heading", { name: "Project conventions" });
+  fireEvent.click(screen.getByRole("button", { name: "Edit: Project conventions" }));
+  fireEvent.change(await screen.findByLabelText("Reference content"), {
+    target: { value: "Unsaved decisions" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Edit: Second reference" }));
+  const dialog = await screen.findByRole("dialog");
+  await userEvent.click(within(dialog).getByRole("button", { name: "Save and continue" }));
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent("your edits are still here");
+  expect(client.get).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText("Reference content")).toHaveValue("Unsaved decisions");
+  await userEvent.click(within(dialog).getByRole("button", { name: "Save and continue" }));
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue(second.name));
+  expect(client.update).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      id,
+      revision: 2,
+      document: expect.objectContaining({ content: "Unsaved decisions" }),
+    }),
+    expect.anything(),
+  );
+});
+
 it("shows project and general references and defaults new references to the current project", async () => {
   const client = fixture(),
     target = { deviceId, projectId };

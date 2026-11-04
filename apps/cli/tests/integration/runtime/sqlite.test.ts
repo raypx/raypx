@@ -49,7 +49,9 @@ it("adds orchestration tables in a second migration without backfilling existing
   // Apply only the initial migration and record a task, as a profile from before.
   const initial = drizzle({ client: f.client });
   migrateLocalDatabase(initial);
-  const statement = migrations.at(-1)!.sql;
+  const statement = migrations.find((entry) =>
+    entry.sql.includes("CREATE TABLE `task_events`"),
+  )!.sql;
   expect(migrations.at(-1)!.name).not.toBe(migrations[0]!.name);
   expect(statement).toContain("CREATE TABLE `task_events`");
   expect(statement).toContain("CREATE TABLE `task_effects`");

@@ -12,6 +12,11 @@ and directory grants owned by the native picker. Preserve the existing SQLite
 instance lock, data paths and encrypted-session format. Dependencies must build
 with CGO_ENABLED=0. Generated assets and binaries stay ignored.
 
+Go owns server-scoped Cookie keys in `credentials.sqlite`, independently of the
+lifetime instance-lock transaction. Preserve the injectable Keys port, private
+POSIX permissions and restricted inheritable Windows DACLs. Never read/import
+old credentials. `Config.LocalProfile` selects the bundled CLI profile only.
+
 Tests live in ../tests/native/host/. From apps/desktop run
 `go test -race ./internal/... ./tests/native/host/...` and `go vet ./...`, then
 the repository Bun verification. Headless artifact checks must use temporary profiles and never

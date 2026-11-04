@@ -123,22 +123,11 @@ export const windowActions = {
 export function handleTrayAction(actionName: unknown) {
   return driver.request("tray", { action: actionName });
 }
-let cleanupAttempted = false;
-export async function cleanupSessionKeys(force = false) {
-  if (cleanupAttempted || (!force && process.env.RAYPX_NATIVE_SMOKE_CLEANUP_SESSIONS !== "true"))
-    return;
-  cleanupAttempted = true;
-  await driver.request("cleanupSessionKeys");
-}
 export async function quitDesktop(code = 0) {
   stopped = true;
   clearInterval(polling);
-  try {
-    await cleanupSessionKeys(code !== 0);
-  } finally {
-    await driver.request("quit", { code }).catch(() => {});
-    driver.close();
-  }
+  await driver.request("quit", { code }).catch(() => {});
+  driver.close();
 }
 
 export function measureNativeStream() {

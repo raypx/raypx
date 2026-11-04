@@ -50,15 +50,19 @@ web_url = "https://app.example.com"
 Profiles are user-defined names, not release channels. Select one by changing
 `profile`; omit it to use root defaults. Unknown profiles or unsupported options
 are errors. Raypx's CLI `--profile` still selects its local SQLite profile and
-does not select this Desktop connection.
+does not select this Desktop connection. Desktop maps optional `local_profile`
+(default `default`) to the bundled CLI `--profile`; it is independent of `profile`.
+Set it to a new name and restart Desktop to explicitly register a new identity.
+The old profile, history and file grants remain on disk.
 
-| Parameter                  | Meaning                                                                  |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `base_url`                 | API origin; defaults to `https://raypx.pro`                              |
-| `web_url`                  | Web origin for verification/password-reset links; defaults to `base_url` |
-| `profile`                  | Optional selected name in `profiles`                                     |
-| `profiles.<name>.base_url` | Overrides the root API origin                                            |
-| `profiles.<name>.web_url`  | Overrides the Web origin for this profile                                |
+| Parameter                  | Meaning                                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `base_url`                 | API origin; defaults to `https://raypx.pro`                                                         |
+| `web_url`                  | Web origin for verification/password-reset links; defaults to `base_url`                            |
+| `local_profile`            | Local CLI profile name, default `default` (1–64 letters/digits/`_`/`-`, starts with a letter/digit) |
+| `profile`                  | Optional selected name in `profiles`                                                                |
+| `profiles.<name>.base_url` | Overrides the root API origin                                                                       |
+| `profiles.<name>.web_url`  | Overrides the Web origin for this profile                                                           |
 
 A selected profile takes precedence over root defaults. If it overrides
 `base_url`, an omitted profile `web_url` follows that new origin, rather than
@@ -97,10 +101,13 @@ configuration directory. It changes where `config.toml` is read, not the server
 precedence. The GUI launched by Finder/Explorer may not inherit shell variables.
 Native smoke tests always use their own temporary configuration directory.
 
-Windows CEF does not implement the current SDK Session cookie interface. Native
-HTTP sessions use an authenticated AES-GCM cookie file in the server's local data
-directory; its random encryption key lives in Windows Credential Manager with
-local-only persistence, protected by DPAPI. Missing keys or corrupted ciphertext
-fail closed. Neither keys nor cookies enter `config.toml` or renderer storage.
-Session cookies without an expiry stay in memory; persistent cookies honor expiry
-and sign-out removal. macOS continues to use its native WebKit Session cookie store.
+Native HTTP on macOS and Windows uses an authenticated AES-GCM `session-v2.enc`
+Cookie file under the server scope. Its encryption key lives in Go-owned
+`credentials.sqlite`, isolated from the CLI profile database and Desktop instance lock.
+POSIX directories/files use 0700/0600; Windows uses restricted inheritable DACLs,
+including SQLite auxiliary files. Credentials never enter TOML, renderer storage or sync.
+Old Keychain entries/credential files are not read, imported or deleted. An old profile
+without its database key remains unavailable, with history and file grants retained;
+choose a fresh `local_profile` explicitly. An old Cookie that cannot be decrypted requires
+sign-in, and a missing Host authorization requires explicit authorization again.
+Session-only Cookies stay in memory; persistent Cookies honor expiry and sign-out removal.

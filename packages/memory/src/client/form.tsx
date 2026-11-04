@@ -1,48 +1,50 @@
-import { useId, useState, type FormEvent } from "react";
+import { useId, type FormEvent } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { SelectField } from "@raypx/ui/select-field";
-import {
-  contextDocumentInputSchema,
-  type ContextDocument,
-  type ContextDocumentInput,
-} from "../model.js";
+import type { ContextDocument, ContextDocumentInput } from "../model.js";
 import type { MemoryProjectsPort } from "./port.js";
+
+export function documentDraft(
+  document: ContextDocument | null,
+  defaultProject?: { deviceId: string; projectId: string },
+): ContextDocumentInput {
+  return {
+    name: document?.name ?? "",
+    category: document?.category ?? "",
+    content: document?.content ?? "",
+    kind: document?.kind ?? "memory",
+    project: document ? document.project : (defaultProject ?? null),
+  };
+}
+
 export function DocumentForm({
   document,
+  draft,
+  onChange,
+  invalid,
   projects,
   busy,
   onSave,
   onCancel,
-  defaultProject,
 }: {
   document: ContextDocument | null;
+  draft: ContextDocumentInput;
+  onChange: (draft: ContextDocumentInput) => void;
+  invalid: boolean;
   projects: Awaited<ReturnType<MemoryProjectsPort["list"]>>;
   busy: boolean;
-  onSave: (input: ContextDocumentInput) => Promise<void>;
+  onSave: () => Promise<unknown>;
   onCancel: () => void;
-  defaultProject?: { deviceId: string; projectId: string } | undefined;
 }) {
   const t = useTranslations("memory"),
     c = useTranslations("common"),
     id = useId();
-  const [name, setName] = useState(document?.name ?? ""),
-    [category, setCategory] = useState(document?.category ?? ""),
-    [content, setContent] = useState(document?.content ?? "");
-  const [kind, setKind] = useState<"memory" | "template">(document?.kind ?? "memory");
-  const [project, setProject] = useState(
-    document
-      ? document.project
-        ? JSON.stringify(document.project)
-        : "global"
-      : defaultProject
-        ? JSON.stringify(defaultProject)
-        : "global",
-  );
-  const [invalid, setInvalid] = useState(false);
+  const { name, category, content, kind } = draft;
+  const project = draft.project ? JSON.stringify(draft.project) : "global";
   const options = [
     { value: "global", label: t("global") },
     ...projects.map((item) => ({
@@ -55,19 +57,7 @@ export function DocumentForm({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
-    const parsed = contextDocumentInputSchema.safeParse({
-      name,
-      category,
-      content,
-      kind,
-      project: project === "global" ? null : JSON.parse(project),
-    });
-    if (!parsed.success) {
-      setInvalid(true);
-      return;
-    }
-    setInvalid(false);
-    await onSave(parsed.data);
+    await onSave();
   }
   return (
     <section className="mb-7 rounded-lg border border-border bg-sidebar p-5">
@@ -79,7 +69,7 @@ export function DocumentForm({
             <SelectField
               id={`${id}-kind`}
               value={kind}
-              onValueChange={setKind}
+              onValueChange={(value) => onChange({ ...draft, kind: value })}
               disabled={busy}
               options={[
                 { value: "memory", label: t("memory") },
@@ -92,7 +82,9 @@ export function DocumentForm({
             <SelectField
               id={`${id}-project`}
               value={project}
-              onValueChange={setProject}
+              onValueChange={(value) =>
+                onChange({ ...draft, project: value === "global" ? null : JSON.parse(value) })
+              }
               disabled={busy}
               options={options}
             />
@@ -103,7 +95,7 @@ export function DocumentForm({
           <Input
             id={`${id}-name`}
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => onChange({ ...draft, name: event.target.value })}
             disabled={busy}
             maxLength={120}
             required
@@ -114,7 +106,7 @@ export function DocumentForm({
           <Input
             id={`${id}-category`}
             value={category}
-            onChange={(event) => setCategory(event.target.value)}
+            onChange={(event) => onChange({ ...draft, category: event.target.value })}
             disabled={busy}
             maxLength={80}
           />
@@ -124,7 +116,7 @@ export function DocumentForm({
           <Textarea
             id={`${id}-content`}
             value={content}
-            onChange={(event) => setContent(event.target.value)}
+            onChange={(event) => onChange({ ...draft, content: event.target.value })}
             disabled={busy}
             maxLength={8000}
             required

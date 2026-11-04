@@ -70,10 +70,11 @@ func ParseOrigin(raw string) (string, error) {
 }
 
 type Config struct {
-	APIURL      string `json:"apiUrl"`
-	WebURL      string `json:"webUrl"`
-	Scope       string `json:"-"`
-	Directories JSON   `json:"-"`
+	APIURL       string `json:"apiUrl"`
+	WebURL       string `json:"webUrl"`
+	Scope        string `json:"-"`
+	Directories  JSON   `json:"-"`
+	LocalProfile string `json:"-"`
 }
 
 var profileName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$`)
@@ -88,7 +89,7 @@ func ParseConfig(source []byte) (Config, error) {
 		return fail()
 	}
 	for key := range root {
-		if !strings.Contains("|base_url|web_url|profile|profiles|ai|connectors|", "|"+key+"|") {
+		if !strings.Contains("|base_url|web_url|profile|profiles|local_profile|ai|connectors|", "|"+key+"|") {
 			return fail()
 		}
 	}
@@ -185,7 +186,15 @@ func ParseConfig(source []byte) (Config, error) {
 			}
 		}
 	}
-	return Config{api, web, Digest(api)[:32], dirs}, nil
+	localProfile := "default"
+	if raw, ok := root["local_profile"]; ok {
+		value, valid := raw.(string)
+		if !valid || !profileName.MatchString(value) {
+			return fail()
+		}
+		localProfile = value
+	}
+	return Config{APIURL: api, WebURL: web, Scope: Digest(api)[:32], Directories: dirs, LocalProfile: localProfile}, nil
 }
 func LoadConfig() (Config, error) {
 	directory := os.Getenv("RAYPX_HOME")

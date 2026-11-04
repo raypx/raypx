@@ -13,7 +13,6 @@ import {
   mainWindow,
   quitDesktop,
   view,
-  cleanupSessionKeys,
 } from "./host";
 
 const suppliedDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
@@ -131,7 +130,6 @@ async function acceptance() {
     console.info(
       "Native smoke beta-restore passed: real HTTPS session survives process restart, relay reconnects, logout clears session and detaches.",
     );
-    await cleanupSessionKeys();
     await handleTrayAction("quit");
     return;
   }
@@ -285,7 +283,6 @@ async function acceptance() {
   console.info(
     "Native smoke beta passed: Web → HTTPS relay → packaged Desktop → standalone CLI → real Claude/Codex → Web and native renderer.",
   );
-  await cleanupSessionKeys();
   await handleTrayAction("quit");
 }
 try {

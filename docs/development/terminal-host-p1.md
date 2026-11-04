@@ -36,14 +36,14 @@ Provider keys remain on the computer.
 
 For this first Desktop-assisted bootstrap, Native checks the current browser
 account, supplies a trusted Origin, and requests a restricted credential for the registered device/epoch.
-The credential goes straight to daemon IPC and macOS Keychain (`pro.raypx.daemon`),
+The credential goes straight to daemon IPC and `host_authorizations` in its existing `profile.sqlite`,
 never the renderer, TOML/JSON files or logs. PostgreSQL stores only its hash. It
 expires after 30 days and can mint only ten-minute grants for that device; it
 cannot read account data or authenticate a viewer. Revoking it invalidates all
 credentials/grants for that computer. Browser sessions remain necessary for
 viewers and new authorization, but are not the daemon's renewal credential.
 
-If Keychain is unavailable the secret stays in memory and settings explicitly
+If a SQLite credential write fails the secret stays in memory and settings explicitly
 show that restart requires authorization again. Initial network failure retries
 without changing origin. Definite revocation or expiry requires authorization.
 Bootstrap requires a session created within ten minutes and after the last
@@ -168,15 +168,15 @@ phases. Model calls in `packages/ai` are not an installed Pi Agent runner.
 
 ## Acceptance recorded on 2026-10-25
 
-| Gate                          | Result                                                                                                                                                                            |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Full repository verify        | Passed: check/test/lint, Node builds, relocated artifact probes and standalone CLI smoke                                                                                          |
-| Application tests             | API 90, CLI 202, Desktop 144, Web 63 passed                                                                                                                                       |
-| Isolated PostgreSQL           | 15/15 passed, including actual replay-window SQL and EXPLAIN                                                                                                                      |
-| Real terminal + browser       | Claude 2.1.302 and Codex 0.163.0-alpha.11.2: isolated installed hooks → daemon → Node API/PostgreSQL/relay → Web button → real marker file; Desktop proxy disconnected throughout |
-| Persistent host authorization | Keychain stored the synthetic host credential; reconnecting GUI and restarting daemon restored the connection without browser bootstrap                                           |
-| macOS packaged GUI            | Shell and both restore phases passed; actual GUI Quit left its owner running; runtime-origin and device preference isolation passed                                               |
-| Responsive approval           | Actual Web UI at desktop width and 390×844, including delivered state                                                                                                             |
+| Gate                          | Result                                                                                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full repository verify        | Passed: check/test/lint, Node builds, relocated artifact probes and standalone CLI smoke                                                                                              |
+| Application tests             | API 90, CLI 202, Desktop 144, Web 63 passed                                                                                                                                           |
+| Isolated PostgreSQL           | 15/15 passed, including actual replay-window SQL and EXPLAIN                                                                                                                          |
+| Real terminal + browser       | Claude 2.1.302 and Codex 0.163.0-alpha.11.2: isolated installed hooks → daemon → Node API/PostgreSQL/relay → Web button → real marker file; Desktop proxy disconnected throughout     |
+| Persistent host authorization | The acceptance at implementation time used Keychain; current credentials use profile SQLite. reconnecting GUI and restarting daemon restored the connection without browser bootstrap |
+| macOS packaged GUI            | Shell and both restore phases passed; actual GUI Quit left its owner running; runtime-origin and device preference isolation passed                                                   |
+| Responsive approval           | Actual Web UI at desktop width and 390×844, including delivered state                                                                                                                 |
 
 Private logs and screenshots are under `.artifacts/task-workspace/p1-*`; they are
 not committed. Native system-notification presentation, interactive Codex trust,

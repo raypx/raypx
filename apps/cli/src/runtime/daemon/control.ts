@@ -59,7 +59,7 @@ export class DaemonControl {
     vault?: HostVault,
     private readonly independent = true,
   ) {
-    this.vault = vault ?? createHostVault();
+    this.vault = vault ?? createHostVault(runtime.state.db);
     this.terminal.onCloudChange(() => {
       void this.wake().catch(() => this.backgroundFailure());
     });
@@ -302,13 +302,14 @@ export class DaemonControl {
       epoch: authorization.epoch,
       expiresAt: authorization.expiresAt,
     };
-    this.persistent = await this.vault.set(binding, authorization);
+    const persistent = await this.vault.set(binding, authorization);
     const grant = await this.grant(binding);
     if (this.closing || generation !== this.selectionGeneration)
       throw new LocalError("AUTH_REQUIRED", "Account selection changed");
     const previous = this.current;
     if (previous && remoteBinding(previous) !== remoteBinding(binding)) await this.detachCurrent();
     this.current = binding;
+    this.persistent = persistent;
     this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
     writeJson(join(this.directory, "host-binding.json"), binding);
     const control = this.control(scope);
@@ -337,8 +338,9 @@ export class DaemonControl {
           { signal: AbortSignal.timeout(3000) },
         )
         .catch(() => {});
-    await this.vault.remove(current);
+    // A failed credential deletion must never restore a detached binding at startup.
     rmSync(join(this.directory, "host-binding.json"), { force: true });
+    await this.vault.remove(current);
   }
   private async selectAccount(scope: { accountId: string | null; apiUrl: string }) {
     const file = join(this.directory, "host-session.json"),

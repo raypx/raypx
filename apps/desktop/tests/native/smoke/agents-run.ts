@@ -1,7 +1,6 @@
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { existsSync } from "node:fs";
 import { buildSmoke, runMyGoSmoke } from "./launch";
 import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
@@ -37,7 +36,6 @@ try {
     RAYPX_NATIVE_SMOKE_PHASE: "agents",
     RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
     RAYPX_NATIVE_SMOKE_UI: "quiet",
-    RAYPX_NATIVE_SMOKE_CLEANUP_SESSIONS: "true",
   });
   results = JSON.parse(await readFile(join(directory, "agents-result.json"), "utf8"));
 } finally {
@@ -47,15 +45,8 @@ try {
   } catch {
     cleanupError = new Error("Live Agent smoke owner cleanup failed");
   } finally {
-    const sessionsCleaned =
-      !existsSync(join(directory, "servers")) ||
-      existsSync(join(directory, ".native-smoke-sessions-cleaned"));
-    if (!sessionsCleaned) {
-      cleanupError ??= new Error("Live Agent smoke session cleanup failed");
-      process.exitCode = 1;
-    }
     try {
-      if (process.env.RAYPX_LIVE_KEEP === "1" || !cleanupSucceeded || !sessionsCleaned)
+      if (process.env.RAYPX_LIVE_KEEP === "1" || !cleanupSucceeded)
         console.info(`Live Agent acceptance data: ${directory}`);
       else await removeSmokeDirectory(directory);
     } finally {

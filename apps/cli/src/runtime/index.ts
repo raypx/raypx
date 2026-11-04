@@ -1,6 +1,7 @@
 import { createLocalRouter } from "./router";
 import { PiHost } from "./agents/pi/host";
 import { InstanceRuntime } from "./instances";
+import { instanceKeys } from "./instances/keys";
 import { join } from "node:path";
 import { type LocalMethod } from "@raypx/contracts/local";
 import { MemoryRuntime } from "./memory";
@@ -20,12 +21,13 @@ import { ProfileStorage } from "./sqlite";
 export function createRuntime(options: RuntimeOptions = {}) {
   const scheduler = options.mode === "stdio" || options.mode === "daemon";
   const emit = options.emit ?? (() => {});
+  const storage = new ProfileStorage(profilePath(options));
   const instances = new InstanceRuntime(profilePath(options), {
+    keys: instanceKeys(storage.database),
     onProgress: (status, id) =>
       recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status, id }),
   });
   const instanceAccess = options.instanceAccess ?? instances;
-  const storage = new ProfileStorage(profilePath(options));
   let state: StateStore;
   try {
     state = new StateStore(storage);

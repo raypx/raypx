@@ -85,9 +85,7 @@ export function SessionBoundary({
         </div>
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">{c("networkError")}</h2>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">
-            Unable to verify your session. Please check your connection and try again.
-          </p>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">{c("sessionUnavailable")}</p>
         </div>
         <Button variant="outline" onClick={() => void session.refetch()}>
           {c("retry")}

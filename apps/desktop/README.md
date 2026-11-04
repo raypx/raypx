@@ -5,7 +5,7 @@ Go 1.27.3 builds with CGO_ENABLED=0. The CLI owns execution and the independent
 daemon; Herdr remains the terminal runtime.
 
 - `main.go`: embedded frontend/manifests and entry point.
-- `internal/app`: MyGo lifecycle, trusted IPC, native UI and OS secrets.
+- `internal/app`: MyGo lifecycle, trusted IPC, native UI.
 - `internal/desktop`: native policy, HTTP/session persistence, CLI and event transport.
 - `src`: existing renderer; `bridge.ts` declares its native vocabulary.
 - `resources`: maintained icons/entitlements, plus generated `bin` payloads.
@@ -47,6 +47,6 @@ compiled CLI for the daemon integration test; only its isolated daemon is stoppe
 Normal production builds exclude the private endpoint and renderer test hook.
 
 Native uses the current data paths, encrypted-session format and device preferences.
-Retired WebView and keyring data is not imported. MyGo signed updates use distinct
+Native session keys live in server-scoped `credentials.sqlite`; CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use private permissions; Windows uses restricted DACLs. Old credentials are never read, imported or deleted. Existing profiles without their database key remain unavailable; select a new `local_profile` explicitly to register again. MyGo signed updates use distinct
 keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.

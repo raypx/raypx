@@ -43,7 +43,7 @@ export function ProjectTools({
           <TooltipTrigger
             render={
               <Link
-                to="/"
+                to="/projects"
                 aria-label={t("allProjects")}
                 className="grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring max-[760px]:hidden"
               />

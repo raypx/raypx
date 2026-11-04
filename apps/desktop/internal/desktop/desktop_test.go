@@ -3,6 +3,7 @@ package desktop
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 )
 
@@ -19,6 +20,34 @@ func (e *testEngine) Request(_ context.Context, method string, _ any) (any, erro
 		return JSON{"entries": []any{}}, nil
 	}
 	return nil, errors.New("unexpected test engine request")
+}
+
+func TestLocalProfileSelectsBundledCLIWithoutExposingNativeConfig(t *testing.T) {
+	for _, profile := range []string{"default", "fresh-profile"} {
+		config, err := ParseConfig([]byte("local_profile='" + profile + "'\n"))
+		if err != nil || config.LocalProfile != profile {
+			t.Fatal("Local profile was not parsed")
+		}
+		desktop, err := New(config, t.TempDir(), Options{CLI: CLIConfig{Binary: "/never-launched"},
+			Engine: func(*EventStream) EngineClient { return &testEngine{} },
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(desktop.cli.Args, []string{"--profile", profile}) {
+			t.Fatal("CLI did not receive the selected profile")
+		}
+		store := desktop.credentials
+		desktop.Close()
+		if _, err := store.Keys(config.Scope).Get("closed"); err == nil {
+			t.Fatal("Desktop leaked its credential connection")
+		}
+	}
+	for _, source := range []string{"local_profile=42", "local_profile='../other'", "local_profile=''"} {
+		if _, err := ParseConfig([]byte(source)); err == nil {
+			t.Fatal("Invalid local profile was accepted")
+		}
+	}
 }
 
 type testKeys struct{}

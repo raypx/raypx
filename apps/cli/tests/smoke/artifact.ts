@@ -160,8 +160,7 @@ try {
     bytecode: true,
   });
   assert.ok(probeBuild.success, "Default provider chunks must compile into the offline probe");
-  // Each independently compiled executable owns its own OS credential. Sharing
-  // the copied CLI's identity would require an interactive macOS Keychain grant.
+  // Give the independently compiled provider probe its own enrolled test profile.
   const probeData = join(dataDir, "provider-profile");
   closeProbe = await enrollTestProfile({ dataDir: probeData }, [probeBinary]);
   const providerIds = ["anthropic", "openai", "google", "openrouter"];

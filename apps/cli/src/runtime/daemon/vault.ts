@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import { and, eq } from "drizzle-orm";
+import type { LocalDatabase } from "../sqlite";
+import { hostAuthorizations } from "../sqlite/schema/credentials";
+import { LocalError } from "../errors";
 import { z } from "zod";
 import { hostAuthorizationSchema, type HostAuthorization } from "@raypx/contracts/terminal";
 
@@ -19,62 +23,77 @@ export interface HostVault {
   set(binding: HostBinding, value: HostAuthorization): Promise<boolean>;
   remove(binding: HostBinding): Promise<void>;
 }
-/** Secrets are never written to TOML, JSON, logs or the desktop bridge. */
-export function createHostVault(
-  options: {
-    platform?: NodeJS.Platform;
-    secrets?: Pick<typeof Bun.secrets, "get" | "set" | "delete">;
-  } = {},
-): HostVault {
-  const platform = options.platform ?? process.platform;
-  const secrets = options.secrets ?? Bun.secrets;
-  const persistent = platform === "darwin" || platform === "win32";
+/** Borrows ProfileStorage; SQLite transactions are the only persistence boundary. */
+export function createHostVault(database: LocalDatabase): HostVault {
   const memory = new Map<string, HostAuthorization>();
   const name = (binding: HostBinding) =>
-    `${bindingKey(binding.apiUrl, binding.accountId)}:${binding.deviceId}:${binding.epoch}`;
-  const service = "pro.raypx.daemon";
+    JSON.stringify([binding.apiUrl, binding.accountId, binding.deviceId, binding.epoch]);
+  const where = (binding: HostBinding) =>
+    and(
+      eq(hostAuthorizations.apiUrl, binding.apiUrl),
+      eq(hostAuthorizations.accountId, binding.accountId),
+      eq(hostAuthorizations.deviceId, binding.deviceId),
+      eq(hostAuthorizations.epoch, binding.epoch),
+    );
+  const valid = (binding: HostBinding, value: HostAuthorization) =>
+    value.accountId === binding.accountId &&
+    value.deviceId === binding.deviceId &&
+    value.epoch === binding.epoch &&
+    value.expiresAt === binding.expiresAt;
   return {
     async get(binding) {
       const key = name(binding),
         cached = memory.get(key);
-      if (cached) return structuredClone(cached);
-      if (!persistent) return;
+      if (cached && valid(binding, cached)) return structuredClone(cached);
       try {
-        const raw = await secrets.get({ service, name: key });
-        if (!raw) return;
-        const parsed = hostAuthorizationSchema.parse(JSON.parse(raw));
-        if (
-          parsed.accountId !== binding.accountId ||
-          parsed.deviceId !== binding.deviceId ||
-          parsed.epoch !== binding.epoch
-        )
-          return;
-        memory.set(key, parsed);
-        return structuredClone(parsed);
+        const row = database.select().from(hostAuthorizations).where(where(binding)).get();
+        if (!row) return;
+        const value = hostAuthorizationSchema.parse(JSON.parse(row.authorization));
+        if (valid(binding, value)) return value;
       } catch {
-        return;
+        // An unavailable credential requires explicit reauthorization.
       }
     },
     async set(binding, value) {
+      hostBindingSchema.parse(binding);
+      const parsed = hostAuthorizationSchema.parse(value);
+      if (!valid(binding, parsed)) throw new Error("Invalid host authorization binding");
       const key = name(binding);
-      memory.set(key, structuredClone(value));
-      if (!persistent) return false;
       try {
-        await secrets.set({ service, name: key, value: JSON.stringify(value), persist: "local" });
+        database.transaction((tx) => {
+          tx.insert(hostAuthorizations)
+            .values({
+              apiUrl: binding.apiUrl,
+              accountId: binding.accountId,
+              deviceId: binding.deviceId,
+              epoch: binding.epoch,
+              authorization: JSON.stringify(parsed),
+            })
+            .onConflictDoUpdate({
+              target: [
+                hostAuthorizations.apiUrl,
+                hostAuthorizations.accountId,
+                hostAuthorizations.deviceId,
+                hostAuthorizations.epoch,
+              ],
+              set: { authorization: JSON.stringify(parsed) },
+            })
+            .run();
+        });
+        memory.delete(key);
         return true;
       } catch {
+        memory.set(key, structuredClone(parsed));
         return false;
       }
     },
     async remove(binding) {
-      const key = name(binding);
-      memory.delete(key);
-      if (persistent) {
-        try {
-          await secrets.delete({ service, name: key });
-        } catch {
-          /* A stale key grants no access after server revocation. */
-        }
+      memory.delete(name(binding));
+      // Report a failed local deletion; callers must not claim it was persisted.
+      try {
+        database.delete(hostAuthorizations).where(where(binding)).run();
+      } catch {
+        throw new LocalError("HOST_CREDENTIAL_UNAVAILABLE", "Unable to remove host authorization");
       }
     },
   };

@@ -21,13 +21,11 @@ export async function prepareSmokeDirectory(directory: string) {
       (await readFile(marker, "utf8")) !== "raypx-native-smoke-v1\n"
     )
       throw new Error("Invalid native smoke data ownership marker");
-    await rm(join(directory, ".native-smoke-sessions-cleaned"), { force: true });
     return;
   }
   if ((await readdir(directory)).length > 0)
     throw new Error("Use an empty isolated native smoke data directory");
   await writeFile(marker, "raypx-native-smoke-v1\n", { mode: 0o600, flag: "wx" });
-  await rm(join(directory, ".native-smoke-sessions-cleaned"), { force: true });
 }
 
 /** WebView2 helpers can retain handles briefly after the GUI and daemon exit. */
