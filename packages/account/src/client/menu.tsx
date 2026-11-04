@@ -60,8 +60,9 @@ export function AccountMenu({
               onClick={() => onNavigate("login")}
               className={cn(
                 "motion-reduce:transition-none",
-                variant === "sidebar" &&
-                  "flex min-h-10 w-full items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 text-left text-[13px] font-medium text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 sidebar-icon:size-10 sidebar-icon:justify-center sidebar-icon:border-transparent sidebar-icon:bg-transparent sidebar-icon:px-0",
+                variant === "header"
+                  ? "h-10"
+                  : "flex min-h-10 w-full items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 text-left text-[13px] font-medium text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 sidebar-icon:size-10 sidebar-icon:justify-center sidebar-icon:border-transparent sidebar-icon:bg-transparent sidebar-icon:px-0",
               )}
             />
           }
@@ -92,7 +93,7 @@ export function AccountMenu({
         className={cn(
           "flex items-center rounded-lg text-left text-foreground outline-none transition-colors duration-150 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent motion-reduce:transition-none",
           variant === "header"
-            ? "size-10 justify-center"
+            ? "size-10 justify-center pointer-coarse:size-11"
             : "min-h-12 w-full gap-2.5 px-2 py-2 sidebar-icon:justify-center sidebar-icon:px-0",
         )}
       >

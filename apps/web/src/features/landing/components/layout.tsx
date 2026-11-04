@@ -44,7 +44,9 @@ export function LandingLayout() {
               <ThemeToggle />
               <LanguageMenu />
             </div>
-            <UserButton />
+            <div className="grid min-h-10 min-w-24 shrink-0 items-center justify-items-end pointer-coarse:min-h-11">
+              <UserButton />
+            </div>
           </nav>
         </div>
       </header>
@@ -55,11 +57,11 @@ export function LandingLayout() {
       >
         <Outlet />
       </main>
-      <div className="border-t border-border">
+      <div className="border-t border-border bg-muted/30">
         <LegalFooter
           expanded
           siteName={siteName}
-          className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-10"
+          className="mx-auto w-full max-w-6xl px-5 py-4 sm:px-10"
         />
       </div>
     </div>

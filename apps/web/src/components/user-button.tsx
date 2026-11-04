@@ -16,10 +16,12 @@ import { accountAccessQuery } from "../features/auth/access";
 import { guestReturnTo } from "../features/tasks/guest-draft";
 import { analytics } from "../features/analytics/client";
 
+const headerPlaceholderClass = "size-10 rounded-full pointer-coarse:size-11";
+
 /** Landing content stays independent of account availability and SSR cookies. */
 export function UserButton({ variant = "header" }: { variant?: "header" | "sidebar" }) {
   return variant === "header" ? (
-    <ClientOnly fallback={<Skeleton className="size-10 rounded-full" />}>
+    <ClientOnly fallback={<Skeleton className={headerPlaceholderClass} />}>
       <AccountButton variant={variant} />
     </ClientOnly>
   ) : (
@@ -55,12 +57,16 @@ function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
     return (
       <Skeleton
         aria-label={c("loading")}
-        className={variant === "header" ? "size-10 rounded-full" : "h-12 w-full rounded-lg"}
+        className={variant === "header" ? headerPlaceholderClass : "h-12 w-full rounded-lg"}
       />
     );
   if (session.error)
     return (
-      <IconButton label={c("retryAccount")} onClick={() => void session.refetch()}>
+      <IconButton
+        label={c("retryAccount")}
+        className={variant === "header" ? "size-10 pointer-coarse:size-11" : undefined}
+        onClick={() => void session.refetch()}
+      >
         <RefreshIcon aria-hidden="true" />
       </IconButton>
     );

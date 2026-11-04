@@ -157,6 +157,9 @@ test(
     const loading = page.getByRole("button", { name: "Loading…", exact: true });
     await expect(loading).toHaveCount(1);
     await expect(loading.first()).toBeDisabled();
+    const header = page.getByRole("banner");
+    const headerHeight = () => header.evaluate((element: HTMLElement) => element.offsetHeight);
+    const loadingHeight = await headerHeight();
     resolveSession();
     await expect(page.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
       "href",
@@ -166,6 +169,7 @@ test(
       page.getByRole("link", { name: "Connect a computer", exact: true }),
     ).toHaveAttribute("href", "/settings");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+    await expect(header).toHaveJSProperty("offsetHeight", loadingHeight);
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
     expect(privateReads).toEqual([]);
 
@@ -190,9 +194,13 @@ test(
       page.getByRole("link", { name: "Sign in to connect a computer", exact: true }),
     ).toHaveAttribute("href", "/login?returnTo=%2Fsettings");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveCount(0);
+    await expect(header).toHaveJSProperty("offsetHeight", loadingHeight);
+    await page.setViewportSize({ width: 320, height: 844 });
+    const narrowHeight = await headerHeight();
     signedIn = true;
     await broadcast("signin");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+    await expect(header).toHaveJSProperty("offsetHeight", narrowHeight);
     await expect(
       page.getByRole("link", { name: "Connect a computer", exact: true }),
     ).toHaveAttribute("href", "/settings");
