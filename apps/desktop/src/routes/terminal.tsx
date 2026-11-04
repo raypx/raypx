@@ -49,7 +49,7 @@ function TerminalPage() {
   const project = Route.useLoaderData();
   const t = useTranslations("terminal");
   const c = useTranslations("common");
-  const j = useTranslations("jobs");
+  const command = useTranslations("command");
   const tasks = useTranslations("tasks");
   const unavailable = Boolean(project.project && !project.cwd);
   const { resolvedTheme } = useTheme();
@@ -237,7 +237,7 @@ function TerminalPage() {
         throw new Error("arguments");
       args = value;
     } catch {
-      setError(j("invalidArguments"));
+      setError(command("invalidArguments"));
       return;
     }
     setOpening(true);
@@ -326,7 +326,7 @@ function TerminalPage() {
             htmlFor="terminal-executable"
             className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
           >
-            {t("executable")}
+            {command("executable")}
             <Input
               id="terminal-executable"
               name="executable"
@@ -341,7 +341,7 @@ function TerminalPage() {
             htmlFor="terminal-cwd"
             className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
           >
-            {t("cwd")}
+            {command("cwd")}
             <Input
               id="terminal-cwd"
               name="cwd"
@@ -356,7 +356,7 @@ function TerminalPage() {
             htmlFor="terminal-args"
             className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
           >
-            {t("arguments")}
+            {command("arguments")}
             <Input id="terminal-args" name="args" defaultValue="[]" disabled={running || opening} />
           </label>
           <div className="flex min-h-[34px] flex-wrap items-center gap-5 self-end">

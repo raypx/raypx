@@ -44,8 +44,7 @@ function JobsPending() {
 }
 function JobsPage() {
   const router = useRouter(),
-    t = useTranslations("jobs"),
-    cloud = useTranslations("cloudJobs"),
+    t = useTranslations("automations"),
     tasks = useTranslations("tasks");
   const data = Route.useLoaderData(),
     local = localRoute.useLoaderData();
@@ -81,7 +80,7 @@ function JobsPage() {
               search={{ scope: "remote", taskId }}
               className="underline underline-offset-4"
             >
-              {cloud("viewTask")}
+              {t("cloud.viewTask")}
             </Link>
           )}
         />

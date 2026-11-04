@@ -22,7 +22,7 @@ export const Route = createFileRoute("/(app)/automations")({
   component: Page,
 });
 function Page() {
-  const t = useTranslations("cloudJobs");
+  const t = useTranslations("automations.cloud");
   const { project, device } = Route.useSearch();
   return (
     <SessionBoundary

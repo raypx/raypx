@@ -70,7 +70,7 @@ export function ReauthorizeHost({ email }: { email: string }) {
             <label htmlFor={`${id}-password`}>{a("password")}</label>
             <PasswordInput
               id={`${id}-password`}
-              labels={{ show: c("showPassword"), hide: c("hidePassword") }}
+              labels={{ show: a("showPassword"), hide: a("hidePassword") }}
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}

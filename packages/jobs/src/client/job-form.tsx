@@ -38,9 +38,8 @@ export function JobForm({
   ownerKey: string;
   target?: { deviceId: string; projectId: string } | undefined;
 }) {
-  const t = useTranslations("cloudJobs"),
-    c = useTranslations("common"),
-    j = useTranslations("jobs");
+  const t = useTranslations("automations"),
+    c = useTranslations("common");
   const format = useFormatter(),
     prefix = useId();
   const [name, setName] = useState(job?.name ?? "");
@@ -156,12 +155,13 @@ export function JobForm({
   }
   const options = devices.map((item) => ({
     value: deviceKey(item),
-    label: `${item.name}${item.online ? "" : ` (${t("offline")})`}`,
+    label: `${item.name}${item.online ? "" : ` (${t("cloud.offline")})`}`,
   }));
-  if (selected && !device) options.unshift({ value: selected, label: t("targetUnavailable") });
+  if (selected && !device)
+    options.unshift({ value: selected, label: t("cloud.targetUnavailable") });
   return (
     <section className="mb-8 rounded-lg border border-border bg-sidebar p-5 @xl/main:p-6">
-      <h2 className="mb-5 text-base font-semibold">{t(job ? "edit" : "create")}</h2>
+      <h2 className="mb-5 text-base font-semibold">{t(job ? "cloud.edit" : "cloud.create")}</h2>
       <form onSubmit={(event) => void submit(event)} className="flex max-w-3xl flex-col gap-5">
         <Field>
           <FieldLabel htmlFor={`${prefix}-name`}>{c("name")}</FieldLabel>
@@ -176,7 +176,7 @@ export function JobForm({
         </Field>
         <div className="grid gap-5 @xl/main:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor={`${prefix}-cron`}>{j("schedule")}</FieldLabel>
+            <FieldLabel htmlFor={`${prefix}-cron`}>{t("schedule")}</FieldLabel>
             <Input
               id={`${prefix}-cron`}
               value={cron}
@@ -185,10 +185,10 @@ export function JobForm({
               required
               disabled={busy}
             />
-            <p className="text-xs text-muted-foreground">{j("timezoneHint")}</p>
+            <p className="text-xs text-muted-foreground">{t("timezoneHint")}</p>
           </Field>
           <Field>
-            <FieldLabel htmlFor={`${prefix}-zone`}>{j("timezone")}</FieldLabel>
+            <FieldLabel htmlFor={`${prefix}-zone`}>{t("timezone")}</FieldLabel>
             <Input
               id={`${prefix}-zone`}
               value={timezone}
@@ -200,7 +200,7 @@ export function JobForm({
           </Field>
         </div>
         <fieldset className="space-y-3">
-          <legend className="mb-2 text-sm font-medium">{j("action")}</legend>
+          <legend className="mb-2 text-sm font-medium">{t("action")}</legend>
           <RadioGroup
             value={action}
             onValueChange={(value) =>
@@ -210,38 +210,38 @@ export function JobForm({
           >
             <Field orientation="horizontal">
               <RadioGroupItem id={`${prefix}-sync`} value="device.sync" />
-              <FieldLabel htmlFor={`${prefix}-sync`}>{t("sync")}</FieldLabel>
+              <FieldLabel htmlFor={`${prefix}-sync`}>{t("cloud.sync")}</FieldLabel>
             </Field>
             <Field orientation="horizontal">
               <RadioGroupItem id={`${prefix}-agent`} value="agent.run" />
-              <FieldLabel htmlFor={`${prefix}-agent`}>{t("agent")}</FieldLabel>
+              <FieldLabel htmlFor={`${prefix}-agent`}>{t("cloud.agent")}</FieldLabel>
             </Field>
           </RadioGroup>
           <p className="max-w-[65ch] text-xs text-muted-foreground">
-            {t(action === "device.sync" ? "syncHint" : "agentHint")}
+            {t(action === "device.sync" ? "cloud.syncHint" : "cloud.agentHint")}
           </p>
         </fieldset>
         <Field>
-          <FieldLabel htmlFor={`${prefix}-device`}>{t("computer")}</FieldLabel>
+          <FieldLabel htmlFor={`${prefix}-device`}>{t("cloud.computer")}</FieldLabel>
           <SelectField
             id={`${prefix}-device`}
             value={selected || null}
             onValueChange={chooseDevice}
             options={options}
-            placeholder={t("chooseDevice")}
+            placeholder={t("cloud.chooseDevice")}
             disabled={busy || Boolean(target)}
             required
           />
         </Field>
         {!device && (
           <p role="status" className="text-sm text-muted-foreground">
-            {t(devices.length ? "epochHint" : "noDevices")}
+            {t(devices.length ? "cloud.epochHint" : "cloud.noDevices")}
           </p>
         )}
         {action === "agent.run" && (
           <>
             <Field>
-              <FieldLabel htmlFor={`${prefix}-project`}>{t("project")}</FieldLabel>
+              <FieldLabel htmlFor={`${prefix}-project`}>{t("cloud.project")}</FieldLabel>
               <SelectField
                 id={`${prefix}-project`}
                 value={project || null}
@@ -250,14 +250,14 @@ export function JobForm({
                   value: item.id,
                   label: item.name,
                 }))}
-                placeholder={t("chooseProject")}
+                placeholder={t("cloud.chooseProject")}
                 disabled={busy || Boolean(target)}
                 required
               />
             </Field>
             <div className="grid gap-5 @xl/main:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor={`${prefix}-provider`}>{t("provider")}</FieldLabel>
+                <FieldLabel htmlFor={`${prefix}-provider`}>{t("cloud.provider")}</FieldLabel>
                 <SelectField
                   id={`${prefix}-provider`}
                   value={provider}
@@ -272,21 +272,21 @@ export function JobForm({
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor={`${prefix}-mode`}>{t("mode")}</FieldLabel>
+                <FieldLabel htmlFor={`${prefix}-mode`}>{t("cloud.mode")}</FieldLabel>
                 <SelectField
                   id={`${prefix}-mode`}
                   value={mode}
                   onValueChange={setMode}
                   options={[
-                    { value: "run", label: t("runMode") },
-                    { value: "plan", label: t("planMode") },
+                    { value: "run", label: t("cloud.runMode") },
+                    { value: "plan", label: t("cloud.planMode") },
                   ]}
                   disabled={busy}
                 />
               </Field>
             </div>
             <Field>
-              <FieldLabel htmlFor={`${prefix}-prompt`}>{t("prompt")}</FieldLabel>
+              <FieldLabel htmlFor={`${prefix}-prompt`}>{t("cloud.prompt")}</FieldLabel>
               <Textarea
                 id={`${prefix}-prompt`}
                 value={prompt}
@@ -311,7 +311,7 @@ export function JobForm({
         )}
         {budgetProps && <ContextBudget {...budgetProps} onChange={setBudget} />}
         <section className="space-y-2 text-xs text-muted-foreground">
-          <h3 className="font-medium text-foreground">{j("preview")}</h3>
+          <h3 className="font-medium text-foreground">{t("preview")}</h3>
           {preview.length ? (
             <ul className="space-y-1">
               {preview.map((date) => (
@@ -321,12 +321,12 @@ export function JobForm({
               ))}
             </ul>
           ) : (
-            <p role="status">{t("INVALID_CRON")}</p>
+            <p role="status">{t("cloud.INVALID_CRON")}</p>
           )}
         </section>
         {invalid && (
           <p role="alert" className="text-sm text-destructive-text">
-            {t("invalid")}
+            {t("cloud.invalid")}
           </p>
         )}
         <div className="flex gap-3">

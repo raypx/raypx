@@ -63,8 +63,7 @@ function CloudJobs({
   accountId,
   target,
 }: CloudJobsPageProps) {
-  const t = useTranslations("cloudJobs"),
-    j = useTranslations("jobs"),
+  const t = useTranslations("automations"),
     c = useTranslations("common");
   const format = useFormatter();
   const { confirm, dialog } = useConfirmation();
@@ -221,7 +220,7 @@ function CloudJobs({
       !(await confirm({
         requestKey: `job-delete:${job.id}`,
         title: c("deleteNamed", { name: job.name }),
-        description: t("deleteHint"),
+        description: t("cloud.deleteHint"),
         confirmLabel: c("delete"),
         cancelLabel: c("cancel"),
       })) ||
@@ -285,10 +284,10 @@ function CloudJobs({
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <h1>{t("title")}</h1>
-            <HelpHint label={t("help")} description={t("ownership")} />
+            <h1>{t("cloud.title")}</h1>
+            <HelpHint label={t("cloud.help")} description={t("cloud.ownership")} />
           </div>
-          <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("intro")}</p>
+          <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("cloud.intro")}</p>
         </div>
         <div className="flex items-center gap-2">
           <IconButton
@@ -311,20 +310,20 @@ function CloudJobs({
             }}
           >
             <PlusIcon aria-hidden="true" />
-            {t("create")}
+            {t("cloud.create")}
           </Button>
         </div>
       </header>
       {data && !data.enabled && (
         <p role="status" className="mb-5 rounded-md bg-muted p-3 text-sm">
-          {t("JOBS_DISABLED")}
+          {t("cloud.JOBS_DISABLED")}
         </p>
       )}
       {error && (
         <div role="alert" className="mb-5 space-y-2 text-sm text-destructive-text">
-          <p>{t(error)}</p>
+          <p>{t(`cloud.${error}`)}</p>
           {(error === "CONFLICT" || error === "JOB_CONFLICT") && (
-            <p className="text-xs">{t("conflictHint")}</p>
+            <p className="text-xs">{t("cloud.conflictHint")}</p>
           )}
         </div>
       )}
@@ -348,9 +347,9 @@ function CloudJobs({
       {shown?.length === 0 && editing === false && (
         <div className="py-14 text-center">
           <ScheduleIcon className="mx-auto mb-4 size-9 text-muted-foreground" />
-          <h2 className="text-lg">{t("empty")}</h2>
+          <h2 className="text-lg">{t("cloud.empty")}</h2>
           <p className="mx-auto mt-2 max-w-[55ch] text-sm text-muted-foreground">
-            {t("emptyHint")}
+            {t("cloud.emptyHint")}
           </p>
         </div>
       )}
@@ -364,20 +363,20 @@ function CloudJobs({
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base font-medium wrap-anywhere">{job.name}</h2>
                 <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                  {j(job.enabled ? "enabled" : "disabled")}
+                  {t(job.enabled ? "enabled" : "disabled")}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
                 <code>{job.cron}</code> · {job.timezone} ·{" "}
-                {t(job.action.type === "device.sync" ? "sync" : "agent")}
+                {t(job.action.type === "device.sync" ? "cloud.sync" : "cloud.agent")}
               </p>
               <p className="text-xs text-muted-foreground">
                 {data.devices.find((item) => item.id === job.action.deviceId)?.name ??
-                  t("targetUnavailable")}
+                  t("cloud.targetUnavailable")}
               </p>
               {job.enabled && job.nextRunAt && (
                 <p className="text-xs text-muted-foreground">
-                  {j("next")}: {date(job.nextRunAt)}
+                  {t("next")}: {date(job.nextRunAt)}
                 </p>
               )}
             </div>
@@ -388,15 +387,15 @@ function CloudJobs({
                 onClick={() => void runNow(job)}
               >
                 <PlayIcon aria-hidden="true" />
-                {pendingRuns.includes(job.id) ? t("checkRun") : j("run")}
+                {pendingRuns.includes(job.id) ? t("cloud.checkRun") : t("run")}
               </Button>
               <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
-                {j("history")}
+                {t("history")}
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label={`${j(job.enabled ? "pause" : "enable")}: ${job.name}`}
+                aria-label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}
                 disabled={busy}
                 onClick={() => void toggle(job)}
               >
@@ -430,7 +429,7 @@ function CloudJobs({
         <section className="mt-8 space-y-3">
           <header className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold">
-              {history.job.name} · {j("history")}
+              {history.job.name} · {t("history")}
             </h2>
             <Button
               variant="ghost"
@@ -444,7 +443,7 @@ function CloudJobs({
             </Button>
           </header>
           {!history.runs.length && (
-            <p className="text-sm text-muted-foreground">{j("noHistory")}</p>
+            <p className="text-sm text-muted-foreground">{t("noHistory")}</p>
           )}
           {history.runs.map((run) => (
             <Collapsible key={run.id} className="border-t border-border">
@@ -458,29 +457,29 @@ function CloudJobs({
               >
                 <ChevronRightIcon className="group-data-panel-open:rotate-90" aria-hidden="true" />
                 <span>{date(run.startedAt)}</span>
-                <span>{t(`status_${run.status}`)}</span>
-                <span>{t(run.trigger === "manual" ? "manual" : "scheduled")}</span>
+                <span>{t(`cloud.status_${run.status}`)}</span>
+                <span>{t(run.trigger === "manual" ? "cloud.manual" : "cloud.scheduled")}</span>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 pb-4 text-sm">
-                <p>{t(run.action.type === "device.sync" ? "sync" : "agent")}</p>
+                <p>{t(run.action.type === "device.sync" ? "cloud.sync" : "cloud.agent")}</p>
                 {run.action.type === "agent.run" && (
                   <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap wrap-anywhere">
                     {run.action.prompt}
                   </pre>
                 )}
-                {run.code && <p>{t(jobReason(run.code))}</p>}
+                {run.code && <p>{t(`cloud.${jobReason(run.code)}`)}</p>}
                 {run.status === "unknown" && (
-                  <p className="max-w-[65ch] text-muted-foreground">{t("unknownHint")}</p>
+                  <p className="max-w-[65ch] text-muted-foreground">{t("cloud.unknownHint")}</p>
                 )}
                 {run.taskId && <div>{renderTaskLink(run.taskId)}</div>}
                 {run.sync && (
                   <p className="text-xs text-muted-foreground">
-                    {t("syncCompleted", { sequence: String(run.sync.sequence) })}
+                    {t("cloud.syncCompleted", { sequence: String(run.sync.sequence) })}
                   </p>
                 )}
                 {run.finishedAt && (
                   <p className="text-xs text-muted-foreground">
-                    {t("finishedAt", { date: date(run.finishedAt) })}
+                    {t("cloud.finishedAt", { date: date(run.finishedAt) })}
                   </p>
                 )}
               </CollapsibleContent>

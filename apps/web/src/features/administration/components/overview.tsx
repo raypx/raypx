@@ -45,7 +45,7 @@ export function Overview() {
   return (
     <section className="flex min-w-0 flex-col gap-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1>{c("overview")}</h1>
+        <h1>{t("nav.overview")}</h1>
         <div className="flex items-center gap-2">
           <SelectField
             aria-label={t("period")}

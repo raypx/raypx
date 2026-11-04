@@ -30,7 +30,6 @@ export function PasswordField({
   const inputId = id ?? generatedId;
   const requirementsId = `${inputId}-requirements`;
   const t = useTranslations("auth");
-  const c = useTranslations("common");
   const [validLength, setValidLength] = useState<boolean | null>(null);
   const showRequirements = purpose === "new";
   const valid = validLength === true;
@@ -65,7 +64,7 @@ export function PasswordField({
           autoComplete={purpose === "current" ? "current-password" : "new-password"}
           minLength={purpose === "current" ? 1 : authPolicy.passwordMinLength}
           maxLength={authPolicy.passwordMaxLength}
-          labels={{ show: c("showPassword"), hide: c("hidePassword"), capsLock: c("capsLockOn") }}
+          labels={{ show: t("showPassword"), hide: t("hidePassword"), capsLock: t("capsLockOn") }}
           aria-invalid={isInvalid}
           aria-describedby={
             [describedBy, showRequirements ? requirementsId : undefined]

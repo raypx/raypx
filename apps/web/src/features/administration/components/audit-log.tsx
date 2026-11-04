@@ -71,7 +71,7 @@ export function AuditLog() {
     if (!query.data) return <LoadingState label={c("loading")} />;
     if (!query.data.entries.length) return <EmptyState title={t("noAudit")} />;
     return (
-      <Table aria-label={c("auditLog")}>
+      <Table aria-label={t("nav.auditLog")}>
         <TableHeader>
           <TableRow>
             <TableHead>{t("time")}</TableHead>
@@ -114,7 +114,7 @@ export function AuditLog() {
   return (
     <section className="flex min-w-0 flex-col gap-6">
       <header className="flex items-center justify-between gap-3">
-        <h1>{c("auditLog")}</h1>
+        <h1>{t("nav.auditLog")}</h1>
         <Button variant="outline" onClick={() => void query.refetch()}>
           {c("refresh")}
         </Button>

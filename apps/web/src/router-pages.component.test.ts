@@ -45,10 +45,10 @@ describe("application shell pages", () => {
     ).toEqual({
       "/projects": { title: "common.projects", layout: "workbench" },
       "/account": { title: "common.account", layout: "document" },
-      "/admin/": { title: "common.overview", layout: "workbench" },
-      "/admin/audit": { title: "common.auditLog", layout: "workbench" },
+      "/admin/": { title: "administration.nav.overview", layout: "workbench" },
+      "/admin/audit": { title: "administration.nav.auditLog", layout: "workbench" },
       "/admin/users": { title: "common.users", layout: "workbench" },
-      "/admin/settings": { title: "common.adminSettings", layout: "document" },
+      "/admin/settings": { title: "configuration.title", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },
       "/memory": { title: "memory.title", layout: "workbench" },

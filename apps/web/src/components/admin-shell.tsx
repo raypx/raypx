@@ -54,33 +54,46 @@ export function AdminShell() {
       ),
   });
   const navigation: ShellNavItem<WebPath>[] = [
-    { to: "/admin", exact: true, label: c("overview"), icon: <AdjustmentsIcon /> },
+    {
+      to: "/admin",
+      exact: true,
+      label: t("administration.nav.overview"),
+      icon: <AdjustmentsIcon />,
+    },
     { to: "/admin/users", label: c("users"), icon: <UserCircleIcon /> },
-    { to: "/admin/settings", label: c("adminSettings"), icon: <AdjustmentsIcon /> },
-    { to: "/admin/audit", label: c("auditLog"), icon: <BookOpenIcon /> },
+    { to: "/admin/settings", label: t("configuration.title"), icon: <AdjustmentsIcon /> },
+    { to: "/admin/audit", label: t("administration.nav.auditLog"), icon: <BookOpenIcon /> },
   ];
   return (
     <AppShell
       brand={{
         to: "/admin",
         label: site.data?.siteName ?? "Raypx",
-        description: c("adminConsole"),
+        description: t("administration.nav.adminConsole"),
       }}
       navigation={[
         navigation.filter((item) =>
           canAccessWebPage(access.isError ? undefined : access.data, item.to),
         ),
       ]}
-      navigationLabels={[c("adminConsole")]}
+      navigationLabels={[t("administration.nav.adminConsole")]}
       secondaryNavigation={[
-        { to: "/projects", label: c("backToWorkspace"), icon: <ArrowLeftIcon /> },
+        {
+          to: "/projects",
+          label: t("administration.nav.backToWorkspace"),
+          icon: <ArrowLeftIcon />,
+        },
       ]}
       LinkComponent={AdminLink}
       breadcrumbs={page ? [t(page.title)] : []}
       layout={page?.layout ?? "document"}
       account={<UserButton variant="sidebar" />}
     >
-      <SessionBoundary guest={<SignInGate title={c("adminConsole")} description={c("signIn")} />}>
+      <SessionBoundary
+        guest={
+          <SignInGate title={t("administration.nav.adminConsole")} description={c("signIn")} />
+        }
+      >
         {(accountId) => (
           <PermissionBoundary key={accountId} accountId={accountId} permission="admin.read">
             <Outlet />

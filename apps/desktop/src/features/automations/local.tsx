@@ -35,7 +35,8 @@ export function LocalJobsPage({
   refresh: () => Promise<void>;
   projectId?: string | undefined;
 }) {
-  const t = useTranslations("jobs");
+  const t = useTranslations("automations");
+  const commandText = useTranslations("command");
   const c = useTranslations("common");
   const format = useFormatter();
   const { confirm, dialog } = useConfirmation();
@@ -93,7 +94,7 @@ export function LocalJobsPage({
               },
       };
     } catch {
-      setError(t("invalidArguments"));
+      setError(commandText("invalidArguments"));
       return;
     }
     setBusy(true);
@@ -171,12 +172,12 @@ export function LocalJobsPage({
     <section>
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1>{t("title")}</h1>
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
+          <h1>{t("local.title")}</h1>
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("local.intro")}</p>
         </div>
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
           <PlusIcon size={16} />
-          {t("create")}
+          {t("local.create")}
         </Button>
       </header>
       {projectId && (
@@ -185,7 +186,7 @@ export function LocalJobsPage({
           search={{ scope: "local" }}
           className="mb-5 inline-block text-sm underline underline-offset-4"
         >
-          {t("allAutomations")}
+          {t("local.allAutomations")}
         </Link>
       )}
       {!desktopAvailable && (
@@ -208,23 +209,23 @@ export function LocalJobsPage({
       )}
       {editing !== false && (
         <section className="mb-8 rounded-lg border border-border bg-sidebar p-6">
-          <h2 className="mb-5.5">{t("create")}</h2>
+          <h2 className="mb-5.5">{t("local.create")}</h2>
           <form
             key={editing?.id ?? "new"}
             onSubmit={save}
             className="flex max-w-180 flex-col gap-[19px] [&_label]:flex [&_label]:flex-col [&_label]:gap-[7px] [&_label]:text-[13px] [&_label]:font-medium [&_input]:min-h-[39px] [&>button]:mt-1"
           >
             <label htmlFor="job-project">
-              {t("projectAssociation")}
+              {t("local.projectAssociation")}
               <SelectField
                 id="job-project"
                 value={association}
                 onValueChange={setAssociation}
                 options={[
-                  { value: "", label: t("globalAutomation") },
+                  { value: "", label: t("local.globalAutomation") },
                   ...roots.map((root) => ({ value: root.id, label: root.name })),
                   ...(association && !roots.some((root) => root.id === association)
-                    ? [{ value: association, label: t("projectUnavailable") }]
+                    ? [{ value: association, label: t("local.projectUnavailable") }]
                     : []),
                 ]}
               />
@@ -271,27 +272,27 @@ export function LocalJobsPage({
                 value={action}
                 onValueChange={setAction}
                 options={[
-                  { value: "directory.scan", label: t("scan") },
-                  { value: "command.run", label: t("command") },
+                  { value: "directory.scan", label: t("local.scan") },
+                  { value: "command.run", label: t("local.command") },
                 ]}
               />
             </label>
             {action === "directory.scan" ? (
               <div className="flex gap-5 [&>label]:min-w-0 [&>label]:flex-1">
                 <label htmlFor="job-root">
-                  {t("folder")}
+                  {t("local.folder")}
                   <SelectField
                     id="job-root"
                     name="rootId"
                     value={rootId}
                     onValueChange={setRootId}
                     required
-                    placeholder={t("chooseFolderFirst")}
+                    placeholder={t("local.chooseFolderFirst")}
                     options={roots.map((root) => ({ value: root.id, label: root.name }))}
                   />
                 </label>
                 <label htmlFor="job-path">
-                  {t("relativePath")}
+                  {t("local.relativePath")}
                   <Input
                     id="job-path"
                     name="path"
@@ -304,7 +305,7 @@ export function LocalJobsPage({
             ) : (
               <>
                 <label htmlFor="job-executable">
-                  {t("executable")}
+                  {commandText("executable")}
                   <Input
                     id="job-executable"
                     name="executable"
@@ -313,7 +314,7 @@ export function LocalJobsPage({
                   />
                 </label>
                 <label htmlFor="job-args">
-                  {t("arguments")}
+                  {commandText("arguments")}
                   <Input
                     id="job-args"
                     name="args"
@@ -321,7 +322,7 @@ export function LocalJobsPage({
                   />
                 </label>
                 <label htmlFor="job-cwd">
-                  {t("cwd")}
+                  {commandText("cwd")}
                   <Input
                     id="job-cwd"
                     name="cwd"
@@ -332,7 +333,7 @@ export function LocalJobsPage({
                   />
                 </label>
                 <p className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
-                  {t("commandHint")}
+                  {t("local.commandHint")}
                 </p>
               </>
             )}
@@ -353,8 +354,8 @@ export function LocalJobsPage({
       {shown?.length === 0 && editing === false ? (
         <div className="flex flex-col items-center px-6 py-20 text-center">
           <ClockIcon size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
-          <h2 className="text-xl">{t("empty")}</h2>
-          <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">{t("emptyHint")}</p>
+          <h2 className="text-xl">{t("local.empty")}</h2>
+          <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">{t("local.emptyHint")}</p>
         </div>
       ) : (
         <div>
@@ -372,8 +373,8 @@ export function LocalJobsPage({
                   <span className="text-xs text-muted-foreground">
                     {job.projectId
                       ? (roots.find((root) => root.id === job.projectId)?.name ??
-                        t("projectUnavailable"))
-                      : t("globalAutomation")}
+                        t("local.projectUnavailable"))
+                      : t("local.globalAutomation")}
                   </span>
                   <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
                     {t(job.enabled ? "enabled" : "disabled")}
@@ -384,7 +385,7 @@ export function LocalJobsPage({
                   <span>·</span>
                   {job.timezone}
                   <span>·</span>
-                  {t(job.action.type === "directory.scan" ? "scan" : "command")}
+                  {t(job.action.type === "directory.scan" ? "local.scan" : "local.command")}
                 </p>
                 {job.nextRuns[0] && job.enabled && (
                   <p className="mt-1.5 flex flex-wrap items-center gap-1.75 text-[12px] text-muted-foreground">
@@ -464,7 +465,9 @@ export function LocalJobsPage({
                   <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
                     {c(jobRun.status)}
                   </span>
-                  <span>{jobRun.exitCode === null ? "" : `${t("exit")}: ${jobRun.exitCode}`}</span>
+                  <span>
+                    {jobRun.exitCode === null ? "" : `${t("local.exit")}: ${jobRun.exitCode}`}
+                  </span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   {jobRun.output && (
