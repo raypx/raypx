@@ -117,6 +117,97 @@ test(
 );
 
 test(
+  "Web homepage updates session actions across tabs without private workspace reads",
+  { tag: ["@web", "@smoke"] },
+  async ({ page }) => {
+    let signedIn = true;
+    const privateReads: string[] = [];
+    const user = {
+      id: "homepage-fixture",
+      name: "Home User",
+      email: "home@example.test",
+      emailVerified: true,
+    };
+    const session = {
+      id: "homepage-session",
+      userId: user.id,
+      token: "browser-fixture-only",
+      createdAt: "2026-11-01T08:00:00Z",
+      updatedAt: "2026-11-01T08:00:00Z",
+      expiresAt: "2030-11-01T08:00:00Z",
+    };
+    let resolveSession!: () => void;
+    const ready = new Promise<void>((resolve) => {
+      resolveSession = resolve;
+    });
+    await page.route("**/api/auth/get-session**", async (route) => {
+      await ready;
+      return authResponse(route, signedIn ? { user, session } : null);
+    });
+    await accountAccessFixture(page, user.id);
+    page.on("request", (request) => {
+      if (/\/rpc\/(tasks|approvals|devices|observed|relay|memory|jobs)\//.test(request.url()))
+        privateReads.push(request.url());
+    });
+    await page.goto(web + "/");
+    await expect(
+      page.getByRole("heading", { name: "Remote sessions and approvals", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
+    const loading = page.getByRole("button", { name: "Loading…", exact: true });
+    await expect(loading).toHaveCount(1);
+    await expect(loading.first()).toBeDisabled();
+    resolveSession();
+    await expect(page.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
+      "href",
+      "/projects",
+    );
+    await expect(
+      page.getByRole("link", { name: "Connect a computer", exact: true }),
+    ).toHaveAttribute("href", "/settings");
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
+    expect(privateReads).toEqual([]);
+
+    const otherTab = await page.context().newPage();
+    await otherTab.goto(web + "/privacy");
+    async function broadcast(trigger: "signout" | "signin") {
+      await otherTab.evaluate((sessionTrigger) => {
+        localStorage.setItem(
+          "better-auth.message",
+          JSON.stringify({
+            event: "session",
+            data: { trigger: sessionTrigger },
+            timestamp: Date.now(),
+          }),
+        );
+      }, trigger);
+    }
+    signedIn = false;
+    await broadcast("signout");
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Sign in to connect a computer", exact: true }),
+    ).toHaveAttribute("href", "/login?returnTo=%2Fsettings");
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveCount(0);
+    signedIn = true;
+    await broadcast("signin");
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Connect a computer", exact: true }),
+    ).toHaveAttribute("href", "/settings");
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(web + "/");
+    expect(privateReads).toEqual([]);
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+    await otherTab.close();
+  },
+);
+
+test(
   "Web resumes a guest draft after sign-in without sending a task",
   { tag: ["@web", "@smoke"] },
   async ({ page }) => {

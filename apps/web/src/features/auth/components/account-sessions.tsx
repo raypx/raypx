@@ -113,6 +113,7 @@ export function AccountSessions({
         <IconButton
           label={c(loading ? "loading" : "refresh")}
           variant="outline"
+          className="ml-auto"
           disabled={loading}
           onClick={() => {
             setLoading(true);

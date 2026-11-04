@@ -77,6 +77,7 @@ export function PasswordChangeForm({
       {changed ? (
         <Button
           variant="outline"
+          className="ml-auto flex w-fit"
           disabled={auth.busy}
           onClick={() => {
             if (auth.error?.kind === "completion") void auth.retryCompletion();
@@ -89,7 +90,7 @@ export function PasswordChangeForm({
           {c(auth.busy ? "working" : auth.error?.kind === "completion" ? "retry" : "edit")}
         </Button>
       ) : (
-        <form onSubmit={(event) => void submit(event)} aria-busy={auth.busy} className="max-w-lg">
+        <form onSubmit={(event) => void submit(event)} aria-busy={auth.busy}>
           <FieldGroup>
             {fields.map(({ name, purpose }) => {
               const invalid =
@@ -101,6 +102,7 @@ export function PasswordChangeForm({
               return (
                 <PasswordField
                   key={name}
+                  orientation="responsive"
                   label={t(name)}
                   id={`${id}-${name}`}
                   name={name}
@@ -115,17 +117,17 @@ export function PasswordChangeForm({
                 />
               );
             })}
-            <Field orientation="horizontal" data-disabled={auth.busy}>
+            <Field orientation="horizontal" data-disabled={auth.busy} className="justify-end">
+              <FieldLabel htmlFor={`${id}-revoke`}>{t("revokeOtherSessions")}</FieldLabel>
               <Checkbox
                 id={`${id}-revoke`}
                 checked={revokeOthers}
                 onCheckedChange={setRevokeOthers}
                 disabled={auth.busy}
               />
-              <FieldLabel htmlFor={`${id}-revoke`}>{t("revokeOtherSessions")}</FieldLabel>
             </Field>
             <p className="text-sm text-muted-foreground">{t("passwordChangeHint")}</p>
-            <Button type="submit" variant="outline" disabled={auth.busy}>
+            <Button type="submit" variant="outline" className="self-end" disabled={auth.busy}>
               {auth.busy ? (
                 <SpinnerIcon
                   aria-hidden="true"

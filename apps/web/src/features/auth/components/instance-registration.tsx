@@ -59,6 +59,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
           <IconButton
             label={t("refresh")}
             variant="outline"
+            className="ml-auto"
             disabled={busy || list.isFetching}
             onClick={() => void list.refetch()}
           >
@@ -142,8 +143,8 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
         }}
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="instance-code">
+          <Field orientation="responsive">
+            <FieldLabel htmlFor="instance-code" className="min-w-0">
               <MonitorIcon aria-hidden="true" className="size-4 text-muted-foreground" />
               {t("code")}
             </FieldLabel>
@@ -152,7 +153,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
               disabled={busy}
               autoComplete="off"
               maxLength={10}
-              className="max-w-sm font-mono tracking-widest"
+              className="max-w-full font-mono tracking-widest @md/field-group:ml-auto @md/field-group:basis-76 @md/field-group:shrink-0"
               value={code}
               onChange={(event) => {
                 setCode(event.target.value.toUpperCase());
@@ -165,7 +166,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
         <Button
           type="submit"
           variant="outline"
-          className="self-start"
+          className="self-end"
           disabled={busy || !/^[A-Z2-9]{10}$/.test(code)}
         >
           {busy ? (
@@ -196,6 +197,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
           <p className="break-all font-mono text-xs text-muted-foreground">{identity.instanceId}</p>
           <Button
             disabled={busy}
+            className="self-end"
             onClick={() =>
               void act(async () => {
                 await client.instances.approve({ code });

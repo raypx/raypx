@@ -39,7 +39,7 @@ export function AnalyticsSettings() {
                   {t(`${key}Hint`)}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center justify-between gap-3">
+              <div className="flex shrink-0 items-center justify-end gap-3">
                 <StatusBadge
                   label={
                     !state.ready
@@ -74,11 +74,11 @@ export function AnalyticsSettings() {
         )}
         {state.error && (
           <Alert variant="destructive">
-            <AlertDescription>
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
               {t("saveError")}
               <Button
                 variant="outline"
-                className="ml-3"
+                className="ml-auto"
                 disabled={state.pending}
                 onClick={state.retry}
               >

@@ -40,7 +40,12 @@ application is an independent composition root and is never imported by another 
   `src/routes/(landing)/` owns the public `/` homepage with its own header and
   document layout, without account loaders or the workspace shell. A client-only `UserButton` shares
   the sidebar account menu, with a fixed-size SSR placeholder and retryable session errors. Landing views
-  live under `features/landing/components/`. The `(app)/projects` route owns
+  live under `features/landing/components/`. They subscribe to Better Auth's shared
+  session store after hydration: confirmed sessions connect computers through settings
+  directly, guests retain sign-in return paths, pending checks show a disabled loading
+  action and failed checks offer retry. Home never mounts private project/device/task reads;
+  the account menu reads permissions only for confirmed sessions.
+  The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before
   `router.invalidate()`. The account page reads the result from route context.

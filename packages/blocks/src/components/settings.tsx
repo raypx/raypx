@@ -67,7 +67,7 @@ export function SettingsSection({
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      <div className="min-w-0">{children}</div>
+      <div className="flex min-w-0 flex-col items-start @min-xl/settings:items-end">{children}</div>
     </section>
   );
 }

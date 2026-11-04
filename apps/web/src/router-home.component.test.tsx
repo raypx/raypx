@@ -52,7 +52,9 @@ it("server-renders the landing page before the browser session resolves", async 
   expect(page).toMatch(/<h1[^>]*>Remote sessions and approvals<\/h1>/);
   expect(page).toContain("Write a session draft");
   expect(page).not.toContain('role="status"');
-  expect(session).not.toHaveBeenCalled();
+  expect(page).toContain('aria-busy="true"');
+  expect(page).toContain("Loading…");
+  expect(page).not.toContain('href="/login"');
 });
 
 it("keeps an unavailable account distinct from a confirmed guest during SSR", async () => {

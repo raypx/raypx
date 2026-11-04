@@ -72,7 +72,12 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
             <span className="[overflow-wrap:anywhere]">{account.email}</span>
           </p>
         </div>
-        <Button variant="outline" disabled={busy} onClick={() => void onSignOut()}>
+        <Button
+          variant="outline"
+          className="ml-auto"
+          disabled={busy}
+          onClick={() => void onSignOut()}
+        >
           <LogoutIcon aria-hidden="true" data-icon="inline-start" />
           {busy ? c("working") : c("signOut")}
         </Button>

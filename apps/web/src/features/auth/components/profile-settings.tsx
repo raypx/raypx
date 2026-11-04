@@ -71,14 +71,14 @@ export function ProfileSettings({
       className="rounded-xl border border-border bg-background p-5"
     >
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={id}>
+        <Field orientation="responsive">
+          <FieldLabel htmlFor={id} className="min-w-0">
             <UserCircleIcon aria-hidden="true" className="size-4 text-muted-foreground" />
             {t("displayName")}
           </FieldLabel>
           <Input
             id={id}
-            className="max-w-lg"
+            className="max-w-full @md/field-group:ml-auto @md/field-group:basis-76 @md/field-group:shrink-0"
             autoComplete="name"
             required
             maxLength={authPolicy.nameMaxLength}

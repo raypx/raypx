@@ -20,11 +20,14 @@ import { InboxIcon } from "@raypx/icons/inbox";
 import { DevicesIcon } from "@raypx/icons/devices";
 import { PaletteIcon } from "@raypx/icons/palette";
 import { LaptopIcon } from "@raypx/icons/laptop";
-import { LoginIcon } from "@raypx/icons/login";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
+import { authClient } from "../../auth/client";
+import { LandingAuthAction } from "./auth-action";
 
 export function LandingHome() {
   const t = useTranslations("guest");
+  const session = authClient.useSession();
+  const signedOut = !session.isPending && !session.error && !session.data;
   const entries = [
     { key: "approvals", to: "/approvals", icon: InboxIcon },
     { key: "preferences", to: "/settings", icon: PaletteIcon },
@@ -49,7 +52,7 @@ export function LandingHome() {
               {t("title")}
             </h1>
             <p className="text-base leading-relaxed text-pretty text-muted-foreground">
-              {t("intro")}
+              {t(signedOut ? "intro" : "introSignedIn")}
             </p>
           </div>
           <div className="mt-auto flex w-full flex-wrap items-center gap-4">
@@ -92,20 +95,12 @@ export function LandingHome() {
             <EmptyTitle>
               <h2>{t("computers")}</h2>
             </EmptyTitle>
-            <EmptyDescription>{t("computersHint")}</EmptyDescription>
+            <EmptyDescription>
+              {t(signedOut ? "computersHint" : "computersHintSignedIn")}
+            </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Link
-              to="/login"
-              search={{ returnTo: "/settings" }}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-auto min-h-11 max-w-full whitespace-normal bg-background text-center motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0",
-              )}
-            >
-              <LoginIcon data-icon="inline-start" aria-hidden="true" />
-              {t("connect")}
-            </Link>
+            <LandingAuthAction className="h-auto min-h-11 max-w-full whitespace-normal bg-background text-center motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0" />
           </EmptyContent>
         </Empty>
       </div>
@@ -128,7 +123,7 @@ export function LandingHome() {
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">{t(key)}</span>
                 <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
-                  {t(`${key}Hint`)}
+                  {t(key === "approvals" && !signedOut ? "approvalsHintSignedIn" : `${key}Hint`)}
                 </span>
               </span>
               <ChevronRightIcon
