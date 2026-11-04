@@ -131,7 +131,7 @@ func TestTerminalConfigurationWaitsForAccountSelection(t *testing.T) {
 		t.Fatal(err)
 	}
 	binary, _ := os.Executable()
-	desktop, err := host.New(config, t.TempDir(), binary, "0.1.0", nil, true, &keys{}, nil)
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +226,7 @@ func TestPreloadPreservesJSONKeysWithoutChangingPrototypes(t *testing.T) {
 		t.Skip("explicit compiled CLI JavaScript runtime integration gate")
 	}
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), "/unstarted-cli", "0.1.0", nil, true, &keys{}, nil)
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}

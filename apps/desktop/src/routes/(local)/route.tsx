@@ -33,11 +33,7 @@ function LocalLayout() {
   useEffect(() => {
     if (!desktopAvailable) return;
     return onLocalEvent((event) => {
-      if (event.event === "engine.status" && event.data.status === "ready")
-        void router.invalidate({
-          filter: (match) => match.routeId.startsWith("/(local)"),
-        });
-      else if (
+      if (
         event.event === "job.finished" &&
         router.state.matches.some((match) => match.routeId === "/(local)/automations")
       )

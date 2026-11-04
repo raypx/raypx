@@ -5,6 +5,8 @@ import { ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences";
 import { SessionGate } from "../features/auth/components/session-gate";
 import { RemoteCoordinator } from "../features/tasks/coordinator";
+import { DesktopRuntimeProvider } from "../features/engine/provider";
+import { EngineRouteSync } from "../features/engine/routes";
 import { getBridge, isDesktop } from "../lib/desktop";
 import { AppAnalytics } from "../features/analytics/provider";
 import { externalLinkTarget } from "../lib/external-links";
@@ -64,10 +66,13 @@ function RootComponent() {
     <ClientOnly fallback={<ShellSkeleton />}>
       <DesktopPreferencesProvider>
         <AppAnalytics>
-          <SessionGate>
-            <RemoteCoordinator />
-            <DesktopShell />
-          </SessionGate>
+          <DesktopRuntimeProvider>
+            <EngineRouteSync />
+            <SessionGate>
+              <RemoteCoordinator />
+              <DesktopShell />
+            </SessionGate>
+          </DesktopRuntimeProvider>
           {Devtools && (
             <Suspense fallback={null}>
               <Devtools surface="desktop" stylesheetUrl={appCss} />

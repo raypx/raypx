@@ -1,8 +1,8 @@
 import { createLocalRouter } from "./router";
 import { PiHost } from "./agents/pi/host";
-import { InstanceRuntime, type InstanceAccess } from "./instances";
+import { InstanceRuntime } from "./instances";
 import { join } from "node:path";
-import { type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
+import { type LocalMethod } from "@raypx/contracts/local";
 import { MemoryRuntime } from "./memory";
 import { AgentRuntime } from "./agents";
 import { FileRuntime } from "./files";
@@ -12,24 +12,13 @@ import { BundledBun } from "./process/bun";
 import { StateStore, profilePath, acquireLock } from "./state";
 import { LocalError } from "./errors";
 
-import type { AgentProvider } from "@raypx/core/tasks";
-import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics";
+import { recordDiagnostic } from "../diagnostics";
+import type { RuntimeOptions } from "./options";
 
 import { ProfileStorage } from "./sqlite";
 
-export function createRuntime(
-  options: {
-    instanceAccess?: InstanceAccess;
-    onInstanceRevoked?: () => Promise<void>;
-    dataDir?: string;
-    profile?: string;
-    emit?: (event: LocalEvent) => void;
-    scheduler?: boolean;
-    exclusiveOwner?: boolean;
-    agentExecutables?: Partial<Record<AgentProvider, string>>;
-    recordDiagnostic?: RecordDiagnostic;
-  } = {},
-) {
+export function createRuntime(options: RuntimeOptions = {}) {
+  const scheduler = options.mode === "stdio" || options.mode === "daemon";
   const emit = options.emit ?? (() => {});
   const instances = new InstanceRuntime(profilePath(options), {
     onProgress: (status, id) =>
@@ -119,8 +108,8 @@ export function createRuntime(
     if (!closing) void refreshInstance().catch(() => {});
   };
   try {
-    if (options.exclusiveOwner) ownAgents();
-    if (options.scheduler) jobs.startScheduler();
+    if (options.mode === "daemon") ownAgents();
+    if (scheduler) jobs.startScheduler();
   } catch (error) {
     releaseOwner?.();
     storage.close();
@@ -142,7 +131,7 @@ export function createRuntime(
     pi,
     bun,
     refreshInstance,
-    options,
+    options: { ...options, scheduler },
   });
   return {
     state,

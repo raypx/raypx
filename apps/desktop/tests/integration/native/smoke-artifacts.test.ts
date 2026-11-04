@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { cleanupSmokeBundles } from "./smoke-artifacts";
+import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 
 const roots: string[] = [];
 function fixture() {

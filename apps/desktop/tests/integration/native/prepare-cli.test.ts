@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, statSync, utimesSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vite-plus/test";
-import { stageCli } from "./prepare-cli";
+import { stageCli } from "../../../scripts/native/prepare-cli";
 
 const roots: string[] = [];
 function fixture() {

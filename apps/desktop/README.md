@@ -16,6 +16,9 @@ From the repository root:
 ```sh
 bun run --cwd apps/desktop check
 bun run --cwd apps/desktop test
+bun run --cwd apps/desktop test:unit
+bun run --cwd apps/desktop test:component
+bun run --cwd apps/desktop test:integration
 bun run --cwd apps/desktop mygo:check
 bun run --cwd apps/desktop mygo:test
 bun run build:cli
@@ -29,6 +32,11 @@ bun run verify --full
 stages matching renderer, CLI and Herdr inputs, then packages under
 `build/<os>-<arch>`. `dev:desktop` starts MyGo with the Vite renderer server.
 Cross-platform packages require matching CLI artifacts and are currently rejected.
+`test:unit` and `test:component` use isolated platform fixtures without native tools,
+real accounts or Provider processes. `test:integration` owns build/package script
+tests; default `test` runs all three Vitest projects. Go policies and host use cases
+accept an EngineClient port, while process framing and compiled CLI acceptance stay
+in the native gates. See the testing guide for the selected macOS/Windows matrix.
 Go policy checks do not require staged renderer files. Go tests generate contract
 manifests and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
 compiled CLI for the daemon integration test; only its isolated daemon is stopped.

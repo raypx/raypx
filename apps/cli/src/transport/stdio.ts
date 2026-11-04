@@ -1,6 +1,6 @@
 import { localRequestSchema } from "@raypx/contracts/local";
-import { createRuntime } from "../runtime";
-import { createForegroundHost } from "../runtime/foreground";
+import { createExecutionOwner } from "../runtime/owner";
+import { onShutdown } from "./shutdown";
 import { errorPayload, LocalError } from "../runtime/errors";
 import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics";
 
@@ -42,10 +42,7 @@ export async function serveStdio(options: {
       flush();
     });
   }
-  const runtime =
-    process.platform === "win32"
-      ? createForegroundHost({ ...options, emit: output })
-      : createRuntime({ ...options, scheduler: true, emit: output });
+  const runtime = createExecutionOwner({ ...options, mode: "stdio", emit: output });
   closeRuntime = () => runtime.close();
   output({ version: 1, event: "engine.status", data: { status: "ready" } });
   const active = new Set<Promise<void>>();
@@ -53,8 +50,7 @@ export async function serveStdio(options: {
     process.stdin.destroy();
     void runtime.close();
   };
-  process.once("SIGTERM", stop);
-  process.once("SIGINT", stop);
+  const removeSignals = onShutdown(stop);
   let remaining = "";
   const decoder = new TextDecoder();
   const dispatch = (line: string) => {
@@ -89,8 +85,7 @@ export async function serveStdio(options: {
   } finally {
     await runtime.close();
     await Promise.allSettled(active);
-    process.off("SIGTERM", stop);
-    process.off("SIGINT", stop);
+    removeSignals();
     if (remaining.trim())
       output({
         version: 1,

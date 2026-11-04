@@ -136,12 +136,12 @@ describe("device jobs and leases", () => {
 
   it("excludes a second scheduler and releases the lease after shutdown", async () => {
     const { dir } = await fixture();
-    const first = createRuntime({ dataDir: dir, scheduler: true });
+    const first = createRuntime({ dataDir: dir, mode: "stdio" });
     runtimes.push(first);
-    expect(() => createRuntime({ dataDir: dir, scheduler: true })).toThrow(/Another Desktop/);
+    expect(() => createRuntime({ dataDir: dir, mode: "stdio" })).toThrow(/Another Desktop/);
     await first.close();
     runtimes.splice(runtimes.indexOf(first), 1);
-    const second = createRuntime({ dataDir: dir, scheduler: true });
+    const second = createRuntime({ dataDir: dir, mode: "stdio" });
     runtimes.push(second);
     expect(second.jobs.list()).toEqual([]);
   });

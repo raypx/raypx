@@ -98,7 +98,7 @@ func Run(bundled fs.FS) error {
 	mygo.App.WhenReady(func() {
 		go func() {
 			var err error
-			desktop, err := host.New(config, directory, binary, appVersion, smokeArgs(), runtime.GOOS == "darwin" || runtime.GOOS == "windows", SessionKeys{}, methods)
+			desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: binary, Version: appVersion, Args: smokeArgs(), Daemon: runtime.GOOS == "darwin" || runtime.GOOS == "windows"}, Keys: SessionKeys{}, Methods: methods})
 			if err != nil {
 				if interactive() {
 					_, _ = mygo.Dialog.Message(mygo.MessageOptions{Title: "Raypx", Type: mygo.MessageError, Message: "Unable to initialize Desktop / 无法启动桌面端"})

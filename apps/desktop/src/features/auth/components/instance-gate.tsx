@@ -5,9 +5,10 @@ import { createApiClient } from "@raypx/client/api";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
-import { localRequest, isDesktop } from "../../../lib/desktop";
+import { useDesktopPlatform } from "../../../lib/platform-context";
 import { apiUrl, authClient, desktopFetch } from "../client";
 export function InstanceGate({ children }: { children: ReactNode }) {
+  const { localRequest, isDesktop } = useDesktopPlatform();
   const t = useTranslations("instances"),
     c = useTranslations("common");
   const session = authClient.useSession();
@@ -35,7 +36,7 @@ export function InstanceGate({ children }: { children: ReactNode }) {
       clearInterval(timer);
       window.removeEventListener("online", refresh);
     };
-  }, [refetch]);
+  }, [refetch, isDesktop, localRequest]);
   if (!isDesktop()) return children;
   if (status.isPending) return <LoadingState label={c("loading")} />;
   const binding = status.data?.binding;
@@ -75,13 +76,13 @@ export function InstanceGate({ children }: { children: ReactNode }) {
               ? t("intro")
               : t("unavailable")}
       </p>
-      {canBind && session.data && !session.error ? (
+      {canBind && session.data && !session.error && !session.isPending ? (
         <Button disabled={busy} onClick={() => void register()}>
           {t("bind")}
         </Button>
-      ) : (
+      ) : canBind && !session.data && !session.error && !session.isPending ? (
         <Link to="/login">{c("signIn")}</Link>
-      )}
+      ) : null}
       <Button variant="outline" disabled={busy} onClick={() => void status.refetch()}>
         {c("retry")}
       </Button>

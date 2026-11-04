@@ -2,7 +2,8 @@ import type { InstanceAccess } from "../instances";
 import { chmodSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { localParams, localRequestSchema, type LocalEvent } from "@raypx/contracts/local";
-import { createHost } from "../host";
+import { createExecutionOwner, type ExecutionHost } from "../owner";
+import { onShutdown } from "../../transport/shutdown";
 import type { LocalRuntime } from "../index";
 import { acquireLock, profilePath } from "../state";
 import { errorPayload, LocalError } from "../errors";
@@ -60,7 +61,7 @@ export async function startDaemon(
   let endpoint: DaemonEndpoint = { ...identity, ...address };
   const clients = new Map<string, Client>(),
     encoder = new TextEncoder();
-  let host: ReturnType<typeof createHost> | undefined;
+  let host: ExecutionHost | undefined;
   let terminal: LocalTerminalControl | undefined;
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
@@ -131,7 +132,7 @@ export async function startDaemon(
   };
   try {
     refreshStableCli();
-    host = createHost({ ...options, owner: "daemon", emit });
+    host = createExecutionOwner({ ...options, mode: "daemon", emit });
     ({ runtime, terminal, control } = host);
     server = Bun.serve({
       ...(address.socket === undefined
@@ -267,20 +268,16 @@ export async function runDaemon(options: ProfileOptions) {
   const rejected = () =>
     console.error(JSON.stringify({ operation: "daemon.background", code: "UNHANDLED_REJECTION" }));
   process.on("unhandledRejection", rejected);
-  let stop: (() => void) | undefined;
+  let removeSignals: (() => void) | undefined;
   try {
     const host = await startDaemon(options);
-    stop = () => {
+    const stop = () => {
       void host.close().catch(rejected);
     };
-    process.once("SIGINT", stop);
-    process.once("SIGTERM", stop);
+    removeSignals = onShutdown(stop);
     await host.stopped;
   } finally {
-    if (stop) {
-      process.off("SIGINT", stop);
-      process.off("SIGTERM", stop);
-    }
+    removeSignals?.();
     process.off("unhandledRejection", rejected);
   }
 }

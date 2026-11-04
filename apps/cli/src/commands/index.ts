@@ -9,6 +9,7 @@ import type { RecordDiagnostic } from "../diagnostics";
 import { globalArgs, type CliArgs } from "./args";
 import { createAiCommands } from "./ai";
 import { createDaemonCommands, createConnectorCommands } from "./daemon";
+import { onShutdown } from "../transport/shutdown";
 
 type PublicMethod = Exclude<LocalMethod, "runtime.info" | `terminal.${string}`>;
 type Operation = {
@@ -240,19 +241,17 @@ async function executeOperation(
   }
   const { localParams } = await import("@raypx/contracts/local");
   params = localParams[operation.method].parse(params);
-  const { createRuntime } = await import("../runtime");
-  const runtime = createRuntime(options);
+  const { createExecutionOwner } = await import("../runtime/owner");
+  const runtime = createExecutionOwner({ ...options, mode: "command" });
   const stop = () => {
     void runtime.close();
   };
-  process.once("SIGINT", stop);
-  process.once("SIGTERM", stop);
+  const removeSignals = onShutdown(stop);
   try {
     const result = await runtime.request(operation.method, params);
     console.log(JSON.stringify(result, null, invocation.json ? undefined : 2));
   } finally {
     await runtime.close();
-    process.off("SIGINT", stop);
-    process.off("SIGTERM", stop);
+    removeSignals();
   }
 }

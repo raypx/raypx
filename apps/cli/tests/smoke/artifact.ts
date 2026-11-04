@@ -33,6 +33,7 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
   assert.equal(events[0]?.level, outcome === "failed" ? "error" : "info");
 }
 let closeInstance = async () => {};
+let closeProbe = async () => {};
 try {
   // Only the executable leaves dist: lazy imports must be inside this one file.
   await copyFile(builtBinary, binary);
@@ -145,7 +146,7 @@ try {
     bootstrap = join(dataDir, "provider-probe.ts");
   await writeFile(
     bootstrap,
-    `globalThis.fetch = async () => { await Bun.write(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(resolve(import.meta.dirname, "../../dist/main.mjs"))});`,
+    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await Bun.write(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(resolve(import.meta.dirname, "../../dist/main.mjs"))});`,
   );
   const probeBinary = join(
     dataDir,
@@ -159,6 +160,10 @@ try {
     bytecode: true,
   });
   assert.ok(probeBuild.success, "Default provider chunks must compile into the offline probe");
+  // Each independently compiled executable owns its own OS credential. Sharing
+  // the copied CLI's identity would require an interactive macOS Keychain grant.
+  const probeData = join(dataDir, "provider-profile");
+  closeProbe = await enrollTestProfile({ dataDir: probeData }, [probeBinary]);
   const providerIds = ["anthropic", "openai", "google", "openrouter"];
   for (const provider of providerIds) {
     const catalog = Bun.spawn([binary, "ai", "models", JSON.stringify({ provider }), "--json"], {
@@ -178,12 +183,13 @@ try {
         "ai",
         "complete",
         "--data-dir",
-        dataDir,
+        probeData,
         JSON.stringify({
           provider,
           model: models[0].id,
           prompt: "offline loading probe",
           api_key_env: "RAYPX_PROVIDER_SMOKE_KEY",
+          timeout_ms: 5000,
         }),
         "--json",
       ],
@@ -197,11 +203,15 @@ try {
         },
         stdout: "pipe",
         stderr: "pipe",
+        timeout: 15_000,
       },
     );
-    await new Response(probe.stdout).text();
-    const errors = await new Response(probe.stderr).text();
-    assert.notEqual(await probe.exited, 0);
+    const [, errors, code] = await Promise.all([
+      new Response(probe.stdout).text(),
+      new Response(probe.stderr).text(),
+      probe.exited,
+    ]);
+    assert.notEqual(code, 0);
     assert.equal(
       await Bun.file(marker).text(),
       "reached",
@@ -576,6 +586,7 @@ try {
     "Copied standalone CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.",
   );
 } finally {
+  await closeProbe();
   await closeInstance();
   await rm(dataDir, { recursive: true, force: true });
 }

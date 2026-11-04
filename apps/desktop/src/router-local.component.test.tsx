@@ -31,6 +31,8 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "./routeTree.gen.ts";
 import { rememberProject } from "./features/tasks/project-history";
+import { DesktopRuntimeProvider } from "./features/engine/provider";
+import { EngineRouteSync } from "./features/engine/routes";
 
 expect.extend(matchers);
 
@@ -109,7 +111,12 @@ const histories: ReturnType<typeof createMemoryHistory>[] = [];
 beforeAll(() => {
   // Keep the generated route hierarchy while isolating the native window shell.
   rootOptions.shellComponent = ({ children }: { children: ReactNode }) => <>{children}</>;
-  rootOptions.component = Outlet;
+  rootOptions.component = () => (
+    <DesktopRuntimeProvider>
+      <EngineRouteSync />
+      <Outlet />
+    </DesktopRuntimeProvider>
+  );
 });
 afterAll(() => {
   if (documentShell) rootOptions.shellComponent = documentShell;
@@ -424,7 +431,7 @@ describe("Desktop local file routes", () => {
     expect(reads("jobs.list")).toBe(0);
   });
 
-  it("invalidates jobs for relevant events and cleans listeners when leaving local routes", async () => {
+  it("invalidates jobs for relevant events only while their route is active", async () => {
     let jobs = [job("Before event")];
     mocks.localRequest.mockImplementation(async (method) => {
       if (method.startsWith("instance.")) return { state: "registered" };
@@ -454,7 +461,6 @@ describe("Desktop local file routes", () => {
     expect(reads()).toBe(initialReads + 2);
 
     await act(async () => router.navigate({ to: "/settings" }));
-    expect(mocks.listeners.size).toBe(0);
     const beforeUnmountedEvent = mocks.localRequest.mock.calls.length;
     await act(async () => emit("job.finished", { id: "job-1" }));
     expect(mocks.localRequest).toHaveBeenCalledTimes(beforeUnmountedEvent);
@@ -550,7 +556,6 @@ describe("Desktop local file routes", () => {
     expect(router.state.location.pathname).toBe("/settings");
     expect(screen.getByRole("heading", { name: "Settings" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Late automation" })).toBeNull();
-    expect(mocks.listeners.size).toBe(0);
   });
 
   it("reloads route data after creating, updating and deleting an automation", async () => {

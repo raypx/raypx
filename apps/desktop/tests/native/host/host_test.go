@@ -301,7 +301,7 @@ func TestEngineHandshakeAndShutdown(t *testing.T) {
 }
 func TestRendererPolicyKeepsPrivilegedMethodsNative(t *testing.T) {
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), "/unstarted-cli", "0.1.0", nil, true, &keys{}, []string{"instance.begin", "host.authorize", "roots.register", "agents.local.list", "connectors.install", "observed.remote", "approvals.local.watch", "files.list"})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: []string{"instance.begin", "host.authorize", "roots.register", "agents.local.list", "connectors.install", "observed.remote", "approvals.local.watch", "files.list"}})
 	if err != nil {
 		t.Fatal(err)
 	}

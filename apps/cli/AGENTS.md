@@ -27,9 +27,15 @@ help with `renderUsage`; never use `runMain` or let citty print errors or exit t
 Raypx owns confirmation, result output, diagnostics and shutdown. Internal RPC additions do not
 automatically become public commands.
 
+`runtime/owner.ts` is the entry composition for command, TUI, stdio and daemon modes.
+Modes determine scheduling and ownership; do not expose independent scheduler/owner
+switches at entries. Ordinary commands/TUI own only their foreground work, stdio
+retains its platform policy, and daemon owns background scheduling. Services remain
+private in runtime/index.ts; shared signal registration belongs to transport/shutdown.ts.
+
 `raypx tui` is a lazy-loaded, line-oriented task browser with no additional dependencies.
 Require both stdin/stdout TTYs and reject `--json`/`--yes`; help stays non-interactive.
-It owns a single in-process runtime with `scheduler:false`, uses its request interface,
+It owns a single in-process runtime in TUI mode, uses its request interface,
 and closes only its own work on quit/EOF/signals. Restore input state and sanitize display
 text; never rewrite persisted output. Cross-owner control and default no-arg TUI remain planned.
 
@@ -93,7 +99,7 @@ runtime dependency or part of the cross-platform default verify gate.
 hook endpoint (Unix socket, or loopback on Windows), bounded plain-content envelopes and safe hook settings plans.
 `runtime/daemon` owns relay v4, project-specific Away opt-in, host authorization
 in Keychain or Windows Credential Manager and connector/service installation.
-`runtime/host.ts` owns shared construction, request routing, cloud wakeups and shutdown for both daemon and foreground transports. `runtime/foreground.ts` adapts it for direct Windows stdio,
+`runtime/host.ts` owns host services, request routing, cloud wakeups and shutdown for daemon and Windows foreground transports. The execution-owner factory selects it for direct Windows stdio,
 with lifecycle shutdown owned by that foreground process. Host credentials never enter JSON
 settings or Desktop renderer responses. See docs/development/terminal-host-p1.md.
 Hook failure returns no decision, unlike the managed Agent's blocking hook policy.

@@ -17,7 +17,10 @@ function fixture() {
   const root = mkdtempSync(join(tmpdir(), "raypx-desktop-task-"));
   roots.push(root);
   mkdirSync(join(root, "scripts/native"), { recursive: true });
-  copyFileSync(join(import.meta.dirname, "./task.ts"), join(root, "scripts/native/task.ts"));
+  copyFileSync(
+    join(import.meta.dirname, "../../../scripts/native/task.ts"),
+    join(root, "scripts/native/task.ts"),
+  );
   writeFileSync(
     join(root, "scripts/native/generate.ts"),
     'process.argv.splice(2, 0, "native:generate"); await import("../../record.ts");',

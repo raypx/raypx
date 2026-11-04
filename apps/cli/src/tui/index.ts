@@ -4,6 +4,7 @@ import type { LocalRuntime } from "../runtime";
 import { runSession } from "./session";
 import { createTerminal } from "./terminal";
 import { terminalLocale } from "./text";
+import { onShutdown } from "../transport/shutdown";
 
 export async function runTui(options: {
   dataDir?: string;
@@ -25,14 +26,11 @@ export async function runTui(options: {
       void closing.catch(() => {});
     }
   }
-  const interrupt = () => stop(130);
-  const terminate = () => stop(143);
-  process.once("SIGINT", interrupt);
-  process.once("SIGTERM", terminate);
+  const removeSignals = onShutdown((signal) => stop(signal === "SIGINT" ? 130 : 143));
   try {
-    const { createRuntime } = await import("../runtime");
+    const { createExecutionOwner } = await import("../runtime/owner");
     if (stopped) return exitCode;
-    runtime = createRuntime({ ...options, scheduler: false });
+    runtime = createExecutionOwner({ ...options, mode: "tui" }).runtime;
     const activeRuntime = runtime;
     await runSession(
       terminal,
@@ -59,8 +57,7 @@ export async function runTui(options: {
     try {
       await closing;
     } finally {
-      process.off("SIGINT", interrupt);
-      process.off("SIGTERM", terminate);
+      removeSignals();
     }
   }
   return exitCode;

@@ -37,8 +37,7 @@ export function createHost(options: {
   let terminal: LocalTerminalControl | undefined;
   const runtime = createRuntime({
     ...options,
-    scheduler: true,
-    exclusiveOwner: true,
+    mode: "daemon",
     emit,
     onInstanceRevoked: async () => {
       await Promise.allSettled([

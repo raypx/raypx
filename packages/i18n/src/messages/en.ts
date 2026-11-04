@@ -78,7 +78,7 @@ export default {
   localWorkspace: {
     localMode: "Local workspace",
     welcome: "Start on this computer",
-    welcomeHint: "Register this instance once, then set up your first local project.",
+    welcomeHint: "Choose a local project and check your Agent, then write your first message.",
     ownershipHint:
       "Local sessions and drafts stay on this computer. Signing in or out never moves, uploads or stops them.",
     remoteSignIn: "Sign in for remote access",
@@ -86,11 +86,14 @@ export default {
     backToLocal: "Back to local tools",
     getStarted: "Open setup guide",
     chooseProject: "Authorize a project folder",
+    selectProject: "Choose a project",
+    projectMissing: "This project is no longer available on this computer.",
     chooseAnotherProject: "Authorize another folder",
     authorizing: "Authorizing…",
     projectHint: "Grants access on this computer only.",
     checkAgent: "Check Claude Code or Codex",
     agentHint: "Install and sign in to Claude Code or Codex.",
+    agentUnavailable: "Agent status is unavailable. Check again to retry.",
     checkAgain: "Check agents again",
     firstTask: "Write your first message",
     firstTaskHint: "Nothing runs until you send.",
@@ -1065,6 +1068,6 @@ export default {
     upgradeTitle: "Update the execution host",
     unavailable: "Local tools are unavailable",
     retry: "Restart local tools",
-    hint: "You can still use your account and preferences.",
+    hint: "Restart local tools to reconnect. Your workspace stays on this computer.",
   },
 } as const;

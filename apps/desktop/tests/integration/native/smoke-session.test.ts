@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { prepareSmokeDirectory, removeSmokeDirectory } from "../../tests/native/smoke/session";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "../../native/smoke/session";
 
 const roots: string[] = [];
 async function directory() {

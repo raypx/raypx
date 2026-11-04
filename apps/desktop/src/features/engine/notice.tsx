@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
+import { Alert, AlertTitle, AlertDescription } from "@raypx/ui/components/ui/alert";
 
 export function EngineNotice({
   code,
@@ -37,22 +38,22 @@ export function EngineNotice({
   }
   return (
     <>
-      <div
-        className="flex flex-wrap items-center justify-between gap-5 bg-muted px-8 py-4 @max-2xl/main:px-5"
-        role="alert"
-      >
+      <Alert className="gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div>
-          <strong className="text-sm font-medium">
-            {t(upgrade ? "upgradeTitle" : "unavailable")}
-          </strong>
-          <p className="mt-1 max-w-[65ch] text-xs text-muted-foreground">
+          <AlertTitle>{t(upgrade ? "upgradeTitle" : "unavailable")}</AlertTitle>
+          <AlertDescription className="mt-1 max-w-[65ch]">
             {t(upgrade ? "upgradeWarning" : "hint")}
-          </p>
+          </AlertDescription>
         </div>
-        <Button variant="outline" disabled={busy} onClick={() => void recover()}>
+        <Button
+          className="justify-self-start sm:self-center"
+          variant="outline"
+          disabled={busy}
+          onClick={() => void recover()}
+        >
           {t(upgrade ? "replaceOwner" : "retry")}
         </Button>
-      </div>
+      </Alert>
       {confirmation.dialog}
     </>
   );

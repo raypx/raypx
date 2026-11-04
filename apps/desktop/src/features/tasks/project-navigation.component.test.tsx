@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it } from "vite-plus/test";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   createMemoryHistory,
@@ -12,43 +12,40 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { Sidebar, SidebarProvider } from "@raypx/ui/components/ui/sidebar";
 import { ProjectNavigation } from "./project-navigation";
+import { desktopFixture } from "../../../tests/helpers/desktop";
+import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view";
+import { useProjectCatalog } from "./project-catalog";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn() }));
-vi.mock("./local-client", () => ({
-  localTaskClient: { devices: { list: mocks.list } },
-}));
-vi.mock("../../lib/desktop", () => ({
-  isDesktop: () => true,
-  onLocalEvent: () => () => {},
-}));
-const histories: ReturnType<typeof createMemoryHistory>[] = [];
+let fixture: ReturnType<typeof desktopFixture>;
+const views: (() => void)[] = [];
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
-  mocks.list.mockReset().mockResolvedValue([
-    {
-      projects: Array.from({ length: 7 }, (_, index) => ({
-        id: `project-${index}`,
-        name: `Project ${index}`,
-        providers: ["codex"],
-        dirty: false,
-      })),
-    },
-  ]);
+  fixture = desktopFixture();
+  fixture.device.projects = Array.from({ length: 7 }, (_, index) => ({
+    id: `00000000-0000-4000-8000-${String(index + 2).padStart(12, "0")}`,
+    name: `Project ${index}`,
+    providers: ["codex" as const],
+    dirty: false,
+  }));
 });
 afterEach(() => {
   cleanup();
-  for (const history of histories.splice(0)) history.destroy();
+  for (const close of views.splice(0)) close();
 });
+function CatalogSummary() {
+  const catalog = useProjectCatalog();
+  return <output aria-label="Project count">{catalog.data?.[0]?.projects.length ?? 0}</output>;
+}
 async function navigation() {
   const history = createMemoryHistory({ initialEntries: ["/tasks"] });
-  histories.push(history);
   const root = createRootRoute({
     component: () => (
       <SidebarProvider>
         <Sidebar>
           <ProjectNavigation />
         </Sidebar>
+        <CatalogSummary />
       </SidebarProvider>
     ),
   });
@@ -59,14 +56,20 @@ async function navigation() {
   const router = createRouter({ routeTree: tree, history });
   await router.load();
   const queries = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
+  views.push(() => {
+    history.destroy();
+    queries.clear();
+  });
+  const view = render(
     <QueryClientProvider client={queries}>
       <BrowserLanguageProvider>
-        <RouterProvider router={router} />
+        <DesktopFixtureProvider fixture={fixture}>
+          <RouterProvider router={router} />
+        </DesktopFixtureProvider>
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
-  return { history, queries };
+  return { history, queries, unmount: view.unmount };
 }
 it("limits shortcuts, searches all authorized projects and navigates to a local project filter", async () => {
   const { history } = await navigation();
@@ -77,13 +80,17 @@ it("limits shortcuts, searches all authorized projects and navigates to a local 
     target: { value: "Project 6" },
   });
   fireEvent.click(await screen.findByRole("link", { name: "Project 6" }));
-  await waitFor(() => expect(history.location.search).toContain("project=project-6"));
+  await waitFor(() =>
+    expect(history.location.search).toContain(`project=${fixture.device.projects[6]!.id}`),
+  );
   expect(history.location.search).toContain("scope=local");
-  expect(JSON.parse(localStorage.getItem("raypx.recent-projects.v1")!)[0]).toBe("project-6");
-  expect(mocks.list).toHaveBeenCalled();
+  expect(JSON.parse(localStorage.getItem("raypx.recent-projects.v1")!)[0]).toBe(
+    fixture.device.projects[6]!.id,
+  );
+  expect(fixture.calls.some((call) => call.method === "agents.local.device")).toBe(true);
 });
 it("offers local setup when there are no authorized projects", async () => {
-  mocks.list.mockResolvedValue([{ projects: [] }]);
+  fixture.device.projects = [];
   await navigation();
   expect(
     (await screen.findByRole("link", { name: "Authorize your first project" })).getAttribute(
@@ -95,16 +102,51 @@ it("offers local setup when there are no authorized projects", async () => {
 it("keeps remaining shortcuts visible when an expanded project list shrinks", async () => {
   const { queries } = await navigation();
   fireEvent.click(await screen.findByRole("button", { name: "All projects" }));
-  mocks.list.mockResolvedValue([
+  fixture.device.projects = [
     {
-      projects: [
-        { id: "remaining", name: "Remaining project", providers: ["codex"], dirty: false },
-      ],
+      id: fixture.device.projects[0]!.id,
+      name: "Remaining project",
+      providers: ["codex"],
+      dirty: false,
     },
-  ]);
+  ];
   await act(async () => {
     await queries.invalidateQueries({ queryKey: ["desktop-project-navigation"] });
   });
   await screen.findByRole("link", { name: "Remaining project" });
   expect(screen.queryByRole("button", { name: "All projects" })).toBeNull();
+});
+
+it("shares one catalog read across consumers and releases event subscriptions on unmount", async () => {
+  const { unmount, queries } = await navigation();
+  await screen.findByRole("link", { name: "Project 0" });
+  expect(screen.getByRole("status", { name: "Project count" }).textContent).toBe("7");
+  expect(fixture.calls.filter((call) => call.method === "agents.local.device")).toHaveLength(1);
+  fixture.setLocal("agents.local.device", () => {
+    throw new Error("Disconnected");
+  });
+  await act(async () =>
+    fixture.emit({ version: 1, event: "engine.status", data: { status: "error" } }),
+  );
+  await waitFor(() =>
+    expect(queries.getQueryState(["desktop-project-navigation"])?.status).toBe("error"),
+  );
+  expect(screen.getByRole("link", { name: "Project 0" })).toBeTruthy();
+  fixture.setLocal("agents.local.device", () => fixture.device);
+  fixture.device.projects = [];
+  await act(async () =>
+    fixture.emit({
+      version: 1,
+      event: "agent.changed",
+      data: { change: { type: "devices" } },
+    }),
+  );
+  await screen.findByRole("link", { name: "Authorize your first project" });
+  expect(screen.getByRole("status", { name: "Project count" }).textContent).toBe("0");
+  expect(fixture.calls.filter((call) => call.method === "agents.local.device")).toHaveLength(3);
+  unmount();
+  await act(async () =>
+    fixture.emit({ version: 1, event: "engine.status", data: { status: "ready" } }),
+  );
+  expect(fixture.calls.filter((call) => call.method === "agents.local.device")).toHaveLength(3);
 });

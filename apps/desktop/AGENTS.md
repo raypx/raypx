@@ -27,6 +27,13 @@ layout); the shell derives breadcrumbs and the page template, so pages never add
 their own outer width or gutters.
 
 `@raypx/contracts/local-client` owns renderer method/parameter/reply inference and validates both sides of IPC; callers never supply reply generics.
+`src/lib/platform.ts` creates isolated DesktopPlatform ports; application composition
+in desktop.ts selects MyGo. Components use platform-context for injection. RuntimeProvider
+owns engine state and project-catalog invalidation; its controller fences stale reads
+against events and disposal. Project views reuse project-catalog and pure project selection.
+First connection gates project/provider queries; subsequent outages keep the workspace mounted.
+EngineRouteSync lives outside that gate and refreshes local route loaders on readiness,
+including an initial failure before the local layout mounts.
 `preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
 sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...&device=...`. Project and computer filters apply before storage pagination, never create
 work or reads remote/account-owned projects. Account and settings share the footer.
@@ -63,13 +70,19 @@ Own native directory authorization and local UX. Runtime implementations live ex
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
 source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites.
-Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. MyGo transport/policy tests live in `tests/native/host/`.
+Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. MyGo transport/acceptance tests live in `tests/native/host/`; pure policy and engine-port tests live in `internal/desktop/`.
 These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
-Native scripts and their adjacent tests live in `scripts/native/` with Bun types.
+Native scripts and their pure policy tests live in `scripts/native/` with Bun types;
+build/filesystem/process integration cases live in `tests/integration/native/`.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
 Use short feature-local filenames such as `form.tsx` and `form.component.test.tsx`; exported symbols retain feature context. Route composition suites live beside the router.
-Test scripts select components by suffix; `test:unit` excludes components and integration suites and includes native/script cases. File extensions
+Native Vitest projects select unit, component and integration suites. `test:unit` and
+`test:component` require no CLI, Go, WebView, system secrets or Provider installation;
+native build/process cases run in `test:integration`. Default `test` aggregates all three.
+tests/helpers/desktop provides typed per-case ports; unknown requests fail and events
+never leak between fixtures. Keep real process/IPC acceptance in the Go/native gates.
+File extensions
 describe source syntax, and each suite declares its required test environment.
 
 The account route reads its remote projection in a client-only loader; auth

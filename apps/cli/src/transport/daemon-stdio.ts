@@ -1,4 +1,5 @@
 import { localRequestSchema } from "@raypx/contracts/local";
+import { onShutdown } from "./shutdown";
 import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint";
 import { errorPayload, LocalError } from "../runtime/errors";
 
@@ -89,8 +90,7 @@ export async function serveDaemonStdio(options: ProfileOptions) {
     controller.abort();
     process.stdin.destroy();
   };
-  process.once("SIGINT", stop);
-  process.once("SIGTERM", stop);
+  const removeSignals = onShutdown(stop);
   process.stdout.once("error", stop);
   const dispatch = (line: string) => {
     let id = "invalid";
@@ -148,8 +148,7 @@ export async function serveDaemonStdio(options: ProfileOptions) {
     await Promise.allSettled(active);
     await reader;
     await writing.catch(() => {});
-    process.off("SIGINT", stop);
-    process.off("SIGTERM", stop);
+    removeSignals();
     process.stdout.off("error", stop);
   }
 }

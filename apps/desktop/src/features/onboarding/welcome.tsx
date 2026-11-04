@@ -13,10 +13,12 @@ import { EditIcon } from "@raypx/icons/edit";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
-import { isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
+import { useDesktopPlatform } from "../../lib/platform-context";
+import { useProjectCatalog, projectCatalogKey } from "../tasks/project-catalog";
 import { recentProjects, rememberProject } from "../tasks/project-history";
 
 export function LocalWelcome() {
+  const { isDesktop, localRequest, pickDirectory } = useDesktopPlatform();
   const t = useTranslations("localWorkspace"),
     tasks = useTranslations("tasks"),
     c = useTranslations("common");
@@ -24,20 +26,16 @@ export function LocalWelcome() {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(false);
-  const setup = useQuery({
-    queryKey: ["local-onboarding"],
+  const catalog = useProjectCatalog();
+  const agents = useQuery({
+    queryKey: ["desktop-agent-capabilities"],
     enabled: isDesktop(),
     retry: false,
-    queryFn: async () => {
-      const [projects, agents] = await Promise.all([
-        localRequest("agents.projects", {}),
-        localRequest("agents.capabilities", {}),
-      ]);
-      return { projects, agents };
-    },
+    queryFn: () => localRequest("agents.capabilities", {}),
   });
-  const configured = Boolean(setup.data?.projects.length);
-  const available = setup.data?.agents.some((agent) => agent.available) ?? false;
+  const projects = catalog.data?.[0]?.projects ?? [];
+  const configured = projects.length > 0;
+  const available = agents.data?.some((agent) => agent.available) ?? false;
   async function chooseProject() {
     if (busy) return;
     setBusy(true);
@@ -47,8 +45,7 @@ export function LocalWelcome() {
       if (root) {
         await localRequest("agents.configure", { rootId: root.id, providers: [...agentProviders] });
         rememberProject(root.id);
-        await setup.refetch();
-        await queryClient.invalidateQueries({ queryKey: ["desktop-project-navigation"] });
+        await queryClient.invalidateQueries({ queryKey: projectCatalogKey });
       }
     } catch {
       setError(true);
@@ -57,22 +54,21 @@ export function LocalWelcome() {
     }
   }
   const projectId =
-    setup.data?.projects.find((project) => project.id === recentProjects()[0])?.id ??
-    setup.data?.projects[0]?.id;
+    projects.find((project) => project.id === recentProjects()[0])?.id ?? projects[0]?.id;
   const steps = [
     {
       done: configured,
       title: t("chooseProject"),
       hint: t("projectHint"),
-      detail: setup.data?.projects.length ? (
+      detail: projects.length ? (
         <p className="mt-1 text-sm break-words">
-          {setup.data.projects.map((project) => project.name).join(" · ")}
+          {projects.map((project) => project.name).join(" · ")}
         </p>
       ) : undefined,
       action: (
         <Button
-          variant="outline"
-          disabled={busy || !isDesktop()}
+          variant={configured ? "outline" : "default"}
+          disabled={busy || catalog.isPending || !isDesktop()}
           onClick={() => void chooseProject()}
         >
           <FolderOpenIcon aria-hidden="true" />
@@ -84,9 +80,9 @@ export function LocalWelcome() {
       done: available,
       title: t("checkAgent"),
       hint: t("agentHint"),
-      detail: setup.data?.agents.length ? (
+      detail: agents.data?.length ? (
         <ul className="mt-2 flex flex-wrap gap-2">
-          {setup.data.agents.map((agent) => (
+          {agents.data.map((agent) => (
             <li
               key={agent.provider}
               className="flex items-center gap-2 rounded-md border border-border px-2 py-1 text-xs"
@@ -106,9 +102,9 @@ export function LocalWelcome() {
       ) : undefined,
       action: (
         <Button
-          variant="outline"
-          disabled={busy || setup.isFetching || !isDesktop()}
-          onClick={() => void setup.refetch()}
+          variant={configured && !available ? "default" : "outline"}
+          disabled={busy || agents.isFetching || !isDesktop()}
+          onClick={() => void agents.refetch()}
         >
           <RefreshIcon aria-hidden="true" />
           {t("checkAgain")}
@@ -122,11 +118,16 @@ export function LocalWelcome() {
       detail: undefined,
       action: (
         <Button
+          variant={configured && available ? "default" : "outline"}
           disabled={!configured || !available || busy}
           onClick={() =>
             void navigate({
               to: "/tasks",
-              search: { scope: "local", ...(projectId ? { project: projectId } : {}) },
+              search: {
+                scope: "local",
+                ...(projectId ? { project: projectId } : {}),
+                ...(catalog.data?.[0] ? { device: catalog.data[0].id } : {}),
+              },
             })
           }
         >
@@ -143,7 +144,7 @@ export function LocalWelcome() {
         <p className="mt-2 text-sm text-muted-foreground">{t("welcomeHint")}</p>
       </header>
       {!isDesktop() && <p className="mb-5 text-sm text-muted-foreground">{c("desktopOnly")}</p>}
-      {setup.isLoading && <LoadingState label={c("loading")} />}
+      {(catalog.isLoading || agents.isLoading) && <LoadingState label={c("loading")} />}
       <ol className="divide-y divide-border rounded-xl border border-border">
         {steps.map((step, index) => (
           <li
@@ -168,9 +169,19 @@ export function LocalWelcome() {
           </li>
         ))}
       </ol>
-      {(error || setup.isError) && (
+      {(error || catalog.isError) && (
         <p role="alert" className="mt-4 text-sm text-destructive-text">
-          {tasks("LOCAL_UNAVAILABLE")}
+          {tasks("projectsUnavailable")}
+        </p>
+      )}
+      {catalog.isError && (
+        <Button variant="outline" onClick={() => void catalog.refetch()}>
+          {c("retry")}
+        </Button>
+      )}
+      {agents.isError && (
+        <p role="alert" className="mt-4 text-sm text-destructive-text">
+          {t("agentUnavailable")}
         </p>
       )}
       <div className="mt-5 flex flex-wrap gap-2">

@@ -3,7 +3,7 @@ import { expect, it } from "vite-plus/test";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createForegroundHost } from "../../../src/runtime/foreground";
+import { createExecutionOwner } from "../../../src/runtime/owner";
 import type { HostVault } from "../../../src/runtime/daemon/vault";
 import type { HostAuthorization } from "@raypx/contracts/terminal";
 import type { LocalEvent } from "@raypx/contracts/local";
@@ -86,12 +86,16 @@ function fixture() {
     },
   };
   const open = () =>
-    createForegroundHost({
-      dataDir,
-      vault,
-      instanceAccess: enrolledInstance,
-      emit: (event) => events.push(event),
-    });
+    createExecutionOwner(
+      {
+        mode: "stdio",
+        dataDir,
+        vault,
+        instanceAccess: enrolledInstance,
+        emit: (event) => events.push(event),
+      },
+      "win32",
+    );
   let host = open();
   const scope = { accountId, apiUrl: api.url.origin };
   return {

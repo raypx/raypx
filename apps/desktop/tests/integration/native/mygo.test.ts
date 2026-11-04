@@ -2,8 +2,8 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import config from "../../mygo.config";
-import { assertNativeTarget, prepare } from "./mygo";
+import config from "../../../mygo.config";
+import { assertNativeTarget, prepare } from "../../../scripts/native/mygo";
 
 const roots: string[] = [];
 afterEach(async () => {

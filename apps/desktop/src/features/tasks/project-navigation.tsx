@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { FolderIcon } from "@raypx/icons/folder";
@@ -21,48 +20,24 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { isDesktop, onLocalEvent } from "../../lib/desktop";
-import { localTaskClient } from "./local-client";
-import { taskChangeSchema } from "@raypx/contracts/tasks";
+import { useDesktopPlatform } from "../../lib/platform-context";
+import { useProjectCatalog } from "./project-catalog";
 import { recentProjects, rememberProject } from "./project-history";
 
 /** Local project shortcuts never depend on a browser account or remote task data. */
 export function ProjectNavigation() {
   const t = useTranslations("tasks");
-  const queries = useQueryClient();
+  const platform = useDesktopPlatform();
   const location = useLocation();
   const search = new URLSearchParams(location.searchStr);
   const selected = !["remote", "account", "cloud"].includes(search.get("scope") ?? "local")
     ? (search.get("project") ?? search.get("rootId"))
     : null;
-  const [recent, setRecent] = useState(recentProjects);
+  const recent = recentProjects();
   const [query, setQuery] = useState("");
   const [allOpen, setAllOpen] = useState(false);
-  const { data, isError, isPending } = useQuery({
-    queryKey: ["desktop-project-navigation"],
-    queryFn: ({ signal }) => localTaskClient.devices.list({}, { signal }),
-    enabled: isDesktop(),
-    staleTime: 30_000,
-    retry: false,
-  });
-  useEffect(() => {
-    const refresh = () =>
-      void queries.invalidateQueries({ queryKey: ["desktop-project-navigation"] });
-    const stop = onLocalEvent((event) => {
-      if (event.event === "engine.status") refresh();
-      if (event.event === "agent.changed") {
-        const change = taskChangeSchema.safeParse(event.data.change);
-        if (!change.success || change.data.type === "devices" || change.data.type === "reset")
-          refresh();
-      }
-    });
-    window.addEventListener("raypx:remote-change", refresh);
-    return () => {
-      stop();
-      window.removeEventListener("raypx:remote-change", refresh);
-    };
-  }, [queries]);
-  if (!isDesktop()) return null;
+  const { data, isError, isPending } = useProjectCatalog();
+  if (!platform.isDesktop()) return null;
   const projects = [...(data?.[0]?.projects ?? [])].sort((a, b) => {
     const rank = (id: string) => {
       const index = recent.indexOf(id);
@@ -71,8 +46,6 @@ export function ProjectNavigation() {
     return rank(a.id) - rank(b.id);
   });
   function remember(id: string) {
-    const next = [id, ...recentProjects().filter((value) => value !== id)].slice(0, 20);
-    setRecent(next);
     rememberProject(id);
   }
   function items(values: typeof projects) {
@@ -127,7 +100,7 @@ export function ProjectNavigation() {
           <p role="status" className="px-3 py-2 text-xs text-muted-foreground">
             {t("loadingProjects")}
           </p>
-        ) : isError ? (
+        ) : isError && !data ? (
           <p className="px-3 py-2 text-xs text-muted-foreground">{t("projectsUnavailable")}</p>
         ) : !projects.length ? (
           <Link

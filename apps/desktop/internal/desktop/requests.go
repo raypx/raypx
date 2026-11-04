@@ -2,36 +2,12 @@ package desktop
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"path/filepath"
-	"strings"
 )
 
 func (d *Desktop) RendererParams(method string, params any) (any, error) {
-	if method == "" || len(method) > 128 || strings.Trim(method, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.") != "" || !d.methods[method] || strings.HasPrefix(method, "host.") || method == "observed.remote" || method == "approvals.local.watch" || method == "roots.register" || (strings.HasPrefix(method, "agents.") && !strings.HasPrefix(method, "agents.local.") && !contains([]string{"agents.projects", "agents.capabilities", "agents.configure", "agents.models.list", "agents.models.default", "agents.models.setDefault"}, method)) {
-		return nil, errors.New("Local method is not permitted")
-	}
-	b, err := json.Marshal(params)
-	if err != nil || len(b) > LineLimit {
-		return nil, errors.New("Local request exceeds limit")
-	}
-	if input, ok := params.(map[string]any); ok {
-		input = clone(input)
-		if method == "instance.begin" {
-			input["origin"] = d.Config.APIURL
-		}
-		if strings.HasPrefix(method, "agents.local.") {
-			if id, exists := input["accountId"]; exists && id != "device:local-workspace:v1" {
-				return nil, errors.New("Local workspace owner is invalid")
-			}
-		}
-		if strings.HasPrefix(method, "connectors.") {
-			input["configDirs"] = d.Config.Directories
-		}
-		return input, nil
-	}
-	return params, nil
+	return rendererParams(d.Config, d.methods, method, params)
 }
 
 func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, error) {

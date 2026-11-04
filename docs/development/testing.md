@@ -192,12 +192,20 @@ are rejected by Tooling's inventory test. A new scaffold with test support fails
 until actual cases are written. The inventory check also rejects committed `.only`.
 Desktop colocates renderer and native-script tests with source and checks each
 against its platform types. Route composition suites stay beside the router,
-outside `src/routes/` discovery. Native policy, subprocess and OS-lock tests live in
-`apps/desktop/tests/native/host/` and run with Go; the deleted Bun native
-integration layer has no placeholder `test:integration` script.
+outside `src/routes/` discovery. Desktop uses native Vitest projects: `unit` for
+source and script policies/adapters, `component` for DOM interactions, and `integration` for
+native build/package cases in `tests/integration/native/`. `test:unit`, `test:component` and `test:integration`
+select exactly those projects; default `test` aggregates them. Unit and component
+cases use per-case typed DesktopPlatform fixtures, with no CLI, Go, WebView,
+system secrets or installed Provider. Unhandled fixture requests fail explicitly.
+Go's pure policy and injected-engine cases live in `internal/desktop`; real
+subprocess, IPC, OS-lock and compiled CLI tests remain in `tests/native/host`.
 Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/native/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
+The engine controller orders status events ahead of older reads and ignores late
+responses after disposal. Project selection and cache invalidation are shared by
+the homepage, onboarding and sidebar; opening these views never starts a task.
 CLI unit suites live beside source; `tests/integration/` stays grouped by capability.
 Agent lifecycle/approvals, input races and context/resume have separate suites sharing
 per-case host fixtures. Their real ten-second deadline tests remain in integration;

@@ -17,3 +17,10 @@ Tests live in ../tests/native/host/. From apps/desktop run
 the repository Bun verification. Headless artifact checks must use temporary profiles and never
 read production credentials or activate a GUI. Report unrun packaged GUI/platform
 checks accurately.
+
+Desktop depends on EngineClient and receives CLI metadata and dependencies through
+Options. Keep concrete process framing in Engine and event credit in EventStream.
+Pure renderer policy tests live beside policy.go without opening profiles or processes;
+host use-case tests inject an engine. tests/native/host retains real transport,
+subprocess, OS-lock and compiled CLI acceptance. Test ports must preserve native
+authorization and request admission rather than bypassing them.

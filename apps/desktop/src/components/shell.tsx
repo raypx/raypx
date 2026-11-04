@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui
 import { createPendingClient, localTaskClient } from "../features/tasks/local-client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Link,
   Outlet,
@@ -32,7 +32,8 @@ import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { EngineNotice } from "../features/engine/notice";
 import { desktopStorageKey } from "../lib/storage";
 import { useTranslations } from "@raypx/i18n/browser";
-import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "../lib/desktop";
+import { isDesktop, onLocalEvent } from "../lib/desktop";
+import { useDesktopEngine } from "../features/engine/provider";
 
 const pendingClient = createPendingClient(localTaskClient, taskClient);
 
@@ -79,25 +80,9 @@ export function DesktopShell() {
   const t = useTranslations();
   const c = useTranslations("common");
   const memory = useTranslations("memory");
-  const [engine, setEngine] = useState("starting");
-  const [engineCode, setEngineCode] = useState<string>();
+  const { engine, restart } = useDesktopEngine();
   useEffect(() => {
-    let active = true;
-    void getDesktopRuntime()
-      .then((runtime) => {
-        if (active) {
-          setEngine(runtime.engine.status);
-          setEngineCode(runtime.engine.code);
-        }
-      })
-      .catch(() => {
-        if (active) setEngine("error");
-      });
     const stop = onLocalEvent((event) => {
-      if (event.event === "engine.status" && typeof event.data.status === "string") {
-        setEngine(event.data.status);
-        setEngineCode(typeof event.data.code === "string" ? event.data.code : undefined);
-      }
       if (event.event === "approval.open")
         void router.navigate({
           to: "/approvals",
@@ -105,7 +90,6 @@ export function DesktopShell() {
         });
     });
     return () => {
-      active = false;
       stop();
     };
   }, [router]);
@@ -167,15 +151,8 @@ export function DesktopShell() {
         notice={
           <>
             <TerminalRequestNotice accountId={accountId} />
-            {engine === "error" && isDesktop() && (
-              <EngineNotice
-                code={engineCode}
-                restart={async (replace) => {
-                  const ready = await restartEngine(replace);
-                  setEngine(ready ? "ready" : "error");
-                  return ready;
-                }}
-              />
+            {engine.status === "error" && isDesktop() && (
+              <EngineNotice code={engine.code} restart={restart} />
             )}
           </>
         }

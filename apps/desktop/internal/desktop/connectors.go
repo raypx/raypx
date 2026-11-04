@@ -14,8 +14,8 @@ func (d *Desktop) repair(parent context.Context, input JSON) (any, error) {
 		return nil, errors.New("INSTALLATION_FAILED")
 	}
 	encoded, _ := json.Marshal(JSON{"configDirs": d.Config.Directories})
-	args := append([]string{"connectors", "repair", provider, string(encoded), "--json"}, d.Engine.Args...)
-	cmd := Command(d.Engine.Binary, args...)
+	args := append([]string{"connectors", "repair", provider, string(encoded), "--json"}, d.cli.Args...)
+	cmd := Command(d.cli.Binary, args...)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, errors.New("INSTALLATION_FAILED")

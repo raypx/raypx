@@ -24,6 +24,13 @@ ExecutionCoordinator alone owns active handles, startup cancellation fences,
 draining and project-lock release. ManagedExecution owns each run's turn queue,
 approval and cancellation state machine.
 
+CLI entries select command, TUI, stdio or daemon ownership through one private
+execution-owner factory. Service construction retains lazy Agent ownership and
+each mode's scheduling/EOF behavior. The factory adds host services only to daemon
+and Windows foreground stdio; entry adapters own signal registration and output.
+Desktop consumes the existing IPC contract through an injectable platform port.
+Its Go host depends on EngineClient; concrete Engine owns child-process framing.
+
 Application services receive persistence ports. AgentStore borrows ProfileStorage's
 single SQLite writer; cross-record atomic transitions, requests, outbox, receipts,
 forgetting and replay retain their existing transaction boundaries and serialization.
