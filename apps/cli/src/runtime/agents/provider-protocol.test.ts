@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { CodexAdapter } from "@raypx/provider-codex";
+import { CodexAdapter } from "@raypx/providers/codex";
 import { parseProviderReplay, ProviderReplay } from "../../../tests/helpers/provider-replay";
 import type { ReplayRecord } from "../../../tests/helpers/provider-replay";
 import { bootstrap, fixture } from "../../../tests/helpers/provider-session";

@@ -1,8 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import { type LocalDatabase } from "../../../sqlite";
 import { piContexts } from "../../../sqlite/schema";
-import type { PiContext, PiContextStore } from "@raypx/provider-pi";
-import { piStoredContextSchema } from "@raypx/provider-pi/context";
+import type { PiContext, PiContextStore } from "@raypx/providers/pi";
+import { piStoredContextSchema } from "@raypx/providers/pi/context";
 
 export const PI_CONTEXT_MAX_BYTES = 8 * 1024 * 1024;
 type StoreCode =

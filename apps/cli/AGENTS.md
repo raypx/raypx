@@ -157,7 +157,7 @@ the first provider prompt, rejecting excess total size before launching executio
 
 `runtime/agents/index.ts` is the local/replay/receipt facade. `harness/execution.ts`
 owns each task's turn queue, approvals, cancellation and lock release through
-process draining. The `@raypx/provider-codex` and `@raypx/provider-claude` libraries translate provider protocols
+process draining. The `@raypx/providers/codex` and `@raypx/providers/claude` entries translate provider protocols
 into lifecycle events without owning task storage or relay transport.
 `harness/transport.ts` defines protocol I/O; its process implementation is
 `runtime/agents/transport.ts`. Fence callbacks to the current execution handle.
@@ -187,7 +187,7 @@ non-activity event; activity stays a latest-value projection. The goldens in
 `tests/integration/runtime/agents/orchestration.test.ts` pin the wire sequence;
 regenerate them only for a deliberate wire change (`ORCHESTRATION_GOLDENS=write`).
 
-Managed Pi uses `@raypx/provider-pi`; private `runtime/agents/pi` owns its
+Managed Pi uses `@raypx/providers/pi`; private `runtime/agents/pi` owns its
 granted file/command bridge, model admission and context ownership. Local models use
 read-only user TOML/environment and profile defaults. Context CAS, revision-bound
 cross-connection consent, durable effects and SDK drain apply before continuation.
@@ -258,7 +258,7 @@ leases make the local approval channel reachable. Remote eligibility is frozen p
 request; independent projection withdrawal revisions never alter broker revisions.
 Cloud settings are explicit `host.terminal.*` Native RPCs. See ADR 0035.
 Registry interfaces own adapter construction and bounded probes. Execution owns
-plan policy and persistence; provider libraries parse raw conversation records through
+plan policy and persistence; provider adapters parse raw conversation records through
 the shared ConversationSink interface. ConversationRecorder owns bounded activity
 aggregation, revisions and persistence callbacks. Lifecycle
 code sees execution handles and adapter events, never transport controls.

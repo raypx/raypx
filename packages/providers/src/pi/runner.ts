@@ -1,4 +1,4 @@
-import type { ConversationEvent } from "@raypx/provider-core";
+import type { ConversationEvent } from "../core/index.js";
 import { Agent, type AgentTool, type StreamFn } from "@earendil-works/pi-agent-core";
 import {
   createAssistantMessageEventStream,

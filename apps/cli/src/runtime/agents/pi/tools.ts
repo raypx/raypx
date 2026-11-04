@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { AgentTool } from "@raypx/provider-pi";
+import type { AgentTool } from "@raypx/providers/pi";
 import type { AgentTask } from "@raypx/core/tasks";
 import { localParams } from "@raypx/contracts/local";
-import type { AskApproval } from "@raypx/provider-core";
+import type { AskApproval } from "@raypx/providers/core";
 import type { FileRuntime } from "../../files";
 import type { ProcessRuntime } from "../../process";
 

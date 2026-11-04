@@ -1,9 +1,9 @@
 import { ClaudeAdapter } from "./index.js";
-import { createTestProviderHost, createTestTransport } from "@raypx/provider-testing";
+import { createTestProviderHost, createTestTransport } from "../../tests/helpers/host.js";
 import {
   defineProviderConformance,
   defineDrainConformance,
-} from "@raypx/provider-testing/conformance";
+} from "../../tests/helpers/conformance.js";
 
 function fixture() {
   const host = createTestProviderHost(),

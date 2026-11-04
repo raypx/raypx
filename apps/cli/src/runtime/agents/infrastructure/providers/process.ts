@@ -8,10 +8,10 @@ import {
   type ProcessSessionStart,
   type ProcessAdapterFactory,
   type ProviderSession,
-} from "@raypx/provider-core";
-import { piDefinition } from "@raypx/provider-pi";
-import { ClaudeAdapter, claudeDefinition } from "@raypx/provider-claude";
-import { CodexAdapter, codexDefinition } from "@raypx/provider-codex";
+} from "@raypx/providers/core";
+import { piDefinition } from "@raypx/providers/pi";
+import { ClaudeAdapter, claudeDefinition } from "@raypx/providers/claude";
+import { CodexAdapter, codexDefinition } from "@raypx/providers/codex";
 import { createTransport, type TransportFactory } from "../../harness/transport";
 
 type Registration = {

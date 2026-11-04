@@ -6,11 +6,11 @@ import {
 } from "@raypx/ai";
 import { PiAdapter } from "./adapter.js";
 import type { PiContext } from "./runner.js";
-import { createTestProviderHost } from "@raypx/provider-testing";
+import { createTestProviderHost } from "../../tests/helpers/host.js";
 import {
   defineProviderConformance,
   defineDrainConformance,
-} from "@raypx/provider-testing/conformance";
+} from "../../tests/helpers/conformance.js";
 
 function fixture() {
   const host = createTestProviderHost();

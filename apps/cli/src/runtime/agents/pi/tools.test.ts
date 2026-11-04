@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { PiRunner } from "@raypx/provider-pi";
+import { PiRunner } from "@raypx/providers/pi";
 import {
   piMessage,
   piModel,

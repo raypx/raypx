@@ -8,7 +8,7 @@ import {
   type ExecutionHandle,
   type AgentTransport,
   type TransportFactory,
-} from "@raypx/provider-core";
+} from "../core/index.js";
 
 export const claudeDefinition = {
   version: 1,

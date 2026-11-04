@@ -1,4 +1,4 @@
-import type { ConversationEvent, TokenTotals } from "@raypx/provider-core";
+import type { ConversationEvent, TokenTotals } from "@raypx/providers/core";
 import { taskText } from "@raypx/core/task-text";
 
 import type { TaskActivity } from "@raypx/core/tasks";
@@ -8,7 +8,7 @@ import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports";
 
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;
-export type { TokenTotals } from "@raypx/provider-core";
+export type { TokenTotals } from "@raypx/providers/core";
 
 /** Select public conversation fields; reasoning, tool output and provider envelopes stay private. */
 export class ConversationRecorder implements ExecutionConversation {

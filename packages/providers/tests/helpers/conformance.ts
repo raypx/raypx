@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import type { ProviderSession } from "@raypx/provider-core";
-import { observeDrain, type createTestProviderHost } from "./index.js";
+import type { ProviderSession } from "../../src/core/index.js";
+import { observeDrain, type createTestProviderHost } from "./host.js";
 
 export interface ProviderHarness {
   session: ProviderSession;

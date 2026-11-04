@@ -40,7 +40,7 @@ function forbidden(owner: string, target: string, request: string) {
   if (owner === "adapter") return /\/runtime\/index\.[cm]?[jt]s$/.test(target);
   const infrastructure =
     /\/(?:infrastructure|sqlite)\//.test(target) ||
-    /^(?:bun(?::|$)|node:(?:fs(?:\/|$)|child_process|sqlite)|drizzle-orm(?:\/|$)|@raypx\/(?:database|provider-(?:codex|claude|pi))(?:\/|$))/.test(
+    /^(?:bun(?::|$)|node:(?:fs(?:\/|$)|child_process|sqlite)|drizzle-orm(?:\/|$)|@raypx\/(?:database|providers\/(?:codex|claude|pi))(?:\/|$))/.test(
       request,
     );
   return (

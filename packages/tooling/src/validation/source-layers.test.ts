@@ -27,6 +27,18 @@ it("blocks infrastructure hidden behind a barrel or dynamic import while allowin
   });
   expect(layerViolations(nodes)).toHaveLength(1);
 });
+it("allows provider ports in application code but keeps concrete adapters behind infrastructure", () => {
+  const entry = "apps/example/src/application/providers.ts";
+  const violationsFor = (requests: string[]) =>
+    layerViolations(
+      new Map<string, SourceNode>([[entry, { path: entry, dependencies: [], requests }]]),
+    );
+
+  expect(violationsFor(["@raypx/providers/core"])).toEqual([]);
+  expect(violationsFor(["@raypx/providers/codex"])).toHaveLength(1);
+  expect(violationsFor(["@raypx/providers/claude"])).toHaveLength(1);
+  expect(violationsFor(["@raypx/providers/pi/context"])).toHaveLength(1);
+});
 it("keeps page models independent from React and adapters independent from composition", () => {
   const model = "packages/example/src/model/submission.ts";
   const adapter = "apps/example/src/infrastructure/files.ts";

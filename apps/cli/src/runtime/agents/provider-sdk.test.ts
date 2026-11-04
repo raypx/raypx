@@ -1,4 +1,4 @@
-import type { SessionFactory } from "@raypx/provider-core";
+import type { SessionFactory } from "@raypx/providers/core";
 import { expect, it, vi } from "vite-plus/test";
 import { memoryConversation, fixture } from "../../../tests/helpers/provider-session";
 

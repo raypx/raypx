@@ -1,6 +1,6 @@
 import { taskText } from "@raypx/core/task-text";
 import type { HumanDecision, HumanRequest } from "@raypx/core/tasks";
-import { object } from "@raypx/provider-core";
+import { object } from "../core/index.js";
 
 export interface ClaudeHookApprovalPort {
   markPlanHandled(): void;

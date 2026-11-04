@@ -1,6 +1,6 @@
 import { activeTaskStatuses } from "@raypx/core/tasks";
 import { prepareModelContext } from "@raypx/ai";
-import { PiAdapter, type PiSessionOptions } from "@raypx/provider-pi";
+import { PiAdapter, type PiSessionOptions } from "@raypx/providers/pi";
 import type { TaskFollowUp } from "@raypx/core/tasks";
 import type { StateStore } from "../../state";
 import type { FileRuntime } from "../../files";

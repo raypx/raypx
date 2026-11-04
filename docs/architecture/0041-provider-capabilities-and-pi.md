@@ -1,6 +1,7 @@
 # ADR 0041: Provider capabilities and managed Pi
 
-Status: Accepted, 2026-11-03. Extends ADR 0040.
+Status: Accepted, 2026-11-03. Extends ADR 0040. Amended 2026-11-04: provider workspaces
+consolidated into `@raypx/providers`.
 
 ## Ownership and capabilities
 
@@ -11,11 +12,12 @@ runtime kind, modes, approvals and model selection; discovery separately reports
 availability and effective input modes. Unsupported operations fail at the execution
 boundary. Terminal connectors cover Codex and Claude only.
 
-`@raypx/provider-pi` owns the bounded SDK loop, normalized activity and injected session
-adapter. `@raypx/ai` owns transport, model lookup, offline auth configuration checks and
-public SDK context conversion/estimation. CLI owns TOML, OS tools and SQLite. The
-test-only `@raypx/provider-testing` workspace supplies common host/transport scenarios;
-runtime packages never import it.
+`@raypx/providers/pi` owns the bounded SDK loop, normalized activity and injected session
+adapter; `./pi/context` owns the stored transcript schema. `@raypx/ai` owns transport,
+model lookup, offline auth configuration checks and public SDK context
+conversion/estimation. CLI owns TOML, OS tools and SQLite. The library's test-only
+`tests/helpers` supply common host/transport scenarios and conformance suites; runtime
+entries never import them.
 
 This borrows T3's adapter capabilities, conformance tests and distinction between
 replayable state and process-bound effects. It preserves Raypx's Bun, SQLite and
@@ -107,3 +109,10 @@ packaged macOS/Windows GUI acceptance and distribution signing are separate gate
 
 Later increments: read-only Run diff; checkpoint restore with isolated-worktree safety;
 Cron-created Agent tasks through the same runtime; then broader client parity.
+
+## Amendment: one providers workspace
+
+2026-11-04. `provider-pi` and `provider-testing` merged into `@raypx/providers` with the
+Codex and Claude adapters ([ADR 0040 amendment](0040-instance-enrollment-and-providers.md#amendment-one-providers-workspace)).
+The Pi entries keep their Node target, remain the only sources that import the Pi SDK or
+`@raypx/ai`, and still pass the shared adapter conformance suites. Remote Pi stays unavailable.

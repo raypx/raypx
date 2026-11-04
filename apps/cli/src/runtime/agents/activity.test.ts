@@ -1,5 +1,5 @@
-import { decodeCodexActivity } from "@raypx/provider-codex";
-import { decodeClaudeActivity } from "@raypx/provider-claude";
+import { decodeCodexActivity } from "@raypx/providers/codex";
+import { decodeClaudeActivity } from "@raypx/providers/claude";
 import { bounded } from "./projection";
 import { expect, it, vi } from "vite-plus/test";
 import { ConversationRecorder } from "./activity";

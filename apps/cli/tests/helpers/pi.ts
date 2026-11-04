@@ -5,7 +5,7 @@ import {
   type Api,
 } from "@raypx/ai";
 import type { AgentTool, StreamFn } from "@earendil-works/pi-agent-core";
-import type { PiContext, PiContextStore } from "@raypx/provider-pi";
+import type { PiContext, PiContextStore } from "@raypx/providers/pi";
 import { z } from "zod";
 
 export const piModel: Model<Api> = {

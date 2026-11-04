@@ -1,5 +1,5 @@
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
-import type { TokenTotals } from "@raypx/provider-core";
+import type { TokenTotals } from "@raypx/providers/core";
 import type { ActivityDraft, LocalAgentTask } from "../model";
 import type { Ids } from "../domain/ports";
 

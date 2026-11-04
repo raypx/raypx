@@ -21,7 +21,7 @@ import type {
   ProviderSession,
   ExecutionHandle,
   SessionFactory,
-} from "@raypx/provider-core";
+} from "@raypx/providers/core";
 
 export function initialExecutionPrompt(
   task: AgentTask,

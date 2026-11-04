@@ -8,7 +8,7 @@ import type {
 import { TaskContextError, activeTaskStatuses } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import type { TaskChange } from "@raypx/contracts/tasks";
-import type { TokenTotals } from "@raypx/provider-core";
+import type { TokenTotals } from "@raypx/providers/core";
 import type { LocalAgentTask } from "../model";
 import { isDesktopBinding } from "../model";
 import type { ExecutionStore } from "../harness/ports";
@@ -192,7 +192,7 @@ export class ExecutionCoordinator {
       this.status(local, "failed", "PROJECT_BUSY");
       return { accepted: true };
     }
-    let factory: import("@raypx/provider-core").SessionFactory;
+    let factory: import("@raypx/providers/core").SessionFactory;
     let dispose: (() => void) | undefined;
     try {
       const prepared = await this.providers.prepare(local, parent, follow);

@@ -1,6 +1,6 @@
 # ADR 0040: Instance enrollment and provider boundaries
 
-Status: Accepted on 2026-11-02; foundation implemented on 2026-11-03. Supersedes earlier account-free startup statements in ADR 0035/0039. Server-owned Agents and migration remain later deliveries. [ADR 0041](0041-provider-capabilities-and-pi.md) adds managed local Pi.
+Status: Accepted on 2026-11-02; foundation implemented on 2026-11-03; provider workspaces consolidated on 2026-11-04 (see [Amendment](#amendment-one-providers-workspace)). Supersedes earlier account-free startup statements in ADR 0035/0039. Server-owned Agents and migration remain later deliveries. [ADR 0041](0041-provider-capabilities-and-pi.md) adds managed local Pi.
 
 ## Instance authority
 
@@ -25,14 +25,20 @@ Registration is separate from remote Host opt-in, device grants, file grants and
 
 ## Provider contracts
 
-Core owns pure provider identifiers and presentation metadata. `@raypx/provider-core` owns injected session/factory, normalized conversation events and process transport ports; `provider-codex` and `provider-claude` own their wire protocols, conversations and approval mappings. The CLI private harness owns process transport, persistence, policy, turn lifecycle, project locking and cancellation. Applications and models consume metadata/capabilities rather than conditional provider labels or a fixed provider count.
+Core owns pure provider identifiers and presentation metadata. `@raypx/providers/core` owns injected session/factory, normalized conversation events and process transport ports; the `./codex` and `./claude` entries own their wire protocols, conversations and approval mappings. The CLI private harness owns process transport, persistence, policy, turn lifecycle, project locking and cancellation. Applications and models consume metadata/capabilities rather than conditional provider labels or a fixed provider count.
 
 A session factory can start either an external process or an in-process SDK stream. The coordinator does not require an executable or process exit code. Its private CLI ports declare persistence, conversation recording and lifecycle effects without importing concrete stores or recorders. Local record schemas and activity drafts live in the private Agent model; SQLite storage and the conversation recorder implement those ports. Persistence commits synchronously before an approval can resume inference; async writers cannot satisfy the write port. Session completion and kill drain all owned activity before releasing the project lock; deterministic replay covers late events, approvals, queued inputs, continuation, cancellation and SDK drain. Raw provider envelopes never enter the coordinator.
 
-`AgentTask` remains the only persisted Run record. Core Run transitions conform to local waiting/resume/cancelling and owner-loss behavior. No parallel Runtime, Run table or receipt store is introduced. The foundation kept Pi private and experimental. ADR 0041 adds selectable local `provider-pi` through the same approval, recovery, cancellation, usage and session conformance contract.
+`AgentTask` remains the only persisted Run record. Core Run transitions conform to local waiting/resume/cancelling and owner-loss behavior. No parallel Runtime, Run table or receipt store is introduced. The foundation kept Pi private and experimental. ADR 0041 adds selectable local Pi (`@raypx/providers/pi`) through the same approval, recovery, cancellation, usage and session conformance contract.
 
 ## Validation
 
 Focused provider/CLI tests cover process replay and an in-process session with delayed drain. Instance domain tests cover expiry, tampering, possession, ownership and revocation. HTTP/PostgreSQL acceptance runs against a newly created isolated test database; no migration is applied to an operator or retired database. DOM tests cover registration and offline/mismatched/revoked states. Repository policy and affected verification remain required. Cross-process SQLite persistence, failure paths, history clearing and connection release are checked without Keychain wrappers. Windows DACL/native IPC and packaged native acceptance are platform gates and must be reported separately from source checks.
 
 Provider availability includes a versioned definition for runtime kind, supported modes, approvals and model selection. Concrete adapters own their definitions; discovery supplies current availability/input modes. Execution validates capabilities independently of the UI.
+
+## Amendment: one providers workspace
+
+2026-11-04. The foundation split providers into `provider-core`, `provider-codex`, `provider-claude`, `provider-pi` and the test-only `infra/provider-testing`. Each had CLI as its only runtime consumer, and the Codex and Claude adapters had no external dependencies, so the split added manifests, task configurations and lockfile entries without an independent consumer boundary. They are now one private ESM source library, `@raypx/providers`, with explicit `./core`, `./codex`, `./claude`, `./pi` and `./pi/context` entries. The old package names have no aliases.
+
+The adapter boundary is unchanged. Provider code never imports CLI, auth or database source. Concrete adapters reach `./core` but not each other. Raw envelopes stay in their adapter. The source-layer rule still keeps `./codex`, `./claude` and `./pi` out of every layer except infrastructure adapters. The workspace is universal; only the Pi entries and `src/pi/**` target Node and may import `@raypx/ai` or `@earendil-works/pi-agent-core`. Shared host, transport and conformance helpers moved to the library's `tests/helpers`, which runtime entries never import. Split an entry into its own workspace again only when a second execution consumer establishes that boundary.

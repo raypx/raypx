@@ -174,9 +174,10 @@ they retain the executable's diagnostic completion lifecycle.
 The private Agent harness stays inside CLI. `AgentRuntime` owns task lookup,
 command receipts, replay and the active execution registry. `ManagedExecution`
 owns each run's turns, input queue, approvals, cancellation and lock release after
-process draining. The provider-claude and provider-codex libraries translate their private protocols
-through a narrow process port. The daemon's private `runtime/daemon/remote` transport
-owns remote connection and synchronization; it does not own provider execution policy.
+process draining. The private `@raypx/providers` library's Claude and Codex entries translate their
+private protocols through a narrow process port; its Pi entry hosts the in-process SDK session. The
+daemon's private `runtime/daemon/remote` transport owns remote connection and synchronization; it
+does not own provider execution policy.
 Agent orchestration is event-sourced inside the CLI ([ADR 0044](0044-event-sourced-cli-orchestration.md)).
 A pure decider in `runtime/agents/domain/` turns commands and live process facts
 into events and effects; one sink commits the receipt, events, projections, relay
@@ -242,7 +243,7 @@ architecture until each target phase is implemented.
 
 ## Registered instances and providers
 
-[ADR 0040](0040-instance-enrollment-and-providers.md) defines account-bound enrollment, offline identity, revocation and provider package boundaries. Registration does not grant remote Host access or upload local history.
+[ADR 0040](0040-instance-enrollment-and-providers.md) defines account-bound enrollment, offline identity, revocation and provider adapter boundaries; its amendment consolidates the adapters into one `@raypx/providers` workspace. Registration does not grant remote Host access or upload local history.
 
 [ADR 0042](0042-application-layering.md) defines application services, driver preparation,
 source-layer enforcement and transport/view adapters for the current implementation.

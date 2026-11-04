@@ -1,5 +1,5 @@
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import type { ConversationEvent, TokenTotals } from "@raypx/provider-core";
+import type { ConversationEvent, TokenTotals } from "@raypx/providers/core";
 import type { ActivityDraft, LocalAgentTask } from "../model";
 
 /**

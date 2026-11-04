@@ -9,7 +9,7 @@ import {
   type ExecutionHandle,
   type AgentTransport,
   type TransportFactory,
-} from "@raypx/provider-core";
+} from "../core/index.js";
 
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? taskText(value, max) : "";

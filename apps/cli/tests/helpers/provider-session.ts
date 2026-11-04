@@ -1,4 +1,4 @@
-import type { SessionFactory } from "@raypx/provider-core";
+import type { SessionFactory } from "@raypx/providers/core";
 import { readFileSync } from "node:fs";
 import { afterEach, vi } from "vite-plus/test";
 

@@ -5,7 +5,7 @@ import type {
   ExecutionHandle,
   TransportFactory,
   AskApproval,
-} from "@raypx/provider-core";
+} from "../../src/core/index.js";
 
 /** Controlled host used by process and SDK adapters without importing an application. */
 export function createTestProviderHost(

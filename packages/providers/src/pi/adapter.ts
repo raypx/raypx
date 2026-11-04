@@ -5,7 +5,7 @@ import type {
   ExecutionHandle,
   ProviderSession,
   ConversationEvent,
-} from "@raypx/provider-core";
+} from "../core/index.js";
 import { PiRunner, type PiRunnerOptions } from "./runner.js";
 
 export const piDefinition = {
