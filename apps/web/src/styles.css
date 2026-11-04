@@ -7,3 +7,6 @@
 @import "@raypx/analytics/client/styles.css";
 @import "@raypx/blocks/styles.css";
 @import "@raypx/devtools/styles.css";
+
+/* Browser assertions and fixtures are not product class sources. */
+@source not "../e2e/**";

@@ -33,7 +33,7 @@ it("routes root and package-local test commands to the same qualified task graph
     "--workers=1",
   ]).tasks.map((task) => task.taskId);
   expect(browser).toContain("@raypx/e2e#e2e:web");
-  expect(browser).toContain("web#build");
+  expect(browser).toContain("web#build:e2e");
   expect(browser).not.toContain("desktop#build:renderer");
 }, 65_000); // Two cold child graphs each have a bounded 30-second process deadline.
 it("package-local browser commands include their build prerequisites", () => {
@@ -50,14 +50,32 @@ it("package-local browser commands include their build prerequisites", () => {
     );
   };
   const browser = plan("e2e", "e2e:web");
-  expect(browser).toContain("web#build");
+  expect(browser).toContain("web#build:e2e");
   expect(browser).not.toContain("desktop#build:renderer");
+});
+it.each(["web", "desktop"])("scopes package-owned %s E2E to its own build", (surface) => {
+  const tasks = graph(["test", "e2e", "--package", surface]).tasks.map((task) => task.taskId);
+  expect(tasks).toContain(`${surface}#e2e`);
+  expect(tasks).toContain(surface === "web" ? "web#build:e2e" : "desktop#build:renderer");
+  expect(tasks.some((task) => task.startsWith(`${surface === "web" ? "desktop" : "web"}#`))).toBe(
+    false,
+  );
+});
+it("uses Playwright project selection before planning builds", () => {
+  const tasks = graph(["test", "e2e", "--", "--project=desktop"]).tasks.map((task) => task.taskId);
+  expect(tasks).toContain("desktop#build:renderer");
+  expect(tasks).not.toContain("web#build:e2e");
+  expect(tasks).not.toContain("web#check");
+});
+it("lists browser cases without building or checking an application", () => {
+  expect(graph(["test", "e2e", "--", "--list"]).tasks).toEqual([]);
 });
 it("browser-only acceptance excludes CLI builds and full Desktop checks", () => {
   const tasks = graph(["tasks", "e2e"]).tasks.map((task) => task.taskId);
-  expect(tasks).toContain("web#build");
+  expect(tasks).toContain("web#build:e2e");
   expect(tasks).toContain("desktop#build:renderer");
   expect(tasks).not.toContain("desktop#check");
+  expect(tasks).not.toContain("web#check");
   expect(tasks).not.toContain("cli#build");
 });
 it("runs task-runner integration tests without an enclosing filesystem tracer", () => {
@@ -67,7 +85,7 @@ it("runs task-runner integration tests without an enclosing filesystem tracer", 
 });
 it.each(["web", "desktop"])("the %s entry builds only its selected surface", (surface) => {
   const tasks = graph(["tasks", `e2e:${surface}`]).tasks.map((task) => task.taskId);
-  expect(tasks.includes("web#build")).toBe(surface === "web");
+  expect(tasks.includes("web#build:e2e")).toBe(surface === "web");
   expect(tasks.includes("desktop#build:renderer")).toBe(surface === "desktop");
 });
 it("normal Desktop builds render the app without staging a CLI", () => {
@@ -108,7 +126,7 @@ it("changing browser selectors or workers preserves dependency task definitions"
     "template",
     "--reporter=json",
   ]);
-  for (const taskId of ["web#build", "web#check", "desktop#build:renderer"]) {
+  for (const taskId of ["web#build:e2e", "desktop#build:renderer"]) {
     const dependency = selected.tasks.find((task) => task.taskId === taskId)!;
     expect(dependency).toEqual(plain.tasks.find((task) => task.taskId === taskId));
   }

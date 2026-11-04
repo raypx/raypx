@@ -1,4 +1,13 @@
 export { test } from "./browser-fixture.js";
-export { desktop } from "./surfaces.js";
-export { signedInAccount } from "./account-fixture.js";
+export { web, desktop } from "./surfaces.js";
+export {
+  accountAccessFixture,
+  authResponse,
+  connectedProject,
+  signedInAccount,
+  webShellFixture,
+} from "./account-fixture.js";
 export { preferencesPersist } from "./preferences.js";
+export { capture } from "./capture.js";
+export { selectOption } from "./select.js";
+export { expectPrivatePages, expectGuestShell } from "./access.js";

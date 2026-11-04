@@ -1,8 +1,12 @@
+import {
+  test,
+  signedInAccount,
+  accountAccessFixture,
+  authResponse,
+  web,
+  capture,
+} from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
-import { test } from "./helpers/browser-fixture.js";
-import { signedInAccount, accountAccessFixture, authResponse } from "./helpers/account-fixture.js";
-import { web } from "./helpers/surfaces.js";
-import { capture } from "./helpers/capture.js";
 for (const width of [360, 1440])
   for (const locale of ["en", "zh"] as const)
     for (const theme of ["light", "dark"] as const) {

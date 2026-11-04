@@ -1,12 +1,11 @@
 import { expect, type Locator } from "@playwright/test";
-import { test } from "../helpers/browser-fixture.js";
-import { surfaces } from "../helpers/surfaces.js";
+import { test } from "../../helpers/browser-fixture.js";
 import {
   authResponse,
   connectedProject,
   signedInAccount,
   webShellFixture,
-} from "../helpers/account-fixture.js";
+} from "../../helpers/account-fixture.js";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 
@@ -74,11 +73,12 @@ async function expectReadingPosition(
     .toBeLessThan(3);
 }
 
-for (const [surface, base] of surfaces) {
+/** Register the shared journey in the owning application's Playwright file. */
+export function registerTests() {
   test(
-    `${surface} long conversation keeps virtual rows bounded and loaded full text reachable`,
-    { tag: [`@${surface.toLowerCase()}`, "@performance"] },
-    async ({ page }) => {
+    `long conversation keeps virtual rows bounded and loaded full text reachable`,
+    { tag: "@performance" },
+    async ({ page, surface, base }) => {
       test.setTimeout(120_000);
       if (surface === "Web") await webShellFixture(page);
       await signedInAccount(page);

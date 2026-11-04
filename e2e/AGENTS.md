@@ -7,31 +7,45 @@ production-origin cookie persistence require separate packaged platform checks.
 
 ## Interface
 
-Run bun run test e2e after installing Chromium with bun --bun playwright install chromium.
-`tests/helpers/serve-web.ts` starts the compiled Web artifact with the running Bun
-executable (`process.execPath`); Desktop directly
-serves `artifacts/browser/client`, built with `build:renderer`, through the loopback
-static helper. It preserves compiled HTML/CSP and assets without loading Vite config.
-Root `test e2e --web`, `--desktop`, `--smoke` and `--visual` provide focused entry
-points. Package-local `e2e` and `e2e:*` commands use the same build graph through
-`raypx.taskScripts`; `_e2e` is VP's private runner. Pass Playwright flags after `--`.
-Surface/smoke filters intersect with user grep. Full `test e2e`
-retains all cases; focused runs do not replace full acceptance. CI defaults to two
-workers; local 8+ CPU/16+ GiB hosts use four, smaller hosts one or two. Override
-with `-- --workers=2` on a busy machine. Test argv is decoded only by `browser:run`
-from `RAYPX_E2E_ARGS`, preserving dependency cache hashes across filters/reporters.
+Run `bun run test e2e` for the complete compiled-artifact gate. Install the headless
+browser with `bun --bun playwright install --only-shell chromium` in this workspace.
+For daily work use `bun run --cwd apps/web e2e` or `apps/desktop e2e`; root
+`test e2e --package web|desktop` and Playwright `--project=web|desktop` select the
+same application. `--web`/`--desktop`, `--smoke` and `--visual` remain available.
+Pass filenames and Playwright flags after `--`. `--list` collects cases without
+building applications or starting servers. `--dry-run` shows the VP plan.
 
-Web and shared cases live in access/auth/settings/navigation/analytics and feature suites;
-Desktop-only browser cases live in `apps/desktop/e2e/` and are discovered by
-the root compiled-artifact Playwright configuration. Export shared fixtures through
-`@raypx/e2e/testing`; never import private helper paths across workspaces.
-task conversation/history/drafts use `tests/tasks/`. Access owns private memory/job
-guards, while their feature suites own signed-in journeys. Run both for boundary
-changes (for example `-- 'access|memory'`). Shared response fixtures are per case;
-never reuse an authenticated context across cases. `signedInAccount` supplies the
-member `account.access` projection for its own account ID; custom signed-in cases
-use `accountAccessFixture`. The automatic public fixture defaults to guest access.
-Named steps identify checks within a combined journey. See docs/development/testing.md for the coverage map.
+Each application owns `apps/<app>/e2e/*.spec.ts` (including task subdirectories).
+Web owns auth, administration and account settings; Desktop owns local access,
+settings and task pagination. Shared journeys live in `tests/journeys/`; application
+files call their `registerTests` through `@raypx/e2e/journeys/*`. Write each shared
+flow once; project fixtures inject the surface and base URL. Shared response,
+layout and interaction helpers stay in `tests/helpers/`, with application consumers
+using `@raypx/e2e/testing`. Never import private helper paths across workspaces.
+
+VP builds only selected applications: Web `build:e2e` produces the real Nitro Bun
+artifact; Desktop `build:renderer` produces `artifacts/browser/client` without Go
+or CLI preparation. Normal Web builds and daily verification retain type checks;
+E2E does not repeat them. Both browser build tasks are cached, and tests always run.
+Application CSS excludes `e2e/**` from Tailwind class scanning; fixture changes
+must not alter styles or invalidate product builds. Compiled-style acceptance
+checks a test-only utility never enters the generated CSS.
+Test filenames, grep, worker/report/trace flags travel only through `RAYPX_E2E_ARGS`
+to the uncached `browser:run` leaf, preserving dependency fingerprints.
+
+`serve-web.ts` runs the compiled SSR server with `process.execPath`; `serve-desktop.ts`
+serves the compiled client with deep-link fallback and original HTML/CSP. Playwright
+owns and stops both loopback servers; occupied ports fail instead of reusing stale
+artifacts. Reports live in ignored `test-results/<all|web|desktop>/` directories.
+CI defaults to two workers; local 12+ CPU/32+ GiB hosts use eight, 8+ CPU/16+ GiB
+hosts four, and smaller hosts one or two. Explicit `--workers` overrides this.
+
+Surface, smoke and user grep filters intersect. Full `test e2e` retains every
+ordinary case; focused runs do not replace release acceptance. Each case gets a
+fresh browser context and response fixtures. `signedInAccount` supplies its
+member `account.access` projection; custom signed-in cases use `accountAccessFixture`.
+The automatic public fixture defaults to guest access. Named steps identify checks
+within a combined journey. See docs/development/testing.md for the coverage map.
 
 ## Constraints
 
@@ -60,8 +74,8 @@ Run bun run --cwd e2e check; bun run test e2e is an explicit browser gate.
 
 The control browser test is an explicit real-backend gate. Launch the isolated API
 with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build
-both surfaces against that fixture API. The default browser
-suite skips this gate when the fixture is absent; it must not be reported as passed.
+both surfaces against that fixture API. The `control` project is registered only when that fixture is present; ordinary
+project runs do not establish real-backend acceptance.
 For an HTTP loopback fixture, set `VITE_API_URL` to that exact API origin when
 building both surfaces. The dedicated Desktop browser output includes only that
 validated loopback Origin in connect-src; static serving preserves its HTML/CSP.
@@ -70,4 +84,4 @@ validated loopback Origin in connect-src; static serving preserves its HTML/CSP.
 It uses a dedicated test account, a running packaged native beta acceptance instance,
 real HTTPS/WebSocket traffic and real Claude/Codex inference. Never use a person's
 account. Keep tracing off to avoid recording login request bodies; the default E2E
-gate skips this live suite. All browser gates default to headless; use `--headed` only for explicit interactive diagnosis. Close the isolated browser after acceptance.
+gate excludes this live suite. All browser gates default to headless; use `--headed` only for explicit interactive diagnosis. Close the isolated browser after acceptance.

@@ -66,10 +66,10 @@ be customized in the owning workspace without changing a shared option schema.
 
 ```sh
 bun --bun playwright install chromium
-bun run test e2e --web --smoke -- --workers=1
+bun run test e2e --package web --smoke -- --workers=1
 bun run --cwd e2e e2e
-bun run --cwd e2e e2e:web
-bun run --cwd e2e e2e:desktop -- --grep template
+bun run --cwd apps/web e2e -- settings.spec.ts
+bun run --cwd apps/desktop e2e -- --grep template
 bun run --cwd e2e e2e --web --dry-run
 
 bun run test inventory --layers
@@ -78,7 +78,8 @@ bun run --cwd packages/tooling test:backends
 bun run test backends --with-e2e -- --workers=1
 ```
 
-Browser commands use the same scoped arguments and build plan from root or `e2e/`.
+Browser commands use the same scoped arguments and build plan from root, `e2e/` or
+the selected application. Root `--package` resolves workspace names and paths.
 Private `_e2e` scripts are terminal runners for VP, not public entry points.
 `raypx.taskScripts` connects each public command to a real private script, rejecting
 chains or missing targets so a direct command cannot recursively enter its own graph.
@@ -114,8 +115,8 @@ and `clean:artifacts`. Scripts belong in Tooling; `.artifacts/` holds generated 
 
 Unit suites live beside source as `*.test.ts(x)`. DOM suites use
 `*.component.test.ts(x)`; the suffix selects their layer independently of syntax.
-Integration suites, shared setup and fixtures stay in `tests/`; Desktop-only
-browser acceptance lives in `apps/desktop/e2e/`.
+Integration suites, shared setup and fixtures stay in `tests/`; application browser
+acceptance lives in `apps/web/e2e/` and `apps/desktop/e2e/`.
 Tasks owns pure tests beside its model and component tests beside shared views
 (composer, conversation, observed requests, workspace). Web/Desktop retain application auth,
 routes and IPC adapters. CLI owns loopback relay `tests/integration/` for renewal,
@@ -144,13 +145,15 @@ per-case host fixtures. Their real ten-second deadline tests remain in integrati
 injected Pi cases separate lifecycle, tool durability and completion in unit.
 Standalone artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
 live in their own `tests/helpers/` and own temporary resource cleanup.
-E2E server launch helpers live in `e2e/tests/helpers/`.
-Ordinary browser cases are grouped by access, auth, settings, navigation, analytics
-and feature journeys; task conversation/history/drafts live under `e2e/tests/tasks/`.
-Desktop-only settings acceptance lives in `apps/desktop/e2e/settings.spec.ts`
-and shares `@raypx/e2e/testing` fixtures through its public test entry. The root
-Playwright configuration discovers both locations. Use `bun run test e2e -- --list`
-for the current inventory; fixed counts are not an ownership contract.
+E2E server launch and response helpers live in `e2e/tests/helpers/`.
+Application-specific cases live in each application's `e2e/` directory. Shared
+analytics, navigation, memory, cloud schedules and task journeys are registered from
+`@raypx/e2e/journeys/*` by small application-owned spec files. Their assertions live
+once in `e2e/tests/journeys/`; `surface` and `base` fixtures come from the selected
+Playwright project. Application fixtures use the public `@raypx/e2e/testing` entry.
+The root config defines `web` and `desktop` projects with separate test directories.
+`bun run test e2e -- --list` lists the complete ordinary inventory without builds
+or servers; fixed counts are not an ownership contract.
 
 Combine cases only within one coherent journey. Keep independent failures, account
 boundaries and platform checks identifiable. Browser response fixtures do not prove
@@ -203,32 +206,45 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 
 ### Faster browser feedback
 
-The complete browser gate remains `bun run test e2e`, with all ordinary assertions.
-CI defaults to two workers. Local hosts with at least eight available CPUs and
-16 GiB of total memory default to four; smaller hosts use one or two. Explicit
-Playwright flags override the default. Select a surface or a smaller smoke set:
+The complete compiled-artifact gate remains `bun run test e2e`, with every ordinary
+assertion. For daily work, select the owning application before building or serving:
 
 ```sh
-bun run test e2e --web
-bun run test e2e --desktop
-bun run test e2e --smoke
-bun run test e2e -- --workers=2
-bun run test e2e --web -- --grep template
-bun run test e2e --desktop -- 'access|memory'
-bun run raypx-dev e2e --web --smoke -- --list
+bun run --cwd apps/web e2e
+bun run --cwd apps/desktop e2e -- settings.spec.ts
+bun run test e2e --package web -- --grep template
+bun run test e2e -- --project=desktop
+bun run test e2e --web --smoke
+bun run test e2e --package desktop -- --list
+bun run test e2e --package web --dry-run
 ```
 
-The smoke set covers guest boundaries/draft restoration, shared task/approval
-interaction and both memory flows. Surface, smoke and user grep filters intersect;
-they do not replace one another. Pass Playwright flags or filenames after `--`.
-Use `bun run raypx-dev e2e --web --dry-run` to inspect the VP dependency plan.
-Focused runs are feedback tools; run complete acceptance before release.
+Package names/paths, local application scripts, `--web`/`--desktop` and native
+Playwright `--project=web|desktop` select the same build and server scope. Conflicting
+selectors fail before running. Projects select application cases; smoke and user
+grep intersect within that project. Pass filenames or Playwright flags after `--`.
+Listing cases bypasses VP builds and Playwright does not start servers. Focused
+runs are feedback tools; run complete acceptance before release.
 
-Playwright filenames, workers, trace and reporter arguments travel through a scoped
-JSON environment field to the uncached browser leaf. They are not dependency passthrough
-arguments: changing a test selection must not invalidate Web/Desktop builds or
-their type checks. Application source, build variables and runtime pins still
-participate in the normal build hashes.
+CI defaults to two workers. Local hosts with at least twelve available CPUs and
+32 GiB of total memory default to eight; eight CPUs and 16 GiB use four; smaller
+hosts use one or two. Explicit `--workers` wins. Every case keeps its own browser
+context, account and response fixtures.
+
+Web's cached `build:e2e` uses the production Nitro Bun build command. It omits the
+normal build's type-check prerequisite; `apps/web check` and `bun run verify` still
+check both application and E2E sources. Desktop uses its cached `build:renderer`
+task. Test-only edits and Playwright selections must not rebuild unchanged product
+artifacts. The uncached browser leaf receives test filenames, grep, worker, trace
+and reporter arguments through scoped JSON, outside dependency fingerprints.
+Application source, build variables and runtime pins remain build inputs.
+Application CSS explicitly excludes `e2e/**` from Tailwind class scanning. The
+compiled-style check seeds a test-only utility and rejects it in generated CSS,
+so browser fixture edits cannot leak styles into product builds.
+
+Playwright owns its loopback servers and fails on an occupied port. It never
+reuses an unrelated or stale server. Web/Desktop/all runs use separate report
+folders under `e2e/test-results/`; CI uploads that tree on failure.
 
 Successful runs skip manual full-page screenshots and local traces. Failure
 screenshots remain enabled; CI records traces on the first retry. Capture the

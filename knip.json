@@ -41,7 +41,7 @@
       ]
     },
     "apps/web": {
-      "entry": ["src/routes/**/*.{ts,tsx}", "vite.app.config.ts"]
+      "entry": ["src/routes/**/*.{ts,tsx}", "vite.app.config.ts", "e2e/**/*.spec.ts"]
     },
     "apps/cli": {
       "entry": ["src/main.ts", "tests/smoke/*.ts", "tests/fixtures/**/*.{ts,mjs}"]

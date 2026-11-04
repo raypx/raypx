@@ -1,14 +1,50 @@
-const tasks = ["e2e", "e2e:web", "e2e:desktop", "e2e:smoke", "e2e:visual"] as const;
-export const isBrowserTestTask = (task: string) => tasks.some((value) => value === task);
+export const browserTestTasks = [
+  "e2e",
+  "e2e:web",
+  "e2e:desktop",
+  "e2e:smoke",
+  "e2e:visual",
+] as const;
+export const isBrowserTestTask = (task: string) => browserTestTasks.some((value) => value === task);
 type Environment = Record<string, string | undefined>;
 
+export type BrowserSurface = "web" | "desktop";
+
+/** Resolve native Playwright projects before VP chooses prerequisites or servers. */
+function selectedSurface(args: string[], selected?: BrowserSurface): BrowserSurface | undefined {
+  const projects = new Set<BrowserSurface | "control">();
+  for (let index = 0; index < args.length; index++) {
+    const value = args[index]!;
+    const project =
+      value === "--project"
+        ? args[++index]
+        : value.startsWith("--project=")
+          ? value.slice(10)
+          : undefined;
+    if (value !== "--project" && !value.startsWith("--project=")) continue;
+    if (project !== "web" && project !== "desktop" && project !== "control")
+      throw new Error("Choose a Playwright project: web, desktop or the real-backend control gate");
+    projects.add(project);
+  }
+  if (selected && projects.size && (projects.size !== 1 || !projects.has(selected)))
+    throw new Error("Playwright project conflicts with the selected browser surface");
+  // The real-backend control journey crosses both applications.
+  return (
+    selected ??
+    (projects.size === 1 && !projects.has("control")
+      ? ([...projects][0] as BrowserSurface)
+      : undefined)
+  );
+}
+
 /** CLI intent only; VP owns the build/run graph. */
-export function planBrowserTests(argv: string[]) {
+export function planBrowserTests(argv: string[], project?: BrowserSurface) {
   let surface: "web" | "desktop" | undefined;
   let smoke = false,
     visual = false,
     dry = false;
   const forwarded: string[] = [];
+  const controls: string[] = [];
   for (let index = 0; index < argv.length; index++) {
     const value = argv[index]!;
     if (value === "--") {
@@ -22,11 +58,19 @@ export function planBrowserTests(argv: string[]) {
     } else if (value === "--smoke") smoke = true;
     else if (value === "--visual") visual = true;
     else if (value === "--dry-run") dry = true;
+    else if (value === "--no-cache" || value === "--verbose") controls.push(value);
     else forwarded.push(value);
   }
+  if (project && surface && project !== surface)
+    throw new Error("Browser surface conflicts with the selected package");
+  surface = selectedSurface(forwarded, project ?? surface);
   return {
     task: surface ? `e2e:${surface}` : smoke ? "e2e:smoke" : visual ? "e2e:visual" : "e2e",
-    args: [dry ? "--dry-run" : "--verbose", ...(forwarded.length ? ["--", ...forwarded] : [])],
+    args: [
+      ...(dry ? ["--dry-run"] : []),
+      ...controls,
+      ...(forwarded.length ? ["--", ...forwarded] : []),
+    ],
     env: {
       RAYPX_E2E_SURFACE: surface ?? "all",
       RAYPX_E2E_SMOKE: smoke ? "1" : "0",
@@ -56,14 +100,21 @@ export function prepareBrowserTask(task: string, args: string[], environment: En
     else forwarded.push(value);
   }
   if (grep) grep = new RegExp(grep).source;
+  const requested =
+    environment.RAYPX_E2E_SURFACE ??
+    (task === "e2e:web" ? "web" : task === "e2e:desktop" ? "desktop" : "all");
+  if (!["all", "web", "desktop"].includes(requested)) throw new Error("Invalid E2E surface");
+  const surface =
+    selectedSurface(forwarded, requested === "all" ? undefined : (requested as BrowserSurface)) ??
+    "all";
   return {
     // Keep browser flags scoped to the uncached leaf, outside build fingerprints.
     args: before,
     env: {
-      RAYPX_E2E_SURFACE: task === "e2e:web" ? "web" : task === "e2e:desktop" ? "desktop" : "all",
       RAYPX_E2E_SMOKE: task === "e2e:smoke" ? "1" : "0",
       RAYPX_E2E_SCREENSHOTS: task === "e2e:visual" ? "1" : "0",
       ...environment,
+      RAYPX_E2E_SURFACE: surface,
       RAYPX_E2E_GREP: grep,
       RAYPX_E2E_ARGS: JSON.stringify(forwarded),
     },
@@ -86,7 +137,6 @@ export function browserTestSettings(
   const surface = environment.RAYPX_E2E_SURFACE ?? "all";
   if (!["all", "web", "desktop"].includes(surface)) throw new Error("Invalid E2E surface");
   const clauses = [
-    ...(surface === "all" ? [] : [`@${surface}\\b`]),
     ...(environment.RAYPX_E2E_SMOKE === "1" ? ["@smoke\\b"] : []),
     ...(environment.RAYPX_E2E_GREP ? [environment.RAYPX_E2E_GREP] : []),
   ];
@@ -100,8 +150,10 @@ export function browserTestSettings(
     workers:
       environment.CI || !capacity
         ? 2
-        : capacity.cpus >= 8 && capacity.memoryBytes >= 16 * 2 ** 30
-          ? 4
-          : Math.max(1, Math.min(2, capacity.cpus)),
+        : capacity.cpus >= 12 && capacity.memoryBytes >= 32 * 2 ** 30
+          ? 8
+          : capacity.cpus >= 8 && capacity.memoryBytes >= 16 * 2 ** 30
+            ? 4
+            : Math.max(1, Math.min(2, capacity.cpus)),
   };
 }

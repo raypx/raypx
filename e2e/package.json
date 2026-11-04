@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./testing": "./tests/helpers/testing.ts"
+    "./testing": "./tests/helpers/testing.ts",
+    "./journeys/*": "./tests/journeys/*.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

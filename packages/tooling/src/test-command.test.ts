@@ -67,7 +67,7 @@ it("routes E2E and repository workflows without silently turning them into a pac
     planTests(root, "/repo/e2e", members, ["e2e", "--web", "--smoke", "--", "--workers=1"]),
   ).toMatchObject({
     task: "@raypx/e2e#e2e:web",
-    args: ["--verbose", "--", "--workers=1"],
+    args: ["--", "--workers=1"],
     env: { RAYPX_E2E_SURFACE: "web", RAYPX_E2E_SMOKE: "1" },
   });
   expect(planTests(root, "/repo/packages/tooling", members, ["inventory", "--layers"])).toEqual({
@@ -77,9 +77,7 @@ it("routes E2E and repository workflows without silently turning them into a pac
   expect(() => planTests(root, root, members, ["inventory", "--package", "tasks"])).toThrow(
     "does not own",
   );
-  expect(() => planTests(root, root, members, ["e2e", "--package", "api"])).toThrow(
-    "E2E workspace",
-  );
+  expect(() => planTests(root, root, members, ["e2e", "--package", "api"])).toThrow("no e2e");
 });
 
 it("fails on unsupported suites, empty layers, unknown or ambiguous packages before running anything", () => {

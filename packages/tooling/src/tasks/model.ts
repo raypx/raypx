@@ -12,10 +12,12 @@ import {
   type TaskContext,
   type TaskCache,
 } from "@raypx-kit/devkit/tasks";
+import { browserTestTasks, type BrowserSurface } from "../browser-tests.js";
 import { taskScripts } from "./delegation.js";
 export { taskRef };
 interface TaskMember extends Member {
   native: boolean;
+  browserProject?: BrowserSurface;
   uncachedTasks: string[];
 }
 export type TaskModel = Model<TaskMember>;
@@ -56,7 +58,7 @@ function cachedTask(
   context: TaskContext<TaskMember>,
 ): TaskCache | false {
   if (member.uncachedTasks.includes(name)) return false;
-  const build = name === "build" || name === "build:renderer";
+  const build = name === "build" || name === "build:renderer" || name === "build:e2e";
   if (!build && !["check", "test", "test:unit", "test:component"].includes(name)) return false;
   const exclusions = [
     "**/node_modules/.vitest-cache/**",
@@ -67,6 +69,9 @@ function cachedTask(
     "**/.tanstack/**",
     ".artifacts/**",
     ...reportDirectories(context).map((directory) => `${directory}/**`),
+    // Application CSS excludes browser sources. Ignore their directory enumeration
+    // too, so creating a case does not invalidate an unchanged product artifact.
+    ...(build && member.browserProject ? [`${member.path}/e2e/**`] : []),
     ...(build || name === "check"
       ? [
           "target/**",
@@ -185,12 +190,19 @@ function dependencyBuilds(member: TaskMember, members: TaskMember[]) {
     .map((candidate) => taskRef(candidate.name, "build"));
 }
 
+function browserBuild(member: TaskMember) {
+  return member.scripts["build:e2e"]
+    ? "build:e2e"
+    : member.scripts["build:renderer"]
+      ? "build:renderer"
+      : "build";
+}
+
 function prerequisites(member: TaskMember, name: string, members: TaskMember[]) {
   const result: string[] = [];
-  if (name === "build" || name === "build:renderer" || name === "dev") {
+  if (name === "build" || name === "build:renderer" || name === "build:e2e" || name === "dev") {
     result.push(...dependencyBuilds(member, members));
-    if (name !== "dev" && name !== "build:renderer" && member.scripts.check)
-      result.push(taskRef(member.name, "check"));
+    if (name === "build" && member.scripts.check) result.push(taskRef(member.name, "check"));
     if (member.native && name === "dev") {
       if (members.some((candidate) => candidate.name === "cli" && candidate.scripts.build))
         result.push(taskRef("cli", "build"));
@@ -216,10 +228,15 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
     members.some((candidate) => candidate.name === "cli" && candidate.scripts.build)
   )
     result.push(taskRef("cli", "build"));
-  if (["e2e", "e2e:web", "e2e:desktop", "e2e:smoke", "e2e:visual"].includes(name)) {
-    if (name !== "e2e:desktop") result.push(taskRef("web", "build"));
-    if (name !== "e2e:web") result.push(taskRef("desktop", "build:renderer"));
+  if (member.browserProject && name === "e2e") {
+    result.push(taskRef(member.name, browserBuild(member)));
+  } else if (browserTestTasks.some((task) => task === name)) {
+    const project = name === "e2e:web" ? "web" : name === "e2e:desktop" ? "desktop" : undefined;
+    for (const candidate of members)
+      if (candidate.browserProject && (!project || candidate.browserProject === project))
+        result.push(taskRef(candidate.name, browserBuild(candidate)));
   }
+
   return [...new Set(result)];
 }
 
@@ -238,8 +255,16 @@ export function taskModel(
           [];
         if (uncachedTasks.some((name) => !member.scripts[name]))
           throw new Error(`${member.name}: uncachedTasks must name existing scripts`);
+        const browserProject = (
+          workspace.manifest.raypx as { browserTestProject?: BrowserSurface } | undefined
+        )?.browserTestProject;
+        if (browserProject && (!["web", "desktop"].includes(browserProject) || !member.scripts.e2e))
+          throw new Error(
+            `${member.name}: browserTestProject requires web/desktop and an e2e script`,
+          );
         return {
           ...member,
+          ...(browserProject ? { browserProject } : {}),
           native: Boolean(member.scripts["native:build"] && member.scripts["native:prepare"]),
           uncachedTasks,
         };
@@ -251,6 +276,19 @@ export function taskModel(
       }),
       aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
       rootTasks: (context) => ({
+        // Applications expose local E2E entries, while the root runs one shared Playwright process.
+        ...Object.fromEntries(
+          browserTestTasks.map((name) => [
+            name,
+            {
+              command: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+              dependsOn: context.members
+                .filter((member) => !member.browserProject && member.scripts[name])
+                .map((member) => taskRef(member.name, name)),
+              cache: false as const,
+            },
+          ]),
+        ),
         policy: {
           command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
           dependsOn: [],

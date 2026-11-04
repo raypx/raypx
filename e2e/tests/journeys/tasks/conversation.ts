@@ -1,18 +1,18 @@
 import { expect } from "@playwright/test";
-import { test } from "../helpers/browser-fixture.js";
-import { surfaces } from "../helpers/surfaces.js";
-import { capture } from "../helpers/capture.js";
-import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
-import { selectOption } from "../helpers/select.js";
-import { expectViewportShell } from "../helpers/layout.js";
+import { test } from "../../helpers/browser-fixture.js";
+import { capture } from "../../helpers/capture.js";
+import { authResponse, signedInAccount, webShellFixture } from "../../helpers/account-fixture.js";
+import { selectOption } from "../../helpers/select.js";
+import { expectViewportShell } from "../../helpers/layout.js";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 
-for (const [surface, base] of surfaces) {
+/** Register the shared journey in the owning application's Playwright file. */
+export function registerTests() {
   test(
-    `${surface} shows conversation, Diff approvals and sends queued and immediate instructions`,
-    { tag: [`@${surface.toLowerCase()}`, "@smoke"] },
-    async ({ page }) => {
+    `shows conversation, Diff approvals and sends queued and immediate instructions`,
+    { tag: "@smoke" },
+    async ({ page, surface, base }) => {
       if (surface === "Web") await webShellFixture(page);
       await signedInAccount(page);
       const deviceId = crypto.randomUUID(),
@@ -297,6 +297,3 @@ for (const [surface, base] of surfaces) {
     },
   );
 }
-
-// Browser acceptance isolates HTTP responses only. It never creates native IPC.
-// Real registration, verification, reset and revocation run in API's PostgreSQL gate.

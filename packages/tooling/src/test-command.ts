@@ -1,11 +1,12 @@
 import { basename, isAbsolute, relative, resolve, sep } from "node:path";
-import { planBrowserTests } from "./browser-tests.js";
+import { planBrowserTests, type BrowserSurface } from "./browser-tests.js";
 import { discover, runTasks } from "./repository.js";
 
 interface TestWorkspace {
   name: string;
   path: string;
   scripts: Record<string, string>;
+  browserProject?: BrowserSurface;
 }
 const suites = [
   "all",
@@ -101,12 +102,15 @@ export function planTests(
     return { kind: suite, args: [...args, ...forwarded] };
   }
   if (suite === "e2e") {
-    if (owner && !owner.scripts.e2e)
-      throw new Error("Select the E2E workspace, or use --web/--desktop for a browser surface");
-    const browser = planBrowserTests([...args, ...forwarded]);
+    if (owner && !owner.scripts.e2e) throw new Error(`${owner.name} has no e2e; use test list`);
+    const browser = planBrowserTests([...args, ...forwarded], owner?.browserProject);
     return {
       kind: "tasks" as const,
-      task: owner ? `${owner.name}#${browser.task}` : browser.task,
+      task: owner?.browserProject
+        ? `${owner.name}#e2e`
+        : owner
+          ? `${owner.name}#${browser.task}`
+          : browser.task,
       args: browser.args,
       env: browser.env,
     };
@@ -126,6 +130,13 @@ export async function runTests(root: string, cwd: string, args: string[]) {
     name: workspace.manifest.name,
     path: workspace.path,
     scripts: workspace.manifest.scripts ?? {},
+    ...((workspace.manifest.raypx as { browserTestProject?: BrowserSurface } | undefined)
+      ?.browserTestProject
+      ? {
+          browserProject: (workspace.manifest.raypx as { browserTestProject: BrowserSurface })
+            .browserTestProject,
+        }
+      : {}),
   }));
   const plan = planTests(root, cwd, members, args);
   if (plan.kind === "help" || plan.kind === "list") {
@@ -133,7 +144,7 @@ export async function runTests(root: string, cwd: string, args: string[]) {
       console.log(
         [
           "bun run test [all|unit|component|integration|coverage|postgres|redis|cluster] [--package name|path] [VP flags] [-- test flags]",
-          "bun run test e2e [--web|--desktop] [--smoke] [--visual] [-- Playwright flags]",
+          "bun run test e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [-- Playwright flags]",
           "bun run test inventory [--layers] [--baseline file] [--owners file]",
           "bun run test backends [--with-e2e [-- Playwright flags]]",
           "bun run test list",

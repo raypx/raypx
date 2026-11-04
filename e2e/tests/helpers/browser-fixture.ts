@@ -2,7 +2,21 @@ import { test as base } from "@playwright/test";
 import { accountAccessFixture, authResponse } from "./account-fixture.js";
 
 /** Browser response fixtures; real authentication remains in the PostgreSQL gate. */
-export const test = base.extend<{ publicApi: undefined }>({
+export const test = base.extend<{
+  publicApi: undefined;
+  surface: "Web" | "Desktop";
+  base: string;
+}>({
+  surface: async ({ baseURL }, provide, info) => {
+    if (!baseURL) throw new Error("A browser project must declare its baseURL");
+    if (info.project.name !== "web" && info.project.name !== "desktop")
+      throw new Error("Shared browser journeys require the web or desktop Playwright project");
+    await provide(info.project.name === "web" ? "Web" : "Desktop");
+  },
+  base: async ({ baseURL }, provide) => {
+    if (!baseURL) throw new Error("A browser project must declare its baseURL");
+    await provide(baseURL);
+  },
   publicApi: [
     async ({ page }, use) => {
       await accountAccessFixture(page, null);

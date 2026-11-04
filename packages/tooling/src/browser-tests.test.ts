@@ -27,25 +27,26 @@ it("combines surface, smoke and visual intent while forwarding normal Playwright
   const task = prepareBrowserTask(plan.task, plan.args, plan.env);
   const settings = browserTestSettings(task.env);
   expect(plan.task).toBe("e2e:web");
-  expect(task.args).toEqual(["--verbose"]);
+  expect(task.args).toEqual([]);
   expect(browserTestArguments([], task.env)).toEqual(["--workers", "2"]);
   expect(settings.screenshots).toBe(true);
   expect(settings.grep?.test("chromium memory.spec.ts Web versions a template @web @smoke")).toBe(
     true,
   );
-  expect(
-    settings.grep?.test("chromium memory.spec.ts Desktop versions a template @desktop @smoke"),
-  ).toBe(false);
+
   expect(settings.grep?.test("chromium memory.spec.ts Web versions a template @web")).toBe(false);
   expect(settings.grep?.test("chromium memory.spec.ts Web visits memory @web @smoke")).toBe(false);
 });
-it.each(["--grep=template", "-g"])("preserves the platform restriction through %s", (flag) => {
-  const args = flag === "-g" ? [flag, "template"] : [flag];
-  const task = prepareBrowserTask("e2e:desktop", ["--", ...args], {});
-  const settings = browserTestSettings(task.env);
-  expect(settings.grep?.test("Web template @web")).toBe(false);
-  expect(settings.grep?.test("Desktop template @desktop")).toBe(true);
-});
+it.each(["--grep=template", "-g"])(
+  "selects the project while preserving grep through %s",
+  (flag) => {
+    const args = flag === "-g" ? [flag, "template"] : [flag];
+    const task = prepareBrowserTask("e2e:desktop", ["--", ...args], {});
+    const settings = browserTestSettings(task.env);
+    expect(settings.surface).toBe("desktop");
+    expect(settings.grep?.test("Desktop template @desktop")).toBe(true);
+  },
+);
 it("makes trace recording explicit locally and uses the first retry on CI", () => {
   expect(browserTestSettings({}).trace).toBe("off");
   expect(browserTestSettings({ CI: "true" }).trace).toBe("on-first-retry");
@@ -76,9 +77,28 @@ it("passes filename, reporter and literal arguments only to the uncached browser
   expect(browserTestArguments(["--list"], {})).toEqual(["--list"]);
 });
 
+it("uses native projects to select builds and rejects conflicting application scope", () => {
+  expect(planBrowserTests(["--", "--project=desktop"]).env.RAYPX_E2E_SURFACE).toBe("desktop");
+  expect(planBrowserTests(["--", "--project", "web"]).task).toBe("e2e:web");
+  expect(planBrowserTests([], "desktop").task).toBe("e2e:desktop");
+  expect(() => planBrowserTests(["--web"], "desktop")).toThrow("selected package");
+  expect(() => planBrowserTests(["--web", "--", "--project=desktop"])).toThrow("conflicts");
+  expect(() => planBrowserTests(["--", "--project=missing"])).toThrow("Playwright project");
+  expect(() => planBrowserTests(["--", "--project"])).toThrow("Playwright project");
+  expect(planBrowserTests(["--", "--project=web", "--project=desktop"]).task).toBe("e2e");
+  expect(planBrowserTests(["--", "--project=control"]).task).toBe("e2e");
+  expect(() => planBrowserTests(["--desktop", "--", "--project=control"])).toThrow("conflicts");
+  expect(planBrowserTests(["--no-cache", "--", "settings.spec.ts"]).args).toEqual([
+    "--no-cache",
+    "--",
+    "settings.spec.ts",
+  ]);
+});
+
 it.each([
   [{}, 8, 16, 4],
-  [{}, 16, 32, 4],
+  [{}, 16, 32, 8],
+  [{}, 12, 24, 4],
   [{}, 4, 16, 2],
   [{}, 8, 8, 2],
   [{}, 1, 16, 1],

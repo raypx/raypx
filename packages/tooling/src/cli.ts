@@ -59,13 +59,16 @@ async function main() {
       await runTests(root, process.cwd(), ["e2e", ...args]);
       break;
     }
-    case "browser:run":
+    case "browser:run": {
+      const workspace = discover(root).byName.get("@raypx/e2e");
+      if (!workspace) throw new Error("Missing browser test workspace");
       await run(
         process.execPath,
         ["--bun", "playwright", "test", ...browserTestArguments(args, process.env)],
-        process.cwd(),
+        join(root, workspace.path),
       );
       break;
+    }
     case "tasks": {
       if (!args[0]) throw new Error("Usage: raypx-dev tasks <task> [VP options]");
       await runTasks(root, args[0], args.slice(1));

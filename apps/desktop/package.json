@@ -29,7 +29,9 @@
     "mygo:test": "bun run native:generate && bun scripts/native/mygo.ts test",
     "mygo:smoke": "bun scripts/native/mygo.ts smoke",
     "mygo:dev": "bun scripts/native/mygo.ts dev",
-    "native:generate": "bun scripts/native/generate.ts"
+    "native:generate": "bun scripts/native/generate.ts",
+    "e2e": "raypx-dev e2e",
+    "_e2e": "raypx-dev browser:run"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -95,6 +97,10 @@
       "mygo.config.ts": "bun",
       "bridge.ts": "universal",
       "e2e/**": "bun"
-    }
+    },
+    "taskScripts": {
+      "e2e": "_e2e"
+    },
+    "browserTestProject": "desktop"
   }
 }

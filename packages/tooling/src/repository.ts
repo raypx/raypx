@@ -1,7 +1,8 @@
 import { resolveRelease } from "./build/release.js";
-import { developmentEnvironment } from "@raypx-kit/devkit/process";
+import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
-import { isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
+import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
+import { join } from "node:path";
 import {
   runTasks as executeTasks,
   prepareTaskDirectories as prepareDirectories,
@@ -29,8 +30,34 @@ export async function runTasks(
 ): Promise<void> {
   const separator = task.lastIndexOf("#"),
     name = separator < 0 ? task : task.slice(separator + 1);
-  const browser = isBrowserTestTask(name) ? prepareBrowserTask(name, args, environment) : undefined;
   const model = taskModel(root, environment.RAYPX_VERIFY_TASKS);
+  const owner =
+    separator < 0
+      ? undefined
+      : model.members.find((member) => member.name === task.slice(0, separator));
+  if (isBrowserTestTask(name) && owner?.browserProject) {
+    if (environment.RAYPX_E2E_SURFACE && environment.RAYPX_E2E_SURFACE !== owner.browserProject)
+      throw new Error("Browser surface conflicts with the selected package");
+    environment = { ...environment, RAYPX_E2E_SURFACE: owner.browserProject };
+  }
+  const browser = isBrowserTestTask(name) ? prepareBrowserTask(name, args, environment) : undefined;
+  if (browser) {
+    const surface = browser.env.RAYPX_E2E_SURFACE;
+    if (!owner?.browserProject && surface !== "all")
+      task = `${separator < 0 ? "" : `${task.slice(0, separator)}#`}e2e:${surface}`;
+    if (browserTestArguments([], browser.env).includes("--list")) {
+      if (browser.args.includes("--dry-run"))
+        console.log(JSON.stringify({ runner: "playwright", tasks: [] }));
+      else
+        await run(
+          process.execPath,
+          [join(root, "packages/tooling/src/cli.ts"), "browser:run"],
+          root,
+          { ...process.env, ...browser.env },
+        );
+      return;
+    }
+  }
   await executeTasks(model, task, browser?.args ?? args, {
     runtime: process.execPath,
     directories: taskDirectories,
@@ -39,7 +66,10 @@ export async function runTasks(
         JSON.stringify({
           runner: "vp",
           tasks: taskPlan(model, [
-            taskRef(separator < 0 ? model.rootName : task.slice(0, separator), name),
+            taskRef(
+              task.includes("#") ? task.slice(0, task.lastIndexOf("#")) : model.rootName,
+              task.slice(task.lastIndexOf("#") + 1),
+            ),
           ]),
         }),
       ),
@@ -47,7 +77,7 @@ export async function runTasks(
       const verb = invocation.name.split(":")[0];
       const development =
         ["dev", "build"].includes(verb!) ||
-        plan.some(({ ref }) => /#task:(?:build(?::renderer)?|dev)$/.test(ref));
+        plan.some(({ ref }) => /#task:(?:build(?::renderer|:e2e)?|dev)$/.test(ref));
       const inherited = {
         ...(development ? developmentEnvironment(root) : process.env),
         ...(browser?.env ?? environment),

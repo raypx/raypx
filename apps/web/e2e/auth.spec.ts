@@ -1,7 +1,5 @@
+import { test, web, authResponse } from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
-import { test } from "./helpers/browser-fixture.js";
-import { web } from "./helpers/surfaces.js";
-import { authResponse } from "./helpers/account-fixture.js";
 
 test(
   "Web registration validates fields and sends the verification request",

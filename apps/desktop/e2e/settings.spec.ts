@@ -1,5 +1,5 @@
-import { expect } from "@playwright/test";
 import { test, desktop, signedInAccount, preferencesPersist } from "@raypx/e2e/testing";
+import { expect } from "@playwright/test";
 
 test(
   "Desktop preview states local unavailability after sign-in",

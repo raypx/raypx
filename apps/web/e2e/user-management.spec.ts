@@ -1,13 +1,13 @@
-import { expect } from "@playwright/test";
-import { test } from "./helpers/browser-fixture.js";
 import {
+  test,
   signedInAccount,
   accountAccessFixture,
   authResponse,
   webShellFixture,
-} from "./helpers/account-fixture.js";
-import { capture } from "./helpers/capture.js";
-import { web } from "./helpers/surfaces.js";
+  capture,
+  web,
+} from "@raypx/e2e/testing";
+import { expect } from "@playwright/test";
 
 for (const width of [360, 768, 1440])
   for (const locale of ["en", "zh"])

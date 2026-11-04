@@ -1,11 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-if (process.env.RAYPX_LIVE_AGENTS !== "1")
-  throw new Error(
-    "Set RAYPX_LIVE_AGENTS=1 to run real inference against the configured HTTPS acceptance environment",
-  );
-
 export default defineConfig({
+  globalSetup: "./tests/helpers/live-setup.ts",
   testDir: "./tests",
   testMatch: "live-agents.spec.ts",
   workers: 1,

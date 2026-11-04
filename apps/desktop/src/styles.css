@@ -51,3 +51,6 @@
     }
   }
 }
+
+/* Browser assertions and fixtures are not product class sources. */
+@source not "../e2e/**";

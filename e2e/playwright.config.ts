@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { browserTestSettings } from "@raypx/tooling/browser-tests";
 import { availableParallelism, totalmem } from "node:os";
+import { web, desktop } from "./tests/helpers/surfaces.js";
 
 const settings = browserTestSettings(process.env, {
   cpus: availableParallelism(),
@@ -8,14 +9,13 @@ const settings = browserTestSettings(process.env, {
 });
 
 export default defineConfig({
-  testDir: "./tests",
-  testIgnore: "**/devtools.spec.ts",
+  testDir: "..",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: settings.workers,
   reporter: "list",
-  outputDir: "test-results",
+  outputDir: `test-results/${settings.surface}`,
   ...(settings.grep ? { grep: settings.grep } : {}),
   use: {
     ...devices["Desktop Chrome"],
@@ -25,10 +25,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "chromium" },
-    ...(settings.surface === "web"
-      ? []
-      : [{ name: "desktop-chromium", testDir: "../apps/desktop/e2e" }]),
+    ...(["web", "desktop"] as const)
+      .filter((project) => settings.surface === "all" || settings.surface === project)
+      .map((project) => ({
+        name: project,
+        testDir: `../apps/${project}/e2e`,
+        use: { baseURL: project === "web" ? web : desktop },
+      })),
+    ...(process.env.CONTROL_E2E_API_URL && settings.surface === "all"
+      ? [{ name: "control", testMatch: "**/e2e/tests/control.spec.ts" }]
+      : []),
   ],
   webServer: [
     ...(settings.surface === "desktop"
@@ -37,7 +43,7 @@ export default defineConfig({
           {
             command: "bun run tests/helpers/serve-web.ts",
             url: "http://127.0.0.1:4173",
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: false,
             timeout: 30000,
           },
         ]),
@@ -47,7 +53,7 @@ export default defineConfig({
           {
             command: "bun run tests/helpers/serve-desktop.ts",
             url: "http://127.0.0.1:4174",
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: false,
             timeout: 30000,
           },
         ]),

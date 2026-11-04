@@ -1,22 +1,20 @@
-import { capture } from "./helpers/capture.js";
+import { capture } from "../helpers/capture.js";
 import { expect } from "@playwright/test";
-import { test } from "./helpers/browser-fixture.js";
+import { test } from "../helpers/browser-fixture.js";
 
 import type { ContextDocument, ContextDocumentInput, ContextVersion } from "@raypx/memory";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
-import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
-import { selectOption } from "./helpers/select.js";
+import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
+import { selectOption } from "../helpers/select.js";
 
-for (const [surface, base] of [
-  ["Web", "http://127.0.0.1:4173"],
-  ["Desktop", "http://127.0.0.1:4174"],
-] as const) {
-  const memoryPath = surface === "Desktop" ? "/memory?scope=account" : "/memory";
+/** Register the shared journey in the owning application's Playwright file. */
+export function registerTests() {
   test(
-    `${surface} versions a template and preserves its captured task context`,
-    { tag: [`@${surface.toLowerCase()}`, "@smoke"] },
-    async ({ page }) => {
+    `versions a template and preserves its captured task context`,
+    { tag: "@smoke" },
+    async ({ page, surface, base }) => {
+      const memoryPath = surface === "Desktop" ? "/memory?scope=account" : "/memory";
       if (surface === "Web") await webShellFixture(page);
       await signedInAccount(page);
       const deviceId = crypto.randomUUID(),

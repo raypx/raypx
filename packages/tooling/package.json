@@ -45,14 +45,16 @@
       "./build/deployment": "node",
       "./build/analytics": "node",
       "./build/start-env": "node",
-      "./tasks": "node"
+      "./tasks": "node",
+      "./browser-tests": "node"
     },
     "sourceTargets": {
       "src/build/**": "node",
       "src/tasks/config.ts": "node",
       "src/tasks/model.ts": "node",
       "src/tasks/arguments.ts": "node",
-      "src/tasks/delegation.ts": "node"
+      "src/tasks/delegation.ts": "node",
+      "src/browser-tests.ts": "node"
     }
   }
 }

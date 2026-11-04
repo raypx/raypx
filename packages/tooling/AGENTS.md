@@ -14,7 +14,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
-- raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
+- raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | knip | verify | doctor | clean | clean:artifacts
   `policy` also checks public entries (`src/validation/entries.ts`): every exports key
@@ -130,8 +130,13 @@ roots and fixture environments. `src/validation/toolchain.ts` reads the single B
 select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
 never dependency passthrough: test flags must not invalidate build/check dependencies.
-The config caps local defaults at four workers only with 8+ CPUs and 16+ GiB;
-smaller hosts use one or two, and CI defaults to two. Explicit Playwright flags win.
+Applications declare `raypx.browserTestProject` and delegate `e2e` to `_e2e`.
+The root runs one shared Playwright process; local/package entries run one application.
+Native `--project=web|desktop` selectors resolve before graph construction. `--list`
+bypasses builds and servers. Web `build:e2e` compiles the production SSR artifact
+without the normal build's type-check prerequisite; daily verification keeps checks.
+The config uses eight local workers at 12+ CPUs/32+ GiB, four at 8+ CPUs/16+ GiB,
+one or two on smaller hosts, and two on CI. Explicit Playwright flags win.
 `./browser-server` serves only compiled Desktop client assets on loopback with
 HTML deep-link fallback; never run Vite configuration or simulate backend/Native IPC there.
 Smoke orchestration and artifact probes live in

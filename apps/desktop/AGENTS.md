@@ -71,7 +71,9 @@ for Desktop account URLs, auth client and router search. Shared forms own fields
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
 source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites. Desktop-only compiled
 browser acceptance lives in `e2e/`, uses `@raypx/e2e/testing` fixtures and runs
-through `bun run test e2e --desktop`. It does not establish native WebView acceptance.
+through `bun run --cwd apps/desktop e2e` (root: `test e2e --package desktop`). Shared
+journeys register through `@raypx/e2e/journeys/*`; the `desktop` Playwright project
+selects only this renderer and its compiled assets. It does not establish native WebView acceptance.
 Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. MyGo transport/acceptance tests live in `tests/native/host/`; pure policy and engine-port tests live in `internal/desktop/`.
 These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.

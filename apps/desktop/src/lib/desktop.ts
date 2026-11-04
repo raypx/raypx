@@ -1,5 +1,4 @@
 import { createDesktopPlatform } from "./platform";
-export type { DesktopRuntime } from "../../bridge";
 
 const platform = createDesktopPlatform({
   available: () => typeof window !== "undefined" && window.__raypxDesktopHost === "mygo",

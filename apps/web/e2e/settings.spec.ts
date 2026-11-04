@@ -1,9 +1,12 @@
+import {
+  test,
+  web,
+  capture,
+  signedInAccount,
+  webShellFixture,
+  preferencesPersist,
+} from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
-import { test } from "./helpers/browser-fixture.js";
-import { web } from "./helpers/surfaces.js";
-import { capture } from "./helpers/capture.js";
-import { signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
-import { preferencesPersist } from "./helpers/preferences.js";
 
 test(
   "Web preserves local appearance and language preferences with an account fixture",

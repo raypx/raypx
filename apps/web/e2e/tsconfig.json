@@ -1,0 +1,8 @@
+{
+  "extends": "@raypx/tsconfig/node.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["**/*.ts"]
+}

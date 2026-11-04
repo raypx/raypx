@@ -155,8 +155,15 @@ and [verification](../../docs/development/testing.md).
 ```sh
 bun run --cwd apps/web check
 bun run --cwd apps/web test
+bun run --cwd apps/web e2e -- settings.spec.ts
 bun run build:web
 ```
+
+Web browser cases live in `e2e/` and use `@raypx/e2e/testing`; shared flows register
+through `@raypx/e2e/journeys/*`. The `web` Playwright project builds only Web through
+cached `build:e2e` and starts the real compiled SSR server. E2E uses a separate Bun
+tsconfig, checked by `check`; browser runs do not repeat type checking. Root
+`test e2e --package web` uses the same plan; `-- --list` needs no build or server.
 
 ## Remote tasks
 
