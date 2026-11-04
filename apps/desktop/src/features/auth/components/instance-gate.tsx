@@ -3,7 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { createApiClient } from "@raypx/client/api";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { MonitorIcon } from "@raypx/icons/monitor";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useDesktopPlatform } from "../../../lib/platform-context";
@@ -11,11 +20,16 @@ import { apiUrl, webUrl, authClient, desktopFetch } from "../client";
 import { signOutDesktopHost } from "../../tasks/host-session";
 import { analytics } from "../../analytics/client";
 
-function gateMessage(mismatch: boolean, state: string | undefined, checkFailed: boolean) {
+function gateMessage(
+  mismatch: boolean,
+  state: string | undefined,
+  checkFailed: boolean,
+  signedIn: boolean,
+) {
   if (mismatch) return "mismatch";
   if (state === "revoked") return "revoked";
   if (checkFailed) return "statusCheckFailed";
-  if (state === "unregistered") return "intro";
+  if (state === "unregistered") return signedIn ? "bindIntro" : "intro";
   return "unavailable";
 }
 
@@ -101,47 +115,80 @@ export function InstanceGate({ children }: { children: ReactNode }) {
     }
   }
   return (
-    <main className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-16">
-      <h1>{t("title")}</h1>
-      <p>{t(gateMessage(Boolean(mismatch), status.data?.state, status.isError))}</p>
-      {binding && binding.origin !== apiUrl && (
-        <p>{t("originMismatch", { origin: binding.origin })}</p>
-      )}
-      {mismatch && !session.isPending && (
-        <>
-          {session.data && (
-            <Button variant="outline" disabled={busy} onClick={() => void recover(false)}>
-              {c("signOut")}
-            </Button>
+    <main aria-labelledby="instance-title" className="flex h-dvh flex-col overflow-auto px-6 py-8">
+      <Empty className="m-auto max-w-lg flex-none gap-6 p-0">
+        <EmptyHeader>
+          <EmptyMedia variant="icon" className="size-12">
+            <MonitorIcon className="size-6" />
+          </EmptyMedia>
+          <h1 id="instance-title">{t(canBind ? "title" : "registrationStatus")}</h1>
+          <EmptyDescription>
+            {t(
+              gateMessage(
+                Boolean(mismatch),
+                status.data?.state,
+                status.isError,
+                Boolean(session.data),
+              ),
+            )}
+          </EmptyDescription>
+          {binding && binding.origin !== apiUrl && (
+            <EmptyDescription className="wrap-anywhere">
+              {t("originMismatch", { origin: binding.origin })}
+            </EmptyDescription>
           )}
-          {binding?.origin === apiUrl && (
-            <Button disabled={busy} onClick={() => void recover(true)}>
-              {t("signInOriginal")}
-            </Button>
+        </EmptyHeader>
+        <EmptyContent className="gap-4">
+          <div className="flex flex-wrap justify-center gap-2">
+            {mismatch && !session.isPending && (
+              <>
+                {session.data && (
+                  <Button variant="outline" disabled={busy} onClick={() => void recover(false)}>
+                    {c("signOut")}
+                  </Button>
+                )}
+                {binding?.origin === apiUrl && (
+                  <Button disabled={busy} onClick={() => void recover(true)}>
+                    {t("signInOriginal")}
+                  </Button>
+                )}
+              </>
+            )}
+            {canBind &&
+              sessionKnown &&
+              (session.data ? (
+                <Button
+                  size="lg"
+                  disabled={busy}
+                  aria-busy={registering}
+                  onClick={() => void register()}
+                >
+                  {t(registering ? "registering" : "bind")}
+                </Button>
+              ) : (
+                <Link to="/login" className={buttonVariants({ size: "lg" })}>
+                  {t("signInToContinue")}
+                  <ArrowRightIcon data-icon="inline-end" />
+                </Link>
+              ))}
+            {status.isError && (
+              <Button
+                variant="outline"
+                disabled={busy || status.isFetching}
+                onClick={() => void refetch()}
+              >
+                {c("retry")}
+              </Button>
+            )}
+          </div>
+          {failed && (
+            <p role="alert" className="text-destructive-text">
+              {t("error")}
+            </p>
           )}
-        </>
-      )}
-      {canBind &&
-        sessionKnown &&
-        (session.data ? (
-          <Button disabled={busy} onClick={() => void register()}>
-            {t("bind")}
-          </Button>
-        ) : (
-          <Link to="/login" className={buttonVariants()}>
-            {c("signIn")}
-          </Link>
-        ))}
-      {status.isError && (
-        <Button
-          variant="outline"
-          disabled={busy || status.isFetching}
-          onClick={() => void refetch()}
-        >
-          {c("retry")}
-        </Button>
-      )}
-      {failed && <p role="alert">{t("error")}</p>}
+          {canBind && <p className="text-xs/relaxed text-muted-foreground">{t("privacy")}</p>}
+        </EmptyContent>
+      </Empty>
     </main>
   );
 }

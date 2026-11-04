@@ -99,7 +99,7 @@ it.each(["revoked", "unavailable"] as const)("blocks %s instances", async (state
   await page(() => ({ state }));
   await screen.findByRole("heading");
   expect(screen.queryByText("Private local work")).toBeNull();
-  expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Sign in to continue" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 });
 it("can recover from a failed instance status query", async () => {
@@ -118,7 +118,7 @@ it("blocks a different signed-in account before mounting local tools", async () 
   await page(() => ({ state: "registered", binding }));
   await screen.findByRole("heading");
   expect(screen.queryByText("Private local work")).toBeNull();
-  expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Sign in to continue" })).toBeNull();
 });
 it("blocks a binding from a different server origin while offline", async () => {
   await page(() => ({
@@ -165,13 +165,14 @@ it.each([
   mocks.session.mockReturnValue(session);
   await page(() => ({ state: "unregistered" }));
   await screen.findByRole("heading");
-  expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Sign in to continue" })).toBeNull();
   expect(screen.queryByText("Private local work")).toBeNull();
 });
 it("offers sign-in to an unregistered signed-out instance", async () => {
   mocks.session.mockReturnValue({ data: null, error: null, isPending: false });
   await page(() => ({ state: "unregistered" }));
-  expect(await screen.findByRole("link", { name: "Sign in" })).toBeTruthy();
+  const signIn = await screen.findByRole("link", { name: "Sign in to continue" });
+  expect(signIn.getAttribute("href")).toBe("/login");
   expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 });
 it("approves enrollment using the native authenticated client before unlocking local tools", async () => {

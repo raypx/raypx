@@ -3,11 +3,14 @@ export default {
     signInOriginal: "Sign in with the original account",
     originMismatch:
       "To use this instance online, select its original server ({origin}) in Desktop connection settings.",
-    title: "Register this instance",
-    intro:
-      "Register the current local profile to work offline. Registration does not enable remote access or upload project files.",
-    register: "Sign in and register",
+    title: "Set up this computer",
+    registrationStatus: "Computer registration",
+    intro: "Sign in to register this computer once. After setup, you can use local tools offline.",
+    bindIntro: "Register this computer to use local tools offline.",
+    privacy: "Project files stay on this computer. Remote access is enabled separately.",
+    signInToContinue: "Sign in to continue",
     bind: "Register this computer",
+    registering: "Registering this computer…",
     unavailable:
       "The local instance identity is unavailable. If you archived this profile, restore the full profile from the archive.",
     statusCheckFailed: "Couldn't check whether this computer is registered.",
