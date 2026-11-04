@@ -32,7 +32,7 @@ read, imported or deleted; Desktop requires sign-in once.
 `native_smoke` is a separate Go build tag. Only that build exposes the private
 random-token test endpoint; `mygo:check`/`mygo:test` compile it alongside the
 production host. The endpoint offers renderer eval, engine/API requests, window
-state with native focus counts, tray actions and the stream/CORS probes; scenarios
+state with native focus and activation counts, tray actions and the stream/CORS probes; scenarios
 read state on demand instead of mirroring it. Its renderer is built in `native-smoke` mode with a
 stream observation hook; production compilation removes that branch. App identity,
 WebView/data paths and package outputs are isolated. Startup validates the owned
