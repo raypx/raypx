@@ -221,7 +221,7 @@ export default {
     forbidden: "You do not have permission to access this page.",
     unavailable: "Unable to verify permissions. Please try again.",
   },
-  configuration: {
+  site: {
     registrationUnavailable: "Registration is temporarily unavailable. Please try again later.",
     checkingRegistration: "Checking registration availability…",
 
@@ -308,8 +308,6 @@ export default {
     projectUnavailableHint:
       "This project is unavailable. Authorize it again; the directory stays the same.",
     sessionOutsideProject: "This session belongs to another project. Open it from its project.",
-    chooseProjectForDraft:
-      "Your draft is saved. Choose a project to keep editing; execution waits for Send.",
     projectReferences: "References",
     viewSession: "Open session",
     projectAutomations: "Automations",
@@ -332,33 +330,9 @@ export default {
     viewConversation: "View full conversation",
     signInToSend: "Sign in to send",
     guestSendHint: "Sign in to choose a computer. Signing in won't send anything.",
-    signInDraftFailed:
-      "Could not continue to sign-in. Your text is still in the editor. Try again.",
 
-    terminalSettingsSymlink:
-      "Your hook settings are managed by dotfiles. Add the Raypx hook to the symlink target manually; the link is preserved.",
-    reviewRequests: "Review requests",
-    terminalPendingNotice:
-      "{count, plural, one {A terminal request needs your answer.} other {# terminal requests need your answer.}}",
-    terminalRequests: "Terminal requests",
-    terminalPendingOnly: "Pending only",
     managedRequests: "Session requests",
     managedNothingWaiting: "No managed sessions need your answer.",
-    terminalHint: "Requests from connected terminal sessions. Tool output stays on the computer.",
-    terminalEmpty: "No terminal requests. Connect agents in Settings.",
-    terminalUnavailable:
-      "Terminal requests are unavailable. Check the computer and server connection.",
-    terminalHistory: "Show recent requests",
-    terminalPending: "Needs your answer",
-    terminalDelivered: "Delivered to the agent",
-    terminalUnknown: "Outcome unknown",
-    terminalWaitingHint: "Remote waiting; no answer returns control to the terminal.",
-    terminalReceiptUnknown: "Delivery is unconfirmed. Refresh the status or retry the same answer.",
-    terminalRetry: "Retry the same answer",
-    terminalDenyNote: "Reason for denying (optional)",
-    terminalUnsupported: "This request cannot be answered remotely with the current connector.",
-    terminalExpires: "Returns to terminal at {time}",
-    terminalChanged: "The request changed. Refresh before answering.",
     daemonAuthorizationRequired:
       "Authorizing this computer requires a recent sign-in. Confirm your password to continue.",
     daemonReauthorize: "Authorize this computer again",
@@ -368,58 +342,9 @@ export default {
       "On macOS, sessions continue after quitting Desktop. Signing out or disconnecting stops this account's work.",
     pendingCount: "{count} pending approvals",
     pendingCountPartial: "Pending approvals count is incomplete. At least {count} are known.",
-    terminalActionFailed: "Could not complete this action. Refresh the status before retrying.",
-    terminalInstallationBusy: "Another installation is running. Wait for it to finish, then retry.",
-    terminalInstallationPermission:
-      "Raypx cannot write the hook files. Check directory permissions, then retry.",
-    terminalInstallationDowngrade:
-      "A newer hook is installed. Use the newer Desktop version to update it.",
-    terminalInstallationUnsupported: "Hook installation currently requires the macOS desktop app.",
-    terminalBinaryConflict:
-      "The hook program was changed outside Raypx. Review the file before replacing it.",
-    terminalInstallationTimeout:
-      "The operation timed out and its outcome is unconfirmed. Refresh the status before retrying.",
-    terminalRefreshStatus: "Refresh status",
-    terminalRecoverBinary: "Back up and replace hook",
-    terminalRecoverBinaryHint:
-      "Raypx will preserve the changed program beside the installed file, then replace it with the trusted bundled version. Agent hook settings will be preserved.",
-    terminalRecoverBinaryConfirm: "Back up and replace",
-    terminalInstallationSource:
-      "Open the current Desktop version to repair this hook. The modified program cannot replace itself.",
-    terminalCloud: "Sync terminal approvals to this account",
-    terminalCloudHint:
-      "Explicitly share new requests from selected local projects. Signing in does not upload local history or enable remote execution.",
 
-    terminalSettings: "Terminal connections",
-    terminalSettingsHint:
-      "Connect new Claude and Codex sessions. Authorize each project separately; tool inputs are stored in plain text on your selected server during private testing.",
-    terminalAway: "Away mode",
-    terminalAwayHint:
-      "Terminal requests wait for Raypx while Away is on. This window must remain visible and not minimized, or an authorized cloud channel must be online. Disconnection or timeout returns control to the terminal.",
-    terminalWait: "Wait before returning to terminal",
-    terminalWaitMinutes: "{minutes, plural, one {# minute} other {# minutes}}",
-    terminalSettingsConflict:
-      "Review your agent's hook settings, then refresh this page. Raypx preserves edited or unrecognized settings.",
-    terminalProject: "Sync terminal requests for {name}",
-    terminalNoProjects: "Enable a project above, then choose which terminal requests to sync.",
-    terminalUpdate: "Update hook binary",
-    terminalRepair: "Repair hook",
-    terminalRepairHint:
-      "The hook binary is missing or cannot run. Repair it to restore terminal approvals.",
-    terminalServerUpgrade:
-      "Managed sessions remain available. Upgrade your server to enable terminal approvals.",
-    terminalInstall: "Install hook",
-    terminalUninstall: "Remove hook",
-    terminalInstalled: "Hook installed",
-    terminalNotInstalled: "Hook not installed",
-    terminalTrust:
-      "After installation, review and trust Raypx in Codex /hooks. Restart the agent session to load the hook.",
-    terminalSave: "Save terminal settings",
-    terminalSaved: "Terminal settings saved.",
     renamedFrom: "Renamed from {path}",
     backToTasks: "Back to sessions",
-    draftCleanupFailed:
-      "Session sent, but the saved draft could not be removed. Delete it before sending it again.",
     filters: "Filters",
     taskOptions: "Session options",
     taskHistory: "Session history",
@@ -428,17 +353,6 @@ export default {
     allTasks: "All",
     needsYou: "Needs you",
     workingTasks: "Running or queued",
-    newDraft: "New draft",
-    drafts: "Drafts",
-    saveDraft: "Save draft",
-    draftDeviceOnly: "Drafts stay on this device.",
-    draftSaved: "Draft saved on this device.",
-    draftSaveFailed:
-      "Unable to read or save drafts on this device. Your current text is still in the editor.",
-    draftLimit: "You have 20 drafts. Delete one before saving a new draft.",
-    deleteDraft: "Delete draft: {name}",
-    discardDraftChanges: "Discard unsaved changes?",
-    discardDraftHint: "Save your current text as a draft first if you want to keep it.",
     discardChanges: "Discard changes",
     promptPlaceholder: "Describe the change, question or investigation…",
     conversation: "Conversation",
@@ -607,9 +521,26 @@ export default {
     noRemoteProjects: "No remote projects yet",
     uncommitted: "Uncommitted changes",
     changesHelp: "About this preview",
-    terminalHelp: "About terminal requests",
     localWorkHelp: "About local work",
     agentHelp: "Agent requirements",
+    draft: {
+      chooseProject:
+        "Your draft is saved. Choose a project to keep editing; execution waits for Send.",
+      signInFailed: "Could not continue to sign-in. Your text is still in the editor. Try again.",
+      cleanupFailed:
+        "Session sent, but the saved draft could not be removed. Delete it before sending it again.",
+      new: "New draft",
+      title: "Drafts",
+      save: "Save draft",
+      deviceOnly: "Drafts stay on this device.",
+      saved: "Draft saved on this device.",
+      saveFailed:
+        "Unable to read or save drafts on this device. Your current text is still in the editor.",
+      limit: "You have 20 drafts. Delete one before saving a new draft.",
+      delete: "Delete draft: {name}",
+      discard: "Discard unsaved changes?",
+      discardHint: "Save your current text as a draft first if you want to keep it.",
+    },
   },
   common: {
     sessionUnavailable:
@@ -691,22 +622,6 @@ export default {
     displayName: "Display name",
     profileSaved: "Display name saved.",
     profileRefresh: "Your name was saved. Refresh the page to update the account details.",
-    sessionsTitle: "Signed-in sessions",
-    sessionsHint: "Sign out sessions you don’t recognize or use.",
-    sessionsEmpty: "No active sessions found. Sign in again to refresh your account.",
-    currentSession: "This session",
-    unknownSession: "Unknown browser or device",
-    sessionCreated: "Signed in {date}",
-    sessionExpires: "Expires {date}",
-    revokeSession: "Sign out session",
-    revokeSessionHint:
-      "This session will lose account access. Signing in again will require your password.",
-    revokeOtherSessions: "Sign out all other sessions",
-    revokeOtherSessionsHint:
-      "All other browser sessions and all execution hosts will lose account access. This browser stays signed in; computers will need authorization again.",
-    sessionReauth: "Sign out and sign in again before managing sessions.",
-    sessionUnauthorized: "Your session has expired. Sign in again to manage sessions.",
-    sessionForbidden: "Session management is not permitted. Refresh the page and try again.",
     registrationDisabled: "Registration is closed. Existing accounts can still sign in.",
     mailUnavailable: "Email delivery is unavailable right now. Please try again later.",
     title: "Your account, across devices.",
@@ -749,6 +664,24 @@ export default {
     featureLocal: "Secure device-local execution",
     featureRemote: "Access connected projects remotely",
     featureApprovals: "Review and approve Agent actions",
+    sessions: {
+      title: "Signed-in sessions",
+      hint: "Sign out sessions you don’t recognize or use.",
+      empty: "No active sessions found. Sign in again to refresh your account.",
+      current: "This session",
+      unknown: "Unknown browser or device",
+      created: "Signed in {date}",
+      expires: "Expires {date}",
+      revoke: "Sign out session",
+      revokeHint:
+        "This session will lose account access. Signing in again will require your password.",
+      revokeOthers: "Sign out all other sessions",
+      revokeOthersHint:
+        "All other browser sessions and all execution hosts will lose account access. This browser stays signed in; computers will need authorization again.",
+      reauth: "Sign out and sign in again before managing sessions.",
+      expired: "Your session has expired. Sign in again to manage sessions.",
+      forbidden: "Session management is not permitted. Refresh the page and try again.",
+    },
   },
   settings: {
     accountScope: "Account-wide",
@@ -873,13 +806,6 @@ export default {
       "Archived references cannot be selected for new sessions. Future runs of schedules that reference this item will fail and pause the schedule. Existing session snapshots and version history are preserved.",
     localArchiveHint:
       "Archived references cannot be selected for new sessions. Existing session snapshots and version history are preserved.",
-    scheduledPlansCount: "Cloud schedules referencing this item: {count}.",
-    scheduledPlanPreview: "{name} ({status})",
-    scheduledPlansMore: "{count} more; review them in Cloud automations.",
-    scheduledPlansUnknown:
-      "Unable to confirm references. Review Cloud automations before archiving. You can still choose Archive; this can be undone.",
-    planEnabled: "Enabled",
-    planPaused: "Paused",
     created: "Created",
     updated: "Updated",
     restored: "Restored",
@@ -923,6 +849,15 @@ export default {
     NOT_FOUND: "This reference is unavailable.",
     NETWORK_UNAVAILABLE: "Unable to complete the request. Check your connection and try again.",
     help: "About references",
+    plans: {
+      count: "Cloud schedules referencing this item: {count}.",
+      preview: "{name} ({status})",
+      more: "{count} more; review them in Cloud automations.",
+      unknown:
+        "Unable to confirm references. Review Cloud automations before archiving. You can still choose Archive; this can be undone.",
+      enabled: "Enabled",
+      paused: "Paused",
+    },
   },
   automations: {
     scope: "Automation location",
@@ -1087,6 +1022,78 @@ export default {
     running: "Session running",
     finished: "Session exited",
     permissionHint: "This process uses your operating system permissions.",
+    hook: {
+      symlink:
+        "Your hook settings are managed by dotfiles. Add the Raypx hook to the symlink target manually; the link is preserved.",
+      settingsConflict:
+        "Review your agent's hook settings, then refresh this page. Raypx preserves edited or unrecognized settings.",
+      busy: "Another installation is running. Wait for it to finish, then retry.",
+      permission: "Raypx cannot write the hook files. Check directory permissions, then retry.",
+      downgrade: "A newer hook is installed. Use the newer Desktop version to update it.",
+      unsupported: "Hook installation currently requires the macOS desktop app.",
+      binaryConflict:
+        "The hook program was changed outside Raypx. Review the file before replacing it.",
+      timeout:
+        "The operation timed out and its outcome is unconfirmed. Refresh the status before retrying.",
+      refresh: "Refresh status",
+      replace: "Back up and replace hook",
+      replaceHint:
+        "Raypx will preserve the changed program beside the installed file, then replace it with the trusted bundled version. Agent hook settings will be preserved.",
+      replaceConfirm: "Back up and replace",
+      desktopRequired:
+        "Open the current Desktop version to repair this hook. The modified program cannot replace itself.",
+      update: "Update hook binary",
+      repair: "Repair hook",
+      repairHint:
+        "The hook binary is missing or cannot run. Repair it to restore terminal approvals.",
+      install: "Install hook",
+      uninstall: "Remove hook",
+      installed: "Hook installed",
+      notInstalled: "Hook not installed",
+      trust:
+        "After installation, review and trust Raypx in Codex /hooks. Restart the agent session to load the hook.",
+    },
+    approval: {
+      review: "Review requests",
+      notice:
+        "{count, plural, one {A terminal request needs your answer.} other {# terminal requests need your answer.}}",
+      title: "Terminal requests",
+      pendingOnly: "Pending only",
+      hint: "Requests from connected terminal sessions. Tool output stays on the computer.",
+      help: "About terminal requests",
+      empty: "No terminal requests. Connect agents in Settings.",
+      unavailable: "Terminal requests are unavailable. Check the computer and server connection.",
+      history: "Show recent requests",
+      pending: "Needs your answer",
+      delivered: "Delivered to the agent",
+      unknown: "Outcome unknown",
+      waitingHint: "Remote waiting; no answer returns control to the terminal.",
+      unconfirmed: "Delivery is unconfirmed. Refresh the status or retry the same answer.",
+      retry: "Retry the same answer",
+      denyNote: "Reason for denying (optional)",
+      unsupported: "This request cannot be answered remotely with the current connector.",
+      expires: "Returns to terminal at {time}",
+      changed: "The request changed. Refresh before answering.",
+    },
+    settings: {
+      failed: "Could not complete this action. Refresh the status before retrying.",
+      cloud: "Sync terminal approvals to this account",
+      cloudHint:
+        "Explicitly share new requests from selected local projects. Signing in does not upload local history or enable remote execution.",
+      title: "Terminal connections",
+      hint: "Connect new Claude and Codex sessions. Authorize each project separately; tool inputs are stored in plain text on your selected server during private testing.",
+      away: "Away mode",
+      awayHint:
+        "Terminal requests wait for Raypx while Away is on. This window must remain visible and not minimized, or an authorized cloud channel must be online. Disconnection or timeout returns control to the terminal.",
+      wait: "Wait before returning to terminal",
+      minutes: "{minutes, plural, one {# minute} other {# minutes}}",
+      project: "Sync terminal requests for {name}",
+      noProjects: "Enable a project above, then choose which terminal requests to sync.",
+      upgrade:
+        "Managed sessions remain available. Upgrade your server to enable terminal approvals.",
+      save: "Save terminal settings",
+      saved: "Terminal settings saved.",
+    },
   },
   engine: {
     replaceOwner: "Stop old host and update",

@@ -145,8 +145,8 @@ export function useTaskComposer({
   // Clean editors switch synchronously; only unsaved changes wait for confirmation.
   const confirmDiscard = () =>
     confirm({
-      title: t("discardDraftChanges"),
-      description: t("discardDraftHint"),
+      title: t("draft.discard"),
+      description: t("draft.discardHint"),
       confirmLabel: t("discardChanges"),
       cancelLabel: c("cancel"),
     });

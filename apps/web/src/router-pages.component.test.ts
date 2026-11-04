@@ -48,7 +48,7 @@ describe("application shell pages", () => {
       "/admin/": { title: "dash.nav.overview", layout: "workbench" },
       "/admin/audit": { title: "dash.nav.audit", layout: "workbench" },
       "/admin/users": { title: "common.users", layout: "workbench" },
-      "/admin/settings": { title: "configuration.title", layout: "document" },
+      "/admin/settings": { title: "site.title", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },
       "/memory": { title: "memory.title", layout: "workbench" },

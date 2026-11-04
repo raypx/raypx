@@ -120,13 +120,16 @@ function AccountPage() {
                 currentSessionId={session.data.session.id}
               />
             ) : (
-              <section className="mt-8 border-t border-border pt-6" aria-label={t("sessionsTitle")}>
+              <section
+                className="mt-8 border-t border-border pt-6"
+                aria-label={t("sessions.title")}
+              >
                 <p role={session.isPending ? "status" : "alert"}>
                   {session.error
                     ? c("networkError")
                     : session.isPending
                       ? c("loading")
-                      : t("sessionUnauthorized")}
+                      : t("sessions.expired")}
                 </p>
                 {!session.isPending && (
                   <Button variant="outline" onClick={() => void session.refetch()}>

@@ -34,7 +34,7 @@ type PageTitle =
   | "dash.nav.audit"
   | "common.users"
   | "common.account"
-  | "configuration.title"
+  | "site.title"
   | "common.approvals"
   | "common.home"
   | "common.projects"

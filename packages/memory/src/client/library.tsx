@@ -241,16 +241,16 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                 characters.length > 40
                   ? `${characters.slice(0, 39).join("")}…`
                   : characters.join("");
-              return t("scheduledPlanPreview", {
+              return t("plans.preview", {
                 name,
-                status: t(plan.enabled ? "planEnabled" : "planPaused"),
+                status: t(plan.enabled ? "plans.enabled" : "plans.paused"),
               });
             });
-            description += ` ${t("scheduledPlansCount", { count: String(plans.length) })}`;
+            description += ` ${t("plans.count", { count: String(plans.length) })}`;
             if (preview.length) description += ` ${preview.join("; ")}.`;
             if (plans.length > 3)
-              description += ` ${t("scheduledPlansMore", { count: String(plans.length - 3) })}`;
-          } else description += ` ${t("scheduledPlansUnknown")}`;
+              description += ` ${t("plans.more", { count: String(plans.length - 3) })}`;
+          } else description += ` ${t("plans.unknown")}`;
         }
         if (
           !(await confirm({

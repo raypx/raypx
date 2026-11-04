@@ -27,35 +27,35 @@ type RequestStatus = TerminalRequestSummary["status"];
 function summaryLabel(status: RequestStatus, expired: boolean) {
   switch (status) {
     case "pending":
-      return expired ? "expired" : "terminalPending";
+      return expired ? "tasks.expired" : "terminal.approval.pending";
     case "delivered":
-      return "terminalDelivered";
+      return "terminal.approval.delivered";
     case "outcome_unknown":
-      return "terminalUnknown";
+      return "terminal.approval.unknown";
     case "applied":
     case "cancelled":
     case "decided":
     case "expired":
-      return status;
+      return `tasks.${status}` as const;
   }
 }
 /** Detail label for a request this device can no longer answer. */
 function closedLabel(status: RequestStatus, current: boolean, supported: boolean) {
   switch (status) {
     case "pending":
-      if (!current) return "terminalChanged";
-      if (!supported) return "terminalUnsupported";
-      return "expired";
+      if (!current) return "terminal.approval.changed";
+      if (!supported) return "terminal.approval.unsupported";
+      return "tasks.expired";
     case "decided":
-      return "awaitingDevice";
+      return "tasks.awaitingDevice";
     case "delivered":
-      return "terminalDelivered";
+      return "terminal.approval.delivered";
     case "outcome_unknown":
-      return "terminalUnknown";
+      return "terminal.approval.unknown";
     case "applied":
     case "cancelled":
     case "expired":
-      return status;
+      return `tasks.${status}` as const;
   }
 }
 type ObservedClient = NonNullable<TaskWorkspacePort["observed"]>;
@@ -71,7 +71,7 @@ export function ObservedApprovals({
   return <ObservedList client={client as Client} accountId={accountId} />;
 }
 function ObservedList({ client, accountId }: { client: Client; accountId: string }) {
-  const t = useTranslations("tasks"),
+  const t = useTranslations(),
     c = useTranslations("common"),
     id = useId();
   const load = useCallback((signal: AbortSignal) => client.observed.list({}, { signal }), [client]);
@@ -105,20 +105,20 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
         <div className="flex items-center gap-1">
           <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
             <TerminalIcon className="size-4" aria-hidden="true" />
-            {t("terminalRequests")}
+            {t("terminal.approval.title")}
             {pending.length > 0 && <Badge variant="secondary">{pending.length}</Badge>}
           </h2>
-          <HelpHint label={t("terminalHelp")} description={t("terminalHint")} />
+          <HelpHint label={t("terminal.approval.help")} description={t("terminal.approval.hint")} />
         </div>
         {requests.length > pending.length && (
           <Button variant="ghost" size="sm" onClick={() => setHistory(!history)}>
-            {t(history ? "terminalPendingOnly" : "terminalHistory")}
+            {t(history ? "terminal.approval.pendingOnly" : "terminal.approval.history")}
           </Button>
         )}
       </div>
       {error && (
         <p role="alert" className="mb-3 text-sm text-destructive-text">
-          {t("terminalUnavailable")}{" "}
+          {t("terminal.approval.unavailable")}{" "}
           <Button variant="link" size="sm" onClick={refresh}>
             {c("refresh")}
           </Button>
@@ -131,7 +131,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
         />
       )}
       {data && !shown.length && (
-        <p className="text-sm text-muted-foreground">{t("terminalEmpty")}</p>
+        <p className="text-sm text-muted-foreground">{t("terminal.approval.empty")}</p>
       )}
       <ul className="divide-y divide-border">
         {shown.map((request) => {
@@ -200,7 +200,7 @@ function ObservedRequest({
   now: number;
   onChanged: (accepted?: boolean) => void;
 }) {
-  const t = useTranslations("tasks"),
+  const t = useTranslations(),
     format = useFormatter(),
     c = useTranslations("common"),
     id = useId();
@@ -255,7 +255,7 @@ function ObservedRequest({
   if (error)
     return (
       <p role="alert" className="text-sm text-destructive-text">
-        {t("terminalUnavailable")}{" "}
+        {t("terminal.approval.unavailable")}{" "}
         <Button variant="link" size="sm" onClick={refresh}>
           {c("refresh")}
         </Button>
@@ -274,14 +274,14 @@ function ObservedRequest({
       {actionable && supported ? (
         <>
           <p className="text-xs text-muted-foreground">
-            {t("terminalWaitingHint")} ·{" "}
-            {t("terminalExpires", {
+            {t("terminal.approval.waitingHint")} ·{" "}
+            {t("terminal.approval.expires", {
               time: format.dateTime(new Date(request.expiresAt), { timeStyle: "medium" }),
             })}
           </p>
           <div className="max-w-2xl space-y-2">
             <label htmlFor={id} className="text-sm font-medium">
-              {t("terminalDenyNote")}
+              {t("terminal.approval.denyNote")}
             </label>
             <Textarea
               id={id}
@@ -295,7 +295,7 @@ function ObservedRequest({
           {uncertain ? (
             <div role="alert" className="space-y-3">
               <p className="max-w-[65ch] text-sm text-muted-foreground">
-                {t("terminalReceiptUnknown")}
+                {t("terminal.approval.unconfirmed")}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -304,7 +304,7 @@ function ObservedRequest({
                     void decide(receipt.current?.decision.type === "allow" ? "allow" : "deny")
                   }
                 >
-                  {t("terminalRetry")}
+                  {t("terminal.approval.retry")}
                 </Button>
                 <Button
                   variant="outline"
@@ -320,10 +320,10 @@ function ObservedRequest({
           ) : (
             <div className="flex flex-wrap gap-2">
               <Button disabled={busy} onClick={() => void decide("allow")}>
-                {t("allowOnce")}
+                {t("tasks.allowOnce")}
               </Button>
               <Button variant="outline" disabled={busy} onClick={() => void decide("deny")}>
-                {t("deny")}
+                {t("tasks.deny")}
               </Button>
             </div>
           )}

@@ -166,7 +166,7 @@ export function PasswordChangeDialog({
                     onCheckedChange={setRevokeOthers}
                     disabled={auth.busy}
                   />
-                  <FieldLabel htmlFor={`${id}-revoke`}>{t("revokeOtherSessions")}</FieldLabel>
+                  <FieldLabel htmlFor={`${id}-revoke`}>{t("sessions.revokeOthers")}</FieldLabel>
                 </Field>
               </FieldGroup>
               <DialogFooter>

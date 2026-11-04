@@ -13,15 +13,15 @@ import { localRequest } from "../../lib/desktop";
 type Settings = LocalResult<"approvals.local.settings">;
 type Connector = LocalResult<"connectors.status">[number];
 const errorKeys = {
-  INSTALLATION_BUSY: "terminalInstallationBusy",
-  EACCES: "terminalInstallationPermission",
-  EPERM: "terminalInstallationPermission",
-  HOST_DOWNGRADE: "terminalInstallationDowngrade",
-  UNSUPPORTED_PLATFORM: "terminalInstallationUnsupported",
-  COMPILED_CLI_REQUIRED: "terminalInstallationUnsupported",
-  INSTALLATION_CONFLICT: "terminalBinaryConflict",
-  HOST_UPDATE_REQUIRED: "terminalInstallationSource",
-  INSTALLATION_TIMEOUT: "terminalInstallationTimeout",
+  INSTALLATION_BUSY: "hook.busy",
+  EACCES: "hook.permission",
+  EPERM: "hook.permission",
+  HOST_DOWNGRADE: "hook.downgrade",
+  UNSUPPORTED_PLATFORM: "hook.unsupported",
+  COMPILED_CLI_REQUIRED: "hook.unsupported",
+  INSTALLATION_CONFLICT: "hook.binaryConflict",
+  HOST_UPDATE_REQUIRED: "hook.desktopRequired",
+  INSTALLATION_TIMEOUT: "hook.timeout",
 } as const;
 function failureKey(error: unknown) {
   const code =
@@ -32,17 +32,17 @@ function failureKey(error: unknown) {
         : undefined;
   return code && Object.hasOwn(errorKeys, code)
     ? errorKeys[code as keyof typeof errorKeys]
-    : "terminalActionFailed";
+    : "settings.failed";
 }
 export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
-  const t = useTranslations("tasks"),
+  const t = useTranslations("terminal"),
     c = useTranslations("common"),
     id = useId();
   const [settings, setSettings] = useState<Settings>(),
     [connectors, setConnectors] = useState<Connector[]>([]);
   const [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState<ReturnType<typeof failureKey> | "terminalUnavailable" | null>(
+    [error, setError] = useState<ReturnType<typeof failureKey> | "approval.unavailable" | null>(
       null,
     ),
     [saved, setSaved] = useState(false);
@@ -63,7 +63,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
         }
       },
       () => {
-        if (active) setError("terminalUnavailable");
+        if (active) setError("approval.unavailable");
       },
     );
     return () => {
@@ -103,9 +103,9 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
       if (
         await confirm({
           requestKey: `repair:${connector.provider}`,
-          title: t("terminalRecoverBinary"),
-          description: t("terminalRecoverBinaryHint"),
-          confirmLabel: t("terminalRecoverBinaryConfirm"),
+          title: t("hook.replace"),
+          description: t("hook.replaceHint"),
+          confirmLabel: t("hook.replaceConfirm"),
           cancelLabel: c("cancel"),
         })
       )
@@ -129,9 +129,9 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
   return (
     <section aria-labelledby={`${id}-title`} className="mt-8 border-t border-border pt-7">
       <h3 id={`${id}-title`} className="text-base font-semibold">
-        {t("terminalSettings")}
+        {t("settings.title")}
       </h3>
-      <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("terminalSettingsHint")}</p>
+      <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("settings.hint")}</p>
       <ul className="mt-4 divide-y divide-border">
         {connectors.map((connector) => (
           <li
@@ -143,7 +143,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
                 {agentProviderMetadata[connector.provider].label}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {t(connector.installed ? "terminalInstalled" : "terminalNotInstalled")}
+                {t(connector.installed ? "hook.installed" : "hook.notInstalled")}
               </p>
               {connector.settingsFile && (
                 <p className="mt-1 max-w-[65ch] break-all font-mono text-xs text-muted-foreground">
@@ -154,12 +154,12 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
                 <p className="mt-1 max-w-[65ch] text-xs text-destructive-text">
                   {t(
                     connector.error === "HOOK_SETTINGS_SYMLINK"
-                      ? "terminalSettingsSymlink"
+                      ? "hook.symlink"
                       : ["HOST_BINARY_MISSING", "HOST_BINARY_NOT_EXECUTABLE"].includes(
                             connector.error ?? "",
                           )
-                        ? "terminalRepairHint"
-                        : "terminalSettingsConflict",
+                        ? "hook.repairHint"
+                        : "hook.settingsConflict",
                   )}
                 </p>
               )}
@@ -167,7 +167,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
             <div className="flex flex-wrap gap-2">
               {connector.repairable && !connector.modified ? (
                 <Button variant="outline" disabled={busy} onClick={() => void recover(connector)}>
-                  {t("terminalRecoverBinary")}
+                  {t("hook.replace")}
                 </Button>
               ) : (
                 (!connector.installed || connector.updateAvailable) && (
@@ -191,10 +191,10 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
                   >
                     {t(
                       connector.updateAvailable
-                        ? "terminalUpdate"
+                        ? "hook.update"
                         : connector.hookInstalled
-                          ? "terminalRepair"
-                          : "terminalInstall",
+                          ? "hook.repair"
+                          : "hook.install",
                     )}
                   </Button>
                 )
@@ -209,22 +209,22 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
                     )
                   }
                 >
-                  {t("terminalUninstall")}
+                  {t("hook.uninstall")}
                 </Button>
               )}
             </div>
           </li>
         ))}
       </ul>
-      <p className="mt-3 max-w-[65ch] text-xs text-muted-foreground">{t("terminalTrust")}</p>
+      <p className="mt-3 max-w-[65ch] text-xs text-muted-foreground">{t("hook.trust")}</p>
       {settings && (
         <div className="mt-6 space-y-5">
           <div className="flex items-start justify-between gap-5">
             <div className="space-y-1">
               <label htmlFor={`${id}-away`} className="text-sm font-medium">
-                {t("terminalAway")}
+                {t("settings.away")}
               </label>
-              <p className="max-w-[65ch] text-sm text-muted-foreground">{t("terminalAwayHint")}</p>
+              <p className="max-w-[65ch] text-sm text-muted-foreground">{t("settings.awayHint")}</p>
             </div>
             <Switch
               id={`${id}-away`}
@@ -235,21 +235,21 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
           </div>
           <div className="max-w-xs space-y-2">
             <label htmlFor={`${id}-wait`} className="text-sm font-medium">
-              {t("terminalWait")}
+              {t("settings.wait")}
             </label>
             <SelectField
               id={`${id}-wait`}
               value={String(settings.waitSeconds)}
               options={durations.map((seconds) => ({
                 value: String(seconds),
-                label: t("terminalWaitMinutes", { minutes: seconds / 60 }),
+                label: t("settings.minutes", { minutes: seconds / 60 }),
               }))}
               disabled={busy || unavailable}
               onValueChange={(value) => update({ waitSeconds: Number(value) })}
             />
           </div>
           {!projects.length && (
-            <p className="text-sm text-muted-foreground">{t("terminalNoProjects")}</p>
+            <p className="text-sm text-muted-foreground">{t("settings.noProjects")}</p>
           )}
           <div className="space-y-3">
             {projects.map((project) => (
@@ -266,7 +266,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
                   }
                 />
                 <span className="min-w-0 wrap-anywhere">
-                  {t("terminalProject", { name: project.name })}
+                  {t("settings.project", { name: project.name })}
                 </span>
               </label>
             ))}
@@ -287,13 +287,13 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
               )
             }
           >
-            {busy ? c("loading") : t("terminalSave")}
+            {busy ? c("loading") : t("settings.save")}
           </Button>
         </div>
       )}
       {saved && (
         <p role="status" className="mt-3 text-sm">
-          {t("terminalSaved")}
+          {t("settings.saved")}
         </p>
       )}
       {error && (
@@ -311,7 +311,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
               })
             }
           >
-            {t("terminalRefreshStatus")}
+            {t("hook.refresh")}
           </Button>
         </div>
       )}

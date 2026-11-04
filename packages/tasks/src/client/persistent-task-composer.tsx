@@ -9,13 +9,13 @@ import { createTaskDraft } from "../model/drafts.js";
 export function PersistentTaskComposer(props: ComponentProps<typeof TaskComposer>) {
   const editor = useTaskDrafts(JSON.stringify(["raypx.task-editor.v1", props.draftKey]));
   const c = useTranslations("common"),
-    t = useTranslations("tasks");
+    t = useTranslations("tasks.draft");
   if (!editor.ready) return <LoadingState label={c("loading")} />;
   return (
     <>
       {editor.failed && (
         <p role="alert" className="text-sm text-destructive-text">
-          {t("draftSaveFailed")}
+          {t("saveFailed")}
         </p>
       )}
       <TaskComposer

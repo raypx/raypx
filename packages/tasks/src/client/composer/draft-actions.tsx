@@ -6,6 +6,14 @@ import { SaveIcon } from "@raypx/icons/save";
 import { SendIcon } from "@raypx/icons/send";
 import type { ComposerDraftStatus } from "../../model/composer.js";
 
+const draftFeedback = {
+  draftSaved: "draft.saved",
+  draftSaveFailed: "draft.saveFailed",
+  draftCleanupFailed: "draft.cleanupFailed",
+  draftLimit: "draft.limit",
+  signInDraftFailed: "draft.signInFailed",
+} as const satisfies Record<ComposerDraftStatus, string>;
+
 /** New/save draft actions, Send and the draft storage notice. */
 export function ComposerDraftActions({
   busy,
@@ -39,7 +47,7 @@ export function ComposerDraftActions({
           <IconButton
             size="icon-sm"
             type="button"
-            label={t("newDraft")}
+            label={t("draft.new")}
             disabled={busy || empty}
             onClick={onNew}
           >
@@ -48,8 +56,8 @@ export function ComposerDraftActions({
           <IconButton
             size="icon-sm"
             type="button"
-            label={t("saveDraft")}
-            hint={t("draftDeviceOnly")}
+            label={t("draft.save")}
+            hint={t("draft.deviceOnly")}
             disabled={busy || !draftsReady || !prompted}
             onClick={onSave}
           >
@@ -70,7 +78,7 @@ export function ComposerDraftActions({
               : "text-xs text-destructive-text"
           }
         >
-          {t(status ?? "draftSaveFailed")}
+          {t(draftFeedback[status ?? "draftSaveFailed"])}
         </p>
       )}
     </>

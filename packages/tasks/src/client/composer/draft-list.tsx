@@ -31,9 +31,9 @@ export function ComposerDraftList({
   const t = useTranslations("tasks");
   if (!drafts.length) return null;
   return (
-    <Collapsible render={<section aria-label={t("drafts")} />}>
+    <Collapsible render={<section aria-label={t("draft.title")} />}>
       <CollapsibleTrigger
-        aria-label={t("drafts")}
+        aria-label={t("draft.title")}
         render={
           <Button
             type="button"
@@ -44,7 +44,7 @@ export function ComposerDraftList({
         }
       >
         <FileEditIcon aria-hidden="true" />
-        {t("drafts")}
+        {t("draft.title")}
         <span className="text-xs tabular-nums">{drafts.length}</span>
         <ChevronDownIcon aria-hidden="true" className="ml-auto group-data-panel-open:rotate-180" />
       </CollapsibleTrigger>
@@ -76,7 +76,7 @@ export function ComposerDraftList({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={t("deleteDraft", { name: draft.prompt.slice(0, 80) })}
+                aria-label={t("draft.delete", { name: draft.prompt.slice(0, 80) })}
                 disabled={busy}
                 onClick={() => onDelete(draft.id)}
               >

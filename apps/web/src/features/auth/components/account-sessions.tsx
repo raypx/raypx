@@ -20,10 +20,10 @@ import type { authClient } from "../client";
 type Client = Pick<typeof authClient, "listSessions" | "revokeSession" | "revokeOtherSessions">;
 type Session = NonNullable<Awaited<ReturnType<Client["listSessions"]>>["data"]>[number];
 function sessionFailure(error: { code?: string | undefined; status?: number | undefined }) {
-  if (error.code === "SESSION_NOT_FRESH") return "sessionReauth" as const;
-  if (error.status === 401 || error.code === "UNAUTHORIZED") return "sessionUnauthorized" as const;
+  if (error.code === "SESSION_NOT_FRESH") return "reauth" as const;
+  if (error.status === 401 || error.code === "UNAUTHORIZED") return "expired" as const;
   if (error.status === 403 || error.code === "FORBIDDEN" || error.code === "INVALID_ORIGIN")
-    return "sessionForbidden" as const;
+    return "forbidden" as const;
   return "network" as const;
 }
 
@@ -56,7 +56,7 @@ export function AccountSessions({
   client: Client;
   currentSessionId: string;
 }) {
-  const t = useTranslations("auth");
+  const t = useTranslations("auth.sessions");
   const c = useTranslations("common");
   const format = useFormatter();
   const [sessions, setSessions] = useState<Session[]>();
@@ -76,7 +76,7 @@ export function AccountSessions({
         if (response.error || !response.data) {
           const failure = response.error ? sessionFailure(response.error) : "network";
           setError(failure);
-          if (failure === "sessionUnauthorized") setSessions(undefined);
+          if (failure === "expired") setSessions(undefined);
           return;
         }
         setSessions(
@@ -102,7 +102,7 @@ export function AccountSessions({
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <ShieldCheckIcon aria-hidden="true" className="size-4 text-muted-foreground" />
           <h2 id="account-sessions-title" className="text-sm font-medium">
-            {t("sessionsTitle")}
+            {t("title")}
           </h2>
           {sessions && <Badge variant="outline">{sessions.length}</Badge>}
         </div>
@@ -123,13 +123,13 @@ export function AccountSessions({
           />
         </IconButton>
       </div>
-      <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("sessionsHint")}</p>
+      <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("hint")}</p>
       {error && (
         <Alert variant="destructive" className="mt-4">
           <AlertCircleIcon aria-hidden="true" />
           <AlertDescription>
             {error === "network" ? c("networkError") : t(error)}
-            {error === "sessionUnauthorized" && (
+            {error === "expired" && (
               <a className="ml-2 underline" href="/login">
                 {c("signIn")}
               </a>
@@ -139,11 +139,7 @@ export function AccountSessions({
       )}
       {!sessions && loading && <LoadingState label={c("loading")} />}
       {sessions?.length === 0 && (
-        <EmptyState
-          title={t("sessionsEmpty")}
-          icon={<MonitorIcon aria-hidden="true" />}
-          className="py-8"
-        />
+        <EmptyState title={t("empty")} icon={<MonitorIcon aria-hidden="true" />} className="py-8" />
       )}
       <ul className="mt-5 flex flex-col gap-3">
         {sessions?.map((session) => (
@@ -157,22 +153,22 @@ export function AccountSessions({
             <div className="min-w-0 flex-1 basis-40">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-medium">
-                  {sessionLabel(session.userAgent) ?? t("unknownSession")}
+                  {sessionLabel(session.userAgent) ?? t("unknown")}
                 </h3>
                 {session.id === currentSessionId && (
-                  <StatusBadge label={t("currentSession")} tone="success" />
+                  <StatusBadge label={t("current")} tone="success" />
                 )}
               </div>
               <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
                 <ClockIcon aria-hidden="true" className="size-3.5 shrink-0" />
                 <span>
-                  {t("sessionCreated", {
+                  {t("created", {
                     date: format.dateTime(new Date(session.createdAt), "timestamp"),
                   })}
                 </span>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("sessionExpires", {
+                {t("expires", {
                   date: format.dateTime(new Date(session.expiresAt), "timestamp"),
                 })}
               </p>
@@ -185,9 +181,9 @@ export function AccountSessions({
             </div>
             {session.id !== currentSessionId && (
               <RevokeSession
-                title={t("revokeSession")}
-                description={t("revokeSessionHint")}
-                label={sessionLabel(session.userAgent) ?? t("unknownSession")}
+                title={t("revoke")}
+                description={t("revokeHint")}
+                label={sessionLabel(session.userAgent) ?? t("unknown")}
                 revoke={() =>
                   client.revokeSession({
                     token: session.token,
@@ -207,8 +203,8 @@ export function AccountSessions({
       {others.length > 0 && (
         <div className="mt-5 flex flex-wrap justify-end border-t border-border pt-5">
           <RevokeSession
-            title={t("revokeOtherSessions")}
-            description={t("revokeOtherSessionsHint")}
+            title={t("revokeOthers")}
+            description={t("revokeOthersHint")}
             revoke={() =>
               client.revokeOtherSessions({ fetchOptions: { signal: AbortSignal.timeout(15_000) } })
             }
@@ -239,7 +235,7 @@ function RevokeSession({
   revoke: () => Promise<{ error?: { code?: string | undefined } | null | undefined }>;
   onRevoked: () => void;
 }) {
-  const t = useTranslations("auth");
+  const t = useTranslations("auth.sessions");
   const c = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);

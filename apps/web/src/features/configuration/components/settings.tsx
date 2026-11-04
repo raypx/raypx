@@ -11,7 +11,7 @@ const row =
   "grid items-start gap-4 border-b border-border py-6 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] @xl/main:items-center @xl/main:gap-8";
 
 export function ConfigurationSettings() {
-  const t = useTranslations("configuration");
+  const t = useTranslations("site");
   const session = authClient.useSession();
   const accountId = session.data?.user.id ?? null;
   const query = useQuery({
@@ -93,7 +93,7 @@ export function ConfigurationForm({
   configuration: Configuration;
   accountId: string;
 }) {
-  const t = useTranslations("configuration");
+  const t = useTranslations("site");
   const client = useQueryClient();
   const [saved, setSaved] = useState(configuration);
   const [values, setValues] = useState(configuration.values);

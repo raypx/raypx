@@ -75,7 +75,7 @@ function SignedInTasks({ accountId }: { accountId: string }) {
     return (
       <>
         {resume.draft && (
-          <p className="mb-5 text-sm text-muted-foreground">{t("chooseProjectForDraft")}</p>
+          <p className="mb-5 text-sm text-muted-foreground">{t("draft.chooseProject")}</p>
         )}
         <ProjectList
           client={reportedClient}

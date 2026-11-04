@@ -61,7 +61,7 @@ export function AdminShell() {
       icon: <AdjustmentsIcon />,
     },
     { to: "/admin/users", label: c("users"), icon: <UserCircleIcon /> },
-    { to: "/admin/settings", label: t("configuration.title"), icon: <AdjustmentsIcon /> },
+    { to: "/admin/settings", label: t("site.title"), icon: <AdjustmentsIcon /> },
     { to: "/admin/audit", label: t("dash.nav.audit"), icon: <BookOpenIcon /> },
   ];
   return (

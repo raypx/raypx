@@ -12,7 +12,7 @@ export const Route = createFileRoute("/(auth)/signup")({
 function SignupPage() {
   const search = Route.useSearch();
   const query = useQuery(publicConfigurationQuery());
-  const t = useTranslations("configuration");
+  const t = useTranslations("site");
   if (query.data?.registrationEnabled) return <AuthForm mode="signup" />;
   return (
     <section className="mx-auto max-w-lg space-y-5 px-6 py-16">

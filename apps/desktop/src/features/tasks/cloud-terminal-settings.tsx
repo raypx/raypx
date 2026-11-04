@@ -15,7 +15,7 @@ export function CloudTerminalSettings({
   projects: DeviceProject[];
   supported?: boolean;
 }) {
-  const t = useTranslations("tasks"),
+  const t = useTranslations("terminal"),
     id = useId();
   const [value, setValue] = useState<{ enabled: boolean; rootIds: string[] }>();
   const [localRoots, setLocalRoots] = useState<string[]>([]);
@@ -73,18 +73,18 @@ export function CloudTerminalSettings({
   return (
     <section className="mt-6 space-y-4" aria-labelledby={id}>
       <h4 id={id} className="text-sm font-medium">
-        {t("terminalCloud")}
+        {t("settings.cloud")}
       </h4>
-      <p className="max-w-[65ch] text-sm text-muted-foreground">{t("terminalCloudHint")}</p>
+      <p className="max-w-[65ch] text-sm text-muted-foreground">{t("settings.cloudHint")}</p>
       {!supported && (
         <p role="status" className="text-sm text-muted-foreground">
-          {t("terminalServerUpgrade")}
+          {t("settings.upgrade")}
         </p>
       )}
       {value && (
         <>
           <label className="flex items-center justify-between gap-4 text-sm">
-            {t("terminalCloud")}
+            {t("settings.cloud")}
             <Switch
               checked={value.enabled}
               disabled={busy || !supported}
@@ -127,13 +127,13 @@ export function CloudTerminalSettings({
                 .finally(() => setBusy(false));
             }}
           >
-            {t("terminalSave")}
+            {t("settings.save")}
           </Button>
         </>
       )}
       {error && (
         <p role="alert" className="text-sm text-destructive-text">
-          {t("terminalActionFailed")}
+          {t("settings.failed")}
         </p>
       )}
     </section>

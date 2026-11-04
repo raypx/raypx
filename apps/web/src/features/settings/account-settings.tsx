@@ -75,7 +75,7 @@ export function AccountSettingsPanel({ children }: { children: ReactNode }) {
       { value: "preferences", label: s("device"), icon: SettingsIcon },
       { value: "diagnostics", label: a("title"), icon: ShieldCheckIcon },
       { value: "password", label: t("changePassword"), icon: LockIcon },
-      { value: "sessions", label: t("sessionsTitle"), icon: ShieldCheckIcon },
+      { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
       { value: "instances", label: i("instances"), icon: MonitorIcon },
     ] as const
   ).map((item) => ({ ...item, keywords: s(`searchKeywords.${item.value}`) }));

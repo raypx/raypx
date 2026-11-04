@@ -7,7 +7,7 @@ import { onLocalEvent } from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 
 export function TerminalRequestNotice({ accountId }: { accountId: string | null }) {
-  const t = useTranslations("tasks"),
+  const t = useTranslations("terminal.approval"),
     router = useRouter(),
     queries = useQueryClient();
   const { data } = useQuery({
@@ -34,12 +34,12 @@ export function TerminalRequestNotice({ accountId }: { accountId: string | null 
       role="status"
       className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted px-8 py-3 @max-2xl/main:px-5"
     >
-      <p className="text-sm">{t("terminalPendingNotice", { count: data })}</p>
+      <p className="text-sm">{t("notice", { count: data })}</p>
       <Button
         size="sm"
         onClick={() => void router.navigate({ to: "/approvals", search: { scope: "local" } })}
       >
-        {t("reviewRequests")}
+        {t("review")}
       </Button>
     </div>
   );

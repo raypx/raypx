@@ -28,7 +28,7 @@ export function actionErrorKey(error: AuthActionError) {
     case "invalidName":
     case "passwordLong":
     case "passwordUnavailable":
-    case "sessionUnauthorized":
+    case "sessions.expired":
       return "common.error";
   }
 }

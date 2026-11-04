@@ -12,7 +12,7 @@ export type AuthErrorKey =
   | "invalidName"
   | "currentPasswordInvalid"
   | "passwordUnavailable"
-  | "sessionUnauthorized"
+  | "sessions.expired"
   | "rateLimited"
   | "invalidLink"
   | "generic";
@@ -94,7 +94,7 @@ function authErrorKey({ code, status }: NonNullable<AuthActionResponse["error"]>
   if (code === "INVALID_NAME") return "invalidName";
   if (code === "CURRENT_PASSWORD_INVALID") return "currentPasswordInvalid";
   if (code === "CREDENTIAL_ACCOUNT_NOT_FOUND") return "passwordUnavailable";
-  if (code === "UNAUTHORIZED" || code === "SESSION_EXPIRED") return "sessionUnauthorized";
+  if (code === "UNAUTHORIZED" || code === "SESSION_EXPIRED") return "sessions.expired";
   if (code === "INVALID_TOKEN" || code === "TOKEN_EXPIRED") return "invalidLink";
   return "generic";
 }

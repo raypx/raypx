@@ -7,7 +7,7 @@ import { ConfigurationSettings } from "../../../features/configuration/component
 export const Route = createFileRoute("/(admin)/admin/settings")({
   beforeLoad: webPageGuard("/admin/settings"),
   errorComponent: PageAccessFeedback,
-  staticData: { page: { title: "configuration.title", layout: "document" } },
+  staticData: { page: { title: "site.title", layout: "document" } },
   component: Page,
 });
 function Page() {
