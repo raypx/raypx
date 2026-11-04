@@ -111,6 +111,7 @@ Reviewed, redacted recordings are under `tests/fixtures/terminal/recorded` and r
 without credentials in the default suite. Never commit the private raw captures.
 
 `eval:agents` previews policy Evals (`--run` enables paid calls); `perf:tasks` checks snapshots. See docs/development/agent-quality.md.
+Snapshot suites stay in `tests/integration/runtime/agents/`: they exercise real SQLite queries, WAL transactions and runtime pagination. `tests/helpers/agent-snapshot.ts` owns their shared fixtures; pure domain tests stay beside source.
 
 ## Agent host
 
