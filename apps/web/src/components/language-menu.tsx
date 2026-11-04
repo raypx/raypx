@@ -33,7 +33,7 @@ export function LanguageMenu() {
       <DropdownMenuTrigger render={<IconButton label={t("language")} />}>
         <GlobalIcon aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" aria-label={t("language")} className="w-44">
+      <DropdownMenuContent align="end" sideOffset={24} aria-label={t("language")} className="w-44">
         <DropdownMenuRadioGroup
           value={preference}
           onValueChange={(value) => setPreference(parseLocalePreference(value))}

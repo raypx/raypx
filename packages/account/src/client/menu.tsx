@@ -99,7 +99,7 @@ export function AccountMenu({
       <DropdownMenuContent
         side={variant === "header" ? "bottom" : "top"}
         align={variant === "header" ? "end" : "start"}
-        sideOffset={8}
+        sideOffset={variant === "header" ? 20 : 8}
         aria-label={c("accountMenu")}
         className="w-72 max-w-[calc(100vw-1.5rem)] [&_[data-slot=dropdown-menu-item]]:min-h-10 [&_[data-slot=dropdown-menu-item]]:gap-2.5 [&_[data-slot=dropdown-menu-item]]:px-2.5 [&_[data-slot=dropdown-menu-item]>svg]:text-muted-foreground [&_[data-slot=dropdown-menu-item]>svg]:stroke-[1.75] motion-reduce:animate-none"
       >
