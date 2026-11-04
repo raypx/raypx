@@ -784,9 +784,9 @@ try {
   } else throw new Error("Unknown native smoke phase");
   if (!presentation.activate)
     assert.equal(
-      (await nativeWindow.state()).focuses,
+      (await nativeWindow.state()).activations,
       0,
-      "Quiet smoke activated the native window",
+      "Quiet smoke activated the native application",
     );
   console.info(
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,

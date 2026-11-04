@@ -7,11 +7,15 @@ const endpoint = process.env.RAYPX_NATIVE_SMOKE_SOCKET;
 const token = process.env.RAYPX_NATIVE_SMOKE_TOKEN;
 if (!endpoint || !token) throw new Error("Native smoke endpoint is missing");
 const driver = await connectSmoke(endpoint, token);
-/** Read on demand; `focuses` counts native focus events since smoke started. */
+/**
+ * Read on demand. `focuses` counts native focus events; `activations` counts the
+ * application becoming active (macOS) or its window taking the foreground (Windows).
+ */
 export type WindowState = {
   visible: boolean;
   focused: boolean;
   focuses: number;
+  activations: number;
   minimized: boolean;
   width: number;
   height: number;

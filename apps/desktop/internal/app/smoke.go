@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -46,9 +47,15 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, act
 		return err
 	}
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { listener.Close() })
-	// Count native focus events so quiet runs can prove they never activated the window.
-	var focuses atomic.Int64
+	// Interactive runs wait for focus; quiet runs prove no activation. A background
+	// macOS app can make its window key without activating, so count the app there.
+	var focuses, activations atomic.Int64
 	window.OnFocus(func() { focuses.Add(1) })
+	if runtime.GOOS == "darwin" {
+		mygo.App.OnDidBecomeActive(func() { activations.Add(1) })
+	} else {
+		window.OnFocus(func() { activations.Add(1) })
+	}
 	permits := make(chan struct{}, 4)
 	go func() {
 		for {
@@ -105,7 +112,7 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, act
 							if tray != nil {
 								bounds = tray.Bounds()
 							}
-							return host.JSON{"visible": window.IsVisible(), "focused": window.IsFocused(), "focuses": focuses.Load(), "minimized": window.IsMinimized(), "width": size.Width, "height": size.Height, "trayVisible": desktop.Tray.Load(), "trayBounds": host.JSON{"width": bounds.Width, "height": bounds.Height}}, nil
+							return host.JSON{"visible": window.IsVisible(), "focused": window.IsFocused(), "focuses": focuses.Load(), "activations": activations.Load(), "minimized": window.IsMinimized(), "width": size.Width, "height": size.Height, "trayVisible": desktop.Tray.Load(), "trayBounds": host.JSON{"width": bounds.Width, "height": bounds.Height}}, nil
 						case "tray":
 							// The tray menu's own actions: show, hide, pending and quit.
 							name, _ := input["action"].(string)
