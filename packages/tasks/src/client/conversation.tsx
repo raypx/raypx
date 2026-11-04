@@ -49,6 +49,7 @@ function ConversationViewport({
   const viewport = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
   const anchor = useRef<{ id: string; offset: number } | undefined>(undefined);
+  const anchorPadding = useRef(0);
   const [full, setFull] = useState(false);
   const [focused, setFocused] = useState<string | undefined>(undefined);
   const rows = useMemo(() => {
@@ -84,6 +85,7 @@ function ConversationViewport({
     overscan: 6,
     rangeExtractor,
     useFlushSync: false,
+    scrollPaddingStart: anchorPadding.current,
     // The initial estimate also gives prerendered and temporarily hidden regions content.
     initialRect: { width: 480, height: 480 },
   });
@@ -131,17 +133,20 @@ function ConversationViewport({
               saved.offset;
           }
         } else {
-          const offset = virtualizer.getOffsetForIndex(index, "start");
-          if (offset) {
-            const content = node.firstElementChild as HTMLElement;
-            // offsetTop belongs to the offset parent, which may be outside this viewport.
-            const contentStart =
-              content.getBoundingClientRect().top -
-              node.getBoundingClientRect().top -
-              node.clientTop +
-              node.scrollTop;
-            virtualizer.scrollToOffset(offset[0] + contentStart - saved.offset);
-          }
+          const content = node.firstElementChild as HTMLElement;
+          // An index target follows pending row measurements; an absolute
+          // offset would discard corrections before its scroll event arrives.
+          const contentStart =
+            content.getBoundingClientRect().top -
+            node.getBoundingClientRect().top -
+            node.clientTop +
+            node.scrollTop;
+          anchorPadding.current = saved.offset - contentStart;
+          virtualizer.setOptions({
+            ...virtualizer.options,
+            scrollPaddingStart: anchorPadding.current,
+          });
+          virtualizer.scrollToIndex(index, { align: "start" });
         }
       }
     }

@@ -74,8 +74,10 @@ when history or Markdown heights change. Loaded history is never evicted. The
 explicit full-text mode mounts all loaded rows for selection/browser search, keeps
 manual older/gap paging and the reading position, and resets on task change.
 `perf:tasks` exercises a deterministic 10,000-entry tail-update workload; the
-Chromium `long conversation` fixtures check the 720px viewport/80-row DOM bound,
-focus, loaded full text and prepend/mode-switch reading positions.
+Chromium conversation fixtures load at most 200 messages in total and check the
+720px viewport/80-row DOM bound, focus, loaded full text and prepend/mode-switch
+reading positions under fourfold CPU throttling. Virtual reading restoration uses
+an index target with the saved row offset so pending measurements retarget it.
 Markdown must skip raw HTML and remote images. Recognized edit approvals have a
 bounded Diff plus the complete original request. In-flight controls depend on the
 host's advertised inputModes; explain Claude interrupt versus Codex current-turn

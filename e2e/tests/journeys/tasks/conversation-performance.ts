@@ -76,10 +76,12 @@ async function expectReadingPosition(
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {
   test(
-    `long conversation keeps virtual rows bounded and loaded full text reachable`,
+    `conversation keeps virtual rows bounded and loaded full text reachable`,
     { tag: "@performance" },
     async ({ page, surface, base }) => {
-      test.setTimeout(120_000);
+      // Keep the regression sensitive to delayed measurement on slower CI hosts.
+      const session = await page.context().newCDPSession(page);
+      await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
       if (surface === "Web") await webShellFixture(page);
       await signedInAccount(page);
       const now = new Date().toISOString();
@@ -89,7 +91,7 @@ export function registerTests() {
         projectId: crypto.randomUUID(),
         provider: "codex",
         mode: "run",
-        prompt: "Long conversation performance fixture",
+        prompt: "Conversation reading fixture",
         status: "running",
         summary: "",
         parentTaskId: null,
@@ -114,13 +116,19 @@ export function registerTests() {
         createdAt: now,
         updatedAt: now,
       });
-      const loaded = Array.from({ length: 10_000 }, (_, index) => makeEntry(index + 101));
-      const older = Array.from({ length: 100 }, (_, index) => makeEntry(index + 1));
+      // The complete journey loads at most 200 messages, including history/gaps.
+      const loaded = Array.from({ length: 100 }, (_, index) => makeEntry(index + 51));
+      const older = Array.from({ length: 50 }, (_, index) => makeEntry(index + 1));
       let historicalReads = 0;
       let latest = loaded;
-      let latestBefore = 101;
-      const missing = Array.from({ length: 99 }, (_, index) => makeEntry(10101 + index));
-      const evidence: Record<string, number | null> = { fixtureRows: 10_000, viewportHeight: 720 };
+      let latestBefore = 51;
+      const missing = Array.from({ length: 49 }, (_, index) => makeEntry(151 + index));
+      const evidence: Record<string, number | null> = {
+        fixtureRows: 100,
+        maxFixtureRows: 200,
+        cpuThrottlingRate: 4,
+        viewportHeight: 720,
+      };
       const started = performance.now();
       await page.route("**/rpc/tasks/list", (route) =>
         authResponse(route, { json: [task, second] }),
@@ -136,7 +144,7 @@ export function registerTests() {
         return authResponse(route, {
           json: {
             task,
-            activity: historical ? (input.beforeActivity === 10200 ? missing : older) : latest,
+            activity: historical ? (input.beforeActivity === 200 ? missing : older) : latest,
             events: [],
             requests: [],
             ...(historical ? {} : { activityBefore: latestBefore }),
@@ -153,7 +161,7 @@ export function registerTests() {
             project: task.projectId,
           }),
       );
-      await page.getByRole("button", { name: /Long conversation performance fixture/ }).click();
+      await page.getByRole("button", { name: /Conversation reading fixture/ }).click();
       const viewport = page.locator("[data-conversation]");
       await expect(viewport).toHaveAttribute("data-conversation-mode", "virtual");
       // Acceptance is a fixed 720px scroll viewport, independent of the app shell's size.
@@ -175,9 +183,7 @@ export function registerTests() {
         sample();
         new MutationObserver(sample).observe(element, { childList: true, subtree: true });
       });
-      await expect(
-        viewport.getByText("Conversation message 10100.", { exact: false }),
-      ).toBeVisible();
+      await expect(viewport.getByText("Conversation message 150.", { exact: false })).toBeVisible();
       evidence.loadMs = performance.now() - started;
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
       await viewport.evaluate((element) => {
@@ -203,7 +209,7 @@ export function registerTests() {
       const link = viewport.locator(`a[href="${href}"]`);
       await link.evaluate((element) => element.focus({ preventScroll: true }));
       await viewport.evaluate((element) => {
-        element.scrollTop += 3000;
+        element.scrollTop += element.clientHeight * 2;
       });
       await expect(link).toBeFocused();
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
@@ -239,13 +245,11 @@ export function registerTests() {
       const fullStarted = performance.now();
       await page.getByRole("button", { name: "Show all loaded messages", exact: true }).click();
       await expect(viewport).toHaveAttribute("data-conversation-mode", "full");
-      await expect(rows).toHaveCount(10_001);
+      await expect(rows).toHaveCount(101);
       evidence.fullModeMs = performance.now() - fullStarted;
       expect(historicalReads).toBe(0);
       await expectReadingPosition(viewport, saved);
-      await expect(viewport.getByText("Conversation message 101.", { exact: false })).toHaveCount(
-        1,
-      );
+      await expect(viewport.getByText("Conversation message 51.", { exact: false })).toHaveCount(1);
       // Revising an earlier message changes the measured height above the reader.
       const first = loaded[0]!;
       if (first.kind === "message")
@@ -262,19 +266,25 @@ export function registerTests() {
       await expectReadingPosition(viewport, saved);
       evidence.virtualModeMs = performance.now() - virtualStarted;
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      await viewport.evaluate((element) => {
-        element.scrollTop = 0;
+      await test.step("preserves the reading position after loading earlier messages", async () => {
+        await viewport.evaluate((element) => {
+          element.scrollTop = 0;
+        });
+        const earlier = viewport.getByRole("button", {
+          name: "Load earlier messages",
+          exact: true,
+        });
+        await expect(earlier).toBeVisible();
+        const beforePrepend = await settledReadingPosition(viewport);
+        await earlier.click();
+        await expect.poll(() => historicalReads).toBe(1);
+        await settledReadingPosition(viewport);
+        await expectReadingPosition(viewport, beforePrepend);
       });
-      const earlier = viewport.getByRole("button", { name: "Load earlier messages", exact: true });
-      await expect(earlier).toBeVisible();
-      const beforePrepend = await settledReadingPosition(viewport);
-      await earlier.click();
-      await expect.poll(() => historicalReads).toBe(1);
-      await expectReadingPosition(viewport, beforePrepend);
       await page.getByRole("button", { name: "Show all loaded messages", exact: true }).click();
-      await expect(rows).toHaveCount(10_101);
-      latest = [makeEntry(10200)];
-      latestBefore = 10200;
+      await expect(rows).toHaveCount(151);
+      latest = [makeEntry(200)];
+      latestBefore = 200;
       await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
       const gap = viewport.getByRole("button", {
         name: "Some messages are missing here. Load the missing history.",
@@ -292,8 +302,9 @@ export function registerTests() {
       const beforeGap = await settledReadingPosition(viewport);
       await gap.click();
       await expect(gap).toHaveCount(0);
+      await settledReadingPosition(viewport);
       await expectReadingPosition(viewport, beforeGap);
-      await expect(rows).toHaveCount(10_201);
+      await expect(rows).toHaveCount(201);
       evidence.peakVirtualRows = Number(await viewport.getAttribute("data-peak-virtual-rows"));
       expect(evidence.peakVirtualRows).toBeGreaterThan(0);
       expect(evidence.peakVirtualRows).toBeLessThanOrEqual(80);

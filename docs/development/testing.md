@@ -231,6 +231,12 @@ CI defaults to two workers. Local hosts with at least twelve available CPUs and
 hosts use one or two. Explicit `--workers` wins. Every case keeps its own browser
 context, account and response fixtures.
 
+The conversation browser journey loads at most 200 messages in total: 100 initial
+messages, 50 older messages, 49 gap messages and one new message. Fourfold Chromium
+CPU throttling makes delayed virtual-row measurements observable with this bounded
+fixture. It retains focus, virtual/full-text switching, revision, prepend and gap
+checks, including reading-position drift below 3px after layout settles.
+
 Web's cached `build:e2e` uses the production Nitro Bun build command. It omits the
 normal build's type-check prerequisite; `apps/web check` and `bun run verify` still
 check both application and E2E sources. Desktop uses its cached `build:renderer`
