@@ -21,10 +21,9 @@ const localeIcons = { en: TextSizeIcon, zh: LanguagesIcon };
 
 export function LanguageMenu() {
   const t = useTranslations("settings");
-  const c = useTranslations("common");
   const { preference, setPreference } = useLanguagePreference();
   const items = [
-    { value: "system", label: c("system"), icon: MonitorIcon },
+    { value: "system", label: t("system"), icon: MonitorIcon },
     ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({
       value,
       label: nativeName,
@@ -66,13 +65,12 @@ const themes = {
 
 export function ThemeToggle() {
   const t = useTranslations("settings");
-  const c = useTranslations("common");
   const { theme, setTheme } = useTheme();
   const { icon: Icon, next } = themes[theme];
   return (
     <IconButton
-      label={`${t("appearance")}: ${c(theme)}`}
-      hint={`${c(theme)} → ${c(next)}`}
+      label={t("appearanceLabel", { theme: t(theme) })}
+      hint={t("appearanceHint", { current: t(theme), next: t(next) })}
       onClick={() => setTheme(next)}
     >
       <Icon aria-hidden="true" />

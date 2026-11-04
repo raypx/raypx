@@ -75,12 +75,11 @@ export function SettingsSection({
 /** Device theme preference; requires the UI ThemeProvider. */
 export function AppearanceSettings() {
   const t = useTranslations("settings");
-  const c = useTranslations("common");
   return (
     <SettingsSection title={t("appearance")} icon={PaletteIcon}>
       <ThemePicker
         label={t("appearance")}
-        labels={{ light: c("light"), dark: c("dark"), system: c("system") }}
+        labels={{ light: t("light"), dark: t("dark"), system: t("system") }}
       />
     </SettingsSection>
   );
@@ -89,10 +88,9 @@ export function AppearanceSettings() {
 /** Device language preference; requires the i18n browser language provider. */
 export function LanguageSettings() {
   const t = useTranslations("settings");
-  const c = useTranslations("common");
   const { preference, setPreference } = useLanguagePreference();
   const items = [
-    { value: "system", label: c("system") },
+    { value: "system", label: t("system") },
     ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({ value, label: nativeName })),
   ];
   return (
