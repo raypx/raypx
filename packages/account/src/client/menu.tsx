@@ -4,6 +4,7 @@ import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { LoginIcon } from "@raypx/icons/login";
 import { LogoutIcon } from "@raypx/icons/logout";
 import { Avatar } from "@raypx/ui/avatar";
+import { Button } from "@raypx/ui/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,24 +45,38 @@ export function AccountMenu({
   async function signOut() {
     if (await onSignOut()) setOpen(false);
   }
+  const SignInButton = variant === "header" ? Button : "button";
   // Guests get a direct sign-in action; the menu only manages an existing account.
   if (!user)
     return (
       <Tooltip>
         <TooltipTrigger
           render={
-            <button
+            <SignInButton
               type="button"
               aria-label={c(pending ? "loading" : "signIn")}
               aria-busy={pending || busy}
               disabled={pending || busy}
               onClick={() => onNavigate("login")}
-              className="flex min-h-10 w-full items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 text-left text-[13px] font-medium text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 motion-reduce:transition-none sidebar-icon:size-10 sidebar-icon:justify-center sidebar-icon:border-transparent sidebar-icon:bg-transparent sidebar-icon:px-0"
+              className={cn(
+                "motion-reduce:transition-none",
+                variant === "sidebar" &&
+                  "flex min-h-10 w-full items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 text-left text-[13px] font-medium text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 sidebar-icon:size-10 sidebar-icon:justify-center sidebar-icon:border-transparent sidebar-icon:bg-transparent sidebar-icon:px-0",
+              )}
             />
           }
         >
-          <LoginIcon aria-hidden="true" className="size-4.5 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate sidebar-icon:hidden">
+          <LoginIcon
+            aria-hidden="true"
+            data-icon="inline-start"
+            className={cn(variant === "sidebar" && "size-4.5 shrink-0 text-muted-foreground")}
+          />
+          <span
+            className={cn(
+              "min-w-0 truncate",
+              variant === "sidebar" && "flex-1 sidebar-icon:hidden",
+            )}
+          >
             {c(pending ? "loading" : "signIn")}
           </span>
         </TooltipTrigger>

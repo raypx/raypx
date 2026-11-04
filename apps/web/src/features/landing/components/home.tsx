@@ -47,7 +47,7 @@ export function LandingHome() {
           <div className="flex max-w-lg flex-col gap-4">
             <h1
               id="landing-home-title"
-              className="max-w-[15ch] bg-linear-to-br from-foreground from-40% to-foreground/55 bg-clip-text pb-1 text-4xl leading-[1.1] font-semibold tracking-tight text-balance text-transparent @xl/main:text-5xl"
+              className="max-w-[15ch] bg-linear-to-br from-foreground from-40% to-foreground/55 bg-clip-text pb-1 text-3xl leading-tight font-semibold tracking-tight text-balance text-transparent @xl/main:text-4xl"
             >
               {t("title")}
             </h1>
@@ -121,7 +121,7 @@ export function LandingHome() {
                 <Icon aria-hidden="true" className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{t(key)}</span>
+                <span className="block text-base leading-snug font-medium">{t(key)}</span>
                 <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
                   {t(key === "approvals" && !signedOut ? "approvalsHintSignedIn" : `${key}Hint`)}
                 </span>
