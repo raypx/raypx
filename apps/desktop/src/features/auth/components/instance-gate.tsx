@@ -3,13 +3,22 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { createApiClient } from "@raypx/client/api";
-import { Button } from "@raypx/ui/components/ui/button";
+import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useDesktopPlatform } from "../../../lib/platform-context";
 import { apiUrl, webUrl, authClient, desktopFetch } from "../client";
 import { signOutDesktopHost } from "../../tasks/host-session";
 import { analytics } from "../../analytics/client";
+
+function gateMessage(mismatch: boolean, state: string | undefined, checkFailed: boolean) {
+  if (mismatch) return "mismatch";
+  if (state === "revoked") return "revoked";
+  if (checkFailed) return "statusCheckFailed";
+  if (state === "unregistered") return "intro";
+  return "unavailable";
+}
+
 export function InstanceGate({ children }: { children: ReactNode }) {
   const platform = useDesktopPlatform();
   const { localRequest, isDesktop } = platform;
@@ -54,6 +63,7 @@ export function InstanceGate({ children }: { children: ReactNode }) {
       (!session.error && session.data && binding.accountId !== session.data.user.id));
   if (status.data?.state === "registered" && !mismatch) return children;
   const canBind = status.data?.state === "unregistered";
+  const sessionKnown = !session.isPending && !session.error;
   async function recover(signIn: boolean) {
     setFailed(false);
     const complete = async () => {
@@ -93,15 +103,7 @@ export function InstanceGate({ children }: { children: ReactNode }) {
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-16">
       <h1>{t("title")}</h1>
-      <p>
-        {mismatch
-          ? t("mismatch")
-          : status.data?.state === "revoked"
-            ? t("revoked")
-            : canBind
-              ? t("intro")
-              : t("unavailable")}
-      </p>
+      <p>{t(gateMessage(Boolean(mismatch), status.data?.state, status.isError))}</p>
       {binding && binding.origin !== apiUrl && (
         <p>{t("originMismatch", { origin: binding.origin })}</p>
       )}
@@ -119,16 +121,26 @@ export function InstanceGate({ children }: { children: ReactNode }) {
           )}
         </>
       )}
-      {canBind && session.data && !session.error && !session.isPending ? (
-        <Button disabled={busy} onClick={() => void register()}>
-          {t("bind")}
+      {canBind &&
+        sessionKnown &&
+        (session.data ? (
+          <Button disabled={busy} onClick={() => void register()}>
+            {t("bind")}
+          </Button>
+        ) : (
+          <Link to="/login" className={buttonVariants()}>
+            {c("signIn")}
+          </Link>
+        ))}
+      {status.isError && (
+        <Button
+          variant="outline"
+          disabled={busy || status.isFetching}
+          onClick={() => void refetch()}
+        >
+          {c("retry")}
         </Button>
-      ) : canBind && !session.data && !session.error && !session.isPending ? (
-        <Link to="/login">{c("signIn")}</Link>
-      ) : null}
-      <Button variant="outline" disabled={busy} onClick={() => void status.refetch()}>
-        {c("retry")}
-      </Button>
+      )}
       {failed && <p role="alert">{t("error")}</p>}
     </main>
   );

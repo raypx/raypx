@@ -51,6 +51,10 @@ func Run(bundled fs.FS) error {
 		return err
 	}
 	mygo.App.SetName("Raypx")
+	// MyGo activates regular apps at launch; quiet smoke must never take the foreground.
+	if !interactive() {
+		mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
+	}
 	mygo.App.SetPath(mygo.PathUserData, filepath.Join(directory, "webview", config.Scope))
 	mygo.App.SetPath(mygo.PathCache, filepath.Join(directory, "cache", config.Scope))
 	binary, err := cliBinary()

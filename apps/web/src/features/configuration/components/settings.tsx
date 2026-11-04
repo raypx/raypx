@@ -22,13 +22,9 @@ export function ConfigurationSettings() {
     // Background reads must not replace an administrator's unsaved form.
     refetchOnWindowFocus: false,
   });
-  return (
-    <section>
-      <header className="mb-8">
-        <h1>{t("title")}</h1>
-        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
-      </header>
-      {session.error ? (
+  function content() {
+    if (session.error)
+      return (
         <div className="space-y-4 py-8">
           <p role="alert">{t("unavailable")}</p>
           <Button
@@ -39,14 +35,19 @@ export function ConfigurationSettings() {
             {t("retry")}
           </Button>
         </div>
-      ) : !session.isPending && !accountId ? (
+      );
+    if (!session.isPending && !accountId)
+      return (
         <p role="alert" className="py-8">
           {t("forbidden")}
         </p>
-      ) : query.isError ? (
+      );
+    if (query.isError) {
+      const failure = configurationError(query.error);
+      return (
         <div className="space-y-4 py-8">
-          <p role="alert">{t(configurationError(query.error))}</p>
-          {configurationError(query.error) !== "forbidden" && (
+          <p role="alert">{t(failure)}</p>
+          {failure !== "forbidden" && (
             <Button
               variant="outline"
               onClick={() => void query.refetch()}
@@ -56,19 +57,31 @@ export function ConfigurationSettings() {
             </Button>
           )}
         </div>
-      ) : query.data ? (
+      );
+    }
+    if (query.data)
+      return (
         <ConfigurationForm
           key={`${accountId}:${query.data.revision}`}
           configuration={query.data}
           accountId={accountId!}
         />
-      ) : (
-        <div role="status" aria-label={t("loading")} className="space-y-8 py-8">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="h-20 rounded-md bg-muted motion-safe:animate-pulse" />
-          ))}
-        </div>
-      )}
+      );
+    return (
+      <div role="status" aria-label={t("loading")} className="space-y-8 py-8">
+        {[1, 2, 3].map((n) => (
+          <div key={n} className="h-20 rounded-md bg-muted motion-safe:animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <section>
+      <header className="mb-8">
+        <h1>{t("title")}</h1>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
+      </header>
+      {content()}
     </section>
   );
 }

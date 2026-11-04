@@ -137,16 +137,12 @@ export function TaskPanels({
           persist(width);
         }}
         onKeyDown={(event) => {
-          const value =
-            event.key === "Home"
-              ? 30
-              : event.key === "End"
-                ? 50
-                : event.key === "ArrowLeft"
-                  ? clamp(width - 2)
-                  : event.key === "ArrowRight"
-                    ? clamp(width + 2)
-                    : undefined;
+          const value = new Map([
+            ["Home", 30],
+            ["End", 50],
+            ["ArrowLeft", clamp(width - 2)],
+            ["ArrowRight", clamp(width + 2)],
+          ]).get(event.key);
           if (value === undefined) return;
           event.preventDefault();
           resize(value);

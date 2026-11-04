@@ -11,6 +11,14 @@ import type { RelayCluster } from "./cluster.js";
 import { dispatchJob, forwarded, syncJob } from "./dispatch.js";
 import { authenticate, frameHandlers, type FrameHandler } from "./frames.js";
 import { RelayRegistry, type Client, type RelayPeer, type UseControl } from "./registry.js";
+
+// WebSocket close codes clients act on; every other failure closes with 4000.
+const closeCodes = new Map([
+  ["SERVER_UNAVAILABLE", 1011],
+  ["UPGRADE_REQUIRED", 4006],
+  ["DEVICE_REVOKED", 4003],
+  ["AUTH_REQUIRED", 4001],
+]);
 /** Public relay facade: socket lifecycle, frame dispatch and the internal job transport. */
 export class RelayHub {
   private readonly relay: RelayRegistry;
@@ -77,18 +85,7 @@ export class RelayHub {
       .catch((error) => {
         const code = error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE";
         this.relay.send(client, { type: "error", code });
-        client.peer.close(
-          code === "SERVER_UNAVAILABLE"
-            ? 1011
-            : code === "UPGRADE_REQUIRED"
-              ? 4006
-              : code === "DEVICE_REVOKED"
-                ? 4003
-                : code === "AUTH_REQUIRED"
-                  ? 4001
-                  : 4000,
-          code,
-        );
+        client.peer.close(closeCodes.get(code) ?? 4000, code);
       });
     return client.chain;
   }

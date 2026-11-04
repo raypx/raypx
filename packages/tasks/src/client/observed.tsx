@@ -22,6 +22,42 @@ import { useRemoteQuery } from "./remote-query.js";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { ApprovalBody } from "./approval-body.js";
 
+type RequestStatus = TerminalRequestSummary["status"];
+/** List label: a pending request shows whether it can still be answered. */
+function summaryLabel(status: RequestStatus, expired: boolean) {
+  switch (status) {
+    case "pending":
+      return expired ? "expired" : "terminalPending";
+    case "delivered":
+      return "terminalDelivered";
+    case "outcome_unknown":
+      return "terminalUnknown";
+    case "applied":
+    case "cancelled":
+    case "decided":
+    case "expired":
+      return status;
+  }
+}
+/** Detail label for a request this device can no longer answer. */
+function closedLabel(status: RequestStatus, current: boolean, supported: boolean) {
+  switch (status) {
+    case "pending":
+      if (!current) return "terminalChanged";
+      if (!supported) return "terminalUnsupported";
+      return "expired";
+    case "decided":
+      return "awaitingDevice";
+    case "delivered":
+      return "terminalDelivered";
+    case "outcome_unknown":
+      return "terminalUnknown";
+    case "applied":
+    case "cancelled":
+    case "expired":
+      return status;
+  }
+}
 type ObservedClient = NonNullable<TaskWorkspacePort["observed"]>;
 type Client = TaskWorkspacePort & { observed: ObservedClient };
 export function ObservedApprovals({
@@ -117,17 +153,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                    {t(
-                      request.status === "pending" && Date.parse(request.expiresAt) <= now
-                        ? "expired"
-                        : request.status === "pending"
-                          ? "terminalPending"
-                          : request.status === "delivered"
-                            ? "terminalDelivered"
-                            : request.status === "outcome_unknown"
-                              ? "terminalUnknown"
-                              : request.status,
-                    )}
+                    {t(summaryLabel(request.status, Date.parse(request.expiresAt) <= now))}
                     <ChevronDownIcon
                       className="size-4 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
                       aria-hidden="true"
@@ -304,21 +330,7 @@ function ObservedRequest({
         </>
       ) : (
         <p role="status" className="text-sm text-muted-foreground">
-          {t(
-            !current && request.status === "pending"
-              ? "terminalChanged"
-              : request.status === "decided"
-                ? "awaitingDevice"
-                : request.status === "delivered"
-                  ? "terminalDelivered"
-                  : request.status === "outcome_unknown"
-                    ? "terminalUnknown"
-                    : request.status === "pending" && !supported
-                      ? "terminalUnsupported"
-                      : request.status === "pending"
-                        ? "expired"
-                        : request.status,
-          )}
+          {t(closedLabel(request.status, current, Boolean(supported)))}
         </p>
       )}
     </div>

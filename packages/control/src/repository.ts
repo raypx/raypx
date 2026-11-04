@@ -47,20 +47,20 @@ export function controlListQuery(
   const cursor = sql`((${body}->>'cursor')::bigint)`;
   const createdAt = sql`${body}->>'createdAt'`;
   const separator = query.beforeTask?.lastIndexOf(":") ?? -1;
-  const orderBy =
-    query.observedAt !== undefined
-      ? [
-          desc(sql`(${body}->>'status'='pending' and ${body}->>'expiresAt'>${query.observedAt})`),
-          desc(createdAt),
-          desc(record.id),
-        ]
-      : kind === "task"
-        ? [desc(createdAt), desc(record.id)]
-        : query.pendingApprovals
-          ? [asc(sql`${body}->>'expiresAt'`), asc(record.id)]
-          : kind === "event"
-            ? [(query.descending ? desc : asc)(query.activity ? activityOrder : cursor)]
-            : [];
+  function ordering() {
+    if (query.observedAt !== undefined)
+      return [
+        desc(sql`(${body}->>'status'='pending' and ${body}->>'expiresAt'>${query.observedAt})`),
+        desc(createdAt),
+        desc(record.id),
+      ];
+    if (kind === "task") return [desc(createdAt), desc(record.id)];
+    if (query.pendingApprovals) return [asc(sql`${body}->>'expiresAt'`), asc(record.id)];
+    if (kind === "event")
+      return [(query.descending ? desc : asc)(query.activity ? activityOrder : cursor)];
+    return [];
+  }
+  const orderBy = ordering();
   const statement = database
     .select({ body: query.summary ? sql`${body} - 'body' - 'questions' - 'decision'` : body })
     .from(record)

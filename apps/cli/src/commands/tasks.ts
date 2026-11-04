@@ -19,6 +19,13 @@ function taskCommand(definition: CommandDef) {
   return defineCommand(definition);
 }
 const taskId = z.object({ id: z.uuid() });
+// Relay commands; the only other relay action is "approvals decide".
+const relayMethods = new Map([
+  ["create", "tasks.create"],
+  ["follow-up", "tasks.followUp"],
+  ["input", "tasks.input"],
+  ["cancel", "tasks.cancel"],
+]);
 export function createTaskCommands(invocation: CliArgs, options: ProfileOptions) {
   const leaves = new Map<string, CommandDef>();
   const descriptions = {
@@ -119,16 +126,7 @@ export function createTaskCommands(invocation: CliArgs, options: ProfileOptions)
               );
               if (!result) throw new LocalError("NOT_FOUND", "Approval unavailable");
             } else {
-              const method =
-                action === "create"
-                  ? "tasks.create"
-                  : action === "follow-up"
-                    ? "tasks.followUp"
-                    : action === "input"
-                      ? "tasks.input"
-                      : action === "cancel"
-                        ? "tasks.cancel"
-                        : "approvals.decide";
+              const method = relayMethods.get(action) ?? "approvals.decide";
               const commandId =
                 typeof params.commandId === "string"
                   ? z.uuid().parse(params.commandId)

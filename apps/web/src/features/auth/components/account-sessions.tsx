@@ -27,29 +27,25 @@ function sessionFailure(error: { code?: string | undefined; status?: number | un
   return "network" as const;
 }
 
+// First match wins: Edge user agents also name Chrome and Safari, Chrome names Safari.
+const browsers: [RegExp, string][] = [
+  [/Edg\//, "Edge"],
+  [/Firefox\//, "Firefox"],
+  [/Chrome\//, "Chrome"],
+  [/Safari\//, "Safari"],
+];
+const platforms: [RegExp, string][] = [
+  [/iPhone|iPad/, "iOS"],
+  [/Android/, "Android"],
+  [/Windows/, "Windows"],
+  [/Macintosh|Mac OS X/, "macOS"],
+  [/Linux/, "Linux"],
+];
 function sessionLabel(userAgent?: string | null) {
   if (!userAgent) return null;
-  const browser = /Edg\//.test(userAgent)
-    ? "Edge"
-    : /Firefox\//.test(userAgent)
-      ? "Firefox"
-      : /Chrome\//.test(userAgent)
-        ? "Chrome"
-        : /Safari\//.test(userAgent)
-          ? "Safari"
-          : null;
-  const platform = /iPhone|iPad/.test(userAgent)
-    ? "iOS"
-    : /Android/.test(userAgent)
-      ? "Android"
-      : /Windows/.test(userAgent)
-        ? "Windows"
-        : /Macintosh|Mac OS X/.test(userAgent)
-          ? "macOS"
-          : /Linux/.test(userAgent)
-            ? "Linux"
-            : null;
-  return [browser, platform].filter(Boolean).join(" · ") || null;
+  const match = (rules: [RegExp, string][]) =>
+    rules.find(([pattern]) => pattern.test(userAgent))?.[1];
+  return [match(browsers), match(platforms)].filter(Boolean).join(" · ") || null;
 }
 
 /** Session tokens stay in component memory, outside query caches, markup and diagnostics. */

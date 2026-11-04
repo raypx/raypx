@@ -95,16 +95,24 @@ it("allows a registered instance after online logout or a failed session read", 
   await page(() => ({ state: "registered", binding }));
   expect(await screen.findByText("Private local work")).toBeTruthy();
 });
-it.each(["revoked", "unavailable"] as const)(
-  "blocks %s instances with a retry action",
-  async (state) => {
-    await page(() => ({ state }));
-    await screen.findByRole("heading");
-    expect(screen.queryByText("Private local work")).toBeNull();
-    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
-  },
-);
+it.each(["revoked", "unavailable"] as const)("blocks %s instances", async (state) => {
+  await page(() => ({ state }));
+  await screen.findByRole("heading");
+  expect(screen.queryByText("Private local work")).toBeNull();
+  expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+});
+it("can recover from a failed instance status query", async () => {
+  let available = false;
+  await page(() => {
+    if (!available) throw new Error("Instance status query failed");
+    return { state: "registered", binding };
+  });
+  const retry = await screen.findByRole("button", { name: "Try again" });
+  available = true;
+  fireEvent.click(retry);
+  expect(await screen.findByText("Private local work")).toBeTruthy();
+});
 it("blocks a different signed-in account before mounting local tools", async () => {
   mocks.session.mockReturnValue({ data: { user: { id: "other" } }, error: null, isPending: false });
   await page(() => ({ state: "registered", binding }));
@@ -164,6 +172,7 @@ it("offers sign-in to an unregistered signed-out instance", async () => {
   mocks.session.mockReturnValue({ data: null, error: null, isPending: false });
   await page(() => ({ state: "unregistered" }));
   expect(await screen.findByRole("link", { name: "Sign in" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 });
 it("approves enrollment using the native authenticated client before unlocking local tools", async () => {
   mocks.session.mockReturnValue({ data: { user: { id: "owner" } }, error: null, isPending: false });
