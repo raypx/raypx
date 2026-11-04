@@ -251,13 +251,15 @@ root `overrides` references and existing catalog declarations. Every other findi
 fails verification. Go-launched TypeScript fixtures are explicit entries; vendored
 skills stay outside product analysis. The root `skills` dependency is the CLI used
 by `skills:update`. Root overrides pin `oxc-parser` and `@oxc-project/types` together
-at `0.156.0`. Revalidate Tooling, Knip, type checks and builds when changing this
+at `0.157.0`. Revalidate Tooling, Knip, type checks and builds when changing this
 pair, including compatibility with Vite+'s declarations. Native parser bindings
-follow the parser package. Root overrides also keep `@oxc-project/runtime` at
-`0.156.0`, `oxlint` and `@oxlint/plugins` at `1.90.0`, `oxfmt` at `0.75.0`,
-and `oxlint-tsgolint` at `7.0.2005`, ahead of Vite+ 1.4.0's bundled pins.
-Revalidate lint, formatting and Tooling whenever updating these overrides; remove
-redundant overrides when Vite+ catches up.
+follow the parser package. Vite+ 1.5.0 supplies `@oxc-project/runtime` at
+`0.157.0`, `oxfmt` at `0.76.0`, and `oxlint-tsgolint` at `7.0.2005` without
+root overrides. Keep `oxlint` and `@oxlint/plugins` overridden together at `1.90.0`
+until the React `immutability` false positive in bundled Oxlint 1.91.0 is fixed
+([upstream issue](https://github.com/oxc-project/oxc/issues/28401)). Revalidate lint,
+formatting and Tooling before removing these overrides.
+Keep `@vitest/coverage-v8` at `5.1.0`, matching Vite+ 1.5.0's bundled Vitest.
 Workspaces inheriting the shared coverage configuration declare
 `@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
 
