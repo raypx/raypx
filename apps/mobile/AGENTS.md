@@ -19,12 +19,19 @@ session cookies by origin; do not store passwords or trust cached user profiles.
 Email/password uses Better Auth's Expo client with the exact HTTPS server Origin.
 Do not add OAuth/deep-link login without the matching server integration.
 
-Use native React Native controls with Tailwind CSS 4 utilities through Uniwind;
-never import shared DOM components. Import `src/global.css` once in the root layout.
+Use HeroUI Native for interactive controls and React Native for layout/text,
+styled with Tailwind CSS 4 through Uniwind; never import shared DOM components.
+Import components through their public subpaths. The root layout mounts a gesture
+root, SafeAreaProvider and HeroUINativeProviderRaw; add portal/toast providers only
+when a feature needs them. The provider respects system reduced motion.
+Import `src/global.css` once in the root layout.
 Use `className`, `contentContainerClassName` and color prop class names; wrap
 third-party native components with `withUniwind` when they need style adaptation.
-The CSS entry imports UI's generated `themes/native.css`; do not duplicate tokens
-or add feature-specific CSS selectors. System appearance is Uniwind's default.
+The CSS entry imports HeroUI styles then UI's generated `themes/native.css` and
+maps HeroUI's semantic variables to Raypx tokens (accent → primary,
+muted → muted-foreground) in both theme variants. Keep color aliases static so
+HeroUI's runtime color hooks can read them. Do not duplicate tokens or add feature-specific CSS
+selectors. System appearance is Uniwind's default.
 Only pure UI theme tokens and the original logo may cross from UI. Reuse Auth's
 platform-neutral hooks and i18n catalogs. System language and appearance are defaults.
 
@@ -32,6 +39,8 @@ platform-neutral hooks and i18n catalogs. System language and appearance are def
 
 Use Bun 1.4.4 for scripts. VP registers check/test/build; Expo owns Metro bundling.
 React and React DOM use the shared root catalog at Expo's supported version.
+Mobile-only dependencies use catalog:mobile; shared runtime libraries use catalog:
+and build/test tools use catalog:dev. Keep native versions aligned with Expo's SDK.
 Check dependency alignment with `bun --bun expo install --check` in this workspace.
 Build exports both native JS bundles and is uncached because Expo consumes public
 environment variables. Generated native projects, Expo caches and bundles are not source.

@@ -1,13 +1,8 @@
 import type { ReactNode } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Button } from "heroui-native/button";
+import { useThemeColor } from "heroui-native/hooks";
+import { Spinner } from "heroui-native/spinner";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -45,25 +40,25 @@ export function Action({
   disabled?: boolean;
   secondary?: boolean;
 }) {
+  const spinnerColor = useThemeColor(secondary ? "foreground" : "accent-foreground");
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Button
       accessibilityLabel={label}
       accessibilityState={{ disabled: disabled || busy, busy }}
-      disabled={disabled || busy}
+      isDisabled={disabled || busy}
+      variant={secondary ? "ghost" : "primary"}
       onPress={onPress}
-      className={`min-h-12 flex-row items-center justify-center gap-2 rounded-[10px] p-3 active:opacity-75 disabled:opacity-50 ${secondary ? "bg-background" : "bg-primary"}`}
+      className="h-auto min-h-12 rounded-lg p-3"
     >
       {busy ? (
-        <ActivityIndicator
-          colorClassName={secondary ? "accent-foreground" : "accent-primary-foreground"}
+        <Spinner
+          size="sm"
+          color={spinnerColor}
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
         />
       ) : null}
-      <Text
-        className={`shrink text-base font-semibold ${secondary ? "text-foreground" : "text-primary-foreground"}`}
-      >
-        {label}
-      </Text>
-    </Pressable>
+      <Button.Label className="shrink font-semibold">{label}</Button.Label>
+    </Button>
   );
 }

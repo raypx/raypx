@@ -53,8 +53,10 @@ The accepted foundation design supersedes documents in docs/history.
   inherited environment for leaf commands.
   mise is the recommended runtime manager; mise.toml
   only enables reading package.json and never pins `[tools]`. There is no Nix shell.
-- Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
-  Keep external versions there and use workspace:* for internal dependencies.
+- Use the default Bun catalog for shared runtime libraries, catalog:mobile for
+  Mobile-only dependencies and catalog:dev for build/test tools. Keep React and
+  React DOM in the shared default catalog. Keep external versions in these catalogs
+  and use workspace:* for internal dependencies.
 - Keep coverage aligned with Vite+'s bundled Vitest and native modules within
   Expo's bundled version ranges.
 - React and React DOM share the same exact Expo-supported version across all

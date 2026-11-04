@@ -1,5 +1,8 @@
-import { useRef, useState, type ComponentRef } from "react";
-import { Image, Linking, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { Input, type InputRef } from "heroui-native/input";
+import { Label } from "heroui-native/label";
+import { TextField } from "heroui-native/text-field";
+import { Image, Linking, Text } from "react-native";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { apiOrigin, authClient } from "../src/auth";
 import { actionErrorKey, useCopy } from "../src/locale";
@@ -12,7 +15,8 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [linkFailed, setLinkFailed] = useState(false);
-  const passwordInput = useRef<ComponentRef<typeof TextInput>>(null);
+  const emailInput = useRef<InputRef>(null);
+  const passwordInput = useRef<InputRef>(null);
   const canSubmit = email.trim().length > 0 && password.length > 0 && !actions.busy;
   const openWeb = async (path: string) => {
     setLinkFailed(false);
@@ -40,11 +44,14 @@ export default function LoginScreen() {
       <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
         {t("auth.login")}
       </Text>
-      <View>
-        <Text nativeID="email-label" className="mb-2 text-sm font-medium text-foreground">
-          {t("auth.email")}
-        </Text>
-        <TextInput
+      <TextField isDisabled={actions.busy} className="gap-2">
+        <Label accessible={false} onPress={() => emailInput.current?.focus()}>
+          <Label.Text nativeID="email-label" className="text-sm">
+            {t("auth.email")}
+          </Label.Text>
+        </Label>
+        <Input
+          ref={emailInput}
           accessibilityLabel={t("auth.email")}
           accessibilityLabelledBy="email-label"
           autoCapitalize="none"
@@ -53,21 +60,22 @@ export default function LoginScreen() {
           keyboardType="email-address"
           textContentType="username"
           returnKeyType="next"
-          editable={!actions.busy}
           value={email}
           onChangeText={(value) => {
             actions.clearError();
             setEmail(value);
           }}
           onSubmitEditing={() => passwordInput.current?.focus()}
-          className="min-h-12 rounded-[10px] border border-input p-3 text-base text-foreground focus:border-ring"
+          className="p-3 text-base ios:focus:outline-focus android:border-input android:focus:border-focus"
         />
-      </View>
-      <View>
-        <Text nativeID="password-label" className="mb-2 text-sm font-medium text-foreground">
-          {t("auth.password")}
-        </Text>
-        <TextInput
+      </TextField>
+      <TextField isDisabled={actions.busy} className="gap-2">
+        <Label accessible={false} onPress={() => passwordInput.current?.focus()}>
+          <Label.Text nativeID="password-label" className="text-sm">
+            {t("auth.password")}
+          </Label.Text>
+        </Label>
+        <Input
           ref={passwordInput}
           accessibilityLabel={t("auth.password")}
           accessibilityLabelledBy="password-label"
@@ -77,16 +85,15 @@ export default function LoginScreen() {
           autoComplete="current-password"
           textContentType="password"
           returnKeyType="go"
-          editable={!actions.busy}
           value={password}
           onChangeText={(value) => {
             actions.clearError();
             setPassword(value);
           }}
           onSubmitEditing={() => void signIn()}
-          className="min-h-12 rounded-[10px] border border-input p-3 text-base text-foreground focus:border-ring"
+          className="p-3 text-base ios:focus:outline-focus android:border-input android:focus:border-focus"
         />
-      </View>
+      </TextField>
       {actions.error || linkFailed ? (
         <Text
           accessibilityRole="alert"

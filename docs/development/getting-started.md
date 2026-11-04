@@ -58,8 +58,9 @@ builds; they do not override an installed Desktop's TOML settings.
 bun run dev:storybook previews `@raypx/ui` components on 6006; bun run build:storybook
 writes the static site to `apps/storybook/dist`.
 
-Bun catalogs hold third-party versions: the default `catalog:` contains runtime
-libraries, and `catalog:dev` contains build, test and development tools. Shared
+Bun catalogs hold third-party versions: the default `catalog:` contains shared
+runtime libraries, `catalog:mobile` contains Mobile-only dependencies, and
+`catalog:dev` contains build, test and development tools. Shared
 libraries keep the same catalog even when a test workspace lists them under
 `devDependencies`. All workspaces share one exact React
 version. Raypx Kit stays external. Do not add another task runner. Web and API run under Bun in dev, build, preview
