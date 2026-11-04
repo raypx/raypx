@@ -159,7 +159,7 @@ func ParseConfig(source []byte) (Config, error) {
 		}
 	}
 	if api == "" {
-		api = "https://raypx.pro"
+		api = "https://raypx.com"
 	}
 	if web == "" {
 		web = api
@@ -213,7 +213,7 @@ func LoadConfig() (Config, error) {
 	}
 	file := filepath.Join(directory, "config.toml")
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		if err := AtomicWrite(file, []byte("# Raypx desktop connection\nbase_url = \"https://raypx.pro\"\n")); err != nil {
+		if err := AtomicWrite(file, []byte("# Raypx desktop connection\nbase_url = \"https://raypx.com\"\n")); err != nil {
 			return Config{}, err
 		}
 	}

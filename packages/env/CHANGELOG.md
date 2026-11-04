@@ -1,5 +1,9 @@
 # @raypx/env
 
+> Imported Raypx Kit release history. This is now a private Raypx workspace;
+> the Node requirements and publication instructions below describe those earlier
+> releases. Current toolchain and interfaces are defined by package.json and README.md.
+
 ## 0.0.0-alpha.2
 
 ### Patch Changes

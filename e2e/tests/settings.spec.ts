@@ -1,32 +1,9 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { test } from "./helpers/browser-fixture.js";
-import { web, desktop } from "./helpers/surfaces.js";
+import { web } from "./helpers/surfaces.js";
 import { capture } from "./helpers/capture.js";
 import { signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
-
-async function preferencesPersist(page: Page, base: string) {
-  await page.goto(`${base}/settings`);
-  await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
-  // The visible theme card activates its visually hidden radio.
-  await page.getByText("Dark", { exact: true }).click();
-  await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.getByRole("combobox", { name: "Language", exact: true }).click();
-  await page.getByRole("option", { name: "简体中文", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "设置", exact: true })).toBeVisible();
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("lang", "zh");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("combobox", { name: "语言", exact: true })).toContainText("简体中文");
-  await expect(page.getByRole("radio", { name: "深色", exact: true })).toBeChecked();
-  await capture(page, {
-    path: test
-      .info()
-      .outputPath(base === web ? "web-settings-dark-zh.png" : "desktop-settings-dark-zh.png"),
-    fullPage: true,
-  });
-}
+import { preferencesPersist } from "./helpers/preferences.js";
 
 test(
   "Web preserves local appearance and language preferences with an account fixture",
@@ -56,37 +33,6 @@ test(
     await page.getByRole("button", { name: "Account menu", exact: true }).click();
     await page.getByRole("menuitem", { name: "Account", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
-  },
-);
-
-test(
-  "Desktop preview states local unavailability after sign-in",
-  { tag: "@desktop" },
-  async ({ page }) => {
-    const user = await signedInAccount(page);
-    await page.goto(`${desktop}/files`);
-    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
-    await expect(
-      page.getByText("Open the desktop app to use local tools.", { exact: true }),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Choose folder", exact: true })).toBeDisabled();
-    await expect(
-      page.getByRole("heading", { name: "Start with a folder", exact: true }),
-    ).toBeVisible();
-    expect(await page.evaluate(() => "__TAURI_INTERNALS__" in window)).toBe(false);
-    await page.getByRole("link", { name: "Automations", exact: true }).click();
-    await expect(page).toHaveURL(`${desktop}/automations`);
-    await expect(page.getByRole("heading", { name: "Automations", exact: true })).toBeVisible();
-    await expect(
-      page.getByText("Open the desktop app to use local tools.", { exact: true }),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: "New automation", exact: true })).toBeDisabled();
-    await page.getByRole("button", { name: "Account menu", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Account", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: user.name, exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "Settings", exact: true }).click();
-    await preferencesPersist(page, desktop);
   },
 );
 

@@ -15,7 +15,7 @@ Vite plugin. This workspace is not published to npm.
 - `/renderer` supplies the official custom-render Dock lifecycle. Its module-local
   target is shared with the bridge; excluding this workspace from dependency
   prebundling keeps one ESM instance in each page.
-- `/snapshot` exports the pure metadata projection and its types.
+- The snapshot projection stays private; the root exports `PageDiagnosticsSnapshot`.
 - `/styles.css` registers the component directory with the application's Tailwind build.
 
 Snapshots contain route templates/status and field names, current preferences,

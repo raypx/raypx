@@ -20,7 +20,7 @@ Local work stays on the device unless that person explicitly opts a host in. Dev
 
 ## Operating Context
 
-Web runs in desktop and phone browsers. Desktop runs on macOS and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Device-owned Pi tasks run through Desktop and the public task CLI. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
+Web runs in desktop and phone browsers. Desktop targets macOS 13+ and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Device-owned Pi tasks run through Desktop and the public task CLI. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
 
 ## Capabilities and Constraints
 
@@ -36,7 +36,7 @@ macOS can install Claude and Codex terminal hooks. Per-project Away mode forward
 
 The CLI, application features, and shared contracts use Bun and TypeScript. Desktop uses a MyGo policy host and system WKWebView or WebView2. Native development and packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
 
-Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, native mobile, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. Shared packages are added only when a real consumer needs them.
+Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, the complete native mobile workbench, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. The Expo Mobile workspace currently implements the account/login baseline. Shared packages are added only when a real consumer needs them.
 
 Show real execution, permission failures, and retry state. Never fabricate data.
 

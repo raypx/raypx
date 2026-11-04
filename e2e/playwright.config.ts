@@ -24,7 +24,12 @@ export default defineConfig({
     trace: settings.trace,
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium" }],
+  projects: [
+    { name: "chromium" },
+    ...(settings.surface === "web"
+      ? []
+      : [{ name: "desktop-chromium", testDir: "../apps/desktop/e2e" }]),
+  ],
   webServer: [
     ...(settings.surface === "desktop"
       ? []

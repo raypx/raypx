@@ -163,7 +163,8 @@ mise exec -- bun run --cwd infra/railway deploy
 # Uploads use the repository root as their build context.
 mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service api --detach
 mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service web --detach
-# Wait for API and Web to become healthy before publishing Gateway.
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service relay --detach
+# Wait for API, Web and Relay to become healthy before publishing Gateway.
 mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service gateway --detach
 ```
 

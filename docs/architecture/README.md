@@ -198,7 +198,9 @@ normal OS permissions. PTY output is bytes encoded as base64; dates are ISO stri
 SQLite stores profiles, roots, schedules and bounded run history. A profile has
 one scheduling owner and per-job execution locks. Cron uses five fields and an
 IANA zone, skips missed triggers, and never retries interrupted commands on restart.
-Tray runtime owns scheduling; explicit Quit/EOF cancels managed work. Local state
+On macOS and Windows, the independent CLI daemon owns scheduling; GUI Quit only
+disconnects Desktop. Stopping that daemon cancels its managed work. Foreground
+commands/TUI close only their own runtime and never start a scheduler. Local state
 and theme/locale preferences survive account logout.
 Files uses route search for directory/pagination, a scoped Zustand store for
 unsaved UI state, and route loaders for native reads. Root grants are shared at
@@ -229,7 +231,7 @@ cloud opt-in, terminal approval leases and migration boundary. Each profile owns
 one Bun/TypeScript execution Host. Foreground and daemon transports use the same
 `runtime/host.ts` composition for routing, cloud restore and teardown.
 Local tasks, connectors and approvals require initial instance enrollment and then work offline; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
-[ADR 0036](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
+[ADR 0038](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
 token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks run through shared verification.
 
 ## Persistent Agent platform target
@@ -247,3 +249,19 @@ architecture until each target phase is implemented.
 
 [ADR 0042](0042-application-layering.md) defines application services, driver preparation,
 source-layer enforcement and transport/view adapters for the current implementation.
+
+## Accepted decisions
+
+Later accepted amendments supersede conflicting earlier text. The topic guides
+above describe current implementation; these records preserve the decisions.
+
+- [0034: Extensible foundation](0034-extensible-foundation.md)
+- [0035: Local Owner Host](0035-local-owner-host.md)
+- [0037: Windows daemon](0037-windows-daemon.md)
+- [0038: MyGo Desktop host](0038-mygo-desktop-host.md)
+- [0039: Local and server Agent platform](0039-local-server-agent-platform.md)
+- [0040: Instance enrollment and providers](0040-instance-enrollment-and-providers.md)
+- [0041: Provider capabilities and managed Pi](0041-provider-capabilities-and-pi.md)
+- [0042: Application services and adapters](0042-application-layering.md)
+- [0043: Package surfaces](0043-package-surfaces.md)
+- [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)

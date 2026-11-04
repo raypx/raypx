@@ -1,6 +1,6 @@
 # Persistent Agent Platform Roadmap
 
-Status: In progress. Updated 2026-11-02. The Phase 1 first-delivery flow passed real Codex acceptance on macOS arm64; other platforms and the broader recovery matrix remain open. Phase dates beyond the first delivery goal remain planning estimates.
+Status: In progress. Documentation reconciled 2026-11-05; live acceptance snapshot 2026-11-02. The Phase 1 first-delivery flow passed real Codex acceptance on macOS arm64; other platforms and the broader recovery matrix remain open. Phase dates beyond the first delivery goal remain planning estimates.
 
 This roadmap describes the target product, not currently shipped behavior. The first phases intentionally reuse proven CLI, Desktop, storage, memory and scheduling components; later architecture remains open to evidence from those workflows. `PRODUCT.md` remains the description of the current product; [ADR 0039](architecture/0039-local-server-agent-platform.md) records the accepted target, and `PRODUCT.md` changes only as that target ships.
 
@@ -15,6 +15,21 @@ Each Agent has exactly one authority. During the local-first phase, the local CL
 ## First Delivery Goal
 
 By 2026-11-10, validate one initially registered, offline-capable local flow through the existing Raypx CLI daemon on macOS or Windows: select a granted project, start a Codex-backed Run, read a project file, reject one read-only plan without any write, approve another plan before the provider writes and tests files, restart the daemon owner and reconnect Desktop, then continue the provider session without losing committed state. Plan approval is the write boundary for this flow: Codex enforces the read-only plan phase in its sandbox, and its run mode then writes inside the granted project without per-write prompts; only escalations it requests reach provider permission hooks. Raypx Agent Runtime and Run ownership stay local. Closing the Desktop window during a Run (Phase 3), cloud migration, local/server pairing, and container/VM isolation are outside this acceptance; Codex CLI may itself use its configured model service.
+
+## Current implementation (2026-11-05)
+
+Desktop uses MyGo 0.7.4 with Go 1.27.3 and the existing React SPA, while the
+independent Bun CLI daemon owns execution on macOS/Windows. Local execution
+requires one-time account/origin-bound enrollment, then supports offline use and
+online logout. Codex, Claude and managed local Pi share the private CLI harness.
+Provider adapters are consolidated in `@raypx/providers`; Core owns task-domain
+rules and event-sourced orchestration commits effects and projections in SQLite
+([ADR 0044](architecture/0044-event-sourced-cli-orchestration.md)). The independent
+Relay handles opted-in remote coordination; API keeps read projections.
+
+These source facts do not expand the dated live acceptance below. Server-owned
+Agents, migration/pairing and the complete native mobile workbench remain targets.
+The Expo Mobile workspace currently provides account/login only.
 
 ## Progress Snapshot (2026-11-02)
 
@@ -100,7 +115,7 @@ Exit criteria: the CLI daemon is the sole local authority; Run, approval, effect
 - Verify Desktop-to-daemon create, stream, inspect, follow-up, disconnect and restart flows against synthetic providers before live-provider acceptance.
 - Limit first acceptance to one configured provider, one granted project, a project read and a plan-approved write; the provider sandbox, not the prompt, keeps the plan phase read-only. Track usage through existing activity/provider paths where available.
 
-Exit criteria: by 2026-11-10, the existing CLI daemon can complete the first delivery flow above without login or a server dependency; committed local state survives Desktop reconnect and daemon restart; ambiguous provider/effect outcomes are not replayed invisibly.
+Exit criteria: by 2026-11-10, the existing CLI daemon can complete the first delivery flow above offline after first-time instance enrollment, without an active online session or a running Raypx server; committed local state survives Desktop reconnect and daemon restart; ambiguous provider/effect outcomes are not replayed invisibly.
 
 ### 2. Local Tools, Effects, and Human Approval
 

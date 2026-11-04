@@ -1,7 +1,9 @@
 # Raypx Kit library changes
 
 Merged Raypx changes consume `@raypx-kit/*` from npm at exact versions. Raypx Kit is
-maintained in its own repository, so a change that needs a new Raypx Kit API follows
+maintained in its own repository. This workflow applies only to remaining external
+`@raypx-kit/*` dependencies: `@raypx/env`, `@raypx/tsconfig` and `@raypx/logger`
+are private workspaces changed and checked here. A change needing a new Kit API follows
 the same three steps. Review branches may use a published snapshot or a tracked
 local archive while publication is pending; neither is a merge-ready dependency.
 
@@ -38,7 +40,7 @@ For a new, unpublished package, track its verified compiled archive
 inside Raypx rather than depending on another checkout or a temporary directory:
 
 1. Verify the Raypx Kit source and record its provenance. For a clean source commit,
-   record `sourceCommit` and run `bun run release:snapshot logger` without
+   record `sourceCommit` and run `bun run release:snapshot <package>` without
    `--publish`, or pack the verified package with `bun pm pack --ignore-scripts`.
    For an uncommitted implementation, use the direct pack command and record
    `sourceBaseCommit`, an explicit uncommitted `sourceWorkingTree` marker and a

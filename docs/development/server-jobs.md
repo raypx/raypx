@@ -2,7 +2,7 @@
 
 The API owns server-side jobs under `apps/api/server/jobs/`. Nitro Tasks supplies
 the named task registry and platform scheduling. `maintenance:cleanup` runs on
-`*/15 * * * *` (every 15 minutes) through the Node handler. This is independent of device-local CLI schedules and
+`*/15 * * * *` (every 15 minutes) through the Bun Nitro server. This is independent of device-local CLI schedules and
 Agent execution.
 
 ## Account cloud automations
@@ -15,7 +15,7 @@ making HTTP or the browser an execution host.
 
 Web `/automations` manages account-owned cloud schedules. Desktop's automation
 page separates **This computer** from **Cloud**. Local schedules remain available
-without login and survive account changes; cloud reads and writes require login.
+offline after first-time instance enrollment and survive account changes; cloud reads and writes require login.
 Scheduling does not install or enable a device host automatically.
 
 The first cloud actions are:
@@ -30,7 +30,7 @@ requires the user to choose its current connection explicitly. Every execution
 rechecks account ownership, epoch, connection, project and provider availability.
 The backend never stores a browser cookie or runs a local shell action.
 
-`schedules:tick` runs every minute on Node, controlled by
+`schedules:tick` runs every minute on Bun, controlled by
 `JOBS_ENABLED` independently of the administrator's maintenance-cleanup switch.
 The existing fifteen-minute cleanup task keeps its own policy. When scheduling is
 disabled, tick performs no business queries; plans can still be saved and edited.
@@ -76,7 +76,7 @@ refresh their private lists; account/client changes discard that view's state.
    This persisted switch defaults to on and is read again before each enabled run.
 4. Build and deploy the API for the selected platform.
 
-Node's Nitro server runs the schedule while the API process is alive, using
+Bun's Nitro server runs the schedule while the API process is alive, using
 `scheduledTasks` in `apps/api/vite.app.config.ts`.
 
 ## Cleanup policy
@@ -114,7 +114,7 @@ next scheduled run; a backlog drains in bounded batches. Logs include operation,
 status and deletion counts, with driver errors reduced to `JOB_FAILED`. They never
 include row identifiers, tokens, query parameters or connection strings.
 
-Node tasks reuse the API's process-owned database pool.
+Tasks reuse the API's process-owned database pool.
 
 ## Development and verification
 
@@ -146,6 +146,6 @@ configuration and its `scheduledTasks` registry. Specify
 the job's idempotency, concurrency and retry policy before enabling it; cleanup's
 transaction lock is specific to this task. Use separate locks for unrelated jobs.
 
-Nitro Tasks is experimental in the pinned Nitro version. The Node deployment build
+Nitro Tasks is experimental in the pinned Nitro version. The Bun deployment build
 and scheduled-event tests are required when upgrading it. See
 [Nitro Tasks](https://nitro.build/guide/tasks).

@@ -1,8 +1,9 @@
 # Raypx
 
-A foundation for Web and MyGo Desktop, with shared
-accounts, device-local appearance/language settings, and a standalone local CLI.
-The previous cloud product is retired; historical decisions remain in docs/history.
+A project-centered personal development workbench. MyGo Desktop and the standalone
+CLI execute on your computer; Web provides optional remote access. Projects, Agent
+sessions, approvals, files, automations and terminals share explicit device ownership.
+The [current architecture](docs/architecture/README.md) defines the implementation.
 
 ## Requirements
 
@@ -10,8 +11,10 @@ Bun 1.4.4 and an isolated PostgreSQL database for account flows. Bun is the only
 JavaScript runtime; `packageManager` pins it. With [mise](https://mise.jdx.dev),
 run `mise trust && mise install` once; direct installs also work.
 `bun run doctor` confirms it.
-Native Desktop development and packaging require Go 1.27.3; see the
-[MyGo Desktop guide](docs/development/desktop-release.md).
+Native Desktop development and packaging require Go 1.27.3 and MyGo 0.7.4, with
+`CGO_ENABLED=0`. The configured macOS minimum is 13.0; Windows uses WebView2.
+Linux CLI support does not establish Linux Desktop acceptance. See the
+[MyGo Desktop guide](docs/development/desktop.md#build-and-release).
 Desktop includes its own native host and compiled CLI; users do not install Bun.
 
 ```sh
@@ -30,9 +33,11 @@ Bun services: `bun apps/web/.output/server/index.mjs` and
 Relay starts with `bun infra/relay/dist/main.js`; the gateway sends `/relay` to it.
 Its server rendering needs the session cookie: serve both from one origin, or set
 `AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
-Local desktop files, automations and terminals do not require login. Close-to-tray
-keeps scheduling. On macOS and Windows, Quit disconnects the window while the
-independent CLI daemon keeps working.
+Register each local Desktop/CLI profile once to an account and API origin. Its signed
+identity then permits offline local work, including after online logout. Remote
+data and Host authorization require a separate online session and explicit grants.
+On macOS and Windows, the independent CLI daemon owns scheduling and execution;
+closing or quitting Desktop leaves daemon tasks running.
 External tools run with the user's OS permissions.
 
 ## Commands
@@ -53,9 +58,13 @@ bun run package:desktop
 ```
 
 VP discovers tasks from workspace manifests. Engineering commands are exposed
-as `raypx-dev`; the product executable is `raypx`. Workspaces under apps and packages
-are discovered automatically, without editing a central name list.
-Use `bun run test --help` or the [test command guide](docs/development/test-commands.md)
+as `raypx-dev`; the product executable is `raypx`. Workspace discovery reads the
+root `package.json` patterns, including applications, libraries, infrastructure and E2E.
+`verify` checks affected sources/tests; `verify --full` adds repository-wide audits,
+builds and current-platform artifact probes. Database, browser and packaged GUI
+acceptance have separate gates. The Expo Mobile workspace currently provides an
+account/login baseline; it is not the complete Desktop workbench.
+Use `bun run test --help` or the [test command guide](docs/development/testing.md#test-commands)
 for root suites, package-local commands and optional backend/browser gates.
 
 See [documentation](docs/README.md), [architecture](docs/architecture/README.md),

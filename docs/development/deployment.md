@@ -1,4 +1,4 @@
-# Shared deployment per project
+# Compose deployment and environments
 
 Every Dokploy Compose service uses the same `deploy/build.sh` and
 `deploy/compose.yaml`. Each project supplies its own environment variables.
@@ -27,7 +27,7 @@ inputs change, including a changed host.
 `POSTGRES_VOLUME_NAME` is an optional override for adopting known existing storage.
 Leave it empty for the default `<compose-project>_postgres` volume. Never point it
 at another project's data, and never run new migrations against an old/operator
-database. See [existing beta](beta.md) for the original deployment's transition.
+database. See [Beta environment](#beta-environment) for the original deployment's transition.
 
 ## Configuration
 
@@ -49,7 +49,7 @@ password-reset mail. Otherwise the explicit mail guard remains active.
 `JOBS_ENABLED` controls maintenance scheduling.
 
 The template also forwards optional `AUTH_DOMAIN`, `MAIL_DEFAULT_LOCALE`,
-Google/GitHub OAuth credentials (see [social login](social-login.md)),
+Google/GitHub OAuth credentials (see [social login](accounts.md#social-login)),
 S3 storage settings and server `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`.
 `REDIS_URL` is required for the private broker shared by API and Relay.
 Empty optional values keep the corresponding integration disabled. These settings
@@ -235,3 +235,69 @@ API environment keys come from `apps/api/server/env.contract.ts`, whose exact ke
 are enforced by the runtime schema. Policy reads this static catalog without
 executing app code or loading environment files, and checks runtime Docker stages
 including inherited Railway settings.
+
+## Production environment
+
+The production public origin is `https://raypx.com`. Deploy it through the
+existing Raypx production Compose service in Dokploy.
+It uses the same Compose workflow as Beta.
+
+- Compose project: `raypx-prod-6yiunf`.
+- Database: `raypx`, user `raypx`.
+- Persistent volume: `raypx-prod-6yiunf_postgres`.
+- Protected host configuration: `/opt/raypx/private/.env` (`0600`).
+- Versioned source: `/opt/raypx/releases/<release>`.
+- Configuration and database backups: `/opt/raypx/backups/<release>` (`0700`).
+
+Keep these identifiers stable across deployments. Production has independent
+database and authentication secrets. Its database is a new foundation database;
+Beta and retired product data are not imported or migrated.
+
+Release from a verified `canary` commit. Build the migration, API, Relay and Web images
+for `APP_HOST=raypx.com` and the exact Compose project name before changing the
+service's `RAYPX_RELEASE`. Set `APP_HOST=raypx.com` in its runtime environment,
+with matching auth, Web, relay and OAuth callback origins. DNS, the origin
+certificate and public HTTPS must be configured for this hostname before
+acceptance. Back up the database before migrations. The host can
+reuse the bounded `raypx-beta-builder` and its caches; stop it after building.
+Deploy through the existing Dokploy Compose service without replacing volumes.
+
+Verify the origin certificate as well as public HTTPS, `/health`, `/ready`,
+signed-out redirects, secure session cookies, real login and WebSocket relay.
+The opt-in native and browser gates described in [testing](testing.md) accept
+`https://raypx.com` through their explicit HTTPS settings despite their `beta`
+command names. Use a dedicated acceptance account and remove it after testing.
+
+Mail requires an explicitly configured `RESEND_API_KEY` and verified `MAIL_FROM`.
+Until configured, registration verification and password-reset mail remain
+unavailable behind the `MAIL_NOT_CONFIGURED` guard. Existing-account login is
+independent of mail availability; never bypass verification for real users.
+
+Desktop defaults to this production origin. Existing installations can retain a
+Beta or self-hosted profile in `~/.raypx/config.toml`; deployment does not change
+their selection. See [Desktop configuration](desktop.md#connection-configuration).
+
+## Beta environment
+
+These are explicit settings for the existing deployment. Confirm that selected
+storage belongs to the intended foundation project; retired product databases
+remain outside the new migration workflow.
+
+The original `deploy/beta/` files moved to `deploy/`. Replace `BETA_HOST` with
+`APP_HOST`. Use the existing Dokploy service's exact `appName` as
+`COMPOSE_PROJECT_NAME`; preserve it for every update.
+
+For the original beta database, explicitly keep `POSTGRES_DB=raypx_beta` and
+`POSTGRES_VOLUME_NAME=raypx-beta-postgres`. This adopts the existing named storage.
+New projects leave the volume override empty and get project-scoped storage.
+Back up configuration and the database before changing the Compose configuration.
+
+New image tags use `<compose-project>-<release>`. Build the new tags, or explicitly
+alias old images after verifying they were built for the same hostname and source
+version. For example, original `beta-20261024-01` images can keep source version
+`20261024-01` under the existing Compose project's image prefix.
+
+To keep the original bounded builder and caches, set
+`RAYPX_BUILD_BUILDER=raypx-beta-builder` on that host. The shared default for new
+hosts is `raypx-builder`. Hostnames, credentials and storage are explicit values;
+the scripts do not infer or migrate existing resources.

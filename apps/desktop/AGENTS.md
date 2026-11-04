@@ -69,8 +69,10 @@ Own native directory authorization and local UX. Runtime implementations live ex
 `src/features/auth/components/form.tsx` adapts the shared `@raypx/auth/client` form
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
-source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites.
-Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. MyGo transport/acceptance tests live in `tests/native/host/`; pure policy and engine-port tests live in `internal/desktop/`.
+source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites. Desktop-only compiled
+browser acceptance lives in `e2e/`, uses `@raypx/e2e/testing` fixtures and runs
+through `bun run test e2e --desktop`. It does not establish native WebView acceptance.
+Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. MyGo transport/acceptance tests live in `tests/native/host/`; pure policy and engine-port tests live in `internal/desktop/`.
 These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
 Native scripts and their pure policy tests live in `scripts/native/` with Bun types;
@@ -92,7 +94,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 ## Constraints
 
-- MyGo v0.7.4 uses WKWebView/WebView2. Build with Go 1.27.3 and CGO_ENABLED=0.
+- MyGo v0.7.4 uses WKWebView/WebView2. Build with Go 1.27.3 and CGO_ENABLED=0; macOS packages require 13.0+.
   Framework APIs live in internal/app; native transport/policy in internal/desktop.
   Opaque business JSON uses TS contracts as the sole business schema authority.
 - Build a prerendered SPA in dist/client and embed it under generated/frontend.

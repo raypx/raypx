@@ -1,8 +1,7 @@
 # Pi AI model calls
 
-`@raypx/ai` uses `@earendil-works/pi-ai` 1.4.0, the current package from the
-[Pi repository](https://github.com/earendil-works/pi/tree/v1.4.0/packages/ai).
-The former package name was `@mariozechner/pi-ai`.
+`@raypx/ai` uses the catalog-pinned `@earendil-works/pi-ai` 1.5.0 from the
+[Pi repository](https://github.com/earendil-works/pi/tree/v1.5.0/packages/ai).
 
 The package provides model catalogs, streaming responses, structured tool-call
 data, usage totals, deadlines and cancellation. Default providers are Anthropic,
@@ -122,15 +121,17 @@ HTTP errors and custom configuration. The copied standalone CLI smoke runs those
 model calls outside the repository with an empty PATH. These gates use no paid
 inference; a real-provider check must be reported separately.
 
-## Experimental Agent loop
+## Injected Agent loop
 
-CLI's private `runtime/agents/harness/providers/pi.ts` uses
-`@earendil-works/pi-agent-core` 1.4.0 for an experimental `PiRunner`. It is not a
-selectable task provider and does not replace the Claude/Codex execution adapters.
+`@raypx/providers/pi` uses `@earendil-works/pi-agent-core` 1.5.0 for `PiRunner`
+and its provider-session adapter. CLI's private `src/runtime/agents/pi/` composes
+this adapter for local managed tasks alongside Claude and Codex.
 Callers inject the model stream, tools, approval callback and a context store with
 atomic revision checks. The runner supplies no filesystem or shell tools.
 
-Each tool requires approval and a committed execution intent before it starts.
+Each tool passes the injected authorization callback before it starts. Effectful
+tools also require a committed execution intent; the CLI owns read-only versus
+mutation approval policy.
 Tool calls run sequentially; the outcome must be committed before another tool or
 model request. An unresolved intent or interrupted running context requires explicit
 recovery and is never replayed automatically. Cancellation waits for the active
@@ -140,6 +141,7 @@ approval or effect, including IDs loaded from an earlier run.
 
 `run(prompt, { signal, timeoutMs })` accepts caller cancellation and a run deadline.
 The default is 60 seconds; explicit deadlines range from 1 ms to 10 minutes.
+The deadline pauses while waiting for authorization.
 A deadline requests cancellation and reports `PI_TIMEOUT` after active work and
 durable writes settle. A tool that ignores cancellation still holds the run until
 it settles; the runner never starts replacement work while an effect is uncertain.
@@ -147,10 +149,12 @@ The first cancellation cause is retained, and a storage failure takes precedence
 over a timeout. Once a completed outcome enters its terminal commit, that durable
 outcome remains authoritative even if cancellation arrives during the write.
 
-`harness/context/sqlite.ts` provides the local `SqlitePiContextStore(profileDirectory, contextId)`.
-It uses the shared profile database, separates contexts, validates persisted messages, limits each context to 8 MiB
+CLI's `src/runtime/agents/harness/context/sqlite.ts` provides
+`SqlitePiContextStore(database, contextId)`, borrowing the profile-owned writer.
+It separates contexts, validates persisted messages, limits each context to 8 MiB
 and commits with an atomic revision check across connections. Callers close the
-store after execution has drained. Reopening preserves completed history and
+store after execution has drained; only `ProfileStorage` closes the database.
+Reopening preserves completed history and
 unresolved intents; the store does not make recovery decisions.
 
 ```sh
@@ -163,8 +167,7 @@ credentials or PATH tools, and with HTTP disabled. It reopens SQLite, continues 
 conversation and rejects a repeated tool effect, then reports the executable size.
 Unit tests also cover denied approvals, cancellation, deadlines, persistence
 failures, context isolation, competing revision writes and uncertain recovery.
-Real model execution and Windows packaging remain separate,
-unverified gates for this experiment.
+Real model execution and Windows packaging remain separate acceptance gates.
 
 ## Configuration precedence
 

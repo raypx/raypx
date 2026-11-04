@@ -47,7 +47,7 @@ See [foundation architecture](../../docs/architecture/0034-extensible-foundation
 
 ## Verification
 
-Pure helpers and streamed SSR have source-adjacent tests in the Node project.
+Pure helpers and streamed SSR have source-adjacent tests in the `server` project.
 Browser/provider hydration uses adjacent `*.component.test.tsx` in the separate
 happy-dom project, so React renderers do not share module context.
 

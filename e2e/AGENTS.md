@@ -21,14 +21,17 @@ workers; local 8+ CPU/16+ GiB hosts use four, smaller hosts one or two. Override
 with `-- --workers=2` on a busy machine. Test argv is decoded only by `browser:run`
 from `RAYPX_E2E_ARGS`, preserving dependency cache hashes across filters/reporters.
 
-Ordinary cases live in access/auth/settings/navigation/analytics and feature suites;
+Web and shared cases live in access/auth/settings/navigation/analytics and feature suites;
+Desktop-only browser cases live in `apps/desktop/e2e/` and are discovered by
+the root compiled-artifact Playwright configuration. Export shared fixtures through
+`@raypx/e2e/testing`; never import private helper paths across workspaces.
 task conversation/history/drafts use `tests/tasks/`. Access owns private memory/job
 guards, while their feature suites own signed-in journeys. Run both for boundary
 changes (for example `-- 'access|memory'`). Shared response fixtures are per case;
 never reuse an authenticated context across cases. `signedInAccount` supplies the
 member `account.access` projection for its own account ID; custom signed-in cases
 use `accountAccessFixture`. The automatic public fixture defaults to guest access.
-Named steps identify checks within a combined journey. See docs/development/test-cases.md for the coverage map.
+Named steps identify checks within a combined journey. See docs/development/testing.md for the coverage map.
 
 ## Constraints
 

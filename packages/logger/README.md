@@ -46,11 +46,9 @@ share one promise. Call it after producers stop when finite draining is required
 failure and shares one result. Its default ten-second deadline bounds waiting;
 it cannot cancel arbitrary sink work. Transports own cancellation.
 
-Context helpers bind existing loggers without emitting or configuring them.
-Nested scopes restore their parent, and concurrent scopes stay isolated.
 The stream drain never ends a caller-owned stream. CLI stdout stays reserved for
 command results and the Desktop protocol.
 
 Run `bun run --cwd packages/logger check` and `bun run --cwd packages/logger test`.
-Root verification also checks compiled API Node/Worker outputs and the standalone
-CLI outside the repository. See [source provenance](NOTICE.md).
+Full root verification also checks the built Bun API and the standalone CLI
+outside the repository. See [source provenance](NOTICE.md).

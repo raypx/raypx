@@ -40,6 +40,9 @@ Unhandled errors/rejections, React boundaries and router catches use one sanitiz
 error path. Error messages become safe codes. Only application `/assets/*.js`
 frames from the current HTTP(S) or `views:` origin survive; local paths, query
 strings, causes and other frames are discarded. Source-map chunk/release IDs remain.
+The pinned sanitizer does not accept MyGo's macOS `mygo:` page scheme, so those
+packaged renderer errors retain their safe code but lose stack frames. Windows'
+mapped HTTP origin and browser development checks do not establish macOS source-map resolution.
 Autocapture, automatic pageviews, flags, console/network capture and replay are off.
 The SDK uses its no-external bundle and loads no remote feature scripts.
 It formats events but never dispatches them: the package sends only the final safe
@@ -72,8 +75,8 @@ recorded build release, independently of the current Git checkout. Missing/inval
 metadata, a different surface or a conflicting explicit `VITE_APP_RELEASE` fails
 before injection. Credentials and maps are required only for upload.
 
-Publish those same injected outputs. For Desktop, run the workspace `native:build` after injection; do
-not run root `package:desktop`, which rebuilds the renderer. Do not publish outputs
+Publish those same injected outputs. For Desktop, run the workspace `native:build` after injection;
+root `package:desktop` rebuilds the renderer. Do not publish outputs
 from a failed upload or serve hidden maps accidentally.
 
 `@raypx-kit/analytics` is pinned to an exact published alpha; update it through the

@@ -16,7 +16,7 @@ const MAX_MARKDOWN_LINES = 500;
 export function checkMarkdownLength(root: string): string[] {
   return globSync("**/*.md", {
     cwd: root,
-    exclude: ["docs/history/**", "**/node_modules/**", ".agents/**", ".claude/**", "**/dist/**"],
+    exclude: ["**/node_modules/**", ".agents/**", ".claude/**", "**/dist/**"],
   }).flatMap((file) => {
     // Skill aliases must retain the same vendored exclusion as their canonical directory.
     const canonical = relative(root, realpathSync(join(root, file))).replaceAll("\\", "/");
@@ -48,21 +48,14 @@ export function policy(root: string): string[] {
     [
       "*.md",
       "docs/**/*.md",
-      "skills/raypx/**/*.md",
+      "skills/**/*.md",
       ...index.workspaces.map((w) => `${w.path}/AGENTS.md`),
     ],
-    { cwd: root, exclude: ["docs/history/**"] },
+    { cwd: root },
   );
   findings.push(...checkMarkdownLength(root));
   findings.push(...checkDocumentLinks(root, documents));
-  // Acceptance and review records describe the release they ran on and are not rewritten on upgrade.
-  const records = new Set(["docs/development/foundation-acceptance.md"]);
-  findings.push(
-    ...checkToolchain(
-      root,
-      documents.filter((file) => !records.has(file)),
-    ),
-  );
+  findings.push(...checkToolchain(root, documents));
   return [...new Set(findings)];
 }
 

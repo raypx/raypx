@@ -2,10 +2,12 @@
 
 MyGo v0.7.4 hosts the existing React SPA and launches the standalone Bun CLI.
 Go 1.27.3 builds with CGO_ENABLED=0. The CLI owns execution and the independent
-daemon; Herdr remains the terminal runtime.
+daemon; Herdr remains the terminal runtime. The UI remains React in WKWebView
+(macOS) or WebView2 (Windows). `mygo.config.ts` targets macOS 13.0+. Linux Desktop
+acceptance remains unverified. The current application uses one main window.
 
 - `main.go`: embedded frontend/manifests and entry point.
-- `internal/app`: MyGo lifecycle, trusted IPC, native UI.
+- `internal/app`: MyGo lifecycle, trusted IPC, windows, tray and native dialogs.
 - `internal/desktop`: native policy, HTTP/session persistence, CLI and event transport.
 - `src`: existing renderer; `bridge.ts` declares its native vocabulary.
 - `resources`: maintained icons/entitlements, plus generated `bin` payloads.
@@ -47,6 +49,11 @@ compiled CLI for the daemon integration test; only its isolated daemon is stoppe
 `native:smoke:interactive` also checks native focus/resize/close; use isolated CI.
 Normal production builds exclude the private endpoint and renderer test hook.
 
+Register the local instance once to one account and API origin. Its signed
+identity allows local work offline and after online logout. Remote access needs
+separate Host opt-in and online authorization. On macOS/Windows, GUI Quit leaves
+the daemon and its tasks running; explicit daemon shutdown stops its owned work.
+
 Native uses the current data paths and device preferences.
 Native persistent Cookies are encrypted in server-scoped rows of `sessions.sqlite`.
 MyGo Secrets keeps the key in the system credential store. Upgrading from the
@@ -59,3 +66,8 @@ remain unavailable; select a new `local_profile` explicitly to register again.
 MyGo signed updates use distinct
 keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.
+
+Desktop-only browser acceptance lives in `e2e/`; run it through
+`bun run test e2e --desktop -- --grep settings` from the repository root. Shared
+Web/Desktop journeys remain in the root `e2e/` workspace. Browser preview tests
+do not replace packaged native acceptance.

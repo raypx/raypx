@@ -28,7 +28,7 @@ standalone CLI, run `bun run build:cli` then `bun run --cwd apps/cli smoke`.
 Real model Evals and a measured model baseline have not been collected. They
 require an explicit provider/model and `--run`; offline success does not establish
 the quality of a real model. Platform release acceptance is described in
-[testing](testing.md) and [Desktop release](desktop-release.md).
+[testing](testing.md) and [Desktop release](desktop.md#build-and-release).
 
 ## Local history reads and clearing
 

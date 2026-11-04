@@ -4,7 +4,8 @@
     "allowSyntheticDefaultImports": true,
     "types": ["bun", "vite/client"],
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"]
   },
   "include": [
     "vite.config.ts",
@@ -13,6 +14,7 @@
     "mygo.config.ts",
     "scripts/**/*.ts",
     "tests/integration/**/*.ts",
-    "tests/native/**/*.ts"
+    "tests/native/**/*.ts",
+    "e2e/**/*.ts"
   ]
 }

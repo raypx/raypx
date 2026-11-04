@@ -28,7 +28,6 @@ export default defineConfig({
       "**/dist/**",
       "**/.output/**",
       "**/node_modules/**",
-      "docs/history/**",
       // Vendored agent skills are upstream content managed by `bun run skills:update`;
       // skills/ and .claude/skills link them for other agents and add only Markdown.
       ".agents/**",

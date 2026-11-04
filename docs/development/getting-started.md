@@ -12,9 +12,10 @@ eval "$(mise activate zsh)"         # in ~/.zshrc (bash/fish/PowerShell also sup
 ```
 
 Activated shells switch versions on cd; without activation use `mise exec -- <command>`.
-Raypx uses mise for Bun selection and Go 1.27.3 for the native host. Nix is not
-required: current CI bottlenecks are task selection and cache invalidation, while
-Windows acceptance still uses the native MSVC/WebView2 environment.
+Raypx uses mise for Bun selection and Go 1.27.3 for the native host. The repository does not use a Nix shell.
+Windows Desktop uses WebView2 and the Windows packaging/signing tools. The MyGo
+host builds with `CGO_ENABLED=0`; it does not require a C/C++ compiler for that build.
+The configured macOS package minimum is 13.0.
 Direct Bun installs also work. `bun run doctor` confirms the active runtime. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
@@ -22,7 +23,7 @@ Desktop's Go module lives in apps/desktop. Daily `bun run verify` selects affect
 JavaScript and Go checks; `bun run verify --full` checks all current-platform sources
 and artifacts for release preparation or an explicit full-validation request.
 Shared JS configuration/lockfile changes broaden source checks without starting
-native runners. See the [Desktop guide](desktop-release.md).
+native runners. See the [Desktop guide](desktop.md#build-and-release).
 
 `bun install` runs the root `prepare` script, which installs the Vite+ Git hook
 dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:
@@ -47,12 +48,13 @@ development proxy forwards `/relay` to the independent service; production uses
 the shared gateway. See [Relay](../../infra/relay/README.md).
 bun run dev:desktop starts Desktop development;
 bun run package:desktop packages it with its version-matched CLI. Phones use the Web
-application; a native mobile app is deferred until it needs native capabilities.
+application for the remote workbench. An Expo Mobile account/login baseline is
+also available through `bun run dev:mobile`; see [Mobile](mobile.md).
 Desktop reads its connection at runtime from `~/.raypx/config.toml`, defaulting
 to production. To use the local API, set `base_url = "http://localhost:3002"`
 and `web_url = "http://localhost:3000"`, then fully quit and restart Desktop.
 Use a separate absolute `RAYPX_HOME` for isolated development configurations.
-See [Desktop configuration](desktop-configuration.md) for profiles/self-hosting.
+See [Desktop configuration](desktop.md#connection-configuration) for profiles/self-hosting.
 `VITE_API_URL` and `VITE_WEB_URL` still configure ordinary browser previews/Web
 builds; they do not override an installed Desktop's TOML settings.
 bun run dev:storybook previews `@raypx/ui` components on 6006; bun run build:storybook
@@ -63,7 +65,9 @@ runtime libraries, `catalog:mobile` contains Mobile-only dependencies, and
 `catalog:dev` contains build, test and development tools. Shared
 libraries keep the same catalog even when a test workspace lists them under
 `devDependencies`. All workspaces share one exact React
-version. Raypx Kit stays external. Do not add another task runner. Web and API run under Bun in dev, build, preview
+version. Environment, TypeScript presets and logging are local `@raypx` workspaces;
+remaining `@raypx-kit/*` dependencies are independently released external libraries.
+Do not add another task runner. Web and API run under Bun in dev, build, preview
 and production: scripts call `bun --bun vp`, and each output starts with
 `bun .output/server/index.mjs`. Nitro's `bun` preset traces Bun export conditions.
 
@@ -81,7 +85,8 @@ physical instance. Policy still checks every declared production import.
 Build with `bun run build:cli`, then use `apps/cli/dist/raypx` (`raypx.exe` on
 Windows), or run the source with `bun run --cwd apps/cli dev --help`.
 The citty command tree provides `raypx --help`, `raypx files --help` and
-`raypx files read --help`. Existing JSON-parameter commands remain available:
+`raypx files read --help`. Register the selected profile with `raypx login`
+before using local execution commands; see [registration](#register-local-execution). JSON-parameter commands include:
 
 ```sh
 raypx files authorize /absolute/directory --json
@@ -98,8 +103,9 @@ all following arguments remain operands, for example
 JSON command object; their executable argv belongs in its `args` array.
 `--version`/`-v` print the version, and `--help`/`-h` select help.
 Results retain the current bare JSON shape; errors and diagnostics use stderr.
-Only Desktop's private `stdio` engine schedules jobs; foreground commands run
-once and close their runtime.
+On macOS/Windows the independent CLI daemon schedules jobs and survives GUI Quit.
+The private foreground `stdio` runtime can also own scheduling when used directly.
+One-shot commands and TUI keep scheduling disabled and close only their own runtime.
 
 `raypx tui --profile work` opens a lightweight task browser when stdin and stdout
 are both terminals. Enter `t` for tasks, select a number, then `r` to run once
@@ -120,7 +126,7 @@ live output and cross-owner controls remain proposed.
 ## Build caches
 
 `bun run clean:artifacts` removes validation evidence, coverage, test-report caches
-and browser reports while preserving builds and SDKs. See
+and browser reports while preserving builds and staged native resources. See
 [validation scripts and cleanup](validation-artifacts.md) for the maintained checks
 and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
@@ -158,8 +164,13 @@ Include transfer time when measuring CI gains. See the [testing guide](testing.m
 Vendored skills live in `.agents/skills/` and `skills-lock.json` records their sources and
 hashes; `skills/` and `.claude/skills/` link them for each agent. Run `bun run skills:update`
 to pull upstream versions, review the diff, and never edit them by hand. A skill removed
-upstream stays installed until you remove it explicitly. `skills/raypx` is maintained in
-this repository. Lint skips vendored skills because they are upstream content.
+upstream stays installed until you remove it explicitly. Keep only skills for
+the current stack and remove retired skills together with both discovery links
+and their `skills-lock.json` entry. Lint skips these upstream bytes.
+
+Project guidance lives in root/workspace `AGENTS.md` and this documentation tree.
+Update the owning document directly instead of maintaining a second project
+manual in a repository-specific skill.
 
 ## Register local execution
 

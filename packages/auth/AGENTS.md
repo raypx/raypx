@@ -28,6 +28,7 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   and Web callback origin.
 - `/types`: pure public account/session types.
 - `/policy`: pure name/password limits shared by endpoints and forms.
+- `/origins`: pure normalization of explicitly trusted HTTP(S) and `views://main` origins.
 - `/access`: Better Auth's shared access controller and member/admin roles, built on
   Core's `/permissions` vocabulary. Auth imports the role names and permissions from
   `@raypx/core/permissions`; it never defines a second copy. The Admin plugin and
@@ -79,7 +80,7 @@ routing retain their own behavior.
 ## Verification
 
 Auth owns its source-adjacent hooks and form component tests in a separate
-happy-dom project; endpoint integration tests use the memory adapter in Node.
+happy-dom project; endpoint integration tests use the memory adapter under Bun.
 
 ```sh
 bun run --cwd packages/auth check

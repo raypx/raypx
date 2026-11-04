@@ -8,7 +8,8 @@ Cloud control owns origin/account credentials, grant renewal, relay and opted-in
 projections. Cloud restore runs in the background; local RPC never joins its
 serial queue. Signing in does not enable remote execution or upload local history.
 The MyGo composition root uses Go; its checks run through the shared VP graph.
-The unused Rust experiment and its independent CI have been removed.
+The current MyGo host is recorded in
+[ADR 0038](0038-mygo-desktop-host.md).
 
 ## Local terminal ownership
 

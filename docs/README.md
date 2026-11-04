@@ -1,58 +1,59 @@
 # Raypx documentation
 
-- [Persistent Agent Platform roadmap](roadmap.md)
-- [Event-sourced CLI orchestration](architecture/0044-event-sourced-cli-orchestration.md)
-- [Application services and adapters](architecture/0042-application-layering.md)
-- [Package surfaces](architecture/0043-package-surfaces.md)
-- [Architecture and runtime boundaries](architecture/README.md)
-- [Opt-in browser analytics](architecture/analytics.md)
-- [Remote Agent tasks and approvals](architecture/remote-tasks.md)
-- [Provider capabilities and managed Pi](architecture/0041-provider-capabilities-and-pi.md)
-- [Instance enrollment and provider boundaries](architecture/0040-instance-enrollment-and-providers.md)
-- [Local and server Agent platform decision](architecture/0039-local-server-agent-platform.md)
-- [Internationalization and device preferences](architecture/internationalization.md)
-- [Google and GitHub login](development/social-login.md)
-- [Account settings and session management](development/account-security.md)
-- [Account roles and menu permissions](development/access-control.md)
-- [Adding and extracting packages](development/workspaces.md)
-- [Windows daemon decision](architecture/0037-windows-daemon.md)
-- [MyGo Desktop host decision](architecture/0038-mygo-desktop-host.md)
-- [Local Owner Host decision](architecture/0035-local-owner-host.md)
-- [MyGo Desktop build and release](development/desktop-release.md)
-- [Shared logger workspace](../packages/logger/README.md)
-- [Development environment and commands](development/getting-started.md)
-- [Expo mobile development and login](development/mobile.md)
-- [Development page DevTools and diagnostic snapshots](development/devtools.md)
-- [Shared Hugeicons package](development/icons.md)
-- [Desktop connection configuration](development/desktop-configuration.md)
-- [Native cloud oRPC transport](development/desktop-orpc.md)
-- [Pi AI model calls](development/ai.md)
-- [Testing and release gates](development/testing.md)
+Raypx is a project-centered workbench with MyGo Desktop, a standalone Bun
+CLI/daemon, TanStack Start Web, Bun API and independent Relay. Desktop targets
+macOS 13+ and Windows; Expo Mobile currently provides the account/login baseline.
+Register local profiles once for offline work; remote data and execution grants
+require separate online authorization.
+
+Read the [project overview](../README.md), [product scope](../PRODUCT.md) and
+[root instructions](../AGENTS.md) first. Workspace manifests are the inventory:
+`bun run workspace:list` and `bun run test list`. Current guides describe the
+implementation; the roadmap describes future work. Accepted later amendments
+supersede conflicting earlier ADR text.
+
+## Development and verification
+
+- [Environment and everyday commands](development/getting-started.md)
+- [Workspace boundaries and package creation](development/workspaces.md)
+- [Tests, ownership and release gates](development/testing.md)
+- [Validation automation, CI, caches and evidence](development/validation-artifacts.md)
 - [Agent quality Evals and performance checks](development/agent-quality.md)
-- [Root test command and package ownership](development/test-commands.md)
-- [Validation scripts, evidence and cleanup](development/validation-artifacts.md)
-- [Test case ownership and consolidation](development/test-cases.md)
-- [Shared deployment per project](development/deployment.md)
-- [Infrastructure workspaces](../infra/README.md)
-- [Independent Relay service](../infra/relay/README.md)
-- [Cloudflare Relay deployment](../infra/cloudflare/README.md)
-- [Railway deployment and domain setup](development/railway.md)
-- [Existing beta environment](development/beta.md)
-- [Production environment](development/production.md)
+- [Development DevTools and diagnostic snapshots](development/devtools.md)
+
+## Applications and local execution
+
+- [MyGo Desktop configuration, native transport and release](development/desktop.md)
+- [Standalone CLI commands and profiles](../apps/cli/README.md)
+- [Independent terminal host and connectors](development/terminal-host.md)
+- [Expo mobile development and login](development/mobile.md)
+- [Pi AI model calls](development/ai.md)
+- [Memory, templates and task context](development/task-context.md)
+- [Local SQLite schema and migrations](development/local-sqlite.md)
+
+## Accounts and shared services
+
+- [Accounts, sessions, roles, administration and OAuth](development/accounts.md)
 - [Administrator configuration](development/configuration.md)
 - [Server caching](development/caching.md)
 - [Object storage](development/object-storage.md)
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
-- [Memory, templates and task context](development/task-context.md)
-- [Local SQLite schema and migrations](development/local-sqlite.md)
-- [Memory review remediation](development/memory-review-ffcc9bd.md)
+- [Internationalization and device preferences](architecture/internationalization.md)
+- [Shared Hugeicons package](development/icons.md)
+- [Opt-in browser analytics](architecture/analytics.md)
+- [Shared logger](../packages/logger/README.md)
 - [Raypx Kit library changes](development/intl-release.md)
-- [Foundation acceptance results](development/foundation-acceptance.md)
-- [Review remediation, 2026-10-25](development/review-remediation-2026-10-25.md)
-- [Terminal protocol P0 implementation](development/terminal-protocol-p0.md)
-- [Independent terminal host P1](development/terminal-host-p1.md)
-- [Foundation decision](architecture/0034-extensible-foundation.md)
-- [Historical documentation](history/README.md)
 
-Only the current documents above describe the active product. Earlier cloud,
-worker and business-layer designs are retained as historical context.
+## Deployment
+
+- [Compose deployment, production and Beta environments](development/deployment.md)
+- [Railway deployment and domains](development/railway.md)
+- [Infrastructure workspaces](../infra/README.md)
+- [Independent Relay service](../infra/relay/README.md)
+- [Cloudflare Relay ingress](../infra/cloudflare/README.md)
+
+## Architecture
+
+- [Runtime boundaries and accepted decisions](architecture/README.md)
+- [Remote Agent tasks and approvals](architecture/remote-tasks.md)
+- [Persistent Agent Platform roadmap](roadmap.md)

@@ -3,8 +3,8 @@
     "name": "defaults",
     "source": "",
     "expected": {
-      "apiUrl": "https://raypx.pro",
-      "webUrl": "https://raypx.pro"
+      "apiUrl": "https://raypx.com",
+      "webUrl": "https://raypx.com"
     }
   },
   {
@@ -51,8 +51,8 @@
     "name": "CLI AI table opaque",
     "source": "[ai]\nprovider=\"test\"\nmodel=\"test\"",
     "expected": {
-      "apiUrl": "https://raypx.pro",
-      "webUrl": "https://raypx.pro"
+      "apiUrl": "https://raypx.com",
+      "webUrl": "https://raypx.com"
     }
   },
   {

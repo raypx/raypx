@@ -4,8 +4,9 @@
 platform adapters. `@raypx-kit/intl` is an independently published SDK that bundles
 `use-intl` for translation, formatting, React context and caches; Raypx does not
 declare `use-intl` itself. Application
-loaders own any future asynchronous message retrieval. Current catalogs stay
-statically imported; there is no remote loading or localized routing in this design.
+builds choose catalog delivery through `@raypx/i18n/vite`. Web splits non-default
+catalogs into local client chunks; Desktop and server rendering use static imports.
+There is no remote translation service or localized routing.
 
 ## Types and configuration
 
@@ -33,9 +34,10 @@ explicit preference first, then all ordered system locales, then the default.
 Selecting English while system already resolves to English still changes and
 persists the mode. A system-derived locale is never stored as an explicit choice.
 
-The shared `LanguageProvider` is controlled by the platform owner and passes the
-current locale and catalog directly to the SDK provider. It has no second locale
-state or loader cache. Translation hooks use the nearest upstream provider.
+The shared `LanguageProvider` is controlled by the platform owner. The browser
+adapter binds it to a catalog store, keeping the previous ready catalog visible
+while another language chunk loads. Only a first render without a ready catalog
+suspends. Translation hooks use the nearest upstream provider.
 
 ### Web
 
@@ -43,6 +45,11 @@ The root loader resolves cookies and the complete weighted Accept-Language list.
 HTML and the first hydration render consume the same snapshot. Only after
 hydration does the browser read localStorage and `navigator.languages` (falling
 back to `navigator.language` when the list is empty).
+
+Web enables `i18nCatalogs({ catalogs: "lazy" })` in its application Vite config.
+English remains in the client entry; Chinese loads on demand. Its client entry
+awaits `preloadCatalog(document.documentElement.lang)` before hydration so the
+initial client catalog matches the HTML. Server environments stay static.
 
 Browser restoration reads only `raypx_locale`; a missing or invalid value selects
 system. Retired product keys are ignored without deletion or migration. Storage denial

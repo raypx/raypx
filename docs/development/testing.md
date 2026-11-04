@@ -1,176 +1,110 @@
-# Verification
+# Testing and verification
 
-Run focused meaningful workspace tests, then `bun run verify` for daily changes.
-It checks catalog parity, workspace/platform rules, changed-file format/lint and
-affected workspace types/tests. Native inputs add current-platform Go checks.
-Builds, relocated API/Web/CLI artifact probes and repository-wide Knip/lint belong
-to explicit `bun run verify --full` for release preparation. These local commands
-require no database, GUI or mail provider. Test runners share test.config.ts and
-remain plugin-independent. VP schedules the selected checks and tests; full mode
-adds builds in the same graph. Desktop's
-SDK preparation runs once as an uncached dependency; checks fingerprint its generated
-files after preparation. Application task configs never load the SDK or Vite app
-plugins, so pure package tests work after clean. Outcome-affecting fields are declared
-in each task's `cache.env`; `untrackedEnv` preserves the inherited environment.
-Browser argument
-payloads are scoped to the uncached browser leaf. Build outputs are explicit, and
-Vitest/Vite temporary caches are excluded from task input/output tracking.
-Typecheck dependency fingerprints also exclude each workspace's generated coverage,
-validation and browser reports. Dependency declarations under build outputs remain
-tracked, as do authored source folders named `coverage`.
-Tooling's full suite includes independent VP cache fixtures and always executes:
-VP's filesystem tracer cannot be nested on macOS. `raypx.uncachedTasks: ["test"]`
-records this exception; its unit-only suite and other workspaces retain caching.
+Run focused workspace tests, then `bun run verify` for daily delivery. It checks
+policy/locales, changed-file format/lint and affected types/tests; native inputs
+add current-platform Go checks. `bun run verify --full` adds repository audits,
+builds and relocated artifact probes for release preparation. Neither command
+replaces separate database, browser, installed native or live-provider acceptance.
 
-## Daily feedback and machine load
+## Test commands
 
-The root test entry is `bun run test [suite]`; each package keeps independent
-scripts. See [test commands](test-commands.md) for package selection, local entry
-points and the migration from root `test:*` aliases. Use `bun run test list` to
-discover supported layers instead of maintaining a package-name list.
-
-Task discovery, dependency closure, argument keys, VP configuration and cache snapshots
-come from `@raypx-kit/devkit/tasks`. Git change reading and reverse propagation use
-`@raypx-kit/devkit/verification`; Raypx supplies browser/native scope policies.
-The Start environment adapter uses `@raypx-kit/devkit/vite` with injected Vite `loadEnv`.
-Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture repositories
-cannot inherit another checkout's task list.
-
-Use `bun run verify` for daily feedback: policy and locales are always selected as VP
-tasks; unchanged inputs can reuse successful results. Explicit source, manifest,
-document and catalog patterns cover newly added/deleted files alongside automatic
-tracing. Policy/locales share the source task graph, avoiding extra runner launches.
-Verification prints and records their execution times (zero when cached), format/lint
-wall times and VP graph wall time including runner overhead. VP restores timing
-evidence with cached outputs; this evidence does not decide cache reuse.
-
-Changed files select formatting/lint and affected workspace types through reverse
-dependency graphs. Local test selection follows transitive source imports and changed
-test files, retaining affected integration suites and filesystem/subprocess assertions.
-Indirect consumers run complete suites. Configuration, fixtures, deletions, unresolved
-imports or sources without a test dependency fall back to complete suites. Test arguments
-are scoped to each existing package test task and participate in its VP cache key.
-CI and `--full` run complete suites for selected workspaces. Native inputs independently select Go host tasks.
-The default base is the merge-base
-with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
-Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
-Unknown inputs, shared JS configuration/lockfiles, or an unavailable base broaden
-source checks to all workspaces. This does not request release builds, Knip, browser
-acceptance or database jobs. An unavailable Git base also selects native checks
-conservatively because the native inputs are unknown. `bun run knip` remains an
-explicit maintenance command.
-Private Tooling verification/validation code and tests select only Tooling. Public
-helpers follow their exported entry's transitive source dependencies and actual
-workspace imports, then propagate to downstream consumers. Changes to task machinery,
-unknown/deleted Tooling inputs or unresolved public graphs retain all source checks.
-Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
-browser code or import a browser entry, including type-only and test imports. If a workspace's
-non-browser, non-test sources import browser code, its consumers are selected as before.
-
-Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
-Go host targets, builds outputs and runs independent artifact probes concurrently.
-It needs no GUI, database or mail service. The repository uses Bun for JavaScript
-and Go 1.27.3 for Desktop; no Rust toolchain is needed. `verify` and `verify --full`
-are the verification entry points.
-
-GitHub uses the same change planner:
-
-The `changes` job emits one versioned plan bound to the workflow's commit SHA.
-Source, database, browser and deployment workers execute that plan through
-`RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
-Missing plans, unsupported versions, mismatched commits and an invocation of an
-unselected gate fail. Native workers use the same plan's runner matrix and
-distribution selection. `verification/gates.ts` registers the required CI jobs;
-the final `foundation` job verifies the plan outputs and every registered result.
-An unknown dependency job must be registered before it can pass the final gate.
-
-Local `.artifacts/verification/latest.json` records `running` before executing
-checks, then `passed` or `failed`. Cancellation can leave `running`; it is not
-success. Local success covers source checks and the selected current-platform
-artifact probes, not separate database, browser, Docker or macOS/Windows CI gates.
-
-| Change                                                                            | Daily acceptance                                                                            |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Documentation                                                                     | Changed-file formatting and repository policy; no workspace/native suites                   |
-| JS/React business code                                                            | Affected workspace types and unit/component/integration tests                               |
-| Shared JS dependency/configuration                                                | All workspace source checks/tests; no release builds or native runners                      |
-| API or its affected libraries                                                     | Source checks/tests plus PostgreSQL/Redis integration                                       |
-| Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Go checks and relevant macOS/Windows native checks                                          |
-| Browser acceptance tests themselves                                               | Browser acceptance, to validate the changed suite                                           |
-| Version tag or manual full check                                                  | All workspaces, audits, builds, artifact probes, database/browser and both native platforms |
-
-Platform-specific filenames containing `windows`/`win32` select Windows;
-`darwin`/`macos`/`unix` select macOS; shared native inputs select both. Linux-only
-native files run the Linux Go checks without requesting macOS/Windows. JavaScript
-dependency reach alone never requests native runners, including renderer changes.
-Native workflow changes validate both platforms. `foundation` requires every
-selected gate to succeed and permits only intentional skips; an abandoned runner
-is reported as unavailable, never as a passing native check.
-
-Herdr integration and pinned Go checks run in the native check phase. Go caches
-are separate from VP's JS task cache; smoke and production use separate outputs.
-
-The check phase stages a matching CLI, runs Herdr and executes Go source checks on each selected platform.
-Routine checks run Herdr once; distribution runs repeat it three times on Windows
-without blocking the parallel package/smoke phases.
-Installer creation, signatures and installed GUI smoke run on tag pushes or manual
-dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
-Those runs require Go checks, production packaging and packaged GUI smoke in parallel.
-Manual distribution runs have their own cancellation group, so routine pushes cannot
-cancel a release acceptance run.
-Distribution runs prepare shared JS inputs once per platform; that job alone saves VP artifacts
-and the parallel phases only restore them. Routine runs skip preparation, so the lone check
-phase builds and saves its own inputs. Verification, test and E2E tasks receive the fixed
-`VITE_APP_RELEASE=verification`, so a new commit does not invalidate unchanged tasks. Native Go
-compilation uses the Go cache and independent production/smoke package directories.
-Generated route trees and native JSON use LF on every checkout so Windows generators do not
-invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
-CI selects Go through apps/desktop/go.mod and keys its native cache with go.sum.
-Windows jobs install Bun packages from the registry instead of restoring the download cache;
-extracting its many small files took longer than a fresh frozen install.
-The browser job caches Playwright's Chromium headless shell by Playwright version and runs
-`playwright install-deps` only when `ldd` reports a missing system library.
-Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
-
-The approach borrows component path selection from
-[Tauri's core workflow](https://github.com/tauri-apps/tauri/blob/dev/.github/workflows/test-core.yml),
-documentation-only test skipping and a bounded platform/version matrix from
-[Vite's CI](https://github.com/vitejs/vite/blob/main/.github/workflows/ci.yml),
-and an independent tag-triggered release flow from
-[MyGo's release workflow](https://github.com/egoist/mygo/blob/main/.github/workflows/release.yml).
-Raypx keeps its existing affected-workspace planner and adds no third-party filtering action.
-The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
-worker and per-file isolation; larger suites set their worker count locally.
-CLI, Desktop and Tooling also own their subprocess test timeouts locally.
-Override task concurrency with `--concurrency-limit=1`
-or `VP_RUN_CONCURRENCY_LIMIT`. A single direct runner can still use
-`bun run --cwd packages/ui test --maxWorkers=2`.
+Root commands discover scripts from workspace manifests; each workspace owns its
+actual suites. Ordinary Vitest tests need no database, GUI or provider login.
 
 ```sh
-bun run test --filter=@raypx/ui
-bun run test '--filter=...@raypx/ui'
-bun run raypx-dev tasks @raypx/ui#test -- --testNamePattern keyboard
-bun run raypx-dev tasks desktop#build --dry-run
-bun run test --verbose
+bun run test --help
+bun run test list
+bun run test
+bun run test unit
+bun run test component
+bun run test integration
+bun run test coverage
 ```
 
-Qualified `package#task` references accept scoped arguments after `--`. When forwarding
-arguments with a filter, use a qualified reference to avoid changing dependency tasks.
-`--dry-run` prints a dependency plan without executing tasks. VP uses private `task:*`
-names so package scripts remain independently runnable without task/script conflicts.
-There is no second scheduler. `vp run --filter @raypx/ui task:test` is the equivalent
-native task entry; `vp run test` at root enters the normal root launcher.
+### Independent packages
 
-VP records local results in `node_modules/.vite/task-cache`. Use `--verbose` or
-`vp run --last-details` for cache misses and task timings. Cached logs describe an
-earlier execution; their test durations are not the current command's elapsed time.
-Task inputs ignore `node_modules` listings and tool caches such as `.nitro`, `.vite` and
-`.cache`, so a fresh CI runner can replay builds; `bun.lock` still invalidates dependency
-changes. Keep the cache between runs. `bun run clean` removes task/transform caches while
-preserving dependency packages, sources and local user data.
+```sh
+bun run --cwd packages/tasks test
+bun run --cwd packages/tasks test:unit
+bun run --cwd packages/tasks test:component
+bun run --cwd apps/api test
+bun run --cwd apps/api test:postgres
+bun run --cwd apps/api test:redis
+bun run --cwd apps/api test:cluster
+```
 
-The root `dev` entry selects Web and API and allows three task slots. Preparation
-and compilation dependencies complete before the long-running dev commands start.
+`test:cluster` requires both `TEST_DATABASE_URL` (an isolated database ending in
+`_test`) and `TEST_REDIS_URL`. It checks multi-instance Relay with real sockets.
+`test backends` and the CI backend gate include it.
+
+Only layers with actual suites get scripts. Root selection accepts the full name,
+workspace path or an unambiguous directory name. Running `raypx-dev test` within a
+workspace also selects that workspace automatically.
+
+```sh
+bun run test --package @raypx/tasks
+bun run test component --package tasks
+bun run test unit --package packages/tasks -- --testNamePattern conversation
+bun run test --filter=@raypx/ui
+bun run test '--filter=...@raypx/ui'
+```
+
+Use `--package` when forwarding runner arguments to one package. Existing VP
+filters remain available for graph selections; do not combine them with `--package`.
+VP options go before `--`; filenames, reporters and other runner arguments go after.
+Package-local scripts call Vitest directly and accept runner arguments directly.
+Use the root entry with `--package` for VP controls such as `--dry-run` and `--no-cache`.
+
+Each workspace's `vitest.config.ts` merges the plain defaults from `test.config.ts`
+with native `defineConfig`/`mergeConfig`. Test selection and customization stay local;
+multi-environment packages declare native `projects` and select them with `--project`.
+Focused scripts name their actual test directories or projects and fail when empty.
+Coverage scripts use `--coverage`; reporters default to text, JSON and LCOV and can
+be customized in the owning workspace without changing a shared option schema.
+
+### Browser and repository workflows
+
+```sh
+bun --bun playwright install chromium
+bun run test e2e --web --smoke -- --workers=1
+bun run --cwd e2e e2e
+bun run --cwd e2e e2e:web
+bun run --cwd e2e e2e:desktop -- --grep template
+bun run --cwd e2e e2e --web --dry-run
+
+bun run test inventory --layers
+bun run --cwd packages/tooling test:inventory
+bun run --cwd packages/tooling test:backends
+bun run test backends --with-e2e -- --workers=1
+```
+
+Browser commands use the same scoped arguments and build plan from root or `e2e/`.
+Private `_e2e` scripts are terminal runners for VP, not public entry points.
+`raypx.taskScripts` connects each public command to a real private script, rejecting
+chains or missing targets so a direct command cannot recursively enter its own graph.
+
+Inventory and isolated-backend orchestration belong to Tooling and stay repository-wide,
+even when launched from that package. Baseline/mapping filenames resolve against
+the caller's current directory. Prerequisites, generated reports and cleanup are in
+[validation artifacts](validation-artifacts.md). Live inference remains a separate,
+explicit `bun run --cwd e2e e2e:live` gate with its existing prerequisites.
+
+## Daily acceptance
+
+| Change                                                                            | Daily acceptance                                                                    |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Documentation                                                                     | Changed-file formatting and repository policy; no workspace/native suites           |
+| JS/React business code                                                            | Affected workspace types and unit/component/integration tests                       |
+| Shared JS dependency/configuration                                                | All workspace source checks/tests; no release builds or native runners              |
+| API or its affected libraries                                                     | Source checks/tests plus PostgreSQL/Redis integration                               |
+| Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Go checks and relevant macOS/Windows native checks                                  |
+| Browser acceptance tests themselves                                               | Browser acceptance, to validate the changed suite                                   |
+| Release preparation                                                               | Full source/build/audit checks plus separate database/browser/native platform gates |
+
+Source-only daily checks and CI gates have different prerequisites. The
+[validation guide](validation-artifacts.md#verification-planning-and-cache) covers
+selection, CI plans, native platform matrices, task caches and machine load.
+Report unavailable or unrun platforms explicitly.
 
 ## Test locations
 
@@ -180,10 +114,11 @@ and `clean:artifacts`. Scripts belong in Tooling; `.artifacts/` holds generated 
 
 Unit suites live beside source as `*.test.ts(x)`. DOM suites use
 `*.component.test.ts(x)`; the suffix selects their layer independently of syntax.
-Integration/acceptance suites, shared setup and fixtures stay in `tests/`.
+Integration suites, shared setup and fixtures stay in `tests/`; Desktop-only
+browser acceptance lives in `apps/desktop/e2e/`.
 Tasks owns pure tests beside its model and component tests beside shared views
 (composer, conversation, observed requests, workspace). Web/Desktop retain application auth,
-routes and IPC adapters. Host owns loopback relay `tests/integration/` for renewal,
+routes and IPC adapters. CLI owns loopback relay `tests/integration/` for renewal,
 replay and snapshots, with fresh transport/storage resources per case.
 Keep filenames focused on the subject (`auth.test.tsx`, `cache.test.ts`).
 The `test:unit`, `test:component` and `test:integration` scripts select these layers.
@@ -203,20 +138,24 @@ subprocess, IPC, OS-lock and compiled CLI tests remain in `tests/native/host`.
 Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/native/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
-The engine controller orders status events ahead of older reads and ignores late
-responses after disposal. Project selection and cache invalidation are shared by
-the homepage, onboarding and sidebar; opening these views never starts a task.
 CLI unit suites live beside source; `tests/integration/` stays grouped by capability.
 Agent lifecycle/approvals, input races and context/resume have separate suites sharing
 per-case host fixtures. Their real ten-second deadline tests remain in integration;
 injected Pi cases separate lifecycle, tool durability and completion in unit.
-standalone artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
+Standalone artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
 live in their own `tests/helpers/` and own temporary resource cleanup.
 E2E server launch helpers live in `e2e/tests/helpers/`.
 Ordinary browser cases are grouped by access, auth, settings, navigation, analytics
 and feature journeys; task conversation/history/drafts live under `e2e/tests/tasks/`.
-See [case ownership and consolidation](test-cases.md) for the coverage map and rules
-for combining cases without replacing independent safety or platform checks.
+Desktop-only settings acceptance lives in `apps/desktop/e2e/settings.spec.ts`
+and shares `@raypx/e2e/testing` fixtures through its public test entry. The root
+Playwright configuration discovers both locations. Use `bun run test e2e -- --list`
+for the current inventory; fixed counts are not an ownership contract.
+
+Combine cases only within one coherent journey. Keep independent failures, account
+boundaries and platform checks identifiable. Browser response fixtures do not prove
+real authentication or native IPC, and each case gets fresh context and resources.
+
 i18n separates pure/SSR tests from `*.component.test.tsx` through Vitest projects
 to preserve independent React renderer environments.
 DOM tests run in happy-dom. The shared setup in `packages/tooling/tests/setup/dom.ts`
@@ -238,30 +177,12 @@ under `tests/postgres/node/`, selected only by the `postgres` mode in
 The existing script names select the mode; the default test command never connects to a database.
 Database seeding and behavior assertions stay in each suite.
 
-## Unused code checks
+### DOM matchers with the hoisted install
 
-Run `bun run knip` for the full report. `knip.json` declares Vite app configs,
-spawned fixtures, native smoke entries, type assertions and command-loaded tools
-as entries, including the TypeScript presets' VP-invoked `scripts/task.ts`.
-Drizzle config is analyzed statically, without loading database
-credentials. The Vitest scaffold is a static `.template` file copied into each new
-workspace, so its workspace-relative imports need no Knip resolution exception.
-The read-only JSON adapter recognizes only catalog findings backed by actual Bun
-root `overrides` references and existing catalog declarations. Every other finding
-fails verification. Go-launched TypeScript fixtures are explicit entries; vendored
-skills stay outside product analysis. The root `skills` dependency is the CLI used
-by `skills:update`. Root overrides pin `oxc-parser` and `@oxc-project/types` together
-at `0.157.0`. Revalidate Tooling, Knip, type checks and builds when changing this
-pair, including compatibility with Vite+'s declarations. Native parser bindings
-follow the parser package. Vite+ 1.5.0 supplies `@oxc-project/runtime` at
-`0.157.0`, `oxfmt` at `0.76.0`, and `oxlint-tsgolint` at `7.0.2005` without
-root overrides. Keep `oxlint` and `@oxlint/plugins` overridden together at `1.90.0`
-until the React `immutability` false positive in bundled Oxlint 1.91.0 is fixed
-([upstream issue](https://github.com/oxc-project/oxc/issues/28401)). Revalidate lint,
-formatting and Tooling before removing these overrides.
-Keep `@vitest/coverage-v8` at `5.1.0`, matching Vite+ 1.5.0's bundled Vitest.
-Workspaces inheriting the shared coverage configuration declare
-`@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
+Register @testing-library/jest-dom/matchers using expect.extend on the expect
+exported by vite-plus/test. Keep the jest-dom/vitest import type-only for assertion
+augmentation; its runtime side effect can extend a different auto-installed Vitest
+peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 
 ## Explicit gates
 
@@ -274,9 +195,11 @@ Workspaces inheriting the shared coverage configuration declare
 - bun run test e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
 - bun run package:desktop on macOS and Windows checks the actual native package.
-  Release acceptance additionally verifies views://main session persistence on macOS
-  WebKit/Windows CEF against HTTPS auth, bundled CLI resolution/version, picker grants,
-  tray scheduling, restart, EOF/quit cleanup and PTY resize/cancellation.
+  Release acceptance additionally verifies Go-owned encrypted session persistence
+  against HTTPS auth, scoped MyGo browser storage on WKWebView/WebView2, matching
+  bundled CLI resolution, picker grants, daemon scheduling/task survival after GUI
+  Quit, explicit daemon shutdown and PTY resize/cancellation. Renderer previews
+  cannot establish these native results.
 
 ### Faster browser feedback
 
@@ -305,7 +228,7 @@ Playwright filenames, workers, trace and reporter arguments travel through a sco
 JSON environment field to the uncached browser leaf. They are not dependency passthrough
 arguments: changing a test selection must not invalidate Web/Desktop builds or
 their type checks. Application source, build variables and runtime pins still
-participate in the normal build hashes. See the [case timing record](test-cases.md).
+participate in the normal build hashes.
 
 Successful runs skip manual full-page screenshots and local traces. Failure
 screenshots remain enabled; CI records traces on the first retry. Capture the
@@ -319,11 +242,11 @@ bun run test e2e --web -- --grep template --trace on
 
 Each mode builds only its required surfaces, using synthetic analytics settings
 and the running Bun executable. Desktop browser acceptance builds `artifacts/browser` in
-Vite mode `e2e`; it excludes Native SDK preparation, CLI compilation and Native
+Vite mode `e2e`; it excludes MyGo preparation, CLI compilation and Go
 checks. Its Native bridge fails with `DESKTOP_REQUIRED`, so this output cannot
-simulate successful IPC. Normal Desktop builds and packaging still use the real
-SDK and `dist`, and `bun run verify` retains strict Native checking and artifact
-probes. The browser-only output is ignored, cached separately and removed by
+simulate successful IPC. Normal renderer builds use `dist/client`; packaging embeds that output with
+the compiled CLI and Herdr. Daily `bun run verify` selects native checks only for
+native inputs; `verify --full` adds builds and artifact probes. The browser-only output is ignored, cached separately and removed by
 `bun run clean`. Live backend/inference acceptance keeps its separate opt-in config.
 The Desktop acceptance server reads that compiled client directory directly;
 startup no longer loads Vite plugins or application configuration. It retains
@@ -374,9 +297,8 @@ web security. Do not count browser-preview tests as packaged-platform passes.
 Unavailable platform checks remain open release gates, with their reasons reported.
 
 Browser E2E, including `e2e:live`, defaults to headless. Add `--headed` only when
-interactive browser debugging is wanted. Native smoke defaults to quiet presentation:
-windows use `activate: false` and `showInactive()`, and system notifications/dialogs
-are suppressed. Display/hide and visibility-based approval leases still run; native
+interactive browser debugging is wanted. Native smoke defaults to quiet presentation with inactive windows and suppressed
+notifications/dialogs. Display/hide and visibility-based approval leases still run; native
 close, resize and foreground activation checks are explicitly skipped. Quiet smoke
 fails if it observes its test window gaining focus. This is not a fully headless
 native renderer: a test window can still be visible behind the current application.
@@ -399,41 +321,18 @@ origins using TOML, then switches back. It checks native cookie and WebView-stor
 isolation, remote opt-in isolation, restoration of the original server state,
 and preservation of device preferences and local file/job state.
 
-## DOM matchers with the hoisted install
-
-Register @testing-library/jest-dom/matchers using expect.extend on the expect
-exported by vite-plus/test. Keep the jest-dom/vitest import type-only for assertion
-augmentation; its runtime side effect can extend a different auto-installed Vitest
-peer. Independent runner setup files preserve the shared Bun/jsdom preload.
-
 ## Independent terminal host
 
-The [P1 host guide](terminal-host-p1.md) documents the isolated real Claude/Codex
+The [terminal host guide](terminal-host.md) documents the isolated real Claude/Codex
 terminal-to-Web gate, daemon lifetime and capability restrictions. It complements
 the HTTPS Beta gate rather than replacing it. Default tests cover private IPC,
 GUI-client disconnect, retention and Native authorization fences. `native:smoke`
 also probes the daemon after actual GUI Quit and explicitly stops its isolated
 owner at cleanup. Production service installation and iOS are separate gates.
 
-## MyGo Desktop migration gates
+## Native release acceptance
 
-`native:smoke` builds a separate release application with the `native_smoke`
-Go build tag, then drives the existing TS assertions through a token-authenticated
-Unix socket or Windows named pipe. `native:smoke:interactive` additionally exercises
-foreground close/focus/minimum-size behavior. The normal release has no smoke
-listener or eval commands; the post-package gate matches the actual binary to its
-Go module/build metadata and checks that no native-smoke socket marker is present.
-Go retains the shared config/Cookie/API/local-method JSON fixtures. Renderer
-tests verify the TS contract and preference validation, including the raw preload
-regression executed by Go through a Bun fixture.
-Native application tests run separately in the macOS/Windows CI matrix. Default
-Bun verification builds renderer assets without preparing a native SDK. Local
-automation stays quiet; foreground close/focus/minimum-size checks run on isolated
-GitHub runners. Windows CI silently installs the smoke NSIS package into an owned
-temporary directory, runs its actual installed main executable and CLI through
-every phase, then uninstalls and verifies cleanup.
-
-Release signing and real HTTPS/live-agent acceptance require their explicit CI
-secrets or isolated acceptance environment. A successful unsigned local bundle does
-not establish notarization, Windows WebView2 behavior or live-provider acceptance.
-See [ADR 0038](../architecture/0038-mygo-desktop-host.md).
+See [Desktop build and release](desktop.md#build-and-release) for platform
+requirements, native-smoke isolation, installed package checks and signatures.
+Browser preview establishes compiled web behavior only. MyGo transport tests run
+through `mygo:test`; native smoke and interactive acceptance remain explicit.

@@ -2,6 +2,12 @@
 
 The compiled `raypx` executable needs no installed Node or Bun. Desktop bundles the same version and connects to its independent daemon through private IPC. The daemon owns scheduling. Foreground commands run once and never install a service.
 
+Run `raypx login` once to enroll the selected profile with an account and server
+origin before local execution. Its signed identity permits offline work after
+online logout. `RAYPX_API_URL` selects the enrollment server (default
+`https://raypx.com`); `RAYPX_WEB_URL` can select a separate account-page origin.
+Enrollment and remote Host authorization are separate.
+
 Terminals, Agents and external commands started by the CLI can run `bun` and `bunx` without an installed Bun: the CLI appends shims for its embedded Bun to the end of their PATH, so an installed Bun still wins. `runtime.info` returns the absolute `bun` shim for commands that need an executable path.
 
 ```sh

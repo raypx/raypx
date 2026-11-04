@@ -168,5 +168,5 @@ clients; it removes only its own fixture row afterward.
 Administrative writes also require the durable audit store introduced with the
 console. The default runtime couples configuration CAS and success history in one
 transaction; custom repository factories receive AuditService and must keep this
-contract. See [administration audit](access-control.md#durable-audit) for migration,
+contract. See [administration audit](accounts.md#durable-audit) for migration,
 uncertainty and permanent-retention behavior.

@@ -69,7 +69,7 @@ it("keeps offline catalogs independent of invalid TOML and custom endpoints", as
 
 it("reads AI settings alongside server profiles and never modifies the user's TOML", async () => {
   const server = fixture();
-  const source = `base_url = "https://raypx.pro"\nprofile = "beta"\n[profiles.beta]\nbase_url = "https://beta.raypx.pro"\n[ai]\nprovider = "local"\nmodel = "fixture-model"\napi = "openai-completions"\nbase_url = ${JSON.stringify(server.url)}\n`;
+  const source = `base_url = "https://raypx.com"\nprofile = "beta"\n[profiles.beta]\nbase_url = "https://beta.raypx.com"\n[ai]\nprovider = "local"\nmodel = "fixture-model"\napi = "openai-completions"\nbase_url = ${JSON.stringify(server.url)}\n`;
   await writeFile(join(directory, "config.toml"), source);
   vi.stubEnv("OPENAI_API_KEY", "ambient-private-key");
   const result = await invoke("complete", { prompt: "Test Pi" });

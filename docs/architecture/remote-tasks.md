@@ -28,10 +28,10 @@ and sends heartbeats to detect broken connections. Reconnect uses bounded backof
 ## Desktop local tasks
 
 Desktop opens This computer by default. Its renderer calls Native and the bundled
-CLI through private `agents.local.*` stdio methods for creation, reads, approvals,
+CLI daemon through private `agents.local.*` methods over its NDJSON proxy for creation, reads, approvals,
 follow-ups and cancellation. Local execution requires an authorized project and
-an installed provider; it does not require remote access, a relay grant or a Web
-deployment or Raypx login. Remote views and host authorization require a confirmed
+an available provider and first-time account/origin-bound instance enrollment.
+Its signed identity permits offline execution after online logout. Remote views and host authorization require a confirmed
 account session. Local pages remain usable during session errors. Email verification
 and password reset still use their existing Web callbacks.
 
@@ -59,10 +59,10 @@ by server/account. WebView partitions still isolate browser storage between depl
 ## Authentication and routing
 
 The account session bootstraps a restricted host credential stored in the CLI profile SQLite database, scoped to the account, origin, device and epoch.
-The daemon uses it to renew device grants valid for at most ten minutes independently
-of browser sessions. Native never exports this credential to the renderer. Windows
-continues cookie-backed Native renewal. Renewing the same binding reconnects without
-cancelling execution. See [P1 host authorization](../development/terminal-host-p1.md). Browser viewers
+The daemon uses it on macOS and Windows to renew device grants valid for at most
+ten minutes independently of browser sessions. Native never exports this credential
+to the renderer. Renewing the same binding reconnects without
+cancelling execution. See [P1 host authorization](../development/terminal-host.md). Browser viewers
 receive single-use tickets valid for thirty seconds. Authentication is the first
 WebSocket frame; tokens are never query parameters. The account query parameter
 selects a room and grants no access. Known browser origins are checked at upgrade.
@@ -72,8 +72,8 @@ host credential. Device epochs fence
 revoked connections; connection identities fence stale sockets. A revoke closes
 connected devices, whose execution owner cancels the binding. Heartbeats also detect
 session revocation and credential expiry. Account changes, logout, disabling remote
-access cancel affected managed tasks; transient network loss does not. macOS GUI
-Quit preserves tasks, while explicit daemon stop and Windows GUI Quit cancel them.
+access cancel affected managed tasks; transient network loss does not. GUI Quit
+preserves daemon-owned tasks on both platforms; explicit daemon stop cancels them.
 
 `infra/relay` uses Bun's WebSocket server independently of API's Nitro listener.
 The gateway sends `/relay` to Relay and HTTP authentication/RPC to API; clients
@@ -173,17 +173,17 @@ assembled snapshots to 32 MiB. Slow connections are disconnected and recover by
 cursor. Unsupported or oversized managed-task approvals fail closed. External
 terminal hooks instead return to the Agent's native permission flow.
 
-The normalized relay protocol leaves space for another local adapter such as Pi.
-Pi Agent execution, arbitrary terminal transcript synchronization and full terminal
-control are not part of this release. Explicitly installed macOS Claude/Codex Bash
-hooks are covered separately below.
+Pi is available for device-local managed tasks but is excluded from remote
+project grants and advertised as unsupported remotely. Arbitrary terminal transcript
+synchronization and full terminal control are not part of this release.
+Explicitly installed Claude/Codex Bash hooks are covered separately below.
 
 ## Verification
 
 The default gate covers real loopback WebSockets, account isolation, one-time
 tickets, reconnect/replay, event deduplication, snapshots, revocation, competing
-host approvals and protocol subprocess fixtures. `bun run verify` also builds
-Node artifacts and checks relocated outputs.
+host approvals and protocol subprocess fixtures. `bun run verify --full` also
+builds Bun artifacts and checks relocated outputs.
 
 `bun run test postgres` checks real migrations and projection persistence across
 API instances. These commands
@@ -201,7 +201,7 @@ explicit platform acceptance; browser tests do not imply those checks passed.
 
 ## Managed activity and read isolation
 
-Auth and ready require protocol version 3 for managed tasks and observed requests.
+Auth and ready require protocol version 4 for managed tasks and observed requests.
 Other versions fail with UPGRADE_REQUIRED and are never retried as an older protocol. Messages begin with a full
 activity checkpoint, then carry append-only deltas with base/new revisions;
 replacements and terminal updates are full checkpoints. A missing base requires
@@ -223,11 +223,11 @@ after suspension are labelled; contiguous history can be loaded deliberately.
 
 ## Observed terminal sessions
 
-macOS relay v4 also synchronizes explicitly opted-in Claude/Codex Bash permission
+Relay v4 also synchronizes explicitly opted-in Claude/Codex Bash permission
 hooks through a separate RequestBroker and observed projection. Away waiting is
 bounded and fails back to the terminal. Tool outputs and full terminal streams
 remain local. Content is plaintext private testing data, pending E2EE. See the
-[P1 guide](../development/terminal-host-p1.md) for capability, lifetime and test limits.
+[P1 guide](../development/terminal-host.md) for capability, lifetime and test limits.
 
 Local terminal approvals use `approvals.local.*` and a profile-owned broker in
 `<profile>/terminal/`. Native alone exposes cloud terminal preferences through

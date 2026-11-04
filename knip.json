@@ -36,7 +36,8 @@
         "tests/native/smoke/*.ts",
         "vite.app.config.ts",
         "scripts/native/*.ts",
-        "tests/native/fixtures/*.ts"
+        "tests/native/fixtures/*.ts",
+        "e2e/**/*.spec.ts"
       ]
     },
     "apps/web": {

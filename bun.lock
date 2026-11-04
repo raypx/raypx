@@ -113,7 +113,9 @@
       },
       "devDependencies": {
         "@orpc/server": "catalog:",
+        "@playwright/test": "catalog:dev",
         "@raypx/devtools": "workspace:*",
+        "@raypx/e2e": "workspace:*",
         "@raypx/instances": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
@@ -249,9 +251,11 @@
     "e2e": {
       "name": "@raypx/e2e",
       "version": "0.0.0",
-      "devDependencies": {
+      "dependencies": {
         "@playwright/test": "catalog:dev",
         "@raypx/account": "workspace:*",
+      },
+      "devDependencies": {
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",

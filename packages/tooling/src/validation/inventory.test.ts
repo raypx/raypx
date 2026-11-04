@@ -1,4 +1,5 @@
 import { expect, it } from "vite-plus/test";
+import { testLayer } from "./test-sources.js";
 import { baselineCases, compareCases, ownerMap } from "./inventory.js";
 
 const original = {
@@ -33,4 +34,9 @@ it("rejects malformed baselines and misspelled ownership mappings instead of sil
     "baseline file",
   );
   expect(baselineCases({ cases: [original] })).toEqual([original]);
+});
+
+it("keeps app-owned browser acceptance outside ordinary Vitest inventory", () => {
+  expect(testLayer("e2e/settings.spec.ts")).toBe("external");
+  expect(testLayer("tests/integration/settings.spec.ts")).toBe("integration");
 });

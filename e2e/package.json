@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./testing": "./tests/helpers/testing.ts"
+  },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "e2e": "raypx-dev e2e",
@@ -14,9 +17,11 @@
     "e2e:visual": "raypx-dev e2e --visual",
     "_e2e": "raypx-dev browser:run"
   },
-  "devDependencies": {
+  "dependencies": {
     "@playwright/test": "catalog:dev",
-    "@raypx/account": "workspace:*",
+    "@raypx/account": "workspace:*"
+  },
+  "devDependencies": {
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",

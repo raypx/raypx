@@ -56,7 +56,9 @@
   },
   "devDependencies": {
     "@orpc/server": "catalog:",
+    "@playwright/test": "catalog:dev",
     "@raypx/devtools": "workspace:*",
+    "@raypx/e2e": "workspace:*",
     "@raypx/instances": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
@@ -91,7 +93,8 @@
       "scripts/**": "bun",
       "vite.app.config.ts": "bun",
       "mygo.config.ts": "bun",
-      "bridge.ts": "universal"
+      "bridge.ts": "universal",
+      "e2e/**": "bun"
     }
   }
 }

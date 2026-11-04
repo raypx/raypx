@@ -1,10 +1,11 @@
 # Extending workspaces
 
 Bun workspaces below cover TypeScript applications and libraries. Desktop also owns
-a Go module in apps/desktop; see the [Desktop guide](desktop-release.md).
+a Go module in apps/desktop; see the [Desktop guide](desktop.md#build-and-release).
 
-Provider infrastructure lives under `infra/*` as private tooling workspaces with
-their own manifests, dependencies, deployment commands and checks. These are
+Infrastructure lives under `infra/*`, including the independent Relay application
+and provider deployment tooling. Each manifest declares its actual kind/target,
+dependencies, deployment commands and checks. These are
 discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).
 
 ```sh
@@ -26,8 +27,8 @@ node or bun. entryTargets overrides the default by exports key. sourceTargets
 maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Bun can consume node code;
 other platform crossings require a compatible explicit public entry. A server use
-case behind a universal entry is not safe merely because the runtime happens to be
-node today: `memory`, `jobs` and `instances` mark `./server` and `src/server.ts` /
+case behind a universal entry is not safe merely because Bun can execute
+Node-compatible APIs: `memory`, `jobs` and `instances` mark `./server` and `src/server.ts` /
 `src/server/**` as node, following `account`, so a browser import of a server use
 case fails policy instead of reaching a bundled dependency by accident.
 
@@ -52,7 +53,7 @@ VP discovers lightweight `vite.config.ts` files. `@raypx/tooling/tasks` derives
 private `task:*` definitions from the package scripts and declares build dependencies.
 Root `test [suite]` aggregates declared package commands; `test --package` selects
 one owner. Public commands with build prerequisites can use `raypx.taskScripts`
-to select a private runner inside VP's leaf; see [test commands](test-commands.md).
+to select a private runner inside VP's leaf; see [test commands](testing.md#test-commands).
 Actual file reads determine incremental invalidation; source-only libraries need no
 build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
 in `vite.app.config.ts`, while independent Vitest configs keep test initialization
@@ -87,7 +88,9 @@ directly consumes CLI internals. Do not create packages before those consumers e
 `@raypx/logger` is a private source workspace consumed by API and CLI. It owns
 evlog adapters, safe projection and managed delivery; applications own event
 schemas, privacy policies and destinations. Its safe/managed entries are universal,
-while context and stream entries remain Node/Bun-only. Keep it local while the
+while the root/context implementation and `/stream` remain Node-compatible.
+`context` and `pipeline` are private modules, not public package entries. Keep it
+local while the
 product workflow settles; no Kit release or archive is required.
 
 `@raypx/icons` is the shared browser icon library consumed by UI, Blocks, feature
@@ -139,8 +142,9 @@ SQLite and process implementations remain at their existing CLI boundaries. Keep
 page queries, drafts and authentication navigation in tasks/apps. A separate
 `@raypx/harness` workspace is justified when another execution host consumes this
 boundary directly, rather than creating a second owner inside Desktop.
-The private PiRunner is an offline-tested SDK experiment, not a new selectable
-provider; see [Pi Agent loop and acceptance](ai.md#experimental-agent-loop).
+Managed local Pi is a selectable provider through `@raypx/providers/pi`; the CLI
+private harness owns task policy, persistence, approval and cancellation. See
+[Pi Agent loop and acceptance](ai.md#injected-agent-loop).
 
 ## Scheduled jobs
 

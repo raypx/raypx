@@ -9,7 +9,7 @@ export async function loginInstance(options: {
   profile?: string;
   recordDiagnostic?: RecordDiagnostic;
 }) {
-  const origin = instanceOrigin(process.env.RAYPX_API_URL ?? "https://raypx.pro");
+  const origin = instanceOrigin(process.env.RAYPX_API_URL ?? "https://raypx.com");
   const webOrigin = instanceOrigin(process.env.RAYPX_WEB_URL ?? origin);
   const storage = new ProfileStorage(profilePath(options));
   try {

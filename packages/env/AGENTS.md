@@ -8,12 +8,12 @@ validation and browser access rules.
 
 ## Interface
 
-| Path        | Purpose                                                                  |
-| ----------- | ------------------------------------------------------------------------ |
-| `.`         | `createEnv`, `defineEnv`, `EnvError`, Zod and public schema/preset types |
-| `./runtime` | Reusable `NODE_ENV` preset                                               |
+| Path | Purpose                                                                  |
+| ---- | ------------------------------------------------------------------------ |
+| `.`  | `createEnv`, `defineEnv`, `EnvError`, Zod and public schema/preset types |
 
 Public entries live directly under `src/` through the workspace exports. The README documents the complete API.
+Consumers declare their own `NODE_ENV` schema; there is no shared runtime preset.
 
 ## Ownership
 

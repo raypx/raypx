@@ -6,8 +6,8 @@ export interface DesktopConnection {
 
 export const CONNECTION_KEY = "__raypxConnection";
 export const DEFAULT_CONNECTION: Readonly<DesktopConnection> = Object.freeze({
-  apiUrl: "https://raypx.pro",
-  webUrl: "https://raypx.pro",
+  apiUrl: "https://raypx.com",
+  webUrl: "https://raypx.com",
 });
 
 function hasUnsafeCharacter(value: string) {

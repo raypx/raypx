@@ -4,7 +4,7 @@
 
 Raypx is a project-centered personal development workbench with device-local Desktop execution and optional Web remote access.
 Read the nearest workspace AGENTS.md and docs/README.md before changing code.
-The accepted foundation design supersedes documents in docs/history.
+The accepted foundation design and current architecture decisions define the implementation.
 
 ## Workspaces and boundaries
 
@@ -65,14 +65,17 @@ The accepted foundation design supersedes documents in docs/history.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.4 and Go 1.27.3.
-  Native builds require `CGO_ENABLED=0`; `internal/app` owns framework APIs and
+  Native builds require `CGO_ENABLED=0`; macOS packages target 13.0+, Windows uses WebView2,
+  and Linux Desktop acceptance remains unverified. `internal/app` owns framework APIs and
   `internal/desktop` owns native policy and CLI transport. Bun/VP owns JS builds.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
   `test --package` and package-local scripts must select the same suites and prerequisites.
 - Colocate unit tests with their source. Name DOM suites `*.component.test.ts(x)`;
-  keep integration/acceptance suites and shared test-only setup/fixtures in `tests/`.
+  keep integration suites and shared test-only setup/fixtures in `tests/`.
+  Application-owned browser acceptance may use `e2e/`; the root E2E workspace
+  discovers Desktop cases there.
   Root test.config.ts exports runner defaults as a plain Vitest config. Each workspace
   owns include patterns, projects and overrides using native defineConfig/mergeConfig;
   do not introduce custom config factories or option schemas. Application Vite plugins
@@ -122,7 +125,7 @@ Report unavailable checks as unavailable; never describe an unrun platform as pa
 
 Keep each workspace AGENTS.md concise and update it when its interface changes.
 Current architecture and commands live under docs/architecture and docs/development.
-docs/history is historical context and does not constrain the new foundation.
+Keep documentation aligned with the implementation and remove obsolete guides.
 
 ## Remote control
 

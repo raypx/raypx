@@ -1,7 +1,7 @@
 # Memory, templates and task context
 
 Web `/memory` manages account-owned reference documents. Desktop defaults to
-**This computer**, available without login, with an account tab behind the same
+**This computer**, available offline after first-time instance enrollment, with an account tab behind the same
 remote login boundary as tasks. A document is project memory or a task template;
 both have a name, category, text and optional device/project target. Templates
 provide reusable task instructions as reference text and do not enable tools.
@@ -20,7 +20,7 @@ Project references require an authorized device/project. Revoked devices are
 ineligible for new context resolution.
 
 `@raypx/memory` owns schemas, injected library use cases and shared browser views.
-API supplies PostgreSQL and project authorization; CLI supplies SQLite and local
+API composes Control's PostgreSQL adapter and project authorization; CLI supplies SQLite and local
 authorization. Contracts composes the same schemas into separate account RPC and
 private IPC entries. Core owns task context selections, immutable snapshots and
 pure prompt composition. Browser-only ports stay in the client entry.
@@ -110,9 +110,9 @@ current device behavior.
 
 The default gate covers schemas, budget boundaries, versions, CAS conflicts,
 ownership, account changes, draft restoration, native IPC restrictions, provider
-prompt injection and relay capability negotiation. Real PostgreSQL tests cover
+prompt injection and relay v4 context requirements. Real PostgreSQL tests cover
 concurrent writes, immutable versions, retry IDs, quotas and reads without the
-account write lock. Node integration exercises RPC and contextual task delivery.
+account write lock. Bun integration exercises RPC and contextual task delivery.
 
 Browser tests exercise both account pages, version restoration, explicit template
 selection and unchanged historical task context after later source edits.

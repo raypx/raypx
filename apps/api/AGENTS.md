@@ -2,7 +2,8 @@
 
 ## Purpose
 
-The Bun HTTP composition root for authentication and account RPC.
+The Bun HTTP composition root for authentication, account and administrator RPC,
+remote read projections, memory and cloud scheduling.
 
 ## Interface
 
@@ -14,8 +15,8 @@ this fixture against an operator database or bypass real-user verification.
 `/api/auth/*` delegates to Better Auth, including Google/GitHub OAuth and public
 provider discovery. API injects optional paired `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
 and `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; neither secret reaches Web. `/rpc/*` serves the explicit oRPC account
-contract. `/health` reports process liveness without querying PostgreSQL.
-Every other path is a JSON 404; Web is a separate service.
+contract. `/health` reports process liveness without querying PostgreSQL;
+`/ready` checks configured dependencies. Every other path is a JSON 404; Web is a separate service.
 
 Unit tests live beside `server/` source; `tests/integration/` and these unit tests
 form the default database-free gate. `tests/postgres/node/` uses the `postgres`

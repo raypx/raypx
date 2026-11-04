@@ -72,13 +72,12 @@ compiler option locally when a project needs different behavior.
 
 ## Compatibility
 
-Tested with TypeScript 7.0.2. TypeScript 5.6 or later is required for
-`noUncheckedSideEffectImports`. Presets resolve through package `exports`, so
+The repository development catalog selects TypeScript 7.0.2; current checks use
+that toolchain. Presets resolve through package `exports`, so
 consumers extend the exact exported file names shown above.
 
-A change that can introduce new type errors in consuming projects, such as a
-stricter option or a different module resolution, is released as a new minor
-version while the package is below 1.0.
+Changes to strictness or module resolution require checking all workspace
+consumers together. This private workspace has no independent release workflow.
 
 ## License
 
