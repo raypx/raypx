@@ -131,7 +131,7 @@ func TestInstanceLockExcludesOtherConnections(t *testing.T) {
 }
 func openSessions(t *testing.T, directory string) *host.Sessions {
 	t.Helper()
-	sessions, err := host.OpenSessions(directory)
+	sessions, err := host.OpenSessions(directory, testSessionKey)
 	if err != nil {
 		t.Fatal(err)
 	}

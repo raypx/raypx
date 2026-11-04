@@ -115,7 +115,8 @@ Local tools render during session/network checks. Auth routes use a standalone l
   stops startup. Only configured API origins are reachable. Isolate sessions,
   browser storage, remote settings and account-owned history by server origin.
 - Native owns `sessions.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
-  Server-scoped rows keep persistent Cookies out of the renderer and TOML.
+  Server-scoped rows encrypt persistent Cookies with a key from MyGo Secrets.
+  Keep both credentials and key out of the renderer and TOML.
   POSIX files are private; Windows uses a restricted inheritable DACL.
   Never read, delete or import old Keychain/credential files. `local_profile` selects
   the CLI profile explicitly (default `default`); never reset or rebind an old profile.

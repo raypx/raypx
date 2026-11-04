@@ -33,9 +33,10 @@ type CLIConfig struct {
 }
 
 type Options struct {
-	CLI     CLIConfig
-	Methods []string
-	Engine  func(*EventStream) EngineClient
+	CLI        CLIConfig
+	Methods    []string
+	Engine     func(*EventStream) EngineClient
+	SessionKey SessionKey
 }
 type Desktop struct {
 	closeOnce          sync.Once
@@ -74,7 +75,7 @@ func New(config Config, directory string, options Options) (*Desktop, error) {
 	if err != nil {
 		return nil, err
 	}
-	sessions, err := OpenSessions(directory)
+	sessions, err := OpenSessions(directory, options.SessionKey)
 	if err != nil {
 		instance.Close()
 		db.Close()

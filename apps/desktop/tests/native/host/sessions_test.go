@@ -1,7 +1,9 @@
 package tests
 
 import (
+	"bytes"
 	"database/sql"
+	"errors"
 	"net/url"
 	"os"
 	"os/exec"
@@ -13,12 +15,16 @@ import (
 	"time"
 )
 
+func testSessionKey(bool) ([]byte, error) {
+	return bytes.Repeat([]byte{0x42}, 32), nil
+}
+
 func TestSessionSubprocess(t *testing.T) {
 	directory := os.Getenv("RAYPX_TEST_SESSION_DIRECTORY")
 	if directory == "" {
 		return
 	}
-	store, err := host.OpenSessions(directory)
+	store, err := host.OpenSessions(directory, testSessionKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +37,7 @@ func TestSessionSubprocess(t *testing.T) {
 
 func TestSQLiteSessionsSurviveProcessRestartAndIsolateServers(t *testing.T) {
 	directory := t.TempDir()
-	store, err := host.OpenSessions(directory)
+	store, err := host.OpenSessions(directory, testSessionKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,11 +66,137 @@ func TestSQLiteSessionsSurviveProcessRestartAndIsolateServers(t *testing.T) {
 	}
 }
 
+func TestSessionCiphertextRejectsTamperingAndScopeSwap(t *testing.T) {
+	directory := t.TempDir()
+	store, err := host.OpenSessions(directory, testSessionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	token := []byte("synthetic-token-must-not-appear-in-sqlite")
+	if err := store.Server("one").Save(token); err != nil {
+		t.Fatal(err)
+	}
+	db, err := sql.Open("sqlite", filepath.Join(directory, "sessions.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var ciphertext []byte
+	var kind string
+	if err := db.QueryRow("SELECT typeof(cookies), cookies FROM sessions WHERE scope='one'").Scan(&kind, &ciphertext); err != nil {
+		t.Fatal(err)
+	}
+	if kind != "blob" || bytes.Contains(ciphertext, token) {
+		t.Fatal("Session was not stored as ciphertext")
+	}
+	if _, err := db.Exec("INSERT INTO sessions(scope, cookies) VALUES('two', ?)", ciphertext); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Server("two").Load(); err == nil {
+		t.Fatal("Restored ciphertext under a different server scope")
+	}
+	ciphertext[len(ciphertext)-1] ^= 1
+	if _, err := db.Exec("UPDATE sessions SET cookies=? WHERE scope='one'", ciphertext); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Server("one").Load(); err == nil {
+		t.Fatal("Restored modified ciphertext")
+	}
+}
+
+func TestPlaintextSessionUpgradeRequiresSignInAndClearsDatabase(t *testing.T) {
+	directory := t.TempDir()
+	path := filepath.Join(directory, "sessions.sqlite")
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token := "synthetic-old-plaintext-session"
+	if _, err := db.Exec("PRAGMA journal_mode=WAL; CREATE TABLE sessions (scope TEXT PRIMARY KEY, cookies TEXT NOT NULL); PRAGMA user_version=1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec("INSERT INTO sessions VALUES('one', ?), ('two', ?)", token, token); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	store, err := host.OpenSessions(directory, testSessionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	for _, scope := range []string{"one", "two"} {
+		if value, err := store.Server(scope).Load(); err != nil || value != nil {
+			t.Fatal("Restored a plaintext session")
+		}
+	}
+	for _, name := range []string{path, path + "-wal"} {
+		data, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(data, []byte(token)) {
+			t.Fatal("Upgrade retained plaintext in a live database file")
+		}
+	}
+	if err := store.Server("one").Save([]byte("new-session")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUnavailableSessionKeyPreservesStoredSessions(t *testing.T) {
+	directory := t.TempDir()
+	store, err := host.OpenSessions(directory, testSessionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Server("one").Save([]byte("[]")); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	unavailable, err := host.OpenSessions(directory, func(create bool) ([]byte, error) {
+		if create {
+			t.Fatal("Attempted to replace the key for an encrypted session")
+		}
+		return nil, errors.New("vault unavailable")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	origin, _ := url.Parse("https://example.test")
+	jar, err := host.OpenCookies(origin.String(), unavailable.Server("one"))
+	if err != nil || jar.Recovery != "temporary" {
+		t.Fatal("Unavailable key did not fall back to memory")
+	}
+	change, _ := host.ParseCookie(origin, "__Secure-better-auth.session_token=temporary; Path=/; Secure; HttpOnly; Max-Age=3600", time.Now())
+	if err := jar.Apply([]host.CookieChange{*change}); err != nil {
+		t.Fatal(err)
+	}
+	if header, err := jar.Header(origin); err != nil || !strings.Contains(header, "=temporary") {
+		t.Fatal("Temporary sign-in did not work")
+	}
+	if err := unavailable.Close(); err != nil {
+		t.Fatal(err)
+	}
+	restored, err := host.OpenSessions(directory, testSessionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer restored.Close()
+	if value, err := restored.Server("one").Load(); err != nil || string(value) != "[]" {
+		t.Fatal("Temporary sign-in modified the encrypted session")
+	}
+}
+
 func TestSQLiteCookiesPersistLogoutAndResetInvalidSessions(t *testing.T) {
 	directory := t.TempDir()
 	open := func() *host.Sessions {
 		t.Helper()
-		store, err := host.OpenSessions(directory)
+		store, err := host.OpenSessions(directory, testSessionKey)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -137,7 +269,7 @@ func TestSQLiteCookiesPersistLogoutAndResetInvalidSessions(t *testing.T) {
 
 func TestSessionStorageFailureNeverClaimsPersistence(t *testing.T) {
 	directory := t.TempDir()
-	store, err := host.OpenSessions(directory)
+	store, err := host.OpenSessions(directory, testSessionKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,7 +337,7 @@ func TestSessionsRejectCorruptionUnknownVersionsAndUnsafePaths(t *testing.T) {
 				}
 				db.Close()
 			}
-			if store, err := host.OpenSessions(directory); err == nil {
+			if store, err := host.OpenSessions(directory, testSessionKey); err == nil {
 				store.Close()
 				t.Fatal("Unsupported storage was accepted")
 			}
@@ -225,7 +357,7 @@ func TestSessionsRejectCorruptionUnknownVersionsAndUnsafePaths(t *testing.T) {
 		if err := os.Symlink(target, filepath.Join(directory, "sessions.sqlite")); err != nil {
 			t.Fatal(err)
 		}
-		if store, err := host.OpenSessions(directory); err == nil {
+		if store, err := host.OpenSessions(directory, testSessionKey); err == nil {
 			store.Close()
 			t.Fatal("Symlink accepted")
 		}
@@ -241,7 +373,7 @@ func TestSessionDatabaseAndAuxiliaryPermissions(t *testing.T) {
 		t.Skip("DACL is verified by the Windows ACL suite")
 	}
 	directory := t.TempDir()
-	store, err := host.OpenSessions(directory)
+	store, err := host.OpenSessions(directory, testSessionKey)
 	if err != nil {
 		t.Fatal(err)
 	}

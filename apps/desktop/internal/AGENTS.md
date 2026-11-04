@@ -14,7 +14,9 @@ with CGO_ENABLED=0. Generated assets and binaries stay ignored.
 
 Go owns server-scoped persistent Cookies in `sessions.sqlite`, independently of the
 lifetime instance-lock transaction. The cookie jar depends only on the SessionStore
-port. Preserve private POSIX permissions and restricted inheritable Windows DACLs.
+port. The app supplies the AES-GCM key through MyGo Secrets. Unavailable keys keep
+the session in memory. Preserve private POSIX permissions and restricted inheritable
+Windows DACLs. Clear the superseded plaintext session format without importing it.
 Never read/import old credentials. `Config.LocalProfile` selects the bundled CLI profile only.
 
 Tests live in ../tests/native/host/. From apps/desktop run

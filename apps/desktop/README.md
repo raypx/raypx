@@ -48,6 +48,14 @@ compiled CLI for the daemon integration test; only its isolated daemon is stoppe
 Normal production builds exclude the private endpoint and renderer test hook.
 
 Native uses the current data paths and device preferences.
-Native persistent Cookies live in server-scoped rows of `sessions.sqlite`; CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use private permissions; Windows uses restricted DACLs. Old credentials are never read, imported or deleted. Existing profiles without their database key remain unavailable; select a new `local_profile` explicitly to register again. MyGo signed updates use distinct
+Native persistent Cookies are encrypted in server-scoped rows of `sessions.sqlite`.
+MyGo Secrets keeps the key in the system credential store. Upgrading from the
+plaintext session format clears the saved online session and requires signing in
+again. If the vault is unavailable, sign-in lasts only for the running app.
+CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use
+private permissions; Windows uses restricted DACLs. Old credential stores are
+never read, imported or deleted. Existing profiles without their database key
+remain unavailable; select a new `local_profile` explicitly to register again.
+MyGo signed updates use distinct
 keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.

@@ -10,7 +10,7 @@ import (
 
 func TestWindowsSessionACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
 	directory := t.TempDir()
-	store, err := host.OpenSessions(directory)
+	store, err := host.OpenSessions(directory, testSessionKey)
 	if err != nil {
 		t.Fatal(err)
 	}

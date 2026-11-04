@@ -23,11 +23,14 @@ include the compiled, version-matched CLI and complete verified Herdr runtime.
 GUI Quit releases UI approval leases and closes only its daemon proxy. The daemon
 continues running tasks. Data paths and the SQLite cross-version instance lock remain
 stable. Go owns a separate `sessions.sqlite` holding each server scope's persistent
-cookies as validated JSON; the lifetime `desktop-instance.sqlite` transaction never
-shares this writer. With no system vault, encrypting cookies under a key stored beside
-them added no protection, so storage relies on private POSIX permissions or a restricted
-inheritable Windows DACL. Old `credentials.sqlite` and `session-v2.enc` files are never
-read, imported or deleted; Desktop requires sign-in once.
+cookies as AES-GCM ciphertext authenticated against the scope. The lifetime
+`desktop-instance.sqlite` transaction never shares this writer. MyGo Secrets keeps
+the key for the Desktop data directory in the system credential store. An unavailable
+key or unreadable ciphertext leaves stored rows intact and permits in-memory
+sign-in. Private POSIX permissions and a restricted inheritable Windows DACL still
+protect the database files. The upgrade clears the previous plaintext session rows
+and requires signing in again. Old `credentials.sqlite` and `session-v2.enc` files
+are never read, imported or deleted.
 
 `native_smoke` is a separate Go build tag. Only that build exposes the private
 random-token test endpoint; `mygo:check`/`mygo:test` compile it alongside the
