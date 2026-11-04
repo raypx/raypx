@@ -210,7 +210,8 @@ Auth's group redirects confirmed accounts from login/signup while preserving cal
 recovery and browser-only draft completion. A successful login navigates after cache
 clear, without invalidating the auth route mid-completion.
 `/admin/users` composes the account-keyed users feature through Better Auth's existing
-Admin client. Lists use server searches and 20-row pagination. Role changes require
+Admin client. Its shared DataTable renders server searches, registration-date sorting,
+and 20-row pagination. Changing sort returns to page one. Role changes require
 confirmation, prevent self-editing, and retry a completed mutation's refresh separately.
 
 ## Administration console

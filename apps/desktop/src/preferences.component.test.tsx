@@ -1,11 +1,13 @@
 /** @vitest-environment happy-dom */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
 import { useTheme } from "@raypx/ui/themes";
 import { type ReactNode } from "react";
 import { DEVICE_PREFERENCES_KEY, type NativePreferenceSnapshot } from "../preferences";
 import { DesktopPreferencesProvider } from "./preferences";
+import { AuthPreferences } from "./features/auth/components/auth-preferences";
 
 const mocks = vi.hoisted(() => ({ isDesktop: vi.fn(), save: vi.fn() }));
 vi.mock("./lib/desktop", () => ({
@@ -49,6 +51,22 @@ afterEach(() => {
 });
 
 describe("Desktop preference initialization", () => {
+  it("applies and saves choices made from the signed-out preference menus", async () => {
+    snapshot({ status: "read", raw: { theme: "light", locale: "en" } });
+    const user = userEvent.setup();
+    mount(<AuthPreferences />);
+
+    await user.click(screen.getByRole("button", { name: "Language" }));
+    await user.click(await screen.findByRole("menuitemradio", { name: "简体中文" }));
+    await waitFor(() => expect(document.documentElement.lang).toBe("zh"));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "light", locale: "zh" }));
+
+    await user.click(screen.getByRole("button", { name: "外观" }));
+    await user.click(await screen.findByRole("menuitemradio", { name: "深色" }));
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "dark", locale: "zh" }));
+  });
+
   it("uses the native snapshot when stale WebView values disagree", async () => {
     localStorage.setItem("theme", "light");
     localStorage.setItem("raypx_locale", "en");

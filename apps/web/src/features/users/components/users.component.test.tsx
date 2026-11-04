@@ -71,6 +71,31 @@ it("searches and pages on the server and disables editing the current account", 
     ),
   );
 });
+it("sorts registrations on the server and returns to the first page", async () => {
+  page();
+  const initialHeader = await screen.findByRole("columnheader", { name: "Registered" });
+  expect(initialHeader).toHaveAttribute("aria-sort", "descending");
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  await screen.findByText(member.email);
+  await waitFor(() =>
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ query: expect.objectContaining({ offset: 20 }) }),
+    ),
+  );
+  mocks.list.mockResolvedValueOnce({ data: { users: [member, actor], total: 21 }, error: null });
+  const sort = screen.getByRole("combobox", { name: "Registered" });
+  await userEvent.click(sort);
+  await userEvent.click(await screen.findByRole("option", { name: "Oldest first" }));
+  const sortedHeader = await screen.findByRole("columnheader", { name: "Registered" });
+  expect(sortedHeader).toHaveAttribute("aria-sort", "ascending");
+  expect(mocks.list).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      query: expect.objectContaining({ offset: 0, sortBy: "createdAt", sortDirection: "asc" }),
+    }),
+  );
+  const [, firstUser] = within(screen.getByRole("table", { name: "Users" })).getAllByRole("row");
+  expect(firstUser).toHaveTextContent(member.email);
+});
 it("waits for confirmation, fences duplicate saves and refreshes after success", async () => {
   page();
   let finish!: (value: unknown) => void;

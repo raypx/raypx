@@ -1,4 +1,5 @@
 import { analytics } from "../../analytics/client";
+import { Logo } from "@raypx/ui/logo";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
@@ -7,7 +8,6 @@ import {
 } from "@raypx/auth/client";
 import { authClient, webUrl } from "../client";
 import { desktopReturnTo } from "../return-to";
-import { useTranslations } from "@raypx/i18n/browser";
 
 function AuthLink({ to, children, className }: AuthFormLinkProps) {
   const search = useLocation({ select: (location) => location.searchStr });
@@ -29,12 +29,23 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const navigate = useNavigate();
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
-  const t = useTranslations("localWorkspace");
+  const login = mode === "login";
   return (
     <SharedAuthForm
       key={mode}
       mode={mode}
-      backLabel={t("backToLocal")}
+      compact={login}
+      headingLeading={
+        login ? (
+          <Link
+            to="/"
+            className="mb-2 inline-flex self-start rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          >
+            <Logo className="text-sm [&_[data-slot=logo-mark]]:size-6" />
+          </Link>
+        ) : undefined
+      }
+      backLabel={null}
       client={authClient}
       webUrl={webUrl}
       search={search}

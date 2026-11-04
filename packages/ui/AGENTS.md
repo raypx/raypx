@@ -39,6 +39,9 @@ packages own page layout, forms, navigation and product behavior.
 - `select-field` composes the shadcn Select for labelled string options, including
   disabled options, placeholders and named form values. Prefer it to NativeSelect
   in feature UI so popup appearance and keyboard behavior are shared.
+- `data-table` renders a caller-owned TanStack Table instance with the existing
+  semantic Table primitives. Callers choose features, translated labels and column
+  presentation and own data loading, empty states and server pagination/sorting.
 - `password-input` exposes `PasswordInput`, composing InputGroup and IconButton.
   Callers supply translated `labels.show`/`labels.hide`; input props and refs target
   the input, while `className` sizes the whole control. Visibility starts hidden

@@ -1,11 +1,10 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
-import { assignedRoles, type AuthRole } from "@raypx/auth/access";
+import { useTranslations } from "@raypx/i18n/browser";
+import type { AuthRole } from "@raypx/auth/access";
 import { hasPermission } from "@raypx/account/access";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
-import { Badge } from "@raypx/ui/components/ui/badge";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import {
   Dialog,
@@ -15,44 +14,40 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@raypx/ui/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@raypx/ui/components/ui/table";
 import { SelectField } from "@raypx/ui/select-field";
 import { IconButton } from "@raypx/ui/icon-button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { EmptyState } from "@raypx/ui/empty-state";
-import { HelpHint } from "@raypx/ui/help-hint";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
-import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { accountAccessQuery } from "../../auth/access";
 import { authClient, apiUrl } from "../../auth/client";
+import { UserTable, type UserRoleSelection, type UserSortDirection } from "./user-table";
 
 const pageSize = 20;
 type SearchField = "email" | "name";
-type Selection = { id: string; email: string; role: AuthRole };
 
 export function Users({ accountId }: { accountId: string }) {
   const c = useTranslations("common");
   const t = useTranslations("users");
-  const locale = useLocale();
   const cache = useQueryClient();
   const [field, setField] = useState<SearchField>("email");
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState({ field: "email" as SearchField, value: "" });
   const [offset, setOffset] = useState(0);
-  const [selection, setSelection] = useState<Selection | null>(null);
+  const [sortDirection, setSortDirection] = useState<UserSortDirection>("desc");
+  const [selection, setSelection] = useState<UserRoleSelection | null>(null);
   const [role, setRole] = useState<AuthRole>("member");
   const [busy, setBusy] = useState(false);
   const fence = useRef(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<"forbidden" | "failed" | "refreshFailed" | null>(null);
+  const editRole = useCallback((selected: UserRoleSelection) => {
+    setSelection(selected);
+    setRole(selected.role);
+    setSaved(false);
+    setError(null);
+  }, []);
   const access = useQuery(accountAccessQuery(accountId));
   const canChange =
     !access.isError &&
@@ -60,14 +55,14 @@ export function Users({ accountId }: { accountId: string }) {
     hasPermission(access.data, "users.roles.update");
   const listKey = ["admin-users", apiUrl, accountId] as const;
   const users = useQuery({
-    queryKey: [...listKey, search, offset],
+    queryKey: [...listKey, search, offset, sortDirection],
     queryFn: async ({ signal }) => {
       const result = await authClient.admin.listUsers({
         query: {
           limit: pageSize,
           offset,
           sortBy: "createdAt",
-          sortDirection: "desc",
+          sortDirection,
           ...(search.value
             ? {
                 searchValue: search.value,
@@ -161,6 +156,21 @@ export function Users({ accountId }: { accountId: string }) {
               onChange={(event) => setDraft(event.target.value)}
             />
           </Field>
+          <Field className="sm:w-40 sm:shrink-0">
+            <FieldLabel htmlFor="user-sort">{t("created")}</FieldLabel>
+            <SelectField
+              id="user-sort"
+              value={sortDirection}
+              onValueChange={(direction) => {
+                setSortDirection(direction);
+                setOffset(0);
+              }}
+              options={[
+                { value: "desc", label: t("newestFirst") },
+                { value: "asc", label: t("oldestFirst") },
+              ]}
+            />
+          </Field>
           <Button type="submit">{t("search")}</Button>
         </FieldGroup>
       </form>
@@ -178,68 +188,13 @@ export function Users({ accountId }: { accountId: string }) {
       ) : users.data.users.length === 0 ? (
         <EmptyState title={t("empty")} />
       ) : (
-        <Table aria-label={c("users")}>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-1/2 @3xl/main:w-auto">{c("name")}</TableHead>
-              <TableHead className="hidden @3xl/main:table-cell">{t("verification")}</TableHead>
-              <TableHead>{t("role")}</TableHead>
-              <TableHead className="hidden @3xl/main:table-cell">{t("created")}</TableHead>
-              <TableHead className="w-12">
-                <span className="sr-only">{c("actions")}</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.data.users.map((user) => {
-              const roles = assignedRoles(user.role);
-              const currentRole = roles.includes("admin") ? "admin" : "member";
-              const registered = new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-                new Date(user.createdAt),
-              );
-              return (
-                <TableRow key={user.id}>
-                  <TableCell className="max-w-64 whitespace-normal wrap-anywhere">
-                    <span className="font-medium">{user.name}</span>
-                    <span className="block text-muted-foreground">{user.email}</span>
-                    <span className="mt-1 block text-xs text-muted-foreground @3xl/main:hidden">
-                      {t(user.emailVerified ? "verified" : "unverified")}
-                      <span className="block">{registered}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell className="hidden @3xl/main:table-cell">
-                    <Badge variant="secondary">
-                      {t(user.emailVerified ? "verified" : "unverified")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="whitespace-normal wrap-anywhere">
-                    {roles.length ? roles.map((value) => t(value)).join(", ") : t("unknown")}
-                  </TableCell>
-                  <TableCell className="hidden @3xl/main:table-cell">{registered}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <IconButton
-                        label={t("editRole")}
-                        disabled={!canChange || user.id === accountId}
-                        onClick={() => {
-                          setSelection({ id: user.id, email: user.email, role: currentRole });
-                          setRole(currentRole);
-                          setSaved(false);
-                          setError(null);
-                        }}
-                      >
-                        <ShieldCheckIcon aria-hidden="true" />
-                      </IconButton>
-                      {user.id === accountId && (
-                        <HelpHint label={t("selfRole")} description={t("selfRoleHint")} />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <UserTable
+          rows={users.data.users}
+          accountId={accountId}
+          canChange={canChange}
+          sortDirection={sortDirection}
+          onEdit={editRole}
+        />
       )}
       <nav
         aria-label={t("pagination")}

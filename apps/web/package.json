@@ -33,6 +33,7 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-ssr-query": "catalog:",
     "@tanstack/react-start": "catalog:",
+    "@tanstack/react-table": "catalog:",
     "nitro": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

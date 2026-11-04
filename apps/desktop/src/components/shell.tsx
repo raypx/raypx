@@ -34,6 +34,7 @@ import { desktopStorageKey } from "../lib/storage";
 import { useTranslations } from "@raypx/i18n/browser";
 import { isDesktop, onLocalEvent } from "../lib/desktop";
 import { useDesktopEngine } from "../features/engine/provider";
+import { WindowDragRegion } from "./window-drag-region";
 
 const pendingClient = createPendingClient(localTaskClient, taskClient);
 
@@ -61,7 +62,11 @@ function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<DesktopPa
 
 /** Prerendered before device preferences are known, so it carries no translated text. */
 export function ShellSkeleton() {
-  return <div className="h-dvh min-h-dvh" aria-busy="true" />;
+  return (
+    <div className="h-dvh min-h-dvh" aria-busy="true">
+      <WindowDragRegion />
+    </div>
+  );
 }
 
 export function DesktopShell() {

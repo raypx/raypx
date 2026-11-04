@@ -1,6 +1,6 @@
 import { canContinueTask, followUpPlan, taskSelection } from "../model/composition.js";
 import { ModelPicker } from "./model-picker.js";
-import type { ModelSelection } from "@raypx/core/tasks";
+import type { AgentTask, ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Approval } from "./approval.js";
@@ -8,7 +8,7 @@ import { Approval } from "./approval.js";
 import { ContextSnapshot } from "@raypx/memory/client";
 import { useId, useRef, useState, type FormEvent } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
-import type { SyncDevice } from "@raypx/contracts/tasks";
+import type { SequencedEvent, SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
@@ -31,6 +31,13 @@ import { TaskInputComposer } from "./task-input.js";
 import { TaskMarkdown } from "./markdown.js";
 import { useTaskConversation } from "./use-task-conversation.js";
 import { isLocalWorkspace, type WorkspaceScope } from "../model/scope.js";
+
+function taskStatusVariant(status: AgentTask["status"]) {
+  if (status === "waiting") return "default";
+  if (status === "failed" || status === "interrupted" || status === "delivery_failed")
+    return "destructive";
+  return "secondary";
+}
 
 export function TaskDetail({
   devices,
@@ -135,20 +142,11 @@ export function TaskDetail({
       setBusy(false);
     }
   }
-  if (!data)
+  if (!data) {
+    const message = local && errorCode !== "UPGRADE_REQUIRED" ? "LOCAL_UNAVAILABLE" : errorCode;
     return (
       <div className="space-y-3">
-        <p role={error ? "alert" : "status"}>
-          {error
-            ? t(
-                errorCode === "UPGRADE_REQUIRED"
-                  ? errorCode
-                  : local
-                    ? "LOCAL_UNAVAILABLE"
-                    : errorCode,
-              )
-            : c("loading")}
-        </p>
+        <p role={error ? "alert" : "status"}>{error ? t(message) : c("loading")}</p>
         {error && (
           <Button variant="outline" onClick={refresh}>
             {c("retry")}
@@ -156,6 +154,7 @@ export function TaskDetail({
         )}
       </div>
     );
+  }
   if (
     target &&
     (data.task.projectId !== target.projectId ||
@@ -166,22 +165,17 @@ export function TaskDetail({
         {t("sessionOutsideProject")}
       </p>
     );
+  function eventLabel(event: SequencedEvent["event"]) {
+    if (event.kind === "status") return t(event.status);
+    if (event.kind === "request") return event.request.title;
+    return t("applied");
+  }
   return (
     <div className="space-y-5">
       {dialog}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 space-y-3">
-          <Badge
-            variant={
-              data.task.status === "waiting"
-                ? "default"
-                : ["failed", "interrupted", "delivery_failed"].includes(data.task.status)
-                  ? "destructive"
-                  : "secondary"
-            }
-          >
-            {t(data.task.status)}
-          </Badge>
+          <Badge variant={taskStatusVariant(data.task.status)}>{t(data.task.status)}</Badge>
           <h2 className="line-clamp-3 text-xl leading-snug font-semibold [overflow-wrap:anywhere]">
             {data.task.prompt}
           </h2>
@@ -303,13 +297,7 @@ export function TaskDetail({
         <CollapsibleContent>
           <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
             {data.events.map(({ cursor: eventCursor, event }) => (
-              <li key={eventCursor}>
-                {event.kind === "status"
-                  ? t(event.status)
-                  : event.kind === "request"
-                    ? event.request.title
-                    : t("applied")}
-              </li>
+              <li key={eventCursor}>{eventLabel(event)}</li>
             ))}
           </ol>
         </CollapsibleContent>

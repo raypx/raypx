@@ -24,6 +24,12 @@ type Row =
   | { id: string; kind: "activity"; entry: TaskActivity };
 const noGaps: readonly Gap[] = [];
 
+function inputStatusLabel(status: Extract<TaskActivity, { kind: "input" }>["status"]) {
+  if (status === "queued") return "inputQueued";
+  if (status === "sent") return "inputSent";
+  return status;
+}
+
 export function Conversation(props: Props) {
   return <ConversationViewport key={props.task.id} {...props} />;
 }
@@ -172,10 +178,12 @@ function ConversationViewport({
     { input: 0, output: 0, cached: 0 },
   );
   function renderRow(row: Row) {
-    if (row.kind === "older" || row.kind === "gap")
+    if (row.kind === "older" || row.kind === "gap") {
+      const isGap = row.kind === "gap";
+      const label = isGap ? "historyGap" : "olderMessages";
       return (
         <Button
-          variant={row.kind === "gap" ? "outline" : "ghost"}
+          variant={isGap ? "outline" : "ghost"}
           size="sm"
           disabled={loading}
           onClick={async () => {
@@ -185,9 +193,10 @@ function ConversationViewport({
             else await loadOlder();
           }}
         >
-          {t(row.kind === "gap" ? "historyGap" : loading ? "loadingHistory" : "olderMessages")}
+          {t(!isGap && loading ? "loadingHistory" : label)}
         </Button>
       );
+    }
     if (row.kind === "prompt")
       return (
         <article className="rounded-sm bg-muted px-4 py-3">
@@ -217,14 +226,7 @@ function ConversationViewport({
       return (
         <article className="rounded-sm bg-muted px-4 py-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
-            {t("you")} · {t(entry.mode)} ·{" "}
-            {t(
-              entry.status === "queued"
-                ? "inputQueued"
-                : entry.status === "sent"
-                  ? "inputSent"
-                  : entry.status,
-            )}
+            {t("you")} · {t(entry.mode)} · {t(inputStatusLabel(entry.status))}
           </p>
           <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{entry.text}</p>
           {entry.code && <p className="mt-2 text-xs text-muted-foreground">{t(entry.code)}</p>}

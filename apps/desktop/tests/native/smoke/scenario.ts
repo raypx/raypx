@@ -260,7 +260,10 @@ try {
     };
     assert.equal(status.state, "registered");
     assert.notEqual(status.binding?.origin, apiOrigin, "Profile was rebound to another server");
-    const titles = [messages.en.instances.title, messages.zh.instances.title];
+    const titles = [
+      messages.en.instances.registrationStatus,
+      messages.zh.instances.registrationStatus,
+    ];
     await waitFor(
       async () =>
         Boolean(
@@ -286,6 +289,48 @@ try {
   assert.equal(info.scheduler, true);
   assert.equal(`bun@${info.runtime}`, process.env.RAYPX_NATIVE_SMOKE_BUN);
   if (fixturePhase === "shell") {
+    stage = "integrated window controls";
+    const chrome = `
+      const style = getComputedStyle(document.documentElement);
+      const left = parseFloat(style.getPropertyValue("--mygo-titlebar-inset-left")) || 0;
+      const right = parseFloat(style.getPropertyValue("--mygo-titlebar-inset-right")) || 0;
+    `;
+    const toolbarFits = async () =>
+      Boolean(
+        await evaluate(`
+        ${chrome}
+        const toggle = document.querySelector('[data-sidebar="trigger"]');
+        const toolbar = toggle?.closest("header");
+        return left + right > 0 && toolbar?.getBoundingClientRect().left >= left &&
+          parseFloat(getComputedStyle(toolbar).paddingRight) >= right;
+      `),
+      );
+    await waitFor(toolbarFits, "Workspace toolbar overlapped the native controls");
+    const before = await nativeWindow.state();
+    await evaluate('location.hash="/login?returnTo=%2Ftasks";return true;');
+    await waitFor(
+      async () =>
+        Boolean(
+          await evaluate(`
+          ${chrome}
+          const title = document.querySelector("main #auth-title");
+          const logo = title?.closest("header")?.querySelector("[data-slot=logo]");
+          if (!title || !logo) return false;
+          const heading = title.getBoundingClientRect();
+          const brand = logo.getBoundingClientRect();
+          const titlebar = parseFloat(style.getPropertyValue("--mygo-titlebar-height")) || 0;
+          return left + right > 0 && brand.top >= titlebar && brand.bottom <= heading.top &&
+            Math.abs(brand.left - heading.left) < 1;
+        `),
+        ),
+      "Login brand was not aligned above the title below the native controls",
+    );
+    await evaluate('location.hash="/";return true;');
+    await waitFor(toolbarFits, "Workspace lost its window insets after leaving login");
+    const after = await nativeWindow.state();
+    assert.equal(after.height, before.height, "Navigating changed the window content height");
+    assert.equal(after.visible, true, "Navigating hid the window");
+    console.info("Native smoke integrated window controls passed");
     stage = "native Channel throughput";
     const runtime = (await evaluate(
       "return await window.mygo.call('Desktop.Request','get_runtime',{})",

@@ -128,7 +128,11 @@ func Run(bundled fs.FS) error {
 				quit()
 				return
 			}
-			window := mygo.NewWindow(mygo.WindowOptions{Title: "Raypx", URL: "about:blank", Width: 1120, Height: 720, UseContentSize: true, MinWidth: 800, MinHeight: 620, Hidden: true, Page: mygo.PageOptions{PreloadScript: desktop.Preload()}})
+			window := mygo.NewWindow(mygo.WindowOptions{
+				Title: "Raypx", URL: "about:blank", TitleBarStyle: mygo.TitleBarHidden,
+				Width: 1120, Height: 720, UseContentSize: true, MinWidth: 800, MinHeight: 620, Hidden: true,
+				Page: mygo.PageOptions{PreloadScript: desktop.Preload()},
+			})
 			// MyGo's native minimum describes the outer frame. Keep the same
 			// 800 x 620 content-area contract as the previous host.
 			frame, content := window.Bounds(), window.ContentBounds()

@@ -154,7 +154,10 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
         style={
           {
             "--sidebar-width": "var(--app-sidebar-width, 15rem)",
-            "--sidebar-width-icon": "var(--app-rail-width, 4rem)",
+            "--sidebar-width-icon":
+              props.frame === "window"
+                ? "max(var(--app-rail-width, 4rem), var(--mygo-titlebar-inset-left, 0px))"
+                : "var(--app-rail-width, 4rem)",
           } as CSSProperties
         }
         className={cn(
@@ -235,7 +238,10 @@ function ShellContents<To extends string>({
     <ToolbarContext.Provider value={toolbar}>
       <a
         href="#main"
-        className="fixed top-2 left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0"
+        className={cn(
+          "fixed left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0",
+          windowed ? "top-[max(0.5rem,var(--mygo-titlebar-height,0px))]" : "top-2",
+        )}
       >
         {c("skipNavigation")}
       </a>
@@ -245,9 +251,15 @@ function ShellContents<To extends string>({
         collapsible="icon"
         className={cn(
           "min-h-0 overflow-hidden border-border bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 px-2 pb-2 shadow-sm sidebar-icon:px-1.5 max-[420px]:sidebar-icon:px-1",
-          windowed ? "pt-10" : "pt-2",
+          !windowed && "pt-2",
         )}
       >
+        {windowed && (
+          <div
+            aria-hidden="true"
+            className="h-[max(2.5rem,var(--mygo-titlebar-height,0px))] shrink-0 [--app-region:drag]"
+          />
+        )}
         <SidebarHeader className="mb-4 shrink-0 gap-0 p-0">
           <LinkComponent
             to={brand.to}
@@ -301,7 +313,8 @@ function ShellContents<To extends string>({
         <header
           className={cn(
             "flex h-12 shrink-0 items-center gap-2 border-b border-border px-4 text-sm text-muted-foreground max-[760px]:px-3",
-            windowed && "[-webkit-app-region:drag]",
+            windowed &&
+              "pr-[max(1rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] [--app-region:drag]",
           )}
         >
           <Tooltip>
@@ -344,11 +357,11 @@ function ShellContents<To extends string>({
             ))}
           <div
             ref={setToolbarStart}
-            className="flex h-full min-w-0 items-center gap-3 empty:hidden [-webkit-app-region:no-drag]"
+            className="flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag]"
           />
           <div
             ref={setToolbarEnd}
-            className="ml-auto flex shrink-0 items-center gap-2 empty:hidden [-webkit-app-region:no-drag]"
+            className="ml-auto flex shrink-0 items-center gap-2 empty:hidden [--app-region:no-drag]"
           />
         </header>
         {notice}

@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
+import { cn } from "@raypx/ui/lib/utils";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
 import type { SocialProvider } from "../types";
@@ -112,11 +113,13 @@ export interface AuthFormLinkProps {
 
 export interface AuthFormProps {
   mode: AuthMode;
+  compact?: boolean;
+  headingLeading?: ReactNode;
   completeOnMount?: boolean;
   socialLogin?:
     | { providers: readonly SocialProvider[]; callbackURL: string; errorCallbackURL: string }
     | undefined;
-  backLabel?: string | undefined;
+  backLabel?: string | null | undefined;
   client: AuthActionClient;
   webUrl: string;
   search: string;
@@ -127,6 +130,8 @@ export interface AuthFormProps {
 
 export function AuthForm({
   mode,
+  compact = false,
+  headingLeading,
   completeOnMount = false,
   socialLogin,
   backLabel,
@@ -204,32 +209,40 @@ export function AuthForm({
   return (
     <section
       aria-labelledby="auth-title"
-      className="mx-auto w-full max-w-sm px-6 py-10 sm:px-0 sm:py-12"
+      className={cn("mx-auto w-full max-w-sm px-6 sm:px-0", compact ? "py-6" : "py-10 sm:py-12")}
     >
-      <LinkComponent
-        to="account"
-        className="group mb-8 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ArrowLeftIcon
-          size={16}
-          aria-hidden="true"
-          className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:-translate-x-0.5"
-        />
-        {backLabel ?? c("account")}
-      </LinkComponent>
-      <header className="mb-8 flex flex-col gap-3">
-        <span
-          aria-hidden="true"
-          className="mb-1 grid size-12 place-items-center rounded-2xl border border-border bg-card text-foreground shadow-sm"
+      {backLabel !== null && (
+        <LinkComponent
+          to="account"
+          className="group mb-8 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ModeIcon className="size-5" />
-        </span>
-        <h1 id="auth-title" className="text-3xl font-semibold tracking-tight">
+          <ArrowLeftIcon
+            size={16}
+            aria-hidden="true"
+            className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:-translate-x-0.5"
+          />
+          {backLabel ?? c("account")}
+        </LinkComponent>
+      )}
+      <header className={cn("flex flex-col", compact ? "mb-6 gap-2" : "mb-8 gap-3")}>
+        {headingLeading ??
+          (!compact && (
+            <span
+              aria-hidden="true"
+              className="mb-1 grid size-12 place-items-center rounded-2xl border border-border bg-card text-foreground shadow-sm"
+            >
+              <ModeIcon className="size-5" />
+            </span>
+          ))}
+        <h1
+          id="auth-title"
+          className={cn("font-semibold tracking-tight", compact ? "text-2xl" : "text-3xl")}
+        >
           {t(config.title)}
         </h1>
         {intro && <p className="text-sm leading-relaxed text-muted-foreground">{t(intro)}</p>}
       </header>
-      <div className="flex flex-col gap-5">
+      <div className={cn("flex flex-col", compact ? "gap-4" : "gap-5")}>
         <AuthFormNotices
           invalidLink={link.failed || link.invalidReset}
           success={messageKey}
@@ -279,7 +292,7 @@ export function AuthForm({
           )}
         {showForm && (
           <form onSubmit={submit} aria-busy={busy}>
-            <FieldGroup>
+            <FieldGroup className={compact ? "gap-4" : undefined}>
               {config.name && (
                 <Field data-disabled={busy}>
                   <FieldLabel htmlFor="auth-name">{t("name")}</FieldLabel>
@@ -350,8 +363,8 @@ export function AuthForm({
             </FieldGroup>
           </form>
         )}
-        <Separator className="my-1" />
-        <AuthFormFooter mode={mode} LinkComponent={LinkComponent} />
+        <Separator className={compact ? undefined : "my-1"} />
+        <AuthFormFooter mode={mode} compact={compact} LinkComponent={LinkComponent} />
       </div>
     </section>
   );
@@ -418,15 +431,19 @@ function AuthFormNotices({
 
 function AuthFormFooter({
   mode,
+  compact,
   LinkComponent,
 }: {
   mode: AuthMode;
+  compact: boolean;
   LinkComponent: ComponentType<AuthFormLinkProps>;
 }) {
   const t = useTranslations("auth");
   const c = useTranslations("common");
   return (
-    <footer className="flex flex-col items-center gap-4 text-center text-sm">
+    <footer
+      className={cn("flex flex-col items-center text-center text-sm", compact ? "gap-2" : "gap-4")}
+    >
       {mode === "login" ? (
         <>
           <p className="text-muted-foreground">

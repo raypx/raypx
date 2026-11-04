@@ -66,6 +66,51 @@ export function AuditLog() {
     enabled: Boolean(session.data?.user.id),
     retry: false,
   });
+  function renderResults() {
+    if (query.isError) return <p role="alert">{c("networkError")}</p>;
+    if (!query.data) return <LoadingState label={c("loading")} />;
+    if (!query.data.entries.length) return <EmptyState title={t("noAudit")} />;
+    return (
+      <Table aria-label={c("auditLog")}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("time")}</TableHead>
+            <TableHead>{t("actor")}</TableHead>
+            <TableHead>{t("action")}</TableHead>
+            <TableHead>{t("outcome")}</TableHead>
+            <TableHead>
+              <span className="sr-only">{c("actions")}</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {query.data.entries.map((entry) => (
+            <TableRow key={entry.id}>
+              <TableCell>
+                <time dateTime={entry.startedAt}>
+                  {entry.startedAt.replace("T", " ").slice(0, 19)} UTC
+                </time>
+              </TableCell>
+              <TableCell className="max-w-40 whitespace-normal wrap-anywhere">
+                {entry.actorId ?? t("operator")}
+              </TableCell>
+              <TableCell>
+                {t(entry.action === "user.role.update" ? "roleUpdate" : "configurationUpdate")}
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">{t(entry.outcome)}</Badge>
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" onClick={() => setSelected(entry)}>
+                  {t("details")}
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  }
   return (
     <section className="flex min-w-0 flex-col gap-6">
       <header className="flex items-center justify-between gap-3">
@@ -166,52 +211,7 @@ export function AuditLog() {
         </Button>
         {invalid && <p role="alert">{t("invalidRange")}</p>}
       </form>
-      {query.isError ? (
-        <p role="alert">{c("networkError")}</p>
-      ) : !query.data ? (
-        <LoadingState label={c("loading")} />
-      ) : !query.data.entries.length ? (
-        <EmptyState title={t("noAudit")} />
-      ) : (
-        <Table aria-label={c("auditLog")}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("time")}</TableHead>
-              <TableHead>{t("actor")}</TableHead>
-              <TableHead>{t("action")}</TableHead>
-              <TableHead>{t("outcome")}</TableHead>
-              <TableHead>
-                <span className="sr-only">{c("actions")}</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {query.data.entries.map((entry) => (
-              <TableRow key={entry.id}>
-                <TableCell>
-                  <time dateTime={entry.startedAt}>
-                    {entry.startedAt.replace("T", " ").slice(0, 19)} UTC
-                  </time>
-                </TableCell>
-                <TableCell className="max-w-40 whitespace-normal wrap-anywhere">
-                  {entry.actorId ?? t("operator")}
-                </TableCell>
-                <TableCell>
-                  {t(entry.action === "user.role.update" ? "roleUpdate" : "configurationUpdate")}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{t(entry.outcome)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" onClick={() => setSelected(entry)}>
-                    {t("details")}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      {renderResults()}
       <nav aria-label={t("auditPages")} className="flex gap-3">
         <Button
           variant="outline"

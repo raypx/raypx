@@ -14,6 +14,7 @@
     "./empty-state": "./src/empty-state.tsx",
     "./status-badge": "./src/status-badge.tsx",
     "./select-field": "./src/select-field.tsx",
+    "./data-table": "./src/data-table.tsx",
     "./password-input": "./src/password-input.tsx",
     "./confirmation": "./src/confirmation.tsx",
     "./avatar": "./src/avatar.tsx",
@@ -49,6 +50,7 @@
   "dependencies": {
     "@base-ui/react": "catalog:",
     "@raypx/icons": "workspace:*",
+    "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
     "cn": "catalog:",
     "tailwindcss": "catalog:",

@@ -171,6 +171,17 @@ function Workspace({
     setSelected(id);
     onTaskChange?.(id ?? undefined);
   }
+  function openTaskDetails(id: string) {
+    selectTask(id);
+    setDetailVisible(true);
+    // Stacked layouts move focus to details instead of leaving them below the fold.
+    const panel = detail.current?.closest("[data-task-panels]");
+    if (!panel || getComputedStyle(panel).gridTemplateColumns.split(" ").length !== 1) return;
+    requestAnimationFrame(() => {
+      detail.current?.scrollIntoView?.({ block: "start", behavior: "instant" });
+      detail.current?.focus({ preventScroll: true });
+    });
+  }
   useEffect(() => {
     if (linkedTask.current === initialTaskId) return;
     linkedTask.current = initialTaskId;
@@ -209,6 +220,11 @@ function Workspace({
     .filter((device) => !deviceId || device.id === deviceId)
     .flatMap((device) => device.projects)
     .find((project) => project.id === activeFilters.project);
+  const projectTitle = selectedProject?.name ?? t("projectUnavailable");
+  const pageTitle = t(view === "approvals" ? "inbox" : "title");
+  const workspaceTitle = view === "tasks" && projectId ? projectTitle : pageTitle;
+  const defaultDeviceId = local ? (data?.devices[0]?.id ?? "") : "";
+  const fixedDeviceId = projectId ? (deviceId ?? defaultDeviceId) : undefined;
   const targetDevice = data?.devices.find((device) => device.id === deviceId);
   const targetUnavailable = Boolean(
     projectId && data && (!selectedProject || !targetDevice?.online || targetDevice.revoked),
@@ -245,18 +261,14 @@ function Workspace({
     <section data-tasks className="@container">
       {ActionsSlot && view === "tasks" && projectId ? (
         <>
-          <h1 className="sr-only">{selectedProject?.name ?? t("projectUnavailable")}</h1>
+          <h1 className="sr-only">{projectTitle}</h1>
           <ActionsSlot>{actions}</ActionsSlot>
         </>
       ) : (
         <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1>
-                {view === "tasks" && projectId
-                  ? (selectedProject?.name ?? t("projectUnavailable"))
-                  : t(view === "approvals" ? "inbox" : "title")}
-              </h1>
+              <h1>{workspaceTitle}</h1>
               {activeFilters.project && !projectId && (
                 <Button
                   variant="secondary"
@@ -264,9 +276,7 @@ function Workspace({
                   aria-label={t("clearProjectFilter")}
                   onClick={() => changeFilters({ ...activeFilters, project: "" })}
                 >
-                  <span className="max-w-48 truncate">
-                    {selectedProject?.name ?? t("projectUnavailable")}
-                  </span>
+                  <span className="max-w-48 truncate">{projectTitle}</span>
                   <CloseIcon aria-hidden="true" />
                 </Button>
               )}
@@ -293,223 +303,197 @@ function Workspace({
           {t(errorCode)}
         </p>
       )}
-      {!data ? (
-        !error && <LoadingState label={c("loading")} />
-      ) : (
-        <>
-          {view === "approvals" ? (
-            <div className="space-y-6">
-              {client.observed && (
-                <h2 className="text-base font-semibold">{t("managedRequests")}</h2>
-              )}
-              {data.requests.length === 0 ? (
-                <EmptyState
-                  className="py-10"
-                  icon={<InboxIcon aria-hidden="true" />}
-                  title={t(client.observed ? "managedNothingWaiting" : "nothingWaiting")}
-                />
-              ) : (
-                data.requests.map((request) => (
-                  <PendingSessionRequest
-                    key={request.id}
-                    client={client}
-                    request={request}
-                    scope={scope}
-                    devices={data.devices}
-                    onOpenTask={onOpenTask}
-                    onChanged={refresh}
-                  />
-                ))
-              )}
-            </div>
+      {!data && !error && <LoadingState label={c("loading")} />}
+      {data && view === "approvals" && (
+        <div className="space-y-6">
+          {client.observed && <h2 className="text-base font-semibold">{t("managedRequests")}</h2>}
+          {data.requests.length === 0 ? (
+            <EmptyState
+              className="py-10"
+              icon={<InboxIcon aria-hidden="true" />}
+              title={t(client.observed ? "managedNothingWaiting" : "nothingWaiting")}
+            />
           ) : (
-            <TaskPanels
-              storageKey={
-                storageNamespace
-                  ? JSON.stringify(["raypx.task-list-width.v1", storageNamespace])
-                  : undefined
-              }
-              detailVisible={detailVisible}
-              list={
-                <>
-                  <Composer
-                    contextLibrary={contextLibrary}
-                    key={`${workspaceScopeKey(scope)}:${projectId ?? "all"}`}
-                    client={client}
-                    fixedProjectId={projectId}
-                    fixedDeviceId={
-                      projectId
-                        ? (deviceId ?? (local ? (data.devices[0]?.id ?? "") : ""))
-                        : undefined
-                    }
-                    initialDraft={initialDraft}
-                    onDraftRestored={onDraftRestored}
-                    devices={data.devices}
+            data.requests.map((request) => (
+              <PendingSessionRequest
+                key={request.id}
+                client={client}
+                request={request}
+                scope={scope}
+                devices={data.devices}
+                onOpenTask={onOpenTask}
+                onChanged={refresh}
+              />
+            ))
+          )}
+        </div>
+      )}
+      {data && view === "tasks" && (
+        <TaskPanels
+          storageKey={
+            storageNamespace
+              ? JSON.stringify(["raypx.task-list-width.v1", storageNamespace])
+              : undefined
+          }
+          detailVisible={detailVisible}
+          list={
+            <>
+              <Composer
+                contextLibrary={contextLibrary}
+                key={`${workspaceScopeKey(scope)}:${projectId ?? "all"}`}
+                client={client}
+                fixedProjectId={projectId}
+                fixedDeviceId={fixedDeviceId}
+                initialDraft={initialDraft}
+                onDraftRestored={onDraftRestored}
+                devices={data.devices}
+                tasks={data.tasks}
+                local={local}
+                draftKey={workspaceDraftKey(scope, projectId, deviceId)}
+                optionsOpen={optionsOpen}
+                onOptionsOpenChange={setOptionsOpen}
+                editorOpen={editorOpen ?? data.tasks.length === 0}
+                onEditorOpenChange={setEditorOpen}
+                promptRef={composer}
+                onCreated={(task) => {
+                  selectTask(task.id);
+                  setDetailVisible(true);
+                  setPages([]);
+                  refresh();
+                }}
+              />
+              <section
+                ref={taskHistory}
+                aria-label={t("taskHistory")}
+                className="@min-[58rem]:flex @min-[58rem]:min-h-0 @min-[58rem]:flex-1 @min-[58rem]:flex-col"
+              >
+                {data.tasks.length > 0 && (
+                  <TaskOverview
                     tasks={data.tasks}
-                    local={local}
-                    draftKey={workspaceDraftKey(scope, projectId, deviceId)}
-                    optionsOpen={optionsOpen}
-                    onOptionsOpenChange={setOptionsOpen}
-                    editorOpen={editorOpen ?? data.tasks.length === 0}
-                    onEditorOpenChange={setEditorOpen}
-                    promptRef={composer}
-                    onCreated={(task) => {
-                      selectTask(task.id);
-                      setDetailVisible(true);
-                      setPages([]);
-                      refresh();
-                    }}
+                    filters={activeFilters}
+                    onChange={changeFilters}
                   />
-                  <section
-                    ref={taskHistory}
-                    aria-label={t("taskHistory")}
-                    className="@min-[58rem]:flex @min-[58rem]:min-h-0 @min-[58rem]:flex-1 @min-[58rem]:flex-col"
-                  >
-                    {data.tasks.length > 0 && (
-                      <TaskOverview
-                        tasks={data.tasks}
-                        filters={activeFilters}
-                        onChange={changeFilters}
-                      />
-                    )}
-                    {data.tasks.length > 0 && (
-                      <TaskFilterBar
-                        filters={activeFilters}
-                        devices={data.devices}
-                        count={filtered.length}
-                        total={data.tasks.length}
-                        fixedTarget={Boolean(projectId)}
-                        onChange={changeFilters}
-                      />
-                    )}
-                    {data.tasks.length === 0 ? (
-                      <EmptyState
-                        className="py-10"
-                        icon={<TaskListIcon aria-hidden="true" />}
-                        title={t("empty")}
-                        description={t(local ? "localEmptyHint" : "emptyHint")}
-                      />
-                    ) : filtered.length === 0 ? (
-                      <EmptyState
-                        title={t("noMatches")}
-                        description={t("noMatchesHint")}
-                        action={
-                          <Button variant="outline" onClick={() => changeFilters(emptyTaskFilters)}>
-                            {t("clearFilters")}
-                          </Button>
-                        }
-                      />
-                    ) : (
-                      <TaskList
-                        fill
-                        restoreFocus={returnToList}
-                        key={JSON.stringify([data.before, activeFilters])}
-                        tasks={filtered}
-                        devices={data.devices}
-                        selected={selected}
-                        onSelect={(id) => {
-                          selectTask(id);
-                          setDetailVisible(true);
-                          // Stacked layouts move focus to details instead of leaving them below the fold.
-                          if (
-                            detail.current &&
-                            getComputedStyle(
-                              detail.current.closest("[data-task-panels]")!,
-                            ).gridTemplateColumns.split(" ").length === 1
-                          ) {
-                            requestAnimationFrame(() => {
-                              detail.current?.scrollIntoView?.({
-                                block: "start",
-                                behavior: "instant",
-                              });
-                              detail.current?.focus({ preventScroll: true });
-                            });
-                          }
-                        }}
-                      />
-                    )}
-                    {(pages.length > 0 || data.next) && (
-                      <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          disabled={!pages.length}
-                          onClick={() => {
-                            revealPage.current = true;
-                            setPages((previous) => previous.slice(0, -1));
-                            selectTask(null);
-                          }}
-                        >
-                          {t("newerTasks")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          disabled={!data.next || data.before !== before}
-                          onClick={() => {
-                            revealPage.current = true;
-                            if (data.next) setPages((previous) => [...previous, data.next!]);
-                            selectTask(null);
-                          }}
-                        >
-                          {t("olderTasks")}
-                        </Button>
-                      </nav>
-                    )}
-                  </section>
-                </>
-              }
-              detail={
-                <div
-                  ref={detail}
-                  tabIndex={-1}
-                  aria-label={t("taskDetails")}
-                  role="region"
-                  className="min-w-0 scroll-mt-5 outline-none"
-                >
-                  {selected && (
+                )}
+                {data.tasks.length > 0 && (
+                  <TaskFilterBar
+                    filters={activeFilters}
+                    devices={data.devices}
+                    count={filtered.length}
+                    total={data.tasks.length}
+                    fixedTarget={Boolean(projectId)}
+                    onChange={changeFilters}
+                  />
+                )}
+                {data.tasks.length === 0 && (
+                  <EmptyState
+                    className="py-10"
+                    icon={<TaskListIcon aria-hidden="true" />}
+                    title={t("empty")}
+                    description={t(local ? "localEmptyHint" : "emptyHint")}
+                  />
+                )}
+                {data.tasks.length > 0 && filtered.length === 0 && (
+                  <EmptyState
+                    title={t("noMatches")}
+                    description={t("noMatchesHint")}
+                    action={
+                      <Button variant="outline" onClick={() => changeFilters(emptyTaskFilters)}>
+                        {t("clearFilters")}
+                      </Button>
+                    }
+                  />
+                )}
+                {filtered.length > 0 && (
+                  <TaskList
+                    fill
+                    restoreFocus={returnToList}
+                    key={JSON.stringify([data.before, activeFilters])}
+                    tasks={filtered}
+                    devices={data.devices}
+                    selected={selected}
+                    onSelect={openTaskDetails}
+                  />
+                )}
+                {(pages.length > 0 || data.next) && (
+                  <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="mb-4 @min-[58rem]:hidden"
+                      variant="outline"
+                      disabled={!pages.length}
                       onClick={() => {
-                        setDetailVisible(false);
-                        setReturnToList((value) => value + 1);
+                        revealPage.current = true;
+                        setPages((previous) => previous.slice(0, -1));
+                        selectTask(null);
                       }}
                     >
-                      <ArrowLeftIcon aria-hidden="true" />
-                      {t("backToTasks")}
+                      {t("newerTasks")}
                     </Button>
-                  )}
-                  {selected ? (
-                    <TaskDetail
-                      key={selected}
-                      client={client}
-                      id={selected}
-                      scope={scope}
-                      devices={data.devices}
-                      onChanged={refresh}
-                      target={projectId ? { projectId, deviceId } : undefined}
-                      onFollowUp={
-                        projectId
-                          ? (id) => {
-                              selectTask(id);
-                              setDetailVisible(true);
-                              setPages([]);
-                            }
-                          : undefined
-                      }
-                    />
-                  ) : (
-                    <div className="flex min-h-72 flex-col items-center justify-center gap-2 px-5 text-center text-muted-foreground">
-                      <TaskListIcon aria-hidden="true" className="size-8" />
-                      <h2 className="text-sm font-normal">{t("selectTask")}</h2>
-                    </div>
-                  )}
+                    <Button
+                      variant="outline"
+                      disabled={!data.next || data.before !== before}
+                      onClick={() => {
+                        revealPage.current = true;
+                        if (data.next) setPages((previous) => [...previous, data.next!]);
+                        selectTask(null);
+                      }}
+                    >
+                      {t("olderTasks")}
+                    </Button>
+                  </nav>
+                )}
+              </section>
+            </>
+          }
+          detail={
+            <div
+              ref={detail}
+              tabIndex={-1}
+              aria-label={t("taskDetails")}
+              role="region"
+              className="min-w-0 scroll-mt-5 outline-none"
+            >
+              {selected && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mb-4 @min-[58rem]:hidden"
+                  onClick={() => {
+                    setDetailVisible(false);
+                    setReturnToList((value) => value + 1);
+                  }}
+                >
+                  <ArrowLeftIcon aria-hidden="true" />
+                  {t("backToTasks")}
+                </Button>
+              )}
+              {selected ? (
+                <TaskDetail
+                  key={selected}
+                  client={client}
+                  id={selected}
+                  scope={scope}
+                  devices={data.devices}
+                  onChanged={refresh}
+                  target={projectId ? { projectId, deviceId } : undefined}
+                  onFollowUp={
+                    projectId
+                      ? (id) => {
+                          selectTask(id);
+                          setDetailVisible(true);
+                          setPages([]);
+                        }
+                      : undefined
+                  }
+                />
+              ) : (
+                <div className="flex min-h-72 flex-col items-center justify-center gap-2 px-5 text-center text-muted-foreground">
+                  <TaskListIcon aria-hidden="true" className="size-8" />
+                  <h2 className="text-sm font-normal">{t("selectTask")}</h2>
                 </div>
-              }
-            />
-          )}
-        </>
+              )}
+            </div>
+          }
+        />
       )}
     </section>
   );

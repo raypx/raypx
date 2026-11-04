@@ -19,6 +19,7 @@ import { useDesktopPlatform } from "../../../lib/platform-context";
 import { apiUrl, webUrl, authClient, desktopFetch } from "../client";
 import { signOutDesktopHost } from "../../tasks/host-session";
 import { analytics } from "../../analytics/client";
+import { WindowDragRegion } from "../../../components/window-drag-region";
 
 function gateMessage(
   mismatch: boolean,
@@ -69,7 +70,13 @@ export function InstanceGate({ children }: { children: ReactNode }) {
     };
   }, [refetch, isDesktop, localRequest]);
   if (!isDesktop()) return children;
-  if (status.isPending) return <LoadingState label={c("loading")} />;
+  if (status.isPending)
+    return (
+      <>
+        <WindowDragRegion />
+        <LoadingState label={c("loading")} />
+      </>
+    );
   const binding = status.data?.binding;
   const mismatch =
     binding &&
@@ -115,7 +122,11 @@ export function InstanceGate({ children }: { children: ReactNode }) {
     }
   }
   return (
-    <main aria-labelledby="instance-title" className="flex h-dvh flex-col overflow-auto px-6 py-8">
+    <main
+      aria-labelledby="instance-title"
+      className="flex h-dvh flex-col overflow-auto px-6 py-8 pt-[max(2rem,var(--mygo-titlebar-height,0px))]"
+    >
+      <WindowDragRegion />
       <Empty className="m-auto max-w-lg flex-none gap-6 p-0">
         <EmptyHeader>
           <EmptyMedia variant="icon" className="size-12">

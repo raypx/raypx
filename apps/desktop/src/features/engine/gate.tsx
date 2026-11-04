@@ -4,6 +4,7 @@ import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { useDesktopPlatform } from "../../lib/platform-context";
 import { useDesktopEngine } from "./provider";
 import { EngineNotice } from "./notice";
+import { WindowDragRegion } from "../../components/window-drag-region";
 
 /** First connection blocks local queries; later outages keep the mounted workspace intact. */
 export function EngineGate({ children }: { children: ReactNode }) {
@@ -13,6 +14,7 @@ export function EngineGate({ children }: { children: ReactNode }) {
   if (!platform.isDesktop() || connected || engine.status === "ready") return children;
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-16">
+      <WindowDragRegion />
       {engine.status === "starting" ? (
         <div role="status" aria-label={t("loading")} className="flex flex-col gap-4">
           <Skeleton className="h-7 w-48" />

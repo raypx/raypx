@@ -73,7 +73,7 @@ describe("AppShell", () => {
   it("scrolls only main content inside a native window", () => {
     renderShell("window");
     expect(screen.getByRole("main").className).toContain("overflow-auto");
-    expect(screen.getByRole("banner").className).toContain("[-webkit-app-region:drag]");
+    expect(screen.getByRole("banner").className).toContain("[--app-region:drag]");
   });
 
   it("toggles the sidebar without removing navigation names, selection or badges", () => {
