@@ -1,10 +1,14 @@
-import { agentPort } from "../tests/helpers/agent-port.js";
+import { agentPort } from "../../../../tests/helpers/remote-agent-port";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { RemoteControl } from "./control.js";
-import { deferred, ManualScheduler, RelaySocket } from "../../client/tests/helpers/relay.js";
+import { RemoteControl } from "./control";
+import {
+  deferred,
+  ManualScheduler,
+  RelaySocket,
+} from "../../../../../../packages/client/tests/helpers/relay";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

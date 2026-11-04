@@ -110,6 +110,12 @@ describe("affected verification", () => {
     ["packages/cli/src/runtime/process/windows.ts", ["windows-latest"]],
     ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/instance.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/runtime/daemon/remote/control.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/tests/helpers/remote-control.ts", ["macos-latest", "windows-latest"]],
+    [
+      "packages/cli/tests/integration/runtime/daemon/remote/renewal.test.ts",
+      ["macos-latest", "windows-latest"],
+    ],
     [".github/workflows/native.yml", ["macos-latest", "windows-latest"]],
     [".gitattributes", ["macos-latest", "windows-latest"]],
   ])("selects native runners from the changed input %s", (file, runners) => {

@@ -64,7 +64,6 @@
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
-        "@raypx/host": "workspace:*",
         "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
@@ -574,21 +573,6 @@
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
-        "@vitest/coverage-v8": "catalog:dev",
-      },
-    },
-    "packages/host": {
-      "name": "@raypx/host",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/client": "workspace:*",
-        "@raypx/contracts": "workspace:*",
-        "@raypx/core": "workspace:*",
-      },
-      "devDependencies": {
-        "@raypx/tooling": "workspace:*",
-        "@raypx/tsconfig": "workspace:*",
-        "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
       },
     },
@@ -1832,8 +1816,6 @@
     "@raypx/email": ["@raypx/email@workspace:packages/email"],
 
     "@raypx/env": ["@raypx/env@workspace:packages/env"],
-
-    "@raypx/host": ["@raypx/host@workspace:packages/host"],
 
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
 

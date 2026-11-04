@@ -14,12 +14,10 @@ import {
   type DeviceGrant,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
-import type { HostAgentPort } from "./agent-port.js";
-import { serverOrigin } from "./origin.js";
+import type { HostAgentPort } from "./agent-port";
+import { serverOrigin } from "./origin";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-export type { ControlInfo } from "@raypx/contracts/terminal";
-
-import { readRemoteControlSettings, type Settings, type Binding } from "./settings.js";
+import { readRemoteControlSettings, type Settings, type Binding } from "./settings";
 export class RemoteControl {
   private readonly settings: Settings;
   private storageUnavailable = false;

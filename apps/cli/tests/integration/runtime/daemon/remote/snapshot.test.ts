@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { type RelayServerFrame } from "@raypx/contracts/tasks";
-import { hostFixtures } from "../helpers/control.js";
+import { hostFixtures } from "../../../../helpers/remote-control";
 const { control } = hostFixtures();
 
 it("uses a complete snapshot when the replay cursor falls behind retained events", async () => {

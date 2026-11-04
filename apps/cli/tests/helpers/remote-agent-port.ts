@@ -1,4 +1,4 @@
-import type { HostAgentPort } from "../../src/agent-port.js";
+import type { HostAgentPort } from "../../src/runtime/daemon/remote/agent-port";
 /** Map explicit test ports to recorded command labels; production has no method router. */
 export function agentPort(
   request: (method: string, input: Record<string, unknown>) => Promise<unknown>,

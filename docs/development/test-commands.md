@@ -25,7 +25,6 @@ inventory audits Bun/Vitest suites and lists external browser/database files sep
 bun run --cwd packages/tasks test
 bun run --cwd packages/tasks test:unit
 bun run --cwd packages/tasks test:component
-bun run --cwd packages/host test:integration
 bun run --cwd apps/api test
 bun run --cwd apps/api test:postgres
 bun run --cwd apps/api test:redis

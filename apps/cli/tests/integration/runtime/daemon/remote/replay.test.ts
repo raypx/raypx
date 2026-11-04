@@ -1,10 +1,10 @@
-import { agentPort } from "../helpers/agent-port.js";
+import { agentPort } from "../../../../helpers/remote-agent-port";
 import { expect, it } from "vite-plus/test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RemoteControl } from "@raypx/host";
-import { hostFixtures } from "../helpers/control.js";
+import { RemoteControl } from "../../../../../src/runtime/daemon/remote/control";
+import { hostFixtures } from "../../../../helpers/remote-control";
 const { control } = hostFixtures();
 
 it("persists installation identity and account intent while keeping credentials off disk and URLs", async () => {

@@ -1,9 +1,14 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createApiClient, isMissingProcedure } from "@raypx/client/api";
-import { RemoteControl, serverOrigin, type ControlInfo } from "@raypx/host";
+import { RemoteControl } from "./remote/control";
+import { serverOrigin } from "./remote/origin";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
-import { hostAuthorizationSchema, type HostAuthorization } from "@raypx/contracts/terminal";
+import {
+  hostAuthorizationSchema,
+  type ControlInfo,
+  type HostAuthorization,
+} from "@raypx/contracts/terminal";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { LocalRuntime } from "../index";
 import { LocalError } from "../errors";

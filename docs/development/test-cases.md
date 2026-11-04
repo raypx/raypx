@@ -201,10 +201,11 @@ guest handoff tests; Desktop keeps its local IPC adapter, drafts and account/dev
 ownership tests. Pure Tasks rules live beside `src/model/` source. This lets a Tasks change
 run its own UI regressions without requiring an application test command.
 
-Host's renewal, replay and snapshot suites now live in `packages/host/tests/integration/`.
-They exercise real loopback WebSockets and temporary storage, including real renewal
-deadlines; CLI keeps the daemon-specific boundary tests. The shared helper registers
-cleanup per case rather than reusing connections between cases.
+The remote transport's renewal, replay and snapshot suites live in
+`apps/cli/tests/integration/runtime/daemon/remote/`. They exercise real loopback
+WebSockets and temporary storage, including real renewal deadlines; the sibling daemon
+suites keep the daemon-specific boundary tests. The shared helper registers cleanup per
+case rather than reusing connections between cases.
 
 Pi's injected SDK suite separates lifecycle, tool durability and authoritative
 completion. Desktop's workspace suite separates conversation, history and drafts,

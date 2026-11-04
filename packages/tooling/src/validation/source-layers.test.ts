@@ -57,7 +57,6 @@ it("keeps contracts free of React, UI, presentation and platform-server surfaces
   expect(violationsFor(["@raypx/i18n/browser"])).toHaveLength(1);
   expect(violationsFor(["@raypx/icons/plus"])).toHaveLength(1);
   expect(violationsFor(["@raypx/client/api"])).toHaveLength(1);
-  expect(violationsFor(["@raypx/host/control"])).toHaveLength(1);
   expect(violationsFor(["@raypx/auth/permissions"])).toHaveLength(1);
   expect(violationsFor(["@raypx/jobs/server"])).toHaveLength(1);
   expect(violationsFor(["@raypx/memory/client"])).toHaveLength(1);

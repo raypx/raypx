@@ -175,8 +175,8 @@ The private Agent harness stays inside CLI. `AgentRuntime` owns task lookup,
 command receipts, replay and the active execution registry. `ManagedExecution`
 owns each run's turns, input queue, approvals, cancellation and lock release after
 process draining. The provider-claude and provider-codex libraries translate their private protocols
-through a narrow process port. The shared host package owns remote connection and
-synchronization; it does not own provider execution policy.
+through a narrow process port. The daemon's private `runtime/daemon/remote` transport
+owns remote connection and synchronization; it does not own provider execution policy.
 Agent orchestration is event-sourced inside the CLI ([ADR 0044](0044-event-sourced-cli-orchestration.md)).
 A pure decider in `runtime/agents/domain/` turns commands and live process facts
 into events and effects; one sink commits the receipt, events, projections, relay

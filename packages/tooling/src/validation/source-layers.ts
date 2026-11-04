@@ -23,7 +23,7 @@ function forbidden(owner: string, target: string, request: string) {
   if (
     owner === "contracts" &&
     (/^react(?:-dom)?(?:\/|$)/.test(request) ||
-      /^@raypx\/(?:ui|i18n|icons|client|host|auth)(?:\/|$)/.test(request) ||
+      /^@raypx\/(?:ui|i18n|icons|client|auth)(?:\/|$)/.test(request) ||
       /^@raypx\/[^/]+\/(?:server|client|crypto)(?:\/|$)/.test(request))
   )
     return true;
@@ -46,7 +46,7 @@ function forbidden(owner: string, target: string, request: string) {
   return (
     infrastructure ||
     (owner === "model" &&
-      /^(?:react(?:\/|$)|react-dom(?:\/|$)|@raypx\/(?:ui|client|host)(?:\/|$))/.test(request))
+      /^(?:react(?:\/|$)|react-dom(?:\/|$)|@raypx\/(?:ui|client)(?:\/|$))/.test(request))
   );
 }
 /** Follow re-exports and imports transitively; a barrel must not bypass a layer. */

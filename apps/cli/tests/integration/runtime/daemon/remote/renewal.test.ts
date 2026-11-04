@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { hostFixtures } from "../helpers/control.js";
+import { hostFixtures } from "../../../../helpers/remote-control";
 const { control } = hostFixtures();
 
 it("finishes an in-flight command before replacing its socket for proactive renewal", async () => {

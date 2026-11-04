@@ -111,6 +111,37 @@ Reviewed, redacted recordings are under `tests/fixtures/terminal/recorded` and r
 without credentials in the default suite. Never commit the private raw captures.
 
 `eval:agents` previews policy Evals (`--run` enables paid calls); `perf:tasks` checks snapshots. See docs/development/agent-quality.md.
+
+## Remote transport
+
+Private `runtime/daemon/remote/` is the Bun-only outbound relay transport composed by
+`runtime/daemon/control.ts`. Domain schemas live in Core and wire envelopes in contracts.
+`RemoteControl` receives `HostAgentPort` explicit operations, never a generic LocalMethod
+router, plus injected credential renewal, notifications and optional observed-session
+projection/acknowledgement callbacks. CLI supplies policy-filtered remote projections;
+the transport has no provider-name policy, never imports browser authentication or
+provider credentials, and forwards frozen task reference snapshots without resolving
+device library entries. Announcements omit Pi from project grants and advertise its
+capability as unsupported; local discovery stays independent. `readRemoteControlSettings`
+is pure: it never creates directories, IDs, files, controllers or network activity.
+Validate origins with `serverOrigin`; keep secrets out of disk settings and diagnostics.
+
+Always authenticate with relay protocol 4, including after grant renewal or explicit
+restart; unsupported handshakes stop with UPGRADE_REQUIRED. Keep replay, command receipts,
+connection fencing and bounded renewal/backoff. Terminal renewal failures call the owner's
+authorization-loss handler, which owns binding cleanup. Consume background promise failures
+and fence queued cleanup to its original binding. Only explicit detach cancels execution;
+a daemon client's disconnect is not detach. Server sync requests use `resume.syncId`:
+never reset the cursor, reconnect or detach for them. Queue each distinct ID through the
+current flush, carry it on every snapshot page and remove it only after its snapshot ACK;
+a request arriving during another snapshot keeps its own authoritative checkpoint.
+
+`remote/scheduler.test.ts` uses injected sockets and the client's manual scheduler for
+exact retry, renewal-drain and acknowledgement deadlines; RemoteControl forwards one
+scheduler to RelayConnection so clocks, jitter and timers share one source. Loopback suites
+in `tests/integration/runtime/daemon/remote/` cover real authentication, command delivery,
+renewal, replay and snapshots; `tests/helpers/remote-control.ts` owns a fresh loopback relay
+and temporary state per case.
 Snapshot suites stay in `tests/integration/runtime/agents/`: they exercise real SQLite queries, WAL transactions and runtime pagination. `tests/helpers/agent-snapshot.ts` owns their shared fixtures; pure domain tests stay beside source.
 
 ## Agent host
