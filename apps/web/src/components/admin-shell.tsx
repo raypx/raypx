@@ -57,30 +57,30 @@ export function AdminShell() {
     {
       to: "/admin",
       exact: true,
-      label: t("administration.nav.overview"),
+      label: t("dash.nav.overview"),
       icon: <AdjustmentsIcon />,
     },
     { to: "/admin/users", label: c("users"), icon: <UserCircleIcon /> },
     { to: "/admin/settings", label: t("configuration.title"), icon: <AdjustmentsIcon /> },
-    { to: "/admin/audit", label: t("administration.nav.auditLog"), icon: <BookOpenIcon /> },
+    { to: "/admin/audit", label: t("dash.nav.audit"), icon: <BookOpenIcon /> },
   ];
   return (
     <AppShell
       brand={{
         to: "/admin",
         label: site.data?.siteName ?? "Raypx",
-        description: t("administration.nav.adminConsole"),
+        description: t("dash.nav.console"),
       }}
       navigation={[
         navigation.filter((item) =>
           canAccessWebPage(access.isError ? undefined : access.data, item.to),
         ),
       ]}
-      navigationLabels={[t("administration.nav.adminConsole")]}
+      navigationLabels={[t("dash.nav.console")]}
       secondaryNavigation={[
         {
           to: "/projects",
-          label: t("administration.nav.backToWorkspace"),
+          label: t("dash.nav.workspace"),
           icon: <ArrowLeftIcon />,
         },
       ]}
@@ -90,9 +90,7 @@ export function AdminShell() {
       account={<UserButton variant="sidebar" />}
     >
       <SessionBoundary
-        guest={
-          <SignInGate title={t("administration.nav.adminConsole")} description={c("signIn")} />
-        }
+        guest={<SignInGate title={t("dash.nav.console")} description={c("signIn")} />}
       >
         {(accountId) => (
           <PermissionBoundary key={accountId} accountId={accountId} permission="admin.read">

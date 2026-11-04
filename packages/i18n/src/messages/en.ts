@@ -136,12 +136,12 @@ export default {
     restoreFailed: "The temporary draft could not be restored. No session has been sent.",
     back: "Back to browsing",
   },
-  administration: {
+  dash: {
     nav: {
-      adminConsole: "Admin console",
+      console: "Admin console",
       overview: "Overview",
-      auditLog: "Audit log",
-      backToWorkspace: "Back to workspace",
+      audit: "Audit log",
+      workspace: "Back to workspace",
     },
     database: "Database",
     redis: "Redis",

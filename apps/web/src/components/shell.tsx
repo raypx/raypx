@@ -102,7 +102,7 @@ export function WebShell() {
   ];
   secondaryNavigation.push({
     to: "/admin",
-    label: t("administration.nav.adminConsole"),
+    label: t("dash.nav.console"),
     icon: <AdjustmentsIcon />,
   });
   return (

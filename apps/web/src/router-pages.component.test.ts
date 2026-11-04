@@ -45,8 +45,8 @@ describe("application shell pages", () => {
     ).toEqual({
       "/projects": { title: "common.projects", layout: "workbench" },
       "/account": { title: "common.account", layout: "document" },
-      "/admin/": { title: "administration.nav.overview", layout: "workbench" },
-      "/admin/audit": { title: "administration.nav.auditLog", layout: "workbench" },
+      "/admin/": { title: "dash.nav.overview", layout: "workbench" },
+      "/admin/audit": { title: "dash.nav.audit", layout: "workbench" },
       "/admin/users": { title: "common.users", layout: "workbench" },
       "/admin/settings": { title: "configuration.title", layout: "document" },
       "/approvals": { title: "common.approvals", layout: "workbench" },

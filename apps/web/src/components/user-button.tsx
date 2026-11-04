@@ -42,7 +42,7 @@ function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
       ? accessQuery.data
       : undefined;
   const c = useTranslations("common");
-  const admin = useTranslations("administration.nav");
+  const nav = useTranslations("dash.nav");
   const auth = useAuthActions({ client: authClient, webUrl });
   useEffect(() => {
     if (previous.current !== accountId) {
@@ -104,7 +104,7 @@ function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
       {hasPermission(access, "admin.read") && (
         <DropdownMenuItem onClick={() => void router.navigate({ to: "/admin" })}>
           <AdjustmentsIcon />
-          {admin("adminConsole")}
+          {nav("console")}
         </DropdownMenuItem>
       )}
     </AccountMenu>

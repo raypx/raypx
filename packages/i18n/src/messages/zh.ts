@@ -132,12 +132,12 @@ export default {
     restoreFailed: "暂时无法恢复登录前的草稿，尚未发送任何会话。",
     back: "返回浏览",
   },
-  administration: {
+  dash: {
     nav: {
-      adminConsole: "管理控制台",
+      console: "管理控制台",
       overview: "概览",
-      auditLog: "操作审计",
-      backToWorkspace: "返回工作台",
+      audit: "操作审计",
+      workspace: "返回工作台",
     },
     database: "数据库",
     redis: "Redis",

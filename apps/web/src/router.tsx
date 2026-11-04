@@ -29,9 +29,9 @@ export function getRouter() {
 }
 /** Message keys that title shell pages; each translates without values. */
 type PageTitle =
-  | "administration.nav.adminConsole"
-  | "administration.nav.overview"
-  | "administration.nav.auditLog"
+  | "dash.nav.console"
+  | "dash.nav.overview"
+  | "dash.nav.audit"
   | "common.users"
   | "common.account"
   | "configuration.title"

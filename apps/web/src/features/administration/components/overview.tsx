@@ -22,7 +22,7 @@ import { authClient, apiUrl } from "../../auth/client";
 import { LoadingState } from "@raypx/ui/loading-state";
 export function Overview() {
   const c = useTranslations("common"),
-    t = useTranslations("administration");
+    t = useTranslations("dash");
   const session = authClient.useSession();
   const id = session.data?.user.id;
   const [days, setDays] = useState<"7" | "30">("30");
