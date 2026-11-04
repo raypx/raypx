@@ -8,14 +8,14 @@ import (
 	"unsafe"
 )
 
-func TestWindowsCredentialACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
+func TestWindowsSessionACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
 	directory := t.TempDir()
-	store, err := host.OpenCredentials(directory)
+	store, err := host.OpenSessions(directory)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer store.Close()
-	if err := store.Keys("scope").Set("key", []byte("synthetic")); err != nil {
+	if err := store.Server("scope").Save([]byte("[]")); err != nil {
 		t.Fatal(err)
 	}
 	user, err := windows.GetCurrentProcessToken().GetTokenUser()
@@ -23,18 +23,18 @@ func TestWindowsCredentialACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
 		t.Fatal(err)
 	}
 	allowed := map[string]bool{user.User.Sid.String(): true, "S-1-5-18": true}
-	for _, path := range []string{directory, filepath.Join(directory, "credentials.sqlite"), filepath.Join(directory, "credentials.sqlite-wal"), filepath.Join(directory, "credentials.sqlite-shm")} {
+	for _, path := range []string{directory, filepath.Join(directory, "sessions.sqlite"), filepath.Join(directory, "sessions.sqlite-wal"), filepath.Join(directory, "sessions.sqlite-shm")} {
 		descriptor, err := windows.GetNamedSecurityInfo(path, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
 		if err != nil {
 			t.Fatal(err)
 		}
 		owner, _, err := descriptor.Owner()
 		if err != nil || !owner.Equals(user.User.Sid) {
-			t.Fatal("Credential owner is not the current user")
+			t.Fatal("Session owner is not the current user")
 		}
 		acl, _, err := descriptor.DACL()
 		if err != nil || acl == nil || int(acl.AceCount) != len(allowed) {
-			t.Fatal("Credential DACL is not restricted")
+			t.Fatal("Session DACL is not restricted")
 		}
 		for index := uint32(0); index < uint32(acl.AceCount); index++ {
 			var ace *windows.ACCESS_ALLOWED_ACE
@@ -43,7 +43,7 @@ func TestWindowsCredentialACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
 			}
 			sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart))
 			if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE || !allowed[sid.String()] {
-				t.Fatal("Credential DACL grants an unexpected principal")
+				t.Fatal("Session DACL grants an unexpected principal")
 			}
 			if path == directory && ace.Header.AceFlags&(windows.OBJECT_INHERIT_ACE|windows.CONTAINER_INHERIT_ACE) != windows.OBJECT_INHERIT_ACE|windows.CONTAINER_INHERIT_ACE {
 				t.Fatal("Directory ACL does not protect future SQLite files")

@@ -12,7 +12,7 @@ credential isolation remains enforced by the Go HTTP adapter.
 
 The adapter enforces configured origin, allowlisted paths/headers, Origin:
 views://main, request/response limits, deadlines, cancellation, redirect refusal
-and atomic encrypted Cookie batches. Host credentials never enter renderer replies.
+and atomic persisted Cookie batches. Host credentials never enter renderer replies.
 The renderer cannot invoke hosts/authorize/revoke through native HTTP.
 
 Requests use the oRPC JSON envelope. Current contracts represent dates as strings;

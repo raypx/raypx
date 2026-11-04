@@ -149,11 +149,31 @@ if (import.meta.main) {
         await preparePackager(env),
       );
       break;
+    // The test-only native_smoke build is compiled wherever the production host is.
     case "check":
       await run(["go", "vet", "./internal/...", "./tests/native/host/...", ...args]);
+      await run([
+        "go",
+        "vet",
+        "-tags",
+        "native_smoke",
+        "./internal/...",
+        "./tests/native/host/...",
+        ...args,
+      ]);
       break;
     case "test":
       await run(["go", "test", "./internal/...", "./tests/native/host/...", ...args]);
+      await run([
+        "go",
+        "test",
+        "-tags",
+        "native_smoke",
+        "./tests/native/host/...",
+        "-run",
+        "^TestSmoke",
+        ...args,
+      ]);
       break;
     case "smoke": {
       await prepare();

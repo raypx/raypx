@@ -9,26 +9,21 @@ import { messages } from "@raypx/i18n/messages";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
 import { CONNECTION_KEY } from "../../../config";
 import { nativePresentation } from "../../../scripts/native/presentation";
+import { instanceFixture } from "../fixtures/instance-server";
 import {
   engine,
-  handleTrayAction,
-  mainWindow,
+  trayAction,
+  nativeWindow,
   apiOrigin,
   desktopApi,
   control,
   quitDesktop,
-  tray,
-  view,
-  windowActions,
+  evaluate as evaluateNative,
   measureNativeCors,
+  measureNativeStream,
 } from "./host";
 
-const evaluateNative = view.evaluate;
 const presentation = nativePresentation(process.env);
-let focused = false;
-mainWindow.on("focus", () => {
-  focused = true;
-});
 async function evaluate(script: string): Promise<unknown> {
   // Native WebView startup/activation can lose an early diagnostic request.
   // Smoke actions operate only on isolated acceptance data.
@@ -58,6 +53,13 @@ let stage = "renderer startup";
 let fixtureSession: unknown = null;
 const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
 const fixtureApi = new URL(apiOrigin);
+const restoredServer = process.env.RAYPX_NATIVE_SMOKE_RESTORED_SERVER === "true";
+// The profile is bound to the shell server; another server must show the origin gate.
+const otherServer = fixturePhase === "restore" && !restoredServer;
+const fixtureUser = "native-shell-fixture";
+// Guests get a direct sign-in action; only an existing account has the account menu.
+const signedOutWorkspace = `Boolean(document.querySelector("#main"))&&!document.querySelector("#auth-email")&&!document.querySelector("[data-slot=dropdown-menu-trigger]")&&[...document.querySelectorAll("button[aria-label]")].some(node=>${JSON.stringify([messages.en.common.signIn, messages.zh.common.signIn])}.includes(node.getAttribute("aria-label")))`;
+const instances = instanceFixture(fixtureApi.origin, fixtureUser);
 if (
   (fixturePhase === "shell" || fixturePhase === "restore") &&
   (fixtureApi.protocol !== "http:" || !["localhost", "127.0.0.1"].includes(fixtureApi.hostname))
@@ -69,6 +71,8 @@ const fixtureServer =
         hostname: fixtureApi.hostname,
         port: Number(fixtureApi.port),
         fetch: (request) => {
+          if (new URL(request.url).pathname.startsWith("/rpc/instances/"))
+            return instances(request);
           if (new URL(request.url).pathname === "/api/auth/list-sessions")
             return Response.json({
               sessionCookiePresent: (request.headers.get("cookie") ?? "").includes(
@@ -101,14 +105,14 @@ async function localSessionFixture() {
     async () =>
       Boolean(
         await evaluate(
-          'document.dispatchEvent(new Event("visibilitychange"));return Boolean(document.querySelector("[data-slot=dropdown-menu-trigger]")) && !document.querySelector("#auth-email")',
+          `document.dispatchEvent(new Event("visibilitychange"));return ${signedOutWorkspace}`,
         ),
       ),
     "Signed-out Desktop did not open the local workspace",
   );
   const createdAt = new Date().toISOString();
   const user = {
-    id: "native-shell-fixture",
+    id: fixtureUser,
     name: "Native Smoke",
     email: "native-smoke@example.test",
     emailVerified: true,
@@ -211,9 +215,10 @@ async function selectLanguage(locale: "en" | "zh") {
 }
 
 try {
-  assert.equal(tray.visible, true, "Native tray was not created");
+  const initial = await nativeWindow.state();
+  assert.equal(initial.trayVisible, true, "Native tray was not created");
   if (process.platform === "darwin") {
-    const bounds = tray.getBounds();
+    const bounds = initial.trayBounds;
     console.info(`Native smoke tray bounds: ${bounds.width} x ${bounds.height}`);
     assert.ok(bounds.width > 0 && bounds.width <= 36, `Tray width is too large: ${bounds.width}`);
   }
@@ -223,17 +228,55 @@ try {
       'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.mygo });',
     ),
   );
+  // The window starts on about:blank; reloading before navigation would keep it there.
   await waitFor(
     async () =>
-      // The prerendered skeleton has no #main; it appears once the shell hydrates.
-      Boolean(await evaluate('return Boolean(document.querySelector("#main"))')),
+      Boolean(
+        await evaluate(
+          'return location.href!=="about:blank"&&Boolean(document.querySelector("main"))',
+        ),
+      ),
     "Packaged renderer did not load",
   );
   stage = "local engine handshake";
   await waitFor(
-    () => engine.status.status === "ready",
+    async () => (await engine.status()).status === "ready",
     "Bundled local engine did not become ready",
   );
+  if (fixturePhase === "shell") {
+    stage = "local instance enrollment";
+    const begun = (await engine.request("instance.begin", { origin: apiOrigin })) as {
+      registered: boolean;
+    };
+    if (!begun.registered)
+      assert.deepEqual(await engine.request("instance.poll", {}), { status: "approved" });
+    await reloadRenderer();
+  }
+  if (otherServer) {
+    stage = "server-bound instance gate";
+    const status = (await engine.request("instance.status", {})) as {
+      state: string;
+      binding?: { origin: string };
+    };
+    assert.equal(status.state, "registered");
+    assert.notEqual(status.binding?.origin, apiOrigin, "Profile was rebound to another server");
+    const titles = [messages.en.instances.title, messages.zh.instances.title];
+    await waitFor(
+      async () =>
+        Boolean(
+          await evaluate(
+            `return ${JSON.stringify(titles)}.includes(document.querySelector("main h1")?.textContent)&&!document.querySelector("#main")`,
+          ),
+        ),
+      "Another server did not show the instance origin gate",
+    );
+  } else
+    await waitFor(
+      async () =>
+        // The prerendered skeleton has no #main; it appears once the shell hydrates.
+        Boolean(await evaluate('return Boolean(document.querySelector("#main"))')),
+      "Packaged renderer shell did not hydrate",
+    );
   const info = (await engine.request("runtime.info", {})) as {
     protocolVersion: number;
     scheduler: boolean;
@@ -248,7 +291,6 @@ try {
       "return await window.mygo.call('Desktop.Request','get_runtime',{})",
     )) as { compiledFeatures: string[] };
     assert.deepEqual(runtime.compiledFeatures, ["native-smoke"]);
-    const { measureNativeStream } = await import("./host");
     const stream = await measureNativeStream();
     console.info(`Native smoke Channel: ${JSON.stringify(stream)}`);
     assert.equal(stream.renderer.ordered, true, "Native Channel reordered terminal packets");
@@ -265,18 +307,24 @@ try {
   }
   if (presentation.activate) {
     stage = "close and restore";
-    mainWindow.requestClose();
-    await waitFor(() => !mainWindow.isVisible(), "Native close did not hide the window");
-    focused = false;
-    await windowActions.show();
-    await waitFor(() => focused, "Interactive smoke did not focus the native window");
-    assert.equal(mainWindow.isVisible(), true);
-    stage = "native resize";
-    mainWindow.setSize(640, 480);
+    await nativeWindow.close();
     await waitFor(
-      () => mainWindow.getSize().width >= 800 && mainWindow.getSize().height >= 620,
-      "Native minimum dimensions were not restored",
+      async () => !(await nativeWindow.state()).visible,
+      "Native close did not hide the window",
     );
+    const { focuses } = await nativeWindow.state();
+    await trayAction("show");
+    await waitFor(
+      async () => (await nativeWindow.state()).focuses > focuses,
+      "Interactive smoke did not focus the native window",
+    );
+    assert.equal((await nativeWindow.state()).visible, true);
+    stage = "native resize";
+    await nativeWindow.resize(640, 480);
+    await waitFor(async () => {
+      const { width, height } = await nativeWindow.state();
+      return width >= 800 && height >= 620;
+    }, "Native minimum dimensions were not restored");
   } else
     console.info(
       "Native smoke quiet: foreground activation, native close and resize checks skipped",
@@ -292,7 +340,6 @@ try {
   if (!dataDir) throw new Error("Smoke requires an isolated data directory");
   if (phase === "shell" || phase === "restore") {
     stage = "runtime server configuration and isolation";
-    const restoredServer = process.env.RAYPX_NATIVE_SMOKE_RESTORED_SERVER === "true";
     assert.equal(
       await evaluate(`return window[${JSON.stringify(CONNECTION_KEY)}]?.apiUrl`),
       apiOrigin,
@@ -356,7 +403,9 @@ try {
       'localStorage.setItem(JSON.stringify(["raypx.desktop",window.__raypxConnection.apiUrl,"raypx-server-acceptance"]),"saved");return true',
     );
     await control.enable("config-isolation", true);
-    stage = "device memory before login and across server changes";
+  }
+  if (phase === "shell" || (phase === "restore" && !otherServer)) {
+    stage = "device memory before login and across restart";
     if (phase === "shell") {
       const document = {
         kind: "memory",
@@ -398,7 +447,7 @@ try {
       );
     }
     const references = (await engine.request("memory.list", {})) as ContextDocumentSummary[];
-    assert.equal(references.length, 1, "Device references did not survive restart/server change");
+    assert.equal(references.length, 1, "Device references did not survive restart");
     assert.equal(references[0]?.revision, 3);
     await evaluate('location.hash="/memory";return true');
     await waitFor(
@@ -412,7 +461,7 @@ try {
     );
     if (phase === "shell" && process.platform === "darwin") {
       stage = "signed-out local terminal approvals and window lease";
-      assert.equal(engine.features.localTerminalApprovals, true);
+      assert.equal((await engine.features()).localTerminalApprovals, true);
       const project = join(dataDir, "terminal-approvals");
       await mkdir(project, { recursive: true });
       const root = (await engine.request("roots.register", { path: project })) as RootGrant;
@@ -457,10 +506,10 @@ try {
         async () => Boolean(await pending()),
         "Visible Native did not maintain its approval lease",
       );
-      await windowActions.hide();
+      await trayAction("hide");
       assert.deepEqual(await first, { fallback: true });
       assert.deepEqual(await hook(), { fallback: true });
-      await windowActions.show();
+      await trayAction("show");
       const second = hook();
       await waitFor(
         async () => Boolean(await pending()),
@@ -492,7 +541,7 @@ try {
     }
     stage = "signed-out local workspace and isolated session fixture";
     await localSessionFixture();
-    await handleTrayAction("pending");
+    await trayAction("pending");
     await waitFor(
       async () => String(await evaluate("return location.hash")).includes("/approvals"),
       "Tray review action did not open the approval page",
@@ -522,7 +571,8 @@ try {
         ),
       "Settings route did not mount",
     );
-    await evaluate('location.hash="/";return true');
+    // Home is the project overview; authorized files are listed on the files tool.
+    await evaluate('location.hash="/files";return true');
     await waitFor(
       async () =>
         Boolean(
@@ -612,12 +662,15 @@ try {
       const value = await file.json();
       return value.theme === "dark" && value.locale === "zh";
     }, "Renderer did not persist preferences through the native bridge");
+  } else if (otherServer) {
+    console.info("Native smoke other server kept its own partition behind the instance gate");
   } else if (phase === "restore") {
     stage = "restart local state";
     const roots = (await engine.request("roots.list", {})) as RootGrant[];
     assert.equal(roots.length, 1);
     const jobs = (await engine.request("jobs.list", {})) as JobDefinition[];
     assert.equal(jobs[0]?.name, "Native smoke scan");
+    await evaluate('location.hash="/files";return true');
     await waitFor(
       async () =>
         Boolean(
@@ -724,23 +777,22 @@ try {
       );
       await reloadRenderer();
       await waitFor(
-        async () =>
-          Boolean(
-            await evaluate(
-              'return Boolean(document.querySelector("[data-slot=dropdown-menu-trigger]")) && !document.querySelector("#auth-email")',
-            ),
-          ),
+        async () => Boolean(await evaluate(`return ${signedOutWorkspace}`)),
         "Logout did not preserve access to the local workspace",
       );
     }
   } else throw new Error("Unknown native smoke phase");
   if (!presentation.activate)
-    assert.equal(focused, false, "Quiet smoke activated the native window");
+    assert.equal(
+      (await nativeWindow.state()).focuses,
+      0,
+      "Quiet smoke activated the native window",
+    );
   console.info(
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,
   );
   await fixtureServer?.stop(true);
-  await handleTrayAction("quit");
+  await trayAction("quit");
 } catch (error) {
   try {
     console.error(
@@ -759,6 +811,6 @@ try {
   );
   if (process.env.CI) console.error(`::error title=Native smoke stage::${stage}`);
   await fixtureServer?.stop(true);
-  await quitDesktop(1);
+  await quitDesktop();
   process.exitCode = 1;
 }

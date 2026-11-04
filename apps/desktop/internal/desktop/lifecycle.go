@@ -34,8 +34,8 @@ func (d *Desktop) Close() {
 			}
 			d.Engine.Close()
 			d.requests.Wait()
-			if d.credentials != nil {
-				_ = d.credentials.Close()
+			if d.sessions != nil {
+				_ = d.sessions.Close()
 			}
 			if d.instance != nil {
 				_, _ = d.instance.ExecContext(context.Background(), "ROLLBACK")

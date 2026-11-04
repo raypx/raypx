@@ -99,7 +99,7 @@ async function ownerEpoch() {
 try {
   // Desktop already starts its owner; wait for that startup before renderer RPCs.
   await waitFor(
-    async () => (engine.status.status === "ready" ? true : undefined),
+    async () => ((await engine.status()).status === "ready" ? true : undefined),
     "engine startup",
   );
   for (const provider of nativeAgentProviders(process.env)) {

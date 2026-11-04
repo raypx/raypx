@@ -108,14 +108,14 @@ Local tools render during session/network checks. Auth routes use a standalone l
   roots.register. Only native directory pickers grant roots. Connector recovery
   uses the bundled CLI and native-owned config directories. Validate external URLs.
 - Cookie/Set-Cookie and restricted host credentials never enter renderer responses.
-  Keep allowlisted paths/headers, deadlines, cancellation, AES-GCM session-v2 and
-  SQLite key storage native. Sanitize errors. Persistence failure disables session
-  transport; temporary key-store failures preserve existing encrypted files.
+  Keep allowlisted paths/headers, deadlines, cancellation and SQLite session storage
+  native. Sanitize errors. Persistence failure disables session transport; unreadable
+  session storage keeps sign-in in memory and preserves stored rows.
 - Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx; invalid config
   stops startup. Only configured API origins are reachable. Isolate sessions,
   browser storage, remote settings and account-owned history by server origin.
-- Native owns `credentials.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
-  Server-scoped Keys keep AES-GCM session-v2 keys out of the renderer and TOML.
+- Native owns `sessions.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
+  Server-scoped rows keep persistent Cookies out of the renderer and TOML.
   POSIX files are private; Windows uses a restricted inheritable DACL.
   Never read, delete or import old Keychain/credential files. `local_profile` selects
   the CLI profile explicitly (default `default`); never reset or rebind an old profile.
@@ -146,7 +146,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 Daily changes run affected Desktop check/test through repository `bun run verify`.
 Native host, IPC, native resources/scripts and terminal/daemon changes also run
-mygo:check/mygo:test and CI on the affected native platforms. Renderer-only changes
+mygo:check/mygo:test (including the native_smoke build) and CI on the affected native platforms. Renderer-only changes
 need no native runner. Release preparation adds build:desktop, mygo:smoke (headless),
 package:desktop and repository verify --full. Go policy tests need no GUI.
 For races: go test -race ./internal/... ./tests/native/host/....

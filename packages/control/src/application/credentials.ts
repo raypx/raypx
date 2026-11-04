@@ -126,7 +126,7 @@ export class ControlCredentials {
       if (!(await tx.hostSessionAllowed(auth.session.createdAt!)))
         throw new ControlError("AUTH_REQUIRED");
       // Owner-scoped transactions serialize replacement. One current credential
-      // per device cannot accumulate unusable keys when Keychain is unavailable.
+      // per device cannot accumulate unusable keys when local storage is unavailable.
       for (const item of await tx.list("credential", device.id))
         await tx.remove("credential", item.id);
       for (const grant of await tx.list("grant", device.id))

@@ -92,7 +92,7 @@ func TestSharedRendererAndScopeFixtures(t *testing.T) {
 	var methods []string
 	_ = json.Unmarshal(bytes, &methods)
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: methods})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Methods: methods})
 	if err != nil {
 		t.Fatal(err)
 	}

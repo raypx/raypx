@@ -89,7 +89,7 @@ it("requires compiled Herdr integration and pinned Go checks in the check phase"
 it("retains Go, production and interactive smoke acceptance", () => {
   expect(named("Desktop MyGo checks").if).toBe("matrix.phase == 'checks'");
   expect(named("Desktop MyGo checks").run).toContain("mygo:test");
-  expect(named("Desktop MyGo checks").run).toContain("go vet -tags native_smoke");
+  expect(named("Desktop MyGo checks").run).toContain("mygo:check");
   expect(named("Package desktop").if).toBe("matrix.phase == 'package'");
   expect(named("Verify production Desktop excludes smoke controls").if).toBe(
     "matrix.phase == 'package'",

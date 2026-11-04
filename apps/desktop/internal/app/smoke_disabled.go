@@ -11,6 +11,6 @@ func validateStartup() error { return nil }
 func smokeDirectory() string { return "" }
 func smokeArgs() []string    { return nil }
 func interactive() bool      { return true }
-func startSmoke(*mygo.Window, *mygo.Tray, *host.Desktop, func(), func(), func(string)) error {
+func startSmoke(*mygo.Window, *mygo.Tray, *host.Desktop, func(string)) error {
 	return nil
 }

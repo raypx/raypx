@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -131,7 +130,7 @@ func TestTerminalConfigurationWaitsForAccountSelection(t *testing.T) {
 		t.Fatal(err)
 	}
 	binary, _ := os.Executable()
-	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: nil, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,56 +176,13 @@ func TestCookieRawQuotesAreRejected(t *testing.T) {
 	}
 }
 
-func TestCookieRecoveryFilesStayBounded(t *testing.T) {
-	directory := t.TempDir()
-	for index := range 5 {
-		name := filepath.Join(directory, "session-v2.enc.corrupt-"+string(rune('a'+index)))
-		if err := os.WriteFile(name, []byte("encrypted recovery"), 0600); err != nil {
-			t.Fatal(err)
-		}
-		modified := time.Now().Add(-time.Duration(index) * time.Hour)
-		_ = os.Chtimes(name, modified, modified)
-	}
-	old := filepath.Join(directory, "session-v2.enc.corrupt-expired")
-	_ = os.WriteFile(old, nil, 0600)
-	_ = os.Chtimes(old, time.Now().Add(-8*24*time.Hour), time.Now().Add(-8*24*time.Hour))
-	unrelated := filepath.Join(directory, "session.enc.corrupt-legacy")
-	_ = os.WriteFile(unrelated, nil, 0600)
-	link := filepath.Join(directory, "session-v2.enc.corrupt-link")
-	linked := os.Symlink(unrelated, link) == nil
-	if _, err := host.OpenCookies(directory, "https://example.com", &keys{}); err != nil {
-		t.Fatal(err)
-	}
-	entries, _ := os.ReadDir(directory)
-	count := 0
-	for _, entry := range entries {
-		if strings.HasPrefix(entry.Name(), "session-v2.enc.corrupt-") && entry.Type().IsRegular() {
-			count++
-		}
-	}
-	if count != 3 {
-		t.Fatalf("expected three bounded recovery files, got %d", count)
-	}
-	if _, err := os.Stat(old); !os.IsNotExist(err) {
-		t.Fatal("expired recovery file survived")
-	}
-	if _, err := os.Stat(unrelated); err != nil {
-		t.Fatal("cleanup removed a different storage format")
-	}
-	if linked {
-		if _, err := os.Lstat(link); err != nil {
-			t.Fatal("cleanup removed a symlink")
-		}
-	}
-}
-
 func TestPreloadPreservesJSONKeysWithoutChangingPrototypes(t *testing.T) {
 	binary := os.Getenv("RAYPX_MYGO_CLI")
 	if binary == "" {
 		t.Skip("explicit compiled CLI JavaScript runtime integration gate")
 	}
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -37,10 +37,10 @@ func TestLocalProfileSelectsBundledCLIWithoutExposingNativeConfig(t *testing.T) 
 		if !reflect.DeepEqual(desktop.cli.Args, []string{"--profile", profile}) {
 			t.Fatal("CLI did not receive the selected profile")
 		}
-		store := desktop.credentials
+		store := desktop.sessions
 		desktop.Close()
-		if _, err := store.Keys(config.Scope).Get("closed"); err == nil {
-			t.Fatal("Desktop leaked its credential connection")
+		if _, err := store.Server(config.Scope).Load(); err == nil {
+			t.Fatal("Desktop leaked its session connection")
 		}
 	}
 	for _, source := range []string{"local_profile=42", "local_profile='../other'", "local_profile=''"} {
@@ -50,18 +50,13 @@ func TestLocalProfileSelectsBundledCLIWithoutExposingNativeConfig(t *testing.T) 
 	}
 }
 
-type testKeys struct{}
-
-func (testKeys) Get(string) ([]byte, error) { return nil, nil }
-func (testKeys) Set(string, []byte) error   { return nil }
-
 func TestDesktopUsesEnginePortAndClosesItOnce(t *testing.T) {
 	config, _ := ParseConfig(nil)
 	engine := &testEngine{}
 	desktop, err := New(config, t.TempDir(), Options{
-		CLI:  CLIConfig{Binary: "/never-launched", Version: "test", Daemon: true},
-		Keys: testKeys{}, Methods: []string{"files.list", "roots.register"},
-		Engine: func(*EventStream) EngineClient { return engine },
+		CLI:     CLIConfig{Binary: "/never-launched", Version: "test", Daemon: true},
+		Methods: []string{"files.list", "roots.register"},
+		Engine:  func(*EventStream) EngineClient { return engine },
 	})
 	if err != nil {
 		t.Fatal(err)

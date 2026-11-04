@@ -62,7 +62,7 @@ func Run(bundled fs.FS) error {
 	if err != nil || json.Unmarshal(data, &methods) != nil {
 		return errors.New("Local method manifest missing")
 	}
-	// Secrets wait for the native event loop, so host initialization runs off its thread.
+	// Host initialization blocks on SQLite and the CLI, so it runs off the native event loop.
 	var owned atomic.Pointer[host.Desktop]
 	bridge := &Bridge{}
 	var quitting atomic.Bool
@@ -249,7 +249,7 @@ func Run(bundled fs.FS) error {
 				desktop.Close()
 				return
 			}
-			if err := startSmoke(window, tray, desktop, show, pending, func(action string) {
+			if err := startSmoke(window, tray, desktop, func(action string) {
 				switch action {
 				case "show":
 					show()

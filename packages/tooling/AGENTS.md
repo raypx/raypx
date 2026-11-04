@@ -58,8 +58,6 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   run in parallel and the final result validates their selection against the event.
   Preparation builds shared JS inputs only. Herdr runs in the check phase before its
   Go checks, leaving package/smoke phases independent of terminal-test duration.
-  Its macOS acceptance wrapper isolates synthetic credentials in an owned temporary
-  Keychain, restores the original default/search settings and removes only that Keychain.
 - `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.

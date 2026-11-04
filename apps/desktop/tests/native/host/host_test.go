@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,24 +16,6 @@ import (
 	host "raypx.local/desktop/internal/desktop"
 )
 
-type keys struct {
-	values      map[string][]byte
-	unavailable bool
-}
-
-func (k *keys) Get(name string) ([]byte, error) {
-	if k.unavailable {
-		return nil, errors.New("unavailable")
-	}
-	return k.values[name], nil
-}
-func (k *keys) Set(name string, value []byte) error {
-	if k.values == nil {
-		k.values = map[string][]byte{}
-	}
-	k.values[name] = append([]byte{}, value...)
-	return nil
-}
 func TestMain(m *testing.M) {
 	if len(os.Args) > 1 && (os.Args[1] == "daemon" || os.Args[1] == "stdio") {
 		mode := ""
@@ -148,13 +129,21 @@ func TestInstanceLockExcludesOtherConnections(t *testing.T) {
 	conn.Close()
 	db.Close()
 }
-func TestEncryptedCookiesPersistAndStayPrivate(t *testing.T) {
-	dir := t.TempDir()
-	vault := &keys{}
-	origin, _ := url.Parse("https://example.com")
-	jar, err := host.OpenCookies(dir, origin.String(), vault)
+func openSessions(t *testing.T, directory string) *host.Sessions {
+	t.Helper()
+	sessions, err := host.OpenSessions(directory)
 	if err != nil {
 		t.Fatal(err)
+	}
+	t.Cleanup(func() { sessions.Close() })
+	return sessions
+}
+func TestCookiesPersistPerServerAndStayInOrigin(t *testing.T) {
+	sessions := openSessions(t, t.TempDir())
+	origin, _ := url.Parse("https://example.com")
+	jar, err := host.OpenCookies(origin.String(), sessions.Server("one"))
+	if err != nil || jar.Recovery != "" {
+		t.Fatal("session initialization failed")
 	}
 	change, err := host.ParseCookie(origin, "__Secure-better-auth.session_token=private-token; Path=/; Secure; HttpOnly; Max-Age=3600", time.Now())
 	if err != nil || change == nil {
@@ -163,11 +152,7 @@ func TestEncryptedCookiesPersistAndStayPrivate(t *testing.T) {
 	if err := jar.Apply([]host.CookieChange{*change}); err != nil {
 		t.Fatal(err)
 	}
-	encrypted, _ := os.ReadFile(filepath.Join(dir, "session-v2.enc"))
-	if strings.Contains(string(encrypted), "private-token") {
-		t.Fatal("plaintext cookie persisted")
-	}
-	restored, err := host.OpenCookies(dir, origin.String(), vault)
+	restored, err := host.OpenCookies(origin.String(), sessions.Server("one"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,14 +160,9 @@ func TestEncryptedCookiesPersistAndStayPrivate(t *testing.T) {
 	if err != nil || !strings.Contains(header, "private-token") {
 		t.Fatal("session did not survive restart")
 	}
-	vault.unavailable = true
-	temporary, err := host.OpenCookies(dir, origin.String(), vault)
-	if err != nil || temporary.Recovery != "temporary" {
-		t.Fatal("missing temporary recovery")
-	}
-	preserved, _ := os.ReadFile(filepath.Join(dir, "session-v2.enc"))
-	if string(preserved) != string(encrypted) {
-		t.Fatal("temporary key failure changed encrypted file")
+	isolated, _ := host.OpenCookies(origin.String(), sessions.Server("two"))
+	if header, _ := isolated.Header(origin); header != "" {
+		t.Fatal("cookie escaped its server scope")
 	}
 	other, _ := url.Parse("https://other.test")
 	if _, err := jar.Header(other); err == nil {
@@ -196,14 +176,16 @@ func TestCookiePolicyAndSessionOnlyPersistence(t *testing.T) {
 			t.Errorf("accepted cookie %q", raw)
 		}
 	}
-	dir := t.TempDir()
-	vault := &keys{}
-	jar, _ := host.OpenCookies(dir, origin.String(), vault)
+	store := openSessions(t, t.TempDir()).Server("scope")
+	jar, _ := host.OpenCookies(origin.String(), store)
 	change, _ := host.ParseCookie(origin, "better-auth.session_token=session-only; Secure; HttpOnly; Path=/", time.Now())
 	if err := jar.Apply([]host.CookieChange{*change}); err != nil {
 		t.Fatal(err)
 	}
-	restored, _ := host.OpenCookies(dir, origin.String(), vault)
+	if stored, err := store.Load(); err != nil || stored != nil {
+		t.Fatal("session-only cookie was persisted")
+	}
+	restored, _ := host.OpenCookies(origin.String(), store)
 	header, _ := restored.Header(origin)
 	if header != "" {
 		t.Fatal("session-only cookie survived restart")
@@ -301,7 +283,7 @@ func TestEngineHandshakeAndShutdown(t *testing.T) {
 }
 func TestRendererPolicyKeepsPrivilegedMethodsNative(t *testing.T) {
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: []string{"instance.begin", "host.authorize", "roots.register", "agents.local.list", "connectors.install", "observed.remote", "approvals.local.watch", "files.list"}})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Methods: []string{"instance.begin", "host.authorize", "roots.register", "agents.local.list", "connectors.install", "observed.remote", "approvals.local.watch", "files.list"}})
 	if err != nil {
 		t.Fatal(err)
 	}

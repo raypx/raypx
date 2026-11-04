@@ -12,10 +12,10 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -38,21 +38,17 @@ func smokeArgs() []string {
 }
 func interactive() bool { return os.Getenv("RAYPX_NATIVE_SMOKE_UI") == "interactive" }
 
-func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, show, pending func(), action func(string)) error {
-	directory := smokeDirectory()
-	marker, err := host.ReadBounded(filepath.Join(directory, ".native-smoke-session-owner"), 64)
-	if err != nil || !filepath.IsAbs(directory) || string(marker) != "raypx-native-smoke-v1\n" {
-		return errors.New("Smoke requires an owned isolated profile")
-	}
+// startSmoke runs after validateStartup accepted the isolated profile and token.
+func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, action func(string)) error {
 	token := os.Getenv("RAYPX_NATIVE_SMOKE_TOKEN")
-	if len(token) < 32 || len(token) > 256 {
-		return errors.New("Invalid smoke token")
-	}
 	listener, err := smokeListener(os.Getenv("RAYPX_NATIVE_SMOKE_SOCKET"))
 	if err != nil {
 		return err
 	}
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { listener.Close() })
+	// Count native focus events so quiet runs can prove they never activated the window.
+	var focuses atomic.Int64
+	window.OnFocus(func() { focuses.Add(1) })
 	permits := make(chan struct{}, 4)
 	go func() {
 		for {
@@ -72,8 +68,6 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, sho
 								return nil, errors.New("Smoke script exceeds limit")
 							}
 							return window.Page().EvalContext(ctx, script)
-						case "runtime":
-							return desktop.Runtime(), nil
 						case "engineRequest":
 							method, _ := input["method"].(string)
 							return desktop.Engine.Request(ctx, method, input["params"])
@@ -82,42 +76,51 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, sho
 						case "engineReplace":
 							return desktop.Engine.ReplaceOwner(), nil
 						case "engineStop":
-							desktop.Engine.Stop()
+							// Smoke always composes the process engine; the port omits Stop.
+							engine, ok := desktop.Engine.(*host.Engine)
+							if !ok {
+								return nil, errors.New("Smoke engine unavailable")
+							}
+							engine.Stop()
 							return true, nil
 						case "refreshGrant":
 							return desktop.RefreshGrant(ctx)
-						case "windowState":
+						case "window":
+							switch input["action"] {
+							case nil:
+							case "close":
+								window.Close()
+							case "resize":
+								width, _ := input["width"].(float64)
+								height, _ := input["height"].(float64)
+								if width < 1 || width > 16384 || height < 1 || height > 16384 {
+									return nil, errors.New("Invalid window size")
+								}
+								window.SetContentSize(int(width), int(height))
+							default:
+								return nil, errors.New("Unknown window action")
+							}
 							size := window.ContentBounds()
 							bounds := mygo.Rectangle{}
 							if tray != nil {
 								bounds = tray.Bounds()
 							}
-							return host.JSON{"visible": window.IsVisible(), "focused": window.IsFocused(), "minimized": window.IsMinimized(), "width": size.Width, "height": size.Height, "trayVisible": desktop.Tray.Load(), "trayBounds": host.JSON{"width": bounds.Width, "height": bounds.Height}}, nil
-						case "show":
-							show()
-							return true, nil
-						case "hide":
-							window.Hide()
-							desktop.Visible(false)
-							return true, nil
-						case "close":
-							window.Close()
-							return true, nil
-						case "resize":
-							width, _ := input["width"].(float64)
-							height, _ := input["height"].(float64)
-							if width < 1 || width > 16384 || height < 1 || height > 16384 {
-								return nil, errors.New("Invalid window size")
-							}
-							window.SetContentSize(int(width), int(height))
-							return true, nil
+							return host.JSON{"visible": window.IsVisible(), "focused": window.IsFocused(), "focuses": focuses.Load(), "minimized": window.IsMinimized(), "width": size.Width, "height": size.Height, "trayVisible": desktop.Tray.Load(), "trayBounds": host.JSON{"width": bounds.Width, "height": bounds.Height}}, nil
 						case "tray":
+							// The tray menu's own actions: show, hide, pending and quit.
 							name, _ := input["action"].(string)
-							action(name)
-							return true, nil
-						case "quit":
-							// Let the response flush before the event loop shuts down.
-							go func() { time.Sleep(50 * time.Millisecond); action("quit") }()
+							switch name {
+							case "show", "hide", "pending":
+								action(name)
+								// Tray handlers update the approval lease asynchronously; settle it
+								// from the real window state so the reply implies the new lease.
+								desktop.UpdateLease()
+							case "quit":
+								// Let the response flush before the event loop shuts down.
+								go func() { time.Sleep(50 * time.Millisecond); action("quit") }()
+							default:
+								return nil, errors.New("Unknown tray action")
+							}
 							return true, nil
 						case "cors":
 							return smokeCors(ctx, input)

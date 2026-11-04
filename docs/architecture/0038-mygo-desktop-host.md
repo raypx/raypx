@@ -10,7 +10,7 @@ is still required before claiming support.
 
 `apps/desktop/internal/app` adapts windows, tray, dialogs and trusted
 MyGo calls. `internal/desktop` implements framework-independent native policy,
-allowlisted HTTP/oRPC, encrypted cookies, preferences, event credit, instance locks
+allowlisted HTTP/oRPC, server-scoped cookies, preferences, event credit, instance locks
 and NDJSON transport. TS contracts remain the business schema authority.
 
 Packaged pages use `mygo://<server-scope>/` (Windows maps this to
@@ -21,15 +21,19 @@ account; remote authorization and sessions remain native and server-scoped.
 The application embeds the built frontend and generated manifests. Resources
 include the compiled, version-matched CLI and complete verified Herdr runtime.
 GUI Quit releases UI approval leases and closes only its daemon proxy. The daemon
-continues running tasks. Data paths, the SQLite cross-version instance lock and
-session-v2 AES-GCM cookie format remain stable. Go owns a separate `credentials.sqlite`
-with server-scoped session encryption keys; the lifetime `desktop-instance.sqlite`
-transaction never shares this writer. The injectable Keys port remains. Native storage
-uses private POSIX permissions or a restricted inheritable Windows DACL. Old credentials
-are never read, imported or deleted; an old cookie without its key requires sign-in.
+continues running tasks. Data paths and the SQLite cross-version instance lock remain
+stable. Go owns a separate `sessions.sqlite` holding each server scope's persistent
+cookies as validated JSON; the lifetime `desktop-instance.sqlite` transaction never
+shares this writer. With no system vault, encrypting cookies under a key stored beside
+them added no protection, so storage relies on private POSIX permissions or a restricted
+inheritable Windows DACL. Old `credentials.sqlite` and `session-v2.enc` files are never
+read, imported or deleted; Desktop requires sign-in once.
 
 `native_smoke` is a separate Go build tag. Only that build exposes the private
-random-token test endpoint. Its renderer is built in `native-smoke` mode with a
+random-token test endpoint; `mygo:check`/`mygo:test` compile it alongside the
+production host. The endpoint offers renderer eval, engine/API requests, window
+state with native focus counts, tray actions and the stream/CORS probes; scenarios
+read state on demand instead of mirroring it. Its renderer is built in `native-smoke` mode with a
 stream observation hook; production compilation removes that branch. App identity,
 WebView/data paths and package outputs are isolated. Startup validates the owned
 profile and its config directory before opening config, credentials or locks. The release gate checks Go

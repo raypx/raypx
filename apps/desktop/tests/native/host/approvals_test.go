@@ -37,7 +37,7 @@ func TestBuiltCLIMaintainsApprovalVisibilityLease(t *testing.T) {
 	enrollBuiltCLI(t, binary, directory, "mygo-approval-test", args)
 	defer func() { _ = host.Command(binary, append([]string{"daemon", "stop"}, args...)...).Run() }()
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: args, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: args, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}

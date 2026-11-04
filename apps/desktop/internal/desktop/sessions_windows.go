@@ -5,7 +5,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func protectCredentialPath(path string, directory bool) error {
+func protectPrivatePath(path string, directory bool) error {
 	pointer, err := windows.UTF16PtrFromString(path)
 	if err != nil {
 		return err
@@ -15,7 +15,7 @@ func protectCredentialPath(path string, directory bool) error {
 		return err
 	}
 	if attrs&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-		return errors.New("Credential paths cannot be reparse points")
+		return errors.New("Session paths cannot be reparse points")
 	}
 	user, err := windows.GetCurrentProcessToken().GetTokenUser()
 	if err != nil {

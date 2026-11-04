@@ -101,13 +101,12 @@ configuration directory. It changes where `config.toml` is read, not the server
 precedence. The GUI launched by Finder/Explorer may not inherit shell variables.
 Native smoke tests always use their own temporary configuration directory.
 
-Native HTTP on macOS and Windows uses an authenticated AES-GCM `session-v2.enc`
-Cookie file under the server scope. Its encryption key lives in Go-owned
-`credentials.sqlite`, isolated from the CLI profile database and Desktop instance lock.
+Native HTTP on macOS and Windows keeps persistent Cookies in Go-owned `sessions.sqlite`,
+one row per server scope, isolated from the CLI profile database and Desktop instance lock.
 POSIX directories/files use 0700/0600; Windows uses restricted inheritable DACLs,
 including SQLite auxiliary files. Credentials never enter TOML, renderer storage or sync.
-Old Keychain entries/credential files are not read, imported or deleted. An old profile
-without its database key remains unavailable, with history and file grants retained;
-choose a fresh `local_profile` explicitly. An old Cookie that cannot be decrypted requires
-sign-in, and a missing Host authorization requires explicit authorization again.
+Old Keychain entries, `credentials.sqlite` and `session-v2.enc` files are not read, imported
+or deleted. An old profile without its database key remains unavailable, with history and
+file grants retained; choose a fresh `local_profile` explicitly. An invalid stored session is
+cleared and requires sign-in, and a missing Host authorization requires explicit authorization again.
 Session-only Cookies stay in memory; persistent Cookies honor expiry and sign-out removal.

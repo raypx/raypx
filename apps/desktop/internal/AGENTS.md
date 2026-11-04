@@ -9,13 +9,13 @@ never require an installed Bun or Node. Quit closes only the daemon proxy.
 Keep credentials/cookies native, API origins and renderer methods allowlisted,
 IPC limited to the owned main page, event delivery bounded and acknowledged,
 and directory grants owned by the native picker. Preserve the existing SQLite
-instance lock, data paths and encrypted-session format. Dependencies must build
+instance lock and data paths. Dependencies must build
 with CGO_ENABLED=0. Generated assets and binaries stay ignored.
 
-Go owns server-scoped Cookie keys in `credentials.sqlite`, independently of the
-lifetime instance-lock transaction. Preserve the injectable Keys port, private
-POSIX permissions and restricted inheritable Windows DACLs. Never read/import
-old credentials. `Config.LocalProfile` selects the bundled CLI profile only.
+Go owns server-scoped persistent Cookies in `sessions.sqlite`, independently of the
+lifetime instance-lock transaction. The cookie jar depends only on the SessionStore
+port. Preserve private POSIX permissions and restricted inheritable Windows DACLs.
+Never read/import old credentials. `Config.LocalProfile` selects the bundled CLI profile only.
 
 Tests live in ../tests/native/host/. From apps/desktop run
 `go test -race ./internal/... ./tests/native/host/...` and `go vet ./...`, then

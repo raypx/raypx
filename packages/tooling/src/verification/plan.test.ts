@@ -98,7 +98,7 @@ describe("affected verification", () => {
   it.each([
     ["packages/desktop/internal/desktop/process_windows.go", ["windows-latest"]],
     ["packages/desktop/scripts/native/windows-smoke-install.ts", ["windows-latest"]],
-    ["packages/desktop/internal/app/keyring_darwin_test.go", ["macos-latest"]],
+    ["packages/desktop/internal/app/platform_darwin_test.go", ["macos-latest"]],
     ["packages/desktop/internal/desktop/process_unix.go", ["macos-latest"]],
     ["packages/desktop/internal/desktop/process_linux.go", []],
     ["packages/desktop/go.mod", ["macos-latest", "windows-latest"]],

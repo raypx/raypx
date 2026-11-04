@@ -37,7 +37,8 @@ real accounts or Provider processes. `test:integration` owns build/package scrip
 tests; default `test` runs all three Vitest projects. Go policies and host use cases
 accept an EngineClient port, while process framing and compiled CLI acceptance stay
 in the native gates. See the testing guide for the selected macOS/Windows matrix.
-Go policy checks do not require staged renderer files. Go tests generate contract
+Go policy checks do not require staged renderer files. `mygo:check`/`mygo:test` also
+compile the `native_smoke` build and run its protocol tests. Go tests generate contract
 manifests and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
 compiled CLI for the daemon integration test; only its isolated daemon is stopped.
 
@@ -46,7 +47,7 @@ compiled CLI for the daemon integration test; only its isolated daemon is stoppe
 `native:smoke:interactive` also checks native focus/resize/close; use isolated CI.
 Normal production builds exclude the private endpoint and renderer test hook.
 
-Native uses the current data paths, encrypted-session format and device preferences.
-Native session keys live in server-scoped `credentials.sqlite`; CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use private permissions; Windows uses restricted DACLs. Old credentials are never read, imported or deleted. Existing profiles without their database key remain unavailable; select a new `local_profile` explicitly to register again. MyGo signed updates use distinct
+Native uses the current data paths and device preferences.
+Native persistent Cookies live in server-scoped rows of `sessions.sqlite`; CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use private permissions; Windows uses restricted DACLs. Old credentials are never read, imported or deleted. Existing profiles without their database key remain unavailable; select a new `local_profile` explicitly to register again. MyGo signed updates use distinct
 keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.

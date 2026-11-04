@@ -41,7 +41,7 @@ func requireInstanceHeld(t *testing.T, directory string) {
 func TestDesktopRejectsCanceledAndClosedSaves(t *testing.T) {
 	directory := t.TempDir()
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestDesktopCloseCancelsAPIAndDrainsBeforeUnlocking(t *testing.T) {
 		t.Fatal(err)
 	}
 	directory := t.TempDir()
-	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestDesktopCloseCancelsBlockedEngineStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: []string{"--host-test-mode=handshake-stall"}, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, t.TempDir(), host.Options{CLI: host.CLIConfig{Binary: binary, Version: "0.1.0", Args: []string{"--host-test-mode=handshake-stall"}, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func (ui *blockedShutdownUI) PickDirectory() (string, error) {
 func TestDesktopCloseBoundsDialogWaitAndRetainsLock(t *testing.T) {
 	directory := t.TempDir()
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Keys: &keys{}, Methods: nil})
+	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil, Daemon: true}, Methods: nil})
 	if err != nil {
 		t.Fatal(err)
 	}

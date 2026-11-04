@@ -6,26 +6,27 @@ import {
 } from "@raypx/instances";
 import { createInstanceSigner, verifyProof } from "@raypx/instances/crypto";
 
-// Only owned temporary profiles are passed by the native Go acceptance suite.
-const signer = createInstanceSigner("native-instance-acceptance");
-const id = crypto.randomUUID();
-const token = crypto.randomUUID().replaceAll("-", "").repeat(2);
-let binding: InstanceBinding | undefined;
-const server = Bun.serve({
-  hostname: "127.0.0.1",
-  port: 0,
-  async fetch(request) {
+/**
+ * Auto-approving instance API for owned temporary profiles only. A new fixture
+ * knows no earlier binding, so checks fail and the profile works offline.
+ */
+export function instanceFixture(origin: string, accountId: string) {
+  const signer = createInstanceSigner("native-instance-acceptance");
+  const id = crypto.randomUUID();
+  const token = crypto.randomUUID().replaceAll("-", "").repeat(2);
+  let binding: InstanceBinding | undefined;
+  return async (request: Request) => {
     const { json: input } = (await request.json()) as { json: Record<string, unknown> };
     const method = new URL(request.url).pathname.split("/").at(-1);
     if (method === "begin") {
       const { proof, ...identity } = enrollmentBeginSchema.parse(input);
-      if (!verifyProof(identity.publicKey, enrollmentProof(server.url.origin, identity), proof))
+      if (!verifyProof(identity.publicKey, enrollmentProof(origin, identity), proof))
         return new Response(null, { status: 403 });
       binding = {
         ...identity,
         version: 1,
-        origin: server.url.origin,
-        accountId: "native-fixture-owner",
+        origin,
+        accountId,
         revision: 1,
         status: "registered",
         issuedAt: new Date().toISOString(),
@@ -50,12 +51,18 @@ const server = Bun.serve({
       typeof input.proof === "string" &&
       verifyProof(
         binding.publicKey,
-        instanceCheckProof(server.url.origin, binding.instanceId, input.timestamp),
+        instanceCheckProof(origin, binding.instanceId, input.timestamp),
         input.proof,
       )
     )
       return Response.json({ json: signer.issue(binding) });
     return new Response(null, { status: 403 });
-  },
-});
-console.info(JSON.stringify({ origin: server.url.origin }));
+  };
+}
+
+// The native Go acceptance suite runs this file and reads the printed origin.
+if (import.meta.main) {
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: (request) => handle(request) });
+  const handle = instanceFixture(server.url.origin, "native-fixture-owner");
+  console.info(JSON.stringify({ origin: server.url.origin }));
+}

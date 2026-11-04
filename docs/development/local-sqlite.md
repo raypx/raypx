@@ -64,9 +64,10 @@ cross-repository rollback, owner closure, validated stored JSON, rejected format
 once. `apps/cli`'s `smoke` and `smoke:pi` commands additionally run copied compiled
 executables outside the repository.
 
-Desktop's Go host separately owns `credentials.sqlite` for server-scoped session
-AES-GCM keys. It never opens the CLI database or uses the lifetime exclusive
-`desktop-instance.sqlite` transaction for credentials. Keys/cookies remain native;
+Desktop's Go host separately owns `sessions.sqlite` for server-scoped persistent
+Cookies. It never opens the CLI database or uses the lifetime exclusive
+`desktop-instance.sqlite` transaction for sessions. Cookies remain native;
 SQLite storage is plaintext protected by filesystem permissions, not a system vault.
-The Cookie file retains its AES-GCM format. A failed key write cannot enable durable
-session persistence; Host authorization may explicitly report memory-only mode.
+An unreadable store keeps sign-in in memory without touching stored rows; a failed
+write disables session transport until restart. Host authorization may explicitly
+report memory-only mode.

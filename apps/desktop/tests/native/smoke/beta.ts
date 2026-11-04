@@ -9,10 +9,10 @@ import {
   apiOrigin,
   desktopApi,
   engine,
-  handleTrayAction,
-  mainWindow,
+  evaluate,
   quitDesktop,
-  view,
+  reloadRenderer,
+  trayAction,
 } from "./host";
 
 const suppliedDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
@@ -40,7 +40,6 @@ const credentials = (await Bun.file(credentialsPath).json()) as {
   userId: string;
 };
 assert.match(credentials.email, /@raypx\.example\.test$/, "Use a dedicated acceptance account");
-const evaluate = view.evaluate;
 async function waitFor(check: () => Promise<boolean> | boolean, label: string, timeout = 30_000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -63,8 +62,8 @@ desktopApi.request = async (input: DesktopApiRequest) => {
   return result;
 };
 async function acceptance() {
-  await handleTrayAction("show");
-  await waitFor(() => engine.status.status === "ready", "standalone CLI startup");
+  await trayAction("show");
+  await waitFor(async () => (await engine.status()).status === "ready", "standalone CLI startup");
   await waitFor(
     async () =>
       Boolean(
@@ -109,7 +108,7 @@ async function acceptance() {
       headers: {},
     });
     assert.equal(JSON.parse(signedOut.body)?.user?.id ?? null, null);
-    view.reload();
+    reloadRenderer();
     await waitFor(
       async () => Boolean(await evaluate('return Boolean(document.querySelector("#auth-email"))')),
       "login page after real logout",
@@ -130,7 +129,7 @@ async function acceptance() {
     console.info(
       "Native smoke beta-restore passed: real HTTPS session survives process restart, relay reconnects, logout clears session and detaches.",
     );
-    await handleTrayAction("quit");
+    await trayAction("quit");
     return;
   }
   stage = "real HTTPS sign in";
@@ -151,7 +150,7 @@ async function acceptance() {
       ),
     "native form sign in",
   );
-  view.reload();
+  reloadRenderer();
   await waitFor(
     async () =>
       Boolean(
@@ -209,7 +208,7 @@ async function acceptance() {
       connected: true,
     }),
   );
-  await mainWindow.hide();
+  await trayAction("hide");
   console.info(
     "Beta native acceptance ready: real HTTPS session, project and relay connected; window hidden.",
   );
@@ -243,7 +242,7 @@ async function acceptance() {
     assert.equal((await Bun.file(join(project, task.file)).text()).trim(), task.marker);
   stage = "Desktop renderer receives completed remote tasks";
   // WebKit may suspend a hidden view; restore it before testing renderer interaction.
-  await handleTrayAction("show");
+  await trayAction("show");
   await evaluate('location.hash="/tasks";return true;');
   const remoteTab = messages.en.tasks.connectedComputers;
   await waitFor(
@@ -283,7 +282,7 @@ async function acceptance() {
   console.info(
     "Native smoke beta passed: Web → HTTPS relay → packaged Desktop → standalone CLI → real Claude/Codex → Web and native renderer.",
   );
-  await handleTrayAction("quit");
+  await trayAction("quit");
 }
 try {
   await acceptance();
@@ -306,6 +305,6 @@ try {
   }
   console.error(`Beta native acceptance failed at ${stage}:`, error);
   await Bun.write(join(directory, "native-failure.json"), JSON.stringify({ stage, failed: true }));
-  await quitDesktop(1);
+  await quitDesktop();
   process.exitCode = 1;
 }
