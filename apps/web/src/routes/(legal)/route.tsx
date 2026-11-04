@@ -5,8 +5,7 @@ import { Logo } from "@raypx/ui/logo";
 import { Separator } from "@raypx/ui/components/ui/separator";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { LegalFooter } from "../../components/legal-footer";
-import { LanguageMenu } from "../../components/language-menu";
-import { ThemeToggle } from "../../components/theme-toggle";
+import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 export const Route = createFileRoute("/(legal)")({ component: LegalLayout });
 

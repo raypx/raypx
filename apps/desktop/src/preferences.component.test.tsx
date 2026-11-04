@@ -7,7 +7,7 @@ import { useTheme } from "@raypx/ui/themes";
 import { type ReactNode } from "react";
 import { DEVICE_PREFERENCES_KEY, type NativePreferenceSnapshot } from "../preferences";
 import { DesktopPreferencesProvider } from "./preferences";
-import { AuthPreferences } from "./features/auth/components/auth-preferences";
+import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 const mocks = vi.hoisted(() => ({ isDesktop: vi.fn(), save: vi.fn() }));
 vi.mock("./lib/desktop", () => ({
@@ -51,18 +51,22 @@ afterEach(() => {
 });
 
 describe("Desktop preference initialization", () => {
-  it("applies and saves choices made from the signed-out preference menus", async () => {
+  it("applies and saves choices made from the signed-out preference controls", async () => {
     snapshot({ status: "read", raw: { theme: "light", locale: "en" } });
     const user = userEvent.setup();
-    mount(<AuthPreferences />);
+    mount(
+      <>
+        <ThemeToggle />
+        <LanguageMenu />
+      </>,
+    );
 
     await user.click(screen.getByRole("button", { name: "Language" }));
     await user.click(await screen.findByRole("menuitemradio", { name: "简体中文" }));
     await waitFor(() => expect(document.documentElement.lang).toBe("zh"));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "light", locale: "zh" }));
 
-    await user.click(screen.getByRole("button", { name: "外观" }));
-    await user.click(await screen.findByRole("menuitemradio", { name: "深色" }));
+    await user.click(screen.getByRole("button", { name: "外观: 浅色" }));
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "dark", locale: "zh" }));
   });

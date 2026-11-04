@@ -3,7 +3,7 @@ import { EngineGate } from "../../engine/gate";
 import type { ReactNode } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Logo } from "@raypx/ui/logo";
-import { AuthPreferences } from "./auth-preferences";
+import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 const publicPaths = new Set([
   "/login",
@@ -22,7 +22,10 @@ function AuthLayout({ children, login }: { children: ReactNode; login: boolean }
             <Logo className="[&_[data-slot=logo-mark]]:size-6" />
           </Link>
         )}
-        <AuthPreferences />
+        <div className="ml-auto flex items-center gap-1 [--app-region:no-drag]">
+          <ThemeToggle />
+          <LanguageMenu />
+        </div>
       </header>
       <main
         id="main"

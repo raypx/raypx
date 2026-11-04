@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./preference-controls": "./src/components/preference-controls.tsx",
     "./settings": "./src/components/settings.tsx",
     "./shell": "./src/components/shell.tsx",
     "./styles.css": "./src/styles.css"

@@ -170,6 +170,14 @@ test(
     ).toHaveAttribute("href", "/settings");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
     await expect(header).toHaveJSProperty("offsetHeight", loadingHeight);
+    const [appearance, language, account] = await Promise.all([
+      header.getByRole("button", { name: /^Appearance:/ }).boundingBox(),
+      header.getByRole("button", { name: "Language", exact: true }).boundingBox(),
+      header.getByRole("button", { name: "Account menu", exact: true }).boundingBox(),
+    ]);
+    if (!appearance || !language || !account) throw new Error("Missing homepage header controls");
+    const preferenceGap = language.x - (appearance.x + appearance.width);
+    expect(account.x - (language.x + language.width)).toBeCloseTo(preferenceGap);
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
     expect(privateReads).toEqual([]);
 

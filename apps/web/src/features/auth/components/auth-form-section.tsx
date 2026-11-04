@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "@raypx/ui/logo";
-import { LanguageMenu } from "../../../components/language-menu";
-import { ThemeToggle } from "../../../components/theme-toggle";
+import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import type { ReactNode } from "react";
 import { LegalFooter } from "../../../components/legal-footer";
 

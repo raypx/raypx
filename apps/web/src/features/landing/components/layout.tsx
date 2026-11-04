@@ -5,8 +5,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Logo } from "@raypx/ui/logo";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { publicConfigurationQuery } from "../../configuration/client";
-import { LanguageMenu } from "../../../components/language-menu";
-import { ThemeToggle } from "../../../components/theme-toggle";
+import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { LegalFooter } from "../../../components/legal-footer";
 
 export function LandingLayout() {
@@ -40,11 +39,9 @@ export function LandingLayout() {
             <Link to="/projects" className={buttonVariants({ variant: "ghost" })}>
               {c("projects")}
             </Link>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex min-h-10 shrink-0 items-center gap-1 pointer-coarse:min-h-11">
               <ThemeToggle />
               <LanguageMenu />
-            </div>
-            <div className="grid min-h-10 min-w-24 shrink-0 items-center justify-items-end pointer-coarse:min-h-11">
               <UserButton />
             </div>
           </nav>

@@ -52,6 +52,9 @@ Code outside `src/components/` stays private.
   sections `AppearanceSettings` (needs UI's ThemeProvider) and `LanguageSettings`
   (needs i18n's BrowserLanguageProvider). LanguageSettings
   composes UI's shadcn Select with i18n's preference hook and locale options.
+- `preference-controls`: `ThemeToggle` and `LanguageMenu` for public headers.
+  Use the surrounding theme and language providers. Applications place the
+  controls and own preference persistence.
 - `styles.css`: registers Blocks as a Tailwind source; applications import it.
 
 ## Constraints

@@ -2,10 +2,13 @@ import { TextSizeIcon } from "@raypx/icons/text-size";
 import { GlobalIcon } from "@raypx/icons/global";
 import { LanguagesIcon } from "@raypx/icons/languages";
 import { MonitorIcon } from "@raypx/icons/monitor";
+import { MoonIcon } from "@raypx/icons/moon";
+import { SunIcon } from "@raypx/icons/sun";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
 import { IconButton } from "@raypx/ui/icon-button";
+import { useTheme } from "@raypx/ui/themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +42,12 @@ export function LanguageMenu() {
           onValueChange={(value) => setPreference(parseLocalePreference(value))}
         >
           {items.map(({ value, label, icon: Icon }) => (
-            <DropdownMenuRadioItem key={value} value={value} closeOnClick>
+            <DropdownMenuRadioItem
+              key={value}
+              value={value}
+              lang={value === "system" ? undefined : value}
+              closeOnClick
+            >
               <Icon aria-hidden="true" className="text-muted-foreground" />
               {label}
             </DropdownMenuRadioItem>
@@ -47,5 +55,27 @@ export function LanguageMenu() {
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+const themes = {
+  light: { icon: SunIcon, next: "dark" },
+  dark: { icon: MoonIcon, next: "system" },
+  system: { icon: MonitorIcon, next: "light" },
+} as const;
+
+export function ThemeToggle() {
+  const t = useTranslations("settings");
+  const c = useTranslations("common");
+  const { theme, setTheme } = useTheme();
+  const { icon: Icon, next } = themes[theme];
+  return (
+    <IconButton
+      label={`${t("appearance")}: ${c(theme)}`}
+      hint={`${c(theme)} → ${c(next)}`}
+      onClick={() => setTheme(next)}
+    >
+      <Icon aria-hidden="true" />
+    </IconButton>
   );
 }

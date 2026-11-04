@@ -56,8 +56,8 @@ application is an independent composition root and is never imported by another 
   locale state or route navigation.
   Authentication pages expose `ThemeToggle` and `LanguageMenu` in their top-right header;
   language changes preserve form drafts and the current return destination.
-  Public header controls live in `src/components/`; the landing header shares
-  `LanguageMenu` and `ThemeToggle` using UI's existing theme provider.
+  Public headers use `LanguageMenu` and `ThemeToggle` from
+  `@raypx/blocks/preference-controls` with the existing preference providers.
   Theme clicks cycle light → dark → system → light; the icon and accessible label
   reflect the current preference, and the tooltip shows the next one.
 - `src/features/auth/client.ts` creates the Better Auth client; `src/features/tasks/client.ts`
