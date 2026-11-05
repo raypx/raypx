@@ -44,15 +44,25 @@ fn native_smoke_setup_error(stage: &str, error: impl Display) -> crate::Error {
 }
 fn native_smoke_lifecycle(stage: &str) {
     #[cfg(feature = "native-smoke")]
-    if let Some(directory) = std::env::var_os("RAYPX_NATIVE_SMOKE_DATA_DIR") {
-        use std::io::Write;
-        let path = std::path::PathBuf::from(directory).join("native-smoke-lifecycle");
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "{stage}");
+    {
+        eprintln!("[native-smoke] {stage}");
+        if let Some(directory) = std::env::var_os("RAYPX_NATIVE_SMOKE_DATA_DIR") {
+            use std::io::Write;
+            let path = std::path::PathBuf::from(directory).join("native-smoke-lifecycle");
+            match std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                Ok(mut file) => {
+                    if let Err(error) = writeln!(file, "{stage}") {
+                        eprintln!("[native-smoke] lifecycle write failed: {error}");
+                    }
+                }
+                Err(error) => eprintln!("[native-smoke] lifecycle open failed: {error}"),
+            }
+        } else {
+            eprintln!("[native-smoke] data directory environment is missing");
         }
     }
     #[cfg(not(feature = "native-smoke"))]
