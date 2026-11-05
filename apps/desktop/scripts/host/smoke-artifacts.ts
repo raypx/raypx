@@ -38,7 +38,12 @@ export async function cleanupSmokeBundles(
       ])
     ).trim();
     if (identifier !== "com.raypx.desktop.native-smoke") continue;
-    await command(registry, ["-u", app]);
+    try {
+      await command(registry, ["-u", app]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("-10814")) throw error;
+    }
     await rm(app, { recursive: true });
   }
 }
