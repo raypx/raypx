@@ -58,6 +58,8 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
     const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
     if (!member) return false;
     const relative = file.slice(member.path.length + 1);
+    if (member.name === "@raypx/tooling")
+      return /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative);
     if (member.native)
       return /^(?:src-tauri\/|launcher\/|(?:bridge|preferences)\.ts$|package\.json$|resources\/|scripts\/host\/|tests\/native\/)/.test(
         relative,

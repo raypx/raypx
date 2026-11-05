@@ -3,10 +3,13 @@ import { mkdirSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project, platformProject } from "../../tests/helpers/verification.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
 import { taskModel, taskPlan, taskRef } from "../tasks/model.ts";
 import { changedFiles, githubPlan, verificationPlan } from "./plan.ts";
 import { verifyOptions } from "./index.ts";
 import { executionTasks } from "./execution.ts";
+
+const { member } = workspaceFixtures();
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -132,6 +135,21 @@ describe("affected verification", () => {
     expect(plan.native).toBe(false);
     expect(plan.nativeRunners).toEqual([]);
     expect(plan.artifacts).toEqual([]);
+  });
+  it("validates CLI distribution preparation on native platforms without expanding unrelated tooling", () => {
+    const { root } = platformProject();
+    member(root, "tooling", {
+      metadata: { kind: "tooling", target: "node" },
+      extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
+    });
+    const model = taskModel(root);
+    for (const file of ["cli.ts", "archive.ts", "archive.test.ts"])
+      expect(verificationPlan(model, [`packages/tooling/src/build/${file}`]).nativeRunners).toEqual(
+        ["macos-latest", "windows-latest"],
+      );
+    expect(
+      verificationPlan(model, ["packages/tooling/src/build/node-deployment.test.ts"]).nativeRunners,
+    ).toEqual([]);
   });
   it("unions platform-specific changes and keeps release acceptance complete", () => {
     const model = platformProject();

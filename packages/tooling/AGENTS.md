@@ -51,7 +51,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   distinguish intentional skips from missing/cancelled/failed gates. Deployment inputs,
   API/Web runtime dependencies and full release runs select an isolated Docker acceptance
   job for Compose and Railway. Source-only verify remains independent of Docker.
-- Branch/PR native gates run only for native/IPC/terminal/daemon inputs and select
+- Branch/PR native gates run only for native/IPC/terminal/daemon inputs, CLI runtime
+  packaging helpers and their regressions, and select
   macOS/Windows by platform-specific filenames; shared native inputs select both.
   JavaScript dependency reach alone does not select native runners. Installers, signing and installed
   GUI acceptance require a tag push or manual `distribution` request; release gates
