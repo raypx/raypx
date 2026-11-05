@@ -242,15 +242,16 @@ pub fn run() {
                 let visible = owned_window.is_visible().unwrap_or(false) && !owned_window.is_minimized().unwrap_or(true);
                 let host = host_events.clone(); tauri::async_runtime::spawn(async move { host.visible(visible).await; });
             });
-            #[cfg(feature="native-smoke")] crate::smoke::start(app.handle().clone(),window.clone(),host.clone())?;
-            let show_item = MenuItem::with_id(app,"show","Show Raypx / 显示",true,None::<&str>)?;
-            let review_item = MenuItem::with_id(app,"review","Review requests / 处理请求",true,None::<&str>)?;
-            let hide_item = MenuItem::with_id(app,"hide","Hide window / 隐藏",true,None::<&str>)?;
-            let update_item = MenuItem::with_id(app,"update","Check for updates / 检查更新",!cfg!(feature="native-smoke"),None::<&str>)?;
-            let quit_item = MenuItem::with_id(app,"quit","Quit Raypx / 退出",true,None::<&str>)?;
-            let separator = PredefinedMenuItem::separator(app)?;
-            let menu = Menu::with_items(app,&[&show_item,&review_item,&hide_item,&separator,&update_item,&quit_item])?;
-            let icon = tauri::image::Image::from_bytes(include_bytes!("../../resources/tray.png"))?;
+            #[cfg(feature="native-smoke")]
+            crate::smoke::start(app.handle().clone(),window.clone(),host.clone()).map_err(|error| native_smoke_setup_error("smoke IPC", error))?;
+            let show_item = MenuItem::with_id(app,"show","Show Raypx / 显示",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray show item", error))?;
+            let review_item = MenuItem::with_id(app,"review","Review requests / 处理请求",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray review item", error))?;
+            let hide_item = MenuItem::with_id(app,"hide","Hide window / 隐藏",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray hide item", error))?;
+            let update_item = MenuItem::with_id(app,"update","Check for updates / 检查更新",!cfg!(feature="native-smoke"),None::<&str>).map_err(|error| native_smoke_setup_error("tray update item", error))?;
+            let quit_item = MenuItem::with_id(app,"quit","Quit Raypx / 退出",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray quit item", error))?;
+            let separator = PredefinedMenuItem::separator(app).map_err(|error| native_smoke_setup_error("tray separator", error))?;
+            let menu = Menu::with_items(app,&[&show_item,&review_item,&hide_item,&separator,&update_item,&quit_item]).map_err(|error| native_smoke_setup_error("tray menu", error))?;
+            let icon = tauri::image::Image::from_bytes(include_bytes!("../../resources/tray.png")).map_err(|error| native_smoke_setup_error("tray icon", error))?;
             if TrayIconBuilder::with_id("main").icon(icon).icon_as_template(true).tooltip("Raypx").menu(&menu)
                 .on_menu_event(|app,event| match event.id.as_ref() {
                     "show" => show(app),
