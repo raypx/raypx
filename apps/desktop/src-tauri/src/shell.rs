@@ -5,6 +5,7 @@ use crate::{
     host::{Host, external_url, trusted_url},
 };
 use serde_json::{Value, json};
+use std::fmt::Display;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -28,6 +29,17 @@ fn caller(window: &WebviewWindow, host: &Host) -> Result<()> {
         return fail("UNTRUSTED_DESKTOP_VIEW");
     }
     Ok(())
+}
+fn native_smoke_setup_error(stage: &str, error: impl Display) -> crate::Error {
+    let message = format!("{stage}: {error}");
+    #[cfg(feature = "native-smoke")]
+    if let Some(directory) = std::env::var_os("RAYPX_NATIVE_SMOKE_DATA_DIR") {
+        let _ = std::fs::write(
+            std::path::PathBuf::from(directory).join("native-smoke-startup-error"),
+            &message,
+        );
+    }
+    crate::Error(message)
 }
 #[tauri::command]
 async fn desktop_request(
@@ -203,15 +215,15 @@ pub fn run() {
             }
         })
         .setup(move |app| {
-            let directory = data_directory()?;
-            let binary = app.path().resource_dir()?.join("bin").join(if cfg!(windows) {"raypx.exe"} else {"raypx"});
-            let host = Host::open(config,directory,binary)?; app.manage(host.clone());
+            let directory = data_directory().map_err(|error| native_smoke_setup_error("data directory", error))?;
+            let binary = app.path().resource_dir().map_err(|error| native_smoke_setup_error("resource directory", error))?.join("bin").join(if cfg!(windows) {"raypx.exe"} else {"raypx"});
+            let host = Host::open(config,directory,binary).map_err(|error| native_smoke_setup_error("host", error))?; app.manage(host.clone());
             let scope = host.config.scope.clone();
-            let url = if cfg!(debug_assertions) { WebviewUrl::External("http://localhost:1420".parse()?) } else { WebviewUrl::CustomProtocol(format!("{scheme}://localhost/").parse()?) };
+            let url = if cfg!(debug_assertions) { WebviewUrl::External("http://localhost:1420".parse().map_err(|error| native_smoke_setup_error("dev URL", error))?) } else { WebviewUrl::CustomProtocol(format!("{scheme}://localhost/").parse().map_err(|error| native_smoke_setup_error("custom URL", error))?) };
             let window = WebviewWindowBuilder::new(app,"main",url).title(if cfg!(feature="native-smoke") {"Raypx Test"} else {"Raypx"}).inner_size(1280.,840.).min_inner_size(960.,600.)
                 .focused(!cfg!(feature="native-smoke") || std::env::var("RAYPX_NATIVE_SMOKE_UI").as_deref()==Ok("interactive"))
                 .initialization_script(host.preload()).data_directory(host.directory.join("webview").join(&scope))
-                .on_navigation(move |url| trusted_url(url,&scope)).on_new_window(|_,_| tauri::webview::NewWindowResponse::Deny).build()?;
+                .on_navigation(move |url| trusted_url(url,&scope)).on_new_window(|_,_| tauri::webview::NewWindowResponse::Deny).build().map_err(|error| native_smoke_setup_error("window", error))?;
             let host_events = host.clone(); let owned_window = window.clone();
             window.on_window_event(move |event| {
                 match event {
