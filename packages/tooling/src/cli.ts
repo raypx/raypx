@@ -1,10 +1,10 @@
 #!/usr/bin/env -S tsx
-import { findExecutable } from "@raypx/runtime-node/process";
+import { findExecutable, run } from "@raypx/runtime-node/process";
 import { uploadAnalyticsMaps } from "./analytics.ts";
 import { readFileSync, appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
+import { developmentEnvironment } from "@raypx-kit/devkit/process";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
 import { clean, cleanArtifacts } from "./clean.ts";
 import { checkLocales, policy } from "./policy.ts";

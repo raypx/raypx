@@ -1,6 +1,6 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { run } from "@raypx-kit/devkit/process";
+import { run } from "@raypx/runtime-node/process";
 import { probeApi, probeWeb, probeRelay } from "./artifacts.ts";
 
 export async function smoke(

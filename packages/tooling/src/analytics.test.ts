@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { uploadAnalyticsMaps } from "./analytics.ts";
 const mocks = vi.hoisted(() => ({ run: vi.fn().mockResolvedValue(undefined) }));
-vi.mock("@raypx-kit/devkit/process", () => ({ run: mocks.run }));
+vi.mock("@raypx/runtime-node/process", () => ({ run: mocks.run }));
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.clearAllMocks();

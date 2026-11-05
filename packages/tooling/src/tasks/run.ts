@@ -1,4 +1,4 @@
-import { run } from "@raypx-kit/devkit/process";
+import { run } from "@raypx/runtime-node/process";
 import {
   parseTaskInvocation,
   prepareTaskDirectories,

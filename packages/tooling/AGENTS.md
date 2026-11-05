@@ -106,7 +106,9 @@ source-adjacent tests and `tests/` fixtures in strict checking and merge these d
 `./tasks` exposes Node-compatible, lightweight task configuration. Its model derives
 all members and scripts from manifests, registers private `task:*` definitions and
 explicit dependencies; VP alone schedules them. Leaf scripts stay available for
-direct debugging. Task definitions inherit the environment with `untrackedEnv`,
+direct debugging. Leaves preserve Devkit's task argument keys and execute pnpm through
+Runtime Node's cross-platform runner, retaining exit status, inherited streams and
+interrupt forwarding on Windows command shims. Task definitions inherit the environment with `untrackedEnv`,
 while outcome-affecting fields and per-task argument keys participate in fingerprints.
 `raypx.uncachedTasks` opts specific scripts out. Tooling's complete test suite starts
 independent cached VP runners, so it must run without an enclosing filesystem tracer;

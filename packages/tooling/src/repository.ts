@@ -1,5 +1,6 @@
 import { resolveRelease } from "./build/release.ts";
-import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
+import { developmentEnvironment } from "@raypx-kit/devkit/process";
+import { run } from "@raypx/runtime-node/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
 import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests.ts";
 import { join } from "node:path";

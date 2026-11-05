@@ -36,7 +36,8 @@ README documents every preset and compiler guarantee.
   Vitest config merges root test defaults for coverage without depending on Tooling.
 - Register uncached VP `task:*` entries directly from package scripts. Tooling depends
   on these presets, so do not add a reverse workspace dependency on Tooling.
-  `scripts/task.ts` uses Devkit's leaf runner to preserve forwarded task arguments.
+  `scripts/task.ts` uses Devkit's task argument keys and its own cross-spawn dependency
+  to preserve arguments, exit status and interrupts on Windows package-manager shims.
 
 ## Verification
 

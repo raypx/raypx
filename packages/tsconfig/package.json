@@ -34,8 +34,10 @@
   },
   "devDependencies": {
     "@raypx-kit/devkit": "catalog:dev",
+    "@types/cross-spawn": "catalog:dev",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
+    "cross-spawn": "catalog:",
     "tsx": "catalog:dev",
     "vite-plus": "catalog:dev"
   },

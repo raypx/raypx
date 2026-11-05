@@ -80,6 +80,12 @@ jobs:
         if: ${{ !inputs.distribution }}
         with:
           key: ${{ steps.vp-cache.outputs.key }}
+      - name: Cross-platform process and task runners
+        if: matrix.phase == 'checks'
+        shell: bash
+        run: |
+          pnpm --dir packages/runtime-node run test
+          pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts
       - name: Herdr terminal integration
         if: matrix.phase == 'checks'
         env:

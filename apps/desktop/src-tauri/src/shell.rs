@@ -252,7 +252,7 @@ pub fn run() {
             Ok(())
         }).build(tauri::generate_context!()).expect("Unable to initialize Raypx Desktop");
     application.run(move |app, event| {
-        if let tauri::RunEvent::ExitRequested { api, .. } = event
+        if let tauri::RunEvent::ExitRequested { api, .. } = &event
             && !exit_flag.swap(true, Ordering::SeqCst)
         {
             api.prevent_exit();

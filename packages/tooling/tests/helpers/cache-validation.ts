@@ -33,6 +33,7 @@ export function validationProject() {
   toolingManifest.dependencies = {
     "@raypx-kit/devkit": "1.0.0",
     "@raypx-kit/intl": "1.0.0",
+    "@raypx/runtime-node": "1.0.0",
     confbox: "1.0.0",
   };
   writeFileSync(join(tooling, "package.json"), JSON.stringify(toolingManifest));

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { run } from "@raypx-kit/devkit/process";
+import { run } from "@raypx/runtime-node/process";
 import { runTasks } from "../repository.ts";
 import { smoke } from "../smoke/index.ts";
 import { taskRef, taskModel } from "../tasks/model.ts";

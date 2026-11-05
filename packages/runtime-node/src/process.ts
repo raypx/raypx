@@ -123,6 +123,43 @@ export function spawnProcess<O extends ProcessOptions = {}>(
   };
 }
 
+/** Runs a command with inherited streams and forwards interrupts until it exits. */
+export async function runProcess(
+  command: string,
+  args: string[],
+  cwd: string,
+  env: NodeJS.ProcessEnv = process.env,
+) {
+  const child = spawnProcess([command, ...args], {
+    cwd,
+    env,
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const interrupt = () => child.kill("SIGINT");
+  const terminate = () => child.kill("SIGTERM");
+  process.once("SIGINT", interrupt);
+  process.once("SIGTERM", terminate);
+  try {
+    return await child.exited;
+  } finally {
+    process.off("SIGINT", interrupt);
+    process.off("SIGTERM", terminate);
+  }
+}
+
+/** Runs an inherited-stream command, rejecting unsuccessful exits. */
+export async function run(
+  command: string,
+  args: string[],
+  cwd: string,
+  env: NodeJS.ProcessEnv = process.env,
+) {
+  const code = await runProcess(command, args, cwd, env);
+  if (code !== 0) throw new Error(`${command} exited ${code}`);
+}
+
 export function runProcessSync(
   command: string[] | ({ cmd: string[] } & ProcessOptions),
   supplied: ProcessOptions = {},
