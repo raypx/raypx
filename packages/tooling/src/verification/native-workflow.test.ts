@@ -87,7 +87,9 @@ it("requires compiled Herdr integration and pinned Rust checks in the check phas
 });
 
 it("retains Rust, production and interactive smoke acceptance", () => {
-  expect(named("Desktop Tauri checks").if).toBe("matrix.phase == 'checks'");
+  expect(named("Desktop Tauri checks").if).toContain("!cancelled()");
+  expect(named("Desktop Tauri checks").if).toContain("matrix.phase == 'checks'");
+  expect(named("Desktop Tauri checks").if).toContain("steps.native-inputs.outcome == 'success'");
   expect(named("Desktop Tauri checks").run).toContain("tauri:test");
   expect(named("Desktop Tauri checks").run).toContain("tauri:check");
   expect(named("Package desktop").if).toBe("matrix.phase == 'package'");

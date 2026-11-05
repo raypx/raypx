@@ -53,6 +53,12 @@ async function settled(id: string) {
   }
   return events.find((event) => event.event === "terminal.exit" && event.data.id === id)!;
 }
+function output(id: string) {
+  return events
+    .filter((event) => event.event === "terminal.output" && event.data.id === id)
+    .map((event) => Buffer.from(String(event.data.data), "base64").toString().replace(ansi, ""))
+    .join("");
+}
 try {
   await herdrRpc(
     process.env.RAYPX_HERDR_COMPILED === "1"
@@ -167,7 +173,10 @@ try {
         process.exit(0);
       }
     });
-    setTimeout(() => process.exit(42), 8000);
+    setTimeout(() => {
+      console.log('input-hex:' + Buffer.from(input).toString('hex'));
+      process.exit(42);
+    }, 8000);
   `,
       ],
       cwd: root,
@@ -176,15 +185,17 @@ try {
     80,
     24,
   );
-  await sleep(100);
+  const readyDeadline = Date.now() + 5000;
+  while (!output(query.id).includes("mode-ready")) {
+    if (Date.now() > readyDeadline) throw new Error("Herdr mode fixture did not become ready");
+    await sleep(10);
+  }
   await host.paste(query.id, "paste-value");
   await host.key(query.id, "up");
   await host.mouse(query.id, { action: "down", button: "left", column: 4, row: 5, modifiers: 0 });
-  assert.equal((await settled(query.id)).data.exitCode, 0);
-  const queryOutput = events
-    .filter((event) => event.event === "terminal.output" && event.data.id === query.id)
-    .map((event) => Buffer.from(String(event.data.data), "base64").toString().replace(ansi, ""))
-    .join("");
+  const queryExit = await settled(query.id);
+  const queryOutput = output(query.id);
+  assert.equal(queryExit.data.exitCode, 0, queryOutput);
   assert(
     queryOutput.includes("cursor-reply:ok"),
     "Herdr must answer cursor queries inside the PTY",

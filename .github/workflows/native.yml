@@ -69,6 +69,7 @@ jobs:
         with:
           partition: desktop
       - name: Prepare native check or distribution inputs
+        id: native-inputs
         shell: bash
         run: |
           if [ "${{ matrix.phase }}" != "checks" ]; then
@@ -100,7 +101,7 @@ jobs:
             pnpm --dir apps/cli run smoke:herdr-terminal
           done
       - name: Desktop Tauri checks
-        if: matrix.phase == 'checks'
+        if: ${{ !cancelled() && matrix.phase == 'checks' && steps.native-inputs.outcome == 'success' }}
         env:
           RAYPX_TAURI_CLI: ${{ github.workspace }}/apps/cli/dist/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
         shell: bash
