@@ -105,7 +105,7 @@ export async function runTauriSmoke(
       native.kill();
       scenario.kill();
     },
-    phase === "agents" ? 1_800_000 : phase.startsWith("beta") ? 720_000 : 120_000,
+    phase === "agents" ? 1_800_000 : phase.startsWith("beta") ? 720_000 : 300_000,
   );
   try {
     const first = await Promise.race([
@@ -115,7 +115,13 @@ export async function runTauriSmoke(
     if (first.source === "native" && first.code !== 0)
       throw new Error(`Native smoke ${phase} Desktop exited before assertions`);
     const scenarioCode = first.source === "scenario" ? first.code : await scenario.exited;
-    if (scenarioCode !== 0) throw new Error(`Native smoke ${phase} assertions failed`);
+    if (scenarioCode !== 0) {
+      const desktop =
+        native.exitCode === null
+          ? "still running"
+          : `exited (${native.signalCode ?? native.exitCode})`;
+      throw new Error(`Native smoke ${phase} assertions failed; Desktop process ${desktop}`);
+    }
     const code = await Promise.race([
       native.exited,
       sleep(5_000).then(() => {

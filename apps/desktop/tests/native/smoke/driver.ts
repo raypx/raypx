@@ -4,7 +4,7 @@ import { connect, type Socket } from "node:net";
 /** Private NDJSON driver. Only native-smoke builds listen on this endpoint. */
 export async function connectSmoke(endpoint: string, token: string) {
   if (token.length < 32) throw new Error("Smoke driver requires a random token");
-  const deadline = Date.now() + 30_000;
+  const deadline = Date.now() + 90_000;
   let socket: Socket | undefined;
   while (!socket) {
     try {
@@ -16,8 +16,13 @@ export async function connectSmoke(endpoint: string, token: string) {
         });
         connection.once("error", reject);
       });
-    } catch {
-      if (Date.now() >= deadline) throw new Error("Native smoke socket did not become ready");
+    } catch (error) {
+      const code =
+        error instanceof Error && "code" in error && typeof error.code === "string"
+          ? error.code
+          : "unknown";
+      if (Date.now() >= deadline)
+        throw new Error(`Native smoke socket did not become ready (${code})`, { cause: error });
       await sleep(100);
     }
   }

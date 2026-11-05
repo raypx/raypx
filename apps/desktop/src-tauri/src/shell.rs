@@ -214,6 +214,7 @@ pub fn run() {
                 let visible = owned_window.is_visible().unwrap_or(false) && !owned_window.is_minimized().unwrap_or(true);
                 let host = host_events.clone(); tauri::async_runtime::spawn(async move { host.visible(visible).await; });
             });
+            #[cfg(feature="native-smoke")] crate::smoke::start(app.handle().clone(),window.clone(),host.clone())?;
             let show_item = MenuItem::with_id(app,"show","Show Raypx / 显示",true,None::<&str>)?;
             let review_item = MenuItem::with_id(app,"review","Review requests / 处理请求",true,None::<&str>)?;
             let hide_item = MenuItem::with_id(app,"hide","Hide window / 隐藏",true,None::<&str>)?;
@@ -242,7 +243,6 @@ pub fn run() {
                 if busy.swap(true,Ordering::SeqCst) {return Ok(());}let busy=busy.clone();let app=notify_app.clone();let locale=host.preferences.snapshot()["raw"]["locale"].as_str().unwrap_or("system").to_owned();
                 tauri::async_runtime::spawn_blocking(move || {let text:Value=serde_json::from_str(include_str!("../../generated/notifications.json")).unwrap_or_default();let locale=if locale=="system" {std::env::var("LANG").unwrap_or_default()} else {locale};let body=text[if locale.to_lowercase().starts_with("zh") {"zh"} else {"en"}].as_str().unwrap_or("A session needs your answer");let _=app.notification().builder().title("Raypx").body(body).show();busy.store(false,Ordering::SeqCst);});Ok(())
             }));
-            #[cfg(feature="native-smoke")] crate::smoke::start(app.handle().clone(),window.clone(),host.clone())?;
             tauri::async_runtime::spawn(async move {
                 let _ = host.engine.start(false).await;
                 let cancelled = host.cancelled();
