@@ -3,7 +3,7 @@ import { writeResource, readJsonFile, fileExists, readTextFile } from "@raypx/ru
 import { sleep } from "@raypx/runtime-node/process";
 import type { DesktopApiRequest } from "../../../api.ts";
 import assert from "node:assert/strict";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { messages } from "@raypx/i18n/messages";
 import type { RootGrant } from "@raypx/contracts/local";
@@ -287,6 +287,9 @@ async function acceptance() {
   console.info(
     "Native smoke beta passed: Web → HTTPS relay → packaged Desktop → standalone CLI → real Claude/Codex → Web and native renderer.",
   );
+  const completeFile = process.env.RAYPX_NATIVE_SMOKE_COMPLETE_FILE;
+  if (!completeFile) throw new Error("Native smoke completion marker is unavailable");
+  await writeFile(completeFile, "raypx-native-smoke-complete/1\n", { flag: "wx" });
   await trayAction("quit");
 }
 try {

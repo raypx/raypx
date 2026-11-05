@@ -212,6 +212,9 @@ try {
     results.push({ provider, version: capability.version, checks });
     console.info(`Live Agent ${provider} passed: ${checks.join(", ")}`);
   }
+  const completeFile = process.env.RAYPX_NATIVE_SMOKE_COMPLETE_FILE;
+  if (!completeFile) throw new Error("Native smoke completion marker is unavailable");
+  await writeFile(completeFile, "raypx-native-smoke-complete/1\n", { flag: "wx" });
 } catch (error) {
   console.error(`Live Agent acceptance failed at ${stage}`);
   throw error;

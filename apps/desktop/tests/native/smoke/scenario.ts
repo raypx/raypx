@@ -3,7 +3,7 @@ import { directHttpClient, serveHttp } from "@raypx/runtime-node/http";
 import { fileExists, readJsonFile } from "@raypx/runtime-node/files";
 import { sleep } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition, JobRun } from "@raypx/jobs-model";
@@ -847,6 +847,9 @@ try {
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,
   );
   await fixtureServer?.stop(true);
+  const completeFile = process.env.RAYPX_NATIVE_SMOKE_COMPLETE_FILE;
+  if (!completeFile) throw new Error("Native smoke completion marker is unavailable");
+  await writeFile(completeFile, "raypx-native-smoke-complete/1\n", { flag: "wx" });
   await trayAction("quit");
 } catch (error) {
   try {

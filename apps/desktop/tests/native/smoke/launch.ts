@@ -97,10 +97,8 @@ export async function runTauriSmoke(
     ...signingEnvironment(env, { smoke: true }),
     RAYPX_NATIVE_SMOKE_SOCKET: endpoint,
     RAYPX_NATIVE_SMOKE_TOKEN: crypto.randomUUID() + crypto.randomUUID(),
-    RAYPX_NATIVE_SMOKE_DIAGNOSTIC: join(directory, `native-smoke-main-${phase}-${nonce}`),
+    RAYPX_NATIVE_SMOKE_COMPLETE_FILE: join(directory, `native-smoke-complete-${phase}-${nonce}`),
   };
-  const fallbackDiagnostic = join(tmpdir(), "raypx-native-smoke-main");
-  await rm(fallbackDiagnostic, { force: true });
   const native = spawnProcess([binary], {
     cwd,
     env: environment,
@@ -132,21 +130,29 @@ export async function runTauriSmoke(
       scenario.exited.then((code) => ({ source: "scenario", code })),
       native.exited.then((code) => ({ source: "native", code })),
     ]);
+    let scenarioCode: number;
     if (first.source === "native") {
-      const [diagnostic, lifecycle, main, fallback] = await Promise.all([
+      const [diagnostic, lifecycle, complete] = await Promise.all([
         readFile(join(directory, "native-smoke-startup-error"), "utf8").catch(() => undefined),
         readFile(join(directory, "native-smoke-lifecycle"), "utf8").catch(() => undefined),
-        readFile(environment.RAYPX_NATIVE_SMOKE_DIAGNOSTIC, "utf8").catch(() => undefined),
-        readFile(fallbackDiagnostic, "utf8").catch(() => undefined),
+        readFile(environment.RAYPX_NATIVE_SMOKE_COMPLETE_FILE, "utf8").catch(() => undefined),
       ]);
-      const details = [diagnostic, lifecycle?.trim(), main?.trim(), fallback?.trim()]
-        .filter(Boolean)
-        .join("\n");
-      throw new Error(
-        `Native smoke ${phase} Desktop exited before assertions (${first.code})${details ? `:\n${details}` : ""}`,
-      );
+      if (first.code === 0 && complete === "raypx-native-smoke-complete/1\n") {
+        scenarioCode = await Promise.race([
+          scenario.exited,
+          sleep(5_000).then(() => {
+            throw new Error("Smoke scenario did not finish after requesting Desktop Quit");
+          }),
+        ]);
+      } else {
+        const details = [diagnostic, lifecycle?.trim()].filter(Boolean).join("\n");
+        throw new Error(
+          `Native smoke ${phase} Desktop exited before assertions (${first.code})${details ? `:\n${details}` : ""}`,
+        );
+      }
+    } else {
+      scenarioCode = first.code;
     }
-    const scenarioCode = first.source === "scenario" ? first.code : await scenario.exited;
     if (scenarioCode !== 0) {
       const desktop =
         native.exitCode === null
@@ -167,7 +173,6 @@ export async function runTauriSmoke(
     scenario.kill();
     await Promise.allSettled([native.exited, scenario.exited]);
     if (process.platform !== "win32") await rm(endpoint, { force: true });
-    await rm(fallbackDiagnostic, { force: true });
     // The profile owner is cleaned up by the run.ts orchestrator after GUI Quit.
     void directory;
   }
