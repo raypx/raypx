@@ -176,6 +176,15 @@ async fn update(app: tauri::AppHandle) {
     }
 }
 pub fn run() {
+    #[cfg(feature = "native-smoke")]
+    std::panic::set_hook(Box::new(|panic| {
+        if let Some(directory) = std::env::var_os("RAYPX_NATIVE_SMOKE_DATA_DIR") {
+            let _ = std::fs::write(
+                std::path::PathBuf::from(directory).join("native-smoke-startup-error"),
+                format!("panic: {panic}"),
+            );
+        }
+    }));
     // Kept in executable output so release probes identify the actual native host.
     if std::env::args().any(|arg| arg == "--host-version") {
         println!("raypx-tauri/2.12.5");
