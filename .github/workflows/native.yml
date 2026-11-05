@@ -85,7 +85,7 @@ jobs:
         shell: bash
         run: |
           pnpm --dir packages/runtime-node run test
-          pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts
+          pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts src/build/archive.test.ts
       - name: Herdr terminal integration
         if: matrix.phase == 'checks'
         env:

@@ -1,8 +1,9 @@
 import { cp, mkdir, readFile, readdir, chmod, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { spawnProcess } from "@raypx/runtime-node/process";
+import { extractArchive } from "./archive.ts";
 
 async function run(command: string[], cwd: string, env = process.env) {
   const process = spawnProcess(command, {
@@ -32,7 +33,7 @@ async function npmPackage(name: string, version: string, directory: string) {
   const archive = directory + ".tgz";
   await mkdir(directory, { recursive: true });
   await writeFile(archive, await download(metadata.dist.tarball, hash, algorithm));
-  await run(["tar", "-xzf", archive, "-C", directory, "--strip-components=1"], dirname(directory));
+  await extractArchive(archive, directory, 1);
 }
 export async function packageCli(root: string, output: string, builtAt: number) {
   const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
@@ -70,22 +71,7 @@ export async function packageCli(root: string, output: string, builtAt: number) 
     if (!hash) throw new Error("Node release checksum unavailable");
     const file = join(cache, archive);
     await writeFile(file, await download(base + archive, hash));
-    if (platform === "win32")
-      await run(
-        [
-          "powershell.exe",
-          "-NoProfile",
-          "-NonInteractive",
-          "-EncodedCommand",
-          Buffer.from(
-            "$ErrorActionPreference='Stop'; Expand-Archive -LiteralPath $env:RAYPX_NODE_ARCHIVE -DestinationPath $env:RAYPX_NODE_EXTRACT -Force",
-            "utf16le",
-          ).toString("base64"),
-        ],
-        root,
-        { ...process.env, RAYPX_NODE_ARCHIVE: file, RAYPX_NODE_EXTRACT: cache },
-      );
-    else await run(["tar", "-xJf", file, "-C", cache], root);
+    await extractArchive(file, cache);
     await cp(
       join(cache, name, platform === "win32" ? executable : "bin/node"),
       join(runtime, executable),
