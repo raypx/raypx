@@ -79,7 +79,7 @@ Build and runtime stages use the pinned `node` images; Node is the only runtime.
 Compose and Railway use `apps/api/Dockerfile`, `apps/web/Dockerfile` and
 `infra/relay/Dockerfile`. Relay bundles its Node entry with Vite.
 These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
-local pnpm download and VP task cache mounts to a temporary Dockerfile and removes
+local pnpm download cache mounts to a temporary Dockerfile and removes
 it on exit, including build failure. All install/build commands remain in the
 application Dockerfiles. Compose explicitly selects the API's `migrate` and
 `runtime` targets; the default `deploy` target additionally carries the bundled
@@ -90,6 +90,13 @@ so source edits reuse installed dependencies and only dependency metadata change
 reinstall. It discovers workspaces through `deploy/workspaces.ts` and stages bin
 placeholders so pnpm can link workspace commands before source is copied. The
 build script supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`.
+
+Image builds pass `--no-cache` to VP while retaining its task graph and type-check
+prerequisites. VP's automatic file tracking installs seccomp listeners for static
+executables such as esbuild. A build sandbox with an existing listener rejects
+that installation with `spawn EBUSY`. Docker layer caching still reuses dependencies
+and completed build steps. For a direct build in such a sandbox, run
+`pnpm run build:api --no-cache` (or the corresponding Web/Relay command).
 
 The API provides three deployable targets: `migrate` is an isolated database job,
 `runtime` contains only the API output, and the default `deploy` target extends

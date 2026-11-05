@@ -7,7 +7,9 @@ Dockerfiles in apps/api and apps/web. Keep install/build commands in those files
 `sources.ts` materializes a workspace's production dependency source tree; API's
 `migration-payload` combines it with production dependencies and canonical SQL for
 both Compose and Railway. Keep tests, tooling sources and secrets outside that tree.
-`build.sh` adds Compose-only cache mounts to temporary copies and removes them on exit.
+`build.sh` adds Compose-only pnpm cache mounts to temporary copies and removes them on exit.
+Image builds use VP's `--no-cache` to avoid nesting syscall tracking inside build
+sandboxes with existing seccomp listeners; Docker layers own image build caching.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`
 checks static adapters and API environment forwarding. Run `smoke:deployment`
 for isolated image acceptance; its fixture account and database must remain owned

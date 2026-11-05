@@ -199,10 +199,14 @@ The shared application Dockerfiles use manifest/dependency layer caching without
 cache mounts. Railway requires literal service-specific cache mount IDs, so those
 mounts would prevent portable files. Source-only changes reuse installed layers;
 manifest or lockfile changes can require a fresh download. Compose retains its
-bounded builder and reuses the same image layers. Its `deploy/build.sh` adds pnpm/VP
+bounded builder and reuses the same image layers. Its `deploy/build.sh` adds pnpm
 cache mounts to temporary copies of these Dockerfiles and explicitly selects
 `migrate`/`runtime`; it does not build the API's final `deploy` stage. The temporary
 copies are removed on exit.
+All image builds disable VP task caching with `--no-cache` so its syscall tracker
+does not install a second seccomp listener inside the build sandbox, which can
+otherwise fail while spawning esbuild with `EBUSY`. VP still runs the build graph
+and type checks; Docker layers cache dependencies and completed build steps.
 `pnpm run smoke:deployment` exercises both image profiles with an isolated temporary
 database and Redis. This local gate does not apply IaC or contact Railway services.
 

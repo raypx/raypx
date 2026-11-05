@@ -38,9 +38,6 @@ cached_dockerfile() {
     /^RUN .*pnpm install --frozen-lockfile/ {
       sub(/^RUN /, "RUN --mount=type=cache,id=raypx-pnpm-install,target=/root/.local/share/pnpm/store,sharing=locked ")
     }
-    /^RUN pnpm run build:/ {
-      sub(/^RUN /, "RUN --mount=type=cache,id=raypx-vp,target=/app/node_modules/.vite/task-cache,sharing=locked ")
-    }
     { print }
   ' "$1" > "$dockerfile"
 }

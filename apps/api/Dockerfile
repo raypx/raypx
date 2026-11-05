@@ -28,7 +28,8 @@ COPY . .
 ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
-RUN pnpm run build:api
+# Build sandboxes may already own a seccomp listener; VP's syscall tracing cannot nest.
+RUN pnpm run build:api --no-cache
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 ENV NODE_ENV=production NITRO_PORT=3002 HOST=0.0.0.0

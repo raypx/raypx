@@ -169,7 +169,7 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
           readFileSync(join(root, filePath), "utf8"),
         );
         expect(cached).toContain("id=raypx-pnpm-install,target=/root/.local/share/pnpm/store");
-        expect(cached).toContain("id=raypx-vp,target=/app/node_modules/.vite/task-cache");
+        expect(cached).not.toContain("id=raypx-vp");
       }
     } finally {
       rmSync(directory, { recursive: true, force: true });
