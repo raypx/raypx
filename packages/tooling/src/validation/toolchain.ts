@@ -50,19 +50,19 @@ export function checkToolchain(root: string, documents: readonly string[]) {
   ])
     if (existsSync(join(root, file))) findings.push(`${file}: use the root Node/pnpm pins only`);
   try {
-    const mise = parseTOML(readFileSync(join(root, "mise.toml"), "utf8")) as {
+    const mise = parseTOML<{
       tools?: unknown;
       settings?: { idiomatic_version_file_enable_tools?: string[] };
-    };
+    }>(readFileSync(join(root, "mise.toml"), "utf8"));
     if (
       mise.tools ||
       JSON.stringify(mise.settings?.idiomatic_version_file_enable_tools) !==
         JSON.stringify(["node"])
     )
       findings.push("mise.toml: read the package.json Node pin without a tools section");
-    const rust = parseTOML(readFileSync(join(root, "rust-toolchain.toml"), "utf8")) as {
+    const rust = parseTOML<{
       toolchain?: { channel?: string };
-    };
+    }>(readFileSync(join(root, "rust-toolchain.toml"), "utf8"));
     if (!/^\d+\.\d+\.\d+$/.test(rust.toolchain?.channel ?? ""))
       findings.push("rust-toolchain.toml: pin an exact Rust release");
   } catch {
@@ -72,9 +72,9 @@ export function checkToolchain(root: string, documents: readonly string[]) {
     readFileSync(join(root, "rust-toolchain.toml"), "utf8"),
   ).toolchain.channel;
   if (existsSync(join(root, "Cargo.toml"))) {
-    const cargo = parseTOML(readFileSync(join(root, "Cargo.toml"), "utf8")) as {
+    const cargo = parseTOML<{
       workspace?: { package?: { "rust-version"?: string } };
-    };
+    }>(readFileSync(join(root, "Cargo.toml"), "utf8"));
     if (cargo.workspace?.package?.["rust-version"] !== rustPin)
       findings.push("Cargo.toml: rust-version must match rust-toolchain.toml");
   }
@@ -99,7 +99,7 @@ export function checkToolchain(root: string, documents: readonly string[]) {
     type Step = { uses?: string; with?: Record<string, unknown> };
     let document: { runs?: { steps?: Step[] }; jobs?: Record<string, { steps?: Step[] }> };
     try {
-      document = parseYAML(readFileSync(join(root, file), "utf8")) as typeof document;
+      document = parseYAML<typeof document>(readFileSync(join(root, file), "utf8"));
     } catch {
       findings.push(`${file}: invalid YAML`);
       continue;
