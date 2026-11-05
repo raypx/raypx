@@ -113,12 +113,13 @@ export async function runTauriSmoke(
       native.exited.then((code) => ({ source: "native", code })),
     ]);
     if (first.source === "native") {
-      const diagnostic = await readFile(
-        join(directory, "native-smoke-startup-error"),
-        "utf8",
-      ).catch(() => undefined);
+      const [diagnostic, lifecycle] = await Promise.all([
+        readFile(join(directory, "native-smoke-startup-error"), "utf8").catch(() => undefined),
+        readFile(join(directory, "native-smoke-lifecycle"), "utf8").catch(() => undefined),
+      ]);
+      const details = [diagnostic, lifecycle?.trim()].filter(Boolean).join("\n");
       throw new Error(
-        `Native smoke ${phase} Desktop exited before assertions (${first.code})${diagnostic ? `: ${diagnostic}` : ""}`,
+        `Native smoke ${phase} Desktop exited before assertions (${first.code})${details ? `:\n${details}` : ""}`,
       );
     }
     const scenarioCode = first.source === "scenario" ? first.code : await scenario.exited;
