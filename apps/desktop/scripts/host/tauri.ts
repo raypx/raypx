@@ -84,6 +84,7 @@ export async function bundleConfig() {
     ...(smoke
       ? {
           productName: "Raypx Test",
+          mainBinaryName: "raypx-desktop",
           identifier: "com.raypx.desktop.native-smoke",
           build: { frontendDist: "../artifacts/native-smoke/client" },
         }
