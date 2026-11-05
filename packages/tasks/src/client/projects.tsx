@@ -1,8 +1,8 @@
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import type { ReactNode } from "react";
-import type { TaskWorkspacePort } from "../model/port.js";
-import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
-import { useRemoteQuery } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.ts";
+import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
+import { useRemoteQuery } from "./remote-query.ts";
 import { useCallback, useEffect, useId, useRef } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";

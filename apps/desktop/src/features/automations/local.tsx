@@ -1,4 +1,4 @@
-import { formText } from "../../form-data";
+import { formText } from "../../form-data.ts";
 import { useState, type FormEvent } from "react";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { ClockIcon } from "@raypx/icons/clock";
@@ -19,7 +19,7 @@ import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition, JobInput, JobRun } from "@raypx/jobs";
-import { localRequest } from "../../lib/desktop";
+import { localRequest } from "../../lib/desktop.ts";
 import { Link } from "@tanstack/react-router";
 
 export function LocalJobsPage({

@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { serverOrigin, sessionStoragePrefix } from "./config";
-import { sessionAccess } from "./session-policy";
+import { serverOrigin, sessionStoragePrefix } from "./config.ts";
+import { sessionAccess } from "./session-policy.ts";
 
 const now = Date.parse("2026-11-02T00:00:00Z");
 const session = {

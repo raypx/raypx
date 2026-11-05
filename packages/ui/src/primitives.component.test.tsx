@@ -4,13 +4,13 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
-import { Avatar } from "./avatar";
-import { Logo } from "./logo";
-import { Badge } from "./components/ui/badge";
-import { Button } from "./components/ui/button";
-import { Field, FieldError, FieldLabel } from "./components/ui/field";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group";
-import { Toaster, toast } from "./components/ui/toast";
+import { Avatar } from "./avatar.tsx";
+import { Logo } from "./logo.tsx";
+import { Badge } from "./components/ui/badge.tsx";
+import { Button } from "./components/ui/button.tsx";
+import { Field, FieldError, FieldLabel } from "./components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group.tsx";
+import { Toaster, toast } from "./components/ui/toast.tsx";
 
 afterEach(() => cleanup());
 

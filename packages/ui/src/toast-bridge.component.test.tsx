@@ -4,7 +4,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { createToastBridge, type ToastModule } from "./toast";
+import { createToastBridge, type ToastModule } from "./toast/index.tsx";
 
 afterEach(() => cleanup());
 

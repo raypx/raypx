@@ -1,4 +1,5 @@
-import { serve } from "bun";
+import { serveHttp } from "@raypx/runtime-node/http";
+
 import { MAX_RELAY_BYTES } from "@raypx/contracts/tasks";
 import type { RelayHub } from "@raypx/control/relay";
 
@@ -11,7 +12,7 @@ export interface RelayServerOptions {
 }
 
 /** Only the transport boundary lives here; credentials arrive in the first v4 frame. */
-export function startRelayServer(options: RelayServerOptions) {
+export async function startRelayServer(options: RelayServerOptions) {
   const { hub } = options;
   let stopping = false;
   const json = (body: object, status = 200) =>
@@ -43,7 +44,7 @@ export function startRelayServer(options: RelayServerOptions) {
     const ok = database === "ok" && relay === "ok";
     return json({ status: ok ? "ok" : "unavailable", checks: { database, relay } }, ok ? 200 : 503);
   };
-  const server = serve<{ id: string }>({
+  const server = await serveHttp<{ id: string }>({
     hostname: options.hostname,
     port: options.port,
     async fetch(request, listener) {

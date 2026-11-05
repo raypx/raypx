@@ -5,8 +5,8 @@ import type {
   ExecutionHandle,
   ProviderSession,
   ConversationEvent,
-} from "../core/index.js";
-import { PiRunner, type PiRunnerOptions } from "./runner.js";
+} from "../core/index.ts";
+import { PiRunner, type PiRunnerOptions } from "./runner.ts";
 
 export const piDefinition = {
   version: 1,

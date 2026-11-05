@@ -5,10 +5,10 @@ export default defineConfig({
   ...repositoryTaskConfig(import.meta.url),
   fmt: {},
   staged: {
-    "*.{ts,tsx,json,md,css,toml}": "bun --bun vp fmt --write",
+    "*.{ts,tsx,json,md,css,toml}": "pnpm exec vp fmt --write",
     // oxlint only reads scripts and fails when a commit stages none; vendored skill
     // scripts are ignored, so a commit staging only those must still pass.
-    "*.{ts,tsx}": "bun --bun vp lint --fix --no-error-on-unmatched-pattern",
+    "*.{ts,tsx}": "pnpm exec vp lint --fix --no-error-on-unmatched-pattern",
   },
   lint: {
     plugins: [
@@ -28,7 +28,7 @@ export default defineConfig({
       "**/dist/**",
       "**/.output/**",
       "**/node_modules/**",
-      // Vendored agent skills are upstream content managed by `bun run skills:update`;
+      // Vendored agent skills are upstream content managed by `pnpm run skills:update`;
       // skills/ and .claude/skills link them for other agents and add only Markdown.
       ".agents/**",
       ".claude/**",

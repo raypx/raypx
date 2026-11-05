@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { mergeAiSettings, parseAiSettings } from "./config.js";
-import { createCompatibleProvider } from "./providers.js";
+import { mergeAiSettings, parseAiSettings } from "./config.ts";
+import { createCompatibleProvider } from "./providers.ts";
 it("isolates provider and endpoint credentials while retaining request defaults", () => {
   const file = parseAiSettings({
     provider: "anthropic",

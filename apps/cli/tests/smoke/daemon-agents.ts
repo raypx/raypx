@@ -1,3 +1,5 @@
+import { fileExists } from "@raypx/runtime-node/files";
+import { spawnProcess, sleep, findExecutable } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import {
   copyFile,
@@ -44,8 +46,10 @@ const env: Record<string, string | undefined> = {
   PYTHONDONTWRITEBYTECODE: "1",
 };
 const claude =
-  process.env.RAYPX_CLAUDE_BINARY ?? Bun.which("claude") ?? join(homedir(), ".local/bin/claude");
-const codex = process.env.RAYPX_CODEX_BINARY ?? Bun.which("codex");
+  process.env.RAYPX_CLAUDE_BINARY ??
+  findExecutable("claude") ??
+  join(homedir(), ".local/bin/claude");
+const codex = process.env.RAYPX_CODEX_BINARY ?? findExecutable("codex");
 assert.ok(codex, "Set RAYPX_CODEX_BINARY for the installed CLI");
 try {
   const settings = JSON.parse(
@@ -75,7 +79,7 @@ await copyFile(
 await chmod(join(env.CODEX_HOME, "auth.json"), 0o600);
 
 function proxy() {
-  const child = Bun.spawn([binary, "daemon", "proxy", "--data-dir", stateDirectory], {
+  const child = spawnProcess([binary, "daemon", "proxy", "--data-dir", stateDirectory], {
     env,
     stdin: "pipe",
     stdout: "pipe",
@@ -122,7 +126,7 @@ function proxy() {
         }, 30_000);
       });
       try {
-        await child.stdin.write(JSON.stringify({ version: 1, id, method, params }) + "\n");
+        child.stdin.write(JSON.stringify({ version: 1, id, method, params }) + "\n");
         await child.stdin.flush();
         return (await response) as T;
       } finally {
@@ -130,7 +134,7 @@ function proxy() {
       }
     },
     close: async () => {
-      await child.stdin.end();
+      child.stdin.end();
       await child.exited;
       await reader;
     },
@@ -215,7 +219,7 @@ try {
     ).connected
   ) {
     assert.ok(Date.now() < deadline, "Daemon did not connect");
-    await Bun.sleep(200);
+    await sleep(200);
   }
   await current.close();
   console.info(JSON.stringify({ stage: "desktop-client-disconnected", deviceId: device.deviceId }));
@@ -268,7 +272,7 @@ try {
       }),
       { mode: 0o600 },
     );
-    const terminal = Bun.spawn(
+    const terminal = spawnProcess(
       ["python3", resolvePath(import.meta.dirname, "../fixtures/terminal/driver.py"), spec],
       { env, stdin: "ignore", stdout: "pipe", stderr: "pipe" },
     );
@@ -306,8 +310,8 @@ try {
           }
           answered = true;
         }
-        if (await Bun.file(marker).exists()) break;
-        await Bun.sleep(250);
+        if (await fileExists(marker)) break;
+        await sleep(250);
       }
       assert.equal(await terminal.exited, 0, "Real terminal did not apply the remote approval");
       assert.equal(await readFile(marker, "utf8"), "RAYPX_TERMINAL_P1");
@@ -335,7 +339,7 @@ try {
     JSON.stringify({ stage: "desktop-client-reconnected", persistent: restored.persistent }),
   );
   await current.close();
-  const stopped = Bun.spawn([binary, "daemon", "stop", "--data-dir", stateDirectory], {
+  const stopped = spawnProcess([binary, "daemon", "stop", "--data-dir", stateDirectory], {
     env,
     stdout: "ignore",
     stderr: "ignore",
@@ -343,16 +347,19 @@ try {
   assert.equal(await stopped.exited, 0);
   const stopDeadline = Date.now() + 15_000;
   while (true) {
-    const status = Bun.spawn([binary, "daemon", "status", "--data-dir", stateDirectory, "--json"], {
-      env,
-      stdout: "pipe",
-      stderr: "ignore",
-    });
+    const status = spawnProcess(
+      [binary, "daemon", "status", "--data-dir", stateDirectory, "--json"],
+      {
+        env,
+        stdout: "pipe",
+        stderr: "ignore",
+      },
+    );
     const stoppedInfo = JSON.parse(await new Response(status.stdout).text());
     assert.equal(await status.exited, 0);
     if (!stoppedInfo.running) break;
     assert.ok(Date.now() < stopDeadline, "Daemon did not stop");
-    await Bun.sleep(100);
+    await sleep(100);
   }
   current = proxy();
   const restartDeadline = Date.now() + 30_000;
@@ -367,7 +374,7 @@ try {
       break;
     }
     assert.ok(Date.now() < restartDeadline, "Daemon authorization did not restore independently");
-    await Bun.sleep(200);
+    await sleep(200);
   }
   console.info(JSON.stringify({ stage: "daemon-authorization-restored", browserBootstrap: false }));
   await current.request("host.session", { apiUrl: apiUrl.origin, accountId: null });
@@ -389,7 +396,7 @@ try {
   if (device)
     await api.devices.revoke({ deviceId: device.deviceId, epoch: device.epoch }).catch(() => {});
   await current.close().catch(() => {});
-  const stop = Bun.spawn([binary, "daemon", "stop", "--data-dir", stateDirectory], {
+  const stop = spawnProcess([binary, "daemon", "stop", "--data-dir", stateDirectory], {
     env,
     stdout: "ignore",
     stderr: "ignore",

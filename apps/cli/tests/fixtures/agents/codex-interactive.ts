@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, unlinkSync } from "node:fs";
 import { createInterface } from "node:readline";
-import { exitForVersion } from "./version";
+import { exitForVersion } from "./version.ts";
 
 type RpcMessage = {
   id?: string | number;

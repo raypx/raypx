@@ -5,8 +5,8 @@ import type { HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
-import { approvalChanges } from "./approval-changes.js";
-import { TaskMarkdown } from "./markdown.js";
+import { approvalChanges } from "./approval-changes.ts";
+import { TaskMarkdown } from "./markdown.tsx";
 
 const rawContentClassName =
   "max-h-112 overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-[1.7] whitespace-pre-wrap wrap-anywhere";

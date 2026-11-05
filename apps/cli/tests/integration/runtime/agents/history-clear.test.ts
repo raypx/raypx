@@ -1,16 +1,16 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { Database } from "bun:sqlite";
+import { DatabaseSync as Database } from "node:sqlite";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { RelayCommand } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskContextSnapshot } from "@raypx/core/tasks";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { desktopBinding } from "../../../../src/runtime/agents/model";
-import { StateStore } from "../../../../src/runtime/state";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store.ts";
+import { desktopBinding } from "../../../../src/runtime/agents/model.ts";
+import { StateStore } from "../../../../src/runtime/state/index.ts";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
@@ -161,7 +161,7 @@ it("removes local receipt content atomically while preserving active parents, ot
   ).toEqual([parent.id, active.id].sort());
   expect(f.store.getRequest(binding, approval.id)).toBeUndefined();
   expect(f.store.taskEvents(binding, finished.id, 0)).toEqual([]);
-  const rows = JSON.stringify(f.db.query("SELECT payload,result FROM commands").all());
+  const rows = JSON.stringify(f.db.prepare("SELECT payload,result FROM commands").all());
   expect(rows).not.toContain("clear-");
   for (const marker of ["keep-parent", "keep-active", "keep-other"]) expect(rows).toContain(marker);
   for (const command of commands) {
@@ -260,7 +260,7 @@ it("clears old orphaned receipts while preserving a creation awaiting context re
     expect(f.store.reserve(binding, old)).toEqual({ ok: false, code: "NOT_FOUND" });
     expect(f.store.reserve(binding, oldDecision)).toEqual({ ok: false, code: "NOT_FOUND" });
     expect(f.store.reserve(binding, pending)).toBeNull();
-    expect(JSON.stringify(f.db.query("SELECT payload,result FROM commands").all())).not.toContain(
+    expect(JSON.stringify(f.db.prepare("SELECT payload,result FROM commands").all())).not.toContain(
       "old-cleared-",
     );
   } finally {

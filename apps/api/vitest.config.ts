@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from "vite-plus/test/config";
-import defaults from "../../test.config.js";
+import defaults from "../../test.config.ts";
 
 export default defineConfig(({ mode }) => {
   switch (mode) {

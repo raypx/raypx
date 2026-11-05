@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { schema, user } from "./schema.js";
+import { schema, user } from "./schema.ts";
 
 it("uses the isolated foundation schema with Better Auth Admin fields", () => {
   expect(Object.keys(schema)).toEqual(

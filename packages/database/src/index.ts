@@ -3,5 +3,5 @@ export {
   type DatabaseOptions,
   type DatabaseConnection,
   type Database,
-} from "./connection.js";
-export { migrateDatabase } from "./migrate.js";
+} from "./connection.ts";
+export { migrateDatabase } from "./migrate.ts";

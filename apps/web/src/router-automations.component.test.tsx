@@ -28,7 +28,7 @@ vi.mock("./features/automations/client", () => ({
   cloudJobs: { list: mocks.list },
   jobDevices: { list: mocks.devices },
 }));
-import { Route } from "./routes/(app)/automations";
+import { Route } from "./routes/(app)/automations.tsx";
 beforeEach(() => {
   mocks.account = null;
   mocks.list.mockClear();

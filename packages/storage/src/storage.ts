@@ -1,8 +1,8 @@
 import { createStorage, type Driver } from "unstorage";
 import memoryDriver from "unstorage/drivers/memory";
-import { StorageError } from "./errors.js";
-import { assertObjectKey, assertObjectPrefix, fromStorageKey } from "./keys.js";
-import type { ObjectStorage, PutObjectOptions, SignedUrlOptions } from "./types.js";
+import { StorageError } from "./errors.ts";
+import { assertObjectKey, assertObjectPrefix, fromStorageKey } from "./keys.ts";
+import type { ObjectStorage, PutObjectOptions, SignedUrlOptions } from "./types.ts";
 
 export type UrlSigner = (key: string, options: SignedUrlOptions) => Promise<string>;
 

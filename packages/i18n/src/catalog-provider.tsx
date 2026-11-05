@@ -6,10 +6,10 @@ import {
   useSyncExternalStore,
   type ComponentProps,
 } from "react";
-import type { createCatalogStore } from "./catalog-store.js";
-import { intlClient } from "./react.js";
-import { localeRuntime } from "./runtime.js";
-import type { MessagesByLocale } from "./types.js";
+import type { createCatalogStore } from "./catalog-store.ts";
+import { intlClient } from "./react.ts";
+import { localeRuntime } from "./runtime.ts";
+import type { MessagesByLocale } from "./types.ts";
 
 type CatalogStore = ReturnType<typeof createCatalogStore>;
 type LanguageProviderProps = ComponentProps<typeof intlClient.LanguageProvider>;

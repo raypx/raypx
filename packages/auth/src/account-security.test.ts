@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { createAuth, type AuthMailInput } from "./server.js";
+import { createAuth, type AuthMailInput } from "./server.ts";
 
 interface SessionResponse {
   session: { id: string; token: string; userId: string };

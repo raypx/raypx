@@ -10,7 +10,7 @@ import {
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { FileEditIcon } from "@raypx/icons/file-edit";
-import type { TaskDraft } from "../../model/drafts.js";
+import type { TaskDraft } from "../../model/drafts.ts";
 
 /** Device-saved drafts; opening one only restores editor text. */
 export function ComposerDraftList({

@@ -1,29 +1,29 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskModel } from "../../src/tasks/model.js";
-import { workspaceFixtures } from "./workspace.js";
+import { taskModel } from "../../src/tasks/model.ts";
+import { workspaceFixtures } from "./workspace.ts";
 
 const { fixture, member } = workspaceFixtures();
 export function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
   );
-  member(root, "tokens", { extra: { scripts: { check: "bun check.ts", test: "bun test.ts" } } });
+  member(root, "tokens", { extra: { scripts: { check: "tsx check.ts", test: "tsx test.ts" } } });
   member(root, "bridge", {
     deps: { "@raypx/tokens": "workspace:*" },
-    extra: { scripts: { check: "bun check.ts" } },
+    extra: { scripts: { check: "tsx check.ts" } },
   });
   member(root, "api", {
     deps: { "@raypx/bridge": "workspace:*" },
     extra: {
       name: "api",
-      scripts: { check: "bun check.ts", test: "bun test.ts", build: "bun build.ts" },
+      scripts: { check: "tsx check.ts", test: "tsx test.ts", build: "tsx build.ts" },
     },
   });
   member(root, "independent", {
-    extra: { scripts: { check: "bun check.ts", test: "bun test.ts" } },
+    extra: { scripts: { check: "tsx check.ts", test: "tsx test.ts" } },
   });
   return { root, model: taskModel(root) };
 }
@@ -32,9 +32,9 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "bun check.ts", test: "bun test.ts" };
+  const scripts = { check: "tsx check.ts", test: "tsx test.ts" };
   member(root, "ui", { metadata: { kind: "library", target: "browser" }, extra: { scripts } });
   const feature = member(root, "feature", {
     metadata: {
@@ -87,17 +87,17 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
           name === "desktop"
             ? {
                 ...scripts,
-                "native:build": "bun native.ts",
-                "native:prepare": "bun prepare.ts",
-                "mygo:check": "go vet ./...",
-                "mygo:test": "go test ./...",
+                "native:build": "tsx native.ts",
+                "native:prepare": "tsx prepare.ts",
+                "tauri:check": "cargo check",
+                "tauri:test": "cargo test",
               }
             : scripts,
       },
     });
   member(root, "cli", {
-    metadata: { kind: "app", target: "bun" },
-    extra: { name: "cli", scripts: { ...scripts, build: "bun build.ts" } },
+    metadata: { kind: "app", target: "node" },
+    extra: { name: "cli", scripts: { ...scripts, build: "tsx build.ts" } },
   });
   return taskModel(root);
 }

@@ -27,8 +27,8 @@ vi.mock("../lib/desktop", () => ({
     },
   }),
 }));
-import { RemoteCoordinator } from "./tasks/coordinator";
-import { signOutDesktopHost } from "./tasks/host-session";
+import { RemoteCoordinator } from "./tasks/coordinator.tsx";
+import { signOutDesktopHost } from "./tasks/host-session.ts";
 
 afterEach(() => {
   cleanup();

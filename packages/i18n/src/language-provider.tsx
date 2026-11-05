@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
-import { messages } from "./messages/index.js";
-import { intlClient } from "./react.js";
+import { messages } from "./messages/index.ts";
+import { intlClient } from "./react.ts";
 
 type BoundProps = ComponentProps<typeof intlClient.LanguageProvider>;
 
@@ -8,4 +8,4 @@ type BoundProps = ComponentProps<typeof intlClient.LanguageProvider>;
 export function LanguageProvider(props: Omit<BoundProps, "messages">) {
   return <intlClient.LanguageProvider {...props} messages={messages} />;
 }
-export { useLanguagePreference } from "./react.js";
+export { useLanguagePreference } from "./react.ts";

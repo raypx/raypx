@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cva } from "class-variance-authority";
 
 import { cn } from "#lib/utils";
-import { Label } from "./label";
+import { Label } from "./label.tsx";
 
 export type FieldOrientation = "vertical" | "horizontal" | "responsive";
 

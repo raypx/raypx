@@ -1,20 +1,14 @@
-import {
-  chmodSync,
-  copyFileSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  renameSync,
-  rmSync,
-  statSync,
-} from "node:fs";
+import { runtimeLease } from "../process/lease.ts";
+import { cliLaunch, cliInstallation, installRuntimeCopy } from "../process/installation.ts";
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
+import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import manifest from "../../../package.json";
-import { cliBuild } from "./build";
-import { profilePath, acquireLock } from "../state";
-import { LocalError } from "../errors";
-import { localAddressSchema, localFetch } from "../local-http";
+import { cliBuild } from "./build.ts";
+import { profilePath, acquireLock } from "../state/index.ts";
+import { LocalError } from "../errors.ts";
+import { localAddressSchema, localFetch } from "../local-http.ts";
 
 export type ProfileOptions = { dataDir?: string; profile?: string };
 const daemonEndpointSchema = z
@@ -79,11 +73,6 @@ async function probe(directory: string, purpose: "connect" | "stop" = "connect")
     );
   return endpoint;
 }
-function cliLaunch() {
-  return /(?:^|[/\\])bun(?:\.exe)?$/.test(process.execPath)
-    ? [process.execPath, Bun.main]
-    : [process.execPath];
-}
 /**
  * Windows locks a running executable, so a long-lived owner must not run from the
  * Desktop bundle the updater replaces. Each build runs from its own private copy.
@@ -92,33 +81,38 @@ export function daemonLaunch(
   directory: string,
   launch = cliLaunch(),
   platform: NodeJS.Platform = process.platform,
+  retain?: (release: () => void) => void,
 ) {
-  const [executable] = launch;
-  if (platform !== "win32" || launch.length > 1 || !executable) return launch;
-  const bin = join(dirname(dirname(directory)), "bin"),
-    name = `raypx-${manifest.version}-${cliBuild.builtAt}.exe`,
-    target = join(bin, name);
-  let current = false;
+  const layout = cliInstallation();
+  if (platform !== "win32" || !layout.bundled) return launch;
+  const parent = join(dirname(dirname(directory)), "bin", "daemon");
+  const target = join(parent, `${cliBuild.version}-${cliBuild.builtAt}`);
+  const pin = runtimeLease(target);
+  if (!pin) throw new LocalError("HOST_STOPPING", "Runtime cleanup is in progress; retry startup");
+  let retained = false;
   try {
-    current = statSync(target).size === statSync(executable).size;
-  } catch {
-    /* Install this build below. */
-  }
-  if (!current) {
-    mkdirSync(bin, { recursive: true });
-    const temporary = `${target}.${crypto.randomUUID()}.tmp`;
-    copyFileSync(executable, temporary);
-    renameSync(temporary, target);
-  }
-  // A restarted owner may still hold its copy briefly; a later launch removes it.
-  for (const entry of readdirSync(bin))
-    if (entry !== name && /^raypx-.+\.exe(?:\..+\.tmp)?$/.test(entry))
+    installRuntimeCopy(layout.root, parent);
+    for (const entry of readdirSync(parent)) {
+      const candidate = join(parent, entry);
+      if (candidate === target || !/^\d+\.\d+\.\d+-\d+$/.test(entry)) continue;
+      let releaseOld: (() => void) | undefined;
       try {
-        rmSync(join(bin, entry), { force: true });
+        releaseOld = runtimeLease(candidate, true);
+        if (releaseOld) rmSync(candidate, { recursive: true });
       } catch {
-        /* A running owner keeps its copy locked until it exits. */
+        /* A running owner or locked resource is retained in full. */
+      } finally {
+        releaseOld?.();
       }
-  return [target];
+    }
+    if (retain) {
+      retain(pin);
+      retained = true;
+    }
+    return [join(target, "runtime/node.exe"), join(target, "main.mjs")];
+  } finally {
+    if (!retained) pin();
+  }
 }
 export async function connectDaemon(options: ProfileOptions, start = true) {
   const directory = profilePath(options);
@@ -128,6 +122,7 @@ export async function connectDaemon(options: ProfileOptions, start = true) {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   chmodSync(directory, 0o700);
   const release = acquireLock(directory, "daemon-launch");
+  let releaseRuntime: (() => void) | undefined;
   try {
     if (release) {
       const deadline = Date.now() + 10_000;
@@ -141,11 +136,13 @@ export async function connectDaemon(options: ProfileOptions, start = true) {
         }
         if (Date.now() >= deadline)
           throw new LocalError("HOST_STOPPING", "Wait for the execution owner to finish stopping");
-        await Bun.sleep(50);
+        await sleep(50);
       }
-      const child = Bun.spawn(
+      const child = spawnProcess(
         [
-          ...daemonLaunch(directory),
+          ...daemonLaunch(directory, cliLaunch(), process.platform, (close) => {
+            releaseRuntime = close;
+          }),
           "daemon",
           "run",
           "--profile",
@@ -167,13 +164,14 @@ export async function connectDaemon(options: ProfileOptions, start = true) {
     while (Date.now() < deadline) {
       const ready = await probe(directory);
       if (ready) return ready;
-      await Bun.sleep(50);
+      await sleep(50);
     }
     throw new LocalError(
       "HOST_START_FAILED",
       "Daemon could not acquire the profile; stop the previous execution owner and retry",
     );
   } finally {
+    releaseRuntime?.();
     release?.();
   }
 }
@@ -196,6 +194,6 @@ export async function stopDaemon(options: ProfileOptions) {
         "HOST_STOPPING",
         "The daemon is still stopping; retry status before starting work",
       );
-    await Bun.sleep(50);
+    await sleep(50);
   }
 }

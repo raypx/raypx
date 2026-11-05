@@ -4,8 +4,8 @@ const transport = vi.hoisted(() => ({
   dispatch: undefined as ((event: unknown) => void) | undefined,
   cancel: vi.fn(),
 }));
-vi.mock("./mygo", () => ({
-  createMyGoBridge: async (dispatch: (event: unknown) => void) => {
+vi.mock("./tauri", () => ({
+  createTauriBridge: async (dispatch: (event: unknown) => void) => {
     transport.dispatch = dispatch;
     return { request: { apiCancel: transport.cancel } };
   },
@@ -13,11 +13,11 @@ vi.mock("./mygo", () => ({
 beforeEach(() => {
   vi.resetModules();
   transport.cancel.mockReset();
-  Object.defineProperty(window, "__raypxDesktopHost", { value: "mygo", configurable: true });
+  Object.defineProperty(window, "__raypxDesktopHost", { value: "tauri", configurable: true });
 });
 afterEach(() => Reflect.deleteProperty(window, "__raypxDesktopHost"));
 it("reuses the bridge and validates events before notifying product listeners", async () => {
-  const { getBridge, onLocalEvent } = await import("./desktop");
+  const { getBridge, onLocalEvent } = await import("./desktop.ts");
   const [left, right] = await Promise.all([getBridge(), getBridge()]);
   expect(left).toBe(right);
   await left.request.apiCancel({ id: "request-a" });
@@ -34,7 +34,7 @@ it("reuses the bridge and validates events before notifying product listeners", 
 });
 it("requires the native preload for transport but keeps browser previews available", async () => {
   Reflect.deleteProperty(window, "__raypxDesktopHost");
-  const { getBridge, getDesktopRuntime, isDesktop } = await import("./desktop");
+  const { getBridge, getDesktopRuntime, isDesktop } = await import("./desktop.ts");
   expect(isDesktop()).toBe(false);
   expect(() => getBridge()).toThrow("DESKTOP_REQUIRED");
   await expect(getDesktopRuntime()).resolves.toMatchObject({

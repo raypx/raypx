@@ -30,7 +30,7 @@ vi.mock("./features/auth/client", () => ({
   desktopFetch: mocks.fetch,
   authClient: { useSession: () => ({ isPending: false, error: null, data: null }) },
 }));
-import { Route } from "./routes/memory";
+import { Route } from "./routes/memory.tsx";
 expect.extend(matchers);
 beforeEach(() => {
   mocks.fetch.mockClear();

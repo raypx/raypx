@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol";
+import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol.ts";
 
 const permission = {
   hook_event_name: "PermissionRequest",

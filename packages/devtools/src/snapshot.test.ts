@@ -6,7 +6,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { expect, it } from "vite-plus/test";
-import { createSnapshotReader } from "./snapshot";
+import { createSnapshotReader } from "./snapshot.ts";
 
 async function fixture() {
   const root = createRootRoute();

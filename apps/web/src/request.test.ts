@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
-import { sessionCookie } from "./features/auth/account";
-import { readRequestPreferences } from "./preferences";
+import { sessionCookie } from "./features/auth/account.ts";
+import { readRequestPreferences } from "./preferences.ts";
 
 describe("server request handling", () => {
   it("forwards only Better Auth cookies to the API", () => {

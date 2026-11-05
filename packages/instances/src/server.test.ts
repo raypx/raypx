@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { InstanceService, type InstanceRepository, type EnrollmentRecord } from "./server.js";
+import { InstanceService, type InstanceRepository, type EnrollmentRecord } from "./server.ts";
 import {
   createInstanceKey,
   createInstanceSigner,
@@ -7,13 +7,13 @@ import {
   signProof,
   verifyProof,
   verifyInstanceReceipt,
-} from "./crypto.js";
+} from "./crypto.ts";
 import {
   instanceOrigin,
   enrollmentProof,
   instanceCheckProof,
   type InstanceBinding,
-} from "./index.js";
+} from "./index.ts";
 function fixture() {
   const instances = new Map<string, InstanceBinding>(),
     enrollments = new Map<string, EnrollmentRecord>();

@@ -7,7 +7,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Avatar } from "@raypx/ui/avatar";
 import { StatusBadge } from "@raypx/ui/status-badge";
 import { useTranslations } from "@raypx/i18n/browser";
-import type { AccountProfile } from "../index";
+import type { AccountProfile } from "../index.ts";
 
 export interface AccountLinkProps {
   to: "login" | "signup";

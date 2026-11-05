@@ -5,11 +5,11 @@
   "type": "module",
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "bun --bun expo start",
-    "build": "bun --bun expo export --platform ios --platform android",
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run"
+    "dev": "expo start",
+    "build": "expo export --platform ios --platform android",
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:mobile",
@@ -43,7 +43,6 @@
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
-    "@types/bun": "catalog:dev",
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "tailwindcss": "catalog:",

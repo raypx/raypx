@@ -1,6 +1,6 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { discover } from "./repository.js";
+import { discover } from "./repository.ts";
 
 export async function cleanArtifacts(root: string): Promise<void> {
   await remove(root, artifactPaths(root));
@@ -42,7 +42,7 @@ export async function clean(root: string): Promise<void> {
     "apps/desktop/generated",
     "apps/desktop/resources/bin",
     "apps/desktop/build",
-    "apps/desktop/.mygo",
+    "target",
   ]);
 }
 

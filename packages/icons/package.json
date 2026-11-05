@@ -82,9 +82,9 @@
     "./warning": "./src/icons/warning.ts"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run .component.test."
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:component": "vp test --run .component.test."
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "catalog:",

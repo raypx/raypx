@@ -1,7 +1,7 @@
 # Cloudflare Relay
 
 `relay-cloudflare` adds an optional Workers + Containers deployment for the
-[independent Bun Relay](../relay/README.md). Railway remains available. API/Web
+[independent Node Relay](../relay/README.md). Railway remains available. API/Web
 stay at their existing origins; API and this Relay share PostgreSQL and Redis.
 The Worker is a managed ingress, and the container runs the existing
 `infra/relay/Dockerfile` with repository-root build context.
@@ -17,7 +17,7 @@ epoch, replay and backpressure checks. API login routes are never published here
 
 Use a Cloudflare account with Workers, Durable Objects and Containers enabled,
 and a Cloudflare-managed zone for the same-origin route. Docker is required for
-local container builds and local development. Bun remains the local toolchain
+local container builds and local development. Node remains the local toolchain
 and container runtime. Only the managed Worker runs in workerd, using the
 SDK's Node-compatible surface (`nodejs_compat`).
 
@@ -52,10 +52,10 @@ secrets in `vars`, Docker build arguments, Git, URLs or CLI flags.
 Run from the repository root:
 
 ```sh
-bun install
-bun run --cwd infra/cloudflare check
-bun run test --package relay-cloudflare
-bun run --cwd infra/cloudflare plan:worker
+pnpm install
+pnpm --dir infra/cloudflare run check
+pnpm run test --package relay-cloudflare
+pnpm --dir infra/cloudflare run plan:worker
 ```
 
 `plan:worker` builds through VP and runs Wrangler's Worker dry-run with container
@@ -65,22 +65,22 @@ It does **not** validate the image, database connectivity or live WebSockets.
 validation, not a remote infrastructure diff, and uploads no deployment.
 
 ```sh
-bun run --cwd infra/cloudflare plan
+pnpm --dir infra/cloudflare run plan
 cp infra/cloudflare/.dev.vars.example infra/cloudflare/.dev.vars
 # Edit .dev.vars to use dedicated development resources with verified TLS.
-bun run --cwd infra/cloudflare dev
+pnpm --dir infra/cloudflare run dev
 ```
 
 Use an allowed HTTPS browser origin or a native WebSocket client without Origin
-when exercising local Wrangler ingress. The ordinary Bun development workflow
-remains `bun run dev`. Local Wrangler includes the real Container integration and
+when exercising local Wrangler ingress. The ordinary Node development workflow
+remains `pnpm run dev`. Local Wrangler includes the real Container integration and
 requires a running Docker daemon. `.dev.vars`, Wrangler state and generated
 configuration are ignored and excluded from the image context.
 
-The Bun launcher generates a temporary config beside `wrangler.json`, adds only
+The Node launcher generates a temporary config beside `wrangler.json`, adds only
 the public Git SHA (or `VITE_APP_RELEASE`) as the image build argument, and removes
 it after Wrangler exits. VP owns Worker builds/checks and caching. The container
-build continues to use the existing Bun Relay build. CI outside a Git checkout
+build continues to use the existing Node Relay build. CI outside a Git checkout
 must supply a public `VITE_APP_RELEASE` identifier.
 
 ## Deployment and cutover
@@ -91,12 +91,12 @@ environment. Choose the Worker name in `wrangler.json` before storing secrets.
 by default, so the initial deployment does not take over production traffic.
 
 ```sh
-bun run --cwd infra/cloudflare --bun wrangler login
-bun run --cwd infra/cloudflare plan
-bun run --cwd infra/cloudflare deploy
-bun run --cwd infra/cloudflare --bun wrangler secret put DATABASE_URL
-bun run --cwd infra/cloudflare --bun wrangler secret put REDIS_URL
-bun run --cwd infra/cloudflare --bun wrangler secret put ALLOWED_ORIGINS
+pnpm --dir infra/cloudflare exec wrangler login
+pnpm --dir infra/cloudflare run plan
+pnpm --dir infra/cloudflare run deploy
+pnpm --dir infra/cloudflare exec wrangler secret put DATABASE_URL
+pnpm --dir infra/cloudflare exec wrangler secret put REDIS_URL
+pnpm --dir infra/cloudflare exec wrangler secret put ALLOWED_ORIGINS
 ```
 
 Enter secret values at the prompts or provide them on standard input from a secret

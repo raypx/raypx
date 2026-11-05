@@ -1,14 +1,14 @@
 # Server caching
 
-`apps/api/server/cache/` gives API features one cache on Bun. It is an optimization only: every cached value must also be
+`apps/api/server/cache/` gives API features one cache on Node. It is an optimization only: every cached value must also be
 loadable from its source of truth, and authoritative decisions read that source.
 
 ## Stores
 
-| Runtime            | Store                           | Scope                       |
-| ------------------ | ------------------------------- | --------------------------- |
-| Bun with REDIS_URL | Memory in front of Redis/Valkey | Shared by every API process |
-| Bun without Redis  | Memory (`cache/memory.ts`)      | One process                 |
+| Runtime             | Store                           | Scope                       |
+| ------------------- | ------------------------------- | --------------------------- |
+| Node with REDIS_URL | Memory in front of Redis/Valkey | Shared by every API process |
+| Node without Redis  | Memory (`cache/memory.ts`)      | One process                 |
 
 `CacheStore` is the raw port: string values with a millisecond TTL. The memory store
 is bounded (1000 entries, least recently used evicted first).

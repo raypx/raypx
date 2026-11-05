@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { clean } from "./clean.js";
+import { clean } from "./clean.ts";
 
 const mocks = vi.hoisted(() => ({ rm: vi.fn() }));
 vi.mock("node:fs/promises", () => ({ rm: mocks.rm }));

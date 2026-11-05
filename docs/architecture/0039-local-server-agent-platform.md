@@ -2,6 +2,12 @@
 
 Status: Accepted for planning on 2026-11-01. This defines the greenfield target; current `PRODUCT.md` and implementation remain the shipped baseline until replaced.
 
+Implementation update (2026-11-05): [ADR 0041](0041-provider-capabilities-and-pi.md)
+has made Pi selectable for device-local managed tasks through `@raypx/providers`.
+Its original experimental status below is historical. [ADR 0045](0045-tauri-node-pnpm.md)
+defines the current Tauri/Node/pnpm stack; server ownership and pairing here remain
+targets tracked in the [roadmap](../roadmap.md).
+
 ## Context
 
 Raypx is moving toward persistent Agents that can work on a user's own computer and continue on a server when useful. A local-only product cannot reach the user while the computer is off. A server-only product makes local project access and data ownership less direct. Replicating one Agent as two writable copies would create competing Run, approval, and workspace histories.

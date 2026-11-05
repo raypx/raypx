@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
+import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts.ts";
 
 const roots: string[] = [];
 function fixture() {
@@ -10,10 +10,7 @@ function fixture() {
   roots.push(directory);
   const project = join(directory, "apps/desktop");
   mkdirSync(project, { recursive: true });
-  const output = join(
-    project,
-    `build/native-smoke/darwin-${process.arch === "x64" ? "amd64" : process.arch}`,
-  );
+  const output = join(project, "../../target/native-smoke/release/bundle/macos");
   const testApp = join(output, "Raypx Test.app"),
     releaseApp = join(output, "Raypx.app");
   for (const app of [testApp, releaseApp]) {

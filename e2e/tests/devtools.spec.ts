@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capture } from "./helpers/capture.js";
+import { capture } from "./helpers/capture.ts";
 
 test.beforeEach(async ({ page }) => {
   await page.route("http://127.0.0.1:4399/**", (route) =>

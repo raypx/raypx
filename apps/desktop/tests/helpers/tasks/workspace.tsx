@@ -11,8 +11,8 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { DesktopTaskWorkspace } from "../../../src/features/tasks/workspace";
-import { localTaskClient } from "../../../src/features/tasks/local-client";
+import { DesktopTaskWorkspace } from "../../../src/features/tasks/workspace.tsx";
+import { localTaskClient } from "../../../src/features/tasks/local-client.ts";
 // Register matchers with the active Vite+ test runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";

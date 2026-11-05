@@ -1,4 +1,4 @@
-import { getBridge, isDesktop } from "./desktop";
+import { getBridge, isDesktop } from "./desktop.ts";
 
 /** Native owns cookies; renderer code receives only the ordinary API response. */
 export function createDesktopFetch(baseUrl: string) {

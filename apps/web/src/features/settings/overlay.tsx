@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
-import { useSettingsNavigation } from "./navigation";
+import { useSettingsNavigation } from "./navigation.ts";
 
-const AccountSettingsDialog = lazy(() => import("./account-dialog"));
+const AccountSettingsDialog = lazy(() => import("./account-dialog.tsx"));
 
 /** Shared by public, workspace and administrator account menus; loaded only when open. */
 export function AccountSettingsOverlay() {

@@ -1,5 +1,5 @@
 import { definePlugin } from "nitro";
-import { closeApiRuntime, getApiRuntime } from "./server.js";
+import { closeApiRuntime, getApiRuntime } from "./server.ts";
 
 export default definePlugin(async (nitroApp) => {
   try {

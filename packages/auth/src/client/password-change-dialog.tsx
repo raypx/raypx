@@ -18,10 +18,10 @@ import {
   DialogTrigger,
 } from "@raypx/ui/components/ui/dialog";
 import { IconButton } from "@raypx/ui/icon-button";
-import { usePasswordChange, type AuthActionSuccess, type PasswordChangeClient } from "../hooks";
-import { formText } from "./form-text";
-import { PasswordField } from "./password-field";
-import { useAuthErrorMessage } from "./use-auth-error-message";
+import { usePasswordChange, type AuthActionSuccess, type PasswordChangeClient } from "../hooks.ts";
+import { formText } from "./form-text.ts";
+import { PasswordField } from "./password-field.tsx";
+import { useAuthErrorMessage } from "./use-auth-error-message.ts";
 
 const fields = [
   { name: "currentPassword", purpose: "current" },

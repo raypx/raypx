@@ -1,7 +1,7 @@
 import { Switch as BaseSwitch } from "@base-ui/react/switch";
 import type { ComponentProps } from "react";
 
-import { cn } from "../../lib/utils";
+import { cn } from "../../lib/utils.ts";
 
 export interface SwitchProps extends ComponentProps<typeof BaseSwitch.Root> {
   size?: "default" | "sm";

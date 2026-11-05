@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { expect, it } from "vite-plus/test";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { rememberProject } from "./project-history";
+import { rememberProject } from "./project-history.ts";
 import {
   setupWorkspaceTests,
   state,
@@ -10,7 +10,7 @@ import {
   mocks,
   page,
   runningTask,
-} from "../../../tests/helpers/tasks/workspace";
+} from "../../../tests/helpers/tasks/workspace.tsx";
 
 setupWorkspaceTests();
 

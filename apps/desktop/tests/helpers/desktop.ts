@@ -1,8 +1,8 @@
-import type { DesktopBridge, DesktopRuntime } from "../../bridge";
+import type { DesktopBridge, DesktopRuntime } from "../../bridge.ts";
 import type { LocalEvent, LocalParams } from "@raypx/contracts/local";
 import type { LocalClientMethod, LocalResult } from "@raypx/contracts/local-client";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import { createDesktopPlatform } from "../../src/lib/platform";
+import { createDesktopPlatform } from "../../src/lib/platform.ts";
 
 export function deferred<T>() {
   let resolve!: (value: T) => void;

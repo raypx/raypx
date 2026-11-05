@@ -10,8 +10,8 @@ vi.mock("../../auth/client", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: () => ({ data: { user: { id: "admin" } } }) },
 }));
-import { Overview } from "./overview";
-import { AuditLog } from "./audit-log";
+import { Overview } from "./overview.tsx";
+import { AuditLog } from "./audit-log.tsx";
 function page(view: ReactNode, locale: "en" | "zh" = "en") {
   return render(
     <QueryClientProvider

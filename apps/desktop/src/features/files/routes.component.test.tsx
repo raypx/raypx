@@ -35,7 +35,7 @@ import type {
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../routeTree.gen.ts";
-import { rememberProject } from "../tasks/project-history";
+import { rememberProject } from "../tasks/project-history.ts";
 
 expect.extend(matchers);
 

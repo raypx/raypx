@@ -8,7 +8,7 @@ import {
 } from "@raypx/contracts/tasks";
 import { taskActivityPage, applyActivityEvent } from "@raypx/core/activity";
 import { type AgentEvent } from "@raypx/core/tasks";
-import type { ControlRepository, ControlTransaction } from "../ports.js";
+import type { ControlRepository, ControlTransaction } from "../ports.ts";
 
 import {
   ControlError,
@@ -17,9 +17,9 @@ import {
   required,
   canonical,
   terminal,
-} from "../records.js";
-import type { ControlCredentials } from "./credentials.js";
-import { releaseContextCommand } from "../context-receipts.js";
+} from "../records.ts";
+import type { ControlCredentials } from "./credentials.ts";
+import { releaseContextCommand } from "../context-receipts.ts";
 export class TaskProjection {
   constructor(
     private readonly repository: ControlRepository,

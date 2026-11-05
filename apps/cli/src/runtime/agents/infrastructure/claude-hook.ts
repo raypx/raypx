@@ -1,14 +1,15 @@
+import { serveHttp } from "@raypx/runtime-node/http";
 import { respondToClaudeHook, type ClaudeHookApprovalPort } from "@raypx/providers/claude";
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 export class ClaudeApprovalServer {
-  private server: ReturnType<typeof Bun.serve> | undefined;
+  private server: Promise<Awaited<ReturnType<typeof serveHttp>>> | undefined;
   private readonly tokens = new Map<string, string>();
   constructor(private readonly lookup: (id: string) => ClaudeHookApprovalPort | undefined) {}
-  endpoint(id: string) {
-    const server = this.start();
+  async endpoint(id: string) {
+    const server = await this.start();
     const token = crypto.randomUUID() + crypto.randomUUID();
     this.tokens.set(id, token);
     return { url: "http://127.0.0.1:" + server.port + "/hook/" + id, token };
@@ -17,10 +18,10 @@ export class ClaudeApprovalServer {
     this.tokens.delete(id);
   }
   async close() {
-    await this.server?.stop(true);
+    await (await this.server)?.stop(true);
   }
-  private start() {
-    return (this.server ??= Bun.serve({
+  private async start() {
+    return (this.server ??= serveHttp({
       hostname: "127.0.0.1",
       port: 0,
       idleTimeout: 0,

@@ -89,7 +89,7 @@ Admin's role/ban fields and session attribution; existing foundation users becom
 members. It never reads or imports the retired product database.
 
 Register and verify the intended administrators, set explicit `DATABASE_URL` and
-`ADMIN_EMAILS`, then run `bun run --cwd apps/api auth:bootstrap-admins`. This operator
+`ADMIN_EMAILS`, then run `pnpm --dir apps/api run auth:bootstrap-admins`. This operator
 command validates all selected accounts before writing, skips existing admins and
 updates roles through Better Auth's adapter, including session-cache refresh. It
 does not migrate or create users. A storage failure can leave some promotions

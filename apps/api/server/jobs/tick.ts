@@ -1,5 +1,5 @@
 import type { CloudJobsService } from "@raypx/jobs/server";
-import type { ApiLogging } from "../logging.js";
+import type { ApiLogging } from "../logging.ts";
 
 export function createScheduleTick(
   service: CloudJobsService,

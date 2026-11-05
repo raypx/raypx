@@ -7,9 +7,9 @@ production-origin cookie persistence require separate packaged platform checks.
 
 ## Interface
 
-Run `bun run test e2e` for the complete compiled-artifact gate. Install the headless
-browser with `bun --bun playwright install --only-shell chromium` in this workspace.
-For daily work use `bun run --cwd apps/web e2e` or `apps/desktop e2e`; root
+Run `pnpm run test e2e` for the complete compiled-artifact gate. Install the headless
+browser with `pnpm exec playwright install --only-shell chromium` in this workspace.
+For daily work use `pnpm --dir apps/web run e2e` or `apps/desktop e2e`; root
 `test e2e --package web|desktop` and Playwright `--project=web|desktop` select the
 same application. `--web`/`--desktop`, `--smoke` and `--visual` remain available.
 Pass filenames and Playwright flags after `--`. `--list` collects cases without
@@ -23,8 +23,8 @@ flow once; project fixtures inject the surface and base URL. Shared response,
 layout and interaction helpers stay in `tests/helpers/`, with application consumers
 using `@raypx/e2e/testing`. Never import private helper paths across workspaces.
 
-VP builds only selected applications: Web `build:e2e` produces the real Nitro Bun
-artifact; Desktop `build:renderer` produces `artifacts/browser/client` without Go
+VP builds only selected applications: Web `build:e2e` produces the real Nitro Node
+artifact; Desktop `build:renderer` produces `artifacts/browser/client` without Rust
 or CLI preparation. Normal Web builds and daily verification retain type checks;
 E2E does not repeat them. Both browser build tasks are cached, and tests always run.
 Application CSS excludes `e2e/**` from Tailwind class scanning; fixture changes
@@ -73,7 +73,7 @@ default compiled-artifact configuration. Client authorization is disabled only o
 these isolated test servers; API traffic uses synthetic responses. It validates
 both renderer surfaces without claiming native WebView acceptance.
 
-Run bun run --cwd e2e check; bun run test e2e is an explicit browser gate.
+Run pnpm --dir e2e run check; pnpm run test e2e is an explicit browser gate.
 
 The control browser test is an explicit real-backend gate. Launch the isolated API
 with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build

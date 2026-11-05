@@ -9,8 +9,8 @@ import {
   themeColors,
   type AppTheme,
   type UserTheme,
-} from "./config";
-import { createThemeScript, type ThemeScriptOptions } from "./script";
+} from "./config.ts";
+import { createThemeScript, type ThemeScriptOptions } from "./script.ts";
 
 interface ThemeContextValue {
   theme: UserTheme;

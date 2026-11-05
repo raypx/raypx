@@ -29,8 +29,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
-  all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
+- `verify` selects affected JavaScript source/tests and native-input Rust tasks; `verify --full` checks
+  all current-platform JavaScript/Rust sources, builds and probes. `--base` selects a Git
   base; `--dry-run` prints the plan, local test selection/reasons and expanded VP graph.
   Local tests follow source imports, retaining integration and filesystem/process
   assertions; indirect consumers and unknown/configuration/deleted inputs use complete
@@ -57,17 +57,17 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   GUI acceptance require a tag push or manual `distribution` request; release gates
   run in parallel and the final result validates their selection against the event.
   Preparation builds shared JS inputs only. Herdr runs in the check phase before its
-  Go checks, leaving package/smoke phases independent of terminal-test duration.
-- `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
+  Rust checks, leaving package/smoke phases independent of terminal-test duration.
+- `clean` removes workspace outputs, staged Tauri resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
-- raypx-dev env -- <command>, db <operation>, desktop build [MyGo build arguments]
+- raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/beta/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
-  before starting Vite and MyGo. Direct Desktop scripts enter the same VP graph.
-  Native CI checks Go on each platform.
-- `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
+  before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
+  Native CI checks Rust on each platform.
+- `./build/nitro` supplies shared Nitro Node build options to API and Web configs.
 - `./build/deployment` owns service ports, health paths and API ingress routes.
   Policy checks static Docker, Compose and Caddy adapters plus API environment
   forwarding without importing application runtime or loading environment files.
@@ -83,11 +83,13 @@ client implementations; delegate database commands to database's scripts. Derive
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
-Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
+Explicit full verification runs Knip; `pnpm run knip` remains available for maintenance.
 Its read-only JSON adapter recognizes catalog entries
-used by Bun root overrides, which Knip currently misses; all other findings fail.
-Native Go-launched TS fixtures and the presets' dynamically invoked task leaf are
+used by pnpm root overrides, which Knip currently misses; all other findings fail.
+Native Rust-launched TS fixtures and the presets' dynamically invoked task leaf are
 explicit Knip entries. Vendored skills are excluded;
+Knip ignores the Tauri CLI and bootstrap tsx dependencies because native build scripts
+and dynamic VP command strings invoke those binaries; they remain direct dependencies.
 the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
 evidence only. Inventory compares case multiplicity and checks exact file selection.
@@ -110,11 +112,11 @@ while outcome-affecting fields and per-task argument keys participate in fingerp
 independent cached VP runners, so it must run without an enclosing filesystem tracer;
 `test:unit` remains cached and `test:integration` always executes.
 Platform/toolchain identity is also part of each command. Native packaging stays
-outside VP's filesystem tracer; Go owns its native compilation cache.
+outside VP's filesystem tracer; Cargo owns its native compilation cache.
 The launcher creates ignored artifact/native directories before tracing:
 directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace
-dependency closure, retaining dependency declarations under build outputs; Bun's
+dependency closure, retaining dependency declarations under build outputs; pnpm's
 native typechecker reads are not fully covered by automatic tracing on Linux.
 Workspace coverage and validation/browser reports are excluded across that closure;
 authored source folders with the same names remain inputs. Root policy/locale tasks use
@@ -123,9 +125,9 @@ Policy/locales run in the same VP graph as source tasks and restore timing evide
 with their cached outputs. Verification records per-check execution times (zero on a
 cache hit), format/lint wall times and VP graph wall time including runner overhead.
 Timing evidence never controls cache reuse. Failed checks never publish success.
-Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
-roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
-`packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
+Full verification builds the API/Web outputs and probes them concurrently under Node using temporary
+roots and fixture environments. `src/validation/toolchain.ts` checks root Node/pnpm pins,
+generated pnpm workspace configuration, Rust pin consistency and obsolete runtimes. These config/test entries never enter product runtime code.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
@@ -154,7 +156,7 @@ manifest and TypeScript configuration data use JSON serialization.
 
 ## Verification
 
-Run bun run --cwd packages/tooling test and check, then bun run policy.
+Run pnpm --dir packages/tooling run test and check, then pnpm run policy.
 
 `analytics sourcemaps <web|desktop>` prepares existing client
 artifacts with the external PostHog CLI. Require release credentials and hidden

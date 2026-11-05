@@ -41,11 +41,11 @@
     "./themes/native.css": "./src/styles/native.css"
   },
   "scripts": {
-    "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json && bun --check --tsconfig-override scripts/tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run .component.test.",
-    "test:coverage": "bun --bun vp test --run --coverage",
-    "generate:theme": "bun run scripts/generate-theme.ts"
+    "check": "tsx scripts/generate-theme.ts --check && tsc --noEmit --project tsconfig.json && tsc --noEmit --project scripts/tsconfig.json",
+    "test": "vp test --run",
+    "test:component": "vp test --run .component.test.",
+    "test:coverage": "vp test --run --coverage",
+    "generate:theme": "tsx scripts/generate-theme.ts"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",

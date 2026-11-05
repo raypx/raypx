@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
-import { parseLocalePreference, resolveLocalePreference } from "./preferences.js";
-import en from "./messages/en.js";
-import zh from "./messages/zh.js";
+import { parseLocalePreference, resolveLocalePreference } from "./preferences.ts";
+import en from "./messages/en.ts";
+import zh from "./messages/zh.ts";
 
 describe("device locale preferences", () => {
   it("resolves system languages and validates stored preferences", () => {

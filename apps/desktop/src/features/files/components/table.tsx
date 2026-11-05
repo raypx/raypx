@@ -8,7 +8,7 @@ import { EditIcon } from "@raypx/icons/edit";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
-import { useFilesStore } from "../store";
+import { useFilesStore } from "../store.tsx";
 
 export type FileListingResult = { status: "success"; listing: FileListing } | { status: "error" };
 interface FileTableProps {

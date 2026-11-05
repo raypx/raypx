@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "./components/ui/button";
+import { Button } from "./components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./components/ui/dialog";
+} from "./components/ui/dialog.tsx";
 
 interface Confirmation {
   requestKey?: string;

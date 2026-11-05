@@ -5,9 +5,9 @@ import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { LockIcon } from "@raypx/icons/lock";
-import { guestReturnTo } from "../../tasks/guest-draft";
-import { authClient, apiUrl } from "../client";
-import { safeReturnTo } from "../return-to";
+import { guestReturnTo } from "../../tasks/guest-draft.ts";
+import { authClient, apiUrl } from "../client.ts";
+import { safeReturnTo } from "../return-to.ts";
 
 export function SignInLink({
   children,

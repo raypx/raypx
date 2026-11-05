@@ -80,9 +80,9 @@ routing retain their own behavior.
 ## Verification
 
 Auth owns its source-adjacent hooks and form component tests in a separate
-happy-dom project; endpoint integration tests use the memory adapter under Bun.
+happy-dom project; endpoint integration tests use the memory adapter under Node.
 
 ```sh
-bun run --cwd packages/auth check
-bun run --cwd packages/auth test
+pnpm --dir packages/auth run check
+pnpm --dir packages/auth run test
 ```

@@ -12,8 +12,8 @@ import {
   type TaskContext,
   type TaskCache,
 } from "@raypx-kit/devkit/tasks";
-import { browserTestTasks, type BrowserSurface } from "../browser-tests.js";
-import { taskScripts } from "./delegation.js";
+import { browserTestTasks, type BrowserSurface } from "../browser-tests.ts";
+import { taskScripts } from "./delegation.ts";
 export { taskRef };
 interface TaskMember extends Member {
   native: boolean;
@@ -40,7 +40,7 @@ function leafCommand(root: string, member: TaskMember, name: string) {
     join(root, member.path),
     join(root, "packages/tooling/src/tasks/leaf.ts"),
   ).replaceAll("\\", "/");
-  return `bun ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))}`;
+  return `tsx ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))}`;
 }
 
 function checkInputs(member: TaskMember, context: TaskContext<TaskMember>): TaskCache["input"] {
@@ -78,7 +78,7 @@ function cachedTask(
           "**/generated/**",
           "**/resources/bin/**",
           "**/build/**",
-          "**/.mygo/**",
+          "target/**",
           "**/node_modules/.nitro/**",
         ]
       : []),
@@ -91,9 +91,9 @@ function cachedTask(
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
     { pattern: "!**/.wrangler.*.json", base: "workspace" },
     // Tool caches appear in node_modules after a first run, so a fresh CI runner lists it
-    // differently. Dependency changes still reach every task through bun.lock below.
+    // differently. Dependency changes still reach every task through pnpm-lock.yaml below.
     { pattern: "!**/node_modules", base: "workspace" },
-    ...["bunfig.toml", "bun.lock"].map((pattern) => ({
+    ...["pnpm-workspace.yaml", "pnpm-lock.yaml"].map((pattern) => ({
       pattern,
       base: "workspace" as const,
     })),
@@ -155,14 +155,14 @@ function validationCache(context: TaskContext<TaskMember>, locales: boolean): Ta
         "**/.env.example",
         ".nvmrc",
         ".node-version",
-        ".bun-version",
+        "rust-toolchain.toml",
         ".tool-versions",
-        "**/go.{mod,sum}",
+        "**/Cargo.{toml,lock}",
       ];
   return {
     input: [
       { auto: true },
-      ...["package.json", "bun.lock", "bunfig.toml", ...patterns].map((pattern) => ({
+      ...["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ...patterns].map((pattern) => ({
         pattern,
         base: "workspace" as const,
       })),
@@ -224,7 +224,7 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
   }
   if (
     member.native &&
-    ["native:prepare", "mygo:smoke"].includes(name) &&
+    ["native:prepare", "tauri:smoke"].includes(name) &&
     members.some((candidate) => candidate.name === "cli" && candidate.scripts.build)
   )
     result.push(taskRef("cli", "build"));
@@ -274,14 +274,14 @@ export function taskModel(
         dependsOn: prerequisites(member, name, context.members),
         cache: cachedTask(member, name, context),
       }),
-      aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+      aggregateCommand: `tsx packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
       rootTasks: (context) => ({
         // Applications expose local E2E entries, while the root runs one shared Playwright process.
         ...Object.fromEntries(
           browserTestTasks.map((name) => [
             name,
             {
-              command: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+              command: `tsx packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
               dependsOn: context.members
                 .filter((member) => !member.browserProject && member.scripts[name])
                 .map((member) => taskRef(member.name, name)),
@@ -290,17 +290,17 @@ export function taskModel(
           ]),
         ),
         policy: {
-          command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
+          command: `tsx packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
           dependsOn: [],
           cache: validationCache(context, false),
         },
         locales: {
-          command: `bun packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(root))}`,
+          command: `tsx packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(root))}`,
           dependsOn: [],
           cache: validationCache(context, true),
         },
-        lint: { command: "bun --bun vp lint", dependsOn: [], cache: false },
-        knip: { command: "bun run knip", dependsOn: [], cache: false },
+        lint: { command: "vp lint", dependsOn: [], cache: false },
+        knip: { command: "pnpm run knip", dependsOn: [], cache: false },
       }),
     },
     selection,

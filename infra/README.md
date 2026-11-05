@@ -1,20 +1,20 @@
 # Infrastructure
 
-Infrastructure is organized as private Bun workspaces with their own dependencies,
+Infrastructure is organized as private Node workspaces with their own dependencies,
 deployment commands, type checks and tests. Install dependencies from the repository
-root with `bun install`.
+root with `pnpm install`.
 
-| Workspace              | Responsibility                                               | Guide                              |
-| ---------------------- | ------------------------------------------------------------ | ---------------------------------- |
-| `@raypx/infra-railway` | Railway API, Web, Relay and gateway service definitions      | [Railway](railway/README.md)       |
-| `relay`                | Independent Bun WebSocket service and private-broker routing | [Relay](relay/README.md)           |
-| `relay-cloudflare`     | Optional Workers ingress and Bun Relay Container deployment  | [Cloudflare](cloudflare/README.md) |
+| Workspace              | Responsibility                                                | Guide                              |
+| ---------------------- | ------------------------------------------------------------- | ---------------------------------- |
+| `@raypx/infra-railway` | Railway API, Web, Relay and gateway service definitions       | [Railway](railway/README.md)       |
+| `relay`                | Independent Node WebSocket service and private-broker routing | [Relay](relay/README.md)           |
+| `relay-cloudflare`     | Optional Workers ingress and Node Relay Container deployment  | [Cloudflare](cloudflare/README.md) |
 
 Run focused checks from the repository root:
 
 ```sh
-bun run --cwd infra/railway check
-bun run test --package @raypx/infra-railway
+pnpm --dir infra/railway run check
+pnpm run test --package @raypx/infra-railway
 ```
 
 The repository's `check`, `test` and `verify` commands discover these workspaces.

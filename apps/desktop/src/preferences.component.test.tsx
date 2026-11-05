@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
 import { useTheme } from "@raypx/ui/themes";
 import { type ReactNode } from "react";
-import { DEVICE_PREFERENCES_KEY, type NativePreferenceSnapshot } from "../preferences";
-import { DesktopPreferencesProvider } from "./preferences";
+import { DEVICE_PREFERENCES_KEY, type NativePreferenceSnapshot } from "../preferences.ts";
+import { DesktopPreferencesProvider } from "./preferences.tsx";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 const mocks = vi.hoisted(() => ({ isDesktop: vi.fn(), save: vi.fn() }));

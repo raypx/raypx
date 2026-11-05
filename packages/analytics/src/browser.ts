@@ -8,7 +8,7 @@ import {
   analyticsCode,
   analyticsRequestId,
   type AnalyticsPreferenceStore,
-} from "./index.js";
+} from "./index.ts";
 export interface RaypxAnalyticsOptions {
   token: string;
   host: string;

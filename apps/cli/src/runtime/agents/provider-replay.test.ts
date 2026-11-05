@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import type { ReplayRecord } from "../../../tests/helpers/provider-replay";
-import { bootstrap, late, fixture } from "../../../tests/helpers/provider-session";
+import type { ReplayRecord } from "../../../tests/helpers/provider-replay.ts";
+import { bootstrap, late, fixture } from "../../../tests/helpers/provider-session.ts";
 
 it.each(["codex", "claude"] as const)(
   "replays %s resume and a durable queued turn, retaining the lock through drain",

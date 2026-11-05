@@ -4,7 +4,7 @@ import {
   followUpPlan,
   prepareTaskSubmission,
   taskSelection,
-} from "./composition.js";
+} from "./composition.ts";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 it("refuses an unavailable capability and requires a model according to the definition", () => {
   const selection = taskSelection([], "device", "project", "codex");

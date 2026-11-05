@@ -15,7 +15,7 @@ import { Modal } from "@raypx/ui/modal";
 import { StatusBadge } from "@raypx/ui/status-badge";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
-import type { authClient } from "../client";
+import type { authClient } from "../client.ts";
 
 type Client = Pick<typeof authClient, "listSessions" | "revokeSession" | "revokeOtherSessions">;
 type Session = NonNullable<Awaited<ReturnType<Client["listSessions"]>>["data"]>[number];

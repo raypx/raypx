@@ -1,8 +1,8 @@
-import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics";
-import { InstanceRuntime } from "../runtime/instances";
-import { instanceKeys } from "../runtime/instances/keys";
-import { ProfileStorage } from "../runtime/sqlite";
-import { profilePath } from "../runtime/state";
+import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics.ts";
+import { InstanceRuntime } from "../runtime/instances/index.ts";
+import { instanceKeys } from "../runtime/instances/keys.ts";
+import { ProfileStorage } from "../runtime/sqlite/index.ts";
+import { profilePath } from "../runtime/state/index.ts";
 import { InstanceError, instanceOrigin } from "@raypx/instances";
 export async function loginInstance(options: {
   dataDir?: string;

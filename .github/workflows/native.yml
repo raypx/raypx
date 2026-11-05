@@ -13,7 +13,7 @@ on:
 permissions:
   contents: read
 env:
-  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+  PNPM_STORE_DIR: ${{ github.workspace }}/.cache/pnpm
 jobs:
   # Only parallel distribution phases share prepared inputs; a lone check phase prepares itself.
   prepare:
@@ -23,7 +23,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/setup-rust
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
@@ -31,8 +32,8 @@ jobs:
       - name: Prepare CLI and distribution renderer
         shell: bash
         run: |
-          bun run build:desktop
-          bun run build:cli
+          pnpm run build:desktop
+          pnpm run build:cli
       # One VP cache writer per platform. Consumers only restore prepared JS outputs.
       - uses: ./.github/actions/vp-save
         with:
@@ -56,16 +57,13 @@ jobs:
       APPLE_TEAM_ID: ${{ matrix.phase == 'package' && secrets.APPLE_TEAM_ID || '' }}
       WINDOWS_CERTIFICATE: ${{ matrix.phase == 'package' && secrets.WINDOWS_CERTIFICATE || '' }}
       WINDOWS_CERTIFICATE_PASSWORD: ${{ matrix.phase == 'package' && secrets.WINDOWS_CERTIFICATE_PASSWORD || '' }}
-      MYGO_UPDATER_PRIVATE_KEY: ${{ matrix.phase == 'package' && secrets.MYGO_UPDATER_PRIVATE_KEY || '' }}
-      RAYPX_MYGO_UPDATER_PUBLIC_KEY: ${{ matrix.phase == 'package' && vars.RAYPX_MYGO_UPDATER_PUBLIC_KEY || '' }}
-      RAYPX_MYGO_UPDATER_URL: ${{ matrix.phase == 'package' && vars.RAYPX_MYGO_UPDATER_URL || '' }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ matrix.phase == 'package' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+      RAYPX_TAURI_UPDATER_PUBLIC_KEY: ${{ matrix.phase == 'package' && vars.RAYPX_TAURI_UPDATER_PUBLIC_KEY || '' }}
+      RAYPX_TAURI_UPDATER_URL: ${{ matrix.phase == 'package' && vars.RAYPX_TAURI_UPDATER_URL || '' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: apps/desktop/go.mod
-          cache-dependency-path: apps/desktop/go.sum
-      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/setup-rust
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
@@ -74,17 +72,14 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.phase }}" != "checks" ]; then
-            bun run build:desktop
+            pnpm run build:desktop
           fi
-          bun run build:cli
+          pnpm run build:cli
       # Without a preparation job the check phase is the platform's only VP cache writer.
       - uses: ./.github/actions/vp-save
         if: ${{ !inputs.distribution }}
         with:
           key: ${{ steps.vp-cache.outputs.key }}
-      - name: Prepare Herdr runtime
-        shell: bash
-        run: bun run --cwd apps/cli prepare:herdr dist/herdr
       - name: Herdr terminal integration
         if: matrix.phase == 'checks'
         env:
@@ -93,24 +88,19 @@ jobs:
           RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution && '3' || '1' }}
         shell: bash
         run: |
-          bun - <<'TS'
-          const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
-          for (let attempt = 0; attempt < runs; attempt++) {
-            const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
-              stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
-            });
-            const code = await child.exited;
-            if (code !== 0) process.exit(code);
-          }
-          TS
-      - name: Desktop MyGo checks
+          runs=1
+          if [ "$RUNNER_OS" = "Windows" ]; then runs="$RAYPX_HERDR_WINDOWS_RUNS"; fi
+          for ((attempt=0; attempt<runs; attempt++)); do
+            pnpm --dir apps/cli run smoke:herdr-terminal
+          done
+      - name: Desktop Tauri checks
         if: matrix.phase == 'checks'
         env:
-          RAYPX_MYGO_CLI: ${{ github.workspace }}/apps/cli/dist/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
+          RAYPX_TAURI_CLI: ${{ github.workspace }}/apps/cli/dist/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
         shell: bash
         run: |
-          bun run --cwd apps/desktop mygo:check
-          bun run --cwd apps/desktop mygo:test
+          pnpm --dir apps/desktop run tauri:check
+          pnpm --dir apps/desktop run tauri:test
       - name: Import macOS signing certificate
         if: matrix.phase == 'package' && (runner.os == 'macOS' && env.APPLE_CERTIFICATE != '')
         run: |
@@ -147,31 +137,31 @@ jobs:
           } finally {
             Remove-Item $certificatePath -ErrorAction SilentlyContinue
           }
-      - name: Check MyGo update configuration
+      - name: Check Tauri update configuration
         if: matrix.phase == 'package'
         shell: bash
         run: |
-          if [ -n "$MYGO_UPDATER_PRIVATE_KEY" ]; then
-            test -n "$RAYPX_MYGO_UPDATER_PUBLIC_KEY"
-            [[ "$RAYPX_MYGO_UPDATER_URL" == https://* ]]
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            test -n "$RAYPX_TAURI_UPDATER_PUBLIC_KEY"
+            [[ "$RAYPX_TAURI_UPDATER_URL" == https://* ]]
           else
-            echo "MyGo signed updates are not configured." >> "$GITHUB_STEP_SUMMARY"
+            echo "Tauri signed updates are not configured." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Package desktop
         if: matrix.phase == 'package'
         shell: bash
-        run: bun run package:desktop
+        run: pnpm run package:desktop
       - name: Verify production Desktop excludes smoke controls
         if: matrix.phase == 'package'
         shell: bash
-        run: bun apps/desktop/scripts/native/check-release.ts
+        run: pnpm exec tsx apps/desktop/scripts/host/check-release.ts
       - name: Verify macOS distribution signature
         if: matrix.phase == 'package' && (runner.os == 'macOS')
         run: |
           if [ -n "$APPLE_CERTIFICATE" ] && [ -n "$APPLE_SIGNING_IDENTITY" ]; then
-            codesign --verify --deep --strict apps/desktop/build/darwin-*/Raypx.app
+            codesign --verify --deep --strict target/release/bundle/macos/Raypx.app
             if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
-              xcrun stapler validate apps/desktop/build/darwin-*/Raypx.app
+              xcrun stapler validate target/release/bundle/macos/Raypx.app
               echo "macOS installer: Developer ID signed and notarization verified." >> "$GITHUB_STEP_SUMMARY"
             else
               echo "macOS installer: Developer ID signed; notarization credentials were not configured." >> "$GITHUB_STEP_SUMMARY"
@@ -184,7 +174,7 @@ jobs:
         shell: pwsh
         run: |
           if ($env:RAYPX_DESKTOP_SIGNING_THUMBPRINT) {
-            $installers = @(Get-ChildItem apps/desktop/build/windows-*/raypx-desktop-setup-*.exe)
+            $installers = @(Get-ChildItem target/release/bundle/nsis/*-setup.exe)
             if ($installers.Count -eq 0) { throw "No NSIS installer was produced" }
             foreach ($installer in $installers) {
               $signature = Get-AuthenticodeSignature $installer.FullName
@@ -200,11 +190,11 @@ jobs:
         with:
           name: desktop-${{ runner.os }}
           path: |
-            apps/desktop/build/**/*.dmg
-            apps/desktop/build/windows-*/raypx-desktop-setup-*.exe
-            apps/desktop/build/**/*.tar.gz
-            apps/desktop/build/**/*.sig
-            apps/desktop/build/**/*.json
+            target/release/bundle/**/*.dmg
+            target/release/bundle/nsis/*-setup.exe
+            target/release/bundle/**/*.tar.gz
+            target/release/bundle/**/*.sig
+            target/release/bundle/**/*.json
           if-no-files-found: error
       - name: Remove temporary Windows signing material
         if: matrix.phase == 'package' && (always() && runner.os == 'Windows')
@@ -230,4 +220,4 @@ jobs:
           fi
       - name: Packaged native smoke
         if: matrix.phase == 'smoke'
-        run: bun run --cwd apps/desktop native:smoke:interactive
+        run: pnpm --dir apps/desktop run native:smoke:interactive

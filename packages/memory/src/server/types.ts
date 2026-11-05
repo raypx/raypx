@@ -5,7 +5,7 @@ import type {
   ContextDocumentSummary,
   ContextDeleteResult,
   ContextVersion,
-} from "../model.js";
+} from "../model.ts";
 
 export interface ContextResolvedSource {
   current: ContextDocumentSummary;

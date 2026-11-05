@@ -1,10 +1,11 @@
+import { spawnProcess } from "@raypx/runtime-node/process";
 import { expect, it, vi } from "vite-plus/test";
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../helpers/enrolled";
-import { parseCliArgs } from "../../../src/commands/args";
-import { runCommand } from "../../../src/commands";
+import { startDaemon } from "../../helpers/enrolled.ts";
+import { parseCliArgs } from "../../../src/commands/args.ts";
+import { runCommand } from "../../../src/commands/index.ts";
 
 it("renders nested task help without starting an owner", async () => {
   const output = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -47,7 +48,7 @@ it.skipIf(process.platform === "win32")(
         output.mockRestore();
       }
     };
-    let watch: ReturnType<typeof Bun.spawn> | undefined;
+    let watch: ReturnType<typeof spawnProcess<{ stdin: "ignore" }>> | undefined;
     try {
       const grant = await host.runtime.files.register(project);
       await invoke("configure", { rootId: grant.id, providers: ["codex"] });
@@ -69,9 +70,11 @@ it.skipIf(process.platform === "win32")(
         { code: "IDEMPOTENCY_CONFLICT" },
       );
       expect(await invoke("get", { id: input.id })).toMatchObject({ task: { status: "running" } });
-      watch = Bun.spawn(
+      watch = spawnProcess(
         [
           process.execPath,
+          "--import",
+          import.meta.resolve("tsx"),
           join(import.meta.dirname, "../../../src/main.ts"),
           "tasks",
           "watch",

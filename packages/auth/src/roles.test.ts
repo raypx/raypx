@@ -1,7 +1,7 @@
 import { expect, it } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { createAuth, readAuthSession } from "./server.js";
-import { accountRoles, assignedRoles, permissionsForRoles } from "./access.js";
+import { createAuth, readAuthSession } from "./server.ts";
+import { accountRoles, assignedRoles, permissionsForRoles } from "./access.ts";
 
 function fixture() {
   const data: Record<string, Record<string, unknown>[]> = {

@@ -4,8 +4,8 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Switch } from "@raypx/ui/components/ui/switch";
-import { authClient } from "../../auth/client";
-import { configurationClient, configurationError, type Configuration } from "../client";
+import { authClient } from "../../auth/client.ts";
+import { configurationClient, configurationError, type Configuration } from "../client.ts";
 
 const row =
   "grid items-start gap-4 border-b border-border py-6 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] @xl/main:items-center @xl/main:gap-8";

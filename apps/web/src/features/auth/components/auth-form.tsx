@@ -1,14 +1,14 @@
-import { claimGuestDraft } from "../../tasks/guest-draft";
-import { safeReturnTo } from "../return-to";
+import { claimGuestDraft } from "../../tasks/guest-draft.ts";
+import { safeReturnTo } from "../return-to.ts";
 import { useTranslations } from "@raypx/i18n/browser";
-import { analytics } from "../../analytics/client";
+import { analytics } from "../../analytics/client.ts";
 import { Link, useLocation, useNavigate, useRouter, useRouteContext } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
   type AuthFormLinkProps,
   type AuthMode,
 } from "@raypx/auth/client";
-import { apiUrl, authClient, webUrl } from "../client";
+import { apiUrl, authClient, webUrl } from "../client.ts";
 import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SocialProvider } from "@raypx/auth/types";

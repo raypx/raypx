@@ -18,7 +18,7 @@ import {
   instanceDigest,
   verifyProof,
 } from "@raypx/instances/crypto";
-import { acquireLock } from "../state";
+import { acquireLock } from "../state/index.ts";
 import manifest from "../../../package.json";
 export type InstanceEnrollmentPhase =
   | "starting"

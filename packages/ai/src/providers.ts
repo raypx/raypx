@@ -12,7 +12,7 @@ import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import { anthropicMessagesApi } from "@earendil-works/pi-ai/api/anthropic-messages.lazy";
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
 import { openAIResponsesApi } from "@earendil-works/pi-ai/api/openai-responses.lazy";
-import { AiError } from "./errors.js";
+import { AiError } from "./errors.ts";
 
 export function defaultProviders(): Provider[] {
   return [anthropicProvider(), openaiProvider(), googleProvider(), openrouterProvider()];

@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vite-plus/test";
-import { EmptyState } from "./empty-state";
-import { StatusBadge } from "./status-badge";
-import { SectionHeading } from "./section-heading";
-import { Switch } from "./components/ui/switch";
+import { EmptyState } from "./empty-state.tsx";
+import { StatusBadge } from "./status-badge.tsx";
+import { SectionHeading } from "./section-heading.tsx";
+import { Switch } from "./components/ui/switch.tsx";
 
 describe("shared UI patterns", () => {
   it("supports labelled switch state changes and disabled state", () => {

@@ -1,4 +1,4 @@
-import { object, type ConversationEvent } from "../core/index.js";
+import { object, type ConversationEvent } from "../core/index.ts";
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 const count = (value: unknown) =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0;

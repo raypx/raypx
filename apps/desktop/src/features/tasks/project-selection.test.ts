@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { desktopFixture } from "../../../tests/helpers/desktop";
-import { selectLocalProject } from "./project-selection";
+import { desktopFixture } from "../../../tests/helpers/desktop.ts";
+import { selectLocalProject } from "./project-selection.ts";
 
 it("restores the newest authorized project and ignores forgotten recent IDs", () => {
   const { device } = desktopFixture();

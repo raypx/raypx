@@ -1,11 +1,11 @@
 import { expect, it, vi } from "vite-plus/test";
-import { JobError, type CloudJob, type CloudJobRun } from "./index.js";
+import { JobError, type CloudJob, type CloudJobRun } from "./index.ts";
 import {
   CloudJobsService,
   type CloudJobsRepository,
   type CloudJobExecutor,
   type JobClaim,
-} from "./server.js";
+} from "./server.ts";
 
 const now = Date.parse("2026-10-26T00:00:00Z");
 const jobId = "11111111-1111-4111-8111-111111111111";

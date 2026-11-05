@@ -5,11 +5,11 @@ import { readStaticCatalog, type CatalogTree } from "@raypx-kit/devkit/catalogs"
 import { checkDocumentLinks } from "@raypx-kit/devkit/docs";
 import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
 import { compareMessageCatalogs } from "@raypx-kit/intl/testing";
-import { discover } from "./repository.js";
-import { checkToolchain } from "./validation/toolchain.js";
-import { checkSourceLayers } from "./validation/source-layers.js";
-import { checkDeployment } from "./validation/deployment.js";
-import { checkEntryConsumers } from "./validation/entries.js";
+import { discover } from "./repository.ts";
+import { checkToolchain } from "./validation/toolchain.ts";
+import { checkSourceLayers } from "./validation/source-layers.ts";
+import { checkDeployment } from "./validation/deployment.ts";
+import { checkEntryConsumers } from "./validation/entries.ts";
 
 const MAX_MARKDOWN_LINES = 500;
 

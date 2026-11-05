@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { SessionBoundary } from "./session-boundary";
+import { SessionBoundary } from "./session-boundary.tsx";
 
 const mocks = vi.hoisted(() => ({ refetch: vi.fn() }));
 vi.mock("../client", () => ({

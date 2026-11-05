@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
-import { analytics } from "../analytics/client";
+import { analytics } from "../analytics/client.ts";
 import { Link, useRouter, useLocation } from "@tanstack/react-router";
 import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
 import { ShellActions } from "@raypx/blocks/shell";
@@ -8,17 +8,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/u
 import { useTranslations } from "@raypx/i18n/browser";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Button } from "@raypx/ui/components/ui/button";
-import { apiUrl } from "../auth/client";
-import { taskClient } from "./client";
-import { isDesktop } from "../../lib/desktop";
-import { localTaskClient } from "./local-client";
+import { apiUrl } from "../auth/client.ts";
+import { taskClient } from "./client.ts";
+import { isDesktop } from "../../lib/desktop.ts";
+import { localTaskClient } from "./local-client.ts";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { RemoteBoundary } from "../auth/components/remote-boundary";
-import { accountMemory, localMemory } from "../memory/client";
-import { LocalWelcome } from "../onboarding/welcome";
-import { ProjectTools } from "./project-tools";
-import { useLocalProjectContext } from "./project-context";
-import { rememberProject } from "./project-history";
+import { RemoteBoundary } from "../auth/components/remote-boundary.tsx";
+import { accountMemory, localMemory } from "../memory/client.ts";
+import { LocalWelcome } from "../onboarding/welcome.tsx";
+import { ProjectTools } from "./project-tools.tsx";
+import { useLocalProjectContext } from "./project-context.ts";
+import { rememberProject } from "./project-history.ts";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
 const remote = instrumentTaskClient(taskClient, analytics, "remote");

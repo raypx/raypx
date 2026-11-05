@@ -1,6 +1,6 @@
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import type { ConversationEvent, TokenTotals } from "@raypx/providers/core";
-import type { ActivityDraft, LocalAgentTask } from "../model";
+import type { ActivityDraft, LocalAgentTask } from "../model.ts";
 
 /**
  * Synchronous command submission for the turn and approval state machine. Each
@@ -39,8 +39,8 @@ export interface ExecutionEffects {
   status(status: AgentTask["status"], summary?: string): void;
   changed(pendingRequest?: string): void;
   resolved(requestId: string): void;
-  hook(): { url: string; token: string };
-  /** Adapter transports inherit this, including the bundled Bun PATH entry. */
+  hook(): { url: string; token: string } | Promise<{ url: string; token: string }>;
+  /** Adapter transports inherit this, including the bundled Node/pnpm PATH entries. */
   environment(): Record<string, string | undefined>;
   track(completion: Promise<void>): void;
   ended(): void;

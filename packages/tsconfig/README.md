@@ -27,8 +27,8 @@ their file layout, path aliases and runtime-specific types. The private
 ```
 
 `node.json` describes Node-compatible module resolution and standard API types.
-It works for Bun and Deno projects too, but does not include their own type
-packages; add `"types": ["node", "bun"]` or similar in the consuming project.
+Runtime-specific types belong in consuming projects; Node consumers declare
+`"types": ["node"]`.
 Install `@types/node` alongside it. The other presets declare no ambient types.
 
 ## Compiler guarantees
@@ -67,7 +67,7 @@ only.
 
 Presets never set `include`, `exclude`, `files`, `references`, `paths`, `baseUrl`,
 `rootDir`, `outDir` or `declarationDir`. Keep runtime-specific ambient types,
-such as Bun or Vite client types, in the project that uses them. Override any
+such as Node or Vite client types, in the project that uses them. Override any
 compiler option locally when a project needs different behavior.
 
 ## Compatibility

@@ -17,7 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
 import { cn } from "@raypx/ui/lib/utils";
-import type { AccountProfile } from "../index";
+import type { AccountProfile } from "../index.ts";
 
 export interface AccountMenuProps {
   variant?: "sidebar" | "header";

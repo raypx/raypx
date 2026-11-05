@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { InstanceError } from "@raypx/instances";
-import type { LocalDatabase } from "../sqlite";
-import { instanceCredentials } from "../sqlite/schema/credentials";
-import type { InstanceKeyStore } from "./index";
+import type { LocalDatabase } from "../sqlite/index.ts";
+import { instanceCredentials } from "../sqlite/schema/credentials.ts";
+import type { InstanceKeyStore } from "./index.ts";
 
 /** Borrows the profile writer. A receipt without this key never creates a new identity. */
 export function instanceKeys(database: LocalDatabase): InstanceKeyStore {

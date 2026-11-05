@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { checked, execute, pass, project } from "../helpers/cache.js";
+import { checked, execute, pass, project } from "../helpers/cache.ts";
 
 const repository = resolve(import.meta.dirname, "../../../..");
 
@@ -12,19 +12,19 @@ it("checks a native app without staging native resources", () => {
     "native",
     {},
     {
-      "native:build": "bun package.ts",
-      "native:prepare": "bun stage.ts",
-      typecheck: "bun --check --tsconfig-override tsconfig.json",
-      "typecheck:node": "bun --check --tsconfig-override tsconfig.json",
+      "native:build": "tsx package.ts",
+      "native:prepare": "tsx stage.ts",
+      typecheck: "tsc --noEmit --project tsconfig.json",
+      "typecheck:node": "tsc --noEmit --project tsconfig.json",
     },
   );
-  mkdirSync(join(folder, "scripts/native"), { recursive: true });
+  mkdirSync(join(folder, "scripts/host"), { recursive: true });
   copyFileSync(
-    join(repository, "apps/desktop/scripts/native/task.ts"),
-    join(folder, "scripts/native/task.ts"),
+    join(repository, "apps/desktop/scripts/host/task.ts"),
+    join(folder, "scripts/host/task.ts"),
   );
   writeFileSync(
-    join(folder, "scripts/native/generate.ts"),
+    join(folder, "scripts/host/generate.ts"),
     "// Contract generation checked by desktop tests.\n",
   );
   writeFileSync(

@@ -1,7 +1,13 @@
+import { spawnProcess } from "@raypx/runtime-node/process";
 import { resolve } from "node:path";
 
-const child = Bun.spawn(
-  [process.execPath, resolve(import.meta.dirname, "../../../apps/web/.output/server/index.mjs")],
+const child = spawnProcess(
+  [
+    process.execPath,
+    "--import",
+    import.meta.resolve("tsx"),
+    resolve(import.meta.dirname, "../../../apps/web/.output/server/index.mjs"),
+  ],
   {
     env: { ...process.env, NODE_ENV: "production", HOST: "127.0.0.1", PORT: "4173" },
     stdin: "ignore",

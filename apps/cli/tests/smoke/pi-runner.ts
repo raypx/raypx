@@ -1,11 +1,13 @@
-import { ProfileStorage } from "../../src/runtime/sqlite";
+import { spawnProcess } from "@raypx/runtime-node/process";
+import { ProfileStorage } from "../../src/runtime/sqlite/index.ts";
 import assert from "node:assert/strict";
-import { copyFile, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { copyFile, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PiRunner, type PiRunnerOptions } from "@raypx/providers/pi";
-import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite";
-import { piMessage, piModel, piScript, piTool } from "../helpers/pi";
+import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite.ts";
+import { piMessage, piModel, piScript, piTool } from "../helpers/pi.ts";
 
 async function fixture() {
   // This is the real Agent loop with an offline stream; any accidental HTTP fails.
@@ -107,34 +109,23 @@ async function main() {
   } else {
     const directory = await mkdtemp(join(tmpdir(), "raypx-pi-standalone-"));
     try {
-      const build = join(directory, process.platform === "win32" ? "compiled.exe" : "compiled");
-      const compile = Bun.spawn(
-        [
-          process.execPath,
-          "build",
-          "--compile",
-          "--bytecode",
-          "--outfile",
-          build,
-          import.meta.path,
-        ],
-        {
-          cwd: resolve(import.meta.dirname, "../../../.."),
-          stdout: "pipe",
-          stderr: "pipe",
-        },
-      );
-      const [output, errors, exit] = await Promise.all([
-        new Response(compile.stdout).text(),
-        new Response(compile.stderr).text(),
-        compile.exited,
-      ]);
-      assert.equal(exit, 0, `Pi standalone compilation failed\n${output}\n${errors}`);
       const isolated = join(directory, "isolated");
-      await mkdir(isolated);
-      const binary = join(isolated, process.platform === "win32" ? "pi-runner.exe" : "pi-runner");
-      await copyFile(build, binary);
-      const child = Bun.spawn([binary, "--fixture"], {
+      const { build } = await import("vite-plus/pack");
+      await build({
+        config: false,
+        entry: { fixture: fileURLToPath(import.meta.url) },
+        outDir: isolated,
+        platform: "node",
+        format: "esm",
+        fixedExtension: true,
+        dts: false,
+        deps: { alwaysBundle: [/.*/], neverBundle: [/^node:/, /^vite-plus(?:\/|$)/] },
+      });
+      const nodeName = process.platform === "win32" ? "node.exe" : "node";
+      const binary = join(isolated, nodeName);
+      await copyFile(resolve(import.meta.dirname, "../../dist/runtime", nodeName), binary);
+      const entry = join(isolated, "fixture.mjs");
+      const child = spawnProcess([binary, entry, "--fixture"], {
         cwd: isolated,
         env: {
           PATH: "",
@@ -164,7 +155,8 @@ async function main() {
       console.log(
         JSON.stringify({
           standalone: "passed",
-          compiledBytes: (await stat(binary)).size,
+          nodeBytes: (await stat(binary)).size,
+          entryBytes: (await stat(entry)).size,
           fixture: receipt,
           liveModels: "unverified",
         }),

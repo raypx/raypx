@@ -1,10 +1,10 @@
-import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.tsx";
 import { createFileRoute } from "@tanstack/react-router";
 import { MemoryLibraryPage } from "@raypx/memory/client";
 import { useTranslations } from "@raypx/i18n/browser";
-import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary";
-import { accountMemory, memoryProjects, memoryUsage } from "../../features/memory/client";
-import { ProjectTools } from "../../features/tasks/project-tools";
+import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary.tsx";
+import { accountMemory, memoryProjects, memoryUsage } from "../../features/memory/client.ts";
+import { ProjectTools } from "../../features/tasks/project-tools.tsx";
 export const Route = createFileRoute("/(app)/memory")({
   beforeLoad: webPageGuard("/memory"),
   errorComponent: PageAccessFeedback,

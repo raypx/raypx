@@ -7,9 +7,9 @@ import {
   type CloudJobInput,
   type CloudJobRun,
   type CloudJobRunStatus,
-} from "../model.js";
-import { JobError, nextJobRuns } from "../schedule.js";
-import type { CloudJobsServiceOptions, JobClaim, JobRunUpdate } from "./types.js";
+} from "../model.ts";
+import { JobError, nextJobRuns } from "../schedule.ts";
+import type { CloudJobsServiceOptions, JobClaim, JobRunUpdate } from "./types.ts";
 
 const knownFailures = new Set([
   "DEVICE_OFFLINE",

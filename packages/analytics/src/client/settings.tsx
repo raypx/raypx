@@ -4,7 +4,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { StatusBadge } from "@raypx/ui/status-badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
-import { useAnalyticsPreferences } from "./provider.js";
+import { useAnalyticsPreferences } from "./provider.tsx";
 export function AnalyticsSettings() {
   const t = useTranslations("analytics"),
     c = useTranslations("common"),

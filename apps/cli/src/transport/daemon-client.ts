@@ -1,8 +1,8 @@
 import { createLocalClient } from "@raypx/contracts/local-client";
 import { localEventSchema, localResponseSchema, type LocalEvent } from "@raypx/contracts/local";
-import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint";
-import { daemonEventLines } from "./daemon-stdio";
-import { LocalError } from "../runtime/errors";
+import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint.ts";
+import { daemonEventLines } from "./daemon-stdio.ts";
+import { LocalError } from "../runtime/errors.ts";
 
 /** One authenticated IPC event lease plus finite RPCs; disconnect never owns Agent cancellation. */
 export async function createDaemonClient(options: ProfileOptions, start = true) {

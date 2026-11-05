@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DesktopTaskWorkspace } from "../features/tasks/workspace";
+import { DesktopTaskWorkspace } from "../features/tasks/workspace.tsx";
 export const Route = createFileRoute("/approvals")({
   staticData: { page: { title: "common.approvals", layout: "workbench" } },
   validateSearch: (search: Record<string, unknown>): { scope?: "local" | "remote" } =>

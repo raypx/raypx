@@ -7,8 +7,8 @@ import {
   type DrainContext,
   type LoggerConfig,
 } from "@raypx/logger";
-import { getLogger, runWithLogger, useLogger } from "../../src/context.js";
-import { createDrainPipeline, type PipelineDrainFn } from "../../src/pipeline.js";
+import { getLogger, runWithLogger, useLogger } from "../../src/context.ts";
+import { createDrainPipeline, type PipelineDrainFn } from "../../src/pipeline.ts";
 import { createManagedDrain, type DrainStats } from "@raypx/logger/managed";
 
 const managed = createManagedDrain({ policy: { fields: ["operation"] }, sink: () => {} });

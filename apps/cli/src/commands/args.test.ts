@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { parseCliArgs } from "./args";
+import { parseCliArgs } from "./args.ts";
 
 describe("CLI global arguments", () => {
   it("keeps ordinary command arguments and defaults all flags to false", () => {

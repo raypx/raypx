@@ -20,9 +20,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { useDesktopPlatform } from "../../lib/platform-context";
-import { useProjectCatalog } from "./project-catalog";
-import { recentProjects, rememberProject } from "./project-history";
+import { useDesktopPlatform } from "../../lib/platform-context.tsx";
+import { useProjectCatalog } from "./project-catalog.ts";
+import { recentProjects, rememberProject } from "./project-history.ts";
 
 /** Local project shortcuts never depend on a browser account or remote task data. */
 export function ProjectNavigation() {

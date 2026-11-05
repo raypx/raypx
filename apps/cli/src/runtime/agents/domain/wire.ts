@@ -1,6 +1,6 @@
 import type { AgentEvent } from "@raypx/core/tasks";
-import type { OrchestrationEvent } from "./events";
-import { isDesktopBinding } from "./state";
+import type { OrchestrationEvent } from "./events.ts";
+import { isDesktopBinding } from "./state.ts";
 
 /**
  * Wire projection: one domain event becomes the `AgentEvent` the relay journal,

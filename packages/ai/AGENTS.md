@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Pi AI model transport for the bundled Bun CLI.
+Pi AI model transport for the bundled TypeScript CLI.
 
 ## Interface
 
@@ -28,4 +28,4 @@ Custom endpoints have unknown prices; zero SDK cost fields are not billing estim
 
 ## Verification
 
-Run bun run --cwd packages/ai check and test.
+Run pnpm --dir packages/ai run check and test.

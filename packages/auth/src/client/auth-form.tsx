@@ -25,16 +25,16 @@ import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
 import { cn } from "@raypx/ui/lib/utils";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
-import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks";
-import type { SocialProvider } from "../types";
-import { authPolicy } from "../policy";
-import { readAuthLink, type AuthMode } from "./auth-link";
-import { formText } from "./form-text";
-import { PasswordField } from "./password-field";
-import { useMailCooldown } from "./use-mail-cooldown";
-import { useAuthErrorMessage } from "./use-auth-error-message";
+import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks.ts";
+import type { SocialProvider } from "../types.ts";
+import { authPolicy } from "../policy.ts";
+import { readAuthLink, type AuthMode } from "./auth-link.ts";
+import { formText } from "./form-text.ts";
+import { PasswordField } from "./password-field.tsx";
+import { useMailCooldown } from "./use-mail-cooldown.ts";
+import { useAuthErrorMessage } from "./use-auth-error-message.ts";
 
-export type { AuthMode } from "./auth-link";
+export type { AuthMode } from "./auth-link.ts";
 
 interface ModeConfig {
   icon: IconComponent;

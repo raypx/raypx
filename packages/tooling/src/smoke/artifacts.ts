@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { probeArtifact } from "@raypx-kit/devkit/artifact";
-import { checkApi, checkWeb } from "./checks.js";
+import { checkApi, checkWeb } from "./checks.ts";
 
 function probeApp(
   root: string,
@@ -35,13 +35,13 @@ export async function probeApi(root: string): Promise<void> {
     checkApi,
   );
   console.log(
-    "Bun API artifact probe passed (relocated output, health, 404s, mail guard, no Relay listener)",
+    "Node API artifact probe passed (relocated output, health, 404s, mail guard, no Relay listener)",
   );
 }
 
 export async function probeWeb(root: string): Promise<void> {
   await probeApp(root, "web", () => ({ NODE_ENV: "production" }), checkWeb);
-  console.log("Bun Web artifact probe passed (relocated output, SSR locale, assets, 404s)");
+  console.log("Node Web artifact probe passed (relocated output, SSR locale, assets, 404s)");
 }
 
 export async function probeRelay(root: string): Promise<void> {
@@ -68,6 +68,6 @@ export async function probeRelay(root: string): Promise<void> {
     },
   });
   console.log(
-    "Bun Relay artifact probe passed (relocated bundle, liveness, readiness, private boundary)",
+    "Node Relay artifact probe passed (relocated bundle, liveness, readiness, private boundary)",
   );
 }

@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type ReactNode } from "react";
-import type { TaskWorkspacePort } from "../model/port.js";
+import type { TaskWorkspacePort } from "../model/port.ts";
 
 import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -11,9 +11,9 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 
-import { failureCode } from "../model/failure.js";
+import { failureCode } from "../model/failure.ts";
 
-import { ApprovalBody } from "./approval-body.js";
+import { ApprovalBody } from "./approval-body.tsx";
 
 export function Approval({
   client,

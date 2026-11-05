@@ -5,7 +5,7 @@ import {
   isBrowserTestTask,
   planBrowserTests,
   prepareBrowserTask,
-} from "./browser-tests.js";
+} from "./browser-tests.ts";
 
 it("keeps complete browser acceptance as the default and leaves live acceptance separate", () => {
   const plan = planBrowserTests([]);

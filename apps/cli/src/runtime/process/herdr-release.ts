@@ -1,3 +1,5 @@
+import { writeResource } from "@raypx/runtime-node/files";
+import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
 import { createHash } from "node:crypto";
 import { createReadStream, existsSync } from "node:fs";
 import {
@@ -15,12 +17,13 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, join } from "node:path";
 import manifest from "../../../package.json";
-import { LocalError } from "../errors";
+import { cliInstallation } from "./installation.ts";
+import { LocalError } from "../errors.ts";
 
 export const herdrVersion = manifest.herdr.version;
 export function bundledHerdrDirectory() {
   return [
-    join(dirname(process.execPath), "herdr"),
+    join(cliInstallation().root, "herdr"),
     join(dirname(process.execPath), "../Resources/herdr"),
   ].find((path) => existsSync(join(path, "runtime.json")));
 }
@@ -69,7 +72,7 @@ export async function prepareHerdr(output: string) {
   await mkdir(dirname(output), { recursive: true });
   const staging = await mkdtemp(join(dirname(output), ".herdr-"));
   try {
-    const local = process.platform !== "win32" ? Bun.which("herdr") : undefined;
+    const local = process.platform !== "win32" ? findExecutable("herdr") : undefined;
     if (local && (await digestHerdr(local)) === asset.sha256) {
       await copyFile(local, join(staging, executable));
     } else {
@@ -82,8 +85,8 @@ export async function prepareHerdr(output: string) {
         throw new Error("Herdr runtime checksum differs");
       if (process.platform === "win32") {
         const archive = join(staging, "runtime.zip");
-        await Bun.write(archive, bytes);
-        const unpack = Bun.spawn(
+        await writeResource(archive, bytes);
+        const unpack = spawnProcess(
           [
             join(process.env.SystemRoot ?? "C:\\Windows", "System32/tar.exe"),
             "-xf",
@@ -104,7 +107,7 @@ export async function prepareHerdr(output: string) {
           await cp(nested, staging, { recursive: true });
           await rm(nested, { recursive: true });
         }
-      } else await Bun.write(join(staging, executable), bytes);
+      } else await writeResource(join(staging, executable), bytes);
     }
     if (process.platform !== "win32") await chmod(join(staging, executable), 0o755);
     // Release licenses remain beside the runtime, including Windows ConPTY notices.
@@ -112,7 +115,7 @@ export async function prepareHerdr(output: string) {
       `https://raw.githubusercontent.com/herdrdev/herdr/v${herdrVersion}/LICENSE`,
     );
     if (!license.ok) throw new Error("Herdr license download failed");
-    await Bun.write(join(staging, "HERDR-LICENSE"), await license.text());
+    await writeResource(join(staging, "HERDR-LICENSE"), await license.text());
     await stamp(staging);
     await rm(output, { recursive: true, force: true });
     await rename(staging, output);
@@ -141,7 +144,7 @@ export async function resolveHerdrBinary(directory: string, selected?: string) {
     await cp(source, cached, { recursive: true });
     if (await verifyHerdrDirectory(cached)) return join(cached, executable);
   }
-  const installed = Bun.which("herdr");
+  const installed = findExecutable("herdr");
   if (installed) return installed;
   throw new LocalError(
     "TERMINAL_HOST_UNAVAILABLE",

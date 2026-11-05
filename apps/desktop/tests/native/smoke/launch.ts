@@ -1,9 +1,10 @@
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { installWindowsSmoke } from "../../../scripts/native/windows-smoke-install";
-import { signingEnvironment } from "../../../scripts/native/signing";
+import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install.ts";
+import { signingEnvironment } from "../../../scripts/host/signing.ts";
 
 const cwd = resolve(import.meta.dirname, "../../..");
 export function shouldInstallWindowsSmoke(
@@ -31,50 +32,45 @@ export async function buildSmoke(): Promise<SmokeInstallation> {
     RAYPX_DESKTOP_NATIVE_SMOKE_BUILD: "1",
   };
   for (const command of [
+    ["pnpm", "exec", "vp", "build", "--config", "vite.app.config.ts", "--mode", "native-smoke"],
     [
       process.execPath,
-      "--bun",
-      "vp",
-      "build",
-      "--config",
-      "vite.app.config.ts",
-      "--mode",
-      "native-smoke",
+      "--import",
+      import.meta.resolve("tsx"),
+      "scripts/host/csp.ts",
+      "artifacts/native-smoke/client",
     ],
-    [process.execPath, "scripts/native/csp.ts", "artifacts/native-smoke/client"],
-    [process.execPath, "scripts/native/mygo.ts", "build", "-skip-dmg"],
+    [process.execPath, "--import", import.meta.resolve("tsx"), "scripts/host/tauri.ts", "build"],
   ]) {
-    const child = Bun.spawn(command, {
+    const child = spawnProcess(command, {
       cwd,
       env,
       stdin: "ignore",
       stdout: "inherit",
       stderr: "inherit",
     });
-    if (await child.exited) throw new Error("MyGo native-smoke packaging failed");
+    if (await child.exited) throw new Error("Tauri native-smoke packaging failed");
   }
-  const platform = process.platform === "win32" ? "windows" : "darwin";
-  const arch = process.arch === "x64" ? "amd64" : process.arch;
-  const output = join(cwd, "build/native-smoke", `${platform}-${arch}`);
+  const output = resolve(cwd, "../../target/native-smoke/release");
   if (shouldInstallWindowsSmoke(process.platform, process.env))
     return installWindowsSmoke(output, resolve(cwd, "../cli/dist/raypx.exe"));
   return {
     binary:
       process.platform === "win32"
-        ? join(output, "Raypx Test.exe")
-        : join(output, "Raypx Test.app/Contents/MacOS/Raypx Test"),
+        ? join(output, "raypx-desktop.exe")
+        : join(output, "bundle/macos/Raypx Test.app/Contents/MacOS/raypx-desktop"),
     dispose: async () => {},
   };
 }
 
-export async function runMyGoSmoke(
+export async function runTauriSmoke(
   installation: SmokeInstallation,
   phase: string,
   directory: string,
   env: NodeJS.ProcessEnv,
 ) {
   const { binary } = installation;
-  if (!existsSync(binary)) throw new Error("Build the MyGo native-smoke release first");
+  if (!existsSync(binary)) throw new Error("Build the Tauri native-smoke release first");
   const nonce = crypto.randomUUID();
   const endpoint =
     process.platform === "win32"
@@ -85,17 +81,18 @@ export async function runMyGoSmoke(
     RAYPX_NATIVE_SMOKE_SOCKET: endpoint,
     RAYPX_NATIVE_SMOKE_TOKEN: crypto.randomUUID() + crypto.randomUUID(),
   };
-  const native = Bun.spawn([binary], {
+  const native = spawnProcess([binary], {
     cwd,
     env: environment,
     stdin: "ignore",
     stdout: "inherit",
     stderr: "inherit",
   });
-  const scenario = Bun.spawn(
+  const scenario = spawnProcess(
     [
       process.execPath,
-      "run",
+      "--import",
+      import.meta.resolve("tsx"),
       resolve(
         import.meta.dirname,
         phase === "agents" ? "agents.ts" : phase.startsWith("beta") ? "beta.ts" : "scenario.ts",
@@ -121,7 +118,7 @@ export async function runMyGoSmoke(
     if (scenarioCode !== 0) throw new Error(`Native smoke ${phase} assertions failed`);
     const code = await Promise.race([
       native.exited,
-      Bun.sleep(5_000).then(() => {
+      sleep(5_000).then(() => {
         throw new Error("Desktop did not quit after smoke assertions");
       }),
     ]);

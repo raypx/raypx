@@ -10,7 +10,7 @@ const settingsSections = [
 ] as const;
 export type SettingsSection = (typeof settingsSections)[number];
 
-export function settingsSection(hash: string): SettingsSection | null {
+function settingsSection(hash: string): SettingsSection | null {
   return settingsSections.find((section) => hash === `settings/${section}`) ?? null;
 }
 

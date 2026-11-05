@@ -1,8 +1,8 @@
 import { defineCommand, type CommandDef } from "citty";
-import { globalArgs, type CliArgs } from "./args";
-import { LocalError } from "../runtime/errors";
-import { profilePath } from "../runtime/state";
-import { connectDaemon, stopDaemon, type ProfileOptions } from "../runtime/daemon/endpoint";
+import { globalArgs, type CliArgs } from "./args.ts";
+import { LocalError } from "../runtime/errors.ts";
+import { profilePath } from "../runtime/state/index.ts";
+import { connectDaemon, stopDaemon, type ProfileOptions } from "../runtime/daemon/endpoint.ts";
 import { localParams } from "@raypx/contracts/local";
 
 const command = (definition: CommandDef) => defineCommand(definition);
@@ -49,14 +49,15 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
       if (action === "run" || action === "proxy") {
         if (invocation.json || invocation.yes)
           throw new LocalError("INVALID_INPUT", "Daemon transports do not accept --json or --yes");
-        if (action === "run") await (await import("../runtime/daemon/server")).runDaemon(options);
-        else await (await import("../transport/daemon-stdio")).serveDaemonStdio(options);
+        if (action === "run")
+          await (await import("../runtime/daemon/server.ts")).runDaemon(options);
+        else await (await import("../transport/daemon-stdio.ts")).serveDaemonStdio(options);
         return;
       }
       let result: unknown;
       if (action === "install" || action === "uninstall")
         result = await (
-          await import("../runtime/daemon/service")
+          await import("../runtime/daemon/service.ts")
         ).configureService(options, action);
       else {
         try {
@@ -107,7 +108,7 @@ export function createConnectorCommands(invocation: CliArgs, options: ProfileOpt
             raw += decoder.decode(chunk, { stream: true });
             if (Buffer.byteLength(raw) > 256 * 1024) return;
           }
-          const { forwardTerminalHook } = await import("../runtime/terminal/hook");
+          const { forwardTerminalHook } = await import("../runtime/terminal/hook.ts");
           const result = await forwardTerminalHook(profilePath(options), provider, JSON.parse(raw));
           if (result) {
             await new Promise<void>((resolve, reject) =>
@@ -122,7 +123,7 @@ export function createConnectorCommands(invocation: CliArgs, options: ProfileOpt
         }
         return;
       }
-      const { connectorAction, connectorStatus } = await import("../runtime/daemon/connectors");
+      const { connectorAction, connectorStatus } = await import("../runtime/daemon/connectors.ts");
       if (action === "status") {
         if (inputs.length)
           throw new LocalError("INVALID_INPUT", "Connector status does not accept operands");

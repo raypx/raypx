@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createApiClient, isMissingProcedure } from "@raypx/client/api";
-import { RemoteControl } from "./remote/control";
-import { serverOrigin } from "./remote/origin";
+import { RemoteControl } from "./remote/control.ts";
+import { serverOrigin } from "./remote/origin.ts";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import {
   hostAuthorizationSchema,
@@ -10,19 +10,19 @@ import {
   type HostAuthorization,
 } from "@raypx/contracts/terminal";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
-import type { LocalRuntime } from "../index";
-import { LocalError } from "../errors";
-import type { LocalTerminalControl } from "./terminal-control";
+import type { LocalRuntime } from "../index.ts";
+import { LocalError } from "../errors.ts";
+import type { LocalTerminalControl } from "./terminal-control.ts";
 import {
   bindingKey,
   createHostVault,
   hostBindingSchema,
   type HostBinding,
   type HostVault,
-} from "./vault";
+} from "./vault.ts";
 
 type Scope = { accountId: string; apiUrl: string };
-export { terminalProjectPaths } from "./terminal-control";
+export { terminalProjectPaths } from "./terminal-control.ts";
 const remoteBinding = (binding: HostBinding) =>
   `host:${bindingKey(binding.apiUrl, binding.accountId)}:${binding.deviceId}:${binding.epoch}`;
 const writeJson = (file: string, value: unknown) => {

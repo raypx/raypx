@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { createDesktopFetch } from "./api-fetch";
+import { createDesktopFetch } from "./api-fetch.ts";
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   cancel: vi.fn(async () => true),

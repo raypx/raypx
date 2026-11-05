@@ -1,6 +1,6 @@
 # Agent quality and performance checks
 
-`bun run perf:tasks` runs the CLI snapshot/local-read and Tasks conversation performance
+`pnpm run perf:tasks` runs the CLI snapshot/local-read and Tasks conversation performance
 regressions through the existing VP task graph. The gates assert bounded work,
 snapshot budgets, stable references and rendered row counts. Timings and memory
 measurements are evidence, not hardware-dependent pass thresholds. Browser
@@ -17,14 +17,14 @@ boundaries without requiring real inference:
 | Conversation state and rendering | Stable references and atomic deltas over 10,000 model rows; browser fixtures cap loaded messages at 200 and check bounded DOM, focus, virtual/full height changes, paging and gap anchors |
 | Connection reliability           | Shared scheduler, deterministic retry/renewal/heartbeat/ACK/drain tests, real loopback transport                                                                                          |
 | Provider lifecycle replay        | Shared Codex/Claude execution scenarios and protocol-specific steer/interrupt cases                                                                                                       |
-| Performance entry                | `bun run perf:tasks`; Chromium reports DOM counts, timings and available heap separately                                                                                                  |
+| Performance entry                | `pnpm run perf:tasks`; Chromium reports DOM counts, timings and available heap separately                                                                                                 |
 | Policy Evals                     | Case validation, simulated effects, grading and injected model turns; paid inference remains opt-in                                                                                       |
 
-Run `bun run test e2e -- tasks/` for all Web/Desktop task browser
+Run `pnpm run test e2e -- tasks/` for all Web/Desktop task browser
 journeys. Conversation acceptance uses at most 200 messages and fourfold Chromium
 CPU throttling to exercise delayed height measurements. This checks compiled renderers; packaged
 native WebView and Windows acceptance remain separate platform gates. For the
-standalone CLI, run `bun run build:cli` then `bun run --cwd apps/cli smoke`.
+standalone CLI, run `pnpm run build:cli` then `pnpm --dir apps/cli run smoke`.
 
 Real model Evals and a measured model baseline have not been collected. They
 require an explicit provider/model and `--run`; offline success does not establish
@@ -85,7 +85,7 @@ CLI. This gate consumes real provider inference and uses a separate native test
 application, temporary profile and synthetic project without a Raypx account:
 
 ```sh
-RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents
+RAYPX_LIVE_AGENTS=1 pnpm --dir apps/desktop run native:agents
 ```
 
 Codex is the default. `RAYPX_LIVE_AGENT_PROVIDERS=claude,codex` explicitly expands
@@ -103,7 +103,7 @@ test or build does not count as a live-provider or unrun-platform result.
 
 ## Policy Evals
 
-`bun run eval:agents --provider <provider> --model <model>` previews six synthetic,
+`pnpm run eval:agents --provider <provider> --model <model>` previews six synthetic,
 policy-derived cases. It imports the real `initialExecutionPrompt`, including
 selected-context boundaries; it does not duplicate the production prompt. These
 cases measure prompt behavior through `@raypx/ai`, rather than the external Codex
@@ -120,7 +120,7 @@ Preview is the default and makes no provider request. Actual usage requires
 `--run` and provider credentials through the existing AI environment variables:
 
 ```sh
-bun run eval:agents --provider <provider> --model <model> --case positive-edit --samples 3 --out .artifacts/evals/results.jsonl --run
+pnpm run eval:agents --provider <provider> --model <model> --case positive-edit --samples 3 --out .artifacts/evals/results.jsonl --run
 ```
 
 Provider and model are always explicit. Runs are sequential, default to three

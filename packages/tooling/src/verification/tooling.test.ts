@@ -1,20 +1,20 @@
 import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel } from "../tasks/model.js";
-import { verificationPlan } from "./plan.js";
+import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
+import { taskModel } from "../tasks/model.ts";
+import { verificationPlan } from "./plan.ts";
 
 const { fixture, member } = workspaceFixtures();
 function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
+  const scripts = { check: "tsx check.ts", test: "vp test --run" };
   member(root, "tooling", {
-    metadata: { kind: "tooling", target: "bun" },
+    metadata: { kind: "tooling", target: "node" },
     extra: {
       scripts,
       exports: {

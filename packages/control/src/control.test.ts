@@ -6,7 +6,7 @@ import {
   humanRequest,
   memoryControlRepository,
   running,
-} from "../tests/helpers/control.js";
+} from "../tests/helpers/control.ts";
 
 describe("Desktop-owned task projections", () => {
   it("filters the project and computer before paging newer sessions from other projects", async () => {

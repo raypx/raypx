@@ -62,7 +62,7 @@ owning package, not through contracts.
 - `packages/tooling/src/validation/source-layers.ts` gains a `contracts` layer that
   forbids React, UI, i18n, icons, client, host, auth and any `server`/`client`/`crypto`
   subpath transitively from `packages/contracts/src/`, in addition to the
-  infrastructure rule (Bun/Node host modules, Drizzle, database and provider packages)
+  infrastructure rule (OS/runtime host modules, Drizzle, database and provider packages)
   every layered owner shares.
 - A new entry-consumer check in Tooling's `policy()` requires every `exports` key of a
   library or tooling workspace to have an importer in another workspace or in a
@@ -105,7 +105,8 @@ Four entries stay by declaration, each with its reason in `raypx.entryConsumers`
 
 - `i18n/config` is read as a file by Tooling's static catalog reader.
 - `devtools/renderer` is injected as a module string into the overlay by the Vite plugin.
-- `infra/railway` (`.`) is an IaC program the Railway CLI loads through its preload script.
+- `infra/railway` (`.`) is an IaC program the Railway CLI evaluates under Node,
+  selected explicitly with `--file railway.ts` (runtime amended by ADR 0045).
 - `database` (`.`) adds `migrateDatabase` on top of `/connection` for the PostgreSQL
   acceptance harness; production migrates through the package's own `db` commands.
 

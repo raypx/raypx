@@ -5,7 +5,7 @@ import type {
   ExecutionHandle,
   TransportFactory,
   AskApproval,
-} from "../../src/core/index.js";
+} from "../../src/core/index.ts";
 
 /** Controlled host used by process and SDK adapters without importing an application. */
 export function createTestProviderHost(

@@ -36,15 +36,12 @@ The accepted foundation design and current architecture decisions define the imp
 
 ## Toolchain
 
-- Bun 1.4.4 owns install, lockfile, scripts, tests and standalone CLI compilation.
-- Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
-  `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
-  and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
-- The optional Cloudflare Relay ingress runs in the provider-managed Workers
-  runtime; its container and all local tooling still use the pinned Bun runtime.
-- Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
-  the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
-  Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.
+- Node 24.22.2 is the JavaScript runtime; pnpm 12.16.1 owns installation and the lockfile.
+  Root engines.node and packageManager are their respective pins. The generated
+  pnpm workspace configuration follows root workspaces and catalogs; policy rejects drift.
+- The optional Cloudflare ingress runs in provider-managed Workers; local tooling uses Node.
+- Nitro Web/API use the node-server preset. Tauri 2.12.5 with Rust 1.99.1 owns the
+  Desktop host. The TypeScript CLI ships with Node and pnpm in a versioned directory.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
   `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
   `vite.app.config.ts`. The TypeScript presets register uncached bootstrap tasks
@@ -53,7 +50,7 @@ The accepted foundation design and current architecture decisions define the imp
   inherited environment for leaf commands.
   mise is the recommended runtime manager; mise.toml
   only enables reading package.json and never pins `[tools]`. There is no Nix shell.
-- Use the default Bun catalog for shared runtime libraries, catalog:mobile for
+- Use the default pnpm catalog for shared runtime libraries, catalog:mobile for
   Mobile-only dependencies and catalog:dev for build/test tools. Keep React and
   React DOM in the shared default catalog. Keep external versions in these catalogs
   and use workspace:* for internal dependencies.
@@ -64,11 +61,10 @@ The accepted foundation design and current architecture decisions define the imp
 - Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
-- Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.4 and Go 1.27.3.
-  Native builds require `CGO_ENABLED=0`; macOS packages target 13.0+, Windows uses WebView2,
-  and Linux Desktop acceptance remains unverified. `internal/app` owns framework APIs and
-  `internal/desktop` owns native policy and CLI transport. Bun/VP owns JS builds.
-- Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
+- Rust toolchains are pinned in rust-toolchain.toml; Cargo owns native compilation.
+  Desktop targets macOS 13.5+ and Windows WebView2; Linux Desktop remains unverified.
+  Native framework code stays in the Tauri host, execution stays in TypeScript CLI.
+- Type checks use tsc --noEmit with an explicit project; scripts use tsx.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
   `test --package` and package-local scripts must select the same suites and prerequisites.
@@ -112,10 +108,10 @@ The accepted foundation design and current architecture decisions define the imp
 
 ## Verification
 
-Run focused meaningful tests and `bun run verify` for daily delivery. It selects
-affected source checks/tests and Go host tasks only for native inputs. Shared
+Run focused meaningful tests and `pnpm run verify` for daily delivery. It selects
+affected source checks/tests and Rust host tasks only for native inputs. Shared
 JavaScript dependency/configuration changes broaden source checks without selecting
-builds or native platforms. Use `bun run verify --full` for release preparation or an
+builds or native platforms. Use `pnpm run verify --full` for release preparation or an
 explicit full-validation request; it includes repository-wide audits, builds and
 current-platform artifact probes. PostgreSQL, browser and packaged native acceptance
 run separately; releases require their full selected matrix.

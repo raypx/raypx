@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { fileURLToPath } from "node:url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { connectDatabase } from "./connection.js";
+import { connectDatabase } from "./connection.ts";
 
 export async function migrateDatabase(
   databaseUrl: string,

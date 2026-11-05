@@ -1,4 +1,4 @@
-import { LinkEmail, type LinkEmailProps } from "./_components/link-email.js";
+import { LinkEmail, type LinkEmailProps } from "./_components/link-email.tsx";
 
 export default function VerificationEmail(props: LinkEmailProps) {
   return <LinkEmail kind="verification" {...props} />;

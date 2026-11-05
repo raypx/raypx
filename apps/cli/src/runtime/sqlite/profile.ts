@@ -1,14 +1,14 @@
-import { Database } from "bun:sqlite";
+import { DatabaseSync as Database } from "node:sqlite";
 import { join } from "node:path";
-import { drizzle } from "drizzle-orm/bun-sqlite";
-import { migrateLocalDatabase } from "./migrate";
-import { protectProfile } from "./permissions";
+import { drizzle } from "./database.ts";
+import { migrateLocalDatabase } from "./migrate.ts";
+import { protectProfile } from "./permissions.ts";
 
 /** Only the profile owner opens and migrates the shared writer. */
 function openProfileDatabase(directory: string) {
   protectProfile(directory);
   const path = join(directory, "profile.sqlite");
-  const client = new Database(path, { create: true, strict: true });
+  const client = new Database(path, {});
   try {
     if (process.platform !== "win32") protectProfile(directory);
     const database = drizzle({ client });

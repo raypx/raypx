@@ -6,9 +6,9 @@ import {
 } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { ContextError, type ContextDocument } from "../index.js";
-import type { MemoryClientPort } from "./port.js";
-import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
+import { ContextError, type ContextDocument } from "../index.ts";
+import type { MemoryClientPort } from "./port.ts";
+import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
 
 export interface ContextBudgetState {
   key: string;

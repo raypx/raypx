@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { accountAccessQuery } from "../access";
+import { accountAccessQuery } from "../access.ts";
 
 /** Private views never mount before the server grants the page's permission. */
 export function PermissionBoundary({

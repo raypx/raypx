@@ -1,7 +1,8 @@
+import { parseYAML } from "confbox/yaml";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readStaticCatalog } from "@raypx-kit/devkit/catalogs";
-import { apiIngress, relayIngress, deploymentServices } from "../build/deployment.js";
+import { apiIngress, relayIngress, deploymentServices } from "../build/deployment.ts";
 
 interface ComposeService {
   environment?: Record<string, string>;
@@ -15,7 +16,7 @@ export function checkDeployment(root: string): string[] {
   const read = (file: string) => readFileSync(join(root, file), "utf8");
   const findings: string[] = [];
   try {
-    const { services } = Bun.YAML.parse(read("deploy/compose.yaml")) as {
+    const { services } = parseYAML(read("deploy/compose.yaml")) as {
       services: Record<string, ComposeService>;
     };
     const environment = services.api?.environment ?? {};

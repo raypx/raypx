@@ -1,6 +1,8 @@
 import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
+  symlinkSync,
+  chmodSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -9,20 +11,32 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
 const roots: string[] = [];
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "raypx-desktop-task-"));
   roots.push(root);
-  mkdirSync(join(root, "scripts/native"), { recursive: true });
+  mkdirSync(join(root, "scripts/host"), { recursive: true });
   copyFileSync(
-    join(import.meta.dirname, "../../../scripts/native/task.ts"),
-    join(root, "scripts/native/task.ts"),
+    join(import.meta.dirname, "../../../scripts/host/task.ts"),
+    join(root, "scripts/host/task.ts"),
   );
+  mkdirSync(join(root, "node_modules/@raypx"), { recursive: true });
+  symlinkSync(
+    resolve(import.meta.dirname, "../../../../../packages/runtime-node"),
+    join(root, "node_modules/@raypx/runtime-node"),
+    "dir",
+  );
+  mkdirSync(join(root, "node_modules/.bin"), { recursive: true });
   writeFileSync(
-    join(root, "scripts/native/generate.ts"),
+    join(root, "node_modules/.bin/vp"),
+    '#!/usr/bin/env node\nprocess.argv.splice(2,0,"vp");await import("../../record.ts");\n',
+  );
+  chmodSync(join(root, "node_modules/.bin/vp"), 0o755);
+  writeFileSync(
+    join(root, "scripts/host/generate.ts"),
     'process.argv.splice(2, 0, "native:generate"); await import("../../record.ts");',
   );
   writeFileSync(
@@ -36,9 +50,9 @@ function fixture() {
           "typecheck:node",
           "native:csp",
           "vp",
-          "mygo:dev",
-          "mygo:build",
-        ].map((name) => [name, `bun record.ts ${name}`]),
+          "tauri:dev",
+          "tauri:build",
+        ].map((name) => [name, `tsx record.ts ${name}`]),
       ),
     }),
   );
@@ -82,8 +96,9 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
     const result = spawnSync(
       process.execPath,
       [
-        "run",
-        join(root, "scripts/native/task.ts"),
+        "--import",
+        import.meta.resolve("tsx"),
+        join(root, "scripts/host/task.ts"),
         ...(options.leaf ? ["--leaf"] : []),
         task,
         ...(options.args ?? []),
@@ -153,20 +168,20 @@ describe("Desktop task graph entry", () => {
     ]);
   });
 
-  it("uses the MyGo development leaf and preserves its arguments", () => {
+  it("uses the Tauri development leaf and preserves its arguments", () => {
     const result = fixture()("dev", { leaf: true, args: ["--verbose"] });
     expect(result.status).toBe(0);
-    expect(result.events).toEqual([{ name: "mygo:dev", args: ["--verbose"], forwarded: {} }]);
+    expect(result.events).toEqual([{ name: "tauri:dev", args: ["--verbose"], forwarded: {} }]);
   });
 
-  it("packages MyGo through the qualified native build leaf", () => {
-    const result = fixture()("native:build", { leaf: true, forwarded: ["-skip-dmg"] });
+  it("packages Tauri through the qualified native build leaf", () => {
+    const result = fixture()("native:build", { leaf: true, forwarded: ["--verbose"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
-        name: "mygo:build",
-        args: ["-skip-dmg"],
-        forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["-skip-dmg"]' },
+        name: "tauri:build",
+        args: ["--verbose"],
+        forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["--verbose"]' },
       },
     ]);
   });
@@ -199,7 +214,7 @@ describe("Desktop task graph entry", () => {
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
     ["native:beta", "smoke-run", ["beta"]],
     ["native:agents", "smoke-agents-run", []],
-  ] as const)("runs the MyGo %s gate inside VP", (task, name, args) => {
+  ] as const)("runs the Tauri %s gate inside VP", (task, name, args) => {
     const result = fixture()(task, { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([{ name, args, forwarded: {} }]);

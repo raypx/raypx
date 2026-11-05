@@ -11,7 +11,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { Link } from "@tanstack/react-router";
-import { useQuickSettingsStore } from "./quick-settings-store";
+import { useQuickSettingsStore } from "./quick-settings-store.ts";
 
 /**
  * Quick settings modal for common preferences (appearance, language, analytics).

@@ -1,4 +1,4 @@
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcBoundary } from "./boundary.ts";
 export function createApprovalsHandlers({
   os,
   controlCall,

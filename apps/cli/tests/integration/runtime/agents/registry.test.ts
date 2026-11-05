@@ -1,10 +1,10 @@
-import { agentFixtures } from "../../../helpers/agents";
+import { agentFixtures } from "../../../helpers/agents.ts";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { createAdapter } from "../../../../src/runtime/agents/infrastructure/providers/process";
+import { createAdapter } from "../../../../src/runtime/agents/infrastructure/providers/process.ts";
 
 const roots: string[] = [];
 afterEach(() => {

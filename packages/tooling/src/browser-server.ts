@@ -1,4 +1,5 @@
-import { realpath, stat } from "node:fs/promises";
+import { serveHttp } from "@raypx/runtime-node/http";
+import { readFile, realpath, stat } from "node:fs/promises";
 import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 function inside(directory: string, path: string) {
@@ -18,7 +19,7 @@ export async function startBrowserPreview({
   const index = await realpath(join(root, "index.html"));
   if (!inside(root, index) || !(await stat(index)).isFile())
     throw new Error("Build the Desktop renderer before browser acceptance");
-  return Bun.serve({
+  return await serveHttp({
     hostname: "127.0.0.1",
     port,
     async fetch(request) {
@@ -45,10 +46,22 @@ export async function startBrowserPreview({
       )
         file = index;
       if (!file) return new Response(null, { status: 404 });
-      const body = Bun.file(file);
+      const body = await readFile(file);
       return new Response(request.method === "HEAD" ? null : body, {
         headers: {
-          "content-type": body.type || "application/octet-stream",
+          "content-type":
+            (
+              {
+                ".html": "text/html; charset=utf-8",
+                ".js": "text/javascript",
+                ".mjs": "text/javascript",
+                ".css": "text/css",
+                ".json": "application/json",
+                ".svg": "image/svg+xml",
+                ".png": "image/png",
+                ".woff2": "font/woff2",
+              } as Record<string, string>
+            )[extname(file)] ?? "application/octet-stream",
           "content-length": String((await stat(file)).size),
           "cache-control": "no-cache",
         },

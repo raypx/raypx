@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { approvalChanges } from "../client/approval-changes.js";
-import { MAX_DIFF_LINES } from "./diff.js";
+import { approvalChanges } from "../client/approval-changes.ts";
+import { MAX_DIFF_LINES } from "./diff.ts";
 
 it("renders Claude replacements with common context and text-safe content", () => {
   const [file] = approvalChanges(

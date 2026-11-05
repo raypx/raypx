@@ -13,9 +13,9 @@ import { EditIcon } from "@raypx/icons/edit";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
-import { useDesktopPlatform } from "../../lib/platform-context";
-import { useProjectCatalog, projectCatalogKey } from "../tasks/project-catalog";
-import { recentProjects, rememberProject } from "../tasks/project-history";
+import { useDesktopPlatform } from "../../lib/platform-context.tsx";
+import { useProjectCatalog, projectCatalogKey } from "../tasks/project-catalog.ts";
+import { recentProjects, rememberProject } from "../tasks/project-history.ts";
 
 export function LocalWelcome() {
   const { isDesktop, localRequest, pickDirectory } = useDesktopPlatform();

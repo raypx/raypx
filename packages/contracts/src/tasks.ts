@@ -19,7 +19,7 @@ import {
   terminalDecisionSchema,
   terminalRequestSchema,
   terminalSessionSchema,
-} from "./terminal.js";
+} from "./terminal.ts";
 export const RELAY_VERSION = 4;
 
 export const deviceProjectSchema = z.object({

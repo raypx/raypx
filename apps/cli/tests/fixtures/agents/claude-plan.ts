@@ -1,4 +1,4 @@
-import { exitForVersion } from "./version";
+import { exitForVersion } from "./version.ts";
 
 exitForVersion("claude");
 const settingsArgument = process.argv[process.argv.indexOf("--settings") + 1];

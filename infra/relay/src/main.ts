@@ -1,5 +1,5 @@
-import { getRelayEnvironment } from "./env.js";
-import { createRelayRuntime } from "./runtime.js";
+import { getRelayEnvironment } from "./env.ts";
+import { createRelayRuntime } from "./runtime.ts";
 
 try {
   const runtime = await createRelayRuntime(getRelayEnvironment());

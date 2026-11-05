@@ -1,4 +1,4 @@
-import { CLIENT_IP_HEADER, getApiRuntime } from "../runtime/server.js";
+import { CLIENT_IP_HEADER, getApiRuntime } from "../runtime/server.ts";
 
 export default {
   async fetch(request: Request & { ip?: string }): Promise<Response> {

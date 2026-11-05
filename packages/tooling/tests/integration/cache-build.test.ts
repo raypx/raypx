@@ -1,15 +1,15 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { argumentKey } from "../../src/tasks/arguments.js";
-import { checked, execute, pass, project } from "../helpers/cache.js";
+import { argumentKey } from "../../src/tasks/arguments.ts";
+import { checked, execute, pass, project } from "../helpers/cache.ts";
 
 const repository = resolve(import.meta.dirname, "../../../..");
 const vp = join(repository, "node_modules/vite-plus/bin/vp");
 
 it("restores cached build outputs and scopes literal argv and public build environment", () => {
   const root = project();
-  const folder = checked(root, "feature", {}, { build: "bun build.ts" });
+  const folder = checked(root, "feature", {}, { build: "tsx build.ts" });
   writeFileSync(
     join(folder, "build.ts"),
     'import { mkdirSync, writeFileSync } from "node:fs"; mkdirSync("dist",{recursive:true}); writeFileSync("dist/value.json",JSON.stringify([process.env.VITE_EXAMPLE,...process.argv.slice(2)]));',
@@ -41,12 +41,7 @@ it("restores cached build outputs and scopes literal argv and public build envir
 
 it("reuses VP pack results after validation writes ignored artifacts", () => {
   const root = project();
-  const folder = checked(
-    root,
-    "cli-fixture",
-    {},
-    { build: `bun --bun ${JSON.stringify(vp)} pack` },
-  );
+  const folder = checked(root, "cli-fixture", {}, { build: `node ${JSON.stringify(vp)} pack` });
   const config = join(folder, "vite.config.ts");
   writeFileSync(
     config,

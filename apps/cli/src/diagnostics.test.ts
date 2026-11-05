@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
-import { diagnosticCode } from "./diagnostics";
-import { LocalError } from "./runtime/errors";
+import { diagnosticCode } from "./diagnostics.ts";
+import { LocalError } from "./runtime/errors.ts";
 
 describe("diagnostic error summaries", () => {
   it("retains bounded local codes without inspecting raw exception content", () => {

@@ -1,12 +1,13 @@
+import { serveHttp } from "@raypx/runtime-node/http";
 /** Explicit real-backend browser fixture. Never imported by production routes. */
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { serve } from "bun";
+
 import { RelayHub } from "@raypx/control/relay";
 import { user, schema } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
-import { createApiApp } from "../../server/api.js";
+import { createApiApp } from "../../server/api.ts";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 const url = process.env.TEST_DATABASE_URL;
@@ -76,7 +77,7 @@ const signup = await app.fetch(
 );
 if (signup.status !== 200) throw new Error("Unable to seed browser fixture account");
 await connection.db.update(user).set({ emailVerified: true }).where(eq(user.email, email));
-const server = serve<{ id: string }>({
+const server = await serveHttp<{ id: string }>({
   hostname: "127.0.0.1",
   port,
   fetch(request, listener) {

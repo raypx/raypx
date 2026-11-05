@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { createManagedDrain, type ManagedSink } from "./managed.js";
-import type { SafeEvent } from "./safe.js";
+import { createManagedDrain, type ManagedSink } from "./managed.ts";
+import type { SafeEvent } from "./safe.ts";
 
 const policy = { fields: ["operation", "error"] };
 const makeEvent = (operation: string) => ({ event: { operation, password: "private-password" } });

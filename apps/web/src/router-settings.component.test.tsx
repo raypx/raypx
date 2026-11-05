@@ -13,7 +13,7 @@ vi.mock("./features/auth/client", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: () => ({ data: null, isPending: false, error: null }) },
 }));
-import { Route } from "./routes/(app)/settings";
+import { Route } from "./routes/(app)/settings.tsx";
 
 const SettingsPage = Route.options.component!;
 

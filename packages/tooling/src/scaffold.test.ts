@@ -2,16 +2,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { checkArchitecture } from "@raypx-kit/devkit/architecture";
-import { discover } from "./repository.js";
-import { scaffold } from "./scaffold.js";
-import { workspaceFixtures } from "../tests/helpers/workspace.js";
+import { discover } from "./repository.ts";
+import { scaffold } from "./scaffold.ts";
+import { workspaceFixtures } from "../tests/helpers/workspace.ts";
 
 const { fixture, member } = workspaceFixtures();
 
 describe("workspace scaffolding", () => {
   it("discovers a scaffolded package without editing any central list and refuses overwrite", () => {
     const root = fixture();
-    member(root, "tooling", { metadata: { kind: "tooling", target: "bun" } });
+    member(root, "tooling", { metadata: { kind: "tooling", target: "node" } });
     member(root, "tsconfig");
     const preview = scaffold(root, "feature-kit", { kind: "library", target: "universal" });
     expect(preview).toContain("packages/feature-kit/src/index.ts");
@@ -30,7 +30,12 @@ describe("workspace scaffolding", () => {
     expect(
       JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
         .devDependencies,
-    ).toEqual({ "@raypx/tsconfig": "workspace:*", "@raypx/tooling": "workspace:*" });
+    ).toEqual({
+      "@raypx/tsconfig": "workspace:*",
+      "@raypx/tooling": "workspace:*",
+      typescript: "catalog:dev",
+      "vite-plus": "catalog:dev",
+    });
     const scripts = JSON.parse(
       readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"),
     ).scripts;

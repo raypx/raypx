@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { desktopAnalyticsStore } from "./store";
+import { desktopAnalyticsStore } from "./store.ts";
 const mocks = vi.hoisted(() => ({ save: vi.fn().mockResolvedValue(true), read: vi.fn() }));
 vi.mock("../../lib/desktop", () => ({
   isDesktop: () => true,

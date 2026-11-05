@@ -1,0 +1,10 @@
+# Node runtime services
+
+Small Node-only filesystem, process and HTTP services used by CLI, Relay and
+repository tooling. Keep application execution, authorization and scheduling in
+their owners. Public entries require real consumers. Never depend on Tooling:
+its task registration follows the TypeScript presets' bootstrap pattern.
+
+Process streams use Web Streams at this boundary; native process lifetime and
+backpressure remain explicit. HTTP listeners bind asynchronously and local
+requests always use a direct dispatcher, including Unix sockets.

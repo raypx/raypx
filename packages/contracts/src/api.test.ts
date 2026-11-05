@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { accountProfileSchema, apiContract } from "./api.js";
+import { accountProfileSchema, apiContract } from "./api.ts";
 
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {

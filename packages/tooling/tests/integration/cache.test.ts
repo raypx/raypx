@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { checked, execute, pass, project } from "../helpers/cache.js";
+import { checked, execute, pass, project } from "../helpers/cache.ts";
 
 it.each([true, false])(
   "invalidates typecheck consumers and retains unrelated hits (automatic inputs: %s)",

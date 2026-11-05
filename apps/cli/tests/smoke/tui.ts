@@ -1,4 +1,5 @@
-import { enrollTestProfile } from "../helpers/instance";
+import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
+import { enrollTestProfile } from "../helpers/instance.ts";
 import assert from "node:assert/strict";
 import { chmod, copyFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -8,7 +9,7 @@ if (process.platform === "win32") {
   throw new Error("TUI PTY smoke is unavailable on Windows: it requires POSIX pty and termios.");
 }
 
-const python = Bun.which("python3");
+const python = findExecutable("python3");
 assert.ok(python, "TUI PTY smoke requires Python 3 with pty and termios support");
 
 const directory = await mkdtemp(join(tmpdir(), "raypx-tui-smoke-"));
@@ -33,7 +34,7 @@ try {
     "tui-sigterm-active",
   ])
     closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }, [binary]));
-  const child = Bun.spawn([python, driver, binary, directory], {
+  const child = spawnProcess([python, driver, binary, directory], {
     cwd: directory,
     stdin: "ignore",
     stdout: "inherit",

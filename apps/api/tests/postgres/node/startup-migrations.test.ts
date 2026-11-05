@@ -1,3 +1,4 @@
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { cp, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,11 +20,14 @@ const command = fileURLToPath(
 afterAll(() => connection.close());
 
 function worker() {
-  const child = Bun.spawn([process.execPath, "--no-env-file", command, "migrate"], {
-    env: { ...process.env, DATABASE_URL: url! },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const child = spawnProcess(
+    [process.execPath, "--import", import.meta.resolve("tsx"), command, "migrate"],
+    {
+      env: { ...process.env, DATABASE_URL: url! },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
   return Promise.all([
     child.exited,
     new Response(child.stdout).text(),
@@ -71,7 +75,7 @@ it("waits for another migrator's transaction before reading migration history", 
         waiting = true;
         break;
       }
-      await Bun.sleep(20);
+      await sleep(20);
     }
     expect(waiting).toBe(true);
   } finally {

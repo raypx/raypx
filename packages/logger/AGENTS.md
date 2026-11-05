@@ -20,7 +20,7 @@ PostHog settings; CLI owns diagnostic categories and stdout/protocol separation.
 `initLogger` is global to a process/isolate and is called once by the application,
 never by package imports. Creating a managed drain does not reconfigure evlog.
 Keep `/safe` and `/managed` free of Node built-ins. The root and `/stream` use
-Node-compatible APIs under Bun. Context and pipeline modules are private; do not
+Node-compatible APIs under Node. Context and pipeline modules are private; do not
 add public entries without an established consumer.
 Managed admission bounds queued plus active events; overflow drops new events.
 Do not retry failed sinks. Report delivery loss on flush without private errors.
@@ -32,4 +32,4 @@ Preserve the source notice and license. No compiled library artifact is required
 
 Unit tests live beside source; `tests/types/public.ts` checks public types
 without running. Run this workspace's check/test, API logging tests, then root
-`bun run verify --full` for the built Bun API and relocated standalone CLI probes.
+`pnpm run verify --full` for the built Node API and relocated standalone CLI probes.

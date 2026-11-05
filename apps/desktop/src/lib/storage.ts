@@ -1,4 +1,4 @@
-import { CONNECTION_KEY, parseConnection } from "../../config";
+import { CONNECTION_KEY, parseConnection } from "../../config.ts";
 
 /** One native WebView store, with server-scoped application keys. */
 export function desktopStorageKey(key: string) {

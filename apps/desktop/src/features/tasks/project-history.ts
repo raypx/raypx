@@ -1,4 +1,4 @@
-import { desktopStorageKey } from "../../lib/storage";
+import { desktopStorageKey } from "../../lib/storage.ts";
 
 const recentKey = "raypx.recent-projects.v1";
 export function recentProjects(): string[] {

@@ -54,7 +54,13 @@
       "diff": "9.0.0",
       "@cloudflare/containers": "0.3.7",
       "@hugeicons/core-free-icons": "^4.4.0",
-      "@hugeicons/react": "^1.1.10"
+      "@hugeicons/react": "^1.1.10",
+      "confbox": "0.3.2",
+      "ws": "8.22.1",
+      "undici": "8.12.3",
+      "semver": "7.8.6",
+      "@tauri-apps/api": "2.12.4",
+      "cross-spawn": "7.0.6"
     },
     "catalogs": {
       "mobile": {
@@ -89,8 +95,7 @@
         "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/react": "^16.3.3",
         "@testing-library/user-event": "^14.6.8",
-        "@types/bun": "1.4.4",
-        "@types/node": "^26.6.6",
+        "@types/node": "^24.0.0",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.2.1",
@@ -113,14 +118,19 @@
         "storybook": "^10.6.5",
         "@railway/cli": "5.71.0",
         "@cloudflare/workers-types": "5.20261103.1",
-        "wrangler": "4.157.0"
+        "wrangler": "4.157.0",
+        "tsx": "4.23.15",
+        "@types/ws": "8.18.2",
+        "@types/semver": "^7.7.0",
+        "@tauri-apps/cli": "2.12.4",
+        "@types/cross-spawn": "6.0.6"
       }
     }
   },
   "type": "module",
   "scripts": {
     "prepare": "vp config --hooks --no-agent",
-    "raypx-dev": "bun packages/tooling/src/cli.ts",
+    "raypx-dev": "tsx packages/tooling/src/cli.ts",
     "doctor": "raypx-dev doctor",
     "workspace:list": "raypx-dev workspace list",
     "workspace:new": "raypx-dev workspace new",
@@ -137,9 +147,9 @@
     "build:storybook": "raypx-dev tasks build --filter ui-storybook",
     "check": "raypx-dev tasks check",
     "test": "raypx-dev test",
-    "lint": "bun --bun vp lint",
-    "format": "bun --bun vp fmt --check",
-    "format:fix": "bun --bun vp fmt --write",
+    "lint": "vp lint",
+    "format": "vp fmt --check",
+    "format:fix": "vp fmt --write",
     "verify": "raypx-dev verify",
     "smoke": "raypx-dev smoke",
     "smoke:deployment": "raypx-dev deployment:smoke",
@@ -149,22 +159,23 @@
     "db:studio": "raypx-dev db studio",
     "clean": "raypx-dev clean",
     "clean:artifacts": "raypx-dev clean:artifacts",
-    "deps:audit": "bun audit",
-    "skills:update": "DO_NOT_TRACK=1 bun --bun skills update --project --yes",
+    "deps:audit": "pnpm audit",
+    "skills:update": "DO_NOT_TRACK=1 skills update --project --yes",
     "analytics:sourcemaps": "raypx-dev analytics sourcemaps",
     "knip": "raypx-dev knip",
     "perf:tasks": "raypx-dev tasks perf:tasks",
     "eval:agents": "raypx-dev tasks cli#eval:agents --",
     "build:relay": "raypx-dev tasks build --filter relay",
-    "dev:mobile": "raypx-dev tasks dev --filter mobile"
+    "dev:mobile": "raypx-dev tasks dev --filter mobile",
+    "workspace:sync": "node packages/tooling/src/validation/workspaces.ts --write"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
-    "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
     "knip": "catalog:dev",
     "skills": "catalog:dev",
+    "tsx": "catalog:dev",
     "typescript": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
@@ -182,15 +193,18 @@
   },
   "devEngines": {
     "packageManager": {
-      "name": "bun",
-      "version": "1.4.4",
+      "name": "pnpm",
+      "version": "12.16.1",
       "onFail": "error"
     },
     "runtime": {
-      "name": "bun",
-      "version": "1.4.4",
+      "name": "node",
+      "version": "24.22.2",
       "onFail": "error"
     }
   },
-  "packageManager": "bun@1.4.4"
+  "engines": {
+    "node": "24.22.2"
+  },
+  "packageManager": "pnpm@12.16.1"
 }

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { globSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 interface Manifest {
@@ -14,7 +14,7 @@ export interface Workspace {
   manifest: Manifest;
 }
 
-// These helpers run before dependency installation, so they use only Bun and built-ins.
+// These helpers run before dependency installation, so they use only Node and built-ins.
 export function readWorkspaces(root: string): Map<string, Workspace> {
   const { workspaces } = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
     workspaces: string[] | { packages: string[] };
@@ -22,8 +22,7 @@ export function readWorkspaces(root: string): Map<string, Workspace> {
   const patterns = Array.isArray(workspaces) ? workspaces : workspaces.packages;
   const files = new Set<string>();
   for (const pattern of patterns)
-    for (const file of new Bun.Glob(`${pattern}/package.json`).scanSync({ cwd: root }))
-      files.add(file);
+    for (const file of globSync(`${pattern}/package.json`, { cwd: root })) files.add(file);
   const members = new Map<string, Workspace>();
   for (const file of [...files].sort()) {
     const manifest = JSON.parse(readFileSync(join(root, file), "utf8")) as Manifest;

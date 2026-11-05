@@ -1,13 +1,14 @@
+import { readStandardInput } from "@raypx/runtime-node/process";
 import { appendFileSync, realpathSync } from "node:fs";
-import { parseHookInvocation } from "../../../src/runtime/terminal/protocol";
-import { forwardTerminalHook } from "../../../src/runtime/terminal/hook";
+import { parseHookInvocation } from "../../../src/runtime/terminal/protocol.ts";
+import { forwardTerminalHook } from "../../../src/runtime/terminal/hook.ts";
 
 // Test-only recorder. The harness supplies an isolated project and private output.
 const provider = process.env.RAYPX_P0_PROVIDER;
 const file = process.env.RAYPX_P0_CAPTURE;
 const cwd = process.env.RAYPX_P0_PROJECT;
 if ((provider !== "claude" && provider !== "codex") || !file || !cwd) process.exit(0);
-const raw = await Bun.stdin.text();
+const raw = await readStandardInput();
 if (Buffer.byteLength(raw) > 256 * 1024) process.exit(0);
 let value: unknown;
 try {

@@ -20,8 +20,8 @@ import type { JobDefinition } from "@raypx/jobs";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../src/routeTree.gen.ts";
-import { DesktopRuntimeProvider } from "../../src/features/engine/provider";
-import { EngineRouteSync } from "../../src/features/engine/routes";
+import { DesktopRuntimeProvider } from "../../src/features/engine/provider.tsx";
+import { EngineRouteSync } from "../../src/features/engine/routes.tsx";
 
 expect.extend(matchers);
 

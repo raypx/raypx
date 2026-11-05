@@ -3,8 +3,8 @@ import type { AgentTool } from "@raypx/providers/pi";
 import type { AgentTask } from "@raypx/core/tasks";
 import { localParams } from "@raypx/contracts/local";
 import type { AskApproval } from "@raypx/providers/core";
-import type { FileRuntime } from "../../files";
-import type { ProcessRuntime } from "../../process";
+import type { FileRuntime } from "../../files/index.ts";
+import type { ProcessRuntime } from "../../process/index.ts";
 
 const path = { path: z.string() };
 const definitions = [

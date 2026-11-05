@@ -1,7 +1,7 @@
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
 import type { TokenTotals } from "@raypx/providers/core";
-import type { ActivityDraft, LocalAgentTask } from "../model";
-import type { Ids } from "../domain/ports";
+import type { ActivityDraft, LocalAgentTask } from "../model.ts";
+import type { Ids } from "../domain/ports.ts";
 
 /** Synchronous commits the ingestor submits; each goes through the orchestration sink. */
 export interface IngestStore {

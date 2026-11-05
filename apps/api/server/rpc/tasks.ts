@@ -1,4 +1,4 @@
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcBoundary } from "./boundary.ts";
 export function createTasksHandlers({ os, controlCall }: Pick<RpcBoundary, "os" | "controlCall">) {
   return {
     list: os.tasks.list.handler(({ input, context }) =>

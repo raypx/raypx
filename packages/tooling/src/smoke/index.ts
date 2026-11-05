@@ -1,7 +1,7 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { run } from "@raypx-kit/devkit/process";
-import { probeApi, probeWeb, probeRelay } from "./artifacts.js";
+import { probeApi, probeWeb, probeRelay } from "./artifacts.ts";
 
 export async function smoke(
   root: string,
@@ -19,7 +19,7 @@ export async function smoke(
               ["--version"],
               tmpdir(),
             );
-            await run(process.execPath, ["run", "smoke"], join(root, "apps/cli"));
+            await run("pnpm", ["run", "smoke"], join(root, "apps/cli"));
           })(),
         ]
       : []),

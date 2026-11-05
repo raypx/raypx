@@ -1,3 +1,4 @@
+import { directHttpClient } from "@raypx/runtime-node/http";
 import { z } from "zod";
 
 /**
@@ -15,15 +16,26 @@ export type LocalAddress = z.infer<typeof localAddressSchema>;
 export const loopbackTransport = () =>
   process.platform === "win32" || process.env.RAYPX_LOCAL_TRANSPORT === "tcp";
 
-export function localFetch(address: LocalAddress, path: string, init: RequestInit = {}) {
-  if (address.socket !== undefined)
-    return fetch(`http://localhost${path}`, { ...init, unix: address.socket, redirect: "error" });
-  // Proxy environment variables would otherwise receive the bearer token.
-  return fetch(`http://127.0.0.1:${address.port}${path}`, {
-    ...init,
-    proxy: false,
-    redirect: "error",
-  });
+export async function localFetch(address: LocalAddress, path: string, init: RequestInit = {}) {
+  // A dedicated dispatcher deliberately ignores proxy environment and global dispatchers.
+  const client = directHttpClient(address.socket);
+  try {
+    const response = await client.fetch(
+      address.socket === undefined
+        ? `http://127.0.0.1:${address.port}${path}`
+        : `http://localhost${path}`,
+      {
+        ...init,
+        redirect: "error",
+      },
+    );
+    // close() waits for the streaming response to finish; never await it here.
+    void client.close().catch(() => {});
+    return response;
+  } catch (error) {
+    void client.close().catch(() => {});
+    throw error;
+  }
 }
 
 /** Only a direct local client reaches a loopback host; browsers always send Origin. */

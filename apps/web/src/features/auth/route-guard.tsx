@@ -4,8 +4,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { redirect, useRouter } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { accountAccessQuery, webPages, type WebPath } from "./access";
-import { safeReturnTo } from "./return-to";
+import { accountAccessQuery, webPages, type WebPath } from "./access.ts";
+import { safeReturnTo } from "./return-to.ts";
 
 class PageAccessError extends Error {
   constructor(readonly reason: "forbidden" | "unavailable") {

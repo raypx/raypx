@@ -3,6 +3,16 @@
 Status: accepted, supersedes conflicting cloud-only, no-local-runtime and all-Bun
 requirements in historical ADRs. Approved by the user for this rebuild.
 
+Current amendment (2026-11-05): [ADR 0045](0045-tauri-node-pnpm.md) supersedes
+the Bun-only runtime/catalog/install rules below and the former MyGo host.
+Node/pnpm now own JavaScript execution and installation; Rust owns the Tauri host
+and CLI launcher, and VP remains the single task graph. Manifest discovery,
+composition boundaries and data isolation remain accepted. The dated choices
+below preserve the foundation's history; use the [current architecture](README.md)
+for the implemented stack and workspace responsibilities.
+
+## Original foundation and earlier amendments
+
 Remove retired business apps/libraries. Keep Web, Desktop, Mobile, API and CLI
 (Mobile was later removed on 2026-10-18; phones use Web until native needs return),
 with eight libraries: auth, client, contracts, database, i18n, mail, ui and tooling.
@@ -12,9 +22,8 @@ exports and explicit per-entry platform metadata allow future package extraction
 Replace name allowlists and exhaustive documentation inventories with manifest
 discovery. The initial foundation used one Turbo graph and Bun catalogs, a Nix
 development shell and a Node production API. The amendments below supersede those
-toolchain and runtime choices. The compiled CLI includes Bun;
-[ADR 0038](0038-mygo-desktop-host.md) replaces the Desktop host with MyGo
-and system WKWebView/WebView2.
+toolchain and runtime choices. Before ADR 0045, the compiled CLI included Bun
+and Desktop used MyGo with system WKWebView/WebView2.
 
 The account database and migration history are new and independent. Retired SQL
 is available only in Git history and must not be applied by foundation commands.
@@ -43,7 +52,7 @@ cache policy through Tooling; app plugins live in separate Vite app configs.
 Native SDK preparation stays uncached, with generated files checked after it runs.
 The migration is now active on canary.
 
-Amendment (2026-10-27), approved by the user: Bun is the only JavaScript runtime,
+Amendment (2026-10-27; superseded by ADR 0045), approved by the user: Bun is the only JavaScript runtime,
 including the Web/API Nitro services and deployment images. Root `packageManager`
 is the single Bun version pin; `.nvmrc`, `engines.node` and Node setup in CI were
 removed. `raypx-dev policy` checks runtime consistency and rejects reintroduced

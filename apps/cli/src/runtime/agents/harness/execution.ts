@@ -7,15 +7,15 @@ import {
   type HumanRequest,
   type TaskInput,
 } from "@raypx/core/tasks";
-import { LocalError } from "../../errors";
-import { isDesktopBinding, type LocalAgentTask } from "../model";
+import { LocalError } from "../../errors.ts";
+import { isDesktopBinding, type LocalAgentTask } from "../model.ts";
 import type {
   ExecutionConversation,
   ExecutionEffects,
   ExecutionIngest,
   ExecutionStore,
-} from "./ports";
-import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports";
+} from "./ports.ts";
+import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports.ts";
 import type {
   AdapterEvent,
   ProviderSession,
@@ -320,6 +320,8 @@ export class ManagedExecution {
     )
       throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
     this.planRequestHandled = false;
+    const hook = await this.effects.hook();
+    if (this.finished || this.cancelled) return;
     const adapter = this.adapterFactory(
       {
         directory,
@@ -328,7 +330,7 @@ export class ManagedExecution {
         ...(sessionId ? { sessionId } : {}),
       },
       {
-        approval: { ask: (...args) => this.ask(...args), hook: () => this.effects.hook() },
+        approval: { ask: (...args) => this.ask(...args), hook: () => hook },
         current: (handle) => !this.finished && this.process === handle,
         emit: (event) => this.adapterEvent(event, directory, sessionId),
       },

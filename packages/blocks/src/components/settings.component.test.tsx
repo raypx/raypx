@@ -2,7 +2,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
-import { AppearanceSettings, LanguageSettings, SettingsPage, SettingsSection } from "./settings";
+import {
+  AppearanceSettings,
+  LanguageSettings,
+  SettingsPage,
+  SettingsSection,
+} from "./settings.tsx";
 
 afterEach(cleanup);
 beforeEach(() => {

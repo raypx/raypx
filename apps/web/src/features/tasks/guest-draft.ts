@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import type { TaskComposerDraft } from "@raypx/tasks/client/task-composer";
-import { safeReturnTo } from "../auth/return-to";
+import { safeReturnTo } from "../auth/return-to.ts";
 
 const parameter = "guestDraft";
 const storageKey = (namespace: string, accountId?: string) =>

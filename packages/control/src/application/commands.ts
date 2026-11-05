@@ -11,7 +11,7 @@ import {
 
 import { type RelayRequest } from "@raypx/contracts/tasks";
 
-import type { ControlRepository, ControlReader } from "../ports.js";
+import type { ControlRepository, ControlReader } from "../ports.ts";
 
 import {
   CONTEXT_COMMAND_TTL_MS,
@@ -23,8 +23,8 @@ import {
   required,
   hash,
   canonical,
-} from "../records.js";
-import type { ControlCredentials } from "./credentials.js";
+} from "../records.ts";
+import type { ControlCredentials } from "./credentials.ts";
 export class ControlCommands {
   constructor(
     private readonly repository: ControlRepository,

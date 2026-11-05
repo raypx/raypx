@@ -1,12 +1,12 @@
 import { runTaskLeaf } from "@raypx-kit/devkit/tasks";
-import { taskScripts } from "./delegation.js";
+import { taskScripts } from "./delegation.ts";
 process.exitCode = await runTaskLeaf({
-  runtime: process.execPath,
+  runtime: "pnpm",
   command(manifest, name, args) {
     const delegated = taskScripts(manifest)[name];
     const native = manifest.scripts["native:build"] && manifest.scripts["native:prepare"];
     return delegated
-      ? [process.execPath, "run", delegated, ...args]
+      ? ["pnpm", "run", delegated, ...args]
       : native &&
           [
             "native:build",
@@ -19,7 +19,15 @@ process.exitCode = await runTaskLeaf({
             "native:beta",
             "native:agents",
           ].includes(name)
-        ? [process.execPath, "run", "scripts/native/task.ts", "--leaf", name, ...args]
-        : [process.execPath, "run", name, ...args];
+        ? [
+            process.execPath,
+            "--import",
+            import.meta.resolve("tsx"),
+            "scripts/host/task.ts",
+            "--leaf",
+            name,
+            ...args,
+          ]
+        : ["pnpm", "run", name, ...args];
   },
 });

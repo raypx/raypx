@@ -1,4 +1,4 @@
-import { allowedOrigins, type RelaySecrets } from "./environment.js";
+import { allowedOrigins, type RelaySecrets } from "./environment.ts";
 
 interface RelayTarget {
   fetch(request: Request): Promise<Response>;

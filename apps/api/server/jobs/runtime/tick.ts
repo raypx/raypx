@@ -1,5 +1,5 @@
 import type { Task } from "nitro/types";
-import { getApiRuntime } from "../../runtime/server.js";
+import { getApiRuntime } from "../../runtime/server.ts";
 
 export default {
   meta: { name: "schedules:tick", description: "Reconcile and dispatch due device schedules" },

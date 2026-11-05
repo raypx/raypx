@@ -14,8 +14,8 @@ import { LaptopIcon } from "@raypx/icons/laptop";
 import { ScheduleIcon } from "@raypx/icons/schedule";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { TaskListIcon } from "@raypx/icons/task-list";
-import { authClient } from "../../auth/client";
-import { LandingAuthAction } from "./auth-action";
+import { authClient } from "../../auth/client.ts";
+import { LandingAuthAction } from "./auth-action.tsx";
 
 const primaryActionClass = cn(
   buttonVariants(),

@@ -1,1 +1,4 @@
 /dist
+
+# Authored synthetic migration fixture, never an actual local profile.
+!tests/fixtures/sqlite/baseline/profile.sqlite

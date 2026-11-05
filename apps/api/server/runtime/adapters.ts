@@ -3,14 +3,14 @@ import { createMailer } from "@raypx/email/server";
 import { createUnavailableStorage } from "@raypx/storage";
 import { createS3Storage } from "@raypx/storage/s3";
 import { sql } from "drizzle-orm";
-import { createCache } from "../cache/cache.js";
-import { createMemoryStore } from "../cache/memory.js";
-import { createTieredStore } from "../cache/tiered.js";
-import type { ApiEnvironment } from "../env.js";
-import { createRateLimiter } from "../rate-limit.js";
-import type { Cache } from "../cache/types.js";
+import { createCache } from "../cache/cache.ts";
+import { createMemoryStore } from "../cache/memory.ts";
+import { createTieredStore } from "../cache/tiered.ts";
+import type { ApiEnvironment } from "../env.ts";
+import { createRateLimiter } from "../rate-limit.ts";
+import type { Cache } from "../cache/types.ts";
 import type { ObjectStorage } from "@raypx/storage";
-import type { RedisResources } from "./redis.js";
+import type { RedisResources } from "./redis.ts";
 
 /** Process-local copies in front of Redis; changes from other processes apply within it. */
 const NEAR_CACHE_TTL_MS = 1_000;

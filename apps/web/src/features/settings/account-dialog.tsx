@@ -7,16 +7,16 @@ import { PasswordChangeDialog } from "@raypx/auth/client";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { apiUrl, authClient, webUrl } from "../auth/client";
-import { accountQuery } from "../auth/account-query";
-import { PermissionBoundary } from "../auth/components/permission-boundary";
-import { SessionBoundary, SignInGate } from "../auth/components/session-boundary";
-import { AccountSessions } from "../auth/components/account-sessions";
-import { ProfileSettings } from "../auth/components/profile-settings";
-import { InstanceRegistration } from "../auth/components/instance-registration";
-import { analytics } from "../analytics/client";
-import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings";
-import type { SettingsSection } from "./navigation";
+import { apiUrl, authClient, webUrl } from "../auth/client.ts";
+import { accountQuery } from "../auth/account-query.ts";
+import { PermissionBoundary } from "../auth/components/permission-boundary.tsx";
+import { SessionBoundary, SignInGate } from "../auth/components/session-boundary.tsx";
+import { AccountSessions } from "../auth/components/account-sessions.tsx";
+import { ProfileSettings } from "../auth/components/profile-settings.tsx";
+import { InstanceRegistration } from "../auth/components/instance-registration.tsx";
+import { analytics } from "../analytics/client.ts";
+import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings.tsx";
+import type { SettingsSection } from "./navigation.ts";
 
 function PrivateSettings({ children }: { children: (accountId: string) => ReactNode }) {
   const t = useTranslations("auth");

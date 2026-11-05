@@ -1,11 +1,11 @@
-import { profileStorage, removeProfileDirectory } from "./sqlite";
+import { profileStorage, removeProfileDirectory } from "./sqlite.ts";
 import { afterEach } from "vite-plus/test";
 import { cpSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { StateStore } from "../../src/runtime/state";
-import { AgentRuntime } from "../../src/runtime/agents";
-import type { Clock, Ids } from "../../src/runtime/agents/domain/ports";
+import { StateStore } from "../../src/runtime/state/index.ts";
+import { AgentRuntime } from "../../src/runtime/agents/index.ts";
+import type { Clock, Ids } from "../../src/runtime/agents/domain/ports.ts";
 import type { TaskChange } from "@raypx/contracts/tasks";
 
 import type {

@@ -1,3 +1,3 @@
-export { CloudJobsPage } from "./client/cloud-jobs.js";
-export type { CloudJobsPageProps } from "./client/cloud-jobs.js";
-export type * from "./client/ports.js";
+export { CloudJobsPage } from "./client/cloud-jobs.tsx";
+export type { CloudJobsPageProps } from "./client/cloud-jobs.tsx";
+export type * from "./client/ports.ts";

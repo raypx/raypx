@@ -11,8 +11,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@raypx/ui/components/ui/sidebar";
-import { taskClient } from "./client";
-import { apiUrl } from "../auth/client";
+import { taskClient } from "./client.ts";
+import { apiUrl } from "../auth/client.ts";
 
 /** Signed-in shortcuts to authorized remote projects, grouped by computer. */
 export function RemoteProjectNavigation({ accountId }: { accountId: string }) {

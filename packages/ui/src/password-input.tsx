@@ -2,8 +2,8 @@ import { useId, useState, type ComponentProps } from "react";
 import { CapsLockIcon } from "@raypx/icons/caps-lock";
 import { EyeIcon } from "@raypx/icons/eye";
 import { EyeOffIcon } from "@raypx/icons/eye-off";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group";
-import { IconButton } from "./icon-button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group.tsx";
+import { IconButton } from "./icon-button.tsx";
 
 export interface PasswordInputProps extends Omit<ComponentProps<"input">, "type"> {
   labels: { show: string; hide: string; capsLock?: string };

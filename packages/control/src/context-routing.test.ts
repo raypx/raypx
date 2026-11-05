@@ -2,7 +2,7 @@ import { expect, it, vi } from "vite-plus/test";
 import { ContextError } from "@raypx/memory";
 import { taskExecutionPrompt, type TaskContextSnapshot } from "@raypx/core/tasks";
 import { ControlService } from "@raypx/control";
-import { connected, memoryControlRepository } from "../tests/helpers/control.js";
+import { connected, memoryControlRepository } from "../tests/helpers/control.ts";
 import { RelayHub } from "@raypx/control/relay";
 import type { RelayServerFrame } from "@raypx/contracts/tasks";
 

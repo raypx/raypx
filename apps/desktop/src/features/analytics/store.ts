@@ -4,7 +4,7 @@ import {
   parseAnalyticsConsent,
   type AnalyticsPreferenceStore,
 } from "@raypx/analytics";
-import { getBridge, isDesktop } from "../../lib/desktop";
+import { getBridge, isDesktop } from "../../lib/desktop.ts";
 export function desktopAnalyticsStore(): AnalyticsPreferenceStore {
   const browser = browserPreferenceStore();
   return {

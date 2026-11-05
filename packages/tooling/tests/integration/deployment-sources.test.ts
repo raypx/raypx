@@ -1,3 +1,4 @@
+import { globFiles } from "@raypx/runtime-node/files";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -67,7 +68,7 @@ it.each([false, true])(
         "shared/optional",
         "shared/peer",
       ].flatMap((path) => [`${path}/package.json`, `${path}/src/index.ts`]);
-      expect([...new Bun.Glob("**/*").scanSync({ cwd: output, onlyFiles: true })].sort()).toEqual(
+      expect([...globFiles("**/*", { cwd: output, onlyFiles: true })].sort()).toEqual(
         [...expected, "shared/tokens/src/data.json"].sort(),
       );
       expect(readFileSync(join(output, "shared/tokens/src/data.json"), "utf8")).toBe(

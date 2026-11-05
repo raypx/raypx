@@ -1,7 +1,7 @@
 import { createRailwayContext, project } from "railway/iac";
 import { expect, it } from "vite-plus/test";
 import { deploymentServices } from "@raypx/tooling/build/deployment";
-import program, { partial } from "./railway.js";
+import program, { partial } from "./railway.ts";
 
 const projectId = "766ffb45-d60f-4e4d-83b1-135443ff0b51";
 
@@ -39,7 +39,7 @@ it("uses shared application images, migration hooks and health paths after reloc
         ]),
       },
       deploy: {
-        preDeployCommand: ["bun run --cwd packages/database migrate"],
+        preDeployCommand: ["node migration/dist/commands.mjs migrate"],
         healthcheckPath: deploymentServices.api.ready,
         multiRegionConfig: { "asia-southeast1-eqsg3a": { numReplicas: 1 } },
       },

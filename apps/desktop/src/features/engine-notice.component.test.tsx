@@ -2,7 +2,7 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { EngineNotice } from "./engine/notice";
+import { EngineNotice } from "./engine/notice.tsx";
 afterEach(cleanup);
 it("requires an explicit answer before replacing a host with active work", async () => {
   localStorage.setItem("raypx_locale", "en");

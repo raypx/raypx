@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "./lib/utils";
+import { cn } from "./lib/utils.ts";
 
 /** A compact, neutral heading row for sections inside a page. */
 export function SectionHeading({

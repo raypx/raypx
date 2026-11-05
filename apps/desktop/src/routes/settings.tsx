@@ -1,13 +1,13 @@
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
-import { AgentSettings } from "../features/tasks/settings";
+import { AgentSettings } from "../features/tasks/settings.tsx";
 import { DeviceSettings } from "@raypx/tasks/client";
-import { taskClient } from "../features/tasks/client";
+import { taskClient } from "../features/tasks/client.ts";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppearanceSettings, LanguageSettings, SettingsPage } from "@raypx/blocks/settings";
 import { useTranslations } from "@raypx/i18n/browser";
-import { RemoteBoundary } from "../features/auth/components/remote-boundary";
-import { authClient } from "../features/auth/client";
-import { isDesktop } from "../lib/desktop";
+import { RemoteBoundary } from "../features/auth/components/remote-boundary.tsx";
+import { authClient } from "../features/auth/client.ts";
+import { isDesktop } from "../lib/desktop.ts";
 
 export const Route = createFileRoute("/settings")({
   staticData: { page: { title: "common.settings", layout: "document" } },

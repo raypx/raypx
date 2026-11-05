@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { createAccountService } from "./server";
+import { createAccountService } from "./server.ts";
 
 describe("account service", () => {
   it("resolves each request afresh and projects only public fields", async () => {

@@ -1,3 +1,4 @@
+import { spawnProcess, runProcessSync } from "@raypx/runtime-node/process";
 import { afterEach, expect, it } from "vite-plus/test";
 import {
   chmodSync,
@@ -12,14 +13,14 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createInstanceKey, createInstanceSigner } from "@raypx/instances/crypto";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { ProfileStorage } from "../../../src/runtime/sqlite";
-import { instanceKeys } from "../../../src/runtime/instances/keys";
-import { InstanceRuntime } from "../../../src/runtime/instances";
-import { createHostVault, type HostBinding } from "../../../src/runtime/daemon/vault";
-import { hostAuthorizations } from "../../../src/runtime/sqlite/schema/credentials";
-import { createRuntime } from "../../../src/runtime";
-import { profilePath } from "../../../src/runtime/state";
-import { errorPayload } from "../../../src/runtime/errors";
+import { ProfileStorage } from "../../../src/runtime/sqlite/index.ts";
+import { instanceKeys } from "../../../src/runtime/instances/keys.ts";
+import { InstanceRuntime } from "../../../src/runtime/instances/index.ts";
+import { createHostVault, type HostBinding } from "../../../src/runtime/daemon/vault.ts";
+import { hostAuthorizations } from "../../../src/runtime/sqlite/schema/credentials.ts";
+import { createRuntime } from "../../../src/runtime/index.ts";
+import { profilePath } from "../../../src/runtime/state/index.ts";
+import { errorPayload } from "../../../src/runtime/errors.ts";
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -68,9 +69,9 @@ it("restores credentials in another process and isolates every host binding dime
     expect(await vault.get(other)).toBeUndefined();
   db.close();
   const script = `
-    import { ProfileStorage } from ${JSON.stringify(resolve(import.meta.dirname, "../../../src/runtime/sqlite"))};
-    import { instanceKeys } from ${JSON.stringify(resolve(import.meta.dirname, "../../../src/runtime/instances/keys"))};
-    import { createHostVault } from ${JSON.stringify(resolve(import.meta.dirname, "../../../src/runtime/daemon/vault"))};
+    import { ProfileStorage } from ${JSON.stringify(resolve(import.meta.dirname, "../../../src/runtime/sqlite/index.ts"))};
+    import { instanceKeys } from ${JSON.stringify(resolve(import.meta.dirname, "../../../src/runtime/instances/keys.ts"))};
+    import { createHostVault } from ${JSON.stringify(resolve(import.meta.dirname, "../../../src/runtime/daemon/vault.ts"))};
     import { signProof, verifyProof } from "@raypx/instances/crypto";
     const db = new ProfileStorage(process.argv[1]);
     try {
@@ -79,12 +80,23 @@ it("restores credentials in another process and isolates every host binding dime
       console.log(JSON.stringify({ identity: Boolean(key && verifyProof(process.argv[3], "test", signProof(key, "test"))), host: host?.credential === "k".repeat(64) }));
     } finally { db.close(); }
   `;
-  const child = Bun.spawn(
-    [process.execPath, "-e", script, root, id, pair.publicKey, JSON.stringify(binding)],
+  const child = spawnProcess(
+    [
+      process.execPath,
+      "--import",
+      import.meta.resolve("tsx"),
+      "--input-type=module",
+      "-e",
+      script,
+      root,
+      id,
+      pair.publicKey,
+      JSON.stringify(binding),
+    ],
     {
       cwd: resolve(import.meta.dirname, "../../.."),
       stdout: "pipe",
-      stderr: "ignore",
+      stderr: "inherit",
     },
   );
   expect(await child.exited).toBe(0);
@@ -215,7 +227,7 @@ it.skipIf(process.platform !== "win32")(
       if (!(Get-Acl -LiteralPath $root).AreAccessRulesProtected) { $ok = $false }
       Write-Output ($ok | ConvertTo-Json -Compress)
     `;
-      const result = Bun.spawnSync({
+      const result = runProcessSync({
         cmd: [
           join(process.env.SystemRoot!, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
           "-NoProfile",
@@ -224,7 +236,7 @@ it.skipIf(process.platform !== "win32")(
           Buffer.from(script, "utf16le").toString("base64"),
         ],
         env: { ...process.env, RAYPX_ACL_TEST_DIRECTORY: root },
-        stderr: "ignore",
+        stderr: "inherit",
         timeout: 15_000,
       });
       expect(result.exitCode).toBe(0);

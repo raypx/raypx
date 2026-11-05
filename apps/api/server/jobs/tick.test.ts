@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import type { CloudJobsService } from "@raypx/jobs/server";
 import type { SafeEvent } from "@raypx/logger/safe";
-import { createScheduleTick } from "./tick.js";
-import { createApiLogging, type ApiLogging } from "../logging.js";
+import { createScheduleTick } from "./tick.ts";
+import { createApiLogging, type ApiLogging } from "../logging.ts";
 
 let logger: ApiLogging | undefined;
 afterEach(async () => {

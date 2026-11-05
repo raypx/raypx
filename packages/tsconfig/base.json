@@ -16,6 +16,7 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": []
+    "types": [],
+    "allowImportingTsExtensions": true
   }
 }

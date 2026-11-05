@@ -1,4 +1,4 @@
-import { analytics } from "./features/analytics/client";
+import { analytics } from "./features/analytics/client.ts";
 import { createQueryFailureReporter } from "@raypx/analytics/browser";
 import { createRouter } from "@tanstack/react-router";
 import { QueryCache, QueryClient } from "@tanstack/react-query";

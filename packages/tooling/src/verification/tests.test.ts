@@ -1,14 +1,14 @@
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel } from "../tasks/model.js";
-import { argumentKey } from "../tasks/arguments.js";
-import { testLayer, testSources } from "../validation/test-sources.js";
-import { executionTasks } from "./execution.js";
-import { verificationPlan } from "./plan.js";
-import type { VerificationPlan } from "./plan.js";
-import { localTests } from "./tests.js";
+import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
+import { taskModel } from "../tasks/model.ts";
+import { argumentKey } from "../tasks/arguments.ts";
+import { testLayer, testSources } from "../validation/test-sources.ts";
+import { executionTasks } from "./execution.ts";
+import { verificationPlan } from "./plan.ts";
+import type { VerificationPlan } from "./plan.ts";
+import { localTests } from "./tests.ts";
 
 const { fixture, member } = workspaceFixtures();
 function feature(root: string, plan: VerificationPlan) {
@@ -18,9 +18,9 @@ function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
+  const scripts = { check: "tsx check.ts", test: "vp test --run" };
   member(root, "feature", { extra: { scripts } });
   member(root, "consumer", { deps: { "@raypx/feature": "workspace:*" }, extra: { scripts } });
   member(root, "unrelated", { extra: { scripts } });
@@ -100,7 +100,7 @@ describe("local related test selection", () => {
     const { root, plan, write } = project();
     for (const scope of [
       plan([], { full: true }),
-      plan(["bun.lock"]),
+      plan(["pnpm-lock.yaml"]),
       plan([], { reasons: ["Missing Git base"] }),
     ])
       expect(localTests(root, scope).every((test) => test.mode === "all")).toBe(true);
@@ -110,11 +110,11 @@ describe("local related test selection", () => {
   it("limits private verification edits to Tooling in local and canonical CI tasks", () => {
     const { root, write, plan } = project();
     member(root, "tooling", {
-      metadata: { kind: "tooling", target: "bun" },
-      extra: { scripts: { check: "bun check.ts", test: "bun --bun vp test --run" } },
+      metadata: { kind: "tooling", target: "node" },
+      extra: { scripts: { check: "tsx check.ts", test: "vp test --run" } },
     });
     write("packages/tooling/src/verification/plan.ts", "export const value = 1;");
-    write("packages/tooling/src/verification/plan.test.ts", 'import { value } from "./plan.js";');
+    write("packages/tooling/src/verification/plan.test.ts", 'import { value } from "./plan.ts";');
     const canonical = plan(["packages/tooling/src/verification/plan.ts"]);
     const selected = localTests(root, canonical);
     const refs = executionTasks(canonical, "fixture", selected);

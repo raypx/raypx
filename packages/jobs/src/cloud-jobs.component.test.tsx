@@ -6,9 +6,9 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { CloudJob, CloudJobRun } from "./index.js";
-import type { CloudJobsPort, JobDevicesPort } from "./client.js";
-import { CloudJobsPage, type CloudJobsPageProps } from "./client.js";
+import type { CloudJob, CloudJobRun } from "./index.ts";
+import type { CloudJobsPort, JobDevicesPort } from "./client.ts";
+import { CloudJobsPage, type CloudJobsPageProps } from "./client.ts";
 
 expect.extend(matchers);
 const deviceId = "11111111-1111-4111-8111-111111111111",

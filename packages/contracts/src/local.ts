@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { deviceCommandSchema, relayCommandSchema, relayRequestSchema } from "./tasks.js";
+import { deviceCommandSchema, relayCommandSchema, relayRequestSchema } from "./tasks.ts";
 import {
   taskSchema,
   terminalProviderSchema,
@@ -9,7 +9,7 @@ import {
   taskContextSelectionSchema,
   taskContextTargetSchema,
 } from "@raypx/core/tasks";
-import { hostAuthorizationSchema, terminalDecisionSchema } from "./terminal.js";
+import { hostAuthorizationSchema, terminalDecisionSchema } from "./terminal.ts";
 import {
   contextCreateSchema,
   contextUpdateSchema,

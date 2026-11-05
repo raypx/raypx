@@ -1,7 +1,7 @@
 import * as aws4fetch from "aws4fetch";
 import s3Driver from "unstorage/drivers/s3";
-import { createObjectStorage } from "./storage.js";
-import type { ObjectStorage } from "./types.js";
+import { createObjectStorage } from "./storage.ts";
+import type { ObjectStorage } from "./types.ts";
 
 export interface S3StorageConfig {
   /** Service origin without the bucket, e.g. `https://s3.example.com`. */

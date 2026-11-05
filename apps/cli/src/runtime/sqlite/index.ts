@@ -1,10 +1,10 @@
-import type { SQLQueryBindings } from "bun:sqlite";
+import type { SQLInputValue as SQLQueryBindings } from "node:sqlite";
 import type { Query } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/bun-sqlite";
+import { drizzle } from "./database.ts";
 
 export { drizzle };
-export { migrateLocalDatabase } from "./migrate";
-export { ProfileStorage } from "./profile";
+export { migrateLocalDatabase } from "./migrate.ts";
+export { ProfileStorage } from "./profile.ts";
 export type LocalDatabase = ReturnType<typeof drizzle>;
 
 /** Drizzle has no streaming SQLite iterator. A dedicated native cursor keeps
@@ -15,11 +15,11 @@ export function* iterateRows<T extends Record<string, unknown>>(
   query: { toSQL(): Query; _: { result: T[] } },
 ): Generator<T, void, unknown> {
   const { sql, params } = query.toSQL();
-  const statement = database.$client.prepare<T, SQLQueryBindings[]>(sql);
+  const statement = database.$client.prepare(sql);
+  const cursor = statement.iterate(...(params as SQLQueryBindings[]));
   try {
-    // Drizzle encodes SQLite bindings, but its shared Query type uses unknown[].
-    yield* statement.iterate(...(params as SQLQueryBindings[]));
+    for (const row of cursor) yield row as T;
   } finally {
-    statement.finalize();
+    cursor.return?.();
   }
 }

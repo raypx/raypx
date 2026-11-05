@@ -1,6 +1,6 @@
 import type { HumanDecision, HumanRequest } from "@raypx/core/tasks";
 
-/** Adapters see protocol I/O, never Bun's child process or task storage. */
+/** Adapters see protocol I/O, never Node's child process or task storage. */
 export interface AgentTransport {
   readonly completed: Promise<number>;
   send(value: unknown): void;

@@ -112,7 +112,7 @@ The default gate covers schemas, budget boundaries, versions, CAS conflicts,
 ownership, account changes, draft restoration, native IPC restrictions, provider
 prompt injection and relay v4 context requirements. Real PostgreSQL tests cover
 concurrent writes, immutable versions, retry IDs, quotas and reads without the
-account write lock. Bun integration exercises RPC and contextual task delivery.
+account write lock. Node integration exercises RPC and contextual task delivery.
 
 Browser tests exercise both account pages, version restoration, explicit template
 selection and unchanged historical task context after later source edits.

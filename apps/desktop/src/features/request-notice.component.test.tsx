@@ -21,7 +21,7 @@ vi.mock("../lib/desktop", () => ({
     };
   },
 }));
-import { TerminalRequestNotice } from "./tasks/request-notice";
+import { TerminalRequestNotice } from "./tasks/request-notice.tsx";
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

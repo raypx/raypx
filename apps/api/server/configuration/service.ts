@@ -1,11 +1,11 @@
-import type { AuditService } from "../administration/audit.js";
+import type { AuditService } from "../administration/audit.ts";
 import { hasPermission } from "@raypx/account/access";
-import type { AccessPolicy } from "../access.js";
+import type { AccessPolicy } from "../access.ts";
 import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";
-import { createCache } from "../cache/cache.js";
-import { createMemoryStore } from "../cache/memory.js";
-import type { Cache } from "../cache/types.js";
-import type { ConfigurationRepository, ConfigurationService } from "./types.js";
+import { createCache } from "../cache/cache.ts";
+import { createMemoryStore } from "../cache/memory.ts";
+import type { Cache } from "../cache/types.ts";
+import type { ConfigurationRepository, ConfigurationService } from "./types.ts";
 
 export class ConfigurationError extends Error {
   constructor(

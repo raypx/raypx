@@ -1,8 +1,8 @@
-import { profileStorage } from "../../../helpers/sqlite";
+import { profileStorage } from "../../../helpers/sqlite.ts";
 import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "../../../helpers/agents";
+import { agentFixtures } from "../../../helpers/agents.ts";
 
 import {
   taskExecutionPrompt,
@@ -10,7 +10,7 @@ import {
   type TaskContextSnapshot,
 } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { AgentStore } from "../../../../src/runtime/agents/store";
+import { AgentStore } from "../../../../src/runtime/agents/store.ts";
 const { host } = agentFixtures();
 
 function contextSnapshot(scope: "device" | "account" = "device"): TaskContextSnapshot {

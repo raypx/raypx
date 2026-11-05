@@ -1,5 +1,6 @@
+import { createRequire } from "node:module";
 import { globSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { imports } from "@raypx-kit/devkit/architecture";
 import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
 
@@ -101,7 +102,7 @@ export function checkSourceLayers(root: string, index: WorkspaceIndex) {
       const edges = imports(path, readFileSync(full, "utf8"));
       const dependencies = edges.map(({ request }) => {
         try {
-          return relative(root, realpathSync(Bun.resolveSync(request, dirname(full)))).replaceAll(
+          return relative(root, realpathSync(createRequire(full).resolve(request))).replaceAll(
             "\\",
             "/",
           );

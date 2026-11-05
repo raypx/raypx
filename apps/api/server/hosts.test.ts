@@ -9,7 +9,7 @@ import {
   running,
 } from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "./api.js";
+import { createApiApp } from "./api.ts";
 
 it("limits host grants before credential lookup without retaining bearer secrets", async () => {
   const hostGrant = vi.fn(),

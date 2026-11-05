@@ -1,15 +1,15 @@
-import { createTaskCommands } from "./tasks";
-import type { InstanceAccess } from "../runtime/instances";
+import { createTaskCommands } from "./tasks.ts";
+import type { InstanceAccess } from "../runtime/instances/index.ts";
 import { createInterface } from "node:readline/promises";
 import { defineCommand, renderUsage, runCommand as runCittyCommand, type CommandDef } from "citty";
 import type { LocalMethod } from "@raypx/contracts/local";
 import manifest from "../../package.json";
-import { LocalError } from "../runtime/errors";
-import type { RecordDiagnostic } from "../diagnostics";
-import { globalArgs, type CliArgs } from "./args";
-import { createAiCommands } from "./ai";
-import { createDaemonCommands, createConnectorCommands } from "./daemon";
-import { onShutdown } from "../transport/shutdown";
+import { LocalError } from "../runtime/errors.ts";
+import type { RecordDiagnostic } from "../diagnostics.ts";
+import { globalArgs, type CliArgs } from "./args.ts";
+import { createAiCommands } from "./ai.ts";
+import { createDaemonCommands, createConnectorCommands } from "./daemon.ts";
+import { onShutdown } from "../transport/shutdown.ts";
 
 type PublicMethod = Exclude<LocalMethod, "runtime.info" | `terminal.${string}`>;
 type Operation = {
@@ -111,7 +111,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     async run() {
       if (invocation.json || invocation.yes)
         throw new Error("stdio only accepts --profile and --data-dir");
-      const { serveStdio } = await import("../transport/stdio");
+      const { serveStdio } = await import("../transport/stdio.ts");
       await serveStdio(options);
     },
   });
@@ -121,7 +121,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     async run() {
       if (invocation.json || invocation.yes)
         throw new LocalError("INTERACTIVE_REQUIRED", "tui cannot be combined with --json or --yes");
-      const { runTui } = await import("../tui");
+      const { runTui } = await import("../tui/index.ts");
       process.exitCode = await runTui(options);
     },
   });
@@ -146,7 +146,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
         "INVALID_INPUT",
         "login takes no operands and requires human confirmation in a browser",
       );
-    const { loginInstance } = await import("./instance");
+    const { loginInstance } = await import("./instance.ts");
     await loginInstance(options);
     return;
   }
@@ -241,7 +241,7 @@ async function executeOperation(
   }
   const { localParams } = await import("@raypx/contracts/local");
   params = localParams[operation.method].parse(params);
-  const { createExecutionOwner } = await import("../runtime/owner");
+  const { createExecutionOwner } = await import("../runtime/owner.ts");
   const runtime = createExecutionOwner({ ...options, mode: "command" });
   const stop = () => {
     void runtime.close();

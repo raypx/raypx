@@ -1,17 +1,25 @@
-import { smokeManagedPi } from "./managed-pi";
-import { enrollTestProfile } from "../helpers/instance";
+import {
+  writeResource,
+  readJsonFile,
+  readTextFile,
+  fileExists,
+  globFiles,
+} from "@raypx/runtime-node/files";
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
+import { smokeManagedPi } from "./managed-pi.ts";
+import { enrollTestProfile } from "../helpers/instance.ts";
 import assert from "node:assert/strict";
-import { chmod, copyFile, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import manifest from "../../package.json";
-import { aiFixture } from "../helpers/ai";
+import { aiFixture } from "../helpers/ai.ts";
 
-const { packageManager } = await Bun.file(
+const { engines, packageManager } = await readJsonFile(
   resolve(import.meta.dirname, "../../../../package.json"),
-).json();
+);
 
-const dataDir = await mkdtemp(join(tmpdir(), "raypx-executable-smoke-"));
+const dataDir = await mkdtemp(join(tmpdir(), "raypx 完整运行目录 smoke-"));
 const builtBinary = resolve(
   import.meta.dirname,
   "../../dist",
@@ -35,11 +43,11 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
 let closeInstance = async () => {};
 let closeProbe = async () => {};
 try {
-  // Only the executable leaves dist: lazy imports must be inside this one file.
-  await copyFile(builtBinary, binary);
+  // Relocate the complete distribution; no repository or global runtime may be required.
+  await cp(resolve(builtBinary, ".."), dataDir, { recursive: true });
   if (process.platform !== "win32") await chmod(binary, 0o700);
   closeInstance = await enrollTestProfile({ dataDir }, [binary]);
-  const version = Bun.spawn([binary, "--version"], {
+  const version = spawnProcess([binary, "--version"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
     stdout: "pipe",
@@ -54,7 +62,7 @@ try {
       claude = join(home, "claude"),
       codex = join(home, "codex");
     const invoke = async (args: string[], success = true) => {
-      const child = Bun.spawn([binary, ...args, "--data-dir", state, "--json"], {
+      const child = spawnProcess([binary, ...args, "--data-dir", state, "--json"], {
         cwd: dataDir,
         env: {
           ...process.env,
@@ -77,7 +85,7 @@ try {
     await invoke(["connectors", "install", "claude"]);
     const stable = join(home, "bin", "raypx"),
       metadataFile = join(home, "bin", "installation.json");
-    const metadata = await Bun.file(metadataFile).json();
+    const metadata = await readJsonFile(metadataFile);
     assert.equal(metadata.version, manifest.version);
     assert.ok(metadata.builtAt > 0, "Standalone build identity must be embedded");
     let status = JSON.parse((await invoke(["connectors", "status"])).stdout)[0];
@@ -88,8 +96,8 @@ try {
     assert.equal(status.installed, false);
     assert.equal(status.error, "HOST_BINARY_MISSING");
     await invoke(["connectors", "install", "claude"]);
-    const settingsBeforeRepair = await Bun.file(join(claude, "settings.json")).text();
-    await Bun.write(stable, "externally modified hook");
+    const settingsBeforeRepair = await readTextFile(join(claude, "settings.json"));
+    await writeResource(stable, "externally modified hook");
     status = JSON.parse((await invoke(["connectors", "status"])).stdout)[0];
     assert.equal(status.repairable, true);
     assert.ok(
@@ -99,23 +107,26 @@ try {
     );
     await invoke(["connectors", "repair", "claude"]);
     const backups = await Array.fromAsync(
-      new Bun.Glob("raypx.backup-*").scan({ cwd: join(home, "bin"), absolute: true }),
+      globFiles("raypx.backup-*", { cwd: join(home, "bin"), absolute: true }),
     );
     assert.equal(backups.length, 1);
-    assert.equal(await Bun.file(backups[0]!).text(), "externally modified hook");
-    assert.equal(await Bun.file(join(claude, "settings.json")).text(), settingsBeforeRepair);
-    await Bun.write(
+    assert.equal(await readTextFile(backups[0]!), "externally modified hook");
+    assert.equal(await readTextFile(join(claude, "settings.json")), settingsBeforeRepair);
+    await writeResource(
       metadataFile,
       JSON.stringify({ ...metadata, builtAt: metadata.builtAt + 100000 }),
     );
     assert.ok(
       (await invoke(["connectors", "install", "claude"], false)).stderr.includes("HOST_DOWNGRADE"),
     );
-    await Bun.write(metadataFile, JSON.stringify({ ...metadata, version: "0.0.1", builtAt: 0 }));
+    await writeResource(
+      metadataFile,
+      JSON.stringify({ ...metadata, version: "0.0.1", builtAt: 0 }),
+    );
     try {
       await invoke(["daemon", "start"]);
       assert.equal(
-        (await Bun.file(metadataFile).json()).builtAt,
+        (await readJsonFile(metadataFile)).builtAt,
         metadata.builtAt,
         "Starting the bundled daemon updates its owned hook binary",
       );
@@ -126,7 +137,7 @@ try {
   }
   const aiHome = join(dataDir, "ai-home");
   for (const action of ["providers", "models"]) {
-    const catalog = Bun.spawn([binary, "ai", action, "--json"], {
+    const catalog = spawnProcess([binary, "ai", action, "--json"], {
       cwd: dataDir,
       env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
       stdout: "pipe",
@@ -143,29 +154,21 @@ try {
   // Compile the exact production JS/chunks behind an offline fetch harness. This
   // exercises lazy SDK initialization without adding a test hook to the product.
   const marker = join(dataDir, "provider-fetch"),
-    bootstrap = join(dataDir, "provider-probe.ts");
+    bootstrap = join(dataDir, "provider-probe.mjs");
   await writeFile(
     bootstrap,
-    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await Bun.write(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(resolve(import.meta.dirname, "../../dist/main.mjs"))});`,
+    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await (await import("node:fs/promises")).writeFile(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(resolve(import.meta.dirname, "../../dist/main.mjs"))});`,
   );
-  const probeBinary = join(
-    dataDir,
-    process.platform === "win32" ? "provider-probe.exe" : "provider-probe",
-  );
-  const probeBuild = await Bun.build({
-    entrypoints: [bootstrap],
-    compile: { outfile: probeBinary },
-    target: "bun",
-    format: "esm",
-    bytecode: true,
-  });
-  assert.ok(probeBuild.success, "Default provider chunks must compile into the offline probe");
+  const probeLaunch = [
+    join(dataDir, "runtime", process.platform === "win32" ? "node.exe" : "node"),
+    bootstrap,
+  ];
   // Give the independently compiled provider probe its own enrolled test profile.
   const probeData = join(dataDir, "provider-profile");
-  closeProbe = await enrollTestProfile({ dataDir: probeData }, [probeBinary]);
+  closeProbe = await enrollTestProfile({ dataDir: probeData }, probeLaunch);
   const providerIds = ["anthropic", "openai", "google", "openrouter"];
   for (const provider of providerIds) {
-    const catalog = Bun.spawn([binary, "ai", "models", JSON.stringify({ provider }), "--json"], {
+    const catalog = spawnProcess([binary, "ai", "models", JSON.stringify({ provider }), "--json"], {
       cwd: dataDir,
       env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
       stdout: "pipe",
@@ -176,9 +179,9 @@ try {
     assert.equal(await catalog.exited, 0);
     assert.ok(models[0]);
     await rm(marker, { force: true });
-    const probe = Bun.spawn(
+    const probe = spawnProcess(
       [
-        probeBinary,
+        ...probeLaunch,
         "ai",
         "complete",
         "--data-dir",
@@ -212,14 +215,14 @@ try {
     ]);
     assert.notEqual(code, 0);
     assert.equal(
-      await Bun.file(marker).text(),
+      await readTextFile(marker),
       "reached",
       `${provider} must load its compiled SDK and reach the offline transport`,
     );
     assert.ok(!errors.includes("synthetic-smoke-key"));
   }
   let bundledJsBytes = 0;
-  for await (const file of new Bun.Glob("**/*.mjs").scan({
+  for (const file of globFiles("**/*.mjs", {
     cwd: resolve(import.meta.dirname, "../../dist"),
     absolute: true,
   }))
@@ -234,9 +237,9 @@ try {
       2,
     ),
   );
-  const aiServer = aiFixture();
+  const aiServer = await aiFixture();
   try {
-    const ai = Bun.spawn(
+    const ai = spawnProcess(
       [
         binary,
         "ai",
@@ -283,8 +286,8 @@ try {
       ["SIGINT", 130],
       ["SIGTERM", 143],
     ] as const) {
-      const server = aiFixture({ stall: true });
-      const child = Bun.spawn(
+      const server = await aiFixture({ stall: true });
+      const child = spawnProcess(
         [
           binary,
           "ai",
@@ -310,7 +313,7 @@ try {
       const watchdog = setTimeout(() => child.kill("SIGKILL"), 10_000);
       try {
         const deadline = performance.now() + 5000;
-        while (!server.requests.length && performance.now() < deadline) await Bun.sleep(10);
+        while (!server.requests.length && performance.now() < deadline) await sleep(10);
         assert.equal(server.requests.length, 1, "AI request must start before cancellation");
         child.kill(signal);
         assert.equal(
@@ -328,7 +331,7 @@ try {
     }
   }
   await smokeManagedPi(binary, dataDir);
-  const invalid = Bun.spawn([binary, "--json", "--profile"], {
+  const invalid = spawnProcess([binary, "--json", "--profile"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
     stdout: "pipe",
@@ -340,7 +343,7 @@ try {
   assert.ok(diagnostics(invalidDiagnostics).some((event) => event.code === "LOCAL_ERROR"));
   completed(invalidDiagnostics, "command", "failed");
   for (const tuiArgs of [["tui"], ["tui", "--json"], ["tui", "--yes"]]) {
-    const tui = Bun.spawn([binary, ...tuiArgs, "--data-dir", join(dataDir, "not-interactive")], {
+    const tui = spawnProcess([binary, ...tuiArgs, "--data-dir", join(dataDir, "not-interactive")], {
       cwd: dataDir,
       env: { ...process.env, PATH: "" },
       stdin: "ignore",
@@ -355,13 +358,11 @@ try {
     );
     completed(rejectedDiagnostics, "tui", "failed");
     assert.equal(
-      await Bun.file(
-        join(dataDir, "not-interactive", "profiles", "default", "profile.sqlite"),
-      ).exists(),
+      await fileExists(join(dataDir, "not-interactive", "profiles", "default", "profile.sqlite")),
       false,
     );
   }
-  const help = Bun.spawn([binary, "stdio", "--help", "--data-dir", dataDir], {
+  const help = spawnProcess([binary, "stdio", "--help", "--data-dir", dataDir], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
     stdin: "ignore",
@@ -374,7 +375,7 @@ try {
   assert.ok(!helpText.includes('"event":'), "Help must not start the stdio protocol");
   completed(await new Response(help.stderr).text(), "command", "success");
   for (const invalidArgs of [["--unknown"], ["jobs", "list", "--json", "--json"]]) {
-    const rejected = Bun.spawn([binary, ...invalidArgs], {
+    const rejected = spawnProcess([binary, ...invalidArgs], {
       cwd: dataDir,
       env: { ...process.env, PATH: "" },
       stdout: "pipe",
@@ -388,7 +389,7 @@ try {
   }
   const directory = join(dataDir, "authorized --help 工作 目录");
   await mkdir(directory);
-  const authorize = Bun.spawn(
+  const authorize = spawnProcess(
     [binary, "--data-dir", dataDir, "files", "--json", "authorize", "--", directory],
     { cwd: dataDir, env: { ...process.env, PATH: "" }, stdout: "pipe", stderr: "pipe" },
   );
@@ -406,7 +407,7 @@ try {
     process.platform === "win32"
       ? ["/d", "/c", "echo private-command-output"]
       : ["-c", "printf private-command-output"];
-  const createJob = Bun.spawn(
+  const createJob = spawnProcess(
     [
       binary,
       "jobs",
@@ -430,7 +431,7 @@ try {
   const job = JSON.parse(await new Response(createJob.stdout).text());
   assert.equal(await createJob.exited, 0);
   completed(await new Response(createJob.stderr).text(), "command", "success");
-  const runJob = Bun.spawn(
+  const runJob = spawnProcess(
     [binary, "jobs", "run", JSON.stringify({ id: job.id }), "--json", "--data-dir", dataDir],
     { cwd: dataDir, env: { ...process.env, PATH: "" }, stdout: "pipe", stderr: "pipe" },
   );
@@ -450,14 +451,14 @@ try {
   assert.ok(Number(summaries[0]?.elapsedMs) > 0, "Job summary must retain the operation duration");
   for (const privateValue of ["private-job-name", "private-command-output", dataDir, shell])
     assert.ok(!jobDiagnostics.includes(privateValue), "Diagnostics must omit private command data");
-  const child = Bun.spawn([binary, "stdio", "--data-dir", dataDir], {
+  const child = spawnProcess([binary, "stdio", "--data-dir", dataDir], {
     cwd: dataDir,
     env: { ...process.env, PATH: "", RAYPX_HERDR_BINARY: join(dataDir, "missing-herdr") },
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
-  await child.stdin.write(
+  child.stdin.write(
     JSON.stringify({ version: 1, id: "smoke", method: "runtime.info", params: {} }) + "\n",
   );
   const reader = child.stdout.getReader();
@@ -475,27 +476,20 @@ try {
       .filter(Boolean)
       .map((line) => JSON.parse(line))
       .find((value) => value.id === "smoke");
-    assert.equal(`bun@${response.result.runtime}`, packageManager);
+    assert.equal(response.result.runtime, engines.node);
     assert.equal(response.result.scheduler, true);
-    const bunShim: unknown = response.result.bun;
-    assert.ok(typeof bunShim === "string", "runtime.info must report the bundled Bun shim");
-    assert.ok((await Bun.file(bunShim).text()).includes(binary), "Shim must run this executable");
-    if (process.platform !== "win32") {
-      const script = join(dataDir, "bundled-bun.ts");
-      await writeFile(script, "console.log(`bundled-bun ${Bun.version}`)");
-      const bun = Bun.spawn([bunShim, "run", script], {
-        cwd: dataDir,
-        env: { ...process.env, PATH: "" },
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      assert.equal(await bun.exited, 0, "Bundled Bun must run scripts without an installed Bun");
-      assert.equal(
-        `bun@${(await new Response(bun.stdout).text()).trim().replace("bundled-bun ", "")}`,
-        packageManager,
-      );
+    const nodePath: unknown = response.result.node;
+    const pnpmPath: unknown = response.result.pnpm;
+    assert.ok(typeof nodePath === "string" && typeof pnpmPath === "string");
+    for (const [tool, toolVersion] of [
+      [nodePath, `v${engines.node}`],
+      [pnpmPath, packageManager.slice(5)],
+    ]) {
+      const process = spawnProcess([tool!, "--version"], { cwd: dataDir, env: { PATH: "" } });
+      assert.equal((await new Response(process.stdout).text()).trim(), toolVersion);
+      assert.equal(await process.exited, 0);
     }
-    await child.stdin.write(
+    child.stdin.write(
       JSON.stringify({ version: 1, id: "persisted", method: "roots.list", params: {} }) + "\n",
     );
     while (!output.includes('"id":"persisted"')) {
@@ -513,7 +507,7 @@ try {
       process.platform === "win32"
         ? ["/d", "/c", "echo raypx-pty"]
         : ["-c", "printf 'raypx-pty\\n'"];
-    await child.stdin.write(
+    child.stdin.write(
       JSON.stringify({
         version: 1,
         id: "pty",
@@ -544,7 +538,7 @@ try {
       "TERMINAL_HOST_UNAVAILABLE",
     );
     const toolId = crypto.randomUUID();
-    await child.stdin.write(
+    child.stdin.write(
       JSON.stringify({
         version: 1,
         id: "cleanup",
@@ -561,8 +555,8 @@ try {
         },
       }) + "\n",
     );
-    await Bun.sleep(100);
-    await child.stdin.end();
+    await sleep(100);
+    child.stdin.end();
     while (true) {
       const part = await reader.read();
       if (part.done) break;

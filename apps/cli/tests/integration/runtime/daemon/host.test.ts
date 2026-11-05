@@ -10,9 +10,9 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon, createRuntime } from "../../../helpers/enrolled";
-import { daemonFetch } from "../../../../src/runtime/daemon/endpoint";
-import { localFetch } from "../../../../src/runtime/local-http";
+import { startDaemon, createRuntime } from "../../../helpers/enrolled.ts";
+import { daemonFetch } from "../../../../src/runtime/daemon/endpoint.ts";
+import { localFetch } from "../../../../src/runtime/local-http.ts";
 
 import type { AgentTask } from "@raypx/core/tasks";
 

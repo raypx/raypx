@@ -2,8 +2,8 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
-import type { ContextDocument } from "./index.js";
-import { MemoryLibraryPage, type MemoryUsagePort } from "./client.js";
+import type { ContextDocument } from "./index.ts";
+import { MemoryLibraryPage, type MemoryUsagePort } from "./client.ts";
 import {
   document,
   version,
@@ -14,7 +14,7 @@ import {
   deviceId,
   projectId,
   setupMemoryClientTests,
-} from "../tests/helpers/client";
+} from "../tests/helpers/client.tsx";
 setupMemoryClientTests();
 
 it.each(["switch", "new", "close"] as const)(

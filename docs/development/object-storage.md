@@ -2,7 +2,7 @@
 
 `@raypx/storage` stores files for server code. It wraps [unstorage](https://unstorage.unjs.io)
 drivers behind a small `ObjectStorage` interface and adds S3 pre-signed URLs with
-aws4fetch. The S3 adapter uses fetch only, so AWS S3 and compatible providers work through the Bun API.
+aws4fetch. The S3 adapter uses fetch only, so AWS S3 and compatible providers work through the Node API.
 
 ## Configuration
 

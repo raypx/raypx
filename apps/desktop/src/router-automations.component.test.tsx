@@ -11,7 +11,7 @@ import {
   testRouter,
   mount,
   page,
-} from "../tests/helpers/router-local";
+} from "../tests/helpers/router-local.tsx";
 import userEvent from "@testing-library/user-event";
 
 describe("Desktop local file routes", () => {

@@ -9,7 +9,7 @@ const config: StorybookConfig = {
   // Storybook owns the Vite config; add only what the shared UI styles need.
   viteFinal(viteConfig) {
     viteConfig.plugins = [...(viteConfig.plugins ?? []), tailwindcss()];
-    // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
+    // A `pnpm link`ed library resolves its own React copy; keep singleton peers unique.
     viteConfig.resolve = { ...viteConfig.resolve, dedupe: ["react", "react-dom"] };
     viteConfig.build = {
       ...viteConfig.build,

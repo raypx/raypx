@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { AuthForm } from "../../features/auth/components/auth-form";
-import { publicConfigurationQuery } from "../../features/configuration/client";
+import { AuthForm } from "../../features/auth/components/auth-form.tsx";
+import { publicConfigurationQuery } from "../../features/configuration/client.ts";
 
 export const Route = createFileRoute("/(auth)/signup")({
   component: SignupPage,

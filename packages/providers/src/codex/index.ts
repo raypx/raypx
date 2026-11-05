@@ -1,4 +1,4 @@
-import { decodeCodexActivity } from "./activity.js";
+import { decodeCodexActivity } from "./activity.ts";
 import { taskText } from "@raypx/core/task-text";
 import type { AgentTask, ProviderDefinition } from "@raypx/core/tasks";
 import {
@@ -9,7 +9,7 @@ import {
   type ExecutionHandle,
   type AgentTransport,
   type TransportFactory,
-} from "../core/index.js";
+} from "../core/index.ts";
 
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? taskText(value, max) : "";
@@ -228,4 +228,4 @@ export class CodexAdapter implements ProviderSession {
   }
 }
 
-export { decodeCodexActivity } from "./activity.js";
+export { decodeCodexActivity } from "./activity.ts";

@@ -1,4 +1,4 @@
-import type { CacheStore } from "./types.js";
+import type { CacheStore } from "./types.ts";
 
 export interface MemoryStoreOptions {
   /** Least recently used entries are evicted beyond this count. */

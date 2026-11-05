@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { isDevicePreferences } from "./preferences";
+import { isDevicePreferences } from "./preferences.ts";
 
 it.each([
   { fields: { theme: "dark", locale: "zh" }, valid: true },

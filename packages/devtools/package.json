@@ -11,10 +11,10 @@
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --project unit",
-    "test:component": "bun --bun vp test --run --project component"
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --project unit",
+    "test:component": "vp test --run --project component"
   },
   "dependencies": {
     "@raypx/i18n": "workspace:*",

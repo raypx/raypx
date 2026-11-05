@@ -1,12 +1,12 @@
-import { capture } from "../helpers/capture.js";
+import { capture } from "../helpers/capture.ts";
 import { expect } from "@playwright/test";
-import { test } from "../helpers/browser-fixture.js";
+import { test } from "../helpers/browser-fixture.ts";
 
 import type { ContextDocument, ContextDocumentInput, ContextVersion } from "@raypx/memory";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
-import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
-import { selectOption } from "../helpers/select.js";
+import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.ts";
+import { selectOption } from "../helpers/select.ts";
 
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {

@@ -8,7 +8,7 @@ import { Switch } from "@raypx/ui/components/ui/switch";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { localRequest } from "../../lib/desktop";
+import { localRequest } from "../../lib/desktop.ts";
 
 type Settings = LocalResult<"approvals.local.settings">;
 type Connector = LocalResult<"connectors.status">[number];

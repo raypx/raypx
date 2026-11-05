@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { accountQuery } from "../../features/auth/account-query";
-import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
-import { AdminShell } from "../../components/admin-shell";
+import { accountQuery } from "../../features/auth/account-query.ts";
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.tsx";
+import { AdminShell } from "../../components/admin-shell.tsx";
 
 export const Route = createFileRoute("/(admin)")({
   beforeLoad: async ({ context, location }) => {

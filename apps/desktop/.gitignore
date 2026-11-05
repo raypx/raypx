@@ -1,9 +1,8 @@
-# Start output is embedded in the native WebView.
+# Generated renderer, contracts and bundled CLI resources.
 /dist
-# MyGo outputs; resources icons and entitlements are source files.
 /generated/
 /resources/bin/
-/.mygo/
-/mygo_windows_*.syso
 /build
 /artifacts
+/src-tauri/target/
+/src-tauri/gen/

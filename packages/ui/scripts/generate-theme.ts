@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { themeTokens } from "../src/themes/tokens.js";
+import { themeTokens } from "../src/themes/tokens.ts";
 
 const dom = Object.entries(themeTokens)
   .map(

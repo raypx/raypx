@@ -1,7 +1,7 @@
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
-import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary";
-import { taskClient } from "../../features/tasks/client";
+import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary.tsx";
+import { taskClient } from "../../features/tasks/client.ts";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppearanceSettings, LanguageSettings, SettingsPage } from "@raypx/blocks/settings";
 import { useTranslations } from "@raypx/i18n/browser";

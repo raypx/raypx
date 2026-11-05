@@ -14,9 +14,9 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { DesktopPlatformProvider } from "../../lib/platform-context";
-import { desktopFixture, deferred } from "../../../tests/helpers/desktop";
-import { DesktopSignOutProvider, useDesktopSignOut } from "./sign-out";
+import { DesktopPlatformProvider } from "../../lib/platform-context.tsx";
+import { desktopFixture, deferred } from "../../../tests/helpers/desktop.ts";
+import { DesktopSignOutProvider, useDesktopSignOut } from "./sign-out.tsx";
 
 expect.extend(matchers);
 const mocks = vi.hoisted(() => ({ signOut: vi.fn(), reset: vi.fn() }));

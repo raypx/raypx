@@ -1,9 +1,9 @@
 import { JobError, type CloudJobRun } from "@raypx/jobs";
 import type { JobDispatchResult } from "@raypx/jobs/server";
 import { taskSchema } from "@raypx/core/tasks";
-import { ControlError, type ControlService } from "../service.js";
-import type { RelayOperation, RelayReply } from "./cluster.js";
-import type { DeviceResult, RelayRegistry, SyncPending, Synced } from "./registry.js";
+import { ControlError, type ControlService } from "../service.ts";
+import type { RelayOperation, RelayReply } from "./cluster.ts";
+import type { DeviceResult, RelayRegistry, SyncPending, Synced } from "./registry.ts";
 // Only these host paths reject before launching a task. Generic errors can also
 // come from saving a receipt after execution, so an explicit failure is not proof.
 const knownHostCreateRejections = new Set([

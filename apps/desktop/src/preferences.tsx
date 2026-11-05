@@ -13,9 +13,9 @@ import {
   isDevicePreferences,
   type DevicePreferences,
   type PreferenceSnapshot,
-} from "../preferences";
+} from "../preferences.ts";
 import { Button } from "@raypx/ui/components/ui/button";
-import { isDesktop, saveDesktopPreferences } from "./lib/desktop";
+import { isDesktop, saveDesktopPreferences } from "./lib/desktop.ts";
 
 function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot {
   if (snapshot && typeof snapshot === "object" && "status" in snapshot) {

@@ -75,7 +75,7 @@ vi.mock("../../src/features/configuration/client", () => ({
   }),
 }));
 vi.mock("../../src/features/auth/access", async (original) => ({
-  ...(await original<typeof import("../../src/features/auth/access")>()),
+  ...(await original<typeof import("../../src/features/auth/access.ts")>()),
   accountAccessQuery: (accountId: string | null) => ({
     queryKey: ["account-access", accountId],
     queryFn: mocks.access,

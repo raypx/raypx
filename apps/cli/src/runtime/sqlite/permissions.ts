@@ -1,6 +1,7 @@
+import { runProcessSync } from "@raypx/runtime-node/process";
 import { chmodSync, lstatSync, mkdirSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.ts";
 
 const files = ["profile.sqlite", "profile.sqlite.migration-lock.sqlite"].flatMap((file) => [
   file,
@@ -18,6 +19,7 @@ $directory = $env:RAYPX_PRIVATE_PROFILE
 $paths = @($directory) + @('profile.sqlite','profile.sqlite-wal','profile.sqlite-shm','profile.sqlite-journal','profile.sqlite.migration-lock.sqlite','profile.sqlite.migration-lock.sqlite-wal','profile.sqlite.migration-lock.sqlite-shm','profile.sqlite.migration-lock.sqlite-journal') | ForEach-Object { if ($_ -eq $directory) { $_ } else { Join-Path $directory $_ } }
 foreach ($path in $paths) {
   if (!(Test-Path -LiteralPath $path)) { continue }
+  try {
   $item = Get-Item -Force -LiteralPath $path
   if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { throw 'Unsupported path' }
   if ($item.PSIsContainer) {
@@ -34,6 +36,11 @@ foreach ($path in $paths) {
     $acl.AddAccessRule($rule)
   }
   Set-Acl -LiteralPath $path -AclObject $acl
+  } catch {
+    # Another SQLite connection may remove a transient sidecar after Test-Path.
+    if (($path -match '-(wal|shm|journal)$') -and !(Test-Path -LiteralPath $path)) { continue }
+    throw
+  }
 }
 `;
 
@@ -60,7 +67,7 @@ export function protectProfile(directory: string) {
     if (process.platform === "win32") {
       const root = process.env.SystemRoot;
       if (!root || !isAbsolute(root)) throw new Error("Windows system directory unavailable");
-      const result = Bun.spawnSync({
+      const result = runProcessSync({
         cmd: [
           join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
           "-NoProfile",
@@ -77,7 +84,18 @@ export function protectProfile(directory: string) {
       if (result.exitCode !== 0) throw new Error("Private ACL unavailable");
     } else {
       chmodSync(directory, 0o700);
-      for (const file of existing) chmodSync(file, 0o600);
+      for (const file of existing) {
+        try {
+          chmodSync(file, 0o600);
+        } catch (error) {
+          // Closing another connection can remove WAL/SHM/journal files between lstat and chmod.
+          if (
+            !/-(wal|shm|journal)$/.test(file) ||
+            (error as NodeJS.ErrnoException).code !== "ENOENT"
+          )
+            throw error;
+        }
+      }
     }
   } catch {
     throw new LocalError("PROFILE_STORAGE_UNAVAILABLE", "Unable to protect profile storage");

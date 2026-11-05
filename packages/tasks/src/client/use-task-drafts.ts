@@ -1,5 +1,5 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { readTaskDrafts, type TaskDraft, type TaskDraftStore } from "../model/drafts.js";
+import { readTaskDrafts, type TaskDraft, type TaskDraftStore } from "../model/drafts.ts";
 
 const empty = { drafts: [] as TaskDraft[], ready: false, failed: false };
 const failed = { ...empty, ready: true, failed: true };

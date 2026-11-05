@@ -1,10 +1,12 @@
+import { fileExists, readJsonFile } from "@raypx/runtime-node/files";
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { LocalEvent } from "@raypx/contracts/local";
-import { HerdrTerminalHost, terminalLaunch } from "../../src/runtime/process/herdr";
-import { herdrRpc } from "../helpers/herdr-rpc";
+import { HerdrTerminalHost, terminalLaunch } from "../../src/runtime/process/herdr.ts";
+import { herdrRpc } from "../helpers/herdr-rpc.ts";
 
 // eslint-disable-next-line no-control-regex -- Inspect rendered ANSI fixture frames.
 const ansi = /\x1b\[[0-?]*[ -/]*[@-~]/g;
@@ -47,7 +49,7 @@ async function settled(id: string) {
   const until = Date.now() + 12000;
   while (!events.some((event) => event.event === "terminal.exit" && event.data.id === id)) {
     if (Date.now() > until) throw new Error("Herdr terminal did not settle");
-    await Bun.sleep(10);
+    await sleep(10);
   }
   return events.find((event) => event.event === "terminal.exit" && event.data.id === id)!;
 }
@@ -133,7 +135,7 @@ try {
       );
       throw new Error("Herdr input was not rendered");
     }
-    await Bun.sleep(10);
+    await sleep(10);
   }
   host.cancel(interactive.id);
   await settled(interactive.id);
@@ -174,7 +176,7 @@ try {
     80,
     24,
   );
-  await Bun.sleep(100);
+  await sleep(100);
   await host.paste(query.id, "paste-value");
   await host.key(query.id, "up");
   await host.mouse(query.id, { action: "down", button: "left", column: 4, row: 5, modifiers: 0 });
@@ -193,9 +195,11 @@ try {
   );
   console.log("Herdr cursor query, alternate screen and bracketed paste passed");
   const report = join(root, "owned-processes.json");
-  const owner = Bun.spawn(
+  const owner = spawnProcess(
     [
       process.execPath,
+      "--import",
+      import.meta.resolve("tsx"),
       resolve(import.meta.dirname, "../fixtures/process/herdr-owner.ts"),
       binary,
       root,
@@ -214,12 +218,12 @@ try {
   );
   const deadline = Date.now() + 12000;
   try {
-    while (!(await Bun.file(report).exists())) {
+    while (!(await fileExists(report))) {
       if (Date.now() > deadline || owner.exitCode !== null)
         throw new Error("Isolated Herdr owner did not start");
-      await Bun.sleep(20);
+      await sleep(20);
     }
-    const pids = (await Bun.file(report).json()) as number[];
+    const pids = await readJsonFile(report);
     owner.kill();
     await owner.exited;
     const alive = (pid: number) => {
@@ -232,7 +236,7 @@ try {
     };
     while (pids.some(alive)) {
       if (Date.now() > deadline) throw new Error("Owner exit left a terminal descendant running");
-      await Bun.sleep(25);
+      await sleep(25);
     }
     console.log("Herdr supervisor EOF and descendant cleanup passed");
   } finally {

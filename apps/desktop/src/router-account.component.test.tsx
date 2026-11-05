@@ -28,7 +28,7 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "./routeTree.gen.ts";
-import { DesktopSignOutProvider } from "./features/auth/sign-out";
+import { DesktopSignOutProvider } from "./features/auth/sign-out.tsx";
 
 expect.extend(matchers);
 

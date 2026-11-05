@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AgentTask, HumanRequest } from "./tasks.js";
+import type { AgentTask, HumanRequest } from "./tasks.ts";
 
 export const agentRunStatusSchema = z.enum([
   "queued",

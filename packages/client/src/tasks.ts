@@ -1,5 +1,5 @@
-import type { ApiClient } from "./api.js";
-import { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.js";
+import type { ApiClient } from "./api.ts";
+import { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.ts";
 import {
   RELAY_VERSION,
   type RelayRequest,

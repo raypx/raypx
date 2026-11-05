@@ -2,7 +2,7 @@ import { expect, it } from "vite-plus/test";
 import { chmod, lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { applyHookSettings, planHookSettings } from "../../../../src/runtime/terminal/settings";
+import { applyHookSettings, planHookSettings } from "../../../../src/runtime/terminal/settings.ts";
 
 const command = { command: "'/installed/raypx' terminal hook codex" };
 it.skipIf(process.platform === "win32")(

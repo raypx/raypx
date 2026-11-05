@@ -4,8 +4,8 @@ import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { InfoIcon } from "@raypx/icons/info";
 import type { IconComponent } from "@raypx/icons";
 
-import { Badge, type BadgeProps } from "./components/ui/badge";
-import { cn } from "./lib/utils";
+import { Badge, type BadgeProps } from "./components/ui/badge.tsx";
+import { cn } from "./lib/utils.ts";
 
 export type StatusTone = "neutral" | "info" | "warning" | "success" | "danger";
 

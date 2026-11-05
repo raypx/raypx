@@ -1,4 +1,4 @@
-import { StorageError } from "./errors.js";
+import { StorageError } from "./errors.ts";
 
 const SEGMENT = /^[A-Za-z0-9!_.*'()-]+$/;
 

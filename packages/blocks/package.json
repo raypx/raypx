@@ -10,9 +10,9 @@
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run .component.test."
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:component": "vp test --run .component.test."
   },
   "dependencies": {
     "@raypx/i18n": "workspace:*",

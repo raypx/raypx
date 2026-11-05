@@ -1,4 +1,5 @@
-export function aiFixture(
+import { serveHttp } from "@raypx/runtime-node/http";
+export async function aiFixture(
   options: {
     status?: number;
     tool?: boolean;
@@ -14,7 +15,7 @@ export function aiFixture(
     body: Record<string, unknown>;
   }[] = [];
   let cancelled = false;
-  const server = Bun.serve({
+  const server = await serveHttp({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {

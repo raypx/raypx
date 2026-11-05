@@ -1,11 +1,11 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { AuthSession } from "@raypx/auth/types";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { createCache } from "../cache/cache.js";
-import { createMemoryStore } from "../cache/memory.js";
-import { createConfigurationService } from "./service.js";
-import { createAccessPolicy } from "../access.js";
-import type { ConfigurationReader, ConfigurationRepository } from "./types.js";
+import { createCache } from "../cache/cache.ts";
+import { createMemoryStore } from "../cache/memory.ts";
+import { createConfigurationService } from "./service.ts";
+import { createAccessPolicy } from "../access.ts";
+import type { ConfigurationReader, ConfigurationRepository } from "./types.ts";
 
 function fixture() {
   const auth: AuthSession = {

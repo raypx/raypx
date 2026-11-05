@@ -1,5 +1,5 @@
 import { connect } from "node:net";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.ts";
 
 export const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);

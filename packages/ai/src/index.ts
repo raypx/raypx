@@ -4,13 +4,13 @@ export {
   type AiRequestOptions,
   type AiSelection,
   type AiStream,
-} from "./client.js";
-export { AiError, type AiErrorCode } from "./errors.js";
+} from "./client.ts";
+export { AiError, type AiErrorCode } from "./errors.ts";
 export {
   createCompatibleProvider,
   defaultProviders,
   type CompatibleProviderOptions,
-} from "./providers.js";
+} from "./providers.ts";
 export { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 export type {
   Api,
@@ -27,4 +27,4 @@ export type {
   Usage,
 } from "@earendil-works/pi-ai";
 
-export { prepareModelContext } from "./context.js";
+export { prepareModelContext } from "./context.ts";

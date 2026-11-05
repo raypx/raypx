@@ -1,11 +1,14 @@
 import { expect, it } from "vite-plus/test";
-import { connectorCommand, planConnectorSettings } from "../../../../src/runtime/daemon/connectors";
-import { serviceDefinition } from "../../../../src/runtime/daemon/service";
-import { profilePath } from "../../../../src/runtime/state";
+import {
+  connectorCommand,
+  planConnectorSettings,
+} from "../../../../src/runtime/daemon/connectors.ts";
+import { serviceDefinition } from "../../../../src/runtime/daemon/service.ts";
+import { profilePath } from "../../../../src/runtime/state/index.ts";
 import { dirname, join } from "node:path";
 import { mkdtempSync, mkdirSync, realpathSync, symlinkSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { terminalProjectPaths } from "../../../../src/runtime/daemon/control";
+import { terminalProjectPaths } from "../../../../src/runtime/daemon/control.ts";
 
 it.skipIf(process.platform === "win32")(
   "ignores missing projects and refuses a replacement symlink",

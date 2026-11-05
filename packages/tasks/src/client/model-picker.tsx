@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useId, useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
-import type { TaskWorkspacePort } from "../model/port.js";
+import type { TaskWorkspacePort } from "../model/port.ts";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { SelectField } from "@raypx/ui/select-field";

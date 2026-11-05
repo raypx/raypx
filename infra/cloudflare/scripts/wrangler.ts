@@ -1,3 +1,5 @@
+import { writeResource, readJsonFile, removeResource } from "@raypx/runtime-node/files";
+import { spawnProcess } from "@raypx/runtime-node/process";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -18,10 +20,10 @@ const release =
     stdio: ["ignore", "pipe", "ignore"],
   }).trim();
 if (!/^[\w.-]{1,200}$/.test(release)) throw new Error("Invalid public release identifier");
-const config = await Bun.file(join(workspace, "wrangler.json")).json();
+const config = await readJsonFile(join(workspace, "wrangler.json"));
 config.containers[0].image_vars = { VITE_APP_RELEASE: release };
 config.build = {
-  command: "bun run raypx-dev tasks build --filter relay-cloudflare",
+  command: "pnpm run raypx-dev tasks build --filter relay-cloudflare",
   cwd: root,
   watch_dir: join(workspace, "src"),
 };
@@ -30,10 +32,12 @@ config.build = {
 // their normal meaning. Remove it even when the deploy/build fails.
 const generated = join(workspace, `.wrangler.${process.pid}.json`);
 try {
-  await Bun.write(generated, JSON.stringify(config));
-  const child = Bun.spawn(
+  await writeResource(generated, JSON.stringify(config));
+  const child = spawnProcess(
     [
       process.execPath,
+      "--import",
+      import.meta.resolve("tsx"),
       fileURLToPath(import.meta.resolve("wrangler")),
       command === "dev" ? "dev" : "deploy",
       ...(command?.startsWith("plan") ? ["--dry-run"] : []),
@@ -46,5 +50,5 @@ try {
   );
   process.exitCode = await child.exited;
 } finally {
-  await Bun.file(generated).delete();
+  await removeResource(generated);
 }

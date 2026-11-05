@@ -2,7 +2,7 @@ import { styledSlot } from "#lib/styled-slot";
 import type { ComponentProps, MouseEvent } from "react";
 
 import { cn } from "#lib/utils";
-import { Input } from "./input";
+import { Input } from "./input.tsx";
 
 export type InputGroupAddonAlign = "inline-start" | "inline-end" | "block-start" | "block-end";
 

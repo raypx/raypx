@@ -1,4 +1,4 @@
-import { releaseMetadataFile, resolveRelease, type ReleaseSurface } from "./release.js";
+import { releaseMetadataFile, resolveRelease, type ReleaseSurface } from "./release.ts";
 
 /** Hidden maps are an explicit release-build option, independent of user capture consent. */
 export function analyticsBuild(surface: ReleaseSurface) {

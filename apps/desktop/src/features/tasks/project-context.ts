@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { useProjectCatalog } from "./project-catalog";
-import { selectLocalProject } from "./project-selection";
-import { recentProjects, rememberProject } from "./project-history";
+import { useProjectCatalog } from "./project-catalog.ts";
+import { selectLocalProject } from "./project-selection.ts";
+import { recentProjects, rememberProject } from "./project-history.ts";
 
 /** The application owns the authorized project; tools only consume this target. */
 export function useLocalProjectContext(enabled = true) {

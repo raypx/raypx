@@ -84,7 +84,7 @@ Keep shared test setup in `tests/setup.ts`.
 ## Verification
 
 ```sh
-bun run --cwd packages/ui generate:theme
-bun run --cwd packages/ui check
-bun run --cwd packages/ui test
+pnpm --dir packages/ui run generate:theme
+pnpm --dir packages/ui run check
+pnpm --dir packages/ui run test
 ```

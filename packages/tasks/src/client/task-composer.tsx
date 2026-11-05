@@ -11,14 +11,14 @@ import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { cn } from "@raypx/ui/lib/utils";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { SendIcon } from "@raypx/icons/send";
-import { ComposerContextFields } from "./composer/context-fields.js";
-import { ComposerDraftActions } from "./composer/draft-actions.js";
-import { ComposerDraftList } from "./composer/draft-list.js";
-import { ComposerTargetOptions } from "./composer/target-options.js";
-import { ModelPicker } from "./model-picker.js";
-import { useTaskComposer, type TaskComposerProps } from "./use-task-composer.js";
+import { ComposerContextFields } from "./composer/context-fields.tsx";
+import { ComposerDraftActions } from "./composer/draft-actions.tsx";
+import { ComposerDraftList } from "./composer/draft-list.tsx";
+import { ComposerTargetOptions } from "./composer/target-options.tsx";
+import { ModelPicker } from "./model-picker.tsx";
+import { useTaskComposer, type TaskComposerProps } from "./use-task-composer.ts";
 
-export type { ComposerDraft as TaskComposerDraft } from "../model/composer.js";
+export type { ComposerDraft as TaskComposerDraft } from "../model/composer.ts";
 
 export function TaskComposer(props: TaskComposerProps) {
   return (

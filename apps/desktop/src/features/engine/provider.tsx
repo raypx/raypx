@@ -6,11 +6,11 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { useDesktopPlatform } from "../../lib/platform-context";
-import { createEngineController } from "./model";
+import { useDesktopPlatform } from "../../lib/platform-context.tsx";
+import { createEngineController } from "./model.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { taskChangeSchema } from "@raypx/contracts/tasks";
-import { projectCatalogKey } from "../tasks/project-catalog";
+import { projectCatalogKey } from "../tasks/project-catalog.ts";
 
 type Controller = ReturnType<typeof createEngineController>;
 const EngineContext = createContext<Controller | null>(null);

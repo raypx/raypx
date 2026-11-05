@@ -1,9 +1,16 @@
-import { profileStorage } from "../../../helpers/sqlite";
+import { profileStorage } from "../../../helpers/sqlite.ts";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { Database } from "bun:sqlite";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { StateStore } from "../../../../src/runtime/state";
-import { uuid, now, normalizedSql, task, request, fixture } from "../../../helpers/agent-snapshot";
+import { DatabaseSync as Database } from "node:sqlite";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
+import { StateStore } from "../../../../src/runtime/state/index.ts";
+import {
+  uuid,
+  now,
+  normalizedSql,
+  task,
+  request,
+  fixture,
+} from "../../../helpers/agent-snapshot.ts";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -13,16 +20,16 @@ it("bounds local pages, task approvals and startup work among 10,000 historical 
   let runtime: AgentRuntime | undefined;
   const binding = "desktop:performance";
   try {
-    f.database.transaction(() => {
+    f.transaction(() => {
       for (let index = 1; index <= 10_000; index++) {
         const local = task(index, index % 2 ? "desktop:other" : binding);
         f.put.run(local.task.id, JSON.stringify(local));
         const value = { ...request(index, local.task.id), status: "applied" };
         f.request.run(value.id, binding, JSON.stringify(value));
       }
-    })();
+    });
     const parse = vi.spyOn(JSON, "parse");
-    const queries = vi.spyOn(Database.prototype, "query");
+    const queries = vi.spyOn(Database.prototype, "prepare");
     runtime = new AgentRuntime(state, () => {});
     expect(parse).not.toHaveBeenCalled();
     for (let index = 10_001; index <= 10_002; index++) {
@@ -69,20 +76,20 @@ it("bounds local pages, task approvals and startup work among 10,000 historical 
         "select value from tasks where json_extract(tasks.value,'$.task.status') in",
       ),
     )!;
-    expect(JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${startup}`).all())).toMatch(
+    expect(JSON.stringify(f.database.prepare(`EXPLAIN QUERY PLAN ${startup}`).all())).toMatch(
       /USING INDEX tasks_(active_session|binding_active)/,
     );
     const page = sql.find((statement) =>
       normalizedSql(statement).includes("|| ':' || tasks.id < ?"),
     )!;
     const plan = JSON.stringify(
-      f.database.query(`EXPLAIN QUERY PLAN ${page}`).all(binding, before, 100),
+      f.database.prepare(`EXPLAIN QUERY PLAN ${page}`).all(binding, before, 100),
     );
     expect(plan).toContain("tasks_binding_cursor");
     expect(plan).not.toContain("TEMP B-TREE");
     const pending = sql.find((statement) => normalizedSql(statement).includes("exists (select"))!;
     expect(
-      JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${pending}`).all(binding)),
+      JSON.stringify(f.database.prepare(`EXPLAIN QUERY PLAN ${pending}`).all(binding)),
     ).toContain("requests_binding_pending");
     const approvals = sql.find(
       (statement) =>
@@ -90,7 +97,7 @@ it("bounds local pages, task approvals and startup work among 10,000 historical 
         normalizedSql(statement).includes("json_extract(requests.value,'$.taskid') = ?"),
     )!;
     expect(
-      JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${approvals}`).all(binding, uuid(2))),
+      JSON.stringify(f.database.prepare(`EXPLAIN QUERY PLAN ${approvals}`).all(binding, uuid(2))),
     ).toContain("requests_binding_task");
     console.info(
       JSON.stringify({

@@ -1,16 +1,16 @@
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { DesktopShell, ShellSkeleton } from "../components/shell";
+import { DesktopShell, ShellSkeleton } from "../components/shell.tsx";
 import { ThemeScript, themeMeta } from "@raypx/ui/themes";
-import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences";
-import { SessionGate } from "../features/auth/components/session-gate";
-import { DesktopSignOutProvider } from "../features/auth/sign-out";
-import { RemoteCoordinator } from "../features/tasks/coordinator";
-import { DesktopRuntimeProvider } from "../features/engine/provider";
-import { EngineRouteSync } from "../features/engine/routes";
-import { getBridge, isDesktop } from "../lib/desktop";
-import { AppAnalytics } from "../features/analytics/provider";
-import { externalLinkTarget } from "../lib/external-links";
+import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences.tsx";
+import { SessionGate } from "../features/auth/components/session-gate.tsx";
+import { DesktopSignOutProvider } from "../features/auth/sign-out.tsx";
+import { RemoteCoordinator } from "../features/tasks/coordinator.tsx";
+import { DesktopRuntimeProvider } from "../features/engine/provider.tsx";
+import { EngineRouteSync } from "../features/engine/routes.tsx";
+import { getBridge, isDesktop } from "../lib/desktop.ts";
+import { AppAnalytics } from "../features/analytics/provider.tsx";
+import { externalLinkTarget } from "../lib/external-links.ts";
 import appCss from "../styles.css?url";
 
 const Devtools = import.meta.env.DEV

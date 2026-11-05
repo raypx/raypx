@@ -16,8 +16,8 @@ vi.mock("./features/auth/client", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: session },
 }));
-import { Route as LandingRoute } from "./routes/(landing)/index";
-import { Route as ProjectsRoute } from "./routes/(app)/projects";
+import { Route as LandingRoute } from "./routes/(landing)/index.tsx";
+import { Route as ProjectsRoute } from "./routes/(app)/projects.tsx";
 
 async function html(account: AccountState, path = "/") {
   const root = createRootRouteWithContext<{ account: AccountState }>()({ component: Outlet });

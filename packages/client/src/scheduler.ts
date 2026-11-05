@@ -1,4 +1,4 @@
-/** A cancellation callback keeps timer handles portable across Bun and browsers. */
+/** A cancellation callback keeps timer handles portable across Node and browsers. */
 export interface RelayScheduler {
   now(): number;
   random(): number;

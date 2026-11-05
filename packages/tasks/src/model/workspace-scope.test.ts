@@ -5,7 +5,7 @@ import {
   workspaceOwner,
   workspaceScopeKey,
   type WorkspaceScope,
-} from "../model.js";
+} from "../model.ts";
 
 it("isolates device and remote draft ownership", () => {
   const namespace = "https://api.example.test";

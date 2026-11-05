@@ -5,7 +5,7 @@ vi.mock("../auth/client", () => ({
   apiUrl: "https://api.example.test",
   desktopFetch: vi.fn(),
 }));
-import { memoryUsage } from "./client";
+import { memoryUsage } from "./client.ts";
 it("adapts only referencing agent schedules while preserving paused-plan status", async () => {
   const id = "ABCDEFAB-1111-4111-8111-111111111111";
   mocks.list.mockResolvedValue({

@@ -1,11 +1,11 @@
 import { expect } from "@playwright/test";
-import { test } from "../helpers/browser-fixture.js";
+import { test } from "../helpers/browser-fixture.ts";
 
 import type { AgentTask } from "@raypx/core/tasks";
 
 import type { CloudJob, CloudJobCreateInput, CloudJobRun } from "@raypx/jobs";
-import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
-import { selectOption } from "../helpers/select.js";
+import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.ts";
+import { selectOption } from "../helpers/select.ts";
 
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {

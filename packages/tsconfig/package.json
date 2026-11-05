@@ -27,15 +27,16 @@
     "./react-library.json": "./react-library.json"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "bun --bun vp test --run --coverage"
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "vp test --run --coverage"
   },
   "devDependencies": {
     "@raypx-kit/devkit": "catalog:dev",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
+    "tsx": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {

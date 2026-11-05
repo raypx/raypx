@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
-import { test } from "./browser-fixture.js";
-import { web } from "./surfaces.js";
-import { capture } from "./capture.js";
+import { test } from "./browser-fixture.ts";
+import { web } from "./surfaces.ts";
+import { capture } from "./capture.ts";
 
 export async function preferencesPersist(page: Page, base: string) {
   await page.goto(`${base}/settings`);

@@ -7,8 +7,8 @@ import {
   log,
   parseError,
   type DrainContext,
-} from "./index.js";
-import { createDrainPipeline } from "./pipeline.js";
+} from "./index.ts";
+import { createDrainPipeline } from "./pipeline.ts";
 
 describe("evlog contracts", () => {
   let events: DrainContext[];

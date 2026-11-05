@@ -1,17 +1,20 @@
+import { cliLaunch } from "./installation.ts";
+import { serveHttp } from "@raypx/runtime-node/http";
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { mkdtemp, mkdir, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { isAbsolute, join } from "node:path";
 import type { LocalEvent } from "@raypx/contracts/local";
 import type { CommandSpec } from "@raypx/jobs";
-import type { Environment } from "./bun";
-import { LocalError } from "../errors";
-import { herdrError, herdrRequest, record } from "./herdr-ipc";
-import { herdrVersion } from "./herdr-release";
-import { removeHerdrDirectory } from "./herdr-cleanup";
-import { herdrFrame } from "./herdr-frame";
-import { foreignLoopbackRequest } from "../local-http";
+import type { Environment } from "./tools.ts";
+import { LocalError } from "../errors.ts";
+import { herdrError, herdrRequest, record } from "./herdr-ipc.ts";
+import { herdrVersion } from "./herdr-release.ts";
+import { removeHerdrDirectory } from "./herdr-cleanup.ts";
+import { herdrFrame } from "./herdr-frame.ts";
+import { foreignLoopbackRequest } from "../local-http.ts";
 
-type Child = ReturnType<typeof Bun.spawn>;
+type Child = ReturnType<typeof spawnProcess<{ stderr: "ignore" }>>;
 type Session = {
   id: string;
   workspace: string;
@@ -31,11 +34,7 @@ type Session = {
   pendingWrites: number;
   writing: Promise<void>;
 };
-export function terminalLaunch() {
-  return /(?:^|[/\\])bun(?:\.native)?(?:\.exe)?$/.test(process.execPath)
-    ? [process.execPath, resolve(import.meta.dirname, "../../main.ts")]
-    : [process.execPath];
-}
+export const terminalLaunch = cliLaunch;
 const fail = (code: string, message: string) => new LocalError(code, message);
 
 /** Herdr owns PTYs/VT state. Raypx owns command admission and session lifetime. */
@@ -54,12 +53,14 @@ export class HerdrTerminalHost {
   private root = "";
   private socket = "";
   private env: Environment = {};
-  private supervisor: Child | undefined;
+  private supervisor:
+    | ReturnType<typeof spawnProcess<{ stdout: "ignore"; stderr: "ignore" }>>
+    | undefined;
   private closing = false;
   private stopping: Promise<void> | undefined;
   private readonly token = crypto.randomUUID() + crypto.randomUUID();
   private readonly sessions = new Map<string, Session>();
-  private server: ReturnType<typeof Bun.serve> | undefined;
+  private server: Awaited<ReturnType<typeof serveHttp>> | undefined;
   constructor(
     private readonly binary: string,
     private readonly emit: (event: LocalEvent) => void,
@@ -78,7 +79,7 @@ export class HerdrTerminalHost {
   private async startOnce() {
     if (!isAbsolute(this.binary) || !(await stat(this.binary).catch(() => undefined))?.isFile())
       throw fail("TERMINAL_HOST_UNAVAILABLE", "Select an absolute Herdr executable");
-    const version = Bun.spawn([this.binary, "--version"], {
+    const version = spawnProcess([this.binary, "--version"], {
       stdout: "pipe",
       stderr: "ignore",
       windowsHide: true,
@@ -119,13 +120,13 @@ export class HerdrTerminalHost {
       HERDR_SOCKET_PATH: this.socket,
       RUST_LOG: "off",
     });
-    this.server = Bun.serve({
+    this.server = await serveHttp({
       hostname: "127.0.0.1",
       port: 0,
       maxRequestBodySize: 4096,
       fetch: async (request) => {
         if (
-          foreignLoopbackRequest(request, { port: this.server!.port! }) ||
+          foreignLoopbackRequest(request, { port: this.server!.port }) ||
           request.headers.get("authorization") !== `Bearer ${this.token}`
         )
           return new Response(null, { status: 403 });
@@ -153,7 +154,7 @@ export class HerdrTerminalHost {
         return new Response(null, { status: 409 });
       },
     });
-    this.supervisor = Bun.spawn(
+    this.supervisor = spawnProcess(
       [...this.launch, "--herdr-internal", "server", this.binary, this.socket, this.token],
       {
         cwd: this.root,
@@ -173,14 +174,14 @@ export class HerdrTerminalHost {
         if (ready.version !== herdrVersion) throw herdrError();
         break;
       }
-      await Bun.sleep(25);
+      await sleep(25);
     }
     void this.supervisor.exited.then(() => {
       if (!this.closing) for (const session of this.sessions.values()) this.finish(session, 1);
     });
   }
   private control(session: Session, observe = false) {
-    const child = Bun.spawn(
+    const child = spawnProcess(
       [
         this.binary,
         "terminal",
@@ -316,7 +317,7 @@ export class HerdrTerminalHost {
       });
       await Promise.race([
         session.ready,
-        Bun.sleep(5000).then(() => {
+        sleep(5000).then(() => {
           throw herdrError();
         }),
       ]);
@@ -332,7 +333,7 @@ export class HerdrTerminalHost {
       throw fail("TERMINAL_NOT_FOUND", "Terminal is closed");
     const line = JSON.stringify(message) + "\n";
     return this.queue(session, Buffer.byteLength(line), async () => {
-      await stdin.write(line);
+      stdin.write(line);
       await stdin.flush();
     });
   }
@@ -435,7 +436,7 @@ export class HerdrTerminalHost {
     if (session.finishing) return session.done;
     // The command may exit before layout.apply has returned its pane id.
     const until = Date.now() + 5000;
-    while (!session.pane && !session.finishing && Date.now() < until) await Bun.sleep(10);
+    while (!session.pane && !session.finishing && Date.now() < until) await sleep(10);
     if (session.finishing) return session.done;
     session.finishing = true;
     session.done = this.track(
@@ -448,7 +449,7 @@ export class HerdrTerminalHost {
               observed = true;
               break;
             }
-            await Bun.sleep(10);
+            await sleep(10);
           }
           if (!observed) throw herdrError();
           // Preserve a bounded history after the owned pane is closed. Screen
@@ -467,7 +468,7 @@ export class HerdrTerminalHost {
           )
             throw herdrError();
           if (session.control?.stdin && typeof session.control.stdin !== "number")
-            await session.control.stdin.end();
+            session.control.stdin.end();
           const control = session.control;
           const drainDeadline = setTimeout(() => control?.kill(), 2000);
           try {
@@ -548,7 +549,7 @@ export class HerdrTerminalHost {
         const input = this.supervisor.stdin;
         if (input && typeof input !== "number") {
           try {
-            await input.end();
+            input.end();
           } catch {
             /* Supervisor may have already exited. */
           }

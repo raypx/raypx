@@ -1,5 +1,5 @@
-import en from "./en.js";
-import zh from "./zh.js";
-import type { MessagesByLocale } from "../types.js";
+import en from "./en.ts";
+import zh from "./zh.ts";
+import type { MessagesByLocale } from "../types.ts";
 
 export const messages = { en, zh } satisfies MessagesByLocale;

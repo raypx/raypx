@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "@raypx-kit/devkit/process";
-import { runTasks } from "../repository.js";
-import { smoke } from "../smoke/index.js";
-import { taskRef, taskModel } from "../tasks/model.js";
-import { argumentKey } from "../tasks/arguments.js";
-import type { VerificationPlan } from "./plan.js";
-import type { TestSelection } from "./tests.js";
-import { completionReport, precheckTimings, reportTiming } from "./report.js";
+import { runTasks } from "../repository.ts";
+import { smoke } from "../smoke/index.ts";
+import { taskRef, taskModel } from "../tasks/model.ts";
+import { argumentKey } from "../tasks/arguments.ts";
+import type { VerificationPlan } from "./plan.ts";
+import type { TestSelection } from "./tests.ts";
+import { completionReport, precheckTimings, reportTiming } from "./report.ts";
 
 export function executionTasks(
   plan: VerificationPlan,
@@ -30,9 +30,9 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   const formatStarted = performance.now();
   if (plan.full || files.length)
     await run(
-      process.execPath,
+      "pnpm",
       [
-        "--bun",
+        "exec",
         "vp",
         "fmt",
         "--check",
@@ -45,7 +45,7 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   const lintStarted = performance.now();
   const lintable = files.filter((file) => /\.(?:[cm]?[jt]sx?|vue|svelte)$/.test(file));
   if (plan.full || lintable.length)
-    await run(process.execPath, ["--bun", "vp", "lint", ...(plan.full ? [] : lintable)], root);
+    await run("pnpm", ["exec", "vp", "lint", ...(plan.full ? [] : lintable)], root);
   timings.lintMs = Math.round(performance.now() - lintStarted);
   return timings;
 }

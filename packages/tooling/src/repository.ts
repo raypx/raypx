@@ -1,20 +1,18 @@
-import { resolveRelease } from "./build/release.js";
+import { resolveRelease } from "./build/release.ts";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
-import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
+import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests.ts";
 import { join } from "node:path";
-import {
-  runTasks as executeTasks,
-  prepareTaskDirectories as prepareDirectories,
-} from "@raypx-kit/devkit/tasks";
-import { taskModel, taskPlan, taskRef, type TaskModel } from "./tasks/model.js";
+import { prepareTaskDirectories as prepareDirectories } from "@raypx-kit/devkit/tasks";
+import { executeTasks } from "./tasks/run.ts";
+import { taskModel, taskPlan, taskRef, type TaskModel } from "./tasks/model.ts";
 
 /** Raypx conventions for the shared @raypx-kit/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
 
 function taskDirectories(member: TaskModel["members"][number]) {
   return [
-    ...(member.native ? ["generated", "resources/bin", "build", ".mygo", "artifacts/browser"] : []),
+    ...(member.native ? ["generated", "resources/bin", "build", "artifacts/browser"] : []),
     ...(member.scripts.build ? ["dist", ".output"] : []),
   ];
 }
@@ -51,7 +49,12 @@ export async function runTasks(
       else
         await run(
           process.execPath,
-          [join(root, "packages/tooling/src/cli.ts"), "browser:run"],
+          [
+            "--import",
+            import.meta.resolve("tsx"),
+            join(root, "packages/tooling/src/cli.ts"),
+            "browser:run",
+          ],
           root,
           { ...process.env, ...browser.env },
         );
@@ -99,7 +102,7 @@ export async function runTasks(
               ? "development"
               : "build",
         ),
-        RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}`,
+        RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-node${process.versions.node}`,
       };
     },
   });

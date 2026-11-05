@@ -4,16 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "raypx-dev env -- bun --bun vp dev --config vite.app.config.ts",
-    "build": "raypx-dev env -- bun --bun vp build --config vite.app.config.ts",
-    "_build": "bun --bun vp build --config vite.app.config.ts",
-    "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
-    "start": "bun .output/server/index.mjs",
-    "check": "bun --check --tsconfig-override tsconfig.json && bun --check --tsconfig-override e2e/tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --project unit",
-    "test:component": "bun --bun vp test --run --project component",
-    "test:coverage": "bun --bun vp test --run --coverage",
+    "dev": "raypx-dev env -- vp dev --config vite.app.config.ts",
+    "build": "raypx-dev env -- vp build --config vite.app.config.ts",
+    "_build": "vp build --config vite.app.config.ts",
+    "preview": "raypx-dev env -- vp preview --config vite.app.config.ts",
+    "start": "node .output/server/index.mjs",
+    "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project e2e/tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --project unit",
+    "test:component": "vp test --run --project component",
+    "test:coverage": "vp test --run --coverage",
     "e2e": "raypx-dev e2e",
     "_e2e": "raypx-dev browser:run",
     "build:e2e": "raypx-dev tasks web#build:e2e"
@@ -76,7 +76,7 @@
     },
     "sourceTargets": {
       "vite.app.config.ts": "node",
-      "e2e/**": "bun"
+      "e2e/**": "node"
     },
     "browserTestProject": "web"
   }

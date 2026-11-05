@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { FileEntry } from "@raypx/contracts/local";
-import { localRequest, pickDirectory } from "../../lib/desktop";
-import { fileErrors, isDirty, useFilesStoreApi, type FileError } from "./store";
+import { localRequest, pickDirectory } from "../../lib/desktop.ts";
+import { fileErrors, isDirty, useFilesStoreApi, type FileError } from "./store.tsx";
 
 export function useFileActions({
   rootId,

@@ -11,9 +11,9 @@
     "./pi/context": "./src/pi/context.ts"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run"
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "catalog:",

@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vite-plus/test";
 import { CodexAdapter } from "@raypx/providers/codex";
-import { parseProviderReplay, ProviderReplay } from "../../../tests/helpers/provider-replay";
-import type { ReplayRecord } from "../../../tests/helpers/provider-replay";
-import { bootstrap, fixture } from "../../../tests/helpers/provider-session";
+import { parseProviderReplay, ProviderReplay } from "../../../tests/helpers/provider-replay.ts";
+import type { ReplayRecord } from "../../../tests/helpers/provider-replay.ts";
+import { bootstrap, fixture } from "../../../tests/helpers/provider-session.ts";
 
 it("validates replay records and reports directional mismatches without exposing payloads", async () => {
   expect(() => parseProviderReplay('{"direction":"provider","message":{},"extra":true}')).toThrow(

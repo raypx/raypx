@@ -1,4 +1,4 @@
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcBoundary } from "./boundary.ts";
 export function createJobsHandlers({ os, jobsCall }: Pick<RpcBoundary, "os" | "jobsCall">) {
   return {
     list: os.jobs.list.handler(({ context }) =>

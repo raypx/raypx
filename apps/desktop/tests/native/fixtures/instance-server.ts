@@ -1,3 +1,6 @@
+import { fileURLToPath as entryFile } from "node:url";
+import { resolve as entryPath } from "node:path";
+import { serveHttp } from "@raypx/runtime-node/http";
 import {
   enrollmentBeginSchema,
   enrollmentProof,
@@ -61,8 +64,12 @@ export function instanceFixture(origin: string, accountId: string) {
 }
 
 // The native Go acceptance suite runs this file and reads the printed origin.
-if (import.meta.main) {
-  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: (request) => handle(request) });
+if (process.argv[1] !== undefined && entryPath(process.argv[1]) === entryFile(import.meta.url)) {
+  const server = await serveHttp({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch: (request) => handle(request),
+  });
   const handle = instanceFixture(server.url.origin, "native-fixture-owner");
   console.info(JSON.stringify({ origin: server.url.origin }));
 }

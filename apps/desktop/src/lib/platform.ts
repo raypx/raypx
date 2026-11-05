@@ -1,7 +1,7 @@
 import { createLocalClient } from "@raypx/contracts/local-client";
 import { localEventSchema, type LocalEvent } from "@raypx/contracts/local";
-import type { DesktopBridge, DesktopRuntime } from "../../bridge";
-import type { DevicePreferences } from "../../preferences";
+import type { DesktopBridge, DesktopRuntime } from "../../bridge.ts";
+import type { DevicePreferences } from "../../preferences.ts";
 
 export function createDesktopPlatform(options: {
   available(): boolean;

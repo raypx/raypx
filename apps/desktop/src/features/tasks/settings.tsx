@@ -14,12 +14,12 @@ import {
   hasTerminalHooks,
   localRequest,
   pickDirectory,
-} from "../../lib/desktop";
-import { authClient } from "../auth/client";
-import { CloudTerminalSettings } from "./cloud-terminal-settings";
-import { TerminalSettings } from "./terminal-settings";
-import { ReauthorizeHost } from "./reauthorize";
-import { RemoteBoundary } from "../auth/components/remote-boundary";
+} from "../../lib/desktop.ts";
+import { authClient } from "../auth/client.ts";
+import { CloudTerminalSettings } from "./cloud-terminal-settings.tsx";
+import { TerminalSettings } from "./terminal-settings.tsx";
+import { ReauthorizeHost } from "./reauthorize.tsx";
+import { RemoteBoundary } from "../auth/components/remote-boundary.tsx";
 import { Link } from "@tanstack/react-router";
 import { CompassIcon } from "@raypx/icons/compass";
 

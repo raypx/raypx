@@ -1,5 +1,5 @@
-import { localeRuntime } from "./runtime.js";
-import type { Locale } from "./types.js";
+import { localeRuntime } from "./runtime.ts";
+import type { Locale } from "./types.ts";
 
 export function getLocaleCookie(header: string | null | undefined) {
   return localeRuntime.getLocaleCookie(header);

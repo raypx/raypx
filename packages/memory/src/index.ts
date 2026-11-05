@@ -1,4 +1,4 @@
-export * from "./model.js";
+export * from "./model.ts";
 
 export class ContextError extends Error {
   constructor(readonly code: string) {

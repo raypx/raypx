@@ -2,9 +2,9 @@ import type { ConversationEvent, TokenTotals } from "@raypx/providers/core";
 import { taskText } from "@raypx/core/task-text";
 
 import type { TaskActivity } from "@raypx/core/tasks";
-import type { ActivityDraft } from "./model";
-import type { ExecutionConversation } from "./harness/ports";
-import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports";
+import type { ActivityDraft } from "./model.ts";
+import type { ExecutionConversation } from "./harness/ports.ts";
+import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports.ts";
 
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;

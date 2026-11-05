@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { testLayer } from "./test-sources.js";
-import { baselineCases, compareCases, ownerMap } from "./inventory.js";
+import { testLayer } from "./test-sources.ts";
+import { baselineCases, compareCases, ownerMap } from "./inventory.ts";
 
 const original = {
   workspace: "web",

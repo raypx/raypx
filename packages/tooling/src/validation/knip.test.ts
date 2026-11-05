@@ -1,10 +1,10 @@
 import { expect, it } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { checkKnip, knipFindings } from "./knip.js";
+import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
+import { checkKnip, knipFindings } from "./knip.ts";
 
-it("keeps unused catalog entries and all other findings while recognizing Bun override references", () => {
+it("keeps unused catalog entries and all other findings while recognizing Node override references", () => {
   const report = {
     issues: [
       {

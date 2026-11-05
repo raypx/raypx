@@ -9,8 +9,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
-import { loadPreferences } from "../preferences";
-import { AppAnalytics } from "../features/analytics/provider";
+import { loadPreferences } from "../preferences.ts";
+import { AppAnalytics } from "../features/analytics/provider.tsx";
 import appCss from "../styles.css?url";
 
 const Devtools = import.meta.env.DEV

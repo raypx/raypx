@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { agentProviderSchema, agentProviders, type AgentProvider } from "@raypx/core/tasks";
-import type { LocalDatabase } from "../../../sqlite";
-import { storedRecord } from "../../../sqlite/records";
-import { agentMeta, projects } from "../../../sqlite/schema";
+import type { LocalDatabase } from "../../../sqlite/index.ts";
+import { storedRecord } from "../../../sqlite/records.ts";
+import { agentMeta, projects } from "../../../sqlite/schema.ts";
 
 /** Profile-level agent settings: enabled providers per project and device identity per binding. */
 export class ProfileSettings {

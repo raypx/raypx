@@ -1,2 +1,2 @@
-import { serveDaemonStdio } from "../../../src/transport/daemon-stdio";
+import { serveDaemonStdio } from "../../../src/transport/daemon-stdio.ts";
 await serveDaemonStdio({ dataDir: process.argv[2]! });

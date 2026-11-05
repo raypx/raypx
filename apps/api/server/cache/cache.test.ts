@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vite-plus/test";
-import { createCache } from "./cache.js";
-import { createMemoryStore } from "./memory.js";
-import { createTieredStore } from "./tiered.js";
-import type { CacheStore } from "./types.js";
+import { createCache } from "./cache.ts";
+import { createMemoryStore } from "./memory.ts";
+import { createTieredStore } from "./tiered.ts";
+import type { CacheStore } from "./types.ts";
 
 const asName = (value: unknown) => {
   if (typeof value !== "object" || value === null || !("name" in value)) throw new Error("invalid");

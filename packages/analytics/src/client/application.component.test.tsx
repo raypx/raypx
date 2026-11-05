@@ -3,8 +3,8 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { createNoopAnalytics } from "@raypx-kit/analytics";
-import { AnalyticsApplication } from "./application";
-import type { AnalyticsConsent } from "../index";
+import { AnalyticsApplication } from "./application.tsx";
+import type { AnalyticsConsent } from "../index.ts";
 
 afterEach(cleanup);
 it.each(["web", "desktop"] as const)(

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { selectOption } from "./helpers/select.js";
+import { selectOption } from "./helpers/select.ts";
 
 const directory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 const credentialsPath = process.env.RAYPX_NATIVE_SMOKE_CREDENTIALS;

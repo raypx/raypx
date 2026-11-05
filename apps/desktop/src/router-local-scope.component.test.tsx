@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
-import { mocks, page } from "../tests/helpers/router-local";
+import { mocks, page } from "../tests/helpers/router-local.tsx";
 
 it("keeps the cloud scope behind contextual login and returns to that scope afterward", async () => {
   const router = await page("/automations?scope=cloud");

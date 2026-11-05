@@ -64,8 +64,8 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { AgentSettings } from "./tasks/settings";
-import { RemoteCoordinator } from "./tasks/coordinator";
+import { AgentSettings } from "./tasks/settings.tsx";
+import { RemoteCoordinator } from "./tasks/coordinator.tsx";
 
 beforeEach(() => {
   mocks.recent = false;

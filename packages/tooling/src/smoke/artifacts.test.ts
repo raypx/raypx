@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vite-plus/test";
 
 const probeArtifact = vi.hoisted(() => vi.fn(async (_options: unknown) => {}));
 vi.mock("@raypx-kit/devkit/artifact", () => ({ probeArtifact }));
-const { probeApi, probeWeb, probeRelay } = await import("./artifacts.js");
+const { probeApi, probeWeb, probeRelay } = await import("./artifacts.ts");
 beforeEach(() => {
   probeArtifact.mockClear();
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -14,19 +14,19 @@ it.each([
   ["web", probeWeb],
   ["relay", probeRelay],
 ] as const)(
-  "starts the relocated %s output with the running Bun executable",
+  "starts the relocated %s output with the running Node executable",
   async (app, probe) => {
     await probe("/repo");
     expect(probeArtifact).toHaveBeenCalledOnce();
     const options = probeArtifact.mock.calls[0]![0] as Record<string, unknown>;
-    // No NODE_BINARY or pinned Node lookup: the probe runs the output under this Bun.
+    // No NODE_BINARY or pinned Node lookup: the probe runs the output under this Node.
     expect(options).toMatchObject({
       name: app,
       output:
         app === "relay" ? join("/repo", "infra/relay/dist") : join("/repo", "apps", app, ".output"),
       node: process.execPath,
     });
-    expect(process.versions.bun).toBeTruthy();
+    expect(process.versions.node).toBeTruthy();
   },
 );
 

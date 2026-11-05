@@ -1,11 +1,11 @@
-export { RelayHub } from "./hub.js";
-export { type RelayPeer } from "./registry.js";
-export { RedisRelayCluster } from "./redis.js";
+export { RelayHub } from "./hub.ts";
+export { type RelayPeer } from "./registry.ts";
+export { RedisRelayCluster } from "./redis.ts";
 export {
   type RelayCluster,
   type RelayOperation,
   type RelayReply,
   type RelayNotice,
-} from "./cluster.js";
-export { createRelayJobExecutor, type RelayJobTransport } from "./jobs.js";
-export { createRemoteRelay } from "./client.js";
+} from "./cluster.ts";
+export { createRelayJobExecutor, type RelayJobTransport } from "./jobs.ts";
+export { createRemoteRelay } from "./client.ts";

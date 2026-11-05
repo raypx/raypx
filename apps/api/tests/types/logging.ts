@@ -1,4 +1,4 @@
-import type { ApiLogging } from "../../server/logging.js";
+import type { ApiLogging } from "../../server/logging.ts";
 
 /** Checked by the API's strict type gate; never emits a runtime event. */
 function assertEventTypes(logging: ApiLogging) {

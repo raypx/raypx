@@ -1,6 +1,6 @@
 import z from "zod";
 
-import type { Preset } from "./types.js";
+import type { Preset } from "./types.ts";
 
 export const runtimeEnv = {
   id: "runtime",

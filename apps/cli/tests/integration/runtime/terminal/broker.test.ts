@@ -1,4 +1,4 @@
-import { profileStorage } from "../../../helpers/sqlite";
+import { profileStorage } from "../../../helpers/sqlite.ts";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -7,8 +7,8 @@ import {
   RequestBroker,
   type BrokerStore,
   type DecisionReceipt,
-} from "../../../../src/runtime/terminal/broker";
-import { TerminalStore } from "../../../../src/runtime/terminal/store";
+} from "../../../../src/runtime/terminal/broker.ts";
+import { TerminalStore } from "../../../../src/runtime/terminal/store.ts";
 import type { TerminalRequest } from "@raypx/contracts/terminal";
 
 const input = () => ({

@@ -16,14 +16,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.distribution || false }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 env:
-  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+  PNPM_STORE_DIR: ${{ github.workspace }}/.cache/pnpm
 jobs:
   changes:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
-      go: ${{ steps.plan.outputs.go }}
+      rust: ${{ steps.plan.outputs.rust }}
       native: ${{ steps.plan.outputs.native }}
       native_runners: ${{ steps.plan.outputs.native_runners }}
       deployment: ${{ steps.plan.outputs.deployment }}
@@ -34,10 +34,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/setup-node
       - name: Select affected verification gates
         id: plan
-        run: bun run raypx-dev ci:plan
+        run: pnpm run raypx-dev ci:plan
   javascript:
     needs: changes
     env:
@@ -48,18 +48,14 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
-      - uses: actions/setup-go@v6
-        if: needs.changes.outputs.go == 'true'
-        with:
-          go-version-file: apps/desktop/go.mod
-          cache-dependency-path: apps/desktop/go.sum
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/setup-rust
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
           partition: javascript
       - name: Verify affected source and artifacts
-        run: bun run raypx-dev ci:gate js
+        run: pnpm run raypx-dev ci:gate js
       - name: Generated sources remain reproducible
         run: git diff --exit-code
       - uses: ./.github/actions/vp-save
@@ -96,8 +92,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
-      - run: bun run raypx-dev ci:gate backend
+      - uses: ./.github/actions/setup-node
+      - run: pnpm run raypx-dev ci:gate backend
   browser:
     needs: changes
     env:
@@ -109,7 +105,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
@@ -117,7 +113,7 @@ jobs:
       - name: Resolve Playwright version
         id: playwright
         working-directory: e2e
-        run: echo "version=$(bun --bun playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
       # Headless runs only launch the Chromium shell; browser revisions follow the Playwright version.
       - uses: actions/cache@v6
         id: playwright-cache
@@ -125,7 +121,7 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-shell-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}
       - if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bun --bun playwright install --only-shell chromium
+        run: pnpm exec playwright install --only-shell chromium
         working-directory: e2e
       # The runner image usually provides Chromium's libraries; apt runs only when one is missing.
       - name: Install missing Chromium system libraries
@@ -134,9 +130,9 @@ jobs:
           shell="$(find ~/.cache/ms-playwright -type f -name chrome-headless-shell | head -n 1)"
           test -n "$shell"
           if ldd "$shell" | grep -q "not found"; then
-            bun --bun playwright install-deps chromium
+            pnpm exec playwright install-deps chromium
           fi
-      - run: bun run raypx-dev ci:gate browser
+      - run: pnpm run raypx-dev ci:gate browser
       - uses: ./.github/actions/vp-save
         with:
           key: ${{ steps.vp-cache.outputs.key }}
@@ -157,9 +153,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/setup-node
       - name: Build and accept Compose and Railway images
-        run: bun run raypx-dev ci:gate deployment
+        run: pnpm run raypx-dev ci:gate deployment
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -187,11 +183,11 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v6
         with:
-          bun-version-file: package.json
+          node-version-file: package.json
       - name: Require every selected gate to pass
         env:
           GITHUB_NEEDS: ${{ toJSON(needs) }}
           RAYPX_DISTRIBUTION_REQUEST: ${{ inputs.distribution || false }}
-        run: bun packages/tooling/src/verification/result.ts
+        run: node packages/tooling/src/verification/result.ts

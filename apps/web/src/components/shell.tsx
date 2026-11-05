@@ -1,20 +1,20 @@
-import { publicConfigurationQuery } from "../features/configuration/client";
+import { publicConfigurationQuery } from "../features/configuration/client.ts";
 import {
   accountAccessQuery,
   canAccessWebPage,
   webPages,
   type WebPath,
-} from "../features/auth/access";
+} from "../features/auth/access.ts";
 import { hasPermission } from "@raypx/account/access";
-import { PermissionBoundary } from "../features/auth/components/permission-boundary";
-import { analytics } from "../features/analytics/client";
+import { PermissionBoundary } from "../features/auth/components/permission-boundary.tsx";
+import { analytics } from "../features/analytics/client.ts";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { useEffect, useRef } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
-import { UserButton } from "./user-button";
-import { authClient } from "../features/auth/client";
-import { taskClient } from "../features/tasks/client";
-import { RemoteProjectNavigation } from "../features/tasks/project-navigation";
+import { UserButton } from "./user-button.tsx";
+import { authClient } from "../features/auth/client.ts";
+import { taskClient } from "../features/tasks/client.ts";
+import { RemoteProjectNavigation } from "../features/tasks/project-navigation.tsx";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Link,
@@ -32,8 +32,8 @@ import { BookOpenIcon } from "@raypx/icons/book-open";
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
-import { QuickSettingsModal } from "../features/settings/quick-settings-modal";
-import { useQuickSettingsStore } from "../features/settings/quick-settings-store";
+import { QuickSettingsModal } from "../features/settings/quick-settings-modal.tsx";
+import { useQuickSettingsStore } from "../features/settings/quick-settings-store.ts";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath | "/">) {
   return (

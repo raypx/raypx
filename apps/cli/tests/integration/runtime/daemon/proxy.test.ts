@@ -1,9 +1,11 @@
+import { serveHttp } from "@raypx/runtime-node/http";
+import { spawnProcess } from "@raypx/runtime-node/process";
 import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { daemonEventLines } from "../../../../src/transport/daemon-stdio";
-import { profilePath } from "../../../../src/runtime/state";
+import { daemonEventLines } from "../../../../src/transport/daemon-stdio.ts";
+import { profilePath } from "../../../../src/runtime/state/index.ts";
 import manifest from "../../../../package.json";
 
 it("reassembles UTF-8 events across arbitrary byte boundaries and rejects truncated records", async () => {
@@ -55,7 +57,7 @@ it.skipIf(process.platform === "win32")(
           data: { id: "terminal", bytes: "x".repeat(128000) + "😀" },
         }) + "\n",
       encode = new TextEncoder();
-    const server = Bun.serve({
+    const server = await serveHttp({
       unix: endpoint.socket,
       fetch(request) {
         const path = new URL(request.url).pathname;
@@ -76,13 +78,19 @@ it.skipIf(process.platform === "win32")(
       },
     });
     writeFileSync(join(directory, "daemon.json"), JSON.stringify(endpoint));
-    const child = Bun.spawn(
-      [process.execPath, join(import.meta.dirname, "../../../fixtures/daemon/proxy.ts"), dataDir],
+    const child = spawnProcess(
+      [
+        process.execPath,
+        "--import",
+        import.meta.resolve("tsx"),
+        join(import.meta.dirname, "../../../fixtures/daemon/proxy.ts"),
+        dataDir,
+      ],
       { stdin: "pipe", stdout: "pipe", stderr: "pipe" },
     );
     try {
       await expect.poll(() => Boolean(controller)).toBe(true);
-      await child.stdin.write(
+      child.stdin.write(
         JSON.stringify({ version: 1, id: "rpc", method: "runtime.info", params: {} }) + "\n",
       );
       await child.stdin.flush();
@@ -104,7 +112,7 @@ it.skipIf(process.platform === "win32")(
         event: "terminal.output",
         data: { bytes: "x".repeat(128000) + "😀" },
       });
-      await child.stdin.end();
+      child.stdin.end();
       await expect(child.exited).resolves.toBe(0);
     } finally {
       child.kill();

@@ -3,12 +3,12 @@ import { createFileRoute, getRouteApi, Link, useRouter } from "@tanstack/react-r
 import { CloudJobsPage } from "@raypx/jobs/client";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
-import { localRequest } from "../../lib/desktop";
-import { LocalJobsPage } from "../../features/automations/local";
-import { RemoteBoundary } from "../../features/auth/components/remote-boundary";
-import { cloudJobs, jobDevices } from "../../features/automations/client";
-import { accountMemory } from "../../features/memory/client";
-import { ProjectTools } from "../../features/tasks/project-tools";
+import { localRequest } from "../../lib/desktop.ts";
+import { LocalJobsPage } from "../../features/automations/local.tsx";
+import { RemoteBoundary } from "../../features/auth/components/remote-boundary.tsx";
+import { cloudJobs, jobDevices } from "../../features/automations/client.ts";
+import { accountMemory } from "../../features/memory/client.ts";
+import { ProjectTools } from "../../features/tasks/project-tools.tsx";
 import { ShellActions } from "@raypx/blocks/shell";
 
 const localRoute = getRouteApi("/(local)");

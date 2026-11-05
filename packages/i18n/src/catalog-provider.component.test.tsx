@@ -1,13 +1,13 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Suspense, useState } from "react";
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { createCatalogLanguageProvider } from "./catalog-provider.js";
-import { createCatalogStore } from "./catalog-store.js";
-import en from "./messages/en.js";
-import zh from "./messages/zh.js";
-import type { LocalePreference } from "./preferences.js";
-import { useLanguagePreference, useLocale, useTranslations } from "./react.js";
-import type { Messages } from "./types.js";
+import { createCatalogLanguageProvider } from "./catalog-provider.tsx";
+import { createCatalogStore } from "./catalog-store.ts";
+import en from "./messages/en.ts";
+import zh from "./messages/zh.ts";
+import type { LocalePreference } from "./preferences.ts";
+import { useLanguagePreference, useLocale, useTranslations } from "./react.ts";
+import type { Messages } from "./types.ts";
 
 afterEach(cleanup);
 

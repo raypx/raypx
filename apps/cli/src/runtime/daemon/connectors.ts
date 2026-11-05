@@ -1,3 +1,10 @@
+import { compare } from "semver";
+import {
+  cliInstallation,
+  installRuntimeCopy,
+  verifyInstallation,
+} from "../process/installation.ts";
+import { parseTOML } from "confbox/toml";
 import {
   chmodSync,
   copyFileSync,
@@ -23,10 +30,10 @@ import {
   planHookSettings,
   readHookSettings,
   type HookCommand,
-} from "../terminal/settings";
-import { LocalError } from "../errors";
-import { acquireLock } from "../state";
-import { cliBuild } from "./build";
+} from "../terminal/settings.ts";
+import { LocalError } from "../errors.ts";
+import { acquireLock } from "../state/index.ts";
+import { cliBuild } from "./build.ts";
 
 export function raypxHome() {
   const directory = process.env.RAYPX_HOME ?? join(homedir(), ".raypx");
@@ -121,7 +128,7 @@ export function connectorSettingsFile(
     if (Buffer.byteLength(source) > 16384)
       throw new LocalError("INVALID_CONFIG", "Raypx config exceeds 16 KiB");
     try {
-      configured = (Bun.TOML.parse(source) as Record<string, unknown>).connectors;
+      configured = parseTOML<Record<string, unknown>>(source).connectors;
     } catch {
       throw new LocalError("INVALID_CONFIG", "Invalid connector configuration");
     }
@@ -147,7 +154,7 @@ export function assertStableUpgrade(
   next = cliBuild,
 ) {
   if (
-    Bun.semver.order(previous.version, next.version) > 0 ||
+    compare(previous.version, next.version) > 0 ||
     (previous.version === next.version && previous.builtAt > next.builtAt)
   )
     throw new LocalError(
@@ -160,6 +167,10 @@ const installationSchema = z.strictObject({
   digest: z.string().regex(/^[a-f0-9]{64}$/),
   version: z.string().min(1).max(120),
   builtAt: z.number().int().nonnegative(),
+  directory: z
+    .string()
+    .regex(/^versions\/[a-zA-Z0-9_.-]+$/)
+    .optional(),
 });
 function readInstallation(file: string) {
   const result = installationSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
@@ -184,6 +195,7 @@ export function stableCliStatus(binary = stableCliPath()) {
         updateAvailable: false,
         repairable: true,
       };
+    if (previous.directory) verifyInstallation(join(dirname(binary), previous.directory), null);
     const updateAvailable =
       previous.version !== cliBuild.version ||
       (cliBuild.builtAt > 0 && previous.builtAt !== cliBuild.builtAt);
@@ -200,7 +212,7 @@ export function stableCliStatus(binary = stableCliPath()) {
   }
 }
 export function refreshStableCli() {
-  if (/(?:^|[/\\])bun(?:\.native)?(?:\.exe)?$/.test(process.execPath)) return;
+  if (!cliInstallation().bundled) return;
   const metadata = join(dirname(stableCliPath()), "installation.json");
   if (!existsSync(metadata)) return;
   const status = stableCliStatus();
@@ -233,14 +245,15 @@ export function preserveModifiedCli(binary: string, confirmed = false) {
   return backup;
 }
 
-/** Copy only the compiled host to a stable, explicitly owned installation. */
+/** Install the launcher and its complete versioned runtime to a stable, explicitly owned installation. */
 export function installStableCli(recoverModified = false) {
   if (process.platform !== "darwin" && process.platform !== "win32")
     throw new LocalError(
       "UNSUPPORTED_PLATFORM",
       "Stable host installation currently supports macOS and Windows",
     );
-  if (/(?:^|[/\\])bun(?:\.native)?(?:\.exe)?$/.test(process.execPath))
+  const layout = cliInstallation();
+  if (!layout.bundled || !layout.launcher)
     throw new LocalError(
       "COMPILED_CLI_REQUIRED",
       "Build Raypx before installing terminal connectors",
@@ -259,16 +272,17 @@ export function installStableCli(recoverModified = false) {
           "INSTALLATION_CONFLICT",
           "Existing executable is not owned by this Raypx installer",
         );
-      if (recoverModified && binary === process.execPath)
+      if (recoverModified && binary === layout.launcher)
         throw new LocalError(
           "HOST_UPDATE_REQUIRED",
           "Use the trusted Desktop binary to repair this installation",
         );
       preserveModifiedCli(binary, recoverModified);
     }
-    if (binary !== process.execPath) {
+    const payload = installRuntimeCopy(layout.root, join(directory, "versions"));
+    if (binary !== layout.launcher) {
       const temporary = `${binary}.${crypto.randomUUID()}.tmp`;
-      copyFileSync(process.execPath, temporary);
+      copyFileSync(layout.launcher, temporary);
       chmodSync(temporary, 0o755);
       // Windows cannot replace a running hook executable but can rename it aside.
       if (process.platform === "win32" && existsSync(binary))
@@ -283,9 +297,17 @@ export function installStableCli(recoverModified = false) {
           }
     }
     const temporary = `${ownership}.tmp`;
-    writeFileSync(temporary, JSON.stringify({ digest: digest(binary), ...cliBuild }), {
-      mode: 0o600,
-    });
+    writeFileSync(
+      temporary,
+      JSON.stringify({
+        digest: digest(binary),
+        ...cliBuild,
+        directory: "versions/" + basename(payload),
+      }),
+      {
+        mode: 0o600,
+      },
+    );
     renameSync(temporary, ownership);
     return binary;
   } finally {

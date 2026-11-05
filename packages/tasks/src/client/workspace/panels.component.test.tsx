@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { TaskPanels } from "../task-panels.js";
+import { TaskPanels } from "../task-panels.tsx";
 
 beforeEach(() => {
   localStorage.clear();

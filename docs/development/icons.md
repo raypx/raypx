@@ -65,9 +65,9 @@ Do not overwrite existing primitives merely to switch icon libraries.
 ## Verification and package size
 
 ```sh
-bun run --cwd packages/icons check
-bun run --cwd packages/icons test
-bun run verify
+pnpm --dir packages/icons run check
+pnpm --dir packages/icons run test
+pnpm run verify
 ```
 
 Meaningful component tests cover SVG refs, updated size/stroke/accessibility props
@@ -88,8 +88,8 @@ the free MIT collection is used; Pro assets and license keys are not required.
 ## Migration validation (2026-11-02)
 
 All source checks and tests, production Web/Desktop renderer builds and
-`bun run verify` passed on raypx-tokyo. Verify completed 71 tasks, including the
-Linux Go checks/tests after installing the pinned Go 1.27.3 toolchain. This does
+`pnpm run verify` passed on raypx-tokyo. Verify completed 71 tasks, including the
+Linux Rust checks/tests after installing the pinned Rust 1.99.1 toolchain. This does
 not establish packaged macOS/Windows or native mobile acceptance.
 
 Browser probes passed for compiled stroke inheritance, light/dark rendering,

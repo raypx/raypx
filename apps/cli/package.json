@@ -7,23 +7,23 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "bun run src/main.ts",
-    "check": "bun scripts/generate-sqlite.ts --check && bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:integration": "bun --bun vp test --run tests/integration",
-    "build": "bun scripts/generate-sqlite.ts --check && bun --bun vp pack",
-    "smoke": "bun run tests/smoke/artifact.ts",
-    "smoke:tui": "bun run tests/smoke/tui.ts",
-    "smoke:herdr-terminal": "bun run tests/smoke/herdr-terminal.ts",
-    "prepare:herdr": "bun run scripts/prepare-herdr.ts",
-    "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
-    "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts",
-    "smoke:daemon-agents": "bun run tests/smoke/daemon-agents.ts",
-    "smoke:pi": "bun run tests/smoke/pi-runner.ts",
-    "perf:tasks": "bun --bun vp test --run tests/integration/runtime/agents/snapshot --reporter=verbose --silent=false",
-    "eval:agents": "bun --no-env-file tests/evals/run.ts",
-    "db:generate": "bun scripts/generate-sqlite.ts"
+    "dev": "tsx src/main.ts",
+    "check": "tsx scripts/generate-sqlite.ts --check && tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:integration": "vp test --run tests/integration",
+    "build": "tsx scripts/generate-sqlite.ts --check && vp pack",
+    "smoke": "tsx tests/smoke/artifact.ts",
+    "smoke:tui": "tsx tests/smoke/tui.ts",
+    "smoke:herdr-terminal": "tsx tests/smoke/herdr-terminal.ts",
+    "prepare:herdr": "tsx scripts/prepare-herdr.ts",
+    "smoke:terminal": "tsx tests/smoke/terminal-hooks.ts",
+    "smoke:terminal-stream": "tsx tests/smoke/terminal-stream.ts",
+    "smoke:daemon-agents": "tsx tests/smoke/daemon-agents.ts",
+    "smoke:pi": "tsx tests/smoke/pi-runner.ts",
+    "perf:tasks": "vp test --run tests/integration/runtime/agents/snapshot --reporter=verbose --silent=false",
+    "eval:agents": "tsx tests/evals/run.ts",
+    "db:generate": "tsx scripts/generate-sqlite.ts"
   },
   "dependencies": {
     "@raypx/ai": "workspace:*",
@@ -35,19 +35,23 @@
     "@raypx/logger": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/providers": "workspace:*",
+    "@raypx/runtime-node": "workspace:*",
     "citty": "catalog:",
+    "confbox": "catalog:",
     "croner": "catalog:",
     "drizzle-orm": "catalog:",
+    "semver": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@earendil-works/pi-agent-core": "catalog:",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
-    "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
+    "@types/semver": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "drizzle-kit": "catalog:dev",
+    "tsx": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "herdr": {
@@ -77,6 +81,6 @@
   },
   "raypx": {
     "kind": "app",
-    "target": "bun"
+    "target": "node"
   }
 }

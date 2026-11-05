@@ -1,6 +1,6 @@
 import type { ZodType } from "zod";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.ts";
 
 /** Persisted JSON crosses the same validation boundary on every read. */
 export function storedRecord<T>(schema: ZodType<T>, value: string): T {

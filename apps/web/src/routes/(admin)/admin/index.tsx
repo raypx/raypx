@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Overview } from "../../../features/administration/components/overview";
+import { Overview } from "../../../features/administration/components/overview.tsx";
 export const Route = createFileRoute("/(admin)/admin/")({
   staticData: { page: { title: "dash.nav.overview", layout: "workbench" } },
   component: Overview,

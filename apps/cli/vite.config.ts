@@ -1,9 +1,10 @@
 import { workspaceTaskConfig } from "@raypx/tooling/tasks";
+import { packageCli } from "@raypx/tooling/build/cli";
 import { resolve } from "node:path";
 import { defineConfig } from "vite-plus";
 
+const builtAt = Date.now();
 export default defineConfig({
-  // Standalone CLI builds do not consume Vite browser environment variables.
   envPrefix: [],
   ...workspaceTaskConfig(import.meta.url),
   pack: {
@@ -13,36 +14,12 @@ export default defineConfig({
     fixedExtension: true,
     dts: false,
     minify: true,
-    deps: {
-      alwaysBundle: [/.*/],
-      neverBundle: [/^bun:/],
-      onlyBundle: false,
-    },
-    inputOptions: {
-      resolve: { conditionNames: ["bun", "node", "import", "default"] },
-    },
+    define: { __RAYPX_CLI_BUILT_AT__: String(builtAt) },
+    deps: { alwaysBundle: [/.*/], neverBundle: [/^node:/], onlyBundle: false },
+    inputOptions: { resolve: { conditionNames: ["node", "import", "default"] } },
     hooks: {
       "build:done": async ({ options }) => {
-        // The repository packageManager pins the runtime embedded in the standalone binary.
-        const { packageManager } = await Bun.file(
-          resolve(import.meta.dirname, "../../package.json"),
-        ).json();
-        if (`bun@${Bun.version}` !== packageManager)
-          throw new Error(`CLI artifacts must be compiled with ${packageManager}`);
-
-        const result = await Bun.build({
-          entrypoints: [resolve(options.outDir, "main.mjs")],
-          compile: {
-            outfile: resolve(options.outDir, process.platform === "win32" ? "raypx.exe" : "raypx"),
-          },
-          target: "bun",
-          define: { __RAYPX_CLI_BUILT_AT__: String(Date.now()) },
-          // Keep ESM so bytecode compilation supports the entrypoint's top-level await.
-          format: "esm",
-          bytecode: true,
-        });
-        if (!result.success)
-          throw new AggregateError(result.logs, "CLI executable compilation failed");
+        await packageCli(resolve(import.meta.dirname, "../.."), resolve(options.outDir), builtAt);
       },
     },
   },

@@ -1,12 +1,12 @@
 import { and, asc, eq } from "drizzle-orm";
-import type { LocalDatabase } from "../../../sqlite";
-import { storedRecord } from "../../../sqlite/records";
-import { taskEvents } from "../../../sqlite/schema";
+import type { LocalDatabase } from "../../../sqlite/index.ts";
+import { storedRecord } from "../../../sqlite/records.ts";
+import { taskEvents } from "../../../sqlite/schema.ts";
 import {
   isActivityEvent,
   orchestrationEventSchema,
   type OrchestrationEvent,
-} from "../../domain/events";
+} from "../../domain/events.ts";
 
 /**
  * Durable orchestration history. Every non-activity domain event the sink commits

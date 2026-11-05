@@ -3,7 +3,7 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { systemConfiguration, user } from "@raypx/database/schema";
 import { configurationDefaults } from "@raypx/contracts/api";
 import { eq } from "drizzle-orm";
-import { createConfigurationRepository } from "../../../server/configuration/repository.js";
+import { createConfigurationRepository } from "../../../server/configuration/repository.ts";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

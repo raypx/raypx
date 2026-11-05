@@ -6,7 +6,7 @@ import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/rea
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { TaskMarkdown } from "./markdown.js";
+import { TaskMarkdown } from "./markdown.tsx";
 
 type Gap = { id: number; before: number; after: number };
 type Props = {

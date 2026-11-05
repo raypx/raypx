@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { checked, execute, pass, project } from "../helpers/cache.js";
+import { checked, execute, pass, project } from "../helpers/cache.ts";
 
 for (const automaticInputs of [true, false]) {
   it.each(["coverage", ".artifacts", "test-results", "playwright-report"])(

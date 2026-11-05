@@ -6,8 +6,8 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "./components/ui/empty";
-import { cn } from "./lib/utils";
+} from "./components/ui/empty.tsx";
+import { cn } from "./lib/utils.ts";
 
 export function EmptyState({
   title,

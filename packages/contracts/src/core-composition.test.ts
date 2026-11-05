@@ -1,9 +1,9 @@
 import { expect, it } from "vite-plus/test";
 import * as core from "@raypx/core/tasks";
 import { agentRunStatusSchema } from "@raypx/core/agent-runs";
-import * as tasks from "./tasks.js";
-import { apiContract } from "./api.js";
-import { localResults } from "./local-client.js";
+import * as tasks from "./tasks.ts";
+import { apiContract } from "./api.ts";
+import { localResults } from "./local-client.ts";
 
 it("composes wire envelopes with core models while retaining command normalization", () => {
   expect(tasks.sequencedEventSchema.shape.event).toBe(core.agentEventSchema);

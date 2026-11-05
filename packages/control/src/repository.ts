@@ -1,4 +1,4 @@
-import { decodeControlRecord, decodeObservedSummary, type RecordKind } from "./schemas.js";
+import { decodeControlRecord, decodeObservedSummary, type RecordKind } from "./schemas.ts";
 import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Database } from "@raypx/database/connection";
@@ -15,7 +15,7 @@ import {
   controlTask,
 } from "@raypx/database/schema";
 
-import type { ControlRepository, ControlTransaction, ControlQuery } from "./ports.js";
+import type { ControlRepository, ControlTransaction, ControlQuery } from "./ports.ts";
 const tables = {
   device: controlDevice,
   project: controlProject,
@@ -29,7 +29,7 @@ const tables = {
   observed_request: controlObservedRequest,
 } satisfies Record<RecordKind, typeof controlEvent>;
 const table = (kind: RecordKind) => tables[kind];
-import { CONTEXT_COMMAND_TTL_MS } from "./records.js";
+import { CONTEXT_COMMAND_TTL_MS } from "./records.ts";
 
 /** Build the production projection query, also used by real-PostgreSQL EXPLAIN tests. */
 export function controlListQuery(

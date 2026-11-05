@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { PasswordInput } from "./password-input";
+import { PasswordInput } from "./password-input.tsx";
 
 afterEach(cleanup);
 const labels = { show: "Show password", hide: "Hide password" };

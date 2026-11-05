@@ -1,7 +1,7 @@
 import type { JobDefinition, JobRun } from "@raypx/jobs";
 import { describe, expect, it, vi } from "vite-plus/test";
-import { runSession, type TuiService } from "./session";
-import type { TuiTerminal } from "./terminal";
+import { runSession, type TuiService } from "./session.ts";
+import type { TuiTerminal } from "./terminal.ts";
 
 const job: JobDefinition = {
   id: "job-daily",

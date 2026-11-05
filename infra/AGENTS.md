@@ -1,6 +1,6 @@
 # Infrastructure
 
-Infrastructure packages are private Bun workspaces discovered through `infra/*`
+Infrastructure packages are private Node workspaces discovered through `infra/*`
 in the root manifest. Service composition roots declare `raypx.kind: app` and
 provider configuration declares `tooling`. Each owns its dependencies, deployment
 entry, lightweight VP task config and focused tests. Applications never import
@@ -10,4 +10,4 @@ Reuse the service contract in `@raypx/tooling/build/deployment` and application
 Dockerfiles. Keep secrets and infrastructure state out of source control.
 Provider-specific instructions live in each workspace's AGENTS.md.
 The optional Cloudflare Worker is a managed edge adapter; its Relay container and
-all local tooling keep the pinned Bun runtime.
+all local tooling keep the pinned Node runtime.

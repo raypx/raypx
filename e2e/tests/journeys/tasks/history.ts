@@ -1,12 +1,12 @@
 import { expect } from "@playwright/test";
-import { test } from "../../helpers/browser-fixture.js";
-import { capture } from "../../helpers/capture.js";
+import { test } from "../../helpers/browser-fixture.ts";
+import { capture } from "../../helpers/capture.ts";
 import {
   authResponse,
   connectedProject,
   signedInAccount,
   webShellFixture,
-} from "../../helpers/account-fixture.js";
+} from "../../helpers/account-fixture.ts";
 
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {

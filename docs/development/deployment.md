@@ -57,7 +57,7 @@ do not provision Redis, storage or mail services; supply the intended environmen
 endpoints and credentials. Browser analytics uses its separate public build values.
 
 `@raypx/tooling/build/deployment` owns service ports, readiness paths and API ingress
-routes. Vite and Railway use that contract directly. `bun run policy` checks the
+routes. Vite and Railway use that contract directly. `pnpm run policy` checks the
 static Compose, Docker and Caddy adapters against it, and rejects API settings
 missing from Compose or the environment template.
 
@@ -75,33 +75,33 @@ period is 100000 microseconds, so quota 200000 means two CPUs. Change existing
 limits explicitly or choose a new builder name. A stopped builder starts on the
 next build. Reuse one bounded builder for the shared manifest and dependency image layers.
 
-Build and runtime stages use the pinned `oven/bun` images; Bun is the only runtime.
+Build and runtime stages use the pinned `node` images; Node is the only runtime.
 Compose and Railway use `apps/api/Dockerfile`, `apps/web/Dockerfile` and
-`infra/relay/Dockerfile`. Relay bundles its Bun entry with Vite.
+`infra/relay/Dockerfile`. Relay bundles its Node entry with Vite.
 These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
-local Bun install and VP task cache mounts to a temporary Dockerfile and removes
+local pnpm download and VP task cache mounts to a temporary Dockerfile and removes
 it on exit, including build failure. All install/build commands remain in the
 application Dockerfiles. Compose explicitly selects the API's `migrate` and
-`runtime` targets; the default `deploy` target additionally carries migration
-dependencies for Railway's isolated pre-deploy command.
+`runtime` targets; the default `deploy` target additionally carries the bundled
+Node migration command for Railway's isolated pre-deploy hook.
 API and Web share identical manifest and dependency stages: `deploy/manifests.ts`
-extracts package manifests and `bun.lock`, so source edits reuse the installed
-dependencies and only manifest or lockfile changes reinstall. The script
-supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`. Migration images
-install only database production dependencies and run as the `bun` user.
-`deploy/workspaces.ts` supplies dependency-free workspace discovery to manifest
-extraction and `deploy/sources.ts`. Source staging follows database's production
-workspace dependencies (including optional and peer dependencies), copying their
-manifests and `src/` trees at their original paths. Development dependencies and
-unrelated source trees are excluded. Database's `drizzle-foundation` remains an
-explicit asset in the shared `migration-payload` stage. Both migration-capable
-image targets copy that same stage, so adding a production workspace dependency
-does not require another Dockerfile source-copy entry.
+extracts package manifests, `pnpm-lock.yaml` and generated pnpm workspace config,
+so source edits reuse installed dependencies and only dependency metadata changes
+reinstall. It discovers workspaces through `deploy/workspaces.ts` and stages bin
+placeholders so pnpm can link workspace commands before source is copied. The
+build script supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`.
 
 The API provides three deployable targets: `migrate` is an isolated database job,
 `runtime` contains only the API output, and the default `deploy` target extends
-`runtime` with production database dependencies and migration sources for pre-deploy
-hooks. Railway builds that default target; Web defaults to `runtime` on both
+`runtime` with migration artifacts for pre-deploy hooks. The `migration-build`
+stage bundles `packages/database` as Node ESM; both migration-capable targets
+copy `dist/` and the unchanged `drizzle-foundation/` SQL ledger. Their command is
+`node migration/dist/commands.mjs migrate`; no repository source or installed
+package tree is required at migration runtime. The `deploy` target additionally
+contains the compiled API fixture used by deployment acceptance. All runtime
+targets use the unprivileged `node` user.
+
+Railway builds the default `deploy` target; Web defaults to `runtime` on both
 platforms. The shared Dockerfiles use layer caching without cache mounts, whose
 service-specific IDs would tie the files to Railway. Manifest or lockfile changes
 can require a fresh download; source-only changes reuse the installed dependency layer.
@@ -164,7 +164,7 @@ Check `/health`, database-aware `/ready`, signed-out redirects, real login,
 WebSocket upgrades and that images/routes/volumes belong to the intended project.
 Browser checks do not validate packaged Desktop or unconfigured mail flows.
 
-Run `bun run smoke:deployment` to build and exercise both deployment image targets
+Run `pnpm run smoke:deployment` to build and exercise both deployment image targets
 locally. The shared checks cover migrations, dependency readiness, guest SSR,
 assets, authenticated sessions, secure cookie attributes, Relay and recorded build
 release metadata. See [validation evidence](validation-artifacts.md) for isolation,

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { getRelayEnvironment } from "./env.js";
+import { getRelayEnvironment } from "./env.ts";
 
 const values = {
   NODE_ENV: "test",

@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { Auth } from "@raypx/auth/server";
-import { bootstrapAdministrators } from "./administration/bootstrap.js";
+import { bootstrapAdministrators } from "./administration/bootstrap.ts";
 
 function fixture() {
   const users = [

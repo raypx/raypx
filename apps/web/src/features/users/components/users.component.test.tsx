@@ -13,7 +13,7 @@ vi.mock("../../auth/client", () => ({
 vi.mock("../../auth/access", () => ({
   accountAccessQuery: (id: string) => ({ queryKey: ["account-access", id], queryFn: mocks.access }),
 }));
-import { Users } from "./users";
+import { Users } from "./users.tsx";
 
 const actor = {
   id: "admin",

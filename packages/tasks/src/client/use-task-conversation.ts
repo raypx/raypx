@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ConversationState } from "../model/conversation.js";
+import { ConversationState } from "../model/conversation.ts";
 import type { AgentEvent } from "@raypx/core/tasks";
-import type { TaskWorkspacePort } from "../model/port.js";
-import { workspaceOwner, workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
-import { failureCode } from "../model/failure.js";
-import { useRemoteQuery } from "./remote-query.js";
-import { waitForRead } from "./read.js";
+import type { TaskWorkspacePort } from "../model/port.ts";
+import { workspaceOwner, workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
+import { failureCode } from "../model/failure.ts";
+import { useRemoteQuery } from "./remote-query.ts";
+import { waitForRead } from "./read.ts";
 
 export function useTaskConversation(
   client: TaskWorkspacePort,

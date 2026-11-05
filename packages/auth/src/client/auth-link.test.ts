@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { readAuthLink } from "./auth-link";
+import { readAuthLink } from "./auth-link.ts";
 
 it.each(["", "?token=%20%20", "?error=TOKEN_EXPIRED", "?token=old&error=TOKEN_EXPIRED"])(
   "rejects an unusable reset link %s",

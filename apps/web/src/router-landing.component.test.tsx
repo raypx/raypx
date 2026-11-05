@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
-import { mocks, page, signIn } from "../tests/helpers/router-auth";
+import { mocks, page, signIn } from "../tests/helpers/router-auth.tsx";
 
 it("renders the landing page without account or private workspace reads", async () => {
   mocks.sessionPending = true;

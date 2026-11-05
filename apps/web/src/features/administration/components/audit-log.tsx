@@ -18,8 +18,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@raypx/ui/comp
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { administrationClient } from "../client";
-import { authClient, apiUrl } from "../../auth/client";
+import { administrationClient } from "../client.ts";
+import { authClient, apiUrl } from "../../auth/client.ts";
 
 type Cursor = NonNullable<AuditFilter["cursor"]>;
 function dateRange(from: string, to: string) {

@@ -1,4 +1,4 @@
-import type { StorageErrorCode } from "./types.js";
+import type { StorageErrorCode } from "./types.ts";
 
 /** Messages are codes only, so driver URLs and responses never reach logs or clients. */
 export class StorageError extends Error {

@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { uploadAnalyticsMaps } from "./analytics.js";
+import { uploadAnalyticsMaps } from "./analytics.ts";
 const mocks = vi.hoisted(() => ({ run: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@raypx-kit/devkit/process", () => ({ run: mocks.run }));
 afterEach(() => {

@@ -11,15 +11,15 @@ import {
   projectOccupied,
   taskSelection,
   type TaskSubmission,
-} from "./composition.js";
+} from "./composition.ts";
 import {
   createTaskDraft,
   MAX_TASK_DRAFTS,
   sameDraft,
   type DraftInput,
   type TaskDraft,
-} from "./drafts.js";
-import type { TaskFailureCode } from "./failure.js";
+} from "./drafts.ts";
+import type { TaskFailureCode } from "./failure.ts";
 
 /** Plain editor input an application restores; it never carries an execution receipt. */
 export type ComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode"> &

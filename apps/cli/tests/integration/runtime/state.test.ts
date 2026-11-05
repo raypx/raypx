@@ -1,8 +1,8 @@
-import { profileStorage } from "../../helpers/sqlite";
+import { profileStorage } from "../../helpers/sqlite.ts";
 import { describe, expect, it } from "vite-plus/test";
-import { createRuntime } from "../../helpers/enrolled";
-import { runtimeFixtures } from "../../helpers/runtime.js";
-import { StateStore } from "../../../src/runtime/state/index.js";
+import { createRuntime } from "../../helpers/enrolled.ts";
+import { runtimeFixtures } from "../../helpers/runtime.ts";
+import { StateStore } from "../../../src/runtime/state/index.ts";
 
 const { fixture } = runtimeFixtures();
 
@@ -44,7 +44,7 @@ describe("device state", () => {
       const roots = runtime.state.roots();
       runtime.state.db.$client.exec(`PRAGMA user_version=${version}`);
       expect(() => createRuntime({ dataDir: dir })).toThrow("unsupported SQLite schema");
-      expect(runtime.state.db.$client.query("PRAGMA user_version").get()).toEqual({
+      expect(runtime.state.db.$client.prepare("PRAGMA user_version").get()).toEqual({
         user_version: version,
       });
       expect(runtime.state.roots()).toEqual(roots);

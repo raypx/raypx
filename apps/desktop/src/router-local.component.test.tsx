@@ -2,8 +2,15 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import type { RootGrant } from "@raypx/contracts/local";
-import { rememberProject } from "./features/tasks/project-history";
-import { mocks, grants, deferred, testRouter, mount, page } from "../tests/helpers/router-local";
+import { rememberProject } from "./features/tasks/project-history.ts";
+import {
+  mocks,
+  grants,
+  deferred,
+  testRouter,
+  mount,
+  page,
+} from "../tests/helpers/router-local.tsx";
 
 describe("Desktop local file routes", () => {
   it("prefills the terminal from the current project without starting it and retains revoked targets", async () => {

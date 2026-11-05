@@ -1,22 +1,21 @@
-import { createLocalRouter } from "./router";
-import { PiHost } from "./agents/pi/host";
-import { InstanceRuntime } from "./instances";
-import { instanceKeys } from "./instances/keys";
-import { join } from "node:path";
+import { createLocalRouter } from "./router.ts";
+import { PiHost } from "./agents/pi/host.ts";
+import { InstanceRuntime } from "./instances/index.ts";
+import { instanceKeys } from "./instances/keys.ts";
 import { type LocalMethod } from "@raypx/contracts/local";
-import { MemoryRuntime } from "./memory";
-import { AgentRuntime } from "./agents";
-import { FileRuntime } from "./files";
-import { JobRuntime } from "./jobs";
-import { ProcessRuntime } from "./process";
-import { BundledBun } from "./process/bun";
-import { StateStore, profilePath, acquireLock } from "./state";
-import { LocalError } from "./errors";
+import { MemoryRuntime } from "./memory/index.ts";
+import { AgentRuntime } from "./agents/index.ts";
+import { FileRuntime } from "./files/index.ts";
+import { JobRuntime } from "./jobs/index.ts";
+import { ProcessRuntime } from "./process/index.ts";
+import { BundledTools } from "./process/tools.ts";
+import { StateStore, profilePath, acquireLock } from "./state/index.ts";
+import { LocalError } from "./errors.ts";
 
-import { recordDiagnostic } from "../diagnostics";
-import type { RuntimeOptions } from "./options";
+import { recordDiagnostic } from "../diagnostics.ts";
+import type { RuntimeOptions } from "./options.ts";
 
-import { ProfileStorage } from "./sqlite";
+import { ProfileStorage } from "./sqlite/index.ts";
 
 export function createRuntime(options: RuntimeOptions = {}) {
   const scheduler = options.mode === "stdio" || options.mode === "daemon";
@@ -35,8 +34,8 @@ export function createRuntime(options: RuntimeOptions = {}) {
     storage.close();
     throw error;
   }
-  const bun = new BundledBun(join(state.directory, "bun"));
-  const environment = () => bun.environment();
+  const tools = new BundledTools();
+  const environment = () => tools.environment();
   let releaseOwner: (() => void) | undefined;
   const ownAgents = () => {
     if (releaseOwner) return;
@@ -131,7 +130,7 @@ export function createRuntime(options: RuntimeOptions = {}) {
     processes,
     state,
     pi,
-    bun,
+    tools,
     refreshInstance,
     options: { ...options, scheduler },
   });

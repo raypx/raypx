@@ -1,8 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { collectInventory } from "../../src/validation/inventory.js";
-import { workspaceFixtures } from "../helpers/workspace.js";
+import { collectInventory } from "../../src/validation/inventory.ts";
+import { workspaceFixtures } from "../helpers/workspace.ts";
 
 const { fixture, member } = workspaceFixtures();
 function write(root: string, path: string, value: unknown) {
@@ -35,7 +35,7 @@ function setup() {
   ])
     write(root, `${directory}/${file}`, "fixture");
   const browser = member(root, "browser", {
-    metadata: { kind: "tooling", target: "bun" },
+    metadata: { kind: "tooling", target: "node" },
     extra: { scripts: { e2e: "fixture" } },
   });
   write(root, `${browser}/tests/access.spec.ts`, "fixture");

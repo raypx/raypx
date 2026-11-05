@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { desktopFixture, deferred } from "../../../tests/helpers/desktop";
-import { createEngineController } from "./model";
+import { desktopFixture, deferred } from "../../../tests/helpers/desktop.ts";
+import { createEngineController } from "./model.ts";
 
 it("keeps an authoritative engine event when an older initial read finishes later", async () => {
   const fixture = desktopFixture();

@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { admin } from "better-auth/plugins/admin";
-import { accountAccessControl, accountRoles, assignedRoles } from "./access.js";
+import { accountAccessControl, accountRoles, assignedRoles } from "./access.ts";
 import {
   APIError,
   createAuthEndpoint,
@@ -9,9 +9,9 @@ import {
 } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
-import type { AuthSession, AuthUser, SocialProvider } from "./types.js";
-import { normalizeTrustedOrigins } from "./origins.js";
-import { authPolicy } from "./policy.js";
+import type { AuthSession, AuthUser, SocialProvider } from "./types.ts";
+import { normalizeTrustedOrigins } from "./origins.ts";
+import { authPolicy } from "./policy.ts";
 
 export interface AuthMailInput {
   email: string;

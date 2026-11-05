@@ -2,9 +2,9 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
-import type { ContextDocument } from "./index.js";
+import type { ContextDocument } from "./index.ts";
 import { taskExecutionBudget } from "@raypx/core/tasks";
-import { ContextBudget } from "./client.js";
+import { ContextBudget } from "./client.ts";
 import {
   version,
   deferred,
@@ -14,7 +14,7 @@ import {
   deviceId,
   projectId,
   setupMemoryClientTests,
-} from "../tests/helpers/client";
+} from "../tests/helpers/client.tsx";
 setupMemoryClientTests();
 
 it("measures the selected historical version and updates on typing without refetching bodies", async () => {

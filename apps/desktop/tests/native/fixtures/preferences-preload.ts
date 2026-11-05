@@ -1,9 +1,12 @@
+import { fileURLToPath as entryFile } from "node:url";
+import { resolve as entryPath } from "node:path";
+import { readStandardInput } from "@raypx/runtime-node/process";
 import { runInNewContext } from "node:vm";
 import {
   DEVICE_PREFERENCES_KEY,
   isDevicePreferences,
   type NativePreferenceSnapshot,
-} from "../../../preferences";
+} from "../../../preferences.ts";
 
 /** Execute either host's actual preload and inspect JSON identity in its own JS realm. */
 function inspectPreferencePreload(script: string) {
@@ -32,7 +35,7 @@ function inspectPreferencePreload(script: string) {
   return { ...inspection, valid: isDevicePreferences(inspection.snapshot.raw) };
 }
 
-if (import.meta.main) {
-  const input = JSON.parse(await Bun.stdin.text()) as { script: string };
+if (process.argv[1] !== undefined && entryPath(process.argv[1]) === entryFile(import.meta.url)) {
+  const input = JSON.parse(await readStandardInput()) as { script: string };
   console.info(JSON.stringify(inspectPreferencePreload(input.script)));
 }

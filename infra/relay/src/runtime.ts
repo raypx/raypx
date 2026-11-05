@@ -4,8 +4,8 @@ import { ControlService, ControlProjects } from "@raypx/control";
 import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ContextLibraryService } from "@raypx/memory/server";
-import { startRelayServer } from "./server.js";
-import type { RelayEnvironment } from "./env.js";
+import { startRelayServer } from "./server.ts";
+import type { RelayEnvironment } from "./env.ts";
 
 export async function createRelayRuntime(environment: RelayEnvironment) {
   const connection = connectDatabase(environment.DATABASE_URL);
@@ -26,7 +26,7 @@ export async function createRelayRuntime(environment: RelayEnvironment) {
   try {
     // A configured broker outage leaves liveness available but readiness closed.
     await hub.attachCluster(new RedisRelayCluster(environment.REDIS_URL)).catch(() => {});
-    const server = startRelayServer({
+    const server = await startRelayServer({
       hub,
       databaseReady: () => connection.db.execute(sql`select 1`),
       allowedOrigins: environment.allowedOrigins,

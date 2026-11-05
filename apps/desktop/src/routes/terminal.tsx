@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { formText } from "../form-data";
+import { formText } from "../form-data.ts";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TerminalIcon } from "@raypx/icons/terminal";
 import { StopIcon } from "@raypx/icons/stop";
@@ -10,11 +10,11 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { useTranslations } from "@raypx/i18n/browser";
 import { themeTokens, useTheme } from "@raypx/ui/themes";
-import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop";
-import { terminalFrame } from "../features/terminal/frame";
-import { terminalKey } from "../features/terminal/input";
-import { recentProjects } from "../features/tasks/project-history";
-import { ProjectTools } from "../features/tasks/project-tools";
+import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop.ts";
+import { terminalFrame } from "../features/terminal/frame.ts";
+import { terminalKey } from "../features/terminal/input.ts";
+import { recentProjects } from "../features/tasks/project-history.ts";
+import { ProjectTools } from "../features/tasks/project-tools.tsx";
 
 export const Route = createFileRoute("/terminal")({
   staticData: { page: { title: "common.terminal", layout: "tool" } },

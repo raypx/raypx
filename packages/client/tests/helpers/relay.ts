@@ -1,4 +1,4 @@
-import type { RelayScheduler } from "../../src/scheduler.js";
+import type { RelayScheduler } from "../../src/scheduler.ts";
 
 export function deferred<T = void>() {
   let resolve!: (value: T | PromiseLike<T>) => void;

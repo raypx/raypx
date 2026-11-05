@@ -5,7 +5,7 @@ import {
   controlAuth,
   memoryControlRepository,
   observed,
-} from "../tests/helpers/control.js";
+} from "../tests/helpers/control.ts";
 
 it("projects external sessions separately, excludes tool bodies from lists and routes only a matching receipt/revision", async () => {
   const service = new ControlService(memoryControlRepository()),

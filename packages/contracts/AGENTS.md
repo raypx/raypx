@@ -22,8 +22,8 @@ No network, environment, filesystem, database or framework implementations. The 
 ## Verification
 
 ```sh
-bun run --cwd packages/contracts check
-bun run --cwd packages/contracts test
+pnpm --dir packages/contracts run check
+pnpm --dir packages/contracts run test
 ```
 
 `/tasks` owns device projections, grants, relay envelopes and notification schemas.

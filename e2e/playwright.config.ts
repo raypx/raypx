@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { browserTestSettings } from "@raypx/tooling/browser-tests";
 import { availableParallelism, totalmem } from "node:os";
-import { web, desktop } from "./tests/helpers/surfaces.js";
+import { web, desktop } from "./tests/helpers/surfaces.ts";
 
 const settings = browserTestSettings(process.env, {
   cpus: availableParallelism(),
@@ -41,7 +41,7 @@ export default defineConfig({
       ? []
       : [
           {
-            command: "bun run tests/helpers/serve-web.ts",
+            command: "tsx tests/helpers/serve-web.ts",
             url: "http://127.0.0.1:4173",
             reuseExistingServer: false,
             timeout: 30000,
@@ -51,7 +51,7 @@ export default defineConfig({
       ? []
       : [
           {
-            command: "bun run tests/helpers/serve-desktop.ts",
+            command: "tsx tests/helpers/serve-desktop.ts",
             url: "http://127.0.0.1:4174",
             reuseExistingServer: false,
             timeout: 30000,

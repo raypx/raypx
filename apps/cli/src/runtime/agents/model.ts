@@ -10,4 +10,4 @@ export {
   tokenUsageSchema,
   type ActivityDraft,
   type LocalAgentTask,
-} from "./domain/state";
+} from "./domain/state.ts";

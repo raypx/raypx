@@ -1,4 +1,4 @@
-import { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
+import { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
 import {
   relayServerSchema,
   RELAY_VERSION,
@@ -7,7 +7,7 @@ import {
   type RelayServerFrame,
 } from "@raypx/contracts/api";
 
-export { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
+export { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
 
 export type RelaySocketFactory = (url: string) => WebSocket;
 export function relayUrl(baseUrl: string, accountId?: string) {

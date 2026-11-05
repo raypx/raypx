@@ -1,6 +1,6 @@
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import type { OrchestrationEvent } from "./events";
-import type { TokenUsage } from "./state";
+import type { OrchestrationEvent } from "./events.ts";
+import type { TokenUsage } from "./state.ts";
 
 interface TaskWrite {
   taskId: string;

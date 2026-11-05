@@ -1,4 +1,4 @@
-import { SessionBoundary, SignInGate } from "../features/auth/components/session-boundary";
+import { SessionBoundary, SignInGate } from "../features/auth/components/session-boundary.tsx";
 import { useEffect, useRef } from "react";
 import {
   Link,
@@ -14,11 +14,11 @@ import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { BookOpenIcon } from "@raypx/icons/book-open";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
-import { authClient } from "../features/auth/client";
-import { publicConfigurationQuery } from "../features/configuration/client";
-import { PermissionBoundary } from "../features/auth/components/permission-boundary";
-import { accountAccessQuery, canAccessWebPage, type WebPath } from "../features/auth/access";
-import { UserButton } from "./user-button";
+import { authClient } from "../features/auth/client.ts";
+import { publicConfigurationQuery } from "../features/configuration/client.ts";
+import { PermissionBoundary } from "../features/auth/components/permission-boundary.tsx";
+import { accountAccessQuery, canAccessWebPage, type WebPath } from "../features/auth/access.ts";
+import { UserButton } from "./user-button.tsx";
 function AdminLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath>) {
   return (
     <Link

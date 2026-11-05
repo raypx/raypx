@@ -1,11 +1,12 @@
+import { sleep } from "@raypx/runtime-node/process";
 import { isDeepStrictEqual } from "node:util";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "./agents";
-import { FakeClock } from "../../src/runtime/agents/domain/ports";
-import { AgentStore } from "../../src/runtime/agents/store";
-import type { AgentRuntime } from "../../src/runtime/agents";
-import type { StateStore } from "../../src/runtime/state";
+import { agentFixtures } from "./agents.ts";
+import { FakeClock } from "../../src/runtime/agents/domain/ports.ts";
+import { AgentStore } from "../../src/runtime/agents/store.ts";
+import type { AgentRuntime } from "../../src/runtime/agents/index.ts";
+import type { StateStore } from "../../src/runtime/state/index.ts";
 import type { TaskChange } from "@raypx/contracts/tasks";
 import type { AgentProvider, AgentTask } from "@raypx/core/tasks";
 
@@ -70,7 +71,7 @@ export async function orchestrationHost(
       const file = join(fixture.directory, `gate:${name}`);
       for (let attempt = 0; attempt < 400; attempt++) {
         if (existsSync(file)) return;
-        await Bun.sleep(5);
+        await sleep(5);
       }
       throw new Error(`Provider never reached gate ${name}`);
     },

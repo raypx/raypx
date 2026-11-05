@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it } from "vite-plus/test";
-import { desktopStorageKey } from "./storage";
+import { desktopStorageKey } from "./storage.ts";
 
 afterEach(() => {
   Reflect.deleteProperty(window, "__raypxConnection");

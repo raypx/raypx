@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { getApiEnvironment } from "./env.js";
+import { getApiEnvironment } from "./env.ts";
 afterEach(() => vi.unstubAllEnvs());
 it("uses only explicit runtime inputs without inheriting deployment connections", () => {
   vi.stubEnv("DATABASE_URL", "postgres://fixture:fixture@operator.example:5432/operator");

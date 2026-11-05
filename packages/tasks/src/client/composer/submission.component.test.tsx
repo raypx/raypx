@@ -1,4 +1,4 @@
-import { mockTaskLayout } from "../../../tests/helpers/layout.js";
+import { mockTaskLayout } from "../../../tests/helpers/layout.ts";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
@@ -7,8 +7,8 @@ import { TaskWorkspace } from "@raypx/tasks/client";
 import type { AgentTask } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { TaskWorkspacePort } from "@raypx/tasks/model";
-import { createTaskClient } from "../../../tests/helpers/client.js";
-import { selectOption } from "../../../tests/helpers/select.js";
+import { createTaskClient } from "../../../tests/helpers/client.ts";
+import { selectOption } from "../../../tests/helpers/select.ts";
 
 beforeEach(() => {
   mockTaskLayout("all");

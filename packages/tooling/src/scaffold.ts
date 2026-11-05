@@ -1,8 +1,8 @@
 import { constants, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { targets, type Kind, type Target } from "@raypx-kit/devkit/workspaces";
-import { discover } from "./repository.js";
-import { workspaceInstructions } from "./templates/workspace/agents.js";
+import { discover } from "./repository.ts";
+import { workspaceInstructions } from "./templates/workspace/agents.ts";
 
 export interface ScaffoldOptions {
   kind: Kind;
@@ -16,7 +16,11 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     throw new Error("Use a lowercase hyphenated workspace name");
   if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name))
     throw new Error("Workspace name is reserved on Windows");
-  if (!["library", "app", "tooling"].includes(options.kind) || !targets.includes(options.target))
+  if (
+    !["library", "app", "tooling"].includes(options.kind) ||
+    !targets.includes(options.target) ||
+    options.target === "bun"
+  )
     throw new Error("Invalid workspace kind or target");
   const folder = options.kind === "app" ? "apps" : "packages";
   const directory = `${folder}/${name}`;
@@ -24,11 +28,11 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
   if (existsSync(join(root, directory)) || discover(root).byName.has(packageName))
     throw new Error(`Workspace already exists: ${directory}`);
   const scripts: Record<string, string> = {
-    check: "bun --check --tsconfig-override tsconfig.json",
+    check: "tsc --noEmit --project tsconfig.json",
   };
   if (options.tests)
     Object.assign(scripts, {
-      test: "bun --bun vp test --run",
+      test: "vp test --run",
     });
   const manifest = {
     name: packageName,
@@ -41,7 +45,9 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     devDependencies: {
       "@raypx/tsconfig": "workspace:*",
       "@raypx/tooling": "workspace:*",
-      ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
+      typescript: "catalog:dev",
+      "vite-plus": "catalog:dev",
+      ...(options.target === "node" ? { "@types/node": "catalog:dev" } : {}),
     },
   };
   const config =
@@ -54,7 +60,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     extends: `@raypx/tsconfig/${config}.json`,
     compilerOptions: {
       ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}),
-      ...(options.target === "bun" ? { types: ["bun"] } : {}),
+      ...(options.target === "node" ? { types: ["node"] } : {}),
     },
     include: [
       "src/**/*.ts",

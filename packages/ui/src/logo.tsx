@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from "react";
 
 import markUrl from "./assets/raypx-mark.webp?url";
-import { cn } from "./lib/utils";
+import { cn } from "./lib/utils.ts";
 
 export interface LogoProps extends ComponentPropsWithoutRef<"span"> {
   label?: string;

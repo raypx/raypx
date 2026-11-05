@@ -12,7 +12,7 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { sidebarPreference } from "./sidebar-preference";
+import { sidebarPreference } from "./sidebar-preference.ts";
 import { SidebarCollapseIcon } from "@raypx/icons/sidebar-collapse";
 import { SidebarExpandIcon } from "@raypx/icons/sidebar-expand";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -156,7 +156,7 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
             "--sidebar-width": "var(--app-sidebar-width, 15rem)",
             "--sidebar-width-icon":
               props.frame === "window"
-                ? "max(var(--app-rail-width, 4rem), var(--mygo-titlebar-inset-left, 0px))"
+                ? "max(var(--app-rail-width, 4rem), var(--raypx-titlebar-inset-left, 0px))"
                 : "var(--app-rail-width, 4rem)",
           } as CSSProperties
         }
@@ -240,7 +240,7 @@ function ShellContents<To extends string>({
         href="#main"
         className={cn(
           "fixed left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0",
-          windowed ? "top-[max(0.5rem,var(--mygo-titlebar-height,0px))]" : "top-2",
+          windowed ? "top-[max(0.5rem,var(--raypx-titlebar-height,0px))]" : "top-2",
         )}
       >
         {c("skipNavigation")}
@@ -257,7 +257,7 @@ function ShellContents<To extends string>({
         {windowed && (
           <div
             aria-hidden="true"
-            className="h-[max(2.5rem,var(--mygo-titlebar-height,0px))] shrink-0 [--app-region:drag]"
+            className="h-[max(2.5rem,var(--raypx-titlebar-height,0px))] shrink-0 [--app-region:drag]"
           />
         )}
         <SidebarHeader className="mb-4 shrink-0 gap-0 p-0">
@@ -314,7 +314,7 @@ function ShellContents<To extends string>({
           className={cn(
             "flex h-12 shrink-0 items-center gap-2 border-b border-border px-4 text-sm text-muted-foreground max-[760px]:px-3",
             windowed &&
-              "pr-[max(1rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] [--app-region:drag]",
+              "pr-[max(1rem,calc(var(--raypx-titlebar-inset-right,0px)+0.5rem))] [--app-region:drag]",
           )}
         >
           <Tooltip>

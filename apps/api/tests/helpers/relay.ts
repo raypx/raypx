@@ -1,11 +1,13 @@
-import { serve, sleep } from "bun";
+import { serveHttp } from "@raypx/runtime-node/http";
+import { sleep } from "@raypx/runtime-node/process";
+
 import {
   relayServerSchema,
   type RelayClientFrame,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
 import { RelayHub } from "@raypx/control/relay";
-import { createApiApp } from "../../server/api.js";
+import { createApiApp } from "../../server/api.ts";
 import { ControlService } from "@raypx/control";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 
@@ -57,7 +59,7 @@ export async function relayFixture() {
     allowedOrigins: [],
     onRevoke: (userId, deviceId) => hub.revoke(userId, deviceId),
   });
-  const server = serve<{ id: string }>({
+  const server = await serveHttp<{ id: string }>({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request, listener) {

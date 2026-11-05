@@ -5,7 +5,7 @@ import {
   TERMINAL_DEFAULT_WAIT_SECONDS,
   TERMINAL_MAX_WAIT_SECONDS,
   TERMINAL_HOOK_TIMEOUT_SECONDS,
-} from "./terminal";
+} from "./terminal.ts";
 
 const request = () => ({
   version: 1,

@@ -2,12 +2,12 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { FakeClock } from "../../../../src/runtime/agents/domain/ports";
-import { taskEffects } from "../../../../src/runtime/sqlite/schema";
-import type { LiveFacts } from "../../../../src/runtime/agents/domain/commands";
-import type { LocalAgentTask } from "../../../../src/runtime/agents/model";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store.ts";
+import { FakeClock } from "../../../../src/runtime/agents/domain/ports.ts";
+import { taskEffects } from "../../../../src/runtime/sqlite/schema.ts";
+import type { LiveFacts } from "../../../../src/runtime/agents/domain/commands.ts";
+import type { LocalAgentTask } from "../../../../src/runtime/agents/model.ts";
 
 /**
  * Effects are durable intents that commit with the decision producing them. They

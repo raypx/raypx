@@ -1,11 +1,11 @@
-import { profileStorage, removeProfileDirectory } from "./sqlite";
-import { Database } from "bun:sqlite";
+import { profileStorage, removeProfileDirectory } from "./sqlite.ts";
+import { DatabaseSync as Database } from "node:sqlite";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { AgentStore } from "../../src/runtime/agents/store";
-import type { LocalAgentTask } from "../../src/runtime/agents/model";
+import { AgentStore } from "../../src/runtime/agents/store.ts";
+import type { LocalAgentTask } from "../../src/runtime/agents/model.ts";
 
 export const uuid = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 export const now = "2026-10-31T00:00:00.000Z";
@@ -75,9 +75,19 @@ export function fixture() {
     directory,
     store,
     database,
-    put: database.query("INSERT OR REPLACE INTO tasks VALUES (?,?)"),
-    activity: database.query("INSERT INTO activity VALUES (?,?,?,?)"),
-    request: database.query("INSERT INTO requests VALUES (?,?,?)"),
+    transaction(operation: () => void) {
+      database.exec("BEGIN");
+      try {
+        operation();
+        database.exec("COMMIT");
+      } catch (error) {
+        database.exec("ROLLBACK");
+        throw error;
+      }
+    },
+    put: database.prepare("INSERT OR REPLACE INTO tasks VALUES (?,?)"),
+    activity: database.prepare("INSERT INTO activity VALUES (?,?,?,?)"),
+    request: database.prepare("INSERT INTO requests VALUES (?,?,?)"),
     close() {
       database.close();
       removeProfileDirectory(directory, { recursive: true, force: true });

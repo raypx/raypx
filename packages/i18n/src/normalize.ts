@@ -1,5 +1,5 @@
-import { localeRuntime } from "./runtime.js";
-import type { Locale } from "./types.js";
+import { localeRuntime } from "./runtime.ts";
+import type { Locale } from "./types.ts";
 
 export function isLocale(value: string): value is Locale {
   return localeRuntime.isLocale(value);

@@ -13,30 +13,33 @@
     "./build/start-env": "./src/build/start-env.ts",
     "./browser-tests": "./src/browser-tests.ts",
     "./browser-server": "./src/browser-server.ts",
-    "./tasks": "./src/tasks/config.ts"
+    "./tasks": "./src/tasks/config.ts",
+    "./build/cli": "./src/build/cli.ts"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:integration": "bun --bun vp test --run tests/integration",
-    "test:inventory": "bun src/cli.ts test inventory",
-    "test:backends": "bun src/cli.ts test backends"
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:integration": "vp test --run tests/integration",
+    "test:inventory": "tsx src/cli.ts test inventory",
+    "test:backends": "tsx src/cli.ts test backends"
   },
   "dependencies": {
     "@posthog/cli": "catalog:dev",
     "@raypx-kit/devkit": "catalog:dev",
-    "@raypx-kit/intl": "catalog:"
+    "@raypx-kit/intl": "catalog:",
+    "@raypx/runtime-node": "workspace:*",
+    "confbox": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "nitro": "catalog:"
+    "nitro": "catalog:",
+    "tsx": "catalog:dev"
   },
   "raypx": {
     "kind": "tooling",
-    "target": "bun",
+    "target": "node",
     "uncachedTasks": [
       "test"
     ],
@@ -46,7 +49,8 @@
       "./build/analytics": "node",
       "./build/start-env": "node",
       "./tasks": "node",
-      "./browser-tests": "node"
+      "./browser-tests": "node",
+      "./build/cli": "node"
     },
     "sourceTargets": {
       "src/build/**": "node",

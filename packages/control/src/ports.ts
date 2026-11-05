@@ -1,5 +1,5 @@
-import type { ControlRecords, RecordKind, ObservedSummary } from "./schemas.js";
-export type { RecordKind } from "./schemas.js";
+import type { ControlRecords, RecordKind, ObservedSummary } from "./schemas.ts";
+export type { RecordKind } from "./schemas.ts";
 export interface ControlRecord {
   id: string;
   deviceId: string;

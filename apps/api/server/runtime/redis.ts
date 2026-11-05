@@ -1,7 +1,7 @@
 import { Redis } from "ioredis";
 import type { AuthSecondaryStorage } from "@raypx/auth/server";
-import type { RateLimiter } from "../rate-limit/types.js";
-import type { CacheStore } from "../cache/types.js";
+import type { RateLimiter } from "../rate-limit/types.ts";
+import type { CacheStore } from "../cache/types.ts";
 
 export interface RedisResources {
   secondaryStorage: AuthSecondaryStorage;

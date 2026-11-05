@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import * as jobs from "@raypx/jobs";
-import * as local from "./local.js";
+import * as local from "./local.ts";
 
 it("composes local job commands with the shared domain schema", () => {
   expect(local.localParams["jobs.create"]).toBe(jobs.jobInputSchema);

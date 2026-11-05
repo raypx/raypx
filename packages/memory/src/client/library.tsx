@@ -35,10 +35,10 @@ import {
   type ContextDocument,
   type ContextDocumentSummary,
   type ContextVersion,
-} from "../model.js";
-import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.js";
-import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
-import { DocumentForm, documentDraft } from "./form.js";
+} from "../model.ts";
+import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.ts";
+import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
+import { DocumentForm, documentDraft } from "./form.tsx";
 type EditorDestination = "new" | "close" | ContextDocumentSummary;
 interface Props {
   client: MemoryClientPort;

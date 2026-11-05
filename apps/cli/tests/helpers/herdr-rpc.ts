@@ -1,4 +1,5 @@
-import { enrollTestProfile } from "./instance";
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
+import { enrollTestProfile } from "./instance.ts";
 import assert from "node:assert/strict";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
@@ -14,7 +15,7 @@ type Message = {
 /** Exercise default runtime admission over real CLI stdio, including owner EOF. */
 export async function herdrRpc(launch: string[], root: string, binary: string, command: unknown) {
   const closeInstance = await enrollTestProfile({ dataDir: root, profile: "herdr-rpc" }, launch);
-  const child = Bun.spawn([...launch, "stdio", "--data-dir", root, "--profile", "herdr-rpc"], {
+  const child = spawnProcess([...launch, "stdio", "--data-dir", root, "--profile", "herdr-rpc"], {
     env: { ...process.env, RAYPX_HERDR_BINARY: binary },
     stdin: "pipe",
     stdout: "pipe",
@@ -29,13 +30,13 @@ export async function herdrRpc(launch: string[], root: string, binary: string, c
   })();
   const deadline = setTimeout(() => child.kill(), 15000);
   try {
-    await child.stdin.write(
+    child.stdin.write(
       JSON.stringify({ version: 1, id: "open", method: "terminal.open", params: command }) + "\n",
     );
     await child.stdin.flush();
     while (!messages.some((message) => message.id === "open")) {
       if (child.exitCode !== null) throw new Error("CLI terminal admission failed");
-      await Bun.sleep(10);
+      await sleep(10);
     }
     const opened = messages.find((message) => message.id === "open")!;
     assert(!opened.error, "CLI must open the default Herdr backend");
@@ -45,7 +46,7 @@ export async function herdrRpc(launch: string[], root: string, binary: string, c
       )
     ) {
       if (child.exitCode !== null) throw new Error("CLI terminal did not settle");
-      await Bun.sleep(10);
+      await sleep(10);
     }
     assert.equal(messages.find((message) => message.event === "terminal.exit")!.data?.exitCode, 17);
     assert(
@@ -53,7 +54,7 @@ export async function herdrRpc(launch: string[], root: string, binary: string, c
         (message) => message.event === "terminal.output" && message.data?.full === true,
       ),
     );
-    await child.stdin.end();
+    child.stdin.end();
     assert.equal(await child.exited, 0);
   } finally {
     clearTimeout(deadline);

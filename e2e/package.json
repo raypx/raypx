@@ -8,10 +8,10 @@
     "./journeys/*": "./tests/journeys/*.ts"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
+    "check": "tsc --noEmit --project tsconfig.json",
     "e2e": "raypx-dev e2e",
-    "e2e:live": "bun --bun playwright test --config playwright.live.config.ts",
-    "e2e:devtools": "bun --bun playwright test --config playwright.devtools.config.ts",
+    "e2e:live": "playwright test --config playwright.live.config.ts",
+    "e2e:devtools": "playwright test --config playwright.devtools.config.ts",
     "e2e:web": "raypx-dev e2e --web",
     "e2e:desktop": "raypx-dev e2e --desktop",
     "e2e:smoke": "raypx-dev e2e --smoke",
@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@playwright/test": "catalog:dev",
-    "@raypx/account": "workspace:*"
+    "@raypx/account": "workspace:*",
+    "@raypx/runtime-node": "workspace:*"
   },
   "devDependencies": {
     "@raypx/client": "workspace:*",
@@ -29,12 +30,11 @@
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/tooling": "workspace:*",
-    "@raypx/tsconfig": "workspace:*",
-    "@types/bun": "catalog:dev"
+    "@raypx/tsconfig": "workspace:*"
   },
   "raypx": {
     "kind": "tooling",
-    "target": "bun",
+    "target": "node",
     "taskScripts": {
       "e2e": "_e2e",
       "e2e:web": "_e2e",

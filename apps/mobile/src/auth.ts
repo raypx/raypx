@@ -1,7 +1,7 @@
 import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
-import { serverOrigin, sessionStoragePrefix } from "./config";
+import { serverOrigin, sessionStoragePrefix } from "./config.ts";
 
 export const apiOrigin = serverOrigin(process.env.EXPO_PUBLIC_API_URL ?? "https://raypx.com");
 

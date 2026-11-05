@@ -1,5 +1,7 @@
-import { distributionRequested } from "./events.js";
-import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.js";
+import { fileURLToPath as entryFile } from "node:url";
+import { resolve as entryPath } from "node:path";
+import { distributionRequested } from "./events.ts";
+import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.ts";
 
 type Job = { result: string; outputs?: Record<string, string> };
 export function assertCiResult(
@@ -38,7 +40,7 @@ export function assertCiResult(
       throw new Error(`CI gate ${name} did not complete successfully (${result ?? "missing"})`);
   }
 }
-if (import.meta.main) {
+if (process.argv[1] !== undefined && entryPath(process.argv[1]) === entryFile(import.meta.url)) {
   assertCiResult(
     JSON.parse(process.env.GITHUB_NEEDS ?? "{}"),
     distributionRequested(

@@ -1,8 +1,11 @@
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { join } from "node:path";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.ts";
 
 export class ProcessTransport {
-  readonly child: ReturnType<typeof Bun.spawn>;
+  readonly child: ReturnType<
+    typeof spawnProcess<{ stdin: "pipe"; stdout: "pipe"; stderr: "pipe" }>
+  >;
   private termination: Promise<void> | undefined;
   private serial = 0;
   private readonly pending = new Map<
@@ -21,7 +24,7 @@ export class ProcessTransport {
     onMessage: (value: Record<string, unknown>) => void,
     env?: Record<string, string | undefined>,
   ) {
-    this.child = Bun.spawn([executable, ...args], {
+    this.child = spawnProcess([executable, ...args], {
       cwd,
       env: env ?? process.env,
       stdin: "pipe",
@@ -146,7 +149,7 @@ export class ProcessTransport {
   private async terminate() {
     if (process.platform === "win32") {
       try {
-        const code = await Bun.spawn(
+        const code = await spawnProcess(
           [
             join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"),
             "/PID",
@@ -174,7 +177,7 @@ export class ProcessTransport {
       // The parent can exit before tools that ignore SIGTERM. Keep the project
       // locked through their grace period, even when they closed inherited pipes.
       while (signal(0) && Date.now() < deadline) {
-        await Bun.sleep(10);
+        await sleep(10);
       }
       signal("SIGKILL");
     }

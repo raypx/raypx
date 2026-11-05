@@ -8,10 +8,10 @@ import { StatusBar } from "expo-status-bar";
 import { Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { authClient } from "../src/auth";
-import { sessionAccess } from "../src/session-policy";
-import { useCopy } from "../src/locale";
-import { Action, Screen } from "../src/ui";
+import { authClient } from "../src/auth.ts";
+import { sessionAccess } from "../src/session-policy.ts";
+import { useCopy } from "../src/locale.ts";
+import { Action, Screen } from "../src/ui.tsx";
 
 const StyledGestureHandlerRootView = withUniwind(GestureHandlerRootView);
 

@@ -4,10 +4,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { StrictMode } from "react";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { createNoopAnalytics } from "@raypx-kit/analytics";
-import { AnalyticsPreferencesProvider, AnalyticsIdentity } from "./provider";
-import { browserPreferenceStore } from "../browser";
-import { AnalyticsSettings } from "./settings";
-import type { AnalyticsConsent } from "../index";
+import { AnalyticsPreferencesProvider, AnalyticsIdentity } from "./provider.tsx";
+import { browserPreferenceStore } from "../browser.ts";
+import { AnalyticsSettings } from "./settings.tsx";
+import type { AnalyticsConsent } from "../index.ts";
 afterEach(() => {
   cleanup();
   localStorage.clear();

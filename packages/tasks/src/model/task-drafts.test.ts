@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { readTaskDrafts, sameDraft, MAX_TASK_DRAFTS } from "../model.js";
+import { readTaskDrafts, sameDraft, MAX_TASK_DRAFTS } from "../model.ts";
 const draft = {
   id: "draft-1",
   deviceId: "computer",

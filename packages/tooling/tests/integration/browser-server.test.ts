@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "vite-plus/test";
 import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { startBrowserPreview } from "../../src/browser-server.js";
+import { startBrowserPreview } from "../../src/browser-server.ts";
 
 const servers: Awaited<ReturnType<typeof startBrowserPreview>>[] = [];
 const roots: string[] = [];

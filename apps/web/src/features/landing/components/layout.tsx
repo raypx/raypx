@@ -1,11 +1,11 @@
-import { UserButton } from "../../../components/user-button";
+import { UserButton } from "../../../components/user-button.tsx";
 import { Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Logo } from "@raypx/ui/logo";
-import { publicConfigurationQuery } from "../../configuration/client";
+import { publicConfigurationQuery } from "../../configuration/client.ts";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
-import { LegalFooter } from "../../../components/legal-footer";
+import { LegalFooter } from "../../../components/legal-footer.tsx";
 
 export function LandingLayout() {
   const c = useTranslations("common");

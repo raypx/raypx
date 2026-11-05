@@ -1,4 +1,4 @@
-import type { CacheStore } from "./types.js";
+import type { CacheStore } from "./types.ts";
 
 export interface TieredStoreOptions {
   /** Upper bound on how long a value stays in the near store; keep it below feature TTLs. */

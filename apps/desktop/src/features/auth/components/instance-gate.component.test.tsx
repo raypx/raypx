@@ -11,10 +11,10 @@ import {
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import type { InstanceBinding, InstanceStatus } from "@raypx/instances";
-import { DesktopPlatformProvider } from "../../../lib/platform-context";
-import { desktopFixture } from "../../../../tests/helpers/desktop";
-import { InstanceGate } from "./instance-gate";
-import { DesktopSignOutProvider } from "../sign-out";
+import { DesktopPlatformProvider } from "../../../lib/platform-context.tsx";
+import { desktopFixture } from "../../../../tests/helpers/desktop.ts";
+import { InstanceGate } from "./instance-gate.tsx";
+import { DesktopSignOutProvider } from "../sign-out.tsx";
 
 const mocks = vi.hoisted(() => ({
   session: vi.fn(),

@@ -2,6 +2,10 @@
 
 Status: Accepted, 2026-11-03. Extends ADR 0042.
 
+Runtime amendment (2026-11-05): [ADR 0045](0045-tauri-node-pnpm.md) replaces
+`bun:sqlite` with synchronous `node:sqlite` and Drizzle's `node-sqlite` driver.
+The decision/transaction, journal and process-bound effect semantics remain unchanged.
+
 ## Direction
 
 The CLI Agent host records orchestration as domain events. A pure decider turns
@@ -50,7 +54,7 @@ call `new Date()` or `crypto.randomUUID()` inline; production injects the system
 clock and random UUIDs, and tests inject a fixed clock and monotonic ids.
 Live-process facts are inputs, not hidden reads: whether a request is still
 pending, whether the session is ready, the queue depth and the closing flag are
-passed into the decider. A synchronous `bun:sqlite` transaction stands in for a
+passed into the decider. A synchronous `node:sqlite` transaction stands in for a
 per-thread lock, because one process owns the profile writer.
 
 ## Effects

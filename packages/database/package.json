@@ -9,13 +9,14 @@
     "./schema": "./src/schema.ts"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "bun --bun vp test --run --coverage",
-    "generate": "bun --bun drizzle-kit generate --config drizzle.config.ts",
-    "migrate": "bun src/commands.ts migrate",
-    "studio": "bun --bun drizzle-kit studio --config drizzle.config.ts"
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "vp test --run --coverage",
+    "generate": "drizzle-kit generate --config drizzle.config.ts",
+    "migrate": "tsx src/commands.ts migrate",
+    "studio": "drizzle-kit studio --config drizzle.config.ts",
+    "build": "vp pack"
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
@@ -26,7 +27,10 @@
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
-    "drizzle-kit": "catalog:dev"
+    "drizzle-kit": "catalog:dev",
+    "tsx": "catalog:dev",
+    "typescript": "catalog:dev",
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "library",

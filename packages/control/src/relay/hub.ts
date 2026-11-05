@@ -6,11 +6,11 @@ import {
   type RelayClientFrame,
 } from "@raypx/contracts/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import { ControlError } from "../service.js";
-import type { RelayCluster } from "./cluster.js";
-import { dispatchJob, forwarded, syncJob } from "./dispatch.js";
-import { authenticate, frameHandlers, type FrameHandler } from "./frames.js";
-import { RelayRegistry, type Client, type RelayPeer, type UseControl } from "./registry.js";
+import { ControlError } from "../service.ts";
+import type { RelayCluster } from "./cluster.ts";
+import { dispatchJob, forwarded, syncJob } from "./dispatch.ts";
+import { authenticate, frameHandlers, type FrameHandler } from "./frames.ts";
+import { RelayRegistry, type Client, type RelayPeer, type UseControl } from "./registry.ts";
 
 // WebSocket close codes clients act on; every other failure closes with 4000.
 const closeCodes = new Map([

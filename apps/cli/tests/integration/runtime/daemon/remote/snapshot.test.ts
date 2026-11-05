@@ -1,6 +1,7 @@
+import { sleep } from "@raypx/runtime-node/process";
 import { expect, it } from "vite-plus/test";
 import { type RelayServerFrame } from "@raypx/contracts/tasks";
-import { hostFixtures } from "../../../../helpers/remote-control";
+import { hostFixtures } from "../../../../helpers/remote-control.ts";
 const { control } = hostFixtures();
 
 it("uses a complete snapshot when the replay cursor falls behind retained events", async () => {
@@ -107,7 +108,7 @@ it("keeps snapshot requests arriving during a flush and ignores duplicate old sn
     sequence: first.sequence,
     snapshotId: first.id,
   });
-  await Bun.sleep(20);
+  await sleep(20);
   expect(f.request.mock.calls.filter(([method]) => method === "agents.checkpoint")).toHaveLength(
     checkpoints,
   );

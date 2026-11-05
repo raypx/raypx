@@ -4,11 +4,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
 import { useTheme } from "@raypx/ui/themes";
-import { createSnapshotReader, type PageDiagnosticsSnapshot } from "./snapshot";
-import { ensureEmbeddedClient, panelStore } from "./runtime";
-import { DiagnosticsPanel } from "./panel";
+import { createSnapshotReader, type PageDiagnosticsSnapshot } from "./snapshot.ts";
+import { ensureEmbeddedClient, panelStore } from "./runtime.ts";
+import { DiagnosticsPanel } from "./panel.tsx";
 
-export type { PageDiagnosticsSnapshot } from "./snapshot";
+export type { PageDiagnosticsSnapshot } from "./snapshot.ts";
 export interface DevtoolsBridgeProps {
   surface: PageDiagnosticsSnapshot["surface"];
   stylesheetUrl: string;

@@ -9,7 +9,7 @@ import {
 import { type RelayCommand } from "@raypx/contracts/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
 
-import type { ControlRecords } from "./schemas.js";
+import type { ControlRecords } from "./schemas.ts";
 
 export class ControlError extends Error {
   constructor(readonly code: string) {

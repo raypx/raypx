@@ -1,13 +1,13 @@
-import { canContinueTask, followUpPlan, taskSelection } from "../model/composition.js";
-import { ModelPicker } from "./model-picker.js";
+import { canContinueTask, followUpPlan, taskSelection } from "../model/composition.ts";
+import { ModelPicker } from "./model-picker.tsx";
 import type { AgentTask, ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { agentProviderMetadata } from "@raypx/core/tasks";
-import { Approval } from "./approval.js";
+import { Approval } from "./approval.tsx";
 
 import { ContextSnapshot } from "@raypx/memory/client";
 import { useId, useRef, useState, type FormEvent } from "react";
-import type { TaskWorkspacePort } from "../model/port.js";
+import type { TaskWorkspacePort } from "../model/port.ts";
 import type { SequencedEvent, SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -22,15 +22,15 @@ import { Badge } from "@raypx/ui/components/ui/badge";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { isTaskActive } from "../model/task.js";
+import { isTaskActive } from "../model/task.ts";
 
-import { failureCode } from "../model/failure.js";
-import { Conversation } from "./conversation.js";
-import { TaskInputComposer } from "./task-input.js";
+import { failureCode } from "../model/failure.ts";
+import { Conversation } from "./conversation.tsx";
+import { TaskInputComposer } from "./task-input.tsx";
 
-import { TaskMarkdown } from "./markdown.js";
-import { useTaskConversation } from "./use-task-conversation.js";
-import { isLocalWorkspace, type WorkspaceScope } from "../model/scope.js";
+import { TaskMarkdown } from "./markdown.tsx";
+import { useTaskConversation } from "./use-task-conversation.ts";
+import { isLocalWorkspace, type WorkspaceScope } from "../model/scope.ts";
 
 function taskStatusVariant(status: AgentTask["status"]) {
   if (status === "waiting") return "default";

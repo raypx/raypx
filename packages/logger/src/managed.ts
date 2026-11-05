@@ -1,4 +1,4 @@
-import { createEventPolicy, type EventPolicyOptions, type SafeDrain } from "./safe.js";
+import { createEventPolicy, type EventPolicyOptions, type SafeDrain } from "./safe.ts";
 
 export type ManagedSink = SafeDrain & {
   flush?(): Promise<void>;

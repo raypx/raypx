@@ -87,7 +87,7 @@ describe("TypeScript presets", () => {
     expect(await resolvePreset("node")).toMatchObject({
       module: "NodeNext",
       moduleResolution: "NodeNext",
-      lib: ["ES2022"],
+      lib: ["ESNext"],
       types: ["node"],
     });
     expect(await resolvePreset("browser")).toMatchObject({

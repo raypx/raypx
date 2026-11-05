@@ -1,4 +1,4 @@
-import { analytics } from "../../analytics/client";
+import { analytics } from "../../analytics/client.ts";
 import { Logo } from "@raypx/ui/logo";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
@@ -6,8 +6,8 @@ import {
   type AuthFormLinkProps,
   type AuthMode,
 } from "@raypx/auth/client";
-import { authClient, webUrl } from "../client";
-import { desktopReturnTo } from "../return-to";
+import { authClient, webUrl } from "../client.ts";
+import { desktopReturnTo } from "../return-to.ts";
 
 function AuthLink({ to, children, className }: AuthFormLinkProps) {
   const search = useLocation({ select: (location) => location.searchStr });

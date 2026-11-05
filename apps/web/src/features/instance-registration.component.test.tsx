@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { InstanceRegistration } from "./auth/components/instance-registration";
+import { InstanceRegistration } from "./auth/components/instance-registration.tsx";
 
 const mocks = vi.hoisted(() => ({
   inspect: vi.fn(),

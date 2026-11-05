@@ -13,7 +13,8 @@
     "**/dist/**",
     "**/build/**",
     "**/artifacts/**",
-    ".agents/skills/**"
+    ".agents/skills/**",
+    ".claude/**"
   ],
   "workspaces": {
     ".": {
@@ -27,15 +28,17 @@
         "server/jobs/runtime/*.ts",
         "vite.app.config.ts",
         "tests/helpers/control-server.ts",
+        "tests/fixtures/deployment.ts",
         "tests/types/*.ts"
       ]
     },
     "apps/desktop": {
+      "ignoreDependencies": ["@tauri-apps/cli"],
       "entry": [
         "src/routes/**/*.tsx",
         "tests/native/smoke/*.ts",
         "vite.app.config.ts",
-        "scripts/native/*.ts",
+        "scripts/host/*.ts",
         "tests/native/fixtures/*.ts",
         "e2e/**/*.spec.ts"
       ]
@@ -53,6 +56,11 @@
       "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
     },
     "packages/tsconfig": {
+      "ignoreDependencies": ["tsx"],
+      "entry": ["scripts/task.ts"]
+    },
+    "packages/runtime-node": {
+      "ignoreDependencies": ["tsx"],
       "entry": ["scripts/task.ts"]
     },
     "packages/email": {

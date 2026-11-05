@@ -1,7 +1,7 @@
 import { Button } from "@raypx/ui/components/ui/button";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { useTranslations } from "@raypx/i18n/browser";
-import { isDirty, useFilesStore } from "../store";
+import { isDirty, useFilesStore } from "../store.tsx";
 
 export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose: () => unknown }) {
   const t = useTranslations("files");

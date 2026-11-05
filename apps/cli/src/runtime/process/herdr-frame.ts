@@ -1,4 +1,4 @@
-import { herdrError, record } from "./herdr-ipc";
+import { herdrError, record } from "./herdr-ipc.ts";
 
 /** Validate the public Herdr NDJSON frame before forwarding bytes to Desktop. */
 export function herdrFrame(value: unknown, previous: number) {

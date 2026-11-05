@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { createTranslator } from "./translator.js";
-import type { DynamicMessages } from "./index.js";
+import { createTranslator } from "./translator.ts";
+import type { DynamicMessages } from "./index.ts";
 
 const messages = {
   home: {

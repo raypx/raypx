@@ -8,7 +8,7 @@ import {
   device,
   page,
   runningTask,
-} from "../../../tests/helpers/tasks/workspace";
+} from "../../../tests/helpers/tasks/workspace.tsx";
 
 setupWorkspaceTests();
 

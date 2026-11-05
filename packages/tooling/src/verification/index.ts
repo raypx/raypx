@@ -1,12 +1,12 @@
-import { smokeDeployment } from "../validation/deployment-smoke.js";
+import { smokeDeployment } from "../validation/deployment-smoke.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runTasks } from "../repository.js";
-import { taskRef, taskModel, taskPlan } from "../tasks/model.js";
-import { localPlan } from "./plan.js";
-import { executionTasks, sourceChecks } from "./execution.js";
-import { ciOutputs, parseCiPlan, requiredGates } from "./gates.js";
-import { localTests } from "./tests.js";
+import { runTasks } from "../repository.ts";
+import { taskRef, taskModel, taskPlan } from "../tasks/model.ts";
+import { localPlan } from "./plan.ts";
+import { executionTasks, sourceChecks } from "./execution.ts";
+import { ciOutputs, parseCiPlan, requiredGates } from "./gates.ts";
+import { localTests } from "./tests.ts";
 
 export function verifyOptions(args: string[]) {
   const options: { full?: boolean; base?: string; dry?: boolean } = {};
@@ -16,14 +16,14 @@ export function verifyOptions(args: string[]) {
     else if (arg === "--dry-run") options.dry = true;
     else if (arg === "--base" && args[i + 1] && !args[i + 1]!.startsWith("-"))
       options.base = args[++i]!;
-    else throw new Error("Usage: bun run verify [--full] [--base ref] [--dry-run]");
+    else throw new Error("Usage: pnpm run verify [--full] [--base ref] [--dry-run]");
   }
   return options;
 }
 export async function verify(root: string, args: string[]) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0]!)) {
     console.log(
-      "bun run verify              Affected types and related tests; native-input Go checks\nbun run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
+      "pnpm run verify              Affected types and related tests; native-input Rust checks\npnpm run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
     );
     return;
   }

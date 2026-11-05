@@ -5,7 +5,7 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { schema, user, session } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "../../../server/api.js";
+import { createApiApp } from "../../../server/api.ts";
 import type { AuthMailInput } from "@raypx/auth/server";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";

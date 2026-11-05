@@ -1,4 +1,4 @@
-export { PiAdapter, piDefinition, type PiSessionOptions } from "./adapter.js";
+export { PiAdapter, piDefinition, type PiSessionOptions } from "./adapter.ts";
 export {
   PiRunner,
   type PiContext,
@@ -6,5 +6,5 @@ export {
   type PiRunnerOptions,
   type PiRunOptions,
   type PiResult,
-} from "./runner.js";
+} from "./runner.ts";
 export type { AgentTool, StreamFn } from "@earendil-works/pi-agent-core";

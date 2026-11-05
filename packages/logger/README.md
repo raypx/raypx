@@ -49,6 +49,6 @@ it cannot cancel arbitrary sink work. Transports own cancellation.
 The stream drain never ends a caller-owned stream. CLI stdout stays reserved for
 command results and the Desktop protocol.
 
-Run `bun run --cwd packages/logger check` and `bun run --cwd packages/logger test`.
-Full root verification also checks the built Bun API and the standalone CLI
+Run `pnpm --dir packages/logger run check` and `pnpm --dir packages/logger run test`.
+Full root verification also checks the built Node API and the standalone CLI
 outside the repository. See [source provenance](NOTICE.md).

@@ -1,11 +1,11 @@
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import type { SnapshotRecord } from "@raypx/contracts/tasks";
 import { humanRequestSchema, taskActivitySchema } from "@raypx/core/tasks";
-import { iterateRows, type LocalDatabase } from "../../../sqlite";
-import { storedRecord } from "../../../sqlite/records";
-import { activity, requests, tasks } from "../../../sqlite/schema";
-import { localAgentTaskSchema } from "../../model";
-import { activeTaskFilter, requestTaskId, taskBinding, taskCreatedAt } from "./queries";
+import { iterateRows, type LocalDatabase } from "../../../sqlite/index.ts";
+import { storedRecord } from "../../../sqlite/records.ts";
+import { activity, requests, tasks } from "../../../sqlite/schema.ts";
+import { localAgentTaskSchema } from "../../model.ts";
+import { activeTaskFilter, requestTaskId, taskBinding, taskCreatedAt } from "./queries.ts";
 
 const activeActivityFilter = sql`json_extract(${activity.value},'$.status') IN ('streaming','running','queued','sending')`;
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TaskContextSelection, TaskContextTarget } from "@raypx/core/tasks";
-import type { ContextDocument, ContextDocumentSummary } from "../model.js";
+import type { ContextDocument, ContextDocumentSummary } from "../model.ts";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
@@ -10,8 +10,8 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import type { MemoryClientPort } from "./port.js";
-import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
+import type { MemoryClientPort } from "./port.ts";
+import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
 interface Props {
   client: MemoryClientPort;
   ownerKey: string;

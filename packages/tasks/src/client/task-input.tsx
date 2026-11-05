@@ -6,8 +6,8 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import type { TaskWorkspacePort } from "../model/port.js";
-import { failureCode } from "../model/failure.js";
+import type { TaskWorkspacePort } from "../model/port.ts";
+import { failureCode } from "../model/failure.ts";
 
 export function TaskInputComposer({
   client,

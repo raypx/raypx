@@ -1,14 +1,14 @@
-#!/usr/bin/env bun
-import { runCommand } from "./commands";
-import { parseCliArgs } from "./commands/args";
-import { errorPayload } from "./runtime/errors";
-import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagnostics";
-import { createCliLogging } from "./logging";
-import { bundledHerdrDirectory } from "./runtime/process/herdr-release";
+#!/usr/bin/env -S tsx
+import { runCommand } from "./commands/index.ts";
+import { parseCliArgs } from "./commands/args.ts";
+import { errorPayload } from "./runtime/errors.ts";
+import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagnostics.ts";
+import { createCliLogging } from "./logging.ts";
+import { bundledHerdrDirectory } from "./runtime/process/herdr-release.ts";
 
 const args = process.argv.slice(2);
 if (args[0] === "--herdr-internal") {
-  const { herdrInternal } = await import("./runtime/process/herdr-internal");
+  const { herdrInternal } = await import("./runtime/process/herdr-internal.ts");
   await herdrInternal(args.slice(1));
 } else {
   const bundledHerdr = bundledHerdrDirectory();

@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@raypx/ui/components/ui/dialog";
-import { authClient, webUrl } from "../auth/client";
+import { authClient, webUrl } from "../auth/client.ts";
 
 /** Refresh the browser session in place; signing out would cancel account work. */
 export function ReauthorizeHost({ email }: { email: string }) {

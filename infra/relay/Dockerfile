@@ -1,28 +1,27 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.4.4 AS bun
-
-FROM bun AS manifests
+ARG NODE_VERSION=24.22.2
+FROM node:${NODE_VERSION}-bookworm AS node
 WORKDIR /app
+
+FROM node AS manifests
 COPY . .
-RUN bun deploy/manifests.ts /app /manifests
+RUN node deploy/manifests.ts /app /manifests
 
-FROM bun AS dependencies
-WORKDIR /app
+FROM node AS dependencies
 COPY --from=manifests /manifests/ ./
-RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
+RUN npm install --global "$(node -p 'require("./package.json").packageManager')" && VP_GIT_HOOKS=0 pnpm install --frozen-lockfile
 
 FROM dependencies AS build
 COPY . .
 ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
-ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
-ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
-RUN bun run build:relay
+ENV VITE_APP_RELEASE=$VITE_APP_RELEASE RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
+RUN pnpm run build:relay
 
-FROM oven/bun:1.4.4-slim AS runtime
+FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 ENV NODE_ENV=production PORT=3003 HOST=0.0.0.0
 WORKDIR /app
-COPY --from=build --chown=bun:bun /app/infra/relay/dist ./dist
-USER bun
+COPY --from=build --chown=node:node /app/infra/relay/dist ./dist
+USER node
 EXPOSE 3003
-CMD ["bun", "dist/main.js"]
+CMD ["node", "dist/main.js"]

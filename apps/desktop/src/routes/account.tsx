@@ -9,9 +9,9 @@ import { useEffect, useRef } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
-import { authClient } from "../features/auth/client";
-import { useDesktopSignOut } from "../features/auth/sign-out";
-import { taskClient } from "../features/tasks/client";
+import { authClient } from "../features/auth/client.ts";
+import { useDesktopSignOut } from "../features/auth/sign-out.tsx";
+import { taskClient } from "../features/tasks/client.ts";
 
 export const Route = createFileRoute("/account")({
   staticData: { page: { title: "common.account", layout: "document" } },

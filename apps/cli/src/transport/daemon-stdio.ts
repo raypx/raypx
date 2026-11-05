@@ -1,7 +1,7 @@
 import { localRequestSchema } from "@raypx/contracts/local";
-import { onShutdown } from "./shutdown";
-import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint";
-import { errorPayload, LocalError } from "../runtime/errors";
+import { onShutdown } from "./shutdown.ts";
+import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint.ts";
+import { errorPayload, LocalError } from "../runtime/errors.ts";
 
 /** Transport chunks are not protocol records; only complete bounded lines may mix with RPC. */
 export async function* daemonEventLines(body: ReadableStream<Uint8Array>) {

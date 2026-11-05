@@ -1,12 +1,13 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { sleep } from "@raypx/runtime-node/process";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
 import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "../../../helpers/agents";
+import { agentFixtures } from "../../../helpers/agents.ts";
 import { tmpdir } from "node:os";
-import { StateStore } from "../../../../src/runtime/state";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore } from "../../../../src/runtime/agents/store";
+import { StateStore } from "../../../../src/runtime/state/index.ts";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store.ts";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 
 import type { AgentTask } from "@raypx/core/tasks";
@@ -274,7 +275,7 @@ it.skipIf(process.platform === "win32")(
     );
     await stopping;
     const heartbeat = readFileSync(join(directory, "heartbeat"), "utf8");
-    await Bun.sleep(40);
+    await sleep(40);
     expect(readFileSync(join(directory, "heartbeat"), "utf8")).toBe(heartbeat);
     const next = { ...task, id: crypto.randomUUID() };
     await runtime.start("binding", crypto.randomUUID(), next, deadline);

@@ -18,9 +18,9 @@ import {
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { TerminalIcon } from "@raypx/icons/terminal";
-import { useRemoteQuery } from "./remote-query.js";
-import type { TaskWorkspacePort } from "../model/port.js";
-import { ApprovalBody } from "./approval-body.js";
+import { useRemoteQuery } from "./remote-query.ts";
+import type { TaskWorkspacePort } from "../model/port.ts";
+import { ApprovalBody } from "./approval-body.tsx";
 
 type RequestStatus = TerminalRequestSummary["status"];
 /** List label: a pending request shows whether it can still be answered. */

@@ -1,10 +1,10 @@
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { project } from "../../tests/helpers/verification.js";
-import { verify } from "./index.js";
-import { completionReport, precheckTimings } from "./report.js";
-import * as execution from "./execution.js";
+import { project } from "../../tests/helpers/verification.ts";
+import { verify } from "./index.ts";
+import { completionReport, precheckTimings } from "./report.ts";
+import * as execution from "./execution.ts";
 
 afterEach(() => {
   vi.unstubAllEnvs();

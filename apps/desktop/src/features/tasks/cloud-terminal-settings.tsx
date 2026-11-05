@@ -4,7 +4,7 @@ import type { DeviceProject } from "@raypx/contracts/tasks";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Switch } from "@raypx/ui/components/ui/switch";
-import { getBridge, localRequest } from "../../lib/desktop";
+import { getBridge, localRequest } from "../../lib/desktop.ts";
 
 export function CloudTerminalSettings({
   accountId,

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import type { ReactNode } from "react";
-import { LegalFooter } from "../../../components/legal-footer";
+import { LegalFooter } from "../../../components/legal-footer.tsx";
 
 interface AuthFormSectionProps {
   siteName: string;

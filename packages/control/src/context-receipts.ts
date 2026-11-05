@@ -1,8 +1,8 @@
 import { type RelayRequest } from "@raypx/contracts/tasks";
 import { type AgentTask } from "@raypx/core/tasks";
-import type { ControlTransaction } from "./ports.js";
+import type { ControlTransaction } from "./ports.ts";
 
-import { canonical, hash } from "./records.js";
+import { canonical, hash } from "./records.ts";
 export async function releaseContextCommand(tx: ControlTransaction, task: AgentTask) {
   if (task.parentTaskId !== null || !task.context?.sources.length) return;
   const previous = await tx.get("command", task.id);

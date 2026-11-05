@@ -1,8 +1,8 @@
 # Independent Relay
 
-`relay` is a private Bun application workspace, deployed independently on Railway.
+`relay` is a private Node application workspace, deployed independently on Railway.
 An optional [Cloudflare Workers + Containers adapter](../cloudflare/README.md)
-deploys the same Bun image with managed edge ingress.
+deploys the same Node image with managed edge ingress.
 It owns WebSocket connections and relay v4 message routing. API owns login,
 device/host grants, one-time viewer tickets, HTTP read models and scheduling.
 Device-local execution stays in the CLI daemon.
@@ -22,19 +22,19 @@ forwards `/relay` on port 3002 to Relay on 3003; the built API exposes no socket
 
 Install from the repository root. Root `.env.example` supplies the shared local
 PostgreSQL/Redis configuration; `infra/relay/.env.example` documents the Relay-only
-variables. `bun run dev` starts Web, API and Relay using the root environment.
+variables. `pnpm run dev` starts Web, API and Relay using the root environment.
 
 ```sh
-bun install
+pnpm install
 cp .env.example .env
 docker compose up -d postgres valkey
-bun run db:migrate
-bun run dev
+pnpm run db:migrate
+pnpm run dev
 ```
 
-For focused work, run `bun run --cwd infra/relay dev`, `check`, `test`, or
-`bun run build:relay`. The Vite SSR build bundles dependencies into `dist/main.js`,
-which starts with `bun infra/relay/dist/main.js` and runs outside the repository.
+For focused work, run `pnpm --dir infra/relay run dev`, `check`, `test`, or
+`pnpm run build:relay`. The Vite SSR build bundles dependencies into `dist/main.js`,
+which starts with `node infra/relay/dist/main.js` and runs outside the repository.
 
 ## Deployment
 
@@ -71,9 +71,9 @@ preserves one-time tickets, host/session/epoch fencing, replay acknowledgements,
 immutable task-context receipts, account ownership and bounded backpressure.
 Runtime code never imports API or another application.
 
-Run `bun run verify` for source validation. `bun run --cwd packages/tooling test:backends`
+Run `pnpm run verify` for source validation. `pnpm --dir packages/tooling run test:backends`
 provisions owned temporary PostgreSQL/Redis services and includes a cross-process
-API-to-Relay dispatch/revocation test. `bun run smoke:deployment` additionally
+API-to-Relay dispatch/revocation test. `pnpm run smoke:deployment` additionally
 builds and probes actual images; it requires Docker and does not apply Railway IaC.
-Full verification also probes the relocated Relay bundle under Bun with deliberately
+Full verification also probes the relocated Relay bundle under Node with deliberately
 unavailable dependencies, checking liveness, closed readiness and API-route isolation.

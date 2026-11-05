@@ -2,10 +2,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
-import type { ContextDocument } from "./index.js";
+import type { ContextDocument } from "./index.ts";
 import { useState } from "react";
 import type { TaskContextSelection } from "@raypx/core/tasks";
-import { ContextPicker, ContextSnapshot } from "./client.js";
+import { ContextPicker, ContextSnapshot } from "./client.ts";
 import {
   document,
   version,
@@ -16,7 +16,7 @@ import {
   deviceId,
   projectId,
   setupMemoryClientTests,
-} from "../tests/helpers/client";
+} from "../tests/helpers/client.tsx";
 setupMemoryClientTests();
 
 it("filters sources by project and preserves a chosen historical revision until an explicit update", async () => {

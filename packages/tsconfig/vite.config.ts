@@ -13,7 +13,7 @@ export default defineConfig({
     tasks: Object.fromEntries(
       Object.keys(scripts).map((name) => [
         `task:${name}`,
-        { command: `bun scripts/task.ts ${JSON.stringify(name)}`, cache: false },
+        { command: `tsx scripts/task.ts ${JSON.stringify(name)}`, cache: false },
       ]),
     ),
   },

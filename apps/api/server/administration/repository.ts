@@ -1,10 +1,10 @@
-import type { AdministrationQueries } from "./types.js";
+import type { AdministrationQueries } from "./types.ts";
 import type { Database } from "@raypx/database/connection";
 import { adminAudit, user } from "@raypx/database/schema";
 import { and, desc, eq, gte, lt, or, sql } from "drizzle-orm";
 import { auditEntrySchema, type AuditEntry, type AuditFilter } from "@raypx/contracts/api";
-import type { AuditIntent, AuditJournal, AuditOperation } from "./audit.js";
-import { AuditUnavailable } from "./audit.js";
+import type { AuditIntent, AuditJournal, AuditOperation } from "./audit.ts";
+import { AuditUnavailable } from "./audit.ts";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Changes = Pick<AuditEntry, "before" | "after" | "targetId">;

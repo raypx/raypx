@@ -1,7 +1,7 @@
-import { Gate } from "./workspace-gate.js";
+import { Gate } from "./workspace-gate.tsx";
 
 import { useCallback, useRef, useState } from "react";
-import { useRemoteQuery } from "./remote-query.js";
+import { useRemoteQuery } from "./remote-query.ts";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -9,7 +9,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Modal } from "@raypx/ui/modal";
 
-import type { DeviceManagementPort } from "../model/port.js";
+import type { DeviceManagementPort } from "../model/port.ts";
 
 export function DeviceSettings({
   client,

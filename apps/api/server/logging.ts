@@ -1,9 +1,9 @@
 import { EvlogHandlerPlugin } from "@orpc/evlog";
 import { createLogger, initLogger, type DrainContext } from "@raypx/logger";
 import { createManagedDrain, type ManagedSink, type DrainStats } from "@raypx/logger/managed";
-import { apiEventPolicy } from "./logging/policy.js";
-import type { CreateApiEvent, DiagnosticRoute } from "./logging/events.js";
-export type { ApiEventLogger } from "./logging/events.js";
+import { apiEventPolicy } from "./logging/policy.ts";
+import type { CreateApiEvent, DiagnosticRoute } from "./logging/events.ts";
+export type { ApiEventLogger } from "./logging/events.ts";
 
 export interface ApiLogging {
   createLogger: CreateApiEvent;

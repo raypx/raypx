@@ -6,7 +6,7 @@ import {
   writeGuestDraft,
   claimGuestDraft,
   guestReturnTo,
-} from "./tasks/guest-draft";
+} from "./tasks/guest-draft.ts";
 beforeEach(() => sessionStorage.clear());
 const draft = { prompt: "Local 中😀", provider: "codex", mode: "plan" } as const;
 it("keeps content out of URLs, preserves choices and scopes handoff to a server", () => {

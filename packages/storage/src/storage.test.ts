@@ -5,7 +5,7 @@ import {
   createObjectStorage,
   createUnavailableStorage,
   StorageError,
-} from "./index.js";
+} from "./index.ts";
 
 it("stores, streams, lists and deletes binary objects", async () => {
   const storage = createMemoryStorage();

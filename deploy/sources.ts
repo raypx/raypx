@@ -1,12 +1,10 @@
-/// <reference types="bun" />
-
 import { copyFileSync, cpSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { productionWorkspaces, readWorkspaces } from "./workspaces.js";
+import { productionWorkspaces, readWorkspaces } from "./workspaces.ts";
 
 const [root, destination, entry] = process.argv.slice(2);
 if (!root || !destination || !entry || process.argv.length !== 5)
-  throw new Error("Usage: bun deploy/sources.ts <source> <destination> <workspace>");
+  throw new Error("Usage: tsx deploy/sources.ts <source> <destination> <workspace>");
 
 for (const member of productionWorkspaces(readWorkspaces(root), entry)) {
   const source = join(root, member.path);

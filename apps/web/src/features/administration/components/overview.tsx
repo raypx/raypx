@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@raypx/ui/components/ui/table";
-import { administrationClient } from "../client";
-import { authClient, apiUrl } from "../../auth/client";
+import { administrationClient } from "../client.ts";
+import { authClient, apiUrl } from "../../auth/client.ts";
 import { LoadingState } from "@raypx/ui/loading-state";
 export function Overview() {
   const c = useTranslations("common"),

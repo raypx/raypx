@@ -1,5 +1,5 @@
 import { afterAll, expect, it } from "vite-plus/test";
-import { connectRedis } from "../../server/runtime/redis.js";
+import { connectRedis } from "../../server/runtime/redis.ts";
 
 const url = process.env.TEST_REDIS_URL;
 if (!url) throw new Error("TEST_REDIS_URL is required");

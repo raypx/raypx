@@ -1,3 +1,4 @@
+import { setTimeout as sleep } from "node:timers/promises";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 
@@ -23,7 +24,7 @@ function gate(name: string) {
 }
 async function release(name: string) {
   gate(name);
-  while (!existsSync(`${directory}/release:${name}`)) await Bun.sleep(5);
+  while (!existsSync(`${directory}/release:${name}`)) await sleep(5);
 }
 
 if (process.argv.includes("--version")) {

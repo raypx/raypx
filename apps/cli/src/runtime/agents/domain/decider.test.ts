@@ -1,8 +1,8 @@
 import { expect, it } from "vite-plus/test";
-import { decide, DecisionRejected, type DecideState } from "./decider";
-import { FakeIds } from "./ports";
-import type { LiveFacts } from "./commands";
-import type { LocalAgentTask } from "./state";
+import { decide, DecisionRejected, type DecideState } from "./decider.ts";
+import { FakeIds } from "./ports.ts";
+import type { LiveFacts } from "./commands.ts";
+import type { LocalAgentTask } from "./state.ts";
 
 const at = "2026-01-01T00:00:00.000Z";
 const taskId = "00000000-0000-4000-8000-000000000020";

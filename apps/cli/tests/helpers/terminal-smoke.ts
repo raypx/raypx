@@ -1,4 +1,4 @@
-import { ProfileStorage } from "../../src/runtime/sqlite";
+import { ProfileStorage } from "../../src/runtime/sqlite/index.ts";
 import { join } from "node:path";
 import type { LocalMethod } from "@raypx/contracts/local";
 
@@ -8,10 +8,10 @@ import type {
   TerminalDecision,
   TerminalRequest,
 } from "@raypx/contracts/terminal";
-import { startDaemon } from "./enrolled";
-import { daemonFetch } from "../../src/runtime/daemon/endpoint";
-import { readTerminalEndpoint, startTerminalHost } from "../../src/runtime/terminal/host";
-import { daemonEventLines } from "../../src/transport/daemon-stdio";
+import { startDaemon } from "./enrolled.ts";
+import { daemonFetch } from "../../src/runtime/daemon/endpoint.ts";
+import { readTerminalEndpoint, startTerminalHost } from "../../src/runtime/terminal/host.ts";
+import { daemonEventLines } from "../../src/transport/daemon-stdio.ts";
 
 /** Explicit live gate only: exercise the same authenticated IPC and profile broker as Native. */
 export async function terminalSmokeHost(
@@ -24,7 +24,7 @@ export async function terminalSmokeHost(
 ) {
   if (process.env.RAYPX_P0_HOST_MODE !== "daemon") {
     const storage = new ProfileStorage(directory);
-    const host = startTerminalHost({
+    const host = await startTerminalHost({
       database: storage.database,
       directory,
       projects: [project],
@@ -35,7 +35,7 @@ export async function terminalSmokeHost(
     return {
       discoveryDirectory: directory,
       watch: async () => {
-        const { terminalFetch } = await import("../../src/runtime/terminal/host");
+        const { terminalFetch } = await import("../../src/runtime/terminal/host.ts");
         await terminalFetch(host.endpoint, "owner", "/watch", { active: true });
       },
       list: async () => host.broker.list(),

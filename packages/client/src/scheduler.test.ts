@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { RelayConnection } from "./relay.js";
-import { deferred, ManualScheduler, RelaySocket } from "../tests/helpers/relay.js";
+import { RelayConnection } from "./relay.ts";
+import { deferred, ManualScheduler, RelaySocket } from "../tests/helpers/relay.ts";
 
 it.each([undefined, 1, 2, 3, "4", 5])(
   "rejects server protocol %s without retrying or accepting application frames",

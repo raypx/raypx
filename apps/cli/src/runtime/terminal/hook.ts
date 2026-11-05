@@ -4,8 +4,8 @@ import { z } from "zod";
 
 import { decisionSchema, type TerminalProvider } from "@raypx/core/tasks";
 import { TERMINAL_HOOK_TIMEOUT_SECONDS } from "@raypx/contracts/terminal";
-import { hookDecision, parseHookInvocation } from "./protocol";
-import { localAddressSchema, localFetch } from "../local-http";
+import { hookDecision, parseHookInvocation } from "./protocol.ts";
+import { localAddressSchema, localFetch } from "../local-http.ts";
 
 const endpointSchema = z
   .object({

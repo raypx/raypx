@@ -1,5 +1,7 @@
+import { serveHttp } from "@raypx/runtime-node/http";
+import { spawnProcess } from "@raypx/runtime-node/process";
 import { resolve } from "node:path";
-import { profilePath } from "../../src/runtime/state";
+import { profilePath } from "../../src/runtime/state/index.ts";
 import {
   enrollmentBeginSchema,
   enrollmentProof,
@@ -11,7 +13,12 @@ import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instan
 /** Enroll an owned temporary profile over HTTP; exercise production identity/key storage. */
 export async function enrollTestProfile(
   options: { dataDir: string; profile?: string },
-  launch: string[] = [process.execPath, resolve(import.meta.dirname, "../../src/main.ts")],
+  launch: string[] = [
+    process.execPath,
+    "--import",
+    import.meta.resolve("tsx"),
+    resolve(import.meta.dirname, "../../src/main.ts"),
+  ],
 ) {
   const directory = profilePath(options);
   const signer = createInstanceSigner("isolated-packaged-acceptance");
@@ -20,7 +27,7 @@ export async function enrollTestProfile(
   let binding: InstanceBinding | undefined;
   let stage = "before begin";
   const keyId = instanceDigest(directory);
-  const server = Bun.serve({
+  const server = await serveHttp({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request): Promise<Response> {
@@ -76,7 +83,7 @@ export async function enrollTestProfile(
   };
   try {
     // Enroll with the executable under test; credentials stay in this temporary profile.
-    const child = Bun.spawn(
+    const child = spawnProcess(
       [
         ...launch,
         "login",

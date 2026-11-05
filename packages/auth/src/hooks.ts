@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import type { SocialProvider } from "./types";
+import type { SocialProvider } from "./types.ts";
 
 export type AuthErrorKey =
   | "registrationDisabled"

@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it } from "vite-plus/test";
-import { CONNECTION_KEY } from "../../config";
-import { readDesktopConnection } from "./connection";
+import { CONNECTION_KEY } from "../../config.ts";
+import { readDesktopConnection } from "./connection.ts";
 
 afterEach(() => {
   Reflect.deleteProperty(window, "__raypxDesktopHost");
@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 it("uses native runtime config for auth, Web links and remote tasks instead of build variables", () => {
-  Object.defineProperty(window, "__raypxDesktopHost", { value: "mygo", configurable: true });
+  Object.defineProperty(window, "__raypxDesktopHost", { value: "tauri", configurable: true });
   Reflect.set(window, CONNECTION_KEY, {
     apiUrl: "https://own-api.example.test",
     webUrl: "https://own-web.example.test",
@@ -21,7 +21,7 @@ it("uses native runtime config for auth, Web links and remote tasks instead of b
 });
 
 it("refuses to start native authentication when preload config is absent or invalid", () => {
-  Object.defineProperty(window, "__raypxDesktopHost", { value: "mygo", configurable: true });
+  Object.defineProperty(window, "__raypxDesktopHost", { value: "tauri", configurable: true });
   expect(() => readDesktopConnection()).toThrow("Native connection settings unavailable");
   Reflect.set(window, CONNECTION_KEY, {
     apiUrl: "http://external.test",

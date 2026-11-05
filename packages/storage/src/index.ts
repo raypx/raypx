@@ -1,16 +1,16 @@
-export { StorageError } from "./errors.js";
-export { assertObjectKey } from "./keys.js";
+export { StorageError } from "./errors.ts";
+export { assertObjectKey } from "./keys.ts";
 export {
   createMemoryStorage,
   createObjectStorage,
   createUnavailableStorage,
   type ObjectStorageOptions,
   type UrlSigner,
-} from "./storage.js";
+} from "./storage.ts";
 export type {
   ObjectBody,
   ObjectStorage,
   PutObjectOptions,
   SignedUrlOptions,
   StorageErrorCode,
-} from "./types.js";
+} from "./types.ts";

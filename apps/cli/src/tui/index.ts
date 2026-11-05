@@ -1,10 +1,10 @@
 import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs";
-import type { RecordDiagnostic } from "../diagnostics";
-import type { LocalRuntime } from "../runtime";
-import { runSession } from "./session";
-import { createTerminal } from "./terminal";
-import { terminalLocale } from "./text";
-import { onShutdown } from "../transport/shutdown";
+import type { RecordDiagnostic } from "../diagnostics.ts";
+import type { LocalRuntime } from "../runtime/index.ts";
+import { runSession } from "./session.ts";
+import { createTerminal } from "./terminal.ts";
+import { terminalLocale } from "./text.ts";
+import { onShutdown } from "../transport/shutdown.ts";
 
 export async function runTui(options: {
   dataDir?: string;
@@ -28,7 +28,7 @@ export async function runTui(options: {
   }
   const removeSignals = onShutdown((signal) => stop(signal === "SIGINT" ? 130 : 143));
   try {
-    const { createExecutionOwner } = await import("../runtime/owner");
+    const { createExecutionOwner } = await import("../runtime/owner.ts");
     if (stopped) return exitCode;
     runtime = createExecutionOwner({ ...options, mode: "tui" }).runtime;
     const activeRuntime = runtime;

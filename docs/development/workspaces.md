@@ -1,36 +1,37 @@
 # Extending workspaces
 
-Bun workspaces below cover TypeScript applications and libraries. Desktop also owns
-a Go module in apps/desktop; see the [Desktop guide](desktop.md#build-and-release).
+Root `package.json` workspace patterns discover TypeScript applications, libraries
+and infrastructure. `pnpm run workspace:sync` generates the corresponding pnpm
+configuration; do not maintain another package inventory. The root Cargo workspace
+contains `apps/cli/launcher` and `apps/desktop/src-tauri`; native commands join the
+VP graph. See the [Desktop guide](desktop.md#build-and-release).
 
 Infrastructure lives under `infra/*`, including the independent Relay application
 and provider deployment tooling. Each manifest declares its actual kind/target,
 dependencies, deployment commands and checks. These are
-discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).
+discovered by the same pnpm/VP graph; see [infrastructure](../../infra/README.md).
 
 ```sh
-bun run workspace:list
-bun run workspace:new feature-kit --kind library --target universal
-bun run workspace:new feature-kit --kind library --target universal --tests --write
+pnpm run workspace:list
+pnpm run workspace:new feature-kit --kind library --target universal
+pnpm run workspace:new feature-kit --kind library --target universal --tests --write
 ```
 
 Preview is the default. Creation refuses existing paths and names. The generated
 private ESM package has an explicit source export, strict tsconfig and AGENTS.md;
 --tests adds an independent runner config and includes `tests/` in strict checking,
-without placeholder tests. Install with
-Bun, then import the public entry from a consumer using workspace:*.
+without placeholder tests. Run `pnpm run workspace:sync` and `pnpm install`, then
+import the public entry from a consumer using `workspace:*`.
 
 ## Manifest metadata
 
 raypx.kind is app, library or tooling. raypx.target is universal, browser, native,
-node or bun. entryTargets overrides the default by exports key. sourceTargets
+or node. entryTargets overrides the default by exports key. sourceTargets
 maps package-relative globs to targets; the most-specific matching pattern wins.
-Universal code has no platform host dependencies. Bun can consume node code;
-other platform crossings require a compatible explicit public entry. A server use
-case behind a universal entry is not safe merely because Bun can execute
-Node-compatible APIs: `memory`, `jobs` and `instances` mark `./server` and `src/server.ts` /
-`src/server/**` as node, following `account`, so a browser import of a server use
-case fails policy instead of reaching a bundled dependency by accident.
+Universal code has no platform host dependencies. Platform crossings require a
+compatible explicit public entry. Server use cases in `memory`, `jobs` and
+`instances` mark `./server` and `src/server.ts` / `src/server/**` as node, following
+`account`, so browser imports fail policy before bundling server dependencies.
 
 Every public entry has an established consumer in another workspace. `policy`
 finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig

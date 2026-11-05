@@ -1,7 +1,7 @@
 import { redirect } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { accountQuery } from "./account-query";
-import { safeReturnTo } from "./return-to";
+import { accountQuery } from "./account-query.ts";
+import { safeReturnTo } from "./return-to.ts";
 
 export async function authPageGuard({
   context,

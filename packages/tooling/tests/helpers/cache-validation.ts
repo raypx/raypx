@@ -1,8 +1,9 @@
 import { copyFileSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { workspaceFixtures } from "./workspace.js";
-import { project } from "./cache.js";
+import { workspaceFixtures } from "./workspace.ts";
+import { workspaceConfiguration } from "../../src/validation/workspaces.ts";
+import { project } from "./cache.ts";
 
 const { member } = workspaceFixtures();
 const repository = resolve(import.meta.dirname, "../../../..");
@@ -12,13 +13,16 @@ export function validationProject() {
   const root = project();
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   manifest.devEngines = {
-    packageManager: { name: "bun", version: "1.4.4", onFail: "error" },
-    runtime: { name: "bun", version: "1.4.4", onFail: "error" },
+    packageManager: { name: "pnpm", version: "12.16.1", onFail: "error" },
+    runtime: { name: "node", version: "24.22.2", onFail: "error" },
   };
+  manifest.engines = { node: "24.22.2" };
   writeFileSync(join(root, "package.json"), JSON.stringify(manifest));
+  writeFileSync(join(root, "pnpm-workspace.yaml"), workspaceConfiguration(root));
+  writeFileSync(join(root, "rust-toolchain.toml"), '[toolchain]\nchannel="1.99.1"\n');
   writeFileSync(
     join(root, "mise.toml"),
-    '[settings]\nidiomatic_version_file_enable_tools = ["bun"]\n',
+    '[settings]\nidiomatic_version_file_enable_tools = ["node"]\n',
   );
   writeFileSync(
     join(root, "vite.config.ts"),
@@ -26,7 +30,11 @@ export function validationProject() {
   );
   const tooling = join(root, "packages/tooling");
   const toolingManifest = JSON.parse(readFileSync(join(tooling, "package.json"), "utf8"));
-  toolingManifest.dependencies = { "@raypx-kit/devkit": "1.0.0", "@raypx-kit/intl": "1.0.0" };
+  toolingManifest.dependencies = {
+    "@raypx-kit/devkit": "1.0.0",
+    "@raypx-kit/intl": "1.0.0",
+    confbox: "1.0.0",
+  };
   writeFileSync(join(tooling, "package.json"), JSON.stringify(toolingManifest));
   symlinkSync(
     join(repository, "packages/tooling/node_modules/@raypx-kit/intl"),
@@ -36,6 +44,7 @@ export function validationProject() {
   for (const file of [
     "policy.ts",
     "validation/toolchain.ts",
+    "validation/workspaces.ts",
     "validation/source-layers.ts",
     "validation/entries.ts",
     "validation/deployment.ts",

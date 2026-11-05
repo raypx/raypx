@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { expect, it } from "vite-plus/test";
-import { externalLinkTarget } from "./lib/external-links";
+import { externalLinkTarget } from "./lib/external-links.ts";
 it("keeps dev-server router links inside Desktop and identifies only external HTTP links", () => {
   const target = (href: string, origin: string) => {
     const anchor = document.createElement("a");

@@ -1,4 +1,4 @@
-import { mockTaskLayout } from "../../../tests/helpers/layout.js";
+import { mockTaskLayout } from "../../../tests/helpers/layout.ts";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

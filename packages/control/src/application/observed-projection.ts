@@ -1,9 +1,9 @@
 import type { ObservedProjection } from "@raypx/contracts/terminal";
 import { type RelayClientFrame } from "@raypx/contracts/tasks";
-import type { ControlRepository } from "../ports.js";
+import type { ControlRepository } from "../ports.ts";
 
-import { ControlError, type RelayActor, required, canonical } from "../records.js";
-import type { ControlCredentials } from "./credentials.js";
+import { ControlError, type RelayActor, required, canonical } from "../records.ts";
+import type { ControlCredentials } from "./credentials.ts";
 export class ObservedProjectionStore {
   constructor(
     private readonly repository: ControlRepository,

@@ -1,9 +1,9 @@
 import type { AgentProvider } from "@raypx/core/tasks";
-import type { PiExecutionServices } from "../../pi/ports";
-import { ProviderRegistry, type ProviderDriver } from "../../application/providers";
-import { createAdapter, discoverProviders } from "./process";
-import type { TransportFactory } from "../../harness/transport";
-import { LocalError } from "../../../errors";
+import type { PiExecutionServices } from "../../pi/ports.ts";
+import { ProviderRegistry, type ProviderDriver } from "../../application/providers.ts";
+import { createAdapter, discoverProviders } from "./process.ts";
+import type { TransportFactory } from "../../harness/transport.ts";
+import { LocalError } from "../../../errors.ts";
 
 export function builtinDrivers(
   overrides: Partial<Record<AgentProvider, string>> = {},

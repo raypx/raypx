@@ -13,7 +13,7 @@ const config = {
   resolver: {
     ...defaults.resolver,
     // Shared ESM packages spell emitted imports as .js. Resolve their relative
-    // imports to TypeScript source, as Bun and Vite already do.
+    // imports to TypeScript source, as Node and Vite already do.
     resolveRequest(context, moduleName, platform) {
       const workspaceSource =
         context.originModulePath.startsWith(packagesRoot) &&

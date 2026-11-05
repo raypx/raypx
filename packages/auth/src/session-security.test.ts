@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { createAuth } from "./server.js";
+import { createAuth } from "./server.ts";
 
 it("allows old valid sessions, validates names and requires trusted mutation origins", async () => {
   const data: Record<string, Record<string, unknown>[]> = {

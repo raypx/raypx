@@ -12,7 +12,7 @@ import {
   InstanceError,
   type InstanceBinding,
   type InstanceReceipt,
-} from "./index.js";
+} from "./index.ts";
 export function createInstanceKey() {
   const { privateKey, publicKey } = generateKeyPairSync("ed25519");
   return {

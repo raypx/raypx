@@ -8,6 +8,10 @@ Repositories never migrate or close borrowed connections. Operations across
 repositories can share one Drizzle transaction. Independent profile owners in
 other processes still use separate connections. The database and auxiliaries use private POSIX permissions (directory 0700, files 0600) or a Windows DACL restricted to the current user and SYSTEM. The directory ACL is inheritable so newly created WAL/SHM/journal files remain private; unsupported paths and permission failures stop initialization.
 
+Node's `node:sqlite` supplies the synchronous connection; Drizzle's `node-sqlite`
+driver supplies typed queries and transactions/savepoints. The runtime migration
+changes the driver, not the existing SQLite schemas or applied migration history.
+
 `apps/cli/src/runtime/sqlite/schema/` owns the table definitions by feature;
 `schema.ts` exports the complete profile schema. Generated migrations under
 `apps/cli/drizzle/` create the current tables and indexes:
@@ -32,8 +36,8 @@ other processes still use separate connections. The database and auxiliaries use
    `ai complete`; offline `ai providers/models` never create a profile database.
 
 ```sh
-bun run --cwd apps/cli db:generate
-bun run --cwd apps/cli check
+pnpm --dir apps/cli run db:generate
+pnpm --dir apps/cli run check
 ```
 
 Change the Drizzle definitions, then run `db:generate`. It invokes drizzle-kit
@@ -43,14 +47,15 @@ files by hand. The check command fails if the embedded journal differs from the
 SQL. Future schema changes generate additional migrations; applied migrations
 are immutable.
 
-The Bun SQLite migrator receives this embedded journal. The compiled CLI needs
-only its executable at runtime; it does not look for migration files beside the
-binary or in the repository.
+The Node SQLite migrator receives this journal embedded in the bundled ESM.
+The CLI requires its complete runtime directory, but no external migration SQL
+files or repository checkout. See [CLI distribution](../../apps/cli/README.md#build-and-distribution).
 
 Startup holds a separate SQLite migration lock while configuring WAL, checking
-the migration ledger and running `migrate()`. This serializes independent CLI
-processes, including the ledger read that Drizzle performs before its migration
-transaction. Kernel locks release if the owner exits. Daemon/project ownership
+the existing Drizzle ledger and applying the embedded SQL journal. The Node
+migrator preserves that ledger's format and serializes reads and migration
+transactions across independent CLI processes. Kernel locks release if the owner
+exits. Daemon/project ownership
 locks also remain separate from the business database, so a long-lived owner
 does not hold its business write lock.
 
@@ -61,13 +66,19 @@ in storage initialization.
 
 Default integration tests exercise initialization, reopen, cross-store visibility,
 cross-repository rollback, owner closure, validated stored JSON, rejected formats and six processes starting at
-once. `apps/cli`'s `smoke` and `smoke:pi` commands additionally run copied compiled
-executables outside the repository.
+once. `apps/cli`'s `smoke` additionally relocates the complete distribution outside
+the repository; `smoke:pi` relocates an ESM fixture with the bundled Node runtime.
 
-Desktop's Go host separately owns `sessions.sqlite` for server-scoped persistent
-Cookies. It never opens the CLI database or uses the lifetime exclusive
-`desktop-instance.sqlite` transaction for sessions. Cookies remain native;
-SQLite storage is plaintext protected by filesystem permissions, not a system vault.
-An unreadable store keeps sign-in in memory without touching stored rows; a failed
-write disables session transport until restart. Host authorization may explicitly
-report memory-only mode.
+Desktop's Rust host separately owns `tauri-sessions.sqlite` for server-scoped
+persistent cookies. Cookie batches are AES-GCM ciphertext authenticated against
+their server scope; a separate system credential-store key belongs to the Tauri
+data directory. Private filesystem permissions also protect SQLite auxiliaries.
+The host never opens the CLI business database or shares the lifetime exclusive
+`desktop-instance.sqlite` transaction with sessions. Missing keys or unreadable
+ciphertext preserve stored rows and permit in-memory sign-in; a failed session
+write disables that session transport until restart.
+
+Tauri does not read, import or delete MyGo login storage. Sign in once after the
+switch; existing CLI profiles, grants, offline identity and history stay local.
+CLI Host authorization is a separate record in `profile.sqlite` and may explicitly
+report memory-only mode. See [Desktop sessions](desktop.md#apply-and-isolate).

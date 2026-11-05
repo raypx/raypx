@@ -1,10 +1,10 @@
-import { mockTaskLayout } from "../../../tests/helpers/layout.js";
+import { mockTaskLayout } from "../../../tests/helpers/layout.ts";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import { createTaskClient } from "../../../tests/helpers/client.js";
+import { createTaskClient } from "../../../tests/helpers/client.ts";
 
 beforeEach(() => {
   // happy-dom has no layout; provide dimensions for the real virtualizer.

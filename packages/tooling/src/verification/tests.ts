@@ -2,10 +2,10 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { imports } from "@raypx-kit/devkit/architecture";
 import { resolveImport, workspaceFor } from "@raypx-kit/devkit/workspaces";
-import { discover } from "../repository.js";
-import { taskModel, taskRef } from "../tasks/model.js";
-import { testLayer, testSources } from "../validation/test-sources.js";
-import type { VerificationPlan } from "./plan.js";
+import { discover } from "../repository.ts";
+import { taskModel, taskRef } from "../tasks/model.ts";
+import { testLayer, testSources } from "../validation/test-sources.ts";
+import type { VerificationPlan } from "./plan.ts";
 
 export interface TestSelection {
   workspace: string;

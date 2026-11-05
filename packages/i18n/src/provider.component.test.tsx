@@ -8,7 +8,7 @@ import {
   useLanguagePreference,
   useLocale,
   useTranslations,
-} from "./browser.js";
+} from "./browser.tsx";
 
 function system(languages: string[]) {
   vi.spyOn(navigator, "languages", "get").mockReturnValue(languages);

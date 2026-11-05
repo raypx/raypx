@@ -1,2 +1,2 @@
-export * from "./model.js";
-export * from "./schedule.js";
+export * from "./model.ts";
+export * from "./schedule.ts";

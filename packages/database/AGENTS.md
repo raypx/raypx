@@ -17,7 +17,7 @@ PostgreSQL persistence for the new account foundation.
 
 Use postgres.js and Drizzle. Active tables are in raypx_foundation; migration history uses raypx_foundation_migrations. Only drizzle-foundation is retained; retired migration histories are available in Git history. No reset/drop command. Generate new migrations with drizzle-kit; never edit generated SQL or snapshots. No runtime dependency on auth, tooling or apps.
 `studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
-Bun defaults to a process pool of ten connections. `/connection` keeps runtime
+Node defaults to a process pool of ten connections. `/connection` keeps runtime
 connections separate from filesystem-based migrations in `migrate.ts`.
 API startup and explicit commands share the migrator's transaction-scoped advisory lock
 before any ledger/schema access. Lock acquisition waits at most 120 seconds; subsequent
@@ -33,9 +33,9 @@ retired product tables.
 ## Verification
 
 ```sh
-bun run --cwd packages/database check
-bun run --cwd packages/database test
-DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/database generate
+pnpm --dir packages/database run check
+pnpm --dir packages/database run test
+DATABASE_URL=postgres://localhost/raypx_foundation_test pnpm --dir packages/database run generate
 ```
 
 Remote control records share the foundation schema and cascade with the account.

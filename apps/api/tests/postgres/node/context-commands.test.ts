@@ -3,7 +3,7 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { controlCommand, controlTask, user } from "@raypx/database/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { contextCommandPrune, createControlRepository } from "@raypx/control/postgres";
-import { cleanupExpired } from "../../../server/jobs/cleanup.js";
+import { cleanupExpired } from "../../../server/jobs/cleanup.ts";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

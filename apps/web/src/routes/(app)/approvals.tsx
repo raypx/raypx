@@ -1,12 +1,12 @@
-import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard";
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.tsx";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
-import { analytics } from "../../features/analytics/client";
+import { analytics } from "../../features/analytics/client.ts";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary";
+import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary.tsx";
 import { useTranslations } from "@raypx/i18n/browser";
-import { taskClient } from "../../features/tasks/client";
-import { apiUrl } from "../../features/auth/client";
+import { taskClient } from "../../features/tasks/client.ts";
+import { apiUrl } from "../../features/auth/client.ts";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 export const Route = createFileRoute("/(app)/approvals")({
   beforeLoad: webPageGuard("/approvals"),

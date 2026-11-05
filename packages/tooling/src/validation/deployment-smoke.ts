@@ -1,9 +1,10 @@
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { deploymentServices } from "../build/deployment.js";
-import { releaseMetadataFile } from "../build/release.js";
-import { checkApi, checkWeb, checkDeploymentSession } from "../smoke/checks.js";
-import { Evidence } from "./evidence.js";
+import { deploymentServices } from "../build/deployment.ts";
+import { releaseMetadataFile } from "../build/release.ts";
+import { checkApi, checkWeb, checkDeploymentSession } from "../smoke/checks.ts";
+import { Evidence } from "./evidence.ts";
 
 export function deploymentSmokePlatform(args: string[]): string {
   if (!args.length) return "linux/amd64";
@@ -23,7 +24,7 @@ class DeploymentDockerError extends Error {
 }
 
 async function docker(args: string[], timeoutMs = 30_000): Promise<string> {
-  const child = Bun.spawn(["docker", ...args], {
+  const child = spawnProcess(["docker", ...args], {
     env: process.env,
     stdout: "pipe",
     stderr: "pipe",
@@ -47,7 +48,7 @@ async function untilReady(evidence: Evidence, probe: () => Promise<boolean>) {
   while (Date.now() < deadline) {
     evidence.check();
     if (await probe().catch(() => false)) return;
-    await Bun.sleep(200);
+    await sleep(200);
   }
   throw new Error("Deployment service readiness timed out");
 }
@@ -176,7 +177,7 @@ export async function smokeDeployment(root: string, args: string[]) {
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ""],
         ["railway-relay", "infra/relay/Dockerfile", images.railwayRelay, ""],
         ["gateway", "infra/railway/Dockerfile", images.gateway, ""],
-        ["fixture", "apps/api/Dockerfile", images.fixture, "build"],
+        ["fixture", "apps/api/Dockerfile", images.fixture, "deploy"],
       ]) {
         await evidence.command(`${label}-build`, [
           "docker",
@@ -242,7 +243,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           migrate,
           { DATABASE_URL: database },
           [],
-          profile === "railway" ? ["bun", "run", "--cwd", "packages/database", "migrate"] : [],
+          profile === "railway" ? ["node", "migration/dist/commands.mjs", "migrate"] : [],
         );
         if (profile === "compose")
           await once(
@@ -257,7 +258,7 @@ export async function smokeDeployment(root: string, args: string[]) {
               FIXTURE_PASSWORD: fixture.password,
             },
             [],
-            ["bun", "run", "--cwd", "apps/api", "deployment:fixture"],
+            ["node", "fixture/deployment.mjs"],
           );
         const api = `${project}-api`,
           relay = `${project}-relay`,

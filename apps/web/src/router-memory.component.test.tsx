@@ -32,7 +32,7 @@ vi.mock("./features/memory/client", () => ({
   memoryProjects: { list: mocks.projects },
   memoryUsage: { scheduledPlans: mocks.usage },
 }));
-import { Route } from "./routes/(app)/memory";
+import { Route } from "./routes/(app)/memory.tsx";
 beforeEach(() => {
   mocks.account = null;
   mocks.list.mockClear();

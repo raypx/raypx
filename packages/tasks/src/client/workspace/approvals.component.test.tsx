@@ -3,7 +3,7 @@ import { expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import { createTaskClient } from "../../../tests/helpers/client.js";
+import { createTaskClient } from "../../../tests/helpers/client.ts";
 
 it("loads approvals independently when the task list is unavailable", async () => {
   localStorage.setItem("raypx_locale", "en");

@@ -1,4 +1,7 @@
-import type { DesktopApiRequest } from "../../../api";
+import { createHash } from "node:crypto";
+import { writeResource, readJsonFile, fileExists, readTextFile } from "@raypx/runtime-node/files";
+import { sleep } from "@raypx/runtime-node/process";
+import type { DesktopApiRequest } from "../../../api.ts";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -13,7 +16,7 @@ import {
   quitDesktop,
   reloadRenderer,
   trayAction,
-} from "./host";
+} from "./host.ts";
 
 const suppliedDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 const api = process.env.RAYPX_NATIVE_SMOKE_API;
@@ -34,11 +37,11 @@ assert.equal(
   new URL(api).origin,
   "Runtime TOML must select the HTTPS acceptance server",
 );
-const credentials = (await Bun.file(credentialsPath).json()) as {
+const credentials = await readJsonFile<{
   email: string;
   password: string;
   userId: string;
-};
+}>(credentialsPath);
 assert.match(credentials.email, /@raypx\.example\.test$/, "Use a dedicated acceptance account");
 async function waitFor(check: () => Promise<boolean> | boolean, label: string, timeout = 30_000) {
   const deadline = Date.now() + timeout;
@@ -48,7 +51,7 @@ async function waitFor(check: () => Promise<boolean> | boolean, label: string, t
     } catch {
       /* Native startup/navigation may replace the bridge. */
     }
-    await Bun.sleep(200);
+    await sleep(200);
   }
   throw new Error(`Beta native acceptance timed out: ${label}`);
 }
@@ -75,7 +78,9 @@ async function acceptance() {
   );
   assert.equal(
     await evaluate("return location.protocol"),
-    process.platform === "win32" ? "http:" : "mygo:",
+    process.platform === "win32"
+      ? "http:"
+      : `raypx-${createHash("sha256").update(apiOrigin).digest("hex").slice(0, 32)}:`,
   );
   if (restoring) {
     stage = "native process restart persistence and logout";
@@ -117,7 +122,7 @@ async function acceptance() {
       async () => !(await control.info(credentials.userId)).connected,
       "relay detached after logout",
     );
-    await Bun.write(
+    await writeResource(
       join(directory, "native-restore-complete.json"),
       JSON.stringify({
         status: "passed",
@@ -169,7 +174,7 @@ async function acceptance() {
   stage = "project authorization and remote grant";
   const project = join(directory, "remote-project");
   await mkdir(project, { recursive: true });
-  await Bun.write(
+  await writeResource(
     join(project, "AGENTS.md"),
     "Isolated Raypx live Beta acceptance. Work only here. Do not use network, skills, integrations, commit or push.\n",
   );
@@ -197,7 +202,7 @@ async function acceptance() {
     60_000,
   );
   const info = await control.info(credentials.userId);
-  await Bun.write(
+  await writeResource(
     join(directory, "native-ready.json"),
     JSON.stringify({
       accountId: credentials.userId,
@@ -216,30 +221,30 @@ async function acceptance() {
   let renewedDuringTask = false;
   await waitFor(
     async () => {
-      if (!renewedDuringTask && (await Bun.file(join(directory, "renew-now.json")).exists())) {
+      if (!renewedDuringTask && (await fileExists(join(directory, "renew-now.json")))) {
         assert.equal(await control.refreshGrant(), true, "Hidden native grant renewal failed");
         await waitFor(
           async () => (await control.info(credentials.userId)).connected,
           "hidden relay reconnect after native renewal",
         );
         renewedDuringTask = true;
-        await Bun.write(
+        await writeResource(
           join(directory, "native-renewed.json"),
           JSON.stringify({ renewed: true, hidden: true }),
         );
       }
-      return await Bun.file(join(directory, "web-complete.json")).exists();
+      return await fileExists(join(directory, "web-complete.json"));
     },
     "Web task verification",
     600_000,
   );
-  const completed = (await Bun.file(join(directory, "web-complete.json")).json()) as {
+  const completed = await readJsonFile<{
     tasks: { provider: string; marker: string; file: string }[];
-  };
+  }>(join(directory, "web-complete.json"));
   assert.equal(completed.tasks.length, 2);
   assert.equal(renewedDuringTask, true);
   for (const task of completed.tasks)
-    assert.equal((await Bun.file(join(project, task.file)).text()).trim(), task.marker);
+    assert.equal((await readTextFile(join(project, task.file))).trim(), task.marker);
   stage = "Desktop renderer receives completed remote tasks";
   // WebKit may suspend a hidden view; restore it before testing renderer interaction.
   await trayAction("show");
@@ -266,7 +271,7 @@ async function acceptance() {
       ),
     "remote task rows in native renderer",
   );
-  await Bun.write(
+  await writeResource(
     join(directory, "native-complete.json"),
     JSON.stringify({
       status: "passed",
@@ -304,7 +309,10 @@ try {
     /* Keep the original failure when the WebView bridge is gone. */
   }
   console.error(`Beta native acceptance failed at ${stage}:`, error);
-  await Bun.write(join(directory, "native-failure.json"), JSON.stringify({ stage, failed: true }));
+  await writeResource(
+    join(directory, "native-failure.json"),
+    JSON.stringify({ stage, failed: true }),
+  );
   await quitDesktop();
   process.exitCode = 1;
 }

@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import type { ProviderSession } from "../../src/core/index.js";
-import { observeDrain, type createTestProviderHost } from "./host.js";
+import type { ProviderSession } from "../../src/core/index.ts";
+import { observeDrain, type createTestProviderHost } from "./host.ts";
 
 export interface ProviderHarness {
   session: ProviderSession;

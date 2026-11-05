@@ -1,7 +1,7 @@
-import { Gate } from "./workspace-gate.js";
-import { TaskDetail } from "./task-detail.js";
-import { Approval } from "./approval.js";
-import { PersistentTaskComposer } from "./persistent-task-composer.js";
+import { Gate } from "./workspace-gate.tsx";
+import { TaskDetail } from "./task-detail.tsx";
+import { Approval } from "./approval.tsx";
+import { PersistentTaskComposer } from "./persistent-task-composer.tsx";
 import { type MemoryClientPort } from "@raypx/memory/client";
 import {
   useCallback,
@@ -11,8 +11,8 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import { useRemoteQuery } from "./remote-query.js";
-import type { TaskWorkspacePort } from "../model/port.js";
+import { useRemoteQuery } from "./remote-query.ts";
+import type { TaskWorkspacePort } from "../model/port.ts";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -27,16 +27,16 @@ import { RefreshIcon } from "@raypx/icons/refresh";
 import { CloseIcon } from "@raypx/icons/close";
 import { IconButton } from "@raypx/ui/icon-button";
 
-import { TaskComposer, type TaskComposerDraft } from "./task-composer.js";
-import { TaskOverview } from "./task-overview.js";
+import { TaskComposer, type TaskComposerDraft } from "./task-composer.tsx";
+import { TaskOverview } from "./task-overview.tsx";
 
-import { TaskList } from "./task-list.js";
-import { emptyTaskFilters, filterTasks, TaskFilterBar } from "./task-filters.js";
+import { TaskList } from "./task-list.tsx";
+import { emptyTaskFilters, filterTasks, TaskFilterBar } from "./task-filters.tsx";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
 
-import { ObservedApprovals } from "./observed.js";
-import { TaskPanels } from "./task-panels.js";
+import { ObservedApprovals } from "./observed.tsx";
+import { TaskPanels } from "./task-panels.tsx";
 
 import {
   isLocalWorkspace,
@@ -44,7 +44,7 @@ import {
   workspaceOwner,
   workspaceScopeKey,
   type WorkspaceScope,
-} from "../model/scope.js";
+} from "../model/scope.ts";
 
 interface Props {
   client: TaskWorkspacePort;

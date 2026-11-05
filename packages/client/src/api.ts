@@ -3,7 +3,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
 import type { apiContract } from "@raypx/contracts/api";
 
-export { isMissingProcedure } from "./response.js";
+export { isMissingProcedure } from "./response.ts";
 
 export type ApiClient = ContractRouterClient<typeof apiContract>;
 export type ApiHeaders = Record<string, string | undefined>;

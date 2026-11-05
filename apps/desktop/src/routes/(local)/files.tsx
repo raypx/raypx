@@ -5,23 +5,23 @@ import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useEffect } from "react";
 
-import { localRequest } from "../../lib/desktop";
-import { filesSearch } from "../../features/files/search";
+import { localRequest } from "../../lib/desktop.ts";
+import { filesSearch } from "../../features/files/search.ts";
 import {
   FilesProvider,
   fileErrors,
   isDirty,
   useFilesStore,
   useFilesStoreApi,
-} from "../../features/files/store";
-import { useFileActions } from "../../features/files/use-actions";
-import { FilesToolbar } from "../../features/files/components/toolbar";
-import { FileTable, type FileListingResult } from "../../features/files/components/table";
-import { FileOperationForm } from "../../features/files/components/operation-form";
-import { FileEditor } from "../../features/files/components/editor";
-import { LocalWelcome } from "../../features/onboarding/welcome";
-import { recentProjects, rememberProject } from "../../features/tasks/project-history";
-import { ProjectTools } from "../../features/tasks/project-tools";
+} from "../../features/files/store.tsx";
+import { useFileActions } from "../../features/files/use-actions.ts";
+import { FilesToolbar } from "../../features/files/components/toolbar.tsx";
+import { FileTable, type FileListingResult } from "../../features/files/components/table.tsx";
+import { FileOperationForm } from "../../features/files/components/operation-form.tsx";
+import { FileEditor } from "../../features/files/components/editor.tsx";
+import { LocalWelcome } from "../../features/onboarding/welcome.tsx";
+import { recentProjects, rememberProject } from "../../features/tasks/project-history.ts";
+import { ProjectTools } from "../../features/tasks/project-tools.tsx";
 
 const localRoute = getRouteApi("/(local)");
 

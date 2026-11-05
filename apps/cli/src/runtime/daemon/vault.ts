@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import type { LocalDatabase } from "../sqlite";
-import { hostAuthorizations } from "../sqlite/schema/credentials";
-import { LocalError } from "../errors";
+import type { LocalDatabase } from "../sqlite/index.ts";
+import { hostAuthorizations } from "../sqlite/schema/credentials.ts";
+import { LocalError } from "../errors.ts";
 import { z } from "zod";
 import { hostAuthorizationSchema, type HostAuthorization } from "@raypx/contracts/terminal";
 

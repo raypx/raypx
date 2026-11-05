@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { safeReturnTo } from "./features/auth/return-to";
+import { safeReturnTo } from "./features/auth/return-to.ts";
 it.each([
   "https://evil.test/tasks",
   "//evil.test/tasks",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { outputLines, safeText, terminalLocale } from "./text";
+import { outputLines, safeText, terminalLocale } from "./text.ts";
 
 describe("terminal display text", () => {
   it("removes terminal commands, control characters and bidi overrides from display text", () => {

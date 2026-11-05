@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { rateLimit, session, user, verification } from "@raypx/database/schema";
 import { eq, like, sql } from "drizzle-orm";
-import { cleanupExpired, cleanupLock } from "../../../server/jobs/cleanup.js";
+import { cleanupExpired, cleanupLock } from "../../../server/jobs/cleanup.ts";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { apiUrl, authClient } from "../auth/client";
-import { taskClient } from "./client";
-import { getBridge, isDesktop, onLocalEvent } from "../../lib/desktop";
+import { apiUrl, authClient } from "../auth/client.ts";
+import { taskClient } from "./client.ts";
+import { getBridge, isDesktop, onLocalEvent } from "../../lib/desktop.ts";
 
 export function RemoteCoordinator() {
   const session = authClient.useSession();

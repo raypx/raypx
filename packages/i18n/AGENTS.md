@@ -52,7 +52,7 @@ Browser/provider hydration uses adjacent `*.component.test.tsx` in the separate
 happy-dom project, so React renderers do not share module context.
 
 ```sh
-bun run --cwd packages/i18n check
-bun run --cwd packages/i18n test
-bun run i18n:check
+pnpm --dir packages/i18n run check
+pnpm --dir packages/i18n run test
+pnpm run i18n:check
 ```

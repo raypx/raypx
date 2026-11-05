@@ -2,8 +2,8 @@ import { parseArgs } from "node:util";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { AiError, createAiClient } from "@raypx/ai";
-import { cases, promptFor, validateCases } from "./cases";
-import { EvalRequestError, evaluate, promptHash } from "./harness";
+import { cases, promptFor, validateCases } from "./cases.ts";
+import { EvalRequestError, evaluate, promptHash } from "./harness.ts";
 
 async function main() {
   const { values } = parseArgs({

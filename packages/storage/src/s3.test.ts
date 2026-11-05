@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { createS3Storage } from "./s3.js";
+import { createS3Storage } from "./s3.ts";
 
 const config = {
   endpoint: "https://s3.example.test/",

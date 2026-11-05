@@ -1,16 +1,26 @@
 # Raypx documentation
 
-Raypx is a project-centered workbench with MyGo Desktop, a standalone Bun
-CLI/daemon, TanStack Start Web, Bun API and independent Relay. Desktop targets
-macOS 13+ and Windows; Expo Mobile currently provides the account/login baseline.
+Raypx is a project-centered workbench with Tauri Desktop, a standalone TypeScript
+CLI/daemon, TanStack Start Web, Node API and independent Relay. Desktop targets
+macOS 13.5+ and Windows; Expo Mobile currently provides the account/login baseline.
 Register local profiles once for offline work; remote data and execution grants
 require separate online authorization.
 
-Read the [project overview](../README.md), [product scope](../PRODUCT.md) and
-[root instructions](../AGENTS.md) first. Workspace manifests are the inventory:
-`bun run workspace:list` and `bun run test list`. Current guides describe the
+Start with the [project overview](../README.md), [product scope](../PRODUCT.md),
+[current architecture](architecture/README.md) and
+[development setup](development/getting-started.md).
+[Root instructions](../AGENTS.md) define repository rules. Workspace manifests are the inventory:
+`pnpm run workspace:list` and `pnpm run test list`. Current guides describe the
 implementation; the roadmap describes future work. Accepted later amendments
 supersede conflicting earlier ADR text.
+
+## Architecture and decisions
+
+- [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
+- [Tauri / Node / pnpm decision and migration contract](architecture/0045-tauri-node-pnpm.md)
+- [Remote Agent tasks and approvals](architecture/remote-tasks.md)
+- [Decision history and supersession status](architecture/README.md#decision-history)
+- [Persistent Agent Platform roadmap](roadmap.md) — future scope and dated acceptance
 
 ## Development and verification
 
@@ -23,7 +33,7 @@ supersede conflicting earlier ADR text.
 
 ## Applications and local execution
 
-- [MyGo Desktop configuration, native transport and release](development/desktop.md)
+- [Tauri Desktop configuration, native transport and release](development/desktop.md)
 - [Standalone CLI commands and profiles](../apps/cli/README.md)
 - [Independent terminal host and connectors](development/terminal-host.md)
 - [Expo mobile development and login](development/mobile.md)
@@ -52,8 +62,10 @@ supersede conflicting earlier ADR text.
 - [Independent Relay service](../infra/relay/README.md)
 - [Cloudflare Relay ingress](../infra/cloudflare/README.md)
 
-## Architecture
+## Migration record
 
-- [Runtime boundaries and accepted decisions](architecture/README.md)
-- [Remote Agent tasks and approvals](architecture/remote-tasks.md)
-- [Persistent Agent Platform roadmap](roadmap.md)
+- [2026-11-05 migration validation and measurements](development/migration-validation.md)
+
+This dated evidence does not replace current platform release gates. Follow the
+[Desktop release guide](development/desktop.md#build-and-release) for first
+installation, updater keys and macOS/Windows acceptance requirements.

@@ -1,3 +1,5 @@
+import { fileURLToPath as entryFile } from "node:url";
+import { resolve as entryPath } from "node:path";
 import { projectAuthUser, type Auth } from "@raypx/auth/server";
 import { assignedRoles } from "@raypx/auth/access";
 
@@ -24,11 +26,11 @@ export async function bootstrapAdministrators(
   return { updated };
 }
 
-if (import.meta.main) {
+if (process.argv[1] !== undefined && entryPath(process.argv[1]) === entryFile(import.meta.url)) {
   try {
     if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL_REQUIRED");
-    const { getApiEnvironment } = await import("../env.js");
-    const { createApiRuntime } = await import("../runtime/server.js");
+    const { getApiEnvironment } = await import("../env.ts");
+    const { createApiRuntime } = await import("../runtime/server.ts");
     const environment = getApiEnvironment();
     if (!environment.ADMIN_EMAILS.length) throw new Error("ADMIN_EMAILS_REQUIRED");
     const runtime = await createApiRuntime(environment);

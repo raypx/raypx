@@ -1,11 +1,11 @@
 import { Profiler, type ProfilerOnRenderCallback } from "react";
-import { mockTaskLayout } from "../../../tests/helpers/layout.js";
+import { mockTaskLayout } from "../../../tests/helpers/layout.ts";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
-import { Conversation } from "../conversation.js";
+import { Conversation } from "../conversation.tsx";
 
 beforeEach(() => {
   mockTaskLayout("all");

@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
-import { mocks, page } from "../tests/helpers/router-auth";
+import { mocks, page } from "../tests/helpers/router-auth.tsx";
 
 describe("public legal routes", () => {
   it("serves privacy outside the account shell when the API is unavailable", async () => {

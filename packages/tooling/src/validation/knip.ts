@@ -11,7 +11,7 @@ type Manifest = {
   };
 };
 
-/** Knip currently reads pnpm.overrides, but not Bun's root overrides. Keep its report read-only. */
+/** Knip currently reads pnpm.overrides, but not Node's root overrides. Keep its report read-only. */
 export function knipFindings(report: unknown, manifest: Manifest): Issue[] {
   if (
     !report ||

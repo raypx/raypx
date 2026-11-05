@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useDesktopPlatform } from "../../lib/platform-context";
-import { createLocalTaskClient } from "./local-client";
+import { useDesktopPlatform } from "../../lib/platform-context.tsx";
+import { createLocalTaskClient } from "./local-client.ts";
 
 export const projectCatalogKey = ["desktop-project-navigation"] as const;
 export function useProjectCatalog(enabled = true) {

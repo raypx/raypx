@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { DesktopPlatformProvider } from "../../src/lib/platform-context";
-import { DesktopRuntimeProvider } from "../../src/features/engine/provider";
-import type { desktopFixture } from "./desktop";
+import { DesktopPlatformProvider } from "../../src/lib/platform-context.tsx";
+import { DesktopRuntimeProvider } from "../../src/features/engine/provider.tsx";
+import type { desktopFixture } from "./desktop.ts";
 
 export function DesktopFixtureProvider({
   fixture,

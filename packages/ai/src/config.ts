@@ -1,4 +1,4 @@
-import { AiError } from "./errors.js";
+import { AiError } from "./errors.ts";
 
 export interface AiSettings {
   provider?: string;

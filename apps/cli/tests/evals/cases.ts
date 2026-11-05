@@ -1,5 +1,5 @@
 import type { AgentTask } from "@raypx/core/tasks";
-import { initialExecutionPrompt } from "../../src/runtime/agents/harness/execution";
+import { initialExecutionPrompt } from "../../src/runtime/agents/harness/execution.ts";
 
 export interface EvalCase {
   id: string;

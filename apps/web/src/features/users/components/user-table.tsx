@@ -12,7 +12,7 @@ import { DataTable } from "@raypx/ui/data-table";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { IconButton } from "@raypx/ui/icon-button";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
-import type { authClient } from "../../auth/client";
+import type { authClient } from "../../auth/client.ts";
 
 type UserRow = NonNullable<
   Awaited<ReturnType<typeof authClient.admin.listUsers>>["data"]

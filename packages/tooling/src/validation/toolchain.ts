@@ -1,142 +1,132 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { workspacePatterns } from "@raypx-kit/devkit/workspaces";
+import { parseTOML } from "confbox/toml";
+import { parseYAML } from "confbox/yaml";
+import { checkWorkspaceConfiguration } from "./workspaces.ts";
 
-type Manifest = Record<string, any>;
-
-const manifestAt = (root: string, file = "package.json"): Manifest =>
-  JSON.parse(readFileSync(join(root, file), "utf8"));
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-/** The root `packageManager` is the single Bun pin; Bun is the only JavaScript runtime. */
-export function readBunPin(root: string): string {
-  const bun = /^bun@(\d+\.\d+\.\d+)$/.exec(manifestAt(root).packageManager ?? "")?.[1];
-  if (!bun) throw new Error("Pin an exact Bun version in package.json packageManager.");
-  return bun;
+type Manifest = {
+  packageManager?: string;
+  engines?: { node?: string };
+  devEngines?: Record<string, { name?: string; version?: string; onFail?: string }>;
+};
+const manifestAt = (root: string): Manifest =>
+  JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+export function readNodePin(root: string) {
+  const node = manifestAt(root).engines?.node;
+  if (!node || !/^\d+\.\d+\.\d+$/.test(node))
+    throw new Error("Pin an exact Node version in package.json engines.node");
+  return node;
 }
-
-function checkMise(root: string): string[] {
-  const file = "mise.toml";
-  if (!existsSync(join(root, file))) return [`${file}: missing runtime manager configuration`];
-  let mise: unknown;
+export function readPnpmPin(root: string) {
+  const pnpm = /^pnpm@(\d+\.\d+\.\d+)$/.exec(manifestAt(root).packageManager ?? "")?.[1];
+  if (!pnpm) throw new Error("Pin an exact pnpm version in package.json packageManager");
+  return pnpm;
+}
+export function checkToolchain(root: string, documents: readonly string[]) {
+  let node: string, pnpm: string;
   try {
-    mise = Bun.TOML.parse(readFileSync(join(root, file), "utf8"));
-  } catch {
-    return [`${file}: invalid TOML configuration`];
+    node = readNodePin(root);
+    pnpm = readPnpmPin(root);
+  } catch (error) {
+    return [error instanceof Error ? error.message : String(error)];
   }
-  if (!isRecord(mise)) return [`${file}: configuration must be a table`];
-  const findings: string[] = [];
-  if (Object.hasOwn(mise, "tools"))
-    findings.push(`${file}: read existing pins instead of declaring [tools] versions`);
-  const tools = isRecord(mise.settings) ? mise.settings.idiomatic_version_file_enable_tools : [];
-  if (!Array.isArray(tools) || tools.length !== 1 || tools[0] !== "bun")
-    findings.push(`${file}: enable idiomatic version files for bun only`);
-  return findings;
-}
-
-function setupSteps(root: string): { file: string; step: Record<string, unknown> }[] {
-  const steps: { file: string; step: Record<string, unknown> }[] = [];
-  const collect = (file: string, list: unknown) => {
-    if (Array.isArray(list))
-      for (const step of list) if (isRecord(step)) steps.push({ file, step });
-  };
+  const findings: string[] = [...checkWorkspaceConfiguration(root)];
+  const manifest = manifestAt(root);
+  for (const [key, name, version] of [
+    ["runtime", "node", node],
+    ["packageManager", "pnpm", pnpm],
+  ]) {
+    const engine = manifest.devEngines?.[key!];
+    if (engine?.name !== name || engine?.version !== version || engine?.onFail !== "error")
+      findings.push(`package.json: devEngines.${key} must require ${name}@${version}`);
+  }
+  for (const file of [
+    "bun.lock",
+    "bunfig.toml",
+    ".bun-version",
+    ".nvmrc",
+    ".node-version",
+    ".tool-versions",
+  ])
+    if (existsSync(join(root, file))) findings.push(`${file}: use the root Node/pnpm pins only`);
+  try {
+    const mise = parseTOML(readFileSync(join(root, "mise.toml"), "utf8")) as {
+      tools?: unknown;
+      settings?: { idiomatic_version_file_enable_tools?: string[] };
+    };
+    if (
+      mise.tools ||
+      JSON.stringify(mise.settings?.idiomatic_version_file_enable_tools) !==
+        JSON.stringify(["node"])
+    )
+      findings.push("mise.toml: read the package.json Node pin without a tools section");
+    const rust = parseTOML(readFileSync(join(root, "rust-toolchain.toml"), "utf8")) as {
+      toolchain?: { channel?: string };
+    };
+    if (!/^\d+\.\d+\.\d+$/.test(rust.toolchain?.channel ?? ""))
+      findings.push("rust-toolchain.toml: pin an exact Rust release");
+  } catch {
+    findings.push("Invalid runtime manager configuration");
+  }
+  const rustPin = parseTOML<{ toolchain: { channel: string } }>(
+    readFileSync(join(root, "rust-toolchain.toml"), "utf8"),
+  ).toolchain.channel;
+  if (existsSync(join(root, "Cargo.toml"))) {
+    const cargo = parseTOML(readFileSync(join(root, "Cargo.toml"), "utf8")) as {
+      workspace?: { package?: { "rust-version"?: string } };
+    };
+    if (cargo.workspace?.package?.["rust-version"] !== rustPin)
+      findings.push("Cargo.toml: rust-version must match rust-toolchain.toml");
+  }
+  for (const file of globSync("**/Dockerfile", {
+    cwd: root,
+    exclude: ["**/node_modules/**", ".claude/**"],
+  })) {
+    const source = readFileSync(join(root, file), "utf8");
+    if (/^FROM\s+(oven\/bun|golang):/m.test(source))
+      findings.push(`${file}: Bun and Go images are unsupported`);
+    for (const [, version] of source.matchAll(/^ARG NODE_VERSION=(\S+)/gm))
+      if (version !== node) findings.push(`${file}: Node image must use ${node}`);
+    for (const [, version] of source.matchAll(/^FROM\s+rust:(\d+\.\d+\.\d+)/gm))
+      if (version !== rustPin) findings.push(`${file}: Rust image must use ${rustPin}`);
+    for (const [, version] of source.matchAll(/^FROM\s+node:(\d+\.\d+\.\d+)/gm))
+      if (version !== node) findings.push(`${file}: Node image must use ${node}`);
+  }
   for (const file of globSync(
     [".github/workflows/*.{yml,yaml}", ".github/actions/**/action.{yml,yaml}"],
     { cwd: root },
   )) {
-    let document: unknown;
+    type Step = { uses?: string; with?: Record<string, unknown> };
+    let document: { runs?: { steps?: Step[] }; jobs?: Record<string, { steps?: Step[] }> };
     try {
-      document = Bun.YAML.parse(readFileSync(join(root, file), "utf8"));
+      document = parseYAML(readFileSync(join(root, file), "utf8")) as typeof document;
     } catch {
-      steps.push({ file, step: { invalid: true } });
+      findings.push(`${file}: invalid YAML`);
       continue;
     }
-    if (!isRecord(document)) continue;
-    if (isRecord(document.jobs))
-      for (const job of Object.values(document.jobs)) if (isRecord(job)) collect(file, job.steps);
-    if (isRecord(document.runs)) collect(file, document.runs.steps);
-  }
-  return steps;
-}
-
-/** Check duplicated runtime declarations without installing tools or running application code. */
-export function checkToolchain(root: string, documents: readonly string[]): string[] {
-  let bun: string;
-  try {
-    bun = readBunPin(root);
-  } catch (error) {
-    return [error instanceof Error ? error.message : String(error)];
-  }
-  const findings: string[] = [];
-  const manifest = manifestAt(root);
-  const expect = (file: string, label: string, actual: string | undefined, expected: string) => {
-    if (actual !== expected)
-      findings.push(`${file}: ${label} is ${actual ?? "missing"}, expected ${expected}`);
-  };
-  if (manifest.engines?.node !== undefined)
-    findings.push("package.json: remove engines.node; Bun is the only runtime");
-  for (const key of ["packageManager", "runtime"]) {
-    const engine = manifest.devEngines?.[key];
-    expect("package.json", `devEngines.${key}`, `${engine?.name}@${engine?.version}`, `bun@${bun}`);
-    expect("package.json", `devEngines.${key}.onFail`, engine?.onFail, "error");
-  }
-  for (const file of [".nvmrc", ".node-version", ".bun-version", ".tool-versions"])
-    if (existsSync(join(root, file)))
-      findings.push(`${file}: package.json packageManager is the only runtime pin`);
-  findings.push(...checkMise(root));
-  const typesVersion = (range: unknown) =>
-    typeof range === "string" && !/^[a-z]+:/.test(range) ? range.replace(/^[\^~]/, "") : undefined;
-  const workspaces = manifest.workspaces;
-  const catalogs = isRecord(workspaces)
-    ? [
-        workspaces.catalog,
-        ...Object.values(isRecord(workspaces.catalogs) ? workspaces.catalogs : {}),
-      ]
-    : [];
-  const typed = [
-    ...catalogs.map((catalog) => ["package.json catalog", catalog] as const),
-    ...[
-      "package.json",
-      ...globSync(
-        workspacePatterns(manifest).map((path) => `${path}/package.json`),
-        { cwd: root },
-      ),
-    ].map((file) => [file, manifestAt(root, file).devDependencies] as const),
-  ];
-  for (const [file, dependencies] of typed) {
-    if (!isRecord(dependencies)) continue;
-    const version = typesVersion(dependencies["@types/bun"]);
-    if (version) expect(file, "@types/bun", version, bun);
-  }
-  for (const file of globSync("**/Dockerfile", { cwd: root, exclude: ["**/node_modules/**"] })) {
-    const source = readFileSync(join(root, file), "utf8");
-    if (/^FROM\s+node:/m.test(source)) findings.push(`${file}: build and run on oven/bun images`);
-    for (const [, version] of source.matchAll(/^FROM\s+oven\/bun:(\d+\.\d+\.\d+)/gm))
-      expect(file, "bun image", version, bun);
-  }
-  for (const { file, step } of setupSteps(root)) {
-    if (step.invalid) {
-      findings.push(`${file}: invalid YAML configuration`);
-      continue;
+    const steps = [
+      ...(document.runs?.steps ?? []),
+      ...Object.values(document.jobs ?? {}).flatMap((job) => job.steps ?? []),
+    ];
+    for (const step of steps) {
+      if (/^(oven-sh\/setup-bun|actions\/setup-go)@/.test(step.uses ?? ""))
+        findings.push(`${file}: obsolete runtime setup`);
+      if (
+        (step.uses ?? "").startsWith("actions/setup-node@") &&
+        (step.with?.["node-version-file"] !== "package.json" || step.with?.["node-version"])
+      )
+        findings.push(`${file}: setup-node must read package.json`);
+      if ((step.uses ?? "").startsWith("pnpm/action-setup@") && step.with?.version)
+        findings.push(`${file}: pnpm setup must read packageManager`);
     }
-    const uses = typeof step.uses === "string" ? step.uses.toLowerCase() : "";
-    if (uses.startsWith("actions/setup-node@"))
-      findings.push(`${file}: remove actions/setup-node; Bun is the only runtime`);
-    if (!uses.startsWith("oven-sh/setup-bun@")) continue;
-    const inputs = isRecord(step.with) ? step.with : {};
-    if (Object.hasOwn(inputs, "bun-version"))
-      findings.push(`${file}: read bun-version-file: package.json instead of a literal version`);
-    if (inputs["bun-version-file"] !== "package.json")
-      findings.push(`${file}: every bun setup must read package.json`);
   }
-  for (const file of documents) {
-    if (!existsSync(join(root, file))) continue;
-    const document = readFileSync(join(root, file), "utf8").replaceAll("**", "");
-    for (const [, version] of document.matchAll(/\bBun v?(\d+\.\d+\.\d+)\b/g))
-      expect(file, "documented Bun", version, bun);
-    if (/\bNode v?\d+\.\d+\.\d+\b/.test(document))
-      findings.push(`${file}: documents a Node release; Bun is the only runtime`);
-  }
+  for (const file of documents)
+    if (existsSync(join(root, file))) {
+      const source = readFileSync(join(root, file), "utf8").replaceAll("**", "");
+      for (const [, version] of source.matchAll(/\bNode v?(\d+\.\d+\.\d+)\b/g))
+        if (version !== node) findings.push(`${file}: documented Node must use ${node}`);
+      for (const [, version] of source.matchAll(/\bpnpm v?(\d+\.\d+\.\d+)\b/g))
+        if (version !== pnpm) findings.push(`${file}: documented pnpm must use ${pnpm}`);
+    }
   return [...new Set(findings)];
 }

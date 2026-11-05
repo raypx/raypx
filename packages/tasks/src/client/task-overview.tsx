@@ -1,8 +1,8 @@
 import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { isTaskActive } from "../model/task.js";
-import type { TaskFilters } from "./task-filters.js";
+import { isTaskActive } from "../model/task.ts";
+import type { TaskFilters } from "./task-filters.tsx";
 
 /** These counts describe this loaded page, independent of search and other filters. */
 export function TaskOverview({

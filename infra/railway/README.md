@@ -5,25 +5,25 @@ Postgres, Redis and their volumes remain outside application ownership. Runtime
 variables and secrets stay on Railway and are not managed by this file.
 The application services track raypx/raypx on canary and deploy matching pushes.
 API and Web use the same application Dockerfiles as Compose. API's default deploy
-target includes its isolated pre-deploy migration dependencies.
+target includes its isolated pre-deploy Node migration bundle and SQL ledger.
 
 Install dependencies from the repository root. Link the checkout to the existing
 Raypx production environment, then run workspace commands from the root:
 
 ```sh
-bun run --cwd infra/railway check
-bun run --cwd infra/railway test
-bun run --cwd infra/railway plan
+pnpm --dir infra/railway run check
+pnpm --dir infra/railway run test
+pnpm --dir infra/railway run plan
 # Review the plan before applying.
-bun run --cwd infra/railway deploy
+pnpm --dir infra/railway run deploy
 ```
 
-`plan` and `deploy` use the catalog-pinned Railway CLI under Bun, select
-`railway.ts` explicitly with `--file`, and load the scoped IaC preload. They are
+`plan` and `deploy` use the catalog-pinned Railway CLI under Node, select
+`railway.ts` explicitly with `--file`, and evaluate it under Node. They are
 uncached VP tasks. `deploy` applies infrastructure configuration; Railway builds
 the application images from GitHub. Neither command runs during `check` or `test`.
-The scripts select the installed `@railway/cli` package explicitly because the
-`railway` command name also resolves to the installed SDK package.
+The `railway` development dependency supplies the IaC program SDK; `@railway/cli`
+supplies the command-line executable.
 
 `railway.ts` is the package's public entry. `Dockerfile` and `Caddyfile` own the
 gateway image; application Dockerfiles remain in `apps/api` and `apps/web`.

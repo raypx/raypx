@@ -12,7 +12,7 @@ import type {
   Schema,
   ServerFormat,
   SharedFormat,
-} from "./types.js";
+} from "./types.ts";
 
 type RuntimeEnv = Record<string, string | boolean | number | undefined>;
 type RuntimePreset = Preset | Readonly<Preset>;

@@ -1,7 +1,7 @@
 import type { AgentProvider } from "@raypx/core/tasks";
 import type { LocalEvent } from "@raypx/contracts/local";
-import type { RecordDiagnostic } from "../diagnostics";
-import type { InstanceAccess } from "./instances";
+import type { RecordDiagnostic } from "../diagnostics.ts";
+import type { InstanceAccess } from "./instances/index.ts";
 
 export type ExecutionMode = "command" | "tui" | "stdio" | "daemon";
 export interface RuntimeOptions {

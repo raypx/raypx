@@ -4,7 +4,7 @@ Typed environment validation with Zod schemas, composable presets and browser ac
 
 This private workspace exports `@raypx/env`. It uses the
 root Zod catalog; application presets and environment loading stay with consumers.
-The package is ESM-only and supports Bun, Node-compatible runtimes and browser
+The package is ESM-only and supports Node and browser
 builds that supply runtime values explicitly.
 
 ## Create an environment

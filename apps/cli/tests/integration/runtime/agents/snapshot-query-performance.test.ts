@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { Database } from "bun:sqlite";
-import { uuid, normalizedSql, task, request, fixture } from "../../../helpers/agent-snapshot";
+import { DatabaseSync as Database } from "node:sqlite";
+import { uuid, normalizedSql, task, request, fixture } from "../../../helpers/agent-snapshot.ts";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -9,7 +9,7 @@ it.each([10_000, 100_000])(
   (count) => {
     const f = fixture();
     try {
-      f.database.transaction(() => {
+      f.transaction(() => {
         for (let index = count; index > 0; index--) {
           const local = task(index, index % 2 ? "other-binding" : "relay");
           f.put.run(local.task.id, JSON.stringify(local));
@@ -25,10 +25,10 @@ it.each([10_000, 100_000])(
           [3, "other-binding", uuid(2)],
         ] as const)
           f.request.run(uuid(2_000_000 + index), binding, JSON.stringify(request(index, taskId)));
-      })();
+      });
       const parse = vi.spyOn(JSON, "parse");
-      const queries = vi.spyOn(Database.prototype, "query");
-      const prepares = vi.spyOn(Database.prototype, "prepare");
+      const queries = vi.spyOn(Database.prototype, "prepare");
+      const prepares = queries;
       const memoryBefore = process.memoryUsage().heapUsed;
       const started = performance.now();
       const snapshot = f.store.snapshot("relay");
@@ -62,7 +62,7 @@ it.each([10_000, 100_000])(
         normalizedSql(statement).startsWith("with selected as"),
       )!;
       const plan = JSON.stringify(
-        f.database.query(`EXPLAIN QUERY PLAN ${taskQuery}`).all("relay", 100, "relay"),
+        f.database.prepare(`EXPLAIN QUERY PLAN ${taskQuery}`).all("relay", 100, "relay"),
       );
       expect(plan).toContain("tasks_binding_created");
       expect(plan).toContain("tasks_binding_active");
@@ -74,7 +74,7 @@ it.each([10_000, 100_000])(
       )!;
       expect(
         JSON.stringify(
-          f.database.query(`EXPLAIN QUERY PLAN ${activeQuery}`).all("relay", uuid(2), 64),
+          f.database.prepare(`EXPLAIN QUERY PLAN ${activeQuery}`).all("relay", uuid(2), 64),
         ),
       ).toContain("activity_task_active");
       const requestsQuery = sql.find((statement) =>
@@ -83,7 +83,7 @@ it.each([10_000, 100_000])(
       expect(
         JSON.stringify(
           f.database
-            .query(`EXPLAIN QUERY PLAN ${requestsQuery}`)
+            .prepare(`EXPLAIN QUERY PLAN ${requestsQuery}`)
             .all("relay", JSON.stringify([uuid(2)])),
         ),
       ).toContain("requests_binding_task");
@@ -93,7 +93,7 @@ it.each([10_000, 100_000])(
       expect(
         JSON.stringify(
           f.database
-            .query(`EXPLAIN QUERY PLAN ${countsQuery}`)
+            .prepare(`EXPLAIN QUERY PLAN ${countsQuery}`)
             .all("relay", JSON.stringify([uuid(2)])),
         ),
       ).toContain("COVERING INDEX activity_task");

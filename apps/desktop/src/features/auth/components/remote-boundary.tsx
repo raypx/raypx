@@ -3,8 +3,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
-import { authClient } from "../client";
-import { desktopReturnTo } from "../return-to";
+import { authClient } from "../client.ts";
+import { desktopReturnTo } from "../return-to.ts";
 
 function DesktopSignIn({ returnTo }: { returnTo?: string }) {
   const location = useLocation();

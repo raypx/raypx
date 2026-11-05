@@ -1,10 +1,11 @@
+import { spawnProcess } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 
 type Run = (binary: string, args: string[]) => Promise<{ code: number; output: string }>;
 type Options = { platform?: NodeJS.Platform; run?: Run };
 const run: Run = async (binary, args) => {
-  const child = Bun.spawn([binary, ...args], {
+  const child = spawnProcess([binary, ...args], {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "ignore",

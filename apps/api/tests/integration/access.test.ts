@@ -2,8 +2,8 @@ import { expect, it, vi } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
 import { accessForRole } from "@raypx/account/access";
 import type { AuthSession } from "@raypx/auth/types";
-import { createApiApp } from "../../server/api.js";
-import { createAccessPolicy } from "../../server/access.js";
+import { createApiApp } from "../../server/api.ts";
+import { createAccessPolicy } from "../../server/access.ts";
 
 function fixture() {
   let session: AuthSession | null = null;

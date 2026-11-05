@@ -1,6 +1,6 @@
 import { createApiClient } from "@raypx/client/api";
 import type { CloudJobsPort, JobDevicesPort } from "@raypx/jobs/client";
-import { apiUrl } from "../auth/client";
+import { apiUrl } from "../auth/client.ts";
 
 let api: ReturnType<typeof createApiClient> | undefined;
 const client = () => (api ??= createApiClient({ baseUrl: apiUrl }));

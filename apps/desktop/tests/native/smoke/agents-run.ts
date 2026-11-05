@@ -1,12 +1,12 @@
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { buildSmoke, runMyGoSmoke } from "./launch";
-import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
-import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
-import type { SmokeInstallation } from "./launch";
-import { stopSmokeOwner } from "./owner";
-import { nativeAgentProviders } from "../../../scripts/native/agent-options";
+import { buildSmoke, runTauriSmoke } from "./launch.ts";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "./session.ts";
+import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts.ts";
+import type { SmokeInstallation } from "./launch.ts";
+import { stopSmokeOwner } from "./owner.ts";
+import { nativeAgentProviders } from "../../../scripts/host/agent-options.ts";
 
 // Building or importing the scenario must never start paid inference implicitly.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
@@ -29,7 +29,7 @@ try {
     { mode: 0o600 },
   );
   installation = await buildSmoke();
-  await runMyGoSmoke(installation, "agents", directory, {
+  await runTauriSmoke(installation, "agents", directory, {
     ...process.env,
     RAYPX_HOME: config,
     RAYPX_NATIVE_SMOKE: "1",

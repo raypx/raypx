@@ -35,10 +35,10 @@ dockerfile=$(mktemp "${TMPDIR:-/tmp}/raypx-dockerfile.XXXXXX")
 trap 'rm -f "$dockerfile"' EXIT
 cached_dockerfile() {
   awk '
-    /^RUN (VP_GIT_HOOKS=0 )?bun install / {
-      sub(/^RUN /, "RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked ")
+    /^RUN .*pnpm install --frozen-lockfile/ {
+      sub(/^RUN /, "RUN --mount=type=cache,id=raypx-pnpm-install,target=/root/.local/share/pnpm/store,sharing=locked ")
     }
-    /^RUN bun run build:/ {
+    /^RUN pnpm run build:/ {
       sub(/^RUN /, "RUN --mount=type=cache,id=raypx-vp,target=/app/node_modules/.vite/task-cache,sharing=locked ")
     }
     { print }
@@ -47,7 +47,7 @@ cached_dockerfile() {
 
 # Run image builds sequentially; the container builder owns the CPU/memory budget.
 # Compose and Railway share the application Dockerfiles. Identical dependency stages mean
-# the later builds reuse the first install unless package manifests or bun.lock change.
+# the later builds reuse the first install unless package manifests or pnpm-lock.yaml change.
 cached_dockerfile apps/api/Dockerfile
 docker buildx build --builder "$builder" --load \
   --file "$dockerfile" --target migrate \

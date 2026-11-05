@@ -1,15 +1,16 @@
+import { cliBuild } from "./daemon/build.ts";
 import { localParams, LOCAL_WORKSPACE_ID, type LocalMethod } from "@raypx/contracts/local";
 import { ContextError } from "@raypx/memory";
-import type { InstanceRuntime, InstanceAccess } from "./instances";
-import type { MemoryRuntime } from "./memory";
-import type { AgentRuntime } from "./agents";
-import type { FileRuntime } from "./files";
-import type { JobRuntime } from "./jobs";
-import type { ProcessRuntime } from "./process";
-import type { BundledBun } from "./process/bun";
-import type { StateStore } from "./state";
-import type { PiHost } from "./agents/pi/host";
-import { LocalError } from "./errors";
+import type { InstanceRuntime, InstanceAccess } from "./instances/index.ts";
+import type { MemoryRuntime } from "./memory/index.ts";
+import type { AgentRuntime } from "./agents/index.ts";
+import type { FileRuntime } from "./files/index.ts";
+import type { JobRuntime } from "./jobs/index.ts";
+import type { ProcessRuntime } from "./process/index.ts";
+import type { BundledTools } from "./process/tools.ts";
+import type { StateStore } from "./state/index.ts";
+import type { PiHost } from "./agents/pi/host.ts";
+import { LocalError } from "./errors.ts";
 import manifest from "../../package.json";
 const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown): T => {
   try {
@@ -29,7 +30,7 @@ export function createLocalRouter({
   processes,
   state,
   pi,
-  bun,
+  tools,
   refreshInstance,
   options,
 }: {
@@ -42,7 +43,7 @@ export function createLocalRouter({
   processes: ProcessRuntime;
   state: StateStore;
   pi: PiHost;
-  bun: BundledBun;
+  tools: BundledTools;
   refreshInstance: () => ReturnType<InstanceRuntime["refresh"]>;
   options: { profile?: string; scheduler?: boolean };
 }) {
@@ -199,12 +200,14 @@ export function createLocalRouter({
       case "runtime.info":
         return {
           version: manifest.version,
+          builtAt: cliBuild.builtAt,
           protocolVersion: 1,
           profile: options.profile ?? "default",
           scheduler: Boolean(options.scheduler),
-          runtime: Bun.version,
+          runtime: process.versions.node,
           // Absolute shim for commands; terminals and Agents find it on PATH.
-          bun: bun.ensure() ? bun.path : null,
+          node: tools.node,
+          pnpm: tools.pnpm,
           features: { localTerminalApprovals: false },
         };
       case "roots.list":

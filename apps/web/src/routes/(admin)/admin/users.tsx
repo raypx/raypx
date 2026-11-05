@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
-import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-guard";
-import { SessionBoundary, SignInGate } from "../../../features/auth/components/session-boundary";
-import { Users } from "../../../features/users/components/users";
+import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-guard.tsx";
+import {
+  SessionBoundary,
+  SignInGate,
+} from "../../../features/auth/components/session-boundary.tsx";
+import { Users } from "../../../features/users/components/users.tsx";
 
 export const Route = createFileRoute("/(admin)/admin/users")({
   staticData: { page: { title: "common.users", layout: "workbench" } },

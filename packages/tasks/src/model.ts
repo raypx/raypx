@@ -4,8 +4,8 @@ export {
   workspaceOwner,
   workspaceScopeKey,
   type WorkspaceScope,
-} from "./model/scope.js";
-export { ConversationState, type ConversationGap } from "./model/conversation.js";
+} from "./model/scope.ts";
+export { ConversationState, type ConversationGap } from "./model/conversation.ts";
 export {
   createTaskDraft,
   MAX_TASK_DRAFTS,
@@ -13,19 +13,19 @@ export {
   sameDraft,
   type DraftInput,
   type TaskDraft,
-} from "./model/drafts.js";
+} from "./model/drafts.ts";
 export {
   MAX_DIFF_LINES,
   replacementDiff,
   unifiedDiff,
   type DiffFile,
   type DiffLine,
-} from "./model/diff.js";
+} from "./model/diff.ts";
 export type {
   DeviceManagementPort,
   TaskChangeSource,
   TaskHistoryPage,
   TaskReadOptions,
   TaskWorkspacePort,
-} from "./model/port.js";
-export { isTaskActive, taskCursor } from "./model/task.js";
+} from "./model/port.ts";
+export { isTaskActive, taskCursor } from "./model/task.ts";

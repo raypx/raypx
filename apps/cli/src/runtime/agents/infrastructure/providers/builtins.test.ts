@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { agentProviders } from "@raypx/core/tasks";
-import { builtinDrivers } from "./builtins";
+import { builtinDrivers } from "./builtins.ts";
 
 describe("builtin provider set", () => {
   it("covers every provider core can route to, exactly once", () => {

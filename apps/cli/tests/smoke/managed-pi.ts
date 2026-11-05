@@ -1,8 +1,9 @@
+import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { enrollTestProfile } from "../helpers/instance";
-import { aiFixture } from "../helpers/ai";
+import { enrollTestProfile } from "../helpers/instance.ts";
+import { aiFixture } from "../helpers/ai.ts";
 import type { AgentTask, TaskContinuation } from "@raypx/core/tasks";
 
 /** The production executable owns both IPC clients and a detached, enrolled Pi daemon. */
@@ -13,7 +14,7 @@ export async function smokeManagedPi(binary: string, dataDir: string) {
   await mkdir(home);
   await mkdir(project);
   const closeInstance = await enrollTestProfile({ dataDir, profile }, [binary]);
-  const server = aiFixture({
+  const server = await aiFixture({
     toolSequence: [
       {
         name: "files_write",
@@ -28,7 +29,7 @@ export async function smokeManagedPi(binary: string, dataDir: string) {
     input?: unknown,
     failureAllowed = false,
   ) => {
-    const child = Bun.spawn(
+    const child = spawnProcess(
       [
         binary,
         group,
@@ -68,7 +69,7 @@ export async function smokeManagedPi(binary: string, dataDir: string) {
     const deadline = Date.now() + 15_000;
     while (Date.now() < deadline) {
       if (await test()) return;
-      await Bun.sleep(50);
+      await sleep(50);
     }
     assert.fail("Compiled Pi state did not reach its expected checkpoint");
   };

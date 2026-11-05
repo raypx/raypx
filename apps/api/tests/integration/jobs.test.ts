@@ -8,7 +8,7 @@ import {
   type CloudJobRun,
 } from "@raypx/jobs";
 import type { CloudJobsService } from "@raypx/jobs/server";
-import { createApiApp } from "../../server/api.js";
+import { createApiApp } from "../../server/api.ts";
 import { controlAuth } from "@raypx/control/testing";
 
 function fixture() {

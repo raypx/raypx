@@ -2,13 +2,13 @@ import { and, desc, eq, lt, sql } from "drizzle-orm";
 import { taskActivitySchema, type TaskActivity } from "@raypx/core/tasks";
 import { taskActivityPage } from "@raypx/core/activity";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import { LocalError } from "../../../errors";
-import type { LocalDatabase } from "../../../sqlite";
-import { storedRecord } from "../../../sqlite/records";
-import { activity } from "../../../sqlite/schema";
-import type { ActivityRecorded } from "../../domain/events";
-import { isDesktopBinding } from "../../domain/state";
-import type { ActivityDraft } from "../../model";
+import { LocalError } from "../../../errors.ts";
+import type { LocalDatabase } from "../../../sqlite/index.ts";
+import { storedRecord } from "../../../sqlite/records.ts";
+import { activity } from "../../../sqlite/schema.ts";
+import type { ActivityRecorded } from "../../domain/events.ts";
+import { isDesktopBinding } from "../../domain/state.ts";
+import type { ActivityDraft } from "../../model.ts";
 
 /** Revisioned task activity entries. The caller projects each change as an event. */
 export class ActivityLog {

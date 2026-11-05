@@ -1,9 +1,10 @@
+import { sleep } from "@raypx/runtime-node/process";
 import { expect, it } from "vite-plus/test";
-import { EPOCH, orchestrationHost } from "../../../helpers/orchestration";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { fold } from "../../../../src/runtime/agents/domain/fold";
-import type { AgentRuntime } from "../../../../src/runtime/agents";
-import type { StateStore } from "../../../../src/runtime/state";
+import { EPOCH, orchestrationHost } from "../../../helpers/orchestration.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store.ts";
+import { fold } from "../../../../src/runtime/agents/domain/fold.ts";
+import type { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
+import type { StateStore } from "../../../../src/runtime/state/index.ts";
 import type { AgentTask } from "@raypx/core/tasks";
 
 /**
@@ -17,7 +18,7 @@ const deadline = new Date(EPOCH.getTime() + 10_000).toISOString();
 async function waitFor(condition: () => boolean) {
   for (let attempt = 0; attempt < 600; attempt++) {
     if (condition()) return;
-    await Bun.sleep(10);
+    await sleep(10);
   }
   throw new Error("Condition never became true");
 }

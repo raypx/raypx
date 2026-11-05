@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { checkWeb } from "./checks.js";
+import { checkWeb } from "./checks.ts";
 
 afterEach(() => vi.unstubAllGlobals());
 function fixture(home: string) {

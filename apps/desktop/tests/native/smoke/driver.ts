@@ -1,3 +1,4 @@
+import { sleep } from "@raypx/runtime-node/process";
 import { connect, type Socket } from "node:net";
 
 /** Private NDJSON driver. Only native-smoke builds listen on this endpoint. */
@@ -17,7 +18,7 @@ export async function connectSmoke(endpoint: string, token: string) {
       });
     } catch {
       if (Date.now() >= deadline) throw new Error("Native smoke socket did not become ready");
-      await Bun.sleep(100);
+      await sleep(100);
     }
   }
   const connection = socket;

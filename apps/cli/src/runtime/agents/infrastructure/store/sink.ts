@@ -1,16 +1,16 @@
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
-import type { LocalDatabase } from "../../../sqlite";
-import { apply } from "../../domain/projector";
-import { toWireEvents } from "../../domain/wire";
-import type { OrchestrationEvent } from "../../domain/events";
-import type { Clock, Ids } from "../../domain/ports";
-import type { ActivityDraft, LocalAgentTask, TokenUsage } from "../../domain/state";
-import type { ActivityLog } from "./activity";
-import type { CommandReceipts } from "./commands";
-import type { EventJournal } from "./journal";
-import type { RequestRecords } from "./requests";
-import type { TaskRecords } from "./tasks";
-import type { TaskEventLog } from "./events";
+import type { LocalDatabase } from "../../../sqlite/index.ts";
+import { apply } from "../../domain/projector.ts";
+import { toWireEvents } from "../../domain/wire.ts";
+import type { OrchestrationEvent } from "../../domain/events.ts";
+import type { Clock, Ids } from "../../domain/ports.ts";
+import type { ActivityDraft, LocalAgentTask, TokenUsage } from "../../domain/state.ts";
+import type { ActivityLog } from "./activity.ts";
+import type { CommandReceipts } from "./commands.ts";
+import type { EventJournal } from "./journal.ts";
+import type { RequestRecords } from "./requests.ts";
+import type { TaskRecords } from "./tasks.ts";
+import type { TaskEventLog } from "./events.ts";
 
 export interface SinkPorts {
   database: LocalDatabase;

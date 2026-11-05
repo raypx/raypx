@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
 import { createTaskClient } from "@raypx/client/tasks";
-import { relayFixture, relaySocket } from "../helpers/relay.js";
+import { relayFixture, relaySocket } from "../helpers/relay.ts";
 import { controlAuth } from "@raypx/control/testing";
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

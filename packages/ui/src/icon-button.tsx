@@ -1,5 +1,5 @@
-import { Button, type ButtonProps } from "./components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
+import { Button, type ButtonProps } from "./components/ui/button.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip.tsx";
 
 export interface IconButtonProps extends Omit<ButtonProps, "size"> {
   label: string;

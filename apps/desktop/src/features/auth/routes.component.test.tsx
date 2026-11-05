@@ -25,7 +25,7 @@ import {
 } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DesktopSignOutProvider } from "./sign-out";
+import { DesktopSignOutProvider } from "./sign-out.tsx";
 import { routeTree } from "../../routeTree.gen.ts";
 
 expect.extend(matchers);
