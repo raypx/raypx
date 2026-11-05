@@ -3,7 +3,6 @@ import { join, resolve } from "node:path";
 import { preparePackager } from "./packager";
 import { stageCli } from "./prepare-cli";
 import { signingEnvironment } from "./signing";
-import { generateNativeContracts } from "./generate";
 
 const desktop = resolve(import.meta.dirname, "../..");
 const root = resolve(desktop, "../..");
@@ -114,6 +113,7 @@ export async function prepare(
   }
   const generated = join(paths.desktop, "generated");
   await mkdir(generated, { recursive: true });
+  const { generateNativeContracts } = await import("./generate");
   await generateNativeContracts(paths.desktop);
   await writeFile(join(generated, "version.json"), JSON.stringify(manifest.version) + "\n");
   const frontend = join(generated, "frontend");

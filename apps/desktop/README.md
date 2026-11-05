@@ -22,6 +22,7 @@ bun run --cwd apps/desktop test:unit
 bun run --cwd apps/desktop test:component
 bun run --cwd apps/desktop test:integration
 bun run --cwd apps/desktop mygo:check
+bun run --cwd apps/desktop mygo:check:docker
 bun run --cwd apps/desktop mygo:test
 bun run build:cli
 bun run build:desktop
@@ -43,6 +44,17 @@ Go policy checks do not require staged renderer files. `mygo:check`/`mygo:test` 
 compile the `native_smoke` build and run its protocol tests. Go tests generate contract
 manifests and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
 compiled CLI for the daemon integration test; only its isolated daemon is stopped.
+
+`mygo:check:docker` enters the same VP graph and runs the existing Go checks in
+Docker BuildKit with pinned Go/Bun, without installing JavaScript dependencies.
+Its scoped context contains only the native check inputs. BuildKit caches the
+`go.mod`/`go.sum` download layer and retains both `GOMODCACHE` and `GOCACHE` across
+source edits. Reuse the same builder; `BUILDX_BUILDER` or `--builder <name>` selects
+one. Source edits rerun checks while reusing the Go caches. VP leaves this task
+uncached so Docker owns its layers and Go owns incremental compilation.
+Ephemeral CI builders need separate persistence for cache-mount contents; exporting
+image-layer caches alone does not retain them. This command performs headless Go
+vet/compilation for production and `native_smoke`, without running tests or a GUI.
 
 `native:smoke` builds a separate `native_smoke` Go host and renderer in
 `artifacts/native-smoke` and `build/native-smoke`. Quiet presentation stays inactive.

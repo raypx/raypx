@@ -26,6 +26,8 @@
     "native:prepare": "bun scripts/native/mygo.ts prepare",
     "mygo:build": "bun scripts/native/mygo.ts build",
     "mygo:check": "bun scripts/native/mygo.ts check",
+    "mygo:check:docker": "raypx-dev tasks desktop#mygo:check:docker --",
+    "_mygo:check:docker": "docker buildx build --file Dockerfile --target checks --output type=cacheonly ../..",
     "mygo:test": "bun run native:generate && bun scripts/native/mygo.ts test",
     "mygo:smoke": "bun scripts/native/mygo.ts smoke",
     "mygo:dev": "bun scripts/native/mygo.ts dev",
@@ -99,7 +101,8 @@
       "e2e/**": "bun"
     },
     "taskScripts": {
-      "e2e": "_e2e"
+      "e2e": "_e2e",
+      "mygo:check:docker": "_mygo:check:docker"
     },
     "browserTestProject": "desktop"
   }

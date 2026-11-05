@@ -138,6 +138,9 @@ Local tools render during session/network checks. Auth routes use a standalone l
 - Bun/VP owns JS tasks and caches; Go owns native compilation caches. Default build
   checks/builds the renderer. Explicit packaging stages renderer, CLI and Herdr and
   invokes MyGo uncached. Go host verification is explicit in the shared task graph.
+- `mygo:check:docker` delegates through VP to the scoped Dockerfile. BuildKit owns
+  module/layer caches and Go owns compilation caches; this opt-in headless check
+  requires Docker, no JS dependency install and no staged renderer/CLI.
 - Native smoke exists only in the native_smoke Go build tag, with random-token
   private IPC, isolated profiles and a separate renderer/package output. Production
   has no socket/eval controls. Inspect actual build metadata and bytes before release.
