@@ -6,7 +6,6 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { LockIcon } from "@raypx/icons/lock";
@@ -32,7 +31,7 @@ import {
 } from "@raypx/ui/components/ui/select";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
-import { safeReturnTo } from "../auth/return-to";
+import type { SettingsSection } from "./navigation";
 
 const VisitedSections = createContext<ReadonlySet<string>>(new Set(["account"]));
 
@@ -42,7 +41,7 @@ export function AccountSettingsContent({
   className,
   children,
 }: {
-  value: string;
+  value: SettingsSection;
   className?: string;
   children: ReactNode;
 }) {
@@ -54,20 +53,28 @@ export function AccountSettingsContent({
   ) : null;
 }
 
-/** Route-backed account dialog, with a validated local return destination. */
-export function AccountSettingsPanel({ children }: { children: ReactNode }) {
+/** The URL owns selection; visited panels retain edits until the dialog closes. */
+export function AccountSettingsPanel({
+  section,
+  onSectionChange,
+  onClose,
+  children,
+}: {
+  section: SettingsSection;
+  onSectionChange: (section: SettingsSection) => void;
+  onClose: () => void;
+  children: ReactNode;
+}) {
   const t = useTranslations("auth");
   const c = useTranslations("common");
   const i = useTranslations("instances");
   const s = useTranslations("settings");
   const a = useTranslations("analytics");
-  const navigate = useNavigate();
-  const returnTo = useLocation({ select: (location) => location.state.settingsReturnTo });
-  const [section, setSection] = useState("account");
   const [query, setQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLElement>(null);
-  const [visited, setVisited] = useState<ReadonlySet<string>>(() => new Set(["account"]));
+  const [visited, setVisited] = useState<ReadonlySet<string>>(() => new Set([section]));
+  if (!visited.has(section)) setVisited(new Set([...visited, section]));
   const scrollRef = useRef<HTMLDivElement>(null);
   const sections = (
     [
@@ -124,32 +131,19 @@ export function AccountSettingsPanel({ children }: { children: ReactNode }) {
     clearSearch();
   }
   function changeSection(value: unknown) {
-    if (typeof value !== "string" || !sections.some((item) => item.value === value)) return;
-    setSection(value);
-    setVisited((previous) => (previous.has(value) ? previous : new Set([...previous, value])));
+    const next = sections.find((item) => item.value === value);
+    if (!next) return;
+    onSectionChange(next.value);
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }
-  const destination = safeReturnTo(returnTo);
   const currentSection = sections.find((item) => item.value === section)!;
   const SectionIcon = currentSection.icon;
   const deviceSection = section === "preferences" || section === "diagnostics";
-  const destinationPath = destination.split(/[?#]/)[0];
-  const close = () => {
-    void navigate({
-      href:
-        returnTo === destination &&
-        destinationPath !== "/account" &&
-        destinationPath !== "/settings"
-          ? destination
-          : "/projects",
-      replace: true,
-    });
-  };
   return (
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) close();
+        if (!open) onClose();
       }}
     >
       <DialogContent
@@ -322,7 +316,7 @@ export function AccountSettingsPanel({ children }: { children: ReactNode }) {
           </div>
         </Tabs>
         <div className="absolute top-3 right-3 z-20">
-          <IconButton label={c("close")} variant="ghost" onClick={close}>
+          <IconButton label={c("close")} variant="ghost" onClick={onClose}>
             <CloseIcon aria-hidden="true" />
           </IconButton>
         </div>

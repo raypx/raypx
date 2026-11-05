@@ -33,7 +33,6 @@ type PageTitle =
   | "dash.nav.overview"
   | "dash.nav.audit"
   | "common.users"
-  | "common.account"
   | "site.title"
   | "common.approvals"
   | "common.home"
@@ -45,7 +44,7 @@ type PageTitle =
 
 declare module "@tanstack/react-router" {
   interface HistoryState {
-    settingsReturnTo?: string;
+    settingsBackground?: { href: string; index: number };
   }
   interface Register {
     router: ReturnType<typeof getRouter>;

@@ -20,7 +20,7 @@ application is an independent composition root and is never imported by another 
   theme script and preference providers; keep layout and feature dependencies out of it.
 - Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate
   first-load JavaScript: `src/routes/(app)/` renders
-  `src/components/shell.tsx` (`@raypx/blocks/shell` with the account menu and pending count) for the account,
+  `src/components/shell.tsx` (`@raypx/blocks/shell` with the account menu and pending count) for
   settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
   Import heavy client modules only from the layout or route that needs them.
 - `src/routes/(legal)/` holds public legal pages under a lightweight document layout.
@@ -55,7 +55,7 @@ application is an independent composition root and is never imported by another 
   The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before
-  `router.invalidate()`. The account page reads the result from route context.
+  `router.invalidate()`.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
   The root passes this request snapshot to the language provider so SSR and the first
   client render use the same locale and catalog; browser storage is restored only
@@ -74,12 +74,16 @@ application is an independent composition root and is never imported by another 
 - Authentication forms use `AuthForm` from `@raypx/auth/client`, backed by
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.
-- The account page composes `ProfileSettings` and `AccountSessions` from
-  `/account` in a route-backed settings dialog with account, password, session and
-  instance categories, plus inline device preferences and diagnostics. Category panels
-  mount on first visit and retain drafts while switching. Close/Escape returns to the
-  validated local `settingsReturnTo` history state set by the account menu, falling back
-  to `/projects` for direct links. Local settings search matches category labels and
+- `features/settings` composes `ProfileSettings` and `AccountSessions` in a lazy
+  dialog mounted by the shared `UserButton` on landing, workspace and administrator
+  layouts. `#settings/account` (also preferences, diagnostics, password, sessions and
+  instances) owns opening and category selection without replacing the background
+  route, search or mounted drafts. Opening pushes one history entry; switching replaces
+  it. Close/Escape returns to that background entry; direct links simply clear the hash.
+  Browser back/forward and reload restore URL selection. Unknown hashes open nothing.
+  Private categories require a confirmed session and live `account.manage` permission;
+  account reads are identity-keyed, and identity changes discard dialog drafts. Category
+  panels mount on first visit and retain drafts while switching. Local settings search matches category labels and
   bilingual setting keywords without mounting private reads; choosing a result opens
   its category. Enter opens the first result, Escape clears a query before closing,
   and clearing search preserves drafts. Cmd/Ctrl+K focuses search; arrows and Home/End
@@ -94,8 +98,7 @@ application is an independent composition root and is never imported by another 
   The `/projects` page lists authorized remote projects grouped by computer.
   Project/session selection lives in validated URL search. The composer consumes
   that target and never executes on navigation or guest draft restoration.
-  The account page composes its views from
-  `features/auth/components`. They call the existing Better Auth client methods.
+  Account views in `features/auth/components` call the existing Better Auth client methods.
   Name saves invalidate the account query before reloading route context. Session
   lists stay in component memory, never query caches or persisted storage; tokens
   are used only for revocation and never rendered. Remount them on account changes.

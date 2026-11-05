@@ -140,8 +140,8 @@ it("preserves a validated return destination through Google OAuth", async () => 
 
 it("refreshes the account and restores navigation on an OAuth callback", async () => {
   signIn();
-  const router = await page("/login?oauth=success&returnTo=%2Faccount");
-  await waitFor(() => expect(router.state.location.pathname).toBe("/account"));
+  const router = await page("/login?oauth=success&returnTo=%2Fprojects%23settings%2Faccount");
+  await waitFor(() => expect(router.state.location.href).toBe("/projects#settings/account"));
 });
 
 it.each(["/login", "/signup"])(

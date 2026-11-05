@@ -15,6 +15,8 @@ import { authClient, apiUrl, webUrl } from "../features/auth/client";
 import { accountAccessQuery } from "../features/auth/access";
 import { guestReturnTo } from "../features/tasks/guest-draft";
 import { analytics } from "../features/analytics/client";
+import { AccountSettingsOverlay } from "../features/settings/overlay";
+import { useSettingsNavigation } from "../features/settings/navigation";
 
 const headerPlaceholderClass = "size-8 rounded-full";
 
@@ -30,9 +32,15 @@ export function UserButton({
   return variant === "header" ? (
     <ClientOnly fallback={<Skeleton className={headerPlaceholderClass} />}>
       <AccountButton variant={variant} sessionError={sessionError} />
+      <AccountSettingsOverlay />
     </ClientOnly>
   ) : (
-    <AccountButton variant={variant} sessionError={sessionError} />
+    <>
+      <AccountButton variant={variant} sessionError={sessionError} />
+      <ClientOnly fallback={null}>
+        <AccountSettingsOverlay />
+      </ClientOnly>
+    </>
   );
 }
 
@@ -48,6 +56,7 @@ function AccountButton({
   const previous = useRef(accountId);
   const router = useRouter();
   const href = useRouterState({ select: (state) => state.location.href });
+  const settings = useSettingsNavigation();
   const cache = useQueryClient();
   const accessQuery = useQuery(accountAccessQuery(accountId));
   const access =
@@ -61,10 +70,12 @@ function AccountButton({
     if (previous.current !== accountId) {
       const oldAccount = previous.current;
       previous.current = accountId;
-      cache.removeQueries({ queryKey: ["account"] });
-      if (oldAccount)
+      cache.removeQueries({ queryKey: ["account"], exact: true });
+      if (oldAccount) {
+        cache.removeQueries({ queryKey: ["account", apiUrl, oldAccount] });
         for (const key of ["admin-users", "admin-overview", "admin-health", "admin-audit"])
           cache.removeQueries({ queryKey: [key, apiUrl, oldAccount] });
+      }
     }
   }, [accountId, cache]);
   if (session.isPending)
@@ -94,8 +105,7 @@ function AccountButton({
       error={Boolean(auth.error)}
       onNavigate={(destination) => {
         if (destination === "account" && accountId) {
-          if (!href.startsWith("/account"))
-            void router.navigate({ to: "/account", state: { settingsReturnTo: href } });
+          void settings.open();
         } else {
           void router.navigate({ to: "/login", search: { returnTo: guestReturnTo(apiUrl, href) } });
         }

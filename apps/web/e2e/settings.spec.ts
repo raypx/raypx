@@ -39,6 +39,57 @@ test(
   },
 );
 
+test(
+  "Web settings anchors preserve the background, history and selected category on reload",
+  { tag: "@web" },
+  async ({ page }) => {
+    await webShellFixture(page);
+    await signedInAccount(page);
+    await page.goto(`${web}/settings`);
+    const language = page.getByRole("combobox", { name: "Language", exact: true });
+    await expect(language).toBeVisible();
+    await language.evaluate((element) =>
+      element.setAttribute("data-background-check", "preserved"),
+    );
+    await page.getByRole("button", { name: "Account menu", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Account", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Settings", exact: true });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(`${web}/settings#settings/account`);
+    const name = dialog.getByLabel("Display name", { exact: true });
+    await name.fill("Unsaved account draft");
+    await dialog.getByRole("tab", { name: "Change password", exact: true }).click();
+    await expect(page).toHaveURL(`${web}/settings#settings/password`);
+    await dialog.getByRole("tab", { name: "Account", exact: true }).click();
+    await expect(name).toHaveValue("Unsaved account draft");
+    await dialog.getByRole("tab", { name: "Change password", exact: true }).click();
+    await page.goBack();
+    await expect(dialog).toHaveCount(0);
+    await expect(page).toHaveURL(`${web}/settings`);
+    await expect(language).toHaveAttribute("data-background-check", "preserved");
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeFocused();
+    await page.goForward();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("tab", { name: "Change password", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await page.reload();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("tab", { name: "Change password", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page).toHaveURL(`${web}/settings`);
+    await page.goto(`${web}/settings#settings/preferences`);
+    await expect(dialog.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(page).toHaveURL(`${web}/settings`);
+  },
+);
+
 for (const layout of [
   {
     locale: "en",
@@ -114,7 +165,7 @@ for (const layout of [
       await expect(settings).toBeVisible();
       await expect(search).toHaveValue("password");
       await expect(trigger).toBeFocused();
-      await expect(page).toHaveURL(`${web}/account`);
+      await expect(page).toHaveURL(`${web}/settings#settings/password`);
       await trigger.click();
       await expect(current).toHaveValue("");
       await dialog.getByRole("button", { name: layout.cancel, exact: true }).click();

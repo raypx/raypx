@@ -15,7 +15,6 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as landingRouteRouteImport } from './routes/(landing)/route'
 import { Route as legalRouteRouteImport } from './routes/(legal)/route'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as appAccountRouteImport } from './routes/(app)/account'
 import { Route as appApprovalsRouteImport } from './routes/(app)/approvals'
 import { Route as appAutomationsRouteImport } from './routes/(app)/automations'
 import { Route as appMemoryRouteImport } from './routes/(app)/memory'
@@ -58,11 +57,6 @@ const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
   getParentRoute: () => rootRouteImport,
-} as any)
-const appAccountRoute = appAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => appRouteRoute,
 } as any)
 const appApprovalsRoute = appApprovalsRouteImport.update({
   id: '/approvals',
@@ -152,7 +146,6 @@ const adminAdminUsersRoute = adminAdminUsersRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
-  '/account': typeof appAccountRoute
   '/approvals': typeof appApprovalsRoute
   '/automations': typeof appAutomationsRoute
   '/memory': typeof appMemoryRoute
@@ -173,7 +166,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/health': typeof HealthRoute
-  '/account': typeof appAccountRoute
   '/approvals': typeof appApprovalsRoute
   '/automations': typeof appAutomationsRoute
   '/memory': typeof appMemoryRoute
@@ -200,7 +192,6 @@ export interface FileRoutesById {
   '/(landing)': typeof landingRouteRouteWithChildren
   '/(legal)': typeof legalRouteRouteWithChildren
   '/health': typeof HealthRoute
-  '/(app)/account': typeof appAccountRoute
   '/(app)/approvals': typeof appApprovalsRoute
   '/(app)/automations': typeof appAutomationsRoute
   '/(app)/memory': typeof appMemoryRoute
@@ -223,7 +214,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/health'
-    | '/account'
     | '/approvals'
     | '/automations'
     | '/memory'
@@ -244,7 +234,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/health'
-    | '/account'
     | '/approvals'
     | '/automations'
     | '/memory'
@@ -270,7 +259,6 @@ export interface FileRouteTypes {
     | '/(landing)'
     | '/(legal)'
     | '/health'
-    | '/(app)/account'
     | '/(app)/approvals'
     | '/(app)/automations'
     | '/(app)/memory'
@@ -342,13 +330,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/(app)/account': {
-      id: '/(app)/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof appAccountRouteImport
-      parentRoute: typeof appRouteRoute
     }
     '/(app)/approvals': {
       id: '/(app)/approvals'
@@ -491,7 +472,6 @@ const adminRouteRouteWithChildren = adminRouteRoute._addFileChildren(
 )
 
 interface appRouteRouteChildren {
-  appAccountRoute: typeof appAccountRoute
   appApprovalsRoute: typeof appApprovalsRoute
   appAutomationsRoute: typeof appAutomationsRoute
   appMemoryRoute: typeof appMemoryRoute
@@ -501,7 +481,6 @@ interface appRouteRouteChildren {
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
-  appAccountRoute: appAccountRoute,
   appApprovalsRoute: appApprovalsRoute,
   appAutomationsRoute: appAutomationsRoute,
   appMemoryRoute: appMemoryRoute,

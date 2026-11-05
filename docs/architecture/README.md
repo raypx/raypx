@@ -20,7 +20,8 @@ independent of browser sessions.
 The product entry is project → session → requests → result. A project is one
 authorized directory, identified with its ownership scope and computer. Desktop
 restores valid recent local selection; Web lists remote projects after login and
-keeps account details at `/account`. URL selection never dispatches execution.
+opens account settings over the current page with `#settings/account`. Desktop
+keeps its independent `/account` route. URL selection never dispatches execution.
 TaskWorkspacePort list targets flow through HTTP/private IPC into storage filters
 before cursor/limit. Query keys, page probes and draft identities use the same
 target; unavailable targets are explicit and never redirect execution elsewhere.

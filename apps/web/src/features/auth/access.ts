@@ -21,7 +21,6 @@ export const webPages = {
   "/admin/audit": { permission: "audit.read", guest: false, publicNavigation: false },
   "/projects": { permission: "projects.read", guest: true, publicNavigation: true },
   "/settings": { permission: null, guest: true, publicNavigation: true },
-  "/account": { permission: "account.manage", guest: true, publicNavigation: false },
   "/tasks": { permission: "tasks.read", guest: true, publicNavigation: false },
   "/approvals": { permission: "approvals.read", guest: true, publicNavigation: false },
   "/automations": { permission: "automations.manage", guest: true, publicNavigation: false },

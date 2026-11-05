@@ -68,7 +68,8 @@ function PrivacyPage() {
                       {t("openSettings")}
                     </Link>
                     <Link
-                      to="/account"
+                      to="/projects"
+                      hash="settings/account"
                       className="rounded-sm underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {t("openAccount")}

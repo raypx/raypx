@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { loadAccount } from "./account";
 
-/** The account behind the `(app)` guard and account page, cached per QueryClient. */
+/** Account projection for route guards and identity-scoped settings reads. */
 export function accountQuery() {
   return queryOptions({
     queryKey: ["account"],
