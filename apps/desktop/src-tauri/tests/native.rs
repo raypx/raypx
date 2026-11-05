@@ -495,10 +495,14 @@ async fn native_http_uses_the_real_typescript_orpc_envelope_without_exposing_cre
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let mut server = Command::new("node")
         .arg("--import")
-        .arg(root.join("node_modules/tsx/dist/loader.mjs"))
+        .arg(
+            url::Url::from_file_path(root.join("node_modules/tsx/dist/loader.mjs"))
+                .unwrap()
+                .as_str(),
+        )
         .arg(root.join("apps/desktop/tests/native/fixtures/orpc-server.ts"))
         .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::null())
+        .stderr(std::process::Stdio::inherit())
         .kill_on_drop(true)
         .spawn()
         .unwrap();
@@ -510,6 +514,10 @@ async fn native_http_uses_the_real_typescript_orpc_envelope_without_exposing_cre
     .await
     .unwrap()
     .unwrap();
+    assert!(
+        !line.is_empty(),
+        "The TypeScript API fixture exited before becoming ready"
+    );
     let origin = serde_json::from_str::<serde_json::Value>(&line).unwrap()["origin"]
         .as_str()
         .unwrap()
@@ -605,7 +613,11 @@ fn actual_preload_preserves_json_keys_and_freezes_preferences_without_prototype_
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let mut child = std::process::Command::new("node")
         .arg("--import")
-        .arg(root.join("node_modules/tsx/dist/loader.mjs"))
+        .arg(
+            url::Url::from_file_path(root.join("node_modules/tsx/dist/loader.mjs"))
+                .unwrap()
+                .as_str(),
+        )
         .arg(root.join("apps/desktop/tests/native/fixtures/preferences-preload.ts"))
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
