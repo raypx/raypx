@@ -97,6 +97,7 @@ export async function runTauriSmoke(
     ...signingEnvironment(env, { smoke: true }),
     RAYPX_NATIVE_SMOKE_SOCKET: endpoint,
     RAYPX_NATIVE_SMOKE_TOKEN: crypto.randomUUID() + crypto.randomUUID(),
+    RAYPX_NATIVE_SMOKE_DIAGNOSTIC: join(directory, `native-smoke-main-${phase}-${nonce}`),
   };
   const native = spawnProcess([binary], {
     cwd,
@@ -130,11 +131,12 @@ export async function runTauriSmoke(
       native.exited.then((code) => ({ source: "native", code })),
     ]);
     if (first.source === "native") {
-      const [diagnostic, lifecycle] = await Promise.all([
+      const [diagnostic, lifecycle, main] = await Promise.all([
         readFile(join(directory, "native-smoke-startup-error"), "utf8").catch(() => undefined),
         readFile(join(directory, "native-smoke-lifecycle"), "utf8").catch(() => undefined),
+        readFile(environment.RAYPX_NATIVE_SMOKE_DIAGNOSTIC, "utf8").catch(() => undefined),
       ]);
-      const details = [diagnostic, lifecycle?.trim()].filter(Boolean).join("\n");
+      const details = [diagnostic, lifecycle?.trim(), main?.trim()].filter(Boolean).join("\n");
       throw new Error(
         `Native smoke ${phase} Desktop exited before assertions (${first.code})${details ? `:\n${details}` : ""}`,
       );
