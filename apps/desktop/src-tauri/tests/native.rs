@@ -79,6 +79,32 @@ fn cookie_storage_is_encrypted_and_origin_scoped_and_preserves_old_host_credenti
         b"old host credentials"
     );
 }
+#[cfg(feature = "native-smoke")]
+#[test]
+fn isolated_smoke_session_key_survives_reopen_without_os_keyring() {
+    let directory = tempfile::tempdir().unwrap();
+    let mut first = CookieJar::open(
+        "https://example.com",
+        Sessions::open(directory.path(), "smoke").unwrap(),
+    )
+    .unwrap();
+    first
+        .apply(&["__Secure-better-auth.session_token=smoke-token; Path=/; Secure; HttpOnly; Max-Age=3600".into()])
+        .unwrap();
+    drop(first);
+
+    let reopened = CookieJar::open(
+        "https://example.com",
+        Sessions::open(directory.path(), "smoke").unwrap(),
+    )
+    .unwrap();
+    assert!(
+        reopened
+            .header(&"https://example.com/".parse().unwrap())
+            .unwrap()
+            .contains("smoke-token")
+    );
+}
 #[test]
 fn instance_lock_cannot_be_opened_twice_and_is_released_without_unlinking() {
     let directory = tempfile::tempdir().unwrap();

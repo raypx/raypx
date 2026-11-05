@@ -2,7 +2,7 @@ import { readJsonFile } from "@raypx/runtime-node/files";
 import { spawnProcess } from "@raypx/runtime-node/process";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { lstat, mkdtemp, rm } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve, win32 } from "node:path";
 import { signingEnvironment } from "./signing.ts";
@@ -147,6 +147,22 @@ async function digest(path: string) {
   for await (const chunk of createReadStream(path)) hash.update(chunk);
   return { path, size: stat.size, sha256: hash.digest("hex") };
 }
+async function nsisMainDigest(path: string) {
+  const stat = await regularFile(path);
+  const binary = await readFile(path);
+  // Tauri patches the bundle type marker before embedding this binary in NSIS.
+  const marker = Buffer.from("__TAURI_BUNDLE_TYPE_VAR_UNK");
+  const nsis = Buffer.from("__TAURI_BUNDLE_TYPE_VAR_NSS");
+  const offset = binary.indexOf(marker);
+  if (
+    marker.length !== nsis.length ||
+    offset < 0 ||
+    binary.indexOf(marker, offset + marker.length) >= 0
+  )
+    throw new Error("Tauri NSIS bundle marker is missing or ambiguous");
+  nsis.copy(binary, offset);
+  return { path, size: stat.size, sha256: createHash("sha256").update(binary).digest("hex") };
+}
 
 const sameLocation = (left: string | null, right: string) =>
   left !== null &&
@@ -167,7 +183,7 @@ export async function installWindowsSmoke(
   await regularFile(installer);
   const resources = options.resources ?? resolve(import.meta.dirname, "../../resources/bin");
   const [expectedMain, expectedCli, cliBuild] = await Promise.all([
-    digest(join(target, "raypx-desktop.exe")),
+    nsisMainDigest(join(target, "raypx-desktop.exe")),
     digest(join(resources, "raypx.exe")),
     digest(cli),
   ]);

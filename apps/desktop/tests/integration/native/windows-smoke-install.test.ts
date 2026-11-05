@@ -19,12 +19,18 @@ async function fixture() {
   const target = join(root, "target/native-smoke/release");
   const cli = join(root, "cli/raypx.exe");
   const main = join(target, "raypx-desktop.exe");
+  const mainBuild = Buffer.from("compiled Tauri smoke host__TAURI_BUNDLE_TYPE_VAR_UNK");
+  const mainNsis = Buffer.from(mainBuild);
+  Buffer.from("__TAURI_BUNDLE_TYPE_VAR_NSS").copy(
+    mainNsis,
+    mainNsis.indexOf("__TAURI_BUNDLE_TYPE_VAR_UNK"),
+  );
   const installer = join(target, "bundle/nsis/Raypx Test_0.1.0_x64-setup.exe");
   await mkdir(join(target, "bin"), { recursive: true });
   await mkdir(dirname(cli));
   await writeFile(cli, "compiled CLI");
   await copyFile(cli, join(target, "bin/raypx.exe"));
-  await writeFile(main, "compiled Tauri smoke host");
+  await writeFile(main, mainBuild);
   await mkdir(dirname(installer), { recursive: true });
   await writeFile(installer, "smoke NSIS");
   await writeFile(
@@ -52,7 +58,7 @@ async function fixture() {
         directory = args.slice("/S /D=".length);
         roots.push(dirname(directory));
         await mkdir(join(directory, "bin"), { recursive: true });
-        await copyFile(main, join(directory, "raypx-desktop.exe"));
+        await writeFile(join(directory, "raypx-desktop.exe"), mainNsis);
         await writeFile(
           join(directory, "bin/raypx.exe"),
           corrupt ? "stale CLI" : await readFile(cli),
@@ -82,6 +88,7 @@ async function fixture() {
     target,
     cli,
     main,
+    mainNsis,
     installer,
     calls,
     invocationArgs,
@@ -98,7 +105,7 @@ it("installs the actual test package, verifies payload hashes and disposes once"
     resources: join(f.target, "bin"),
     commands: f.commands,
   });
-  expect(await readFile(installed.binary, "utf8")).toBe("compiled Tauri smoke host");
+  expect(await readFile(installed.binary)).toEqual(f.mainNsis);
   await installed.dispose();
   await installed.dispose();
   expect(existsSync(installed.binary)).toBe(false);

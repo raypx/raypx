@@ -1,6 +1,8 @@
+#[cfg(not(feature = "native-smoke"))]
+use crate::config::digest;
 use crate::{
     Result,
-    config::{digest, private_directory, protect},
+    config::{private_directory, protect},
     fail,
 };
 use aes_gcm::{
@@ -137,7 +139,17 @@ impl Sessions {
     }
 }
 fn system_key(directory: &Path, create: bool) -> Result<Vec<u8>> {
-    #[cfg(any(target_os = "macos", windows))]
+    #[cfg(feature = "native-smoke")]
+    {
+        use sha2::{Digest, Sha256};
+        let path = directory.canonicalize()?;
+        let mut key = Sha256::new();
+        key.update(b"raypx-native-smoke-session-key-v1\0");
+        key.update(path.to_string_lossy().as_bytes());
+        let _ = create;
+        Ok(key.finalize().to_vec())
+    }
+    #[cfg(all(not(feature = "native-smoke"), any(target_os = "macos", windows)))]
     {
         use base64::{Engine, engine::general_purpose::STANDARD};
         let name = format!(
@@ -164,7 +176,7 @@ fn system_key(directory: &Path, create: bool) -> Result<Vec<u8>> {
             _ => fail("SESSION_KEY_UNAVAILABLE"),
         }
     }
-    #[cfg(not(any(target_os = "macos", windows)))]
+    #[cfg(all(not(feature = "native-smoke"), not(any(target_os = "macos", windows))))]
     {
         let _ = (directory, create, digest(""));
         fail("SESSION_KEY_UNAVAILABLE")
