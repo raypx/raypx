@@ -16,9 +16,9 @@ export function checkDeployment(root: string): string[] {
   const read = (file: string) => readFileSync(join(root, file), "utf8");
   const findings: string[] = [];
   try {
-    const { services } = parseYAML(read("deploy/compose.yaml")) as {
+    const { services } = parseYAML<{
       services: Record<string, ComposeService>;
-    };
+    }>(read("deploy/compose.yaml"));
     const environment = services.api?.environment ?? {};
     const contract = "apps/api/server/env.contract.ts";
     const declared = readStaticCatalog(contract, read(contract));
