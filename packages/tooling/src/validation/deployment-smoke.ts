@@ -177,7 +177,7 @@ export async function smokeDeployment(root: string, args: string[]) {
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ""],
         ["railway-relay", "infra/relay/Dockerfile", images.railwayRelay, ""],
         ["gateway", "infra/railway/Dockerfile", images.gateway, ""],
-        ["fixture", "apps/api/Dockerfile", images.fixture, "deploy"],
+        ["fixture", "apps/api/Dockerfile", images.fixture, "fixture"],
       ]) {
         await evidence.command(`${label}-build`, [
           "docker",

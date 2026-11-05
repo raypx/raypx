@@ -78,11 +78,12 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Dockerfile is shared by Compose and Railway. Its default deploy stage carries
-  database production dependencies and migration sources for pre-deploy migration.
+  the standalone Node migration bundle and canonical SQL for pre-deploy migration.
   Compose selects the runtime and independent migrate targets explicitly.
   The runtime output also includes private SQL assets for default startup migration.
-  Both migration-capable targets copy the shared migration-payload stage, whose
-  workspace sources follow database's transitive production dependencies.
+  Both migration-capable targets copy the shared migration-build output. The separate
+  fixture target builds and ships only the synthetic deployment account provisioner;
+  production targets do not build or carry that fixture.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address

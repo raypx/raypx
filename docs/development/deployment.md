@@ -84,12 +84,15 @@ it on exit, including build failure. All install/build commands remain in the
 application Dockerfiles. Compose explicitly selects the API's `migrate` and
 `runtime` targets; the default `deploy` target additionally carries the bundled
 Node migration command for Railway's isolated pre-deploy hook.
-API and Web share identical manifest and dependency stages: `deploy/manifests.ts`
-extracts package manifests, `pnpm-lock.yaml` and generated pnpm workspace config,
-so source edits reuse installed dependencies and only dependency metadata changes
-reinstall. It discovers workspaces through `deploy/workspaces.ts` and stages bin
-placeholders so pnpm can link workspace commands before source is copied. The
-build script supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`.
+The server images use manifest/dependency layering: `deploy/manifests.ts` extracts
+package manifests, `pnpm-lock.yaml` and generated pnpm workspace config, so source
+edits reuse installed dependencies and only dependency metadata changes reinstall.
+The script discovers workspaces through `deploy/workspaces.ts` and stages bin
+placeholders so pnpm can link workspace commands before source is copied. Each
+Dockerfile installs its service and root tooling dependency closures, excluding
+unrelated server and platform dependencies. Compose shares pnpm downloads across
+these installs with its local cache mount. The build script supplies
+`VITE_APP_RELEASE` because Docker contexts omit `.git`.
 
 Image builds pass `--no-cache` to VP while retaining its task graph and type-check
 prerequisites. VP's automatic file tracking installs seccomp listeners for static
@@ -104,8 +107,9 @@ The API provides three deployable targets: `migrate` is an isolated database job
 stage bundles `packages/database` as Node ESM; both migration-capable targets
 copy `dist/` and the unchanged `drizzle-foundation/` SQL ledger. Their command is
 `node migration/dist/commands.mjs migrate`; no repository source or installed
-package tree is required at migration runtime. The `deploy` target additionally
-contains the compiled API fixture used by deployment acceptance. All runtime
+package tree is required at migration runtime. Deployment acceptance explicitly
+builds the separate `fixture` target, which contains the compiled synthetic account
+provisioner. Ordinary image builds skip that compilation and payload. All runtime
 targets use the unprivileged `node` user.
 
 Railway builds the default `deploy` target; Web defaults to `runtime` on both

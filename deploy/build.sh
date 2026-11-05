@@ -43,8 +43,8 @@ cached_dockerfile() {
 }
 
 # Run image builds sequentially; the container builder owns the CPU/memory budget.
-# Compose and Railway share the application Dockerfiles. Identical dependency stages mean
-# the later builds reuse the first install unless package manifests or pnpm-lock.yaml change.
+# Compose and Railway share application Dockerfiles. Cache pnpm downloads across the
+# service-specific workspace dependency closures.
 cached_dockerfile apps/api/Dockerfile
 docker buildx build --builder "$builder" --load \
   --file "$dockerfile" --target migrate \

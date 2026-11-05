@@ -177,10 +177,11 @@ deployments for normal canary updates after connecting the repository.
 Detached upload completion is not a health result: inspect deployment status and
 logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v4.
 
-Railway and Compose share apps/api/Dockerfile and apps/web/Dockerfile. The default
-API `deploy` stage extends runtime with the bundled database command, canonical
-SQL migrations and the compiled deployment-acceptance fixture. The
-`migration-build` stage produces the Node ESM bundle; Compose's isolated `migrate`
+Railway and Compose share apps/api/Dockerfile, apps/web/Dockerfile and
+infra/relay/Dockerfile. The default API `deploy` stage extends runtime with the
+bundled database command and canonical SQL migrations. Deployment acceptance builds the separate `fixture` target;
+ordinary Railway deployments skip its compilation and do not carry the provisioner.
+The `migration-build` stage produces the Node ESM bundle; Compose's isolated `migrate`
 image copies that same bundle and SQL ledger. Compose selects `runtime` and
 `migrate` explicitly; Web defaults to `runtime` on both platforms.
 Railway runs `node migration/dist/commands.mjs migrate` in its isolated pre-deploy
@@ -198,11 +199,13 @@ does not stop the old API or Relay. Preserve migration history and storage on ro
 The shared application Dockerfiles use manifest/dependency layer caching without
 cache mounts. Railway requires literal service-specific cache mount IDs, so those
 mounts would prevent portable files. Source-only changes reuse installed layers;
-manifest or lockfile changes can require a fresh download. Compose retains its
-bounded builder and reuses the same image layers. Its `deploy/build.sh` adds pnpm
-cache mounts to temporary copies of these Dockerfiles and explicitly selects
-`migrate`/`runtime`; it does not build the API's final `deploy` stage. The temporary
-copies are removed on exit.
+manifest or lockfile changes can require a fresh download. Each server image installs
+only its own workspace dependency closure and root build tools, so Railway does not
+install unrelated service or platform dependencies. Compose retains its bounded
+builder and caches pnpm downloads across those service-specific installs. Its
+`deploy/build.sh` adds pnpm cache mounts to temporary copies of these Dockerfiles
+and explicitly selects `migrate`/`runtime`; it does not build the API's final
+`deploy` stage. The temporary copies are removed on exit.
 All image builds disable VP task caching with `--no-cache` so its syscall tracker
 does not install a second seccomp listener inside the build sandbox, which can
 otherwise fail while spawning esbuild with `EBUSY`. VP still runs the build graph

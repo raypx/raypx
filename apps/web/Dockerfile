@@ -9,7 +9,8 @@ RUN node deploy/manifests.ts /app /manifests
 
 FROM node AS dependencies
 COPY --from=manifests /manifests/ ./
-RUN npm install --global "$(node -p 'require("./package.json").packageManager')" && VP_GIT_HOOKS=0 pnpm install --frozen-lockfile
+RUN npm install --global "$(node -p 'require("./package.json").packageManager')" && VP_GIT_HOOKS=0 pnpm install --frozen-lockfile \
+    --filter . --filter '{./apps/web}...'
 
 FROM dependencies AS build
 COPY . .

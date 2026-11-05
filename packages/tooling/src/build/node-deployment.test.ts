@@ -41,12 +41,21 @@ it.each(["api", "web"])("runs the %s image on Node as the node user", (app) => {
   expect(read(`apps/${app}/package.json`)).toContain('"start": "node .output/server/index.mjs"');
 });
 
-it.each(["api", "web"])("installs %s dependencies from manifests before copying source", (app) => {
-  const file = `apps/${app}/Dockerfile`;
+it.each([
+  ["api", "./apps/api"],
+  ["web", "./apps/web"],
+  ["relay", "./infra/relay"],
+])("installs only the %s dependency closure from manifests before copying source", (app, path) => {
+  const file = app === "relay" ? "infra/relay/Dockerfile" : `apps/${app}/Dockerfile`;
   const all = stages(file);
   const dependencies = all.get("dependencies")!;
   expect(dependencies.lines).toContain("COPY --from=manifests /manifests/ ./");
-  expect(dependencies.lines.join("\n")).toMatch(/VP_GIT_HOOKS=0 pnpm install --frozen-lockfile/);
+  expect(
+    dependencies.lines.some((line) =>
+      line.includes("VP_GIT_HOOKS=0 pnpm install --frozen-lockfile"),
+    ),
+  ).toBe(true);
+  expect(dependencies.lines).toContain(`    --filter . --filter '{${path}}...'`);
   expect(dependencies.lines).not.toContain("COPY . .");
   const build = all.get("build")!;
   expect(build.from).toBe("dependencies");
@@ -54,21 +63,19 @@ it.each(["api", "web"])("installs %s dependencies from manifests before copying 
   expect(build.lines.join("\n")).not.toMatch(/pnpm install/);
 });
 
-it("shares identical dependency stages so one builder reuses the install", () => {
-  const shared = (file: string) =>
-    ["node", "manifests", "dependencies"].map((name) => stages(file).get(name));
-  expect(shared("apps/web/Dockerfile")).toEqual(shared("apps/api/Dockerfile"));
-});
-
 it("keeps portable Dockerfiles and isolated pre-deploy migration payloads", () => {
-  for (const app of ["api", "web"])
-    expect(read(`apps/${app}/Dockerfile`)).not.toContain("--mount=type=cache");
+  for (const file of ["apps/api/Dockerfile", "apps/web/Dockerfile", "infra/relay/Dockerfile"])
+    expect(read(file)).not.toContain("--mount=type=cache");
   const all = stages("apps/api/Dockerfile");
   expect([...all.keys()].at(-1)).toBe("deploy");
   const deploy = all.get("deploy")!;
   expect(deploy.from).toBe("runtime");
-  for (const payload of ["/migration/dist", "/migration/drizzle-foundation", "/fixture"])
+  for (const payload of ["/migration/dist", "/migration/drizzle-foundation"])
     expect(deploy.lines.join("\n")).toContain(payload);
+  expect(deploy.lines.join("\n")).not.toContain("fixture");
+  const fixture = all.get("fixture")!;
+  expect(fixture.from).toBe("node:${NODE_VERSION}-bookworm-slim");
+  expect(fixture.lines).toContain('CMD ["node", "fixture/deployment.mjs"]');
   const migrate = all.get("migrate")!;
   expect(migrate.from).toBe("node:${NODE_VERSION}-bookworm-slim");
   expect(migrate.lines).toContain('CMD ["node", "migration/dist/commands.mjs", "migrate"]');

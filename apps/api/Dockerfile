@@ -9,12 +9,22 @@ RUN node deploy/manifests.ts /app /manifests
 
 FROM node AS dependencies
 COPY --from=manifests /manifests/ ./
-RUN npm install --global "$(node -p 'require("./package.json").packageManager')" && VP_GIT_HOOKS=0 pnpm install --frozen-lockfile
+RUN npm install --global "$(node -p 'require("./package.json").packageManager')" && VP_GIT_HOOKS=0 pnpm install --frozen-lockfile \
+    --filter . --filter '{./apps/api}...'
 
 FROM dependencies AS migration-build
 COPY . .
 RUN pnpm --dir packages/database run build
+
+FROM dependencies AS fixture-build
+COPY . .
 RUN pnpm --dir apps/api run build:fixture
+
+FROM node:${NODE_VERSION}-bookworm-slim AS fixture
+WORKDIR /app
+COPY --from=fixture-build --chown=node:node /app/apps/api/artifacts/fixture ./fixture
+USER node
+CMD ["node", "fixture/deployment.mjs"]
 
 FROM node:${NODE_VERSION}-bookworm-slim AS migrate
 WORKDIR /app
@@ -42,4 +52,3 @@ CMD ["node", ".output/server/index.mjs"]
 FROM runtime AS deploy
 COPY --from=migration-build --chown=node:node /app/packages/database/dist ./migration/dist
 COPY --from=migration-build --chown=node:node /app/packages/database/drizzle-foundation ./migration/drizzle-foundation
-COPY --from=migration-build --chown=node:node /app/apps/api/artifacts/fixture ./fixture

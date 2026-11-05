@@ -12,8 +12,9 @@ This private Node tooling workspace exports `railway.ts`. Keep the Railway SDK
 and CLI dependencies here, with versions in the root development catalog.
 `plan` and `deploy` explicitly select that file through the Node evaluator;
 both must remain uncached. Review the plan before applying. Keep one API and one Relay replica and preserve the separate
-Compose runtime/migration image targets. Use the shared apps/api and apps/web
-Dockerfiles; API's default deploy target includes pre-deploy migration dependencies.
+Compose runtime/migration image targets. Use the shared apps/api, apps/web and
+infra/relay Dockerfiles; each installs its own server dependency closure. API's
+default deploy target includes pre-deploy migration dependencies.
 
 Keep tests beside the infrastructure entry and independent of credentials or live Railway state.
 Run `pnpm --dir infra/railway run check` and `test`, then root `pnpm run verify`.
