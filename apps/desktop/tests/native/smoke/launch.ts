@@ -99,6 +99,8 @@ export async function runTauriSmoke(
     RAYPX_NATIVE_SMOKE_TOKEN: crypto.randomUUID() + crypto.randomUUID(),
     RAYPX_NATIVE_SMOKE_DIAGNOSTIC: join(directory, `native-smoke-main-${phase}-${nonce}`),
   };
+  const fallbackDiagnostic = join(tmpdir(), "raypx-native-smoke-main");
+  await rm(fallbackDiagnostic, { force: true });
   const native = spawnProcess([binary], {
     cwd,
     env: environment,
@@ -106,7 +108,6 @@ export async function runTauriSmoke(
     stdout: "inherit",
     stderr: "inherit",
   });
-  const fallbackDiagnostic = join(tmpdir(), `raypx-native-smoke-main-${native.pid}`);
   const scenario = spawnProcess(
     [
       process.execPath,

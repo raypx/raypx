@@ -16,8 +16,7 @@ fn main() {
             .as_ref()
             .is_some_and(|path: &std::path::PathBuf| std::fs::write(path, &diagnostic).is_ok());
         if !recorded {
-            let fallback = std::env::temp_dir()
-                .join(format!("raypx-native-smoke-main-{}", std::process::id()));
+            let fallback = std::env::temp_dir().join("raypx-native-smoke-main");
             let _ = std::fs::write(fallback, diagnostic);
         }
     }
