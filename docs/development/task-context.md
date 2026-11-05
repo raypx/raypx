@@ -19,11 +19,12 @@ rate limits. References and history are always filtered by the resolved account.
 Project references require an authorized device/project. Revoked devices are
 ineligible for new context resolution.
 
-`@raypx/memory` owns schemas, injected library use cases and shared browser views.
-API composes Control's PostgreSQL adapter and project authorization; CLI supplies SQLite and local
-authorization. Contracts composes the same schemas into separate account RPC and
-private IPC entries. Core owns task context selections, immutable snapshots and
-pure prompt composition. Browser-only ports stay in the client entry.
+`@raypx/memory-model` owns document and task-context schemas. `@raypx/memory-server`
+owns injected library use cases; `@raypx/memory` owns shared browser views and ports.
+API composes Control's PostgreSQL adapter and project authorization; CLI supplies
+SQLite and local authorization. Contracts composes the model schemas into separate
+account RPC and private IPC entries. Core owns task context selections, immutable
+snapshots and pure prompt composition. Browser-only ports stay in the client entry.
 
 ## Versions and retries
 
@@ -55,10 +56,12 @@ document IDs and revisions. Changing its target clears the composer selection.
 Drafts retain only those references, scoped to the same device/account workspace
 as the rest of the draft. They never contain copied private reference bodies.
 
-The API or local engine resolves the selected versions and checks both their
-current location and historical project target. An archived, missing or moved
-reference is an explicit error. References are never silently dropped, updated to
-the newest version or truncated to make a task fit.
+The local engine resolves selected versions and checks both their current location
+and historical project target. For remote `tasks.create`, Relay uses the account-
+scoped resolver before delivery and commits the immutable context receipt with the
+command; ordinary account-memory CRUD remains on API RPC. An archived, missing or
+moved reference is an explicit error. References are never silently dropped, updated
+to the newest version or truncated to make a task fit.
 
 The combined user task and reference material has a 32,000-character budget.
 Existing fixed host execution constraints are appended separately. Claude/Codex

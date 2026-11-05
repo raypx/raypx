@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { cloudJobRunSchema } from "@raypx/jobs";
+import { cloudJobRunSchema } from "@raypx/jobs-model";
 import { taskStatusSchema } from "@raypx/core/tasks";
 import { relayCommandSchema, relayServerSchema } from "@raypx/contracts/tasks";
 

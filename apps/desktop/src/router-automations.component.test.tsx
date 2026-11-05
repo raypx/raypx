@@ -2,7 +2,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition } from "@raypx/jobs";
+import type { JobDefinition } from "@raypx/jobs-model";
 import {
   mocks,
   grants,

@@ -7,8 +7,8 @@ import { DatabaseSync as Database } from "node:sqlite";
 import { SqliteContextRepository } from "../../../src/runtime/memory/repository.ts";
 import { createRuntime } from "../../helpers/enrolled.ts";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import type { ContextDocument, ContextDocumentInput } from "@raypx/memory";
-import { ContextLibraryService } from "@raypx/memory/server";
+import type { ContextDocument, ContextDocumentInput } from "@raypx/memory-model";
+import { ContextLibraryService } from "@raypx/memory-server";
 import { runtimeFixtures } from "../../helpers/runtime.ts";
 
 const roots: string[] = [];

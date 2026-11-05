@@ -2,21 +2,17 @@
 
 ## Purpose
 
-Shared job models, calendar rules, cloud scheduling use cases and injected Web/Desktop views.
+Browser views for shared local/cloud jobs. Pure models live in `@raypx/jobs-model`;
+cloud scheduling use cases live in `@raypx/jobs-server`.
 
 ## Interface
 
-The universal root owns local-compatible job/command schemas, cloud schedule/run
-schemas and pure calendar calculation. `/server` owns injected
-cloud use cases without HTTP, SQL, environment or relay implementations. It is a node
-entry (`./server`, `src/server.ts`, `src/server/**`), so browser code cannot reach a
-scheduling implementation through a universal import. Recurring
-platform timers belong to apps; dispatch deadlines remain bounded within the use case.
 `/client` owns DOM views and their injected ports; apps own routing, authentication and concrete adapters.
+Recurring platform timers belong to apps; dispatch deadlines remain bounded within the use case.
 
 ## Boundaries
 
-Contracts imports this package to assemble wire messages; jobs must never import
+Contracts imports `@raypx/jobs-model` to assemble wire messages; jobs must never import
 contracts or a concrete SDK. Keep the complete dependency graph acyclic.
 Cloud actions are device.sync and agent.run, scoped to an account and captured
 device epoch. Local directory scans/commands retain their device ownership and

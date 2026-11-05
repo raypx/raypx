@@ -25,6 +25,7 @@ function forbidden(owner: string, target: string, request: string) {
     owner === "contracts" &&
     (/^react(?:-dom)?(?:\/|$)/.test(request) ||
       /^@raypx\/(?:ui|i18n|icons|client|auth)(?:\/|$)/.test(request) ||
+      /^@raypx\/(?:jobs-server|memory-server)(?:\/|$)/.test(request) ||
       /^@raypx\/[^/]+\/(?:server|client|crypto)(?:\/|$)/.test(request))
   )
     return true;
@@ -41,7 +42,7 @@ function forbidden(owner: string, target: string, request: string) {
   if (owner === "adapter") return /\/runtime\/index\.[cm]?[jt]s$/.test(target);
   const infrastructure =
     /\/(?:infrastructure|sqlite)\//.test(target) ||
-    /^(?:bun(?::|$)|node:(?:fs(?:\/|$)|child_process|sqlite)|drizzle-orm(?:\/|$)|@raypx\/(?:database|providers\/(?:codex|claude|pi))(?:\/|$))/.test(
+    /^(?:node:(?:fs(?:\/|$)|child_process|sqlite)|drizzle-orm(?:\/|$)|@raypx\/(?:database|providers\/(?:codex|claude|pi))(?:\/|$))/.test(
       request,
     );
   return (

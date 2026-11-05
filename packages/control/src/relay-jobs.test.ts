@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import type { CloudJob, CloudJobAction, CloudJobRun } from "@raypx/jobs";
-import { CloudJobsService, type CloudJobsRepository } from "@raypx/jobs/server";
+import type { CloudJob, CloudJobAction, CloudJobRun } from "@raypx/jobs-model";
+import { CloudJobsService, type CloudJobsRepository } from "@raypx/jobs-server";
 import type { RelayServerFrame } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
 import { ControlService } from "@raypx/control";

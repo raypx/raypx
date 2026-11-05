@@ -60,7 +60,7 @@ export function verifyInstallation(
     "raypx" + suffix,
     "runtime/node" + suffix,
     "runtime/pnpm/pnpm" + suffix,
-    "runtime/pnpm/pnpx" + suffix,
+    "runtime/pnpm/" + (process.platform === "win32" ? "pnpx.cmd" : "pnpx"),
   ])
     if (!manifest.files[required])
       throw new LocalError("INSTALLATION_CONFLICT", "Incomplete CLI runtime manifest");

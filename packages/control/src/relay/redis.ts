@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 import { z } from "zod";
-import { JobError } from "@raypx/jobs";
+import { JobError } from "@raypx/jobs-model";
 import { MAX_RELAY_BYTES } from "@raypx/contracts/tasks";
 import {
   relayNoticeSchema,

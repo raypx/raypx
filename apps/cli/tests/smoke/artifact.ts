@@ -11,7 +11,7 @@ import { enrollTestProfile } from "../helpers/instance.ts";
 import assert from "node:assert/strict";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import manifest from "../../package.json";
 import { aiFixture } from "../helpers/ai.ts";
 
@@ -489,6 +489,15 @@ try {
       assert.equal((await new Response(process.stdout).text()).trim(), toolVersion);
       assert.equal(await process.exited, 0);
     }
+    const pnpxPath = join(dirname(pnpmPath), process.platform === "win32" ? "pnpx.cmd" : "pnpx");
+    const pnpx = spawnProcess([pnpxPath, "--version"], {
+      cwd: dataDir,
+      env: { PATH: "" },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    assert.equal((await new Response(pnpx.stdout).text()).trim(), packageManager.slice(5));
+    assert.equal(await pnpx.exited, 0);
     child.stdin.write(
       JSON.stringify({ version: 1, id: "persisted", method: "roots.list", params: {} }) + "\n",
     );

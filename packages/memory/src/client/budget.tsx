@@ -6,7 +6,7 @@ import {
 } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { ContextError, type ContextDocument } from "../index.ts";
+import { ContextError, type ContextDocument } from "@raypx/memory-model";
 import type { MemoryClientPort } from "./port.ts";
 import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
 

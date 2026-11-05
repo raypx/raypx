@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import * as jobs from "@raypx/jobs";
+import * as jobs from "@raypx/jobs-model";
 import * as local from "./local.ts";
 
 it("composes local job commands with the shared domain schema", () => {

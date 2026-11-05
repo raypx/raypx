@@ -1,4 +1,4 @@
-import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs";
+import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs-model";
 import type { RecordDiagnostic } from "../diagnostics.ts";
 import type { LocalRuntime } from "../runtime/index.ts";
 import { runSession } from "./session.ts";

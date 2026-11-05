@@ -6,6 +6,7 @@ const leaf = supplied[0] === "--leaf";
 const [task, ...directArgs] = leaf ? supplied.slice(1) : supplied;
 const pnpm = "pnpm";
 const cwd = resolve(import.meta.dirname, "../..");
+const root = resolve(cwd, "../..");
 let commands: string[][];
 
 const nativeGate =
@@ -80,7 +81,7 @@ if (!leaf) {
 
 for (const command of commands) {
   const child = spawnProcess(command, {
-    cwd,
+    cwd: leaf ? cwd : root,
     env,
     stdin: "inherit",
     stdout: "inherit",

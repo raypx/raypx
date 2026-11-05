@@ -4,7 +4,7 @@ import { access, mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { FileEntry, RootGrant, ToolResult } from "@raypx/contracts/local";
-import type { JobDefinition } from "@raypx/jobs";
+import type { JobDefinition } from "@raypx/jobs-model";
 import manifest from "../../../package.json";
 import { parseCliArgs } from "../../../src/commands/args.ts";
 import { runCommand } from "../../../src/commands/index.ts";

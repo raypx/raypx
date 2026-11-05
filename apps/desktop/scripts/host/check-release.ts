@@ -37,7 +37,7 @@ export async function checkRelease(binary: string) {
       "runtime/node" + suffix,
       "runtime/NODE-LICENSE",
       "runtime/pnpm/pnpm" + suffix,
-      "runtime/pnpm/pnpx" + suffix,
+      "runtime/pnpm/" + (process.platform === "win32" ? "pnpx.cmd" : "pnpx"),
       "runtime/pnpm/LICENSE",
       "runtime/pnpm/THIRD-PARTY-NOTICES.md",
       "RAYPX-LICENSE",

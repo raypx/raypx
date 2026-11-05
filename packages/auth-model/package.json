@@ -1,0 +1,26 @@
+{
+  "name": "@raypx/auth-model",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
+  }
+}

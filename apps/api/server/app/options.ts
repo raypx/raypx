@@ -3,12 +3,12 @@ import type { AdministrationQueries } from "../administration/types.ts";
 import type { InstanceService } from "@raypx/instances/server";
 import type { ConfigurationService } from "../configuration/types.ts";
 import type { ControlService } from "@raypx/control";
-import type { AuthSession } from "@raypx/auth/types";
+import type { AuthSession } from "@raypx/auth-model";
 import type { AccessPolicy } from "../access.ts";
 import type { ApiLogging } from "../logging.ts";
 import type { RateLimiter } from "../rate-limit/types.ts";
-import type { CloudJobsService } from "@raypx/jobs/server";
-import type { ContextLibraryService } from "@raypx/memory/server";
+import type { CloudJobsService } from "@raypx/jobs-server";
+import type { ContextLibraryService } from "@raypx/memory-server";
 export interface ApiAppOptions {
   instances?: InstanceService;
   audit?: AuditService;

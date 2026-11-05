@@ -1,4 +1,4 @@
-import { ContextLibraryService } from "@raypx/memory/server";
+import { ContextLibraryService } from "@raypx/memory-server";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 
 import { type TaskContextSelection, type TaskContextTarget } from "@raypx/core/tasks";

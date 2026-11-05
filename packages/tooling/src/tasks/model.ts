@@ -77,7 +77,10 @@ function cachedTask(
           "target/**",
           "**/generated/**",
           "**/resources/bin/**",
-          "**/build/**",
+          "apps/*/build/**",
+          "packages/*/build/**",
+          "infra/*/build/**",
+          "e2e/build/**",
           "target/**",
           "**/node_modules/.nitro/**",
         ]
@@ -86,6 +89,12 @@ function cachedTask(
   const input: TaskCache["input"] = [
     { auto: true },
     ...(name === "check" ? checkInputs(member, context) : []),
+    ...(member.name === "cli" && build
+      ? [
+          { pattern: "packages/tooling/src/build/*.ts", base: "workspace" as const },
+          { pattern: "packages/runtime-node/src/process.ts", base: "workspace" as const },
+        ]
+      : []),
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),

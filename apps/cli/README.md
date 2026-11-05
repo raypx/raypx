@@ -37,7 +37,7 @@ The distribution contains:
 
 - `raypx` (`raypx.exe` on Windows): the thin native launcher.
 - `main.mjs` and ESM chunks: the application and embedded database migration journal.
-- `runtime/`: Node, the complete pnpm package and pnpm/pnpx executables, and their licenses.
+- `runtime/`: Node, the pnpm package and native executable, a pnpx wrapper, and their licenses.
 - Herdr resources, the Raypx license and `runtime.json` with versions, build identity and file checksums.
 
 The launcher locates this directory, starts its bundled Node with the ESM entry,

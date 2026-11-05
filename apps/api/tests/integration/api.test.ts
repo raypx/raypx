@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "../../server/api.ts";
 import { ControlService } from "@raypx/control";
-import type { AuthSession } from "@raypx/auth/types";
+import type { AuthSession } from "@raypx/auth-model";
 
 const session: AuthSession = {
   user: { id: "u1", email: "a@example.com", name: "A", emailVerified: true, role: "member" },

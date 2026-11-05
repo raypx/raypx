@@ -10,8 +10,8 @@ import {
   type TaskContextSnapshot,
   type TaskContextTarget,
 } from "@raypx/core/tasks";
-import { ContextError } from "../index.ts";
 import {
+  ContextError,
   contextCreateSchema,
   contextUpdateSchema,
   contextArchiveSchema,
@@ -24,7 +24,7 @@ import {
   type ContextDeleteInput,
   type ContextHistoryInput,
   type ContextRestoreInput,
-} from "../model.ts";
+} from "@raypx/memory-model";
 import type { ContextLibraryServiceOptions } from "./types.ts";
 
 const getSchema = z.strictObject({ id: taskContextIdSchema });

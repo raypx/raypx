@@ -1,4 +1,4 @@
-import type { AuthSession } from "@raypx/auth/types";
+import type { AuthSession } from "@raypx/auth-model";
 import type { HostAuthorization } from "@raypx/contracts/terminal";
 import { type DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlRepository, ControlTransaction, ControlReader } from "../ports.ts";

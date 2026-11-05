@@ -1,5 +1,5 @@
 import { InstanceError } from "@raypx/instances";
-import { ContextError } from "@raypx/memory";
+import { ContextError } from "@raypx/memory-model";
 
 import { TaskContextError } from "@raypx/core/tasks";
 

@@ -1,5 +1,5 @@
 import { accessForAssignedRoles, accessForRole, type AccountAccess } from "@raypx/account/access";
-import type { AuthSession } from "@raypx/auth/types";
+import type { AuthSession } from "@raypx/auth-model";
 
 export type AccessPolicy = (auth: AuthSession | null) => AccountAccess;
 

@@ -2,7 +2,7 @@ import { expect, it, vi } from "vite-plus/test";
 import type { OAuthProvider } from "better-auth";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth } from "./server.ts";
-import type { SocialProvider } from "./types.ts";
+import type { SocialProvider } from "@raypx/auth-model";
 
 async function fixture(provider: SocialProvider, registrationAllowed = true, emailVerified = true) {
   const records: Record<string, Record<string, unknown>[]> = {

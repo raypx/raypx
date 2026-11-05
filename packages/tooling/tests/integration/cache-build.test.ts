@@ -39,6 +39,33 @@ it("restores cached build outputs and scopes literal argv and public build envir
   expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(["two", literal]);
 }, 30000);
 
+it("invalidates CLI builds when the cross-workspace packaging hook changes", () => {
+  const root = project();
+  const hook = join(root, "packages/tooling/src/build/cli.ts");
+  mkdirSync(join(root, "packages/tooling/src/build"), { recursive: true });
+  writeFileSync(hook, "export const version = 1;\n");
+  const folder = checked(root, "cli", {}, { build: "tsx build.ts" });
+  const manifestPath = join(folder, "package.json");
+  writeFileSync(
+    manifestPath,
+    JSON.stringify({ ...JSON.parse(readFileSync(manifestPath, "utf8")), name: "cli" }),
+  );
+  writeFileSync(
+    join(folder, "build.ts"),
+    `import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+mkdirSync("dist", { recursive: true });
+writeFileSync("dist/package-hook.txt", readFileSync("../../packages/tooling/src/build/cli.ts"));\n`,
+  );
+  const selector = "cli#task:build";
+  pass(execute(root, "build", {}, selector));
+  expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
+
+  writeFileSync(hook, "export const version = 2;\n");
+  const changed = pass(execute(root, "build", {}, selector));
+  expect(changed.log).toContain("1 cache hit");
+  expect(readFileSync(join(folder, "dist/package-hook.txt"), "utf8")).toContain("version = 2");
+}, 30000);
+
 it("reuses VP pack results after validation writes ignored artifacts", () => {
   const root = project();
   const folder = checked(root, "cli-fixture", {}, { build: `node ${JSON.stringify(vp)} pack` });

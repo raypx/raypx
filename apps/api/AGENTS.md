@@ -50,7 +50,7 @@ Tasks reuse the API runtime.
 See `docs/development/server-jobs.md` for policy and verification.
 
 `schedules:tick` runs every minute on Node with the same deployment gate.
-`@raypx/jobs/server` owns scheduling use cases; API supplies PostgreSQL persistence
+`@raypx/jobs-server` owns scheduling use cases; API supplies PostgreSQL persistence
 and the private relay executor. `jobs.*` RPC resolves an account on every call;
 writes additionally require a trusted Origin, revision checks and account limits.
 Create request IDs are durable plan IDs; retries are checked before the 100-plan quota.
@@ -61,7 +61,7 @@ Internal checked-at ordering rotates reconciliation fairly across bounded batche
 Deleting a plan removes its run log, while existing managed tasks remain unchanged.
 
 `memory.*` requires an account session on every read and write; mutations also require
-trusted Origin, CAS and account limits. `@raypx/memory/server` owns shared use cases;
+trusted Origin, CAS and account limits. `@raypx/memory-server` owns shared use cases;
 `@raypx/control/postgres` atomically stores current documents and immutable
 versions. Resolve joins current eligibility with selected revisions without account
 write locking. Sources are frozen on task creation and obey core's full prompt budget.

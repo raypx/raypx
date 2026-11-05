@@ -75,7 +75,7 @@ Source checks and unit tests need no Herdr or Rust. Complete distribution builds
   Missed Cron triggers are skipped.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - Vite+ `vp pack` builds ESM chunks; its hook stages a thin Rust launcher, Node,
-  complete native pnpm distribution, licenses and Herdr. The version/build/checksum
+  native pnpm distribution, a pnpx wrapper, licenses and Herdr. The version/build/checksum
   inventory covers the whole directory. Connector install/repair and Windows daemon
   upgrade copy the complete inventory, preserving ownership and rollback protection.
 

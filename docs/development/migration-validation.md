@@ -42,6 +42,25 @@ No comparable pre-migration runtime/Desktop size, startup or memory measurements
 were retained before the migration. No before/after improvement is claimed.
 macOS/Windows installer sizes, GUI startup and GUI memory remain unmeasured.
 
+## CLI Packaging Follow-up (2026-11-06)
+
+The Linux x64 package now uses a small `pnpx` wrapper that delegates to the bundled
+native `pnpm dlx` command, so it no longer carries a second copy of the native binary.
+The wrapper and cleanup were validated with the bundled `pnpm --version`,
+`pnpx --version` and `pnpx --help` commands. The Windows batch wrapper is generated
+by the same build but still needs execution on Windows.
+
+| Measurement               | Before cleanup | Rebuilt output |
+| ------------------------- | -------------: | -------------: |
+| Complete CLI distribution |     270.46 MiB |     214.06 MiB |
+| pnpm / pnpx component     |     116.98 MiB |      60.58 MiB |
+
+The local uncompressed Linux x64 distribution fell by 56.40 MiB (20.9%). The
+before-cleanup values are from the local output immediately before removing the
+duplicate binary; the rebuilt values come from `pnpm run size --package cli --require`.
+These figures sum regular-file bytes and do not measure archive/download size or
+other platform installers.
+
 ## Build output size snapshot
 
 `pnpm run size` now records all buildable workspaces without starting services or

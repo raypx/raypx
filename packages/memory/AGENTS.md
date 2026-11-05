@@ -2,21 +2,19 @@
 
 ## Purpose
 
-Versioned user-selected memory and task templates, shared by device and account stores.
+Browser views for versioned user-selected memory and task templates. Pure schemas live in
+`@raypx/memory-model`; injected server use cases live in `@raypx/memory-server`.
 
 ## Interface
 
-The universal root owns document schemas. `/server` owns injected library use cases
-and repository ports; it is a node entry (`./server`, `src/server.ts`, `src/server/**`),
-so browser code cannot import a use case and inherit a database or filesystem adapter. `/client` owns browser management, context selection, immutable
-task-context views and browser-only ports. CLI owns SQLite; Control's `/postgres`
-entry owns account persistence. Applications compose identity, authentication,
-routing and device authorization.
+`/client` owns browser management, context selection, immutable task-context views and
+browser-only ports. CLI owns SQLite; Control's `/postgres` entry owns account persistence.
+Applications compose identity, authentication, routing and device authorization.
 
 ## Constraints
 
-Use public workspace entries and keep dependencies acyclic. Contracts composes these
-schemas; memory never imports contracts or a concrete SDK. Core owns task context
+Use public workspace entries and keep dependencies acyclic. Contracts composes the
+model schemas; memory never imports contracts or a concrete SDK. Core owns task context
 selection/snapshot schemas and prompt-budget rules.
 
 Device-owned documents survive login, account changes and logout and are never

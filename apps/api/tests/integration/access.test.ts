@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
 import { accessForRole } from "@raypx/account/access";
-import type { AuthSession } from "@raypx/auth/types";
+import type { AuthSession } from "@raypx/auth-model";
 import { createApiApp } from "../../server/api.ts";
 import { createAccessPolicy } from "../../server/access.ts";
 

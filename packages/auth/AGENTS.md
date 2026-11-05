@@ -26,9 +26,9 @@ Account authentication, platform-specific session adapters and shared DOM forms.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.
-- `/types`: pure public account/session types.
+- Pure session projections, provider identifiers and trusted-origin normalization
+  come from `@raypx/auth-model`.
 - `/policy`: pure name/password limits shared by endpoints and forms.
-- `/origins`: pure normalization of explicitly trusted HTTP(S) and `views://main` origins.
 - `/access`: Better Auth's shared access controller and member/admin roles, built on
   Core's `/permissions` vocabulary. Auth imports the role names and permissions from
   `@raypx/core/permissions`; it never defines a second copy. The Admin plugin and

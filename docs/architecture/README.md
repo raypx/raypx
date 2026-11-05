@@ -146,7 +146,7 @@ and never retried after restart. The wire projection preserves current
 | Boundary        | Owner and rule                                                                                                                |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Domain          | Core owns task/input/decision schemas and pure rules; no transport, React, files or database                                  |
-| Wire            | Contracts composes HTTP, Relay and private local messages from domain schemas; local methods never enter public RPC           |
+| Models and wire | Memory/jobs/auth models own pure schemas; Contracts composes HTTP, Relay and private local messages from them                 |
 | Task views      | Tasks `/model` owns pure page state and injected ports; `/client` adapts it to React; apps inject remote/private IPC adapters |
 | Remote clients  | Client exposes `/api`, `/relay` and `/tasks`; it does not execute providers                                                   |
 | Authentication  | API injects the DB adapter, mailer and config into Auth; Web/Desktop inject clients and navigation                            |
@@ -181,10 +181,13 @@ domain. API issues tickets/grants, routes commands and stores read projections.
 It executes no local provider and owns no WebSocket listener.
 
 Relay owns socket peers; API reaches it through private Redis using shared Control
-rules. The gateway routes `/relay` to that independent service at the public
-origin. Optional Cloudflare ingress uses the provider-managed Workers runtime;
-the Relay container and local tooling use pinned Node. Web, API, migration and
-Relay build outputs run outside the repository. See
+rules. On remote `tasks.create`, Relay's composition resolves account-selected
+memory revisions and commits the frozen context receipt before delivery; normal
+memory CRUD remains in API RPC. This is command acceptance, not a second memory
+API. The gateway routes `/relay` to that independent service at the public origin.
+Optional Cloudflare ingress uses the provider-managed Workers runtime; the Relay
+container and local tooling use pinned Node. Web, API, migration and Relay build
+outputs run outside the repository. See
 [deployment](../development/deployment.md) and [infrastructure](../../infra/README.md).
 
 API/CLI configure `@raypx/logger` once per process. Allowed fields pass redaction

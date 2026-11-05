@@ -18,7 +18,7 @@ import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition, JobInput, JobRun } from "@raypx/jobs";
+import type { JobDefinition, JobInput, JobRun } from "@raypx/jobs-model";
 import { localRequest } from "../../lib/desktop.ts";
 import { Link } from "@tanstack/react-router";
 

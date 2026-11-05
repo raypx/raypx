@@ -1,6 +1,6 @@
 import { cliBuild } from "./daemon/build.ts";
 import { localParams, LOCAL_WORKSPACE_ID, type LocalMethod } from "@raypx/contracts/local";
-import { ContextError } from "@raypx/memory";
+import { ContextError } from "@raypx/memory-model";
 import type { InstanceRuntime, InstanceAccess } from "./instances/index.ts";
 import type { MemoryRuntime } from "./memory/index.ts";
 import type { AgentRuntime } from "./agents/index.ts";

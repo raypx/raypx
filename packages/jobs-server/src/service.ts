@@ -1,5 +1,6 @@
 import { activeTaskStatuses } from "@raypx/core/tasks";
 import {
+  JobError,
   cloudJobInputSchema,
   cloudJobCreateSchema,
   type CloudJobCreateInput,
@@ -7,8 +8,8 @@ import {
   type CloudJobInput,
   type CloudJobRun,
   type CloudJobRunStatus,
-} from "../model.ts";
-import { JobError, nextJobRuns } from "../schedule.ts";
+  nextJobRuns,
+} from "@raypx/jobs-model";
 import type { CloudJobsServiceOptions, JobClaim, JobRunUpdate } from "./types.ts";
 
 const knownFailures = new Set([

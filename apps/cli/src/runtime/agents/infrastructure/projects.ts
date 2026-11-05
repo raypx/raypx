@@ -1,6 +1,6 @@
 import { spawnProcess } from "@raypx/runtime-node/process";
 import type { DeviceProject } from "@raypx/contracts/tasks";
-import { ContextError } from "@raypx/memory";
+import { ContextError } from "@raypx/memory-model";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopBinding } from "../model.ts";
 import type { TaskContextTarget, AgentProvider } from "@raypx/core/tasks";

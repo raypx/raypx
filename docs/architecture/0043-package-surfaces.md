@@ -2,6 +2,12 @@
 
 Status: Accepted, 2026-11-03. Extends ADR 0042.
 
+Runtime amendment (2026-11-06): pure memory, job and auth schemas now live in
+`@raypx/memory-model`, `@raypx/jobs-model` and `@raypx/auth-model`. Injected
+server use cases live in `@raypx/memory-server` and `@raypx/jobs-server`. This
+replaces the vertical schema ownership recorded below; see the current
+[workspace guide](../development/workspaces.md).
+
 ## Direction
 
 A package entry is a surface, not a barrel. Each public subpath carries one cohesive
@@ -50,11 +56,11 @@ are imported from `@raypx/core/tasks` and `@raypx/contracts/tasks`, their owners
 
 ## Contracts
 
-`@raypx/contracts` drops `.`, `./jobs` and `./memory`. The jobs and memory schemas stay
-where they are — `@raypx/jobs` and `@raypx/memory` own them as vertical packages
-(`docs/development/workspaces.md`), and `/api` composes them internally. Only the composition surface
-is public. A consumer that needs a jobs or memory wire schema imports it from the
-owning package, not through contracts.
+`@raypx/contracts` drops `.`, `./jobs` and `./memory`. It composes wire schemas from
+the pure `@raypx/jobs-model` and `@raypx/memory-model` packages. Browser views stay in
+`@raypx/jobs` and `@raypx/memory`; injected server use cases live in the corresponding
+`*-server` workspaces. A consumer that needs a domain schema imports it from its model
+owner, not through contracts.
 
 ## Enforcement
 

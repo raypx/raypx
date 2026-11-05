@@ -9,8 +9,12 @@ import {
 } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
-import type { AuthSession, AuthUser, SocialProvider } from "./types.ts";
-import { normalizeTrustedOrigins } from "./origins.ts";
+import {
+  normalizeTrustedOrigins,
+  type AuthSession,
+  type AuthUser,
+  type SocialProvider,
+} from "@raypx/auth-model";
 import { authPolicy } from "./policy.ts";
 
 export interface AuthMailInput {

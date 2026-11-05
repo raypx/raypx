@@ -7,6 +7,11 @@ It owns WebSocket connections and relay v4 message routing. API owns login,
 device/host grants, one-time viewer tickets, HTTP read models and scheduling.
 Device-local execution stays in the CLI daemon.
 
+For an accepted remote `tasks.create`, Relay resolves the requested account memory
+revisions and persists their immutable context snapshot with the command before
+delivery. This preserves retry identity if a reference changes while a response is
+lost. Memory document CRUD remains on API RPC; Relay does not expose those use cases.
+
 | Endpoint      | Behavior                                                                            |
 | ------------- | ----------------------------------------------------------------------------------- |
 | `GET /relay`  | Upgrade to WebSocket; the first frame authenticates a viewer ticket or device grant |

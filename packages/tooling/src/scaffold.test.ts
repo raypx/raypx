@@ -51,5 +51,8 @@ describe("workspace scaffolding", () => {
     expect(() => scaffold(root, "con", { kind: "library", target: "universal" })).toThrow(
       "reserved on Windows",
     );
+    expect(() => scaffold(root, "invalid-target", { kind: "library", target: "bun" })).toThrow(
+      "Invalid workspace kind or target",
+    );
   });
 });

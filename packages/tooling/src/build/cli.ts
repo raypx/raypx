@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, chmod, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, chmod, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -32,8 +32,12 @@ async function npmPackage(name: string, version: string, directory: string) {
   if (algorithm !== "sha512" || !hash) throw new Error("Unsupported package integrity");
   const archive = directory + ".tgz";
   await mkdir(directory, { recursive: true });
-  await writeFile(archive, await download(metadata.dist.tarball, hash, algorithm));
-  await extractArchive(archive, directory, 1);
+  try {
+    await writeFile(archive, await download(metadata.dist.tarball, hash, algorithm));
+    await extractArchive(archive, directory, 1);
+  } finally {
+    await rm(archive, { force: true });
+  }
 }
 export async function packageCli(root: string, output: string, builtAt: number) {
   const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
@@ -84,13 +88,22 @@ export async function packageCli(root: string, output: string, builtAt: number) 
     await cp(join(native, "LICENSE"), join(pnpm, "LICENSE"));
     const pnpmExe = "pnpm" + (platform === "win32" ? ".exe" : "");
     await cp(join(native, pnpmExe), join(pnpm, pnpmExe));
-    await cp(join(native, pnpmExe), join(pnpm, "pnpx" + (platform === "win32" ? ".exe" : "")));
-    if (platform !== "win32") {
-      await chmod(join(runtime, executable), 0o755);
-      await chmod(join(pnpm, "pnpm"), 0o755);
-      await chmod(join(pnpm, "pnpx"), 0o755);
-    }
+    if (platform !== "win32") await chmod(join(runtime, executable), 0o755);
   }
+  const pnpm = join(runtime, "pnpm");
+  const pnpx = platform === "win32" ? "pnpx.cmd" : "pnpx";
+  await rm(join(pnpm, "pnpx.exe"), { force: true });
+  await rm(join(pnpm, platform === "win32" ? "pnpx" : "pnpx.cmd"), { force: true });
+  await rm(join(pnpm, "pnpm-native"), { force: true });
+  await rm(join(pnpm, "pnpm-native.exe"), { force: true });
+  await writeFile(
+    join(pnpm, pnpx),
+    platform === "win32"
+      ? '@"%~dp0pnpm.exe" dlx %*\r\n@exit /b %ERRORLEVEL%\r\n'
+      : '#!/bin/sh\nscript_dir=${0%/*}\nexec "$script_dir/pnpm" dlx "$@"\n',
+  );
+  if (platform !== "win32") await chmod(join(pnpm, pnpx), 0o755);
+  await rm(join(runtime, "pnpm.tgz"), { force: true });
   await cp(runtime, join(output, "runtime"), { recursive: true });
   await cp(join(root, "LICENSE"), join(output, "RAYPX-LICENSE"));
   await run(["cargo", "build", "--locked", "--release", "--package", "raypx-launcher"], root);

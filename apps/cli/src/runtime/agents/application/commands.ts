@@ -12,7 +12,7 @@ import {
   type HumanDecision,
   type TaskInput,
 } from "@raypx/core/tasks";
-import { ContextError } from "@raypx/memory";
+import { ContextError } from "@raypx/memory-model";
 import { LocalError } from "../../errors.ts";
 import { desktopBinding, type LocalAgentTask } from "../model.ts";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";

@@ -26,7 +26,7 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { cn } from "@raypx/ui/lib/utils";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks.ts";
-import type { SocialProvider } from "../types.ts";
+import type { SocialProvider } from "@raypx/auth-model";
 import { authPolicy } from "../policy.ts";
 import { readAuthLink, type AuthMode } from "./auth-link.ts";
 import { formText } from "./form-text.ts";

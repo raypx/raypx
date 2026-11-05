@@ -5,7 +5,7 @@ import { mkdtemp, mkdir, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import type { LocalEvent } from "@raypx/contracts/local";
-import type { CommandSpec } from "@raypx/jobs";
+import type { CommandSpec } from "@raypx/jobs-model";
 import type { Environment } from "./tools.ts";
 import { LocalError } from "../errors.ts";
 import { herdrError, herdrRequest, record } from "./herdr-ipc.ts";

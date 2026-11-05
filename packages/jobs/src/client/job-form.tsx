@@ -6,9 +6,13 @@ import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { SelectField } from "@raypx/ui/select-field";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
-import { cloudJobInputSchema, type CloudJob, type CloudJobInput } from "../model.ts";
+import {
+  cloudJobInputSchema,
+  nextJobRuns,
+  type CloudJob,
+  type CloudJobInput,
+} from "@raypx/jobs-model";
 import type { JobDevice } from "./ports.ts";
-import { nextJobRuns } from "../schedule.ts";
 import {
   ContextPicker,
   ContextBudget,

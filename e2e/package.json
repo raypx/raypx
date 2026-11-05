@@ -27,8 +27,8 @@
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
-    "@raypx/jobs": "workspace:*",
-    "@raypx/memory": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
+    "@raypx/memory-model": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*"
   },

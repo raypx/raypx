@@ -29,9 +29,11 @@ raypx.kind is app, library or tooling. raypx.target is universal, browser, nativ
 or node. entryTargets overrides the default by exports key. sourceTargets
 maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Platform crossings require a
-compatible explicit public entry. Server use cases in `memory`, `jobs` and
-`instances` mark `./server` and `src/server.ts` / `src/server/**` as node, following
-`account`, so browser imports fail policy before bundling server dependencies.
+compatible explicit public entry. Model schemas live in `auth-model`, `memory-model`
+and `jobs-model`; injected Node use cases live in `memory-server` and `jobs-server`.
+The `auth`, `memory` and `jobs` packages own their server adapters or browser views as
+declared by their manifests, so a protocol consumer does not acquire UI dependencies
+to use pure schemas.
 
 Every public entry has an established consumer in another workspace. `policy`
 finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig
@@ -149,14 +151,12 @@ private harness owns task policy, persistence, approval and cancellation. See
 
 ## Scheduled jobs
 
-`@raypx/jobs` now has actual consumers in CLI, API, Web and Desktop. Its root owns
-job schemas, inferred types and calendar rules. `/server` contains injected scheduling
-use cases, and `/client` contains shared browser views and their injected ports. Contracts
-depends on the root; jobs must not depend on contracts or a concrete API SDK.
-API supplies SQL/relay adapters, while CLI supplies local scheduling and execution.
-Import job models directly from `@raypx/jobs`; Contracts owns only wire definitions.
-Cloud schedules do not
-claim local plans or move them between accounts. See [server jobs](server-jobs.md).
+`@raypx/jobs-model` owns pure job schemas, inferred types and calendar rules.
+`@raypx/jobs-server` owns injected cloud scheduling use cases. `@raypx/jobs` owns
+shared browser views and their ports. Contracts composes wire schemas from the model;
+API supplies SQL/Relay adapters, while CLI supplies local scheduling and execution.
+Cloud schedules do not claim local plans or move them between accounts. See
+[server jobs](server-jobs.md).
 
 ## Provider adapters
 

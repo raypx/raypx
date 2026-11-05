@@ -7,11 +7,11 @@ Agent execution.
 
 ## Account cloud automations
 
-`@raypx/jobs` owns the shared local/cloud job models, pure Cron calendar rules,
-injected cloud use cases and shared browser views. Contracts composes those same
-schemas into local IPC and account RPC. API owns PostgreSQL and relay adapters;
-CLI owns device-local timers and execution. This keeps one schedule model without
-making HTTP or the browser an execution host.
+`@raypx/jobs-model` owns shared local/cloud schemas and pure Cron calendar rules.
+`@raypx/jobs-server` owns injected cloud use cases; `@raypx/jobs` owns shared browser
+views. Contracts composes local IPC and account RPC schemas from the model. API owns
+PostgreSQL and Relay adapters; CLI owns device-local timers and execution. This keeps
+one schedule model without making HTTP or the browser an execution host.
 
 Web `/automations` manages account-owned cloud schedules. Desktop's automation
 page separates **This computer** from **Cloud**. Local schedules remain available

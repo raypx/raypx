@@ -13,12 +13,12 @@
     "test:integration": "vp test --run tests/integration"
   },
   "dependencies": {
-    "@raypx/auth": "workspace:*",
+    "@raypx/auth-model": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/control": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
-    "@raypx/memory": "workspace:*",
+    "@raypx/memory-server": "workspace:*",
     "@raypx/runtime-node": "workspace:*",
     "drizzle-orm": "catalog:"
   },

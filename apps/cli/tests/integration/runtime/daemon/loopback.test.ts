@@ -85,7 +85,7 @@ it("runs a Windows owner from a private per-build copy and prunes older copies",
       "runtime/pnpm/pnpm",
       "runtime/pnpm/pnpx",
       "runtime/pnpm/pnpm.exe",
-      "runtime/pnpm/pnpx.exe",
+      "runtime/pnpm/pnpx.cmd",
     ]) {
       const file = join(root, name);
       mkdirSync(join(file, ".."), { recursive: true });

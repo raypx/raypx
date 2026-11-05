@@ -35,7 +35,7 @@ import {
   type ContextDocument,
   type ContextDocumentSummary,
   type ContextVersion,
-} from "../model.ts";
+} from "@raypx/memory-model";
 import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.ts";
 import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
 import { DocumentForm, documentDraft } from "./form.tsx";

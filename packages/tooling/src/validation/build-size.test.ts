@@ -53,7 +53,7 @@ it("partitions the full CLI payload without dropping or double-counting runtime 
   file(root, `${cli}/dist/runtime/node.exe`, Buffer.alloc(11));
   file(root, `${cli}/dist/runtime/LICENSE`, Buffer.alloc(2));
   file(root, `${cli}/dist/runtime/pnpm/pnpm.exe`, Buffer.alloc(7));
-  file(root, `${cli}/dist/runtime/pnpm/pnpx.exe`, Buffer.alloc(7));
+  file(root, `${cli}/dist/runtime/pnpm/pnpx.cmd`, Buffer.alloc(7));
   file(root, `${cli}/dist/herdr/herdr.exe`, Buffer.alloc(3));
   const [artifact] = collectBuildSizes(root, { packages: ["command"] }).artifacts;
   expect(artifact).toMatchObject({ bytes: 37, files: 7 });

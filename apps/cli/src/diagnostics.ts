@@ -1,6 +1,6 @@
 import { InstanceError } from "@raypx/instances";
 import type { InstanceEnrollmentPhase } from "./runtime/instances/index.ts";
-import type { JobRun } from "@raypx/jobs";
+import type { JobRun } from "@raypx/jobs-model";
 import { LocalError } from "./runtime/errors.ts";
 
 export type Diagnostic =

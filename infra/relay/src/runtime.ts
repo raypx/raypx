@@ -3,7 +3,7 @@ import { connectDatabase } from "@raypx/database/connection";
 import { ControlService, ControlProjects } from "@raypx/control";
 import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
-import { ContextLibraryService } from "@raypx/memory/server";
+import { ContextLibraryService } from "@raypx/memory-server";
 import { startRelayServer } from "./server.ts";
 import type { RelayEnvironment } from "./env.ts";
 

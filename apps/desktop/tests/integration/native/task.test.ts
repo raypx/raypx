@@ -16,65 +16,76 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 
 const roots: string[] = [];
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), "raypx-desktop-task-"));
-  roots.push(root);
-  mkdirSync(join(root, "scripts/host"), { recursive: true });
+  const repository = mkdtempSync(join(tmpdir(), "raypx-desktop-task-"));
+  const workspace = join(repository, "apps/desktop");
+  roots.push(repository);
+  mkdirSync(join(workspace, "scripts/host"), { recursive: true });
   copyFileSync(
     join(import.meta.dirname, "../../../scripts/host/task.ts"),
-    join(root, "scripts/host/task.ts"),
+    join(workspace, "scripts/host/task.ts"),
   );
-  mkdirSync(join(root, "node_modules/@raypx"), { recursive: true });
+  mkdirSync(join(workspace, "node_modules/@raypx"), { recursive: true });
   symlinkSync(
     resolve(import.meta.dirname, "../../../../../packages/runtime-node"),
-    join(root, "node_modules/@raypx/runtime-node"),
+    join(workspace, "node_modules/@raypx/runtime-node"),
     "dir",
   );
-  mkdirSync(join(root, "node_modules/.bin"), { recursive: true });
+  mkdirSync(join(workspace, "node_modules/.bin"), { recursive: true });
   writeFileSync(
-    join(root, "node_modules/.bin/vp"),
-    '#!/usr/bin/env node\nprocess.argv.splice(2,0,"vp");await import("../../record.ts");\n',
+    join(workspace, "node_modules/.bin/vp"),
+    '#!/usr/bin/env node\nprocess.argv.splice(2,0,"vp");await import("../../record.mjs");\n',
   );
-  chmodSync(join(root, "node_modules/.bin/vp"), 0o755);
+  chmodSync(join(workspace, "node_modules/.bin/vp"), 0o755);
+  const recorder = `import { appendFileSync } from "node:fs";
+const [name, ...args] = process.argv.slice(2);
+const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^RAYPX_DESKTOP_.*_ARGS$/.test(key)));
+appendFileSync(process.env.TASK_TEST_EVENTS, JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
+if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`;
   writeFileSync(
-    join(root, "scripts/host/generate.ts"),
-    'process.argv.splice(2, 0, "native:generate"); await import("../../record.ts");',
+    join(workspace, "scripts/host/generate.ts"),
+    'process.argv.splice(2, 0, "native:generate"); await import("../../record.mjs");',
   );
   writeFileSync(
-    join(root, "package.json"),
+    join(repository, "package.json"),
     JSON.stringify({
       type: "module",
-      scripts: Object.fromEntries(
-        [
-          "raypx-dev",
-          "typecheck",
-          "typecheck:node",
-          "native:csp",
-          "vp",
-          "tauri:dev",
-          "tauri:build",
-        ].map((name) => [name, `tsx record.ts ${name}`]),
-      ),
+      scripts: { "raypx-dev": "node record.mjs raypx-dev" },
     }),
   );
   writeFileSync(
-    join(root, "record.ts"),
-    `import { appendFileSync } from "node:fs";
-const [name, ...args] = process.argv.slice(2);
-const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^RAYPX_DESKTOP_.*_ARGS$/.test(key)));
-appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
-if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
+    join(repository, "record.mjs"),
+    recorder,
   );
-  mkdirSync(join(root, "tests/native/smoke"), { recursive: true });
+  writeFileSync(
+    join(workspace, "record.mjs"),
+    recorder,
+  );
+  writeFileSync(
+    join(workspace, "package.json"),
+    JSON.stringify({
+      type: "module",
+      scripts: Object.fromEntries(
+        ["typecheck", "typecheck:node", "native:csp", "tauri:dev", "tauri:build"].map(
+          (name) => [name, `node record.mjs ${name}`],
+        ),
+      ),
+    }),
+  );
+  mkdirSync(join(workspace, "tests/native/smoke"), { recursive: true });
   for (const file of ["run", "agents-run"])
     writeFileSync(
-      join(root, `tests/native/smoke/${file}.ts`),
-      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.ts");`,
+      join(workspace, `tests/native/smoke/${file}.ts`),
+      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.mjs");`,
     );
   return (
     task: string,
     options: { leaf?: boolean; args?: string[]; forwarded?: string[]; fail?: string } = {},
   ) => {
-    const env: NodeJS.ProcessEnv = { ...process.env, TASK_TEST_FAIL: options.fail };
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      TASK_TEST_EVENTS: join(repository, "events.jsonl"),
+      TASK_TEST_FAIL: options.fail,
+    };
 
     delete env.RAYPX_DESKTOP_BROWSER_BUILD;
     for (const key of [
@@ -98,20 +109,20 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       [
         "--import",
         import.meta.resolve("tsx"),
-        join(root, "scripts/host/task.ts"),
+        join(workspace, "scripts/host/task.ts"),
         ...(options.leaf ? ["--leaf"] : []),
         task,
         ...(options.args ?? []),
       ],
       {
-        cwd: root,
+        cwd: workspace,
         env,
         encoding: "utf8",
         timeout: 15_000,
       },
     );
-    const events = existsSync(join(root, "events.jsonl"))
-      ? readFileSync(join(root, "events.jsonl"), "utf8")
+    const events = existsSync(join(repository, "events.jsonl"))
+      ? readFileSync(join(repository, "events.jsonl"), "utf8")
           .trim()
           .split("\n")
           .map((line) => JSON.parse(line) as { name: string; args: string[] })

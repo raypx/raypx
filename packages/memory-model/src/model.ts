@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { taskContextTargetSchema, taskContextIdSchema } from "@raypx/core/tasks";
 
+export class ContextError extends Error {
+  constructor(readonly code: string) {
+    super(code);
+    this.name = "ContextError";
+  }
+}
+
 /** Device and account stores share the format, never their ownership namespace. */
 export const contextDocumentInputSchema = z.strictObject({
   kind: z.enum(["memory", "template"]),

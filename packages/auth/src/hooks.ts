@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import type { SocialProvider } from "./types.ts";
+import type { SocialProvider } from "@raypx/auth-model";
 
 export type AuthErrorKey =
   | "registrationDisabled"

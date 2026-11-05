@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import type { AuthSession } from "@raypx/auth/types";
+import type { AuthSession } from "@raypx/auth-model";
 import { configurationDefaults } from "@raypx/contracts/api";
 import { createCache } from "../cache/cache.ts";
 import { createMemoryStore } from "../cache/memory.ts";

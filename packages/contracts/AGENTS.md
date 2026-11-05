@@ -70,7 +70,7 @@ carries an authoritative `context` snapshot.
 Private `memory.*` IPC always addresses the device-profile library, accepts no
 account ID, and uses the same version/CAS inputs as the account library.
 
-`/api` composes `memory.*` from the same `@raypx/memory` document/version schemas.
+`/api` composes `memory.*` from `@raypx/memory-model` document/version schemas.
 Resolve accepts explicit revision references and a task target, with an optional
 prompt for complete budget validation; the server derives the account from session.
 

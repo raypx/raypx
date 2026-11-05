@@ -4,6 +4,8 @@ import { targets, type Kind, type Target } from "@raypx-kit/devkit/workspaces";
 import { discover } from "./repository.ts";
 import { workspaceInstructions } from "./templates/workspace/agents.ts";
 
+const scaffoldTargets: readonly Target[] = targets.filter((target) => target !== "bun");
+
 export interface ScaffoldOptions {
   kind: Kind;
   target: Target;
@@ -18,8 +20,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     throw new Error("Workspace name is reserved on Windows");
   if (
     !["library", "app", "tooling"].includes(options.kind) ||
-    !targets.includes(options.target) ||
-    options.target === "bun"
+    !scaffoldTargets.includes(options.target)
   )
     throw new Error("Invalid workspace kind or target");
   const folder = options.kind === "app" ? "apps" : "packages";

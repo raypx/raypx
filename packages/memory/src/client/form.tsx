@@ -5,7 +5,7 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { SelectField } from "@raypx/ui/select-field";
-import type { ContextDocument, ContextDocumentInput } from "../model.ts";
+import type { ContextDocument, ContextDocumentInput } from "@raypx/memory-model";
 import type { MemoryProjectsPort } from "./port.ts";
 
 export function documentDraft(

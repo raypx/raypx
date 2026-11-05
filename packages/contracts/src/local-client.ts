@@ -25,8 +25,8 @@ import {
   contextDocumentSummarySchema,
   contextVersionSchema,
   contextDeleteResultSchema,
-} from "@raypx/memory";
-import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs";
+} from "@raypx/memory-model";
+import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs-model";
 import { agentRunStatusSchema } from "@raypx/core/agent-runs";
 
 const settings = localParams["approvals.local.configure"];
