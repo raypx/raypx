@@ -30,7 +30,6 @@
     "@raypx/icons": "workspace:*",
     "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
-    "@raypx/jobs-model": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/memory-model": "workspace:*",
     "@raypx/tasks": "workspace:*",

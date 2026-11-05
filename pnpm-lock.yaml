@@ -1049,9 +1049,6 @@ importers:
       '@raypx/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
-      '@raypx/jobs-model':
-        specifier: workspace:*
-        version: link:../../packages/jobs-model
       '@raypx/memory':
         specifier: workspace:*
         version: link:../../packages/memory
