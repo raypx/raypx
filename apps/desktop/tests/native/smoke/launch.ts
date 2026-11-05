@@ -1,6 +1,6 @@
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { existsSync } from "node:fs";
-import { rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
 import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install.ts";
@@ -112,8 +112,15 @@ export async function runTauriSmoke(
       scenario.exited.then((code) => ({ source: "scenario", code })),
       native.exited.then((code) => ({ source: "native", code })),
     ]);
-    if (first.source === "native" && first.code !== 0)
-      throw new Error(`Native smoke ${phase} Desktop exited before assertions`);
+    if (first.source === "native") {
+      const diagnostic = await readFile(
+        join(directory, "native-smoke-startup-error"),
+        "utf8",
+      ).catch(() => undefined);
+      throw new Error(
+        `Native smoke ${phase} Desktop exited before assertions (${first.code})${diagnostic ? `: ${diagnostic}` : ""}`,
+      );
+    }
     const scenarioCode = first.source === "scenario" ? first.code : await scenario.exited;
     if (scenarioCode !== 0) {
       const desktop =

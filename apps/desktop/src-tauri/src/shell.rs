@@ -171,8 +171,15 @@ pub fn run() {
     }
     let config = match Config::load() {
         Ok(config) => config,
-        Err(_) => {
+        Err(error) => {
             eprintln!("Unable to load Raypx configuration / 无法读取 Raypx 配置");
+            #[cfg(feature = "native-smoke")]
+            if let Some(directory) = std::env::var_os("RAYPX_NATIVE_SMOKE_DATA_DIR") {
+                let _ = std::fs::write(
+                    std::path::PathBuf::from(directory).join("native-smoke-startup-error"),
+                    error.to_string(),
+                );
+            }
             return;
         }
     };
