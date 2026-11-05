@@ -21,6 +21,7 @@ import { ciOutputs } from "./verification/gates.ts";
 import { cacheSnapshot } from "./verification/cache.ts";
 import { smokeDeployment } from "./validation/deployment-smoke.ts";
 import { runPrecheck } from "./verification/prechecks.ts";
+import { reportBuildSizes, sizeOptions } from "./validation/build-size.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -110,6 +111,9 @@ async function main() {
     case "verify":
       await verify(root, args);
       break;
+    case "size":
+      reportBuildSizes(root, sizeOptions(args));
+      break;
     case "ci:plan": {
       const plan = readGithubPlan(root);
       console.log(JSON.stringify(plan, null, 2));
@@ -191,7 +195,7 @@ async function main() {
     }
     case undefined:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | deployment:smoke | env | db | desktop | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | size | smoke | deployment:smoke | env | db | desktop | clean | clean:artifacts | doctor",
       );
       break;
     default:

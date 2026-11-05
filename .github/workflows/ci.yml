@@ -56,6 +56,14 @@ jobs:
           partition: javascript
       - name: Verify affected source and artifacts
         run: pnpm run raypx-dev ci:gate js
+      - name: Upload build size reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-sizes-javascript
+          path: .artifacts/sizes/
+          include-hidden-files: true
+          if-no-files-found: ignore
       - name: Generated sources remain reproducible
         run: git diff --exit-code
       - uses: ./.github/actions/vp-save
@@ -133,6 +141,14 @@ jobs:
             pnpm exec playwright install-deps chromium
           fi
       - run: pnpm run raypx-dev ci:gate browser
+      - name: Upload build size reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-sizes-browser
+          path: .artifacts/sizes/
+          include-hidden-files: true
+          if-no-files-found: ignore
       - uses: ./.github/actions/vp-save
         with:
           key: ${{ steps.vp-cache.outputs.key }}

@@ -42,6 +42,31 @@ No comparable Bun/MyGo size, startup or memory measurements were retained before
 the migration. No before/after improvement is claimed. macOS/Windows installer
 sizes, GUI startup and GUI memory remain unmeasured.
 
+## Build output size snapshot
+
+`pnpm run size` now records all buildable workspaces without starting services or
+using a profile. The existing Linux x64 outputs on 2026-11-05 measured:
+
+| Package            | Output                  |       Size |
+| ------------------ | ----------------------- | ---------: |
+| CLI                | Complete distribution   | 271.52 MiB |
+| API                | Nitro `.output`         |   4.38 MiB |
+| Web                | Nitro `.output`         |   7.34 MiB |
+| Desktop            | Renderer `dist/client`  |   2.34 MiB |
+| Mobile             | Expo export `dist`      |  10.09 MiB |
+| Storybook          | Static `dist`           |   8.80 MiB |
+| Relay              | Server `dist`           |   2.42 MiB |
+| Cloudflare ingress | Worker `dist`           |   0.05 MiB |
+| Database           | Migration runner `dist` |   0.60 MiB |
+
+These are sums of regular-file bytes in existing outputs, including maps/licenses,
+not fresh builds or compressed download sizes. Desktop covers only the renderer;
+Mobile covers the Expo export, not an APK/IPA. API/Web/Relay do not include the Node
+runtime supplied by their deployment image. Source-only libraries have no separate
+artifact and are included in consuming builds. Follow the
+[build size guide](validation-artifacts.md#build-sizes) for CI summaries, exact-byte
+JSON reports, CLI runtime breakdown and production native package measurements.
+
 ## Acceptance boundaries
 
 `pnpm run verify` passed all 75 selected tasks. `pnpm run verify --full` passed all

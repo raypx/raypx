@@ -3,11 +3,12 @@ import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
 import { runTasks } from "../repository.ts";
 import { smoke } from "../smoke/index.ts";
-import { taskRef, taskModel } from "../tasks/model.ts";
+import { taskRef, taskModel, taskPlan } from "../tasks/model.ts";
 import { argumentKey } from "../tasks/arguments.ts";
 import type { VerificationPlan } from "./plan.ts";
 import type { TestSelection } from "./tests.ts";
 import { completionReport, precheckTimings, reportTiming } from "./report.ts";
+import { reportBuildSizes } from "../validation/build-size.ts";
 
 export function executionTasks(
   plan: VerificationPlan,
@@ -57,7 +58,8 @@ export async function sourceChecks(
 ) {
   const started = performance.now();
   const style = await sourceStyle(root, plan);
-  const rootName = taskModel(root).rootName;
+  const model = taskModel(root);
+  const rootName = model.rootName;
   const refs = executionTasks(plan, rootName, tests);
   const styleMs = Math.round(performance.now() - started),
     taskStarted = performance.now();
@@ -76,6 +78,10 @@ export async function sourceChecks(
   const { cacheHits, cachedTasks } = completionReport(root, refs);
   const prechecks = precheckTimings(root, rootName, cachedTasks);
   const probeStarted = performance.now();
+  const builds = taskPlan(model, refs)
+    .filter((task) => task.taskId.endsWith("#build"))
+    .map((task) => task.taskId.slice(0, -"#build".length));
+  if (builds.length) reportBuildSizes(root, { packages: builds, required: true });
   if (plan.artifacts.length) await smoke(root, plan.artifacts);
   const metrics = {
     ...prechecks,

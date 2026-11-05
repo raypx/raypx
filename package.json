@@ -145,6 +145,7 @@
     "build:desktop": "raypx-dev tasks build --filter desktop",
     "build:cli": "raypx-dev tasks build --filter cli",
     "build:storybook": "raypx-dev tasks build --filter ui-storybook",
+    "size": "raypx-dev size",
     "check": "raypx-dev tasks check",
     "test": "raypx-dev test",
     "lint": "vp lint",

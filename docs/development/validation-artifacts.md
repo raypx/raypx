@@ -10,6 +10,50 @@ verification; their generated evidence may remain until cleanup.
 Root commands aggregate through `pnpm run test <suite>`; Tooling owns independent
 `test:inventory` and `test:backends` scripts. See [test commands](testing.md#test-commands).
 
+## Build sizes
+
+```sh
+pnpm run size
+pnpm run size --package cli --package web --require
+pnpm run size --package desktop --native --require
+pnpm run size --package desktop --browser --require
+```
+
+Build the selected packages first with the existing VP commands. `size` never builds
+or starts an application. It discovers buildable workspaces from manifests, omits
+source-only libraries, and accepts repeated `--package` selectors by manifest name,
+`@raypx/` shorthand or workspace path. Without selectors it snapshots all existing
+build outputs, marking missing/empty outputs unavailable. `--require` fails when
+any selected output is unavailable, after writing the evidence.
+
+The reporter prefers Nitro `.output` over intermediate `dist`; other builds use
+`dist`. Desktop measures the renderer from Tauri's `frontendDist`, with
+`--browser` selecting its compiled browser fixture instead. `--native` adds each
+production `.app`, installer and updater archive under `target/release/bundle`
+(or `CARGO_TARGET_DIR/release/bundle`). It excludes smoke/debug outputs and signature
+sidecars. No installer is inferred from renderer-only or Rust source checks.
+
+Directories report the sum of regular-file bytes and file counts, including maps,
+licenses and bundled dependencies. Symlinks are counted separately in JSON and are
+not followed. This is logical payload size, not filesystem allocation or network
+transfer size. Installer/archive rows report their actual compressed file sizes;
+no synthetic gzip estimate is mixed into directory totals. CLI distributions also
+show Node, full pnpm/pnpx, Herdr and application/launcher components. Those components
+are included in the CLI total; renderer, `.app`, installer and updater measurements
+overlap and must not be added together.
+
+Each invocation writes `.artifacts/sizes/<run>/sizes.json` (exact bytes, file counts,
+status, platform/architecture and observation time) and `sizes.md`. These describe
+the existing output snapshot; cached or older local artifacts are not a fresh build
+of the current checkout. CI also records the workflow revision, appends the table to
+the GitHub job summary, and uploads `build-sizes-*` report artifacts. Source verification
+reports only packages in its executed build graph, including restored cache outputs;
+source-only runs do not produce size rows. Browser gates measure their selected assets.
+Native checks report the CLI payload, while distribution phases additionally report
+the renderer and actual native packages. Size evidence does not establish platform
+acceptance. See the [dated migration measurements](migration-validation.md) for the
+Linux CLI archive and runtime observations.
+
 ## Test inventory and preservation
 
 ```sh

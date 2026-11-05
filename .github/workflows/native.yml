@@ -81,12 +81,20 @@ jobs:
         if: ${{ !inputs.distribution }}
         with:
           key: ${{ steps.vp-cache.outputs.key }}
+      - name: Report prepared build sizes
+        shell: bash
+        run: |
+          if [ "${{ matrix.phase }}" = "checks" ]; then
+            pnpm run size --package cli --require
+          else
+            pnpm run size --package cli --package desktop --require
+          fi
       - name: Cross-platform process and task runners
         if: matrix.phase == 'checks'
         shell: bash
         run: |
           pnpm --dir packages/runtime-node run test
-          pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts src/build/archive.test.ts
+          pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts src/build/archive.test.ts src/validation/build-size.test.ts
       - name: Herdr terminal integration
         if: matrix.phase == 'checks'
         env:
@@ -158,6 +166,10 @@ jobs:
         if: matrix.phase == 'package'
         shell: bash
         run: pnpm run package:desktop
+      - name: Report desktop distribution sizes
+        if: matrix.phase == 'package'
+        shell: bash
+        run: pnpm run size --package desktop --native --require
       - name: Verify production Desktop excludes smoke controls
         if: matrix.phase == 'package'
         shell: bash
@@ -228,3 +240,11 @@ jobs:
       - name: Packaged native smoke
         if: matrix.phase == 'smoke'
         run: pnpm --dir apps/desktop run native:smoke:interactive
+      - name: Upload build size reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-sizes-${{ runner.os }}-${{ matrix.phase }}
+          path: .artifacts/sizes/
+          include-hidden-files: true
+          if-no-files-found: ignore

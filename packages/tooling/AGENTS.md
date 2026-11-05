@@ -25,6 +25,14 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   validated against the exported keys.
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
+- raypx-dev size [--package name|path] [--native] [--browser] [--require]
+  Discovers buildable workspaces, measures existing deployable directories and CLI
+  runtime components, and writes JSON/Markdown under `.artifacts/sizes/`. Native
+  mode adds actual production bundles/installers; browser mode selects Desktop's
+  compiled browser fixture. Missing outputs are unavailable; `--require` rejects them.
+  CI appends tables to its summary after selected builds/cache restoration and uploads
+  reports. Sizes count regular files, excluding symlinks; components/bundles overlap
+  and must not be added together. Measurement never launches a build or smoke task.
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,

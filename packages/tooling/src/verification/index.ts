@@ -7,6 +7,7 @@ import { localPlan } from "./plan.ts";
 import { executionTasks, sourceChecks } from "./execution.ts";
 import { ciOutputs, parseCiPlan, requiredGates } from "./gates.ts";
 import { localTests } from "./tests.ts";
+import { reportBuildSizes } from "../validation/build-size.ts";
 
 export function verifyOptions(args: string[]) {
   const options: { full?: boolean; base?: string; dry?: boolean } = {};
@@ -95,5 +96,10 @@ export async function ciGate(root: string, args: string[]) {
       await runTasks(root, `api#${task}`);
   } else if (gate === "browser") {
     await runTasks(root, `@raypx/e2e#${plan.browser === "all" ? "e2e" : `e2e:${plan.browser}`}`);
+    reportBuildSizes(root, {
+      packages: plan.browser === "all" ? ["web", "desktop"] : [plan.browser],
+      browser: true,
+      required: true,
+    });
   } else throw new Error("Unknown internal CI gate");
 }
