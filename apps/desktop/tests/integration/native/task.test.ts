@@ -52,22 +52,17 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`;
       scripts: { "raypx-dev": "node record.mjs raypx-dev" },
     }),
   );
-  writeFileSync(
-    join(repository, "record.mjs"),
-    recorder,
-  );
-  writeFileSync(
-    join(workspace, "record.mjs"),
-    recorder,
-  );
+  writeFileSync(join(repository, "record.mjs"), recorder);
+  writeFileSync(join(workspace, "record.mjs"), recorder);
   writeFileSync(
     join(workspace, "package.json"),
     JSON.stringify({
       type: "module",
       scripts: Object.fromEntries(
-        ["typecheck", "typecheck:node", "native:csp", "tauri:dev", "tauri:build"].map(
-          (name) => [name, `node record.mjs ${name}`],
-        ),
+        ["typecheck", "typecheck:node", "native:csp", "tauri:dev", "tauri:build"].map((name) => [
+          name,
+          `node record.mjs ${name}`,
+        ]),
       ),
     }),
   );
