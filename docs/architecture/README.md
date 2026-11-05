@@ -103,11 +103,11 @@ have separate login/grant checks. See
 
 Tauri keeps server-scoped persistent cookies in a separate
 `tauri-sessions.sqlite`, encrypted with AES-GCM and a new OS credential-store key.
-MyGo login storage is neither read nor deleted; switching hosts requires signing
-in once. Local projects, history, preferences, TOML settings and offline identity
-remain. The shared `desktop-instance.sqlite` lock prevents concurrent Desktop
-hosts. Missing session keys preserve ciphertext and allow temporary in-memory
-sign-in. These stores never share the CLI business writer.
+Previous-host login storage is neither read nor deleted; switching hosts requires
+signing in once. Local projects, history, preferences, TOML settings and offline
+identity remain. The shared `desktop-instance.sqlite` lock prevents concurrent
+Desktop hosts. Missing session keys preserve ciphertext and allow temporary
+in-memory sign-in. These stores never share the CLI business writer.
 
 Only the owned main WebView can call native commands. Native policy restricts
 origins, paths, headers, request sizes, navigation and directory grants. Events

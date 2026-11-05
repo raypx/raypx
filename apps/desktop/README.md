@@ -45,7 +45,7 @@ verify the complete runtime inventory.
 Profile paths, preferences, TOML settings, migration journals and offline enrollment
 remain unchanged. `desktop-instance.sqlite` prevents concurrent hosts. Tauri creates
 `tauri-sessions.sqlite` and a separate system credential key. It never reads or
-deletes MyGo login storage: sign in once after switching. Missing keys preserve
+deletes previous-host login storage: sign in once after switching. Missing keys preserve
 stored ciphertext and allow temporary sign-in. POSIX permissions are private;
 Windows uses restricted inheritable DACLs.
 

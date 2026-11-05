@@ -4,7 +4,7 @@ Status: accepted, supersedes conflicting cloud-only, no-local-runtime and all-Bu
 requirements in historical ADRs. Approved by the user for this rebuild.
 
 Current amendment (2026-11-05): [ADR 0045](0045-tauri-node-pnpm.md) supersedes
-the Bun-only runtime/catalog/install rules below and the former MyGo host.
+the Bun-only runtime/catalog/install rules below and the former Go desktop host.
 Node/pnpm now own JavaScript execution and installation; Rust owns the Tauri host
 and CLI launcher, and VP remains the single task graph. Manifest discovery,
 composition boundaries and data isolation remain accepted. The dated choices
@@ -23,7 +23,7 @@ Replace name allowlists and exhaustive documentation inventories with manifest
 discovery. The initial foundation used one Turbo graph and Bun catalogs, a Nix
 development shell and a Node production API. The amendments below supersede those
 toolchain and runtime choices. Before ADR 0045, the compiled CLI included Bun
-and Desktop used MyGo with system WKWebView/WebView2.
+and Desktop used a Go host with system WKWebView/WebView2.
 
 The account database and migration history are new and independent. Retired SQL
 is available only in Git history and must not be applied by foundation commands.

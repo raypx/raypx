@@ -4,9 +4,10 @@ Status: accepted, 2026-10-27. Incremental implementation from `c3020e4`.
 
 Implementation amendments: [ADR 0037](0037-windows-daemon.md) extends the
 independent daemon to Windows; [ADR 0041](0041-provider-capabilities-and-pi.md)
-adds local managed Pi; [ADR 0045](0045-tauri-node-pnpm.md) replaces Bun/MyGo/Go
-with Node, Tauri and Rust. These amend the implementation notes below while
-preserving local ownership, optional cloud channels and approval leases.
+adds local managed Pi; [ADR 0045](0045-tauri-node-pnpm.md) replaces the Bun
+runtime and Go desktop host with Node, Tauri and Rust. These amend the
+implementation notes below while preserving local ownership, optional cloud
+channels and approval leases.
 
 Each profile has one Owner and one Node + TypeScript Host. Local tasks, project
 grants, connectors, SQLite, terminal settings and broker work without an active online session after initial instance enrollment (ADR 0040).

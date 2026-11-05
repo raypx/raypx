@@ -1,6 +1,6 @@
 # ADR 0045: Tauri, Node and pnpm
 
-Status: accepted, 2026-11-05. Supersedes the former MyGo Desktop implementation
+Status: accepted, 2026-11-05. Supersedes the former Desktop implementation
 and the repository's Bun-only toolchain rule.
 
 Raypx uses TypeScript for product and execution code and Rust for the Tauri
@@ -22,8 +22,9 @@ copying one executable. GUI Quit never stops the daemon.
 Current NDJSON, Relay v4, SQLite schemas and migration journals remain the
 baseline. Profile paths, offline enrollment, preferences, grants and the SQLite
 desktop instance lock are preserved. Tauri establishes a new native session
-store and OS key; users sign in once. MyGo credentials are not imported or
-deleted. Remote authorization is still separate from local enrollment.
+store and OS key; users sign in once. Credentials from the previous Desktop host
+are not imported or deleted. Remote authorization is still separate from local
+enrollment.
 
 Native commands are restricted to the owned main WebView. Cookies and host
 credentials remain native; directory grants require the native picker. Events

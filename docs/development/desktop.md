@@ -125,8 +125,9 @@ file grants retained; choose a fresh `local_profile` explicitly. An expired or s
 Persistent cookies are AES-GCM ciphertext authenticated against their server scope;
 the OS credential store keeps a separate key for the Tauri data directory. A missing
 key or unreadable ciphertext preserves the stored rows and permits in-memory
-sign-in. MyGo sessions stay untouched; the first Tauri launch requires sign-in. Session-only Cookies stay in memory; persistent
-Cookies honor expiry and sign-out removal.
+sign-in. Previous-host sessions stay untouched; the first Tauri launch requires
+sign-in. Session-only Cookies stay in memory; persistent Cookies honor expiry and
+sign-out removal.
 
 ## Native API transport
 
@@ -202,13 +203,14 @@ the NSIS installer. Missing distribution credentials produce an unverified
 artifact; they cannot establish signing, notarization or release acceptance.
 
 The first Tauri release is a signed installer, retaining the existing application
-identifier and data directories. Quit MyGo, explicitly stop its daemon through
-the current CLI, and wait for lock release before switching. A mismatched daemon
+identifier and data directories. Quit the previous Desktop app, explicitly stop
+its daemon through the current CLI, and wait for lock release before switching. A mismatched daemon
 is never silently taken over. Re-login affects online sessions only; preferences,
 projects, task history, config, offline identity and existing remote consent remain.
 
 Later updates require new `TAURI_SIGNING_PRIVATE_KEY`,
 `RAYPX_TAURI_UPDATER_PUBLIC_KEY` and HTTPS `RAYPX_TAURI_UPDATER_URL`. Never reuse
-the MyGo key/feed. Test packages receive no distribution keys or update endpoint.
+the previous updater key/feed. Test packages receive no distribution keys or
+update endpoint.
 Only publish an artifact after its platform's installer, GUI and signing matrix
 passes. Record unavailable checks as unverified.

@@ -13,7 +13,7 @@
 ### Changed
 
 - Replace the native host with Tauri and system WKWebView/WebView2; native windows enforce a minimum content size of 960 × 600.
-- Keep credentials in the Rust host and execution in the bundled TypeScript CLI. Tauri uses a new native session store and system key; sign in once after switching. Preserve local profiles and offline identity, and leave MyGo credentials untouched.
+- Keep credentials in the Rust host and execution in the bundled TypeScript CLI. Tauri uses a new native session store and system key; sign in once after switching. Preserve local profiles and offline identity, and leave previous-host credentials untouched.
 
 - Rebuild the renderer as a TanStack Start SPA with Files, Automations, Terminal, Account and Settings navigation. The window layout appears in the user's theme before the renderer finishes loading.
 - Bundle the matching CLI runtime directory, including Node, pnpm and terminal resources; local execution needs no globally installed JavaScript tools.

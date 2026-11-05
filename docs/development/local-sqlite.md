@@ -78,7 +78,8 @@ The host never opens the CLI business database or shares the lifetime exclusive
 ciphertext preserve stored rows and permit in-memory sign-in; a failed session
 write disables that session transport until restart.
 
-Tauri does not read, import or delete MyGo login storage. Sign in once after the
-switch; existing CLI profiles, grants, offline identity and history stay local.
+Tauri does not read, import or delete previous-host login storage. Sign in once
+after the switch; existing CLI profiles, grants, offline identity and history stay
+local.
 CLI Host authorization is a separate record in `profile.sqlite` and may explicitly
 report memory-only mode. See [Desktop sessions](desktop.md#apply-and-isolate).

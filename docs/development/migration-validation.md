@@ -38,9 +38,9 @@ it excludes future task subprocesses. The two native pnpm/pnpx executables are
 regular copies, and both contribute to the uncompressed size. The archive is a
 CLI distribution archive, not a desktop installer.
 
-No comparable Bun/MyGo size, startup or memory measurements were retained before
-the migration. No before/after improvement is claimed. macOS/Windows installer
-sizes, GUI startup and GUI memory remain unmeasured.
+No comparable pre-migration runtime/Desktop size, startup or memory measurements
+were retained before the migration. No before/after improvement is claimed.
+macOS/Windows installer sizes, GUI startup and GUI memory remain unmeasured.
 
 ## Build output size snapshot
 
@@ -103,8 +103,8 @@ installation and upgrade, macOS notarization and Windows NSIS/locked-file
 acceptance require their actual platforms. They have not been run locally.
 Linux Desktop remains unaccepted. No installer has been published.
 
-Before the first Tauri release, stop the old daemon explicitly, exit MyGo and wait
-for the shared instance lock to release. Use a signed installer that preserves
+Before the first Tauri release, stop the old daemon explicitly, exit the previous
+Desktop app and wait for the shared instance lock to release. Use a signed installer that preserves
 the app identity and data directory. Configure a new Tauri update signing key and
 feed. Sign in once into the new native session store; this must not reset offline
 identity or automatically change remote grants. Publish only artifacts whose

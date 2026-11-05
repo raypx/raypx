@@ -6,9 +6,10 @@ and business schemas stay in the TypeScript CLI/contracts. Generate JSON policy
 with `pnpm --dir apps/desktop run native:generate`; do not hand-edit its outputs.
 
 Preserve profile/data paths and the exclusive desktop-instance.sqlite lifetime
-lock. New tauri-sessions.sqlite and system credentials never read or delete MyGo
-credentials. API cookies, instance keys and host credentials never reach renderer
-storage, TOML or diagnostics. Session loss cannot reset or transfer enrollment.
+lock. New tauri-sessions.sqlite and system credentials never read or delete
+previous-host credentials. API cookies, instance keys and host credentials never
+reach renderer storage, TOML or diagnostics. Session loss cannot reset or transfer
+enrollment.
 
 Invoke commands require the main window and its configured trusted origin. Deny
 external navigation/popups. HTTP enforces origin, path/header policy, limits,
