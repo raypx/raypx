@@ -23,6 +23,21 @@ export interface SmokeInstallation {
   dispose(): Promise<void>;
 }
 
+async function assertSmokeBinary(binary: string, env: NodeJS.ProcessEnv) {
+  const probe = spawnProcess([binary, "--native-smoke-probe"], {
+    cwd,
+    env,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [error, code] = await Promise.all([new Response(probe.stderr).text(), probe.exited]);
+  if (code !== 0)
+    throw new Error(
+      `Native smoke binary is not built with the smoke feature (${code}): ${error.trim()}`,
+    );
+}
+
 export async function buildSmoke(): Promise<SmokeInstallation> {
   if (!["darwin", "win32"].includes(process.platform))
     throw new Error("Packaged native smoke is only verified on macOS and Windows");
@@ -52,15 +67,17 @@ export async function buildSmoke(): Promise<SmokeInstallation> {
     if (await child.exited) throw new Error("Tauri native-smoke packaging failed");
   }
   const output = resolve(cwd, "../../target/native-smoke/release");
-  if (shouldInstallWindowsSmoke(process.platform, process.env))
-    return installWindowsSmoke(output, resolve(cwd, "../cli/dist/raypx.exe"));
-  return {
-    binary:
-      process.platform === "win32"
-        ? join(output, "raypx-desktop.exe")
-        : join(output, "bundle/macos/Raypx Test.app/Contents/MacOS/raypx-desktop"),
-    dispose: async () => {},
-  };
+  const installation = shouldInstallWindowsSmoke(process.platform, process.env)
+    ? await installWindowsSmoke(output, resolve(cwd, "../cli/dist/raypx.exe"))
+    : {
+        binary:
+          process.platform === "win32"
+            ? join(output, "raypx-desktop.exe")
+            : join(output, "bundle/macos/Raypx Test.app/Contents/MacOS/raypx-desktop"),
+        dispose: async () => {},
+      };
+  await assertSmokeBinary(installation.binary, env);
+  return installation;
 }
 
 export async function runTauriSmoke(
