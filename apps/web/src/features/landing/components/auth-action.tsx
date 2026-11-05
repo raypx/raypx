@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { LoginIcon } from "@raypx/icons/login";
 import { MonitorIcon } from "@raypx/icons/monitor";
-import { RefreshIcon } from "@raypx/icons/refresh";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
@@ -13,23 +12,15 @@ export function LandingAuthAction({ className }: { className?: string }) {
   const c = useTranslations("common");
   const t = useTranslations("guest");
   const session = authClient.useSession();
-  if (session.isPending || session.error) {
-    const Icon = session.isPending ? SpinnerIcon : RefreshIcon;
+  if (session.isPending) {
     return (
-      <Button
-        variant="outline"
-        className={className}
-        disabled={session.isPending}
-        aria-busy={session.isPending}
-        aria-description={session.error ? c("networkError") : undefined}
-        onClick={() => void session.refetch()}
-      >
-        <Icon
+      <Button variant="outline" className={className} disabled aria-busy={true}>
+        <SpinnerIcon
           aria-hidden="true"
           data-icon="inline-start"
-          className={cn(session.isPending && "animate-spin motion-reduce:animate-none")}
+          className="animate-spin motion-reduce:animate-none"
         />
-        {c(session.isPending ? "loading" : "retry")}
+        {c("loading")}
       </Button>
     );
   }

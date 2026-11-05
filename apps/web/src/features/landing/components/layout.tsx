@@ -3,7 +3,6 @@ import { Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Logo } from "@raypx/ui/logo";
-import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { publicConfigurationQuery } from "../../configuration/client";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { LegalFooter } from "../../../components/legal-footer";
@@ -36,13 +35,10 @@ export function LandingLayout() {
             aria-label={c("home")}
             className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2"
           >
-            <Link to="/projects" className={buttonVariants({ variant: "ghost" })}>
-              {c("projects")}
-            </Link>
-            <div className="flex min-h-10 shrink-0 items-center gap-1 pointer-coarse:min-h-11">
+            <div className="flex shrink-0 items-center gap-1">
               <ThemeToggle />
               <LanguageMenu />
-              <UserButton />
+              <UserButton sessionError="account" />
             </div>
           </nav>
         </div>

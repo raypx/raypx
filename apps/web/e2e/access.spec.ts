@@ -31,10 +31,10 @@ test(
       page.getByRole("heading", { name: "Remote sessions and approvals", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("complementary")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
-      "href",
-      "/projects",
-    );
+    await expect(
+      page.getByRole("link", { name: /Sign in to open projects on a computer/ }),
+    ).toHaveAttribute("href", "/projects");
+    await expect(page.getByRole("banner").getByRole("link", { name: "Projects" })).toHaveCount(0);
     expect(privateReads).toEqual([]);
     await capture(page, {
       path: test.info().outputPath("web-landing-home.png"),
@@ -124,6 +124,11 @@ test(
     await expect(page.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
       "href",
       "/projects",
+    );
+    await expect(page.getByRole("banner").getByRole("link", { name: "Projects" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sessions", exact: true })).toHaveAttribute(
+      "href",
+      "/tasks",
     );
     await expect(
       page.getByRole("link", { name: "Connect a computer", exact: true }),

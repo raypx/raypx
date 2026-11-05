@@ -1,49 +1,74 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@raypx/ui/components/ui/empty";
 import { cn } from "@raypx/ui/lib/utils";
 import markUrl from "@raypx/ui/logo-mark.webp";
 import type { IconComponent } from "@raypx/icons";
-import { AgentIcon } from "@raypx/icons/agent";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { BookOpenIcon } from "@raypx/icons/book-open";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
-import { FileEditIcon } from "@raypx/icons/file-edit";
-import { InboxIcon } from "@raypx/icons/inbox";
 import { DevicesIcon } from "@raypx/icons/devices";
-import { PaletteIcon } from "@raypx/icons/palette";
+import { FolderOpenIcon } from "@raypx/icons/folder-open";
+import { InboxIcon } from "@raypx/icons/inbox";
 import { LaptopIcon } from "@raypx/icons/laptop";
+import { ScheduleIcon } from "@raypx/icons/schedule";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
+import { TaskListIcon } from "@raypx/icons/task-list";
 import { authClient } from "../../auth/client";
 import { LandingAuthAction } from "./auth-action";
 
+const primaryActionClass = cn(
+  buttonVariants(),
+  "group max-w-full whitespace-normal shadow-sm motion-safe:transition-[transform,box-shadow] motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-md motion-safe:active:translate-y-0",
+);
+const secondaryActionClass = cn(
+  buttonVariants({ variant: "outline" }),
+  "max-w-full whitespace-normal motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0",
+);
+const entryDelay = [
+  "motion-safe:delay-150",
+  "motion-safe:delay-200",
+  "motion-safe:delay-300",
+  "motion-safe:delay-500",
+] as const;
+
 export function LandingHome() {
   const t = useTranslations("guest");
+  const c = useTranslations("common");
+  const memory = useTranslations("memory");
   const session = authClient.useSession();
-  const signedOut = !session.isPending && !session.error && !session.data;
+  const signedIn = !session.isPending && !session.error && Boolean(session.data);
   const entries = [
-    { key: "approvals", to: "/approvals", icon: InboxIcon },
-    { key: "preferences", to: "/settings", icon: PaletteIcon },
+    {
+      to: "/projects",
+      icon: FolderOpenIcon,
+      title: c("projects"),
+      hint: t(signedIn ? "projectsHintSignedIn" : "projectsHint"),
+    },
+    {
+      to: "/approvals",
+      icon: InboxIcon,
+      title: c("approvals"),
+      hint: t(signedIn ? "approvalsHintSignedIn" : "approvalsHint"),
+    },
+    {
+      to: "/automations",
+      icon: ScheduleIcon,
+      title: c("jobs"),
+      hint: t(signedIn ? "jobsHintSignedIn" : "jobsHint"),
+    },
+    {
+      to: "/memory",
+      icon: BookOpenIcon,
+      title: memory("title"),
+      hint: t(signedIn ? "memoryHintSignedIn" : "memoryHint"),
+    },
   ] as const;
   return (
-    <section
-      aria-labelledby="landing-home-title"
-      className="grid gap-4 @3xl/main:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] @3xl/main:gap-5"
-    >
-      <div className="contents">
-        <header className="relative isolate flex min-w-0 flex-col items-start gap-8 overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-xs @xl/main:p-10 @3xl/main:min-h-96 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
+    <section aria-labelledby="landing-home-title" className="grid gap-4 @3xl/main:gap-5">
+      <div className="grid gap-4 @3xl/main:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] @3xl/main:gap-5">
+        <header className="relative isolate flex min-w-0 flex-col items-start gap-8 overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-xs @xl/main:p-10 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
           <HeroArtwork />
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 py-1 pr-3 pl-2.5 text-xs font-medium text-muted-foreground shadow-xs backdrop-blur-sm">
-            <FileEditIcon aria-hidden="true" className="size-3.5" />
-            {t("draft")}
-          </span>
           <div className="flex max-w-lg flex-col gap-4">
             <h1
               id="landing-home-title"
@@ -52,88 +77,86 @@ export function LandingHome() {
               {t("title")}
             </h1>
             <p className="text-base leading-relaxed text-pretty text-muted-foreground">
-              {t(signedOut ? "intro" : "introSignedIn")}
+              {t(signedIn ? "introSignedIn" : "intro")}
             </p>
           </div>
-          <div className="mt-auto flex w-full flex-wrap items-center gap-4">
-            <Link
-              to="/tasks"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "group min-h-11 max-w-full whitespace-normal shadow-sm motion-safe:transition-[transform,box-shadow] motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-md motion-safe:active:translate-y-0",
-              )}
-            >
-              <FileEditIcon data-icon="inline-start" aria-hidden="true" />
-              {t("writeDraft")}
+          <div className="mt-auto flex w-full flex-wrap items-center gap-3">
+            <Link to="/projects" className={primaryActionClass}>
+              <FolderOpenIcon data-icon="inline-start" aria-hidden="true" />
+              {c("projects")}
               <ArrowRightIcon
                 data-icon="inline-end"
                 aria-hidden="true"
                 className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1"
               />
             </Link>
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <ShieldCheckIcon aria-hidden="true" className="size-3.5 shrink-0" />
-              {t("draftHint")}
-            </span>
+            <Link to="/tasks" className={secondaryActionClass}>
+              <TaskListIcon data-icon="inline-start" aria-hidden="true" />
+              {c("tasks")}
+            </Link>
           </div>
         </header>
-        <Empty className="relative isolate overflow-hidden rounded-3xl border border-solid border-border bg-card p-6 shadow-xs @xl/main:p-8 @3xl/main:col-start-2 @3xl/main:row-span-2 @3xl/main:row-start-1 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700 motion-safe:delay-100">
+        <article className="relative isolate flex min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-xs @xl/main:p-8 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700 motion-safe:delay-100">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(var(--color-border)_1px,transparent_1px)] bg-size-[1rem_1rem] mask-radial-from-10% mask-radial-to-70%"
           />
-          <EmptyHeader>
-            <EmptyMedia aria-hidden="true" className="my-5 flex w-full max-w-72 items-center">
-              <DiagramNode icon={DevicesIcon} />
-              <DiagramLink />
-              <span className="relative grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md ring-4 ring-muted">
-                <ShieldCheckIcon className="size-6" />
-              </span>
-              <DiagramLink />
-              <DiagramNode icon={LaptopIcon} />
-            </EmptyMedia>
-            <EmptyTitle>
-              <h2>{t("computers")}</h2>
-            </EmptyTitle>
-            <EmptyDescription>
-              {t(signedOut ? "computersHint" : "computersHintSignedIn")}
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <LandingAuthAction className="h-auto min-h-11 max-w-full whitespace-normal bg-background text-center motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0" />
-          </EmptyContent>
-        </Empty>
-      </div>
-      <ul className="grid min-w-0 gap-4 @xl/main:grid-cols-2 @3xl/main:col-start-1 @3xl/main:gap-5">
-        {entries.map(({ key, to, icon: Icon }) => (
-          <li
-            key={key}
-            className={cn(
-              "min-w-0 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700",
-              key === "approvals" ? "motion-safe:delay-150" : "motion-safe:delay-200",
+          <div aria-hidden="true" className="flex w-full max-w-72 items-center py-3">
+            <DiagramNode icon={DevicesIcon} />
+            <DiagramLink />
+            <span className="relative grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md ring-4 ring-muted">
+              <ShieldCheckIcon className="size-6" />
+            </span>
+            <DiagramLink />
+            <DiagramNode icon={LaptopIcon} />
+          </div>
+          <h2 className="text-lg font-medium">{t("computers")}</h2>
+          <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+            {t(
+              session.isPending
+                ? "computersSummary"
+                : session.data
+                  ? "computersHintSignedIn"
+                  : "computersHint",
             )}
-          >
-            <Link
-              to={to}
-              className="group flex h-full items-start gap-3 rounded-2xl border border-border bg-card p-5 shadow-xs outline-none hover:border-foreground/15 focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-[transform,box-shadow,border-color] motion-safe:duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-md motion-safe:focus-visible:-translate-y-1 motion-safe:active:translate-y-0"
+          </p>
+          <div className="mt-auto">
+            <LandingAuthAction className="max-w-full whitespace-normal bg-background text-center motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0" />
+          </div>
+        </article>
+      </div>
+      <nav aria-label={c("workspace")}>
+        <ul className="grid min-w-0 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 @3xl/main:gap-5">
+          {entries.map(({ to, icon: Icon, title, hint }, index) => (
+            <li
+              key={to}
+              className={cn(
+                "min-w-0 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700",
+                entryDelay[index],
+              )}
             >
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-muted text-muted-foreground group-hover:border-transparent group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:border-transparent group-focus-visible:bg-primary group-focus-visible:text-primary-foreground motion-safe:transition-colors motion-safe:duration-200">
-                <Icon aria-hidden="true" className="size-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-base leading-snug font-medium">{t(key)}</span>
-                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
-                  {t(key === "approvals" && !signedOut ? "approvalsHintSignedIn" : `${key}Hint`)}
+              <Link
+                to={to}
+                className="group flex h-full items-start gap-3 rounded-2xl border border-border bg-card p-5 shadow-xs outline-none hover:border-foreground/15 focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-[transform,box-shadow,border-color] motion-safe:duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-md motion-safe:focus-visible:-translate-y-1 motion-safe:active:translate-y-0"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-muted text-muted-foreground group-hover:border-transparent group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:border-transparent group-focus-visible:bg-primary group-focus-visible:text-primary-foreground motion-safe:transition-colors motion-safe:duration-200">
+                  <Icon aria-hidden="true" className="size-5" />
                 </span>
-              </span>
-              <ChevronRightIcon
-                aria-hidden="true"
-                className="mt-3 size-4 shrink-0 text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-0.5 motion-safe:group-focus-visible:translate-x-0.5"
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base leading-snug font-medium">{title}</span>
+                  <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
+                    {hint}
+                  </span>
+                </span>
+                <ChevronRightIcon
+                  aria-hidden="true"
+                  className="mt-3 size-4 shrink-0 text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-0.5 motion-safe:group-focus-visible:translate-x-0.5"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </section>
   );
 }
@@ -161,8 +184,11 @@ function HeroArtwork() {
           height={96}
           className="absolute inset-0 m-auto size-16 drop-shadow-lg"
         />
-        <OrbitNode icon={InboxIcon} className="top-[calc(50%+5rem)] left-[calc(50%-8.75rem)]" />
-        <OrbitNode icon={AgentIcon} className="top-[calc(50%+11.25rem)] left-[calc(50%-6.5rem)]" />
+        <OrbitNode
+          icon={FolderOpenIcon}
+          className="top-[calc(50%+5rem)] left-[calc(50%-8.75rem)]"
+        />
+        <OrbitNode icon={InboxIcon} className="top-[calc(50%+11.25rem)] left-[calc(50%-6.5rem)]" />
       </div>
     </div>
   );

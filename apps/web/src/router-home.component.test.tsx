@@ -50,7 +50,12 @@ async function html(account: AccountState, path = "/") {
 it("server-renders the landing page before the browser session resolves", async () => {
   const page = await html({ status: "signed-out" });
   expect(page).toMatch(/<h1[^>]*>Remote sessions and approvals<\/h1>/);
-  expect(page).toContain("Write a session draft");
+  expect(page).toContain("Open a project, or write a session.");
+  expect(page).toContain("Sessions");
+  expect(page).toContain('href="/automations"');
+  expect(page).toContain('href="/memory"');
+  expect(page).toContain("Computers connected from Desktop.");
+  expect(page).not.toContain("Appearance and language");
   expect(page).not.toContain('role="status"');
   expect(page).toContain('aria-busy="true"');
   expect(page).toContain("Loading…");

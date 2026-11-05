@@ -39,12 +39,19 @@ application is an independent composition root and is never imported by another 
   and preferences; `SessionBoundary` mounts private views only after a confirmed session.
   `src/routes/(landing)/` owns the public `/` homepage with its own header and
   document layout, without account loaders or the workspace shell. A client-only `UserButton` shares
-  the sidebar account menu, with a fixed-size SSR placeholder and retryable session errors. Landing views
+  the sidebar account menu, with a fixed-size SSR placeholder. The landing header keeps
+  that account button when the session check fails; the computer card keeps its connect
+  action. Sidebar
+  session errors stay on the retry control. Landing views
   live under `features/landing/components/`. They subscribe to Better Auth's shared
-  session store after hydration: confirmed sessions connect computers through settings
-  directly, guests retain sign-in return paths, pending checks show a disabled loading
-  action and failed checks offer retry. Home never mounts private project/device/task reads;
-  the account menu reads permissions only for confirmed sessions.
+  session store after hydration: confirmed sessions open projects first and connect
+  computers through settings; guests open projects and sessions from the hero, and
+  sign-in return paths stay on the computer action.
+  Pending checks show a disabled loading action. A failed check keeps the connect or
+  sign-in action. Until the
+  session is confirmed, home keeps the public project and session actions. Home links projects, approvals,
+  automations and memory, and never mounts private project, device, task, job or memory
+  reads; the account menu reads permissions only for confirmed sessions.
   The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before

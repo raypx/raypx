@@ -16,20 +16,33 @@ import { accountAccessQuery } from "../features/auth/access";
 import { guestReturnTo } from "../features/tasks/guest-draft";
 import { analytics } from "../features/analytics/client";
 
-const headerPlaceholderClass = "size-10 rounded-full pointer-coarse:size-11";
+const headerPlaceholderClass = "size-8 rounded-full";
 
 /** Landing content stays independent of account availability and SSR cookies. */
-export function UserButton({ variant = "header" }: { variant?: "header" | "sidebar" }) {
+export function UserButton({
+  variant = "header",
+  sessionError = "retry",
+}: {
+  variant?: "header" | "sidebar";
+  /** Landing keeps the account control; shells retry the session check in place. */
+  sessionError?: "retry" | "account";
+}) {
   return variant === "header" ? (
     <ClientOnly fallback={<Skeleton className={headerPlaceholderClass} />}>
-      <AccountButton variant={variant} />
+      <AccountButton variant={variant} sessionError={sessionError} />
     </ClientOnly>
   ) : (
-    <AccountButton variant={variant} />
+    <AccountButton variant={variant} sessionError={sessionError} />
   );
 }
 
-function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
+function AccountButton({
+  variant,
+  sessionError,
+}: {
+  variant: "header" | "sidebar";
+  sessionError: "retry" | "account";
+}) {
   const session = authClient.useSession();
   const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   const previous = useRef(accountId);
@@ -61,11 +74,11 @@ function AccountButton({ variant }: { variant: "header" | "sidebar" }) {
         className={variant === "header" ? headerPlaceholderClass : "h-12 w-full rounded-lg"}
       />
     );
-  if (session.error)
+  if (session.error && sessionError === "retry")
     return (
       <IconButton
         label={c("retryAccount")}
-        className={variant === "header" ? "size-10 pointer-coarse:size-11" : undefined}
+        className={variant === "header" ? "size-8" : undefined}
         onClick={() => void session.refetch()}
       >
         <RefreshIcon aria-hidden="true" />
