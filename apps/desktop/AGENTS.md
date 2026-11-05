@@ -93,6 +93,10 @@ The account route reads its remote projection in a client-only loader; auth
 mutations invalidate route data on success. Keep Better Auth session updates as
 invalidation signals rather than a second account-query state machine.
 Local tools render during session/network checks. Auth routes use a standalone layout; `RemoteBoundary` gates private views and returns to an allowlisted destination. Logout returns to local tools. Keep the coordinator mounted.
+The root `DesktopSignOutProvider` owns explicit logout for the shell, account page
+and instance gate. Clear account caches after web sign-out; retain failed native
+cleanup across routes/gates and retry it manually or on engine/network recovery,
+without repeating web sign-out or dropping the device identity.
 
 ## Constraints
 

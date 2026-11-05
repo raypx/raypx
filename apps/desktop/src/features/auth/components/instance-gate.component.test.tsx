@@ -14,6 +14,7 @@ import type { InstanceBinding, InstanceStatus } from "@raypx/instances";
 import { DesktopPlatformProvider } from "../../../lib/platform-context";
 import { desktopFixture } from "../../../../tests/helpers/desktop";
 import { InstanceGate } from "./instance-gate";
+import { DesktopSignOutProvider } from "../sign-out";
 
 const mocks = vi.hoisted(() => ({
   session: vi.fn(),
@@ -62,9 +63,11 @@ async function page(read: () => InstanceStatus) {
   fixture.setNative("controlDetach", async () => true);
   const root = createRootRoute({
     component: () => (
-      <InstanceGate>
-        <p>Private local work</p>
-      </InstanceGate>
+      <DesktopSignOutProvider>
+        <InstanceGate>
+          <p>Private local work</p>
+        </InstanceGate>
+      </DesktopSignOutProvider>
     ),
   });
   const history = createMemoryHistory({ initialEntries: ["/"] });

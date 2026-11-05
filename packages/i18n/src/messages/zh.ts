@@ -551,6 +551,7 @@ export default {
     actions: "操作",
     signIn: "登录",
     signOut: "退出登录",
+    signOutIncomplete: "退出尚未完成。请重试以完成撤销此电脑的远程访问权限。",
     desktopOnly: "请打开桌面应用以使用本地工具。",
     working: "处理中…",
     confirmDelete: "确认删除此项？此操作无法撤销。",

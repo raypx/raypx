@@ -28,6 +28,7 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "./routeTree.gen.ts";
+import { DesktopSignOutProvider } from "./features/auth/sign-out";
 
 expect.extend(matchers);
 
@@ -41,6 +42,7 @@ const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   signIn: vi.fn(),
   signOut: vi.fn(),
+  hostSignOut: vi.fn(),
   session: { data: null, isPending: false, error: null } as SessionSnapshot,
   listeners: new Set<() => void>(),
 }));
@@ -70,6 +72,7 @@ vi.mock("./features/auth/client", () => ({
 vi.mock("./features/tasks/client", () => ({
   taskClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
 }));
+vi.mock("./features/tasks/host-session", () => ({ signOutDesktopHost: mocks.hostSignOut }));
 // The generated tree imports terminal code, but account tests never mount xterm.
 vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));
 
@@ -102,7 +105,11 @@ const histories: ReturnType<typeof createMemoryHistory>[] = [];
 beforeAll(() => {
   // Exercise generated routes without mounting the native window shell.
   rootOptions.shellComponent = ({ children }: { children: ReactNode }) => <>{children}</>;
-  rootOptions.component = Outlet;
+  rootOptions.component = () => (
+    <DesktopSignOutProvider>
+      <Outlet />
+    </DesktopSignOutProvider>
+  );
 });
 afterAll(() => {
   if (documentShell) rootOptions.shellComponent = documentShell;
@@ -122,6 +129,7 @@ beforeEach(() => {
   mocks.account.mockResolvedValue(ada);
   mocks.signIn.mockResolvedValue({ data: {}, error: null });
   mocks.signOut.mockResolvedValue({ data: {}, error: null });
+  mocks.hostSignOut.mockResolvedValue(undefined);
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
@@ -266,6 +274,25 @@ describe("Desktop account route", () => {
     expect(screen.queryByRole("heading", { name: ada.name })).toBeNull();
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
     expect(mocks.account).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps failed host cleanup visible after the session clears and navigation leaves account", async () => {
+    mocks.signOut.mockImplementation(async () => {
+      setSession(null);
+      return { data: {}, error: null };
+    });
+    mocks.hostSignOut.mockRejectedValueOnce(new Error("private native cleanup diagnostic"));
+    const router = await page();
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(await screen.findByRole("heading", { name: "You’re not signed in" })).toBeTruthy();
+    expect(screen.getByRole("alert")).toHaveTextContent("Sign-out is incomplete.");
+    expect(screen.queryByText("private native cleanup diagnostic")).toBeNull();
+    await act(async () => router.navigate({ to: "/login" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Sign-out is incomplete.");
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect(mocks.signOut).toHaveBeenCalledTimes(1);
+    expect(mocks.hostSignOut).toHaveBeenCalledTimes(2);
   });
 
   it.each(["auth", "network"])(

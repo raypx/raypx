@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useRouter } from "@tanstack/react-router";
-import { useAuthActions } from "@raypx/auth/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { createApiClient } from "@raypx/client/api";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { MonitorIcon } from "@raypx/icons/monitor";
@@ -16,9 +15,8 @@ import {
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useDesktopPlatform } from "../../../lib/platform-context";
-import { apiUrl, webUrl, authClient, desktopFetch } from "../client";
-import { signOutDesktopHost } from "../../tasks/host-session";
-import { analytics } from "../../analytics/client";
+import { apiUrl, authClient, desktopFetch } from "../client";
+import { useDesktopSignOut } from "../sign-out";
 import { WindowDragRegion } from "../../../components/window-drag-region";
 
 function gateMessage(
@@ -37,9 +35,7 @@ function gateMessage(
 export function InstanceGate({ children }: { children: ReactNode }) {
   const platform = useDesktopPlatform();
   const { localRequest, isDesktop } = platform;
-  const router = useRouter(),
-    queries = useQueryClient();
-  const auth = useAuthActions({ client: authClient, webUrl });
+  const auth = useDesktopSignOut();
   const t = useTranslations("instances"),
     c = useTranslations("common");
   const session = authClient.useSession();
@@ -87,20 +83,7 @@ export function InstanceGate({ children }: { children: ReactNode }) {
   const sessionKnown = !session.isPending && !session.error;
   async function recover(signIn: boolean) {
     setFailed(false);
-    const complete = async () => {
-      await signOutDesktopHost(platform);
-      analytics.reset();
-      const accountId = session.data?.user.id;
-      if (accountId)
-        queries.removeQueries({ predicate: (query) => query.queryKey.includes(accountId) });
-      await status.refetch();
-      await router.invalidate();
-      if (signIn) await router.navigate({ to: "/login" });
-    };
-    const result =
-      auth.error?.kind === "completion"
-        ? await auth.retryCompletion()
-        : await auth.signOut(complete);
+    const result = await auth.signOut(session.data?.user.id ?? null, signIn ? "/login" : undefined);
     if (result.status === "error") setFailed(true);
   }
   async function register() {

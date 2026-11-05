@@ -1,5 +1,4 @@
 import { readAccount } from "@raypx/account";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   AccountDetails,
   AccountSkeleton,
@@ -10,10 +9,9 @@ import { useEffect, useRef } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useAuthActions } from "@raypx/auth/hooks";
-import { authClient, webUrl } from "../features/auth/client";
+import { authClient } from "../features/auth/client";
+import { useDesktopSignOut } from "../features/auth/sign-out";
 import { taskClient } from "../features/tasks/client";
-import { signOutDesktopHost } from "../features/tasks/host-session";
 
 export const Route = createFileRoute("/account")({
   staticData: { page: { title: "common.account", layout: "document" } },
@@ -56,9 +54,8 @@ function AccountPage() {
   const state = Route.useLoaderData();
   const refreshing = Route.useMatch({ select: (match) => !!match.isFetching });
   const router = useRouter();
-  const queryClient = useQueryClient();
   const session = authClient.useSession();
-  const auth = useAuthActions({ client: authClient, webUrl });
+  const auth = useDesktopSignOut();
   const busy = auth.busy || refreshing;
   const sessionId =
     session.isPending || session.error ? undefined : (session.data?.user.id ?? null);
@@ -103,17 +100,9 @@ function AccountPage() {
         <AccountDetails
           account={state.account}
           busy={busy}
-          onSignOut={() =>
-            auth.signOut(async () => {
-              await signOutDesktopHost();
-              queryClient.removeQueries({
-                predicate: (query) => query.queryKey.includes(state.account.id),
-              });
-              return refresh();
-            })
-          }
+          onSignOut={() => auth.signOut(state.account.id)}
         >
-          {auth.error && (
+          {auth.error && auth.error.kind !== "completion" && (
             <div
               role="alert"
               className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"

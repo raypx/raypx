@@ -104,14 +104,27 @@ export function useFileActions({
         if (!operation || !value.trim()) return;
         const next = path ? `${path}/${value}` : value;
         switch (operation.type) {
-          case "move":
-            await localRequest("files.move", {
+          case "move": {
+            const editor = store.getState().editor;
+            const opened = editor?.rootId === rootId && editor.path === operation.entry.path;
+            const version = opened ? editor.content.version : operation.entry.version;
+            const moved = await localRequest("files.move", {
               rootId,
               path: operation.entry.path,
               to: value,
-              version: operation.entry.version,
+              version,
             });
+            if (!current()) return;
+            if (opened)
+              store.setState({
+                editor: {
+                  ...editor,
+                  path: moved.path,
+                  content: { ...editor.content, version: moved.version },
+                },
+              });
             break;
+          }
           case "folder":
             await localRequest("files.mkdir", { rootId, path: next });
             break;
@@ -124,11 +137,6 @@ export function useFileActions({
           }
         }
         if (!current()) return;
-        if (operation.type === "move") {
-          const editor = store.getState().editor;
-          if (editor?.path === operation.entry.path)
-            store.setState({ editor: { ...editor, path: value } });
-        }
         store.setState({ operation: null });
         await refresh();
       }),

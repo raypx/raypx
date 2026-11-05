@@ -584,6 +584,8 @@ export default {
     actions: "Actions",
     signIn: "Sign in",
     signOut: "Sign out",
+    signOutIncomplete:
+      "Sign-out is incomplete. Retry to finish revoking this computer’s remote access.",
     desktopOnly: "Open the desktop app to use local tools.",
     working: "Working…",
     confirmDelete: "Delete this item? This cannot be undone.",

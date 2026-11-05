@@ -24,6 +24,8 @@ import {
   vi,
 } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DesktopSignOutProvider } from "./sign-out";
 import { routeTree } from "../../routeTree.gen.ts";
 
 expect.extend(matchers);
@@ -66,7 +68,11 @@ const histories: ReturnType<typeof createMemoryHistory>[] = [];
 beforeAll(() => {
   // Exercise the real leaf routes inside happy-dom without mounting the native shell.
   rootOptions.shellComponent = ({ children }: { children: ReactNode }) => <>{children}</>;
-  rootOptions.component = Outlet;
+  rootOptions.component = () => (
+    <DesktopSignOutProvider>
+      <Outlet />
+    </DesktopSignOutProvider>
+  );
 });
 afterAll(() => {
   if (documentShell) rootOptions.shellComponent = documentShell;
@@ -101,9 +107,11 @@ async function page(url: string, hash = false) {
   const router = createRouter({ routeTree, history, defaultPendingMinMs: 0 });
   await router.load();
   render(
-    <BrowserLanguageProvider>
-      <RouterProvider router={router} />
-    </BrowserLanguageProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <BrowserLanguageProvider>
+        <RouterProvider router={router} />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
   );
   return router;
 }

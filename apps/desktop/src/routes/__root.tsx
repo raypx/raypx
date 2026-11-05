@@ -4,6 +4,7 @@ import { DesktopShell, ShellSkeleton } from "../components/shell";
 import { ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences";
 import { SessionGate } from "../features/auth/components/session-gate";
+import { DesktopSignOutProvider } from "../features/auth/sign-out";
 import { RemoteCoordinator } from "../features/tasks/coordinator";
 import { DesktopRuntimeProvider } from "../features/engine/provider";
 import { EngineRouteSync } from "../features/engine/routes";
@@ -67,11 +68,13 @@ function RootComponent() {
       <DesktopPreferencesProvider>
         <AppAnalytics>
           <DesktopRuntimeProvider>
-            <EngineRouteSync />
-            <SessionGate>
-              <RemoteCoordinator />
-              <DesktopShell />
-            </SessionGate>
+            <DesktopSignOutProvider>
+              <EngineRouteSync />
+              <SessionGate>
+                <RemoteCoordinator />
+                <DesktopShell />
+              </SessionGate>
+            </DesktopSignOutProvider>
           </DesktopRuntimeProvider>
           {Devtools && (
             <Suspense fallback={null}>

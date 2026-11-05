@@ -1,12 +1,10 @@
 import { analytics } from "../features/analytics/client";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
-import { useQueryClient } from "@tanstack/react-query";
 import { AccountMenu } from "@raypx/account/client";
-import { useAuthActions } from "@raypx/auth/hooks";
-import { authClient, webUrl } from "../features/auth/client";
+import { authClient } from "../features/auth/client";
+import { useDesktopSignOut } from "../features/auth/sign-out";
 import { taskClient } from "../features/tasks/client";
-import { signOutDesktopHost } from "../features/tasks/host-session";
 import { TerminalRequestNotice } from "../features/tasks/request-notice";
 import { ProjectNavigation } from "../features/tasks/project-navigation";
 import { RemoteProjectNavigation } from "../features/tasks/remote-navigation";
@@ -72,8 +70,7 @@ export function ShellSkeleton() {
 export function DesktopShell() {
   const session = authClient.useSession();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const auth = useAuthActions({ client: authClient, webUrl });
+  const auth = useDesktopSignOut();
   const href = useRouterState({ select: (state) => state.location.href });
   const page = useMatches({
     select: (matches) =>
@@ -167,7 +164,7 @@ export function DesktopShell() {
             user={accountId ? (session.data?.user ?? null) : null}
             pending={session.isPending}
             busy={auth.busy}
-            error={Boolean(auth.error)}
+            error={Boolean(auth.error && auth.error.kind !== "completion")}
             onNavigate={(destination) =>
               destination === "login"
                 ? void router.navigate({
@@ -177,16 +174,7 @@ export function DesktopShell() {
                 : void router.navigate({ to: `/${destination}` })
             }
             onSignOut={async () => {
-              const result = await auth.signOut(async () => {
-                if (accountId) await signOutDesktopHost();
-                // Drop every account-scoped query before the next session reads.
-                analytics.reset();
-                queryClient.removeQueries({
-                  predicate: (query) => query.queryKey.includes(accountId),
-                });
-                await router.invalidate();
-                await router.navigate({ to: "/", replace: true });
-              });
+              const result = await auth.signOut(accountId, "/");
               return result.status === "success";
             }}
           />

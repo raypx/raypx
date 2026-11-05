@@ -334,6 +334,81 @@ describe("Files route and workspace", () => {
     });
   });
 
+  it.each(["v1", "v2"])(
+    "preserves a draft across rename and saves with the returned version (opened %s)",
+    async (readVersion) => {
+      let moved = false;
+      mocks.localRequest.mockImplementation(async (method) => {
+        if (method === "roots.list") return grants;
+        if (method === "files.list")
+          return { entries: [entry(moved ? "renamed.txt" : "readme.txt")], total: 1, offset: 0 };
+        if (method === "files.read") return { text: "hello", version: readVersion };
+        if (method === "files.move") {
+          moved = true;
+          return { ...entry("renamed.txt"), version: "v3" };
+        }
+        if (method === "files.write") return { text: "draft", version: "v4" };
+        throw new Error(`Unexpected local request: ${method}`);
+      });
+      await page("/files");
+      await draft();
+      fireEvent.click(screen.getByRole("button", { name: "Move or rename: readme.txt" }));
+      fireEvent.change(screen.getByLabelText("New relative path"), {
+        target: { value: "renamed.txt" },
+      });
+      fireEvent.submit(screen.getByLabelText("New relative path").closest("form")!);
+      await waitFor(() => expect(screen.queryByLabelText("New relative path")).toBeNull());
+      await waitFor(() => expect(screen.getByLabelText("Text editor")).toBeEnabled());
+      expect(mocks.localRequest).toHaveBeenCalledWith("files.move", {
+        rootId: "work",
+        path: "readme.txt",
+        to: "renamed.txt",
+        version: readVersion,
+      });
+      expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
+      expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+      expect(await screen.findByText("File saved.")).toBeTruthy();
+      expect(mocks.localRequest).toHaveBeenCalledWith("files.write", {
+        rootId: "work",
+        path: "renamed.txt",
+        text: "draft",
+        version: "v3",
+      });
+    },
+  );
+
+  it("does not rebase an open draft onto a newer directory version during rename", async () => {
+    let version = "v1";
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method === "roots.list") return grants;
+      if (method === "files.list")
+        return { entries: [{ ...entry("readme.txt"), version }], total: 1, offset: 0 };
+      if (method === "files.read") return { text: "hello", version: "v1" };
+      if (method === "files.move") throw new Error("CONFLICT private rename diagnostic");
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/files");
+    await draft();
+    version = "v2";
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Move or rename: readme.txt" }));
+    fireEvent.change(screen.getByLabelText("New relative path"), {
+      target: { value: "renamed.txt" },
+    });
+    fireEvent.submit(screen.getByLabelText("New relative path").closest("form")!);
+    expect(await screen.findByRole("alert")).toHaveTextContent("This file changed on disk.");
+    expect(mocks.localRequest).toHaveBeenCalledWith("files.move", {
+      rootId: "work",
+      path: "readme.txt",
+      to: "renamed.txt",
+      version: "v1",
+    });
+    expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
+    expect(screen.getByRole("heading", { name: "readme.txt" })).toBeTruthy();
+    expect(screen.queryByText("CONFLICT private rename diagnostic")).toBeNull();
+  });
+
   it("ignores a file read and native picker that finish after leaving the workspace", async () => {
     const late = deferred<{ text: string; version: string }>();
     mocks.localRequest.mockImplementation(async (m, p) => {
