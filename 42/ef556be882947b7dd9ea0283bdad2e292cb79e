@@ -1,0 +1,31 @@
+apps/desktop/src-tauri/src/engine.rs
+  s_33df189f0a0908::t_750d20f3204cbc 37-39,41-45
+  s_33df189f0a0908::t_9a07df34be8ef1 24-26,187-191
+  s_33df189f0a0908::t_03dadd4fe8fb56 19-23,27-36,40,46-50,200-203,235
+apps/desktop/tests/native/smoke/scenario.ts
+  s_33df189f0a0908::t_d4c0d114607204 373-375,380-381,383
+apps/cli/src/runtime/daemon/endpoint.ts
+  s_33df189f0a0908::t_c201dda86acba1 168-170,172-175
+  s_33df189f0a0908::t_298b3ba5543a18 164-167,171,176-177
+  s_33df189f0a0908::t_1ce5cc1e3581a1 160
+apps/cli/src/runtime/daemon/server.ts
+  s_33df189f0a0908::t_298b3ba5543a18 274,276-280
+  s_33df189f0a0908::t_1ce5cc1e3581a1 287-297,299-301
+  s_33df189f0a0908::t_a5ecf8f60c6c33 298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "42ef556be882947b7dd9ea0283bdad2e292cb79e",
+  "prompts": {},
+  "sessions": {
+    "s_33df189f0a0908": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ac17-2dcf-7351-8a8a-608fc4a8aba0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
