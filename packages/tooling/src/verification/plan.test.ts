@@ -157,6 +157,16 @@ describe("affected verification", () => {
       "packages/desktop/src-tauri/src/process_windows.rs",
       "packages/desktop/src-tauri/src/process_darwin.rs",
     ];
+    expect(
+      verificationPlan(model, ["packages/contracts/src/local.ts"], { macos: false }).nativeRunners,
+    ).toEqual(["windows-latest"]);
+    expect(verificationPlan(model, [files[1]!], { macos: false }).nativeRunners).toEqual([
+      "macos-latest",
+    ]);
+    expect(verificationPlan(model, files, { macos: false }).nativeRunners).toEqual([
+      "macos-latest",
+      "windows-latest",
+    ]);
     expect(verificationPlan(model, files).nativeRunners).toEqual([
       "macos-latest",
       "windows-latest",
@@ -215,6 +225,18 @@ describe("affected verification", () => {
   it("runs manual/tag events fully and checks all sources when push bases are unavailable", () => {
     const { root } = project();
     expect(githubPlan(root, "workflow_dispatch", {}).full).toBe(true);
+    expect(githubPlan(root, "workflow_dispatch", {}).nativeRunners).toEqual(["windows-latest"]);
+    for (const macos of [true, "true"])
+      expect(githubPlan(root, "workflow_dispatch", { inputs: { macos } }).nativeRunners).toEqual([
+        "macos-latest",
+        "windows-latest",
+      ]);
+    expect(
+      githubPlan(root, "workflow_dispatch", { inputs: { macos: "false" } }).nativeRunners,
+    ).toEqual(["windows-latest"]);
+    expect(
+      githubPlan(root, "push", { ref: "refs/tags/v1.0.0", inputs: { macos: false } }).nativeRunners,
+    ).toEqual(["macos-latest", "windows-latest"]);
     expect(githubPlan(root, "workflow_dispatch", {}).distribution).toBe(false);
     expect(
       githubPlan(root, "workflow_dispatch", { inputs: { distribution: "true" } }).distribution,
@@ -224,7 +246,7 @@ describe("affected verification", () => {
     const unknown = githubPlan(root, "push", { before: "0".repeat(40) });
     expect(unknown.full).toBe(false);
     expect(unknown.workspaces).toHaveLength(taskModel(root).members.length);
-    expect(unknown.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
+    expect(unknown.nativeRunners).toEqual(["windows-latest"]);
     expect(unknown.artifacts).toEqual([]);
     expect(unknown.distribution).toBe(false);
   });

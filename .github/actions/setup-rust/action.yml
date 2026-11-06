@@ -1,5 +1,9 @@
 name: Prepare pinned Rust
 description: Install the toolchain selected by rust-toolchain.toml
+inputs:
+  cache:
+    description: Restore and save Cargo caches
+    default: "true"
 runs:
   using: composite
   steps:
@@ -8,3 +12,4 @@ runs:
         toolchain="$(bun -e 'import {readFileSync} from "node:fs"; const text=readFileSync("rust-toolchain.toml","utf8"); console.log(text.match(/channel\s*=\s*"([^"]+)"/)[1])')"
         rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
     - uses: Swatinem/rust-cache@v2
+      if: inputs.cache == 'true'

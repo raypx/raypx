@@ -25,7 +25,10 @@ const workflow = (name: string) =>
   Bun.YAML.parse(readFileSync(join(root, `.github/workflows/${name}.yml`), "utf8")) as {
     jobs: Record<string, Job>;
     concurrency?: { group?: string };
-    on: { workflow_call?: { inputs: { distribution: { default: boolean } } } };
+    on: {
+      workflow_call?: { inputs: Record<string, { default: boolean }> };
+      workflow_dispatch?: { inputs: Record<string, { default: boolean }> };
+    };
   };
 const native = workflow("native").jobs;
 const steps = native.verify!.steps!;
@@ -47,7 +50,7 @@ it("checks selected platforms and adds parallel distribution phases only when re
   );
   expect(ci.foundation?.needs).toContain("desktop");
   expect(ci.desktop?.with?.distribution).toContain("needs.changes.outputs.distribution");
-  expect(workflow("native").on.workflow_call?.inputs.distribution.default).toBe(false);
+  expect(workflow("native").on.workflow_call?.inputs.distribution?.default).toBe(false);
   expect(native.verify?.needs).toBe("prepare");
   expect(native.verify?.strategy?.["fail-fast"]).toBe(false);
   const selection = native.verify!.strategy!.matrix.phase as string;
@@ -119,6 +122,8 @@ it("keeps explicit release acceptance independent from routine push cancellation
   const group = workflow("ci").concurrency?.group;
   expect(group).toContain("github.event_name");
   expect(group).toContain("inputs.distribution");
+  expect(group).toContain("inputs.macos");
+  expect(group).toContain("inputs.cold_native");
 });
 
 it("exposes distribution credentials only to packaging and always cleans them up", () => {
@@ -128,4 +133,27 @@ it("exposes distribution credentials only to packaging and always cleans them up
   for (const [, value] of credentials) expect(value).toContain("matrix.phase == 'package'");
   expect(named("Remove temporary macOS signing material").if).toContain("always()");
   expect(named("Remove temporary Windows signing material").if).toContain("always()");
+});
+
+it("defaults manual CI to Windows and forwards explicit cold native builds", () => {
+  const ci = workflow("ci");
+  expect(ci.on.workflow_dispatch?.inputs.macos?.default).toBe(false);
+  expect(ci.on.workflow_dispatch?.inputs.cold_native?.default).toBe(false);
+  expect(ci.jobs.desktop?.with?.cold_native).toBe("${{ inputs.cold_native || false }}");
+  expect(workflow("native").on.workflow_call?.inputs.cold_native?.default).toBe(false);
+  const rustSteps = Object.values(native)
+    .flatMap((job) => job.steps ?? [])
+    .filter((step) => step.uses === "./.github/actions/setup-rust");
+  expect(rustSteps).toHaveLength(2);
+  for (const step of rustSteps) expect(step.with?.cache).toBe("${{ !inputs.cold_native }}");
+  const rust = Bun.YAML.parse(
+    readFileSync(join(root, ".github/actions/setup-rust/action.yml"), "utf8"),
+  ) as {
+    inputs: Record<string, { default: string }>;
+    runs: { steps: Step[] };
+  };
+  expect(rust.inputs.cache?.default).toBe("true");
+  expect(rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.if).toBe(
+    "inputs.cache == 'true'",
+  );
 });
