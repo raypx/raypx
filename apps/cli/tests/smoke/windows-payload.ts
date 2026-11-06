@@ -67,7 +67,10 @@ try {
         id: "open",
         method: "terminal.open",
         params: {
-          executable: process.env.ComSpec!,
+          executable:
+            process.env.ComSpec ??
+            process.env.COMSPEC ??
+            join(process.env.SystemRoot ?? "C:\\Windows", "System32", "cmd.exe"),
           args: ["/D", "/Q", "/C", "echo preserved-payload & exit /b 17"],
           cwd: root,
           cols: 80,
@@ -82,7 +85,10 @@ try {
     for await (const line of reader) {
       const message = JSON.parse(line);
       if (message.id === "open") {
-        assert.ok(!message.error, "Copied daemon could not start its bundled Herdr");
+        assert.ok(
+          !message.error,
+          `Copied daemon rejected terminal.open (${message.error?.code ?? "unknown"})`,
+        );
         opened = true;
       }
       if (message.event === "terminal.exit") {
