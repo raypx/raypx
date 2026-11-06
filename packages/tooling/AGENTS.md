@@ -140,7 +140,10 @@ with their cached outputs. Verification records per-check execution times (zero 
 cache hit), format/lint wall times and VP graph wall time including runner overhead.
 Timing evidence never controls cache reuse. Failed checks never publish success.
 Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
-roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
+roots and fixture environments. Linux CLI probes use Docker `--network none` with the pinned
+Bun image, read-only sources/payload and a writable report directory; already isolated
+Linux namespaces run directly. Docker failure never falls back to the host.
+`src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select synthetic analytics for every mode; live acceptance stays separate.

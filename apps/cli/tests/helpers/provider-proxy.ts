@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { createServer as httpServer } from "node:http";
 import { createServer as httpsServer } from "node:https";
 import { connect, type AddressInfo, type Socket } from "node:net";
-import { readFile, writeFile, readdir, realpath } from "node:fs/promises";
+import { readFile, writeFile, realpath } from "node:fs/promises";
+import { networkInterfaces } from "node:os";
 import { basename, join } from "node:path";
 import { findExecutable } from "@raypx/runtime-node/process";
 
@@ -162,8 +163,9 @@ export async function providerProxy(directory: string) {
             "remove provider egress block",
           );
       } else if (process.platform === "linux") {
+        // sysfs can list inactive tunnel devices; inspect addresses in this network namespace.
         assert.deepEqual(
-          (await readdir("/sys/class/net")).sort(),
+          Object.keys(networkInterfaces()).sort(),
           ["lo"],
           "Linux provider acceptance requires a network namespace with only loopback (for example Docker --network none)",
         );

@@ -7,9 +7,12 @@ builds and relocated artifact probes for release preparation. Neither command
 replaces separate database, browser, installed native or live-provider acceptance.
 
 `bun run verify --no-cache` forwards VP's cache control for container filesystems.
-Linux CLI artifact acceptance requires a network namespace with only loopback
-(for example Docker `--network none`); prepare dependencies, Go modules and Herdr
-before disconnecting the container, then run `bun run verify --full --no-cache`.
+Linux CLI artifact probes automatically run the prepared payload in Docker with
+`--network none`, using the Bun image pinned by `packageManager`. The repository and
+payload are read-only; only `.artifacts/cli` reports are written back. Host environment
+variables are not forwarded and Bun's env-file loading is disabled. A namespace that
+already has only loopback addresses runs directly, so full verification inside an offline container needs no
+nested Docker. Direct `apps/cli` smoke still requires that isolated namespace.
 The four SDK probes fail when outbound network isolation cannot be established.
 
 ## Test commands
