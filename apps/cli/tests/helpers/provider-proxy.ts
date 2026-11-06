@@ -3,7 +3,7 @@ import { createServer as httpServer } from "node:http";
 import { createServer as httpsServer } from "node:https";
 import { connect, type AddressInfo, type Socket } from "node:net";
 import { readFile, writeFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { findExecutable } from "@raypx/runtime-node/process";
 
 const hosts = [
@@ -34,13 +34,18 @@ export async function providerProxy(directory: string) {
       "-addext",
       "subjectAltName=" + hosts.map((host) => "DNS:" + host).join(","),
       "-keyout",
-      key,
+      basename(key),
       "-out",
-      cert,
+      basename(cert),
     ],
-    { stdout: "ignore", stderr: "ignore" },
+    { cwd: directory, stdout: "ignore", stderr: "pipe" },
   );
-  assert.equal(await certificateProcess.exited, 0, "Could not create the provider test CA");
+  const certificateError = await new Response(certificateProcess.stderr).text();
+  assert.equal(
+    await certificateProcess.exited,
+    0,
+    `Could not create the provider test CA: ${certificateError.trim().slice(-4096)}`,
+  );
   const sockets = new Set<Socket>();
   const track = (socket: Socket) => {
     sockets.add(socket);
