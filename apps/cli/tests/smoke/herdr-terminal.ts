@@ -1,12 +1,13 @@
 import { fileExists, readJsonFile } from "@raypx/runtime-node/files";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { LocalEvent } from "@raypx/contracts/local";
 import { HerdrTerminalHost, terminalLaunch } from "../../src/runtime/process/herdr.ts";
 import { herdrRpc } from "../helpers/herdr-rpc.ts";
+import { removeTemporaryDirectory } from "../helpers/temporary.ts";
 
 // eslint-disable-next-line no-control-regex -- Inspect rendered ANSI fixture frames.
 const ansi = /\x1b\[[0-?]*[ -/]*[@-~]/g;
@@ -254,5 +255,5 @@ try {
   }
 } finally {
   await host.close();
-  await rm(root, { recursive: true, force: true, maxRetries: 10 });
+  await removeTemporaryDirectory(root);
 }
