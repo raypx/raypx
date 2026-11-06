@@ -9,10 +9,10 @@ export function checkWorkspaceConfiguration(root: string) {
   for (const key of ["workspaces", "overrides"])
     if (key in manifest) findings.push(`package.json: move ${key} to pnpm-workspace.yaml`);
   try {
-    const configuration = parseYAML(readFileSync(join(root, "pnpm-workspace.yaml"), "utf8")) as {
+    const configuration = parseYAML<{
       packages?: unknown;
       engineStrict?: boolean;
-    };
+    }>(readFileSync(join(root, "pnpm-workspace.yaml"), "utf8"));
     if (
       !Array.isArray(configuration?.packages) ||
       !configuration.packages.length ||
