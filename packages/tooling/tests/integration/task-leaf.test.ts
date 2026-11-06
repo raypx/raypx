@@ -7,6 +7,9 @@ import { workspaceFixtures } from "../helpers/workspace.ts";
 
 const { fixture } = workspaceFixtures();
 const repository = resolve(import.meta.dirname, "../../../..");
+// VP's Windows worker can use Bun's node.exe mode, which treats `run` as a file.
+const runtime = Bun.which("bun");
+if (!runtime) throw new Error("Task leaf acceptance requires the pinned Bun CLI on PATH");
 
 it.each([
   "packages/tooling/src/tasks/leaf.ts",
@@ -25,7 +28,7 @@ writeFileSync('result.json', JSON.stringify({ args: process.argv.slice(2), value
 process.exit(23);`,
   );
   const args = ["--flag", "中文 path", "$(literal)", "a&b"];
-  const result = runProcessSync([process.execPath, join(repository, leaf), "test"], {
+  const result = runProcessSync([runtime, join(repository, leaf), "test"], {
     cwd: root,
     env: {
       ...process.env,
