@@ -1,0 +1,19 @@
+docs/development/migration-validation.md
+  s_33df189f0a0908::t_4caf0eb009f71b 4-5,120-131,154-155,162-165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "986f58d5531c159f24da97ed532442bc0071ed82",
+  "prompts": {},
+  "sessions": {
+    "s_33df189f0a0908": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ac17-2dcf-7351-8a8a-608fc4a8aba0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
