@@ -14,6 +14,7 @@ import { DEVICE_PREFERENCES_KEY } from "../../../preferences.ts";
 import { CONNECTION_KEY } from "../../../config.ts";
 import { nativePresentation } from "../../../scripts/host/presentation.ts";
 import { instanceFixture } from "../fixtures/instance-server.ts";
+import { smokeOwnerIdentity } from "./owner.ts";
 import {
   engine,
   trayAction,
@@ -56,6 +57,8 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string,
 let stage = "renderer startup";
 let fixtureSession: unknown = null;
 const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
+const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
+if (!dataDir) throw new Error("Smoke requires an isolated data directory");
 const fixtureApi = new URL(apiOrigin);
 const restoredServer = process.env.RAYPX_NATIVE_SMOKE_RESTORED_SERVER === "true";
 // The profile is bound to the shell server; another server must show the origin gate.
@@ -289,10 +292,15 @@ try {
     protocolVersion: number;
     scheduler: boolean;
     runtime: string;
+    builtAt: number;
+    version: string;
   };
   assert.equal(info.protocolVersion, 1);
   assert.equal(info.scheduler, true);
   assert.equal(info.runtime, process.env.RAYPX_NATIVE_SMOKE_BUN);
+  const daemonIdentity = await smokeOwnerIdentity(dataDir);
+  assert.equal(info.builtAt, daemonIdentity.builtAt, "GUI and independent CLI builds differ");
+  assert.equal(info.version, daemonIdentity.version);
   if (fixturePhase === "shell") {
     stage = "integrated window controls";
     const chrome = `
@@ -388,8 +396,6 @@ try {
   }, "Renderer bridge did not recover after native resize");
   console.info(`Native smoke WebView origin: ${String(origin)}`);
   const phase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
-  const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
-  if (!dataDir) throw new Error("Smoke requires an isolated data directory");
   if (phase === "shell" || phase === "restore") {
     stage = "runtime server configuration and isolation";
     assert.equal(
@@ -853,6 +859,11 @@ try {
   const completeFile = process.env.RAYPX_NATIVE_SMOKE_COMPLETE_FILE;
   if (!completeFile) throw new Error("Native smoke completion marker is unavailable");
   await writeFile(completeFile, "raypx-native-smoke-complete/1\n", { flag: "wx" });
+  await writeFile(
+    join(dataDir, "daemon-before-quit.json"),
+    JSON.stringify(await smokeOwnerIdentity(dataDir)),
+    { mode: 0o600 },
+  );
   await quitDesktop();
 } catch (error) {
   try {

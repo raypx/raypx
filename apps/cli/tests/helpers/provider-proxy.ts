@@ -52,6 +52,8 @@ export async function providerProxy(directory: string) {
     socket.once("close", () => sockets.delete(socket));
   };
   const requests: { host: string; body: string; credential: string }[] = [];
+  const connects: string[] = [];
+  const tlsErrors: string[] = [];
   const tls = httpsServer(
     { key: await readFile(key), cert: await readFile(cert) },
     async (request, response) => {
@@ -81,6 +83,9 @@ export async function providerProxy(directory: string) {
     },
   );
   tls.on("connection", track);
+  tls.on("tlsClientError", (error: NodeJS.ErrnoException) => {
+    tlsErrors.push(error.code ?? error.name);
+  });
   await new Promise<void>((resolve) => tls.listen(0, "127.0.0.1", resolve));
   const proxy = httpServer((_request, response) => {
     response.writeHead(403);
@@ -88,10 +93,12 @@ export async function providerProxy(directory: string) {
   });
   proxy.on("connection", track);
   proxy.on("connect", (request, socket, head) => {
-    if (!hosts.includes((request.url ?? "").replace(/:443$/, ""))) {
+    const host = (request.url ?? "").replace(/:443$/, "");
+    if (!hosts.includes(host)) {
       socket.destroy();
       return;
     }
+    connects.push(host);
     const upstream = connect((tls.address() as AddressInfo).port, "127.0.0.1", () => {
       socket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
       if (head.length) upstream.write(head);
@@ -131,6 +138,8 @@ export async function providerProxy(directory: string) {
   }
   return {
     requests,
+    connects,
+    tlsErrors,
     cert,
     url,
     async isolate(binary: string) {

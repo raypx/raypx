@@ -63,6 +63,33 @@ Measured existing outputs: CLI payload **144.05 MiB** (embedded Bun executable
 These overlap with future native packages and must not be added to installer sizes.
 Native bundle size is unavailable.
 
+## Distribution acceptance
+
+Run the full hosted macOS/Windows matrix on the exact `dev` candidate:
+
+```sh
+gh workflow run ci.yml --ref dev -f distribution=true
+```
+
+Each platform prepares one production Bun CLI, signs it when credentials are
+configured, seals its inventory and accepts the final archive outside the
+repository with an empty PATH and synthetic HTTPS provider endpoints. Windows
+also tests Unicode paths, removal of the original installation, first Herdr PTY
+use from the complete versioned daemon copy and explicit restart/stop cleanup.
+
+Parallel checks, production packaging and installed GUI smoke consume that exact
+CLI artifact ID. Tauri smoke checks Desktop-first and CLI-first startup against
+the same daemon PID/epoch, verifies its build identity and confirms GUI Quit
+preserves the daemon. Windows uses the real per-user NSIS installation. Production
+inspection rejects smoke controls and modified CLI/Herdr resources.
+
+Native smoke phase identities and cleanup status are uploaded from
+`.artifacts/native-smoke/`. Production delivery directories, installers, size and
+available signing evidence are separate CI artifacts. Missing signing/notarization
+credentials are explicitly reported; unsigned package acceptance does not prove
+signed distribution or updater acceptance. Hosted run results must be assessed
+separately from the Linux record above.
+
 Generated local evidence lives in `.artifacts/bun-tauri/`, with the detailed
 verification plan in `.artifacts/verification/latest.json` and size reports under
 `.artifacts/sizes/`. These directories are intentionally ignored by Git.

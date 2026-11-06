@@ -1,4 +1,14 @@
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vite-plus/test";
@@ -21,12 +31,15 @@ it("runs the embedded runtime with BUN_BE_BUN and quotes the executable for sh",
   });
 });
 
-it("scopes the Windows variable with setlocal and refuses paths cmd cannot quote", () => {
-  expect(bunShims("C:\\Raypx\\raypx.exe", "win32")).toEqual({
-    "bun.cmd": '@setlocal\r\n@set BUN_BE_BUN=1\r\n@"C:\\Raypx\\raypx.exe" %*\r\n',
-    "bunx.cmd": '@setlocal\r\n@set BUN_BE_BUN=1\r\n@"C:\\Raypx\\raypx.exe" x %*\r\n',
-  });
-  for (const path of ["C:\\100%\\raypx.exe", 'C:\\"\\raypx.exe'])
+it("keeps Windows wrappers ASCII and scopes the embedded runtime variable", () => {
+  const shims = bunShims("C:\\中文 # 100%\\raypx.exe", "win32");
+  for (const content of Object.values(shims)) {
+    expect(content).toMatch(/^@setlocal\r\n@set BUN_BE_BUN=1\r\n/);
+    expect(content).toMatch(/@"%~dp0runtime-[a-f0-9]{16}\\raypx\.exe"/);
+    expect(Buffer.byteLength(content, "utf8")).toBe(content.length);
+  }
+  expect(shims["bunx.cmd"]).toContain('raypx.exe" x %*');
+  for (const path of ["C:\\Raypx\\100%.exe", 'C:\\"\\raypx.exe'])
     expect(() => bunShims(path, "win32")).toThrow("cannot be quoted");
 });
 
@@ -45,12 +58,42 @@ it("appends the shim directory once so an installed Bun keeps precedence", () =>
 });
 
 it("keeps the inherited Windows Path spelling", () => {
-  const directory = join(temporary(), "bun");
-  const bun = new BundledBun(directory, "C:\\Raypx\\raypx.exe", "win32");
+  const root = temporary();
+  const directory = join(root, "bun");
+  const executable = join(root, "raypx.exe");
+  writeFileSync(executable, "synthetic runtime");
+  const bun = new BundledBun(directory, executable, "win32");
   expect(bun.environment({ Path: "C:\\Windows" })).toEqual({
     Path: `C:\\Windows;${directory}`,
   });
   expect(bun.path).toBe(join(directory, "bun.cmd"));
+});
+
+it("links the complete runtime through Unicode paths and preserves unexpected directories", () => {
+  const root = temporary();
+  const source = join(root, "中文 # distribution");
+  mkdirSync(source);
+  const executable = join(source, "raypx.exe");
+  writeFileSync(executable, "synthetic runtime");
+  writeFileSync(join(source, "runtime.json"), "synthetic inventory");
+  const directory = join(root, "中文 # profile", "bun");
+  const bun = new BundledBun(directory, executable, "win32");
+  expect(bun.ensure()).toBe(true);
+  expect(bun.ensure()).toBe(true);
+  const link = join(
+    directory,
+    readdirSync(directory).find((name) => name.startsWith("runtime-"))!,
+  );
+  expect(lstatSync(link).isSymbolicLink()).toBe(true);
+  expect(realpathSync(link)).toBe(realpathSync(source));
+  expect(readFileSync(join(link, "runtime.json"), "utf8")).toBe("synthetic inventory");
+  const content = readFileSync(bun.path, "utf8");
+  expect(Buffer.byteLength(content, "utf8")).toBe(content.length);
+  rmSync(link, { recursive: true });
+  mkdirSync(link);
+  const base = { Path: "C:\\Windows" };
+  expect(bun.environment(base)).toBe(base);
+  expect(lstatSync(link).isDirectory()).toBe(true);
 });
 
 it("rewrites only changed shims and leaves PATH alone when it cannot write them", () => {

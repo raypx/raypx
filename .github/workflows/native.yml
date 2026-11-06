@@ -216,11 +216,16 @@ jobs:
           RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution && '3' || '1' }}
         shell: bash
         run: |
-          runs=1
-          if [ "$RUNNER_OS" = "Windows" ]; then runs="$RAYPX_HERDR_WINDOWS_RUNS"; fi
-          for ((attempt=0; attempt<runs; attempt++)); do
-            bun run --cwd apps/cli smoke:herdr-terminal
-          done
+          bun - <<'TS'
+          const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
+          for (let attempt = 0; attempt < runs; attempt++) {
+            const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
+              stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
+            });
+            const code = await child.exited;
+            if (code !== 0) process.exit(code);
+          }
+          TS
       - name: Desktop Tauri checks
         if: ${{ !cancelled() && matrix.phase == 'checks' && steps.native-inputs.outcome == 'success' }}
         env:
@@ -288,6 +293,33 @@ jobs:
         if: matrix.phase == 'package'
         shell: bash
         run: bun apps/desktop/scripts/host/check-release.ts
+      - name: Preserve prepared Desktop delivery
+        if: matrix.phase == 'package'
+        shell: bash
+        run: |
+          bun - <<'TS'
+          import { mkdir, cp } from "node:fs/promises";
+          import { resolve, join } from "node:path";
+          import { verifyCliPayload } from "./packages/tooling/src/build/cli.ts";
+          const delivery = resolve(".artifacts/desktop-delivery");
+          await mkdir(delivery, { recursive: true });
+          if (process.platform === "darwin") {
+            await cp("target/release/bundle/macos/Raypx.app", join(delivery, "Raypx.app"), { recursive: true });
+          } else {
+            await cp("target/release/raypx-desktop.exe", join(delivery, "raypx-desktop.exe"));
+            await cp("apps/desktop/resources/bin", join(delivery, "bin"), { recursive: true });
+          }
+          const payload = process.platform === "darwin" ? join(delivery, "Raypx.app/Contents/Resources/bin") : join(delivery, "bin");
+          await verifyCliPayload(payload, { platform: process.platform, arch: process.arch, commit: process.env.GITHUB_SHA });
+          const child = Bun.spawn(["tar", "-cf", ".artifacts/desktop-payload.tar", "-C", delivery, "."], { stdout: "inherit", stderr: "inherit" });
+          if (await child.exited) throw new Error("Could not preserve Desktop delivery directory");
+          TS
+      - uses: actions/upload-artifact@v7
+        if: matrix.phase == 'package'
+        with:
+          name: desktop-payload-${{ runner.os }}-${{ runner.arch }}
+          path: .artifacts/desktop-payload.tar
+          if-no-files-found: error
       - name: Verify macOS distribution signature
         if: matrix.phase == 'package' && (runner.os == 'macOS')
         run: |
@@ -354,6 +386,16 @@ jobs:
       - name: Packaged native smoke
         if: matrix.phase == 'smoke'
         run: bun run --cwd apps/desktop native:smoke:interactive
+      - name: Upload native acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-evidence-${{ runner.os }}-${{ matrix.phase }}
+          path: |
+            .artifacts/native-*/
+            .artifacts/distribution-signing/*.json
+          include-hidden-files: true
+          if-no-files-found: ignore
       - name: Upload build size reports
         if: always()
         uses: actions/upload-artifact@v7

@@ -16,6 +16,7 @@ type Job = {
   uses?: string;
   with?: Record<string, string>;
   env?: Record<string, string>;
+  outputs?: Record<string, string>;
   steps?: Step[];
   strategy?: { "fail-fast": boolean; matrix: Record<string, string[] | string> };
 };
@@ -69,6 +70,14 @@ it("prepares shared JS inputs only for parallel distribution phases", () => {
   expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
   expect(prepare.filter((step) => step.run?.includes("bun run build:cli"))).toHaveLength(1);
   expect(steps.some((step) => step.run?.includes("bun run build:cli"))).toBe(false);
+  expect(native.prepare?.outputs?.["cli-artifact-id"]).toContain(
+    "steps.cli-payload.outputs.artifact-id",
+  );
+  expect(
+    steps.find((step) => step.uses?.startsWith("actions/download-artifact@"))?.with?.[
+      "artifact-ids"
+    ],
+  ).toBe("${{ needs.prepare.outputs.cli-artifact-id }}");
   expect(prepare.some((step) => step.name === "Sign and seal the shared CLI payload")).toBe(true);
   expect(named("Prepare native check or distribution inputs").run).toContain(
     "distribution.ts verify",
@@ -80,7 +89,7 @@ it("requires compiled Herdr integration and pinned Rust checks in the check phas
   const herdr = named("Herdr terminal integration");
   expect(herdr.if).toBe("matrix.phase == 'checks'");
   expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe("${{ inputs.distribution && '3' || '1' }}");
-  expect(herdr.run).toContain("$RUNNER_OS");
+  expect(herdr.run).toContain('process.platform === "win32"');
   expect(herdr.run).toContain("RAYPX_HERDR_WINDOWS_RUNS");
   expect(steps.indexOf(named("Prepare native check or distribution inputs"))).toBeLessThan(
     steps.indexOf(herdr),
@@ -100,6 +109,10 @@ it("retains Rust, production and interactive smoke acceptance", () => {
   );
   expect(named("Packaged native smoke").if).toBe("matrix.phase == 'smoke'");
   expect(named("Packaged native smoke").run).toContain("native:smoke:interactive");
+  expect(named("Preserve prepared Desktop delivery").if).toBe("matrix.phase == 'package'");
+  expect(named("Preserve prepared Desktop delivery").run).toContain("verifyCliPayload");
+  expect(named("Preserve prepared Desktop delivery").run).toContain("GITHUB_SHA");
+  expect(named("Upload native acceptance evidence").if).toBe("always()");
 });
 
 it("keeps explicit release acceptance independent from routine push cancellation", () => {

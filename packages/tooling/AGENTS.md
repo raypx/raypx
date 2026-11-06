@@ -142,6 +142,9 @@ Timing evidence never controls cache reuse. Failed checks never publish success.
 Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
 roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
+Linux full verification accepts the installed CLI in the pinned Bun Docker image with
+`--network none`, read-only source/payload mounts and a writable `.artifacts/cli` evidence mount;
+ordinary source verification requires no Docker.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,

@@ -166,6 +166,9 @@ local tools/terminal, native event credit, server isolation, restart/persistence
 and tray. Quiet mode uses inactive windows and suppresses notifications/dialogs;
 interactive mode adds focus/close/resize acceptance on isolated CI. Windows hosted
 CI installs/uninstalls the actual per-user NSIS package and verifies payload hashes.
+Desktop-first and CLI-first launches must retain the same daemon PID/epoch across
+GUI Quit. Sanitized phase identities and cleanup status are recorded under
+`.artifacts/native-smoke/` and uploaded by native CI, including failed runs.
 
 native:agents is an opt-in real-provider gate. It requires
 RAYPX_LIVE_AGENTS=1 and isolated data and consume provider inference.

@@ -38,7 +38,10 @@ const host = new HerdrTerminalHost(
 const shell = (source: string) =>
   process.platform === "win32"
     ? {
-        executable: process.env.ComSpec!,
+        executable:
+          process.env.ComSpec ??
+          process.env.COMSPEC ??
+          join(process.env.SystemRoot ?? "C:\\Windows", "System32", "cmd.exe"),
         args: ["/D", "/Q", "/C", source],
         cwd: root,
         timeoutMs: 10000,
