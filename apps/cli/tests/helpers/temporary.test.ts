@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
@@ -12,6 +12,8 @@ it("removes cyclic and dangling fixture links while preserving external targets"
     await mkdir(fixture);
     await mkdir(external);
     await writeFile(join(external, "sentinel"), "preserved");
+    await writeFile(join(fixture, "read-only-resource"), "owned");
+    await chmod(join(fixture, "read-only-resource"), 0o400);
     const type = process.platform === "win32" ? "junction" : "dir";
     await symlink(external, join(fixture, "external-runtime"), type);
     await symlink(fixture, join(fixture, "cycle"), type);
