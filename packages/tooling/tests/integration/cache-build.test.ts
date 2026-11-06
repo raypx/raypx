@@ -89,3 +89,43 @@ it("reuses VP pack results after validation writes ignored artifacts", () => {
   writeFileSync(join(root, ".artifacts/validation/result.json"), "fixture");
   expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
 }, 30000);
+
+it("restores the sealed CLI build without the Herdr download cache and tracks release pins", () => {
+  const root = project();
+  const folder = checked(root, "cli", {}, { build: "bun build.ts" });
+  const manifest = join(folder, "package.json");
+  const metadata = {
+    ...JSON.parse(readFileSync(manifest, "utf8")),
+    name: "cli",
+    herdr: { version: "one" },
+  };
+  writeFileSync(manifest, JSON.stringify(metadata));
+  const cache = join(root, ".cache/herdr");
+  mkdirSync(cache, { recursive: true });
+  writeFileSync(join(cache, "herdr"), "one");
+  writeFileSync(
+    join(folder, "build.ts"),
+    `
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+const version = JSON.parse(readFileSync("package.json", "utf8")).herdr.version;
+const cache = "../../.cache/herdr";
+mkdirSync(cache, { recursive: true });
+if (!existsSync(cache + "/herdr") || readFileSync(cache + "/herdr", "utf8") !== version)
+  writeFileSync(cache + "/herdr", version);
+mkdirSync("dist", { recursive: true });
+writeFileSync("dist/herdr", readFileSync(cache + "/herdr"));
+`,
+  );
+  const selector = "cli#task:build";
+  pass(execute(root, "build", {}, selector));
+  expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
+  rmSync(cache, { recursive: true });
+  rmSync(join(folder, "dist"), { recursive: true });
+  const restored = pass(execute(root, "build", {}, selector));
+  expect(restored.log).toContain("2 cache hits");
+  expect(existsSync(cache)).toBe(false);
+  expect(readFileSync(join(folder, "dist/herdr"), "utf8")).toBe("one");
+  writeFileSync(manifest, JSON.stringify({ ...metadata, herdr: { version: "two" } }));
+  pass(execute(root, "build", {}, selector));
+  expect(readFileSync(join(folder, "dist/herdr"), "utf8")).toBe("two");
+}, 30000);
