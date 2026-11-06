@@ -144,7 +144,8 @@ try {
     stdout: "pipe",
     stderr: "ignore",
   });
-  const reader = createInterface({ input: Readable.fromWeb(child.stdout) });
+  // Windows text pipes can deliver CR and LF in separate, delayed chunks.
+  const reader = createInterface({ input: Readable.fromWeb(child.stdout), crlfDelay: Infinity });
   const timeout = setTimeout(() => child.kill(), 90_000);
   try {
     await child.stdin.write(
