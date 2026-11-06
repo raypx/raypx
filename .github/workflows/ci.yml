@@ -10,10 +10,18 @@ on:
         description: Build installers and run full packaged native acceptance
         type: boolean
         default: false
+      macos:
+        description: Include macOS native checks and distribution (automatic for release tags)
+        type: boolean
+        default: false
+      cold_native:
+        description: Disable native compiler caches for build comparisons
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.distribution || false }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.distribution || false }}-${{ inputs.macos || false }}-${{ inputs.cold_native || false }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
@@ -179,6 +187,7 @@ jobs:
     with:
       runner: ${{ matrix.os }}
       distribution: ${{ needs.changes.outputs.distribution == 'true' }}
+      cold_native: ${{ inputs.cold_native || false }}
     secrets: inherit
   foundation:
     if: always()

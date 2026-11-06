@@ -214,10 +214,12 @@ success. Local success covers source checks and the selected current-platform
 artifact probes, not separate database, browser, Docker or macOS/Windows CI gates.
 
 Platform-specific filenames containing `windows`/`win32` select Windows;
-`darwin`/`macos`/`unix` select macOS; shared native inputs select both. Linux-only
+`darwin`/`macos`/`unix` select macOS; shared native CI inputs default to Windows. Linux-only
 native files run the Linux Go checks without requesting macOS/Windows. JavaScript
 dependency reach alone never requests native runners, including renderer changes.
-Native workflow changes validate both platforms. `foundation` requires every
+Native workflow changes default to Windows. Manual dispatch includes macOS only with
+`macos=true`; release tag pushes always require both platforms. Local `verify` continues
+to validate native inputs on the current platform. `foundation` requires every
 selected gate to succeed and permits only intentional skips; an abandoned runner
 is reported as unavailable, never as a passing native check.
 
@@ -231,10 +233,20 @@ Installer creation, signatures and installed GUI smoke run on tag pushes or manu
 dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
 Those runs require Go checks, production packaging and packaged GUI smoke in parallel.
 Manual distribution runs have their own cancellation group, so routine pushes cannot
-cancel a release acceptance run.
-Distribution runs prepare shared JS inputs once per platform; that job alone saves VP artifacts
-and the parallel phases only restore them. Routine runs skip preparation, so the lone check
-phase builds and saves its own inputs. Verification, test and E2E tasks receive the fixed
+cancel a release acceptance run. The `macos` and `cold_native` selections also have
+separate cancellation groups. For a Windows-only native comparison, use
+`gh workflow run ci.yml --ref <branch> -f distribution=true -f cold_native=true`.
+This disables Cargo/Go compiler cache restoration and saving on fresh hosted native
+runners; Bun installation and the shared VP JavaScript cache keep their usual policy.
+Compare the same runner image/architecture and signing configuration. Record preparation,
+package-step duration (native compilation plus installer creation), each job duration
+and queue delay separately; whole-workflow elapsed time includes unrelated parallel gates.
+Use the uploaded size report for the actual installer, Desktop payload and CLI component
+bytes; GitHub artifact ZIP sizes measure transport compression. One run is a sample,
+not a stable benchmark or evidence for macOS performance. Add `-f macos=true` for
+explicit macOS acceptance.
+Every selected native platform prepares the immutable CLI and shared JS inputs once;
+that job alone saves VP artifacts and consumer phases only restore them. Verification, test and E2E tasks receive the fixed
 `VITE_APP_RELEASE=verification`, so a new commit does not invalidate unchanged tasks. Native Go
 compilation uses the Go cache and independent production/smoke package directories.
 Generated route trees and native JSON use LF on every checkout so Windows generators do not

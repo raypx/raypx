@@ -10,6 +10,10 @@ on:
         description: Include installers, signatures and installed GUI acceptance
         type: boolean
         default: false
+      cold_native:
+        description: Disable native compiler caches for build comparisons
+        type: boolean
+        default: false
 permissions:
   contents: read
 env:
@@ -169,6 +173,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: apps/desktop/go.mod
+          cache: ${{ !inputs.cold_native }}
           cache-dependency-path: apps/desktop/go.sum
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore

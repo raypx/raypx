@@ -45,8 +45,9 @@ function globalInput(file: string) {
 }
 
 /** Select native work from its actual inputs, independently of JavaScript dependency reach. */
-function nativeChanges(model: TaskModel, files: string[], full: boolean) {
+function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: boolean) {
   const runners = ["macos-latest", "windows-latest"];
+  const defaults = macos ? runners : ["windows-latest"];
   const paths = files.filter((file) => {
     if (documentation(file)) return false;
     if (file === ".gitattributes" || file === ".github/workflows/native.yml") return true;
@@ -74,23 +75,23 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
     else if (/(?:^|[/_.-])(?:darwin|macos|unix)(?:[/_.-]|$)/i.test(file))
       selected.add("macos-latest");
     else if (!/(?:^|[/_.-])linux(?:[/_.-]|$)/i.test(file))
-      for (const runner of runners) selected.add(runner);
+      for (const runner of defaults) selected.add(runner);
   }
   return {
     native: full || paths.length > 0,
-    nativeRunners: full ? runners : runners.filter((runner) => selected.has(runner)),
+    nativeRunners: full ? defaults : runners.filter((runner) => selected.has(runner)),
   };
 }
 
 export function verificationPlan(
   model: TaskModel,
   files: string[],
-  options: { full?: boolean; artifacts?: boolean; reasons?: string[] } = {},
+  options: { full?: boolean; artifacts?: boolean; reasons?: string[]; macos?: boolean } = {},
 ): VerificationPlan {
   const reasons = [...(options.reasons ?? [])];
   const full = Boolean(options.full);
   let allSources = full || reasons.length > 0;
-  const native = nativeChanges(model, files, full || reasons.length > 0);
+  const native = nativeChanges(model, files, full || reasons.length > 0, options.macos ?? true);
   // "browser" workspaces are reached only through browser code; "all" may affect any platform.
   const affected = new Map<string, "browser" | "all">();
   const mark = (name: string, scope: "browser" | "all") => {
@@ -239,7 +240,9 @@ export function localPlan(
 export function githubPlan(root: string, eventName: string, event: Record<string, unknown>) {
   const pull = event.pull_request as { base: { sha: string } } | undefined;
   const ref = typeof event.ref === "string" ? event.ref : "";
-  const full = eventName === "workflow_dispatch" || ref.startsWith("refs/tags/");
+  const tag = eventName === "push" && ref.startsWith("refs/tags/");
+  const full = eventName === "workflow_dispatch" || tag;
+  const macos = (event.inputs as Record<string, unknown> | undefined)?.macos;
   const before =
     eventName === "pull_request"
       ? pull?.base.sha
@@ -257,6 +260,7 @@ export function githubPlan(root: string, eventName: string, event: Record<string
       full,
       artifacts: full,
       reasons: changed.reasons,
+      macos: tag || (eventName === "workflow_dispatch" && (macos === true || macos === "true")),
     }),
     distribution: distributionRequested(
       eventName,
