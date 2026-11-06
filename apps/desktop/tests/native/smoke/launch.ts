@@ -145,9 +145,17 @@ export async function runTauriSmoke(
           }),
         ]);
       } else {
+        let timeout: NodeJS.Timeout | undefined;
+        const scenarioExit = await Promise.race([
+          scenario.exited.then((code) => ({ code })),
+          new Promise<undefined>((resolveTimeout) => {
+            timeout = setTimeout(() => resolveTimeout(undefined), 30_000);
+          }),
+        ]);
+        if (timeout) clearTimeout(timeout);
         const details = [diagnostic, lifecycle?.trim()].filter(Boolean).join("\n");
         throw new Error(
-          `Native smoke ${phase} Desktop exited before assertions (${first.code})${details ? `:\n${details}` : ""}`,
+          `Native smoke ${phase} Desktop exited before assertions (${first.code}); scenario ${scenarioExit ? `exited (${scenarioExit.code})` : "did not exit within 30 seconds"}${details ? `:\n${details}` : ""}`,
         );
       }
     } else {
