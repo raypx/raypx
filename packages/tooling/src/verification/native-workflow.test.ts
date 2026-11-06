@@ -67,7 +67,7 @@ it("prepares shared JS inputs only for parallel distribution phases", () => {
   expect(native.verify?.if).toContain("!cancelled()");
   expect(native.verify?.if).toContain("needs.prepare.result == 'success'");
   expect(prepare.some((step) => step.name === "Herdr terminal integration")).toBe(false);
-  expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(true);
+  expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(false);
   expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
   expect(prepare.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
   expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
@@ -144,8 +144,12 @@ it("defaults manual CI to Windows and forwards explicit cold native builds", () 
   const rustSteps = Object.values(native)
     .flatMap((job) => job.steps ?? [])
     .filter((step) => step.uses === "./.github/actions/setup-rust");
-  expect(rustSteps).toHaveLength(2);
+  expect(rustSteps).toHaveLength(1);
   for (const step of rustSteps) expect(step.with?.cache).toBe("${{ !inputs.cold_native }}");
+  expect(rustSteps[0]?.with?.["cache-key"]).toBe("${{ matrix.phase }}");
+  expect(rustSteps[0]?.with?.["target-directory"]).toBe(
+    "${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}",
+  );
   const rust = Bun.YAML.parse(
     readFileSync(join(root, ".github/actions/setup-rust/action.yml"), "utf8"),
   ) as {
@@ -153,6 +157,9 @@ it("defaults manual CI to Windows and forwards explicit cold native builds", () 
     runs: { steps: Step[] };
   };
   expect(rust.inputs.cache?.default).toBe("true");
+  expect(rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.with?.key).toBe(
+    "${{ inputs.cache-key }}",
+  );
   expect(rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.if).toBe(
     "inputs.cache == 'true'",
   );

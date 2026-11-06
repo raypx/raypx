@@ -58,6 +58,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/setup-rust
+        if: needs.changes.outputs.rust == 'true'
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:

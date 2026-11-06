@@ -251,7 +251,14 @@ that job alone saves VP artifacts and consumer phases only restore them. Verific
 compilation uses Cargo caches and independent production/smoke target directories.
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
 invalidate restored tasks. Tauri produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
-CI reads rust-toolchain.toml and keys native caches with Cargo.lock.
+CI reads rust-toolchain.toml and keys native caches with Cargo.lock and the native
+phase. The smoke cache explicitly follows `target/native-smoke`; check and package
+caches follow `target`. CLI/renderer preparation does not install or cache Rust.
+Linux source jobs install Rust only when selected Rust inputs require it.
+The CLI build ignores `.cache/herdr` downloads as task inputs: manifest pins still
+invalidate the build, and restored `dist` already contains the verified binaries.
+The manual `CLI size experiment` workflow compares isolated executable variants and
+warm command startup on Windows; it does not run automatically or request macOS.
 Windows jobs install Bun packages from the registry instead of restoring the download cache;
 extracting its many small files took longer than a fresh frozen install.
 The browser job caches Playwright's Chromium headless shell by Playwright version and runs

@@ -38,9 +38,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
-      - uses: ./.github/actions/setup-rust
-        with:
-          cache: ${{ !inputs.cold_native }}
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
@@ -177,6 +174,8 @@ jobs:
       - uses: ./.github/actions/setup-rust
         with:
           cache: ${{ !inputs.cold_native }}
+          cache-key: ${{ matrix.phase }}
+          target-directory: ${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:

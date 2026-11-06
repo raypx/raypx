@@ -4,6 +4,12 @@ inputs:
   cache:
     description: Restore and save Cargo caches
     default: "true"
+  cache-key:
+    description: Separate native check, production and smoke compiler artifacts
+    default: ""
+  target-directory:
+    description: Cargo output directory for this phase
+    default: target
 runs:
   using: composite
   steps:
@@ -13,3 +19,6 @@ runs:
         rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
     - uses: Swatinem/rust-cache@v2
       if: inputs.cache == 'true'
+      with:
+        key: ${{ inputs.cache-key }}
+        workspaces: . -> ${{ inputs.target-directory }}
