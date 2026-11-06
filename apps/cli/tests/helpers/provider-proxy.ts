@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createServer as httpServer } from "node:http";
 import { createServer as httpsServer } from "node:https";
 import { connect, type AddressInfo, type Socket } from "node:net";
-import { readFile, writeFile, readdir } from "node:fs/promises";
+import { readFile, writeFile, readdir, realpath } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { findExecutable } from "@raypx/runtime-node/process";
 
@@ -12,21 +12,6 @@ const hosts = [
   "generativelanguage.googleapis.com",
   "openrouter.ai",
 ];
-
-// Leave only IPv4 loopback for the explicit 127.0.0.1 proxy. Windows Firewall
-// rejects a zero-length IPv6 prefix, so cover IPv6 with two /1 filters.
-export const windowsProviderBlockedSubnets = [
-  "0.0.0.0/2",
-  "64.0.0.0/3",
-  "96.0.0.0/4",
-  "112.0.0.0/5",
-  "120.0.0.0/6",
-  "124.0.0.0/7",
-  "126.0.0.0/8",
-  "128.0.0.0/1",
-  "::/1",
-  "8000::/1",
-] as const;
 
 /** A local TLS endpoint reached through CONNECT. It never forwards traffic to the Internet. */
 export async function providerProxy(directory: string) {
@@ -126,7 +111,7 @@ export async function providerProxy(directory: string) {
   );
   let cleanupNetwork = async () => {};
   let isolatedBinary: string | undefined;
-  async function powershell(script: string, binary: string, rule: string) {
+  async function powershell(script: string, binary: string, rule: string, operation: string) {
     const child = Bun.spawn(
       [
         join(process.env.SystemRoot!, "System32/WindowsPowerShell/v1.0/powershell.exe"),
@@ -142,11 +127,7 @@ export async function providerProxy(directory: string) {
       },
     );
     const error = await new Response(child.stderr).text();
-    assert.equal(
-      await child.exited,
-      0,
-      `Could not configure loopback-only provider egress: ${error.trim().slice(-4096)}`,
-    );
+    assert.equal(await child.exited, 0, `Could not ${operation}: ${error.trim().slice(-4096)}`);
   }
   return {
     requests,
@@ -154,14 +135,23 @@ export async function providerProxy(directory: string) {
     url,
     async isolate(binary: string) {
       if (process.platform === "win32") {
+        const program = await realpath(binary);
         const rule = "raypx-provider-" + crypto.randomUUID();
+        // Windows Firewall exempts loopback. Block all other egress for this
+        // canonical executable; the SDK assertions still require the local proxy.
         await powershell(
-          `New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress @(${windowsProviderBlockedSubnets.map((subnet) => `'${subnet}'`).join(",")}) | Out-Null`,
-          binary,
+          "if (@(Get-NetFirewallProfile -PolicyStore ActiveStore | Where-Object { $_.Enabled -ne 'True' }).Count) { throw 'Provider acceptance requires enabled Windows Firewall profiles' }; New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress Any | Out-Null",
+          program,
           rule,
+          "install provider egress block",
         );
         cleanupNetwork = () =>
-          powershell("Remove-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE", binary, rule);
+          powershell(
+            "Remove-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE",
+            program,
+            rule,
+            "remove provider egress block",
+          );
       } else if (process.platform === "linux") {
         assert.deepEqual(
           (await readdir("/sys/class/net")).sort(),
