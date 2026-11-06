@@ -360,8 +360,10 @@ export class ManagedExecution {
       await adapter.sendTurn(prompt, this.local.sessionId, task.mode);
     };
     const start = async () => {
-      await this.sendTurn!(initialExecutionPrompt(task, continuationPrompt, resumed));
+      // Initialization is complete. Inputs may queue while the provider acknowledges
+      // the first turn; serial delivery still waits for that acknowledgement.
       this.ready = true;
+      await this.sendTurn!(initialExecutionPrompt(task, continuationPrompt, resumed));
     };
     // Some adapters replace their process after a plan is approved.
     if (adapter.holdPlanOnExit) {

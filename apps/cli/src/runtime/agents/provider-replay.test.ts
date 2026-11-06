@@ -2,6 +2,56 @@ import { expect, it, vi } from "vite-plus/test";
 import type { ReplayRecord } from "../../../tests/helpers/provider-replay.ts";
 import { bootstrap, late, fixture } from "../../../tests/helpers/provider-session.ts";
 
+it("queues input while Codex is acknowledging the initial turn", async () => {
+  const initial = bootstrap("codex");
+  const f = fixture("codex", [
+    ...initial.slice(0, -2),
+    { direction: "gate", name: "starting" },
+    ...initial.slice(-2),
+    {
+      direction: "provider",
+      message: {
+        method: "turn/completed",
+        params: { turn: { id: "synthetic-turn-1", status: "completed" } },
+      },
+    },
+    {
+      direction: "host",
+      channel: "request",
+      method: "turn/start",
+      message: { input: [{ type: "text", text: "Queued synthetic input" }] },
+      reply: { turn: { id: "synthetic-turn-2" } },
+    },
+    { direction: "gate", name: "queued" },
+    {
+      direction: "provider",
+      message: {
+        method: "turn/completed",
+        params: { turn: { id: "synthetic-turn-2", status: "completed" } },
+      },
+    },
+    { direction: "host", channel: "kill" },
+    { direction: "exit", code: 0 },
+  ]);
+  await f.replay.wait("starting");
+  await expect.poll(() => f.replay.sent.some((call) => call.method === "turn/start")).toBe(true);
+  const input = f.execution.enqueue({
+    id: crypto.randomUUID(),
+    mode: "queue",
+    prompt: "Queued synthetic input",
+  });
+  expect(input.status).toBe("queued");
+  f.replay.release("starting");
+  await f.running;
+  f.replay.release("started");
+  await f.replay.wait("queued");
+  await f.waitActivity(input.id, "sent");
+  f.replay.release("queued");
+  await f.finished();
+  expect(f.local.task.status).toBe("succeeded");
+  expect(f.unlock).toHaveBeenCalledTimes(1);
+});
+
 it.each(["codex", "claude"] as const)(
   "replays %s resume and a durable queued turn, retaining the lock through drain",
   async (provider) => {
