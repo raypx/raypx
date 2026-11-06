@@ -104,7 +104,7 @@ it("packages Desktop explicitly with the matching CLI and without caching native
   expect(plan.find((task) => task.taskId === "desktop#native:build")?.cache).toBe(false);
 });
 
-it.each(["native:smoke", "native:smoke:interactive", "native:beta", "native:agents"])(
+it.each(["native:smoke", "native:smoke:interactive", "native:agents"])(
   "%s builds the matching CLI and renderer before native verification",
   (name) => {
     const plan = graph(["tasks", `desktop#${name}`]).tasks;

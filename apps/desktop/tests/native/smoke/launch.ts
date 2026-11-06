@@ -111,10 +111,7 @@ export async function runTauriSmoke(
       process.execPath,
       "--import",
       import.meta.resolve("tsx"),
-      resolve(
-        import.meta.dirname,
-        phase === "agents" ? "agents.ts" : phase.startsWith("beta") ? "beta.ts" : "scenario.ts",
-      ),
+      resolve(import.meta.dirname, phase === "agents" ? "agents.ts" : "scenario.ts"),
     ],
     { cwd, env: environment, stdin: "ignore", stdout: "inherit", stderr: "inherit" },
   );
@@ -123,7 +120,7 @@ export async function runTauriSmoke(
       native.kill();
       scenario.kill();
     },
-    phase === "agents" ? 1_800_000 : phase.startsWith("beta") ? 720_000 : 300_000,
+    phase === "agents" ? 1_800_000 : 300_000,
   );
   try {
     const first = await Promise.race([

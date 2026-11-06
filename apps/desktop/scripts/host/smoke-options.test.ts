@@ -4,16 +4,16 @@ import { nativeSmokeOptions } from "./smoke-options.ts";
 it("defaults native smoke and its restart phases to quiet presentation", () => {
   expect(nativeSmokeOptions([], {})).toEqual({ phase: "shell", ui: "quiet" });
   expect(nativeSmokeOptions(["restore"], {})).toEqual({ phase: "restore", ui: "quiet" });
-  expect(nativeSmokeOptions([], { RAYPX_NATIVE_SMOKE_PHASE: "beta" })).toEqual({
-    phase: "beta",
+  expect(nativeSmokeOptions([], { RAYPX_NATIVE_SMOKE_PHASE: "write" })).toEqual({
+    phase: "write",
     ui: "quiet",
   });
 });
 
 it("requires an explicit choice for interactive acceptance", () => {
   expect(nativeSmokeOptions(["--interactive"], {})).toEqual({ phase: "shell", ui: "interactive" });
-  expect(nativeSmokeOptions(["beta", "--interactive"], {})).toEqual({
-    phase: "beta",
+  expect(nativeSmokeOptions(["write", "--interactive"], {})).toEqual({
+    phase: "write",
     ui: "interactive",
   });
   expect(nativeSmokeOptions(["restore"], { RAYPX_NATIVE_SMOKE_UI: "interactive" }).ui).toBe(

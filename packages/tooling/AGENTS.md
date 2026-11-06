@@ -75,7 +75,7 @@ package's `tsx/esm/api`; callers need Node, with no global tsx executable.
   and persistent user/database data stay intact.
 - raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
-  `native:build` and native smoke/beta/agents tasks are uncached, depend on the
+  `native:build` and native smoke/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
   before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
   Native CI checks Rust on each platform.

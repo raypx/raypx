@@ -147,7 +147,6 @@ describe("Desktop task graph entry", () => {
     "build:renderer",
     "native:smoke",
     "native:smoke:interactive",
-    "native:beta",
     "native:agents",
   ])("routes direct %s through the repository graph", (task) => {
     const result = fixture()(task, { args: ["--example", "value with spaces"] });
@@ -218,7 +217,6 @@ describe("Desktop task graph entry", () => {
   it.each([
     ["native:smoke", "smoke-run", []],
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
-    ["native:beta", "smoke-run", ["beta"]],
     ["native:agents", "smoke-agents-run", []],
   ] as const)("runs the Tauri %s gate inside VP", (task, name, args) => {
     const result = fixture()(task, { leaf: true });

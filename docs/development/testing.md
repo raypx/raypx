@@ -88,7 +88,7 @@ Inventory and isolated-backend orchestration belong to Tooling and stay reposito
 even when launched from that package. Baseline/mapping filenames resolve against
 the caller's current directory. Prerequisites, generated reports and cleanup are in
 [validation artifacts](validation-artifacts.md). Live inference remains a separate,
-explicit `pnpm --dir e2e run e2e:live` gate with its existing prerequisites.
+explicit `pnpm --dir apps/desktop run native:agents` gate with its existing prerequisites.
 
 ## Daily acceptance
 
@@ -292,38 +292,11 @@ with the complete CLI distribution. It verifies file reads, plan rejection and a
 generated `node:test` suites run by `node --test`, provider session resume across an engine restart, and cancellation
 of a running child process. `RAYPX_LIVE_KEEP=1` retains its temporary evidence directory.
 
-For a real HTTPS environment, provision a dedicated verified `@raypx.example.test`
-account. Store `{ "email": "…", "password": "…", "userId": "…" }` in a private local
-file, never in source or command arguments. Use a fresh temporary native data directory.
-Build Desktop normally. Native reads its API and Web origins from runtime TOML;
-no environment-specific package or `runtime-config.json` is required.
-
-Set `RAYPX_LIVE_AGENTS=1`, `RAYPX_NATIVE_SMOKE_API`,
-`RAYPX_NATIVE_SMOKE_CREDENTIALS` (the private file), and
-`RAYPX_NATIVE_SMOKE_DATA_DIR`, then run `pnpm --dir apps/desktop run native:beta`.
-The runner creates `config/config.toml` under that isolated data directory using
-the supplied API origin, without reading or changing the user's `~/.raypx` file.
-After `native-ready.json` appears, set `RAYPX_LIVE_WEB_URL` to the same origin and
-run `pnpm --dir e2e run e2e:live` with the same native directory and credentials.
-The isolated headless browser signs in, creates both providers' tasks, checks no
-project writes occur before approval, approves through Web, verifies real files
-and returned results, and reloads the persisted task list. During a pending task,
-Native renews its real grant while hidden and reconnects without cancelling it.
-No mock API, simulated device, credential override or disabled browser security
-is used by this gate. Traces are off to avoid capturing login request bodies.
-
-Web writes `web-complete.json`; the native gate checks local files and its actual
-remote-task renderer. It then restarts the packaged process, checks the real session
-and relay reconnect, and verifies logout clears the session and detaches the device.
-The receipts are `native-complete.json` and `native-restore-complete.json`.
-Remove only the dedicated account and its test records after acceptance; preserve
-other environment data. Real macOS success does not establish Windows HTTPS behavior.
-
 Never replace production cookie security with trusting null origins or disabling
 web security. Do not count browser-preview tests as packaged-platform passes.
 Unavailable platform checks remain open release gates, with their reasons reported.
 
-Browser E2E, including `e2e:live`, defaults to headless. Add `--headed` only when
+Browser E2E defaults to headless. Add `--headed` only when
 interactive browser debugging is wanted. Native smoke defaults to quiet presentation with inactive windows and suppressed
 notifications/dialogs. Display/hide and visibility-based approval leases still run; native
 close, resize and foreground activation checks are explicitly skipped. Quiet smoke
@@ -334,8 +307,6 @@ native renderer: a test window can still be visible behind the current applicati
 pnpm --dir apps/desktop run native:smoke
 # Explicit foreground GUI acceptance, when it will not interrupt development:
 pnpm --dir apps/desktop run native:smoke:interactive
-# HTTPS native acceptance can also opt in explicitly:
-pnpm --dir apps/desktop run native:beta --interactive
 ```
 
 `RAYPX_NATIVE_SMOKE_UI=interactive` is the equivalent explicit environment option;

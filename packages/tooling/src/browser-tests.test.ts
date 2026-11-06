@@ -7,11 +7,11 @@ import {
   prepareBrowserTask,
 } from "./browser-tests.ts";
 
-it("keeps complete browser acceptance as the default and leaves live acceptance separate", () => {
+it("keeps complete browser acceptance as the default and leaves devtools acceptance separate", () => {
   const plan = planBrowserTests([]);
   expect(plan.task).toBe("e2e");
   expect(browserTestSettings(plan.env).grep).toBeUndefined();
-  expect(isBrowserTestTask("e2e:live")).toBe(false);
+  expect(isBrowserTestTask("e2e:devtools")).toBe(false);
 });
 it("combines surface, smoke and visual intent while forwarding normal Playwright arguments", () => {
   const plan = planBrowserTests([
@@ -56,11 +56,13 @@ it("makes trace recording explicit locally and uses the first retry on CI", () =
   expect(browserTestArguments([], task.env)).toEqual(["--trace", "on"]);
   expect(browserTestSettings(task.env).screenshots).toBe(true);
 });
-it("rejects conflicting surfaces, malformed patterns and alternate live configs", () => {
+it("rejects conflicting surfaces, malformed patterns and alternate configs", () => {
   expect(() => planBrowserTests(["--web", "--desktop"])).toThrow("either");
   expect(() => prepareBrowserTask("e2e", ["--", "--grep"], {})).toThrow("regular expression");
   expect(() => prepareBrowserTask("e2e", ["--", "--grep", "["], {})).toThrow(SyntaxError);
-  expect(() => prepareBrowserTask("e2e", ["--", "--config", "live.ts"], {})).toThrow("separately");
+  expect(() => prepareBrowserTask("e2e", ["--", "--config", "custom.ts"], {})).toThrow(
+    "compiled-artifact config",
+  );
   expect(() => browserTestSettings({ RAYPX_E2E_SURFACE: "unknown" })).toThrow("surface");
   expect(() => browserTestArguments([], { RAYPX_E2E_ARGS: "[" })).toThrow(SyntaxError);
   expect(() => browserTestArguments([], { RAYPX_E2E_ARGS: '["valid",2]' })).toThrow("string array");

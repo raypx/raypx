@@ -82,9 +82,3 @@ project runs do not establish real-backend acceptance.
 For an HTTP loopback fixture, set `VITE_API_URL` to that exact API origin when
 building both surfaces. The dedicated Desktop browser output includes only that
 validated loopback Origin in connect-src; static serving preserves its HTML/CSP.
-
-`e2e:live` uses `playwright.live.config.ts` and the opt-in `live-agents.spec.ts`.
-It uses a dedicated test account, a running packaged native beta acceptance instance,
-real HTTPS/WebSocket traffic and real Claude/Codex inference. Never use a person's
-account. Keep tracing off to avoid recording login request bodies; the default E2E
-gate excludes this live suite. All browser gates default to headless; use `--headed` only for explicit interactive diagnosis. Close the isolated browser after acceptance.

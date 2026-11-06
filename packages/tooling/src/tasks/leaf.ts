@@ -22,7 +22,6 @@ async function runTaskLeaf() {
           "dev",
           "native:smoke",
           "native:smoke:interactive",
-          "native:beta",
           "native:agents",
         ].includes(name)
       ? [

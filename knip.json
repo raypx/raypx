@@ -74,12 +74,7 @@
       "drizzle": false
     },
     "e2e": {
-      "entry": [
-        "tests/**/*.ts",
-        "playwright.config.ts",
-        "playwright.live.config.ts",
-        "playwright.devtools.config.ts"
-      ]
+      "entry": ["tests/**/*.ts", "playwright.config.ts", "playwright.devtools.config.ts"]
     },
     "infra/railway": {
       "entry": ["railway.ts", "scripts/iac-preload.ts"]

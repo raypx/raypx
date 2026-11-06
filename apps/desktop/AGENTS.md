@@ -167,7 +167,7 @@ and tray. Quiet mode uses inactive windows and suppresses notifications/dialogs;
 interactive mode adds focus/close/resize acceptance on isolated CI. Windows hosted
 CI installs/uninstalls the actual per-user NSIS package and verifies payload hashes.
 
-native:agents and native:beta are opt-in real-provider/account gates. They require
+native:agents is an opt-in real-provider gate. It requires
 RAYPX_LIVE_AGENTS=1 and isolated data and consume provider inference.
 The Agent gate defaults to Codex; RAYPX_LIVE_AGENT_PROVIDERS optionally selects
 codex, claude or both. Successful native Agent results, including provider versions,

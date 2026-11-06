@@ -1,4 +1,4 @@
-const phases = new Set(["shell", "restore", "write", "read", "beta", "beta-restore"]);
+const phases = new Set(["shell", "restore", "write", "read"]);
 
 /** Resolve presentation before launching a native process, including restore phases. */
 export function nativeSmokeOptions(

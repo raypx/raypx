@@ -10,8 +10,7 @@ const root = resolve(cwd, "../..");
 let commands: string[][];
 
 const nativeGate =
-  task &&
-  ["native:smoke", "native:smoke:interactive", "native:beta", "native:agents"].includes(task);
+  task && ["native:smoke", "native:smoke:interactive", "native:agents"].includes(task);
 if (
   task !== "check" &&
   task !== "native:build" &&
@@ -21,7 +20,7 @@ if (
   !nativeGate
 )
   throw new Error(
-    "Usage: scripts/host/task.ts <check|build|build:renderer|dev|native:build|native:smoke|native:smoke:interactive|native:beta|native:agents>",
+    "Usage: scripts/host/task.ts <check|build|build:renderer|dev|native:build|native:smoke|native:smoke:interactive|native:agents>",
   );
 
 const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`;
@@ -68,12 +67,7 @@ if (!leaf) {
   ];
 } else if (nativeGate) {
   const scenario = task === "native:agents" ? "agents-run.ts" : "run.ts";
-  const mode =
-    task === "native:beta"
-      ? ["beta"]
-      : task === "native:smoke:interactive"
-        ? ["--interactive"]
-        : [];
+  const mode = task === "native:smoke:interactive" ? ["--interactive"] : [];
   commands = [[pnpm, "exec", "tsx", `tests/native/smoke/${scenario}`, ...mode, ...args]];
 } else {
   commands = [[pnpm, "run", "tauri:dev", ...args]];

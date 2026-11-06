@@ -21,7 +21,6 @@
     "native:smoke": "tsx scripts/host/task.ts native:smoke",
     "native:smoke:interactive": "tsx scripts/host/task.ts native:smoke:interactive",
     "native:agents": "tsx scripts/host/task.ts native:agents",
-    "native:beta": "tsx scripts/host/task.ts native:beta",
     "build:renderer": "tsx scripts/host/task.ts build:renderer",
     "native:prepare": "tsx scripts/host/tauri.ts prepare",
     "tauri:build": "tsx scripts/host/tauri.ts build",

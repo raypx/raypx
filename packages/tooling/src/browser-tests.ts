@@ -94,9 +94,7 @@ export function prepareBrowserTask(task: string, args: string[], environment: En
       grep = pattern;
     } else if (value.startsWith("--grep=")) grep = value.slice(7);
     else if (value === "--config" || value === "-c" || value.startsWith("--config="))
-      throw new Error(
-        "Browser acceptance uses its compiled-artifact config; run e2e:live separately",
-      );
+      throw new Error("Browser acceptance uses its compiled-artifact config");
     else forwarded.push(value);
   }
   if (grep) grep = new RegExp(grep).source;

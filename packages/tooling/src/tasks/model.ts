@@ -219,13 +219,7 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
   }
   if (
     member.native &&
-    [
-      "native:build",
-      "native:smoke",
-      "native:smoke:interactive",
-      "native:beta",
-      "native:agents",
-    ].includes(name)
+    ["native:build", "native:smoke", "native:smoke:interactive", "native:agents"].includes(name)
   ) {
     if (member.scripts.build) result.push(taskRef(member.name, "build"));
     if (members.some((candidate) => candidate.name === "cli" && candidate.scripts.build))

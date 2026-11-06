@@ -30,16 +30,7 @@ async function run(smokePhase: string, directory: string, restoredServer = false
     RAYPX_NATIVE_SMOKE_NODE: runtime.nodeVersion,
   });
 }
-if (
-  phase.startsWith("beta") &&
-  (!process.env.RAYPX_NATIVE_SMOKE_DATA_DIR || process.env.RAYPX_LIVE_AGENTS !== "1")
-)
-  throw new Error(
-    "Beta smoke requires RAYPX_LIVE_AGENTS=1 and an isolated RAYPX_NATIVE_SMOKE_DATA_DIR",
-  );
-const directory = phase.startsWith("beta")
-  ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR!)
-  : await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));
+const directory = await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));
 const loopbackOrigin = async () => {
   const server = await serveHttp({
     hostname: "127.0.0.1",
@@ -84,19 +75,16 @@ try {
     await run("restore", directory, true);
   }
   if (phase === "write") await run("read", directory);
-  if (phase === "beta") await run("beta-restore", directory);
 } finally {
   if (directoryPrepared) {
     let ownerStopped = false;
     try {
       // GUI Quit preserves its independent owner on both macOS and Windows.
       ownerStopped = await stopSmokeOwner(directory);
-      if (!phase.startsWith("beta")) {
-        if (ownerStopped) await removeSmokeDirectory(directory);
-        else {
-          console.error(`Native smoke teardown incomplete; retained ${directory}`);
-          process.exitCode = 1;
-        }
+      if (ownerStopped) await removeSmokeDirectory(directory);
+      else {
+        console.error(`Native smoke teardown incomplete; retained ${directory}`);
+        process.exitCode = 1;
       }
     } finally {
       try {
