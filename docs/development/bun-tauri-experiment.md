@@ -32,7 +32,7 @@ On a native development machine, `bun run dev:desktop` launches Vite and Tauri.
 `RAYPX_CLI_PAYLOAD` to an absolute prepared CLI directory to reuse one build;
 staging rejects modified or mismatched platform/version inventories.
 
-## Acceptance record
+## Initial Linux acceptance record
 
 Validated on Linux x64 (CentOS Stream 9), with Bun 1.4.4 and Rust 1.99.1.
 
@@ -90,10 +90,41 @@ credentials are explicitly reported; unsigned package acceptance does not prove
 signed distribution or updater acceptance. Hosted run results must be assessed
 separately from the Linux record above.
 
+## Hosted delivery record — 2026-11-06
+
+Candidate `c2a9566a8ab1666164554fc785f19eda0f7a9f4c` passed all **14 jobs** in
+the [complete distribution run](https://github.com/raypx/raypx/actions/runs/42235551818).
+Local full verification also passed all 92 tasks and relocated artifact probes;
+the subsequent Windows test-runner correction passed affected verification (83 tasks).
+
+| Gate                                                                       | macOS arm64    | Windows x64                                    |
+| -------------------------------------------------------------------------- | -------------- | ---------------------------------------------- |
+| Final standalone CLI archive and isolated provider probes                  | Passed         | Passed                                         |
+| Process/task runners, installed CLI and Herdr PTY                          | Passed         | Passed; PTY repeated three times               |
+| Rust format, check, Clippy and native tests with the compiled CLI          | Passed         | Passed                                         |
+| Production package, CLI/Herdr checksums and smoke-control exclusion        | Passed         | Passed                                         |
+| Interactive GUI, Desktop-first/CLI-first daemon identity, Quit and cleanup | Passed         | Passed; actual per-user NSIS install/uninstall |
+| Production installer                                                       | DMG: 57.75 MiB | NSIS: 55.02 MiB                                |
+
+The macOS production application directory measured 129.97 MiB. Sizes include
+the bundled CLI and overlap; application, installer and CLI sizes are not additive.
+JavaScript, backend, browser, deployment and the final aggregate gate also passed.
+
+The GUI driver uses a separate smoke-enabled host with the same sealed production
+CLI. Production packages are independently inspected to exclude smoke controls.
+Both downloaded GUI evidence records match the candidate commit and report passed
+cleanup. Windows task-runner acceptance explicitly launches the Bun CLI because
+VP's `node.exe` worker mode treats Bun's `run` subcommand as a filename; literal
+Chinese, space, `$()` and `&` arguments remain covered.
+
+Installers were unsigned: Developer ID, Authenticode, notarization credentials and
+Tauri updater keys/feed were not configured. Signed distribution, updater behavior,
+live account/provider flows, installed-app upgrade continuity and Linux GUI remain
+unverified. CI retains the CLI archives, production delivery directories, installers,
+size reports and native phase evidence as separate artifacts.
+
 Generated local evidence lives in `.artifacts/bun-tauri/`, with the detailed
 verification plan in `.artifacts/verification/latest.json` and size reports under
-`.artifacts/sizes/`. These directories are intentionally ignored by Git.
-
-Linux headless Rust results do not establish macOS/Windows GUI acceptance. Signing,
-notarization, installers, updater behavior, real account/provider flows and daemon
-survival through installed-app upgrades still require the platform release matrix.
+`.artifacts/sizes/`. Downloaded hosted evidence lives under
+`.artifacts/bun-tauri-delivery/42235551818/`. These directories are intentionally
+ignored by Git.
