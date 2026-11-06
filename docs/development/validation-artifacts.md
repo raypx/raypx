@@ -38,7 +38,7 @@ licenses and bundled dependencies. Symlinks are counted separately in JSON and a
 not followed. This is logical payload size, not filesystem allocation or network
 transfer size. Installer/archive rows report their actual compressed file sizes;
 no synthetic gzip estimate is mixed into directory totals. CLI distributions also
-show Node, full pnpm/pnpx, Herdr and application/launcher components. Those components
+show Node, Herdr and application/launcher components. Those components
 are included in the CLI total; renderer, `.app`, installer and updater measurements
 overlap and must not be added together.
 
@@ -62,7 +62,7 @@ pnpm run test inventory --layers
 pnpm run test inventory --baseline .artifacts/tests/<previous-run>/inventory.json
 ```
 
-Each invocation executes fresh tests with the pinned runtimes, then writes a new
+Each invocation executes fresh tests with the configured toolchain, then writes a new
 `.artifacts/tests/<run>/` containing raw workspace reports, logs and `inventory.json`.
 `--layers` runs the unit, component and integration entries separately and checks
 that their file selections do not overlap. Both modes require every ordinary

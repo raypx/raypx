@@ -2,7 +2,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import type { LocalMethod } from "@raypx/contracts/local";
-import type { JobDefinition } from "@raypx/jobs-model";
+import type { JobDefinition } from "@raypx/jobs/model";
 import { mocks, grants, job, deferred, emit, page } from "../tests/helpers/router-local.tsx";
 
 describe("Desktop local file routes", () => {

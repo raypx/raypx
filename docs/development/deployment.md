@@ -85,8 +85,8 @@ application Dockerfiles. Compose explicitly selects the API's `migrate` and
 `runtime` targets; the default `deploy` target additionally carries the bundled
 Node migration command for Railway's isolated pre-deploy hook.
 The server images use manifest/dependency layering: `deploy/manifests.ts` extracts
-package manifests, `pnpm-lock.yaml` and generated pnpm workspace config, so source
-edits reuse installed dependencies and only dependency metadata changes reinstall.
+package manifests, `pnpm-lock.yaml`, pnpm workspace config and any tracked Kit preview
+archives, so source edits reuse installed dependencies and only dependency metadata changes reinstall.
 The script discovers workspaces through `deploy/workspaces.ts` and stages bin
 placeholders so pnpm can link workspace commands before source is copied. Each
 Dockerfile installs its service and root tooling dependency closures, excluding

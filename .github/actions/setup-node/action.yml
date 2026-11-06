@@ -1,4 +1,4 @@
-name: Prepare pinned Node and pnpm dependencies
+name: Prepare supported Node and pinned pnpm dependencies
 description: Read Node and pnpm from the root manifest and perform a frozen isolated install
 runs:
   using: composite

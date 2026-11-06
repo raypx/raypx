@@ -109,7 +109,10 @@ export function daemonLaunch(
       retain(pin);
       retained = true;
     }
-    return [join(target, "runtime/node.exe"), join(target, "main.mjs")];
+    return [
+      layout.systemNode ? layout.node : join(target, "runtime/node.exe"),
+      join(target, "main.mjs"),
+    ];
   } finally {
     if (!retained) pin();
   }

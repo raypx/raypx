@@ -8,7 +8,7 @@ export function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1" }),
   );
   member(root, "tokens", { extra: { scripts: { check: "tsx check.ts", test: "tsx test.ts" } } });
   member(root, "bridge", {
@@ -32,7 +32,7 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1" }),
   );
   const scripts = { check: "tsx check.ts", test: "tsx test.ts" };
   member(root, "ui", { metadata: { kind: "library", target: "browser" }, extra: { scripts } });

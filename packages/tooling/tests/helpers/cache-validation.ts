@@ -2,7 +2,6 @@ import { copyFileSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } fro
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { workspaceFixtures } from "./workspace.ts";
-import { workspaceConfiguration } from "../../src/validation/workspaces.ts";
 import { project } from "./cache.ts";
 
 const { member } = workspaceFixtures();
@@ -14,11 +13,10 @@ export function validationProject() {
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   manifest.devEngines = {
     packageManager: { name: "pnpm", version: "12.16.1", onFail: "error" },
-    runtime: { name: "node", version: "24.22.2", onFail: "error" },
+    runtime: { name: "node", version: ">=24.18.0 <25", onFail: "error" },
   };
-  manifest.engines = { node: "24.22.2" };
+  manifest.engines = { node: ">=24.18.0 <25" };
   writeFileSync(join(root, "package.json"), JSON.stringify(manifest));
-  writeFileSync(join(root, "pnpm-workspace.yaml"), workspaceConfiguration(root));
   writeFileSync(join(root, "rust-toolchain.toml"), '[toolchain]\nchannel="1.99.1"\n');
   writeFileSync(
     join(root, "mise.toml"),
@@ -35,6 +33,7 @@ export function validationProject() {
     "@raypx-kit/intl": "1.0.0",
     "@raypx/runtime-node": "1.0.0",
     confbox: "1.0.0",
+    semver: "1.0.0",
   };
   writeFileSync(join(tooling, "package.json"), JSON.stringify(toolingManifest));
   symlinkSync(

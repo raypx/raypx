@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { connectDaemon, type ProfileOptions } from "./endpoint.ts";
-import { installStableCli, raypxHome } from "./connectors.ts";
+import { installStableCli, stableCliLaunch, raypxHome } from "./connectors.ts";
 import { profilePath } from "../state/index.ts";
 import { LocalError } from "../errors.ts";
 
@@ -15,12 +15,16 @@ const xml = (value: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
-export function serviceDefinition(options: ProfileOptions, binary: string, home = homedir()) {
+export function serviceDefinition(
+  options: ProfileOptions,
+  binary: string | readonly string[],
+  home = homedir(),
+) {
   const directory = profilePath(options),
     id = createHash("sha256").update(directory).digest("hex").slice(0, 16);
   const label = `pro.raypx.host.${id}`;
   const args = [
-    binary,
+    ...(typeof binary === "string" ? [binary] : binary),
     "daemon",
     "run",
     "--profile",
@@ -48,7 +52,7 @@ export async function configureService(options: ProfileOptions, action: "install
   if (process.platform !== "darwin" || !process.getuid?.())
     throw new LocalError("UNSUPPORTED_PLATFORM", "Install this service as a macOS user");
   const binary = action === "install" ? installStableCli() : join(raypxHome(), "bin", "raypx");
-  const { label, plist, file } = serviceDefinition(options, binary),
+  const { label, plist, file } = serviceDefinition(options, stableCliLaunch(binary)),
     marker = join(raypxHome(), `${label}.json`);
   const digest = (value: string) => createHash("sha256").update(value).digest("hex");
   if (

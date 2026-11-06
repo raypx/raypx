@@ -205,7 +205,7 @@ export function createLocalRouter({
           profile: options.profile ?? "default",
           scheduler: Boolean(options.scheduler),
           runtime: process.versions.node,
-          // Absolute shim for commands; terminals and Agents find it on PATH.
+          // Bundled Node and the optional user-installed package manager.
           node: tools.node,
           pnpm: tools.pnpm,
           features: { localTerminalApprovals: false },

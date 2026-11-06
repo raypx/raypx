@@ -1,5 +1,6 @@
-import { globSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { readFileSync, realpathSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { execFileSync } from "node:child_process";
 
 interface Manifest {
   name: string;
@@ -16,13 +17,18 @@ export interface Workspace {
 
 // These helpers run before dependency installation, so they use only Node and built-ins.
 export function readWorkspaces(root: string): Map<string, Workspace> {
-  const { workspaces } = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
-    workspaces: string[] | { packages: string[] };
-  };
-  const patterns = Array.isArray(workspaces) ? workspaces : workspaces.packages;
-  const files = new Set<string>();
-  for (const pattern of patterns)
-    for (const file of globSync(`${pattern}/package.json`, { cwd: root })) files.add(file);
+  root = realpathSync(root);
+  const listed = JSON.parse(
+    execFileSync("pnpm", ["list", "--recursive", "--depth", "-1", "--json"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }),
+  ) as { path: string }[];
+  const files = listed
+    .map((member) => relative(root, member.path))
+    .filter(Boolean)
+    .map((path) => join(path, "package.json"));
   const members = new Map<string, Workspace>();
   for (const file of [...files].sort()) {
     const manifest = JSON.parse(readFileSync(join(root, file), "utf8")) as Manifest;

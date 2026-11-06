@@ -29,7 +29,7 @@ fall back, and decided/delivered requests recover as outcome unknown.
 A profile has one execution owner enforced by SQLite's OS-backed write lock.
 A competing legacy host fails rather than repairing/cancelling the running owner.
 Windows runs the daemon from a complete per-build copy under the data directory's
-`bin/daemon`, including Node, ESM, pnpm and Herdr. SQLite runtime leases prevent
+`bin/daemon`, including Node, ESM and Herdr. SQLite runtime leases prevent
 cleanup of copies still in use; this lets Desktop replace bundled resources
 during an update. See [ADR 0037](../architecture/0037-windows-daemon.md).
 Linux retains existing CLI support without complete product acceptance.

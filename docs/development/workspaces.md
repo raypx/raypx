@@ -1,8 +1,8 @@
 # Extending workspaces
 
-Root `package.json` workspace patterns discover TypeScript applications, libraries
-and infrastructure. `pnpm run workspace:sync` generates the corresponding pnpm
-configuration; do not maintain another package inventory. The root Cargo workspace
+`pnpm-workspace.yaml` owns workspace patterns, catalogs, overrides and installation
+settings. Tooling and pnpm discover the same TypeScript applications, libraries
+and infrastructure directly from that file; maintain no second package inventory. The root Cargo workspace
 contains `apps/cli/launcher` and `apps/desktop/src-tauri`; native commands join the
 VP graph. See the [Desktop guide](desktop.md#build-and-release).
 
@@ -20,7 +20,7 @@ pnpm run workspace:new feature-kit --kind library --target universal --tests --w
 Preview is the default. Creation refuses existing paths and names. The generated
 private ESM package has an explicit source export, strict tsconfig and AGENTS.md;
 --tests adds an independent runner config and includes `tests/` in strict checking,
-without placeholder tests. Run `pnpm run workspace:sync` and `pnpm install`, then
+without placeholder tests. Run `pnpm install`, then
 import the public entry from a consumer using `workspace:*`.
 
 ## Manifest metadata
@@ -29,11 +29,12 @@ raypx.kind is app, library or tooling. raypx.target is universal, browser, nativ
 or node. entryTargets overrides the default by exports key. sourceTargets
 maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Platform crossings require a
-compatible explicit public entry. Model schemas live in `auth-model`, `memory-model`
-and `jobs-model`; injected Node use cases live in `memory-server` and `jobs-server`.
-The `auth`, `memory` and `jobs` packages own their server adapters or browser views as
+compatible explicit public entry. Public account/session types and trusted-origin
+rules live in `@raypx/core/auth`; memory schemas live in `memory-model` and job
+schemas in `@raypx/jobs/model`. Injected Node use cases live in `memory-server`
+and `@raypx/jobs/server`. The `auth`, `memory` and `jobs` packages own their server adapters or browser views as
 declared by their manifests, so a protocol consumer does not acquire UI dependencies
-to use pure schemas.
+through source imports. Subpaths share their workspace's installation dependencies.
 
 Every public entry has an established consumer in another workspace. `policy`
 finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig
@@ -103,8 +104,9 @@ per-icon exports; UI registers its styles without an Icons → UI dependency. Se
 
 ## Agent domain and page boundaries
 
-`@raypx/core` is the universal source of task-domain schemas, inferred types and
-pure activity/decision rules. `@raypx/contracts` adds protocol envelopes. Consumers
+`@raypx/core` is the universal source of task-domain schemas, inferred types,
+pure activity/decision rules and public account models through `/auth`.
+`@raypx/contracts` adds protocol envelopes. Consumers
 import domain definitions from their owning package; compatibility aliases are not provided. Never define a second copy of a domain
 interface or introduce a core dependency on contracts, React or host implementations.
 
@@ -151,9 +153,10 @@ private harness owns task policy, persistence, approval and cancellation. See
 
 ## Scheduled jobs
 
-`@raypx/jobs-model` owns pure job schemas, inferred types and calendar rules.
-`@raypx/jobs-server` owns injected cloud scheduling use cases. `@raypx/jobs` owns
-shared browser views and their ports. Contracts composes wire schemas from the model;
+`@raypx/jobs` exposes `/model` for pure job schemas, inferred types and calendar rules,
+`/server` for injected cloud scheduling use cases, and `/client` for shared browser
+views and their ports. The entries have universal, Node and browser targets respectively.
+Models and server use cases never import client views. Contracts composes wire schemas from `/model`;
 API supplies SQL/Relay adapters, while CLI supplies local scheduling and execution.
 Cloud schedules do not claim local plans or move them between accounts. See
 [server jobs](server-jobs.md).

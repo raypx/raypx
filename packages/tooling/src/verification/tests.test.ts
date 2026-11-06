@@ -18,7 +18,7 @@ function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1", workspaces: ["packages/*"] }),
+    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1" }),
   );
   const scripts = { check: "tsx check.ts", test: "vp test --run" };
   member(root, "feature", { extra: { scripts } });

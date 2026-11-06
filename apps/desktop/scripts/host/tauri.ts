@@ -60,15 +60,18 @@ async function run(command: string[], cwd = desktop) {
     process.off("SIGTERM", stop);
   }
 }
-export async function prepare(rendererRequired = true) {
+async function prepareCli() {
   const source = join(root, "apps/cli/dist");
   const manifest = JSON.parse(await readFile(join(source, "runtime.json"), "utf8"));
   const { version } = JSON.parse(await readFile(join(desktop, "package.json"), "utf8"));
-  if (manifest.version !== version || !manifest.files?.["herdr/runtime.json"])
+  if (manifest.version !== version || !manifest.files?.["main.mjs"])
     throw new Error("Build the matching complete CLI distribution first");
   const target = join(desktop, "resources/bin");
   await stageRuntime(source, target);
   await signRuntime(target, env);
+}
+export async function prepare(rendererRequired = true) {
+  await prepareCli();
   await generateNativeContracts(desktop);
   if (rendererRequired)
     await readFile(
@@ -123,6 +126,9 @@ if (process.argv[1] !== undefined && resolve(process.argv[1]) === entryFile(impo
   assertNativeTarget(args);
   const features = smoke ? ["--features", "native-smoke"] : [];
   switch (action) {
+    case "prepare-cli":
+      await prepareCli();
+      break;
     case "prepare":
       await prepare();
       break;
@@ -209,6 +215,6 @@ if (process.argv[1] !== undefined && resolve(process.argv[1]) === entryFile(impo
       );
       break;
     default:
-      throw new Error("Usage: tauri.ts prepare|build|check|test|smoke|dev");
+      throw new Error("Usage: tauri.ts prepare-cli|prepare|build|check|test|smoke|dev");
   }
 }

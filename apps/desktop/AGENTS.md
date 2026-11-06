@@ -105,7 +105,8 @@ without repeating web sign-out or dropping the device identity.
   Packaged routes use hash history; no frontend server runs in packaged apps.
   The root remains text-free; translated providers initialize inside ClientOnly.
 - Launch only the absolute, version-matched bundled CLI at resources/bin/raypx.
-  Package the complete verified Herdr distribution in resources/bin/herdr. CLI
+  Staging the normal CLI JS build adds the native launcher, Node and the host's
+  verified Herdr distribution in resources/bin/herdr. CLI
   copies terminal resources into its profile before use, avoiding Windows DLL locks.
 - macOS and Windows connect to the independent daemon; GUI Quit preserves Agent
   work. Spawn CLI children through Command so Windows opens no console. Terminal

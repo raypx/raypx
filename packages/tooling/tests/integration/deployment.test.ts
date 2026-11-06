@@ -182,8 +182,8 @@ it("discovers build manifests and bin placeholders without copying application c
     const source = join(directory, "source"),
       output = join(directory, "output");
     mkdirSync(join(source, "modules/one"), { recursive: true });
-    writeFileSync(join(source, "package.json"), JSON.stringify({ workspaces: ["modules/*"] }));
-    writeFileSync(join(source, "pnpm-lock.yaml"), "fixture");
+    writeFileSync(join(source, "package.json"), JSON.stringify({ private: true }));
+    writeFileSync(join(source, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\nimporters: {}\n");
     writeFileSync(join(source, "pnpm-workspace.yaml"), 'packages: ["modules/*"]\n');
     writeFileSync(
       join(source, "modules/one/package.json"),

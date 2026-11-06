@@ -1,4 +1,4 @@
-import { JobError, type CloudJobRun } from "@raypx/jobs-model";
+import { JobError, type CloudJobRun } from "@raypx/jobs/model";
 import {
   relayClientSchema,
   RELAY_VERSION,

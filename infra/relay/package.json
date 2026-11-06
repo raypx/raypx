@@ -13,9 +13,9 @@
     "test:integration": "vp test --run tests/integration"
   },
   "dependencies": {
-    "@raypx/auth-model": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/control": "workspace:*",
+    "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/memory-server": "workspace:*",

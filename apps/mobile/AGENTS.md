@@ -37,7 +37,7 @@ platform-neutral hooks and i18n catalogs. System language and appearance are def
 
 ## Verification
 
-Use Node 24.22.2 for scripts. VP registers check/test/build; Expo owns Metro bundling.
+Use Node >=24.18.0 <25 for scripts. VP registers check/test/build; Expo owns Metro bundling.
 React and React DOM use the shared root catalog at Expo's supported version.
 Mobile-only dependencies use catalog:mobile; shared runtime libraries use catalog:
 and build/test tools use catalog:dev. Keep native versions aligned with Expo's SDK.

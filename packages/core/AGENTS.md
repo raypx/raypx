@@ -2,11 +2,13 @@
 
 ## Purpose
 
-Platform-neutral task domain models and pure rules shared by transport adapters,
-execution hosts and product views. Schemas are the single source of inferred types.
+Platform-neutral task and account domain models and pure rules shared by transport
+adapters, execution hosts and product views. Schemas are the single source of inferred types.
 
 ## Interface
 
+- `/auth` exports public account/session types, social provider identifiers and
+  trusted-origin normalization shared by Auth, API, Control, Relay and Web.
 - `/permissions` exports the framework-free role names and application permission
   vocabulary shared by the wire schemas and Auth's ACL. It is vocabulary, not policy:
   Better Auth owns role grants.
@@ -25,7 +27,7 @@ execution hosts and product views. Schemas are the single source of inferred typ
 
 ## Constraints
 
-No dependency on contracts, transports, authentication, environment, filesystem,
+No dependency on contracts, transports, authentication implementations, environment, filesystem,
 frameworks or storage. Keep HTTP/local/relay envelopes, device grants, cursors and
 protocol versions in contracts. Do not duplicate domain schemas or inferred types
 in adapters. Preserve current field limits, defaults and activity revision rules.

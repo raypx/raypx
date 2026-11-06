@@ -1,3 +1,4 @@
+import { packageCliRuntime } from "@raypx/tooling/build/cli";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, readdir, lstat, readFile, cp, rename, rm } from "node:fs/promises";
@@ -16,7 +17,7 @@ export async function verifyRuntime(source: string) {
     version?: string;
     builtAt?: number;
     nodeVersion?: string;
-    pnpmVersion?: string;
+    runtime?: "system";
   };
   if (!manifest.files || typeof manifest.files !== "object")
     throw new Error("Incomplete CLI runtime");
@@ -50,11 +51,20 @@ export async function verifyRuntime(source: string) {
 
 /** Stage the whole distribution so stale chunks cannot survive an upgrade. */
 export async function stageRuntime(source: string, target: string): Promise<void> {
-  await verifyRuntime(source);
+  const manifest = await verifyRuntime(source);
   const temporary = target + "." + crypto.randomUUID() + ".tmp";
   await mkdir(dirname(target), { recursive: true });
   try {
     await cp(source, temporary, { recursive: true, errorOnExist: true, force: false });
+    if (manifest.runtime === "system") {
+      if (typeof manifest.builtAt !== "number") throw new Error("Incomplete CLI build identity");
+      await packageCliRuntime(
+        resolve(import.meta.dirname, "../../../.."),
+        temporary,
+        manifest.builtAt,
+      );
+      await verifyRuntime(temporary);
+    }
     await rm(target, { force: true, recursive: true });
     await rename(temporary, target);
   } finally {

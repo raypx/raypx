@@ -67,7 +67,7 @@ in storage initialization.
 Default integration tests exercise initialization, reopen, cross-store visibility,
 cross-repository rollback, owner closure, validated stored JSON, rejected formats and six processes starting at
 once. `apps/cli`'s `smoke` additionally relocates the complete distribution outside
-the repository; `smoke:pi` relocates an ESM fixture with the bundled Node runtime.
+the repository; `smoke:pi` relocates an ESM fixture with the running Node interpreter.
 
 Desktop's Rust host separately owns `tauri-sessions.sqlite` for server-scoped
 persistent cookies. Cookie batches are AES-GCM ciphertext authenticated against

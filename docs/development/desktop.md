@@ -165,12 +165,17 @@ do not make arbitrary renderer origins trusted or expose native Cookies.
 
 ## Build and release
 
-Node 24.22.2, pnpm 12.16.1, Rust 1.99.1 and Tauri 2.12.5 are pinned in root
-package.json, rust-toolchain.toml and Cargo.lock. The npm Tauri CLI/API package
+Node must satisfy `>=24.18.0 <25` in root package.json; Desktop bundles the actual
+build runtime and records its exact version in runtime.json. pnpm 12.16.1,
+Rust 1.99.1 and Tauri 2.12.5 are pinned in package.json, rust-toolchain.toml and Cargo.lock.
+The npm Tauri CLI/API package
 release is 2.12.4; Rust Tauri remains exactly 2.12.5. pnpm/VP owns JS builds and
 caches; Cargo owns native compilation. `pnpm run package:desktop` stages the full
 matching CLI distribution, signs nested executables, seals manifests and invokes
-Tauri. Outputs live in `target/release/bundle`. Users need no global Node/pnpm.
+Tauri. Staging takes the normal CLI JS build, adds the native launcher and build
+runtime Node, and retains the host's Herdr assets. Outputs live in
+`target/release/bundle`. Users need no global Node;
+project commands use the user's installed package manager.
 
 macOS requires 13.5+ and a system WebView. Windows uses WebView2 and a per-user
 NSIS installer. Linux Desktop remains unverified. Cross compilation is rejected
@@ -197,7 +202,7 @@ Native input changes select the relevant platform runners. Routine renderer edit
 keep source checks; releases additionally run `pnpm run verify --full`, packaged
 native, database and browser acceptance.
 
-Nested macOS Node/pnpm/CLI/Herdr binaries are signed before their checksum ledgers
+Nested macOS Node/CLI/Herdr binaries are signed before their checksum ledgers
 are sealed and the outer app is signed/notarized. Windows signs PE resources and
 the NSIS installer. Missing distribution credentials produce an unverified
 artifact; they cannot establish signing, notarization or release acceptance.

@@ -8,7 +8,7 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { RPCHandler } from "@orpc/server/fetch";
 import { TimeoutHandlerPlugin } from "@orpc/server/plugins";
-import { normalizeTrustedOrigins } from "@raypx/auth-model";
+import { normalizeTrustedOrigins } from "@raypx/core/auth";
 import { createRpcLoggingPlugin, diagnosticRoute } from "./logging.ts";
 
 /**

@@ -18,20 +18,22 @@ export interface InstallationManifest {
   version: string;
   builtAt: number;
   nodeVersion: string;
-  pnpmVersion: string;
+  runtime?: "system";
   files: Record<string, string>;
 }
 const suffix = process.platform === "win32" ? ".exe" : "";
 export function cliInstallation() {
   const here = dirname(fileURLToPath(import.meta.url));
   const bundled = existsSync(join(here, "runtime.json"));
+  const systemNode =
+    bundled && JSON.parse(readFileSync(join(here, "runtime.json"), "utf8")).runtime === "system";
   return {
     root: bundled ? here : resolve(here, "../../.."),
     bundled,
-    node: bundled ? join(here, "runtime", "node" + suffix) : process.execPath,
+    systemNode,
+    node: bundled && !systemNode ? join(here, "runtime", "node" + suffix) : process.execPath,
     entry: bundled ? join(here, "main.mjs") : resolve(here, "../../main.ts"),
-    launcher: bundled ? join(here, "raypx" + suffix) : null,
-    pnpm: bundled ? join(here, "runtime/pnpm/pnpm" + suffix) : null,
+    launcher: bundled ? join(here, systemNode ? "main.mjs" : "raypx" + suffix) : null,
   };
 }
 export function cliLaunch() {
@@ -52,16 +54,12 @@ export function verifyInstallation(
       (manifest.version !== expected.version || manifest.builtAt !== expected.builtAt)) ||
     !manifest.files ||
     typeof manifest.nodeVersion !== "string" ||
-    typeof manifest.pnpmVersion !== "string"
+    (manifest.runtime !== undefined && manifest.runtime !== "system")
   )
     throw new LocalError("HOST_VERSION_MISMATCH", "CLI resources do not match this build");
-  for (const required of [
-    "main.mjs",
-    "raypx" + suffix,
-    "runtime/node" + suffix,
-    "runtime/pnpm/pnpm" + suffix,
-    "runtime/pnpm/" + (process.platform === "win32" ? "pnpx.cmd" : "pnpx"),
-  ])
+  for (const required of manifest.runtime === "system"
+    ? ["main.mjs"]
+    : ["main.mjs", "raypx" + suffix, "runtime/node" + suffix])
     if (!manifest.files[required])
       throw new LocalError("INSTALLATION_CONFLICT", "Incomplete CLI runtime manifest");
   const found = new Set<string>();

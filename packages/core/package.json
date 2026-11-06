@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./auth": "./src/auth.ts",
     "./agent-runs": "./src/agent-runs.ts",
     "./tasks": "./src/tasks.ts",
     "./activity": "./src/activity.ts",

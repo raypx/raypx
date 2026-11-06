@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "bin": {
-    "raypx-dev": "./src/cli.ts"
+    "raypx-dev": "./bin/raypx-dev.mjs"
   },
   "type": "module",
   "exports": {
@@ -29,13 +29,15 @@
     "@raypx-kit/devkit": "catalog:dev",
     "@raypx-kit/intl": "catalog:",
     "@raypx/runtime-node": "workspace:*",
-    "confbox": "catalog:"
+    "confbox": "catalog:",
+    "semver": "catalog:",
+    "tsx": "catalog:dev"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
+    "@types/semver": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "nitro": "catalog:",
-    "tsx": "catalog:dev"
+    "nitro": "catalog:"
   },
   "raypx": {
     "kind": "tooling",

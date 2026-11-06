@@ -1,4 +1,3 @@
-#!/usr/bin/env -S tsx
 import { findExecutable, run } from "@raypx/runtime-node/process";
 import { uploadAnalyticsMaps } from "./analytics.ts";
 import { readFileSync, appendFileSync } from "node:fs";
@@ -12,7 +11,7 @@ import { discover, runTasks } from "./repository.ts";
 import { scaffold } from "./scaffold.ts";
 import { smoke } from "./smoke/index.ts";
 import { checkKnip } from "./validation/knip.ts";
-import { readNodePin } from "./validation/toolchain.ts";
+import { assertNodeVersion } from "./validation/toolchain.ts";
 import { browserTestArguments } from "./browser-tests.ts";
 import { packageTestArguments, runTests } from "./test-command.ts";
 import { verify, ciGate } from "./verification/index.ts";
@@ -184,9 +183,7 @@ async function main() {
       console.log("Validation reports and test artifacts removed");
       break;
     case "doctor": {
-      const node = readNodePin(root);
-      if (process.versions.node !== node)
-        throw new Error(`Expected Node ${node}, got ${process.versions.node}`);
+      assertNodeVersion(root, process.versions.node);
       console.log(`Node ${process.versions.node}; ${process.platform}/${process.arch}`);
       console.log(
         `Desktop: Tauri; Rust ${findExecutable("cargo") ? "available" : "unavailable"}; pnpm run verify selects affected JavaScript and Rust checks`,

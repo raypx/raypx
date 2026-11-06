@@ -9,7 +9,7 @@ import { enrollTestProfile } from "../helpers/instance.ts";
 assert.equal(process.platform, "linux", "This RSS probe requires Linux /proc");
 const root = resolve(import.meta.dirname, "../../../..");
 const distribution = join(root, "apps/cli/dist");
-const binary = join(distribution, "raypx");
+const launch = [process.execPath, join(distribution, "main.mjs")];
 const temporary = await mkdtemp(join(tmpdir(), "raypx runtime metrics-"));
 const output = join(root, ".artifacts/migration", new Date().toISOString().replaceAll(":", "-"));
 await mkdir(output, { recursive: true });
@@ -17,10 +17,9 @@ const inventory = JSON.parse(await readFile(join(distribution, "runtime.json"), 
   version: string;
   builtAt: number;
   nodeVersion: string;
-  pnpmVersion: string;
 };
 async function invoke(args: string[]) {
-  const child = spawnProcess([binary, ...args], {
+  const child = spawnProcess([...launch, ...args], {
     cwd: temporary,
     env: { ...process.env, PATH: "" },
     stdin: "ignore",
@@ -41,13 +40,11 @@ async function size(directory: string, prefix = "") {
     if (entry.isDirectory()) await size(file, name + "/");
     else {
       assert.ok(entry.isFile(), "Distribution must contain only regular files");
-      const group = name.startsWith("runtime/pnpm/")
-        ? "pnpm"
-        : name.startsWith("runtime/")
-          ? "node"
-          : name.startsWith("herdr/")
-            ? "herdr"
-            : "application";
+      const group = name.startsWith("runtime/")
+        ? "node"
+        : name.startsWith("herdr/")
+          ? "herdr"
+          : "application";
       groups[group] = (groups[group] ?? 0) + (await stat(file)).size;
       fileCount++;
     }
@@ -73,9 +70,9 @@ try {
     startupMs.push(performance.now() - start);
   }
   const dataDir = join(temporary, "profile");
-  closeEnrollment = await enrollTestProfile({ dataDir }, [binary]);
+  closeEnrollment = await enrollTestProfile({ dataDir }, launch);
   const start = performance.now();
-  daemon = spawnProcess([binary, "daemon", "run", "--data-dir", dataDir], {
+  daemon = spawnProcess([...launch, "daemon", "run", "--data-dir", dataDir], {
     cwd: temporary,
     env: { ...process.env, PATH: "" },
     stdin: "ignore",

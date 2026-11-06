@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The standalone Raypx local execution host. It ships a complete Node/pnpm runtime directory and requires no global runtime. Execution requires first-time instance enrollment; its signed identity permits offline work after online logout.
+The standalone Raypx local execution host. Its normal build produces an installable JS package with a `raypx` bin and requires supported Node. Desktop adds its own Node runtime and native launcher. Project package managers come from the user's environment. Execution requires first-time instance enrollment; its signed identity permits offline work after online logout.
 
 ## Interface
 
@@ -49,7 +49,7 @@ The runtime owns `ProfileStorage` for `<profile>/profile.sqlite` through private
 `runtime/process/herdr.ts` delegates PTY/VT/cursor state to pinned Herdr; Desktop stages its verified runtime/DLLs/licenses. Runtime never downloads binaries.
 `RAYPX_HERDR_BINARY` selects an absolute development binary. Each owner starts an isolated server: client EOF cancels its PTYs; owner EOF stops its server. Never reuse user sessions.
 Commands/environment use a one-use authenticated local handoff, never persisted layouts. Input/resize/paste delivery is bounded and serial; never retry uncertain input.
-Source checks and unit tests need no Herdr or Rust. Complete distribution builds require the pinned Rust toolchain. `smoke:herdr-terminal` is the explicit native gate; `RAYPX_HERDR_COMPILED=1` tests compiled helpers after building.
+Source checks and unit tests need no Herdr or Rust. CLI builds package verified Herdr assets; only Desktop runtime staging requires the pinned Rust toolchain. `smoke:herdr-terminal` is the explicit native gate; `RAYPX_HERDR_COMPILED=1` tests compiled helpers after building.
 
 ## Constraints
 
@@ -58,7 +58,7 @@ Source checks and unit tests need no Herdr or Rust. Complete distribution builds
   complete per-build copy under `<data>/bin/daemon` so the Desktop updater can replace the bundled executable.
   Ordinary foreground commands never install a daemon or system service. Desktop may start
   an independent owner on demand; `daemon install` alone registers launchd.
-- Append bundled Node/pnpm/pnpx to PATH, preserving user-tool precedence. `runtime.info` exposes absolute node/pnpm paths. Never assume process.execPath is Raypx.
+- Append bundled Node to PATH, preserving user-tool precedence. `runtime.info` exposes the absolute Node path and a user-installed pnpm path or null. Never assume process.execPath is Raypx.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
 - The executable configures `@raypx/logger` (evlog) once with an explicit field policy and a
   stderr stream drain, and closes it after runtime shutdown.
@@ -74,23 +74,24 @@ Source checks and unit tests need no Herdr or Rust. Complete distribution builds
   disconnects one client and cancels its tools/PTYs, preserving Agent tasks and scheduling.
   Missed Cron triggers are skipped.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
-- Vite+ `vp pack` builds ESM chunks; its hook stages a thin Rust launcher, Node,
-  native pnpm distribution, a pnpx wrapper, licenses and Herdr. The version/build/checksum
+- Vite+ `vp pack` builds the sole installable JS package in `dist`, including ESM chunks,
+  licenses and platform Herdr assets. Desktop staging adds Node and a thin Rust launcher. The version/build/checksum
   inventory covers the whole directory. Connector install/repair and Windows daemon
   upgrade copy the complete inventory, preserving ownership and rollback protection.
 
 ## Verification
 
 Unit tests live beside runtime, command and TUI source; integration suites stay in
-`tests/integration/`, grouped by capability. Pure parsers, injected provider ports and SDK loops stay in unit;
-filesystem/SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
+`tests/integration/`, grouped by capability. Tests focused on one source module,
+including small temporary filesystem fixtures such as `runtime/process/tools.test.ts`,
+stay beside it. Pure parsers, injected provider ports and SDK loops stay in unit;
+runtime/profile composition, SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
 Agent integration suites separate lifecycle/approvals, inputs and context/resume.
 Injected suites separate Pi tool durability and provider gate/drain replay (`tests/helpers/provider-replay.ts`).
 Temporary profiles and execution hosts are owned by `tests/helpers/runtime.ts` and
 `tests/helpers/agents.ts`; each case still receives a fresh runtime and directory.
 `tests/smoke/artifact.ts` validates the built executable separately from the unit tests.
-`smoke:pi` bundles an offline Pi fixture with VP and relocates the bundled Node;
-build the complete CLI distribution first. It checks durable context and duplicate effects.
+`smoke:pi` bundles an offline Pi fixture with VP and relocates the running Node interpreter; It checks durable context and duplicate effects.
 `tests/smoke/tui.ts` owns the explicit PTY smoke gate.
 Its Python driver lives in `tests/fixtures/tui/`; simulated Agent executables and
 their child processes live in `tests/fixtures/agents/` and run from temporary profiles.

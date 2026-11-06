@@ -15,12 +15,10 @@
     "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
   },
   "dependencies": {
-    "@raypx/auth-model": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/jobs-model": "workspace:*",
-    "@raypx/jobs-server": "workspace:*",
+    "@raypx/jobs": "workspace:*",
     "@raypx/memory-model": "workspace:*",
     "@raypx/memory-server": "workspace:*",
     "drizzle-orm": "catalog:",

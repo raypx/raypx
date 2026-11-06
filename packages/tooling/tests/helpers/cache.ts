@@ -21,11 +21,13 @@ export function project(automaticInputs = true) {
       private: true,
       type: "module",
       packageManager: "pnpm@12.16.1",
-      workspaces: ["packages/*"],
     }),
   );
   writeFileSync(join(root, "pnpm-lock.yaml"), "{}\n");
-  writeFileSync(join(root, "pnpm-workspace.yaml"), 'packages: ["packages/*"]\n');
+  writeFileSync(
+    join(root, "pnpm-workspace.yaml"),
+    'packages: ["packages/*"]\nengineStrict: true\n',
+  );
   writeFileSync(join(root, "automatic-inputs.json"), JSON.stringify(automaticInputs));
   mkdirSync(join(root, "node_modules/.vite/task-cache"), { recursive: true });
   mkdirSync(join(root, "node_modules/.vite-temp"), { recursive: true });
@@ -51,7 +53,7 @@ export function project(automaticInputs = true) {
     join(root, "node_modules/@raypx/runtime-node"),
     "dir",
   );
-  for (const dependency of ["confbox", "tsx"])
+  for (const dependency of ["confbox", "semver", "tsx"])
     symlinkSync(
       join(repository, "packages/tooling/node_modules", dependency),
       join(root, "node_modules", dependency),

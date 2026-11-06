@@ -7,13 +7,13 @@ import { aiFixture } from "../helpers/ai.ts";
 import type { AgentTask, TaskContinuation } from "@raypx/core/tasks";
 
 /** The production executable owns both IPC clients and a detached, enrolled Pi daemon. */
-export async function smokeManagedPi(binary: string, dataDir: string) {
+export async function smokeManagedPi(launch: string[], dataDir: string) {
   const profile = "pi-acceptance",
     home = join(dataDir, "managed-pi-home"),
     project = join(dataDir, "managed-pi-project");
   await mkdir(home);
   await mkdir(project);
-  const closeInstance = await enrollTestProfile({ dataDir, profile }, [binary]);
+  const closeInstance = await enrollTestProfile({ dataDir, profile }, launch);
   const server = await aiFixture({
     toolSequence: [
       {
@@ -31,7 +31,7 @@ export async function smokeManagedPi(binary: string, dataDir: string) {
   ) => {
     const child = spawnProcess(
       [
-        binary,
+        ...launch,
         group,
         ...action,
         ...(input === undefined

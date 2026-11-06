@@ -13,17 +13,22 @@ function write(root: string, path: string, contents: object | string) {
   writeFileSync(file, typeof contents === "string" ? contents : JSON.stringify(contents));
 }
 
-it.each([false, true])(
-  "collects production workspace sources transitively (object workspaces=%s)",
-  (object) => {
+it.each(["flow", "block"])(
+  "collects production workspace sources transitively (pnpm packages=%s)",
+  (style) => {
     const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-sources-"));
     const source = join(directory, "source"),
       output = join(directory, "output");
     try {
       const patterns = ["units/*", "shared/*", "units/migration"];
-      write(source, "package.json", {
-        workspaces: object ? { packages: patterns } : patterns,
-      });
+      write(source, "package.json", { private: true });
+      write(
+        source,
+        "pnpm-workspace.yaml",
+        style === "flow"
+          ? JSON.stringify({ packages: patterns, catalog: { registry: "1.0.0" } })
+          : `packages:\n${patterns.map((pattern) => `  - ${pattern}\n`).join("")}catalog:\n  registry: 1.0.0\n`,
+      );
       for (const [path, manifest] of [
         [
           "units/migration",
@@ -87,7 +92,8 @@ it.each(["missing-entry", "missing-dependency"])(
     const source = join(directory, "source"),
       output = join(directory, "output");
     try {
-      write(source, "package.json", { workspaces: ["modules/*"] });
+      write(source, "package.json", { private: true });
+      write(source, "pnpm-workspace.yaml", 'packages: ["modules/*"]\n');
       write(source, "modules/migration/package.json", {
         name: "migration",
         dependencies: { missing: "workspace:*" },

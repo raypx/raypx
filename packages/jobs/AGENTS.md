@@ -2,18 +2,23 @@
 
 ## Purpose
 
-Browser views for shared local/cloud jobs. Pure models live in `@raypx/jobs-model`;
-cloud scheduling use cases live in `@raypx/jobs-server`.
+Shared local/cloud job models, injected cloud scheduling use cases and browser views.
 
 ## Interface
 
-`/client` owns DOM views and their injected ports; apps own routing, authentication and concrete adapters.
-Recurring platform timers belong to apps; dispatch deadlines remain bounded within the use case.
+- `/model` owns platform-neutral local/cloud schemas, inferred types, errors and
+  pure calendar calculations.
+- `/server` owns Node-targeted cloud scheduling use cases and injected repository/
+  dispatch ports. API owns platform timers, persistence and concrete dispatch adapters.
+- `/client` owns DOM views and their injected ports; apps own routing and authentication.
+  Recurring platform timers belong to apps; dispatch deadlines remain bounded within the use case.
 
 ## Boundaries
 
-Contracts imports `@raypx/jobs-model` to assemble wire messages; jobs must never import
-contracts or a concrete SDK. Keep the complete dependency graph acyclic.
+Contracts imports `/model` to assemble wire messages; jobs must never import
+contracts or a concrete SDK. Models and server use cases never import client views,
+React or UI. Keep the complete dependency graph acyclic. Public subpaths isolate
+source imports; the workspace dependency manifest is shared across those subpaths.
 Cloud actions are device.sync and agent.run, scoped to an account and captured
 device epoch. Local directory scans/commands retain their device ownership and
 wire format. No server action may execute arbitrary shell commands.
@@ -35,5 +40,5 @@ forms retain edits on CAS errors and require explicit device epoch reselection.
 
 ## Verification
 
-Run package checks/tests and both application consumers. SQL persistence, actual
+Run package checks, `test:unit`, `test:component` and application consumer tests. SQL persistence, actual
 relay round trips and Node/Nitro scheduled events have separate integration gates.

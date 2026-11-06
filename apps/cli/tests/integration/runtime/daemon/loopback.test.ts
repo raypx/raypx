@@ -76,17 +76,7 @@ it("runs a Windows owner from a private per-build copy and prunes older copies",
     mkdirSync(bin);
     const root = join(dataDir, "bundle");
     const files: Record<string, string> = {};
-    for (const name of [
-      "raypx",
-      "raypx.exe",
-      "main.mjs",
-      "runtime/node",
-      "runtime/node.exe",
-      "runtime/pnpm/pnpm",
-      "runtime/pnpm/pnpx",
-      "runtime/pnpm/pnpm.exe",
-      "runtime/pnpm/pnpx.cmd",
-    ]) {
+    for (const name of ["raypx", "raypx.exe", "main.mjs", "runtime/node", "runtime/node.exe"]) {
       const file = join(root, name);
       mkdirSync(join(file, ".."), { recursive: true });
       writeFileSync(file, "fixture " + name);
@@ -96,22 +86,22 @@ it("runs a Windows owner from a private per-build copy and prunes older copies",
     }
     writeFileSync(
       join(root, "runtime.json"),
-      JSON.stringify({ ...cliBuild, nodeVersion: "24.22.2", pnpmVersion: "12.16.1", files }),
+      JSON.stringify({ ...cliBuild, nodeVersion: "24.22.2", files }),
     );
     vi.spyOn(installation, "cliInstallation").mockReturnValue({
       root,
       bundled: true,
+      systemNode: false,
       node: join(root, "runtime/node.exe"),
       entry: join(root, "main.mjs"),
       launcher: bundle,
-      pnpm: join(root, "runtime/pnpm/pnpm.exe"),
     });
     expect(daemonLaunch(directory, [bundle], "darwin")).toEqual([bundle]);
     const [copy, entry] = daemonLaunch(directory, [bundle], "win32");
     expect(copy).not.toBe(bundle);
     expect(copy).toContain(join("bin", "daemon"));
     expect(existsSync(entry!)).toBe(true);
-    expect(existsSync(join(entry!, "../runtime/pnpm/pnpm.exe"))).toBe(true);
+    expect(existsSync(join(entry!, "../runtime/node.exe"))).toBe(true);
     expect(daemonLaunch(directory, [bundle], "win32")).toEqual([copy, entry]);
     expect(existsSync(bundle)).toBe(true);
     const old = join(entry!, "../../0.0.0-1");
@@ -130,6 +120,44 @@ it("runs a Windows owner from a private per-build copy and prunes older copies",
     }
     daemonLaunch(directory, [bundle], "win32");
     expect(existsSync(old)).toBe(false);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+it("keeps the external Node interpreter when copying a Windows JS package owner", () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "raypx-package-owner-"));
+  try {
+    const root = join(dataDir, "package");
+    mkdirSync(root);
+    writeFileSync(join(root, "main.mjs"), "fixture entry");
+    writeFileSync(
+      join(root, "runtime.json"),
+      JSON.stringify({
+        ...cliBuild,
+        nodeVersion: process.versions.node,
+        runtime: "system",
+        files: { "main.mjs": createHash("sha256").update("fixture entry").digest("hex") },
+      }),
+    );
+    vi.spyOn(installation, "cliInstallation").mockReturnValue({
+      root,
+      bundled: true,
+      systemNode: true,
+      node: process.execPath,
+      entry: join(root, "main.mjs"),
+      launcher: join(root, "main.mjs"),
+    });
+    const launch = daemonLaunch(
+      profilePath({ dataDir }),
+      [process.execPath, join(root, "main.mjs")],
+      "win32",
+    );
+    expect(launch[0]).toBe(process.execPath);
+    expect(launch[1]).toContain(join("bin", "daemon"));
+    expect(existsSync(launch[1]!)).toBe(true);
+    expect(existsSync(join(launch[1]!, "../runtime"))).toBe(false);
+    expect(existsSync(join(root, "main.mjs"))).toBe(true);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }

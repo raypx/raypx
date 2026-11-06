@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "bin": {
-    "raypx": "./src/main.ts"
+    "raypx": "./dist/main.mjs"
   },
   "type": "module",
   "scripts": {
@@ -31,7 +31,7 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/instances": "workspace:*",
-    "@raypx/jobs-model": "workspace:*",
+    "@raypx/jobs": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/memory-model": "workspace:*",
     "@raypx/memory-server": "workspace:*",

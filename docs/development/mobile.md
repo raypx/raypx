@@ -7,7 +7,7 @@ with sign-out. Remote task views, approvals and push notifications are later wor
 
 ## Development
 
-Use the repository-pinned Node 24.22.2 runtime:
+Use a Node runtime in the repository's `>=24.18.0 <25` range:
 
 ```sh
 pnpm install

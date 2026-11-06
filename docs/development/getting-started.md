@@ -1,9 +1,10 @@
 # Development
 
-Use Node 24.22.2 and pnpm 12.16.1. Root `engines.node` and `packageManager`
-are their respective pins; `pnpm run policy` checks all mirrored configuration.
-`pnpm run workspace:sync` regenerates pnpm workspace patterns, catalogs and
-overrides from root package.json. Use pnpm's default isolated dependency layout.
+Use Node `>=24.18.0 <25` and pnpm 12.16.1. Root `engines.node` declares the
+supported Node range and `packageManager` pins pnpm; `pnpm run policy` checks
+configuration against these requirements.
+Maintain workspace patterns, catalogs, overrides and installation settings directly
+in `pnpm-workspace.yaml`. Use pnpm's default isolated dependency layout.
 
 mise is the recommended Node version manager. `mise.toml` only enables reading
 package.json and has no `[tools]` pins. Run `mise trust && mise install`, activate
@@ -76,8 +77,9 @@ physical instance. Policy still checks every declared production import.
 
 ## Local CLI
 
-Build with `pnpm run build:cli`, then use `apps/cli/dist/raypx` (`raypx.exe` on
-Windows), or run the source with `pnpm --dir apps/cli run dev --help`.
+Build with `pnpm run build:cli`, then use `node apps/cli/dist/main.mjs` or install
+`apps/cli/dist` with your package manager for its `raypx` bin. Run the source with
+`pnpm --dir apps/cli run dev --help`.
 The citty command tree provides `raypx --help`, `raypx files --help` and
 `raypx files read --help`. Register the selected profile with `raypx login`
 before using local execution commands; see [registration](#register-local-execution). JSON-parameter commands include:

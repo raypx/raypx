@@ -14,16 +14,10 @@ async function fixture() {
   roots.push(root);
   const source = join(root, "source"),
     target = join(root, "target");
-  await mkdir(join(source, "runtime/pnpm"), { recursive: true });
+  await mkdir(join(source, "runtime"), { recursive: true });
   await mkdir(target);
   const files: Record<string, string> = {};
-  for (const name of [
-    "raypx",
-    "main.mjs",
-    "runtime/node",
-    "runtime/pnpm/pnpm",
-    "runtime/pnpm/pnpx",
-  ]) {
+  for (const name of ["raypx", "main.mjs", "runtime/node"]) {
     const data = "fixture " + name;
     await writeFile(join(source, name), data);
     files[name] = createHash("sha256").update(data).digest("hex");
@@ -34,14 +28,17 @@ async function fixture() {
   );
   return { source, target };
 }
-it("stages Node, pnpm and JS chunks as one payload and removes stale files", async () => {
+it("stages Node and JS chunks as one payload and removes stale files", async () => {
   const { source, target } = await fixture();
   await writeFile(join(target, "stale.mjs"), "old");
+  await mkdir(join(target, "runtime/pnpm"), { recursive: true });
+  await writeFile(join(target, "runtime/pnpm/pnpm"), "old package manager");
   await stageRuntime(source, target);
-  expect(await readFile(join(target, "runtime/pnpm/pnpx"), "utf8")).toBe(
-    "fixture runtime/pnpm/pnpx",
-  );
+  expect(await readFile(join(target, "runtime/node"), "utf8")).toBe("fixture runtime/node");
   await expect(readFile(join(target, "stale.mjs"))).rejects.toMatchObject({ code: "ENOENT" });
+  await expect(readFile(join(target, "runtime/pnpm/pnpm"))).rejects.toMatchObject({
+    code: "ENOENT",
+  });
 });
 it("rejects modified payloads before replacing existing inputs", async () => {
   const { source, target } = await fixture();

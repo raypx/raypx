@@ -12,14 +12,14 @@ import sys
 import termios
 import time
 
-binary, directory = sys.argv[1:]
+node, binary, directory = sys.argv[1:]
 environment = dict(os.environ, PATH="", LANG="en_US.UTF-8", LC_ALL="en_US.UTF-8", TERM="xterm-256color")
 ansi = re.compile(rb"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
 def command(profile, *arguments):
     result = subprocess.run(
-        [binary, "--data-dir", directory, "--profile", profile, *arguments, "--json"],
+        [node, binary, "--data-dir", directory, "--profile", profile, *arguments, "--json"],
         cwd=directory, env=environment, stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
     )
@@ -36,7 +36,7 @@ class Session:
         self.output = b""
 
         self.child = subprocess.Popen(
-            [binary, "tui", "--data-dir", directory, "--profile", profile],
+            [node, binary, "tui", "--data-dir", directory, "--profile", profile],
             cwd=directory, env=environment, stdin=self.slave, stdout=self.slave,
             stderr=subprocess.PIPE,
         )
@@ -120,7 +120,7 @@ finally:
 # Desktop's stdio engine owns scheduling. A TUI in the same profile must still
 # open successfully and must not attempt to acquire that scheduler lease.
 engine = subprocess.Popen(
-    [binary, "stdio", "--data-dir", directory, "--profile", "tui-with-desktop"],
+    [node, binary, "stdio", "--data-dir", directory, "--profile", "tui-with-desktop"],
     cwd=directory, env=environment, stdin=subprocess.PIPE,
     stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0,
 )

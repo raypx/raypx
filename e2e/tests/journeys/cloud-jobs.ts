@@ -3,7 +3,7 @@ import { test } from "../helpers/browser-fixture.ts";
 
 import type { AgentTask } from "@raypx/core/tasks";
 
-import type { CloudJob, CloudJobCreateInput, CloudJobRun } from "@raypx/jobs-model";
+import type { CloudJob, CloudJobCreateInput, CloudJobRun } from "@raypx/jobs/model";
 import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.ts";
 import { selectOption } from "../helpers/select.ts";
 

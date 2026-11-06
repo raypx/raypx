@@ -2,11 +2,25 @@
 
 Status: Accepted, 2026-11-03. Extends ADR 0042.
 
-Runtime amendment (2026-11-06): pure memory, job and auth schemas now live in
-`@raypx/memory-model`, `@raypx/jobs-model` and `@raypx/auth-model`. Injected
-server use cases live in `@raypx/memory-server` and `@raypx/jobs-server`. This
+Runtime amendment (2026-11-06): pure memory schemas live in `@raypx/memory-model`.
+Jobs consolidates its model and server workspaces into the explicit
+`@raypx/jobs/model`, `@raypx/jobs/server` and `@raypx/jobs/client` entries.
+Public account/session types,
+social provider identifiers and trusted-origin rules live in `@raypx/core/auth`,
+alongside Core's permission vocabulary; the separate auth model workspace is removed.
+Injected server use cases live in `@raypx/memory-server` and `@raypx/jobs/server`. This
 replaces the vertical schema ownership recorded below; see the current
 [workspace guide](../development/workspaces.md).
+
+Account models remain framework-free in Core. Better Auth and shared authentication
+forms stay in `@raypx/auth`. The explicit `/auth` entry keeps these concerns separate
+without another workspace for a small set of shared types and pure rules.
+
+Job entries retain universal, Node and browser targets with no model/server imports
+of client views. Consolidation removes duplicate manifests and task/test configuration;
+the entries share installation dependencies, so backend workspace installation also
+includes Jobs' declared UI dependencies. Contracts still composes domain schemas
+without importing UI or server implementation code.
 
 ## Direction
 
@@ -57,9 +71,9 @@ are imported from `@raypx/core/tasks` and `@raypx/contracts/tasks`, their owners
 ## Contracts
 
 `@raypx/contracts` drops `.`, `./jobs` and `./memory`. It composes wire schemas from
-the pure `@raypx/jobs-model` and `@raypx/memory-model` packages. Browser views stay in
-`@raypx/jobs` and `@raypx/memory`; injected server use cases live in the corresponding
-`*-server` workspaces. A consumer that needs a domain schema imports it from its model
+the pure `@raypx/jobs/model` and `@raypx/memory-model` entries. Browser views stay in
+`@raypx/jobs/client` and `@raypx/memory/client`; injected server use cases live in
+`@raypx/jobs/server` and `@raypx/memory-server`. A consumer that needs a domain schema imports it from its model
 owner, not through contracts.
 
 ## Enforcement

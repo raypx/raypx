@@ -95,6 +95,10 @@ jobs:
         run: |
           pnpm --dir packages/runtime-node run test
           pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts src/build/archive.test.ts src/validation/build-size.test.ts
+      - name: Installed CLI package
+        if: matrix.phase == 'checks'
+        shell: bash
+        run: pnpm --dir apps/cli run smoke
       - name: Herdr terminal integration
         if: matrix.phase == 'checks'
         env:
@@ -111,9 +115,10 @@ jobs:
       - name: Desktop Tauri checks
         if: ${{ !cancelled() && matrix.phase == 'checks' && steps.native-inputs.outcome == 'success' }}
         env:
-          RAYPX_TAURI_CLI: ${{ github.workspace }}/apps/cli/dist/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
+          RAYPX_TAURI_CLI: ${{ github.workspace }}/apps/desktop/resources/bin/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
         shell: bash
         run: |
+          pnpm --dir apps/desktop exec tsx scripts/host/tauri.ts prepare-cli
           pnpm --dir apps/desktop run tauri:check
           pnpm --dir apps/desktop run tauri:test
       - name: Import macOS signing certificate

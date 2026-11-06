@@ -1,4 +1,4 @@
-import { normalizeTrustedOrigins } from "@raypx/auth-model";
+import { normalizeTrustedOrigins } from "@raypx/core/auth";
 import { defineEnv, z } from "@raypx/env";
 
 export function getRelayEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {

@@ -2,8 +2,8 @@
 
 Tauri 2.12.5 and Rust 1.99.1 host the React SPA in WKWebView or WebView2.
 The standalone TypeScript CLI owns execution, scheduling and the independent
-daemon. The CLI ships with Node 24.22.2, pnpm 12.16.1 and Herdr; installation
-requires no global Node or pnpm. macOS requires 13.5+. Linux Desktop
+daemon. Desktop stages the CLI JS build with the supported Node build runtime and Herdr; installation requires no global
+Node. Project commands use the user's installed package manager. macOS requires 13.5+. Linux Desktop
 acceptance remains unverified.
 
 - `src-tauri/src/shell.rs`: windows, tray, notifications, picker and trusted IPC.
@@ -27,7 +27,7 @@ pnpm run verify
 ```
 
 VP owns the task graph. Normal Desktop builds check and render the SPA. Explicit
-packaging stages the entire CLI distribution, verifies checksums, signs nested
+packaging adds Node and the native launcher to the CLI JS build, verifies checksums, signs nested
 executables, updates their manifests and invokes Tauri. Installers live in
 `target/release/bundle`; matching CLI resources are required for every target.
 `dev:desktop` starts Tauri and Vite. Cargo owns native incremental compilation.

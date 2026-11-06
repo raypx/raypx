@@ -7,25 +7,24 @@ import {
 } from "@raypx/runtime-node/files";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { smokeManagedPi } from "./managed-pi.ts";
+import { installNpmCli } from "../helpers/npm.ts";
 import { enrollTestProfile } from "../helpers/instance.ts";
 import assert from "node:assert/strict";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import manifest from "../../package.json";
+import rootManifest from "../../../../package.json";
+import { satisfies } from "semver";
 import { aiFixture } from "../helpers/ai.ts";
 
-const { engines, packageManager } = await readJsonFile(
-  resolve(import.meta.dirname, "../../../../package.json"),
-);
+const { engines } = rootManifest;
 
 const dataDir = await mkdtemp(join(tmpdir(), "raypx 完整运行目录 smoke-"));
-const builtBinary = resolve(
-  import.meta.dirname,
-  "../../dist",
-  process.platform === "win32" ? "raypx.exe" : "raypx",
-);
-const binary = join(dataDir, process.platform === "win32" ? "raypx.exe" : "raypx");
+const distribution = join(dataDir, "distribution");
+const builtDirectory = await installNpmCli(dataDir);
+const binary = join(distribution, "main.mjs");
+const launch = [process.execPath, binary];
 function diagnostics(text: string) {
   return text
     .split("\n")
@@ -43,11 +42,14 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
 let closeInstance = async () => {};
 let closeProbe = async () => {};
 try {
-  // Relocate the complete distribution; no repository or global runtime may be required.
-  await cp(resolve(builtBinary, ".."), dataDir, { recursive: true });
+  // Run the installed package outside the repository, using only its Node interpreter.
+  await cp(builtDirectory, distribution, { recursive: true });
+  const runtime = await readJsonFile(join(distribution, "runtime.json"));
+  assert.ok(satisfies(runtime.nodeVersion, engines.node));
+  assert.equal(await fileExists(join(distribution, "runtime")), false);
   if (process.platform !== "win32") await chmod(binary, 0o700);
-  closeInstance = await enrollTestProfile({ dataDir }, [binary]);
-  const version = spawnProcess([binary, "--version"], {
+  closeInstance = await enrollTestProfile({ dataDir }, launch);
+  const version = spawnProcess([...launch, "--version"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
     stdout: "pipe",
@@ -62,7 +64,7 @@ try {
       claude = join(home, "claude"),
       codex = join(home, "codex");
     const invoke = async (args: string[], success = true) => {
-      const child = spawnProcess([binary, ...args, "--data-dir", state, "--json"], {
+      const child = spawnProcess([...launch, ...args, "--data-dir", state, "--json"], {
         cwd: dataDir,
         env: {
           ...process.env,
@@ -79,11 +81,16 @@ try {
         new Response(child.stderr).text(),
         child.exited,
       ]);
-      assert.equal(exit, success ? 0 : 1, `Connector lifecycle command ${args.join(" ")} failed`);
+      const code = /"code"\s*:\s*"([A-Z_]+)"/.exec(stderr)?.[1] ?? "unavailable";
+      assert.equal(
+        exit,
+        success ? 0 : 1,
+        `Connector lifecycle command ${args.join(" ")} failed (${code})`,
+      );
       return { stdout, stderr };
     };
     await invoke(["connectors", "install", "claude"]);
-    const stable = join(home, "bin", "raypx"),
+    const stable = join(home, "bin", "raypx.mjs"),
       metadataFile = join(home, "bin", "installation.json");
     const metadata = await readJsonFile(metadataFile);
     assert.equal(metadata.version, manifest.version);
@@ -107,7 +114,7 @@ try {
     );
     await invoke(["connectors", "repair", "claude"]);
     const backups = await Array.fromAsync(
-      globFiles("raypx.backup-*", { cwd: join(home, "bin"), absolute: true }),
+      globFiles("raypx.mjs.backup-*", { cwd: join(home, "bin"), absolute: true }),
     );
     assert.equal(backups.length, 1);
     assert.equal(await readTextFile(backups[0]!), "externally modified hook");
@@ -137,7 +144,7 @@ try {
   }
   const aiHome = join(dataDir, "ai-home");
   for (const action of ["providers", "models"]) {
-    const catalog = spawnProcess([binary, "ai", action, "--json"], {
+    const catalog = spawnProcess([...launch, "ai", action, "--json"], {
       cwd: dataDir,
       env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
       stdout: "pipe",
@@ -157,23 +164,23 @@ try {
     bootstrap = join(dataDir, "provider-probe.mjs");
   await writeFile(
     bootstrap,
-    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await (await import("node:fs/promises")).writeFile(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(resolve(import.meta.dirname, "../../dist/main.mjs"))});`,
+    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await (await import("node:fs/promises")).writeFile(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(join(builtDirectory, "main.mjs"))});`,
   );
-  const probeLaunch = [
-    join(dataDir, "runtime", process.platform === "win32" ? "node.exe" : "node"),
-    bootstrap,
-  ];
+  const probeLaunch = [process.execPath, bootstrap];
   // Give the independently compiled provider probe its own enrolled test profile.
   const probeData = join(dataDir, "provider-profile");
   closeProbe = await enrollTestProfile({ dataDir: probeData }, probeLaunch);
   const providerIds = ["anthropic", "openai", "google", "openrouter"];
   for (const provider of providerIds) {
-    const catalog = spawnProcess([binary, "ai", "models", JSON.stringify({ provider }), "--json"], {
-      cwd: dataDir,
-      env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const catalog = spawnProcess(
+      [...launch, "ai", "models", JSON.stringify({ provider }), "--json"],
+      {
+        cwd: dataDir,
+        env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
     const models = JSON.parse(await new Response(catalog.stdout).text()) as { id: string }[];
     await new Response(catalog.stderr).text();
     assert.equal(await catalog.exited, 0);
@@ -223,7 +230,7 @@ try {
   }
   let bundledJsBytes = 0;
   for (const file of globFiles("**/*.mjs", {
-    cwd: resolve(import.meta.dirname, "../../dist"),
+    cwd: builtDirectory,
     absolute: true,
   }))
     bundledJsBytes += (await stat(file)).size;
@@ -241,7 +248,7 @@ try {
   try {
     const ai = spawnProcess(
       [
-        binary,
+        ...launch,
         "ai",
         "complete",
         "--data-dir",
@@ -289,7 +296,7 @@ try {
       const server = await aiFixture({ stall: true });
       const child = spawnProcess(
         [
-          binary,
+          ...launch,
           "ai",
           "complete",
           "--data-dir",
@@ -330,8 +337,8 @@ try {
       }
     }
   }
-  await smokeManagedPi(binary, dataDir);
-  const invalid = spawnProcess([binary, "--json", "--profile"], {
+  await smokeManagedPi(launch, dataDir);
+  const invalid = spawnProcess([...launch, "--json", "--profile"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
     stdout: "pipe",
@@ -343,13 +350,16 @@ try {
   assert.ok(diagnostics(invalidDiagnostics).some((event) => event.code === "LOCAL_ERROR"));
   completed(invalidDiagnostics, "command", "failed");
   for (const tuiArgs of [["tui"], ["tui", "--json"], ["tui", "--yes"]]) {
-    const tui = spawnProcess([binary, ...tuiArgs, "--data-dir", join(dataDir, "not-interactive")], {
-      cwd: dataDir,
-      env: { ...process.env, PATH: "" },
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const tui = spawnProcess(
+      [...launch, ...tuiArgs, "--data-dir", join(dataDir, "not-interactive")],
+      {
+        cwd: dataDir,
+        env: { ...process.env, PATH: "" },
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
     assert.equal(await new Response(tui.stdout).text(), "");
     assert.equal(await tui.exited, 1);
     const rejectedDiagnostics = await new Response(tui.stderr).text();
@@ -362,7 +372,7 @@ try {
       false,
     );
   }
-  const help = spawnProcess([binary, "stdio", "--help", "--data-dir", dataDir], {
+  const help = spawnProcess([...launch, "stdio", "--help", "--data-dir", dataDir], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
     stdin: "ignore",
@@ -375,7 +385,7 @@ try {
   assert.ok(!helpText.includes('"event":'), "Help must not start the stdio protocol");
   completed(await new Response(help.stderr).text(), "command", "success");
   for (const invalidArgs of [["--unknown"], ["jobs", "list", "--json", "--json"]]) {
-    const rejected = spawnProcess([binary, ...invalidArgs], {
+    const rejected = spawnProcess([...launch, ...invalidArgs], {
       cwd: dataDir,
       env: { ...process.env, PATH: "" },
       stdout: "pipe",
@@ -390,7 +400,7 @@ try {
   const directory = join(dataDir, "authorized --help 工作 目录");
   await mkdir(directory);
   const authorize = spawnProcess(
-    [binary, "--data-dir", dataDir, "files", "--json", "authorize", "--", directory],
+    [...launch, "--data-dir", dataDir, "files", "--json", "authorize", "--", directory],
     { cwd: dataDir, env: { ...process.env, PATH: "" }, stdout: "pipe", stderr: "pipe" },
   );
   const grant = JSON.parse(await new Response(authorize.stdout).text());
@@ -409,7 +419,7 @@ try {
       : ["-c", "printf private-command-output"];
   const createJob = spawnProcess(
     [
-      binary,
+      ...launch,
       "jobs",
       "create",
       JSON.stringify({
@@ -432,7 +442,7 @@ try {
   assert.equal(await createJob.exited, 0);
   completed(await new Response(createJob.stderr).text(), "command", "success");
   const runJob = spawnProcess(
-    [binary, "jobs", "run", JSON.stringify({ id: job.id }), "--json", "--data-dir", dataDir],
+    [...launch, "jobs", "run", JSON.stringify({ id: job.id }), "--json", "--data-dir", dataDir],
     { cwd: dataDir, env: { ...process.env, PATH: "" }, stdout: "pipe", stderr: "pipe" },
   );
   const jobResult = JSON.parse(await new Response(runJob.stdout).text());
@@ -451,7 +461,7 @@ try {
   assert.ok(Number(summaries[0]?.elapsedMs) > 0, "Job summary must retain the operation duration");
   for (const privateValue of ["private-job-name", "private-command-output", dataDir, shell])
     assert.ok(!jobDiagnostics.includes(privateValue), "Diagnostics must omit private command data");
-  const child = spawnProcess([binary, "stdio", "--data-dir", dataDir], {
+  const child = spawnProcess([...launch, "stdio", "--data-dir", dataDir], {
     cwd: dataDir,
     env: { ...process.env, PATH: "", RAYPX_HERDR_BINARY: join(dataDir, "missing-herdr") },
     stdin: "pipe",
@@ -476,28 +486,14 @@ try {
       .filter(Boolean)
       .map((line) => JSON.parse(line))
       .find((value) => value.id === "smoke");
-    assert.equal(response.result.runtime, engines.node);
+    assert.equal(response.result.runtime, process.versions.node);
     assert.equal(response.result.scheduler, true);
     const nodePath: unknown = response.result.node;
-    const pnpmPath: unknown = response.result.pnpm;
-    assert.ok(typeof nodePath === "string" && typeof pnpmPath === "string");
-    for (const [tool, toolVersion] of [
-      [nodePath, `v${engines.node}`],
-      [pnpmPath, packageManager.slice(5)],
-    ]) {
-      const process = spawnProcess([tool!, "--version"], { cwd: dataDir, env: { PATH: "" } });
-      assert.equal((await new Response(process.stdout).text()).trim(), toolVersion);
-      assert.equal(await process.exited, 0);
-    }
-    const pnpxPath = join(dirname(pnpmPath), process.platform === "win32" ? "pnpx.cmd" : "pnpx");
-    const pnpx = spawnProcess([pnpxPath, "--version"], {
-      cwd: dataDir,
-      env: { PATH: "" },
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    assert.equal((await new Response(pnpx.stdout).text()).trim(), packageManager.slice(5));
-    assert.equal(await pnpx.exited, 0);
+    assert.ok(typeof nodePath === "string");
+    assert.equal(response.result.pnpm, null);
+    const node = spawnProcess([nodePath, "--version"], { cwd: dataDir, env: { PATH: "" } });
+    assert.equal((await new Response(node.stdout).text()).trim(), `v${process.versions.node}`);
+    assert.equal(await node.exited, 0);
     child.stdin.write(
       JSON.stringify({ version: 1, id: "persisted", method: "roots.list", params: {} }) + "\n",
     );
@@ -585,7 +581,7 @@ try {
     child.kill();
   }
   console.log(
-    "Copied standalone CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.",
+    `Installed CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.`,
   );
 } finally {
   await closeProbe();

@@ -3,8 +3,9 @@
 This directory owns Dokploy Compose deployment and shared image source staging.
 Build from the repository root with `build.sh`; Compose and Railway share the
 Dockerfiles in apps/api, apps/web and infra/relay. Keep install/build commands in those files.
-`workspaces.ts` discovers packages from the root manifest without installed dependencies.
-`manifests.ts` stages workspace metadata before dependency installation. Each
+`workspaces.ts` uses the pinned pnpm CLI to discover native workspace configuration
+before project dependency installation. Docker installs pnpm in a shared bootstrap stage.
+`manifests.ts` stages workspace metadata and tracked Kit preview archives before dependency installation. Each
 service installs its own workspace dependency closure and root build tools through
 pnpm filters. API's `migration-build` bundles the independent Node migration command;
 `migrate` and `deploy` copy it with canonical SQL. The separate `fixture` target is

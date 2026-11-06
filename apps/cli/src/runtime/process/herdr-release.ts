@@ -24,6 +24,7 @@ export const herdrVersion = manifest.herdr.version;
 export function bundledHerdrDirectory() {
   return [
     join(cliInstallation().root, "herdr"),
+    join(cliInstallation().root, "herdr", `${process.platform}-${process.arch}`),
     join(dirname(process.execPath), "../Resources/herdr"),
   ].find((path) => existsSync(join(path, "runtime.json")));
 }
@@ -42,13 +43,17 @@ async function stamp(root: string) {
   }
   await writeFile(join(root, "runtime.json"), JSON.stringify({ version: herdrVersion, files }));
 }
-export async function verifyHerdrDirectory(root: string) {
+export async function verifyHerdrDirectory(root: string, platform: string = process.platform) {
   try {
     const value = JSON.parse(await readFile(join(root, "runtime.json"), "utf8")) as {
       version: string;
       files: Record<string, string>;
     };
-    if (value.version !== herdrVersion || !value.files[executable]) return false;
+    if (
+      value.version !== herdrVersion ||
+      !value.files[platform === "win32" ? "herdr.exe" : "herdr"]
+    )
+      return false;
     for (const [name, digest] of Object.entries(value.files)) {
       if (
         !name
@@ -64,17 +69,25 @@ export async function verifyHerdrDirectory(root: string) {
   }
 }
 /** Build-time download only. Runtime terminal.open never downloads executables. */
-export async function prepareHerdr(output: string) {
-  if (await verifyHerdrDirectory(output)) return join(output, executable);
-  const key = `${process.platform}-${process.arch}` as keyof typeof manifest.herdr.assets;
+export async function prepareHerdr(
+  output: string,
+  platform: string = process.platform,
+  arch: string = process.arch,
+) {
+  const targetExecutable = platform === "win32" ? "herdr.exe" : "herdr";
+  if (await verifyHerdrDirectory(output, platform)) return join(output, targetExecutable);
+  const key = `${platform}-${arch}` as keyof typeof manifest.herdr.assets;
   const asset = manifest.herdr.assets[key];
   if (!asset) throw new Error("Herdr runtime is unavailable for this platform");
   await mkdir(dirname(output), { recursive: true });
   const staging = await mkdtemp(join(dirname(output), ".herdr-"));
   try {
-    const local = process.platform !== "win32" ? findExecutable("herdr") : undefined;
+    const local =
+      platform === process.platform && arch === process.arch && platform !== "win32"
+        ? findExecutable("herdr")
+        : undefined;
     if (local && (await digestHerdr(local)) === asset.sha256) {
-      await copyFile(local, join(staging, executable));
+      await copyFile(local, join(staging, targetExecutable));
     } else {
       const response = await fetch(
         `https://github.com/herdrdev/herdr/releases/download/v${herdrVersion}/${asset.name}`,
@@ -83,22 +96,24 @@ export async function prepareHerdr(output: string) {
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (createHash("sha256").update(bytes).digest("hex") !== asset.sha256)
         throw new Error("Herdr runtime checksum differs");
-      if (process.platform === "win32") {
+      if (platform === "win32") {
         const archive = join(staging, "runtime.zip");
         await writeResource(archive, bytes);
         const unpack = spawnProcess(
-          [
-            join(process.env.SystemRoot ?? "C:\\Windows", "System32/tar.exe"),
-            "-xf",
-            archive,
-            "-C",
-            staging,
-          ],
+          process.platform === "win32"
+            ? [
+                join(process.env.SystemRoot ?? "C:\\Windows", "System32/tar.exe"),
+                "-xf",
+                archive,
+                "-C",
+                staging,
+              ]
+            : ["unzip", "-q", archive, "-d", staging],
           { stdout: "ignore", stderr: "ignore" },
         );
         if ((await unpack.exited) !== 0) throw new Error("Herdr runtime extraction failed");
         await rm(archive);
-        if (!(await stat(join(staging, executable)).catch(() => undefined))?.isFile()) {
+        if (!(await stat(join(staging, targetExecutable)).catch(() => undefined))?.isFile()) {
           const directories = (await readdir(staging, { withFileTypes: true })).filter((entry) =>
             entry.isDirectory(),
           );
@@ -107,9 +122,9 @@ export async function prepareHerdr(output: string) {
           await cp(nested, staging, { recursive: true });
           await rm(nested, { recursive: true });
         }
-      } else await writeResource(join(staging, executable), bytes);
+      } else await writeResource(join(staging, targetExecutable), bytes);
     }
-    if (process.platform !== "win32") await chmod(join(staging, executable), 0o755);
+    if (platform !== "win32") await chmod(join(staging, targetExecutable), 0o755);
     // Release licenses remain beside the runtime, including Windows ConPTY notices.
     const license = await fetch(
       `https://raw.githubusercontent.com/herdrdev/herdr/v${herdrVersion}/LICENSE`,
@@ -119,7 +134,7 @@ export async function prepareHerdr(output: string) {
     await stamp(staging);
     await rm(output, { recursive: true, force: true });
     await rename(staging, output);
-    return join(output, executable);
+    return join(output, targetExecutable);
   } finally {
     await rm(staging, { recursive: true, force: true });
   }

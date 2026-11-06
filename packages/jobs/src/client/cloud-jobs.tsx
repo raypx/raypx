@@ -18,7 +18,7 @@ import { useConfirmation } from "@raypx/ui/confirmation";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { IconButton } from "@raypx/ui/icon-button";
-import type { CloudJob, CloudJobInput, CloudJobRun } from "@raypx/jobs-model";
+import type { CloudJob, CloudJobInput, CloudJobRun } from "../model.ts";
 import type { CloudJobsPort, JobDevicesPort, JobDevice, JobReadOptions } from "./ports.ts";
 import { JobForm } from "./job-form.tsx";
 import { jobFailure, jobReason } from "./errors.ts";

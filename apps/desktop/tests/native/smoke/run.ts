@@ -10,11 +10,13 @@ import type { SmokeInstallation } from "./launch.ts";
 import { prepareSmokeDirectory, removeSmokeDirectory } from "./session.ts";
 import { assertSmokeOwnerRunning, stopSmokeOwner } from "./owner.ts";
 
-const { engines } = await readJsonFile(resolve(import.meta.dirname, "../../../../../package.json"));
 const { phase, ui } = nativeSmokeOptions(process.argv.slice(2), process.env);
 
 async function run(smokePhase: string, directory: string, restoredServer = false) {
   if (!installation) throw new Error("Native smoke installation is unavailable");
+  const runtime = await readJsonFile(
+    resolve(import.meta.dirname, "../../../../cli/dist/runtime.json"),
+  );
   return runTauriSmoke(installation, smokePhase, directory, {
     ...process.env,
     RAYPX_HOME: join(directory, "config"),
@@ -25,7 +27,7 @@ async function run(smokePhase: string, directory: string, restoredServer = false
     RAYPX_NATIVE_SMOKE_PHASE: smokePhase,
     RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
     RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
-    RAYPX_NATIVE_SMOKE_NODE: engines.node,
+    RAYPX_NATIVE_SMOKE_NODE: runtime.nodeVersion,
   });
 }
 if (

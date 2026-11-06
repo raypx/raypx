@@ -1,6 +1,6 @@
 # Raypx CLI
 
-The packaged `raypx` CLI needs no global Node or pnpm. Desktop bundles the same
+The packaged `raypx` CLI includes its own Node runtime. Desktop bundles the same
 version and connects to its independent daemon through private IPC. The daemon
 owns scheduling. Foreground commands run once and never install a service.
 
@@ -10,8 +10,10 @@ online logout. `RAYPX_API_URL` selects the enrollment server (default
 `https://raypx.com`); `RAYPX_WEB_URL` can select a separate account-page origin.
 Enrollment and remote Host authorization are separate.
 
-The CLI appends its bundled `node`, `pnpm` and `pnpx` to child PATH, preserving
-user-installed tools first. `runtime.info` exposes absolute Node/pnpm paths.
+The CLI appends its bundled `node` to child PATH, preserving user-installed tools
+first. Project commands use the user's installed package manager; pnpm and pnpx
+are not bundled. `runtime.info` exposes the absolute Node path and a user-installed
+pnpm path, or null when pnpm is unavailable. Built-in commands need no package manager.
 Distribute the complete `dist` directory. Copying only `raypx` is unsupported.
 
 ```sh
@@ -30,24 +32,32 @@ Use the current file `version` when editing, moving or deleting. Deletion prompt
 
 ## Build and distribution
 
-Build with `pnpm run build:cli` from the repository root. VP `pack` bundles the
-ESM entry and dependencies; its hook builds the Rust launcher and stages the
-complete matching runtime. Builds require the pinned Node/pnpm and Rust toolchains.
-The distribution contains:
+Build with `pnpm run build:cli` from the repository root. The normal VP `pack`
+build writes an installable `@raypx/cli` package to `apps/cli/dist`, with the
+`raypx` bin pointing to `main.mjs`. Install that directory or its tarball with
+npm, pnpm or another compatible package manager. For example:
 
-- `raypx` (`raypx.exe` on Windows): the thin native launcher.
-- `main.mjs` and ESM chunks: the application and embedded database migration journal.
-- `runtime/`: Node, the pnpm package and native executable, a pnpx wrapper, and their licenses.
-- Herdr resources, the Raypx license and `runtime.json` with versions, build identity and file checksums.
+```sh
+npm pack ./apps/cli/dist
+npm install --global ./raypx-cli-0.1.0.tgz
+raypx --version
+```
 
-The launcher locates this directory, starts its bundled Node with the ESM entry,
-forwards arguments and standard streams, and returns the child exit status.
-Connector install/repair and Windows daemon upgrades copy the complete runtime.
-Never treat `process.execPath` as the Raypx launcher; in JS it identifies Node.
+The package requires Node in the root `engines.node` range. It bundles its ESM
+dependencies, migration journal, verified Herdr resources for supported platforms,
+licenses and a `runtime.json` inventory. It has no install scripts and bundles
+neither Node nor a package manager. Project commands use the user's environment.
 
-`pnpm --dir apps/cli run smoke` relocates the complete distribution outside the
-repository, uses an empty PATH, and exercises commands, NDJSON, persistent grants,
-a PTY and EOF process cancellation. Desktop GUI tests remain separate.
+Desktop packaging takes the same build, retains the host's Herdr resources, and
+adds a thin Rust launcher and the actual build's Node runtime. Desktop users need
+no global Node. Its launcher forwards arguments, standard streams and exit status.
+Connector install/repair and Windows daemon upgrades copy the complete payload;
+standalone package installations retain the absolute Node interpreter path.
+
+`pnpm --dir apps/cli run smoke` packs and installs the real tarball with scripts
+disabled, checks the package manager's bin with only Node on PATH, and exercises
+the relocated application with an empty PATH. It covers commands, NDJSON,
+persistent grants, PTYs and EOF cancellation. Desktop GUI tests remain separate.
 
 All stores share `<profile>/profile.sqlite`, initialized with an embedded Drizzle migration.
 See [local SQLite storage](../../docs/development/local-sqlite.md) for schema generation and profile format requirements.

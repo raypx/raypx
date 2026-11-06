@@ -1,64 +1,28 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { parseYAML } from "confbox/yaml";
 
-export function workspaceConfiguration(root: string) {
-  const manifest = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
-  const workspaces = manifest.workspaces;
-  const packages = Array.isArray(workspaces) ? workspaces : workspaces.packages;
-  const configuration = {
-    packages,
-    catalog: workspaces.catalog,
-    catalogs: workspaces.catalogs,
-    overrides: manifest.overrides,
-    strictPeerDependencies: false,
-    engineStrict: true,
-    minimumReleaseAge: 0,
-    allowBuilds: {
-      "@parcel/watcher": true,
-      "@swc/core": true,
-      esbuild: true,
-      sharp: true,
-      "unrs-resolver": true,
-      "@posthog/cli": true,
-      "@railway/cli": true,
-      workerd: true,
-      "@google/genai": false,
-      "core-js": false,
-      protobufjs: false,
-    },
-  };
-  const yaml = (value: unknown, indent = 0): string => {
-    const prefix = " ".repeat(indent);
-    if (Array.isArray(value))
-      return value.map((item) => prefix + "- " + JSON.stringify(item) + "\n").join("");
-    return Object.entries(value as Record<string, unknown>)
-      .filter(([, item]) => item !== undefined)
-      .map(([key, item]) => {
-        if (item && typeof item === "object")
-          return prefix + JSON.stringify(key) + ":\n" + yaml(item, indent + 2);
-        return prefix + JSON.stringify(key) + ": " + JSON.stringify(item) + "\n";
-      })
-      .join("");
-  };
-  return "# Generated from package.json by pnpm run workspace:sync.\n" + yaml(configuration);
-}
+/** Keep pnpm configuration in its native file, with strict runtime enforcement. */
 export function checkWorkspaceConfiguration(root: string) {
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const findings: string[] = [];
+  for (const key of ["workspaces", "overrides"])
+    if (key in manifest) findings.push(`package.json: move ${key} to pnpm-workspace.yaml`);
   try {
-    return readFileSync(resolve(root, "pnpm-workspace.yaml"), "utf8") ===
-      workspaceConfiguration(root)
-      ? []
-      : ["pnpm-workspace.yaml: run pnpm run workspace:sync"];
+    const configuration = parseYAML(readFileSync(join(root, "pnpm-workspace.yaml"), "utf8")) as {
+      packages?: unknown;
+      engineStrict?: boolean;
+    };
+    if (
+      !Array.isArray(configuration?.packages) ||
+      !configuration.packages.length ||
+      !configuration.packages.every((pattern) => typeof pattern === "string" && pattern.length > 0)
+    )
+      findings.push("pnpm-workspace.yaml: declare workspace packages");
+    if (configuration?.engineStrict !== true)
+      findings.push("pnpm-workspace.yaml: engineStrict must be true");
   } catch {
-    return ["pnpm-workspace.yaml: run pnpm run workspace:sync"];
+    findings.push("pnpm-workspace.yaml: expected valid workspace configuration");
   }
-}
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const root = resolve(import.meta.dirname, "../../../..");
-  if (process.argv.includes("--write"))
-    writeFileSync(resolve(root, "pnpm-workspace.yaml"), workspaceConfiguration(root));
-  else if (checkWorkspaceConfiguration(root).length) {
-    console.error(checkWorkspaceConfiguration(root).join("\n"));
-    process.exitCode = 1;
-  }
+  return findings;
 }

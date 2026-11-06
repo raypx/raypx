@@ -19,7 +19,6 @@
     "test:coverage": "vp test --run --coverage"
   },
   "dependencies": {
-    "@raypx/auth-model": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",

@@ -3,6 +3,7 @@ import { readJsonFile, readBinaryFile } from "@raypx/runtime-node/files";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { satisfies } from "semver";
 import { verifyRuntime } from "./prepare-cli.ts";
 
 /** Inspect compiler metadata and the shipped bytes, including embedded renderer assets. */
@@ -29,17 +30,12 @@ export async function checkRelease(binary: string) {
   if (
     runtime.version !== desktop.version ||
     !Number.isSafeInteger(runtime.builtAt) ||
-    runtime.nodeVersion !== root.engines.node ||
-    `pnpm@${runtime.pnpmVersion}` !== root.packageManager ||
+    !satisfies(runtime.nodeVersion ?? "", root.engines.node) ||
     [
       "raypx" + suffix,
       "main.mjs",
       "runtime/node" + suffix,
       "runtime/NODE-LICENSE",
-      "runtime/pnpm/pnpm" + suffix,
-      "runtime/pnpm/" + (process.platform === "win32" ? "pnpx.cmd" : "pnpx"),
-      "runtime/pnpm/LICENSE",
-      "runtime/pnpm/THIRD-PARTY-NOTICES.md",
       "RAYPX-LICENSE",
       "herdr/runtime.json",
     ].some((name) => !runtime.files[name])

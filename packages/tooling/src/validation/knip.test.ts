@@ -4,47 +4,20 @@ import { join } from "node:path";
 import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
 import { checkKnip, knipFindings } from "./knip.ts";
 
-it("keeps unused catalog entries and all other findings while recognizing Node override references", () => {
+it("preserves native pnpm catalog and override findings without modifying the report", () => {
   const report = {
-    issues: [
-      {
-        file: "package.json",
-        catalog: [
-          { namespace: "dev", name: "esbuild" },
-          { namespace: "dev", name: "unused" },
-          { namespace: "", name: "renderer" },
-          { namespace: "dev", name: "missing" },
-        ],
-        devDependencies: [{ name: "unused-cli" }],
-      },
-      { file: "apps/child/package.json", catalog: [{ namespace: "dev", name: "esbuild" }] },
-    ],
+    issues: [{ file: "pnpm-workspace.yaml", catalog: [{ namespace: "dev", name: "unused" }] }],
   };
   const before = JSON.stringify(report);
-  expect(
-    knipFindings(report, {
-      overrides: { esbuild: "catalog:dev", renderer: "catalog:", missing: "catalog:dev" },
-      workspaces: { catalog: { renderer: "^2.2.0" }, catalogs: { dev: { esbuild: "^0.28.2" } } },
-    }),
-  ).toEqual([
-    {
-      file: "package.json",
-      catalog: [
-        { namespace: "dev", name: "unused" },
-        { namespace: "dev", name: "missing" },
-      ],
-      devDependencies: [{ name: "unused-cli" }],
-    },
-    report.issues[1],
-  ]);
+  expect(knipFindings(report)).toEqual(report.issues);
   expect(JSON.stringify(report)).toBe(before);
 });
 
 it("rejects malformed reports and preserves malformed catalog findings", () => {
   for (const report of [null, {}, { issues: [null] }, { issues: [{ file: "x", exports: false }] }])
-    expect(() => knipFindings(report, {})).toThrow("Invalid Knip");
+    expect(() => knipFindings(report)).toThrow("Invalid Knip");
   const report = { issues: [{ file: "package.json", catalog: [{ name: "x" }] }] };
-  expect(knipFindings(report, {})).toEqual(report.issues);
+  expect(knipFindings(report)).toEqual(report.issues);
 });
 
 const { fixture } = workspaceFixtures();

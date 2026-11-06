@@ -1,7 +1,7 @@
 import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
 import { enrollTestProfile } from "../helpers/instance.ts";
 import assert from "node:assert/strict";
-import { chmod, copyFile, mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -13,8 +13,9 @@ const python = findExecutable("python3");
 assert.ok(python, "TUI PTY smoke requires Python 3 with pty and termios support");
 
 const directory = await mkdtemp(join(tmpdir(), "raypx-tui-smoke-"));
-const binary = join(directory, "raypx");
-const builtBinary = resolve(import.meta.dirname, "../../dist/raypx");
+const distribution = join(directory, "distribution");
+const binary = join(distribution, "main.mjs");
+const launch = [process.execPath, binary];
 
 // The test driver alone uses Python. Keeping the PTY slave open lets it inspect
 // the actual terminal attributes after the standalone executable has exited.
@@ -22,8 +23,7 @@ const driver = resolve(import.meta.dirname, "../fixtures/tui/driver.py");
 
 const closeInstances: (() => Promise<void>)[] = [];
 try {
-  await copyFile(builtBinary, binary);
-  await chmod(binary, 0o700);
+  await cp(resolve(import.meta.dirname, "../../dist"), distribution, { recursive: true });
   for (const profile of [
     "tui-empty",
     "tui-with-desktop",
@@ -33,8 +33,8 @@ try {
     "tui-sigint-active",
     "tui-sigterm-active",
   ])
-    closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }, [binary]));
-  const child = spawnProcess([python, driver, binary, directory], {
+    closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }, launch));
+  const child = spawnProcess([python, driver, process.execPath, binary, directory], {
     cwd: directory,
     stdin: "ignore",
     stdout: "inherit",

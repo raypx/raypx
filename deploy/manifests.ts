@@ -1,4 +1,11 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  globSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { readWorkspaces } from "./workspaces.ts";
 
@@ -9,6 +16,7 @@ const files = [
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
+  ...globSync("vendor/*.tgz", { cwd: root }),
   ...[...readWorkspaces(root).values()].map((member) => join(member.path, "package.json")),
 ];
 for (const file of files) {

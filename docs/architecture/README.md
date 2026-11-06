@@ -8,19 +8,19 @@ work; they do not establish shipped behavior or platform acceptance.
 
 ## Runtime and toolchain
 
-| Component    | Current implementation                                | Responsibility                                                                  |
-| ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Desktop      | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2  | React SPA, native policy, sessions, windows and CLI transport                   |
-| CLI / daemon | TypeScript ESM on bundled Node 24.22.2                | Local execution, Agent harness, approvals, scheduling and replay                |
-| CLI launcher | Thin Rust executable                                  | Locate the distribution, launch Node, forward arguments/streams and exit status |
-| Web          | React / TanStack Start SSR, Nitro `node-server`       | Browser workbench and authenticated remote views                                |
-| API          | Node 24.22.2, Nitro / Hono / oRPC                     | Accounts, authorization, remote commands and read projections                   |
-| Relay        | Independent Node HTTP / `ws` service in `infra/relay` | WebSocket peers and delivery through the private Redis broker                   |
-| Mobile       | Expo iOS/Android                                      | Account/login baseline; native task views remain future work                    |
-| JS tooling   | pnpm 12.16.1, VP, `tsx`, TypeScript                   | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks         |
+| Component            | Current implementation                                    | Responsibility                                                                  |
+| -------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Desktop              | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2      | React SPA, native policy, sessions, windows and CLI transport                   |
+| CLI / daemon         | TypeScript ESM on Node; Desktop bundles its build runtime | Local execution, Agent harness, approvals, scheduling and replay                |
+| Desktop CLI launcher | Thin Rust executable                                      | Locate the distribution, launch Node, forward arguments/streams and exit status |
+| Web                  | React / TanStack Start SSR, Nitro `node-server`           | Browser workbench and authenticated remote views                                |
+| API                  | Node >=24.18.0 <25, Nitro / Hono / oRPC                   | Accounts, authorization, remote commands and read projections                   |
+| Relay                | Independent Node HTTP / `ws` service in `infra/relay`     | WebSocket peers and delivery through the private Redis broker                   |
+| Mobile               | Expo iOS/Android                                          | Account/login baseline; native task views remain future work                    |
+| JS tooling           | pnpm 12.16.1, VP, `tsx`, TypeScript                       | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks         |
 
-Root `package.json` pins Node and pnpm and is the workspace discovery source.
-`pnpm-workspace.yaml` is generated from its patterns, catalogs and overrides;
+Root `package.json` declares the supported Node range and pins pnpm.
+`pnpm-workspace.yaml` owns workspace discovery, catalogs, overrides and installation settings;
 pnpm uses the default isolated dependency layout and one lockfile.
 `rust-toolchain.toml` pins Rust; the root Cargo workspace contains the launcher
 and Tauri host. The Tauri Rust framework is 2.12.5; its independently released
@@ -186,7 +186,7 @@ memory revisions and commits the frozen context receipt before delivery; normal
 memory CRUD remains in API RPC. This is command acceptance, not a second memory
 API. The gateway routes `/relay` to that independent service at the public origin.
 Optional Cloudflare ingress uses the provider-managed Workers runtime; the Relay
-container and local tooling use pinned Node. Web, API, migration and Relay build
+container and local tooling use Node within the supported range. Web, API, migration and Relay build
 outputs run outside the repository. See
 [deployment](../development/deployment.md) and [infrastructure](../../infra/README.md).
 
@@ -205,10 +205,13 @@ tasks; application plugins live in `vite.app.config.ts`. `tsx` runs development
 scripts, `tsc --noEmit` checks types, and VP owns JS builds/tests/lint/format.
 Cargo owns native incremental builds and is called through the same task graph.
 
-The CLI is a complete versioned directory: Rust launcher, bundled Node, ESM entry
-and chunks, full pnpm/pnpx distribution, Herdr, licenses and `runtime.json`
-checksums/build identity. The launcher alone cannot run. Child PATH appends
-bundled tools after user tools. Connector install/repair copies the full runtime;
+The normal CLI build is an installable JS package with a `raypx` bin, bundled ESM
+dependencies, verified platform Herdr assets, licenses and `runtime.json` checksums.
+It requires supported Node and works with npm, pnpm or another compatible installer.
+Desktop stages the same artifact with a Rust launcher, the actual build's Node and
+host Herdr resources. Desktop users need no global runtime. Child PATH appends
+Node after user tools; project package managers come from the user environment.
+Connector install/repair copies the full payload and records the interpreter when needed;
 Windows daemon uses a private per-build runtime copy with leases so an updater
 can replace Desktop resources without deleting files still in use. See
 [CLI distribution](../../apps/cli/README.md) and [terminal connectors](../development/terminal-host.md).

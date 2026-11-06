@@ -27,7 +27,7 @@ Account authentication, platform-specific session adapters and shared DOM forms.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.
 - Pure session projections, provider identifiers and trusted-origin normalization
-  come from `@raypx/auth-model`.
+  come from `@raypx/core/auth`.
 - `/policy`: pure name/password limits shared by endpoints and forms.
 - `/access`: Better Auth's shared access controller and member/admin roles, built on
   Core's `/permissions` vocabulary. Auth imports the role names and permissions from

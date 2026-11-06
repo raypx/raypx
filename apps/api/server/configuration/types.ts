@@ -1,4 +1,4 @@
-import type { AuthSession } from "@raypx/auth-model";
+import type { AuthSession } from "@raypx/core/auth";
 import type { ConfigurationSnapshot, ConfigurationValues } from "@raypx/contracts/api";
 
 /** Inject this capability into consumers that only need to read settings. */

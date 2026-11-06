@@ -33,7 +33,7 @@ assert.ok(
   ["127.0.0.1", "localhost"].includes(apiUrl.hostname),
   "This private plaintext acceptance only runs on loopback",
 );
-const binary = resolvePath(import.meta.dirname, "../../dist/raypx"),
+const launch = [process.execPath, resolvePath(import.meta.dirname, "../../dist/main.mjs")],
   directory = await mkdtemp(join(tmpdir(), "raypx-daemon-live-"));
 const stateDirectory = join(directory, "state"),
   configDirectory = join(directory, "config");
@@ -79,7 +79,7 @@ await copyFile(
 await chmod(join(env.CODEX_HOME, "auth.json"), 0o600);
 
 function proxy() {
-  const child = spawnProcess([binary, "daemon", "proxy", "--data-dir", stateDirectory], {
+  const child = spawnProcess([...launch, "daemon", "proxy", "--data-dir", stateDirectory], {
     env,
     stdin: "pipe",
     stdout: "pipe",
@@ -339,7 +339,7 @@ try {
     JSON.stringify({ stage: "desktop-client-reconnected", persistent: restored.persistent }),
   );
   await current.close();
-  const stopped = spawnProcess([binary, "daemon", "stop", "--data-dir", stateDirectory], {
+  const stopped = spawnProcess([...launch, "daemon", "stop", "--data-dir", stateDirectory], {
     env,
     stdout: "ignore",
     stderr: "ignore",
@@ -348,7 +348,7 @@ try {
   const stopDeadline = Date.now() + 15_000;
   while (true) {
     const status = spawnProcess(
-      [binary, "daemon", "status", "--data-dir", stateDirectory, "--json"],
+      [...launch, "daemon", "status", "--data-dir", stateDirectory, "--json"],
       {
         env,
         stdout: "pipe",
@@ -396,7 +396,7 @@ try {
   if (device)
     await api.devices.revoke({ deviceId: device.deviceId, epoch: device.epoch }).catch(() => {});
   await current.close().catch(() => {});
-  const stop = spawnProcess([binary, "daemon", "stop", "--data-dir", stateDirectory], {
+  const stop = spawnProcess([...launch, "daemon", "stop", "--data-dir", stateDirectory], {
     env,
     stdout: "ignore",
     stderr: "ignore",

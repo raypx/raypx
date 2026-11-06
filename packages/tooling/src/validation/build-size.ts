@@ -63,13 +63,11 @@ function measure(root: string, workspace: string, path: string, kind: ArtifactSi
   if (existsSync(join(absolute, "runtime.json")) && existsSync(join(absolute, "runtime"))) {
     const groups = new Map<string, FileSize[]>();
     for (const file of files) {
-      const name = file.path.startsWith("runtime/pnpm/")
-        ? "pnpm / pnpx"
-        : file.path.startsWith("runtime/")
-          ? "Node"
-          : file.path.startsWith("herdr/")
-            ? "Herdr"
-            : "Application / launcher / metadata";
+      const name = file.path.startsWith("runtime/")
+        ? "Node"
+        : file.path.startsWith("herdr/")
+          ? "Herdr"
+          : "Application / launcher / metadata";
       const group = groups.get(name) ?? [];
       group.push(file);
       groups.set(name, group);

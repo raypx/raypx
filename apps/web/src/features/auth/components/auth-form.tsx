@@ -11,7 +11,7 @@ import {
 import { apiUrl, authClient, webUrl } from "../client.ts";
 import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { SocialProvider } from "@raypx/auth-model";
+import type { SocialProvider } from "@raypx/core/auth";
 
 function AuthLink({ to, className, children }: AuthFormLinkProps) {
   const search = useLocation({ select: (location) => location.searchStr });

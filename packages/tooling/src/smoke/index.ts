@@ -15,8 +15,8 @@ export async function smoke(
       ? [
           (async () => {
             await run(
-              join(root, "apps/cli/dist", process.platform === "win32" ? "raypx.exe" : "raypx"),
-              ["--version"],
+              process.execPath,
+              [join(root, "apps/cli/dist/main.mjs"), "--version"],
               tmpdir(),
             );
             await run("pnpm", ["run", "smoke"], join(root, "apps/cli"));

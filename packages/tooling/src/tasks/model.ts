@@ -22,7 +22,7 @@ interface TaskMember extends Member {
 }
 export type TaskModel = Model<TaskMember>;
 function reportDirectories(context: TaskContext<TaskMember>) {
-  return workspacePatterns(context.manifest as { workspaces?: unknown })
+  return workspacePatterns(context.root)
     .filter((path) => !path.startsWith("!"))
     .flatMap((path) =>
       ["coverage", ".artifacts", "test-results", "playwright-report"].map(

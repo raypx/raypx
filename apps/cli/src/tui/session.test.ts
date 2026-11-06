@@ -1,4 +1,4 @@
-import type { JobDefinition, JobRun } from "@raypx/jobs-model";
+import type { JobDefinition, JobRun } from "@raypx/jobs/model";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { runSession, type TuiService } from "./session.ts";
 import type { TuiTerminal } from "./terminal.ts";

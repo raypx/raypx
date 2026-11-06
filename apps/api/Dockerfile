@@ -3,13 +3,17 @@ ARG NODE_VERSION=24.22.2
 FROM node:${NODE_VERSION}-bookworm AS node
 WORKDIR /app
 
-FROM node AS manifests
+FROM node AS pnpm
+COPY package.json ./
+RUN npm install --global "$(node -p 'require("./package.json").packageManager')"
+
+FROM pnpm AS manifests
 COPY . .
 RUN node deploy/manifests.ts /app /manifests
 
-FROM node AS dependencies
+FROM pnpm AS dependencies
 COPY --from=manifests /manifests/ ./
-RUN npm install --global "$(node -p 'require("./package.json").packageManager')" && VP_GIT_HOOKS=0 pnpm install --frozen-lockfile \
+RUN VP_GIT_HOOKS=0 pnpm install --frozen-lockfile \
     --filter . --filter '{./apps/api}...'
 
 FROM dependencies AS migration-build

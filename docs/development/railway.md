@@ -169,7 +169,7 @@ mise exec -- pnpm --dir infra/railway exec railway up --service gateway --detach
 ```
 
 The workspace scripts select `infra/railway/railway.ts` explicitly with `--file`.
-Railway's evaluator and all local tooling use the pinned Node runtime.
+Railway's evaluator and all local tooling use Node within the root supported range.
 Review plans for application changes and no unrelated service or volume deletion.
 Upload from a clean checkout plus the reviewed deployment configuration.
 CLI uploads remain available for explicit manual releases. Use GitHub-triggered

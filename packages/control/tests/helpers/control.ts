@@ -1,7 +1,7 @@
 import { CONTEXT_COMMAND_TTL_MS } from "../../src/records.ts";
 import { terminalRequestSchema, terminalSessionSchema } from "@raypx/contracts/terminal";
 import { decodeControlRecord, decodeObservedSummary } from "../../src/schemas.ts";
-import type { AuthSession } from "@raypx/auth-model";
+import type { AuthSession } from "@raypx/core/auth";
 import {
   type ControlRecord,
   type ControlRepository,

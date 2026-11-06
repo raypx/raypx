@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx
+#!/usr/bin/env node
 import { runCommand } from "./commands/index.ts";
 import { parseCliArgs } from "./commands/args.ts";
 import { errorPayload } from "./runtime/errors.ts";

@@ -1,5 +1,5 @@
 import type { TaskStatus } from "@raypx/core/tasks";
-import type { CloudJob, CloudJobAction, CloudJobInput, CloudJobRun } from "@raypx/jobs-model";
+import type { CloudJob, CloudJobAction, CloudJobInput, CloudJobRun } from "../model.ts";
 
 export interface JobClaim {
   userId: string;

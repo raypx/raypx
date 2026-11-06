@@ -1,4 +1,4 @@
-import { normalizeTrustedOrigins } from "@raypx/auth-model";
+import { normalizeTrustedOrigins } from "@raypx/core/auth";
 import { defineEnv, type Preset, z } from "@raypx/env";
 import type apiEnvironmentSources from "./env.contract.ts";
 const server = {

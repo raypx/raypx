@@ -8,7 +8,7 @@ The accepted foundation design and current architecture decisions define the imp
 
 ## Workspaces and boundaries
 
-- Discover workspaces from root package.json; never maintain a package-name allowlist.
+- Discover workspaces from pnpm-workspace.yaml; never maintain a package-name allowlist.
 - Infrastructure services and provider tooling live under `infra/*`; declare each
   workspace's actual app/tooling kind and keep composition roots out of cross-workspace imports.
 - Applications are composition roots and cannot be imported by another workspace.
@@ -29,19 +29,22 @@ The accepted foundation design and current architecture decisions define the imp
   to another account/origin. Only device-owned local work is supported.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
-- Core owns task domain schemas and pure rules; contracts composes wire schemas and
+- Core owns task domain schemas, public account models and pure rules; contracts composes wire schemas and
   exports only transport definitions. Tasks/model owns page state and injected view ports;
   Tasks/client adapts those models to React. Keep execution in CLI's private harness
   until a second execution consumer establishes a shared package boundary.
 
 ## Toolchain
 
-- Node 24.22.2 is the JavaScript runtime; pnpm 12.16.1 owns installation and the lockfile.
-  Root engines.node and packageManager are their respective pins. The generated
-  pnpm workspace configuration follows root workspaces and catalogs; policy rejects drift.
+- Node >=24.18.0 <25 is the supported JavaScript runtime range; pnpm 12.16.1 owns installation and the lockfile.
+  Root engines.node declares the range and packageManager pins pnpm.
+  pnpm-workspace.yaml owns workspace patterns, catalogs, overrides and installation policy.
 - The optional Cloudflare ingress runs in provider-managed Workers; local tooling uses Node.
 - Nitro Web/API use the node-server preset. Tauri 2.12.5 with Rust 1.99.1 owns the
-  Desktop host. The TypeScript CLI ships with Node and pnpm in a versioned directory.
+  Desktop host. The TypeScript CLI builds an installable JS package with a `raypx` bin and requires Node.
+  Desktop packaging adds a native launcher and Node in a versioned directory;
+  that Node version matches the build runtime and is recorded in runtime.json.
+  Project package managers come from the user's environment.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
   `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
   `vite.app.config.ts`. The TypeScript presets register uncached bootstrap tasks

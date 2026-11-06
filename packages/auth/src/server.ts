@@ -14,7 +14,7 @@ import {
   type AuthSession,
   type AuthUser,
   type SocialProvider,
-} from "@raypx/auth-model";
+} from "@raypx/core/auth";
 import { authPolicy } from "./policy.ts";
 
 export interface AuthMailInput {

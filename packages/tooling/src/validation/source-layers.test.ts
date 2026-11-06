@@ -62,7 +62,9 @@ it("keeps contracts free of React, UI, presentation and platform-server surfaces
       new Map<string, SourceNode>([[contracts, { path: contracts, dependencies: [], requests }]]),
     );
 
-  expect(violationsFor(["@raypx/core/tasks", "zod", "./access.js"])).toEqual([]);
+  expect(violationsFor(["@raypx/core/tasks", "@raypx/jobs/model", "zod", "./access.js"])).toEqual(
+    [],
+  );
   expect(violationsFor(["react"])).toHaveLength(1);
   expect(violationsFor(["react-dom/client"])).toHaveLength(1);
   expect(violationsFor(["@raypx/ui/button"])).toHaveLength(1);
@@ -70,7 +72,7 @@ it("keeps contracts free of React, UI, presentation and platform-server surfaces
   expect(violationsFor(["@raypx/icons/plus"])).toHaveLength(1);
   expect(violationsFor(["@raypx/client/api"])).toHaveLength(1);
   expect(violationsFor(["@raypx/auth/permissions"])).toHaveLength(1);
-  expect(violationsFor(["@raypx/jobs-server"])).toHaveLength(1);
+  expect(violationsFor(["@raypx/jobs/server"])).toHaveLength(1);
   expect(violationsFor(["@raypx/memory-server"])).toHaveLength(1);
   expect(violationsFor(["@raypx/memory/client"])).toHaveLength(1);
   expect(violationsFor(["@raypx/database/crypto"])).toHaveLength(1);

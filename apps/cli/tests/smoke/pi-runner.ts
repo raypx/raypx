@@ -3,7 +3,7 @@ import { ProfileStorage } from "../../src/runtime/sqlite/index.ts";
 import assert from "node:assert/strict";
 import { copyFile, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PiRunner, type PiRunnerOptions } from "@raypx/providers/pi";
 import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite.ts";
@@ -123,7 +123,7 @@ async function main() {
       });
       const nodeName = process.platform === "win32" ? "node.exe" : "node";
       const binary = join(isolated, nodeName);
-      await copyFile(resolve(import.meta.dirname, "../../dist/runtime", nodeName), binary);
+      await copyFile(process.execPath, binary);
       const entry = join(isolated, "fixture.mjs");
       const child = spawnProcess([binary, entry, "--fixture"], {
         cwd: isolated,

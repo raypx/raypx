@@ -16,6 +16,7 @@ const binary =
   resolve(
     import.meta.dirname,
     "../../dist/herdr",
+    `${process.platform}-${process.arch}`,
     process.platform === "win32" ? "herdr.exe" : "herdr",
   );
 const root = await mkdtemp(join(tmpdir(), "raypx-herdr-smoke-"));
@@ -27,13 +28,7 @@ const host = new HerdrTerminalHost(
   process.env.RAYPX_CLI_BINARY
     ? [process.env.RAYPX_CLI_BINARY]
     : process.env.RAYPX_HERDR_COMPILED === "1"
-      ? [
-          resolve(
-            import.meta.dirname,
-            "../../dist",
-            process.platform === "win32" ? "raypx.exe" : "raypx",
-          ),
-        ]
+      ? [process.execPath, resolve(import.meta.dirname, "../../dist/main.mjs")]
       : undefined,
 );
 const shell = (source: string) =>
@@ -62,13 +57,7 @@ function output(id: string) {
 try {
   await herdrRpc(
     process.env.RAYPX_HERDR_COMPILED === "1"
-      ? [
-          resolve(
-            import.meta.dirname,
-            "../../dist",
-            process.platform === "win32" ? "raypx.exe" : "raypx",
-          ),
-        ]
+      ? [process.execPath, resolve(import.meta.dirname, "../../dist/main.mjs")]
       : terminalLaunch(),
     root,
     binary,
@@ -216,13 +205,7 @@ try {
       root,
       report,
       ...(process.env.RAYPX_HERDR_COMPILED === "1"
-        ? [
-            resolve(
-              import.meta.dirname,
-              "../../dist",
-              process.platform === "win32" ? "raypx.exe" : "raypx",
-            ),
-          ]
+        ? [process.execPath, resolve(import.meta.dirname, "../../dist/main.mjs")]
         : []),
     ],
     { stdin: "pipe", stdout: "pipe", stderr: "ignore" },

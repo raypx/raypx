@@ -2,6 +2,7 @@ import { existsSync, globSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseTOML } from "confbox/toml";
 import { parseYAML } from "confbox/yaml";
+import { satisfies, validRange } from "semver";
 import { checkWorkspaceConfiguration } from "./workspaces.ts";
 
 type Manifest = {
@@ -11,11 +12,15 @@ type Manifest = {
 };
 const manifestAt = (root: string): Manifest =>
   JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-export function readNodePin(root: string) {
+export function readNodeRange(root: string) {
   const node = manifestAt(root).engines?.node;
-  if (!node || !/^\d+\.\d+\.\d+$/.test(node))
-    throw new Error("Pin an exact Node version in package.json engines.node");
+  if (!node || !validRange(node))
+    throw new Error("Declare a valid Node version range in package.json engines.node");
   return node;
+}
+export function assertNodeVersion(root: string, version: string) {
+  const range = readNodeRange(root);
+  if (!satisfies(version, range)) throw new Error(`Expected Node ${range}, got ${version}`);
 }
 export function readPnpmPin(root: string) {
   const pnpm = /^pnpm@(\d+\.\d+\.\d+)$/.exec(manifestAt(root).packageManager ?? "")?.[1];
@@ -25,7 +30,7 @@ export function readPnpmPin(root: string) {
 export function checkToolchain(root: string, documents: readonly string[]) {
   let node: string, pnpm: string;
   try {
-    node = readNodePin(root);
+    node = readNodeRange(root);
     pnpm = readPnpmPin(root);
   } catch (error) {
     return [error instanceof Error ? error.message : String(error)];
@@ -48,7 +53,8 @@ export function checkToolchain(root: string, documents: readonly string[]) {
     ".node-version",
     ".tool-versions",
   ])
-    if (existsSync(join(root, file))) findings.push(`${file}: use the root Node/pnpm pins only`);
+    if (existsSync(join(root, file)))
+      findings.push(`${file}: use the root Node/pnpm requirements only`);
   try {
     const mise = parseTOML<{
       tools?: unknown;
@@ -59,7 +65,7 @@ export function checkToolchain(root: string, documents: readonly string[]) {
       JSON.stringify(mise.settings?.idiomatic_version_file_enable_tools) !==
         JSON.stringify(["node"])
     )
-      findings.push("mise.toml: read the package.json Node pin without a tools section");
+      findings.push("mise.toml: read the package.json Node range without a tools section");
     const rust = parseTOML<{
       toolchain?: { channel?: string };
     }>(readFileSync(join(root, "rust-toolchain.toml"), "utf8"));
@@ -86,11 +92,11 @@ export function checkToolchain(root: string, documents: readonly string[]) {
     if (/^FROM\s+(oven\/bun|golang):/m.test(source))
       findings.push(`${file}: Bun and Go images are unsupported`);
     for (const [, version] of source.matchAll(/^ARG NODE_VERSION=(\S+)/gm))
-      if (version !== node) findings.push(`${file}: Node image must use ${node}`);
+      if (!satisfies(version!, node)) findings.push(`${file}: Node image must satisfy ${node}`);
     for (const [, version] of source.matchAll(/^FROM\s+rust:(\d+\.\d+\.\d+)/gm))
       if (version !== rustPin) findings.push(`${file}: Rust image must use ${rustPin}`);
     for (const [, version] of source.matchAll(/^FROM\s+node:(\d+\.\d+\.\d+)/gm))
-      if (version !== node) findings.push(`${file}: Node image must use ${node}`);
+      if (!satisfies(version!, node)) findings.push(`${file}: Node image must satisfy ${node}`);
   }
   for (const file of globSync(
     [".github/workflows/*.{yml,yaml}", ".github/actions/**/action.{yml,yaml}"],
@@ -124,7 +130,8 @@ export function checkToolchain(root: string, documents: readonly string[]) {
     if (existsSync(join(root, file))) {
       const source = readFileSync(join(root, file), "utf8").replaceAll("**", "");
       for (const [, version] of source.matchAll(/\bNode v?(\d+\.\d+\.\d+)\b/g))
-        if (version !== node) findings.push(`${file}: documented Node must use ${node}`);
+        if (!satisfies(version!, node))
+          findings.push(`${file}: documented Node must satisfy ${node}`);
       for (const [, version] of source.matchAll(/\bpnpm v?(\d+\.\d+\.\d+)\b/g))
         if (version !== pnpm) findings.push(`${file}: documented pnpm must use ${pnpm}`);
     }

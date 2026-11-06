@@ -9,7 +9,7 @@ export class BundledTools {
   readonly pnpm: string | null;
   constructor(layout = cliInstallation()) {
     this.node = layout.node;
-    this.pnpm = layout.pnpm ?? findExecutable("pnpm");
+    this.pnpm = findExecutable("pnpm");
   }
   environment(base: Environment = process.env): Environment {
     const key =
@@ -18,8 +18,8 @@ export class BundledTools {
       "PATH";
     const current = base[key] ?? "";
     const paths = current ? current.split(delimiter) : [];
-    for (const file of [this.node, this.pnpm])
-      if (file && existsSync(file) && !paths.includes(dirname(file))) paths.push(dirname(file));
+    if (existsSync(this.node) && !paths.includes(dirname(this.node)))
+      paths.push(dirname(this.node));
     return { ...base, [key]: paths.join(delimiter) };
   }
 }

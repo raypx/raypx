@@ -162,8 +162,8 @@ pnpm run build:cli
 pnpm --dir apps/cli run smoke:pi
 ```
 
-This gate bundles the actual SDK loop as ESM with VP and relocates the CLI's
-bundled Node beside that fixture. It runs an approved tool outside the repository,
+This gate bundles the actual SDK loop as ESM with VP and relocates the running
+Node interpreter beside that fixture. It runs an approved tool outside the repository,
 without `node_modules`, credentials or PATH tools, and with HTTP disabled. It
 reopens SQLite, continues the conversation and rejects a repeated tool effect,
 then reports the ESM and Node sizes.

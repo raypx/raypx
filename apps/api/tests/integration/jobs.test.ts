@@ -6,8 +6,8 @@ import {
   type CloudJobCreateInput,
   type CloudJobInput,
   type CloudJobRun,
-} from "@raypx/jobs-model";
-import type { CloudJobsService } from "@raypx/jobs-server";
+} from "@raypx/jobs/model";
+import type { CloudJobsService } from "@raypx/jobs/server";
 import { createApiApp } from "../../server/api.ts";
 import { controlAuth } from "@raypx/control/testing";
 

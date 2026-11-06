@@ -7,9 +7,9 @@ The [current architecture](docs/architecture/README.md) defines the implementati
 
 ## Requirements
 
-Node 24.22.2, pnpm 12.16.1 and an isolated PostgreSQL database for account flows.
-Root `engines.node` and `packageManager` pin the JavaScript toolchain; mise reads
-the Node pin. `pnpm run doctor` checks the active runtime. Native development
+Node `>=24.18.0 <25`, pnpm 12.16.1 and an isolated PostgreSQL database for account flows.
+Root `engines.node` declares the supported Node range and `packageManager` pins pnpm;
+mise reads the Node range. `pnpm run doctor` checks the active runtime. Native development
 requires Rust 1.99.1 and Tauri 2.12.5. macOS requires 13.5+; Windows uses WebView2.
 Linux Desktop remains unverified. Installed Desktop/CLI packages contain their
 complete runtime and need no global Node or pnpm. See the

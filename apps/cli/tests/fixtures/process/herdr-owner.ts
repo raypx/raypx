@@ -1,11 +1,11 @@
 import { readStandardInput } from "@raypx/runtime-node/process";
 import { HerdrTerminalHost } from "../../../src/runtime/process/herdr.ts";
-const [binary, root, report, compiled] = process.argv.slice(2);
+const [binary, root, report, ...compiled] = process.argv.slice(2);
 const host = new HerdrTerminalHost(
   binary!,
   () => {},
   () => process.env,
-  compiled ? [compiled] : undefined,
+  compiled.length ? compiled : undefined,
 );
 await host.open(
   {

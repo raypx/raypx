@@ -10,6 +10,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 
 ## Interface
 
+`bin/raypx-dev.mjs` is the executable entry. It loads `src/cli.ts` through the
+package's `tsx/esm/api`; callers need Node, with no global tsx executable.
+
 - raypx-dev tasks <task> [VP options]
 - raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
@@ -76,6 +79,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
   before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
   Native CI checks Rust on each platform.
+- `./build/cli` packages the normal CLI JS artifact and stages Node/native resources only for Desktop.
 - `./build/nitro` supplies shared Nitro Node build options to API and Web configs.
 - `./build/deployment` owns service ports, health paths and API ingress routes.
   Policy checks static Docker, Compose and Caddy adapters plus API environment
@@ -93,8 +97,8 @@ workspace lists from manifests. Scaffolding previews by default and never overwr
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
 Explicit full verification runs Knip; `pnpm run knip` remains available for maintenance.
-Its read-only JSON adapter recognizes catalog entries
-used by pnpm root overrides, which Knip currently misses; all other findings fail.
+Knip reads the native pnpm workspace catalogs and overrides directly; its JSON
+report is validated without suppressing package-manager findings.
 Native Rust-launched TS fixtures and the presets' dynamically invoked task leaf are
 explicit Knip entries. Vendored skills are excluded;
 Knip ignores the Tauri CLI and bootstrap tsx dependencies because native build scripts
@@ -137,8 +141,8 @@ with their cached outputs. Verification records per-check execution times (zero 
 cache hit), format/lint wall times and VP graph wall time including runner overhead.
 Timing evidence never controls cache reuse. Failed checks never publish success.
 Full verification builds the API/Web outputs and probes them concurrently under Node using temporary
-roots and fixture environments. `src/validation/toolchain.ts` checks root Node/pnpm pins,
-generated pnpm workspace configuration, Rust pin consistency and obsolete runtimes. These config/test entries never enter product runtime code.
+roots and fixture environments. `src/validation/toolchain.ts` checks the root Node range and pnpm pin,
+native pnpm workspace configuration, Rust pin consistency and obsolete runtimes. These config/test entries never enter product runtime code.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
