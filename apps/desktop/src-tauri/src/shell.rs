@@ -168,9 +168,6 @@ pub(crate) fn show(app: &tauri::AppHandle) {
     }
 }
 async fn update(app: tauri::AppHandle) {
-    if cfg!(feature = "native-smoke") {
-        return;
-    }
     if let Ok(updater) = app.updater()
         && let Ok(Some(update)) = updater.check().await
     {
@@ -237,9 +234,17 @@ pub fn run() {
     let protocol = scheme.clone();
     let quitting = Arc::new(AtomicBool::new(false));
     let exit_flag = quitting.clone();
-    let application = tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init()).plugin(tauri_plugin_notification::init()).plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+    let context = tauri::generate_context!();
+    let updater_enabled =
+        !cfg!(feature = "native-smoke") && context.config().plugins.0.contains_key("updater");
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_opener::init());
+    if updater_enabled {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+    let application = builder
         .invoke_handler(tauri::generate_handler![desktop_request,desktop_subscribe,desktop_unsubscribe,desktop_acknowledge])
         .register_uri_scheme_protocol(scheme.clone(),move |context, request| {
             let uri = request.uri();
@@ -280,17 +285,17 @@ pub fn run() {
             let show_item = MenuItem::with_id(app,"show","Show Raypx / 显示",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray show item", error))?;
             let review_item = MenuItem::with_id(app,"review","Review requests / 处理请求",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray review item", error))?;
             let hide_item = MenuItem::with_id(app,"hide","Hide window / 隐藏",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray hide item", error))?;
-            let update_item = MenuItem::with_id(app,"update","Check for updates / 检查更新",!cfg!(feature="native-smoke"),None::<&str>).map_err(|error| native_smoke_setup_error("tray update item", error))?;
+            let update_item = MenuItem::with_id(app,"update","Check for updates / 检查更新",updater_enabled,None::<&str>).map_err(|error| native_smoke_setup_error("tray update item", error))?;
             let quit_item = MenuItem::with_id(app,"quit","Quit Raypx / 退出",true,None::<&str>).map_err(|error| native_smoke_setup_error("tray quit item", error))?;
             let separator = PredefinedMenuItem::separator(app).map_err(|error| native_smoke_setup_error("tray separator", error))?;
             let menu = Menu::with_items(app,&[&show_item,&review_item,&hide_item,&separator,&update_item,&quit_item]).map_err(|error| native_smoke_setup_error("tray menu", error))?;
             let icon = tauri::image::Image::from_bytes(include_bytes!("../../resources/tray.png")).map_err(|error| native_smoke_setup_error("tray icon", error))?;
             if TrayIconBuilder::with_id("main").icon(icon).icon_as_template(true).tooltip("Raypx").menu(&menu)
-                .on_menu_event(|app,event| match event.id.as_ref() {
+                .on_menu_event(move |app,event| match event.id.as_ref() {
                     "show" => show(app),
                     "review" => { show(app); let host = app.state::<Arc<Host>>().inner().clone(); tauri::async_runtime::spawn(async move { let _ = host.events.send(json!({"version":1,"event":"approval.open","data":{"scope":"local"}}),&host.cancelled()).await; }); },
                     "hide" => { if let Some(window) = app.get_webview_window("main") { let _ = window.hide(); let host = app.state::<Arc<Host>>().inner().clone(); tauri::async_runtime::spawn(async move { host.visible(false).await; }); } },
-                    "update" => { let app = app.clone(); tauri::async_runtime::spawn(async move { update(app).await; }); },
+                    "update" if updater_enabled => { let app = app.clone(); tauri::async_runtime::spawn(async move { update(app).await; }); },
                     "quit" => app.exit(0), _ => {},
                 }).on_tray_icon_event(|tray,event| { if matches!(event,TrayIconEvent::Click { button:MouseButton::Left,button_state:MouseButtonState::Up,.. }) { show(tray.app_handle()); } }).build(app).is_ok() { host.tray.store(true,Ordering::SeqCst); }
             native_smoke_lifecycle("tray initialized");
@@ -314,7 +319,7 @@ pub fn run() {
             });
             native_smoke_lifecycle("setup complete");
             Ok(())
-        }).build(tauri::generate_context!()).expect("Unable to initialize Raypx Desktop");
+        }).build(context).expect("Unable to initialize Raypx Desktop");
     application.run(move |app, event| {
         if cfg!(feature = "native-smoke") {
             match &event {

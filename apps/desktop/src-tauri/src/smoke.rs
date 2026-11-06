@@ -35,6 +35,9 @@ pub fn start(app: tauri::AppHandle, window: WebviewWindow, host: Arc<Host>) -> R
         host,
         focuses,
     });
+    // Tauri runs setup on the GUI thread. Bind the listener with its Tokio reactor entered.
+    let runtime = tauri::async_runtime::handle();
+    let _guard = runtime.inner().enter();
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -244,13 +247,24 @@ impl Driver {
                 let size = self.window.inner_size().map_err(|_| "WINDOW_UNAVAILABLE")?;
                 let scale = self.window.scale_factor().unwrap_or(1.);
                 let focuses = self.focuses.load(Ordering::SeqCst);
-                let bounds = self
+                // Compare tray and window geometry in logical pixels on the smoke display.
+                let tray_size = self
                     .app
                     .tray_by_id("main")
-                    .and_then(|tray| tray.rect().ok().flatten());
-                Ok(
-                    json!({"visible":self.window.is_visible().unwrap_or(false),"focused":self.window.is_focused().unwrap_or(false),"focuses":focuses,"activations":focuses,"minimized":self.window.is_minimized().unwrap_or(false),"width":size.width as f64/scale,"height":size.height as f64/scale,"trayVisible":self.host.tray.load(Ordering::SeqCst),"trayBounds":{"width":bounds.as_ref().map(|r|r.size.to_physical::<u32>(scale).width).unwrap_or(0),"height":bounds.as_ref().map(|r|r.size.to_physical::<u32>(scale).height).unwrap_or(0)}}),
-                )
+                    .and_then(|tray| tray.rect().ok().flatten())
+                    .map(|bounds| bounds.size.to_logical::<f64>(scale))
+                    .unwrap_or_default();
+                Ok(json!({
+                    "visible": self.window.is_visible().unwrap_or(false),
+                    "focused": self.window.is_focused().unwrap_or(false),
+                    "focuses": focuses,
+                    "activations": focuses,
+                    "minimized": self.window.is_minimized().unwrap_or(false),
+                    "width": size.width as f64 / scale,
+                    "height": size.height as f64 / scale,
+                    "trayVisible": self.host.tray.load(Ordering::SeqCst),
+                    "trayBounds": { "width": tray_size.width, "height": tray_size.height },
+                }))
             }
             "tray" => {
                 match input["action"].as_str() {
