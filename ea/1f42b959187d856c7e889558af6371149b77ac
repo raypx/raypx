@@ -1,0 +1,53 @@
+apps/cli/src/runtime/agents/infrastructure/store/journal.ts
+  s_7d592a64ee8156::t_14427785ed3885 11-13
+  s_7d592a64ee8156::t_417429b55322be 1-10,14-207
+apps/cli/src/runtime/agents/infrastructure/store/profile.ts
+  s_7d592a64ee8156::t_bf22e535e10a6e 1-46
+apps/cli/src/runtime/agents/infrastructure/store/requests.ts
+  s_7d592a64ee8156::t_3af8a85a7220f7 7,16
+  s_7d592a64ee8156::t_afd6c772d7e3ff 1-6,8-15,17-73,75-82
+  s_7d592a64ee8156::t_cbb3c1769cdd2a 74
+apps/cli/src/runtime/agents/infrastructure/store/commands.ts
+  s_7d592a64ee8156::t_a2234095bad969 1-78
+apps/cli/src/runtime/agents/infrastructure/store/clear.ts
+  s_7d592a64ee8156::t_67be282631361a 1-3,5-9,15-28,30-70
+  s_7d592a64ee8156::t_a2f88cc84e0010 29
+  s_7d592a64ee8156::t_33dda06504669e 4,10-14
+apps/cli/src/runtime/agents/infrastructure/store/snapshot.ts
+  s_7d592a64ee8156::t_749037e903d4c0 1-50,56-153,155-156
+  s_7d592a64ee8156::t_00067984b53c55 154
+  s_7d592a64ee8156::t_92945d4e5b9e5c 51-55
+apps/cli/src/runtime/agents/store.ts
+  s_7d592a64ee8156::t_633210497b7161 126
+  s_7d592a64ee8156::t_17e7a61f4023d7 1,4-7,9-19,21-24,27-32,35-37,39-42,46,49-50,52-53,56,58-60,62-66,69,72-75,77-79,88,121-122,128-133,135-138,141,143-144,147-148,150-154,156-159,161,164,166-167,169-174,177,180,182-183,185-186,188-189,192
+  s_7d592a64ee8156::t_7bece0c3b19ed5 123-125,127
+  s_7d592a64ee8156::t_056956780592f1 80-81
+  s_7d592a64ee8156::t_8d7521755f9b5c 43-45
+  s_7d592a64ee8156::t_36ba1923d3029f 134
+apps/cli/AGENTS.md
+  s_7d592a64ee8156::t_324eedb05bb973 212
+apps/cli/src/runtime/agents/infrastructure/store/tasks.ts
+  s_7d592a64ee8156::t_de40b7bbc9b739 1-107
+apps/cli/src/runtime/agents/infrastructure/store/queries.ts
+  s_7d592a64ee8156::t_d123788dd7a0d7 1-10
+apps/cli/src/runtime/agents/infrastructure/store/activity.ts
+  s_7d592a64ee8156::t_c65eb3fba72b4c 10,16
+  s_7d592a64ee8156::t_16e5191860dd92 88
+  s_7d592a64ee8156::t_07b2019a020a7f 1-9,11-15,17-87,89-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ea1f42b959187d856c7e889558af6371149b77ac",
+  "prompts": {},
+  "sessions": {
+    "s_7d592a64ee8156": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "99d88939-2217-464b-aab4-9f4335e9eb7f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+packages/tasks/src/client/approval.tsx
+  s_ccbb987cc16155::t_7dc7d26b12a1ce 14
+packages/tasks/src/client/task-composer.tsx
+  s_ccbb987cc16155::t_98d66c82d872eb 1,9-11,14-19,21,23,32-33,36-37,42,46,61,71,82,84-85,88-100,103-106,109-116,118,123,127,129,132-143,147-155
+packages/tasks/src/client/composer/draft-list.tsx
+  s_ccbb987cc16155::t_45e8909b38bffa 1-91
+packages/tasks/src/model/failure.ts
+  s_ccbb987cc16155::t_fbafe455c87d50 1-42
+packages/tasks/src/client/use-task-composer.ts
+  s_ccbb987cc16155::t_3fe5b1a30943ce 179-183
+  s_ccbb987cc16155::t_5ab84852de5a82 145-152,199,205
+  s_ccbb987cc16155::t_3551bd044e4d79 1-144,153-178,252-261,263,270-271
+  s_ccbb987cc16155::t_a240b6c8c57063 264
+  s_ccbb987cc16155::t_acd246d3367bc3 184-198,200-204,206-251,262,265-269
+packages/tasks/src/client/composer/context-fields.tsx
+  s_ccbb987cc16155::t_89462a60f37030 1-47
+packages/tasks/src/client/remote-query.ts
+  s_ccbb987cc16155::t_7dc7d26b12a1ce 5
+packages/tasks/src/model/composer.test.ts
+  s_ccbb987cc16155::t_fc17cda406af94 1-86,95-96,100-104,115-140,146-205,214-218,228-233,242-254,258-262,267-280,285-294,306-340
+  s_ccbb987cc16155::t_07f6807cf08280 91-94
+  s_ccbb987cc16155::t_08a26ada05de26 87-90,97-99,105-114,141-145,206-213,219-227,234-241,255-257,263-266,281-284,295-305
+packages/tasks/src/client/task-input.tsx
+  s_ccbb987cc16155::t_7dc7d26b12a1ce 10
+packages/tasks/src/client/composer/draft-actions.tsx
+  s_ccbb987cc16155::t_4affd9f8412964 1-78
+packages/tasks/src/client/task-detail.tsx
+  s_ccbb987cc16155::t_7dc7d26b12a1ce 27
+packages/tasks/AGENTS.md
+  s_ccbb987cc16155::t_0bd86c8b9796a7 121-123
+packages/tasks/src/client/use-task-conversation.ts
+  s_ccbb987cc16155::t_7dc7d26b12a1ce 6
+packages/tasks/src/client/composer/target-options.tsx
+  s_ccbb987cc16155::t_f8cc3876149ba8 1-135
+packages/tasks/src/model/composer.ts
+  s_ccbb987cc16155::t_614fbaff153232 1-105,107-317
+  s_ccbb987cc16155::t_08a26ada05de26 106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e4ce6b63db8c6ed6028be9c090eaf4674421701c",
+  "prompts": {},
+  "sessions": {
+    "s_ccbb987cc16155": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff089631-0923-4ba1-8e85-379d1458dcfa",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

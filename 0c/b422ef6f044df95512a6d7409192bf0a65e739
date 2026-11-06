@@ -1,0 +1,41 @@
+apps/desktop/AGENTS.md
+  s_9835e924464762::t_f6b21fa0978145 118-119
+apps/desktop/README.md
+  s_9835e924464762::t_f6b21fa0978145 51-59
+apps/desktop/internal/AGENTS.md
+  s_9835e924464762::t_f6b21fa0978145 17-19
+apps/desktop/internal/app/app.go
+  s_9835e924464762::t_8fc072d967c315 105-111
+apps/desktop/internal/app/session_key.go
+  s_9835e924464762::t_8fc072d967c315 1-33
+docs/architecture/0038-mygo-desktop-host.md
+  s_9835e924464762::t_f6b21fa0978145 26-33
+apps/desktop/tests/native/host/sessions_test.go
+  s_9835e924464762::t_eb49a1df4402bd 4,6,18-21,27,40,69-194,199,272,340,360,376
+apps/desktop/internal/desktop/desktop.go
+  s_9835e924464762::t_d03bc91105f176 39,78
+  s_9835e924464762::t_d766b2af0fc43b 36-38
+apps/desktop/internal/desktop/sessions.go
+  s_9835e924464762::t_d03bc91105f176 5-6,9,16-19,26-31,69,92-107,109-124,139-141,144-147,149-151,153-158,160-161,167-170,178-185,195-199
+  s_9835e924464762::t_b583869d477273 125-129,132,135-138
+apps/desktop/tests/native/host/host_test.go
+  s_9835e924464762::t_dd337be131de25 134
+apps/desktop/tests/native/host/sessions_windows_test.go
+  s_9835e924464762::t_9b50bb60c97d8b 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0cb422ef6f044df95512a6d7409192bf0a65e739",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

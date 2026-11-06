@@ -1,0 +1,65 @@
+apps/desktop/src/features/tasks/cloud-terminal-settings.tsx
+  s_9835e924464762::t_7b134e1c62edb2 18,76,78,81,87,130,136
+apps/desktop/src/features/tasks/request-notice.tsx
+  s_9835e924464762::t_2d6bdc54fd9d26 10,37,42
+apps/desktop/src/features/tasks/terminal-settings.tsx
+  s_9835e924464762::t_7ea24a3fa00b66 16-24,35,38,45,66,106-108,132,134,146,157,161-162,170,194,196-197,212,219,225,227,238,245,252,269,290,296,314
+apps/mobile/src/locale.ts
+  s_9835e924464762::t_473326f55e8a12 31
+apps/web/src/components/admin-shell.tsx
+  s_9835e924464762::t_99f448350e5f36 64
+apps/web/src/features/auth/components/account-sessions.tsx
+  s_9835e924464762::t_40d8903fd996c4 23-24,26,59,79,105,126,132,142,156,159,165,171,184-186,206-207,238
+apps/web/src/features/configuration/components/settings.tsx
+  s_9835e924464762::t_6883229de2e18f 14,96
+apps/web/src/features/settings/account-settings.tsx
+  s_9835e924464762::t_4876a653b39708 78
+apps/web/src/router-pages.component.test.ts
+  s_9835e924464762::t_8d2d1c95681ce1 51
+apps/web/src/router.tsx
+  s_9835e924464762::t_189d30f82f6f1c 37
+apps/web/src/routes/(admin)/admin/settings.tsx
+  s_9835e924464762::t_5e7a546710b760 10
+apps/web/src/routes/(app)/account.tsx
+  s_9835e924464762::t_1fa1dae33d62b1 123-126,132
+apps/web/src/routes/(app)/tasks.tsx
+  s_9835e924464762::t_4daa7df6158636 78
+apps/web/src/routes/(auth)/signup.tsx
+  s_9835e924464762::t_ff690e10de2e0b 15
+packages/auth/src/client/password-change-dialog.tsx
+  s_9835e924464762::t_02e2aa847786e6 169
+packages/auth/src/hooks.ts
+  s_9835e924464762::t_37766e45087148 15,97
+packages/i18n/src/messages/en.ts
+  s_9835e924464762::t_192de8e2504da5 224,526-543,667-684,852-860,1025-1096
+packages/i18n/src/messages/zh.ts
+  s_9835e924464762::t_e591e82a8da77f 219,497-511,630-646,801-808,956-1018
+packages/memory/src/client/library.tsx
+  s_9835e924464762::t_a30d5bf99457fb 244,246,249,252-253
+packages/tasks/src/client/composer/draft-actions.tsx
+  s_9835e924464762::t_d7b412f07d722a 9-16,50,59-60,81
+packages/tasks/src/client/composer/draft-list.tsx
+  s_9835e924464762::t_45246ec054fc31 34,36,47,79
+packages/tasks/src/client/observed.tsx
+  s_9835e924464762::t_40999034c5a3ef 30,32,34,39,46-48,50,52,54,58,74,108,111,115,121,134,203,258,277-278,284,298,307,323,326
+packages/tasks/src/client/persistent-task-composer.tsx
+  s_9835e924464762::t_7653a5eaa9908e 12,18
+packages/tasks/src/client/use-task-composer.ts
+  s_9835e924464762::t_36ebf965dab3ab 148-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a31889aac48514b18148b9cfb21c5fe7aa34c11d",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

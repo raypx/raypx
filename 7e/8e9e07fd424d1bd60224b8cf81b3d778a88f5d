@@ -1,0 +1,32 @@
+packages/control/AGENTS.md
+  s_35b3eec50f8267::t_8610d68b4e1622 7-9
+packages/control/src/relay/hub.ts
+  s_35b3eec50f8267::t_01f616cd7756c3 9-14,16,18-20,22,24-25,27,36,43,52,56,79,98,102-106,109-110,113-114,119-120,122,125,128,133,135,141,147,149,160-161,164-167,169,173-175
+packages/control/src/relay/registry.ts
+  s_35b3eec50f8267::t_415838cd092244 1-155
+packages/control/src/relay/frames.ts
+  s_35b3eec50f8267::t_d6645ddafb5a51 250
+  s_35b3eec50f8267::t_8bb1be5539c969 1-173,175,179-180,184-185,187-249,251-253
+  s_35b3eec50f8267::t_dcda9d792632c2 174,176-178,181-183,186
+packages/control/src/relay/index.ts
+  s_35b3eec50f8267::t_cb793c314d8dba 1-2
+packages/control/src/relay/dispatch.ts
+  s_35b3eec50f8267::t_d6645ddafb5a51 156
+  s_35b3eec50f8267::t_4230a622b958dc 1-155,157-280
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7e8e9e07fd424d1bd60224b8cf81b3d778a88f5d",
+  "prompts": {},
+  "sessions": {
+    "s_35b3eec50f8267": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "90e107d3-0f88-4c8f-b6de-d18b7a30de09",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

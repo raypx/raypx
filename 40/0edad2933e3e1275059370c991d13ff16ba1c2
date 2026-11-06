@@ -1,0 +1,39 @@
+apps/web/src/components/admin-shell.tsx
+  s_9835e924464762::t_66971b84852174 60,65,72,79,83,93
+apps/web/src/components/shell.tsx
+  s_9835e924464762::t_e28a7e2b69258f 105
+apps/web/src/components/user-button.tsx
+  s_9835e924464762::t_3892c506eb54a5 45,107
+apps/web/src/features/administration/components/audit-log.tsx
+  s_9835e924464762::t_baf6799f153c7e 39,74,117
+apps/web/src/features/administration/components/overview.tsx
+  s_9835e924464762::t_ca4a419cb78eb8 25
+apps/web/src/router-pages.component.test.ts
+  s_9835e924464762::t_0af11b4a9f6c0a 48-49
+apps/web/src/router.tsx
+  s_9835e924464762::t_be053f0ec0076a 32-34
+apps/web/src/routes/(admin)/admin/audit.tsx
+  s_9835e924464762::t_47de7c3c525664 7
+apps/web/src/routes/(admin)/admin/index.tsx
+  s_9835e924464762::t_0ce778ef5dd60b 4
+packages/i18n/src/messages/en.ts
+  s_9835e924464762::t_cd86857df259fd 139,141,143-144
+packages/i18n/src/messages/zh.ts
+  s_9835e924464762::t_1a1c1b1debd3a0 135,137,139-140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "400edad2933e3e1275059370c991d13ff16ba1c2",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

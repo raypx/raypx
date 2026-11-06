@@ -1,0 +1,61 @@
+apps/web/src/routes/(admin)/admin/settings.tsx
+  s_9835e924464762::t_161496570c278e 10
+packages/auth/src/client/password-field.tsx
+  s_9835e924464762::t_161496570c278e 67
+packages/jobs/src/client/cloud-jobs.tsx
+  s_9835e924464762::t_161496570c278e 66,223,287-288,290,313,319,324,326,350,352,366,371,375,379,390,393,398,432,446,460-461,464,470,472,477,482
+packages/i18n/src/messages/zh.ts
+  s_9835e924464762::t_161496570c278e 136-141,624-626,863,880-996
+apps/web/src/routes/(admin)/admin/index.tsx
+  s_9835e924464762::t_161496570c278e 4
+apps/desktop/src/features/automations/local.tsx
+  s_9835e924464762::t_161496570c278e 38,175-176,180,189,212,219,225,228,275-276,283,290,295,336,357-358,376-377,388,468-470
+  s_9835e924464762::t_7b92646e75a725 39,97,308,317,325
+packages/jobs/src/client/job-form.tsx
+  s_9835e924464762::t_161496570c278e 41,158,160-161,164,179,188,191,203,213,217,221,225,231,238,244,253,260,275,281-282,289,314,324,329
+  s_9835e924464762::t_d5d2f4fd79c099 42
+apps/web/src/components/shell.tsx
+  s_9835e924464762::t_161496570c278e 103-105,107
+  s_9835e924464762::t_f1f5274be8b7f8 106
+apps/desktop/src/routes/(local)/automations.tsx
+  s_9835e924464762::t_161496570c278e 47,83
+apps/web/src/features/administration/components/audit-log.tsx
+  s_9835e924464762::t_161496570c278e 74,117
+apps/web/src/router-pages.component.test.ts
+  s_9835e924464762::t_161496570c278e 48-49,51
+apps/web/src/components/admin-shell.tsx
+  s_9835e924464762::t_161496570c278e 57-60,62,64-65,72,79,81-83,85,92-96
+  s_9835e924464762::t_ebb18a41e00d68 61,84
+apps/web/src/components/user-button.tsx
+  s_9835e924464762::t_161496570c278e 45,107
+apps/web/src/routes/(admin)/admin/audit.tsx
+  s_9835e924464762::t_161496570c278e 7
+apps/desktop/src/routes/terminal.tsx
+  s_9835e924464762::t_161496570c278e 52,240,329,344,359
+apps/web/src/features/administration/components/overview.tsx
+  s_9835e924464762::t_161496570c278e 48
+apps/web/src/router.tsx
+  s_9835e924464762::t_161496570c278e 32-34,37
+apps/desktop/src/features/tasks/reauthorize.tsx
+  s_9835e924464762::t_161496570c278e 73
+apps/web/src/routes/(app)/automations.tsx
+  s_9835e924464762::t_161496570c278e 25
+packages/i18n/src/messages/en.ts
+  s_9835e924464762::t_161496570c278e 140-145,669-671,927,944-1077
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "062ea2035f63e7c3aa3eb91e266a368159b3689d",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

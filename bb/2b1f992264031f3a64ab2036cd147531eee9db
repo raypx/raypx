@@ -1,0 +1,59 @@
+packages/control/src/relay/hub.ts
+  s_78fa1c2f4443be::t_7585de81a1ffd9 88
+  s_78fa1c2f4443be::t_4e46d954717782 14-21
+packages/i18n/src/messages/en.ts
+  s_c530aa5309e2aa::t_7030b17b8534bd 11-13
+  s_c530aa5309e2aa::t_83146ec22ca2db 8
+apps/desktop/internal/app/app.go
+  s_78fa1c2f4443be::t_ae0a8573a873d1 54-57
+apps/web/src/features/configuration/components/settings.tsx
+  s_78fa1c2f4443be::t_bef1bc1667d626 25-27,38-40,44-47,49-50,60-63,69-84
+apps/desktop/src/features/auth/components/instance-gate.component.test.tsx
+  s_c530aa5309e2aa::t_5756bc027822e0 98-115,175
+packages/tasks/src/client/task-panels.tsx
+  s_78fa1c2f4443be::t_190b71caca0f2e 140-145
+packages/control/src/repository.ts
+  s_78fa1c2f4443be::t_99523e48cc0ef3 50-63
+apps/desktop/src/features/auth/components/instance-gate.tsx
+  s_78fa1c2f4443be::t_3c0e61fc9d892c 106
+  s_78fa1c2f4443be::t_0e0146991eb294 124-134
+  s_c530aa5309e2aa::t_1e6b3172a0d264 6,135-141,143
+  s_78fa1c2f4443be::t_526cef362c47f9 66
+  s_78fa1c2f4443be::t_dd20f049d5ff31 13-21
+apps/cli/src/commands/tasks.ts
+  s_78fa1c2f4443be::t_6f372dd8b4ee19 22-28
+  s_78fa1c2f4443be::t_84a294094d01f6 129
+packages/i18n/src/messages/zh.ts
+  s_c530aa5309e2aa::t_e6852c6a585401 6,9-10
+apps/web/src/features/auth/components/account-sessions.tsx
+  s_78fa1c2f4443be::t_e86c089432038e 30-43,46-48
+packages/tasks/src/client/observed.tsx
+  s_78fa1c2f4443be::t_1a6b083666a9d8 25-34,39-54,58-60
+  s_78fa1c2f4443be::t_22c1e27b1620a7 333
+  s_c530aa5309e2aa::t_269b4c8a23fcbe 35-38,55-57
+  s_78fa1c2f4443be::t_0218e88fa796e3 156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "bb2b1f992264031f3a64ab2036cd147531eee9db",
+  "prompts": {},
+  "sessions": {
+    "s_78fa1c2f4443be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "20306bfb-8e67-4366-a3cc-b92f37841bb8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c530aa5309e2aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a552-74dc-7bc3-b02e-49f8badf037e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

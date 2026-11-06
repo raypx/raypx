@@ -1,0 +1,22 @@
+apps/web/src/features/landing/components/home.tsx
+  s_7d592a64ee8156::t_74cd8e91fc5e82 13
+  s_7d592a64ee8156::t_2c9358d7f85beb 14-15,23,38-41,47,60,77-81,83-87,89-90,103,106,123,125,145-199
+apps/web/src/features/landing/components/layout.tsx
+  s_7d592a64ee8156::t_2c9358d7f85beb 15-19,59-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6c067cf78cc361a9fe68045144e2131a728b967f",
+  "prompts": {},
+  "sessions": {
+    "s_7d592a64ee8156": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "99d88939-2217-464b-aab4-9f4335e9eb7f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

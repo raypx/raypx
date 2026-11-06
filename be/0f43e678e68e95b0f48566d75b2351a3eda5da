@@ -1,0 +1,201 @@
+apps/cli/src/runtime/instances/keys.ts
+  s_e7b2efd2e44eee::t_a3124749f749d9 11,17-20,39-41
+  s_e7b2efd2e44eee::t_b1b720e02b7bbc 1-10,21-23,42-44
+  s_e7b2efd2e44eee::t_b9742ea0254f94 12-16,24-38
+apps/cli/src/runtime/sqlite/schema.ts
+  s_e7b2efd2e44eee::t_b1b720e02b7bbc 8
+apps/web/src/features/administration/components/administration.component.test.tsx
+  s_e7b2efd2e44eee::t_4aa044e0f23403 67,113-129,132-136
+  s_e7b2efd2e44eee::t_b00a59fa317839 15,20,58-60,62-64,66
+  s_e7b2efd2e44eee::t_dd0d6eb5d3fa5e 61,65,130-131
+docs/architecture/remote-tasks.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 61
+apps/cli/src/runtime/index.ts
+  s_e7b2efd2e44eee::t_40978335a2bf3e 4,24,26
+apps/cli/tests/integration/runtime/daemon/control.test.ts
+  s_e7b2efd2e44eee::t_cbf508cff471ad 2-3,168,193-195,202-205,209
+  s_e7b2efd2e44eee::t_c55eede3e7bd24 196-201,206-208
+packages/ui/src/components/ui/dialog.tsx
+  s_e7b2efd2e44eee::t_8a66c4467e82ab 43,45-49,67-68,85,88-92,104-106
+apps/web/src/features/auth/components/session-boundary.tsx
+  s_e7b2efd2e44eee::t_3533b5c92356ef 88
+docs/architecture/0040-instance-enrollment-and-providers.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 9,13-18,36
+packages/ui/AGENTS.md
+  s_e7b2efd2e44eee::t_ae09f47ce4a3c4 11-12
+apps/cli/AGENTS.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 101,236
+docs/development/desktop-release.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 41
+apps/desktop/src/features/auth/components/instance-gate.tsx
+  s_e7b2efd2e44eee::t_d7b3fec890af24 2-4,10-12,14-18,22,24,57-74,106,108-109,111-113,116-118,120-121
+  s_e7b2efd2e44eee::t_5a189e1506bb82 105,107,110,114-115,119
+apps/desktop/tests/native/smoke/run.ts
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 89
+apps/desktop/internal/AGENTS.md
+  s_e7b2efd2e44eee::t_ae09f47ce4a3c4 15-19
+apps/desktop/src/features/onboarding/onboarding.component.test.tsx
+  s_e7b2efd2e44eee::t_0848c1ae3f05f3 161,168
+apps/desktop/internal/desktop/desktop_test.go
+  s_e7b2efd2e44eee::t_b0d6bf6c988910 26-50
+  s_e7b2efd2e44eee::t_407d8009d4cbb3 6,25
+  s_e7b2efd2e44eee::t_d27bf566af8a99 51-52
+apps/cli/tests/integration/runtime/instances.test.ts
+  s_e7b2efd2e44eee::t_a08643db8b0707 15-16,139,142,162-164,177,182-232
+  s_e7b2efd2e44eee::t_67b982cc99425c 233-255,257-268,270-279
+apps/cli/tests/helpers/instance.ts
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 22,78,113
+apps/web/src/features/auth/components/session-boundary.component.test.tsx
+  s_e7b2efd2e44eee::t_b00a59fa317839 1-13,15,17-23,25-29,32-36,38
+  s_e7b2efd2e44eee::t_bfa08368ce1b28 14,16,24,30-31,37
+apps/web/src/features/settings/quick-settings-modal.tsx
+  s_e7b2efd2e44eee::t_3533b5c92356ef 28-31
+packages/memory/src/client/form.tsx
+  s_e7b2efd2e44eee::t_8a94c12aa7e1b1 1,8,10-23,26-28,35-37,40,46-47,60,85-87,98,109,119
+  s_e7b2efd2e44eee::t_83ee10398f12fa 72
+apps/desktop/tests/native/host/credentials_test.go
+  s_e7b2efd2e44eee::t_b0d6bf6c988910 4-13,17-29,33-60,64-130,134-157,161-212,216-237
+  s_e7b2efd2e44eee::t_9ef509974e6265 1-3,14-16,30-32,61-63,131-133,158-160,213-215,238
+packages/i18n/src/messages/en.ts
+  s_e7b2efd2e44eee::t_3533b5c92356ef 3-5,603-604,802-805
+apps/cli/src/runtime/daemon/vault.ts
+  s_e7b2efd2e44eee::t_40978335a2bf3e 2-4,26-27,30-42,47,49-52,54,58-60,63-76,78-83,86,91-92
+  s_e7b2efd2e44eee::t_a3124749f749d9 5
+  s_e7b2efd2e44eee::t_b9742ea0254f94 93-96
+  s_e7b2efd2e44eee::t_4854fca87057f5 77
+apps/desktop/internal/desktop/desktop.go
+  s_e7b2efd2e44eee::t_88999394977925 72,76
+  s_e7b2efd2e44eee::t_619226a552e6c4 60,81-84,90-92,104-105,109-110
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 85-89,94-96,106-108
+  s_e7b2efd2e44eee::t_b0d6bf6c988910 73-75
+  s_e7b2efd2e44eee::t_378b8880032277 118
+.github/workflows/native.yml
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 96,113
+docs/development/terminal-host-p1.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 39,46,171-177
+  s_e7b2efd2e44eee::t_160499ec871207 178-179
+apps/desktop/tests/native/fixtures/instance-server.ts
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 7
+  s_e7b2efd2e44eee::t_2be1036815b403 10-54,56-61
+apps/storybook/src/stories/overlays.stories.tsx
+  s_e7b2efd2e44eee::t_3533b5c92356ef 56
+apps/desktop/AGENTS.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 112-113,117-121
+apps/desktop/src/features/tasks/host-session.ts
+  s_e7b2efd2e44eee::t_4c0e8bb0adff88 1-2,5,7-9
+  s_e7b2efd2e44eee::t_9b5b954eeb3b34 6
+apps/web/src/features/administration/components/audit-log.tsx
+  s_e7b2efd2e44eee::t_5d05774a71c29a 25-36,41-49,54-57,80-81,89
+  s_e7b2efd2e44eee::t_3533b5c92356ef 239
+apps/cli/src/runtime/sqlite/permissions.ts
+  s_e7b2efd2e44eee::t_5a5c2d815d9a14 74
+  s_e7b2efd2e44eee::t_83ee10398f12fa 43,46
+  s_e7b2efd2e44eee::t_49d3cb58869fad 1-8,10-42,44-45,47-68,70-73,75-85
+  s_e7b2efd2e44eee::t_55c96497d739fe 9,69
+apps/desktop/go.mod
+  s_e7b2efd2e44eee::t_378b8880032277 10
+apps/desktop/tests/native/host/credentials_windows_test.go
+  s_e7b2efd2e44eee::t_407d8009d4cbb3 1,11
+  s_e7b2efd2e44eee::t_b0d6bf6c988910 4-5,7-8,12-15,17-51
+packages/i18n/src/messages/zh.ts
+  s_e7b2efd2e44eee::t_3533b5c92356ef 3-4,559,752-755
+apps/cli/src/runtime/sqlite/profile.ts
+  s_e7b2efd2e44eee::t_83ee10398f12fa 16
+  s_e7b2efd2e44eee::t_bbbb1654164864 13
+  s_e7b2efd2e44eee::t_49d3cb58869fad 2,5,9
+apps/cli/src/runtime/instances/index.ts
+  s_e7b2efd2e44eee::t_88999394977925 81-99,130-133,185-186,190,196-197
+  s_e7b2efd2e44eee::t_d19607efb1b2e9 54,57,59,184
+apps/desktop/tests/integration/native/smoke-session.test.ts
+  s_e7b2efd2e44eee::t_a08643db8b0707 18
+apps/desktop/src/features/onboarding/home.tsx
+  s_e7b2efd2e44eee::t_16c1199763a350 2,18,51-72
+apps/cli/src/runtime/daemon/control.ts
+  s_e7b2efd2e44eee::t_40978335a2bf3e 62
+  s_e7b2efd2e44eee::t_aeb6d405e188ac 305,312,341,343
+apps/desktop/internal/desktop/credentials.go
+  s_e7b2efd2e44eee::t_619226a552e6c4 1-3,9-12,18-19,53-55,113-115,117,127-128,137
+  s_e7b2efd2e44eee::t_bbbb1654164864 95,98,102-103
+  s_e7b2efd2e44eee::t_b0d6bf6c988910 99-101
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 4-8,13-17,20-52,56-94,96-97,104-112,116,118-126,129-136
+docs/architecture/0038-mygo-desktop-host.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 11,25-29
+apps/cli/src/runtime/sqlite/schema/credentials.ts
+  s_e7b2efd2e44eee::t_b1b720e02b7bbc 1-9,11-24,26
+  s_e7b2efd2e44eee::t_e1f8b53cb085b4 10,25
+docs/development/desktop-configuration.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 53-65,104-113
+apps/desktop/internal/desktop/config.go
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 73-76,192-194
+  s_e7b2efd2e44eee::t_619226a552e6c4 77,92,189-191,195-197
+apps/desktop/internal/app/app.go
+  s_e7b2efd2e44eee::t_378b8880032277 101
+apps/desktop/internal/desktop/lifecycle.go
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 37-39
+apps/desktop/tests/native/smoke/host.ts
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 129-130
+apps/desktop/src/features/auth/components/instance-gate.component.test.tsx
+  s_e7b2efd2e44eee::t_5b98e590392e1b 8,61-62,71-74,76,92,123-134,136-152
+  s_e7b2efd2e44eee::t_0848c1ae3f05f3 18-21,23,27-28,30
+  s_e7b2efd2e44eee::t_8070ec83026d73 22,75,135
+apps/desktop/README.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 8,50
+apps/desktop/internal/desktop/credentials_posix.go
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 8-12
+  s_e7b2efd2e44eee::t_619226a552e6c4 1-2,5-7,13
+apps/cli/src/commands/ai.ts
+  s_e7b2efd2e44eee::t_40978335a2bf3e 4-5,51-65
+apps/cli/src/commands/instance.ts
+  s_e7b2efd2e44eee::t_40978335a2bf3e 3-4,14,16-40,42-57,60
+apps/desktop/internal/desktop/credentials_windows.go
+  s_e7b2efd2e44eee::t_619226a552e6c4 1-3,6-8,38
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 4-5,9-37
+apps/desktop/tests/native/smoke/agents-run.ts
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 49
+apps/cli/tests/integration/runtime/credentials.test.ts
+  s_e7b2efd2e44eee::t_cbf508cff471ad 22,118-120
+  s_e7b2efd2e44eee::t_b00a59fa317839 180,182-187,189-196,198-223,225-234,236-237
+  s_e7b2efd2e44eee::t_c55eede3e7bd24 116-117
+  s_e7b2efd2e44eee::t_83ee10398f12fa 28,54,106,122,126,134,145,149,181,197,239,254,261,263,270,282
+  s_e7b2efd2e44eee::t_0848c1ae3f05f3 14,249
+  s_e7b2efd2e44eee::t_f4e7664143e94a 1-8,10-13,15-21,24-27,29-37,45,53,55-87,89-92,94-103,105,107-112,114-115,121,125,127,130,133,135-143,147-148,150-172,174-179,238,240-248,250-253,255-260,262,264-269,271-281,283-284,286
+  s_e7b2efd2e44eee::t_30645516a01b50 9,88,93,113,144,173,188,224,235,285
+apps/web/src/features/tasks/project-tools.tsx
+  s_e7b2efd2e44eee::t_3533b5c92356ef 46
+packages/memory/src/library.component.test.tsx
+  s_e7b2efd2e44eee::t_c04d6567de1b59 57
+  s_e7b2efd2e44eee::t_4687b12bc6f4ed 20-26,28-42,44-55,58-59,61-67,69-74,76-90,92-94
+  s_e7b2efd2e44eee::t_5fefa9c88e3176 56
+  s_e7b2efd2e44eee::t_40d63edfcedf3c 27,43,60,68,75,91
+apps/cli/tests/smoke/artifact.ts
+  s_e7b2efd2e44eee::t_ce82f5bc7fc775 163
+docs/development/local-sqlite.md
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 4,9,27-33,66-72
+packages/memory/src/client/library.tsx
+  s_e7b2efd2e44eee::t_5d4a76976e48b4 7-14,33-37,41-42,83-87,117,123,126,155-165,170,172,174-175,185-199,214-218,377,392-394,398,454,552-588
+  s_e7b2efd2e44eee::t_8a62313f47d0ff 167-168,180-182
+apps/cli/drizzle/20261104024215_dapper_the_captain/migration.sql
+  s_e7b2efd2e44eee::t_023d183cae9b78 1-15
+apps/cli/drizzle/20261104024215_dapper_the_captain/snapshot.json
+  s_e7b2efd2e44eee::t_7a4d8f6291e074 1-1406
+apps/cli/src/runtime/sqlite/migrations.generated.json
+  s_e7b2efd2e44eee::t_b32caa5cbb7f26 11-15
+apps/cli/tests/integration/runtime/sqlite.test.ts
+  s_e7b2efd2e44eee::t_2c6d1bfc684e79 52-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "be0f43e678e68e95b0f48566d75b2351a3eda5da",
+  "prompts": {},
+  "sessions": {
+    "s_e7b2efd2e44eee": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a1c4-537f-7660-9625-6986c48a6509",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

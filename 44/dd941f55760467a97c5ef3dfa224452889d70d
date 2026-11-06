@@ -1,0 +1,47 @@
+.github/workflows/native.yml
+  s_9835e924464762::t_358fc39df99f5b 31,35,79
+apps/desktop/tests/native/smoke/launch.ts
+  s_9835e924464762::t_358fc39df99f5b 33,41-43
+apps/desktop/scripts/native/task.ts
+  s_9835e924464762::t_137208fa35b16e 16-22
+  s_9835e924464762::t_358fc39df99f5b 10-11,25,33,38-39,61,63-65,67-75,77-78
+  s_9835e924464762::t_bcc37128e2aceb 76
+apps/desktop/package.json
+  s_9835e924464762::t_358fc39df99f5b 26
+packages/tooling/src/tasks/leaf.ts
+  s_9835e924464762::t_358fc39df99f5b 16
+packages/tooling/src/repository.ts
+  s_9835e924464762::t_358fc39df99f5b 16-21,23-24,58
+  s_9835e924464762::t_1db4057d5730b2 22
+packages/tooling/src/tasks/model.ts
+  s_9835e924464762::t_358fc39df99f5b 59,68,116,127-133,179-182,200,219-220
+  s_9835e924464762::t_137208fa35b16e 202
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_9835e924464762::t_358fc39df99f5b 94,96-99
+apps/desktop/src-tauri/src/host.rs
+  s_9835e924464762::t_e5a3c88c141070 455
+apps/desktop/src-tauri/src/smoke.rs
+  s_9835e924464762::t_4d2bd05bfaeb42 321-326
+apps/desktop/tests/integration/native/task.test.ts
+  s_9835e924464762::t_4edd79db8a786d 50,66,72,129,235-254
+docs/development/testing.md
+  s_9835e924464762::t_b06d7a1dd453a6 121-123
+packages/tooling/AGENTS.md
+  s_9835e924464762::t_e0adb9b2e1b9f8 67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "44dd941f55760467a97c5ef3dfa224452889d70d",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

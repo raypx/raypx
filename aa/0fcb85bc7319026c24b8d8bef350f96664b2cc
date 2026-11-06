@@ -1,0 +1,114 @@
+docs/architecture/0038-mygo-desktop-host.md
+  s_78fa1c2f4443be::t_f055e9da70b142 13,24-30
+  s_c530aa5309e2aa::t_681bc98877dd05 33-36
+apps/desktop/README.md
+  s_78fa1c2f4443be::t_f055e9da70b142 50-51
+  s_c530aa5309e2aa::t_fd1d3477bc8f72 40-41
+apps/desktop/tests/native/smoke/host.ts
+  s_78fa1c2f4443be::t_66d7ccb6728fe3 10-11,14-15,21-30,36,45,47-48,65-69,71-73,75-76,90
+apps/desktop/tests/native/smoke/scenario.ts
+  s_78fa1c2f4443be::t_acf3b48dab27f0 60-61,108,780
+  s_78fa1c2f4443be::t_5b2408fade4a77 12,56-59,62,74-75,115,246-277,279,406-408,450,665-666
+  s_78fa1c2f4443be::t_5391f726798509 15-16,21,23,218-219,221,243,310-316,318-319,321-327,464,509,512,544,795,814
+  s_78fa1c2f4443be::t_d0ee280b2ef71f 231,234,238
+  s_78fa1c2f4443be::t_543c4535d0814a 235-237,278
+  s_78fa1c2f4443be::t_c3740b88e33f92 574-575,673
+  s_78fa1c2f4443be::t_eabaed8663f3ac 786-790
+apps/desktop/internal/desktop/lifecycle.go
+  s_78fa1c2f4443be::t_02cd887d4484d7 37-38
+apps/desktop/tests/native/fixtures/instance-server.ts
+  s_78fa1c2f4443be::t_cdcf0b2cf58fb6 9-18,23,28-29,54,60-65,67-68
+  s_5e0e0d9e24bdeb::t_e148b5c5f66b79 66
+apps/desktop/tests/native/host/sessions_windows_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 1-53
+apps/desktop/scripts/native/mygo.ts
+  s_78fa1c2f4443be::t_6a05577576fdf1 152
+  s_78fa1c2f4443be::t_eabaed8663f3ac 155-163,167-176
+apps/desktop/tests/native/host/host_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 132-134,138-147,155,163-165,179-180,185-188,286
+apps/desktop/internal/desktop/desktop.go
+  s_78fa1c2f4443be::t_02cd887d4484d7 58,70-71,77-81,83,85,107
+docs/development/desktop-orpc.md
+  s_78fa1c2f4443be::t_c59b35c6032264 15
+apps/desktop/internal/app/smoke.go
+  s_78fa1c2f4443be::t_6b4377af890c5e 79-84
+  s_78fa1c2f4443be::t_4525d5ba1c5bf1 115-117
+  s_78fa1c2f4443be::t_123e8b1f63c1d9 18,41-42,49-51,88-102,108,110,112-114,118-123
+docs/development/local-sqlite.md
+  s_78fa1c2f4443be::t_f055e9da70b142 67-69,71-73
+apps/desktop/tests/native/host/fixtures_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 95
+packages/tooling/src/verification/native-workflow.test.ts
+  s_78fa1c2f4443be::t_6a05577576fdf1 92
+apps/desktop/tests/native/smoke/agents.ts
+  s_78fa1c2f4443be::t_5391f726798509 102
+apps/desktop/internal/desktop/cookies.go
+  s_78fa1c2f4443be::t_02cd887d4484d7 15-18,122,128,134-135,137,141-142,148,167-168,170,232,239-244,246
+apps/desktop/internal/desktop/sessions.go
+  s_78fa1c2f4443be::t_acee40eeee4f11 11-142
+apps/desktop/tests/native/host/regressions_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 133,185
+apps/desktop/internal/desktop/sessions_unix.go
+  s_78fa1c2f4443be::t_2398c807a85821 1-13
+apps/desktop/tests/native/host/shutdown_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 44,83,146,190
+apps/desktop/tests/native/host/approvals_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 40
+apps/desktop/internal/desktop/sessions_windows.go
+  s_78fa1c2f4443be::t_2398c807a85821 1-38
+apps/desktop/internal/AGENTS.md
+  s_78fa1c2f4443be::t_f055e9da70b142 12,15-18
+apps/desktop/internal/app/smoke_disabled.go
+  s_78fa1c2f4443be::t_123e8b1f63c1d9 14
+apps/desktop/internal/app/app.go
+  s_78fa1c2f4443be::t_123e8b1f63c1d9 252
+  s_c530aa5309e2aa::t_a0e85c4095b8bc 65
+apps/desktop/AGENTS.md
+  s_78fa1c2f4443be::t_f055e9da70b142 111-113,117-118
+  s_c530aa5309e2aa::t_43849230be4bc5 149
+docs/development/desktop-configuration.md
+  s_78fa1c2f4443be::t_f055e9da70b142 104-105,108-111
+apps/desktop/tests/native/smoke/beta.ts
+  s_78fa1c2f4443be::t_5391f726798509 12,14-15,65-66,111,132,153,211,245,285,308
+apps/desktop/internal/desktop/desktop_test.go
+  s_78fa1c2f4443be::t_ece213742b5d15 57,59
+  s_78fa1c2f4443be::t_cdce2b36484077 40,42-43,58
+knip.json
+  s_c530aa5309e2aa::t_9df290bb9ed92a 52
+packages/control/src/application/credentials.ts
+  s_c530aa5309e2aa::t_45201fca051e69 129
+packages/tooling/src/verification/plan.test.ts
+  s_c530aa5309e2aa::t_1f19c1cae1e5cd 101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "aa0fcb85bc7319026c24b8d8bef350f96664b2cc",
+  "prompts": {},
+  "sessions": {
+    "s_5e0e0d9e24bdeb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a552-d89b-7273-9278-85d200c256d3",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_78fa1c2f4443be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "20306bfb-8e67-4366-a3cc-b92f37841bb8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c530aa5309e2aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a552-74dc-7bc3-b02e-49f8badf037e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

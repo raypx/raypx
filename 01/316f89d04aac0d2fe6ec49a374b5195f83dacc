@@ -1,0 +1,25 @@
+packages/blocks/src/components/settings.tsx
+  s_9835e924464762::t_0575b7d0fc5cbe 82,93
+packages/i18n/src/messages/zh.ts
+  s_9835e924464762::t_0575b7d0fc5cbe 726-730
+packages/blocks/src/components/preference-controls.tsx
+  s_9835e924464762::t_0575b7d0fc5cbe 26,72-73
+packages/i18n/src/messages/en.ts
+  s_9835e924464762::t_0575b7d0fc5cbe 776-780
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "01316f89d04aac0d2fe6ec49a374b5195f83dacc",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

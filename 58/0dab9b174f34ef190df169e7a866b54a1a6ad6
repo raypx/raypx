@@ -1,0 +1,19 @@
+apps/desktop/scripts/native/check-release.ts
+  s_9835e924464762::t_1cf42d77503683 55-93,122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "580dab9b174f34ef190df169e7a866b54a1a6ad6",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

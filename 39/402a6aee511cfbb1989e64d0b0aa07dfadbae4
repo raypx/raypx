@@ -1,0 +1,14 @@
+docs/architecture/0038-mygo-desktop-host.md
+  h_f0766e80fd3864 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "39402a6aee511cfbb1989e64d0b0aa07dfadbae4",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

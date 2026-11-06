@@ -1,0 +1,69 @@
+packages/providers/AGENTS.md
+  s_7ba9979b26fc9e::t_e63dafdf7944fd 1-26
+docs/architecture/README.md
+  s_7ba9979b26fc9e::t_dcf4dad12c60df 177
+  s_7ba9979b26fc9e::t_ba8647cf82fe37 246
+docs/architecture/0040-instance-enrollment-and-providers.md
+  s_7ba9979b26fc9e::t_61c801872c8584 44
+  s_7ba9979b26fc9e::t_72e8f49b5b2b73 3
+  s_7ba9979b26fc9e::t_d76582bcddb9fc 28
+  s_7ba9979b26fc9e::t_eeee33af6143fb 32
+  s_7ba9979b26fc9e::t_30ff66e3fe26e4 39-43
+docs/development/workspaces.md
+  s_7ba9979b26fc9e::t_0314a554143e37 137
+  s_7ba9979b26fc9e::t_7ad154e9ac25a9 158-166
+  s_7ba9979b26fc9e::t_f5f228ffb6797d 156-157
+apps/cli/AGENTS.md
+  s_7ba9979b26fc9e::t_c72017c7db6049 261
+  s_7ba9979b26fc9e::t_038a71aded4cda 160
+  s_7ba9979b26fc9e::t_91ba470c92ad71 190
+docs/roadmap.md
+  s_7ba9979b26fc9e::t_662fe6e22def69 47
+packages/providers/package.json
+  s_7ba9979b26fc9e::t_99fbba312dde01 2-39
+docs/architecture/0041-provider-capabilities-and-pi.md
+  s_7ba9979b26fc9e::t_d17ad43ad331f1 15-20
+  s_7ba9979b26fc9e::t_662fe6e22def69 112-118
+  s_7ba9979b26fc9e::t_220f9394f53025 3-4
+packages/ai/AGENTS.md
+  s_7ba9979b26fc9e::t_858c13974e6e76 11
+packages/tooling/src/validation/source-layers.test.ts
+  s_7ba9979b26fc9e::t_48aedb0af5de15 30-41
+packages/tooling/src/validation/source-layers.ts
+  s_7ba9979b26fc9e::t_e46212c8fcc673 43
+packages/providers/tsconfig.json
+  s_7ba9979b26fc9e::t_99dc23c662dde2 2
+  s_7ba9979b26fc9e::t_3bcf9dd15e8280 3
+apps/cli/package.json
+  s_7ba9979b26fc9e::t_9303fed702d4ab 37
+bun.lock
+  s_7ba9979b26fc9e::t_2bf27ca3ad07cc 71,689-690,1778
+packages/i18n/src/messages/zh.ts
+  s_c530aa5309e2aa::t_7030b17b8534bd 9-10
+packages/i18n/src/messages/en.ts
+  s_c530aa5309e2aa::t_7030b17b8534bd 11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c4a5d5f0432f54b44d0fc4eec7cc1b3020800764",
+  "prompts": {},
+  "sessions": {
+    "s_7ba9979b26fc9e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "977d44ed-8f5f-4f79-94af-9f98b8b0341c",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c530aa5309e2aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a552-74dc-7bc3-b02e-49f8badf037e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

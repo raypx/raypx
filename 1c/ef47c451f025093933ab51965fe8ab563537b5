@@ -1,0 +1,39 @@
+apps/web/AGENTS.md
+  s_9835e924464762::t_a9eeaad67b8a03 59-60
+apps/desktop/src/preferences.component.test.tsx
+  s_9835e924464762::t_a9eeaad67b8a03 10,54,57-62,69
+apps/web/src/routes/(legal)/route.tsx
+  s_9835e924464762::t_f59fe0c86e6c9e 8
+packages/blocks/package.json
+  s_9835e924464762::t_a9eeaad67b8a03 7
+apps/desktop/src/features/auth/components/session-gate.tsx
+  s_9835e924464762::t_a9eeaad67b8a03 6,25-28
+e2e/tests/access.spec.ts
+  s_9835e924464762::t_7a2f2daa83c07c 173-180
+apps/web/src/features/auth/components/auth-form-section.tsx
+  s_9835e924464762::t_f59fe0c86e6c9e 3
+packages/blocks/AGENTS.md
+  s_9835e924464762::t_a9eeaad67b8a03 55-57
+packages/blocks/src/components/preference-controls.tsx
+  s_9835e924464762::t_f59fe0c86e6c9e 1,3,7-9,11,20,22,26-33,35-52,54-79
+  s_9835e924464762::t_8e3aee92cee1c7 5-6,80-81
+apps/web/src/features/landing/components/layout.tsx
+  s_9835e924464762::t_f59fe0c86e6c9e 8
+  s_9835e924464762::t_fb9fd93d90cb6a 42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1cef47c451f025093933ab51965fe8ab563537b5",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
