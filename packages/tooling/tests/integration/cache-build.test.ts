@@ -106,9 +106,11 @@ it("restores the sealed CLI build without the Herdr download cache and tracks re
   writeFileSync(
     join(folder, "build.ts"),
     `
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 const version = JSON.parse(readFileSync("package.json", "utf8")).herdr.version;
 const cache = "../../.cache/herdr";
+// Windows filesystem tracing also observes the parent directory listing.
+readdirSync("../../.cache");
 mkdirSync(cache, { recursive: true });
 if (!existsSync(cache + "/herdr") || readFileSync(cache + "/herdr", "utf8") !== version)
   writeFileSync(cache + "/herdr", version);
