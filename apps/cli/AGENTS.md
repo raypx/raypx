@@ -56,6 +56,7 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
 - Never import another application or authentication code.
 - The explicit daemon owns scheduling on macOS and Windows. On Windows a compiled CLI starts it from a
   per-build copy under `<data>/bin` so the Desktop updater can replace the bundled executable.
+  Resolve bundled Herdr from the running installation; never export the launcher's directory as an inherited source override.
   Ordinary foreground commands never install a daemon or system service. Desktop may start
   an independent owner on demand; `daemon install` alone registers launchd.
 - Child PATH ends with `<profile>/bun` `bun`/`bunx` shims (`BUN_BE_BUN=1`, `runtime.info.bun`); Bun's children inherit it.

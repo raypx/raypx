@@ -4,16 +4,12 @@ import { parseCliArgs } from "./commands/args";
 import { errorPayload } from "./runtime/errors";
 import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagnostics";
 import { createCliLogging } from "./logging";
-import { bundledHerdrDirectory } from "./runtime/process/herdr-release";
 
 const args = process.argv.slice(2);
 if (args[0] === "--herdr-internal") {
   const { herdrInternal } = await import("./runtime/process/herdr-internal");
   await herdrInternal(args.slice(1));
 } else {
-  const bundledHerdr = bundledHerdrDirectory();
-  if (bundledHerdr && !process.env.RAYPX_HERDR_SOURCE)
-    process.env.RAYPX_HERDR_SOURCE = bundledHerdr;
   const logging = await createCliLogging();
   const startedAt = performance.now();
   const options: { dataDir?: string; profile?: string; recordDiagnostic: RecordDiagnostic } = {
