@@ -5,7 +5,7 @@ import {
   cloudJobInputSchema,
   cloudJobSchema,
   cloudJobRunSchema,
-} from "@raypx/jobs/model";
+} from "@raypx/jobs-model";
 
 /** Account-owned schedules; no caller-selected actor or arbitrary server command. */
 export const jobsContract = {

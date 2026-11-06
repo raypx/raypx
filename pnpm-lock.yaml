@@ -567,9 +567,12 @@ importers:
       '@raypx/instances':
         specifier: workspace:*
         version: link:../../packages/instances
-      '@raypx/jobs':
+      '@raypx/jobs-model':
         specifier: workspace:*
-        version: link:../../packages/jobs
+        version: link:../../packages/jobs-model
+      '@raypx/jobs-server':
+        specifier: workspace:*
+        version: link:../../packages/jobs-server
       '@raypx/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -643,9 +646,9 @@ importers:
       '@raypx/instances':
         specifier: workspace:*
         version: link:../../packages/instances
-      '@raypx/jobs':
+      '@raypx/jobs-model':
         specifier: workspace:*
-        version: link:../../packages/jobs
+        version: link:../../packages/jobs-model
       '@raypx/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -740,6 +743,9 @@ importers:
       '@raypx/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
+      '@raypx/jobs-model':
+        specifier: workspace:*
+        version: link:../../packages/jobs-model
       '@raypx/memory':
         specifier: workspace:*
         version: link:../../packages/memory
@@ -1165,9 +1171,9 @@ importers:
       '@raypx/core':
         specifier: workspace:*
         version: link:../packages/core
-      '@raypx/jobs':
+      '@raypx/jobs-model':
         specifier: workspace:*
-        version: link:../packages/jobs
+        version: link:../packages/jobs-model
       '@raypx/memory-model':
         specifier: workspace:*
         version: link:../packages/memory-model
@@ -1486,9 +1492,9 @@ importers:
       '@raypx/instances':
         specifier: workspace:*
         version: link:../instances
-      '@raypx/jobs':
+      '@raypx/jobs-model':
         specifier: workspace:*
-        version: link:../jobs
+        version: link:../jobs-model
       '@raypx/memory-model':
         specifier: workspace:*
         version: link:../memory-model
@@ -1517,9 +1523,12 @@ importers:
       '@raypx/database':
         specifier: workspace:*
         version: link:../database
-      '@raypx/jobs':
+      '@raypx/jobs-model':
         specifier: workspace:*
-        version: link:../jobs
+        version: link:../jobs-model
+      '@raypx/jobs-server':
+        specifier: workspace:*
+        version: link:../jobs-server
       '@raypx/memory-model':
         specifier: workspace:*
         version: link:../memory-model
@@ -1823,18 +1832,15 @@ importers:
       '@raypx/icons':
         specifier: workspace:*
         version: link:../icons
+      '@raypx/jobs-model':
+        specifier: workspace:*
+        version: link:../jobs-model
       '@raypx/memory':
         specifier: workspace:*
         version: link:../memory
       '@raypx/ui':
         specifier: workspace:*
         version: link:../ui
-      croner:
-        specifier: 'catalog:'
-        version: 11.0.0
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.7
     devDependencies:
       '@raypx/tooling':
         specifier: workspace:*
@@ -1863,6 +1869,53 @@ importers:
       react:
         specifier: 'catalog:'
         version: 19.3.0
+
+  packages/jobs-model:
+    dependencies:
+      '@raypx/core':
+        specifier: workspace:*
+        version: link:../core
+      croner:
+        specifier: 'catalog:'
+        version: 11.0.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
+    devDependencies:
+      '@raypx/tooling':
+        specifier: workspace:*
+        version: link:../tooling
+      '@raypx/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@vitest/coverage-v8':
+        specifier: catalog:dev
+        version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
+      vite-plus:
+        specifier: catalog:dev
+        version: 1.5.0(@types/node@24.19.2)(@vitejs/devtools@0.8.2(@voidzero-dev/vite-plus-core@1.5.0)(crossws@0.4.17(srvx@1.0.8))(ocache@0.3.1)(srvx@1.0.8))(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(playwright@1.64.1)(terser@5.51.2)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
+
+  packages/jobs-server:
+    dependencies:
+      '@raypx/core':
+        specifier: workspace:*
+        version: link:../core
+      '@raypx/jobs-model':
+        specifier: workspace:*
+        version: link:../jobs-model
+    devDependencies:
+      '@raypx/tooling':
+        specifier: workspace:*
+        version: link:../tooling
+      '@raypx/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@vitest/coverage-v8':
+        specifier: catalog:dev
+        version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
+      vite-plus:
+        specifier: catalog:dev
+        version: 1.5.0(@types/node@24.19.2)(@vitejs/devtools@0.8.2(@voidzero-dev/vite-plus-core@1.5.0)(crossws@0.4.17(srvx@1.0.8))(ocache@0.3.1)(srvx@1.0.8))(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(playwright@1.64.1)(terser@5.51.2)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
 
   packages/logger:
     dependencies:

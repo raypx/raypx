@@ -9,7 +9,7 @@ import {
   type CloudJobRun,
   type CloudJobRunStatus,
   nextJobRuns,
-} from "../model.ts";
+} from "@raypx/jobs-model";
 import type { CloudJobsServiceOptions, JobClaim, JobRunUpdate } from "./types.ts";
 
 const knownFailures = new Set([

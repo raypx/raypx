@@ -31,10 +31,10 @@ maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Platform crossings require a
 compatible explicit public entry. Public account/session types and trusted-origin
 rules live in `@raypx/core/auth`; memory schemas live in `memory-model` and job
-schemas in `@raypx/jobs/model`. Injected Node use cases live in `memory-server`
-and `@raypx/jobs/server`. The `auth`, `memory` and `jobs` packages own their server adapters or browser views as
-declared by their manifests, so a protocol consumer does not acquire UI dependencies
-through source imports. Subpaths share their workspace's installation dependencies.
+schemas in `@raypx/jobs-model`. Injected Node use cases live in `memory-server`
+and `@raypx/jobs-server`; `@raypx/jobs` owns the browser views. Protocol and Node
+consumers therefore avoid the UI dependencies declared by browser workspaces.
+Subpaths share their workspace's installation dependencies.
 
 Every public entry has an established consumer in another workspace. `policy`
 finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig
@@ -153,11 +153,11 @@ private harness owns task policy, persistence, approval and cancellation. See
 
 ## Scheduled jobs
 
-`@raypx/jobs` exposes `/model` for pure job schemas, inferred types and calendar rules,
-`/server` for injected cloud scheduling use cases, and `/client` for shared browser
-views and their ports. The entries have universal, Node and browser targets respectively.
-Models and server use cases never import client views. Contracts composes wire schemas from `/model`;
-API supplies SQL/Relay adapters, while CLI supplies local scheduling and execution.
+`@raypx/jobs-model` owns pure job schemas, inferred types and calendar rules.
+`@raypx/jobs-server` owns injected cloud scheduling use cases and ports. `@raypx/jobs`
+exposes `/client` for shared browser views and their ports. Contracts composes wire
+schemas from the model package; API supplies SQL/Relay adapters, while CLI supplies
+local scheduling and execution.
 Cloud schedules do not claim local plans or move them between accounts. See
 [server jobs](server-jobs.md).
 

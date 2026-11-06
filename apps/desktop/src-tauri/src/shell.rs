@@ -229,7 +229,7 @@ pub fn run() {
                     _error.to_string(),
                 );
             }
-            return;
+            std::process::exit(1);
         }
     };
     native_smoke_lifecycle("configuration loaded");

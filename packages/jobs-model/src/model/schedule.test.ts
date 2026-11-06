@@ -1,5 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { cloudJobInputSchema, nextJobRuns } from "../model.ts";
+import { cloudJobInputSchema } from "./model.ts";
+import { nextJobRuns } from "./schedule.ts";
 
 it("calculates in the selected IANA zone from an explicit instant", () => {
   expect(

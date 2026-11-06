@@ -1,11 +1,11 @@
 import { expect, it, vi } from "vite-plus/test";
-import { JobError, type CloudJob, type CloudJobRun } from "../model.ts";
+import { JobError, type CloudJob, type CloudJobRun } from "@raypx/jobs-model";
 import {
   CloudJobsService,
   type CloudJobsRepository,
   type CloudJobExecutor,
   type JobClaim,
-} from "../server.ts";
+} from "../index.ts";
 
 const now = Date.parse("2026-10-26T00:00:00Z");
 const jobId = "11111111-1111-4111-8111-111111111111";

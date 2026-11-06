@@ -1,10 +1,10 @@
 import { constants, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { targets, type Kind, type Target } from "@raypx-kit/devkit/workspaces";
+import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
 import { discover } from "./repository.ts";
 import { workspaceInstructions } from "./templates/workspace/agents.ts";
 
-const scaffoldTargets: readonly Target[] = targets.filter((target) => target !== "bun");
+const scaffoldTargets: ReadonlySet<Target> = new Set(["universal", "browser", "native", "node"]);
 
 export interface ScaffoldOptions {
   kind: Kind;
@@ -18,10 +18,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     throw new Error("Use a lowercase hyphenated workspace name");
   if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name))
     throw new Error("Workspace name is reserved on Windows");
-  if (
-    !["library", "app", "tooling"].includes(options.kind) ||
-    !scaffoldTargets.includes(options.target)
-  )
+  if (!["library", "app", "tooling"].includes(options.kind) || !scaffoldTargets.has(options.target))
     throw new Error("Invalid workspace kind or target");
   const folder = options.kind === "app" ? "apps" : "packages";
   const directory = `${folder}/${name}`;

@@ -2,7 +2,7 @@ import { spawnProcess } from "@raypx/runtime-node/process";
 import { isAbsolute, join } from "node:path";
 import { stat } from "node:fs/promises";
 import type { LocalEvent, ToolResult } from "@raypx/contracts/local";
-import type { CommandSpec } from "@raypx/jobs/model";
+import type { CommandSpec } from "@raypx/jobs-model";
 import { LocalError } from "../errors.ts";
 import type { Environment } from "./tools.ts";
 import { HerdrTerminalHost } from "./herdr.ts";

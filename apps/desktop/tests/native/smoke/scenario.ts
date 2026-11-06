@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition, JobRun } from "@raypx/jobs/model";
+import type { JobDefinition, JobRun } from "@raypx/jobs-model";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/memory-model";
 import type { ObservedProjection } from "@raypx/contracts/terminal";
 import { messages } from "@raypx/i18n/messages";

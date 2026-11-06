@@ -31,7 +31,7 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/instances": "workspace:*",
-    "@raypx/jobs": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/memory-model": "workspace:*",
     "@raypx/memory-server": "workspace:*",

@@ -50,7 +50,7 @@ Tasks reuse the API runtime.
 See `docs/development/server-jobs.md` for policy and verification.
 
 `schedules:tick` runs every minute on Node with the same deployment gate.
-`@raypx/jobs/server` owns scheduling use cases; API supplies PostgreSQL persistence
+`@raypx/jobs-server` owns scheduling use cases; API supplies PostgreSQL persistence
 and the private relay executor. `jobs.*` RPC resolves an account on every call;
 writes additionally require a trusted Origin, revision checks and account limits.
 Create request IDs are durable plan IDs; retries are checked before the 100-plan quota.

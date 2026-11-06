@@ -42,7 +42,7 @@ export const fileEntrySchema = z.object({
   version: z.string(),
 });
 export type FileEntry = z.infer<typeof fileEntrySchema>;
-import { commandSchema, jobInputSchema } from "@raypx/jobs/model";
+import { commandSchema, jobInputSchema } from "@raypx/jobs-model";
 export const localParams = {
   "instance.status": z.strictObject({}),
   "instance.begin": z.strictObject({ origin: z.string().url() }),

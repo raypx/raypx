@@ -1,12 +1,15 @@
 # Tauri / Node / pnpm migration validation
 
 The implementation follows [ADR 0045](../architecture/0045-tauri-node-pnpm.md).
-This record describes local evidence from Linux x64 on 2026-11-05. It does not
-establish macOS, Windows or Linux Desktop release acceptance.
+This record includes historical Linux x64 measurements and a current CLI package
+measurement from 2026-11-06. It does not establish macOS or Windows Desktop release
+acceptance.
 
-## Runtime measurements
+## Historical Runtime Measurement
 
-The complete standalone CLI distribution was measured with:
+The 2026-11-05 snapshot predates ADR 0045's final distribution policy. That
+intermediate staged runtime included Node and pnpm; it is not the current standalone
+CLI package or current Desktop staging output. It was measured with:
 
 ```sh
 pnpm run build:cli
@@ -32,34 +35,63 @@ Node 24.22.2 and pnpm 12.16.1.
 | Foreground daemon ready, including CLI status polling       |           878 ms |
 | Idle daemon process RSS, five samples after one second      |        98.80 MiB |
 
-These are single-machine observations with concurrent validation builds and an
-uncontrolled OS file cache. RSS covers the Node owner process with no active tasks;
-it excludes future task subprocesses. The two native pnpm/pnpx executables are
-regular copies, and both contribute to the uncompressed size. The archive is a
-CLI distribution archive, not a desktop installer.
+These are single-machine historical observations with concurrent validation builds
+and an uncontrolled OS file cache. RSS covers the Node owner process with no active
+tasks; it excludes future task subprocesses. The two native pnpm/pnpx executables
+were regular copies in this intermediate bundle. The archive is not a desktop
+installer.
 
 No comparable pre-migration runtime/Desktop size, startup or memory measurements
 were retained before the migration. No before/after improvement is claimed.
 macOS/Windows installer sizes, GUI startup and GUI memory remain unmeasured.
 
-## CLI Packaging Follow-up (2026-11-06)
+## Intermediate Packaging Follow-up
 
-The Linux x64 package now uses a small `pnpx` wrapper that delegates to the bundled
-native `pnpm dlx` command, so it no longer carries a second copy of the native binary.
-The wrapper and cleanup were validated with the bundled `pnpm --version`,
-`pnpx --version` and `pnpx --help` commands. The Windows batch wrapper is generated
-by the same build but still needs execution on Windows.
+This intermediate Linux x64 package used a small `pnpx` wrapper to avoid a duplicate
+native binary. The measurements below are retained as history; the current package
+no longer bundles pnpm and is measured separately in the next section.
 
 | Measurement               | Before cleanup | Rebuilt output |
 | ------------------------- | -------------: | -------------: |
 | Complete CLI distribution |     270.46 MiB |     214.06 MiB |
 | pnpm / pnpx component     |     116.98 MiB |      60.58 MiB |
 
-The local uncompressed Linux x64 distribution fell by 56.40 MiB (20.9%). The
-before-cleanup values are from the local output immediately before removing the
-duplicate binary; the rebuilt values come from `pnpm run size --package cli --require`.
+The intermediate uncompressed Linux x64 distribution fell by 56.40 MiB (20.9%).
 These figures sum regular-file bytes and do not measure archive/download size or
-other platform installers.
+other platform installers. They are superseded by the current measurement below.
+
+## Current CLI Distribution
+
+A fresh Linux x64 build was measured on 2026-11-06 with:
+
+```sh
+pnpm run build:cli
+pnpm run size --package cli --require
+pnpm exec tsx apps/cli/tests/smoke/metrics.ts
+```
+
+The current installable `@raypx/cli` package requires supported system Node and gets
+project package managers from the user's environment. It contains no Node or pnpm
+runtime. One portable npm package includes verified Herdr assets for all supported
+platforms, which account for most of its unpacked size. The metrics probe used a
+synthetic enrolled profile, empty PATH and a working directory outside the repository.
+
+| Measurement                        | Linux x64 result |
+| ---------------------------------- | ---------------: |
+| Unpacked package                   |       131.08 MiB |
+| gzip-compressed tar archive        |        47.13 MiB |
+| Herdr resources for all platforms  |       128.05 MiB |
+| Application and metadata           |         3.01 MiB |
+| Node / pnpm bundled in CLI package |             None |
+| `--version`, median of 15 launches |           188 ms |
+| First `--version` sample           |           192 ms |
+| Daemon ready                       |           510 ms |
+| Idle daemon process RSS            |       100.80 MiB |
+
+Daemon readiness includes CLI status polling. RSS covers the Node owner process with
+no active task. Desktop staging adds Node and a native launcher and keeps only the
+host's Herdr assets; macOS/Windows installer size and startup still require their
+platform runners.
 
 ## Build output size snapshot
 
@@ -68,7 +100,7 @@ using a profile. The existing Linux x64 outputs on 2026-11-05 measured:
 
 | Package            | Output                  |       Size |
 | ------------------ | ----------------------- | ---------: |
-| CLI                | Complete distribution   | 271.52 MiB |
+| CLI                | Historical distribution | 271.52 MiB |
 | API                | Nitro `.output`         |   4.38 MiB |
 | Web                | Nitro `.output`         |   7.34 MiB |
 | Desktop            | Renderer `dist/client`  |   2.34 MiB |
@@ -101,7 +133,7 @@ tests. The databases had synthetic identities and a `_test` suffix; the owned
 containers were removed after the runs.
 
 The standalone artifact probe exercises relocation, Chinese and space-containing
-paths, empty PATH, CLI output and exit status, bundled Node/pnpm, Agent streaming,
+paths, empty PATH, CLI output and exit status, Herdr verification, Agent streaming,
 tool approvals and daemon restart/resume. SQLite fixtures retain the original
 schema, migration journal, projects, task history and offline instance key.
 

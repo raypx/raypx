@@ -6,7 +6,7 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { CloudJob, CloudJobRun } from "./model.ts";
+import type { CloudJob, CloudJobRun } from "@raypx/jobs-model";
 import type { CloudJobsPort, JobDevicesPort } from "./client.ts";
 import { CloudJobsPage, type CloudJobsPageProps } from "./client.ts";
 

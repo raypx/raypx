@@ -1,5 +1,5 @@
-import { JobError } from "@raypx/jobs/model";
-import type { JobDispatchResult } from "@raypx/jobs/server";
+import { JobError } from "@raypx/jobs-model";
+import type { JobDispatchResult } from "@raypx/jobs-server";
 import {
   MAX_RELAY_BYTES,
   type RelayClientFrame,

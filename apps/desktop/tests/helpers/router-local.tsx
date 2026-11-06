@@ -16,7 +16,7 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll, beforeEach, expect, vi } from "vite-plus/test";
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition } from "@raypx/jobs/model";
+import type { JobDefinition } from "@raypx/jobs-model";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../src/routeTree.gen.ts";

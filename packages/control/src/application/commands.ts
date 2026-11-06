@@ -1,4 +1,4 @@
-import type { CloudJobAction } from "@raypx/jobs/model";
+import type { CloudJobAction } from "@raypx/jobs-model";
 import { ContextError } from "@raypx/memory-model";
 import {
   taskExecutionPrompt,

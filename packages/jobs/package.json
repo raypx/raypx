@@ -4,25 +4,21 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./model": "./src/model.ts",
-    "./server": "./src/server.ts",
     "./client": "./src/client.ts",
     "./client/styles.css": "./src/client/styles.css"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
     "test": "vp test --run",
-    "test:component": "vp test --run .component.test.",
-    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
+    "test:component": "vp test --run .component.test."
   },
   "dependencies": {
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
     "@raypx/memory": "workspace:*",
-    "@raypx/ui": "workspace:*",
-    "croner": "catalog:",
-    "zod": "catalog:"
+    "@raypx/ui": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
@@ -40,17 +36,14 @@
   },
   "raypx": {
     "kind": "library",
-    "target": "universal",
+    "target": "browser",
     "entryTargets": {
       "./client": "browser",
-      "./client/styles.css": "browser",
-      "./server": "node"
+      "./client/styles.css": "browser"
     },
     "sourceTargets": {
       "src/client.ts": "browser",
-      "src/client/**": "browser",
-      "src/server.ts": "node",
-      "src/server/**": "node"
+      "src/client/**": "browser"
     }
   }
 }

@@ -7,7 +7,7 @@ import type { AuthSession } from "@raypx/core/auth";
 import type { AccessPolicy } from "../access.ts";
 import type { ApiLogging } from "../logging.ts";
 import type { RateLimiter } from "../rate-limit/types.ts";
-import type { CloudJobsService } from "@raypx/jobs/server";
+import type { CloudJobsService } from "@raypx/jobs-server";
 import type { ContextLibraryService } from "@raypx/memory-server";
 export interface ApiAppOptions {
   instances?: InstanceService;

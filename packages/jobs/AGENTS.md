@@ -2,43 +2,22 @@
 
 ## Purpose
 
-Shared local/cloud job models, injected cloud scheduling use cases and browser views.
+Shared browser views for local/cloud jobs.
 
 ## Interface
 
-- `/model` owns platform-neutral local/cloud schemas, inferred types, errors and
-  pure calendar calculations.
-- `/server` owns Node-targeted cloud scheduling use cases and injected repository/
-  dispatch ports. API owns platform timers, persistence and concrete dispatch adapters.
-- `/client` owns DOM views and their injected ports; apps own routing and authentication.
-  Recurring platform timers belong to apps; dispatch deadlines remain bounded within the use case.
+- `/client` owns DOM views and injected ports; apps own routing and authentication.
+- `@raypx/jobs-model` owns platform-neutral local/cloud schemas, inferred types,
+  errors and pure calendar calculations.
 
 ## Boundaries
 
-Contracts imports `/model` to assemble wire messages; jobs must never import
-contracts or a concrete SDK. Models and server use cases never import client views,
-React or UI. Keep the complete dependency graph acyclic. Public subpaths isolate
-source imports; the workspace dependency manifest is shared across those subpaths.
-Cloud actions are device.sync and agent.run, scoped to an account and captured
-device epoch. Local directory scans/commands retain their device ownership and
-wire format. No server action may execute arbitrary shell commands.
-
-Persist occurrence and run IDs before dispatch. A task's acknowledgement is not
-completion: keep overlap protection until its projection reaches a terminal state.
-Unknown delivery pauses the plan and is never automatically resent. Freshness,
-actual execution and approval remain with the device owner/harness.
-Creation requests retain their UUID until confirmed; timeout retries cannot create
-two schedules. Manual runs retain a separate immutable request/run ID. The remote
-task ID equals its run ID for the existing host command receipt protocol.
-
-Client views receive independent ports, never SDK-derived Pick types. Private state
-is remounted and in-flight requests aborted on account/client changes. Keep local
-automations in the Desktop device profile; login does not migrate them.
-Local definitions accept an optional projectId. New project forms default it to
-the current project; existing unassigned plans remain in global management. Cloud
-forms retain edits on CAS errors and require explicit device epoch reselection.
+This browser-targeted workspace imports `@raypx/jobs-model` and must never import
+contracts or concrete SDKs. Keep client ports independent of SDK-derived types.
+Private view state remounts and in-flight requests abort on account/client changes.
+Cloud forms retain edits on CAS errors and require explicit device epoch reselection.
+Local automations remain in the Desktop device profile across account changes.
 
 ## Verification
 
-Run package checks, `test:unit`, `test:component` and application consumer tests. SQL persistence, actual
-relay round trips and Node/Nitro scheduled events have separate integration gates.
+Run package checks, component tests and application consumer tests.
