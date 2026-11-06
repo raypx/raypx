@@ -1,26 +1,26 @@
 import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { taskModel } from "../tasks/model.ts";
-import { verificationPlan } from "./plan.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace";
+import { taskModel } from "../tasks/model";
+import { verificationPlan } from "./plan";
 
 const { fixture, member } = workspaceFixtures();
 function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1" }),
+    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "tsx check.ts", test: "vp test --run" };
+  const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
   member(root, "tooling", {
-    metadata: { kind: "tooling", target: "node" },
+    metadata: { kind: "tooling", target: "bun" },
     extra: {
       scripts,
       exports: {
-        "./tasks": "./src/tasks/config.ts",
-        "./build/nitro": { import: "./src/build/nitro.ts", types: "./src/build/types.ts" },
-        "./browser-tests": "./src/browser-tests.ts",
+        "./tasks": "./src/tasks/config",
+        "./build/nitro": { import: "./src/build/nitro", types: "./src/build/types" },
+        "./browser-tests": "./src/browser-tests",
       },
     },
   });
@@ -32,9 +32,9 @@ function project() {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     writeFileSync(join(root, file), source);
   }
-  write("packages/tooling/src/tasks/config.ts", 'export { value } from "./model.js";');
+  write("packages/tooling/src/tasks/config.ts", 'export { value } from "./model";');
   write("packages/tooling/src/tasks/model.ts", "export const value = 1;");
-  write("packages/tooling/src/build/nitro.ts", 'export { value } from "./shared.js";');
+  write("packages/tooling/src/build/nitro.ts", 'export { value } from "./shared";');
   write("packages/tooling/src/build/shared.ts", "export const value = 1;");
   write("packages/tooling/src/build/types.ts");
   write("packages/tooling/src/browser-tests.ts");
@@ -78,10 +78,7 @@ describe("Tooling impact", () => {
   it("follows private helpers when a public entry exposes them", () => {
     const { write, plan } = project();
     write("packages/tooling/src/validation/shared.ts", "export const value = 1;");
-    write(
-      "packages/tooling/src/build/shared.ts",
-      'export { value } from "../validation/shared.js";',
-    );
+    write("packages/tooling/src/build/shared.ts", 'export { value } from "../validation/shared";');
     expect(plan(["packages/tooling/src/validation/shared.ts"]).workspaces).toContain(
       "@raypx/service",
     );
@@ -112,7 +109,7 @@ describe("Tooling impact", () => {
     const { root, write, plan } = project();
     unlinkSync(join(root, "packages/tooling/src/build/shared.ts"));
     expect(plan(["packages/tooling/src/build/shared.ts"]).workspaces).toHaveLength(5);
-    write("packages/tooling/src/build/nitro.ts", 'export { value } from "./missing.js";');
+    write("packages/tooling/src/build/nitro.ts", 'export { value } from "./missing";');
     write("packages/tooling/src/policy.ts");
     expect(plan(["packages/tooling/src/policy.ts"]).workspaces).toHaveLength(5);
   });

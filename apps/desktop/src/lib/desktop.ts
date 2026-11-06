@@ -1,12 +1,12 @@
-import { createDesktopPlatform } from "./platform.ts";
+import { createDesktopPlatform } from "./platform";
 
 const platform = createDesktopPlatform({
-  available: () => typeof window !== "undefined" && window.__raypxDesktopHost === "tauri",
+  available: () => typeof window !== "undefined" && window.__raypxDesktopHost === "mygo",
   terminalHooks: () =>
     typeof window !== "undefined" &&
     "__raypxTerminalHooks" in window &&
     window.__raypxTerminalHooks === true,
-  connect: async (dispatch) => (await import("./tauri.ts")).createTauriBridge(dispatch),
+  connect: async (dispatch) => (await import("./mygo")).createMyGoBridge(dispatch),
 });
 export const {
   isDesktop,

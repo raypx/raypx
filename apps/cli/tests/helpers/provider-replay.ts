@@ -1,8 +1,5 @@
 import { z } from "zod";
-import type {
-  AgentTransport,
-  TransportFactory,
-} from "../../src/runtime/agents/harness/transport.ts";
+import type { AgentTransport, TransportFactory } from "../../src/runtime/agents/harness/transport";
 
 const object = z.record(z.string(), z.unknown());
 const recordSchema = z

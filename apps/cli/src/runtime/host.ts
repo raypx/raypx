@@ -1,14 +1,14 @@
-import type { InstanceAccess } from "./instances/index.ts";
+import type { InstanceAccess } from "./instances";
 import { InstanceError, instanceOrigin } from "@raypx/instances";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 
 import type { AgentProvider } from "@raypx/core/tasks";
-import type { RecordDiagnostic } from "../diagnostics.ts";
-import { createRuntime } from "./index.ts";
-import { DaemonControl } from "./daemon/control.ts";
-import { LocalTerminalControl } from "./daemon/terminal-control.ts";
-import type { HostVault } from "./daemon/vault.ts";
-import { LocalError } from "./errors.ts";
+import type { RecordDiagnostic } from "../diagnostics";
+import { createRuntime } from "./index";
+import { DaemonControl } from "./daemon/control";
+import { LocalTerminalControl } from "./daemon/terminal-control";
+import type { HostVault } from "./daemon/vault";
+import { LocalError } from "./errors";
 
 /** Shared execution, terminal and cloud ownership behind each local transport. */
 export function createHost(options: {
@@ -73,10 +73,7 @@ export function createHost(options: {
     restore() {
       void runtime.instanceAccess
         .assert()
-        .then(async () => {
-          await terminalHost.ready;
-          return owner.restore();
-        })
+        .then(() => owner.restore())
         .catch((error: unknown) => {
           if (!(error instanceof InstanceError)) backgroundFailure();
         });
@@ -85,7 +82,6 @@ export function createHost(options: {
     control: owner,
     terminal: terminalHost,
     async request(method: LocalMethod, params: unknown, clientId = "stdio"): Promise<unknown> {
-      await terminalHost.ready;
       if (closing) throw new LocalError("CLOSING", "Execution host is stopping");
       if (
         method !== "runtime.info" &&
@@ -127,7 +123,6 @@ export function createHost(options: {
     close() {
       return (closing ??= (async () => {
         try {
-          await terminalHost.ready;
           await owner.close();
         } finally {
           try {

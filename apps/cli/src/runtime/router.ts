@@ -1,17 +1,17 @@
-import { cliBuild } from "./daemon/build.ts";
 import { localParams, LOCAL_WORKSPACE_ID, type LocalMethod } from "@raypx/contracts/local";
 import { ContextError } from "@raypx/memory-model";
-import type { InstanceRuntime, InstanceAccess } from "./instances/index.ts";
-import type { MemoryRuntime } from "./memory/index.ts";
-import type { AgentRuntime } from "./agents/index.ts";
-import type { FileRuntime } from "./files/index.ts";
-import type { JobRuntime } from "./jobs/index.ts";
-import type { ProcessRuntime } from "./process/index.ts";
-import type { BundledTools } from "./process/tools.ts";
-import type { StateStore } from "./state/index.ts";
-import type { PiHost } from "./agents/pi/host.ts";
-import { LocalError } from "./errors.ts";
+import type { InstanceRuntime, InstanceAccess } from "./instances";
+import type { MemoryRuntime } from "./memory";
+import type { AgentRuntime } from "./agents";
+import type { FileRuntime } from "./files";
+import type { JobRuntime } from "./jobs";
+import type { ProcessRuntime } from "./process";
+import type { BundledBun } from "./process/bun";
+import type { StateStore } from "./state";
+import type { PiHost } from "./agents/pi/host";
+import { LocalError } from "./errors";
 import manifest from "../../package.json";
+import { cliBuild } from "./daemon/build";
 const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown): T => {
   try {
     return schema.parse(input);
@@ -30,7 +30,7 @@ export function createLocalRouter({
   processes,
   state,
   pi,
-  tools,
+  bun,
   refreshInstance,
   options,
 }: {
@@ -43,7 +43,7 @@ export function createLocalRouter({
   processes: ProcessRuntime;
   state: StateStore;
   pi: PiHost;
-  tools: BundledTools;
+  bun: BundledBun;
   refreshInstance: () => ReturnType<InstanceRuntime["refresh"]>;
   options: { profile?: string; scheduler?: boolean };
 }) {
@@ -198,16 +198,20 @@ export function createLocalRouter({
       case "agents.detach":
         return getAgents().detach(localParams[method].parse(raw).binding);
       case "runtime.info":
+        bun.ensure();
         return {
           version: manifest.version,
           builtAt: cliBuild.builtAt,
           protocolVersion: 1,
           profile: options.profile ?? "default",
           scheduler: Boolean(options.scheduler),
-          runtime: process.versions.node,
-          // Bundled Node and the optional user-installed package manager.
-          node: tools.node,
-          pnpm: tools.pnpm,
+          runtime: Bun.version,
+          // Embedded Bun runtime and shims; project tools still use the user environment.
+          bun: bun.path,
+          bunx: bun.path.replace(
+            /bun(?:\.cmd)?$/,
+            process.platform === "win32" ? "bunx.cmd" : "bunx",
+          ),
           features: { localTerminalApprovals: false },
         };
       case "roots.list":

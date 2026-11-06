@@ -77,7 +77,7 @@ async function probe(directory: string, purpose: "connect" | "stop" = "connect")
  * Windows locks a running executable, so a long-lived owner must not run from the
  * Desktop bundle the updater replaces. Each build runs from its own private copy.
  */
-export function daemonLaunch(
+function daemonLaunch(
   directory: string,
   launch = cliLaunch(),
   platform: NodeJS.Platform = process.platform,
@@ -109,10 +109,7 @@ export function daemonLaunch(
       retain(pin);
       retained = true;
     }
-    return [
-      layout.systemNode ? layout.node : join(target, "runtime/node.exe"),
-      join(target, "main.mjs"),
-    ];
+    return [join(target, "raypx.exe")];
   } finally {
     if (!retained) pin();
   }

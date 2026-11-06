@@ -14,8 +14,8 @@ assert.ok(python, "TUI PTY smoke requires Python 3 with pty and termios support"
 
 const directory = await mkdtemp(join(tmpdir(), "raypx-tui-smoke-"));
 const distribution = join(directory, "distribution");
-const binary = join(distribution, "main.mjs");
-const launch = [process.execPath, binary];
+const binary = join(distribution, "raypx");
+const launch = [binary];
 
 // The test driver alone uses Python. Keeping the PTY slave open lets it inspect
 // the actual terminal attributes after the standalone executable has exited.
@@ -34,7 +34,7 @@ try {
     "tui-sigterm-active",
   ])
     closeInstances.push(await enrollTestProfile({ dataDir: directory, profile }, launch));
-  const child = spawnProcess([python, driver, process.execPath, binary, directory], {
+  const child = spawnProcess([python, driver, binary, directory], {
     cwd: directory,
     stdin: "ignore",
     stdout: "inherit",

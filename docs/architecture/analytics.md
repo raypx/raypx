@@ -38,11 +38,10 @@ prompts, files, paths, answers, terminal output and credentials never enter even
 
 Unhandled errors/rejections, React boundaries and router catches use one sanitized
 error path. Error messages become safe codes. Only application `/assets/*.js`
-frames from the current supported HTTP(S) or `views:` origin survive; local paths, query
+frames from the current HTTP(S) or `views:` origin survive; local paths, query
 strings, causes and other frames are discarded. Source-map chunk/release IDs remain.
-The pinned sanitizer does not accept the Desktop host's macOS
-`raypx-<server-scope>:` custom scheme, so those packaged renderer errors retain
-their safe code but lose stack frames. Windows'
+The pinned sanitizer does not accept MyGo's macOS `mygo:` page scheme, so those
+packaged renderer errors retain their safe code but lose stack frames. Windows'
 mapped HTTP origin and browser development checks do not establish macOS source-map resolution.
 Autocapture, automatic pageviews, flags, console/network capture and replay are off.
 The SDK uses its no-external bundle and loads no remote feature scripts.
@@ -67,8 +66,8 @@ Each client build writes `assets/raypx-release.json` with its surface and the
 same release embedded in JavaScript. `RAYPX_SOURCEMAPS=1` enables hidden client maps and is
 part of the build cache key. No upload credentials use a `VITE_` name.
 
-For example, build Web with `RAYPX_SOURCEMAPS=1 pnpm run build:web`, then run
-`pnpm run analytics:sourcemaps web` with `POSTHOG_CLI_HOST` (PostHog UI host),
+For example, build Web with `RAYPX_SOURCEMAPS=1 bun run build:web`, then run
+`bun run analytics:sourcemaps web` with `POSTHOG_CLI_HOST` (PostHog UI host),
 `POSTHOG_CLI_PROJECT_ID` and secret `POSTHOG_CLI_API_KEY` in the release environment.
 For Desktop use `build:desktop` and the `desktop` target. The command injects release
 and chunk metadata, uploads maps, and removes maps after success. Upload reads the

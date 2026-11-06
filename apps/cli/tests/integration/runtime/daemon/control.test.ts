@@ -1,16 +1,14 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { sleep } from "@raypx/runtime-node/process";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { expect, it, vi } from "vite-plus/test";
 import { existsSync, mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../../helpers/enrolled.ts";
-import type { HostVault } from "../../../../src/runtime/daemon/vault.ts";
-import { profilePath } from "../../../../src/runtime/state/index.ts";
-import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host.ts";
-import { TerminalStore } from "../../../../src/runtime/terminal/store.ts";
-import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol.ts";
+import { startDaemon } from "../../../helpers/enrolled";
+import type { HostVault } from "../../../../src/runtime/daemon/vault";
+import { profilePath } from "../../../../src/runtime/state";
+import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host";
+import { TerminalStore } from "../../../../src/runtime/terminal/store";
+import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol";
 import type {
   HostAuthorization,
   ObservedProjection,
@@ -28,7 +26,7 @@ async function fixture(seed = false) {
   let connection: { send(data: string): unknown; close(code?: number): unknown } | undefined;
   let denied = false,
     stored: HostAuthorization | undefined;
-  const api = await serveHttp({
+  const api = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request, server) {
@@ -359,7 +357,7 @@ it.skipIf(process.platform === "win32")(
         )
         .toBe(1);
       f.ack(old);
-      await sleep(100);
+      await Bun.sleep(100);
       expect(f.frames).toHaveLength(2);
       f.ack(initial);
       await expect.poll(() => f.frames.length).toBe(3);
@@ -370,7 +368,7 @@ it.skipIf(process.platform === "win32")(
       await expect.poll(() => f.frames.length, { timeout: 10_000 }).toBe(4);
       const replacement = f.frames[3]!;
       f.ack(f.frames[2]!);
-      await sleep(100);
+      await Bun.sleep(100);
       expect(f.frames).toHaveLength(4);
       f.ack(replacement);
       await expect.poll(() => f.frames.length).toBe(5);

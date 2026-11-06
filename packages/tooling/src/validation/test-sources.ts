@@ -1,13 +1,12 @@
-import { globFiles } from "@raypx/runtime-node/files";
 export type TestLayer = "unit" | "component" | "integration" | "external";
 
 /** Source-adjacent suites and the separately owned integration/acceptance directories. */
 export function testSources(directory: string): string[] {
   return [
-    ...globFiles("{src,server,scripts,tests,e2e}/**/*.{test,spec}.{ts,tsx}", {
+    ...new Bun.Glob("{src,server,scripts,tests,e2e}/**/*.{test,spec}.{ts,tsx}").scanSync({
       cwd: directory,
     }),
-    ...globFiles("*.{test,spec}.{ts,tsx}", { cwd: directory }),
+    ...new Bun.Glob("*.{test,spec}.{ts,tsx}").scanSync({ cwd: directory }),
   ]
     .map((file) => file.replaceAll("\\", "/"))
     .sort();

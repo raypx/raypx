@@ -21,8 +21,8 @@ is sent to a server or another browser tab.
 
 **Copy diagnostic snapshot** takes a fresh snapshot, formats versioned JSON and
 uses the browser Clipboard API. If the API is missing or permission is denied,
-the panel shows a selected, read-only JSON field for manual copying. Clipboard
-handling stays in the renderer. A failed copy never reports success.
+the panel shows a selected, read-only JSON field for manual copying. No native
+clipboard method or Go changes are required. A failed copy never reports success.
 
 The snapshot deliberately excludes complete URLs, parameter/search values,
 query keys and hashes, returned data, loader results and exception messages or
@@ -41,16 +41,16 @@ stylesheet and hosts a React portal, preserving providers and containing styles.
 
 The bridge and renderer share page-local ESM state. Unmount, StrictMode and HMR
 must not duplicate scripts or subscriptions. Production builds remove the guarded
-import and do not enable the plugin or a diagnostics endpoint. Vite+/Node remain the
+import and do not enable the plugin or a diagnostics endpoint. Vite+/Bun remain the
 existing toolchain; no additional task runner or published package is introduced.
 
 ## Verification
 
 ```sh
-pnpm --dir packages/devtools run test
-pnpm --dir packages/devtools run check
-pnpm --dir e2e run e2e:devtools
-pnpm run verify
+bun run --cwd packages/devtools test
+bun run --cwd packages/devtools check
+bun run --cwd e2e e2e:devtools
+bun run verify
 ```
 
 The explicit `e2e:devtools` suite starts test-owned loopback development servers on
@@ -60,5 +60,5 @@ use an operator account. The normal compiled-artifact E2E gate remains separate
 and asserts that development diagnostics are absent.
 
 Desktop renderer browser tests do not establish native WKWebView/WebView2 evidence.
-Check the Dock and clipboard/manual fallback in an isolated Tauri development window
+Check the Dock and clipboard/manual fallback in an isolated MyGo development window
 on each claimed native platform. Report unavailable native checks explicitly.

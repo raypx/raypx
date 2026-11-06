@@ -11,7 +11,7 @@ or OpenAI Responses endpoint. Provider SDK implementations load lazily.
 
 ## CLI
 
-The standalone CLI embeds Node, the SDK and catalogs. `ai providers` and `ai models`
+The standalone CLI embeds Bun, the SDK and catalogs. `ai providers` and `ai models`
 read local data without enrollment, resolving credentials or contacting a provider.
 Completion and managed tasks require initial instance enrollment; subsequent use
 is independent of the online Raypx session:
@@ -158,15 +158,13 @@ Reopening preserves completed history and
 unresolved intents; the store does not make recovery decisions.
 
 ```sh
-pnpm run build:cli
-pnpm --dir apps/cli run smoke:pi
+bun run --cwd apps/cli smoke:pi
 ```
 
-This gate bundles the actual SDK loop as ESM with VP and relocates the running
-Node interpreter beside that fixture. It runs an approved tool outside the repository,
-without `node_modules`, credentials or PATH tools, and with HTTP disabled. It
-reopens SQLite, continues the conversation and rejects a repeated tool effect,
-then reports the ESM and Node sizes.
+This gate compiles the actual SDK loop into a standalone Bun bytecode executable
+and runs an approved fixture tool outside the repository, without `node_modules`,
+credentials or PATH tools, and with HTTP disabled. It reopens SQLite, continues the
+conversation and rejects a repeated tool effect, then reports the executable size.
 Unit tests also cover denied approvals, cancellation, deadlines, persistence
 failures, context isolation, competing revision writes and uncertain recovery.
 Real model execution and Windows packaging remain separate acceptance gates.

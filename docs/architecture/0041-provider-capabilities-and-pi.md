@@ -3,10 +3,6 @@
 Status: Accepted, 2026-11-03. Extends ADR 0040. Amended 2026-11-04: provider workspaces
 consolidated into `@raypx/providers`.
 
-Implementation amendments: [ADR 0044](0044-event-sourced-cli-orchestration.md)
-adds durable orchestration effect intents; [ADR 0045](0045-tauri-node-pnpm.md)
-moves the execution runtime from Bun to Node without changing provider scope.
-
 ## Ownership and capabilities
 
 AgentTask remains the sole Run lifecycle. The CLI daemon owns execution, project locks,
@@ -24,10 +20,9 @@ conversion/estimation. CLI owns TOML, OS tools and SQLite. The library's test-on
 entries never import them.
 
 This borrows T3's adapter capabilities, conformance tests and distinction between
-replayable state and process-bound effects. It preserves Raypx's TypeScript,
-SQLite and existing task coordinator. `ExecutionEffects` remains the lifecycle
-callback interface; ADR 0044 adds the durable effect-intent store around execution.
-The reference is the local t3code checkout at commit
+replayable state and process-bound effects. It preserves Raypx's Bun, SQLite and
+existing task coordinator. ExecutionEffects remains lifecycle callbacks, not an
+effect outbox. The reference is the local t3code checkout at commit
 47f2c8d29e981c7723467efe137ee19e91df924e; its Pi CLI/RPC transport is different.
 
 ## Models and local execution

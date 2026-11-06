@@ -1,16 +1,16 @@
-import { enrolledInstance } from "../../helpers/enrolled.ts";
+import { enrolledInstance } from "../../helpers/enrolled";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { createAiClient, createCompatibleProvider } from "@raypx/ai";
 import { z } from "zod";
-import { parseCliArgs } from "../../../src/commands/args.ts";
-import { runCommand } from "../../../src/commands/index.ts";
-import { aiFixture } from "../../helpers/ai.ts";
+import { parseCliArgs } from "../../../src/commands/args";
+import { runCommand } from "../../../src/commands";
+import { aiFixture } from "../../helpers/ai";
 
 let directory: string;
-const servers: Awaited<ReturnType<typeof aiFixture>>[] = [];
+const servers: ReturnType<typeof aiFixture>[] = [];
 const clients: ReturnType<typeof createAiClient>[] = [];
 beforeEach(async () => {
   directory = await mkdtemp(join(tmpdir(), "raypx-ai-command-"));
@@ -23,8 +23,8 @@ afterEach(async () => {
   vi.unstubAllEnvs();
   await rm(directory, { recursive: true, force: true });
 });
-async function fixture(options: Parameters<typeof aiFixture>[0] = {}) {
-  const server = await aiFixture(options);
+function fixture(options: Parameters<typeof aiFixture>[0] = {}) {
+  const server = aiFixture(options);
   servers.push(server);
   return server;
 }
@@ -68,7 +68,7 @@ it("keeps offline catalogs independent of invalid TOML and custom endpoints", as
 });
 
 it("reads AI settings alongside server profiles and never modifies the user's TOML", async () => {
-  const server = await fixture();
+  const server = fixture();
   const source = `base_url = "https://raypx.com"\nprofile = "beta"\n[profiles.beta]\nbase_url = "https://beta.raypx.com"\n[ai]\nprovider = "local"\nmodel = "fixture-model"\napi = "openai-completions"\nbase_url = ${JSON.stringify(server.url)}\n`;
   await writeFile(join(directory, "config.toml"), source);
   vi.stubEnv("OPENAI_API_KEY", "ambient-private-key");
@@ -85,7 +85,7 @@ it("reads AI settings alongside server profiles and never modifies the user's TO
 });
 
 it("uses only the explicit key environment variable for a configured endpoint", async () => {
-  const server = await fixture();
+  const server = fixture();
   vi.stubEnv("RAYPX_TEST_PI_KEY", "fixture-private-key");
   const result = await invoke("complete", {
     ...settings(server.url),
@@ -100,7 +100,7 @@ it("uses only the explicit key environment variable for a configured endpoint", 
 it.each(["anthropic-messages", "openai-responses"] as const)(
   "uses %s and explicit Bearer authentication through the real SDK",
   async (api) => {
-    const server = await fixture({ api });
+    const server = fixture({ api });
     vi.stubEnv("RAYPX_TEST_PI_KEY", "fixture-bearer-token");
     const base_url = api === "anthropic-messages" ? new URL(server.url).origin : server.url;
     const result = await invoke("complete", {
@@ -123,7 +123,7 @@ it.each(["anthropic-messages", "openai-responses"] as const)(
 );
 
 it("parses streamed tool-call arguments through the real Pi SDK", async () => {
-  const server = await fixture({ tool: true });
+  const server = fixture({ tool: true });
   const client = createAiClient({
     providers: [
       createCompatibleProvider({
@@ -162,7 +162,7 @@ it.each([
   [429, "AI_RATE_LIMITED"],
   [500, "AI_REQUEST_FAILED"],
 ])("maps HTTP %s to %s without leaking provider errors or retrying", async (status, code) => {
-  const server = await fixture({ status });
+  const server = fixture({ status });
   const failure = await invoke("complete", { ...settings(server.url), prompt: "Test Pi" }).catch(
     (error: unknown) => error,
   );
@@ -172,7 +172,7 @@ it.each([
 });
 
 it("cancels a stalled real HTTP stream on its deadline", async () => {
-  const server = await fixture({ stall: true });
+  const server = fixture({ stall: true });
   await expect(
     invoke("complete", { ...settings(server.url), prompt: "Test Pi", timeout_ms: 40 }),
   ).rejects.toMatchObject({ code: "AI_TIMEOUT" });

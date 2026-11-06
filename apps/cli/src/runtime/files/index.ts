@@ -1,10 +1,9 @@
-import { sleep } from "@raypx/runtime-node/process";
 import { constants } from "node:fs";
 import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { MAX_TEXT_BYTES, type FileEntry } from "@raypx/contracts/local";
-import { LocalError } from "../errors.ts";
-import { acquireLock, type StateStore } from "../state/index.ts";
+import { LocalError } from "../errors";
+import { acquireLock, type StateStore } from "../state";
 
 function version(stat: { mtimeMs: number; size: number; ino: number; ctimeMs: number }) {
   return `${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;
@@ -251,7 +250,7 @@ export class FileRuntime {
       }
       if (files + directories + skipped > 200_000)
         throw new LocalError("SCAN_LIMIT", "Scan is limited to 200000 entries");
-      if ((files + directories + skipped) % 100 === 0) await sleep(0);
+      if ((files + directories + skipped) % 100 === 0) await Bun.sleep(0);
     }
     return { files, directories, bytes, skipped };
   }

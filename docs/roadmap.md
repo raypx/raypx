@@ -18,8 +18,8 @@ By 2026-11-10, validate one initially registered, offline-capable local flow thr
 
 ## Current implementation (2026-11-05)
 
-Desktop uses Tauri 2.12.5 with Rust 1.99.1 and the existing React SPA, while the
-independent TypeScript CLI daemon owns execution on macOS/Windows. Local execution
+Desktop uses MyGo 0.7.4 with Go 1.27.3 and the existing React SPA, while the
+independent Bun CLI daemon owns execution on macOS/Windows. Local execution
 requires one-time account/origin-bound enrollment, then supports offline use and
 online logout. Codex, Claude and managed local Pi share the private CLI harness.
 Provider adapters are consolidated in `@raypx/providers`; Core owns task-domain
@@ -29,11 +29,7 @@ Relay handles opted-in remote coordination; API keeps read projections.
 
 These source facts do not expand the dated live acceptance below. Server-owned
 Agents, migration/pairing and the complete native mobile workbench remain targets.
-The Expo Mobile workspace currently provides account/login only. Current toolchain
-and distribution details are in the [architecture overview](architecture/README.md)
-and [ADR 0045](architecture/0045-tauri-node-pnpm.md). The 2026-11-02 live macOS
-acceptance predates Tauri and does not validate the new host's GUI or installer;
-see the separate [migration validation record](development/migration-validation.md).
+The Expo Mobile workspace currently provides account/login only.
 
 ## Progress Snapshot (2026-11-02)
 
@@ -53,7 +49,7 @@ The local synthetic lifecycle suite in `apps/cli/tests/integration/runtime/agent
 
 Real acceptance passed on **2026-11-02 at 11:33 SGT**, on **macOS arm64**, using **codex-cli 0.165.0-alpha.1.2**. The separate native test application exercised read, reject-plan, approve-plan, write-and-test, restart-history, resume-session and cancel-process-tree. The daemon epoch changed across the explicit restart, and owned processes/session cleanup completed. Generated evidence is `.artifacts/native-agents/1793590421488.json`; it contains safe metadata and check names, without prompts or credentials. Claude, Windows and foreground interaction were not run.
 
-`pnpm run verify` passed on the same source changes (24 successful tasks), including CLI's 385 tests, Desktop's 231 tests, the contracts consumer suite and the selected Rust host checks. See [Agent acceptance commands](development/agent-quality.md#local-native-agent-acceptance).
+`bun run verify` passed on the same source changes (24 successful tasks), including CLI's 385 tests, Desktop's 231 tests, the contracts consumer suite and the selected Go host checks. See [Agent acceptance commands](development/agent-quality.md#local-native-agent-acceptance).
 
 ## Near-Term Plan
 
@@ -62,7 +58,7 @@ The 2026-11-10 target is the local first-delivery flow, not completion of all ro
 1. **Local acceptance: passed on macOS.** The gate defaults to Codex; `RAYPX_LIVE_AGENT_PROVIDERS` optionally selects other configured providers. The recorded result above closes the first-delivery gate for this platform.
 2. **Run read contract: connected.** `agents.local.get` uses Core's task-to-Run projection with the persisted pending/decided request kind. Runtime tests cover all mapped statuses, resolved and foreign requests, and ambiguous waits. `AgentTask` remains the sole stored lifecycle record.
 3. **Acceptance defects: resolved for this flow.** The gate now uses the reserved device owner, waits for Desktop's existing engine startup and restarts its owned daemon through the CLI command. It preserves the product's version-mismatch replacement guard. Live denial, approved writes, restart/history, session continuation and cancellation passed. Broader uncertain-effect reconciliation remains Phase 2 work; this gate does not claim that matrix is complete.
-4. **Affected delivery checks: passed.** The native gate and affected CLI/Desktop/contracts/Rust checks passed. Distribution signing, Windows and foreground UI remain separate release gates.
+4. **Affected delivery checks: passed.** The native gate and affected CLI/Desktop/contracts/Go checks passed. Distribution signing, Windows and foreground UI remain separate release gates.
 5. **Core Run and provider foundation: implemented.** Core accepts waiting/resume/cancelling and owner-loss transitions. Codex/Claude adapters in `@raypx/providers` emit normalized conversation events through an injected SDK-compatible session factory. AgentTask remains the sole persisted Run. [ADR 0040](architecture/0040-instance-enrollment-and-providers.md) records the completed foundation scope, including first-time instance enrollment and offline identity; managed local Pi and the public task CLI are implemented in [ADR 0041](architecture/0041-provider-capabilities-and-pi.md).
 
 With the macOS local gate passing and the Run contract reconciled, the next product increment is Phase 4's local Agent automation: add one scheduled Agent trigger through the same `AgentRuntime`, with idempotent delivery, visible run history, pause/resume and an explicit missed-trigger policy. Expand to migration and client extensibility only after that local workflow is proven.

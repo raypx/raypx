@@ -2,12 +2,12 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { project, platformProject } from "../../tests/helpers/verification.ts";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { taskModel, taskPlan, taskRef } from "../tasks/model.ts";
-import { changedFiles, githubPlan, verificationPlan } from "./plan.ts";
-import { verifyOptions } from "./index.ts";
-import { executionTasks } from "./execution.ts";
+import { project, platformProject } from "../../tests/helpers/verification";
+import { workspaceFixtures } from "../../tests/helpers/workspace";
+import { taskModel, taskPlan, taskRef } from "../tasks/model";
+import { changedFiles, githubPlan, verificationPlan } from "./plan";
+import { verifyOptions } from ".";
+import { executionTasks } from "./execution";
 
 const { member } = workspaceFixtures();
 
@@ -56,13 +56,13 @@ describe("affected verification", () => {
     expect(universal.workspaces).toContain("api");
     expect(universal.backend).toBe(true);
     expect(universal.native).toBe(false);
-    expect(universal.tasks).not.toContain("desktop#task:tauri:test");
+    expect(universal.tasks).not.toContain("desktop#task:mygo:test");
   });
   it.each([
     ["packages/desktop/src/index.ts", false],
     ["packages/desktop/src/app.css", false],
     ["packages/desktop/bridge.ts", true],
-    ["packages/desktop/src-tauri/src/main.rs", true],
+    ["packages/desktop/main.go", true],
     ["packages/desktop/package.json", true],
   ])("runs native checks for %s: %s", (file, native) => {
     const plan = verificationPlan(platformProject(), [file]);
@@ -81,7 +81,7 @@ describe("affected verification", () => {
     expect(leaked.backend).toBe(true);
   });
   it.each([
-    "pnpm-lock.yaml",
+    "bun.lock",
     "package.json",
     ".github/actions/example/action.yml",
     "packages/tooling/src/cli.ts",
@@ -99,12 +99,12 @@ describe("affected verification", () => {
     expect(plan.tasks.every((task) => /#task:(?:check|test)$/.test(task))).toBe(true);
   });
   it.each([
-    ["packages/desktop/src-tauri/src/desktop/process_windows.rs", ["windows-latest"]],
+    ["packages/desktop/internal/desktop/process_windows.go", ["windows-latest"]],
     ["packages/desktop/scripts/host/windows-smoke-install.ts", ["windows-latest"]],
-    ["packages/desktop/src-tauri/src/app/platform_darwin_test.rs", ["macos-latest"]],
-    ["packages/desktop/src-tauri/src/desktop/process_unix.rs", ["macos-latest"]],
-    ["packages/desktop/src-tauri/src/desktop/process_linux.rs", []],
-    ["packages/desktop/src-tauri/Cargo.toml", ["macos-latest", "windows-latest"]],
+    ["packages/desktop/internal/app/platform_darwin_test.go", ["macos-latest"]],
+    ["packages/desktop/internal/desktop/process_unix.go", ["macos-latest"]],
+    ["packages/desktop/internal/desktop/process_linux.go", []],
+    ["packages/desktop/go.mod", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/local.ts", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/terminal.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/daemon/endpoint.ts", ["macos-latest", "windows-latest"]],
@@ -125,7 +125,7 @@ describe("affected verification", () => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.native).toBe(true);
     expect(plan.nativeRunners).toEqual(runners);
-    expect(plan.tasks).toContain("desktop#task:tauri:test");
+    expect(plan.tasks).toContain("desktop#task:mygo:test");
   });
   it("keeps CLI business logic independent of native platform runners", () => {
     const plan = verificationPlan(platformProject(), [
@@ -154,8 +154,8 @@ describe("affected verification", () => {
   it("unions platform-specific changes and keeps release acceptance complete", () => {
     const model = platformProject();
     const files = [
-      "packages/desktop/src-tauri/src/process_windows.rs",
-      "packages/desktop/src-tauri/src/process_darwin.rs",
+      "packages/desktop/internal/process_windows.go",
+      "packages/desktop/internal/process_darwin.go",
     ];
     expect(verificationPlan(model, files).nativeRunners).toEqual([
       "macos-latest",
@@ -165,7 +165,7 @@ describe("affected verification", () => {
     expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
     expect(release.browser).toBe("all");
     expect(release.backend).toBe(true);
-    expect(release.tasks).toContain("desktop#task:tauri:test");
+    expect(release.tasks).toContain("desktop#task:mygo:test");
   });
   it("preserves private VP prerequisites and rejects injected/cyclic task references", () => {
     const { root } = project();
@@ -244,7 +244,7 @@ describe("affected verification", () => {
       "base",
     );
     const before = git("rev-parse", "HEAD");
-    writeFileSync(join(root, "pnpm-lock.yaml"), "dependency fixture");
+    writeFileSync(join(root, "bun.lock"), "dependency fixture");
     git("add", ".");
     git(
       "-c",
@@ -271,6 +271,7 @@ describe("affected verification", () => {
   });
   it("uses one public command with explicit full mode and strict options", () => {
     expect(verifyOptions([])).toEqual({});
+    expect(verifyOptions(["--full", "--no-cache"])).toEqual({ full: true, noCache: true });
     expect(verifyOptions(["--full", "--base", "HEAD~1", "--dry-run"])).toEqual({
       full: true,
       base: "HEAD~1",
@@ -300,7 +301,7 @@ it("selects deployment acceptance for Docker, runtime and shared dependency inpu
     "infra/railway/Caddyfile",
     "apps/api/Dockerfile",
     "packages/api/src/server.ts",
-    "pnpm-lock.yaml",
+    "bun.lock",
     "packages/tokens/src/index.ts",
   ])
     expect(verificationPlan(model, [file]).deployment).toBe(true);

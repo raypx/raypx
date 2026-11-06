@@ -9,14 +9,14 @@ import { enrollTestProfile } from "../helpers/instance.ts";
 assert.equal(process.platform, "linux", "This RSS probe requires Linux /proc");
 const root = resolve(import.meta.dirname, "../../../..");
 const distribution = join(root, "apps/cli/dist");
-const launch = [process.execPath, join(distribution, "main.mjs")];
+const launch = [join(distribution, "raypx")];
 const temporary = await mkdtemp(join(tmpdir(), "raypx runtime metrics-"));
 const output = join(root, ".artifacts/migration", new Date().toISOString().replaceAll(":", "-"));
 await mkdir(output, { recursive: true });
 const inventory = JSON.parse(await readFile(join(distribution, "runtime.json"), "utf8")) as {
   version: string;
   builtAt: number;
-  nodeVersion: string;
+  bunVersion: string;
 };
 async function invoke(args: string[]) {
   const child = spawnProcess([...launch, ...args], {

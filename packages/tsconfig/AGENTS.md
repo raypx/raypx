@@ -29,7 +29,7 @@ README documents every preset and compiler guarantee.
 - `verbatimModuleSyntax` and `exactOptionalPropertyTypes` are inherited from
   `base.json`. Never disable either, or any other option in its strict set.
 - Presets extend siblings with relative `./<preset>.json` paths only.
-- Keep Node, Deno, Vite and other runtime-specific types in consuming projects.
+- Keep Bun, Deno, Vite and other runtime-specific types in consuming projects.
   `node.json` describes Node-compatible resolution and standard API types.
 - Treat any option that can add consumer type errors as a breaking change.
 - Tests beside the preset JSON files read those files directly. The independent
@@ -42,6 +42,6 @@ README documents every preset and compiler guarantee.
 ## Verification
 
 ```bash
-pnpm --dir packages/tsconfig run test
-pnpm --dir packages/tsconfig run check
+bun run --cwd packages/tsconfig test
+bun run --cwd packages/tsconfig check
 ```

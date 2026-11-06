@@ -9,7 +9,7 @@ function graph(args: string[]) {
     split < 0
       ? [...args, "--dry-run"]
       : [...args.slice(0, split), "--dry-run", ...args.slice(split)];
-  const result = spawnSync("pnpm", ["run", "raypx-dev", ...dry], {
+  const result = spawnSync(process.execPath, ["run", "raypx-dev", ...dry], {
     cwd: root,
     env: process.env,
     encoding: "utf8",
@@ -38,7 +38,7 @@ it("routes root and package-local test commands to the same qualified task graph
 }, 65_000); // Two cold child graphs each have a bounded 30-second process deadline.
 it("package-local browser commands include their build prerequisites", () => {
   const plan = (directory: string, script: string) => {
-    const child = spawnSync("pnpm", ["run", script, "--dry-run"], {
+    const child = spawnSync(process.execPath, ["run", script, "--dry-run"], {
       cwd: resolve(root, directory),
       env: process.env,
       encoding: "utf8",
@@ -132,8 +132,8 @@ it("changing browser selectors or workers preserves dependency task definitions"
   }
 });
 
-it("full verification builds Node services and the optional edge without deploying providers", () => {
-  const result = spawnSync("pnpm", ["run", "verify", "--full", "--dry-run"], {
+it("full verification builds Bun services and the optional edge without deploying providers", () => {
+  const result = spawnSync(process.execPath, ["run", "verify", "--full", "--dry-run"], {
     cwd: root,
     env: process.env,
     encoding: "utf8",

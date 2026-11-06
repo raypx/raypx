@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertSmokeBinary } from "../../native/smoke/launch.ts";
 
-it("rejects a zero exit without the native smoke feature receipt", async () => {
+it("rejects a zero exit without the native_smoke compiler tag", async () => {
   const directory = await mkdtemp(join(tmpdir(), "raypx-smoke-probe-test-"));
   try {
     const windows = process.platform === "win32";
@@ -13,7 +13,7 @@ it("rejects a zero exit without the native smoke feature receipt", async () => {
       mode: 0o700,
     });
     await expect(assertSmokeBinary(binary, process.env)).rejects.toThrow(
-      "did not attest the smoke feature (0; receipt missing)",
+      "executable lacks native_smoke build tag",
     );
   } finally {
     await rm(directory, { recursive: true, force: true });

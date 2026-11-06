@@ -1,9 +1,9 @@
 import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devkit/verification";
 import { readFileSync } from "node:fs";
-import { taskModel, taskRef, type TaskModel } from "../tasks/model.ts";
-import { distributionRequested } from "./events.ts";
-import { browserReach } from "./platform.ts";
-import { toolingImpact } from "./tooling.ts";
+import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
+import { distributionRequested } from "./events.js";
+import { browserReach } from "./platform.js";
+import { toolingImpact } from "./tooling.js";
 
 type Artifact = "api" | "web" | "relay" | "cli";
 export interface VerificationPlan {
@@ -13,7 +13,7 @@ export interface VerificationPlan {
   workspaces: string[];
   tasks: string[];
   artifacts: Artifact[];
-  /** Current-platform Rust checks; Linux-only changes need no macOS/Windows runner. */
+  /** Current-platform Go checks; Linux-only changes need no macOS/Windows runner. */
   native: boolean;
   nativeRunners: string[];
   backend: boolean;
@@ -39,7 +39,7 @@ function documentation(file: string) {
   );
 }
 function globalInput(file: string) {
-  return /^(?:package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
+  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
     file,
   );
 }
@@ -49,23 +49,18 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
   const runners = ["macos-latest", "windows-latest"];
   const paths = files.filter((file) => {
     if (documentation(file)) return false;
-    if (
-      ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml"].includes(file) ||
-      file === ".gitattributes" ||
-      file === ".github/workflows/native.yml"
-    )
-      return true;
+    if (file === ".gitattributes" || file === ".github/workflows/native.yml") return true;
     const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
     if (!member) return false;
     const relative = file.slice(member.path.length + 1);
     if (member.name === "@raypx/tooling")
       return /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative);
     if (member.native)
-      return /^(?:src-tauri\/|launcher\/|(?:bridge|preferences)\.ts$|package\.json$|resources\/|scripts\/host\/|tests\/native\/)/.test(
+      return /^(?:[^/]+\.go$|go\.(?:mod|sum)$|(?:bridge|preferences|mygo\.config)\.ts$|package\.json$|internal\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
         relative,
       );
     if (member.name === "cli")
-      return /^(?:package\.json$|launcher\/|scripts\/prepare-herdr\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:herdr-terminal|terminal-)))/.test(
+      return /^(?:package\.json$|scripts\/(?:prepare-herdr|build|distribution|archive-smoke)\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:artifact|daemon-agents|herdr-terminal|terminal-)))/.test(
         relative,
       );
     return (
@@ -176,7 +171,7 @@ export function verificationPlan(
       [
         "check",
         "test",
-        ...(member.native && native.native ? ["tauri:check", "tauri:test"] : []),
+        ...(member.native && native.native ? ["mygo:check", "mygo:test"] : []),
         ...(includeArtifacts ? ["build"] : []),
       ]
         .filter((name) => member.scripts[name])
@@ -199,7 +194,7 @@ export function verificationPlan(
         if (documentation(file) || /\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file))
           return false;
         if (
-          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
+          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
             file,
           ) ||
           /^packages\/tooling\/src\/(?:build\/|validation\/deployment)/.test(file)

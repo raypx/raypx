@@ -1,30 +1,31 @@
-import { smokeDeployment } from "../validation/deployment-smoke.ts";
+import { smokeDeployment } from "../validation/deployment-smoke";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runTasks } from "../repository.ts";
-import { taskRef, taskModel, taskPlan } from "../tasks/model.ts";
-import { localPlan } from "./plan.ts";
-import { executionTasks, sourceChecks } from "./execution.ts";
-import { ciOutputs, parseCiPlan, requiredGates } from "./gates.ts";
-import { localTests } from "./tests.ts";
-import { reportBuildSizes } from "../validation/build-size.ts";
+import { runTasks } from "../repository";
+import { taskRef, taskModel, taskPlan } from "../tasks/model";
+import { localPlan } from "./plan";
+import { executionTasks, sourceChecks } from "./execution";
+import { ciOutputs, parseCiPlan, requiredGates } from "./gates";
+import { localTests } from "./tests";
+import { reportBuildSizes } from "../validation/build-size";
 
 export function verifyOptions(args: string[]) {
-  const options: { full?: boolean; base?: string; dry?: boolean } = {};
+  const options: { full?: boolean; base?: string; dry?: boolean; noCache?: boolean } = {};
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--full") options.full = true;
+    else if (arg === "--no-cache") options.noCache = true;
     else if (arg === "--dry-run") options.dry = true;
     else if (arg === "--base" && args[i + 1] && !args[i + 1]!.startsWith("-"))
       options.base = args[++i]!;
-    else throw new Error("Usage: pnpm run verify [--full] [--base ref] [--dry-run]");
+    else throw new Error("Usage: bun run verify [--full] [--no-cache] [--base ref] [--dry-run]");
   }
   return options;
 }
 export async function verify(root: string, args: string[]) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0]!)) {
     console.log(
-      "pnpm run verify              Affected types and related tests; native-input Rust checks\npnpm run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
+      "bun run verify              Affected types and related tests; native-input Go checks\nbun run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run, --no-cache (container filesystem tracing). GUI/database/browser acceptance runs in CI.",
     );
     return;
   }
@@ -68,7 +69,7 @@ export async function verify(root: string, args: string[]) {
     );
   report("running");
   try {
-    const metrics = await sourceChecks(root, plan, tests);
+    const metrics = await sourceChecks(root, plan, tests, options.noCache);
     report("passed", metrics);
   } catch (error) {
     report("failed");

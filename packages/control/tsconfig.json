@@ -1,7 +1,7 @@
 {
   "extends": "@raypx/tsconfig/node.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["bun"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

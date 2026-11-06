@@ -4,4 +4,4 @@ Pure memory document and task-context schemas shared by transports, server use c
 device execution and browser views. Keep this workspace free of UI, persistence and
 transport implementations.
 
-Run `pnpm --dir packages/memory-model run check` and `test`.
+Run `bun run --cwd packages/memory-model run check` and `test`.

@@ -2,8 +2,8 @@ import type { AnalyticsConsent } from "@raypx/analytics";
 import type { LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-import type { DevicePreferences } from "./preferences.ts";
-import type { DesktopApiRequest, DesktopApiResponse } from "./api.ts";
+import type { DevicePreferences } from "./preferences";
+import type { DesktopApiRequest, DesktopApiResponse } from "./api";
 
 interface EngineStatus {
   status: "starting" | "ready" | "error";
@@ -18,7 +18,7 @@ export interface DesktopRuntime {
   features?: { localTerminalApprovals: boolean };
   compiledFeatures?: string[];
 }
-/** The native command vocabulary. The Rust host validates the generated manifest. */
+/** The native command vocabulary. The Go host validates the generated manifest. */
 export const DESKTOP_METHODS = {
   openExternal: "open_external",
   apiFetch: "api_fetch",

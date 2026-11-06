@@ -1,13 +1,11 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
-import { ProfileStorage } from "../../src/runtime/sqlite/index.ts";
+import { ProfileStorage } from "../../src/runtime/sqlite";
 import assert from "node:assert/strict";
-import { copyFile, mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { PiRunner, type PiRunnerOptions } from "@raypx/providers/pi";
-import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite.ts";
-import { piMessage, piModel, piScript, piTool } from "../helpers/pi.ts";
+import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite";
+import { piMessage, piModel, piScript, piTool } from "../helpers/pi";
 
 async function fixture() {
   // This is the real Agent loop with an offline stream; any accidental HTTP fails.
@@ -103,70 +101,5 @@ async function fixture() {
   }
 }
 
-async function main() {
-  if (process.argv.includes("--fixture")) {
-    await fixture();
-  } else {
-    const directory = await mkdtemp(join(tmpdir(), "raypx-pi-standalone-"));
-    try {
-      const isolated = join(directory, "isolated");
-      const { build } = await import("vite-plus/pack");
-      await build({
-        config: false,
-        entry: { fixture: fileURLToPath(import.meta.url) },
-        outDir: isolated,
-        platform: "node",
-        format: "esm",
-        fixedExtension: true,
-        dts: false,
-        deps: { alwaysBundle: [/.*/], neverBundle: [/^node:/, /^vite-plus(?:\/|$)/] },
-      });
-      const nodeName = process.platform === "win32" ? "node.exe" : "node";
-      const binary = join(isolated, nodeName);
-      await copyFile(process.execPath, binary);
-      const entry = join(isolated, "fixture.mjs");
-      const child = spawnProcess([binary, entry, "--fixture"], {
-        cwd: isolated,
-        env: {
-          PATH: "",
-          HOME: isolated,
-          USERPROFILE: isolated,
-          TMPDIR: directory,
-          TEMP: directory,
-        },
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, stderr, status] = await Promise.all([
-        new Response(child.stdout).text(),
-        new Response(child.stderr).text(),
-        child.exited,
-      ]);
-      assert.equal(status, 0, `Relocated Pi fixture failed\n${stdout}\n${stderr}`);
-      assert.equal(stderr, "");
-      const receipt: unknown = JSON.parse(stdout);
-      assert.deepEqual(receipt, {
-        status: "ok",
-        modelRequests: 4,
-        toolExecutions: 1,
-        durableResume: true,
-        duplicateBlocked: true,
-      });
-      console.log(
-        JSON.stringify({
-          standalone: "passed",
-          nodeBytes: (await stat(binary)).size,
-          entryBytes: (await stat(entry)).size,
-          fixture: receipt,
-          liveModels: "unverified",
-        }),
-      );
-    } finally {
-      await rm(directory, { recursive: true, force: true });
-    }
-  }
-}
-void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : "Pi smoke failed");
-  process.exitCode = 1;
-});
+// SDK orchestration fixture runs under the pinned development Bun. Delivery CLI is tested separately.
+await fixture();

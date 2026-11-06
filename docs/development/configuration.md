@@ -1,18 +1,18 @@
 # Administrator configuration
 
 Web exposes `/admin/settings` to verified administrators. It uses the existing API
-and PostgreSQL foundation on Node; there is no second admin
+and PostgreSQL foundation on Bun; there is no second admin
 server or configuration package.
 
 ## First setup
 
 1. Create the PostgreSQL database and configure `DATABASE_URL`, authentication,
    origins and the mail provider in the API environment.
-2. Run `pnpm run db:migrate` against that database. This creates all foundation
+2. Run `bun run db:migrate` against that database. This creates all foundation
    tables, including `system_configuration`; the migration does not create a database.
 3. Register the intended administrator accounts and verify their emails.
 4. Set explicit `DATABASE_URL` and `ADMIN_EMAILS=owner@example.com` (comma-separated
-   for multiple accounts), then run `pnpm --dir apps/api run auth:bootstrap-admins`.
+   for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
    This is an operator command, never a startup action. Database roles remain
    authoritative after it finishes; removing a role is not undone by the email list.
 5. Sign in to Web and open **Site settings**. Membership is checked from the current
@@ -46,9 +46,9 @@ user ID and update timestamp. Defaults apply only when the migrated table has no
 row. Missing tables or failed queries return a safe unavailable error.
 
 The public projection, the sign-up pre-check and mail site names read through a
-5-second [server cache](caching.md): Redis when configured, otherwise memory per Node
+5-second [server cache](caching.md): Redis when configured, otherwise memory per Bun
 process, so other replicas apply a change within that window.
-Failed reads are never cached, and a save refreshes the cache it uses (every Node
+Failed reads are never cached, and a save refreshes the cache it uses (every Bun
 process within a second with Redis, otherwise only the instance that handled it). Admin reads, saves, cleanup runs and the
 Better Auth user-create hook always read the database. That hook is the
 authoritative registration gate for every sign-in method, so a closed policy
@@ -135,7 +135,7 @@ Platform entry points accept the same typed `RuntimeProviders` as an optional
 second argument. For example, in a custom composition root:
 
 ```ts
-// Node: own one runtime for the process and close it on shutdown.
+// Bun: own one runtime for the process and close it on shutdown.
 const runtime = await createApiRuntime(environment, {
   createConfigurationRepository: (db, audit) => repositoryFor(db, audit),
 });
@@ -145,7 +145,7 @@ Alternatively, pass the factory in `createRuntime`'s resources when composing al
 dependencies yourself. The default is PostgreSQL. The factory runs once per
 runtime, receives its database connection and must not capture another runtime's
 connection. Runtime close owns that connection; custom repositories should not
-allocate independent resources without arranging their cleanup. Node keeps its
+allocate independent resources without arranging their cleanup. Bun keeps its
 process runtime, closed on shutdown. Consumers must not retain a service past that lifecycle.
 
 These interfaces are API-internal. Other apps use the typed RPC client rather than
@@ -154,11 +154,11 @@ importing another application's source.
 ## Verification
 
 ```sh
-pnpm --dir apps/api run test -- tests/integration/configuration.test.ts
-pnpm --dir apps/api run test -- server/configuration tests/integration/configuration-runtime.test.ts tests/integration/runtime-providers.test.ts server/jobs
-pnpm --dir apps/web run test -- src/features/configuration.component.test.tsx
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_configuration_test pnpm run test postgres
-pnpm run verify
+bun run --cwd apps/api test -- tests/integration/configuration.test.ts
+bun run --cwd apps/api test -- server/configuration tests/integration/configuration-runtime.test.ts tests/integration/runtime-providers.test.ts server/jobs
+bun run --cwd apps/web test -- src/features/configuration.component.test.tsx
+NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_configuration_test bun run test postgres
+bun run verify
 ```
 
 The database gate requires an isolated `_test` database and an empty settings

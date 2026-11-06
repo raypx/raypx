@@ -20,7 +20,7 @@ Local work stays on the device unless that person explicitly opts a host in. Dev
 
 ## Operating Context
 
-Web runs in desktop and phone browsers. Desktop targets macOS 13.5+ and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Device-owned Pi tasks run through Desktop and the public task CLI. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
+Web runs in desktop and phone browsers. Desktop targets macOS 13+ and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Device-owned Pi tasks run through Desktop and the public task CLI. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
 
 ## Capabilities and Constraints
 
@@ -34,7 +34,7 @@ macOS and Windows Desktop Quit leaves the independent CLI daemon and Agent tasks
 
 macOS can install Claude and Codex terminal hooks. Per-project Away mode forwards validated Bash approvals to a registered local Desktop without an active online session. The visible, unminimized Desktop holds a 15-second approval lease. Hidden, minimized, or Quit releases it. Cloud terminal sharing needs a separate explicit project scope inside the local scope. A qualified cloud channel can continue while Desktop is closed. Timeout or unavailability returns control to the terminal. This release does not support simultaneous native-terminal answers. Terminal outputs and full session streams are not synchronized. This remains a plaintext private test feature until content protection is complete.
 
-The CLI, application features, and shared contracts use Node and TypeScript. Desktop uses a Tauri policy host and system WKWebView or WebView2. Native development and packaging require Rust 1.99.1. The standalone CLI ships as a complete directory with a Rust launcher, Node and application resources; users need no global Node or pnpm. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
+The CLI, application features, and shared contracts use Bun and TypeScript. Desktop uses a MyGo policy host and system WKWebView or WebView2. Native development and packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
 
 Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, the complete native mobile workbench, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. The Expo Mobile workspace currently implements the account/login baseline. Shared packages are added only when a real consumer needs them.
 

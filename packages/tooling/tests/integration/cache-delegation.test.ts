@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { argumentKey } from "../../src/tasks/arguments.ts";
-import { checked, execute, pass, project } from "../helpers/cache.ts";
+import { argumentKey } from "../../src/tasks/arguments.js";
+import { checked, execute, pass, project } from "../helpers/cache.js";
 
 it("runs a delegated package runner once with literal arguments scoped to the public task", () => {
   const root = project();
@@ -10,7 +10,7 @@ it("runs a delegated package runner once with literal arguments scoped to the pu
     root,
     "feature",
     {},
-    { test: "tsx missing-public-entry.ts", _test: "tsx runner.ts" },
+    { test: "bun missing-public-entry.ts", _test: "bun runner.ts" },
   );
   const manifest = JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
   manifest.raypx.taskScripts = { test: "_test" };

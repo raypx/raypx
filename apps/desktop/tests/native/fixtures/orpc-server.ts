@@ -1,4 +1,3 @@
-import { serveHttp } from "@raypx/runtime-node/http";
 import { ORPCError, os } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 
@@ -57,7 +56,7 @@ const router = {
   },
 };
 const handler = new RPCHandler(router);
-const server = await serveHttp({
+const server = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
   async fetch(request) {

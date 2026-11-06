@@ -1,12 +1,11 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
-import { connectDaemon, type ProfileOptions } from "./endpoint.ts";
-import { installStableCli, stableCliLaunch, raypxHome } from "./connectors.ts";
-import { profilePath } from "../state/index.ts";
-import { LocalError } from "../errors.ts";
+import { connectDaemon, type ProfileOptions } from "./endpoint";
+import { installStableCli, stableCliLaunch, raypxHome } from "./connectors";
+import { profilePath } from "../state";
+import { LocalError } from "../errors";
 
 const xml = (value: string) =>
   value
@@ -65,7 +64,7 @@ export async function configureService(options: ProfileOptions, action: "install
       "Service file was edited; preserve and review it before changing the installation",
     );
   if (action === "uninstall") {
-    const child = spawnProcess(["/bin/launchctl", "bootout", `gui/${process.getuid()}/${label}`], {
+    const child = Bun.spawn(["/bin/launchctl", "bootout", `gui/${process.getuid()}/${label}`], {
       stdout: "ignore",
       stderr: "ignore",
     });
@@ -85,7 +84,7 @@ export async function configureService(options: ProfileOptions, action: "install
   } catch (error) {
     if (!(error instanceof LocalError) || error.code !== "HOST_NOT_RUNNING") throw error;
   }
-  const child = spawnProcess(["/bin/launchctl", "bootstrap", `gui/${process.getuid()}`, file], {
+  const child = Bun.spawn(["/bin/launchctl", "bootstrap", `gui/${process.getuid()}`, file], {
     stdout: "ignore",
     stderr: "ignore",
   });

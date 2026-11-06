@@ -1,15 +1,14 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { isAbsolute, join } from "node:path";
 import { stat } from "node:fs/promises";
 import type { LocalEvent, ToolResult } from "@raypx/contracts/local";
 import type { CommandSpec } from "@raypx/jobs-model";
-import { LocalError } from "../errors.ts";
-import type { Environment } from "./tools.ts";
-import { HerdrTerminalHost } from "./herdr.ts";
-import { resolveHerdrBinary } from "./herdr-release.ts";
+import { LocalError } from "../errors";
+import type { Environment } from "./bun";
+import { HerdrTerminalHost } from "./herdr";
+import { resolveHerdrBinary } from "./herdr-release";
 
 const MAX_OUTPUT = 1024 * 1024;
-type Child = ReturnType<typeof spawnProcess<{ stdin: "ignore" }>>;
+type Child = ReturnType<typeof Bun.spawn>;
 export class ProcessRuntime {
   private readonly children = new Map<string, { child: Child; cancel: () => void }>();
   private readonly completions = new Set<Promise<unknown>>();
@@ -34,7 +33,7 @@ export class ProcessRuntime {
   private kill(child: Child) {
     if (process.platform === "win32") {
       // taskkill /T is the Windows process-tree operation; no shell interpolation.
-      const killer = spawnProcess(
+      const killer = Bun.spawn(
         [
           join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"),
           "/PID",
@@ -81,7 +80,7 @@ export class ProcessRuntime {
     if (this.children.has(id))
       throw new LocalError("DUPLICATE_ID", "A command with this ID is already running");
     let cancelled = false;
-    const child = spawnProcess([command.executable, ...command.args], {
+    const child = Bun.spawn([command.executable, ...command.args], {
       cwd: command.cwd,
       env: this.environment(),
       stdin: "ignore",

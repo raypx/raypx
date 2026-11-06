@@ -35,7 +35,7 @@ in adapters. Preserve current field limits, defaults and activity revision rules
 
 ## Verification
 
-Run pnpm --dir packages/core run check and test, then the contracts consumer suites.
+Run bun run --cwd packages/core check and test, then the contracts consumer suites.
 
 ModelSelection and ModelCatalog are pure domain metadata; connection fingerprints contain no credentials. TerminalProvider is narrower than AgentProvider.
 

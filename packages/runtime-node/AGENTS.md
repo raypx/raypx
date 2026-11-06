@@ -1,6 +1,6 @@
-# Node runtime services
+# Node-compatible runtime services
 
-Small Node-only filesystem, process and HTTP services used by CLI, Relay and
+Small Node-compatible filesystem, process and HTTP services run under Bun for CLI, Relay and
 repository tooling. Keep application execution, authorization and scheduling in
 their owners. Public entries require real consumers. Never depend on Tooling:
 its task registration follows the TypeScript presets' bootstrap pattern.

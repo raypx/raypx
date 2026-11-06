@@ -1,10 +1,9 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { agentPort } from "./remote-agent-port.ts";
+import { agentPort } from "./remote-agent-port";
 import { afterEach, expect, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RemoteControl } from "../../src/runtime/daemon/remote/control.ts";
+import { RemoteControl } from "../../src/runtime/daemon/remote/control";
 import {
   RELAY_VERSION,
   relayClientSchema,
@@ -41,7 +40,7 @@ export function hostFixtures() {
     ) {
       return { send: (frame: RelayServerFrame) => send(JSON.stringify(frame)), close };
     }
-    const server = await serveHttp<{ peer: ReturnType<typeof sendSocket> }>({
+    const server = Bun.serve<{ peer: ReturnType<typeof sendSocket> }>({
       hostname: "127.0.0.1",
       port: 0,
       fetch(request, listener) {

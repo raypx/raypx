@@ -1,10 +1,7 @@
-import { createConnection } from "node:net";
-import { serveHttp } from "@raypx/runtime-node/http";
-import { runProcessSync, sleep, findExecutable } from "@raypx/runtime-node/process";
 import { copyFile, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Evidence, type ValidationProcess } from "./evidence.ts";
+import { Evidence, type ValidationProcess } from "./evidence.js";
 
 export function backendEnvironment(
   source: NodeJS.ProcessEnv,
@@ -26,17 +23,13 @@ export function backendEnvironment(
 }
 
 function executable(name: string, directory?: string) {
-  const value = findExecutable(directory ? join(directory, name) : name);
+  const value = Bun.which(directory ? join(directory, name) : name);
   if (!value) throw new Error(`Missing ${name}; configure TEST_POSTGRES_BIN or PATH`);
   return value;
 }
 async function freePort() {
-  const server = await serveHttp({
-    hostname: "127.0.0.1",
-    port: 0,
-    fetch: () => new Response(null),
-  });
-  const port = server.port;
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
+  const port = server.port!;
   await server.stop(true);
   return port;
 }
@@ -46,7 +39,7 @@ async function ready(evidence: Evidence, child: ValidationProcess, probe: () => 
     evidence.check();
     if (!child.alive()) throw new Error(`Validation service exited; see ${evidence.directory}`);
     if (await probe()) return;
-    await sleep(100);
+    await Bun.sleep(100);
   }
   throw new Error(`Validation service startup timed out; see ${evidence.directory}`);
 }
@@ -69,7 +62,7 @@ export async function validateBackends(root: string, args: string[]) {
       executable(name, process.env.TEST_POSTGRES_BIN),
     ]),
   );
-  const redisBinary = findExecutable(process.env.TEST_REDIS_BINARY ?? "redis-server");
+  const redisBinary = Bun.which(process.env.TEST_REDIS_BINARY ?? "redis-server");
   if (!redisBinary) throw new Error("Missing redis-server; configure TEST_REDIS_BINARY or PATH");
   const evidence = new Evidence(root, "backends");
   await evidence.run(async () => {
@@ -108,7 +101,7 @@ export async function validateBackends(root: string, args: string[]) {
         evidence,
         postgres,
         async () =>
-          runProcessSync(
+          Bun.spawnSync(
             [pg.pg_isready!, "-h", "127.0.0.1", "-p", String(port), "-U", "raypx_validation"],
             { stdout: "ignore", stderr: "ignore" },
           ).exitCode === 0,
@@ -146,14 +139,17 @@ export async function validateBackends(root: string, args: string[]) {
         ]);
         await ready(evidence, redis, async () => {
           try {
-            await new Promise<void>((resolve, reject) => {
-              const connection = createConnection({ host: "127.0.0.1", port: redisPort });
-              connection.once("connect", () => {
-                connection.end();
-                resolve();
-              });
-              connection.once("error", reject);
+            const connection = await Bun.connect({
+              hostname: "127.0.0.1",
+              port: redisPort,
+              socket: {
+                data() {},
+                open(socket) {
+                  socket.end();
+                },
+              },
             });
+            connection.end();
             return true;
           } catch {
             return false;
@@ -170,8 +166,7 @@ export async function validateBackends(root: string, args: string[]) {
           label,
           [
             process.execPath,
-            "--import",
-            import.meta.resolve("tsx"),
+            "--no-env-file",
             cli,
             "tasks",
             `api#${task}`,
@@ -193,8 +188,7 @@ export async function validateBackends(root: string, args: string[]) {
           "control-api",
           [
             process.execPath,
-            "--import",
-            import.meta.resolve("tsx"),
+            "--no-env-file",
             join(root, "apps/api/tests/helpers/control-server.ts"),
           ],
           { ...env, RAYPX_VALIDATION: "1", CONTROL_E2E_PORT: String(apiPort) },
@@ -210,8 +204,7 @@ export async function validateBackends(root: string, args: string[]) {
           "e2e",
           [
             process.execPath,
-            "--import",
-            import.meta.resolve("tsx"),
+            "--no-env-file",
             cli,
             "e2e",
             "--",

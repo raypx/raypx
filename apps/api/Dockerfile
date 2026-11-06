@@ -1,58 +1,54 @@
 # syntax=docker/dockerfile:1
-ARG NODE_VERSION=24.22.2
-FROM node:${NODE_VERSION}-bookworm AS node
+# The bun, manifests and dependencies stages match apps/web/Dockerfile exactly, so
+# one builder reuses the installed workspace for both images.
+FROM oven/bun:1.4.4 AS bun
+
+FROM bun AS manifests
 WORKDIR /app
-
-FROM node AS pnpm
-COPY package.json ./
-RUN npm install --global "$(node -p 'require("./package.json").packageManager')"
-
-FROM pnpm AS manifests
 COPY . .
-RUN node deploy/manifests.ts /app /manifests
+RUN bun deploy/manifests.ts /app /manifests
 
-FROM pnpm AS dependencies
+# Dependencies change only with package manifests or bun.lock, not with source edits.
+FROM bun AS dependencies
+WORKDIR /app
 COPY --from=manifests /manifests/ ./
-RUN VP_GIT_HOOKS=0 pnpm install --frozen-lockfile \
-    --filter . --filter '{./apps/api}...'
+RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
-FROM dependencies AS migration-build
-COPY . .
-RUN pnpm --dir packages/database run build
-
-FROM dependencies AS fixture-build
-COPY . .
-RUN pnpm --dir apps/api run build:fixture
-
-FROM node:${NODE_VERSION}-bookworm-slim AS fixture
+FROM bun AS migrate-dependencies
 WORKDIR /app
-COPY --from=fixture-build --chown=node:node /app/apps/api/artifacts/fixture ./fixture
-USER node
-CMD ["node", "fixture/deployment.mjs"]
+COPY --from=manifests /manifests/ ./
+RUN bun install --frozen-lockfile --production --filter @raypx/database --ignore-scripts
 
-FROM node:${NODE_VERSION}-bookworm-slim AS migrate
+FROM manifests AS migration-sources
+RUN bun deploy/sources.ts /app /migration-sources @raypx/database
+
+FROM migrate-dependencies AS migration-payload
+COPY --from=migration-sources /migration-sources/ ./
+COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
+
+FROM bun AS migrate
 WORKDIR /app
-COPY --from=migration-build --chown=node:node /app/packages/database/dist ./migration/dist
-COPY --from=migration-build --chown=node:node /app/packages/database/drizzle-foundation ./migration/drizzle-foundation
-USER node
-CMD ["node", "migration/dist/commands.mjs", "migrate"]
+COPY --from=migration-payload /app/ ./
+USER bun
+CMD ["bun", "run", "--cwd", "packages/database", "migrate"]
 
 FROM dependencies AS build
 COPY . .
 ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
-ENV VITE_APP_RELEASE=$VITE_APP_RELEASE RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
-# Build sandboxes may already own a seccomp listener; VP's syscall tracing cannot nest.
-RUN pnpm run build:api --no-cache
+ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
+ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
+RUN bun run build:api
 
-FROM node:${NODE_VERSION}-bookworm-slim AS runtime
+FROM oven/bun:1.4.4-slim AS runtime
 ENV NODE_ENV=production NITRO_PORT=3002 HOST=0.0.0.0
 WORKDIR /app
-COPY --from=build --chown=node:node /app/apps/api/.output ./.output
-USER node
+COPY --from=build --chown=bun:bun /app/apps/api/.output ./.output
+USER bun
 EXPOSE 3002
-CMD ["node", ".output/server/index.mjs"]
+CMD ["bun", ".output/server/index.mjs"]
 
+# The default image supports pre-deploy migrations. Select runtime for an API-only
+# image, or migrate for an isolated migration job without the API build.
 FROM runtime AS deploy
-COPY --from=migration-build --chown=node:node /app/packages/database/dist ./migration/dist
-COPY --from=migration-build --chown=node:node /app/packages/database/drizzle-foundation ./migration/drizzle-foundation
+COPY --from=migration-payload --chown=bun:bun /app/ ./

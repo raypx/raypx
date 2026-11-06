@@ -3,14 +3,14 @@
 This directory owns Dokploy Compose deployment and shared image source staging.
 Build from the repository root with `build.sh`; Compose and Railway share the
 Dockerfiles in apps/api, apps/web and infra/relay. Keep install/build commands in those files.
-`workspaces.ts` uses the pinned pnpm CLI to discover native workspace configuration
-before project dependency installation. Docker installs pnpm in a shared bootstrap stage.
-`manifests.ts` stages workspace metadata and tracked Kit preview archives before dependency installation. Each
+`workspaces.ts` discovers Bun workspace patterns from the root manifest before
+project dependency installation. Docker uses the same pinned Bun runtime.
+`manifests.ts` stages workspace metadata before dependency installation. Each
 service installs its own workspace dependency closure and root build tools through
-pnpm filters. API's `migration-build` bundles the independent Node migration command;
+Bun filters. API's `migration-build` bundles the independent Bun migration command;
 `migrate` and `deploy` copy it with canonical SQL. The separate `fixture` target is
 only for deployment acceptance; production images do not build or ship it.
-`build.sh` adds Compose-only pnpm cache mounts to temporary copies and removes them on exit.
+`build.sh` adds Compose-only Bun cache mounts to temporary copies and removes them on exit.
 Image builds use VP's `--no-cache` to avoid nesting syscall tracking inside build
 sandboxes with existing seccomp listeners; Docker layers own image build caching.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`

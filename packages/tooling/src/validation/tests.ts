@@ -1,9 +1,8 @@
-import { readJsonFile } from "@raypx/runtime-node/files";
 import { copyFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { discover } from "../repository.ts";
-import { Evidence } from "./evidence.ts";
-import { baselineCases, collectInventory, compareCases, ownerMap } from "./inventory.ts";
+import { discover } from "../repository.js";
+import { Evidence } from "./evidence.js";
+import { baselineCases, collectInventory, compareCases, ownerMap } from "./inventory.js";
 
 export async function auditTests(root: string, args: string[], cwd = root) {
   let layers = false,
@@ -24,8 +23,8 @@ export async function auditTests(root: string, args: string[], cwd = root) {
   }
   if (owners && !baseline) throw new Error("--owners requires --baseline");
   // Load comparison inputs before starting a new run. Never mutate a baseline.
-  const before = baseline ? baselineCases(await readJsonFile(baseline)) : undefined;
-  const mapping = owners ? ownerMap(await readJsonFile(owners)) : {};
+  const before = baseline ? baselineCases(await Bun.file(baseline).json()) : undefined;
+  const mapping = owners ? ownerMap(await Bun.file(owners).json()) : {};
   const evidence = new Evidence(root, "tests");
   await evidence.run(async () => {
     const reports: string[] = [];
@@ -35,8 +34,7 @@ export async function auditTests(root: string, args: string[], cwd = root) {
       reports.push(report);
       await evidence.command(layer, [
         process.execPath,
-        "--import",
-        import.meta.resolve("tsx"),
+        "--no-env-file",
         join(root, "packages/tooling/src/cli.ts"),
         "tasks",
         task,

@@ -1,4 +1,4 @@
-import type { VerificationPlan } from "./plan.ts";
+import type { VerificationPlan } from "./plan.js";
 
 export const gateDefinitions = [
   { name: "javascript", flag: undefined },
@@ -18,7 +18,7 @@ export function requiredGates(flags: Record<string, string>) {
 export function ciOutputs(plan: VerificationPlan & { distribution: boolean }, revision: string) {
   if (!revision) throw new Error("CI plan requires a commit revision");
   return {
-    rust: String(plan.native),
+    go: String(plan.native),
     native: String(plan.nativeRunners.length > 0),
     native_runners: JSON.stringify(plan.nativeRunners),
     deployment: String(plan.deployment),

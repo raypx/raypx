@@ -14,10 +14,10 @@ import {
   type DeviceGrant,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
-import type { HostAgentPort } from "./agent-port.ts";
-import { serverOrigin } from "./origin.ts";
+import type { HostAgentPort } from "./agent-port";
+import { serverOrigin } from "./origin";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-import { readRemoteControlSettings, type Settings, type Binding } from "./settings.ts";
+import { readRemoteControlSettings, type Settings, type Binding } from "./settings";
 export class RemoteControl {
   private readonly settings: Settings;
   private storageUnavailable = false;
@@ -231,9 +231,6 @@ export class RemoteControl {
           const pending = this.message(frame, generation).catch(() => {
             if (generation === this.generation) {
               this.error = "NETWORK_UNAVAILABLE";
-              this.ready = false;
-              this.connected = false;
-              this.options.connected?.(false);
               this.connection?.restart();
             }
           });
@@ -457,9 +454,6 @@ export class RemoteControl {
       .catch(() => {
         if (generation === this.generation) {
           this.error = "NETWORK_UNAVAILABLE";
-          this.ready = false;
-          this.connected = false;
-          this.options.connected?.(false);
           this.connection?.restart();
         }
       })

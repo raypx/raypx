@@ -1,8 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
-  symlinkSync,
-  chmodSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -11,76 +9,59 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
 const roots: string[] = [];
 function fixture() {
-  const repository = mkdtempSync(join(tmpdir(), "raypx-desktop-task-"));
-  const workspace = join(repository, "apps/desktop");
-  roots.push(repository);
-  mkdirSync(join(workspace, "scripts/host"), { recursive: true });
+  const root = mkdtempSync(join(tmpdir(), "raypx-desktop-task-"));
+  roots.push(root);
+  mkdirSync(join(root, "scripts/host"), { recursive: true });
   copyFileSync(
     join(import.meta.dirname, "../../../scripts/host/task.ts"),
-    join(workspace, "scripts/host/task.ts"),
-  );
-  mkdirSync(join(workspace, "node_modules/@raypx"), { recursive: true });
-  symlinkSync(
-    resolve(import.meta.dirname, "../../../../../packages/runtime-node"),
-    join(workspace, "node_modules/@raypx/runtime-node"),
-    "dir",
-  );
-  mkdirSync(join(workspace, "node_modules/.bin"), { recursive: true });
-  writeFileSync(
-    join(workspace, "node_modules/.bin/vp"),
-    '#!/usr/bin/env node\nprocess.argv.splice(2,0,"vp");await import("../../record.mjs");\n',
-  );
-  chmodSync(join(workspace, "node_modules/.bin/vp"), 0o755);
-  const recorder = `import { appendFileSync } from "node:fs";
-const [name, ...args] = process.argv.slice(2);
-const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^RAYPX_DESKTOP_.*_ARGS$/.test(key)));
-appendFileSync(process.env.TASK_TEST_EVENTS, JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
-if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`;
-  writeFileSync(
-    join(workspace, "scripts/host/generate.ts"),
-    'process.argv.splice(2, 0, "native:generate"); await import("../../record.mjs");',
+    join(root, "scripts/host/task.ts"),
   );
   writeFileSync(
-    join(repository, "package.json"),
-    JSON.stringify({
-      type: "module",
-      scripts: { "raypx-dev": "node record.mjs raypx-dev" },
-    }),
+    join(root, "scripts/host/generate.ts"),
+    'process.argv.splice(2, 0, "native:generate"); await import("../../record.ts");',
   );
-  writeFileSync(join(repository, "record.mjs"), recorder);
-  writeFileSync(join(workspace, "record.mjs"), recorder);
   writeFileSync(
-    join(workspace, "package.json"),
+    join(root, "package.json"),
     JSON.stringify({
       type: "module",
       scripts: Object.fromEntries(
-        ["typecheck", "typecheck:node", "native:csp", "tauri:dev", "tauri:build"].map((name) => [
-          name,
-          `node record.mjs ${name}`,
-        ]),
+        [
+          "raypx-dev",
+          "typecheck",
+          "typecheck:node",
+          "perf:check",
+          "native:csp",
+          "vp",
+          "mygo:dev",
+          "mygo:build",
+        ].map((name) => [name, `bun record.ts ${name}`]),
       ),
     }),
   );
-  mkdirSync(join(workspace, "tests/native/smoke"), { recursive: true });
+  writeFileSync(
+    join(root, "record.ts"),
+    `import { appendFileSync } from "node:fs";
+const [name, ...args] = process.argv.slice(2);
+const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^RAYPX_DESKTOP_.*_ARGS$/.test(key)));
+appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
+if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
+  );
+  mkdirSync(join(root, "tests/native/smoke"), { recursive: true });
   for (const file of ["run", "agents-run"])
     writeFileSync(
-      join(workspace, `tests/native/smoke/${file}.ts`),
-      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.mjs");`,
+      join(root, `tests/native/smoke/${file}.ts`),
+      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.ts");`,
     );
   return (
     task: string,
     options: { leaf?: boolean; args?: string[]; forwarded?: string[]; fail?: string } = {},
   ) => {
-    const env: NodeJS.ProcessEnv = {
-      ...process.env,
-      TASK_TEST_EVENTS: join(repository, "events.jsonl"),
-      TASK_TEST_FAIL: options.fail,
-    };
+    const env: NodeJS.ProcessEnv = { ...process.env, TASK_TEST_FAIL: options.fail };
 
     delete env.RAYPX_DESKTOP_BROWSER_BUILD;
     for (const key of [
@@ -91,6 +72,7 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`;
       "RAYPX_DESKTOP_NATIVE_SMOKE_ARGS",
       "RAYPX_DESKTOP_NATIVE_BUILD_ARGS",
       "RAYPX_DESKTOP_NATIVE_SMOKE_INTERACTIVE_ARGS",
+      "RAYPX_DESKTOP_NATIVE_BETA_ARGS",
       "RAYPX_DESKTOP_NATIVE_AGENTS_ARGS",
     ])
       delete env[key];
@@ -101,22 +83,21 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`;
     const result = spawnSync(
       process.execPath,
       [
-        "--import",
-        import.meta.resolve("tsx"),
-        join(workspace, "scripts/host/task.ts"),
+        "run",
+        join(root, "scripts/host/task.ts"),
         ...(options.leaf ? ["--leaf"] : []),
         task,
         ...(options.args ?? []),
       ],
       {
-        cwd: workspace,
+        cwd: root,
         env,
         encoding: "utf8",
         timeout: 15_000,
       },
     );
-    const events = existsSync(join(repository, "events.jsonl"))
-      ? readFileSync(join(repository, "events.jsonl"), "utf8")
+    const events = existsSync(join(root, "events.jsonl"))
+      ? readFileSync(join(root, "events.jsonl"), "utf8")
           .trim()
           .split("\n")
           .map((line) => JSON.parse(line) as { name: string; args: string[] })
@@ -169,23 +150,24 @@ describe("Desktop task graph entry", () => {
       "native:generate",
       "typecheck",
       "typecheck:node",
+      "perf:check",
     ]);
   });
 
-  it("uses the Tauri development leaf and preserves its arguments", () => {
+  it("uses the MyGo development leaf and preserves its arguments", () => {
     const result = fixture()("dev", { leaf: true, args: ["--verbose"] });
     expect(result.status).toBe(0);
-    expect(result.events).toEqual([{ name: "tauri:dev", args: ["--verbose"], forwarded: {} }]);
+    expect(result.events).toEqual([{ name: "mygo:dev", args: ["--verbose"], forwarded: {} }]);
   });
 
-  it("packages Tauri through the qualified native build leaf", () => {
-    const result = fixture()("native:build", { leaf: true, forwarded: ["--verbose"] });
+  it("packages MyGo through the qualified native build leaf", () => {
+    const result = fixture()("native:build", { leaf: true, forwarded: ["-skip-dmg"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
-        name: "tauri:build",
-        args: ["--verbose"],
-        forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["--verbose"]' },
+        name: "mygo:build",
+        args: ["-skip-dmg"],
+        forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["-skip-dmg"]' },
       },
     ]);
   });
@@ -217,7 +199,7 @@ describe("Desktop task graph entry", () => {
     ["native:smoke", "smoke-run", []],
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
     ["native:agents", "smoke-agents-run", []],
-  ] as const)("runs the Tauri %s gate inside VP", (task, name, args) => {
+  ] as const)("runs the MyGo %s gate inside VP", (task, name, args) => {
     const result = fixture()(task, { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([{ name, args, forwarded: {} }]);

@@ -9,7 +9,7 @@ runs:
   steps:
     - shell: bash
       id: changes
-      run: pnpm run raypx-dev ci:cache changed
+      run: bun run raypx-dev ci:cache changed
     - uses: actions/cache/save@v6
       if: steps.changes.outputs.changed == 'true'
       with:

@@ -14,23 +14,23 @@ manifest and lockfile stay untouched.
 
 ```sh
 cd ../raypx-kit/packages/intl
-pnpm run build        # or keep `pnpm run dev` running
-pnpm link
+bun run build        # or keep `bun run dev` running
+bun link
 cd ../../../raypx
-pnpm link @raypx-kit/intl
+bun link @raypx-kit/intl
 ```
 
 The link points at the Raypx Kit checkout, which has its own React. Every Vite and
 Vitest config dedupes `react` and `react-dom` so that links never create a
 second React. Run
-`pnpm install` to return to the registry version.
+`bun install` to return to the registry version.
 
 ## 2. Pin a snapshot on the branch
 
-From a clean Raypx Kit branch, `pnpm run release:snapshot` packs and verifies
+From a clean Raypx Kit branch, `bun run release:snapshot` packs and verifies
 `0.0.0-next-<timestamp>-<commit>` previews. Publishing them with `--publish`
 (under the `next` dist-tag) is a maintainer action. Once the snapshot is published,
-set the root catalog entry to that exact version and run `pnpm install`, so the
+set the root catalog entry to that exact version and run `bun install`, so the
 Raypx branch installs and passes CI on its own. Packing alone does not make the
 printed version resolvable from npm.
 
@@ -40,8 +40,8 @@ For a new, unpublished package, track its verified compiled archive
 inside Raypx rather than depending on another checkout or a temporary directory:
 
 1. Verify the Raypx Kit source and record its provenance. For a clean source commit,
-   record `sourceCommit` and run `pnpm run release:snapshot <package>` without
-   `--publish`, or pack the verified package with `pnpm pack --ignore-scripts`.
+   record `sourceCommit` and run `bun run release:snapshot <package>` without
+   `--publish`, or pack the verified package with `bun pm pack --ignore-scripts`.
    For an uncommitted implementation, use the direct pack command and record
    `sourceBaseCommit`, an explicit uncommitted `sourceWorkingTree` marker and a
    SHA256 checksum for every package source, test, configuration and documentation
@@ -55,23 +55,23 @@ inside Raypx rather than depending on another checkout or a temporary directory:
    `vendor/README.md`.
 3. Point the root runtime catalog at `file:vendor/<archive>.tgz`. Each consuming
    workspace still declares the package through `catalog:`. Commit the
-   archive, metadata, catalog change and regenerated `pnpm-lock.yaml` together. Use a
+   archive, metadata, catalog change and regenerated `bun.lock` together. Use a
    new filename whenever archive contents change, even if the manifest version
    is unchanged, to avoid stale package-manager caches.
 4. In an isolated Raypx checkout without a sibling Raypx Kit checkout, run
-   `pnpm install --frozen-lockfile`, the affected workspace tests and
-   `pnpm run verify`. Inspect the lockfile for repository-relative archive paths
+   `bun install --frozen-lockfile`, the affected workspace tests and
+   `bun run verify`. Inspect the lockfile for repository-relative archive paths
    and integrity hashes; it must not refer to temporary or absolute paths.
 
 These tracked archives make a review branch reproducible. They are not editable
 source forks, publication claims or an exception to the merge gate below. Keep
-reusable implementation in Raypx Kit. A `pnpm link` installation alone is not a
+reusable implementation in Raypx Kit. A `bun link` installation alone is not a
 reproducible branch dependency.
 
 ## 3. Replace the snapshot before merging
 
 After Raypx Kit releases its alpha, set the catalog to that exact version, run
-`pnpm install` and `pnpm run verify`, and remove the corresponding preview archive
+`bun install` and `bun run verify`, and remove the corresponding preview archive
 and metadata in the same change. Confirm the alpha resolves from the registry.
 Never merge with a snapshot version, a range, a `link:` or a tarball path.
 

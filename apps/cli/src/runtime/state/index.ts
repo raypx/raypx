@@ -1,16 +1,16 @@
 import { z } from "zod";
 import { rootGrantSchema } from "@raypx/contracts/local";
 import { jobInputSchema, jobRunSchema } from "@raypx/jobs-model";
-import { storedRecord } from "../sqlite/records.ts";
-import { DatabaseSync as Database } from "node:sqlite";
+import { storedRecord } from "../sqlite/records";
+import { Database } from "bun:sqlite";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { and, asc, desc, eq, lt, notInArray, or, sql } from "drizzle-orm";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobInput, JobRun } from "@raypx/jobs-model";
-import { LocalError } from "../errors.ts";
-import { type ProfileStorage, type LocalDatabase } from "../sqlite/index.ts";
-import { jobs, meta, roots, runs } from "../sqlite/schema.ts";
+import { LocalError } from "../errors";
+import { type ProfileStorage, type LocalDatabase } from "../sqlite";
+import { jobs, meta, roots, runs } from "../sqlite/schema";
 
 export function profilePath(options: { dataDir?: string; profile?: string } = {}) {
   const profile = options.profile ?? "default";
@@ -155,7 +155,7 @@ export class StateStore {
 export function acquireLock(directory: string, name: string): (() => void) | null {
   if (!/^[a-zA-Z0-9_-]+$/.test(name))
     throw new LocalError("INVALID_LOCK", "Invalid lock identifier");
-  const db = new Database(join(directory, `${name}.lock.sqlite`), {});
+  const db = new Database(join(directory, `${name}.lock.sqlite`), { create: true });
   try {
     db.exec("PRAGMA busy_timeout=0; BEGIN IMMEDIATE;");
   } catch {

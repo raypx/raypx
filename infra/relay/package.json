@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "raypx-dev env -- tsx watch src/main.ts",
-    "start": "node dist/main.js",
-    "build": "vp build --config vite.app.config.ts",
+    "dev": "raypx-dev env -- bun --watch src/main.ts",
+    "start": "bun dist/main.js",
+    "build": "bun --bun vp build --config vite.app.config.ts",
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "vp test --run",
-    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:integration": "vp test --run tests/integration"
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:integration": "bun --bun vp test --run tests/integration"
   },
   "dependencies": {
     "@raypx/contracts": "workspace:*",
@@ -19,17 +19,17 @@
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/memory-server": "workspace:*",
-    "@raypx/runtime-node": "workspace:*",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",
-    "target": "node"
+    "target": "bun"
   }
 }

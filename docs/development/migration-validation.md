@@ -1,8 +1,11 @@
-# Tauri / Node / pnpm migration validation
+# Historical Tauri / Node / pnpm validation
 
-The implementation follows [ADR 0045](../architecture/0045-tauri-node-pnpm.md).
-This record includes historical Linux x64 measurements, a current CLI package
-measurement and macOS and Windows packaged Desktop smoke results from 2026-11-06.
+This record describes the retired [ADR 0045](../architecture/0045-tauri-node-pnpm.md)
+implementation. Its Linux measurements and 2026-11-06 macOS/Windows smoke results
+remain baseline evidence; none establish acceptance of the current MyGo/Bun build.
+Current commands, evidence and remaining gates live in the
+[MyGo/Bun implementation guide](mygo-bun-migration-plan.md) and
+[ADR 0046](../architecture/0046-mygo-bun-artifacts.md).
 
 ## Historical Runtime Measurement
 
@@ -59,7 +62,7 @@ The intermediate uncompressed Linux x64 distribution fell by 56.40 MiB (20.9%).
 These figures sum regular-file bytes and do not measure archive/download size or
 other platform installers. They are superseded by the current measurement below.
 
-## Current CLI Distribution
+## Final Node CLI distribution (retired)
 
 A fresh Linux x64 build was measured on 2026-11-06 with:
 
@@ -69,7 +72,7 @@ pnpm run size --package cli --require
 pnpm exec tsx apps/cli/tests/smoke/metrics.ts
 ```
 
-The current installable `@raypx/cli` package requires supported system Node and gets
+That installable `@raypx/cli` package required supported system Node and got
 project package managers from the user's environment. It contains no Node or pnpm
 runtime. One portable npm package includes verified Herdr assets for all supported
 platforms, which account for most of its unpacked size. The metrics probe used a
@@ -88,13 +91,13 @@ synthetic enrolled profile, empty PATH and a working directory outside the repos
 | Idle daemon process RSS            |       100.80 MiB |
 
 Daemon readiness includes CLI status polling. RSS covers the Node owner process with
-no active task. Desktop staging adds Node and a native launcher and keeps only the
+no active task. That Desktop staging added Node and a native launcher and kept only the
 host's Herdr assets; macOS/Windows installer size and startup still require their
 platform runners.
 
 ## Build output size snapshot
 
-`pnpm run size` now records all buildable workspaces without starting services or
+The historical `pnpm run size` recorded all buildable workspaces without starting services or
 using a profile. The existing Linux x64 outputs on 2026-11-05 measured:
 
 | Package            | Output                  |       Size |
@@ -165,9 +168,6 @@ notarization and Windows locked-file handling.
 [Desktop release guide](desktop.md#build-and-release)
 Linux Desktop remains unaccepted. No installer has been published.
 
-Before the first Tauri release, stop the old daemon explicitly, exit the previous
-Desktop app and wait for the shared instance lock to release. Use a signed installer that preserves
-the app identity and data directory. Configure a new Tauri update signing key and
-feed. Sign in once into the new native session store; this must not reset offline
-identity or automatically change remote grants. Publish only artifacts whose
-selected platform matrix has passed.
+The Tauri release/update instructions are retired. MyGo uses its own session and
+update namespaces; follow the current [Desktop release guide](desktop.md#build-and-release)
+and complete the new platform matrix before publishing.

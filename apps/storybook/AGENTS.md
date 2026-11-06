@@ -25,7 +25,7 @@ independent composition root and is never imported by another workspace.
 ## Verification
 
 ```sh
-pnpm --dir apps/storybook run check
-pnpm run build:storybook
-pnpm run dev:storybook
+bun run --cwd apps/storybook check
+bun run build:storybook
+bun run dev:storybook
 ```

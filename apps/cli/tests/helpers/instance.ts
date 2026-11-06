@@ -1,7 +1,6 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { resolve } from "node:path";
-import { profilePath } from "../../src/runtime/state/index.ts";
+import { stripVTControlCharacters } from "node:util";
+import { profilePath } from "../../src/runtime/state";
 import {
   enrollmentBeginSchema,
   enrollmentProof,
@@ -13,12 +12,8 @@ import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instan
 /** Enroll an owned temporary profile over HTTP; exercise production identity/key storage. */
 export async function enrollTestProfile(
   options: { dataDir: string; profile?: string },
-  launch: string[] = [
-    process.execPath,
-    "--import",
-    import.meta.resolve("tsx"),
-    resolve(import.meta.dirname, "../../src/main.ts"),
-  ],
+  launch: string[] = [process.execPath, resolve(import.meta.dirname, "../../src/main.ts")],
+  env: NodeJS.ProcessEnv = process.env,
 ) {
   const directory = profilePath(options);
   const signer = createInstanceSigner("isolated-packaged-acceptance");
@@ -27,7 +22,7 @@ export async function enrollTestProfile(
   let binding: InstanceBinding | undefined;
   let stage = "before begin";
   const keyId = instanceDigest(directory);
-  const server = await serveHttp({
+  const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request): Promise<Response> {
@@ -83,7 +78,7 @@ export async function enrollTestProfile(
   };
   try {
     // Enroll with the executable under test; credentials stay in this temporary profile.
-    const child = spawnProcess(
+    const child = Bun.spawn(
       [
         ...launch,
         "login",
@@ -93,7 +88,7 @@ export async function enrollTestProfile(
         options.profile ?? "default",
       ],
       {
-        env: { ...process.env, RAYPX_API_URL: server.url.origin, RAYPX_WEB_URL: server.url.origin },
+        env: { ...env, RAYPX_API_URL: server.url.origin, RAYPX_WEB_URL: server.url.origin },
         stdout: "ignore",
         stderr: "pipe",
         windowsHide: true,
@@ -108,7 +103,7 @@ export async function enrollTestProfile(
       let phase = "not-started",
         scope = "unknown-slot",
         failureCode = "unavailable";
-      for (const line of diagnostics.split("\n")) {
+      for (const line of stripVTControlCharacters(diagnostics).split("\n")) {
         try {
           const event = JSON.parse(line);
           if (typeof event.code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(event.code))

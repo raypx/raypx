@@ -10,42 +10,47 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
 import { cliBuild } from "../daemon/build.ts";
 import { LocalError } from "../errors.ts";
 
 export interface InstallationManifest {
+  format: 1;
+  commit: string;
+  platform: string;
+  arch: string;
   version: string;
   builtAt: number;
-  nodeVersion: string;
-  runtime?: "system";
+  bunVersion: string;
+  herdrVersion: string;
   files: Record<string, string>;
 }
 const suffix = process.platform === "win32" ? ".exe" : "";
 export function cliInstallation() {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const bundled = existsSync(join(here, "runtime.json"));
-  const systemNode =
-    bundled && JSON.parse(readFileSync(join(here, "runtime.json"), "utf8")).runtime === "system";
-  return {
-    root: bundled ? here : resolve(here, "../../.."),
-    bundled,
-    systemNode,
-    node: bundled && !systemNode ? join(here, "runtime", "node" + suffix) : process.execPath,
-    entry: bundled ? join(here, "main.mjs") : resolve(here, "../../main.ts"),
-    launcher: bundled ? join(here, systemNode ? "main.mjs" : "raypx" + suffix) : null,
-  };
+  const bundled = cliBuild.builtAt > 0;
+  let root = bundled ? dirname(process.execPath) : resolve(import.meta.dirname, "../../..");
+  // Stable connector executable is an owned copy; resolve its complete immutable payload.
+  if (bundled && !existsSync(join(root, "runtime.json"))) {
+    const ownership = JSON.parse(readFileSync(join(root, "installation.json"), "utf8"));
+    if (
+      !/^versions\/[a-zA-Z0-9_.-]+$/.test(ownership.directory) ||
+      ownership.version !== cliBuild.version ||
+      ownership.builtAt !== cliBuild.builtAt ||
+      ownership.digest !== createHash("sha256").update(readFileSync(process.execPath)).digest("hex")
+    )
+      throw new LocalError("INSTALLATION_CONFLICT", "Invalid connector installation");
+    root = join(root, ownership.directory);
+  }
+  return { root, bundled, launcher: bundled ? process.execPath : null };
 }
 export function cliLaunch() {
-  const layout = cliInstallation();
-  return layout.bundled
-    ? [layout.node, layout.entry]
-    : [layout.node, "--import", import.meta.resolve("tsx"), layout.entry];
+  return cliInstallation().bundled ? [process.execPath] : [process.execPath, Bun.main];
 }
 export function verifyInstallation(
   root: string,
   expected: { version: string; builtAt: number } | null = cliBuild,
 ): InstallationManifest {
+  if (!lstatSync(join(root, "runtime.json")).isFile())
+    throw new LocalError("INSTALLATION_CONFLICT", "Invalid CLI runtime manifest");
   const manifest = JSON.parse(
     readFileSync(join(root, "runtime.json"), "utf8"),
   ) as InstallationManifest;
@@ -53,13 +58,20 @@ export function verifyInstallation(
     (expected !== null &&
       (manifest.version !== expected.version || manifest.builtAt !== expected.builtAt)) ||
     !manifest.files ||
-    typeof manifest.nodeVersion !== "string" ||
-    (manifest.runtime !== undefined && manifest.runtime !== "system")
+    typeof manifest.files !== "object" ||
+    Array.isArray(manifest.files) ||
+    !/^[a-f0-9]{40}$/.test(manifest.commit) ||
+    !Number.isSafeInteger(manifest.builtAt) ||
+    manifest.builtAt <= 0 ||
+    typeof manifest.version !== "string" ||
+    manifest.format !== 1 ||
+    manifest.platform !== process.platform ||
+    manifest.arch !== process.arch ||
+    typeof manifest.bunVersion !== "string" ||
+    typeof manifest.herdrVersion !== "string"
   )
     throw new LocalError("HOST_VERSION_MISMATCH", "CLI resources do not match this build");
-  for (const required of manifest.runtime === "system"
-    ? ["main.mjs"]
-    : ["main.mjs", "raypx" + suffix, "runtime/node" + suffix])
+  for (const required of ["raypx" + suffix, "herdr/runtime.json", "LICENSE", "README.txt"])
     if (!manifest.files[required])
       throw new LocalError("INSTALLATION_CONFLICT", "Incomplete CLI runtime manifest");
   const found = new Set<string>();

@@ -13,18 +13,27 @@ on:
 permissions:
   contents: read
 env:
-  PNPM_STORE_DIR: ${{ github.workspace }}/.cache/pnpm
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
-  # Only parallel distribution phases share prepared inputs; a lone check phase prepares itself.
+  # Prepare is the sole production CLI compiler on this platform.
   prepare:
     name: Prepare native inputs
-    if: inputs.distribution
     runs-on: ${{ inputs.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 25
+    outputs:
+      cli-artifact-id: ${{ steps.cli-payload.outputs.artifact-id }}
+    env:
+      APPLE_CERTIFICATE: ${{ inputs.distribution && secrets.APPLE_CERTIFICATE || '' }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ inputs.distribution && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+      APPLE_SIGNING_IDENTITY: ${{ inputs.distribution && secrets.APPLE_SIGNING_IDENTITY || '' }}
+      APPLE_ID: ${{ inputs.distribution && secrets.APPLE_ID || '' }}
+      APPLE_PASSWORD: ${{ inputs.distribution && secrets.APPLE_PASSWORD || '' }}
+      APPLE_TEAM_ID: ${{ inputs.distribution && secrets.APPLE_TEAM_ID || '' }}
+      WINDOWS_CERTIFICATE: ${{ inputs.distribution && secrets.WINDOWS_CERTIFICATE || '' }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ inputs.distribution && secrets.WINDOWS_CERTIFICATE_PASSWORD || '' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-node
-      - uses: ./.github/actions/setup-rust
+      - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
@@ -32,8 +41,98 @@ jobs:
       - name: Prepare CLI and distribution renderer
         shell: bash
         run: |
-          pnpm run build:desktop
-          pnpm run build:cli
+          bun run build:desktop
+          bun run build:cli
+      - name: Import macOS signing certificate
+        if: inputs.distribution && (runner.os == 'macOS' && env.APPLE_CERTIFICATE != '')
+        run: |
+          certificate_path="$RUNNER_TEMP/raypx-signing.p12"
+          keychain_path="$RUNNER_TEMP/raypx-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 32)"
+          trap 'rm -f "$certificate_path"' EXIT
+          printf '%s' "$APPLE_CERTIFICATE" | base64 -D > "$certificate_path"
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          echo "RAYPX_DESKTOP_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" -P "$APPLE_CERTIFICATE_PASSWORD" -k "$keychain_path" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain_path"
+          security list-keychains -d user -s "$keychain_path" "$HOME/Library/Keychains/login.keychain-db"
+          if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+            xcrun notarytool store-credentials raypx-ci --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --keychain "$keychain_path"
+            echo "RAYPX_NOTARY_PROFILE=raypx-ci" >> "$GITHUB_ENV"
+          fi
+      - name: Import Windows signing certificate
+        if: inputs.distribution && (runner.os == 'Windows' && env.WINDOWS_CERTIFICATE != '')
+        shell: pwsh
+        run: |
+          $certificatePath = Join-Path $env:RUNNER_TEMP "raypx-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+            $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+            $certificate = Import-PfxCertificate -FilePath $certificatePath -CertStoreLocation Cert:\CurrentUser\My -Password $password | Where-Object HasPrivateKey | Select-Object -First 1
+            if (-not $certificate) { throw "The signing certificate has no private key" }
+            $signTool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1
+            if (-not $signTool) { throw "The Windows SDK signing tool is unavailable" }
+            "RAYPX_WINDOWS_SIGNTOOL=$($signTool.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            "RAYPX_DESKTOP_SIGNING_THUMBPRINT=$($certificate.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          } finally {
+            Remove-Item $certificatePath -ErrorAction SilentlyContinue
+          }
+      - name: Sign and seal the shared CLI payload
+        shell: bash
+        run: bun apps/cli/scripts/distribution.ts sign
+      - name: Notarize the standalone CLI payload when credentials are configured
+        shell: bash
+        run: bun apps/cli/scripts/distribution.ts notarize
+      - name: Archive standalone CLI
+        shell: bash
+        run: bun apps/cli/scripts/distribution.ts archive
+      - name: Accept the final CLI archive
+        shell: bash
+        run: bun apps/cli/scripts/archive-smoke.ts
+      - name: Transport the immutable CLI directory
+        shell: bash
+        run: |
+          mkdir -p .artifacts
+          tar -cf .artifacts/cli-payload.tar -C apps/cli/dist .
+      - uses: actions/upload-artifact@v7
+        id: cli-payload
+        with:
+          name: cli-payload-${{ runner.os }}-${{ runner.arch }}
+          path: .artifacts/cli-payload.tar
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: inputs.distribution
+        with:
+          name: cli-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            .artifacts/distribution/*
+            .artifacts/distribution-notary/notarization.json
+            .artifacts/distribution-signing/*.json
+          if-no-files-found: error
+      - name: Remove temporary Windows signing material
+        if: (always() && runner.os == 'Windows')
+        shell: pwsh
+        run: |
+          if ($env:RAYPX_DESKTOP_SIGNING_THUMBPRINT) {
+            Remove-Item "Cert:\CurrentUser\My\$env:RAYPX_DESKTOP_SIGNING_THUMBPRINT" -ErrorAction SilentlyContinue
+          }
+          if ($env:RAYPX_DESKTOP_SIGNING_CONFIG) {
+            Remove-Item $env:RAYPX_DESKTOP_SIGNING_CONFIG -ErrorAction SilentlyContinue
+          }
+          if ($env:RAYPX_DESKTOP_BUNDLE_CONFIG) {
+            Remove-Item $env:RAYPX_DESKTOP_BUNDLE_CONFIG -ErrorAction SilentlyContinue
+          }
+      - name: Remove temporary macOS signing material
+        if: (always() && runner.os == 'macOS')
+        run: |
+          if [ -n "$RAYPX_DESKTOP_SIGNING_KEYCHAIN" ]; then
+            security delete-keychain "$RAYPX_DESKTOP_SIGNING_KEYCHAIN"
+          fi
+          if [ -n "$RAYPX_DESKTOP_BUNDLE_CONFIG" ]; then
+            rm -f "$RAYPX_DESKTOP_BUNDLE_CONFIG"
+          fi
       # One VP cache writer per platform. Consumers only restore prepared JS outputs.
       - uses: ./.github/actions/vp-save
         with:
@@ -41,7 +140,7 @@ jobs:
   verify:
     name: ${{ matrix.phase }}
     needs: prepare
-    if: ${{ !cancelled() && (needs.prepare.result == 'success' || needs.prepare.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.prepare.result == 'success' }}
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 45
     strategy:
@@ -49,6 +148,7 @@ jobs:
       matrix:
         phase: ${{ fromJSON(inputs.distribution && '["checks","package","smoke"]' || '["checks"]') }}
     env:
+      RAYPX_CLI_PAYLOAD: ${{ github.workspace }}/apps/cli/dist
       APPLE_CERTIFICATE: ${{ matrix.phase == 'package' && secrets.APPLE_CERTIFICATE || '' }}
       APPLE_CERTIFICATE_PASSWORD: ${{ matrix.phase == 'package' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
       APPLE_SIGNING_IDENTITY: ${{ matrix.phase == 'package' && secrets.APPLE_SIGNING_IDENTITY || '' }}
@@ -57,48 +157,36 @@ jobs:
       APPLE_TEAM_ID: ${{ matrix.phase == 'package' && secrets.APPLE_TEAM_ID || '' }}
       WINDOWS_CERTIFICATE: ${{ matrix.phase == 'package' && secrets.WINDOWS_CERTIFICATE || '' }}
       WINDOWS_CERTIFICATE_PASSWORD: ${{ matrix.phase == 'package' && secrets.WINDOWS_CERTIFICATE_PASSWORD || '' }}
-      TAURI_SIGNING_PRIVATE_KEY: ${{ matrix.phase == 'package' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
-      RAYPX_TAURI_UPDATER_PUBLIC_KEY: ${{ matrix.phase == 'package' && vars.RAYPX_TAURI_UPDATER_PUBLIC_KEY || '' }}
-      RAYPX_TAURI_UPDATER_URL: ${{ matrix.phase == 'package' && vars.RAYPX_TAURI_UPDATER_URL || '' }}
+      MYGO_UPDATER_PRIVATE_KEY: ${{ matrix.phase == 'package' && secrets.MYGO_UPDATER_PRIVATE_KEY || '' }}
+      RAYPX_MYGO_UPDATER_PUBLIC_KEY: ${{ matrix.phase == 'package' && vars.RAYPX_MYGO_UPDATER_PUBLIC_KEY || '' }}
+      RAYPX_MYGO_UPDATER_URL: ${{ matrix.phase == 'package' && vars.RAYPX_MYGO_UPDATER_URL || '' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-node
-      - uses: ./.github/actions/setup-rust
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/desktop/go.mod
+          cache-dependency-path: apps/desktop/go.sum
+      - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
           partition: desktop
-      - name: Prepare native check or distribution inputs
-        id: native-inputs
-        shell: bash
-        run: |
-          if [ "${{ matrix.phase }}" != "checks" ]; then
-            pnpm run build:desktop
-          fi
-          pnpm run build:cli
-      # Without a preparation job the check phase is the platform's only VP cache writer.
-      - uses: ./.github/actions/vp-save
-        if: ${{ !inputs.distribution }}
+      - uses: actions/download-artifact@v8
         with:
-          key: ${{ steps.vp-cache.outputs.key }}
-      - name: Report prepared build sizes
+          artifact-ids: ${{ needs.prepare.outputs.cli-artifact-id }}
+          path: .artifacts/prepared-cli
+          merge-multiple: true
+      - name: Verify prepared CLI and restore executable permissions
         shell: bash
         run: |
-          if [ "${{ matrix.phase }}" = "checks" ]; then
-            pnpm run size --package cli --require
-          else
-            pnpm run size --package cli --package desktop --require
-          fi
-      - name: Cross-platform process and task runners
-        if: matrix.phase == 'checks'
+          test -n "${{ needs.prepare.outputs.cli-artifact-id }}"
+          mkdir -p apps/cli/dist
+          tar -xf .artifacts/prepared-cli/cli-payload.tar -C apps/cli/dist
+          bun apps/cli/scripts/distribution.ts verify
+      - name: Prepare distribution renderer
+        if: matrix.phase != 'checks'
         shell: bash
-        run: |
-          pnpm --dir packages/runtime-node run test
-          pnpm --dir packages/tooling exec vp test --run tests/integration/task-leaf.test.ts src/build/archive.test.ts src/validation/build-size.test.ts
-      - name: Installed CLI package
-        if: matrix.phase == 'checks'
-        shell: bash
-        run: pnpm --dir apps/cli run smoke
+        run: bun run build:desktop
       - name: Herdr terminal integration
         if: matrix.phase == 'checks'
         env:
@@ -107,20 +195,24 @@ jobs:
           RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution && '3' || '1' }}
         shell: bash
         run: |
-          runs=1
-          if [ "$RUNNER_OS" = "Windows" ]; then runs="$RAYPX_HERDR_WINDOWS_RUNS"; fi
-          for ((attempt=0; attempt<runs; attempt++)); do
-            pnpm --dir apps/cli run smoke:herdr-terminal
-          done
-      - name: Desktop Tauri checks
-        if: ${{ !cancelled() && matrix.phase == 'checks' && steps.native-inputs.outcome == 'success' }}
+          bun - <<'TS'
+          const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
+          for (let attempt = 0; attempt < runs; attempt++) {
+            const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
+              stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
+            });
+            const code = await child.exited;
+            if (code !== 0) process.exit(code);
+          }
+          TS
+      - name: Desktop MyGo checks
+        if: matrix.phase == 'checks'
         env:
-          RAYPX_TAURI_CLI: ${{ github.workspace }}/apps/desktop/resources/bin/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
+          RAYPX_MYGO_CLI: ${{ github.workspace }}/apps/cli/dist/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
         shell: bash
         run: |
-          pnpm --dir apps/desktop exec tsx scripts/host/tauri.ts prepare-cli
-          pnpm --dir apps/desktop run tauri:check
-          pnpm --dir apps/desktop run tauri:test
+          bun run --cwd apps/desktop mygo:check
+          bun run --cwd apps/desktop mygo:test
       - name: Import macOS signing certificate
         if: matrix.phase == 'package' && (runner.os == 'macOS' && env.APPLE_CERTIFICATE != '')
         run: |
@@ -157,35 +249,31 @@ jobs:
           } finally {
             Remove-Item $certificatePath -ErrorAction SilentlyContinue
           }
-      - name: Check Tauri update configuration
+      - name: Check MyGo update configuration
         if: matrix.phase == 'package'
         shell: bash
         run: |
-          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
-            test -n "$RAYPX_TAURI_UPDATER_PUBLIC_KEY"
-            [[ "$RAYPX_TAURI_UPDATER_URL" == https://* ]]
+          if [ -n "$MYGO_UPDATER_PRIVATE_KEY" ]; then
+            test -n "$RAYPX_MYGO_UPDATER_PUBLIC_KEY"
+            [[ "$RAYPX_MYGO_UPDATER_URL" == https://* ]]
           else
-            echo "Tauri signed updates are not configured." >> "$GITHUB_STEP_SUMMARY"
+            echo "MyGo signed updates are not configured." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Package desktop
         if: matrix.phase == 'package'
         shell: bash
-        run: pnpm run package:desktop
-      - name: Report desktop distribution sizes
-        if: matrix.phase == 'package'
-        shell: bash
-        run: pnpm run size --package desktop --native --require
+        run: bun run package:desktop
       - name: Verify production Desktop excludes smoke controls
         if: matrix.phase == 'package'
         shell: bash
-        run: pnpm exec tsx apps/desktop/scripts/host/check-release.ts
+        run: bun apps/desktop/scripts/host/check-release.ts
       - name: Verify macOS distribution signature
         if: matrix.phase == 'package' && (runner.os == 'macOS')
         run: |
           if [ -n "$APPLE_CERTIFICATE" ] && [ -n "$APPLE_SIGNING_IDENTITY" ]; then
-            codesign --verify --deep --strict target/release/bundle/macos/Raypx.app
+            codesign --verify --deep --strict apps/desktop/build/darwin-*/Raypx.app
             if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
-              xcrun stapler validate target/release/bundle/macos/Raypx.app
+              xcrun stapler validate apps/desktop/build/darwin-*/Raypx.app
               echo "macOS installer: Developer ID signed and notarization verified." >> "$GITHUB_STEP_SUMMARY"
             else
               echo "macOS installer: Developer ID signed; notarization credentials were not configured." >> "$GITHUB_STEP_SUMMARY"
@@ -198,7 +286,7 @@ jobs:
         shell: pwsh
         run: |
           if ($env:RAYPX_DESKTOP_SIGNING_THUMBPRINT) {
-            $installers = @(Get-ChildItem target/release/bundle/nsis/*-setup.exe)
+            $installers = @(Get-ChildItem apps/desktop/build/windows-*/raypx-desktop-setup-*.exe)
             if ($installers.Count -eq 0) { throw "No NSIS installer was produced" }
             foreach ($installer in $installers) {
               $signature = Get-AuthenticodeSignature $installer.FullName
@@ -208,17 +296,43 @@ jobs:
           } else {
             "Windows installer: unsigned distribution; Authenticode credentials were not configured." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
           }
+      - name: Report distribution sizes
+        if: matrix.phase == 'package'
+        shell: bash
+        run: bun run size -- --package desktop --package cli --native --require
+      - name: Upload size reports
+        if: always() && matrix.phase == 'package'
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-sizes-${{ runner.os }}-${{ runner.arch }}
+          path: .artifacts/sizes/
+      - name: Preserve prepared Desktop for performance acceptance
+        if: matrix.phase == 'package'
+        shell: bash
+        run: |
+          bun - <<'TS'
+          const platform = process.platform === "win32" ? "windows" : process.platform;
+          const arch = process.arch === "x64" ? "amd64" : process.arch;
+          const child = Bun.spawn(["tar", "-cf", ".artifacts/desktop-payload.tar", "-C", `apps/desktop/build/${platform}-${arch}`, "."], { stdout: "inherit", stderr: "inherit" });
+          if (await child.exited) throw new Error("Could not preserve Desktop delivery directory");
+          TS
+      - uses: actions/upload-artifact@v7
+        if: matrix.phase == 'package'
+        with:
+          name: desktop-payload-${{ runner.os }}-${{ runner.arch }}
+          path: .artifacts/desktop-payload.tar
+          if-no-files-found: error
       - name: Upload desktop installers
         if: matrix.phase == 'package'
         uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ runner.os }}
           path: |
-            target/release/bundle/**/*.dmg
-            target/release/bundle/nsis/*-setup.exe
-            target/release/bundle/**/*.tar.gz
-            target/release/bundle/**/*.sig
-            target/release/bundle/**/*.json
+            apps/desktop/build/**/*.dmg
+            apps/desktop/build/windows-*/raypx-desktop-setup-*.exe
+            apps/desktop/build/**/*.tar.gz
+            apps/desktop/build/**/*.sig
+            apps/desktop/build/**/*.json
           if-no-files-found: error
       - name: Remove temporary Windows signing material
         if: matrix.phase == 'package' && (always() && runner.os == 'Windows')
@@ -244,12 +358,4 @@ jobs:
           fi
       - name: Packaged native smoke
         if: matrix.phase == 'smoke'
-        run: pnpm --dir apps/desktop run native:smoke:interactive
-      - name: Upload build size reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-sizes-${{ runner.os }}-${{ matrix.phase }}
-          path: .artifacts/sizes/
-          include-hidden-files: true
-          if-no-files-found: ignore
+        run: bun run --cwd apps/desktop native:smoke:interactive

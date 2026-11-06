@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { checked, execute, pass, project } from "../helpers/cache.ts";
+import { checked, execute, pass, project } from "../helpers/cache.js";
 
 const repository = resolve(import.meta.dirname, "../../../..");
 
@@ -12,10 +12,11 @@ it("checks a native app without staging native resources", () => {
     "native",
     {},
     {
-      "native:build": "tsx package.ts",
-      "native:prepare": "tsx stage.ts",
-      typecheck: "tsc --noEmit --project tsconfig.json",
-      "typecheck:node": "tsc --noEmit --project tsconfig.json",
+      "native:build": "bun package.ts",
+      "native:prepare": "bun stage.ts",
+      typecheck: "bun --check --tsconfig-override tsconfig.json",
+      "typecheck:node": "bun --check --tsconfig-override tsconfig.json",
+      "perf:check": "bun --check --tsconfig-override tsconfig.json",
     },
   );
   mkdirSync(join(folder, "scripts/host"), { recursive: true });

@@ -11,4 +11,4 @@ terminal state. Unknown delivery pauses the plan and is never automatically rese
 Creation requests retain their UUID until confirmed, and manual runs retain a
 separate immutable request/run ID.
 
-Run `pnpm --dir packages/jobs-server run check` and `test`.
+Run `bun run --cwd packages/jobs-server run check` and `test`.

@@ -9,20 +9,16 @@ import { TaskContextError, activeTaskStatuses } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import type { TaskChange } from "@raypx/contracts/tasks";
 import type { TokenTotals } from "@raypx/providers/core";
-import type { LocalAgentTask } from "../model.ts";
-import { isDesktopBinding } from "../model.ts";
-import type { ExecutionStore } from "../harness/ports.ts";
-import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports.ts";
-import type { Effect, LiveFacts } from "../domain/commands.ts";
-import {
-  ManagedExecution,
-  initialExecutionPrompt,
-  executionSession,
-} from "../harness/execution.ts";
-import { ConversationRecorder } from "../activity.ts";
-import { LocalError } from "../../errors.ts";
-import type { ProviderRegistry } from "./providers.ts";
-import { ProviderEventIngestor } from "./ingest.ts";
+import type { LocalAgentTask } from "../model";
+import { isDesktopBinding } from "../model";
+import type { ExecutionStore } from "../harness/ports";
+import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports";
+import type { Effect, LiveFacts } from "../domain/commands";
+import { ManagedExecution, initialExecutionPrompt, executionSession } from "../harness/execution";
+import { ConversationRecorder } from "../activity";
+import { LocalError } from "../../errors";
+import type { ProviderRegistry } from "./providers";
+import { ProviderEventIngestor } from "./ingest";
 
 export interface ExecutionRepository extends ExecutionStore {
   settleEffect(id: string, status: "done" | "failed"): void;
@@ -39,7 +35,7 @@ export interface ExecutionProjects {
   acquire(key: string): (() => void) | null;
 }
 export interface ApprovalEndpoints {
-  endpoint(id: string): Promise<{ url: string; token: string }>;
+  endpoint(id: string): { url: string; token: string };
   forget(id: string): void;
   close(): Promise<void>;
 }

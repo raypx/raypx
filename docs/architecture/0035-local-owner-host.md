@@ -2,20 +2,14 @@
 
 Status: accepted, 2026-10-27. Incremental implementation from `c3020e4`.
 
-Implementation amendments: [ADR 0037](0037-windows-daemon.md) extends the
-independent daemon to Windows; [ADR 0041](0041-provider-capabilities-and-pi.md)
-adds local managed Pi; [ADR 0045](0045-tauri-node-pnpm.md) replaces the Bun
-runtime and Go desktop host with Node, Tauri and Rust. These amend the
-implementation notes below while preserving local ownership, optional cloud
-channels and approval leases.
-
-Each profile has one Owner and one Node + TypeScript Host. Local tasks, project
+Each profile has one Owner and one Bun + TypeScript Host. Local tasks, project
 grants, connectors, SQLite, terminal settings and broker work without an active online session after initial instance enrollment (ADR 0040).
 Cloud control owns origin/account credentials, grant renewal, relay and opted-in
 projections. Cloud restore runs in the background; local RPC never joins its
 serial queue. Signing in does not enable remote execution or upload local history.
-The Tauri composition root uses Rust; its checks run through the shared VP graph.
-Native host and distribution policy are recorded in ADR 0045.
+The MyGo composition root uses Go; its checks run through the shared VP graph.
+The current MyGo host is recorded in
+[ADR 0038](0038-mygo-desktop-host.md).
 
 ## Local terminal ownership
 
@@ -101,13 +95,11 @@ requests or Claude HTTP hooks. Their lifecycle handle does not expose a protocol
 process requirement. Raw provider records still go to the existing conversation
 parsers. The coordinator keeps plan approval and persistence: Codex continues in
 the same process, Claude may replace a process with `holdPlanOnExit`, and turn/
-generation guards and managed-session recognition remain. Managed Pi now uses an
-in-process SDK driver for local tasks (ADR 0041); ACP remains deferred.
+generation guards and managed-session recognition remain. Pi/ACP are not registered.
 
-macOS and Windows Desktop use the independent daemon (ADR 0037); foreground stdio
-remains for explicit CLI use. Linux keeps existing CLI support without a complete
-Desktop acceptance claim. Actual platform GUI/signing acceptance remains separate.
-Configuration sync, local Web, standalone Server, native mobile, team ownership and additional
+macOS is the product acceptance target. Windows keeps foreground mode; Linux keeps
+existing CLI support without a complete product acceptance claim. Configuration
+sync, local Web, standalone Server, native mobile, team ownership and additional
 providers are separate deliveries. Future sync begins with explicitly enabled
 non-sensitive preferences/configuration, local override and conflict preservation;
 credentials, path grants and content require separate design.
@@ -116,10 +108,9 @@ credentials, path grants and content require separate design.
 
 Default tests exercise offline readiness under blocked cloud restore, per-request
 channels, migration safety, withdrawal revision independence, route restrictions,
-adapter lifecycle and Rust host transport. Daily validation uses `pnpm run verify`;
-release preparation adds `pnpm run verify --full`. Packaged native and live hook
-checks are separate, isolated by profile, `RAYPX_HOME`, `CLAUDE_CONFIG_DIR` and
-`CODEX_HOME`; they do not edit personal hooks
+adapter lifecycle and Go host transport. Full validation uses `bun run verify`.
+Packaged macOS and live hook checks are separate, isolated by profile,
+`RAYPX_HOME`, `CLAUDE_CONFIG_DIR` and `CODEX_HOME`; they do not edit personal hooks
 or system services. Real prompt visibility is measured only from timestamped PTY
 output during a delayed hook, never from fallback output after it returns. Seeing
 a prompt is not evidence of correct simultaneous answer consumption/arbitration.

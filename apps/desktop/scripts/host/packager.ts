@@ -1,73 +1,72 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
-import { readFile, readdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { createHash } from "node:crypto";
+import { chmod, cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
-/** Sign executable resources before sealing their manifests and the outer application. */
-export async function signRuntime(directory: string, env: NodeJS.ProcessEnv) {
-  const executableFiles: string[] = [];
-  async function walk(path: string) {
-    for (const entry of await readdir(path, { withFileTypes: true })) {
-      const file = join(path, entry.name);
-      if (entry.isSymbolicLink()) throw new Error("Runtime resources cannot contain symlinks");
-      if (entry.isDirectory()) await walk(file);
-      else if (entry.isFile()) {
-        const bytes = await readFile(file),
-          magic = bytes.subarray(0, 4).toString("hex");
-        if (
-          (process.platform === "darwin" && ["cffaedfe", "cefaedfe", "cafebabe"].includes(magic)) ||
-          (process.platform === "win32" && bytes[0] === 0x4d && bytes[1] === 0x5a)
-        )
-          executableFiles.push(file);
-      }
-    }
+async function writable(directory: string): Promise<void> {
+  await chmod(directory, 0o755);
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isSymbolicLink()) throw new Error("Unsafe packager cache symlink");
+    if (entry.isDirectory()) await writable(path);
+    else await chmod(path, 0o644);
   }
-  await walk(directory);
-  for (const file of executableFiles) {
-    const command =
-      process.platform === "darwin"
-        ? [
-            "/usr/bin/codesign",
-            "--force",
-            "--options",
-            "runtime",
-            ...(env.APPLE_SIGNING_IDENTITY && env.APPLE_SIGNING_IDENTITY !== "-"
-              ? ["--timestamp"]
-              : []),
-            "--sign",
-            env.APPLE_SIGNING_IDENTITY ?? "-",
-            "--entitlements",
-            join(import.meta.dirname, "../../resources/Entitlements.plist"),
-            file,
-          ]
-        : env.RAYPX_DESKTOP_SIGNING_THUMBPRINT
-          ? [
-              env.RAYPX_WINDOWS_SIGNTOOL ?? "signtool",
-              "sign",
-              "/fd",
-              "sha256",
-              "/tr",
-              "http://timestamp.digicert.com",
-              "/td",
-              "sha256",
-              "/sha1",
-              env.RAYPX_DESKTOP_SIGNING_THUMBPRINT,
-              file,
-            ]
-          : [];
-    if (command.length) {
-      const child = spawnProcess(command, { env, stdout: "inherit", stderr: "inherit" });
-      if (await child.exited) throw new Error("Nested runtime signing failed");
-    }
-  }
-  // Inner manifests first; the CLI manifest hashes the signed Herdr ledger too.
-  for (const root of [join(directory, "herdr"), directory]) {
-    const file = join(root, "runtime.json"),
-      manifest = JSON.parse(await readFile(file, "utf8"));
-    for (const name of Object.keys(manifest.files))
-      manifest.files[name] = createHash("sha256")
-        .update(await readFile(join(root, name)))
-        .digest("hex");
-    await writeFile(file, JSON.stringify(manifest, null, 2) + "\n");
-  }
+}
+
+/** Keep the pinned packager from mutating the shared signed payload. */
+export async function preparePackager(environment: NodeJS.ProcessEnv): Promise<string> {
+  const desktop = resolve(import.meta.dirname, "../..");
+  // `go list -m` has no Dir in a fresh module cache. Materialize and verify the
+  // selected module before copying its pinned packaging sources.
+  const probe = Bun.spawn(["go", "mod", "download", "-json", "github.com/egoist/mygo"], {
+    cwd: desktop,
+    env: environment,
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  const metadata = JSON.parse(await new Response(probe.stdout).text());
+  if ((await probe.exited) || metadata.Version !== "v0.7.4" || !metadata.Dir)
+    throw new Error("The packaging adapter requires the pinned MyGo v0.7.4 source");
+  const directory = join(desktop, ".mygo/packager");
+  await mkdir(directory, { recursive: true });
+  await writable(directory);
+  await cp(join(metadata.Dir, "cmd/mygo"), directory, { recursive: true });
+  await writable(directory);
+  const module = (await readFile(join(metadata.Dir, "go.mod"), "utf8")).replace(
+    "module github.com/egoist/mygo",
+    "module github.com/egoist/mygo/cmd/raypx-packager",
+  );
+  await writeFile(join(directory, "go.mod"), `${module}\nrequire github.com/egoist/mygo v0.7.4\n`);
+  const sums = [
+    await readFile(join(metadata.Dir, "go.sum"), "utf8"),
+    await readFile(join(desktop, "go.sum"), "utf8"),
+  ];
+  await writeFile(
+    join(directory, "go.sum"),
+    [...new Set(sums.join("\n").trim().split("\n"))].sort().join("\n") + "\n",
+  );
+  // The prepare job already signed the immutable CLI payload. MyGo may sign only outer code.
+  const resources = join(directory, "resources.go");
+  let source = await readFile(resources, "utf8");
+  const marker = "\tfor _, n := range list {\n\t\tent := entitlements[n.name]";
+  if (!source.includes(marker)) throw new Error("MyGo nested signing boundary changed");
+  source = source.replace(
+    marker,
+    '\tfor _, n := range list {\n if strings.HasPrefix(n.name, "bin/") { continue }\n\t\tent := entitlements[n.name]',
+  );
+  await writeFile(resources, source);
+  const bundle = join(directory, "bundle.go");
+  const bundleSource = await readFile(bundle, "utf8");
+  const bundleMarker = '[]string{"--force", "--deep", "--sign", identity}';
+  if (!bundleSource.includes(bundleMarker)) throw new Error("MyGo outer signing boundary changed");
+  await writeFile(
+    bundle,
+    bundleSource.replace(bundleMarker, '[]string{"--force", "--sign", identity}'),
+  );
+  const windows = join(directory, "winsign.go");
+  source = await readFile(windows, "utf8");
+  const windowsMarker = "func signWindowsResources(c *Config, dir string, res []resource) error {";
+  if (!source.includes(windowsMarker)) throw new Error("MyGo Windows signing boundary changed");
+  source = source.replace(windowsMarker, windowsMarker + "\n return nil\n");
+  await writeFile(windows, source);
+
+  return directory;
 }

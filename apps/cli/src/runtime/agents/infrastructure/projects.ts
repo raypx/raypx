@@ -1,12 +1,11 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import { ContextError } from "@raypx/memory-model";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { desktopBinding } from "../model.ts";
+import { desktopBinding } from "../model";
 import type { TaskContextTarget, AgentProvider } from "@raypx/core/tasks";
 import { existsSync, realpathSync } from "node:fs";
-import { acquireLock, type StateStore } from "../../state/index.ts";
-import type { ExecutionProjects } from "../application/execution.ts";
+import { acquireLock, type StateStore } from "../../state";
+import type { ExecutionProjects } from "../application/execution";
 export class LocalExecutionProjects implements ExecutionProjects {
   constructor(
     private readonly state: StateStore,
@@ -52,7 +51,7 @@ export class LocalExecutionProjects implements ExecutionProjects {
       if (!root || !project.providers.length || !existsSync(root.path)) continue;
       let dirty = false;
       try {
-        const child = spawnProcess(["git", "status", "--porcelain", "--untracked-files=no"], {
+        const child = Bun.spawn(["git", "status", "--porcelain", "--untracked-files=no"], {
           cwd: root.path,
           stdout: "pipe",
           stderr: "ignore",

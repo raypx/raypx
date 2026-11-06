@@ -1,7 +1,7 @@
 {
   "extends": "@raypx/tsconfig/react-library.json",
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src", "tests"]
 }

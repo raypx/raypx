@@ -13,10 +13,10 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "vp test --run",
-    "test:component": "vp test --run --project component",
-    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "vp test --run --coverage"
+    "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run --project component",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
     "@raypx/core": "workspace:*",

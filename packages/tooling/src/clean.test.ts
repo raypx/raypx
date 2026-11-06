@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { clean, cleanArtifacts } from "./clean.ts";
-import { workspaceFixtures } from "../tests/helpers/workspace.ts";
+import { clean, cleanArtifacts } from "./clean.js";
+import { workspaceFixtures } from "../tests/helpers/workspace.js";
 
 const { fixture, member } = workspaceFixtures();
 it("cleans generated files while preserving source, dependencies and local data on repeated runs", async () => {
@@ -31,13 +31,13 @@ it("cleans generated files while preserving source, dependencies and local data 
     `${library}/artifacts/fixture.json`,
     `${library}/node_modules/dependency/index.js`,
     "node_modules/.bun/package/index.js",
-    "pnpm-lock.yaml",
+    "bun.lock",
     "apps/desktop/resources/icon.png",
     ".git/config",
     ".env.local",
     "data/profile.sqlite",
     "apps/desktop/main.go",
-    "apps/desktop/src-tauri/tauri.conf.json",
+    "apps/desktop/mygo.config.ts",
     "apps/desktop/resources/icon.png",
     "packages/tooling/src/validation/inventory.ts",
     "compose.yaml",
@@ -73,7 +73,7 @@ it("cleans reports independently while preserving built applications, sidecars a
     "apps/desktop/build/darwin-arm64/Raypx.app/Contents/MacOS/Raypx",
     "packages/tooling/src/validation/inventory.ts",
     "data/profile.sqlite",
-    "pnpm-lock.yaml",
+    "bun.lock",
   ];
   for (const path of [...outputs, ...preserved]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });

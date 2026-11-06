@@ -1,26 +1,27 @@
-import { findExecutable, run } from "@raypx/runtime-node/process";
-import { uploadAnalyticsMaps } from "./analytics.ts";
+#!/usr/bin/env bun
+import { uploadAnalyticsMaps } from "./analytics.js";
 import { readFileSync, appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { developmentEnvironment } from "@raypx-kit/devkit/process";
+import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
-import { clean, cleanArtifacts } from "./clean.ts";
-import { checkLocales, policy } from "./policy.ts";
-import { discover, runTasks } from "./repository.ts";
-import { scaffold } from "./scaffold.ts";
-import { smoke } from "./smoke/index.ts";
-import { checkKnip } from "./validation/knip.ts";
-import { assertNodeVersion } from "./validation/toolchain.ts";
-import { browserTestArguments } from "./browser-tests.ts";
-import { packageTestArguments, runTests } from "./test-command.ts";
-import { verify, ciGate } from "./verification/index.ts";
-import { readGithubPlan } from "./verification/plan.ts";
-import { ciOutputs } from "./verification/gates.ts";
-import { cacheSnapshot } from "./verification/cache.ts";
-import { smokeDeployment } from "./validation/deployment-smoke.ts";
-import { runPrecheck } from "./verification/prechecks.ts";
-import { reportBuildSizes, sizeOptions } from "./validation/build-size.ts";
+import { clean, cleanArtifacts } from "./clean.js";
+import { checkLocales, policy } from "./policy.js";
+import { discover, runTasks } from "./repository.js";
+import { scaffold } from "./scaffold.js";
+import { smoke } from "./smoke/index.js";
+import { checkKnip } from "./validation/knip.js";
+import { readBunPin } from "./validation/toolchain.js";
+import { browserTestArguments } from "./browser-tests.js";
+import { packageTestArguments, runTests } from "./test-command.js";
+import { verify, ciGate } from "./verification/index.js";
+import { readGithubPlan } from "./verification/plan.js";
+import { ciOutputs } from "./verification/gates.js";
+import { cacheSnapshot } from "./verification/cache.js";
+import { smokeDeployment } from "./validation/deployment-smoke.js";
+import { runPrecheck } from "./verification/prechecks.js";
+
+import { reportBuildSizes, sizeOptions } from "./validation/build-size";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -36,6 +37,9 @@ function option(name: string, fallback: string) {
 
 async function main() {
   switch (command) {
+    case "size":
+      reportBuildSizes(root, sizeOptions(args));
+      break;
     case "verify:check":
       runPrecheck(root, args[0] ?? "");
       break;
@@ -64,8 +68,8 @@ async function main() {
       const workspace = discover(root).byName.get("@raypx/e2e");
       if (!workspace) throw new Error("Missing browser test workspace");
       await run(
-        "pnpm",
-        ["exec", "playwright", "test", ...browserTestArguments(args, process.env)],
+        process.execPath,
+        ["--bun", "playwright", "test", ...browserTestArguments(args, process.env)],
         join(root, workspace.path),
       );
       break;
@@ -91,7 +95,7 @@ async function main() {
           tests: args.includes("--tests"),
         });
         if (args.includes("--write"))
-          await run("pnpm", ["exec", "vp", "fmt", "--write", ...paths], root);
+          await run(process.execPath, ["--bun", "vp", "fmt", "--write", ...paths], root);
         console.log(
           `${args.includes("--write") ? "Created" : "Preview (use --write to create)"}:\n${paths.join("\n")}`,
         );
@@ -109,9 +113,6 @@ async function main() {
       break;
     case "verify":
       await verify(root, args);
-      break;
-    case "size":
-      reportBuildSizes(root, sizeOptions(args));
       break;
     case "ci:plan": {
       const plan = readGithubPlan(root);
@@ -183,16 +184,17 @@ async function main() {
       console.log("Validation reports and test artifacts removed");
       break;
     case "doctor": {
-      assertNodeVersion(root, process.versions.node);
-      console.log(`Node ${process.versions.node}; ${process.platform}/${process.arch}`);
+      const bun = readBunPin(root);
+      if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
+      console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
-        `Desktop: Tauri; Rust ${findExecutable("cargo") ? "available" : "unavailable"}; pnpm run verify selects affected JavaScript and Rust checks`,
+        `Desktop: MyGo; Go ${Bun.which("go") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected JavaScript and Go checks`,
       );
       break;
     }
     case undefined:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | size | smoke | deployment:smoke | env | db | desktop | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | deployment:smoke | env | db | desktop | clean | clean:artifacts | doctor",
       );
       break;
     default:

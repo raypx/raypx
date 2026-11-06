@@ -3,17 +3,17 @@ import { ControlService } from "@raypx/control";
 import { RelayHub } from "@raypx/control/relay";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 import { relayServerSchema, type RelayServerFrame } from "@raypx/contracts/tasks";
-import { startRelayServer } from "../../src/server.ts";
+import { startRelayServer } from "../../src/server.js";
 
 const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
 });
-async function fixture(databaseReady: () => Promise<unknown> = async () => {}) {
+function fixture(databaseReady: () => Promise<unknown> = async () => {}) {
   const repository = memoryControlRepository();
   const control = new ControlService(repository);
   const hub = new RelayHub(async (use) => use(control));
-  const server = await startRelayServer({
+  const server = startRelayServer({
     hub,
     databaseReady,
     allowedOrigins: ["https://app.example.test"],
@@ -41,7 +41,7 @@ async function socket(base: URL, role: "viewer" | "device", token: string) {
   return { client, frames, closed };
 }
 it("serves liveness and dependency readiness and exposes no login or local execution route", async () => {
-  const f = await fixture();
+  const f = fixture();
   expect(await (await fetch(new URL("/health", f.url))).json()).toEqual({
     status: "ok",
     service: "relay",
@@ -51,7 +51,7 @@ it("serves liveness and dependency readiness and exposes no login or local execu
     expect((await fetch(new URL(path, f.url))).status).toBe(404);
 });
 it("rejects disallowed origins before upgrade and permits authenticated native clients without Origin", async () => {
-  const f = await fixture();
+  const f = fixture();
   expect(
     (await fetch(new URL("/relay", f.url), { headers: { origin: "https://evil.example.test" } }))
       .status,
@@ -65,7 +65,7 @@ it("rejects disallowed origins before upgrade and permits authenticated native c
   await expect.poll(() => viewer.frames.some((frame) => frame.type === "ready")).toBe(true);
 });
 it("consumes viewer tickets once and rejects invalid or expired device credentials", async () => {
-  const f = await fixture(),
+  const f = fixture(),
     ticket = await f.control.credentials.ticket(f.auth);
   const first = await socket(f.url, "viewer", ticket.token);
   await expect.poll(() => first.frames.some((frame) => frame.type === "ready")).toBe(true);
@@ -76,7 +76,7 @@ it("consumes viewer tickets once and rejects invalid or expired device credentia
   await expect.poll(() => device.closed.length).toBe(1);
 });
 it("keeps liveness during database/broker outages and does not expose failure details", async () => {
-  const f = await fixture(async () => {
+  const f = fixture(async () => {
     throw new Error("private database details");
   });
   const response = await fetch(new URL("/ready", f.url));
@@ -87,7 +87,7 @@ it("keeps liveness during database/broker outages and does not expose failure de
   expect((await fetch(new URL("/relay", f.url))).status).toBe(503);
 });
 it("rejects binary frames, closes authenticated peers on shutdown and makes close idempotent", async () => {
-  const f = await fixture(),
+  const f = fixture(),
     ticket = await f.control.credentials.ticket(f.auth),
     viewer = await socket(f.url, "viewer", ticket.token);
   await expect.poll(() => viewer.frames.some((frame) => frame.type === "ready")).toBe(true);

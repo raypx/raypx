@@ -15,11 +15,11 @@ runs:
       id: cache
       with:
         path: node_modules/.vite/task-cache
-        key: vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        key: vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'bun.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
         restore-keys: |
-          vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}-
+          vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'bun.lock') }}-
           vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-
     - shell: bash
       run: |
         mkdir -p node_modules/.vite/task-cache
-        pnpm run raypx-dev ci:cache snapshot
+        bun run raypx-dev ci:cache snapshot

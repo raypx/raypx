@@ -1,8 +1,7 @@
-import { sleep } from "@raypx/runtime-node/process";
-import type { DesktopApiRequest, DesktopApiResponse } from "../../../api.ts";
-import type { DesktopRuntime } from "../../../bridge.ts";
+import type { DesktopApiRequest, DesktopApiResponse } from "../../../api";
+import type { DesktopRuntime } from "../../../bridge";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-import { connectSmoke } from "./driver.ts";
+import { connectSmoke } from "./driver";
 
 const endpoint = process.env.RAYPX_NATIVE_SMOKE_SOCKET;
 const token = process.env.RAYPX_NATIVE_SMOKE_TOKEN;
@@ -31,7 +30,7 @@ export function reloadRenderer() {
 }
 function invoke<T>(method: string, input: unknown) {
   return evaluate(
-    `return await window.__TAURI_INTERNALS__.invoke("desktop_request",{method:${JSON.stringify(method)},input:${JSON.stringify(input)}})`,
+    `return await window.mygo.call("Desktop.Request",${JSON.stringify(method)},${JSON.stringify(input)})`,
   ) as Promise<T>;
 }
 export const apiOrigin = await (async () => {
@@ -43,7 +42,7 @@ export const apiOrigin = await (async () => {
     } catch {
       /* Initial WebView navigation can discard an early read callback. */
     }
-    await sleep(100);
+    await Bun.sleep(100);
   }
   throw new Error("Packaged WebView did not publish its connection preload");
 })();
@@ -96,5 +95,5 @@ export function measureNativeStream() {
 }
 
 export async function measureNativeCors() {
-  return (await import("./cors.ts")).measureNativeCors(driver);
+  return (await import("./cors")).measureNativeCors(driver);
 }

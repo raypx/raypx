@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { nativeAgentProviders } from "./agent-options.ts";
+import { nativeAgentProviders } from "./agent-options";
 
 it("runs the Codex first-delivery gate without requiring another installed provider", () => {
   expect(nativeAgentProviders({})).toEqual(["codex"]);

@@ -42,17 +42,9 @@ export function raypxHome() {
   return directory;
 }
 const stableCliPath = (platform: NodeJS.Platform = process.platform) =>
-  join(
-    raypxHome(),
-    "bin",
-    cliInstallation().systemNode ? "raypx.mjs" : platform === "win32" ? "raypx.exe" : "raypx",
-  );
-/** Hooks and launchd use an absolute Node path for JS package installations. */
+  join(raypxHome(), "bin", platform === "win32" ? "raypx.exe" : "raypx");
 export function stableCliLaunch(binary = stableCliPath()) {
-  if (!binary.endsWith(".mjs")) return [binary];
-  const metadata = join(dirname(binary), "installation.json");
-  const node = existsSync(metadata) ? readInstallation(metadata).node : undefined;
-  return [node ?? process.execPath, binary];
+  return [binary];
 }
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 /** Codex runs Windows hooks as `cmd /C "<command>"`; `%` and `"` cannot be quoted there. */
@@ -89,13 +81,8 @@ export function connectorCommand(
 }
 const raypxHook = (handler: Record<string, unknown>) =>
   typeof handler.command === "string" &&
-  (/(?:^|\/)raypx(?:\.mjs)?' 'connectors' 'hook' /.test(handler.command) ||
-    /raypx\.(?:exe|mjs)" "connectors" "hook" /i.test(handler.command) ||
-    (Array.isArray(handler.args) &&
-      typeof handler.args[0] === "string" &&
-      /[\\/]raypx\.mjs$/.test(handler.args[0]) &&
-      handler.args[1] === "connectors" &&
-      handler.args[2] === "hook") ||
+  (/(?:^|\/)raypx' 'connectors' 'hook' /.test(handler.command) ||
+    /raypx\.exe" "connectors" "hook" /i.test(handler.command) ||
     (/(?:^|[\\/])raypx\.exe$/i.test(handler.command) &&
       Array.isArray(handler.args) &&
       handler.args[0] === "connectors" &&
@@ -183,7 +170,6 @@ const installationSchema = z.strictObject({
   digest: z.string().regex(/^[a-f0-9]{64}$/),
   version: z.string().min(1).max(120),
   builtAt: z.number().int().nonnegative(),
-  node: z.string().refine(isAbsolute).optional(),
   directory: z
     .string()
     .regex(/^versions\/[a-zA-Z0-9_.-]+$/)
@@ -299,12 +285,7 @@ export function installStableCli(recoverModified = false) {
     const payload = installRuntimeCopy(layout.root, join(directory, "versions"));
     if (binary !== layout.launcher) {
       const temporary = `${binary}.${crypto.randomUUID()}.tmp`;
-      if (layout.systemNode) {
-        writeFileSync(
-          temporary,
-          `#!/usr/bin/env node\nimport { readFileSync } from "node:fs";\nconst { directory } = JSON.parse(readFileSync(new URL("./installation.json", import.meta.url), "utf8"));\nif (!/^versions\\/[a-zA-Z0-9_.-]+$/.test(directory)) throw new Error("Invalid Raypx runtime directory");\nawait import(new URL("./" + directory + "/main.mjs", import.meta.url));\n`,
-        );
-      } else copyFileSync(layout.launcher, temporary);
+      copyFileSync(layout.launcher, temporary);
       chmodSync(temporary, 0o755);
       // Windows cannot replace a running hook executable but can rename it aside.
       if (process.platform === "win32" && existsSync(binary))
@@ -324,7 +305,6 @@ export function installStableCli(recoverModified = false) {
       JSON.stringify({
         digest: digest(binary),
         ...cliBuild,
-        ...(layout.systemNode ? { node: layout.node } : {}),
         directory: "versions/" + basename(payload),
       }),
       {

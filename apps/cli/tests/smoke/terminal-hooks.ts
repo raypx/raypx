@@ -1,5 +1,3 @@
-import { fileExists } from "@raypx/runtime-node/files";
-import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import {
   copyFile,
@@ -13,7 +11,7 @@ import {
 } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { terminalSmokeHost } from "../helpers/terminal-smoke.ts";
+import { terminalSmokeHost } from "../helpers/terminal-smoke";
 
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to record real hook contracts");
@@ -29,7 +27,7 @@ if (!Number.isInteger(delay) || delay < 0 || delay > 70_000)
   throw new Error("Test delay must be between 0 and 70000 ms");
 const executable =
   process.env[provider === "claude" ? "RAYPX_CLAUDE_BINARY" : "RAYPX_CODEX_BINARY"] ??
-  findExecutable(provider);
+  Bun.which(provider);
 if (!executable) throw new Error("Set the provider binary explicitly or add it to PATH");
 const directory = await mkdtemp(join(tmpdir(), "raypx-hook-contract-"));
 await mkdir(join(directory, "project"));
@@ -73,7 +71,7 @@ const host = await terminalSmokeHost(
 );
 let heartbeat: ReturnType<typeof setInterval> | undefined;
 let timer: ReturnType<typeof setTimeout> | undefined;
-let running: ReturnType<typeof spawnProcess<{ stdin: "ignore" }>> | undefined;
+let running: ReturnType<typeof Bun.spawn> | undefined;
 try {
   await host.watch();
   heartbeat = setInterval(() => {
@@ -94,7 +92,7 @@ try {
     }),
     { mode: 0o600 },
   );
-  const version = await new Response(spawnProcess([executable, "--version"]).stdout).text();
+  const version = await Bun.$`${executable} --version`.text();
   const prompt =
     "Use the shell tool exactly once with this exact command: printf RAYPX_TERMINAL_P0 > permission-marker.txt . Do not use file-write or other tools. Then report success or the denial." +
     (provider === "codex"
@@ -211,7 +209,7 @@ try {
     );
     launch = ["python3", resolve(import.meta.dirname, "../fixtures/terminal/driver.py"), spec];
   }
-  const child = spawnProcess(launch, {
+  const child = Bun.spawn(launch, {
     cwd: project,
     env,
     stdin: "ignore",
@@ -278,7 +276,7 @@ try {
       await readFile(join(project, "permission-marker.txt"), "utf8"),
       "RAYPX_TERMINAL_P0",
     );
-  else assert.equal(await fileExists(join(project, "permission-marker.txt")), false);
+  else assert.equal(await Bun.file(join(project, "permission-marker.txt")).exists(), false);
   if (scenario === "disconnected" || scenario === "expired")
     assert.equal((await host.list())[0]?.status, scenario === "expired" ? "expired" : "cancelled");
   console.info(`Real ${provider} PermissionRequest ${env.RAYPX_P0_DECISION} contract passed`);

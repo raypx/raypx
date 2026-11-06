@@ -1,5 +1,4 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
-import { profileStorage } from "../../../helpers/sqlite.ts";
+import { profileStorage } from "../../../helpers/sqlite";
 import { expect, it } from "vite-plus/test";
 import { mkdtemp, mkdir, realpath, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -9,27 +8,26 @@ import {
   startTerminalHost,
   terminalFetch,
   readTerminalEndpoint,
-} from "../../../../src/runtime/terminal/host.ts";
-import { TerminalStore } from "../../../../src/runtime/terminal/store.ts";
-import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol.ts";
+} from "../../../../src/runtime/terminal/host";
+import { TerminalStore } from "../../../../src/runtime/terminal/store";
+import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol";
 import { createHash } from "node:crypto";
-import { localFetch, loopbackTransport } from "../../../../src/runtime/local-http.ts";
+import { localFetch, loopbackTransport } from "../../../../src/runtime/local-http";
 import type { TerminalSession } from "@raypx/contracts/terminal";
 it.skipIf(loopbackTransport())(
   "reclaims only its owned socket directory after a host crash",
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-terminal-crash-"));
-    const child = spawnProcess(
+    const child = Bun.spawn(
       [
         process.execPath,
-        "--import",
-        import.meta.resolve("tsx"),
+        "run",
         join(import.meta.dirname, "../../../fixtures/terminal/stale-host.ts"),
         directory,
       ],
-      { stdout: "ignore", stderr: "inherit" },
+      { stdout: "ignore", stderr: "ignore" },
     );
-    let host: Awaited<ReturnType<typeof startTerminalHost>> | undefined;
+    let host: ReturnType<typeof startTerminalHost> | undefined;
     try {
       await expect
         .poll(() => {
@@ -44,7 +42,7 @@ it.skipIf(loopbackTransport())(
       child.kill("SIGKILL");
       await child.exited;
       expect(existsSync(old)).toBe(true);
-      host = await startTerminalHost({
+      host = startTerminalHost({
         database: profileStorage(directory).database,
         directory,
         projects: [],
@@ -104,7 +102,7 @@ it.skipIf(process.platform === "win32")(
         expiresAt: now,
       });
     }
-    const host = await startTerminalHost({
+    const host = startTerminalHost({
       database: profileStorage(directory).database,
       directory,
       projects: [project],
@@ -139,7 +137,7 @@ it.skipIf(process.platform === "win32")(
     } finally {
       await host.close();
     }
-    const restored = await startTerminalHost({
+    const restored = startTerminalHost({
       database: profileStorage(directory).database,
       directory,
       projects: [project],
@@ -160,20 +158,20 @@ it.skipIf(process.platform === "win32")(
     const dir = await mkdtemp(join(tmpdir(), "raypx-terminal-ipc-"));
     await mkdir(join(dir, "project"));
     const project = await realpath(join(dir, "project"));
-    const host = await startTerminalHost({
+    const host = startTerminalHost({
       database: profileStorage(dir).database,
       directory: dir,
       projects: [project],
       away: true,
     });
     try {
-      await expect(
+      expect(() =>
         startTerminalHost({
           database: profileStorage(dir).database,
           directory: dir,
           projects: [project],
         }),
-      ).rejects.toThrow(/already owns/);
+      ).toThrow(/already owns/);
       const { socket } = host.endpoint;
       expect(socket === undefined || ((await stat(socket)).mode & 0o777) === 0o600).toBe(true);
       const noAuth = await localFetch(host.endpoint, "/state");
@@ -231,7 +229,7 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const dir = await mkdtemp(join(tmpdir(), "raypx-terminal-fallback-"));
     const project = await realpath(dir);
-    const host = await startTerminalHost({
+    const host = startTerminalHost({
       database: profileStorage(dir).database,
       directory: dir,
       projects: [project],
@@ -286,7 +284,7 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-managed-hook-")),
       project = await realpath(directory);
-    const host = await startTerminalHost({
+    const host = startTerminalHost({
       database: profileStorage(directory).database,
       directory,
       projects: [project],

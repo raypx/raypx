@@ -1,14 +1,14 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
-import { runTasks } from "../repository.ts";
-import { smoke } from "../smoke/index.ts";
-import { taskRef, taskModel, taskPlan } from "../tasks/model.ts";
-import { argumentKey } from "../tasks/arguments.ts";
-import type { VerificationPlan } from "./plan.ts";
-import type { TestSelection } from "./tests.ts";
-import { completionReport, precheckTimings, reportTiming } from "./report.ts";
-import { reportBuildSizes } from "../validation/build-size.ts";
+import { runTasks } from "../repository";
+import { smoke } from "../smoke";
+import { taskRef, taskModel, taskPlan } from "../tasks/model";
+import { argumentKey } from "../tasks/arguments";
+import type { VerificationPlan } from "./plan";
+import type { TestSelection } from "./tests";
+import { completionReport, precheckTimings, reportTiming } from "./report";
+import { reportBuildSizes } from "../validation/build-size";
 
 export function executionTasks(
   plan: VerificationPlan,
@@ -31,9 +31,9 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   const formatStarted = performance.now();
   if (plan.full || files.length)
     await run(
-      "pnpm",
+      process.execPath,
       [
-        "exec",
+        "--bun",
         "vp",
         "fmt",
         "--check",
@@ -46,7 +46,7 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   const lintStarted = performance.now();
   const lintable = files.filter((file) => /\.(?:[cm]?[jt]sx?|vue|svelte)$/.test(file));
   if (plan.full || lintable.length)
-    await run("pnpm", ["exec", "vp", "lint", ...(plan.full ? [] : lintable)], root);
+    await run(process.execPath, ["--bun", "vp", "lint", ...(plan.full ? [] : lintable)], root);
   timings.lintMs = Math.round(performance.now() - lintStarted);
   return timings;
 }
@@ -55,6 +55,7 @@ export async function sourceChecks(
   root: string,
   plan: VerificationPlan,
   tests: TestSelection[] = [],
+  noCache = false,
 ) {
   const started = performance.now();
   const style = await sourceStyle(root, plan);
@@ -64,7 +65,7 @@ export async function sourceChecks(
   const styleMs = Math.round(performance.now() - started),
     taskStarted = performance.now();
   if (refs.length)
-    await runTasks(root, "verify:run", [], {
+    await runTasks(root, "verify:run", noCache ? ["--no-cache"] : [], {
       RAYPX_VERIFY_TASKS: JSON.stringify(refs),
       RAYPX_VERIFY_ROOT: root,
       ...Object.fromEntries(

@@ -1,13 +1,11 @@
-import { fileExists } from "@raypx/runtime-node/files";
-import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { RelayRequest, SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentProvider, AgentTask, HumanRequest } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { nativeAgentProviders } from "../../../scripts/host/agent-options.ts";
-import { restartSmokeOwner } from "./owner.ts";
+import { nativeAgentProviders } from "../../../scripts/host/agent-options";
+import { restartSmokeOwner } from "./owner";
 
 // Explicit gate: existing provider credentials/configuration are used and inference is billed.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
@@ -15,7 +13,7 @@ if (process.env.RAYPX_LIVE_AGENTS !== "1")
 const smokeDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 if (!smokeDirectory) throw new Error("Live Agent smoke requires an isolated native data directory");
 const directory = smokeDirectory;
-const { engine, quitDesktop } = await import("./host.ts");
+const { engine, quitDesktop } = await import("./host");
 const accountId = LOCAL_WORKSPACE_ID;
 const results: { provider: AgentProvider; version: string; checks: string[] }[] = [];
 const activeStatuses = ["pending", "running", "waiting", "cancelling"];
@@ -43,7 +41,7 @@ async function waitFor<T>(read: () => Promise<T | undefined>, label: string) {
   while (Date.now() < deadline) {
     const result = await read();
     if (result !== undefined) return result;
-    await sleep(250);
+    await Bun.sleep(250);
   }
   throw new Error(`Timed out: ${label}`);
 }
@@ -78,22 +76,16 @@ async function pendingPlan(id: string) {
   }, "plan approval");
 }
 async function runAcceptanceTests(project: string, count: number) {
-  // Node runs the synthetic node:test acceptance suites.
-  const test = spawnProcess(
-    [process.execPath, "--test", "--test-reporter=tap", "./acceptance.test.mjs"],
-    {
-      cwd: project,
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [stdout, stderr] = await Promise.all([
-    new Response(test.stdout).text(),
-    new Response(test.stderr).text(),
-  ]);
-  const output = stdout + stderr;
+  // Bun's runner executes node:test suites and reports its summary on stderr.
+  const test = Bun.spawn([process.execPath, "test", "./acceptance.test.mjs"], {
+    cwd: project,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  await new Response(test.stdout).text();
+  const output = await new Response(test.stderr).text();
   assert.equal(await test.exited, 0, "Agent-generated tests failed");
-  assert.match(output, new RegExp(`# pass ${count}\\b`));
+  assert.match(output, new RegExp(`\\b${count} pass\\b`));
 }
 
 async function ownerEpoch() {
@@ -117,7 +109,7 @@ try {
     await writeFile(join(project, "seed.txt"), "RAYPX_LIVE_7319\n");
     await writeFile(
       join(project, "AGENTS.md"),
-      "This is an isolated Raypx acceptance project. Work only here. Use Node and its built-in modules. Do not use network, skills, integrations, commit or push.\n",
+      "This is an isolated Raypx acceptance project. Work only here. Use Bun and its built-in modules. Do not use network, skills, integrations, commit or push.\n",
     );
     const root = (await engine.request("roots.register", { path: project })) as { id: string };
     await engine.request("agents.configure", { rootId: root.id, providers: [provider] });
@@ -149,16 +141,16 @@ try {
     );
     await decide(await pendingPlan(rejected), { type: "deny", note: "" });
     assert.equal((await completion(rejected)).status, "cancelled");
-    assert.equal(await fileExists(join(project, "rejected.txt")), false);
+    assert.equal(await Bun.file(join(project, "rejected.txt")).exists(), false);
     checks.push("reject-plan");
 
     stage = `${provider}: plan approval and implementation`;
     const planned = await create(
-      "Plan an implementation: acceptance.mjs exports add(a,b); acceptance.test.mjs uses node:test to verify add(2,3) === 5. Inspect this directory and present a plan for approval. Do not write either file until approved. After approval implement both and run node --test ./acceptance.test.mjs.",
+      "Plan an implementation: acceptance.mjs exports add(a,b); acceptance.test.mjs uses node:test to verify add(2,3) === 5. Inspect this directory and present a plan for approval. Do not write either file until approved. After approval implement both and run bun test ./acceptance.test.mjs.",
       "plan",
     );
     const plan = await pendingPlan(planned);
-    assert.equal(await fileExists(join(project, "acceptance.mjs")), false);
+    assert.equal(await Bun.file(join(project, "acceptance.mjs")).exists(), false);
     await decide(plan, { type: "allow" });
     assert.equal((await completion(planned)).status, "succeeded");
     await runAcceptanceTests(project, 1);
@@ -188,7 +180,7 @@ try {
 
     stage = `${provider}: running process cancellation`;
     const command =
-      'node -e \'const fs=require("fs");fs.writeFileSync("started.txt",String(process.pid));setTimeout(()=>fs.writeFileSync("should-not-exist.txt","finished"),60000)\'';
+      'bun -e \'const fs=require("fs");fs.writeFileSync("started.txt",String(process.pid));setTimeout(()=>fs.writeFileSync("should-not-exist.txt","finished"),60000)\'';
     const cancelled = await create(
       `Use the shell tool to run exactly this command, then wait for it: ${command}. Do not run other commands or read files. This is a cancellation test in this temporary directory.`,
     );
@@ -200,14 +192,14 @@ try {
       );
       for (const request of requests.filter((item) => item.status === "pending"))
         await decide(request, { type: "allow" });
-      return (await fileExists(join(project, "started.txt"))) ? true : undefined;
+      return (await Bun.file(join(project, "started.txt")).exists()) ? true : undefined;
     }, "long-running child");
     const pid = Number(await readFile(join(project, "started.txt"), "utf8"));
     assert.ok(Number.isSafeInteger(pid) && pid > 0);
     await execute({ method: "tasks.cancel", input: { id: cancelled } });
     assert.equal((await completion(cancelled)).status, "cancelled");
     assert.throws(() => process.kill(pid, 0), "Cancelled child process is still alive");
-    assert.equal(await fileExists(join(project, "should-not-exist.txt")), false);
+    assert.equal(await Bun.file(join(project, "should-not-exist.txt")).exists(), false);
     checks.push("cancel-process-tree");
     results.push({ provider, version: capability.version, checks });
     console.info(`Live Agent ${provider} passed: ${checks.join(", ")}`);

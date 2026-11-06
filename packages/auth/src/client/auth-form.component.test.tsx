@@ -2,13 +2,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider, useLanguagePreference } from "@raypx/i18n/browser";
 import { messages } from "@raypx/i18n/messages";
-import {
-  AuthForm,
-  type AuthFormProps,
-  type AuthFormLinkProps,
-  type AuthMode,
-} from "./auth-form.tsx";
-import type { AuthActionClient, AuthActionResponse } from "../hooks.ts";
+import { AuthForm, type AuthFormProps, type AuthFormLinkProps, type AuthMode } from "./auth-form";
+import type { AuthActionClient, AuthActionResponse } from "../hooks";
 
 beforeEach(() => {
   localStorage.clear();

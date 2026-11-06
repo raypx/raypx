@@ -22,7 +22,7 @@ export default defineConfig({
     { name: "desktop-devtools", use: { baseURL: "http://127.0.0.1:4301" } },
   ],
   webServer: ["web", "desktop"].map((surface, index) => ({
-    command: `vp dev --config vite.app.config.ts --host 127.0.0.1 --port ${4300 + index}`,
+    command: `bun --bun vp dev --config vite.app.config.ts --host 127.0.0.1 --port ${4300 + index}`,
     cwd: `../apps/${surface}`,
     url: `http://127.0.0.1:${4300 + index}`,
     reuseExistingServer: false,

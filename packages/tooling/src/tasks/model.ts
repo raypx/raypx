@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { join, relative } from "node:path";
 import { readFileSync } from "node:fs";
 import { workspacePatterns } from "@raypx-kit/devkit/workspaces";
@@ -22,7 +23,7 @@ interface TaskMember extends Member {
 }
 export type TaskModel = Model<TaskMember>;
 function reportDirectories(context: TaskContext<TaskMember>) {
-  return workspacePatterns(context.root)
+  return workspacePatterns(JSON.parse(readFileSync(join(context.root, "package.json"), "utf8")))
     .filter((path) => !path.startsWith("!"))
     .flatMap((path) =>
       ["coverage", ".artifacts", "test-results", "playwright-report"].map(
@@ -40,7 +41,19 @@ function leafCommand(root: string, member: TaskMember, name: string) {
     join(root, member.path),
     join(root, "packages/tooling/src/tasks/leaf.ts"),
   ).replaceAll("\\", "/");
-  return `tsx ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))}`;
+  let commit = "";
+  if (member.name === "cli" && name === "build") {
+    try {
+      commit = execFileSync("git", ["rev-parse", "HEAD"], {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim();
+    } catch {
+      commit = "no-git-fixture";
+    }
+  }
+  return `bun ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))} ${commit}`;
 }
 
 function checkInputs(member: TaskMember, context: TaskContext<TaskMember>): TaskCache["input"] {
@@ -77,18 +90,19 @@ function cachedTask(
           "target/**",
           "**/generated/**",
           "**/resources/bin/**",
-          "apps/*/build/**",
-          "packages/*/build/**",
-          "infra/*/build/**",
-          "e2e/build/**",
-          "target/**",
+          ...context
+            .dependencyClosure(member)
+            .filter((candidate) => candidate.native)
+            .map((candidate) => `${candidate.path}/build/**`),
+          ...(member.native ? [`${member.path}/build/**`] : []),
+          "**/.mygo/**",
           "**/node_modules/.nitro/**",
         ]
       : []),
   ];
   const input: TaskCache["input"] = [
     { auto: true },
-    ...(name === "check" ? checkInputs(member, context) : []),
+    ...(name === "check" || (member.name === "cli" && build) ? checkInputs(member, context) : []),
     ...(member.name === "cli" && build
       ? [
           { pattern: "packages/tooling/src/build/*.ts", base: "workspace" as const },
@@ -100,9 +114,9 @@ function cachedTask(
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
     { pattern: "!**/.wrangler.*.json", base: "workspace" },
     // Tool caches appear in node_modules after a first run, so a fresh CI runner lists it
-    // differently. Dependency changes still reach every task through pnpm-lock.yaml below.
+    // differently. Dependency changes still reach every task through bun.lock below.
     { pattern: "!**/node_modules", base: "workspace" },
-    ...["pnpm-workspace.yaml", "pnpm-lock.yaml"].map((pattern) => ({
+    ...["bunfig.toml", "bun.lock"].map((pattern) => ({
       pattern,
       base: "workspace" as const,
     })),
@@ -123,8 +137,10 @@ function cachedTask(
     "LANG",
     "TZ",
     "RAYPX_CACHE_PLATFORM",
+    "RAYPX_CLI_PAYLOAD",
     argumentKey(`${member.name}#${name}`),
   ];
+  if (build && member.name === "cli") env.push("SOURCE_DATE_EPOCH", "BUN_*", "RAYPX_HERDR_*");
   if (build && member.name !== "cli") env.push("VITE_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS");
   if (member.native && ["check", "build", "build:renderer"].includes(name)) {
     const category =
@@ -164,14 +180,14 @@ function validationCache(context: TaskContext<TaskMember>, locales: boolean): Ta
         "**/.env.example",
         ".nvmrc",
         ".node-version",
-        "rust-toolchain.toml",
+        ".bun-version",
         ".tool-versions",
-        "**/Cargo.{toml,lock}",
+        "**/go.{mod,sum}",
       ];
   return {
     input: [
       { auto: true },
-      ...["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ...patterns].map((pattern) => ({
+      ...["package.json", "bun.lock", "bunfig.toml", ...patterns].map((pattern) => ({
         pattern,
         base: "workspace" as const,
       })),
@@ -227,7 +243,7 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
   }
   if (
     member.native &&
-    ["native:prepare", "tauri:smoke"].includes(name) &&
+    ["native:prepare", "mygo:smoke"].includes(name) &&
     members.some((candidate) => candidate.name === "cli" && candidate.scripts.build)
   )
     result.push(taskRef("cli", "build"));
@@ -240,7 +256,9 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
         result.push(taskRef(candidate.name, browserBuild(candidate)));
   }
 
-  return [...new Set(result)];
+  return [...new Set(result)].filter(
+    (task) => !(process.env.RAYPX_CLI_PAYLOAD && task === taskRef("cli", "build")),
+  );
 }
 
 export function taskModel(
@@ -277,14 +295,14 @@ export function taskModel(
         dependsOn: prerequisites(member, name, context.members),
         cache: cachedTask(member, name, context),
       }),
-      aggregateCommand: `tsx packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+      aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
       rootTasks: (context) => ({
         // Applications expose local E2E entries, while the root runs one shared Playwright process.
         ...Object.fromEntries(
           browserTestTasks.map((name) => [
             name,
             {
-              command: `tsx packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+              command: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
               dependsOn: context.members
                 .filter((member) => !member.browserProject && member.scripts[name])
                 .map((member) => taskRef(member.name, name)),
@@ -293,17 +311,17 @@ export function taskModel(
           ]),
         ),
         policy: {
-          command: `tsx packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
+          command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
           dependsOn: [],
           cache: validationCache(context, false),
         },
         locales: {
-          command: `tsx packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(root))}`,
+          command: `bun packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(root))}`,
           dependsOn: [],
           cache: validationCache(context, true),
         },
-        lint: { command: "vp lint", dependsOn: [], cache: false },
-        knip: { command: "pnpm run knip", dependsOn: [], cache: false },
+        lint: { command: "bun --bun vp lint", dependsOn: [], cache: false },
+        knip: { command: "bun run knip", dependsOn: [], cache: false },
       }),
     },
     selection,

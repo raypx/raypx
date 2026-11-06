@@ -1,21 +1,19 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { fileExists } from "@raypx/runtime-node/files";
 import type { InstanceBinding } from "@raypx/instances";
 import type { EnrollmentRecord } from "@raypx/instances/server";
 import { expect, it, vi } from "vite-plus/test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { InstanceRuntime } from "../../../src/runtime/instances/index.ts";
+import { InstanceRuntime } from "../../../src/runtime/instances";
 import {
   createInstanceKey,
   createInstanceSigner,
   instanceDigest,
   verifyProof,
 } from "@raypx/instances/crypto";
-import { createRuntime } from "../../../src/runtime/index.ts";
-import { ProfileStorage } from "../../../src/runtime/sqlite/index.ts";
-import { instanceKeys } from "../../../src/runtime/instances/keys.ts";
+import { createRuntime } from "../../../src/runtime";
+import { ProfileStorage } from "../../../src/runtime/sqlite";
+import { instanceKeys } from "../../../src/runtime/instances/keys";
 it("keeps an enrolled profile usable offline and rejects revocation and corrupted or missing keys", async () => {
   const dir = await mkdtemp(join(tmpdir(), "raypx-instance-")),
     keys = createInstanceKey(),
@@ -91,7 +89,7 @@ it("enrolls with a private host token and retains the signed identity across res
   const signer = createInstanceSigner("headless-fixture");
   const instances = new Map<string, InstanceBinding>(),
     enrollments = new Map<string, EnrollmentRecord>();
-  const api = await serveHttp({
+  const api = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {
@@ -183,7 +181,7 @@ it("enrolls with a private host token and retains the signed identity across res
 
 it("persists a signed revocation and drains a running command before releasing the profile", async () => {
   const { mkdir, readFile } = await import("node:fs/promises");
-  const { profilePath } = await import("../../../src/runtime/state/index.ts");
+  const { profilePath } = await import("../../../src/runtime/state");
   const dataDir = await mkdtemp(join(tmpdir(), "raypx-revocation-"));
   const directory = profilePath({ dataDir });
   await mkdir(directory, { recursive: true });
@@ -199,7 +197,7 @@ it("persists a signed revocation and drains a running command before releasing t
   const release = new Promise<void>((resolve) => {
     releaseStale = resolve;
   });
-  const api = await serveHttp({
+  const api = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(): Promise<Response> {
@@ -250,13 +248,13 @@ it("persists a signed revocation and drains a running command before releasing t
       executable: process.execPath,
       args: [
         "-e",
-        "require('node:fs').writeFileSync(process.argv.at(-1), 'started'); setInterval(() => {}, 1000)",
+        "await Bun.write(process.argv.at(-1), 'started'); setInterval(() => {}, 1000)",
         marker,
       ],
       cwd: directory,
       timeoutMs: 30_000,
     });
-    await expect.poll(() => fileExists(marker)).toBe(true);
+    await expect.poll(() => Bun.file(marker).exists()).toBe(true);
     delayNext = true;
     const stale = runtime.instances.refresh().catch((error: unknown) => error);
     await arrived;
@@ -281,7 +279,7 @@ it("persists a signed revocation and drains a running command before releasing t
 });
 
 it("revokes the original remote session before rejecting a different instance account", async () => {
-  const { createHost } = await import("../../../src/runtime/host.ts");
+  const { createHost } = await import("../../../src/runtime/host");
   const directory = await mkdtemp(join(tmpdir(), "raypx-instance-account-"));
   const binding: InstanceBinding = {
     version: 1,

@@ -1,10 +1,22 @@
 # syntax=docker/dockerfile:1
-# Core policy/transport checks; GUI and installers require the selected native runners.
-FROM rust:1.99.1-bookworm AS checks
-WORKDIR /app
-COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
-COPY apps/cli/launcher ./apps/cli/launcher
-COPY apps/desktop/src-tauri ./apps/desktop/src-tauri
-COPY apps/desktop/generated ./apps/desktop/generated
-COPY apps/desktop/tests/fixtures/native ./apps/desktop/tests/fixtures/native
-RUN cargo test --locked -p raypx-desktop --no-default-features --features native-smoke
+# Headless Go verification only; installed desktop acceptance runs on native CI.
+FROM oven/bun:1.4.4 AS bun
+
+FROM golang:1.27.3-bookworm AS modules
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+ENV CGO_ENABLED=0 GOTOOLCHAIN=go1.27.3 GOFLAGS=-mod=readonly \
+    GOMODCACHE=/go/pkg/mod GOCACHE=/root/.cache/go-build
+WORKDIR /app/apps/desktop
+COPY apps/desktop/go.mod apps/desktop/go.sum ./
+RUN --mount=type=cache,id=raypx-desktop-gomod,target=/go/pkg/mod,sharing=locked \
+    go mod download
+
+FROM modules AS checks
+COPY apps/desktop/package.json ./
+COPY apps/desktop/internal/ ./internal/
+COPY apps/desktop/tests/native/host/ ./tests/native/host/
+COPY apps/desktop/scripts/host/mygo.ts apps/desktop/scripts/host/packager.ts \
+    apps/desktop/scripts/host/prepare-cli.ts apps/desktop/scripts/host/signing.ts ./scripts/host/
+RUN --mount=type=cache,id=raypx-desktop-gomod,target=/go/pkg/mod,sharing=locked \
+    --mount=type=cache,id=raypx-desktop-go-build,target=/root/.cache/go-build,sharing=locked \
+    bun scripts/host/mygo.ts check

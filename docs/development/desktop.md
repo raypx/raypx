@@ -1,8 +1,8 @@
-# Tauri Desktop
+# MyGo Desktop
 
 Runtime connection settings, native API transport and release requirements for
-the Tauri web host. [Desktop workspace commands](../../apps/desktop/README.md)
-and [ADR 0045](../architecture/0045-tauri-node-pnpm.md) define its entry points
+the MyGo web host. [Desktop workspace commands](../../apps/desktop/README.md)
+and [ADR 0038](../architecture/0038-mygo-desktop-host.md) define its entry points
 and architectural boundary.
 
 ## Connection configuration
@@ -99,7 +99,7 @@ Closing the window only hides it and does not reload configuration. Invalid or
 unreadable configuration stops startup with a native error dialog; Raypx does
 not fall back to another server.
 
-The normalized API origin scopes the Tauri page origin, native cookie partition,
+The normalized API origin scopes the MyGo page origin, native cookie partition,
 remote opt-in and device binding; ports count as distinct origins. Switching back
 restores that server's saved state. Theme/language and device-local CLI data stay
 on the same computer. The CLI profile's account/origin binding remains immutable
@@ -115,31 +115,31 @@ configuration directory. It changes where `config.toml` is read, not the server
 precedence. The GUI launched by Finder/Explorer may not inherit shell variables.
 Native smoke tests always use their own temporary configuration directory.
 
-Native HTTP on macOS and Windows keeps persistent Cookies in Rust-owned `tauri-sessions.sqlite`,
+Native HTTP on macOS and Windows keeps persistent Cookies in Go-owned `mygo-sessions-v3.sqlite`,
 one row per server scope, isolated from the CLI profile database and Desktop instance lock.
 POSIX directories/files use 0700/0600; Windows uses restricted inheritable DACLs,
 including SQLite auxiliary files. Credentials never enter TOML, renderer storage or sync.
 Old Keychain entries, `credentials.sqlite` and `session-v2.enc` files are not read, imported
 or deleted. An old profile without its database key remains unavailable, with history and
 file grants retained; choose a fresh `local_profile` explicitly. An expired or server-revoked session requires sign-in, and a missing Host authorization requires explicit authorization again.
-Persistent cookies are AES-GCM ciphertext authenticated against their server scope;
-the OS credential store keeps a separate key for the Tauri data directory. A missing
+Persistent Cookies are AES-GCM ciphertext authenticated against their server scope;
+MyGo Secrets keeps the data-directory key in the system credential store. A missing
 key or unreadable ciphertext preserves the stored rows and permits in-memory
-sign-in. Previous-host sessions stay untouched; the first Tauri launch requires
-sign-in. Session-only Cookies stay in memory; persistent Cookies honor expiry and
-sign-out removal.
+sign-in. Upgrading the previous plaintext session format clears those old rows
+and requires sign-in again. Session-only Cookies stay in memory; persistent
+Cookies honor expiry and sign-out removal.
 
 ## Native API transport
 
-The Rust host's `Api::rpc` calls account/get and hosts/authorize/revoke through the
+The Go host's `API.RPC` calls account/get and hosts/authorize/revoke through the
 same native HTTP adapter as renderer API requests. Business payloads stay opaque
 JSON; TypeScript contracts remain authoritative.
 
 `apiExposure` in `@raypx/contracts/api` assigns every procedure to renderer, native
-or independent host access. `native:generate` derives the Rust RPC path policy;
-Desktop check generates that policy without requiring renderer/CLI assets.
+or independent host access. `native:generate` derives the Go RPC path policy;
+Desktop check verifies its tracked output without requiring ignored build assets.
 Packaging and native test preparation use the same generator. Native cookie and
-credential isolation remains enforced by the Rust HTTP adapter.
+credential isolation remains enforced by the Go HTTP adapter.
 
 The adapter enforces configured origin, allowlisted paths/headers, Origin:
 `views://main`, request/response limits, deadlines, cancellation, redirect refusal
@@ -154,68 +154,88 @@ maps to MISSING_PROCEDURE and authorization fails. The current hosts API is requ
 there is no browser-grant fallback.
 Redirects cannot become successful authorization responses.
 
-Run `pnpm --dir apps/desktop run tauri:test` for shared policy fixtures, native
-Cookie continuity, real TypeScript oRPC transport, private-method rejection and
-session corruption/lock tests. Fixtures use ephemeral loopback endpoints and
-synthetic data; they require no real accounts or provider login.
+Run `bun run --cwd apps/desktop mygo:test`. The Go tests launch the actual oRPC 2
+TypeScript router in tests/native/fixtures/orpc-server.ts with the pinned Bun,
+on an ephemeral loopback port. They verify Cookie continuity, native credentials,
+account/authorize/revoke calls, status-less errors, missing procedures, redirect
+refusal and unsupported metadata. No GUI, database or provider login is needed.
+Loopback protocol checks do not establish production HTTPS persistence acceptance.
 
-Native HTTP's `views://main` Origin differs from the scoped renderer URL
-(`raypx-<server-scope>://localhost/`, mapped to HTTP on Windows). Framework changes
-do not make arbitrary renderer origins trusted or expose native Cookies.
+The native HTTP Origin is intentionally distinct from the MyGo renderer URL
+(`mygo://<server-scope>/`, mapped to HTTP on Windows). Changing the host framework
+does not make renderer origins trusted API callers or expose session cookies.
 
 ## Build and release
 
-Node must satisfy `>=24.18.0 <25` in root package.json; Desktop bundles the actual
-build runtime and records its exact version in runtime.json. pnpm 12.16.1,
-Rust 1.99.1 and Tauri 2.12.5 are pinned in package.json, rust-toolchain.toml and Cargo.lock.
-The npm Tauri CLI/API package
-release is 2.12.4; Rust Tauri remains exactly 2.12.5. pnpm/VP owns JS builds and
-caches; Cargo owns native compilation. `pnpm run package:desktop` stages the full
-matching CLI distribution, signs nested executables, seals manifests and invokes
-Tauri. Staging takes the normal CLI JS build, adds the native launcher and build
-runtime Node, and retains the host's Herdr assets. Outputs live in
-`target/release/bundle`. Users need no global Node;
-project commands use the user's installed package manager.
+Bun 1.4.4 owns renderer and compiled CLI builds. Go 1.27.3 owns the MyGo v0.7.4 host,
+built with CGO_ENABLED=0. `bun run package:desktop` stages frontend/manifests,
+version-matched standalone CLI and the complete Herdr runtime, then invokes the
+pinned MyGo packager. Outputs live under `apps/desktop/build/<os>-<arch>`.
+No separately installed Bun or Node is needed at runtime. The bundled CLI includes
+Bun, so removing a user-level JavaScript installation does not change compatibility.
 
-macOS requires 13.5+ and a system WebView. Windows uses WebView2 and a per-user
-NSIS installer. Linux Desktop remains unverified. Cross compilation is rejected
-unless the complete matching CLI runtime is available. The main window uses
-native decorations; application layout stays inside their content area.
+### Platform baseline
 
-`pnpm --dir apps/desktop run tauri:check` runs Cargo format/check/Clippy;
-`tauri:test` runs native tests, including real children and SQLite locks. Linux
-checks the core without GTK/WebKit; actual GUI compilation requires those native
-libraries and does not itself establish GUI acceptance.
-`tauri:check:docker` generates contracts then runs the core in a scoped Rust image.
+`mygo.config.ts` sets `mac.minimumSystemVersion` to `13.5`, consistent with the
+pinned Go 1.27.3 host and Bun 1.4.4 CLI. macOS 12 is outside this configuration.
+Windows uses the system WebView2 runtime. Linux CLI/source checks do not establish
+Linux Desktop support. Cross-platform packaging is currently rejected: build on
+the target platform/architecture with matching CLI and Herdr payloads.
 
-Native smoke uses the Cargo `native-smoke` feature, a separate application ID,
-renderer output and `target/native-smoke`. The authenticated private endpoint
-requires a marked, owned temporary directory. Production packages contain no
-smoke socket/eval controls. `pnpm exec tsx apps/desktop/scripts/host/check-release.ts`
-inspects shipped host bytes and resource checksums.
+These are configured requirements, not evidence of testing every OS version.
+Release acceptance must record the actual OS, architecture, signing state and
+installed artifact tested.
 
-`native:smoke` stays inactive; `native:smoke:interactive` also checks native
-focus/resize/close on isolated macOS/Windows runners. The Windows hosted gate
-installs/uninstalls the actual NSIS package and verifies every runtime file.
-Live provider and Beta acceptance require their explicit isolated credentials.
-Native input changes select the relevant platform runners. Routine renderer edits
-keep source checks; releases additionally run `pnpm run verify --full`, packaged
-native, database and browser acceptance.
+### Build and acceptance
 
-Nested macOS Node/CLI/Herdr binaries are signed before their checksum ledgers
-are sealed and the outer app is signed/notarized. Windows signs PE resources and
-the NSIS installer. Missing distribution credentials produce an unverified
-artifact; they cannot establish signing, notarization or release acceptance.
+MyGo v0.7.2 and later disable page pinch zoom and swipe navigation by default.
+Desktop keeps these defaults; enable `PageOptions.PinchZoom` or
+`PageOptions.SwipeNavigation` explicitly if a future page needs those gestures.
 
-The first Tauri release is a signed installer, retaining the existing application
-identifier and data directories. Quit the previous Desktop app, explicitly stop
-its daemon through the current CLI, and wait for lock release before switching. A mismatched daemon
-is never silently taken over. Re-login affects online sessions only; preferences,
-projects, task history, config, offline identity and existing remote consent remain.
+Native smoke uses the separate `native_smoke` Go build tag and token-authenticated
+Unix socket or Windows named pipe to drive TS assertions. Production contains no
+smoke listener or eval controls. Shared Go JSON fixtures cover configuration,
+Cookies, API and local methods; a Bun fixture also exercises the actual preload.
 
-Later updates require new `TAURI_SIGNING_PRIVATE_KEY`,
-`RAYPX_TAURI_UPDATER_PUBLIC_KEY` and HTTPS `RAYPX_TAURI_UPDATER_URL`. Never reuse
-the previous updater key/feed. Test packages receive no distribution keys or
-update endpoint.
-Only publish an artifact after its platform's installer, GUI and signing matrix
-passes. Record unavailable checks as unverified.
+Production MyGo builds omit the native UI inspector. After packaging run
+`bun apps/desktop/scripts/host/check-release.ts`: it checks the actual host's
+Go module/build metadata and rejects embedded native-smoke controls or renderer
+hooks. The headless `mygo:smoke` checks the embedded frontend and matching CLI;
+it does not validate a running WebView.
+
+Native input changes select Go policy/transport and compiled Herdr on the relevant
+platforms; renderer changes and shared JS dependency updates use daily source checks.
+Full release preparation uses `bun run verify --full`. Distribution is selected
+only for a tag or explicit `distribution` request. Packaging and installed native
+GUI smoke run separately on macOS and Windows. Smoke uses a separate identity,
+Go build tag, renderer output and temporary profile; Windows hosted runners verify
+real per-user NSIS install/uninstall and payload hashes. Quiet local smoke never
+activates a window. Interactive smoke belongs on isolated CI.
+
+macOS signing uses APPLE_SIGNING_IDENTITY and a temporary imported keychain.
+When complete Apple credentials are available, CI creates RAYPX_NOTARY_PROFILE
+for MyGo notarization and verifies the stapled result. Windows CI imports the PFX
+and passes its thumbprint to MyGo's signtool command. Missing credentials produce
+unsigned/ad-hoc packages and are reported as such.
+
+Signed MyGo updates require MYGO_UPDATER_PRIVATE_KEY,
+RAYPX_MYGO_UPDATER_PUBLIC_KEY and an HTTPS RAYPX_MYGO_UPDATER_URL. MyGo generates
+its own update archives/manifests. Configure the public key and HTTPS feed
+together and verify the update with the actual packaged application.
+
+Before a public release, verify installed-app upgrade, SQLite credential/session
+migration, server-isolated WebView storage, sleep/wake reconnect, daemon task
+survival after GUI Quit, real account/provider flows, and distribution signatures.
+Local headless results do not count as platform GUI or signing acceptance.
+
+The pinned packager uses a small local packager adapter owned by
+apps/desktop/scripts/host/packager.ts. The prepare job signs CLI/Herdr and reseals
+their inventories once. The adapter prevents resource re-signing and recursive
+outer signing from modifying this shared payload while packaging the host,
+installer and update archive. Each staged payload is verified against the prepare
+artifact; runtime never rewrites the manifest.
+The Go module cache is untouched. Changes to MyGo's signing boundaries fail closed
+until this adapter is reviewed. The pinned CLI sources are copied into the ignored .mygo/packager directory.
+Remove the adapter when upstream provides this hook.
+
+See the [single-compile distribution and Strobe acceptance guide](mygo-bun-migration-plan.md) for prepared payloads and remaining platform gates.

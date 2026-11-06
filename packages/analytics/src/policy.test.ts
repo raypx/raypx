@@ -2,12 +2,8 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import type { TaskClient } from "@raypx/client/tasks";
 type AgentTask = Awaited<ReturnType<TaskClient["tasks"]["create"]>>;
 import { createNoopAnalytics } from "@raypx-kit/analytics";
-import { eventPolicy, parseAnalyticsConsent, analyticsPage } from "./index.ts";
-import {
-  instrumentTaskClient,
-  createRaypxAnalytics,
-  createQueryFailureReporter,
-} from "./browser.ts";
+import { eventPolicy, parseAnalyticsConsent, analyticsPage } from "./index";
+import { instrumentTaskClient, createRaypxAnalytics, createQueryFailureReporter } from "./browser";
 it("projects explicit enums and never forwards task content or raw URLs", () => {
   expect(
     eventPolicy("task_create_result", {

@@ -37,7 +37,7 @@ current eligibility and exact selected revisions in one consistent repository sn
 
 ## Verification
 
-Run pnpm --dir packages/memory run check and test.
+Run bun run --cwd packages/memory check and test.
 Component suites separate library mutations/history, picker/snapshot and prompt
 budgets. `tests/helpers/client.tsx` owns fresh port fixtures and per-case DOM cleanup;
 do not share pending requests or mutable clients between cases.

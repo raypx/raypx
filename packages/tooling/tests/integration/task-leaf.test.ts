@@ -16,7 +16,7 @@ it.each([
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "task-fixture", scripts: { test: "node capture.mjs" } }),
+    JSON.stringify({ name: "task-fixture", scripts: { test: "bun capture.mjs" } }),
   );
   writeFileSync(
     join(root, "capture.mjs"),
@@ -25,17 +25,14 @@ writeFileSync('result.json', JSON.stringify({ args: process.argv.slice(2), value
 process.exit(23);`,
   );
   const args = ["--flag", "中文 path", "$(literal)", "a&b"];
-  const result = runProcessSync(
-    [process.execPath, "--import", import.meta.resolve("tsx"), join(repository, leaf), "test"],
-    {
-      cwd: root,
-      env: {
-        ...process.env,
-        [argumentKey("task-fixture#test")]: JSON.stringify(args),
-        RAYPX_LEAF_TEST: "inherited environment",
-      },
+  const result = runProcessSync([process.execPath, join(repository, leaf), "test"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      [argumentKey("task-fixture#test")]: JSON.stringify(args),
+      RAYPX_LEAF_TEST: "inherited environment",
     },
-  );
+  });
   expect(result.exitCode).toBe(23);
   expect(JSON.parse(readFileSync(join(root, "result.json"), "utf8"))).toEqual({
     args,

@@ -5,7 +5,6 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   readdirSync,
   writeFileSync,
 } from "node:fs";
@@ -60,14 +59,14 @@ function measure(root: string, workspace: string, path: string, kind: ArtifactSi
   const absolute = resolve(root, path);
   const { files, symlinks } = scan(absolute);
   const components: ArtifactSize["components"] = [];
-  if (existsSync(join(absolute, "runtime.json")) && existsSync(join(absolute, "runtime"))) {
+  if (existsSync(join(absolute, "runtime.json")) && existsSync(join(absolute, "herdr"))) {
     const groups = new Map<string, FileSize[]>();
     for (const file of files) {
-      const name = file.path.startsWith("runtime/")
-        ? "Node"
+      const name = /^(?:raypx|raypx\.exe)$/.test(file.path)
+        ? "CLI / embedded Bun"
         : file.path.startsWith("herdr/")
           ? "Herdr"
-          : "Application / launcher / metadata";
+          : "Metadata / licenses";
       const group = groups.get(name) ?? [];
       group.push(file);
       groups.set(name, group);
@@ -91,7 +90,7 @@ function nativeBundles(directory: string): string[] {
     .sort((a, b) => a.name.localeCompare(b.name))
     .flatMap((entry) => {
       const path = join(directory, entry.name);
-      if (entry.isDirectory()) return entry.name.endsWith(".app") ? [path] : nativeBundles(path);
+      if (entry.isDirectory()) return entry.name.endsWith(".app") ? [path] : [];
       return entry.isFile() && /\.(?:dmg|exe|msi|tar\.gz|zip|AppImage|deb|rpm)$/.test(entry.name)
         ? [path]
         : [];
@@ -118,18 +117,22 @@ export function collectBuildSizes(root: string, options: SizeOptions) {
   for (const member of buildable) {
     if (selected.size && !selected.has(member.path)) continue;
     const workspace = member.manifest.name;
-    const tauri = join(root, member.path, "src-tauri/tauri.conf.json");
-    if (existsSync(tauri)) {
-      const config = JSON.parse(readFileSync(tauri, "utf8")) as {
-        build: { frontendDist: string };
-      };
+    const mygo = join(root, member.path, "mygo.config.ts");
+    if (existsSync(mygo)) {
       const renderer = options.browser
         ? join(member.path, "artifacts/browser/client")
-        : relative(root, resolve(root, member.path, "src-tauri", config.build.frontendDist));
+        : join(member.path, "dist/client");
       artifacts.push(measure(root, workspace, renderer, "renderer"));
       if (options.native) {
-        const bundle = resolve(root, process.env.CARGO_TARGET_DIR ?? "target", "release/bundle");
-        const bundles = nativeBundles(bundle);
+        const bundle = join(root, member.path, "build");
+        const bundles = existsSync(bundle)
+          ? readdirSync(bundle, { withFileTypes: true })
+              .filter(
+                (entry) =>
+                  entry.isDirectory() && /^(?:darwin|windows)-(?:arm64|amd64)$/.test(entry.name),
+              )
+              .flatMap((entry) => nativeBundles(join(bundle, entry.name)))
+          : [];
         for (const path of bundles) artifacts.push(measure(root, workspace, path, "native"));
         if (!bundles.length)
           artifacts.push({
@@ -213,7 +216,7 @@ export function sizeOptions(args: string[]): SizeOptions {
       options.packages.push(args[++i]!);
     else
       throw new Error(
-        "Usage: pnpm run size [--package name|path] [--native] [--browser] [--require]",
+        "Usage: bun run size [--package name|path] [--native] [--browser] [--require]",
       );
   }
   return options;

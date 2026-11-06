@@ -1,4 +1,3 @@
-import { serveHttp } from "@raypx/runtime-node/http";
 import assert from "node:assert/strict";
 
 interface CorsDriver {
@@ -16,7 +15,7 @@ interface CorsResult {
 /** Positive controls distinguish actual WebView CORS rejection from CSP/network failures. */
 export async function measureNativeCors(driver: CorsDriver) {
   const counts = { sameOrigin: 0, allowedCors: 0, deniedCors: 0 };
-  const serverA = await serveHttp({
+  const serverA = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request) {
@@ -33,7 +32,7 @@ export async function measureNativeCors(driver: CorsDriver) {
     },
   });
   const originA = `http://127.0.0.1:${serverA.port}`;
-  const serverB = await serveHttp({
+  const serverB = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request) {

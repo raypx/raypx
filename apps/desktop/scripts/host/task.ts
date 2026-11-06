@@ -1,12 +1,10 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { resolve } from "node:path";
 
 const supplied = process.argv.slice(2);
 const leaf = supplied[0] === "--leaf";
 const [task, ...directArgs] = leaf ? supplied.slice(1) : supplied;
-const pnpm = "pnpm";
+const bun = process.execPath;
 const cwd = resolve(import.meta.dirname, "../..");
-const root = resolve(cwd, "../..");
 let commands: string[][];
 
 const nativeGate =
@@ -34,7 +32,7 @@ if (
 )
   throw new Error("The selected renderer task owns its mode and output directory");
 // Scope Desktop arguments to its selected VP task, including dependency builds.
-// Preserve inherited environment in every leaf command.
+// Explicitly forward changes: Bun's default spawn environment is its startup snapshot.
 const env = { ...process.env };
 if (task !== "build:renderer") delete env.RAYPX_DESKTOP_BROWSER_BUILD;
 if (!leaf) {
@@ -44,38 +42,39 @@ if (!leaf) {
 
 // Direct scripts enter VP; the private leaf invocation executes only this task.
 if (!leaf) {
-  commands = [[pnpm, "run", "raypx-dev", "tasks", `desktop#${task}`]];
+  commands = [[bun, "run", "raypx-dev", "tasks", `desktop#${task}`]];
 } else if (task === "native:build") {
-  commands = [[pnpm, "run", "tauri:build", ...args]];
+  commands = [[bun, "run", "mygo:build", ...args]];
 } else if (task === "check") {
   commands = [
-    [pnpm, "exec", "tsx", "scripts/host/generate.ts"],
-    [pnpm, "run", "typecheck"],
-    [pnpm, "run", "typecheck:node", ...args],
+    [bun, "scripts/host/generate.ts", "--check"],
+    [bun, "run", "typecheck"],
+    [bun, "run", "typecheck:node", ...args],
+    [bun, "run", "perf:check"],
   ];
 } else if (task === "build") {
   commands = [
-    [pnpm, "exec", "vp", "build", "--config", "vite.app.config.ts", ...args],
-    [pnpm, "run", "native:csp"],
+    [bun, "--bun", "vp", "build", "--config", "vite.app.config.ts", ...args],
+    [bun, "run", "native:csp"],
   ];
 } else if (task === "build:renderer") {
   // Start's prerender preview reloads Vite config without forwarding --mode.
   env.RAYPX_DESKTOP_BROWSER_BUILD = "1";
   commands = [
-    [pnpm, "exec", "vp", "build", "--config", "vite.app.config.ts", ...args, "--mode", "e2e"],
-    [pnpm, "run", "native:csp", "artifacts/browser/client"],
+    [bun, "--bun", "vp", "build", "--config", "vite.app.config.ts", ...args, "--mode", "e2e"],
+    [bun, "run", "native:csp", "artifacts/browser/client"],
   ];
 } else if (nativeGate) {
   const scenario = task === "native:agents" ? "agents-run.ts" : "run.ts";
   const mode = task === "native:smoke:interactive" ? ["--interactive"] : [];
-  commands = [[pnpm, "exec", "tsx", `tests/native/smoke/${scenario}`, ...mode, ...args]];
+  commands = [[bun, "run", `tests/native/smoke/${scenario}`, ...mode, ...args]];
 } else {
-  commands = [[pnpm, "run", "tauri:dev", ...args]];
+  commands = [[bun, "run", "mygo:dev", ...args]];
 }
 
 for (const command of commands) {
-  const child = spawnProcess(command, {
-    cwd: leaf ? cwd : root,
+  const child = Bun.spawn(command, {
+    cwd,
     env,
     stdin: "inherit",
     stdout: "inherit",
