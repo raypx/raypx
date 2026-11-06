@@ -41,8 +41,8 @@ async function evaluate(script: string): Promise<unknown> {
   }
   throw new Error("Renderer bridge is unavailable");
 }
-async function waitFor(check: () => Promise<boolean> | boolean, message: string) {
-  const deadline = Date.now() + 30_000;
+async function waitFor(check: () => Promise<boolean> | boolean, message: string, timeout = 30_000) {
+  const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     try {
       if (await check()) return;
@@ -246,6 +246,7 @@ try {
   await waitFor(
     async () => (await engine.status()).status === "ready",
     "Bundled local engine did not become ready",
+    45_000,
   );
   if (fixturePhase === "shell") {
     stage = "local instance enrollment";
@@ -369,11 +370,20 @@ try {
     );
     assert.equal((await nativeWindow.state()).visible, true);
     stage = "native resize";
-    await nativeWindow.resize(640, 480);
-    await waitFor(async () => {
-      const { width, height } = await nativeWindow.state();
-      return width >= 800 && height >= 620;
-    }, "Native minimum dimensions were not restored");
+    const before = await nativeWindow.state();
+    let resized = await nativeWindow.resize(640, 480);
+    try {
+      await waitFor(async () => {
+        resized = await nativeWindow.state();
+        return (
+          (resized.width !== before.width || resized.height !== before.height) &&
+          resized.width >= 960 &&
+          resized.height >= 600
+        );
+      }, "Native minimum dimensions were not restored");
+    } finally {
+      console.info(`Native smoke resized window: ${resized.width} x ${resized.height}`);
+    }
   } else
     console.info(
       "Native smoke quiet: foreground activation, native close and resize checks skipped",

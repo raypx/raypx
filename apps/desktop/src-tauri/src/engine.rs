@@ -154,7 +154,13 @@ impl Engine {
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .kill_on_drop(true);
-        let mut child = command.spawn()?;
+        let mut child = command.spawn().inspect_err(|_error| {
+            #[cfg(feature = "native-smoke")]
+            eprintln!(
+                "[native-smoke] CLI launch failed: {:?}",
+                _error.raw_os_error()
+            );
+        })?;
         let stdout = child.stdout.take().ok_or("CLI_UNAVAILABLE")?;
         let process = Arc::new(Process {
             generation,
@@ -182,6 +188,17 @@ impl Engine {
                     if engine.generation.load(Ordering::SeqCst) != generation { return Ok(()); }
                     if let Some(event) = packet["event"].as_str() {
                         if event == "engine.status" {
+                            #[cfg(feature = "native-smoke")]
+                            if packet["data"]["status"] == "error" {
+                                let code = packet["data"]["code"]
+                                    .as_str()
+                                    .filter(|code| {
+                                        !code.is_empty() && code.len() <= 128
+                                            && code.bytes().all(|byte| byte.is_ascii_uppercase() || byte == b'_')
+                                    })
+                                    .unwrap_or("UNKNOWN");
+                                eprintln!("[native-smoke] CLI startup reported {code}");
+                            }
                             if packet["data"]["code"] == "HOST_VERSION_MISMATCH" { engine.status_changed(generation,json!({"status":"error","code":"HOST_VERSION_MISMATCH"})).await; }
                         } else { engine.events.send(packet, &reader_process.cancel).await?; }
                     } else if let Some(id) = packet["id"].as_str() {
@@ -226,6 +243,10 @@ impl Engine {
             }
         });
         let info = self.request("runtime.info", json!({})).await;
+        #[cfg(feature = "native-smoke")]
+        if let Err(error) = &info {
+            eprintln!("[native-smoke] CLI handshake failed: {error}");
+        }
         match info {
             Ok(info)
                 if info["version"] == self.version
@@ -275,15 +296,31 @@ impl Engine {
             engine: self,
             id: id.clone(),
         };
+        // The daemon proxy can wait up to 20 seconds for owner turnover and startup,
+        // in addition to copying the bundled runtime on a cold Windows profile.
+        let response_timeout = Duration::from_secs(match method {
+            "runtime.info" if self.daemon => 30,
+            "runtime.info" => 10,
+            _ => 86410,
+        });
         let result = async {
-            let written = tokio::time::timeout(Duration::from_secs(10), async { let mut input = process.input.lock().await; input.write_all(&bytes).await?; input.flush().await }).await;
-            if !matches!(written, Ok(Ok(()))) { process.cancel.cancel(); return fail("ENGINE_INPUT_FAILED"); }
+            let written = tokio::time::timeout(Duration::from_secs(10), async {
+                let mut input = process.input.lock().await;
+                input.write_all(&bytes).await?;
+                input.flush().await
+            })
+            .await;
+            if !matches!(written, Ok(Ok(()))) {
+                process.cancel.cancel();
+                return fail("ENGINE_INPUT_FAILED");
+            }
             tokio::select! {
                 value = receiver => value.map_err(|_| "ENGINE_STOPPED")?,
                 _ = process.cancel.cancelled() => fail("ENGINE_STOPPED"),
-                _ = tokio::time::sleep(Duration::from_secs(if method == "runtime.info" {10} else {86410})) => fail("ENGINE_TIMEOUT"),
+                _ = tokio::time::sleep(response_timeout) => fail("ENGINE_TIMEOUT"),
             }
-        }.await;
+        }
+        .await;
         if self.generation.load(Ordering::SeqCst) == process.generation {
             self.state.lock().unwrap().pending.remove(&id);
         }
