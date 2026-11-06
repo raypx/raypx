@@ -175,6 +175,7 @@ jobs:
         with:
           cache: ${{ !inputs.cold_native }}
           cache-key: ${{ matrix.phase }}
+          check-profile: ${{ matrix.phase == 'checks' }}
           target-directory: ${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}
       - uses: ./.github/actions/vp-restore
         id: vp-cache

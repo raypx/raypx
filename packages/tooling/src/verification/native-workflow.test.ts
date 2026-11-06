@@ -146,6 +146,12 @@ it("defaults manual CI to Windows and forwards explicit cold native builds", () 
     .filter((step) => step.uses === "./.github/actions/setup-rust");
   expect(rustSteps).toHaveLength(1);
   for (const step of rustSteps) expect(step.with?.cache).toBe("${{ !inputs.cold_native }}");
+  expect(rustSteps[0]?.with?.["check-profile"]).toBe("${{ matrix.phase == 'checks' }}");
+  expect(
+    ci.jobs.javascript?.steps?.find((step) => step.uses === "./.github/actions/setup-rust")?.with?.[
+      "check-profile"
+    ],
+  ).toBe("true");
   expect(rustSteps[0]?.with?.["cache-key"]).toBe("${{ matrix.phase }}");
   expect(rustSteps[0]?.with?.["target-directory"]).toBe(
     "${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}",
@@ -157,6 +163,7 @@ it("defaults manual CI to Windows and forwards explicit cold native builds", () 
     runs: { steps: Step[] };
   };
   expect(rust.inputs.cache?.default).toBe("true");
+  expect(rust.inputs["check-profile"]?.default).toBe("false");
   expect(
     rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.with?.[
       "cache-on-failure"

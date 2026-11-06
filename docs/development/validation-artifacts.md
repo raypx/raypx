@@ -255,6 +255,9 @@ CI reads rust-toolchain.toml and keys native caches with Cargo.lock and the nati
 phase. The smoke cache explicitly follows `target/native-smoke`; check and package
 caches follow `target`. CLI/renderer preparation does not install or cache Rust.
 Linux source jobs install Rust only when selected Rust inputs require it.
+CI source checks set `CARGO_PROFILE_DEV_DEBUG=0` and `CARGO_PROFILE_TEST_DEBUG=0`
+before restoring Cargo caches. These flags enter the cache fingerprint; packaging,
+GUI smoke and local development keep their normal profiles.
 Cargo also saves reusable dependency outputs when an unrelated acceptance step
 fails; failed source/test results never become successful VP cache entries.
 The CLI build ignores `.cache/herdr` downloads as task inputs: manifest pins still

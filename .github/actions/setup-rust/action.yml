@@ -10,11 +10,19 @@ inputs:
   target-directory:
     description: Cargo output directory for this phase
     default: target
+  check-profile:
+    description: Omit development and test debug symbols for CI source checks
+    default: "false"
 runs:
   using: composite
   steps:
     - shell: bash
+      env:
+        RAYPX_RUST_CHECK_PROFILE: ${{ inputs.check-profile }}
       run: |
+        if [ "$RAYPX_RUST_CHECK_PROFILE" = "true" ]; then
+          printf '%s\n' CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 >> "$GITHUB_ENV"
+        fi
         toolchain="$(bun -e 'import {readFileSync} from "node:fs"; const text=readFileSync("rust-toolchain.toml","utf8"); console.log(text.match(/channel\s*=\s*"([^"]+)"/)[1])')"
         rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
     - uses: Swatinem/rust-cache@v2

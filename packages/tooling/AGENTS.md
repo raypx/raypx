@@ -132,6 +132,8 @@ outside VP's filesystem tracer; Cargo owns its native compilation cache.
 CLI build inputs exclude the verified Herdr download cache; the complete sealed `dist`
 and manifest pins determine reuse on fresh runners. Native preparation needs no Rust.
 Cargo cache keys and target directories follow the check/package/smoke phase.
+CI source checks omit dev/test debug symbols before Cargo cache lookup; local and
+package/smoke profiles keep their defaults.
 `raypx-dev cli:experiment <prepared CLI directory> [--upx <executable>]` compiles
 isolated size/startup candidates under `.artifacts/cli-size`; it never replaces the
 prepared production payload. Its manual workflow uses Windows only.
