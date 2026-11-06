@@ -1,6 +1,6 @@
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { existsSync } from "node:fs";
-import { readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
 import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install.ts";
@@ -23,19 +23,26 @@ export interface SmokeInstallation {
   dispose(): Promise<void>;
 }
 
-async function assertSmokeBinary(binary: string, env: NodeJS.ProcessEnv) {
-  const probe = spawnProcess([binary, "--native-smoke-probe"], {
-    cwd,
-    env,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [error, code] = await Promise.all([new Response(probe.stderr).text(), probe.exited]);
-  if (code !== 0)
-    throw new Error(
-      `Native smoke binary is not built with the smoke feature (${code}): ${error.trim()}`,
-    );
+export async function assertSmokeBinary(binary: string, env: NodeJS.ProcessEnv) {
+  const directory = await mkdtemp(join(tmpdir(), "raypx-native-probe-"));
+  const receipt = join(directory, "probe");
+  try {
+    const probe = spawnProcess([binary, "--native-smoke-probe"], {
+      cwd,
+      env: { ...env, RAYPX_NATIVE_SMOKE_PROBE_FILE: receipt },
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "pipe",
+    });
+    const [error, code] = await Promise.all([new Response(probe.stderr).text(), probe.exited]);
+    const result = await readFile(receipt, "utf8").catch(() => undefined);
+    if (code !== 0 || result !== "raypx-native-smoke/1\n")
+      throw new Error(
+        `Native smoke binary did not attest the smoke feature (${code}; receipt ${result ? "invalid" : "missing"}): ${error.trim()}`,
+      );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 }
 
 export async function buildSmoke(): Promise<SmokeInstallation> {
@@ -129,7 +136,8 @@ export async function runTauriSmoke(
     ]);
     let scenarioCode: number;
     if (first.source === "native") {
-      const [diagnostic, lifecycle, complete] = await Promise.all([
+      const [entry, diagnostic, lifecycle, complete] = await Promise.all([
+        readFile(join(directory, "native-smoke-entry"), "utf8").catch(() => undefined),
         readFile(join(directory, "native-smoke-startup-error"), "utf8").catch(() => undefined),
         readFile(join(directory, "native-smoke-lifecycle"), "utf8").catch(() => undefined),
         readFile(environment.RAYPX_NATIVE_SMOKE_COMPLETE_FILE, "utf8").catch(() => undefined),
@@ -150,7 +158,13 @@ export async function runTauriSmoke(
           }),
         ]);
         if (timeout) clearTimeout(timeout);
-        const details = [diagnostic, lifecycle?.trim()].filter(Boolean).join("\n");
+        const details = [
+          entry ? `entry: ${entry}` : "entry: missing",
+          diagnostic,
+          lifecycle?.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n");
         throw new Error(
           `Native smoke ${phase} Desktop exited before assertions (${first.code}); scenario ${scenarioExit ? `exited (${scenarioExit.code})` : "did not exit within 30 seconds"}${details ? `:\n${details}` : ""}`,
         );
