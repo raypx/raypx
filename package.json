@@ -121,7 +121,8 @@
         "wrangler": "4.157.0",
         "@hona/strobe": "0.13.0",
         "@types/ws": "8.18.2",
-        "@types/cross-spawn": "6.0.6"
+        "@types/cross-spawn": "6.0.6",
+        "@types/semver": "7.8.0"
       }
     }
   },
