@@ -58,7 +58,7 @@ export function parseCiPlan(
     decoded.nativeRunners.some((name) => !["macos-latest", "windows-latest"].includes(name)) ||
     new Set(decoded.nativeRunners).size !== decoded.nativeRunners.length ||
     (!decoded.native && decoded.nativeRunners.length > 0) ||
-    (decoded.distribution && decoded.nativeRunners.length !== 2)
+    (decoded.distribution && decoded.nativeRunners.length === 0)
   )
     throw new Error("CI plan has inconsistent acceptance targets");
   return decoded;

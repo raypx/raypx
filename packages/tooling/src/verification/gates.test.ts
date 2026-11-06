@@ -2,7 +2,7 @@ import { copyFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project } from "../../tests/helpers/verification.js";
-import { verificationPlan } from "./plan.js";
+import { githubPlan, verificationPlan } from "./plan.js";
 import { ciGate } from "./index.js";
 import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.js";
 import { assertCiResult } from "./result.js";
@@ -194,4 +194,15 @@ it("requires selected deployment results and rejects skipped or cancelled accept
   expect(() => assertCiResult(needs)).not.toThrow();
   for (const result of ["skipped", "failure", "cancelled", "abandoned"])
     expect(() => assertCiResult({ ...needs, deployment: { result } })).toThrow(/deployment/);
+});
+
+it("accepts Windows-only manual distribution plans and retains both release-tag targets", () => {
+  const { root } = project();
+  const manual = githubPlan(root, "workflow_dispatch", { inputs: { distribution: true } });
+  expect(manual.nativeRunners).toEqual(["windows-latest"]);
+  expect(manual.distribution).toBe(true);
+  expect(parseCiPlan(ciOutputs(manual, "commit-a").plan, "commit-a")).toEqual(manual);
+  const release = githubPlan(root, "push", { ref: "refs/tags/v1.0.0" });
+  expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
+  expect(parseCiPlan(ciOutputs(release, "commit-a").plan, "commit-a")).toEqual(release);
 });
