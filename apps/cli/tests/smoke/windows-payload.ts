@@ -27,6 +27,42 @@ const env = {
 };
 const close = await enrollTestProfile({ dataDir: data, profile: "payload" }, [binary], env);
 const runtime = join(data, "bin/daemon", `${manifest.version}-${manifest.builtAt}`);
+const powershell = join(
+  process.env.SystemRoot ?? "C:\\Windows",
+  "System32/WindowsPowerShell/v1.0/powershell.exe",
+);
+let runtimeImage: string | undefined;
+async function waitForRuntimeExit() {
+  if (!runtimeImage) return;
+  const child = Bun.spawn(
+    [
+      powershell,
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      String.raw`
+$ErrorActionPreference = 'Stop'
+$deadline = [DateTime]::UtcNow.AddSeconds(30)
+$owned = @(Get-Process -Name raypx -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $env:RAYPX_TEST_RUNTIME_EXE })
+foreach ($process in $owned) {
+  try {
+    $remaining = [Math]::Max(0, [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds)
+    if (!$process.WaitForExit($remaining)) { throw 'Stopped runtime retained a process' }
+  } finally { $process.Dispose() }
+}
+exit 0
+`,
+    ],
+    {
+      env: { ...env, RAYPX_TEST_RUNTIME_EXE: runtimeImage },
+      stdout: "ignore",
+      stderr: "ignore",
+      timeout: 35_000,
+      windowsHide: true,
+    },
+  );
+  assert.equal(await child.exited, 0, "Stopped Windows runtime retained processes after 30s");
+}
 async function invoke(exe: string, args: string[]) {
   const child = Bun.spawn([exe, ...args, "--data-dir", data, "--profile", "payload", "--json"], {
     env,
@@ -59,10 +95,7 @@ try {
   assert.ok(Number.isSafeInteger(info.pid) && info.pid > 0);
   const image = Bun.spawn(
     [
-      join(
-        process.env.SystemRoot ?? "C:\\Windows",
-        "System32/WindowsPowerShell/v1.0/powershell.exe",
-      ),
+      powershell,
       "-NoProfile",
       "-NonInteractive",
       "-Command",
@@ -86,6 +119,7 @@ try {
     (await realpath(join(runtime, "raypx.exe"))).toLowerCase(),
     "Daemon must run from its complete versioned copy",
   );
+  runtimeImage = imagePath.trim();
   const moved = join(root, "moved-original");
   const moveDeadline = Date.now() + 5000;
   for (;;) {
@@ -164,5 +198,6 @@ try {
 } finally {
   if (daemonStarted) await invoke(join(runtime, "raypx.exe"), ["daemon", "stop"]);
   await close();
+  await waitForRuntimeExit();
   await removeTemporaryDirectory(root);
 }
