@@ -157,6 +157,11 @@ it("defaults manual CI to Windows and forwards explicit cold native builds", () 
     runs: { steps: Step[] };
   };
   expect(rust.inputs.cache?.default).toBe("true");
+  expect(
+    rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.with?.[
+      "cache-on-failure"
+    ],
+  ).toBe("true");
   expect(rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.with?.key).toBe(
     "${{ inputs.cache-key }}",
   );

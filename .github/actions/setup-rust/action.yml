@@ -22,3 +22,6 @@ runs:
       with:
         key: ${{ inputs.cache-key }}
         workspaces: . -> ${{ inputs.target-directory }}
+        # Cargo fingerprints incomplete builds; unrelated smoke failures should not
+        # discard successfully compiled dependencies.
+        cache-on-failure: "true"
