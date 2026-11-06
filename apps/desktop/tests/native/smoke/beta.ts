@@ -290,7 +290,7 @@ async function acceptance() {
   const completeFile = process.env.RAYPX_NATIVE_SMOKE_COMPLETE_FILE;
   if (!completeFile) throw new Error("Native smoke completion marker is unavailable");
   await writeFile(completeFile, "raypx-native-smoke-complete/1\n", { flag: "wx" });
-  await trayAction("quit");
+  await quitDesktop();
 }
 try {
   await acceptance();
