@@ -1,0 +1,27 @@
+apps/cli/src/runtime/daemon/endpoint.ts
+  s_33df189f0a0908::t_62845d7fcc216a 180-181
+apps/desktop/src-tauri/src/engine.rs
+  s_33df189f0a0908::t_62845d7fcc216a 336,338
+apps/desktop/tests/native/smoke/scenario.ts
+  s_33df189f0a0908::t_62845d7fcc216a 249
+apps/cli/src/runtime/sqlite/permissions.ts
+  s_33df189f0a0908::t_62845d7fcc216a 90,94-99,129-135
+apps/cli/src/runtime/sqlite/profile.ts
+  s_33df189f0a0908::t_62845d7fcc216a 16-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2f8beae0e6687f15b375c29274f863b99071e2e8",
+  "prompts": {},
+  "sessions": {
+    "s_33df189f0a0908": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ac17-2dcf-7351-8a8a-608fc4a8aba0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
