@@ -42,6 +42,7 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
 }
 let closeInstance = async () => {};
 let closeProbe = async () => {};
+const failures: unknown[] = [];
 try {
   // Run the installed package outside the repository, with the embedded Bun runtime.
   await cp(builtDirectory, distribution, { recursive: true });
@@ -603,11 +604,22 @@ try {
     reader.releaseLock();
     child.kill();
   }
-  console.log(
-    `Installed CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.`,
-  );
+} catch (error) {
+  failures.push(error);
 } finally {
-  await closeProbe();
-  await closeInstance();
-  await rm(dataDir, { recursive: true, force: true });
+  for (const cleanup of [
+    closeProbe,
+    closeInstance,
+    () => rm(dataDir, { recursive: true, force: true }),
+  ]) {
+    try {
+      await cleanup();
+    } catch (error) {
+      failures.push(error);
+    }
+  }
 }
+if (failures.length) throw new AggregateError(failures, "CLI artifact smoke failed");
+console.log(
+  `Installed CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.`,
+);

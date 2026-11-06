@@ -123,10 +123,15 @@ export async function providerProxy(directory: string) {
       {
         env: { ...process.env, RAYPX_TEST_PROGRAM: binary, RAYPX_TEST_FIREWALL_RULE: rule },
         stdout: "ignore",
-        stderr: "ignore",
+        stderr: "pipe",
       },
     );
-    assert.equal(await child.exited, 0, "Could not configure loopback-only provider egress");
+    const error = await new Response(child.stderr).text();
+    assert.equal(
+      await child.exited,
+      0,
+      `Could not configure loopback-only provider egress: ${error.trim().slice(-4096)}`,
+    );
   }
   return {
     requests,
@@ -135,12 +140,6 @@ export async function providerProxy(directory: string) {
     async isolate(binary: string) {
       if (process.platform === "win32") {
         const rule = "raypx-provider-" + crypto.randomUUID();
-        cleanupNetwork = () =>
-          powershell(
-            "Remove-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -ErrorAction SilentlyContinue",
-            binary,
-            rule,
-          );
         await powershell(
           "New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress @('0.0.0.0-126.255.255.255','128.0.0.0-255.255.255.255','::2-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff') | Out-Null",
           binary,
