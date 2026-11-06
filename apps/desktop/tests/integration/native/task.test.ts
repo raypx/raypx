@@ -91,7 +91,6 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`;
       "RAYPX_DESKTOP_NATIVE_SMOKE_ARGS",
       "RAYPX_DESKTOP_NATIVE_BUILD_ARGS",
       "RAYPX_DESKTOP_NATIVE_SMOKE_INTERACTIVE_ARGS",
-      "RAYPX_DESKTOP_NATIVE_BETA_ARGS",
       "RAYPX_DESKTOP_NATIVE_AGENTS_ARGS",
     ])
       delete env[key];

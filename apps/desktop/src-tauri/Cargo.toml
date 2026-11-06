@@ -1,5 +1,6 @@
 [package]
 name = "raypx-desktop"
+default-run = "raypx-desktop"
 autotests = false
 version = "0.1.0"
 edition.workspace = true
