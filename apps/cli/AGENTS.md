@@ -59,6 +59,8 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
   Ordinary foreground commands never install a daemon or system service. Desktop may start
   an independent owner on demand; `daemon install` alone registers launchd.
 - Child PATH ends with `<profile>/bun` `bun`/`bunx` shims (`BUN_BE_BUN=1`, `runtime.info.bun`); Bun's children inherit it.
+  Windows batch files stay ASCII and reach the complete original runtime through a per-path
+  directory junction, preserving Unicode paths without changing the console code page.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
 - The executable configures `@raypx/logger` (evlog) once with an explicit field policy and a
   stderr stream drain, and closes it after runtime shutdown.
