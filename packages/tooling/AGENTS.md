@@ -129,6 +129,11 @@ independent cached VP runners, so it must run without an enclosing filesystem tr
 `test:unit` remains cached and `test:integration` always executes.
 Platform/toolchain identity is also part of each command. Native packaging stays
 outside VP's filesystem tracer; Go owns its native compilation cache.
+CLI builds exclude the verified Herdr download cache from task inputs; manifest
+pins and the complete sealed `dist` determine reuse on fresh runners.
+`raypx-dev cli:experiment <prepared CLI directory> [--upx <executable>]` compiles
+isolated size/startup candidates under `.artifacts/cli-size`, preserving the prepared
+production payload. Its manual workflow uses Windows only.
 The launcher creates ignored artifact/native directories before tracing:
 directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace

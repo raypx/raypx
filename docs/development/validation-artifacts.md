@@ -252,6 +252,10 @@ compilation uses the Go cache and independent production/smoke package directori
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
 invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
 CI selects Go through apps/desktop/go.mod and keys its native cache with go.sum.
+The CLI build ignores `.cache/herdr` downloads as task inputs: manifest pins still
+invalidate the build, and restored `dist` already contains the verified binaries.
+The manual `CLI size experiment` workflow compares isolated executable variants and
+warm command startup on Windows; it does not run automatically or request macOS.
 Windows jobs install Bun packages from the registry instead of restoring the download cache;
 extracting its many small files took longer than a fresh frozen install.
 The browser job caches Playwright's Chromium headless shell by Playwright version and runs
