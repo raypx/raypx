@@ -156,26 +156,21 @@ if (action === "verify") {
   await mkdir(output, { recursive: true });
   const name = `raypx-${manifest.version}-${manifest.platform}-${manifest.arch}.${process.platform === "win32" ? "zip" : "tar.gz"}`;
   const archive = join(output, name);
-  const files = [
-    "raypx" + (process.platform === "win32" ? ".exe" : ""),
-    "herdr",
-    "runtime.json",
-    "LICENSE",
-    "README.txt",
-  ];
   if (process.platform === "win32") {
+    await rm(archive, { force: true });
     process.env.RAYPX_CLI_ARCHIVE = archive;
+    process.env.RAYPX_CLI_ARCHIVE_SOURCE = directory;
     await run(
       [
         join(process.env.SystemRoot!, "System32/WindowsPowerShell/v1.0/powershell.exe"),
         "-NoProfile",
         "-NonInteractive",
         "-Command",
-        "$ErrorActionPreference='Stop'; Compress-Archive -LiteralPath @('raypx.exe','herdr','runtime.json','LICENSE','README.txt') -DestinationPath $env:RAYPX_CLI_ARCHIVE -Force",
+        "$ErrorActionPreference='Stop'; Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory($env:RAYPX_CLI_ARCHIVE_SOURCE, $env:RAYPX_CLI_ARCHIVE, [IO.Compression.CompressionLevel]::Optimal, $false)",
       ],
       directory,
     );
-  } else await run(["/usr/bin/tar", "-czf", archive, ...files]);
+  } else await run(["/usr/bin/tar", "-czf", archive, "."]);
   await writeFile(
     archive + ".sha256",
     createHash("sha256")

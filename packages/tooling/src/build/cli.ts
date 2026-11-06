@@ -78,8 +78,10 @@ export async function verifyCliPayload(
   const executable = manifest.platform === "win32" ? "raypx.exe" : "raypx";
   for (const name of [executable, "herdr/runtime.json", "LICENSE", "README.txt"])
     if (!manifest.files[name]) throw new Error(`CLI payload missing ${name}`);
-  if (Object.keys(files).length !== Object.keys(manifest.files).length)
-    throw new Error("CLI payload inventory mismatch");
+  const missing = Object.keys(manifest.files).filter((name) => !Object.hasOwn(files, name));
+  const unexpected = Object.keys(files).filter((name) => !Object.hasOwn(manifest.files, name));
+  if (missing.length || unexpected.length)
+    throw new Error(`CLI payload inventory mismatch: ${JSON.stringify({ missing, unexpected })}`);
   for (const [name, hash] of Object.entries(manifest.files)) {
     const local = relative(directory, resolve(directory, name));
     if (

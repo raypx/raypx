@@ -29,8 +29,11 @@ it("seals signed bytes without changing identity and rejects altered, extra or l
     await sealCliPayload(root);
     await expect(verifyCliPayload(root, identity)).resolves.toMatchObject(identity);
     await writeFile(join(root, "untracked"), "unexpected");
-    await expect(verifyCliPayload(root)).rejects.toThrow("inventory");
+    await expect(verifyCliPayload(root)).rejects.toThrow('"unexpected":["untracked"]');
     await rm(join(root, "untracked"));
+    await rm(join(root, "LICENSE"));
+    await expect(verifyCliPayload(root)).rejects.toThrow('"missing":["LICENSE"]');
+    await writeFile(join(root, "LICENSE"), "unsigned");
 
     if (process.platform === "win32") return;
     await symlink(join(root, "LICENSE"), join(root, "escape"), "file");
