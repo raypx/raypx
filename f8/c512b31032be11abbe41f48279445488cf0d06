@@ -1,0 +1,25 @@
+apps/desktop/tests/native/smoke/scenario.ts
+  s_33df189f0a0908::t_3d39d20b000866 375-379
+apps/desktop/src-tauri/src/engine.rs
+  s_33df189f0a0908::t_3d39d20b000866 156,158
+apps/cli/src/runtime/daemon/endpoint.ts
+  s_33df189f0a0908::t_3d39d20b000866 160
+apps/cli/src/runtime/sqlite/permissions.ts
+  s_33df189f0a0908::t_129c5ac9d6d4f0 16-39,41-52,90,95,111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f8c512b31032be11abbe41f48279445488cf0d06",
+  "prompts": {},
+  "sessions": {
+    "s_33df189f0a0908": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ac17-2dcf-7351-8a8a-608fc4a8aba0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
