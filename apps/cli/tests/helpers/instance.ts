@@ -106,10 +106,13 @@ export async function enrollTestProfile(
         new Response(child.stderr).text(),
       ]);
       let phase = "not-started",
-        scope = "unknown-slot";
+        scope = "unknown-slot",
+        failureCode = "unavailable";
       for (const line of diagnostics.split("\n")) {
         try {
           const event = JSON.parse(line);
+          if (typeof event.code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(event.code))
+            failureCode = event.code;
           if (
             event.operation === "instance.enrollment" &&
             /^(starting|key-read|key-write|key-ready|request|approval|registered)$/.test(
@@ -125,7 +128,7 @@ export async function enrollTestProfile(
       }
       if (code !== 0)
         throw new Error(
-          "Test instance enrollment failed (" + stage + "; " + phase + "; " + scope + ")",
+          `Test instance enrollment failed (exit ${code}; ${failureCode}; ${stage}; ${phase}; ${scope})`,
         );
     } finally {
       clearTimeout(timer);
