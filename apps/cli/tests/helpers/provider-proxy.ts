@@ -13,8 +13,8 @@ const hosts = [
   "openrouter.ai",
 ];
 
-// Windows Firewall accepts subnet filters reliably. Leave only IPv4 loopback for
-// the explicit 127.0.0.1 proxy; provider processes need no IPv6 connectivity.
+// Leave only IPv4 loopback for the explicit 127.0.0.1 proxy. Windows Firewall
+// rejects a zero-length IPv6 prefix, so cover IPv6 with two /1 filters.
 export const windowsProviderBlockedSubnets = [
   "0.0.0.0/2",
   "64.0.0.0/3",
@@ -24,7 +24,8 @@ export const windowsProviderBlockedSubnets = [
   "124.0.0.0/7",
   "126.0.0.0/8",
   "128.0.0.0/1",
-  "::/0",
+  "::/1",
+  "8000::/1",
 ] as const;
 
 /** A local TLS endpoint reached through CONNECT. It never forwards traffic to the Internet. */

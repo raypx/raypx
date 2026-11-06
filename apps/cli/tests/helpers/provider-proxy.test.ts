@@ -7,6 +7,7 @@ it("blocks provider egress outside the IPv4 loopback proxy", () => {
   const ipv6 = new BlockList();
   for (const subnet of windowsProviderBlockedSubnets) {
     const [address, prefix] = subnet.split("/");
+    expect(Number(prefix)).toBeGreaterThan(0);
     if (address!.includes(":")) ipv6.addSubnet(address!, Number(prefix), "ipv6");
     else ipv4.addSubnet(address!, Number(prefix), "ipv4");
   }
