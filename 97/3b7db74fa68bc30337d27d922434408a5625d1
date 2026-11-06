@@ -1,0 +1,23 @@
+apps/cli/src/runtime/sqlite/permissions.ts
+  s_33df189f0a0908::t_34260d2e1b7bec 16-17,25,48-51,87,92-93,98-106,108-111
+  s_33df189f0a0908::t_49e8e82bc4b7a4 86,94-97
+  s_33df189f0a0908::t_2cae307c528069 107
+apps/desktop/src-tauri/tests/native.rs
+  s_33df189f0a0908::t_34260d2e1b7bec 224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "973b7db74fa68bc30337d27d922434408a5625d1",
+  "prompts": {},
+  "sessions": {
+    "s_33df189f0a0908": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ac17-2dcf-7351-8a8a-608fc4a8aba0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
