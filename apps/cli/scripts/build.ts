@@ -30,6 +30,8 @@ const result = await Bun.build({
   format: "esm",
   minify: true,
   bytecode: true,
+  // Cache startup bytecode without serializing every lazily loaded function.
+  bytecodeDepth: 0,
   define: { __RAYPX_CLI_BUILT_AT__: String(builtAt) },
 });
 if (!result.success) throw new AggregateError(result.logs, "CLI compilation failed");
