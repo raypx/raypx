@@ -115,6 +115,8 @@ function cachedTask(
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
+    // Windows also traces the parent listing when staging a Herdr download.
+    ...(member.name === "cli" && build ? [{ pattern: "!.cache", base: "workspace" as const }] : []),
     { pattern: "!**/.wrangler.*.json", base: "workspace" },
     // Tool caches appear in node_modules after a first run, so a fresh CI runner lists it
     // differently. Dependency changes still reach every task through bun.lock below.
