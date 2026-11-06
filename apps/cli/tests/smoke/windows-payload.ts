@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, realpath, rename, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { enrollTestProfile } from "../helpers/instance";
+import { daemonFetch, readDaemon } from "../../src/runtime/daemon/endpoint";
+import { profilePath } from "../../src/runtime/state";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
 if (process.platform !== "win32") throw new Error("Windows payload lifecycle requires Windows");
@@ -49,8 +51,57 @@ try {
   const stable = join(home, "bin/raypx.exe");
   const installation = await Bun.file(join(home, "bin/installation.json")).json();
   await verifyCliPayload(join(home, "bin", installation.directory));
-  await rename(distribution, join(root, "moved-original"));
-  await rm(join(root, "moved-original"), { recursive: true });
+  const endpoint = readDaemon(profilePath({ dataDir: data, profile: "payload" }));
+  const response = await daemonFetch(endpoint, "/info");
+  assert.equal(response.status, 200);
+  const info = (await response.json()) as { pid: number };
+  assert.ok(Number.isSafeInteger(info.pid) && info.pid > 0);
+  const image = Bun.spawn(
+    [
+      join(
+        process.env.SystemRoot ?? "C:\\Windows",
+        "System32/WindowsPowerShell/v1.0/powershell.exe",
+      ),
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "$ErrorActionPreference = 'Stop'; [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false); (Get-Process -Id ([int]$env:RAYPX_TEST_DAEMON_PID)).Path",
+    ],
+    {
+      env: { ...env, RAYPX_TEST_DAEMON_PID: String(info.pid) },
+      stdout: "pipe",
+      stderr: "ignore",
+      timeout: 15_000,
+      windowsHide: true,
+    },
+  );
+  const [imagePath, imageCode] = await Promise.all([
+    new Response(image.stdout).text(),
+    image.exited,
+  ]);
+  assert.equal(imageCode, 0, "Could not inspect the isolated daemon image");
+  assert.equal(
+    (await realpath(imagePath.trim())).toLowerCase(),
+    (await realpath(join(runtime, "raypx.exe"))).toLowerCase(),
+    "Daemon must run from its complete versioned copy",
+  );
+  const moved = join(root, "moved-original");
+  const moveDeadline = Date.now() + 5000;
+  for (;;) {
+    try {
+      await rename(distribution, moved);
+      break;
+    } catch (error) {
+      // Exited CLI processes and file scanners can briefly retain Windows handles.
+      if (
+        Date.now() >= moveDeadline ||
+        !["EBUSY", "EPERM", "EACCES"].includes((error as NodeJS.ErrnoException).code ?? "")
+      )
+        throw error;
+      await Bun.sleep(100);
+    }
+  }
+  await rm(moved, { recursive: true, maxRetries: 10, retryDelay: 100 });
   // The first PTY is opened only after the downloaded directory no longer exists.
   const child = Bun.spawn([stable, "daemon", "proxy", "--data-dir", data, "--profile", "payload"], {
     env,
