@@ -107,6 +107,7 @@ describe("affected verification", () => {
     ["packages/desktop/go.mod", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/local.ts", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/terminal.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/main.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/daemon/endpoint.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/host.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/index.ts", ["macos-latest", "windows-latest"]],

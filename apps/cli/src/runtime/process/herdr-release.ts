@@ -146,6 +146,7 @@ export async function resolveHerdrBinary(directory: string, selected?: string) {
       throw new LocalError("TERMINAL_HOST_UNAVAILABLE", "Select an absolute Herdr executable");
     return selected;
   }
+  // Resolve in this process: Windows owners can outlive the launcher's installation.
   const source = process.env.RAYPX_HERDR_SOURCE ?? bundledHerdrDirectory();
   const cached = join(
     directory,
