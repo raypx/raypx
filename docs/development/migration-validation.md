@@ -1,9 +1,8 @@
 # Tauri / Node / pnpm migration validation
 
 The implementation follows [ADR 0045](../architecture/0045-tauri-node-pnpm.md).
-This record includes historical Linux x64 measurements and a current CLI package
-measurement from 2026-11-06. It does not establish macOS or Windows Desktop release
-acceptance.
+This record includes historical Linux x64 measurements, a current CLI package
+measurement and macOS and Windows packaged Desktop smoke results from 2026-11-06.
 
 ## Historical Runtime Measurement
 
@@ -118,6 +117,18 @@ artifact and are included in consuming builds. Follow the
 [build size guide](validation-artifacts.md#build-sizes) for CI summaries, exact-byte
 JSON reports, CLI runtime breakdown and production native package measurements.
 
+## Packaged Desktop smoke
+
+On 2026-11-06, the GitHub Actions distribution run passed the interactive packaged
+Desktop smoke on macOS and Windows for commit
+[`f8c512b31032be11abbe41f48279445488cf0d06`](https://github.com/raypx/raypx/commit/f8c512b31032be11abbe41f48279445488cf0d06).
+[CI run #42166525847](https://github.com/raypx/raypx/actions/runs/42166525847)
+
+- macOS passed with the packaged `.app`. [macOS smoke job](https://github.com/raypx/raypx/actions/runs/42166525847/job/127725200677)
+- Windows passed with the NSIS-installed test app, including runtime file verification and uninstall. [Windows smoke job](https://github.com/raypx/raypx/actions/runs/42166525847/job/127725272073)
+
+Both jobs exercised native window focus, resize and close on their respective runners.
+
 ## Acceptance boundaries
 
 `pnpm run verify` passed all 75 selected tasks. `pnpm run verify --full` passed all
@@ -140,18 +151,18 @@ schema, migration journal, projects, task history and offline instance key.
 Native core tests exercise origin and IPC policy, sessions, event acknowledgements,
 subprocess shutdown, instance locks and reconnecting to the same real daemon after
 closing a UI proxy. Linux GUI compilation and strict Clippy also exercise the
-production custom-protocol configuration. A Windows-target cross-compilation checks
-the process-token SID and restricted DACL implementation; its Windows runtime test
-still requires Windows.
+production custom-protocol configuration. The original Windows-target cross-compilation
+checked the process-token SID and restricted DACL implementation.
 
 Compose and Railway Docker acceptance passed migrations, database/Redis readiness,
 SSR, static assets, login, session cookies and Relay probes. Both profiles
 used owned synthetic services and accounts; the run recorded successful cleanup
 under `.artifacts/deployment/2026-11-05T07-36-27-810Z-299fb41c/`.
 
-macOS/Windows GUI, system credential persistence, notifications/tray, signed
-installation and upgrade, macOS notarization and Windows NSIS/locked-file
-acceptance require their actual platforms. They have not been run locally.
+Full Desktop release acceptance also requires platform checks for system credential
+persistence, notifications and tray behavior, signed installation and upgrade, macOS
+notarization and Windows locked-file handling.
+[Desktop release guide](desktop.md#build-and-release)
 Linux Desktop remains unaccepted. No installer has been published.
 
 Before the first Tauri release, stop the old daemon explicitly, exit the previous
