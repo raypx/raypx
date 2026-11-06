@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { stripVTControlCharacters } from "node:util";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import manifest from "../../package.json";
 import { aiFixture } from "../helpers/ai.ts";
 
@@ -207,7 +207,7 @@ try {
           HTTP_PROXY: proxy.url,
           https_proxy: proxy.url,
           http_proxy: proxy.url,
-          NODE_EXTRA_CA_CERTS: proxy.cert,
+          NODE_EXTRA_CA_CERTS: basename(proxy.cert),
           PATH: "",
           RAYPX_HOME: aiHome,
           RAYPX_PROVIDER_SMOKE_KEY: "synthetic-smoke-key",
@@ -223,10 +223,15 @@ try {
       probe.exited,
     ]);
     assert.notEqual(code, 0);
+    const safeErrors = errors
+      .replaceAll("synthetic-smoke-key", "[redacted]")
+      .replaceAll("private-provider-prompt", "[redacted]")
+      .trim()
+      .slice(-4096);
     assert.equal(
       proxy.requests.length,
       requestCount + 1,
-      `${provider} must reach the TLS test proxy`,
+      `${provider} must reach the TLS test proxy (exit ${code}, CONNECT ${proxy.connects.length}, TLS ${proxy.tlsErrors.join(",")}): ${safeErrors}`,
     );
     assert.ok(proxy.requests.at(-1)?.body.includes("private-provider-prompt"));
     assert.ok(proxy.requests.at(-1)?.credential.includes("synthetic-smoke-key"));
