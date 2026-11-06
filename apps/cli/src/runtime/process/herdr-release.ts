@@ -21,7 +21,7 @@ import { cliInstallation } from "./installation.ts";
 import { LocalError } from "../errors.ts";
 
 export const herdrVersion = manifest.herdr.version;
-export function bundledHerdrDirectory() {
+function bundledHerdrDirectory() {
   return [
     join(cliInstallation().root, "herdr"),
     join(cliInstallation().root, "herdr", `${process.platform}-${process.arch}`),
