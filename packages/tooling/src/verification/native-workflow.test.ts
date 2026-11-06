@@ -100,6 +100,16 @@ it("requires compiled Herdr integration and pinned Rust checks in the check phas
   expect(steps.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(true);
 });
 
+it("restores Cargo before JavaScript dependencies enter the cache scan", () => {
+  for (const job of [native.verify!, workflow("ci").jobs.javascript!]) {
+    const jobSteps = job.steps!;
+    const rust = jobSteps.findIndex((step) => step.uses === "./.github/actions/setup-rust");
+    const bun = jobSteps.findIndex((step) => step.uses === "./.github/actions/setup-bun");
+    expect(rust).toBeGreaterThanOrEqual(0);
+    expect(bun).toBeGreaterThan(rust);
+  }
+});
+
 it("retains Rust, production and interactive smoke acceptance", () => {
   expect(named("Desktop Tauri checks").if).toContain("!cancelled()");
   expect(named("Desktop Tauri checks").if).toContain("matrix.phase == 'checks'");

@@ -134,6 +134,8 @@ and manifest pins determine reuse on fresh runners. Native preparation needs no 
 Cargo cache keys and target directories follow the check/package/smoke phase.
 CI source checks omit dev/test debug symbols before Cargo cache lookup; local and
 package/smoke profiles keep their defaults.
+Rustup reads the root toolchain file directly; restore Cargo before installing JS
+dependencies to keep `node_modules` out of recursive cache discovery.
 `raypx-dev cli:experiment <prepared CLI directory> [--upx <executable>]` compiles
 isolated size/startup candidates under `.artifacts/cli-size`; it never replaces the
 prepared production payload. Its manual workflow uses Windows only.

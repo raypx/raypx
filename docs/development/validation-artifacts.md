@@ -258,6 +258,9 @@ Linux source jobs install Rust only when selected Rust inputs require it.
 CI source checks set `CARGO_PROFILE_DEV_DEBUG=0` and `CARGO_PROFILE_TEST_DEBUG=0`
 before restoring Cargo caches. These flags enter the cache fingerprint; packaging,
 GUI smoke and local development keep their normal profiles.
+Rustup reads the pinned toolchain, profile and components directly from
+`rust-toolchain.toml`. Cargo restoration precedes Bun dependency installation so
+cache discovery does not recursively scan `node_modules`.
 Cargo also saves reusable dependency outputs when an unrelated acceptance step
 fails; failed source/test results never become successful VP cache entries.
 The CLI build ignores `.cache/herdr` downloads as task inputs: manifest pins still

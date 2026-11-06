@@ -170,13 +170,14 @@ jobs:
       RAYPX_TAURI_UPDATER_URL: ${{ matrix.phase == 'package' && vars.RAYPX_TAURI_UPDATER_URL || '' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/setup-rust
         with:
           cache: ${{ !inputs.cold_native }}
           cache-key: ${{ matrix.phase }}
           check-profile: ${{ matrix.phase == 'checks' }}
           target-directory: ${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}
+      # Cargo cache discovery recursively scans the checkout; keep node_modules absent.
+      - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
