@@ -284,21 +284,6 @@ export async function runDaemon(options: ProfileOptions) {
     };
     removeSignals = onShutdown(stop);
     await host.stopped;
-  } catch (error) {
-    if (process.env.RAYPX_NATIVE_SMOKE === "1") {
-      const details = error as { code?: unknown; errno?: unknown; errcode?: unknown } | null;
-      const code = details?.code;
-      console.error(
-        JSON.stringify({
-          operation: "daemon.startup",
-          code:
-            typeof code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(code) ? code : "LOCAL_ERROR",
-          errno: typeof details?.errno === "number" ? details.errno : undefined,
-          errcode: typeof details?.errcode === "number" ? details.errcode : undefined,
-        }),
-      );
-    }
-    throw error;
   } finally {
     releaseRuntime?.();
     removeSignals?.();

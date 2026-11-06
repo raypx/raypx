@@ -13,51 +13,44 @@ const files = ["profile.sqlite", "profile.sqlite.migration-lock.sqlite"].flatMap
 // A protected inheritable directory ACL also protects SQLite files created after startup.
 const windowsPermissions = String.raw`
 $ErrorActionPreference = 'Stop'
-$stage = 'INITIALIZE'
-try {
-  $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
-  $system = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18')
-  $directory = $env:RAYPX_PRIVATE_PROFILE
-  $paths = @($directory) + @('profile.sqlite','profile.sqlite-wal','profile.sqlite-shm','profile.sqlite-journal','profile.sqlite.migration-lock.sqlite','profile.sqlite.migration-lock.sqlite-wal','profile.sqlite.migration-lock.sqlite-shm','profile.sqlite.migration-lock.sqlite-journal') | ForEach-Object { if ($_ -eq $directory) { $_ } else { [System.IO.Path]::Combine($directory, $_) } }
-  foreach ($path in $paths) {
-    $isDirectory = $path -eq $directory
-    $stage = if ($isDirectory) { 'DIRECTORY' } else { 'SQLITE_FILE' }
-    try {
-      $attributes = [System.IO.File]::GetAttributes($path)
-      if (($attributes -band [System.IO.FileAttributes]::ReparsePoint) -or
-          ([bool]($attributes -band [System.IO.FileAttributes]::Directory) -ne $isDirectory)) {
-        throw 'Unsupported path'
-      }
-      if ($isDirectory) {
-        $item = [System.IO.DirectoryInfo]::new($path)
-        $acl = [System.Security.AccessControl.DirectorySecurity]::new()
-        $inheritance = [System.Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit'
-      } else {
-        $item = [System.IO.FileInfo]::new($path)
-        $acl = [System.Security.AccessControl.FileSecurity]::new()
-        $inheritance = [System.Security.AccessControl.InheritanceFlags]::None
-      }
-      $current = $item.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Owner)
-      if ($current.GetOwner([System.Security.Principal.SecurityIdentifier]) -ne $sid) {
-        $acl.SetOwner($sid)
-      }
-      $acl.SetAccessRuleProtection($true, $false)
-      foreach ($owner in @($sid, $system)) {
-        $rule = [System.Security.AccessControl.FileSystemAccessRule]::new($owner, [System.Security.AccessControl.FileSystemRights]::FullControl, $inheritance, [System.Security.AccessControl.PropagationFlags]::None, [System.Security.AccessControl.AccessControlType]::Allow)
-        $acl.AddAccessRule($rule)
-      }
-      $item.SetAccessControl($acl)
-    } catch {
-      $exception = $_.Exception.GetBaseException()
-      # Optional SQLite files may not exist yet or can disappear during shutdown.
-      if (!$isDirectory -and ($exception -is [System.IO.FileNotFoundException] -or
-          $exception -is [System.IO.DirectoryNotFoundException])) { continue }
-      throw
+$sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+$system = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18')
+$directory = $env:RAYPX_PRIVATE_PROFILE
+$paths = @($directory) + @('profile.sqlite','profile.sqlite-wal','profile.sqlite-shm','profile.sqlite-journal','profile.sqlite.migration-lock.sqlite','profile.sqlite.migration-lock.sqlite-wal','profile.sqlite.migration-lock.sqlite-shm','profile.sqlite.migration-lock.sqlite-journal') | ForEach-Object { if ($_ -eq $directory) { $_ } else { [System.IO.Path]::Combine($directory, $_) } }
+foreach ($path in $paths) {
+  $isDirectory = $path -eq $directory
+  try {
+    $attributes = [System.IO.File]::GetAttributes($path)
+    if (($attributes -band [System.IO.FileAttributes]::ReparsePoint) -or
+        ([bool]($attributes -band [System.IO.FileAttributes]::Directory) -ne $isDirectory)) {
+      throw 'Unsupported path'
     }
+    if ($isDirectory) {
+      $item = [System.IO.DirectoryInfo]::new($path)
+      $acl = [System.Security.AccessControl.DirectorySecurity]::new()
+      $inheritance = [System.Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit'
+    } else {
+      $item = [System.IO.FileInfo]::new($path)
+      $acl = [System.Security.AccessControl.FileSecurity]::new()
+      $inheritance = [System.Security.AccessControl.InheritanceFlags]::None
+    }
+    $current = $item.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Owner)
+    if ($current.GetOwner([System.Security.Principal.SecurityIdentifier]) -ne $sid) {
+      $acl.SetOwner($sid)
+    }
+    $acl.SetAccessRuleProtection($true, $false)
+    foreach ($owner in @($sid, $system)) {
+      $rule = [System.Security.AccessControl.FileSystemAccessRule]::new($owner, [System.Security.AccessControl.FileSystemRights]::FullControl, $inheritance, [System.Security.AccessControl.PropagationFlags]::None, [System.Security.AccessControl.AccessControlType]::Allow)
+      $acl.AddAccessRule($rule)
+    }
+    $item.SetAccessControl($acl)
+  } catch {
+    $exception = $_.Exception.GetBaseException()
+    # Optional SQLite files may not exist yet or can disappear during shutdown.
+    if (!$isDirectory -and ($exception -is [System.IO.FileNotFoundException] -or
+        $exception -is [System.IO.DirectoryNotFoundException])) { continue }
+    throw
   }
-} catch {
-  @{ stage = $stage; hresult = $_.Exception.GetBaseException().HResult } | ConvertTo-Json -Compress
-  exit 1
 }
 `;
 
@@ -94,33 +87,12 @@ export function protectProfile(directory: string) {
         ],
         env: { ...process.env, RAYPX_PRIVATE_PROFILE: directory },
         stdin: "ignore",
-        stdout: "pipe",
+        stdout: "ignore",
         stderr: "ignore",
         windowsHide: true,
         timeout: 30_000,
       });
-      if (result.exitCode !== 0) {
-        if (process.env.RAYPX_NATIVE_SMOKE === "1") {
-          let details: { stage?: unknown; hresult?: unknown } | null = null;
-          try {
-            details = JSON.parse(result.stdout.toString().trim());
-          } catch {
-            // The child can exit before the PowerShell script starts.
-          }
-          const stage = details?.stage;
-          console.error(
-            JSON.stringify({
-              operation: "daemon.startup",
-              code:
-                stage === "INITIALIZE" || stage === "DIRECTORY" || stage === "SQLITE_FILE"
-                  ? `WINDOWS_PROFILE_ACL_${stage}`
-                  : "WINDOWS_PROFILE_ACL",
-              errno: typeof details?.hresult === "number" ? details.hresult : result.exitCode,
-            }),
-          );
-        }
-        throw new Error("Private ACL unavailable");
-      }
+      if (result.exitCode !== 0) throw new Error("Private ACL unavailable");
     } else {
       chmodSync(directory, 0o700);
       for (const file of existing) {
@@ -136,13 +108,7 @@ export function protectProfile(directory: string) {
         }
       }
     }
-  } catch (error) {
-    if (process.platform === "win32" && process.env.RAYPX_NATIVE_SMOKE === "1") {
-      const code = (error as NodeJS.ErrnoException).code;
-      if (typeof code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(code)) {
-        console.error(JSON.stringify({ operation: "daemon.startup", code: `ACL_PROCESS_${code}` }));
-      }
-    }
+  } catch {
     throw new LocalError("PROFILE_STORAGE_UNAVAILABLE", "Unable to protect profile storage");
   }
 }

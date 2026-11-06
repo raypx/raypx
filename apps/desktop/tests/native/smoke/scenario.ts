@@ -372,18 +372,11 @@ try {
     stage = "native resize";
     // AppKit's programmatic resize does not enforce the minimum for user drags.
     const target = { width: 1000, height: 660 };
-    let resized = await nativeWindow.resize(target.width, target.height);
-    try {
-      await waitFor(async () => {
-        resized = await nativeWindow.state();
-        return (
-          Math.abs(resized.width - target.width) <= 1 &&
-          Math.abs(resized.height - target.height) <= 1
-        );
-      }, "Native window did not reach the requested dimensions");
-    } finally {
-      console.info(`Native smoke resized window: ${resized.width} x ${resized.height}`);
-    }
+    await nativeWindow.resize(target.width, target.height);
+    await waitFor(async () => {
+      const { width, height } = await nativeWindow.state();
+      return Math.abs(width - target.width) <= 1 && Math.abs(height - target.height) <= 1;
+    }, "Native window did not reach the requested dimensions");
   } else
     console.info(
       "Native smoke quiet: foreground activation, native close and resize checks skipped",

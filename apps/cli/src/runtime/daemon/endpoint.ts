@@ -157,24 +157,10 @@ export async function connectDaemon(options: ProfileOptions, start = true) {
           env: process.env,
           stdin: "ignore",
           stdout: "ignore",
-          stderr: process.env.RAYPX_NATIVE_SMOKE === "1" ? "inherit" : "ignore",
+          stderr: "ignore",
           windowsHide: true,
         },
       );
-      if (process.env.RAYPX_NATIVE_SMOKE === "1") {
-        void child.exited.then(
-          (code) => {
-            if (code !== 0)
-              console.error(
-                JSON.stringify({ operation: "daemon.startup", code: "DAEMON_EXITED", errno: code }),
-              );
-          },
-          () =>
-            console.error(
-              JSON.stringify({ operation: "daemon.startup", code: "DAEMON_SPAWN_FAILED" }),
-            ),
-        );
-      }
       child.unref();
     }
     // Windows startup includes the PowerShell profile ACL check.
