@@ -370,17 +370,17 @@ try {
     );
     assert.equal((await nativeWindow.state()).visible, true);
     stage = "native resize";
-    const before = await nativeWindow.state();
-    let resized = await nativeWindow.resize(640, 480);
+    // AppKit's programmatic resize does not enforce the minimum for user drags.
+    const target = { width: 1000, height: 660 };
+    let resized = await nativeWindow.resize(target.width, target.height);
     try {
       await waitFor(async () => {
         resized = await nativeWindow.state();
         return (
-          (resized.width !== before.width || resized.height !== before.height) &&
-          resized.width >= 960 &&
-          resized.height >= 600
+          Math.abs(resized.width - target.width) <= 1 &&
+          Math.abs(resized.height - target.height) <= 1
         );
-      }, "Native minimum dimensions were not restored");
+      }, "Native window did not reach the requested dimensions");
     } finally {
       console.info(`Native smoke resized window: ${resized.width} x ${resized.height}`);
     }

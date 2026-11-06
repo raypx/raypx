@@ -271,18 +271,34 @@ export async function runDaemon(options: ProfileOptions) {
     console.error(JSON.stringify({ operation: "daemon.background", code: "UNHANDLED_REJECTION" }));
   process.on("unhandledRejection", rejected);
   let removeSignals: (() => void) | undefined;
-  const layout = cliInstallation();
-  const releaseRuntime =
-    process.platform === "win32" && layout.bundled ? runtimeLease(layout.root) : undefined;
-  if (process.platform === "win32" && layout.bundled && !releaseRuntime)
-    throw new LocalError("HOST_STOPPING", "Runtime cleanup is in progress");
+  let releaseRuntime: (() => void) | undefined;
   try {
+    const layout = cliInstallation();
+    if (process.platform === "win32" && layout.bundled) {
+      releaseRuntime = runtimeLease(layout.root);
+      if (!releaseRuntime) throw new LocalError("HOST_STOPPING", "Runtime cleanup is in progress");
+    }
     const host = await startDaemon(options);
     const stop = () => {
       void host.close().catch(rejected);
     };
     removeSignals = onShutdown(stop);
     await host.stopped;
+  } catch (error) {
+    if (process.env.RAYPX_NATIVE_SMOKE === "1") {
+      const details = error as { code?: unknown; errno?: unknown; errcode?: unknown } | null;
+      const code = details?.code;
+      console.error(
+        JSON.stringify({
+          operation: "daemon.startup",
+          code:
+            typeof code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(code) ? code : "LOCAL_ERROR",
+          errno: typeof details?.errno === "number" ? details.errno : undefined,
+          errcode: typeof details?.errcode === "number" ? details.errcode : undefined,
+        }),
+      );
+    }
+    throw error;
   } finally {
     releaseRuntime?.();
     removeSignals?.();

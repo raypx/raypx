@@ -16,6 +16,38 @@ use tokio::{
     sync::{Mutex as AsyncMutex, oneshot},
 };
 use tokio_util::sync::CancellationToken;
+
+#[cfg(feature = "native-smoke")]
+fn diagnostic_code(code: &str) -> bool {
+    !code.is_empty()
+        && code.len() <= 64
+        && code
+            .bytes()
+            .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit() || byte == b'_')
+}
+
+#[cfg(feature = "native-smoke")]
+async fn report_cli_stderr(mut stderr: tokio::process::ChildStderr) {
+    use tokio::io::AsyncReadExt;
+
+    let mut sample = Vec::new();
+    let _ = (&mut stderr).take(8192).read_to_end(&mut sample).await;
+    let output = String::from_utf8_lossy(&sample);
+    for line in output.lines() {
+        if let Ok(entry) = serde_json::from_str::<Value>(line)
+            && entry["operation"] == "daemon.startup"
+            && let Some(code) = entry["code"].as_str().filter(|code| diagnostic_code(code))
+        {
+            eprintln!(
+                "[native-smoke] Daemon startup failed: {code} (errno: {:?}, SQLite code: {:?})",
+                entry["errno"].as_i64(),
+                entry["errcode"].as_i64(),
+            );
+        }
+    }
+    let _ = tokio::io::copy(&mut stderr, &mut tokio::io::sink()).await;
+}
+
 struct Process {
     generation: u64,
     input: AsyncMutex<ChildStdin>,
@@ -152,7 +184,11 @@ impl Engine {
             .args(&self.args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
+            .stderr(if cfg!(feature = "native-smoke") {
+                Stdio::piped()
+            } else {
+                Stdio::null()
+            })
             .kill_on_drop(true);
         let mut child = command.spawn().inspect_err(|_error| {
             #[cfg(feature = "native-smoke")]
@@ -161,6 +197,10 @@ impl Engine {
                 _error.raw_os_error()
             );
         })?;
+        #[cfg(feature = "native-smoke")]
+        if let Some(stderr) = child.stderr.take() {
+            tokio::spawn(report_cli_stderr(stderr));
+        }
         let stdout = child.stdout.take().ok_or("CLI_UNAVAILABLE")?;
         let process = Arc::new(Process {
             generation,
@@ -192,10 +232,7 @@ impl Engine {
                             if packet["data"]["status"] == "error" {
                                 let code = packet["data"]["code"]
                                     .as_str()
-                                    .filter(|code| {
-                                        !code.is_empty() && code.len() <= 128
-                                            && code.bytes().all(|byte| byte.is_ascii_uppercase() || byte == b'_')
-                                    })
+                                    .filter(|code| diagnostic_code(code))
                                     .unwrap_or("UNKNOWN");
                                 eprintln!("[native-smoke] CLI startup reported {code}");
                             }
