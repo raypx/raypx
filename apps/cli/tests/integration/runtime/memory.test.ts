@@ -1,15 +1,15 @@
-import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite.ts";
+import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite";
 import { afterEach, expect, it } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { DatabaseSync as Database } from "node:sqlite";
-import { SqliteContextRepository } from "../../../src/runtime/memory/repository.ts";
-import { createRuntime } from "../../helpers/enrolled.ts";
+import { Database } from "bun:sqlite";
+import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
+import { createRuntime } from "../../helpers/enrolled";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { ContextDocument, ContextDocumentInput } from "@raypx/memory-model";
 import { ContextLibraryService } from "@raypx/memory-server";
-import { runtimeFixtures } from "../../helpers/runtime.ts";
+import { runtimeFixtures } from "../../helpers/runtime";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -41,7 +41,7 @@ it("rejects an unversioned populated memory database without relabeling or chang
     expect(() => new SqliteContextRepository(profileStorage(f.root).database)).toThrow(
       "unsupported SQLite schema",
     );
-    expect(raw.prepare("PRAGMA user_version").get()).toEqual({ user_version: 0 });
+    expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: 0 });
     expect(await f.store.get("device", id)).toEqual(saved);
   } finally {
     raw.close();
@@ -203,7 +203,7 @@ it("enforces the complete document quota including archived entries and hides co
   expect(await f.store.list("device")).toHaveLength(100);
   const raw = new Database(f.path);
   raw
-    .prepare("UPDATE documents SET value=? WHERE id=?")
+    .query("UPDATE documents SET value=? WHERE id=?")
     .run("private corrupted content", replacement.id);
   raw.close();
   await expect(f.store.get("device", replacement.id)).rejects.toMatchObject({
@@ -233,10 +233,10 @@ it("does not read or migrate retired noncanonical document keys", async () => {
   };
   const raw = new Database(f.path);
   raw
-    .prepare("INSERT INTO documents VALUES (?,?,?)")
+    .query("INSERT INTO documents VALUES (?,?,?)")
     .run("device", physicalId, JSON.stringify(legacy));
   raw
-    .prepare("INSERT INTO versions VALUES (?,?,?,?)")
+    .query("INSERT INTO versions VALUES (?,?,?,?)")
     .run("device", physicalId, 1, JSON.stringify({ ...legacy, reason: "created" }));
   const service = new ContextLibraryService({ repository: f.store, scope: "device" });
   try {
@@ -246,7 +246,7 @@ it("does not read or migrate retired noncanonical document keys", async () => {
     await expect(
       service.create("device", { requestId: id, document: original }),
     ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
-    expect(raw.prepare("SELECT id FROM documents").all()).toEqual([{ id: physicalId }]);
+    expect(raw.query("SELECT id FROM documents").all()).toEqual([{ id: physicalId }]);
   } finally {
     raw.close();
   }
@@ -341,9 +341,9 @@ it("permanently deletes only owned archived revisions, erases versions and reser
     });
   const raw = new Database(f.path);
   try {
-    expect(raw.prepare("SELECT * FROM versions WHERE id=?").all(id)).toEqual([]);
-    expect(raw.prepare("SELECT * FROM documents WHERE id=?").all(id)).toEqual([]);
-    expect(raw.prepare("SELECT * FROM deleted_documents WHERE id=?").get(id)).toEqual({
+    expect(raw.query("SELECT * FROM versions WHERE id=?").all(id)).toEqual([]);
+    expect(raw.query("SELECT * FROM documents WHERE id=?").all(id)).toEqual([]);
+    expect(raw.query("SELECT * FROM deleted_documents WHERE id=?").get(id)).toEqual({
       id,
       owner: "device",
       revision: 2,
@@ -361,7 +361,7 @@ it.each([1, 3])("rejects unsupported memory schema %s without migrating its data
     expect(() => new SqliteContextRepository(profileStorage(f.root).database)).toThrow(
       "unsupported SQLite schema",
     );
-    expect(raw.prepare("PRAGMA user_version").get()).toEqual({ user_version: version });
+    expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: version });
   } finally {
     raw.exec("PRAGMA user_version=0");
     raw.close();

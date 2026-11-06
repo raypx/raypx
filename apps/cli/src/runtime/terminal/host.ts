@@ -1,5 +1,4 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import type { LocalDatabase } from "../sqlite/index.ts";
+import type { LocalDatabase } from "../sqlite";
 import {
   chmodSync,
   mkdirSync,
@@ -21,19 +20,19 @@ import {
   type TerminalRequest,
   type TerminalSession,
 } from "@raypx/contracts/terminal";
-import { RequestBroker } from "./broker.ts";
-import { TerminalStore } from "./store.ts";
-import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol.ts";
-import { acquireLock } from "../state/index.ts";
-import { LocalError } from "../errors.ts";
-import { privateSocketDirectory } from "./socket.ts";
+import { RequestBroker } from "./broker";
+import { TerminalStore } from "./store";
+import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol";
+import { acquireLock } from "../state";
+import { LocalError } from "../errors";
+import { privateSocketDirectory } from "./socket";
 import {
   foreignLoopbackRequest,
   localAddressSchema,
   localFetch,
   loopbackTransport,
   type LocalAddress,
-} from "../local-http.ts";
+} from "../local-http";
 
 const terminalEndpointSchema = z
   .object({
@@ -68,7 +67,7 @@ type TerminalOptions = {
   waitSeconds?: number;
   changed?: (request: TerminalRequest) => void;
 };
-export async function startTerminalHost(options: TerminalOptions) {
+export function startTerminalHost(options: TerminalOptions) {
   if (
     options.waitSeconds !== undefined &&
     (!Number.isInteger(options.waitSeconds) ||
@@ -86,7 +85,7 @@ export async function startTerminalHost(options: TerminalOptions) {
   if (!unlock) throw new LocalError("HOST_RUNNING", "A terminal host already owns this profile");
   let store: TerminalStore | undefined;
   let socketDirectory: string | undefined;
-  let server: Awaited<ReturnType<typeof serveHttp>> | undefined;
+  let server: ReturnType<typeof Bun.serve> | undefined;
   try {
     store = new TerminalStore(options.database);
     const broker = new RequestBroker(store, options.changed);
@@ -112,12 +111,13 @@ export async function startTerminalHost(options: TerminalOptions) {
     let endpoint: TerminalEndpoint = { ...identity, ...address };
     let away = options.away ?? false,
       viewerUntil = 0;
-    server = await serveHttp({
+    server = Bun.serve({
       ...(address.socket === undefined
         ? { hostname: "127.0.0.1", port: 0 }
         : { unix: address.socket }),
       maxRequestBodySize: 256 * 1024,
-      fetch: async (request) => {
+      fetch: async (request, transport) => {
+        transport.timeout(request, 0);
         if (foreignLoopbackRequest(request, address)) return new Response(null, { status: 403 });
         const path = new URL(request.url).pathname;
         const owner = request.headers.get("authorization") === `Bearer ${endpoint.ownerToken}`;
@@ -256,7 +256,7 @@ export async function startTerminalHost(options: TerminalOptions) {
       },
     });
     if (address.socket === undefined) {
-      address = { port: server.port };
+      address = { port: server.port! };
       endpoint = { ...identity, ...address };
     } else chmodSync(address.socket, 0o600);
     const file = join(options.directory, "terminal-host.json");

@@ -1,30 +1,27 @@
 # Current architecture
 
 Raypx uses TypeScript for its applications and execution runtime, and Rust for
-the Tauri Desktop host and CLI launcher. This page describes the current
+the Tauri Desktop host. This page describes the current
 implementation. The [roadmap](../roadmap.md) and
 [ADR 0039](0039-local-server-agent-platform.md) describe future Agent platform
 work; they do not establish shipped behavior or platform acceptance.
 
 ## Runtime and toolchain
 
-| Component            | Current implementation                                    | Responsibility                                                                  |
-| -------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Desktop              | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2      | React SPA, native policy, sessions, windows and CLI transport                   |
-| CLI / daemon         | TypeScript ESM on Node; Desktop bundles its build runtime | Local execution, Agent harness, approvals, scheduling and replay                |
-| Desktop CLI launcher | Thin Rust executable                                      | Locate the distribution, launch Node, forward arguments/streams and exit status |
-| Web                  | React / TanStack Start SSR, Nitro `node-server`           | Browser workbench and authenticated remote views                                |
-| API                  | Node >=24.18.0 <25, Nitro / Hono / oRPC                   | Accounts, authorization, remote commands and read projections                   |
-| Relay                | Independent Node HTTP / `ws` service in `infra/relay`     | WebSocket peers and delivery through the private Redis broker                   |
-| Mobile               | Expo iOS/Android                                          | Account/login baseline; native task views remain future work                    |
-| JS tooling           | pnpm 12.16.1, VP, `tsx`, TypeScript                       | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks         |
+| Component    | Current implementation                               | Responsibility                                                          |
+| ------------ | ---------------------------------------------------- | ----------------------------------------------------------------------- |
+| Desktop      | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2 | React SPA, native policy, sessions, windows and CLI transport           |
+| CLI / daemon | TypeScript compiled with Bun 1.4.4                   | Local execution, Agent harness, approvals, scheduling and replay        |
+| Web          | React / TanStack Start SSR, Nitro `bun`              | Browser workbench and authenticated remote views                        |
+| API          | Bun 1.4.4, Nitro / Hono / oRPC                       | Accounts, authorization, remote commands and read projections           |
+| Relay        | Independent Bun HTTP / `ws` service in `infra/relay` | WebSocket peers and delivery through the private Redis broker           |
+| Mobile       | Expo iOS/Android                                     | Account/login baseline; native task views remain future work            |
+| JS tooling   | Bun 1.4.4, VP, TypeScript                            | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks |
 
-Root `package.json` declares the supported Node range and pins pnpm.
-`pnpm-workspace.yaml` owns workspace discovery, catalogs, overrides and installation settings;
-pnpm uses the default isolated dependency layout and one lockfile.
-`rust-toolchain.toml` pins Rust; the root Cargo workspace contains the launcher
-and Tauri host. The Tauri Rust framework is 2.12.5; its independently released
-npm API/CLI packages are 2.12.4. See [ADR 0045](0045-tauri-node-pnpm.md).
+Root `package.json` pins Bun and owns workspace patterns, catalogs and overrides.
+`bun.lock` records installation. `rust-toolchain.toml` pins Rust; the Cargo workspace
+contains the Tauri host. Rust Tauri is 2.12.5; its independently released npm
+API/CLI packages are 2.12.4. See [ADR 0046](0046-bun-tauri-artifacts.md).
 
 Desktop targets macOS 13.5+ and Windows. Linux CLI/core checks and GUI compilation
 do not establish Linux Desktop acceptance. Native signing, installer and GUI
@@ -37,7 +34,7 @@ flowchart LR
   subgraph Device
     UI[Desktop React SPA] -->|invoke / channel| Native[Tauri Rust host]
     Native -->|absolute bundled path| Proxy[CLI daemon proxy]
-    Proxy -->|authenticated private IPC| Daemon[Independent Node CLI daemon]
+    Proxy -->|authenticated private IPC| Daemon[Independent Bun CLI daemon]
     Terminal[Terminal connectors / task CLI] -->|authenticated private IPC| Daemon
     Daemon --> Profile[(Local profile SQLite)]
     Daemon --> Providers[Codex / Claude / local Pi]
@@ -70,7 +67,7 @@ client. Explicit daemon stop cancels and drains owned work. Restart marks active
 work interrupted and abandons uncertain effects rather than replaying them.
 
 POSIX uses authenticated owner-only Unix sockets. Windows uses token-protected
-loopback TCP with Host/Origin checks. Node clients use an explicit direct
+loopback TCP with Host/Origin checks. Bun clients use an explicit direct
 transport so proxy environment variables cannot forward private credentials.
 Daemon protocol, version and build identity must match; an incompatible owner
 requires an explicit stop/restart, without automatic task takeover.
@@ -86,8 +83,8 @@ opening. Diagnostics use stderr; stdout is command output or bounded NDJSON.
 ## Local state, identity and sessions
 
 One `ProfileStorage` owns `<profile>/profile.sqlite`, migrations and closure.
-Feature repositories borrow its Drizzle `node-sqlite` writer, backed by
-`node:sqlite`; cross-repository changes share synchronous transactions. WAL,
+Feature repositories borrow its Drizzle `bun-sqlite` writer, backed by
+`bun:sqlite`; cross-repository changes share synchronous transactions. WAL,
 migration journals, revision checks and separate OS-backed migration/owner/project
 locks preserve the existing format and concurrency rules. Stored JSON is
 validated, snapshot queries are bounded, and unsupported formats fail explicitly.
@@ -154,7 +151,7 @@ and never retried after restart. The wire projection preserves current
 | Persistence     | Database owns server PostgreSQL schema/migrations; CLI privately owns device SQLite schema                                    |
 | UI              | UI owns DOM primitives and theme; Blocks composes router-independent chrome; pure theme tokens/types stay platform-neutral    |
 | Locale          | I18n owns Chinese/English catalogs and platform adapters; language preference drives the active locale                        |
-| Host helpers    | Runtime-node exposes Node filesystem/process/HTTP helpers, not CLI business composition                                       |
+| Host helpers    | Runtime-node exposes filesystem/process/HTTP adapters, not CLI business composition                                           |
 
 Libraries expose explicit entries with established consumers. Manifests declare
 kind/target and per-entry/source targets; policy checks transitive platform
@@ -166,7 +163,7 @@ See [package surfaces](0043-package-surfaces.md) and
 
 ## Web, API and Relay
 
-Web runs TanStack Start SSR on Nitro `node-server`; Desktop uses Start SPA mode
+Web runs TanStack Start SSR on Nitro `bun`; Desktop uses Start SPA mode
 with file routes and a prerendered shell, without server functions. Both reuse
 React, TanStack, shadcn/Base UI and shared feature views. Device-local Desktop
 selection does not depend on an active browser session; Web remote data does.
@@ -186,7 +183,7 @@ memory revisions and commits the frozen context receipt before delivery; normal
 memory CRUD remains in API RPC. This is command acceptance, not a second memory
 API. The gateway routes `/relay` to that independent service at the public origin.
 Optional Cloudflare ingress uses the provider-managed Workers runtime; the Relay
-container and local tooling use Node within the supported range. Web, API, migration and Relay build
+container and local tooling use the pinned Bun runtime. Web, API, migration and Relay build
 outputs run outside the repository. See
 [deployment](../development/deployment.md) and [infrastructure](../../infra/README.md).
 
@@ -201,22 +198,20 @@ preference restoration are detailed in [internationalization](internationalizati
 ## Build, distribution and acceptance
 
 VP is the only task graph/cache. Lightweight `vite.config.ts` files register
-tasks; application plugins live in `vite.app.config.ts`. `tsx` runs development
+tasks; application plugins live in `vite.app.config.ts`. Bun runs development
 scripts, `tsc --noEmit` checks types, and VP owns JS builds/tests/lint/format.
 Cargo owns native incremental builds and is called through the same task graph.
 
-The normal CLI build is an installable JS package with a `raypx` bin, bundled ESM
-dependencies, verified platform Herdr assets, licenses and `runtime.json` checksums.
-It requires supported Node and works with npm, pnpm or another compatible installer.
-Desktop stages the same artifact with a Rust launcher, the actual build's Node and
-host Herdr resources. Desktop users need no global runtime. Child PATH appends
-Node after user tools; project package managers come from the user environment.
-Connector install/repair copies the full payload and records the interpreter when needed;
-Windows daemon uses a private per-build runtime copy with leases so an updater
-can replace Desktop resources without deleting files still in use. See
-[CLI distribution](../../apps/cli/README.md) and [terminal connectors](../development/terminal-host.md).
+The CLI build compiles one standalone executable with Bun, verified platform Herdr
+assets, licenses and an immutable `runtime.json` inventory. Desktop stages the same
+prepared payload from `RAYPX_CLI_PAYLOAD` (or the local CLI dist directory), verifies
+its version/platform/architecture and checksums, then launches its absolute path.
+No separate JavaScript runtime or Rust launcher is installed. Project commands
+use the user's environment. GUI Quit disconnects the proxy while the independent
+daemon retains execution. See [CLI distribution](../../apps/cli/README.md) and
+[terminal connectors](../development/terminal-host.md).
 
-`pnpm run verify` selects affected source/native checks; `--full` adds audits,
+`bun run verify` selects affected source/native checks; `--full` adds audits,
 builds and artifact probes. Database, browser, live-provider and packaged native
 acceptance remain explicit gates. The first Tauri release uses a signed installer
 after exiting the old host and explicitly stopping its daemon; later updates use
@@ -242,4 +237,5 @@ for commands, paths and supported behavior.
 | [0042: Application services and adapters](0042-application-layering.md)              | Accepted; transaction boundary amended by 0044                 |
 | [0043: Package surfaces](0043-package-surfaces.md)                                   | Accepted                                                       |
 | [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)     | Accepted; SQLite driver amended by 0045                        |
-| [0045: Tauri, Node and pnpm](0045-tauri-node-pnpm.md)                                | Current host, runtime, toolchain and distribution              |
+| [0045: Tauri, Node and pnpm](0045-tauri-node-pnpm.md)                                | Historical baseline before the Bun experiment                  |
+| [0046: Bun and Tauri](0046-bun-tauri-artifacts.md)                                   | Experimental branch runtime and distribution                   |

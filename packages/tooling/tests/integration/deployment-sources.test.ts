@@ -1,4 +1,3 @@
-import { globFiles } from "@raypx/runtime-node/files";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,22 +12,19 @@ function write(root: string, path: string, contents: object | string) {
   writeFileSync(file, typeof contents === "string" ? contents : JSON.stringify(contents));
 }
 
-it.each(["flow", "block"])(
-  "collects production workspace sources transitively (pnpm packages=%s)",
+it.each(["array", "catalog"])(
+  "collects production workspace sources transitively (Bun workspaces=%s)",
   (style) => {
     const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-sources-"));
     const source = join(directory, "source"),
       output = join(directory, "output");
     try {
       const patterns = ["units/*", "shared/*", "units/migration"];
-      write(source, "package.json", { private: true });
-      write(
-        source,
-        "pnpm-workspace.yaml",
-        style === "flow"
-          ? JSON.stringify({ packages: patterns, catalog: { registry: "1.0.0" } })
-          : `packages:\n${patterns.map((pattern) => `  - ${pattern}\n`).join("")}catalog:\n  registry: 1.0.0\n`,
-      );
+      write(source, "package.json", {
+        private: true,
+        workspaces:
+          style === "array" ? patterns : { packages: patterns, catalog: { registry: "1.0.0" } },
+      });
       for (const [path, manifest] of [
         [
           "units/migration",
@@ -73,7 +69,7 @@ it.each(["flow", "block"])(
         "shared/optional",
         "shared/peer",
       ].flatMap((path) => [`${path}/package.json`, `${path}/src/index.ts`]);
-      expect([...globFiles("**/*", { cwd: output, onlyFiles: true })].sort()).toEqual(
+      expect([...new Bun.Glob("**/*").scanSync({ cwd: output, onlyFiles: true })].sort()).toEqual(
         [...expected, "shared/tokens/src/data.json"].sort(),
       );
       expect(readFileSync(join(output, "shared/tokens/src/data.json"), "utf8")).toBe(
@@ -92,8 +88,7 @@ it.each(["missing-entry", "missing-dependency"])(
     const source = join(directory, "source"),
       output = join(directory, "output");
     try {
-      write(source, "package.json", { private: true });
-      write(source, "pnpm-workspace.yaml", 'packages: ["modules/*"]\n');
+      write(source, "package.json", { private: true, workspaces: ["modules/*"] });
       write(source, "modules/migration/package.json", {
         name: "migration",
         dependencies: { missing: "workspace:*" },

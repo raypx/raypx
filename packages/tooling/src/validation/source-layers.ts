@@ -1,6 +1,5 @@
-import { createRequire } from "node:module";
 import { globSync, readFileSync, realpathSync } from "node:fs";
-import { relative, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { imports } from "@raypx-kit/devkit/architecture";
 import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
 
@@ -42,7 +41,7 @@ function forbidden(owner: string, target: string, request: string) {
   if (owner === "adapter") return /\/runtime\/index\.[cm]?[jt]s$/.test(target);
   const infrastructure =
     /\/(?:infrastructure|sqlite)\//.test(target) ||
-    /^(?:node:(?:fs(?:\/|$)|child_process|sqlite)|drizzle-orm(?:\/|$)|@raypx\/(?:database|providers\/(?:codex|claude|pi))(?:\/|$))/.test(
+    /^(?:bun:sqlite|node:(?:fs(?:\/|$)|child_process|sqlite)|drizzle-orm(?:\/|$)|@raypx\/(?:database|providers\/(?:codex|claude|pi))(?:\/|$))/.test(
       request,
     );
   return (
@@ -103,7 +102,7 @@ export function checkSourceLayers(root: string, index: WorkspaceIndex) {
       const edges = imports(path, readFileSync(full, "utf8"));
       const dependencies = edges.map(({ request }) => {
         try {
-          return relative(root, realpathSync(createRequire(full).resolve(request))).replaceAll(
+          return relative(root, realpathSync(Bun.resolveSync(request, dirname(full)))).replaceAll(
             "\\",
             "/",
           );

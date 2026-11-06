@@ -7,14 +7,14 @@ with sign-out. Remote task views, approvals and push notifications are later wor
 
 ## Development
 
-Use a Node runtime in the repository's `>=24.18.0 <25` range:
+Use the repository-pinned Bun 1.4.4 runtime:
 
 ```sh
-pnpm install
-pnpm run dev:mobile
-pnpm --dir apps/mobile run check
-pnpm --dir apps/mobile run test
-pnpm --dir apps/mobile run build
+bun install
+bun run dev:mobile
+bun run --cwd apps/mobile check
+bun run --cwd apps/mobile test
+bun run --cwd apps/mobile build
 ```
 
 The dev task opens Expo's Metro server. Run an iOS/Android development build or
@@ -28,7 +28,7 @@ shared peer ranges include it. Mobile-only dependencies (Expo, React Native,
 HeroUI Native, Uniwind and their native/UI peers) use the root `mobile` catalog
 through `catalog:mobile`. Shared React, Better Auth and Tailwind CSS stay in the
 default catalog; build/test tools use `catalog:dev`. After dependency changes, run
-`pnpm exec expo install --check` from `apps/mobile` to check the installed SDK
+`bun --bun expo install --check` from `apps/mobile` to check the installed SDK
 dependencies. Keep native modules within Expo's bundled version ranges.
 
 Copy `apps/mobile/.env.example` to `.env.local` in that workspace to override
@@ -72,11 +72,11 @@ configuration and system reduced-motion support without unused toast/portal host
 Uniwind needs no Babel plugin; Expo's default Babel preset automatically enables
 the installed Worklets plugin for Reanimated. Reanimated, Worklets, Gesture Handler
 and SVG versions follow Expo's bundled native versions in the `mobile` catalog.
-The one-line `metro.config.cjs` entry lets Node load that typed configuration,
-bypassing Expo 58's TS/ESM config evaluator, which fails under Node.
+The one-line `metro.config.cjs` entry lets Bun load that typed configuration,
+bypassing Expo 58's TS/ESM config evaluator, which fails under Bun.
 The root layout imports `src/global.css` once. That entry registers mobile sources,
 imports `heroui-native/styles`, then pure native theme variables from `@raypx/ui/themes/native.css`,
-generated from UI's existing tokens by `pnpm --dir packages/ui run generate:theme`.
+generated from UI's existing tokens by `bun run --cwd packages/ui generate:theme`.
 Its native-only semantic mappings keep Raypx's neutral appearance: HeroUI's action
 `accent` uses Raypx's `primary`, and HeroUI's text `muted` uses `muted-foreground`.
 Surface, field, focus and danger variables also derive from shared tokens.

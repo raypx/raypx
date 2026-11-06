@@ -149,8 +149,8 @@ behavior by client/contracts.
 - Theme and language persist on this device as storage plus cookies, independently
   of account sessions, so the first server render already matches them.
 - Translate safe error codes. Never display arbitrary server diagnostic messages.
-- Dev, build, preview and production run under Node (`pnpm exec vp`); the Nitro `node-server`
-  preset traces Node export conditions, so start the output with `node`.
+- Dev, build, preview and production run under Bun (`bun --bun vp`); the Nitro `bun`
+  preset traces Bun export conditions, so start the output with `bun`.
   Common target options come from `@raypx/tooling/build/nitro`; Web owns its Start plugins and React tracing.
 - `apps/web/Dockerfile` is shared by Compose and Railway. Keep build commands there;
   `deploy/build.sh` adds Compose-only cache mounts to a temporary copy.
@@ -163,15 +163,15 @@ and [verification](../../docs/development/testing.md).
 ## Verification
 
 ```sh
-pnpm --dir apps/web run check
-pnpm --dir apps/web run test
-pnpm --dir apps/web run e2e -- settings.spec.ts
-pnpm run build:web
+bun run --cwd apps/web check
+bun run --cwd apps/web test
+bun run --cwd apps/web e2e -- settings.spec.ts
+bun run build:web
 ```
 
 Web browser cases live in `e2e/` and use `@raypx/e2e/testing`; shared flows register
 through `@raypx/e2e/journeys/*`. The `web` Playwright project builds only Web through
-cached `build:e2e` and starts the real compiled SSR server. E2E uses a separate Node
+cached `build:e2e` and starts the real compiled SSR server. E2E uses a separate Bun
 tsconfig, checked by `check`; browser runs do not repeat type checking. Root
 `test e2e --package web` uses the same plan; `-- --list` needs no build or server.
 

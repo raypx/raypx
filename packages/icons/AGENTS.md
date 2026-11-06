@@ -25,5 +25,5 @@ Hugeicons Free glyphs, decorative defaults and consistent sizing/stroke behavior
 
 ## Verification
 
-Run `pnpm --dir packages/icons run check` and `test`, then `pnpm run verify`.
+Run `bun run --cwd packages/icons check` and `test`, then `bun run verify`.
 Browser checks cover inherited stroke widths with the compiled Tailwind utilities.

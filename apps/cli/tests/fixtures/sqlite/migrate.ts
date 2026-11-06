@@ -1,13 +1,12 @@
-import { readStandardInput } from "@raypx/runtime-node/process";
-import { ProfileStorage } from "../../../src/runtime/sqlite/index.ts";
-import { StateStore } from "../../../src/runtime/state/index.ts";
-import { AgentStore } from "../../../src/runtime/agents/store.ts";
-import { TerminalStore } from "../../../src/runtime/terminal/store.ts";
-import { SqliteContextRepository } from "../../../src/runtime/memory/repository.ts";
-import { SqlitePiContextStore } from "../../../src/runtime/agents/harness/context/sqlite.ts";
+import { ProfileStorage } from "../../../src/runtime/sqlite";
+import { StateStore } from "../../../src/runtime/state";
+import { AgentStore } from "../../../src/runtime/agents/store";
+import { TerminalStore } from "../../../src/runtime/terminal/store";
+import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
+import { SqlitePiContextStore } from "../../../src/runtime/agents/harness/context/sqlite";
 
 process.stdout.write("ready\n");
-await readStandardInput();
+await Bun.stdin.text();
 const directory = process.argv[2]!;
 const storage = new ProfileStorage(directory);
 const state = new StateStore(storage);

@@ -1,15 +1,14 @@
-import { serveHttp } from "@raypx/runtime-node/http";
 import { expect, it, vi, afterEach } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { bindingKey } from "../../../../src/runtime/daemon/vault.ts";
+import { bindingKey } from "../../../../src/runtime/daemon/vault";
 import {
   readTerminalConfiguration,
   writeTerminalConfiguration,
-} from "../../../../src/runtime/daemon/terminal-settings.ts";
-import { startDaemon } from "../../../helpers/enrolled.ts";
-import { profilePath } from "../../../../src/runtime/state/index.ts";
+} from "../../../../src/runtime/daemon/terminal-settings";
+import { startDaemon } from "../../../helpers/enrolled";
+import { profilePath } from "../../../../src/runtime/state";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -73,7 +72,7 @@ it.skipIf(process.platform === "win32")(
     const configDirs = { claude: join(dataDir, "claude"), codex: join(dataDir, "codex") };
     let grantStarted = false,
       grantAborted = false;
-    const api = await serveHttp({
+    const api = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
       fetch(request) {

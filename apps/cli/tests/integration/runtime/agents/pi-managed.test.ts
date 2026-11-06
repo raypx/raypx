@@ -1,14 +1,14 @@
-import { AgentStore } from "../../../../src/runtime/agents/store.ts";
-import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite.ts";
-import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite";
+import { AgentRuntime } from "../../../../src/runtime/agents";
 import { expect, it, afterEach, vi } from "vite-plus/test";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { runtimeFixtures } from "../../../helpers/runtime.ts";
-import { aiFixture } from "../../../helpers/ai.ts";
+import { runtimeFixtures } from "../../../helpers/runtime";
+import { aiFixture } from "../../../helpers/ai";
 const { fixture } = runtimeFixtures();
-const servers: Awaited<ReturnType<typeof aiFixture>>[] = [];
+const servers: ReturnType<typeof aiFixture>[] = [];
 afterEach(async () => {
   await Promise.all(servers.splice(0).map((server) => server.stop()));
   vi.unstubAllEnvs();
@@ -17,7 +17,7 @@ afterEach(async () => {
 it("runs Pi through the task owner, persists model/context, and resumes only the current revision", async () => {
   const f = await fixture();
   vi.stubEnv("RAYPX_HOME", f.dir);
-  const server = await aiFixture();
+  const server = aiFixture();
   servers.push(server);
   await writeFile(
     join(f.dir, "config.toml"),
@@ -92,7 +92,7 @@ it("runs Pi through the task owner, persists model/context, and resumes only the
 it("stores device model defaults without rewriting TOML or exposing a credential", async () => {
   const f = await fixture();
   vi.stubEnv("RAYPX_HOME", f.dir);
-  const server = await aiFixture();
+  const server = aiFixture();
   servers.push(server);
   const source = `[ai]\nprovider = "local"\nmodel = "fixture-model"\napi = "openai-completions"\nbase_url = "${server.url}"\n`;
   await writeFile(join(f.dir, "config.toml"), source);
@@ -111,7 +111,7 @@ it("stores device model defaults without rewriting TOML or exposing a credential
 it("executes project writes and commands only after separately applied approvals", async () => {
   const f = await fixture();
   vi.stubEnv("RAYPX_HOME", f.dir);
-  const server = await aiFixture({
+  const server = aiFixture({
     toolSequence: [
       {
         name: "files_write",
@@ -121,7 +121,7 @@ it("executes project writes and commands only after separately applied approvals
         name: "command_run",
         arguments: {
           executable: process.execPath,
-          args: ["-e", "await sleep(500); process.stdout.write('done')"],
+          args: ["-e", "await Bun.sleep(500); process.stdout.write('done')"],
           cwd: "",
           timeoutMs: 1000,
         },
@@ -190,8 +190,8 @@ it("executes project writes and commands only after separately applied approvals
 it("requires revision-bound consent before sending conversation history to a changed connection", async () => {
   const f = await fixture();
   vi.stubEnv("RAYPX_HOME", f.dir);
-  const first = await aiFixture(),
-    target = await aiFixture({ api: "anthropic-messages" });
+  const first = aiFixture(),
+    target = aiFixture({ api: "anthropic-messages" });
   servers.push(first, target);
   const settings = async (url: string, api: string) =>
     writeFile(
@@ -314,7 +314,7 @@ it("cancels an admitted Pi task before creating its session when cancellation ar
 it("rejects continuation of an allocated Pi context that never received its first prompt", async () => {
   const f = await fixture();
   vi.stubEnv("RAYPX_HOME", f.dir);
-  const server = await aiFixture();
+  const server = aiFixture();
   servers.push(server);
   await writeFile(
     join(f.dir, "config.toml"),

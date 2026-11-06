@@ -3,8 +3,7 @@ import { readJsonFile, readBinaryFile } from "@raypx/runtime-node/files";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { satisfies } from "semver";
-import { verifyRuntime } from "./prepare-cli.ts";
+import { verifyCliPayload } from "@raypx/tooling/build/cli";
 
 /** Inspect compiler metadata and the shipped bytes, including embedded renderer assets. */
 export function assertProduction(bytes: Uint8Array) {
@@ -23,22 +22,20 @@ export async function checkRelease(binary: string) {
   assertProduction(await readFile(binary));
   const resources =
     process.platform === "darwin" ? resolve(dirname(binary), "../Resources") : dirname(binary);
-  const runtime = await verifyRuntime(join(resources, "bin"));
+  const runtime = await verifyCliPayload(join(resources, "bin"), {
+    platform: process.platform,
+    arch: process.arch,
+  });
   const root = await readJsonFile(resolve(import.meta.dirname, "../../../../package.json"));
   const desktop = await readJsonFile(resolve(import.meta.dirname, "../../package.json"));
   const suffix = process.platform === "win32" ? ".exe" : "";
   if (
     runtime.version !== desktop.version ||
     !Number.isSafeInteger(runtime.builtAt) ||
-    !satisfies(runtime.nodeVersion ?? "", root.engines.node) ||
-    [
-      "raypx" + suffix,
-      "main.mjs",
-      "runtime/node" + suffix,
-      "runtime/NODE-LICENSE",
-      "RAYPX-LICENSE",
-      "herdr/runtime.json",
-    ].some((name) => !runtime.files[name])
+    runtime.bunVersion !== root.packageManager.replace("bun@", "") ||
+    ["raypx" + suffix, "LICENSE", "README.txt", "herdr/runtime.json"].some(
+      (name) => !runtime.files[name],
+    )
   )
     throw new Error("Release CLI runtime is incomplete or does not match the pinned build");
   const herdr = join(resources, "bin/herdr");

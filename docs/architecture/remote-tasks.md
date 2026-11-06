@@ -183,10 +183,10 @@ Explicitly installed Claude/Codex Bash hooks are covered separately below.
 
 The default gate covers real loopback WebSockets, account isolation, one-time
 tickets, reconnect/replay, event deduplication, snapshots, revocation, competing
-host approvals and protocol subprocess fixtures. `pnpm run verify --full` also
+host approvals and protocol subprocess fixtures. `bun run verify --full` also
 builds Node artifacts and checks relocated outputs.
 
-`pnpm run test postgres` checks real migrations and projection persistence across
+`bun run test postgres` checks real migrations and projection persistence across
 API instances. These commands
 require an explicit isolated `*_test` database; never use an operator database.
 

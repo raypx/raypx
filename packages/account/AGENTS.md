@@ -36,5 +36,5 @@ navigation and session invalidation. Never expose credentials or extra user fiel
 
 ## Verification
 
-Run `pnpm --dir packages/account run check` and `pnpm --dir packages/account run test`.
+Run `bun run --cwd packages/account check` and `bun run --cwd packages/account test`.
 Web/Desktop route tests cover view integration; API tests cover RPC projection.

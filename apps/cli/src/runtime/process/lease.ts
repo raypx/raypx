@@ -1,4 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
+import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
@@ -6,7 +6,7 @@ import { basename, dirname, join } from "node:path";
 export function runtimeLease(directory: string, exclusive = false): (() => void) | undefined {
   const parent = join(dirname(directory), ".leases");
   mkdirSync(parent, { recursive: true, mode: 0o700 });
-  const database = new DatabaseSync(join(parent, basename(directory) + ".sqlite"));
+  const database = new Database(join(parent, basename(directory) + ".sqlite"));
   try {
     database.exec(
       "PRAGMA busy_timeout=0; CREATE TABLE IF NOT EXISTS lease (id INTEGER PRIMARY KEY)",
@@ -15,7 +15,7 @@ export function runtimeLease(directory: string, exclusive = false): (() => void)
     return () => database.close();
   } catch (error) {
     database.close();
-    if (error && typeof error === "object" && "errcode" in error && error.errcode === 5)
+    if (error && typeof error === "object" && "code" in error && error.code === "SQLITE_BUSY")
       return undefined;
     throw error;
   }

@@ -1,15 +1,15 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { AgentStore } from "../../../../src/runtime/agents/store.ts";
-import { desktopBinding, type LocalAgentTask } from "../../../../src/runtime/agents/model.ts";
-import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
-import { StateStore } from "../../../../src/runtime/state/index.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { desktopBinding, type LocalAgentTask } from "../../../../src/runtime/agents/model";
+import { AgentRuntime } from "../../../../src/runtime/agents";
+import { StateStore } from "../../../../src/runtime/state";
 
 import { taskSchema, type AgentEvent } from "@raypx/core/tasks";
-import { DatabaseSync as Database } from "node:sqlite";
+import { Database } from "bun:sqlite";
 
 afterEach(() => vi.restoreAllMocks());
 it("stores local text once and sends linear-size relay deltas with a bounded referenced outbox", () => {
@@ -38,9 +38,9 @@ it("stores local text once and sends linear-size relay deltas with a bounded ref
     const db = new Database(join(directory, "profile.sqlite"));
     try {
       expect(
-        db.prepare("SELECT count(*) AS count FROM journal WHERE binding LIKE 'desktop:%'").get(),
+        db.query("SELECT count(*) AS count FROM journal WHERE binding LIKE 'desktop:%'").get(),
       ).toEqual({ count: 0 });
-      const rows = db.prepare("SELECT value FROM journal WHERE binding='relay'").all() as {
+      const rows = db.query("SELECT value FROM journal WHERE binding='relay'").all() as {
         value: string;
       }[];
       expect(rows.filter((row) => JSON.parse(row.value).kind === "activity_delta")).toHaveLength(
@@ -49,7 +49,7 @@ it("stores local text once and sends linear-size relay deltas with a bounded ref
       expect(rows.reduce((bytes, row) => bytes + Buffer.byteLength(row.value), 0)).toBeLessThan(
         32_000 * 2 + rows.length * 600,
       );
-      expect(db.prepare("SELECT count(*) AS count FROM outbox WHERE value!=''").get()).toEqual({
+      expect(db.query("SELECT count(*) AS count FROM outbox WHERE value!=''").get()).toEqual({
         count: 0,
       });
     } finally {
@@ -75,14 +75,14 @@ it("compacts journal bytes and removes dangling outbox references without removi
     try {
       expect(
         (
-          db.prepare("SELECT sum(length(CAST(value AS BLOB))) AS bytes FROM journal").get() as {
+          db.query("SELECT sum(length(CAST(value AS BLOB))) AS bytes FROM journal").get() as {
             bytes: number;
           }
         ).bytes,
       ).toBeLessThanOrEqual(2048);
       expect(
         db
-          .prepare("SELECT count(*) AS count FROM outbox WHERE id NOT IN (SELECT id FROM journal)")
+          .query("SELECT count(*) AS count FROM outbox WHERE id NOT IN (SELECT id FROM journal)")
           .get(),
       ).toEqual({ count: 0 });
     } finally {
@@ -111,14 +111,14 @@ it("leaves existing local journal rows intact and bounds remote replay on restar
     status: "succeeded",
     summary: "kept",
   };
-  db.prepare("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
+  db.query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
     status.id,
     local,
     JSON.stringify(status),
   );
   for (let index = 0; index < 1100; index++) {
     const event = { ...status, id: crypto.randomUUID(), kind: "activity" };
-    db.prepare("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
+    db.query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
       event.id,
       local,
       JSON.stringify(event),
@@ -126,12 +126,12 @@ it("leaves existing local journal rows intact and bounds remote replay on restar
   }
   for (let index = 0; index < 10; index++) {
     const event = { ...status, id: crypto.randomUUID() };
-    db.prepare("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
+    db.query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
       event.id,
       "relay",
       JSON.stringify(event),
     );
-    db.prepare("INSERT INTO outbox (id,binding,value) VALUES (?,?,?)").run(
+    db.query("INSERT INTO outbox (id,binding,value) VALUES (?,?,?)").run(
       event.id,
       "relay",
       JSON.stringify(event),
@@ -143,11 +143,11 @@ it("leaves existing local journal rows intact and bounds remote replay on restar
     expect(restored.taskEvents(local, status.taskId, 0).map((item) => item.event)).toEqual([
       status,
     ]);
-    expect(db.prepare("SELECT count(*) AS count FROM journal WHERE binding=?").get(local)).toEqual({
+    expect(db.query("SELECT count(*) AS count FROM journal WHERE binding=?").get(local)).toEqual({
       count: 1101,
     });
     expect(restored.events("relay")).toHaveLength(3);
-    expect(db.prepare("SELECT count(*) AS count FROM outbox").get()).toEqual({
+    expect(db.query("SELECT count(*) AS count FROM outbox").get()).toEqual({
       count: 3,
     });
   } finally {

@@ -1,12 +1,11 @@
-import { sleep } from "@raypx/runtime-node/process";
 import { defineCommand, type CommandDef } from "citty";
 import { z } from "zod";
 import { LOCAL_WORKSPACE_ID, localParams } from "@raypx/contracts/local";
 import { relayRequestSchema } from "@raypx/contracts/tasks";
-import { globalArgs, type CliArgs } from "./args.ts";
-import { LocalError } from "../runtime/errors.ts";
-import { createDaemonClient } from "../transport/daemon-client.ts";
-import type { ProfileOptions } from "../runtime/daemon/endpoint.ts";
+import { globalArgs, type CliArgs } from "./args";
+import { LocalError } from "../runtime/errors";
+import { createDaemonClient } from "../transport/daemon-client";
+import type { ProfileOptions } from "../runtime/daemon/endpoint";
 
 function object(source?: string): Record<string, unknown> {
   try {
@@ -221,7 +220,7 @@ async function watchTask(options: ProfileOptions, id: string) {
           dirty = true;
         }
         if (!dirty && Date.now() - refreshedAt < 5000) {
-          await sleep(100);
+          await Bun.sleep(100);
           continue;
         }
         dirty = false;
@@ -233,7 +232,7 @@ async function watchTask(options: ProfileOptions, id: string) {
         }
         attempts = 0;
         refreshedAt = Date.now();
-        await sleep(100);
+        await Bun.sleep(100);
       } catch (error) {
         if (watchController.signal.aborted) break;
         await client?.close();
@@ -241,7 +240,7 @@ async function watchTask(options: ProfileOptions, id: string) {
         if (error instanceof LocalError && error.code === "NOT_FOUND") throw error;
         attempts++;
         console.log(JSON.stringify({ type: "connection", status: "reconnecting" }));
-        await sleep(Math.min(1000 * attempts, 5000));
+        await Bun.sleep(Math.min(1000 * attempts, 5000));
       }
     }
   } finally {

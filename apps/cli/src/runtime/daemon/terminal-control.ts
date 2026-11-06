@@ -13,11 +13,11 @@ import type {
   TerminalRequest,
   TerminalSession,
 } from "@raypx/contracts/terminal";
-import type { LocalRuntime } from "../index.ts";
-import { LocalError } from "../errors.ts";
-import { startTerminalHost } from "../terminal/host.ts";
-import { connectorAction, connectorStatus } from "./connectors.ts";
-import { bindingKey } from "./vault.ts";
+import type { LocalRuntime } from "../index";
+import { LocalError } from "../errors";
+import { startTerminalHost } from "../terminal/host";
+import { connectorAction, connectorStatus } from "./connectors";
+import { bindingKey } from "./vault";
 import {
   cloudTerminalSchema,
   emptyCloud,
@@ -25,7 +25,7 @@ import {
   terminalSettingsSchema,
   writeTerminalConfiguration,
   type TerminalConfiguration,
-} from "./terminal-settings.ts";
+} from "./terminal-settings";
 
 const APPROVAL_LEASE_MS = 15_000;
 export type CloudTerminalChannel = {
@@ -59,7 +59,7 @@ export function terminalProjectPaths(roots: { id: string; path: string }[]) {
 /** A profile owns one broker; cloud connections are removable delivery channels. */
 export class LocalTerminalControl {
   private settings: TerminalConfiguration;
-  private terminal: Awaited<ReturnType<typeof startTerminalHost>> | undefined;
+  private terminal: ReturnType<typeof startTerminalHost> | undefined;
   private unavailable = false;
   private readonly viewers = new Map<string, number>();
   private readonly exposures = new Map<string, Exposure>();
@@ -83,16 +83,12 @@ export class LocalTerminalControl {
       };
       this.unavailable = true;
     }
-    this.ready = this.initialize();
-  }
-  readonly ready: Promise<void>;
-  private async initialize() {
     try {
-      this.terminal = await startTerminalHost({
-        directory: join(this.profile, "terminal"),
-        database: this.runtime.state.db,
-        discoveryDirectory: this.profile,
-        lockDirectory: this.profile,
+      this.terminal = startTerminalHost({
+        directory: join(profile, "terminal"),
+        database: runtime.state.db,
+        discoveryDirectory: profile,
+        lockDirectory: profile,
         ...this.configuration(),
         ignoreSession: (provider, id) => this.runtime.agents.managesSession(provider, id),
         reachable: (request, session) => this.reachable(request, session),

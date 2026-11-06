@@ -1,17 +1,15 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { profilePath, acquireLock } from "../../../../src/runtime/state/index.ts";
+import { profilePath, acquireLock } from "../../../../src/runtime/state";
 import {
   connectDaemon,
   stopDaemon,
   readDaemon,
   daemonFetch,
-} from "../../../../src/runtime/daemon/endpoint.ts";
-import { startDaemon } from "../../../helpers/enrolled.ts";
+} from "../../../../src/runtime/daemon/endpoint";
+import { startDaemon } from "../../../helpers/enrolled";
 
 it.each([undefined, 1.5])("rejects daemon metadata with invalid build identity %s", (builtAt) => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-daemon-format-"));
@@ -47,7 +45,7 @@ it.skipIf(process.platform === "win32")(
       token: "a".repeat(64),
       socket: join(dataDir, "host.sock"),
     };
-    const server = await serveHttp({
+    const server = Bun.serve({
       unix: endpoint.socket,
       fetch(request) {
         if (new URL(request.url).pathname === "/info") return Response.json(endpoint);
@@ -96,11 +94,9 @@ it.skipIf(process.platform === "win32")(
   "keeps its owner alive and sanitizes an unexpected background rejection",
   async () => {
     const dataDir = mkdtempSync(join(tmpdir(), "raypx-owner-rejection-"));
-    const child = spawnProcess(
+    const child = Bun.spawn(
       [
         process.execPath,
-        "--import",
-        import.meta.resolve("tsx"),
         join(import.meta.dirname, "../../../fixtures/daemon/rejection.ts"),
         dataDir,
       ],

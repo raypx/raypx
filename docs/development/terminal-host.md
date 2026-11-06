@@ -9,11 +9,9 @@ cloud scope. Native mobile remains separate.
 
 ## Execution and lifetime
 
-On macOS and Windows Desktop launches its bundled, version-matched Rust CLI
-launcher as `daemon proxy`; the launcher starts the bundled Node/ESM entry.
-The proxy connects to a detached owner over a private authenticated Unix socket
-on POSIX, or token-protected loopback TCP on Windows. The owner holds SQLite,
-scheduling, managed Agent processes, the outbound
+On macOS Desktop launches its bundled, version-matched CLI as `daemon proxy`.
+The proxy connects through a private authenticated Unix socket to a detached CLI
+owner. The owner holds SQLite, scheduling, managed Agent processes, the outbound
 relay connection and terminal RequestBroker. Socket directories are 0700 and
 socket/endpoint files 0600; there is no public local HTTP listener.
 
@@ -28,10 +26,7 @@ fall back, and decided/delivered requests recover as outcome unknown.
 
 A profile has one execution owner enforced by SQLite's OS-backed write lock.
 A competing legacy host fails rather than repairing/cancelling the running owner.
-Windows runs the daemon from a complete per-build copy under the data directory's
-`bin/daemon`, including Node, ESM and Herdr. SQLite runtime leases prevent
-cleanup of copies still in use; this lets Desktop replace bundled resources
-during an update. See [ADR 0037](../architecture/0037-windows-daemon.md).
+Windows runs the daemon and hook host over token-guarded loopback (ADR 0037).
 Linux retains existing CLI support without complete product acceptance.
 
 ## Authorization and server selection
@@ -59,14 +54,13 @@ bootstrap without sign-out or task detachment. Successful single-session revocat
 removes only credentials issued by that session; bulk session revocation applies
 to all hosts. Each device has one current credential; reauthorization
 rotates its key and derived grants. Password changes and session-security
-revocation invalidate host access. Standalone CLI onboarding uses `raypx login`
-and browser-approved instance enrollment. That flow supplies an offline local
-identity; it does not create a browser session or remote Host authorization.
+revocation invalidate host access. Full Better Auth device-code login remains
+needed for CLI-only onboarding; this phase does not claim that headless login flow.
 
 ## Terminal connectors
 
 Desktop Agent settings explicitly install/remove owned hooks for Claude and
-Codex. Equivalent commands, after building the complete CLI distribution:
+Codex. Equivalent commands, after building the standalone binary:
 
 ```sh
 raypx daemon start
@@ -79,12 +73,8 @@ raypx connectors uninstall codex
 raypx daemon stop
 ```
 
-Installation places a stable launcher at `~/.raypx/bin/raypx` (`raypx.exe` on
-Windows), the complete matching payload under `~/.raypx/bin/versions/`, and an
-`installation.json` ownership/build record that locates that payload. Checksums
-cover the full inventory. Repair/update preserves ownership and refuses downgrades;
-unknown or modified files require an explicit trusted repair. Installation also
-inserts an incremental `PermissionRequest` hook into
+Installation copies the compiled CLI into `~/.raypx/bin/raypx`, preserving an
+ownership digest, and inserts an incremental `PermissionRequest` hook into
 `~/.claude/settings.json` or `~/.codex/hooks.json`. Existing settings and unrelated
 hooks stay intact; edits, unsupported JSON formats, concurrent changes and another
 Raypx profile's connector fail without overwriting them. Backups are private.
@@ -150,9 +140,8 @@ recovery and old-plaintext retention remain public-hosted-release gates.
 
 Default tests replay redacted real hook fixtures, exercise broker fencing,
 retention/restart, private socket permissions, client disconnect ownership,
-late Native bootstrap and explicit logout versus cookie expiry. `pnpm run verify`
-selects affected source/native checks; `pnpm run verify --full` adds builds and
-relocated artifact probes. Neither replaces packaged GUI or live-provider acceptance.
+late Native bootstrap and explicit logout versus cookie expiry. `bun run verify`
+also covers all existing workspaces and both deployment builds.
 
 The explicit live acceptance uses a synthetic account, isolated PostgreSQL/API,
 temporary projects/configuration, real authenticated Claude/Codex CLIs and the
@@ -165,7 +154,7 @@ actual Web UI clicks; otherwise the typed task client supplies the decision.
 RAYPX_LIVE_AGENTS=1 \
 RAYPX_HOST_ACCEPTANCE_CONFIG=/absolute/private/acceptance.json \
 RAYPX_CODEX_BINARY=/absolute/path/to/codex \
-pnpm --dir apps/cli run smoke:daemon-agents
+bun run --cwd apps/cli smoke:daemon-agents
 ```
 
 The private config contains loopback `apiUrl`, synthetic `email`, `password` and
@@ -177,8 +166,7 @@ hosted relay deployment or mobile behavior.
 
 ## Remaining deliveries
 
-Native mobile task controls, APNs/FCM, E2EE and recovery, full terminal session
-synchronization, ACP, terminal concurrent answering, Linux/Android services,
-worktree workflows and restartable runners remain separate phases. Expo Mobile
-currently provides account/login. Managed local Pi tasks and CLI instance login
-are implemented; neither adds a Pi terminal connector or remote Pi execution.
+Expo iOS foreground app, APNs/FCM, E2EE and recovery, full session synchronization,
+ACP/Pi Agent runners, terminal concurrent answering, headless device-code login,
+Linux/Android services, worktree workflows and restartable runners remain separate
+phases. Model calls in `packages/ai` are not an installed Pi Agent runner.

@@ -1,7 +1,7 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
-import { probeApi, probeWeb, probeRelay } from "./artifacts.ts";
+import { probeApi, probeWeb, probeRelay } from "./artifacts";
 
 export async function smoke(
   root: string,
@@ -15,11 +15,14 @@ export async function smoke(
       ? [
           (async () => {
             await run(
-              process.execPath,
-              [join(root, "apps/cli/dist/main.mjs"), "--version"],
+              join(
+                process.env.RAYPX_CLI_PAYLOAD ?? join(root, "apps/cli/dist"),
+                process.platform === "win32" ? "raypx.exe" : "raypx",
+              ),
+              ["--version"],
               tmpdir(),
             );
-            await run("pnpm", ["run", "smoke"], join(root, "apps/cli"));
+            await run(process.execPath, ["run", "smoke"], join(root, "apps/cli"));
           })(),
         ]
       : []),

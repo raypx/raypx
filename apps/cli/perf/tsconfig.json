@@ -1,0 +1,10 @@
+{
+  "extends": "@raypx/tsconfig/node.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["bun", "node"],
+    "resolveJsonModule": true
+  },
+  "include": ["./**/*.ts"]
+}

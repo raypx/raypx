@@ -50,16 +50,15 @@ it("partitions the full CLI payload without dropping or double-counting runtime 
   const cli = buildMember(root, "command");
   file(root, `${cli}/dist/runtime.json`, "{}");
   file(root, `${cli}/dist/raypx.exe`, Buffer.alloc(5));
-  file(root, `${cli}/dist/runtime/node.exe`, Buffer.alloc(11));
-  file(root, `${cli}/dist/runtime/LICENSE`, Buffer.alloc(2));
+  file(root, `${cli}/dist/LICENSE`, Buffer.alloc(2));
   file(root, `${cli}/dist/herdr/herdr.exe`, Buffer.alloc(3));
   const [artifact] = collectBuildSizes(root, { packages: ["command"] }).artifacts;
-  expect(artifact).toMatchObject({ bytes: 23, files: 5 });
+  expect(artifact).toMatchObject({ bytes: 12, files: 4 });
   expect(artifact!.components).toEqual(
     expect.arrayContaining([
-      { name: "Node", bytes: 13, files: 2 },
+      { name: "CLI / embedded Bun", bytes: 5, files: 1 },
       { name: "Herdr", bytes: 3, files: 1 },
-      { name: "Application / launcher / metadata", bytes: 7, files: 2 },
+      { name: "Metadata / licenses", bytes: 4, files: 2 },
     ]),
   );
 });

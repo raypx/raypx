@@ -3,6 +3,8 @@
 
 # Database
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
 # Package manager artifacts
 node_modules.bun
@@ -78,5 +80,5 @@ e2e/playwright-report/
 # Retain ignored build caches from older branches until explicitly cleaned.
 /target/
 
-# Bundled synthetic API deployment fixture.
-apps/api/artifacts/
+# Generated Tauri host bindings
+apps/desktop/src-tauri/gen/

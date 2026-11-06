@@ -10,9 +10,9 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "vp test --run",
-    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "vp test --run --coverage"
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
     "aws4fetch": "catalog:",

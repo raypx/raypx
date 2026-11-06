@@ -2,7 +2,7 @@
 
 Runtime connection settings, native API transport and release requirements for
 the Tauri web host. [Desktop workspace commands](../../apps/desktop/README.md)
-and [ADR 0045](../architecture/0045-tauri-node-pnpm.md) define its entry points
+and [ADR 0046](../architecture/0046-bun-tauri-artifacts.md) define its entry points
 and architectural boundary.
 
 ## Connection configuration
@@ -154,7 +154,7 @@ maps to MISSING_PROCEDURE and authorization fails. The current hosts API is requ
 there is no browser-grant fallback.
 Redirects cannot become successful authorization responses.
 
-Run `pnpm --dir apps/desktop run tauri:test` for shared policy fixtures, native
+Run `bun run --cwd apps/desktop tauri:test` for shared policy fixtures, native
 Cookie continuity, real TypeScript oRPC transport, private-method rejection and
 session corruption/lock tests. Fixtures use ephemeral loopback endpoints and
 synthetic data; they require no real accounts or provider login.
@@ -165,24 +165,24 @@ do not make arbitrary renderer origins trusted or expose native Cookies.
 
 ## Build and release
 
-Node must satisfy `>=24.18.0 <25` in root package.json; Desktop bundles the actual
-build runtime and records its exact version in runtime.json. pnpm 12.16.1,
-Rust 1.99.1 and Tauri 2.12.5 are pinned in package.json, rust-toolchain.toml and Cargo.lock.
-The npm Tauri CLI/API package
-release is 2.12.4; Rust Tauri remains exactly 2.12.5. pnpm/VP owns JS builds and
-caches; Cargo owns native compilation. `pnpm run package:desktop` stages the full
-matching CLI distribution, signs nested executables, seals manifests and invokes
-Tauri. Staging takes the normal CLI JS build, adds the native launcher and build
-runtime Node, and retains the host's Herdr assets. Outputs live in
-`target/release/bundle`. Users need no global Node;
-project commands use the user's installed package manager.
+Bun 1.4.4 owns installation, scripts, renderer and standalone CLI builds.
+Rust 1.99.1 and Tauri 2.12.5 are pinned in rust-toolchain.toml and Cargo.lock;
+the independently released JavaScript CLI/API packages are 2.12.4. VP owns JS
+builds/caches and Cargo owns native compilation.
+
+Build the CLI once with `bun run build:cli`. Set `RAYPX_CLI_PAYLOAD` to its absolute
+payload directory when reusing a prepared build. `bun run package:desktop`
+verifies its platform, architecture, application version and integrity inventory,
+copies it unchanged and invokes Tauri. Outputs live in `target/release/bundle`.
+The CLI contains Bun; users need no global JavaScript runtime. Project commands
+use the user's installed tools.
 
 macOS requires 13.5+ and a system WebView. Windows uses WebView2 and a per-user
 NSIS installer. Linux Desktop remains unverified. Cross compilation is rejected
 unless the complete matching CLI runtime is available. The main window uses
 native decorations; application layout stays inside their content area.
 
-`pnpm --dir apps/desktop run tauri:check` runs Cargo format/check/Clippy;
+`bun run --cwd apps/desktop tauri:check` runs Cargo format/check/Clippy;
 `tauri:test` runs native tests, including real children and SQLite locks. Linux
 checks the core without GTK/WebKit; actual GUI compilation requires those native
 libraries and does not itself establish GUI acceptance.
@@ -191,7 +191,7 @@ libraries and does not itself establish GUI acceptance.
 Native smoke uses the Cargo `native-smoke` feature, a separate application ID,
 renderer output and `target/native-smoke`. The authenticated private endpoint
 requires a marked, owned temporary directory. Production packages contain no
-smoke socket/eval controls. `pnpm exec tsx apps/desktop/scripts/host/check-release.ts`
+smoke socket/eval controls. `bun apps/desktop/scripts/host/check-release.ts`
 inspects shipped host bytes and resource checksums.
 
 `native:smoke` stays inactive; `native:smoke:interactive` also checks native
@@ -199,10 +199,10 @@ focus/resize/close on isolated macOS/Windows runners. The Windows hosted gate
 installs/uninstalls the actual NSIS package and verifies every runtime file.
 Live provider and Beta acceptance require their explicit isolated credentials.
 Native input changes select the relevant platform runners. Routine renderer edits
-keep source checks; releases additionally run `pnpm run verify --full`, packaged
+keep source checks; releases additionally run `bun run verify --full`, packaged
 native, database and browser acceptance.
 
-Nested macOS Node/CLI/Herdr binaries are signed before their checksum ledgers
+Nested macOS CLI/Herdr binaries are signed before their checksum ledgers
 are sealed and the outer app is signed/notarized. Windows signs PE resources and
 the NSIS installer. Missing distribution credentials produce an unverified
 artifact; they cannot establish signing, notarization or release acceptance.

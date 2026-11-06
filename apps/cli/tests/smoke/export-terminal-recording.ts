@@ -1,4 +1,3 @@
-import { fileExists } from "@raypx/runtime-node/files";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -13,7 +12,7 @@ const cliMode =
   metadata.cliMode ??
   (metadata.transport === "app-server"
     ? "app-server"
-    : (await fileExists(join(directory, "terminal.txt")))
+    : (await Bun.file(join(directory, "terminal.txt")).exists())
       ? "terminal"
       : "print");
 const lines = (source: string) =>

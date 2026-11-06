@@ -1,11 +1,10 @@
-import { runProcessSync } from "@raypx/runtime-node/process";
 import { copyFileSync, symlinkSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { stripVTControlCharacters } from "node:util";
-import { taskModel } from "../../src/tasks/model.ts";
-import { prepareTaskDirectories } from "../../src/repository.ts";
-import { workspaceFixtures } from "./workspace.ts";
+import { taskModel } from "../../src/tasks/model";
+import { prepareTaskDirectories } from "../../src/repository";
+import { workspaceFixtures } from "./workspace";
 
 const { fixture, member } = workspaceFixtures();
 const repository = resolve(import.meta.dirname, "../../../..");
@@ -20,14 +19,12 @@ export function project(automaticInputs = true) {
       name: "cache-fixture",
       private: true,
       type: "module",
-      packageManager: "pnpm@12.16.1",
+      packageManager: "bun@1.4.4",
+      workspaces: ["packages/*"],
     }),
   );
-  writeFileSync(join(root, "pnpm-lock.yaml"), "{}\n");
-  writeFileSync(
-    join(root, "pnpm-workspace.yaml"),
-    'packages: ["packages/*"]\nengineStrict: true\n',
-  );
+  writeFileSync(join(root, "bun.lock"), "{}\n");
+  writeFileSync(join(root, "bunfig.toml"), "\n");
   writeFileSync(join(root, "automatic-inputs.json"), JSON.stringify(automaticInputs));
   mkdirSync(join(root, "node_modules/.vite/task-cache"), { recursive: true });
   mkdirSync(join(root, "node_modules/.vite-temp"), { recursive: true });
@@ -38,7 +35,7 @@ export function project(automaticInputs = true) {
       name: "@raypx/tooling",
       private: true,
       type: "module",
-      raypx: { kind: "tooling", target: "node" },
+      raypx: { kind: "tooling", target: "bun" },
     }),
   );
   mkdirSync(join(root, "node_modules/@raypx-kit"), { recursive: true });
@@ -47,26 +44,11 @@ export function project(automaticInputs = true) {
     join(root, "node_modules/@raypx-kit/devkit"),
     "dir",
   );
-  mkdirSync(join(root, "node_modules/@raypx"), { recursive: true });
-  symlinkSync(
-    join(repository, "packages/runtime-node"),
-    join(root, "node_modules/@raypx/runtime-node"),
-    "dir",
-  );
-  for (const dependency of ["confbox", "semver", "tsx"])
-    symlinkSync(
-      join(repository, "packages/tooling/node_modules", dependency),
-      join(root, "node_modules", dependency),
-      "dir",
-    );
   for (const name of ["leaf", "arguments", "delegation"])
     copyFileSync(
       join(repository, `packages/tooling/src/tasks/${name}.ts`),
       join(root, `packages/tooling/src/tasks/${name}.ts`),
     );
-  // pnpm 12 records its pinned native distribution in a separate lockfile document.
-  // Complete that installation bootstrap before VP observes immutable inputs.
-  runProcessSync(["pnpm", "--version"], { cwd: root });
   return root;
 }
 
@@ -80,7 +62,7 @@ export function checked(
     deps: dependencies,
     extra: {
       scripts: {
-        check: "tsc --noEmit --project tsconfig.json",
+        check: "bun --check --tsconfig-override tsconfig.json",
         ...scripts,
       },
     },
@@ -112,7 +94,7 @@ export default config;`,
         moduleResolution: "Bundler",
         lib: ["ES2022"],
         types: [],
-        paths: { "@raypx/tokens": ["../tokens/src/index.ts"] },
+        paths: { "@raypx/tokens": ["../tokens/src"] },
       },
       include: ["src"],
     }),
@@ -127,10 +109,10 @@ export function execute(
   selector?: string,
 ) {
   prepareTaskDirectories(taskModel(root));
-  const child = runProcessSync(
+  const child = Bun.spawnSync(
     [
       process.execPath,
-
+      "--bun",
       vp,
       "run",
       "--verbose",

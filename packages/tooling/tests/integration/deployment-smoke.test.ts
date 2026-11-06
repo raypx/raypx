@@ -1,9 +1,8 @@
-import { globFiles } from "@raypx/runtime-node/files";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { deploymentSmokePlatform, smokeDeployment } from "../../src/validation/deployment-smoke.ts";
+import { deploymentSmokePlatform, smokeDeployment } from "../../src/validation/deployment-smoke.js";
 
 afterEach(() => vi.unstubAllEnvs());
 it("rejects unsupported deployment arguments before creating resources", () => {
@@ -47,7 +46,9 @@ esac
     expect(commands).toContain(`network rm ${created}-ingress`);
     expect(commands).toContain(`buildx rm --force ${created}`);
     expect(commands).not.toMatch(/prune|volume rm/);
-    const evidence = [...globFiles(".artifacts/deployment/*/commands.json", { cwd: root })];
+    const evidence = [
+      ...new Bun.Glob(".artifacts/deployment/*/commands.json").scanSync({ cwd: root }),
+    ];
     expect(evidence).toHaveLength(1);
     expect(readFileSync(join(root, evidence[0]!), "utf8")).not.toContain("operator-secret");
   } finally {

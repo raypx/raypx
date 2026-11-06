@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
-import { discover } from "../repository.ts";
-import { testLayer, testSources, type TestLayer } from "./test-sources.ts";
+import { discover } from "../repository.js";
+import { testLayer, testSources, type TestLayer } from "./test-sources.js";
 
 export interface CaseIdentity {
   workspace: string;
@@ -101,13 +101,13 @@ export async function collectInventory(root: string, reportNames: string[]): Pro
       });
     if (!workspace.manifest.scripts?.test) continue;
     for (const name of reportNames) {
-      const report = join(directory, "node_modules/.cache/raypx-tests", name);
+      const report = Bun.file(join(directory, "node_modules/.cache/raypx-tests", name));
       // A workspace need not implement every focused layer.
       const layer = name.match(/-(unit|component|integration)\.json$/)?.[1];
       if (layer && !workspace.manifest.scripts[`test:${layer}`]) continue;
-      if (!existsSync(report))
+      if (!(await report.exists()))
         throw new Error(`Missing report for ${workspace.manifest.name}: ${name}`);
-      const result = record(JSON.parse(readFileSync(report, "utf8")));
+      const result = record(await report.json());
       if (result.success !== true || result.numFailedTests !== 0 || result.numPendingTests !== 0)
         throw new Error(`Incomplete or failed test run: ${workspace.manifest.name}`);
       let passed = 0;

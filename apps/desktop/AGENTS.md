@@ -9,7 +9,7 @@ selected JSON for manual copying. Native and compiled builds must not contain
 the diagnostics bootstrap or panel. See the page DevTools development guide.
 
 Tauri composition root with the existing React/Vite renderer, persistent system
-WebView, tray and standalone TypeScript CLI. src-tauri/AGENTS.md owns Rust host rules;
+WebView, tray and standalone Bun CLI. src-tauri/AGENTS.md owns Rust host rules;
 README.md lists the layout, build and acceptance commands. Preserve DesktopBridge.
 
 ## Interface
@@ -69,13 +69,13 @@ for Desktop account URLs, auth client and router search. Shared forms own fields
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
 source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites. Desktop-only compiled
 browser acceptance lives in `e2e/`, uses `@raypx/e2e/testing` fixtures and runs
-through `pnpm --dir apps/desktop run e2e` (root: `test e2e --package desktop`). Shared
+through `bun run --cwd apps/desktop run e2e` (root: `test e2e --package desktop`). Shared
 journeys register through `@raypx/e2e/journeys/*`; the `desktop` Playwright project
 selects only this renderer and its compiled assets. It does not establish native WebView acceptance.
 Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. Tauri transport/acceptance tests live in `src-tauri/tests/`; policy unit tests are colocated in Rust modules.
-These tests exercise real subprocesses and OS locks. TS native smoke drivers use Node. `tests/native/smoke/` contains the
+These tests exercise real subprocesses and OS locks. TS native smoke drivers use Bun. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
-Native scripts and their pure policy tests live in `scripts/host/` with Node types;
+Native scripts and their pure policy tests live in `scripts/host/` with Bun types;
 build/filesystem/process integration cases live in `tests/integration/native/`.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
 Use short feature-local filenames such as `form.tsx` and `form.component.test.tsx`; exported symbols retain feature context. Route composition suites live beside the router.
@@ -101,12 +101,12 @@ without repeating web sign-out or dropping the device identity.
 - Tauri 2.12.5 uses WKWebView/WebView2. Build with Rust 1.99.1 ; macOS packages require 13.5+.
   Framework APIs live in src-tauri/src/shell.rs; other Rust modules own native policy/transport.
   Opaque business JSON uses TS contracts as the sole business schema authority.
-- Build a prerendered SPA in dist/client and embed it under generated/frontend.
+- Build a prerendered SPA in dist/client and embed it through Tauri frontendDist.
   Packaged routes use hash history; no frontend server runs in packaged apps.
   The root remains text-free; translated providers initialize inside ClientOnly.
 - Launch only the absolute, version-matched bundled CLI at resources/bin/raypx.
-  Staging the normal CLI JS build adds the native launcher, Node and the host's
-  verified Herdr distribution in resources/bin/herdr. CLI
+  Stage the immutable compiled Bun CLI payload and its verified Herdr distribution
+  in resources/bin/herdr. Staging never rebuilds or re-signs the payload. CLI
   copies terminal resources into its profile before use, avoiding Windows DLL locks.
 - macOS and Windows connect to the independent daemon; GUI Quit preserves Agent
   work. Spawn CLI children through Command so Windows opens no console. Terminal
@@ -138,7 +138,7 @@ without repeating web sign-out or dropping the device identity.
   IPC. Deny external navigation/popups. Event delivery is bounded and acknowledged.
 - CSP hashes startup scripts and rejects arbitrary inline JS/eval. Production
   renderer builds eliminate the native-smoke observation hook.
-- pnpm/VP owns JS tasks and caches; Cargo owns native compilation caches. Default build
+- Bun/VP owns JS tasks and caches; Cargo owns native compilation caches. Default build
   checks/builds the renderer. Explicit packaging stages renderer, CLI and Herdr and
   invokes Tauri uncached. Rust host verification is explicit in the shared task graph.
 - `tauri:check:docker` delegates through VP to the scoped Dockerfile. BuildKit owns
@@ -155,7 +155,7 @@ without repeating web sign-out or dropping the device identity.
 
 ## Verification
 
-Daily changes run affected Desktop check/test through repository `pnpm run verify`.
+Daily changes run affected Desktop check/test through repository `bun run verify`.
 Native host, IPC, native resources/scripts and terminal/daemon changes also run
 tauri:check/tauri:test (including the native-smoke build) and CI on the affected native platforms. Renderer-only changes
 need no native runner. Release preparation adds build:desktop, tauri:smoke (headless),

@@ -32,8 +32,8 @@ automatically retry a sent execution command. Fetch credentials and headers for 
 ## Verification
 
 ```sh
-pnpm --dir packages/client run check
-pnpm --dir packages/client run test
+bun run --cwd packages/client check
+bun run --cwd packages/client test
 ```
 
 A sign-in or account feature imports `/api` only, so the authentication bundle never

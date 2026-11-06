@@ -1,12 +1,14 @@
-import { resolveRelease } from "./build/release.ts";
+import { resolveRelease } from "./build/release";
 import { developmentEnvironment } from "@raypx-kit/devkit/process";
 import { run } from "@raypx/runtime-node/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
-import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests.ts";
+import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests";
 import { join } from "node:path";
-import { prepareTaskDirectories as prepareDirectories } from "@raypx-kit/devkit/tasks";
-import { executeTasks } from "./tasks/run.ts";
-import { taskModel, taskPlan, taskRef, type TaskModel } from "./tasks/model.ts";
+import {
+  runTasks as executeTasks,
+  prepareTaskDirectories as prepareDirectories,
+} from "@raypx-kit/devkit/tasks";
+import { taskModel, taskPlan, taskRef, type TaskModel } from "./tasks/model";
 
 /** Raypx conventions for the shared @raypx-kit/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
@@ -50,12 +52,7 @@ export async function runTasks(
       else
         await run(
           process.execPath,
-          [
-            "--import",
-            import.meta.resolve("tsx"),
-            join(root, "packages/tooling/src/cli.ts"),
-            "browser:run",
-          ],
+          [join(root, "packages/tooling/src/cli.ts"), "browser:run"],
           root,
           { ...process.env, ...browser.env },
         );
@@ -103,7 +100,7 @@ export async function runTasks(
               ? "development"
               : "build",
         ),
-        RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-node${process.versions.node}`,
+        RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}`,
       };
     },
   });

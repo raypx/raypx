@@ -1,7 +1,6 @@
-import { spawnProcess } from "@raypx/runtime-node/process";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it } from "vite-plus/test";
-import { DatabaseSync as Database } from "node:sqlite";
+import { Database } from "bun:sqlite";
 import { mkdtempSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,9 +8,9 @@ import { fileURLToPath } from "node:url";
 import {
   SqlitePiContextStore,
   PI_CONTEXT_MAX_BYTES,
-} from "../../../../src/runtime/agents/harness/context/sqlite.ts";
+} from "../../../../src/runtime/agents/harness/context/sqlite";
 import { PiRunner, type PiContext } from "@raypx/providers/pi";
-import { piMessage, piModel, piScript, piTool } from "../../../helpers/pi.ts";
+import { piMessage, piModel, piScript, piTool } from "../../../helpers/pi";
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -97,13 +96,10 @@ it("loads a successful transcript after the writing process exits and continues 
     const store = new SqlitePiContextStore(storage.database, "restart");
     await store.commit(0, {status:"succeeded",messages:[{role:"user",content:"Previous turn",timestamp:1}]});
     store.close(); storage.close();`;
-  const child = spawnProcess(
-    [process.execPath, "--import", import.meta.resolve("tsx"), "-e", source, f.directory],
-    {
-      stdout: "ignore",
-      stderr: "inherit",
-    },
-  );
+  const child = Bun.spawn([process.execPath, "-e", source, f.directory], {
+    stdout: "ignore",
+    stderr: "pipe",
+  });
   expect(await child.exited).toBe(0);
   const store = f.open("restart"),
     script = piScript([piMessage([{ type: "text", text: "Continued" }])]);
@@ -252,7 +248,7 @@ it.each([
   await store.commit(0, idle());
   store.close();
   const database = new Database(f.path);
-  database.prepare("UPDATE pi_contexts SET value=? WHERE context_id='one'").run(value);
+  database.query("UPDATE pi_contexts SET value=? WHERE context_id='one'").run(value);
   database.close();
   const reopened = f.open();
   await expect(reopened.load()).rejects.toMatchObject({
@@ -269,7 +265,7 @@ it("rejects oversized stored JSON before returning its body", async () => {
   store.close();
   const database = new Database(f.path);
   database
-    .prepare("UPDATE pi_contexts SET value=? WHERE context_id='one'")
+    .query("UPDATE pi_contexts SET value=? WHERE context_id='one'")
     .run("x".repeat(PI_CONTEXT_MAX_BYTES + 1));
   database.close();
   await expect(f.open().load()).rejects.toMatchObject({ code: "PI_CONTEXT_TOO_LARGE" });
@@ -305,7 +301,7 @@ it("can read the final safe revision and refuses an overflowing write", async ()
   await store.commit(0, idle());
   const database = new Database(f.path);
   database
-    .prepare("UPDATE pi_contexts SET revision=? WHERE context_id='one'")
+    .query("UPDATE pi_contexts SET revision=? WHERE context_id='one'")
     .run(Number.MAX_SAFE_INTEGER - 1);
   database.close();
   expect(await store.commit(Number.MAX_SAFE_INTEGER - 1, idle())).toBe(Number.MAX_SAFE_INTEGER);

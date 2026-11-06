@@ -33,7 +33,12 @@ assert.ok(
   ["127.0.0.1", "localhost"].includes(apiUrl.hostname),
   "This private plaintext acceptance only runs on loopback",
 );
-const launch = [process.execPath, resolvePath(import.meta.dirname, "../../dist/main.mjs")],
+const launch = [
+    resolvePath(
+      process.env.RAYPX_CLI_PAYLOAD ?? resolvePath(import.meta.dirname, "../../dist"),
+      process.platform === "win32" ? "raypx.exe" : "raypx",
+    ),
+  ],
   directory = await mkdtemp(join(tmpdir(), "raypx-daemon-live-"));
 const stateDirectory = join(directory, "state"),
   configDirectory = join(directory, "config");

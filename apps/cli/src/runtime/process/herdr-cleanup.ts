@@ -1,11 +1,10 @@
-import { sleep } from "@raypx/runtime-node/process";
 import { rm } from "node:fs/promises";
 
 /** Windows can release a terminated process's working directory asynchronously. */
 export async function removeHerdrDirectory(
   path: string,
   remove = (directory: string) => rm(directory, { recursive: true, force: true }),
-  wait: (milliseconds: number) => Promise<unknown> = sleep,
+  wait: (milliseconds: number) => Promise<unknown> = Bun.sleep,
 ) {
   for (let attempt = 0; ; attempt++) {
     try {

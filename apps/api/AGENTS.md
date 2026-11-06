@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Node HTTP composition root for authentication, account and administrator RPC,
+The Bun HTTP composition root for authentication, account and administrator RPC,
 remote read projections, memory and cloud scheduling.
 
 ## Interface
@@ -40,7 +40,7 @@ Account RPC uses `@raypx/account/server` with an injected session reader. The
 service projects public fields; API owns HTTP and unauthorized/error mapping.
 
 `jobs/` owns server maintenance; `jobs/runtime/` contains the Nitro Task entries.
-`maintenance:cleanup` runs every 15 minutes on Node, gated by
+`maintenance:cleanup` runs every 15 minutes on Bun, gated by
 `JOBS_ENABLED` (false by default). Nitro owns the schedule.
 Cleanup uses PostgreSQL transaction time, an advisory transaction lock and bounded
 row-locked batches. Sessions/verification records expired over 24 hours ago,
@@ -49,8 +49,8 @@ on the next schedule. Never add a production HTTP task runner or log driver erro
 Tasks reuse the API runtime.
 See `docs/development/server-jobs.md` for policy and verification.
 
-`schedules:tick` runs every minute on Node with the same deployment gate.
-`@raypx/jobs-server` owns scheduling use cases; API supplies PostgreSQL persistence
+`schedules:tick` runs every minute on Bun with the same deployment gate.
+`@raypx/jobs/server` owns scheduling use cases; API supplies PostgreSQL persistence
 and the private relay executor. `jobs.*` RPC resolves an account on every call;
 writes additionally require a trusted Origin, revision checks and account limits.
 Create request IDs are durable plan IDs; retries are checked before the 100-plan quota.
@@ -72,8 +72,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 
 ## Constraints
 
-- Dev and build run vp under Node (`pnpm exec vp`); start `.output/server/index.mjs`
-  with `node`, built by the shared Nitro `node-server` preset.
+- Dev and build run vp under Bun (`bun --bun vp`); start `.output/server/index.mjs`
+  with `bun`, built by the shared Nitro `bun` preset.
   Common target options come from `@raypx/tooling/build/nitro`; API owns routes and runtime plugins.
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
@@ -91,7 +91,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
   have pre-lookup limits by platform-owned client address (120/min) and credential
   digest (6/min); never use a caller-selected forwarding header or raw bearer key.
-- Optional `REDIS_URL` (Node runtime, `server/runtime/redis.ts` with ioredis) becomes
+- Optional `REDIS_URL` (Bun runtime, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
   stores `runtime.cache` values.
   Sessions are still written to PostgreSQL. Requires
@@ -129,10 +129,10 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 ## Verification
 
 ```sh
-pnpm --dir apps/api run check
-pnpm --dir apps/api run test
-pnpm run build:api
-TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test pnpm --dir apps/api run test:postgres
+bun run --cwd apps/api check
+bun run --cwd apps/api test
+bun run build:api
+TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres
 ```
 
 ## Remote tasks
@@ -186,7 +186,7 @@ Registration is enforced by the Better Auth user-create hook with a fresh read, 
 it covers every sign-in method; the email signup route only pre-checks the 5-second
 `readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
 Optional `S3_*` variables (all of endpoint, bucket and keys, or none) give `runtime.storage`
-an S3-compatible `@raypx/storage` store on Node; otherwise it is the
+an S3-compatible `@raypx/storage` store on Bun; otherwise it is the
 unavailable storage whose operations fail with `STORAGE_NOT_CONFIGURED`. `RuntimeProviders.storage`
 overrides it. No route exposes storage yet; consumers must validate ownership before
 issuing keys or pre-signed URLs. See `docs/development/object-storage.md`.

@@ -54,7 +54,7 @@ function requestFrom(
       : (Readable.toWeb(incoming) as unknown as ReadableStream<Uint8Array>);
     init.duplex = "half";
   }
-  return new Request(new URL(incoming.url ?? "/", origin), init);
+  return new Request(new URL(incoming.url ?? "/", origin).href, init);
 }
 
 async function writeResponse(response: Response, outgoing: ServerResponse) {
@@ -255,6 +255,23 @@ export async function serveHttp<T = unknown>(options: ServerOptions<T>): Promise
 }
 
 export function directHttpClient(socketPath?: string) {
+  // Bun's undici compatibility shim does not implement custom dispatchers/socketPath.
+  const bun = (
+    globalThis as typeof globalThis & {
+      Bun?: {
+        fetch(
+          url: string | URL,
+          init: RequestInit & { unix?: string; proxy: false },
+        ): Promise<Response>;
+      };
+    }
+  ).Bun;
+  if (bun)
+    return {
+      fetch: (url: string | URL, init: RequestInit = {}) =>
+        bun.fetch(url, { ...init, ...(socketPath ? { unix: socketPath } : {}), proxy: false }),
+      close: async () => {},
+    };
   const dispatcher = new Agent(socketPath ? { connect: { socketPath } } : {});
   return {
     async fetch(url: string | URL, init: RequestInit = {}): Promise<Response> {

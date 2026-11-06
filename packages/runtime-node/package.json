@@ -10,8 +10,8 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "vp test --run",
-    "test:unit": "vp test --run"
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run"
   },
   "dependencies": {
     "cross-spawn": "catalog:",
@@ -25,7 +25,6 @@
     "@types/node": "catalog:dev",
     "@types/ws": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "tsx": "catalog:dev",
     "typescript": "catalog:dev",
     "vite-plus": "catalog:dev"
   },

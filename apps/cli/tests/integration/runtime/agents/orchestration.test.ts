@@ -1,4 +1,3 @@
-import { sleep } from "@raypx/runtime-node/process";
 import { expect, it } from "vite-plus/test";
 import { join } from "node:path";
 import {
@@ -6,8 +5,8 @@ import {
   EPOCH,
   goldenDifference,
   orchestrationHost,
-} from "../../../helpers/orchestration.ts";
-import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
+} from "../../../helpers/orchestration";
+import { AgentRuntime } from "../../../../src/runtime/agents";
 import type { AgentTask } from "@raypx/core/tasks";
 
 /**
@@ -27,7 +26,7 @@ const deadline = new Date(EPOCH.getTime() + 10_000).toISOString();
 async function waitFor(condition: () => boolean) {
   for (let attempt = 0; attempt < 600; attempt++) {
     if (condition()) return;
-    await sleep(10);
+    await Bun.sleep(10);
   }
   throw new Error("Condition never became true");
 }

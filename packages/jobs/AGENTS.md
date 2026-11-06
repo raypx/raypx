@@ -20,4 +20,5 @@ Local automations remain in the Desktop device profile across account changes.
 
 ## Verification
 
-Run package checks, component tests and application consumer tests.
+Run package checks/tests and both application consumers. SQL persistence, actual
+relay round trips and Bun/Nitro scheduled events have separate integration gates.

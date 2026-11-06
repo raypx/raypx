@@ -1,11 +1,11 @@
-import { spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { exitForVersion } from "./version.ts";
+import { exitForVersion } from "./version";
 
 exitForVersion("codex");
 writeFileSync("parent-pid", String(process.pid));
-spawn(process.execPath, [join(import.meta.dirname, "descendant.ts")], {
-  stdio: "ignore",
+Bun.spawn([process.execPath, join(import.meta.dirname, "descendant.ts")], {
+  stdout: "ignore",
+  stderr: "ignore",
 });
-await import("./codex.ts");
+await import("./codex");

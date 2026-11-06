@@ -1,7 +1,7 @@
 # Cloudflare Relay ingress
 
-Cloudflare Workers + Containers adapter for the existing Node Relay image. Only
-the managed edge entry runs in workerd with nodejs_compat; Node owns local tools,
+Cloudflare Workers + Containers adapter for the existing Bun Relay image. Only
+the managed edge entry runs in workerd with nodejs_compat; Bun owns local tools,
 tests/builds and the container runtime. Metadata target node expresses the SDK's
 Node-compatible surface. Do not import another application's source.
 

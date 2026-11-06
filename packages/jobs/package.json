@@ -9,8 +9,8 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "vp test --run",
-    "test:component": "vp test --run .component.test."
+    "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run .component.test."
   },
   "dependencies": {
     "@raypx/core": "workspace:*",

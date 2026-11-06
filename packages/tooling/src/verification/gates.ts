@@ -1,4 +1,4 @@
-import type { VerificationPlan } from "./plan.ts";
+import type { VerificationPlan } from "./plan.js";
 
 export const gateDefinitions = [
   { name: "javascript", flag: undefined },

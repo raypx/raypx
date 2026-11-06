@@ -31,7 +31,7 @@ These source facts do not expand the dated live acceptance below. Server-owned
 Agents, migration/pairing and the complete native mobile workbench remain targets.
 The Expo Mobile workspace currently provides account/login only. Current toolchain
 and distribution details are in the [architecture overview](architecture/README.md)
-and [ADR 0045](architecture/0045-tauri-node-pnpm.md). The 2026-11-02 live macOS
+and [ADR 0046](architecture/0046-bun-tauri-artifacts.md). The 2026-11-02 live macOS
 acceptance predates Tauri and does not validate the new host's GUI or installer;
 see the separate [migration validation record](development/migration-validation.md).
 
@@ -53,7 +53,7 @@ The local synthetic lifecycle suite in `apps/cli/tests/integration/runtime/agent
 
 Real acceptance passed on **2026-11-02 at 11:33 SGT**, on **macOS arm64**, using **codex-cli 0.165.0-alpha.1.2**. The separate native test application exercised read, reject-plan, approve-plan, write-and-test, restart-history, resume-session and cancel-process-tree. The daemon epoch changed across the explicit restart, and owned processes/session cleanup completed. Generated evidence is `.artifacts/native-agents/1793590421488.json`; it contains safe metadata and check names, without prompts or credentials. Claude, Windows and foreground interaction were not run.
 
-`pnpm run verify` passed on the same source changes (24 successful tasks), including CLI's 385 tests, Desktop's 231 tests, the contracts consumer suite and the selected Rust host checks. See [Agent acceptance commands](development/agent-quality.md#local-native-agent-acceptance).
+`bun run verify` passed on the same source changes (24 successful tasks), including CLI's 385 tests, Desktop's 231 tests, the contracts consumer suite and the selected Rust host checks. See [Agent acceptance commands](development/agent-quality.md#local-native-agent-acceptance).
 
 ## Near-Term Plan
 

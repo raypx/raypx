@@ -67,5 +67,5 @@ Code outside `src/components/` stays private.
 
 ## Verification
 
-Run `pnpm --dir packages/blocks run check` and `pnpm --dir packages/blocks run test`.
+Run `bun run --cwd packages/blocks check` and `bun run --cwd packages/blocks test`.
 Web and Desktop route tests cover integration.

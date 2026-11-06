@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { execute, pass } from "../helpers/cache.ts";
-import { validationProject } from "../helpers/cache-validation.ts";
+import { execute, pass } from "../helpers/cache";
+import { validationProject } from "../helpers/cache-validation";
 
 it("caches policy while rejecting new violations and deleted required inputs", () => {
   const root = validationProject();
@@ -34,7 +34,7 @@ it("caches policy while rejecting new violations and deleted required inputs", (
   writeFileSync(join(root, ".nvmrc"), "24\n");
   const pin = run();
   expect(pin.code).not.toBe(0);
-  expect(pin.log).toContain("root Node/pnpm requirements only");
+  expect(pin.log).toContain("only runtime pin");
 }, 60000);
 
 it("caches locale parity while tracking changed, new and deleted catalogs and language policy", () => {

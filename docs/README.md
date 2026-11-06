@@ -1,7 +1,7 @@
 # Raypx documentation
 
 Raypx is a project-centered workbench with Tauri Desktop, a standalone TypeScript
-CLI/daemon, TanStack Start Web, Node API and independent Relay. Desktop targets
+CLI/daemon, TanStack Start Web, Bun API and independent Relay. Desktop targets
 macOS 13.5+ and Windows; Expo Mobile currently provides the account/login baseline.
 Register local profiles once for offline work; remote data and execution grants
 require separate online authorization.
@@ -10,14 +10,15 @@ Start with the [project overview](../README.md), [product scope](../PRODUCT.md),
 [current architecture](architecture/README.md) and
 [development setup](development/getting-started.md).
 [Root instructions](../AGENTS.md) define repository rules. Workspace manifests are the inventory:
-`pnpm run workspace:list` and `pnpm run test list`. Current guides describe the
+`bun run workspace:list` and `bun run test list`. Current guides describe the
 implementation; the roadmap describes future work. Accepted later amendments
 supersede conflicting earlier ADR text.
 
 ## Architecture and decisions
 
 - [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
-- [Tauri / Node / pnpm decision and migration contract](architecture/0045-tauri-node-pnpm.md)
+- [Bun / Tauri experimental decision](architecture/0046-bun-tauri-artifacts.md)
+- [Bun + Tauri experiment and validation](development/bun-tauri-experiment.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)
 - [Persistent Agent Platform roadmap](roadmap.md) — future scope and dated acceptance

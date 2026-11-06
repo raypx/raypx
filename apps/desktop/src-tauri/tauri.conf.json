@@ -6,7 +6,7 @@
   "build": {
     "devUrl": "http://localhost:1420",
     "frontendDist": "../dist/client",
-    "beforeDevCommand": "pnpm exec vp dev --config vite.app.config.ts"
+    "beforeDevCommand": "bun --bun vp dev --config vite.app.config.ts"
   },
   "app": {
     "windows": [],

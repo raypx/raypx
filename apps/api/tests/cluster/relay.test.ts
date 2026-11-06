@@ -1,7 +1,5 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { afterAll, afterEach, beforeAll, expect, it } from "vite-plus/test";
-
+import { serve } from "bun";
 import { resolve } from "node:path";
 import { Redis } from "ioredis";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
@@ -17,8 +15,8 @@ import type { AgentTask } from "@raypx/core/tasks";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
-import { createApiRuntime } from "../../server/runtime/server.ts";
-import { getApiEnvironment } from "../../server/env.ts";
+import { createApiRuntime } from "../../server/runtime/server.js";
+import { getApiEnvironment } from "../../server/env.js";
 import { connected, controlAuth, observed } from "@raypx/control/testing";
 
 const url = process.env.TEST_DATABASE_URL,
@@ -43,7 +41,7 @@ async function node(prefix: string) {
     await connection.close();
   });
   await hub.attachCluster(cluster);
-  const server = await serveHttp<{ id: string }>({
+  const server = serve<{ id: string }>({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request, listener) {
@@ -223,18 +221,13 @@ it("dispatches and revokes through the API broker while sockets run in a separat
   const f = await connected(runtime.control, auth);
   const credential = await runtime.control.credentials.authorizeHost(auth, f.grant);
   const host = await runtime.control.credentials.hostGrant(credential.credential);
-  const listener = await serveHttp({
-    hostname: "127.0.0.1",
-    port: 0,
-    fetch: () => new Response(null),
-  });
-  const port = listener.port;
+  const listener = serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
+  const port = listener.port!;
   await listener.stop(true);
-  const child = spawnProcess(
+  const child = Bun.spawn(
     [
       process.execPath,
-      "--import",
-      import.meta.resolve("tsx"),
+      "--no-env-file",
       resolve(import.meta.dirname, "../../../../infra/relay/src/main.ts"),
     ],
     {

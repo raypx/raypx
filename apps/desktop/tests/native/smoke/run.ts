@@ -27,7 +27,7 @@ async function run(smokePhase: string, directory: string, restoredServer = false
     RAYPX_NATIVE_SMOKE_PHASE: smokePhase,
     RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
     RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
-    RAYPX_NATIVE_SMOKE_NODE: runtime.nodeVersion,
+    RAYPX_NATIVE_SMOKE_BUN: runtime.bunVersion,
   });
 }
 const directory = await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));

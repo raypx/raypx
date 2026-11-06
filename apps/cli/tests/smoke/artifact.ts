@@ -7,27 +7,27 @@ import {
 } from "@raypx/runtime-node/files";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { smokeManagedPi } from "./managed-pi.ts";
-import { installNpmCli } from "../helpers/npm.ts";
+import { verifyCliPayload } from "@raypx/tooling/build/cli";
+import { providerProxy } from "../helpers/provider-proxy.ts";
 import { enrollTestProfile } from "../helpers/instance.ts";
 import assert from "node:assert/strict";
+import { stripVTControlCharacters } from "node:util";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import manifest from "../../package.json";
-import rootManifest from "../../../../package.json";
-import { satisfies } from "semver";
 import { aiFixture } from "../helpers/ai.ts";
-
-const { engines } = rootManifest;
 
 const dataDir = await mkdtemp(join(tmpdir(), "raypx #完整运行目录 smoke-"));
 const distribution = join(dataDir, "distribution");
-const builtDirectory = await installNpmCli(dataDir);
-const binary = join(distribution, "main.mjs");
-const launch = [process.execPath, binary];
+const builtDirectory = resolve(
+  process.env.RAYPX_CLI_PAYLOAD ?? resolve(import.meta.dirname, "../../dist"),
+);
+await verifyCliPayload(builtDirectory);
+const binary = join(distribution, process.platform === "win32" ? "raypx.exe" : "raypx");
+const launch = [binary];
 function diagnostics(text: string) {
-  return text
+  return stripVTControlCharacters(text)
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line) as Record<string, unknown>);
@@ -42,11 +42,12 @@ function completed(text: string, mode: "command" | "stdio" | "version" | "tui", 
 }
 let closeInstance = async () => {};
 let closeProbe = async () => {};
+const failures: unknown[] = [];
 try {
-  // Run the installed package outside the repository, using only its Node interpreter.
+  // Run the installed package outside the repository, with the embedded Bun runtime.
   await cp(builtDirectory, distribution, { recursive: true });
   const runtime = await readJsonFile(join(distribution, "runtime.json"));
-  assert.ok(satisfies(runtime.nodeVersion, engines.node));
+  assert.equal(runtime.bunVersion, Bun.version);
   assert.equal(await fileExists(join(distribution, "runtime")), false);
   if (process.platform !== "win32") await chmod(binary, 0o700);
   closeInstance = await enrollTestProfile({ dataDir }, launch);
@@ -91,7 +92,7 @@ try {
       return { stdout, stderr };
     };
     await invoke(["connectors", "install", "claude"]);
-    const stable = join(home, "bin", "raypx.mjs"),
+    const stable = join(home, "bin", "raypx"),
       metadataFile = join(home, "bin", "installation.json");
     const metadata = await readJsonFile(metadataFile);
     assert.equal(metadata.version, manifest.version);
@@ -115,7 +116,7 @@ try {
     );
     await invoke(["connectors", "repair", "claude"]);
     const backups = await Array.fromAsync(
-      globFiles("raypx.mjs.backup-*", { cwd: join(home, "bin"), absolute: true }),
+      globFiles("raypx.backup-*", { cwd: join(home, "bin"), absolute: true }),
     );
     assert.equal(backups.length, 1);
     assert.equal(await readTextFile(backups[0]!), "externally modified hook");
@@ -159,18 +160,10 @@ try {
     );
     completed(await new Response(catalog.stderr).text(), "command", "success");
   }
-  // Compile the exact production JS/chunks behind an offline fetch harness. This
-  // exercises lazy SDK initialization without adding a test hook to the product.
-  const marker = join(dataDir, "provider-fetch"),
-    bootstrap = join(dataDir, "provider-probe.mjs");
-  await writeFile(
-    bootstrap,
-    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await (await import("node:fs/promises")).writeFile(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(pathToFileURL(join(builtDirectory, "main.mjs")).href)});`,
-  );
-  const probeLaunch = [process.execPath, bootstrap];
-  // Give the independently compiled provider probe its own enrolled test profile.
-  const probeData = join(dataDir, "provider-profile");
-  closeProbe = await enrollTestProfile({ dataDir: probeData }, probeLaunch);
+  const proxy = await providerProxy(dataDir);
+  closeProbe = () => proxy.close();
+  await proxy.isolate(binary);
+  const probeData = dataDir;
   const providerIds = ["anthropic", "openai", "google", "openrouter"];
   for (const provider of providerIds) {
     const catalog = spawnProcess(
@@ -186,10 +179,9 @@ try {
     await new Response(catalog.stderr).text();
     assert.equal(await catalog.exited, 0);
     assert.ok(models[0]);
-    await rm(marker, { force: true });
+    const requestCount = proxy.requests.length;
     const probe = spawnProcess(
-      [
-        ...probeLaunch,
+      proxy.command(binary, [
         "ai",
         "complete",
         "--data-dir",
@@ -197,16 +189,25 @@ try {
         JSON.stringify({
           provider,
           model: models[0].id,
-          prompt: "offline loading probe",
+          prompt: "private-provider-prompt",
           api_key_env: "RAYPX_PROVIDER_SMOKE_KEY",
           timeout_ms: 5000,
         }),
         "--json",
-      ],
+      ]),
       {
         cwd: dataDir,
         env: {
-          ...process.env,
+          ...Object.fromEntries(
+            Object.entries(process.env).filter(
+              ([key]) => !/^(?:RAYPX_|ANTHROPIC_|OPENAI_|GOOGLE_|GEMINI_|OPENROUTER_)/.test(key),
+            ),
+          ),
+          HTTPS_PROXY: proxy.url,
+          HTTP_PROXY: proxy.url,
+          https_proxy: proxy.url,
+          http_proxy: proxy.url,
+          NODE_EXTRA_CA_CERTS: proxy.cert,
           PATH: "",
           RAYPX_HOME: aiHome,
           RAYPX_PROVIDER_SMOKE_KEY: "synthetic-smoke-key",
@@ -216,17 +217,22 @@ try {
         timeout: 15_000,
       },
     );
-    const [, errors, code] = await Promise.all([
+    const [output, errors, code] = await Promise.all([
       new Response(probe.stdout).text(),
       new Response(probe.stderr).text(),
       probe.exited,
     ]);
     assert.notEqual(code, 0);
     assert.equal(
-      await readTextFile(marker),
-      "reached",
-      `${provider} must load its compiled SDK and reach the offline transport`,
+      proxy.requests.length,
+      requestCount + 1,
+      `${provider} must reach the TLS test proxy`,
     );
+    assert.ok(proxy.requests.at(-1)?.body.includes("private-provider-prompt"));
+    assert.ok(proxy.requests.at(-1)?.credential.includes("synthetic-smoke-key"));
+    assert.ok(!output.includes("private-provider-prompt"));
+    assert.ok(!output.includes("synthetic-smoke-key"));
+    assert.ok(!errors.includes("private-provider-prompt"));
     assert.ok(!errors.includes("synthetic-smoke-key"));
   }
   let bundledJsBytes = 0;
@@ -245,7 +251,7 @@ try {
       2,
     ),
   );
-  const aiServer = await aiFixture();
+  const aiServer = aiFixture();
   try {
     const ai = spawnProcess(
       [
@@ -294,7 +300,7 @@ try {
       ["SIGINT", 130],
       ["SIGTERM", 143],
     ] as const) {
-      const server = await aiFixture({ stall: true });
+      const server = aiFixture({ stall: true });
       const child = spawnProcess(
         [
           ...launch,
@@ -464,7 +470,7 @@ try {
     assert.ok(!jobDiagnostics.includes(privateValue), "Diagnostics must omit private command data");
   const child = spawnProcess([...launch, "stdio", "--data-dir", dataDir], {
     cwd: dataDir,
-    env: { ...process.env, PATH: "", RAYPX_HERDR_BINARY: join(dataDir, "missing-herdr") },
+    env: { ...process.env, PATH: "" },
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
@@ -487,14 +493,17 @@ try {
       .filter(Boolean)
       .map((line) => JSON.parse(line))
       .find((value) => value.id === "smoke");
-    assert.equal(response.result.runtime, process.versions.node);
+    assert.equal(response.result.runtime, Bun.version);
+    assert.equal(response.result.builtAt, runtime.builtAt);
     assert.equal(response.result.scheduler, true);
-    const nodePath: unknown = response.result.node;
-    assert.ok(typeof nodePath === "string");
-    assert.equal(response.result.pnpm, null);
-    const node = spawnProcess([nodePath, "--version"], { cwd: dataDir, env: { PATH: "" } });
-    assert.equal((await new Response(node.stdout).text()).trim(), `v${process.versions.node}`);
-    assert.equal(await node.exited, 0);
+    const bunPath: unknown = response.result.bun;
+    assert.ok(typeof bunPath === "string");
+    const embedded = spawnProcess([bunPath, "--version"], {
+      cwd: dataDir,
+      env: { ...process.env, PATH: "" },
+    });
+    assert.equal((await new Response(embedded.stdout).text()).trim(), Bun.version);
+    assert.equal(await embedded.exited, 0);
     child.stdin.write(
       JSON.stringify({ version: 1, id: "persisted", method: "roots.list", params: {} }) + "\n",
     );
@@ -528,20 +537,34 @@ try {
         },
       }) + "\n",
     );
-    // Real PTY/frame coverage belongs to smoke:herdr-terminal with the staged
-    // native runtime. Default verification deliberately has no Herdr installation.
+    // Exercise the actual bundled Herdr with the delivered executable and an empty PATH.
     while (!output.includes('"id":"pty"')) {
       const part = await reader.read();
       if (part.done) throw new Error("CLI closed before terminal admission");
       output += decoder.decode(part.value, { stream: true });
     }
-    const events = output
-      .split("\n")
-      .filter(Boolean)
-      .map((line) => JSON.parse(line));
+    const messages = () =>
+      output
+        .split("\n")
+        .slice(0, -1)
+        .filter(Boolean)
+        .map((line) => JSON.parse(line));
+    const opened = messages().find((value) => value.id === "pty");
+    assert.ok(opened?.result?.id && !opened.error, "Bundled Herdr must admit the PTY");
+    while (
+      !messages().some(
+        (value) => value.event === "terminal.exit" && value.data.id === opened.result.id,
+      )
+    ) {
+      const part = await reader.read();
+      if (part.done) throw new Error("CLI closed before the bundled PTY exited");
+      output += decoder.decode(part.value, { stream: true });
+    }
     assert.equal(
-      events.find((value) => value.id === "pty").error.code,
-      "TERMINAL_HOST_UNAVAILABLE",
+      messages().find(
+        (value) => value.event === "terminal.exit" && value.data.id === opened.result.id,
+      ).data.exitCode,
+      0,
     );
     const toolId = crypto.randomUUID();
     child.stdin.write(
@@ -581,11 +604,22 @@ try {
     reader.releaseLock();
     child.kill();
   }
-  console.log(
-    `Installed CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.`,
-  );
+} catch (error) {
+  failures.push(error);
 } finally {
-  await closeProbe();
-  await closeInstance();
-  await rm(dataDir, { recursive: true, force: true });
+  for (const cleanup of [
+    closeProbe,
+    closeInstance,
+    () => rm(dataDir, { recursive: true, force: true }),
+  ]) {
+    try {
+      await cleanup();
+    } catch (error) {
+      failures.push(error);
+    }
+  }
 }
+if (failures.length) throw new AggregateError(failures, "CLI artifact smoke failed");
+console.log(
+  `Installed CLI smoke passed outside the repository with an empty PATH, including Pi AI streaming, managed tool approvals and daemon restart/resume.`,
+);

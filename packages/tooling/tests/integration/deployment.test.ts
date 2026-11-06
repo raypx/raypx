@@ -168,8 +168,8 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
         expect(cached.replace(/--mount=type=cache,\S+ /g, "")).toBe(
           readFileSync(join(root, filePath), "utf8"),
         );
-        expect(cached).toContain("id=raypx-pnpm-install,target=/root/.local/share/pnpm/store");
-        expect(cached).not.toContain("id=raypx-vp");
+        expect(cached).toContain("id=raypx-bun-install,target=/root/.bun/install/cache");
+        expect(cached).toContain("id=raypx-vp,target=/app/node_modules/.vite/task-cache");
       }
     } finally {
       rmSync(directory, { recursive: true, force: true });
@@ -182,9 +182,8 @@ it("discovers build manifests and bin placeholders without copying application c
     const source = join(directory, "source"),
       output = join(directory, "output");
     mkdirSync(join(source, "modules/one"), { recursive: true });
-    writeFileSync(join(source, "package.json"), JSON.stringify({ private: true }));
-    writeFileSync(join(source, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\nimporters: {}\n");
-    writeFileSync(join(source, "pnpm-workspace.yaml"), 'packages: ["modules/*"]\n');
+    writeFileSync(join(source, "package.json"), JSON.stringify({ workspaces: ["modules/*"] }));
+    writeFileSync(join(source, "bun.lock"), "fixture");
     writeFileSync(
       join(source, "modules/one/package.json"),
       '{"name":"one","bin":{"one":"./src/cli.ts"}}',
@@ -200,7 +199,7 @@ it("discovers build manifests and bin placeholders without copying application c
     expect(result.status).toBe(0);
     expect(readFileSync(join(output, "modules/one/package.json"), "utf8")).toContain('"one"');
     expect(() => readFileSync(join(output, "modules/one/source.ts"))).toThrow(/ENOENT/);
-    // Bin targets exist so pnpm links them, but carry no source.
+    // Bin targets exist so Bun links them, but carry no source.
     expect(readFileSync(join(output, "modules/one/src/cli.ts"), "utf8")).toBe("");
   } finally {
     rmSync(directory, { recursive: true, force: true });

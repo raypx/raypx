@@ -1,6 +1,6 @@
 import { basename, isAbsolute, relative, resolve, sep } from "node:path";
-import { planBrowserTests, type BrowserSurface } from "./browser-tests.ts";
-import { discover, runTasks } from "./repository.ts";
+import { planBrowserTests, type BrowserSurface } from "./browser-tests.js";
+import { discover, runTasks } from "./repository.js";
 
 interface TestWorkspace {
   name: string;
@@ -143,12 +143,12 @@ export async function runTests(root: string, cwd: string, args: string[]) {
     if (plan.kind === "help")
       console.log(
         [
-          "pnpm run test [all|unit|component|integration|coverage|postgres|redis|cluster] [--package name|path] [VP flags] [-- test flags]",
-          "pnpm run test e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [-- Playwright flags]",
-          "pnpm run test inventory [--layers] [--baseline file] [--owners file]",
-          "pnpm run test backends [--with-e2e [-- Playwright flags]]",
-          "pnpm run test list",
-          "Package: pnpm --dir packages/tasks test (or test:unit / test:component)",
+          "bun run test [all|unit|component|integration|coverage|postgres|redis|cluster] [--package name|path] [VP flags] [-- test flags]",
+          "bun run test e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [-- Playwright flags]",
+          "bun run test inventory [--layers] [--baseline file] [--owners file]",
+          "bun run test backends [--with-e2e [-- Playwright flags]]",
+          "bun run test list",
+          "Package: bun run --cwd packages/tasks test (or test:unit / test:component)",
         ].join("\n"),
       );
     for (const member of plan.members) {
@@ -160,10 +160,10 @@ export async function runTests(root: string, cwd: string, args: string[]) {
         console.log(`${member.name.padEnd(23)} ${member.path.padEnd(20)} ${commands.join(", ")}`);
     }
   } else if (plan.kind === "inventory") {
-    const { auditTests } = await import("./validation/tests.ts");
+    const { auditTests } = await import("./validation/tests.js");
     await auditTests(root, plan.args, cwd);
   } else if (plan.kind === "backends") {
-    const { validateBackends } = await import("./validation/backends.ts");
+    const { validateBackends } = await import("./validation/backends.js");
     await validateBackends(root, plan.args);
   } else await runTasks(root, plan.task, plan.args, plan.env);
 }

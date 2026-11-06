@@ -1,14 +1,14 @@
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { taskModel } from "../tasks/model.ts";
-import { argumentKey } from "../tasks/arguments.ts";
-import { testLayer, testSources } from "../validation/test-sources.ts";
-import { executionTasks } from "./execution.ts";
-import { verificationPlan } from "./plan.ts";
-import type { VerificationPlan } from "./plan.ts";
-import { localTests } from "./tests.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace";
+import { taskModel } from "../tasks/model";
+import { argumentKey } from "../tasks/arguments";
+import { testLayer, testSources } from "../validation/test-sources";
+import { executionTasks } from "./execution";
+import { verificationPlan } from "./plan";
+import type { VerificationPlan } from "./plan";
+import { localTests } from "./tests";
 
 const { fixture, member } = workspaceFixtures();
 function feature(root: string, plan: VerificationPlan) {
@@ -18,9 +18,9 @@ function project() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ name: "fixture", packageManager: "pnpm@12.16.1" }),
+    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "tsx check.ts", test: "vp test --run" };
+  const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
   member(root, "feature", { extra: { scripts } });
   member(root, "consumer", { deps: { "@raypx/feature": "workspace:*" }, extra: { scripts } });
   member(root, "unrelated", { extra: { scripts } });
@@ -29,10 +29,10 @@ function project() {
     writeFileSync(join(root, file), source);
   }
   write("packages/feature/src/value.ts", "export const value = 1;");
-  write("packages/feature/src/adapter.ts", 'export { value } from "./value.js";');
-  write("packages/feature/src/value.test.ts", 'import { value } from "./adapter.js";');
+  write("packages/feature/src/adapter.ts", 'export { value } from "./value";');
+  write("packages/feature/src/value.test.ts", 'import { value } from "./adapter";');
   write("packages/feature/src/other.test.ts");
-  write("packages/feature/src/view.component.test.tsx", 'import { value } from "./value.js";');
+  write("packages/feature/src/view.component.test.tsx", 'import { value } from "./value";');
   write("packages/feature/tests/integration/process.test.ts");
   write("packages/feature/tests/postgres/data.test.ts");
   const plan = (files: string[], options = {}) => verificationPlan(taskModel(root), files, options);
@@ -91,7 +91,7 @@ describe("local related test selection", () => {
     unlinkSync(join(root, "packages/feature/src/value.ts"));
     expect(feature(root, plan(["packages/feature/src/value.ts"]))?.mode).toBe("all");
     write("packages/feature/src/value.ts");
-    write("packages/feature/src/bad.test.ts", 'import "./missing.js";');
+    write("packages/feature/src/bad.test.ts", 'import "./missing";');
     expect(feature(root, plan(["packages/feature/src/value.ts"]))?.mode).toBe("all");
     write("packages/feature/src/bad.test.ts", "const =");
     expect(feature(root, plan(["packages/feature/src/value.ts"]))?.mode).toBe("all");
@@ -100,7 +100,7 @@ describe("local related test selection", () => {
     const { root, plan, write } = project();
     for (const scope of [
       plan([], { full: true }),
-      plan(["pnpm-lock.yaml"]),
+      plan(["bun.lock"]),
       plan([], { reasons: ["Missing Git base"] }),
     ])
       expect(localTests(root, scope).every((test) => test.mode === "all")).toBe(true);
@@ -110,11 +110,11 @@ describe("local related test selection", () => {
   it("limits private verification edits to Tooling in local and canonical CI tasks", () => {
     const { root, write, plan } = project();
     member(root, "tooling", {
-      metadata: { kind: "tooling", target: "node" },
-      extra: { scripts: { check: "tsx check.ts", test: "vp test --run" } },
+      metadata: { kind: "tooling", target: "bun" },
+      extra: { scripts: { check: "bun check.ts", test: "bun --bun vp test --run" } },
     });
     write("packages/tooling/src/verification/plan.ts", "export const value = 1;");
-    write("packages/tooling/src/verification/plan.test.ts", 'import { value } from "./plan.ts";');
+    write("packages/tooling/src/verification/plan.test.ts", 'import { value } from "./plan";');
     const canonical = plan(["packages/tooling/src/verification/plan.ts"]);
     const selected = localTests(root, canonical);
     const refs = executionTasks(canonical, "fixture", selected);

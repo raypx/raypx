@@ -51,7 +51,7 @@ export default defineConfig(() => {
         },
       },
     },
-    // A `pnpm link`ed library resolves its own React copy; keep singleton peers unique.
+    // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
     resolve: { dedupe: ["react", "react-dom"] },
     server: { port: deploymentServices.web.port, strictPort: true },
   };

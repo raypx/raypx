@@ -4,7 +4,6 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { signingEnvironment } from "./signing.ts";
 import { stageRuntime } from "./prepare-cli.ts";
-import { signRuntime } from "./packager.ts";
 import { generateNativeContracts } from "./generate.ts";
 
 const desktop = resolve(import.meta.dirname, "../..");
@@ -61,14 +60,16 @@ async function run(command: string[], cwd = desktop) {
   }
 }
 async function prepareCli() {
-  const source = join(root, "apps/cli/dist");
+  const source = resolve(env.RAYPX_CLI_PAYLOAD ?? join(root, "apps/cli/dist"));
   const manifest = JSON.parse(await readFile(join(source, "runtime.json"), "utf8"));
   const { version } = JSON.parse(await readFile(join(desktop, "package.json"), "utf8"));
-  if (manifest.version !== version || !manifest.files?.["main.mjs"])
+  if (
+    manifest.version !== version ||
+    !manifest.files?.[process.platform === "win32" ? "raypx.exe" : "raypx"]
+  )
     throw new Error("Build the matching complete CLI distribution first");
   const target = join(desktop, "resources/bin");
   await stageRuntime(source, target);
-  await signRuntime(target, env);
 }
 export async function prepare(rendererRequired = true) {
   await prepareCli();
@@ -184,8 +185,8 @@ if (process.argv[1] !== undefined && resolve(process.argv[1]) === entryFile(impo
     case "build":
       await prepare();
       await run([
-        "pnpm",
-        "exec",
+        process.execPath,
+        "--bun",
         "tauri",
         "build",
         "--config",
@@ -196,7 +197,7 @@ if (process.argv[1] !== undefined && resolve(process.argv[1]) === entryFile(impo
       break;
     case "dev":
       await prepare(false);
-      await run(["pnpm", "exec", "tauri", "dev", ...args]);
+      await run([process.execPath, "--bun", "tauri", "dev", ...args]);
       break;
     case "smoke":
       await generateNativeContracts(desktop);

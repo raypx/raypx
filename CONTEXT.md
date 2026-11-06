@@ -3,7 +3,7 @@
 - Application: a composition root under apps, never imported by another workspace.
 - Library: a private ESM package with explicit public exports and platform metadata.
 - Tooling: development/test automation excluded from production import graphs.
-- API: Node-hosted Hono/oRPC application composed by Nitro.
+- API: Bun-hosted Hono/oRPC application composed by Nitro.
 - Local engine: the bundled CLI runtime with device-local SQLite state. On macOS/Windows an independent daemon owns execution, scheduling and remote connections; Desktop is its private IPC client.
 - Registered instance: a local profile bound once to one account and API origin; its signed identity permits offline work after online logout. Remote Host opt-in is separate.
 - Desktop: a Tauri Rust host around the React SPA, system WebView and native policy; it launches the bundled CLI by absolute path.

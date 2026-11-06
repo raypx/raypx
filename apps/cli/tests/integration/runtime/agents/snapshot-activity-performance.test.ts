@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { uuid, task, activity, fixture } from "../../../helpers/agent-snapshot.ts";
+import { uuid, task, activity, fixture } from "../../../helpers/agent-snapshot";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -7,7 +7,7 @@ it("bounds decoded activity among 10,000 historical entries while retaining old 
   const f = fixture();
   try {
     f.store.put(task(1));
-    f.transaction(() => {
+    f.database.transaction(() => {
       for (let index = 0; index < 10_000; index++) {
         const entry = activity(
           index,
@@ -19,7 +19,7 @@ it("bounds decoded activity among 10,000 historical entries while retaining old 
         const other = activity(10_000 + index, uuid(1), "Other binding");
         f.activity.run(other.id, "other-binding", other.taskId, JSON.stringify(other));
       }
-    });
+    })();
     const parse = vi.spyOn(JSON, "parse");
     const started = performance.now();
     const snapshot = f.store.snapshot("relay");
@@ -52,7 +52,7 @@ it("bounds decoded activity among 10,000 historical entries while retaining old 
 it("admits activity in fair rounds before decoding and stays within the 32 MiB checkpoint budget", () => {
   const f = fixture();
   try {
-    f.transaction(() => {
+    f.database.transaction(() => {
       for (let index = 0; index < 100; index++) {
         const local = task(index + 1);
         f.put.run(local.task.id, JSON.stringify(local));
@@ -66,7 +66,7 @@ it("admits activity in fair rounds before decoding and stays within the 32 MiB c
           f.activity.run(value.id, "relay", local.task.id, JSON.stringify(value));
         }
       }
-    });
+    })();
     const parse = vi.spyOn(JSON, "parse");
     const snapshot = f.store.snapshot("relay");
     const entries = snapshot.records.filter((record) => record.kind === "activity");
@@ -97,7 +97,7 @@ it("keeps old active entries plus a bounded recent page, deduplicates them and m
     f.store.put(task(1));
     f.store.put(task(2));
     f.store.put(task(3));
-    f.transaction(() => {
+    f.database.transaction(() => {
       for (let index = 0; index < 80; index++) {
         const value = activity(
           index,
@@ -109,7 +109,7 @@ it("keeps old active entries plus a bounded recent page, deduplicates them and m
       }
       const value = activity(100, uuid(2), "done", "streaming");
       f.activity.run(value.id, "relay", uuid(2), JSON.stringify(value));
-    });
+    })();
     const parse = vi.spyOn(JSON, "parse");
     const snapshot = f.store.snapshot("relay");
     const entries = snapshot.records.filter((record) => record.kind === "activity");

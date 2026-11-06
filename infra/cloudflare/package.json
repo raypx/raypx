@@ -4,23 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx scripts/wrangler.ts dev",
-    "plan": "tsx scripts/wrangler.ts plan",
-    "plan:worker": "tsx scripts/wrangler.ts plan:worker",
-    "deploy": "tsx scripts/wrangler.ts deploy",
-    "build": "vp build --config vite.app.config.ts",
+    "dev": "bun scripts/wrangler.ts dev",
+    "plan": "bun scripts/wrangler.ts plan",
+    "plan:worker": "bun scripts/wrangler.ts plan:worker",
+    "deploy": "bun scripts/wrangler.ts deploy",
+    "build": "bun --bun vp build --config vite.app.config.ts",
     "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project src/tsconfig.json",
-    "test": "vp test --run",
-    "test:unit": "vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
   },
   "dependencies": {
-    "@cloudflare/containers": "catalog:",
-    "@raypx/runtime-node": "workspace:*"
+    "@cloudflare/containers": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:dev",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev",
     "wrangler": "catalog:dev"
@@ -29,7 +29,7 @@
     "kind": "app",
     "target": "node",
     "sourceTargets": {
-      "scripts/**": "node"
+      "scripts/**": "bun"
     },
     "uncachedTasks": [
       "dev",

@@ -47,10 +47,10 @@ existing toolchain; no additional task runner or published package is introduced
 ## Verification
 
 ```sh
-pnpm --dir packages/devtools run test
-pnpm --dir packages/devtools run check
-pnpm --dir e2e run e2e:devtools
-pnpm run verify
+bun run --cwd packages/devtools run test
+bun run --cwd packages/devtools run check
+bun run --cwd e2e run e2e:devtools
+bun run verify
 ```
 
 The explicit `e2e:devtools` suite starts test-owned loopback development servers on

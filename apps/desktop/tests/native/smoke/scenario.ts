@@ -292,7 +292,7 @@ try {
   };
   assert.equal(info.protocolVersion, 1);
   assert.equal(info.scheduler, true);
-  assert.equal(info.runtime, process.env.RAYPX_NATIVE_SMOKE_NODE);
+  assert.equal(info.runtime, process.env.RAYPX_NATIVE_SMOKE_BUN);
   if (fixturePhase === "shell") {
     stage = "integrated window controls";
     const chrome = `

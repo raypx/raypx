@@ -1,26 +1,25 @@
-import { runtimeLease } from "../process/lease.ts";
 import { cliInstallation } from "../process/installation.ts";
-import { serveHttp } from "@raypx/runtime-node/http";
-import type { InstanceAccess } from "../instances/index.ts";
+import { runtimeLease } from "../process/lease.ts";
+import type { InstanceAccess } from "../instances";
 import { chmodSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { localParams, localRequestSchema, type LocalEvent } from "@raypx/contracts/local";
-import { createExecutionOwner, type ExecutionHost } from "../owner.ts";
-import { onShutdown } from "../../transport/shutdown.ts";
-import type { LocalRuntime } from "../index.ts";
-import { acquireLock, profilePath } from "../state/index.ts";
-import { errorPayload, LocalError } from "../errors.ts";
-import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint.ts";
-import type { DaemonControl } from "./control.ts";
-import type { LocalTerminalControl } from "./terminal-control.ts";
-import type { HostVault } from "./vault.ts";
+import { createExecutionOwner, type ExecutionHost } from "../owner";
+import { onShutdown } from "../../transport/shutdown";
+import type { LocalRuntime } from "../index";
+import { acquireLock, profilePath } from "../state";
+import { errorPayload, LocalError } from "../errors";
+import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint";
+import type { DaemonControl } from "./control";
+import type { LocalTerminalControl } from "./terminal-control";
+import type { HostVault } from "./vault";
 import manifest from "../../../package.json";
 
 import type { AgentProvider } from "@raypx/core/tasks";
-import { cliBuild } from "./build.ts";
-import { refreshStableCli } from "./connectors.ts";
-import { privateSocketDirectory } from "../terminal/socket.ts";
-import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http.ts";
+import { cliBuild } from "./build";
+import { refreshStableCli } from "./connectors";
+import { privateSocketDirectory } from "../terminal/socket";
+import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http";
 
 type Client = {
   stream: ReadableStreamDefaultController<Uint8Array>;
@@ -68,7 +67,7 @@ export async function startDaemon(
   let terminal: LocalTerminalControl | undefined;
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
-    server: Awaited<ReturnType<typeof serveHttp>> | undefined;
+    server: ReturnType<typeof Bun.serve> | undefined;
   let stopping = false;
   const backgroundFailure = () =>
     console.error(JSON.stringify({ operation: "daemon.background", code: "BACKGROUND_FAILED" }));
@@ -137,12 +136,13 @@ export async function startDaemon(
     refreshStableCli();
     host = createExecutionOwner({ ...options, mode: "daemon", emit });
     ({ runtime, terminal, control } = host);
-    server = await serveHttp({
+    server = Bun.serve({
       ...(address.socket === undefined
         ? { hostname: "127.0.0.1", port: 0 }
         : { unix: address.socket }),
       maxRequestBodySize: 8 * 1024 * 1024,
-      fetch: async (request) => {
+      fetch: async (request, transport) => {
+        transport.timeout(request, 0);
         if (foreignLoopbackRequest(request, address)) return new Response(null, { status: 403 });
         if (request.headers.get("authorization") !== `Bearer ${endpoint.token}`)
           return new Response(null, { status: 403 });
@@ -154,6 +154,7 @@ export async function startDaemon(
             builtAt: cliBuild.builtAt,
             epoch: endpoint.epoch,
             owner: "daemon",
+            pid: process.pid,
             closing: stopping,
           });
         if (url.pathname === "/stop" && request.method === "POST") {
@@ -251,7 +252,7 @@ export async function startDaemon(
     }, 5000);
     heartbeat.unref();
     if (address.socket === undefined) {
-      address = { port: server.port };
+      address = { port: server.port! };
       endpoint = { ...identity, ...address };
     } else chmodSync(address.socket, 0o600);
     const file = endpointFile(directory),
@@ -270,8 +271,8 @@ export async function runDaemon(options: ProfileOptions) {
   const rejected = () =>
     console.error(JSON.stringify({ operation: "daemon.background", code: "UNHANDLED_REJECTION" }));
   process.on("unhandledRejection", rejected);
-  let removeSignals: (() => void) | undefined;
   let releaseRuntime: (() => void) | undefined;
+  let removeSignals: (() => void) | undefined;
   try {
     const layout = cliInstallation();
     if (process.platform === "win32" && layout.bundled) {
@@ -285,8 +286,8 @@ export async function runDaemon(options: ProfileOptions) {
     removeSignals = onShutdown(stop);
     await host.stopped;
   } finally {
-    releaseRuntime?.();
     removeSignals?.();
+    releaseRuntime?.();
     process.off("unhandledRejection", rejected);
   }
 }

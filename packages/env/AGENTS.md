@@ -30,7 +30,7 @@ Consumers declare their own `NODE_ENV` schema; there is no shared runtime preset
 
 ## Constraints
 
-- Do not import other Raypx product packages, product variables or Node APIs.
+- Do not import other Raypx product packages, product variables or Bun APIs.
 - Do not load `.env` files, add CLI commands or perform filesystem operations.
 - `createEnv` uses `VITE_` as its public prefix; `defineEnv` allows a custom prefix.
 - Preserve explicit `runtimeEnv`, `isServer`, validation skip and callback behavior.
@@ -41,6 +41,6 @@ Consumers declare their own `NODE_ENV` schema; there is no shared runtime preset
 ## Verification
 
 ```bash
-pnpm --dir packages/env run test
-pnpm --dir packages/env run check
+bun run --cwd packages/env test
+bun run --cwd packages/env check
 ```

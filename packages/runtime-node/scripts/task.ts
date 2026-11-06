@@ -7,4 +7,4 @@ if (!name) throw new Error("A workspace task name is required");
 const manifest = JSON.parse(readFileSync("package.json", "utf8"));
 if (!manifest.scripts?.[name]) throw new Error(`Unknown workspace script: ${name}`);
 const args = taskArguments(`${manifest.name}#${name}`, process.env);
-process.exitCode = await runProcess("pnpm", ["run", name, ...args], process.cwd());
+process.exitCode = await runProcess(process.execPath, ["run", name, ...args], process.cwd());

@@ -3183,14 +3183,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "raypx-launcher"
-version = "0.1.0"
-dependencies = [
- "serde_json",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"

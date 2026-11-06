@@ -1,9 +1,9 @@
 import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devkit/verification";
 import { readFileSync } from "node:fs";
-import { taskModel, taskRef, type TaskModel } from "../tasks/model.ts";
-import { distributionRequested } from "./events.ts";
-import { browserReach } from "./platform.ts";
-import { toolingImpact } from "./tooling.ts";
+import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
+import { distributionRequested } from "./events.js";
+import { browserReach } from "./platform.js";
+import { toolingImpact } from "./tooling.js";
 
 type Artifact = "api" | "web" | "relay" | "cli";
 export interface VerificationPlan {
@@ -39,7 +39,7 @@ function documentation(file: string) {
   );
 }
 function globalInput(file: string) {
-  return /^(?:package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
+  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
     file,
   );
 }
@@ -50,9 +50,13 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
   const paths = files.filter((file) => {
     if (documentation(file)) return false;
     if (
-      ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml"].includes(file) ||
-      file === ".gitattributes" ||
-      file === ".github/workflows/native.yml"
+      [
+        "Cargo.toml",
+        "Cargo.lock",
+        "rust-toolchain.toml",
+        ".gitattributes",
+        ".github/workflows/native.yml",
+      ].includes(file)
     )
       return true;
     const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
@@ -61,11 +65,11 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
     if (member.name === "@raypx/tooling")
       return /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative);
     if (member.native)
-      return /^(?:src-tauri\/|launcher\/|(?:bridge|preferences)\.ts$|package\.json$|resources\/|scripts\/host\/|tests\/native\/)/.test(
+      return /^(?:(?:bridge|preferences)\.ts$|package\.json$|src-tauri\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
         relative,
       );
     if (member.name === "cli")
-      return /^(?:package\.json$|launcher\/|scripts\/prepare-herdr\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:herdr-terminal|terminal-)))/.test(
+      return /^(?:package\.json$|scripts\/(?:prepare-herdr|build|distribution|archive-smoke)\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|provider-proxy|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:artifact|daemon-agents|herdr-terminal|windows-payload|terminal-)))/.test(
         relative,
       );
     return (
@@ -199,7 +203,7 @@ export function verificationPlan(
         if (documentation(file) || /\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file))
           return false;
         if (
-          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
+          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
             file,
           ) ||
           /^packages\/tooling\/src\/(?:build\/|validation\/deployment)/.test(file)

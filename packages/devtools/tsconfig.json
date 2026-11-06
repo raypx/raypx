@@ -1,5 +1,5 @@
 {
   "extends": "@raypx/tsconfig/react-library.json",
-  "compilerOptions": { "lib": ["ESNext", "DOM", "DOM.Iterable"], "types": ["vite/client", "node"] },
+  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "types": ["vite/client", "node"] },
   "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"]
 }

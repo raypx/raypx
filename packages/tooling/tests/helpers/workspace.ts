@@ -11,10 +11,9 @@ export function workspaceFixtures() {
     roots.push(root);
     mkdirSync(join(root, "packages"));
     mkdirSync(join(root, "apps"));
-    writeFileSync(join(root, "package.json"), JSON.stringify({ private: true }));
     writeFileSync(
-      join(root, "pnpm-workspace.yaml"),
-      'packages: ["apps/*", "packages/*"]\nengineStrict: true\n',
+      join(root, "package.json"),
+      JSON.stringify({ private: true, workspaces: ["apps/*", "packages/*"] }),
     );
     return root;
   }

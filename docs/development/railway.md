@@ -11,8 +11,8 @@ api, web, relay and gateway. Existing Postgres and Redis services and their volu
 remain outside this partial. Both were inspected and empty before the initial
 foundation migration. Keep their images and persistent storage intact.
 
-The private `@raypx/infra-railway` Node workspace owns the SDK/CLI dependencies,
-IaC entry, gateway assets and offline tests. Run `pnpm --dir infra/railway run check`
+The private `@raypx/infra-railway` Bun workspace owns the SDK/CLI dependencies,
+IaC entry, gateway assets and offline tests. Run `bun run --cwd infra/railway check`
 and `test` for focused validation; root `check`, `test` and `verify` discover it
 through the root manifest's `infra/*` pattern.
 
@@ -148,7 +148,7 @@ the current Railway dashboard settings or live deployment health.
 
 ### CLI workflow
 
-Install repository dependencies with pinned pnpm on Node. CLI 5.71.0 and SDK 3.16.0
+Install the repository dependencies with the pinned Bun. CLI 5.71.0 and SDK 3.16.0
 were used for the initial deployment. Railway's legacy railway.toml configuration
 has been replaced by its [current IaC interface](https://docs.railway.com/infrastructure-as-code).
 
@@ -156,20 +156,22 @@ Run these commands from the repository root. The CLI version is pinned in the
 development catalog and installed by the infrastructure workspace:
 
 ```sh
-mise exec -- pnpm --dir infra/railway exec railway link --project 766ffb45-d60f-4e4d-83b1-135443ff0b51 --environment production
-mise exec -- pnpm --dir infra/railway run plan
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js link --project 766ffb45-d60f-4e4d-83b1-135443ff0b51 --environment production
+mise exec -- bun run --cwd infra/railway plan
 # Review the plan before applying; the deploy command runs config apply.
-mise exec -- pnpm --dir infra/railway run deploy
+mise exec -- bun run --cwd infra/railway deploy
 # Uploads use the repository root as their build context.
-mise exec -- pnpm --dir infra/railway exec railway up --service api --detach
-mise exec -- pnpm --dir infra/railway exec railway up --service web --detach
-mise exec -- pnpm --dir infra/railway exec railway up --service relay --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service api --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service web --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service relay --detach
 # Wait for API, Web and Relay to become healthy before publishing Gateway.
-mise exec -- pnpm --dir infra/railway exec railway up --service gateway --detach
+mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service gateway --detach
 ```
 
 The workspace scripts select `infra/railway/railway.ts` explicitly with `--file`.
-Railway's evaluator and all local tooling use Node within the root supported range.
+The scoped preload restores Railway's Node-style evaluator file argument when
+Bun loses it. It only runs in the IaC child process; application builds and
+production processes continue to use Bun. No Node installation or pin is needed.
 Review plans for application changes and no unrelated service or volume deletion.
 Upload from a clean checkout plus the reviewed deployment configuration.
 CLI uploads remain available for explicit manual releases. Use GitHub-triggered
@@ -177,16 +179,15 @@ deployments for normal canary updates after connecting the repository.
 Detached upload completion is not a health result: inspect deployment status and
 logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v4.
 
-Railway and Compose share apps/api/Dockerfile, apps/web/Dockerfile and
-infra/relay/Dockerfile. The default API `deploy` stage extends runtime with the
-bundled database command and canonical SQL migrations. Deployment acceptance builds the separate `fixture` target;
-ordinary Railway deployments skip its compilation and do not carry the provisioner.
-The `migration-build` stage produces the Node ESM bundle; Compose's isolated `migrate`
-image copies that same bundle and SQL ledger. Compose selects `runtime` and
-`migrate` explicitly; Web defaults to `runtime` on both platforms.
-Railway runs `node migration/dist/commands.mjs migrate` in its isolated pre-deploy
-container. It requires no package manager or repository source at runtime.
-A failure blocks the new deployment.
+Railway and Compose share apps/api/Dockerfile and apps/web/Dockerfile. The default
+API `deploy` stage extends the runtime stage with database production dependencies
+and canonical migrations. Its shared `migration-payload` stage discovers the
+database workspace's production dependency sources automatically through
+`deploy/sources.ts`; Compose's migration image copies the same payload.
+Compose selects runtime and the independent migrate
+stage explicitly; Web defaults to runtime on both platforms.
+Railway runs bun run --cwd packages/database migrate
+in its isolated pre-deploy container. A failure blocks the new deployment.
 API startup also checks pending migrations by default from private bundled SQL assets.
 `DATABASE_MIGRATE_ON_START=false` skips the startup check when the pre-deploy hook
 owns migration. Both paths share the same database advisory lock and migration ledger;
@@ -199,18 +200,12 @@ does not stop the old API or Relay. Preserve migration history and storage on ro
 The shared application Dockerfiles use manifest/dependency layer caching without
 cache mounts. Railway requires literal service-specific cache mount IDs, so those
 mounts would prevent portable files. Source-only changes reuse installed layers;
-manifest or lockfile changes can require a fresh download. Each server image installs
-only its own workspace dependency closure and root build tools, so Railway does not
-install unrelated service or platform dependencies. Compose retains its bounded
-builder and caches pnpm downloads across those service-specific installs. Its
-`deploy/build.sh` adds pnpm cache mounts to temporary copies of these Dockerfiles
-and explicitly selects `migrate`/`runtime`; it does not build the API's final
-`deploy` stage. The temporary copies are removed on exit.
-All image builds disable VP task caching with `--no-cache` so its syscall tracker
-does not install a second seccomp listener inside the build sandbox, which can
-otherwise fail while spawning esbuild with `EBUSY`. VP still runs the build graph
-and type checks; Docker layers cache dependencies and completed build steps.
-`pnpm run smoke:deployment` exercises both image profiles with an isolated temporary
+manifest or lockfile changes can require a fresh download. Compose retains its
+bounded builder and reuses the same image layers. Its `deploy/build.sh` adds Bun/VP
+cache mounts to temporary copies of these Dockerfiles and explicitly selects
+`migrate`/`runtime`; it does not build the API's final `deploy` stage. The temporary
+copies are removed on exit.
+`bun run smoke:deployment` exercises both image profiles with an isolated temporary
 database and Redis. This local gate does not apply IaC or contact Railway services.
 
 ## Bind raypx.com

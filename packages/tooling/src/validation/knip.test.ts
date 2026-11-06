@@ -1,23 +1,50 @@
 import { expect, it } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { checkKnip, knipFindings } from "./knip.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { checkKnip, knipFindings } from "./knip.js";
 
-it("preserves native pnpm catalog and override findings without modifying the report", () => {
+it("keeps unused catalog entries and all other findings while recognizing Bun override references", () => {
   const report = {
-    issues: [{ file: "pnpm-workspace.yaml", catalog: [{ namespace: "dev", name: "unused" }] }],
+    issues: [
+      {
+        file: "package.json",
+        catalog: [
+          { namespace: "dev", name: "esbuild" },
+          { namespace: "dev", name: "unused" },
+          { namespace: "", name: "renderer" },
+          { namespace: "dev", name: "missing" },
+        ],
+        devDependencies: [{ name: "unused-cli" }],
+      },
+      { file: "apps/child/package.json", catalog: [{ namespace: "dev", name: "esbuild" }] },
+    ],
   };
   const before = JSON.stringify(report);
-  expect(knipFindings(report)).toEqual(report.issues);
+  expect(
+    knipFindings(report, {
+      overrides: { esbuild: "catalog:dev", renderer: "catalog:", missing: "catalog:dev" },
+      workspaces: { catalog: { renderer: "^2.2.0" }, catalogs: { dev: { esbuild: "^0.28.2" } } },
+    }),
+  ).toEqual([
+    {
+      file: "package.json",
+      catalog: [
+        { namespace: "dev", name: "unused" },
+        { namespace: "dev", name: "missing" },
+      ],
+      devDependencies: [{ name: "unused-cli" }],
+    },
+    report.issues[1],
+  ]);
   expect(JSON.stringify(report)).toBe(before);
 });
 
 it("rejects malformed reports and preserves malformed catalog findings", () => {
   for (const report of [null, {}, { issues: [null] }, { issues: [{ file: "x", exports: false }] }])
-    expect(() => knipFindings(report)).toThrow("Invalid Knip");
+    expect(() => knipFindings(report, {})).toThrow("Invalid Knip");
   const report = { issues: [{ file: "package.json", catalog: [{ name: "x" }] }] };
-  expect(knipFindings(report)).toEqual(report.issues);
+  expect(knipFindings(report, {})).toEqual(report.issues);
 });
 
 const { fixture } = workspaceFixtures();

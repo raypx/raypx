@@ -9,7 +9,7 @@ Object storage for server runtimes on top of unstorage, with S3 pre-signed URLs.
 `.`: `ObjectStorage` (put/get/getStream/has/delete/list/signedUrl), `createObjectStorage`
 over any raw-capable unstorage driver, `createMemoryStorage` for tests,
 `createUnavailableStorage` and `StorageError`. `/s3`: `createS3Storage` for AWS S3,
-other S3-compatible providers through fetch and aws4fetch on Node.
+other S3-compatible providers through fetch and aws4fetch on Bun.
 
 ## Constraints
 
@@ -29,8 +29,8 @@ other S3-compatible providers through fetch and aws4fetch on Node.
 ## Verification
 
 ```sh
-pnpm --dir packages/storage run check
-pnpm --dir packages/storage run test
+bun run --cwd packages/storage check
+bun run --cwd packages/storage test
 ```
 
 Tests use the memory driver and a stubbed S3 endpoint; no bucket is needed.

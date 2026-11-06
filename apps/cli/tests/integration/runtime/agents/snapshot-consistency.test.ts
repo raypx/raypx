@@ -1,13 +1,13 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { DatabaseSync as Database } from "node:sqlite";
+import { Database } from "bun:sqlite";
 import { join } from "node:path";
-import { AgentRuntime } from "../../../../src/runtime/agents/index.ts";
-import { AgentStore } from "../../../../src/runtime/agents/store.ts";
-import { StateStore } from "../../../../src/runtime/state/index.ts";
-import { uuid, task, request, fixture } from "../../../helpers/agent-snapshot.ts";
+import { AgentRuntime } from "../../../../src/runtime/agents";
+import { AgentStore } from "../../../../src/runtime/agents/store";
+import { StateStore } from "../../../../src/runtime/state";
+import { uuid, task, request, fixture } from "../../../helpers/agent-snapshot";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -24,12 +24,12 @@ it("rejects unmanaged JSON-only task profiles without repairing indexes or rewri
     expect(() => new AgentStore(profileStorage(f.directory).database)).toThrow(
       "unsupported SQLite schema",
     );
-    expect(f.database.prepare("SELECT value FROM tasks WHERE id=?").get(uuid(1))).toEqual({
+    expect(f.database.query("SELECT value FROM tasks WHERE id=?").get(uuid(1))).toEqual({
       value: original,
     });
     expect(
       f.database
-        .prepare(
+        .query(
           "SELECT name FROM sqlite_master WHERE name IN ('tasks_binding_created','tasks_binding_active','tasks_binding_cursor','tasks_active_session','requests_binding_task','requests_binding_pending','activity_task_active','commands_binding')",
         )
         .all(),
@@ -84,7 +84,7 @@ it("freezes paged records across live writes, caps pages at ten rows and 384 KiB
   const database = new Database(join(directory, "profile.sqlite"));
   try {
     for (let index = 1; index <= 21; index++) writer.put(task(index));
-    const insert = database.prepare("INSERT INTO requests VALUES (?,?,?)");
+    const insert = database.query("INSERT INTO requests VALUES (?,?,?)");
     for (let index = 0; index < 5; index++) {
       const value = request(index, uuid(1), "x".repeat(128_000));
       insert.run(value.id, "relay", JSON.stringify(value));

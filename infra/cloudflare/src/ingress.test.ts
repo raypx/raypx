@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { containerEnvironment } from "./environment.ts";
-import { proxyRelay } from "./proxy.ts";
+import { containerEnvironment } from "./environment.js";
+import { proxyRelay } from "./proxy.js";
 
 const env = {
   DATABASE_URL: "postgresql://relay:password@db.example.com/raypx?sslmode=verify-full",
@@ -137,7 +137,7 @@ describe("Cloudflare Relay ingress", () => {
 });
 
 describe("container environment", () => {
-  it("injects only Relay dependencies and fixed Node server settings", () => {
+  it("injects only Relay dependencies and fixed Bun server settings", () => {
     expect(containerEnvironment({ ...env, AUTH_SECRET: "must-not-leak" } as typeof env)).toEqual({
       ...env,
       NODE_ENV: "production",

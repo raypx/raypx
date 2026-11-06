@@ -1,6 +1,6 @@
 # ADR 0045: Tauri, Node and pnpm
 
-Status: accepted, 2026-11-05. Supersedes the former Desktop implementation
+Status: superseded on this experimental branch by [ADR 0046](0046-bun-tauri-artifacts.md). Historical decision accepted, 2026-11-05. Supersedes the former Desktop implementation
 and the repository's Bun-only toolchain rule.
 
 Raypx uses TypeScript for product and execution code and Rust for the Tauri

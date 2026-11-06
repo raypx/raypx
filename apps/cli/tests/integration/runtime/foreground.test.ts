@@ -1,16 +1,15 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { enrolledInstance } from "../../helpers/enrolled.ts";
+import { enrolledInstance } from "../../helpers/enrolled";
 import { expect, it } from "vite-plus/test";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createExecutionOwner } from "../../../src/runtime/owner.ts";
-import type { HostVault } from "../../../src/runtime/daemon/vault.ts";
+import { createExecutionOwner } from "../../../src/runtime/owner";
+import type { HostVault } from "../../../src/runtime/daemon/vault";
 import type { HostAuthorization } from "@raypx/contracts/terminal";
 import type { LocalEvent } from "@raypx/contracts/local";
 import { relayClientSchema } from "@raypx/contracts/tasks";
 
-async function fixture() {
+function fixture() {
   const dataDir = mkdtempSync(join(tmpdir(), "raypx-foreground-"));
   const events: LocalEvent[] = [];
   const accountId = "account",
@@ -25,7 +24,7 @@ async function fixture() {
     token: "t".repeat(64),
     expiresAt: new Date(Date.now() + 600000).toISOString(),
   });
-  const api = await serveHttp({
+  const api = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request, server) {
@@ -136,7 +135,7 @@ async function fixture() {
 }
 
 it("renews and restores the foreground owner without browser cookies, then revokes on logout", async () => {
-  const f = await fixture();
+  const f = fixture();
   try {
     await f.authorize();
     expect(await f.host.request("runtime.info", {})).toMatchObject({
@@ -171,7 +170,7 @@ it("renews and restores the foreground owner without browser cookies, then revok
 });
 
 it("cancels foreground work on close and releases the owner for the next launch", async () => {
-  const f = await fixture();
+  const f = fixture();
   try {
     const marker = join(f.host.runtime.state.directory, "command-started");
     const command = f.host.request("tools.run", {
@@ -179,7 +178,7 @@ it("cancels foreground work on close and releases the owner for the next launch"
       executable: process.execPath,
       args: [
         "-e",
-        "require('node:fs').writeFileSync(process.argv.at(-1), 'started'); setInterval(() => {}, 1000)",
+        "await Bun.write(process.argv.at(-1), 'started'); setInterval(() => {}, 1000)",
         marker,
       ],
       cwd: f.host.runtime.state.directory,

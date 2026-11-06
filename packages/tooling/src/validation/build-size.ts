@@ -5,8 +5,8 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   writeFileSync,
 } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -60,14 +60,14 @@ function measure(root: string, workspace: string, path: string, kind: ArtifactSi
   const absolute = resolve(root, path);
   const { files, symlinks } = scan(absolute);
   const components: ArtifactSize["components"] = [];
-  if (existsSync(join(absolute, "runtime.json")) && existsSync(join(absolute, "runtime"))) {
+  if (existsSync(join(absolute, "runtime.json")) && existsSync(join(absolute, "herdr"))) {
     const groups = new Map<string, FileSize[]>();
     for (const file of files) {
-      const name = file.path.startsWith("runtime/")
-        ? "Node"
+      const name = /^(?:raypx|raypx\.exe)$/.test(file.path)
+        ? "CLI / embedded Bun"
         : file.path.startsWith("herdr/")
           ? "Herdr"
-          : "Application / launcher / metadata";
+          : "Metadata / licenses";
       const group = groups.get(name) ?? [];
       group.push(file);
       groups.set(name, group);
@@ -213,7 +213,7 @@ export function sizeOptions(args: string[]): SizeOptions {
       options.packages.push(args[++i]!);
     else
       throw new Error(
-        "Usage: pnpm run size [--package name|path] [--native] [--browser] [--require]",
+        "Usage: bun run size [--package name|path] [--native] [--browser] [--require]",
       );
   }
   return options;

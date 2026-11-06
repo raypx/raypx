@@ -315,7 +315,7 @@ fn renderer_policy_keeps_native_authorization_and_device_scope_private() {
     let resources = tempfile::tempdir().unwrap();
     std::fs::write(
         resources.path().join("runtime.json"),
-        br#"{"version":"0.1.0","builtAt":42}"#,
+        br#"{"format":1,"version":"0.1.0","builtAt":42}"#,
     )
     .unwrap();
     let host = raypx_desktop::host::Host::open(
@@ -520,13 +520,7 @@ async fn native_http_uses_the_real_typescript_orpc_envelope_without_exposing_cre
         process::Command,
     };
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    let mut server = Command::new("node")
-        .arg("--import")
-        .arg(
-            url::Url::from_file_path(root.join("node_modules/tsx/dist/loader.mjs"))
-                .unwrap()
-                .as_str(),
-        )
+    let mut server = Command::new("bun")
         .arg(root.join("apps/desktop/tests/native/fixtures/orpc-server.ts"))
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::inherit())
@@ -627,7 +621,7 @@ fn actual_preload_preserves_json_keys_and_freezes_preferences_without_prototype_
     let resources = tempfile::tempdir().unwrap();
     std::fs::write(
         resources.path().join("runtime.json"),
-        br#"{"version":"0.1.0","builtAt":42}"#,
+        br#"{"format":1,"version":"0.1.0","builtAt":42}"#,
     )
     .unwrap();
     std::fs::write(directory.path().join("preferences.json"),br#"{"theme":"dark","locale":"zh","__proto__":{"polluted":true},"nested":{"__proto__":{"polluted":true}}}"#).unwrap();
@@ -638,13 +632,7 @@ fn actual_preload_preserves_json_keys_and_freezes_preferences_without_prototype_
     )
     .unwrap();
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    let mut child = std::process::Command::new("node")
-        .arg("--import")
-        .arg(
-            url::Url::from_file_path(root.join("node_modules/tsx/dist/loader.mjs"))
-                .unwrap()
-                .as_str(),
-        )
+    let mut child = std::process::Command::new("bun")
         .arg(root.join("apps/desktop/tests/native/fixtures/preferences-preload.ts"))
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())

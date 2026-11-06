@@ -1,4 +1,3 @@
-import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -13,7 +12,7 @@ import {
 import { piDefinition } from "@raypx/providers/pi";
 import { ClaudeAdapter, claudeDefinition } from "@raypx/providers/claude";
 import { CodexAdapter, codexDefinition } from "@raypx/providers/codex";
-import { createTransport, type TransportFactory } from "../../harness/transport.ts";
+import { createTransport, type TransportFactory } from "../../harness/transport";
 
 type Registration = {
   kind: "process";
@@ -79,7 +78,7 @@ export async function discoverProviders(
         ? [overrides[provider]]
         : [
             overrides[provider],
-            findExecutable(provider),
+            Bun.which(provider),
             join(homedir(), ".local", "bin", provider + suffix),
             join(homedir(), ".bun", "bin", provider + suffix),
             join("/opt/homebrew/bin", provider),
@@ -96,7 +95,7 @@ export async function discoverProviders(
         };
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        const child = spawnProcess([executable, "--version"], { stdout: "pipe", stderr: "ignore" });
+        const child = Bun.spawn([executable, "--version"], { stdout: "pipe", stderr: "ignore" });
         const reader = child.stdout.getReader();
         timer = setTimeout(() => {
           child.kill();

@@ -1,13 +1,12 @@
-import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import { chmod, copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProcessTransport } from "../../src/runtime/agents/transport.ts";
+import { ProcessTransport } from "../../src/runtime/agents/transport";
 
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to record the real Codex stream");
-const executable = process.env.RAYPX_CODEX_BINARY ?? findExecutable("codex");
+const executable = process.env.RAYPX_CODEX_BINARY ?? Bun.which("codex");
 if (!executable) throw new Error("Codex executable is unavailable");
 const directory = await mkdtemp(join(tmpdir(), "raypx-stream-contract-"));
 const home = join(directory, "codex");
@@ -69,9 +68,7 @@ try {
     events.map((event) => JSON.stringify(event)).join("\n") + "\n",
     { mode: 0o600 },
   );
-  const version = (
-    await new Response(spawnProcess([executable, "--version"]).stdout).text()
-  ).trim();
+  const version = (await Bun.$`${executable} --version`.text()).trim();
   const metadata = {
     provider: "codex",
     version,

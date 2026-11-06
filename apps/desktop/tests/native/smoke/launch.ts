@@ -54,15 +54,18 @@ export async function buildSmoke(): Promise<SmokeInstallation> {
     RAYPX_DESKTOP_NATIVE_SMOKE_BUILD: "1",
   };
   for (const command of [
-    ["pnpm", "exec", "vp", "build", "--config", "vite.app.config.ts", "--mode", "native-smoke"],
     [
       process.execPath,
-      "--import",
-      import.meta.resolve("tsx"),
-      "scripts/host/csp.ts",
-      "artifacts/native-smoke/client",
+      "--bun",
+      "vp",
+      "build",
+      "--config",
+      "vite.app.config.ts",
+      "--mode",
+      "native-smoke",
     ],
-    [process.execPath, "--import", import.meta.resolve("tsx"), "scripts/host/tauri.ts", "build"],
+    [process.execPath, "scripts/host/csp.ts", "artifacts/native-smoke/client"],
+    [process.execPath, "scripts/host/tauri.ts", "build"],
   ]) {
     const child = spawnProcess(command, {
       cwd,
@@ -116,8 +119,6 @@ export async function runTauriSmoke(
   const scenario = spawnProcess(
     [
       process.execPath,
-      "--import",
-      import.meta.resolve("tsx"),
       resolve(import.meta.dirname, phase === "agents" ? "agents.ts" : "scenario.ts"),
     ],
     { cwd, env: environment, stdin: "ignore", stdout: "inherit", stderr: "inherit" },

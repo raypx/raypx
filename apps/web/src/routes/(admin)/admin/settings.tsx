@@ -1,11 +1,8 @@
-import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-guard.tsx";
+import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-guard";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  SessionBoundary,
-  SignInGate,
-} from "../../../features/auth/components/session-boundary.tsx";
+import { SessionBoundary, SignInGate } from "../../../features/auth/components/session-boundary";
 import { useTranslations } from "@raypx/i18n/browser";
-import { ConfigurationSettings } from "../../../features/configuration/components/settings.tsx";
+import { ConfigurationSettings } from "../../../features/configuration/components/settings";
 
 export const Route = createFileRoute("/(admin)/admin/settings")({
   beforeLoad: webPageGuard("/admin/settings"),

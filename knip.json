@@ -11,10 +11,12 @@
     "**/*.gen.ts",
     "**/.output/**",
     "**/dist/**",
-    "**/build/**",
     "**/artifacts/**",
     ".agents/skills/**",
-    ".claude/**"
+    "apps/desktop/build/**",
+    ".claude/**",
+    "apps/desktop/src-tauri/gen/**",
+    "apps/desktop/generated/**"
   ],
   "workspaces": {
     ".": {
@@ -28,26 +30,33 @@
         "server/jobs/runtime/*.ts",
         "vite.app.config.ts",
         "tests/helpers/control-server.ts",
-        "tests/fixtures/deployment.ts",
         "tests/types/*.ts"
       ]
     },
     "apps/desktop": {
-      "ignoreDependencies": ["@tauri-apps/cli"],
       "entry": [
         "src/routes/**/*.tsx",
         "tests/native/smoke/*.ts",
         "vite.app.config.ts",
         "scripts/host/*.ts",
         "tests/native/fixtures/*.ts",
-        "e2e/**/*.spec.ts"
+        "e2e/**/*.spec.ts",
+        "perf/*.bench.ts",
+        "perf/browser/main.tsx",
+        "perf/browser/vite.app.config.ts"
       ]
     },
     "apps/web": {
       "entry": ["src/routes/**/*.{ts,tsx}", "vite.app.config.ts", "e2e/**/*.spec.ts"]
     },
     "apps/cli": {
-      "entry": ["src/main.ts", "tests/smoke/*.ts", "tests/fixtures/**/*.{ts,mjs}"]
+      "entry": [
+        "src/main.ts",
+        "tests/smoke/*.ts",
+        "tests/fixtures/**/*.{ts,mjs}",
+        "perf/*.bench.ts",
+        "scripts/*.ts"
+      ]
     },
     "apps/storybook": {
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
@@ -56,11 +65,6 @@
       "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
     },
     "packages/tsconfig": {
-      "ignoreDependencies": ["tsx"],
-      "entry": ["scripts/task.ts"]
-    },
-    "packages/runtime-node": {
-      "ignoreDependencies": ["tsx"],
       "entry": ["scripts/task.ts"]
     },
     "packages/email": {
@@ -87,6 +91,10 @@
     },
     "packages/control": {
       "entry": ["tests/helpers/control.ts"]
+    },
+    "packages/runtime-node": {
+      "entry": ["scripts/task.ts", "src/*.ts"],
+      "ignoreDependencies": ["ws", "undici", "@types/ws"]
     }
   }
 }

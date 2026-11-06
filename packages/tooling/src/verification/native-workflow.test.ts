@@ -1,4 +1,3 @@
-import { parseYAML } from "confbox/yaml";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
@@ -22,11 +21,11 @@ type Job = {
 };
 const root = resolve(import.meta.dirname, "../../../..");
 const workflow = (name: string) =>
-  parseYAML<{
+  Bun.YAML.parse(readFileSync(join(root, `.github/workflows/${name}.yml`), "utf8")) as {
     jobs: Record<string, Job>;
     concurrency?: { group?: string };
     on: { workflow_call?: { inputs: { distribution: { default: boolean } } } };
-  }>(readFileSync(join(root, `.github/workflows/${name}.yml`), "utf8"));
+  };
 const native = workflow("native").jobs;
 const steps = native.verify!.steps!;
 const named = (name: string) => {
@@ -60,18 +59,21 @@ it("checks selected platforms and adds parallel distribution phases only when re
 
 it("prepares shared JS inputs only for parallel distribution phases", () => {
   const prepare = native.prepare!.steps!;
-  expect(native.prepare?.if).toBe("inputs.distribution");
+  expect(native.prepare?.if).toBeUndefined();
   expect(native.verify?.if).toContain("!cancelled()");
-  expect(native.verify?.if).toContain("needs.prepare.result == 'skipped'");
+  expect(native.verify?.if).toContain("needs.prepare.result == 'success'");
   expect(prepare.some((step) => step.name === "Herdr terminal integration")).toBe(false);
   expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(true);
   expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
   expect(prepare.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
-  const saves = steps.filter((step) => step.uses === "./.github/actions/vp-save");
-  expect(saves.map((step) => step.if)).toEqual(["${{ !inputs.distribution }}"]);
-  expect(steps.indexOf(saves[0]!)).toBe(
-    steps.indexOf(named("Prepare native check or distribution inputs")) + 1,
+  expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
+  expect(prepare.filter((step) => step.run?.includes("bun run build:cli"))).toHaveLength(1);
+  expect(steps.some((step) => step.run?.includes("bun run build:cli"))).toBe(false);
+  expect(prepare.some((step) => step.name === "Sign and seal the shared CLI payload")).toBe(true);
+  expect(named("Prepare native check or distribution inputs").run).toContain(
+    "distribution.ts verify",
   );
+  expect(native.verify?.env?.RAYPX_CLI_PAYLOAD).toContain("apps/cli/dist");
 });
 
 it("requires compiled Herdr integration and pinned Rust checks in the check phase", () => {
@@ -107,8 +109,10 @@ it("keeps explicit release acceptance independent from routine push cancellation
 });
 
 it("exposes distribution credentials only to packaging and always cleans them up", () => {
-  for (const value of Object.values(native.verify!.env!))
-    expect(value).toContain("matrix.phase == 'package'");
+  const credentials = Object.entries(native.verify!.env!).filter(
+    ([key]) => key !== "RAYPX_CLI_PAYLOAD",
+  );
+  for (const [, value] of credentials) expect(value).toContain("matrix.phase == 'package'");
   expect(named("Remove temporary macOS signing material").if).toContain("always()");
   expect(named("Remove temporary Windows signing material").if).toContain("always()");
 });

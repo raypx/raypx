@@ -4,8 +4,6 @@
 !rust-toolchain.toml
 !apps
 !apps/cli
-!apps/cli/launcher
-!apps/cli/launcher/**
 !apps/desktop
 !apps/desktop/src-tauri
 !apps/desktop/src-tauri/**

@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { imports } from "@raypx-kit/devkit/architecture";
-import { layerViolations, type SourceNode } from "./source-layers.ts";
+import { layerViolations, type SourceNode } from "./source-layers.js";
 
 it("blocks infrastructure hidden behind a barrel or dynamic import while allowing injected ports", () => {
   const entry = "apps/example/src/application/commands.ts";
@@ -18,7 +18,7 @@ it("blocks infrastructure hidden behind a barrel or dynamic import while allowin
   expect(layerViolations(nodes)).toEqual([]);
   const edges = imports(
     entry,
-    'export * from "../ports"; const load = () => import("node:sqlite");',
+    'export * from "../ports"; const load = () => import("bun:sqlite");',
   );
   nodes.set(entry, {
     path: entry,

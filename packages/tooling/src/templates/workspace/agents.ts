@@ -32,6 +32,6 @@ Keep shared fixtures and integration/acceptance suites in tests/.
 
 ## Verification
 
-Run pnpm --dir ${directory} run check${tests ? " and test" : ""}.
+Run bun run --cwd ${directory} check${tests ? " and test" : ""}.
 `;
 }

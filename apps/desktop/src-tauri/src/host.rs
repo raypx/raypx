@@ -51,7 +51,7 @@ impl Host {
                 .join("runtime.json"),
             1024 * 1024,
         )?)?;
-        if resource["version"] != env!("CARGO_PKG_VERSION") {
+        if resource["format"] != 1 || resource["version"] != env!("CARGO_PKG_VERSION") {
             return fail("CLI_VERSION_MISMATCH");
         }
         let built_at = resource["builtAt"].as_u64().ok_or("CLI_VERSION_MISMATCH")?;

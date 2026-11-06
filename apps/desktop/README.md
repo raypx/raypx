@@ -1,10 +1,9 @@
 # Raypx Desktop
 
 Tauri 2.12.5 and Rust 1.99.1 host the React SPA in WKWebView or WebView2.
-The standalone TypeScript CLI owns execution, scheduling and the independent
-daemon. Desktop stages the CLI JS build with the supported Node build runtime and Herdr; installation requires no global
-Node. Project commands use the user's installed package manager. macOS requires 13.5+. Linux Desktop
-acceptance remains unverified.
+The standalone Bun CLI owns execution, scheduling and the independent daemon.
+Desktop stages its compiled executable and Herdr as one verified payload. macOS
+requires 13.5+; Linux Desktop acceptance remains unverified.
 
 - `src-tauri/src/shell.rs`: windows, tray, notifications, picker and trusted IPC.
 - `src-tauri/src/host.rs`: native policy, authorization and daemon proxy lifecycle.
@@ -16,21 +15,20 @@ acceptance remains unverified.
 From the repository root:
 
 ```sh
-pnpm --dir apps/desktop run check
-pnpm --dir apps/desktop run test
-pnpm --dir apps/desktop run tauri:check
-pnpm --dir apps/desktop run tauri:test
-pnpm run build:cli
-pnpm run build:desktop
-pnpm run package:desktop
-pnpm run verify
+bun run --cwd apps/desktop check
+bun run --cwd apps/desktop test
+bun run --cwd apps/desktop tauri:check
+bun run --cwd apps/desktop tauri:test
+bun run build:cli
+bun run build:desktop
+bun run package:desktop
+bun run verify
 ```
 
 VP owns the task graph. Normal Desktop builds check and render the SPA. Explicit
-packaging adds Node and the native launcher to the CLI JS build, verifies checksums, signs nested
-executables, updates their manifests and invokes Tauri. Installers live in
-`target/release/bundle`; matching CLI resources are required for every target.
-`dev:desktop` starts Tauri and Vite. Cargo owns native incremental compilation.
+packaging verifies and copies the prepared Bun CLI payload, then invokes Tauri.
+Installers live in `target/release/bundle`; matching CLI resources are required
+for every target. `dev:desktop` starts Tauri and Vite. Cargo owns native compilation.
 `tauri:check:docker` generates policy then runs core Rust tests in a scoped Docker
 context. It does not establish GUI acceptance.
 
@@ -57,4 +55,4 @@ The first Tauri version requires a signed installer after quitting the old host
 and explicitly stopping its old daemon. New Tauri updater keys and manifests are
 required; the previous feed is unused. Signing, notarization and macOS/Windows GUI
 checks are release gates. See [the Desktop guide](../../docs/development/desktop.md)
-and [ADR 0045](../../docs/architecture/0045-tauri-node-pnpm.md).
+and [Bun + Tauri experiment](../../docs/development/bun-tauri-experiment.md).

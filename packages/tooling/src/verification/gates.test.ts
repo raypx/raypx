@@ -1,15 +1,13 @@
-import { runProcessSync } from "@raypx/runtime-node/process";
-import { parseYAML } from "confbox/yaml";
 import { copyFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { project } from "../../tests/helpers/verification.ts";
-import { verificationPlan } from "./plan.ts";
-import { ciGate } from "./index.ts";
-import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.ts";
-import { assertCiResult } from "./result.ts";
-import { distributionRequested } from "./events.ts";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
+import { project } from "../../tests/helpers/verification.js";
+import { verificationPlan } from "./plan.js";
+import { ciGate } from "./index.js";
+import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.js";
+import { assertCiResult } from "./result.js";
+import { distributionRequested } from "./events.js";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 
 const { fixture } = workspaceFixtures();
 afterEach(() => {
@@ -99,7 +97,7 @@ describe("required CI results", () => {
     for (const file of ["result.ts", "events.ts", "gates.ts"])
       copyFileSync(join(source, file), join(root, file));
     const execute = (request: string) =>
-      runProcessSync([process.execPath, join(root, "result.ts")], {
+      Bun.spawnSync([process.execPath, join(root, "result.ts")], {
         cwd: root,
         env: {
           ...process.env,
@@ -160,9 +158,11 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
 });
 
 it("registers every CI dependency and passes the authoritative plan to each source acceptance worker", () => {
-  const workflow = parseYAML<{
+  const workflow = Bun.YAML.parse(
+    readFileSync(resolve(import.meta.dirname, "../../../../.github/workflows/ci.yml"), "utf8"),
+  ) as {
     jobs: Record<string, { needs?: string[]; env?: Record<string, string> }>;
-  }>(readFileSync(resolve(import.meta.dirname, "../../../../.github/workflows/ci.yml"), "utf8"));
+  };
   expect(workflow.jobs.foundation!.needs!.sort()).toEqual(
     ["changes", ...gateDefinitions.map(({ name }) => name)].sort(),
   );

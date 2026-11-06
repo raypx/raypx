@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Hona/strobe/v0.13.0/strobe.v1.json",
+  "apps": {
+    "raypx-base": {
+      "kind": "native",
+      "exe": "${RAYPX_STROBE_BASE_EXE}",
+      "unset": [
+        "RAYPX_*",
+        "ANTHROPIC_*",
+        "OPENAI_*",
+        "GOOGLE_*",
+        "GEMINI_*",
+        "OPENROUTER_*",
+        "AWS_*",
+        "AZURE_*",
+        "OTEL_*",
+        "POSTHOG_*",
+        "SENTRY_*",
+        "BUN_INSPECT*",
+        "CLAUDE_*",
+        "CODEX_*",
+        "*API_KEY*",
+        "*ACCESS_TOKEN*",
+        "*SECRET*",
+        "*PASSWORD*",
+        "*CREDENTIAL*",
+        "WEBVIEW2_*"
+      ],
+      "env": {
+        "RAYPX_HOME": "{home}/raypx-config",
+        "RAYPX_DESKTOP_DATA_DIR": "{home}/raypx-desktop",
+        "DO_NOT_TRACK": "1",
+        "HTTP_PROXY": "http://127.0.0.1:9",
+        "HTTPS_PROXY": "http://127.0.0.1:9",
+        "NO_PROXY": "localhost,127.0.0.1,::1"
+      },
+      "dirs": ["raypx-config", "raypx-desktop"],
+      "guard": [
+        {
+          "file": "~/Library/Application Support/Raypx/profiles/default/daemon.json",
+          "os": "macos"
+        },
+        {
+          "file": "%LOCALAPPDATA%/Raypx/profiles/default/daemon.json",
+          "os": "windows"
+        }
+      ],
+      "gpuCache": "warm"
+    },
+    "raypx-head": {
+      "extends": "raypx-base",
+      "exe": "${RAYPX_STROBE_HEAD_EXE}"
+    }
+  }
+}

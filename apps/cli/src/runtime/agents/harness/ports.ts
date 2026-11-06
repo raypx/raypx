@@ -39,7 +39,7 @@ export interface ExecutionEffects {
   status(status: AgentTask["status"], summary?: string): void;
   changed(pendingRequest?: string): void;
   resolved(requestId: string): void;
-  hook(): { url: string; token: string } | Promise<{ url: string; token: string }>;
+  hook(): { url: string; token: string };
   /** Adapter transports inherit user tools and the bundled Node PATH entry. */
   environment(): Record<string, string | undefined>;
   track(completion: Promise<void>): void;

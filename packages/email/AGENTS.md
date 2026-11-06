@@ -18,7 +18,7 @@ Verification and password-reset mail only, in en/zh. Templates are React Email c
 
 ## Preview
 
-`pnpm --dir packages/email run email:dev` serves `src/emails` through
+`bun run --cwd packages/email email:dev` serves `src/emails` through
 `@raypx-kit/email-preview` at `http://127.0.0.1:3001`. Each template's
 `PreviewProps` supplies the sample data. `vite.app.config.ts` owns this preview; the package is never built.
 `vite.config.ts` contains only task metadata.
@@ -26,6 +26,6 @@ Verification and password-reset mail only, in en/zh. Templates are React Email c
 ## Verification
 
 ```sh
-pnpm --dir packages/email run check
-pnpm --dir packages/email run test
+bun run --cwd packages/email check
+bun run --cwd packages/email test
 ```

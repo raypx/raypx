@@ -116,8 +116,8 @@ credentials, path grants and content require separate design.
 
 Default tests exercise offline readiness under blocked cloud restore, per-request
 channels, migration safety, withdrawal revision independence, route restrictions,
-adapter lifecycle and Rust host transport. Daily validation uses `pnpm run verify`;
-release preparation adds `pnpm run verify --full`. Packaged native and live hook
+adapter lifecycle and Rust host transport. Daily validation uses `bun run verify`;
+release preparation adds `bun run verify --full`. Packaged native and live hook
 checks are separate, isolated by profile, `RAYPX_HOME`, `CLAUDE_CONFIG_DIR` and
 `CODEX_HOME`; they do not edit personal hooks
 or system services. Real prompt visibility is measured only from timestamped PTY

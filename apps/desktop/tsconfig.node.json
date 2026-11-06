@@ -2,10 +2,10 @@
   "extends": "@raypx/tsconfig/node.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "types": ["vite/client", "node"],
+    "types": ["bun", "vite/client"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ESNext", "DOM"]
+    "lib": ["ES2022", "DOM"]
   },
   "include": [
     "vite.config.ts",

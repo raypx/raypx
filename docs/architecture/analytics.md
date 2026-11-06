@@ -67,8 +67,8 @@ Each client build writes `assets/raypx-release.json` with its surface and the
 same release embedded in JavaScript. `RAYPX_SOURCEMAPS=1` enables hidden client maps and is
 part of the build cache key. No upload credentials use a `VITE_` name.
 
-For example, build Web with `RAYPX_SOURCEMAPS=1 pnpm run build:web`, then run
-`pnpm run analytics:sourcemaps web` with `POSTHOG_CLI_HOST` (PostHog UI host),
+For example, build Web with `RAYPX_SOURCEMAPS=1 bun run build:web`, then run
+`bun run analytics:sourcemaps web` with `POSTHOG_CLI_HOST` (PostHog UI host),
 `POSTHOG_CLI_PROJECT_ID` and secret `POSTHOG_CLI_API_KEY` in the release environment.
 For Desktop use `build:desktop` and the `desktop` target. The command injects release
 and chunk metadata, uploads maps, and removes maps after success. Upload reads the

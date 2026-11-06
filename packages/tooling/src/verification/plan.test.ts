@@ -81,7 +81,7 @@ describe("affected verification", () => {
     expect(leaked.backend).toBe(true);
   });
   it.each([
-    "pnpm-lock.yaml",
+    "bun.lock",
     "package.json",
     ".github/actions/example/action.yml",
     "packages/tooling/src/cli.ts",
@@ -244,7 +244,7 @@ describe("affected verification", () => {
       "base",
     );
     const before = git("rev-parse", "HEAD");
-    writeFileSync(join(root, "pnpm-lock.yaml"), "dependency fixture");
+    writeFileSync(join(root, "bun.lock"), "dependency fixture");
     git("add", ".");
     git(
       "-c",
@@ -300,7 +300,7 @@ it("selects deployment acceptance for Docker, runtime and shared dependency inpu
     "infra/railway/Caddyfile",
     "apps/api/Dockerfile",
     "packages/api/src/server.ts",
-    "pnpm-lock.yaml",
+    "bun.lock",
     "packages/tokens/src/index.ts",
   ])
     expect(verificationPlan(model, [file]).deployment).toBe(true);
