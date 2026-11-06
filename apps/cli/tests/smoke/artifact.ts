@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import manifest from "../../package.json";
 import rootManifest from "../../../../package.json";
 import { satisfies } from "semver";
@@ -20,7 +21,7 @@ import { aiFixture } from "../helpers/ai.ts";
 
 const { engines } = rootManifest;
 
-const dataDir = await mkdtemp(join(tmpdir(), "raypx 完整运行目录 smoke-"));
+const dataDir = await mkdtemp(join(tmpdir(), "raypx #完整运行目录 smoke-"));
 const distribution = join(dataDir, "distribution");
 const builtDirectory = await installNpmCli(dataDir);
 const binary = join(distribution, "main.mjs");
@@ -164,7 +165,7 @@ try {
     bootstrap = join(dataDir, "provider-probe.mjs");
   await writeFile(
     bootstrap,
-    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await (await import("node:fs/promises")).writeFile(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(join(builtDirectory, "main.mjs"))});`,
+    `const originalFetch = globalThis.fetch; globalThis.fetch = async (input, options) => { const url = new URL(input instanceof Request ? input.url : input); if (["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) return originalFetch(input, options); await (await import("node:fs/promises")).writeFile(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(pathToFileURL(join(builtDirectory, "main.mjs")).href)});`,
   );
   const probeLaunch = [process.execPath, bootstrap];
   // Give the independently compiled provider probe its own enrolled test profile.

@@ -68,7 +68,7 @@ export async function buildSmoke(): Promise<SmokeInstallation> {
   }
   const output = resolve(cwd, "../../target/native-smoke/release");
   const installation = shouldInstallWindowsSmoke(process.platform, process.env)
-    ? await installWindowsSmoke(output, resolve(cwd, "../cli/dist/raypx.exe"))
+    ? await installWindowsSmoke(output, resolve(cwd, "resources/bin/raypx.exe"))
     : {
         binary:
           process.platform === "win32"

@@ -24,7 +24,7 @@ async function command(action: "status" | "stop" | "restart", directory: string,
   if (platform !== "darwin" && platform !== "win32") return;
   const binary = resolve(
     import.meta.dirname,
-    "../../../../cli/dist",
+    "../../../resources/bin",
     platform === "win32" ? "raypx.exe" : "raypx",
   );
   return (options.run ?? run)(binary, [

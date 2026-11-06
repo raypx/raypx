@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { basename } from "node:path";
+import { resolve } from "node:path";
 import {
   assertSmokeOwnerRunning,
   restartSmokeOwner,
@@ -20,7 +20,13 @@ it.each(["darwin", "win32"] as const)(
     expect(run).toHaveBeenCalledTimes(3);
     for (const [index, action] of ["status", "stop", "restart"].entries()) {
       const [binary, args] = run.mock.calls[index]!;
-      expect(basename(binary)).toBe(platform === "win32" ? "raypx.exe" : "raypx");
+      expect(binary).toBe(
+        resolve(
+          import.meta.dirname,
+          "../../resources/bin",
+          platform === "win32" ? "raypx.exe" : "raypx",
+        ),
+      );
       expect(args).toEqual([
         "daemon",
         action,

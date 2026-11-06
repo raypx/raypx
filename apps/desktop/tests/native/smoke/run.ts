@@ -15,7 +15,7 @@ const { phase, ui } = nativeSmokeOptions(process.argv.slice(2), process.env);
 async function run(smokePhase: string, directory: string, restoredServer = false) {
   if (!installation) throw new Error("Native smoke installation is unavailable");
   const runtime = await readJsonFile(
-    resolve(import.meta.dirname, "../../../../cli/dist/runtime.json"),
+    resolve(import.meta.dirname, "../../../resources/bin/runtime.json"),
   );
   return runTauriSmoke(installation, smokePhase, directory, {
     ...process.env,
