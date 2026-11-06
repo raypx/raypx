@@ -43,5 +43,5 @@ try {
     assert.equal(await lifecycle.exited, 0, "Windows archive directory lifecycle failed");
   }
 } finally {
-  await rm(directory, { recursive: true, force: true });
+  await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }
