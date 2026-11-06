@@ -40,6 +40,13 @@ async function main() {
     case "size":
       reportBuildSizes(root, sizeOptions(args));
       break;
+    case "cli:experiment": {
+      const { experimentCliSize } = await import("./validation/cli-size.js");
+      const directory = await experimentCliSize(root, args);
+      if (process.env.GITHUB_OUTPUT)
+        appendFileSync(process.env.GITHUB_OUTPUT, `depth0-payload=${join(directory, "depth-0")}\n`);
+      break;
+    }
     case "verify:check":
       runPrecheck(root, args[0] ?? "");
       break;

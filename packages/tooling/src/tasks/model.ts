@@ -81,6 +81,9 @@ function cachedTask(
     "**/.wrangler/**",
     "**/.tanstack/**",
     ".artifacts/**",
+    // Downloads are verified against the CLI manifest and copied into dist.
+    // A fresh runner can restore that complete output without a download cache.
+    ...(build && member.name === "cli" ? [".cache/herdr/**"] : []),
     ...reportDirectories(context).map((directory) => `${directory}/**`),
     // Application CSS excludes browser sources. Ignore their directory enumeration
     // too, so creating a case does not invalidate an unchanged product artifact.

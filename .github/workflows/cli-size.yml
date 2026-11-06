@@ -1,0 +1,52 @@
+name: CLI size experiment
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-bun
+      - run: bun run build:cli
+      - name: Prepare pinned UPX experiment
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "upx.zip"
+          Invoke-WebRequest https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-win64.zip -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne "D127996C76615E431BE810E9C8D2910DBE3DD400600C5C0C50276FC5A17A9705") {
+            throw "UPX archive checksum mismatch"
+          }
+          Expand-Archive $archive -DestinationPath $env:RUNNER_TEMP
+          "RAYPX_EXPERIMENT_UPX=$env:RUNNER_TEMP\upx-5.3.0-win64\upx.exe" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Compare executable sizes and command startup
+        id: measurements
+        shell: bash
+        run: bun run raypx-dev cli:experiment apps/cli/dist --upx "$RAYPX_EXPERIMENT_UPX"
+      - name: Enable isolated provider acceptance
+        shell: pwsh
+        run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+      - name: Accept smaller bytecode payload
+        env:
+          RAYPX_CLI_PAYLOAD: ${{ steps.measurements.outputs.depth0-payload }}
+        shell: bash
+        run: |
+          test -n "$RAYPX_CLI_PAYLOAD"
+          bun run --cwd apps/cli smoke
+          RAYPX_HERDR_COMPILED=1 bun run --cwd apps/cli smoke:herdr-terminal
+      - name: Report measurements
+        if: always()
+        shell: bash
+        run: cat .artifacts/cli-size/*/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: cli-size-windows
+          path: |
+            .artifacts/cli-size/*/results.json
+            .artifacts/cli-size/*/report.md
+          if-no-files-found: error
