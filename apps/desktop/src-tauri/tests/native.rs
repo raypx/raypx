@@ -221,6 +221,7 @@ async fn bundled_cli_survives_gui_transport_shutdown_with_the_same_daemon() {
     )
     .unwrap();
     let directory = tempfile::tempdir().unwrap();
+    raypx_desktop::config::protect(directory.path()).unwrap();
     let args = vec![
         "--data-dir".into(),
         directory.path().to_string_lossy().into_owned(),

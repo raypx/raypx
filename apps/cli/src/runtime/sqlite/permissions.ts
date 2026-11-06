@@ -13,6 +13,8 @@ const files = ["profile.sqlite", "profile.sqlite.migration-lock.sqlite"].flatMap
 // A protected inheritable directory ACL also protects SQLite files created after startup.
 const windowsPermissions = String.raw`
 $ErrorActionPreference = 'Stop'
+$stage = 'INITIALIZE'
+try {
 $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
 $system = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18')
 $directory = $env:RAYPX_PRIVATE_PROFILE
@@ -20,6 +22,7 @@ $paths = @($directory) + @('profile.sqlite','profile.sqlite-wal','profile.sqlite
 foreach ($path in $paths) {
   if (!(Test-Path -LiteralPath $path)) { continue }
   try {
+  $stage = if ($path -eq $directory) { 'DIRECTORY' } else { 'SQLITE_FILE' }
   $item = Get-Item -Force -LiteralPath $path
   if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { throw 'Unsupported path' }
   if ($item.PSIsContainer) {
@@ -41,6 +44,10 @@ foreach ($path in $paths) {
     if (($path -match '-(wal|shm|journal)$') -and !(Test-Path -LiteralPath $path)) { continue }
     throw
   }
+}
+} catch {
+  @{ stage = $stage; hresult = $_.Exception.HResult } | ConvertTo-Json -Compress
+  exit 1
 }
 `;
 
@@ -76,12 +83,32 @@ export function protectProfile(directory: string) {
           Buffer.from(windowsPermissions, "utf16le").toString("base64"),
         ],
         env: { ...process.env, RAYPX_PRIVATE_PROFILE: directory },
-        stdout: "ignore",
+        stdin: "ignore",
+        stdout: "pipe",
         stderr: "ignore",
         windowsHide: true,
         timeout: 15_000,
       });
-      if (result.exitCode !== 0) throw new Error("Private ACL unavailable");
+      if (result.exitCode !== 0) {
+        if (process.env.RAYPX_NATIVE_SMOKE === "1") {
+          const details = JSON.parse(result.stdout.toString().trim() || "null") as {
+            stage?: unknown;
+            hresult?: unknown;
+          } | null;
+          const stage = details?.stage;
+          console.error(
+            JSON.stringify({
+              operation: "daemon.startup",
+              code:
+                stage === "INITIALIZE" || stage === "DIRECTORY" || stage === "SQLITE_FILE"
+                  ? `WINDOWS_PROFILE_ACL_${stage}`
+                  : "WINDOWS_PROFILE_ACL",
+              errno: typeof details?.hresult === "number" ? details.hresult : result.exitCode,
+            }),
+          );
+        }
+        throw new Error("Private ACL unavailable");
+      }
     } else {
       chmodSync(directory, 0o700);
       for (const file of existing) {
