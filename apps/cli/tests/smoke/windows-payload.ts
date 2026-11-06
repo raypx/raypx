@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, realpath, rename, rm } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, realpath, rename } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { enrollTestProfile } from "../helpers/instance";
+import { removeTemporaryDirectory } from "../helpers/temporary";
 import { daemonFetch, readDaemon } from "../../src/runtime/daemon/endpoint";
 import { profilePath } from "../../src/runtime/state";
 import { createInterface } from "node:readline";
@@ -101,7 +102,7 @@ try {
       await Bun.sleep(100);
     }
   }
-  await rm(moved, { recursive: true, maxRetries: 10, retryDelay: 100 });
+  await removeTemporaryDirectory(moved);
   // The first PTY is opened only after the downloaded directory no longer exists.
   const child = Bun.spawn([stable, "daemon", "proxy", "--data-dir", data, "--profile", "payload"], {
     env,
@@ -163,5 +164,5 @@ try {
 } finally {
   if (daemonStarted) await invoke(join(runtime, "raypx.exe"), ["daemon", "stop"]);
   await close();
-  await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  await removeTemporaryDirectory(root);
 }

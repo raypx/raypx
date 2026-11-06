@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { extractArchive } from "@raypx/tooling/build/archive";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
+import { removeTemporaryDirectory } from "../tests/helpers/temporary";
 const output = resolve(import.meta.dirname, "../../../.artifacts/distribution");
 const names = (await readdir(output)).filter((name) =>
   name.endsWith(process.platform === "win32" ? ".zip" : ".tar.gz"),
@@ -43,5 +44,5 @@ try {
     assert.equal(await lifecycle.exited, 0, "Windows archive directory lifecycle failed");
   }
 } finally {
-  await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  await removeTemporaryDirectory(directory);
 }

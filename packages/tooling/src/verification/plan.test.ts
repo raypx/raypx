@@ -115,6 +115,7 @@ describe("affected verification", () => {
     ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/instance.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/provider-proxy.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/tests/helpers/temporary.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/smoke/windows-payload.ts", ["windows-latest"]],
     ["packages/cli/src/runtime/daemon/remote/control.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/remote-control.ts", ["macos-latest", "windows-latest"]],
