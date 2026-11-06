@@ -177,7 +177,8 @@ export async function connectDaemon(options: ProfileOptions, start = true) {
       }
       child.unref();
     }
-    const deadline = Date.now() + 10_000;
+    // Windows startup includes the PowerShell profile ACL check.
+    const deadline = Date.now() + (process.platform === "win32" ? 45_000 : 10_000);
     while (Date.now() < deadline) {
       const ready = await probe(directory);
       if (ready) return ready;

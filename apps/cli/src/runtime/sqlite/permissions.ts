@@ -87,14 +87,16 @@ export function protectProfile(directory: string) {
         stdout: "pipe",
         stderr: "ignore",
         windowsHide: true,
-        timeout: 15_000,
+        timeout: 30_000,
       });
       if (result.exitCode !== 0) {
         if (process.env.RAYPX_NATIVE_SMOKE === "1") {
-          const details = JSON.parse(result.stdout.toString().trim() || "null") as {
-            stage?: unknown;
-            hresult?: unknown;
-          } | null;
+          let details: { stage?: unknown; hresult?: unknown } | null = null;
+          try {
+            details = JSON.parse(result.stdout.toString().trim());
+          } catch {
+            // The child can exit before the PowerShell script starts.
+          }
           const stage = details?.stage;
           console.error(
             JSON.stringify({
@@ -124,7 +126,13 @@ export function protectProfile(directory: string) {
         }
       }
     }
-  } catch {
+  } catch (error) {
+    if (process.platform === "win32" && process.env.RAYPX_NATIVE_SMOKE === "1") {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (typeof code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(code)) {
+        console.error(JSON.stringify({ operation: "daemon.startup", code: `ACL_PROCESS_${code}` }));
+      }
+    }
     throw new LocalError("PROFILE_STORAGE_UNAVAILABLE", "Unable to protect profile storage");
   }
 }

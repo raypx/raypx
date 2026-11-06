@@ -13,7 +13,9 @@ function openProfileDatabase(directory: string) {
     if (process.platform !== "win32") protectProfile(directory);
     const database = drizzle({ client });
     migrateLocalDatabase(database);
-    protectProfile(directory);
+    // On Windows the protected directory ACL already applies to newly created sidecars.
+    // Existing files were secured before opening SQLite.
+    if (process.platform !== "win32") protectProfile(directory);
     return database;
   } catch (error) {
     client.close();

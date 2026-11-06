@@ -333,9 +333,9 @@ impl Engine {
             engine: self,
             id: id.clone(),
         };
-        // The daemon proxy can wait up to 20 seconds for owner turnover and startup,
-        // in addition to copying the bundled runtime on a cold Windows profile.
+        // Allow owner turnover and daemon startup, plus the cold runtime copy on Windows.
         let response_timeout = Duration::from_secs(match method {
+            "runtime.info" if self.daemon && cfg!(windows) => 75,
             "runtime.info" if self.daemon => 30,
             "runtime.info" => 10,
             _ => 86410,

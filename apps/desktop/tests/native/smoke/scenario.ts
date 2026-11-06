@@ -246,7 +246,7 @@ try {
   await waitFor(
     async () => (await engine.status()).status === "ready",
     "Bundled local engine did not become ready",
-    45_000,
+    process.platform === "win32" ? 90_000 : 45_000,
   );
   if (fixturePhase === "shell") {
     stage = "local instance enrollment";
