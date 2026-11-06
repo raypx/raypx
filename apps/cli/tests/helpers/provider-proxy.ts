@@ -13,6 +13,20 @@ const hosts = [
   "openrouter.ai",
 ];
 
+// Windows Firewall accepts subnet filters reliably. Leave only IPv4 loopback for
+// the explicit 127.0.0.1 proxy; provider processes need no IPv6 connectivity.
+export const windowsProviderBlockedSubnets = [
+  "0.0.0.0/2",
+  "64.0.0.0/3",
+  "96.0.0.0/4",
+  "112.0.0.0/5",
+  "120.0.0.0/6",
+  "124.0.0.0/7",
+  "126.0.0.0/8",
+  "128.0.0.0/1",
+  "::/0",
+] as const;
+
 /** A local TLS endpoint reached through CONNECT. It never forwards traffic to the Internet. */
 export async function providerProxy(directory: string) {
   const openssl = findExecutable("openssl");
@@ -141,7 +155,7 @@ export async function providerProxy(directory: string) {
       if (process.platform === "win32") {
         const rule = "raypx-provider-" + crypto.randomUUID();
         await powershell(
-          "New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress @('0.0.0.0-126.255.255.255','128.0.0.0-255.255.255.255','::2-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff') | Out-Null",
+          `New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress @(${windowsProviderBlockedSubnets.map((subnet) => `'${subnet}'`).join(",")}) | Out-Null`,
           binary,
           rule,
         );
