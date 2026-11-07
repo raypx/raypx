@@ -27,7 +27,18 @@ export async function createCliLogging() {
     env: { service: "raypx-cli", environment: "production" },
     silent: true,
     pretty: false,
-    redact: true,
+    redact: {
+      // The generic card masker also matches the numeric prefix of a valid UUID.
+      // Consume complete UUIDs first, preserving them only in correlation fields.
+      builtins: ["email", "ipv4", "phone", "jwt", "bearer", "iban", "secrets"],
+      patterns: [
+        /\b([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\b|\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/gi,
+      ],
+      replacement: (match, context) =>
+        context.groups?.[0] && (context.path === "id" || context.path === "jobId")
+          ? String(match)
+          : "[REDACTED]",
+    },
     drain,
   });
   const record: RecordDiagnostic = (event) => {
