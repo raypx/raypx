@@ -116,8 +116,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
-      - name: Diagnose Windows temporary cwd cleanup
-        run: bun packages/tooling/src/validation/bun-split-cleanup-probe.ts
+      - name: Check correlation logging and Windows fixture cleanup
+        shell: bash
+        run: |
+          bun run --cwd apps/cli test src/logging.test.ts
+          bun run --cwd packages/tooling test src/validation/owned-temporary.test.ts
       - name: Prepare the unchanged production reference
         shell: pwsh
         run: |
@@ -134,7 +137,6 @@ jobs:
         shell: pwsh
         run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
       - name: Compare and accept all three complete distributions
-        if: false
         shell: bash
         run: bun packages/tooling/src/validation/bun-split.ts apps/cli/dist
       - name: Report split runtime measurements

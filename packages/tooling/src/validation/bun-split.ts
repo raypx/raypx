@@ -14,6 +14,7 @@ import { join, resolve } from "node:path";
 import { sealCliPayload, verifyCliPayload } from "../build/cli.js";
 import { taskModel } from "../tasks/model.js";
 import { readBunPin } from "./toolchain.js";
+import { removeOwnedTemporaryDirectory } from "./owned-temporary.js";
 
 const root = resolve(import.meta.dirname, "../../../..");
 if (process.platform !== "win32" || process.arch !== "x64")
@@ -519,6 +520,6 @@ try {
   process.exitCode = 1;
 } finally {
   await persist();
-  await rm(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  await removeOwnedTemporaryDirectory(temporary);
   console.log(`Split runtime evidence: ${evidence}`);
 }
