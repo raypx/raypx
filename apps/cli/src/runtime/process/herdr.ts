@@ -163,6 +163,8 @@ export class HerdrTerminalHost {
         stdout: "ignore",
         stderr: "ignore",
         windowsHide: true,
+        // Windows owner termination must close stdin, not kill the EOF guardian first.
+        detached: process.platform === "win32",
       },
     );
     const until = Date.now() + 8000;
