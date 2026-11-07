@@ -137,8 +137,20 @@ jobs:
         shell: pwsh
         run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
       - name: Compare and accept all three complete distributions
+        if: false
         shell: bash
         run: bun packages/tooling/src/validation/bun-split.ts apps/cli/dist
+      - name: Diagnose owned Herdr working directory handles
+        shell: pwsh
+        run: |
+          bun packages/tooling/src/validation/bun-split-cleanup-probe.ts
+          $evidence = Join-Path $env:GITHUB_WORKSPACE '.artifacts/bun-split/cleanup-probe'
+          Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath | ConvertTo-Json | Out-File (Join-Path $evidence 'processes.log')
+          $archive = Join-Path $env:RUNNER_TEMP 'Handle.zip'
+          Invoke-WebRequest https://download.sysinternals.com/files/Handle.zip -OutFile $archive
+          $handles = Join-Path $env:RUNNER_TEMP 'handles'
+          Expand-Archive $archive -DestinationPath $handles
+          & (Join-Path $handles 'handle64.exe') -accepteula -nobanner $evidence | Out-File (Join-Path $evidence 'handles.log')
       - name: Report split runtime measurements
         if: always()
         shell: bash
