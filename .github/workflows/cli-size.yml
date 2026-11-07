@@ -117,7 +117,12 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
       - name: Prepare the unchanged production reference
-        run: bun run build:cli
+        shell: pwsh
+        run: |
+          $timer = [Diagnostics.Stopwatch]::StartNew()
+          bun run build:cli
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "RAYPX_SPLIT_REFERENCE_MS=$($timer.ElapsedMilliseconds)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
       - name: Prepare pinned Rust for the small launcher
         shell: pwsh
         run: |

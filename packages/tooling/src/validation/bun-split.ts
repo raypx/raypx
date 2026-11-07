@@ -66,6 +66,8 @@ type Candidate = {
 };
 const results: Candidate[] = [];
 const preparation: Record<string, number> = {};
+if (process.env.RAYPX_SPLIT_REFERENCE_MS)
+  preparation.productionReferenceMs = Number(process.env.RAYPX_SPLIT_REFERENCE_MS);
 const rustPin = (
   Bun.TOML.parse(await readFile(join(root, "rust-toolchain.toml"), "utf8")) as {
     toolchain: { channel: string };
@@ -247,6 +249,7 @@ try {
     RAYPX_SPLIT_BUILT_AT: String(identity.builtAt),
   };
   const testLauncher = join(temporary, "launcher-tests.exe");
+  const launcherTestsStarted = performance.now();
   const testBuild = await run(
     ["rustc", `+${rustPin}`, "--edition=2024", "--test", launcherSource, "-o", testLauncher],
     { env: launcherEnv },
@@ -259,6 +262,7 @@ try {
     launcherTests.stdout + launcherTests.stderr,
   );
   if (launcherTests.exit !== 0) throw new Error("Launcher ABI/quoting tests failed");
+  preparation.launcherTestsMs = performance.now() - launcherTestsStarted;
   const zipScript = join(temporary, "archive.ps1");
   await writeFile(
     zipScript,
@@ -271,8 +275,13 @@ $zip = [IO.Compression.ZipFile]::Open($env:RAYPX_SPLIT_ZIP_OUTPUT, [IO.Compressi
 try {
   foreach ($file in (Get-ChildItem -LiteralPath $source -Recurse -File | Sort-Object FullName)) {
     $name = $file.FullName.Substring($source.Length + 1).Replace('\\', '/')
-    $entry = [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $file.FullName, $name, [IO.Compression.CompressionLevel]::Optimal)
+    $entry = $zip.CreateEntry($name, [IO.Compression.CompressionLevel]::Optimal)
     $entry.LastWriteTime = [DateTimeOffset]::new(2000,1,1,0,0,0,[TimeSpan]::Zero)
+    $input = [IO.File]::OpenRead($file.FullName)
+    try {
+      $output = $entry.Open()
+      try { $input.CopyTo($output) } finally { $output.Dispose() }
+    } finally { $input.Dispose() }
   }
 } finally { $zip.Dispose() }
 `,
@@ -482,7 +491,9 @@ try {
       await probe(c, name, [process.execPath, join(root, cli.path, file)], {
         env: {
           ...candidateEnv,
-          ...(name === "herdr" ? { RAYPX_HERDR_BINARY: join(c.payload, "herdr/herdr.exe") } : {}),
+          ...(name === "herdr"
+            ? { PATH: "", RAYPX_HERDR_BINARY: join(c.payload, "herdr/herdr.exe") }
+            : {}),
         },
         timeout: 300_000,
       });
