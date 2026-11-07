@@ -2,13 +2,18 @@
 
 Status: accepted, 2026-11-06. Supersedes [ADR 0045](0045-tauri-node-pnpm.md).
 
+Packaging amendment (2026-11-07): [ADR 0047](0047-bun-cli-production-packaging.md)
+formalizes stable Bun 1.4.4 with an embedded runtime and depth-0 bytecode as the
+CLI/daemon production distribution. The MyGo host and platform release gates
+remain defined by this record.
+
 Raypx restores MyGo v0.7.4, Go 1.27.3 and Bun 1.4.4 while retaining the current
 product, package boundaries, protocols, local SQLite schema and durable execution behavior.
 Bun owns installation and `bun.lock`, scripts and server runtimes; API/Web use Nitro's
 Bun preset. VP remains the sole task graph/cache. macOS targets 13.5+ and Windows uses WebView2.
 
 Each candidate/platform compiles `apps/cli/src/main.ts` once with Bun's compiler,
-ESM/minify/bytecode. The embedded build identity and payload inventory share one value.
+ESM/minify/depth-0 bytecode. The embedded build identity and payload inventory share one value.
 The manifest binds commit, platform, architecture and CLI/Bun/Herdr versions to exact bytes.
 Desktop launches this self-contained executable by absolute path. Node staging, the Rust
 launcher and the intermediate VP pack bundle are removed. User project managers and external

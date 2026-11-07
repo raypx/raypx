@@ -2,6 +2,10 @@
 
 The compiled `raypx` executable needs no installed Node or Bun. Desktop bundles the same version and connects to its independent daemon through private IPC. The daemon owns scheduling. Foreground commands run once and never install a service.
 
+The [accepted production packaging](../../docs/architecture/0047-bun-cli-production-packaging.md)
+embeds the Bun 1.4.4 stable runtime with minified ESM and depth-0 bytecode.
+Native AOT and separate-runtime distributions remain manual experiments.
+
 Run `raypx login` once to enroll the selected profile with an account and server
 origin before local execution. Its signed identity permits offline work after
 online logout. `RAYPX_API_URL` selects the enrollment server (default
@@ -24,7 +28,7 @@ Use the current file `version` when editing, moving or deleting. Deletion prompt
 
 `--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically.
 
-Build with `bun run --cwd apps/cli build`. VP checks the SQLite journal and the pinned Bun version, then directly compiles `src/main.ts` with ESM, minify and bytecode. `dist/` contains the standalone executable, Herdr, LICENSE, README and the complete `runtime.json` inventory. Consumers use `RAYPX_CLI_PAYLOAD` and never compile again. `bun apps/cli/scripts/distribution.ts archive` creates native macOS arm64 / Windows x64 archives and SHA-256 after signing.
+Build with `bun run --cwd apps/cli build`. VP checks the SQLite journal and the pinned Bun version, then directly compiles `src/main.ts` with ESM, minify and depth-0 bytecode. `dist/` contains the standalone executable, Herdr, LICENSE, README and the complete `runtime.json` inventory. Consumers use `RAYPX_CLI_PAYLOAD` and never compile again. `bun apps/cli/scripts/distribution.ts archive` creates native macOS arm64 / Windows x64 archives and SHA-256 after signing.
 
 `bun run --cwd apps/cli smoke` runs the actual binary outside the repository with an empty PATH, exercises NDJSON, persistent grants, a PTY and EOF process cancellation. Desktop GUI tests remain separate.
 

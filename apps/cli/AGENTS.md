@@ -48,6 +48,8 @@ The runtime owns `ProfileStorage` for `<profile>/profile.sqlite` through private
 
 `runtime/process/herdr.ts` delegates PTY/VT/cursor state to pinned Herdr; Desktop stages its verified runtime/DLLs/licenses. Runtime never downloads binaries.
 `RAYPX_HERDR_BINARY` selects an absolute development binary. Each owner starts an isolated server: client EOF cancels its PTYs; owner EOF stops its server. Never reuse user sessions.
+On Windows keep the EOF supervisor in an independent process group so abrupt owner termination
+still permits cleanup of the default shell and ConPTY descendants.
 Commands/environment use a one-use authenticated local handoff, never persisted layouts. Input/resize/paste delivery is bounded and serial; never retry uncertain input.
 Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit native gate; `RAYPX_HERDR_COMPILED=1` tests compiled helpers after building.
 
@@ -77,7 +79,7 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
   disconnects one client and cancels its tools/PTYs, preserving Agent tasks and scheduling.
   Missed Cron triggers are skipped.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
-- VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
+- Formal production packaging (ADR 0047) uses stable Bun 1.4.4: VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
 
 ## Verification
 

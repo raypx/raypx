@@ -17,6 +17,7 @@ supersede conflicting earlier ADR text.
 ## Architecture and decisions
 
 - [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
+- [Accepted Bun CLI production packaging](architecture/0047-bun-cli-production-packaging.md)
 - [MyGo / Bun and immutable CLI artifacts](architecture/0046-mygo-bun-artifacts.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)

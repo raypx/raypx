@@ -268,12 +268,15 @@ above describe current implementation; these records preserve the decisions.
 - [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)
 
 - [0045: Tauri / Node / pnpm](0045-tauri-node-pnpm.md) — superseded by 0046
-- [0046: MyGo / Bun and immutable CLI artifacts](0046-mygo-bun-artifacts.md) — current
+- [0046: MyGo / Bun and immutable CLI artifacts](0046-mygo-bun-artifacts.md) — current; CLI packaging formalized by 0047
+- [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md) — accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode
 
 ## Distribution and performance
 
-Each candidate/platform compiles the standalone CLI once from source. Desktop, archives and acceptance
-consume the same signed complete payload by immutable artifact ID. No Node runtime or Rust launcher
+The accepted production CLI packaging embeds stable Bun 1.4.4 with minified ESM
+and depth-0 bytecode ([ADR 0047](0047-bun-cli-production-packaging.md)). Each
+candidate/platform compiles the standalone CLI once from source. Desktop, archives
+and acceptance consume the same signed complete payload by immutable artifact ID. No Node runtime or Rust launcher
 is shipped. See [the unified migration and Strobe acceptance guide](../development/mygo-bun-migration-plan.md).
 The `@raypx/runtime-node` package retains Node-compatible process/HTTP helpers under Bun; its name
 is not a requirement for a global Node runtime. Strobe is a development-only dependency and never

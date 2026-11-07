@@ -37,6 +37,8 @@ The accepted foundation design and current architecture decisions define the imp
 ## Toolchain
 
 - Bun 1.4.4 owns install, lockfile, scripts, tests and standalone CLI compilation.
+- Formal CLI packaging is embedded stable Bun with minified ESM and depth-0 bytecode
+  (ADR 0047). Native AOT and separate-runtime layouts remain manual experiments.
 - Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
   `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
   and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
