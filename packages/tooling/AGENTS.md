@@ -142,6 +142,9 @@ prepared production payload. Its manual workflow uses Windows only.
 The workflow's opt-in `aot` mode uses a checksum-pinned experimental compiler
 through `src/validation/bun-aot.ts`; the controller and production payload keep
 the repository pin. Probe eval and an offline bunx package before artifact acceptance.
+The manual `split` mode runs `src/validation/bun-split.ts` on Windows x64 with the pinned
+Bun/Rust. It compares three complete distributions, accepts each CLI/Herdr/daemon lifecycle,
+and keeps JSON/Markdown/logs under `.artifacts/bun-split`; the production payload is immutable.
 The launcher creates ignored artifact/native directories before tracing:
 directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace

@@ -79,6 +79,11 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
 
+The manual Windows `split` experiment alone defines `__RAYPX_CLI_EXTERNAL_BUN__`; it separates
+Raypx launcher and Bun executable identity without changing production compile defaults or IPC.
+Its native launcher consumes an owned payload/stable version directory; foreground jobs clean up
+on launcher exit and only the private daemon entry breaks away.
+
 ## Verification
 
 Unit tests live beside runtime, command and TUI source; integration suites stay in

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, realpath, rename } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, realpath, rename, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
@@ -9,6 +9,8 @@ import { daemonFetch, readDaemon } from "../../src/runtime/daemon/endpoint";
 import { profilePath } from "../../src/runtime/state";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
+import { payloadRuntime } from "../helpers/payload";
+import { providerProxy } from "../helpers/provider-proxy";
 if (process.platform !== "win32") throw new Error("Windows payload lifecycle requires Windows");
 const root = await mkdtemp(join(tmpdir(), "raypx 中文 # payload "));
 const distribution = join(root, "extracted"),
@@ -27,6 +29,8 @@ const env = {
 };
 const close = await enrollTestProfile({ dataDir: data, profile: "payload" }, [binary], env);
 const runtime = join(data, "bin/daemon", `${manifest.version}-${manifest.builtAt}`);
+const network = await providerProxy(root);
+const stableRuntime = join(home, "bin/versions", `${manifest.version}-${manifest.builtAt}`);
 const powershell = join(
   process.env.SystemRoot ?? "C:\\Windows",
   "System32/WindowsPowerShell/v1.0/powershell.exe",
@@ -43,7 +47,7 @@ async function waitForRuntimeExit() {
       String.raw`
 $ErrorActionPreference = 'Stop'
 $deadline = [DateTime]::UtcNow.AddSeconds(30)
-$owned = @(Get-Process -Name raypx -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $env:RAYPX_TEST_RUNTIME_EXE })
+$owned = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $env:RAYPX_TEST_RUNTIME_EXE })
 foreach ($process in $owned) {
   try {
     $remaining = [Math]::Max(0, [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds)
@@ -80,9 +84,23 @@ async function invoke(exe: string, args: string[]) {
 }
 let daemonStarted = false;
 try {
+  await network.isolate(binary, [
+    payloadRuntime(distribution, manifest.files),
+    payloadRuntime(runtime, manifest.files),
+    join(runtime, "raypx.exe"),
+    payloadRuntime(stableRuntime, manifest.files),
+    join(stableRuntime, "raypx.exe"),
+    join(home, "bin/raypx.exe"),
+  ]);
   await mkdir(home, { recursive: true });
   await invoke(binary, ["connectors", "install", "claude"]);
+  const daemonStartedAt = performance.now();
   await invoke(binary, ["daemon", "start"]);
+  if (process.env.RAYPX_SPLIT_DAEMON_TIMING)
+    await writeFile(
+      process.env.RAYPX_SPLIT_DAEMON_TIMING,
+      JSON.stringify({ readyMs: performance.now() - daemonStartedAt }),
+    );
   daemonStarted = true;
   await verifyCliPayload(runtime);
   const stable = join(home, "bin/raypx.exe");
@@ -116,7 +134,7 @@ try {
   assert.equal(imageCode, 0, "Could not inspect the isolated daemon image");
   assert.equal(
     (await realpath(imagePath.trim())).toLowerCase(),
-    (await realpath(join(runtime, "raypx.exe"))).toLowerCase(),
+    (await realpath(payloadRuntime(runtime, manifest.files))).toLowerCase(),
     "Daemon must run from its complete versioned copy",
   );
   runtimeImage = imagePath.trim();
@@ -199,6 +217,7 @@ try {
 } finally {
   if (daemonStarted) await invoke(join(runtime, "raypx.exe"), ["daemon", "stop"]);
   await close();
+  await network.close();
   await waitForRuntimeExit();
   await removeTemporaryDirectory(root);
 }

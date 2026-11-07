@@ -5,7 +5,7 @@ import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import manifest from "../../../package.json";
-import { cliBuild } from "./build.ts";
+import { cliBuild, cliExternalBun } from "./build.ts";
 import { profilePath, acquireLock } from "../state/index.ts";
 import { LocalError } from "../errors.ts";
 import { localAddressSchema, localFetch } from "../local-http.ts";
@@ -109,7 +109,7 @@ function daemonLaunch(
       retain(pin);
       retained = true;
     }
-    return [join(target, "raypx.exe")];
+    return [join(target, "raypx.exe"), ...(cliExternalBun ? ["--raypx-split-detach"] : [])];
   } finally {
     if (!retained) pin();
   }

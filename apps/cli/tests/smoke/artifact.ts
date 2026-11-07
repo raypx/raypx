@@ -10,6 +10,7 @@ import { smokeManagedPi } from "./managed-pi.ts";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { providerProxy } from "../helpers/provider-proxy.ts";
 import { enrollTestProfile } from "../helpers/instance.ts";
+import { payloadRuntime } from "../helpers/payload.ts";
 import assert from "node:assert/strict";
 import { stripVTControlCharacters } from "node:util";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
@@ -162,7 +163,12 @@ try {
   }
   const proxy = await providerProxy(dataDir);
   closeProbe = () => proxy.close();
-  await proxy.isolate(binary);
+  const daemonPayload = join(dataDir, "bin/daemon", `${runtime.version}-${runtime.builtAt}`);
+  await proxy.isolate(binary, [
+    payloadRuntime(distribution, runtime.files),
+    join(daemonPayload, process.platform === "win32" ? "raypx.exe" : "raypx"),
+    payloadRuntime(daemonPayload, runtime.files),
+  ]);
   const probeData = dataDir;
   const providerIds = ["anthropic", "openai", "google", "openrouter"];
   for (const provider of providerIds) {

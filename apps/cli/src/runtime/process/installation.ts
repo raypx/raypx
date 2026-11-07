@@ -9,8 +9,8 @@ import {
   mkdirSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { cliBuild } from "../daemon/build.ts";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { cliBuild, cliExternalBun } from "../daemon/build.ts";
 import { LocalError } from "../errors.ts";
 
 export interface InstallationManifest {
@@ -25,25 +25,60 @@ export interface InstallationManifest {
   files: Record<string, string>;
 }
 const suffix = process.platform === "win32" ? ".exe" : "";
-export function cliInstallation() {
-  const bundled = cliBuild.builtAt > 0;
-  let root = bundled ? dirname(process.execPath) : resolve(import.meta.dirname, "../../..");
+const splitLauncher = cliExternalBun ? process.env.RAYPX_SPLIT_LAUNCHER : undefined;
+if (cliExternalBun) delete process.env.RAYPX_SPLIT_LAUNCHER;
+
+/** Raypx's launcher and Bun's executable differ in the opt-in split distribution. */
+export function resolveInstallation(
+  executable: string,
+  build = cliBuild,
+  externalLauncher?: string,
+) {
+  const bundled = build.builtAt > 0;
+  let root = bundled ? dirname(executable) : resolve(import.meta.dirname, "../../..");
+  const launcher = bundled ? (externalLauncher ?? executable) : null;
+  if (externalLauncher) {
+    if (
+      !bundled ||
+      !isAbsolute(externalLauncher) ||
+      basename(externalLauncher) !== "raypx" + suffix ||
+      basename(executable) !== "bun" + suffix ||
+      !existsSync(join(root, "cli.js")) ||
+      !lstatSync(join(root, "cli.js")).isFile() ||
+      !lstatSync(externalLauncher).isFile()
+    )
+      throw new LocalError("INSTALLATION_CONFLICT", "Invalid external Bun installation");
+  }
+  const launcherRoot = launcher ? dirname(launcher) : root;
   // Stable connector executable is an owned copy; resolve its complete immutable payload.
-  if (bundled && !existsSync(join(root, "runtime.json"))) {
-    const ownership = JSON.parse(readFileSync(join(root, "installation.json"), "utf8"));
+  if (bundled && !existsSync(join(launcherRoot, "runtime.json"))) {
+    const ownership = JSON.parse(readFileSync(join(launcherRoot, "installation.json"), "utf8"));
     if (
       !/^versions\/[a-zA-Z0-9_.-]+$/.test(ownership.directory) ||
-      ownership.version !== cliBuild.version ||
-      ownership.builtAt !== cliBuild.builtAt ||
-      ownership.digest !== createHash("sha256").update(readFileSync(process.execPath)).digest("hex")
+      ownership.version !== build.version ||
+      ownership.builtAt !== build.builtAt ||
+      ownership.digest !== createHash("sha256").update(readFileSync(launcher!)).digest("hex") ||
+      (externalLauncher && resolve(root) !== resolve(launcherRoot, ownership.directory))
     )
       throw new LocalError("INSTALLATION_CONFLICT", "Invalid connector installation");
-    root = join(root, ownership.directory);
+    root = join(launcherRoot, ownership.directory);
   }
-  return { root, bundled, launcher: bundled ? process.execPath : null };
+  if (
+    externalLauncher &&
+    resolve(launcherRoot) !== resolve(root) &&
+    existsSync(join(launcherRoot, "runtime.json"))
+  )
+    throw new LocalError("INSTALLATION_CONFLICT", "External Bun belongs to another installation");
+  return { root, bundled, launcher, bunExecutable: executable };
+}
+export function cliInstallation() {
+  if (cliExternalBun && !splitLauncher)
+    throw new LocalError("INSTALLATION_CONFLICT", "External Bun requires its Raypx launcher");
+  return resolveInstallation(process.execPath, cliBuild, splitLauncher);
 }
 export function cliLaunch() {
-  return cliInstallation().bundled ? [process.execPath] : [process.execPath, Bun.main];
+  const layout = cliInstallation();
+  return layout.launcher ? [layout.launcher] : [layout.bunExecutable, Bun.main];
 }
 export function verifyInstallation(
   root: string,
@@ -71,7 +106,13 @@ export function verifyInstallation(
     typeof manifest.herdrVersion !== "string"
   )
     throw new LocalError("HOST_VERSION_MISMATCH", "CLI resources do not match this build");
-  for (const required of ["raypx" + suffix, "herdr/runtime.json", "LICENSE", "README.txt"])
+  for (const required of [
+    "raypx" + suffix,
+    "herdr/runtime.json",
+    "LICENSE",
+    "README.txt",
+    ...(cliExternalBun ? ["bun" + suffix, "cli.js"] : []),
+  ])
     if (!manifest.files[required])
       throw new LocalError("INSTALLATION_CONFLICT", "Incomplete CLI runtime manifest");
   const found = new Set<string>();

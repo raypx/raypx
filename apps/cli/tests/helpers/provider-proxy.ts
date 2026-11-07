@@ -4,7 +4,7 @@ import { createServer as httpsServer } from "node:https";
 import { connect, type AddressInfo, type Socket } from "node:net";
 import { readFile, writeFile, realpath } from "node:fs/promises";
 import { networkInterfaces } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join, resolve as resolvePath } from "node:path";
 import { findExecutable } from "@raypx/runtime-node/process";
 
 const hosts = [
@@ -118,6 +118,7 @@ export async function providerProxy(directory: string) {
     '(version 1) (allow default) (deny network-outbound) (allow network-outbound (remote ip "localhost:*"))',
   );
   let cleanupNetwork = async () => {};
+  const networkRules: (() => Promise<void>)[] = [];
   let isolatedBinary: string | undefined;
   async function powershell(script: string, binary: string, rule: string, operation: string) {
     const child = Bun.spawn(
@@ -143,25 +144,48 @@ export async function providerProxy(directory: string) {
     tlsErrors,
     cert,
     url,
-    async isolate(binary: string) {
+    async isolate(binary: string, executables = [binary]) {
       if (process.platform === "win32") {
-        const program = await realpath(binary);
-        const rule = "raypx-provider-" + crypto.randomUUID();
-        // Windows Firewall exempts loopback. Block all other egress for this
-        // canonical executable; the SDK assertions still require the local proxy.
-        await powershell(
-          "if (@(Get-NetFirewallProfile -PolicyStore ActiveStore | Where-Object { $_.Enabled -ne 'True' }).Count) { throw 'Provider acceptance requires enabled Windows Firewall profiles' }; New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress Any | Out-Null",
-          program,
-          rule,
-          "install provider egress block",
-        );
-        cleanupNetwork = () =>
-          powershell(
-            "Remove-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE",
+        cleanupNetwork = async () => {
+          const results = await Promise.allSettled(
+            networkRules.splice(0).map((remove) => remove()),
+          );
+          const failed = results.filter((result) => result.status === "rejected");
+          if (failed.length) throw new AggregateError(failed, "Provider firewall cleanup failed");
+        };
+        for (const executable of new Set([binary, ...executables])) {
+          // A daemon/connector copy may not exist yet. Canonicalize its nearest existing parent.
+          let parent = resolvePath(executable);
+          const missing: string[] = [];
+          for (;;) {
+            try {
+              parent = await realpath(parent);
+              break;
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+              missing.unshift(basename(parent));
+              parent = dirname(parent);
+            }
+          }
+          const program = join(parent, ...missing);
+          const rule = "raypx-provider-" + crypto.randomUUID();
+          // Windows Firewall exempts loopback. Block all other egress for this
+          // canonical executable; the SDK assertions still require the local proxy.
+          await powershell(
+            "if (@(Get-NetFirewallProfile -PolicyStore ActiveStore | Where-Object { $_.Enabled -ne 'True' }).Count) { throw 'Provider acceptance requires enabled Windows Firewall profiles' }; New-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE -DisplayName $env:RAYPX_TEST_FIREWALL_RULE -Direction Outbound -Action Block -Program $env:RAYPX_TEST_PROGRAM -RemoteAddress Any | Out-Null",
             program,
             rule,
-            "remove provider egress block",
+            "install provider egress block",
           );
+          networkRules.push(() =>
+            powershell(
+              "Remove-NetFirewallRule -Name $env:RAYPX_TEST_FIREWALL_RULE",
+              program,
+              rule,
+              "remove provider egress block",
+            ),
+          );
+        }
       } else if (process.platform === "linux") {
         // sysfs can list inactive tunnel devices; inspect addresses in this network namespace.
         assert.deepEqual(

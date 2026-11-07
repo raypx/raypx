@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Pinned compiler size comparison or isolated experimental AOT
+        description: Pinned compiler size, isolated AOT, or separate Bun runtime comparison
         type: choice
-        options: [size, aot]
+        options: [size, aot, split]
         default: size
 permissions:
   contents: read
@@ -13,7 +13,7 @@ env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   windows:
-    if: inputs.mode != 'aot'
+    if: inputs.mode == 'size'
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
@@ -107,4 +107,41 @@ jobs:
             .artifacts/bun-aot/*/results.json
             .artifacts/bun-aot/*/report.md
             .artifacts/bun-aot/*/*/build.log
+          if-no-files-found: error
+
+  split:
+    if: inputs.mode == 'split'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-bun
+      - name: Prepare the unchanged production reference
+        run: bun run build:cli
+      - name: Prepare pinned Rust for the small launcher
+        shell: pwsh
+        run: |
+          $toolchain = (Select-String -Path rust-toolchain.toml -Pattern 'channel = "([^" ]+)"').Matches.Groups[1].Value
+          rustup toolchain install $toolchain --profile minimal
+      - name: Enable isolated provider acceptance
+        shell: pwsh
+        run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+      - name: Compare and accept all three complete distributions
+        shell: bash
+        run: bun packages/tooling/src/validation/bun-split.ts apps/cli/dist
+      - name: Report split runtime measurements
+        if: always()
+        shell: bash
+        run: cat .artifacts/bun-split/*/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: bun-split-windows
+          retention-days: 7
+          include-hidden-files: true
+          path: |
+            .artifacts/bun-split/*/results.json
+            .artifacts/bun-split/*/report.md
+            .artifacts/bun-split/*/*.log
+            .artifacts/bun-split/*/*-daemon-ready.json
           if-no-files-found: error
