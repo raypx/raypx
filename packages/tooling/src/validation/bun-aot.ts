@@ -35,6 +35,7 @@ const results: {
   bytes?: number;
   gzipBytes?: number;
   buildMs?: number;
+  startup?: Record<string, { samples: number; medianMs: number; p95Ms: number }>;
   probes?: Record<string, { exit: number | null; passed: boolean; stdout: string; stderr: string }>;
 }[] = [];
 const revision = text(run([compiler, "--revision"], temporary).stdout).trim();
@@ -126,6 +127,30 @@ console.log("RAYPX_AOT_FEATURES_OK");
     throw new AggregateError(bundle.logs, "Cannot prepare the JavaScript bundle");
   await writeFile(bundled, await bundle.outputs[0]!.text());
   const source = join(root, cli.path, "src/main.ts");
+  const tsconfig = join(evidence, "tsconfig.aot.json");
+  await writeFile(
+    tsconfig,
+    JSON.stringify({
+      extends: join(root, cli.path, "tsconfig.json"),
+      compilerOptions: {
+        module: "ESNext",
+        moduleResolution: "Bundler",
+        moduleDetection: "force",
+        customConditions: ["bun"],
+      },
+      files: [source],
+      include: [],
+    }),
+  );
+  const retainRuntime = {
+    aot: true,
+    // Inspector admission keeps every Program API required by arbitrary child code.
+    inspector: true,
+    trim: { allow: ["cli", "interpreter", "jit"] },
+    allowCodeFromDisk: true,
+    autoloadPackageJson: true,
+    autoloadTsconfig: true,
+  };
   const modes = [
     {
       name: "stable-floor",
@@ -144,6 +169,7 @@ console.log("RAYPX_AOT_FEATURES_OK");
       options: { aot: true, trim: { allow: ["cli"] } },
     },
     { name: "aot-features", compiler, source: feature, options: { aot: true, trim: true } },
+    { name: "aot-runtime-floor", compiler, source: hello, options: retainRuntime },
     { name: "aot-source", compiler, source, options: { aot: true }, cli: true },
     { name: "aot-source-trim", compiler, source, options: { aot: true, trim: true }, cli: true },
     {
@@ -154,10 +180,33 @@ console.log("RAYPX_AOT_FEATURES_OK");
       cli: true,
     },
     {
+      name: "aot-source-override-trim",
+      compiler,
+      source,
+      tsconfig,
+      options: { aot: true, trim: true },
+      cli: true,
+    },
+    {
+      name: "aot-source-override-runtime",
+      compiler,
+      source,
+      tsconfig,
+      options: retainRuntime,
+      cli: true,
+    },
+    {
       name: "aot-bundle-trim",
       compiler,
       source: bundled,
       options: { aot: true, trim: true },
+      cli: true,
+    },
+    {
+      name: "aot-bundle-runtime",
+      compiler,
+      source: bundled,
+      options: retainRuntime,
       cli: true,
     },
     {
@@ -181,6 +230,7 @@ console.log("RAYPX_AOT_FEATURES_OK");
         target: "bun",
         format: "esm",
         minify: true,
+        ...(mode.tsconfig ? { tsconfig: mode.tsconfig } : {}),
         ...(mode.bytecode ? { bytecode: true, bytecodeDepth: 0 } : {}),
         define: { __RAYPX_CLI_BUILT_AT__: String(identity.builtAt) },
         compile: { outfile: binary, ...mode.options },
@@ -255,6 +305,51 @@ console.log("RAYPX_AOT_FEATURES_OK");
     await persist();
     console.log(`${mode.name}: ${result.status}; ${(result.bytes / 1024 ** 2).toFixed(2)} MiB`);
   }
+  // Interleave warm launches on the same runner; only time CLI commands that passed.
+  const timed = [
+    { result: results[0]!, binary: reference },
+    ...results
+      .filter(
+        (result) =>
+          result.payload &&
+          result.probes?.version?.passed &&
+          result.probes.providers?.passed &&
+          result.probes.models?.passed,
+      )
+      .map((result) => ({ result, binary: join(result.payload!, binaryName) })),
+  ];
+  const timingHome = join(temporary, "timing-home");
+  await mkdir(timingHome);
+  for (const [name, args] of [
+    ["version", ["--version"]],
+    ["providers", ["ai", "providers", "--json"]],
+    ["models", ["ai", "models", "--json"]],
+  ] as const) {
+    const samples = new Map(timed.map((candidate) => [candidate, [] as number[]]));
+    for (let round = -4; round < 25; round++) {
+      for (const candidate of round % 2 === 0 ? timed : [...timed].reverse()) {
+        const start = performance.now();
+        const probe = run(
+          [candidate.binary, ...args],
+          fixture,
+          { ...fixtureEnv, RAYPX_HOME: timingHome },
+          10_000,
+        );
+        if (probe.exitCode !== 0)
+          throw new Error(`Startup probe failed: ${candidate.result.name}/${name}`);
+        if (round >= 0) samples.get(candidate)!.push(performance.now() - start);
+      }
+    }
+    for (const [candidate, values] of samples) {
+      values.sort((a, b) => a - b);
+      (candidate.result.startup ??= {})[name] = {
+        samples: values.length,
+        medianMs: values[12]!,
+        p95Ms: values[23]!,
+      };
+    }
+    await persist();
+  }
   const rows = results.map(
     (result) =>
       `| ${result.name} | ${result.bytes === undefined ? "unavailable" : (result.bytes / 1024 ** 2).toFixed(2)} | ${result.status} | ${Object.entries(
@@ -264,9 +359,20 @@ console.log("RAYPX_AOT_FEATURES_OK");
         .map(([name]) => name)
         .join(", ")} |`,
   );
+  const startupRows = results
+    .filter((result) => result.startup)
+    .map(
+      (result) =>
+        `| ${result.name} | ${["version", "providers", "models"]
+          .map((name) => {
+            const timing = result.startup![name]!;
+            return `${timing.medianMs.toFixed(1)} / ${timing.p95Ms.toFixed(1)}`;
+          })
+          .join(" | ")} |`,
+    );
   await writeFile(
     join(evidence, "report.md"),
-    `# Bun AOT experiment\n\nCompiler: ${revision}. Platform: ${process.platform}/${process.arch}. Production pin: ${Bun.version}.\n\n| Candidate | Executable MiB | Status | Failed probes |\n| --- | ---: | --- | --- |\n${rows.join("\n")}\n\nThese are isolated experimental outputs. A successful build alone is not CLI/Herdr/daemon acceptance. Retaining CLI tests real eval and an offline local bunx package, not just --version.\n`,
+    `# Bun AOT experiment\n\nCompiler: ${revision}. Platform: ${process.platform}/${process.arch}. Production pin: ${Bun.version}.\n\n| Candidate | Executable MiB | Status | Failed probes |\n| --- | ---: | --- | --- |\n${rows.join("\n")}\n\nWarm process launches, 4 warmups and 25 alternating samples; median / p95 in milliseconds:\n\n| Candidate | Version | Providers | Models |\n| --- | ---: | ---: | ---: |\n${startupRows.join("\n")}\n\nThese are isolated experimental outputs. A successful build alone is not CLI/Herdr/daemon acceptance. Retaining CLI tests real eval and an offline local bunx package, not just --version. Runtime modes retain inspector support and all Program APIs; inspector is not started. Their optimization assumptions differ from default AOT.\n`,
   );
   const accepted = results
     .filter((result) => result.payload && result.status === "probes-passed")
