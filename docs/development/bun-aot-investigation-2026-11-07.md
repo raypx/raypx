@@ -124,29 +124,38 @@ Raypx's embedded-runtime capability.
 [Trim feature definitions](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/src/trim/features/trim-features.def#L1),
 [BUN_BE_BUN tests](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/test/bundler/compile-trim-runtime.test.ts#L295).
 
-There is a source-supported experiment to retain the CLI:
+Retaining `cli` alone is insufficient: `--eval` requires all Program runtime
+features, and `bunx` also requires runtime package/config loading. The fuller
+public configuration under investigation is:
 
 ```ts
 await Bun.build({
-  entrypoints: ["./apps/cli/src/main.ts"],
+  entrypoints: ["./experiment/raypx-bundle.js"],
   target: "bun",
   format: "esm",
   define: { __RAYPX_CLI_BUILT_AT__: String(Date.now()) },
   compile: {
     outfile: "./experiment/raypx.exe",
     aot: true,
-    trim: { allow: ["cli"] },
+    inspector: true,
+    allowCodeFromDisk: true,
+    autoloadPackageJson: true,
+    autoloadTsconfig: true,
+    trim: { allow: ["cli", "interpreter", "jit"] },
   },
 });
 ```
 
 An object `trim` enables trimming, and `allow` retains named features plus their
-dependencies. The planner seeds retained features from `allow` before removing
-unused features. This makes CLI retention a legitimate test, not proof that
-arbitrary child code, JIT behavior or all APIs in unbundled children survive.
-Retaining these features can erase much of the advertised size reduction.
+dependencies. `inspector: true` admits unknown code and preserves all Program
+APIs, without starting an inspector listener. This also changes optimization
+assumptions; timings from this mode must be labelled separately from default AOT.
+Keeping only the named CLI/interpreter/JIT features can still reject `--eval`
+when another Program API was removed. Retaining the full runtime can erase the
+advertised size reduction.
 [Public API](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/packages/bun-types/bun.d.ts#L3866),
-[planner](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/src/trim/decide.rs#L122).
+[runtime-code requirements](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/src/trim/removable_features/requirement.rs#L20),
+[inspector retention](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/src/trim/decide.rs#L228).
 
 | Concern                        | Established fact                                                                                                                                                                              | Raypx implication / unresolved experiment                                                                                                                                                                                               |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -167,25 +176,137 @@ Sources for the table:
 [Bun compatibility](https://bun.com/docs/compiler/compatibility),
 [Bun trimming limits](https://bun.com/docs/compiler/size).
 
+## Windows executable evidence
+
+The first native Windows x64 experiment used the exact canary archive above and
+the prepared stable CLI from the same checkout. MiB means bytes / 1,048,576;
+gzip is level 9 over the executable alone, excluding the unchanged Herdr payload.
+[First run](https://github.com/raypx/raypx/actions/runs/42317610192).
+
+| Candidate                                                 | Executable MiB | gzip MiB | Observed behavior                                             |
+| --------------------------------------------------------- | -------------: | -------: | ------------------------------------------------------------- |
+| Production CLI, stable 1.4.4, depth-0 bytecode            |         113.34 |    52.94 | Reference                                                     |
+| Empty stable executable                                   |         109.93 |    51.84 | Program, eval and offline bunx passed                         |
+| Empty canary JIT executable                               |         142.94 |    69.74 | Program, eval and offline bunx passed                         |
+| Empty AOT + trim                                          |          37.69 |    16.92 | Program passed; embedded Bun CLI removed                      |
+| SQLite/spawn/HTTP AOT + trim fixture                      |          47.81 |    21.37 | All three fixture operations passed; embedded Bun CLI removed |
+| Actual CLI, prebundled JS, AOT + trim                     |          90.12 |    41.75 | Version/provider/model catalogs passed; eval and bunx failed  |
+| Actual CLI, prebundled JS, AOT + trim allowing only `cli` |         155.15 |    74.29 | Catalogs passed; eval and bunx still failed                   |
+
+The 90.12 MiB result is a 20.5% reduction in the executable, but it cannot serve
+as a drop-in Raypx CLI: it loses the existing embedded script/package runner.
+The 37.69 MiB hello-world floor is not a Raypx package measurement. First-run
+workflow success means the investigation completed, not production acceptance;
+CLI/Herdr acceptance was skipped because no actual CLI passed all prerequisite
+runtime probes.
+
+Direct TS AOT initially failed with 34 TS1287 diagnostics in the AI/Instances
+workspaces. These packages already declare ESM, but their NodeNext configs were
+classified as CommonJS by this experimental checker. A generated global
+ESNext/Bundler tsconfig override resolved these diagnostics and produced native
+executables. Production TypeScript configs remain unchanged.
+[Top-level tsconfig override API](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/packages/bun-types/bun.d.ts#L3671).
+
+The [second run](https://github.com/raypx/raypx/actions/runs/42318682039) established
+the cost of retaining arbitrary script execution and offline bunx. The
+[final run](https://github.com/raypx/raypx/actions/runs/42319572120) reproduced the
+sizes and passed installed CLI/Herdr smoke on the smallest full-runtime candidate.
+The tables below use that final run. All four actual-CLI variants passed
+version/provider/model catalogs. Full-runtime variants additionally passed eval
+and the offline package binary; trim-only variants lost both capabilities.
+
+| Actual CLI candidate                       | Executable MiB | gzip MiB |         Native build seconds | Embedded eval/bunx |
+| ------------------------------------------ | -------------: | -------: | ---------------------------: | ------------------ |
+| Stable reference, depth-0 bytecode         |         113.34 |    52.94 | Not timed in this experiment | Existing behavior  |
+| Direct TS + config override + trim         |          90.71 |    42.00 |                        26.49 | Removed            |
+| Direct TS + config override + full runtime |         173.65 |    82.88 |                        26.29 | Passed             |
+| JS prebundle + trim                        |          90.12 |    41.75 |                        25.00 | Removed            |
+| JS prebundle + full runtime                |         169.02 |    80.92 |                        24.69 | Passed             |
+
+Native build timings cover the experimental compiler invocation, not dependency
+installation, JS prebundling, hashing/compression or the full CI job. Full runtime
+uses the inspector-retention configuration above. Even an empty program in that
+mode is 146.32 MiB (71.21 MiB gzip). The actual smallest retained-runtime CLI is
+49.1% larger than stable, or 52.8% larger when gzipped. Canary's own JIT floor is
+already larger than stable's, so this is a comparison of the tested release
+artifacts, not a claim that AOT inherently makes every Bun version larger.
+
+Warm process launches used the same Windows runner, four warmups and 25 samples
+per command/candidate, alternating candidate order each round. Values are median
+/ p95 milliseconds, including process creation and command execution:
+
+| Candidate                   | `--version` | `ai providers --json` | `ai models --json` |
+| --------------------------- | ----------: | --------------------: | -----------------: |
+| Stable reference            | 72.2 / 79.1 |           88.3 / 95.5 |        80.9 / 84.4 |
+| Direct TS + trim            | 30.4 / 35.2 |           32.1 / 33.4 |        32.2 / 33.8 |
+| Direct TS + full runtime    | 31.5 / 38.3 |           34.3 / 46.0 |        34.6 / 35.2 |
+| JS prebundle + trim         | 32.0 / 37.7 |           34.1 / 46.8 |        34.2 / 34.8 |
+| JS prebundle + full runtime | 34.7 / 39.9 |           36.7 / 45.5 |        36.0 / 37.1 |
+
+The retained-runtime AOT CLI reduced these startup medians by 51.9–58.5%.
+These are repeated short commands, not cold-disk launch, daemon throughput,
+provider latency, memory usage or long-running agent work. Compiler logs also
+show interpreted regular-expression warnings in Zod; successful catalogs do not
+prove validation performance equivalence.
+
+The second run's full smoke step stopped at payload inventory validation:
+Windows bunx had generated `bun-node/bun.exe` and `bun-node/node.exe` aliases
+beside the experimental executable after sealing. This was an experiment
+side effect, before product smoke assertions ran. The harness removes these
+generated aliases and re-verifies the sealed inventory before handing it to
+acceptance. The final run passed this verification and both smoke commands.
+
+These aliases are hard links to the current Raypx/Bun executable, not a Node.js
+installation or another runtime payload. Bun chooses the adjacent directory
+when Windows' temporary directory is on another drive; it creates both names
+with `CreateHardLinkW` targeting its own process image.
+[Path selection](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/src/install/lib.rs#L420),
+[hard-link creation](https://github.com/oven-sh/bun/blob/b1305ddc7ceebad383019d796d1367cc68f66ba0/src/install/lib.rs#L683).
+
+The final Windows smoke ran outside the repository with an empty PATH and passed
+Pi AI streaming, managed tool approvals and daemon restart/resume. Herdr through
+CLI RPC also passed fast-exit retention, exit status, input, resize, cancellation,
+cursor queries, alternate screen, bracketed paste, supervisor EOF and descendant
+cleanup. This certifies these smoke paths on this candidate, not a complete
+Desktop distribution or every API of the embedded runtime.
+
+Local evidence: `.artifacts/bun-aot/windows-42317610192/`,
+`.artifacts/bun-aot/windows-42318682039/` and
+`.artifacts/bun-aot/windows-42319572120/`, including raw probe stdout/stderr,
+compiler logs and full job logs. Executables are not published.
+
+**Current recommendation:** retain stable depth-0 compilation for Raypx. The
+tested AOT compiler offers useful startup improvements, but provides size savings
+only when existing embedded-runtime capabilities are removed. Configurations
+retaining the arbitrary-code runtime are larger despite passing the selected
+Windows smoke tests. Do not upgrade the production pin solely for this experiment.
+
 ## Evidence still required before adoption
 
-The source findings justify an isolated **Windows-first** experiment. They do
-not justify changing the runtime pin or promising a package-size percentage.
-Compare stable JIT/bytecode, canary JIT/bytecode, canary AOT, AOT+trim and
-AOT+trim retaining the embedded CLI against the same Raypx commit. A tiny hello
-world is useful for compiler availability and the runtime floor; it is not a
-Raypx package, startup or memory measurement.
+The experiments do not justify changing the runtime pin. A tiny hello world is
+useful for compiler availability and the runtime floor; it is not a Raypx
+package, startup or memory measurement.
 
-For every viable candidate, record compiler revision/digest, complete payload
-inventory and compressed/uncompressed sizes. Run the real CLI's help/catalog,
-SQLite/profile, daemon/IPC, process/terminal and provider paths, plus
-`BUN_BE_BUN=1` script execution and offline package-bin execution through `bunx`.
-Check runtime-generated validation, error/stack behavior and representative
-startup/RSS/long-running work. Compiler success alone does not pass these gates.
+The selected Windows smoke covers the installed CLI, provider/daemon and terminal
+paths listed above. Runtime-generated validation performance, representative
+RSS/long-running work, Desktop installed GUI behavior and the complete release
+platform matrix remain unmeasured. Compiler success and catalog startup timings
+do not establish equivalence for those paths.
 
-At the time of this source note, the coordinator's Windows executable and full
-Raypx AOT probes were pending. The research agent did not run them. macOS
-release acceptance is also unrun; no additional macOS CI is required merely to
-answer the current Windows feasibility question. Any later experiment results
-must be attached with their own run/artifact evidence rather than inferred from
-the website's size examples.
+macOS release acceptance is unrun; no additional macOS CI is required merely to
+answer the current Windows feasibility question. Later experiment results must
+carry their own run/artifact evidence rather than being inferred from website
+size examples.
+
+## Experiment implementation checks
+
+Tooling's 48 test files passed: 262 tests passed and one skipped. Tooling type
+checking, focused lint/format, repository policy and Knip passed. Knip explicitly
+records the standalone experiment as an entry because its consumer is the
+manual workflow rather than the normal developer CLI.
+
+The local daily `bun run verify` was not green: 61/63 tasks succeeded. CLI's
+baseline-profile SQLite integration failed with `unable to open database file`,
+and Web reported unhandled `AbortError` rejections while its assertions passed.
+These are recorded separately from native AOT executable results. No macOS CI,
+installer/signing acceptance or complete release matrix was run for this note.

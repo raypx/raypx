@@ -62,7 +62,7 @@
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
     },
     "packages/tooling": {
-      "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
+      "entry": ["src/cli.ts", "src/tasks/leaf.ts", "src/validation/bun-aot.ts"]
     },
     "packages/tsconfig": {
       "entry": ["scripts/task.ts"]
