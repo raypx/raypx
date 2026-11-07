@@ -2,6 +2,7 @@ import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
 import { herdrRequest, record } from "./herdr-ipc";
 import { removeHerdrDirectory, stopWindowsHerdrTree } from "./herdr-cleanup";
+import { appendFile } from "node:fs/promises";
 
 /** Private subprocess entrypoints, never registered as public CLI commands. */
 export async function herdrInternal(args: string[]) {
@@ -14,6 +15,11 @@ export async function herdrInternal(args: string[]) {
       stderr: "ignore",
       windowsHide: true,
     });
+    if (process.env.RAYPX_HERDR_CLEANUP_TRACE)
+      await appendFile(
+        process.env.RAYPX_HERDR_CLEANUP_TRACE,
+        JSON.stringify({ stage: "start", pid: process.pid, child: child.pid, directory }) + "\n",
+      );
     try {
       await Promise.race([
         child.exited,
@@ -24,6 +30,12 @@ export async function herdrInternal(args: string[]) {
         })(),
       ]);
     } finally {
+      if (process.env.RAYPX_HERDR_CLEANUP_TRACE)
+        await appendFile(
+          process.env.RAYPX_HERDR_CLEANUP_TRACE,
+          JSON.stringify({ stage: "finally", pid: process.pid, child: child.pid, directory }) +
+            "\n",
+        );
       const deadline = setTimeout(() => {
         if (process.platform === "win32") {
           const killer = Bun.spawn(

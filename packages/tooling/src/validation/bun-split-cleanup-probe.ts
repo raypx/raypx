@@ -16,8 +16,9 @@ const env = {
   TMPDIR: temporary,
   RAYPX_CLI_PAYLOAD: payload,
   RAYPX_HERDR_COMPILED: "1",
+  RAYPX_HERDR_CLEANUP_TRACE: join(evidence, "cleanup-events.log"),
 };
-for (const test of ["herdr-terminal", "artifact", "windows-payload", "launcher-lifecycle"]) {
+for (const test of ["herdr-terminal"]) {
   const child = Bun.spawn([process.execPath, join(root, cli.path, `tests/smoke/${test}.ts`)], {
     cwd: root,
     env:

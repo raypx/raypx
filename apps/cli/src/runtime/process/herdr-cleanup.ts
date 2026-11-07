@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { rm, appendFile } from "node:fs/promises";
 import { join } from "node:path";
 
 /** Snapshot descendants before taskkill can orphan a ConPTY helper by killing its parent. */
@@ -27,6 +27,8 @@ while ($pending.Count -gt 0) {
     }
   }
 }
+$trace = $env:RAYPX_HERDR_CLEANUP_TRACE
+if ($trace) { "STOP owner:$ownerId descendants:$($owned.Keys -join ',')" | Out-File $trace -Append }
 $ErrorActionPreference = 'Continue'
 & (Join-Path $env:SystemRoot 'System32/taskkill.exe') /PID $ownerId /T /F 2>&1 | Out-Null
 $ErrorActionPreference = 'Stop'
@@ -47,12 +49,19 @@ exit 0
       env: { ...process.env, RAYPX_HERDR_STOP_PID: String(pid) },
       stdin: "ignore",
       stdout: "ignore",
-      stderr: "ignore",
+      stderr: "pipe",
       windowsHide: true,
       timeout: 15_000,
     },
   );
-  if ((await child.exited) !== 0) throw new Error("Could not stop the owned Herdr process tree");
+  const error = await new Response(child.stderr).text();
+  const exit = await child.exited;
+  if (process.env.RAYPX_HERDR_CLEANUP_TRACE)
+    await appendFile(
+      process.env.RAYPX_HERDR_CLEANUP_TRACE,
+      JSON.stringify({ stage: "stopped", pid: process.pid, owner: pid, exit, error }) + "\n",
+    );
+  if (exit !== 0) throw new Error("Could not stop the owned Herdr process tree");
 }
 
 /** Windows can release a terminated process's working directory asynchronously. */
