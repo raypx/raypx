@@ -2,7 +2,7 @@
 #![cfg(windows)]
 use std::{
     env,
-    ffi::{c_void, OsStr, OsString},
+    ffi::{OsStr, OsString, c_void},
     io, mem,
     os::windows::ffi::OsStrExt,
     path::{Path, PathBuf},
@@ -160,6 +160,10 @@ fn run() -> io::Result<u32> {
     let launcher = env::current_exe()?;
     let root = payload(&launcher)?;
     let bun = root.join("bun.exe");
+    let child_cwd = wide(env::current_dir()?.as_os_str());
+    // The child may chdir and remove its old cwd (Herdr's private supervisor does this).
+    // Keep the launcher's own directory handle in the payload, not that temporary cwd.
+    env::set_current_dir(&root)?;
     let mut args: Vec<OsString> = env::args_os().skip(1).collect();
     let detached = args.first().is_some_and(|a| a == "--raypx-split-detach");
     if detached {
@@ -237,7 +241,7 @@ fn run() -> io::Result<u32> {
                 i32::from(!detached),
                 flags,
                 ptr::null_mut(),
-                ptr::null(),
+                child_cwd.as_ptr(),
                 &startup,
                 &mut child,
             ) != 0,

@@ -1,8 +1,7 @@
 import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
 import { herdrRequest, record } from "./herdr-ipc";
-import { removeHerdrDirectory, stopWindowsHerdrTree } from "./herdr-cleanup";
-import { appendFile } from "node:fs/promises";
+import { removeHerdrDirectory } from "./herdr-cleanup";
 
 /** Private subprocess entrypoints, never registered as public CLI commands. */
 export async function herdrInternal(args: string[]) {
@@ -15,11 +14,6 @@ export async function herdrInternal(args: string[]) {
       stderr: "ignore",
       windowsHide: true,
     });
-    if (process.env.RAYPX_HERDR_CLEANUP_TRACE)
-      await appendFile(
-        process.env.RAYPX_HERDR_CLEANUP_TRACE,
-        JSON.stringify({ stage: "start", pid: process.pid, child: child.pid, directory }) + "\n",
-      );
     try {
       await Promise.race([
         child.exited,
@@ -30,12 +24,6 @@ export async function herdrInternal(args: string[]) {
         })(),
       ]);
     } finally {
-      if (process.env.RAYPX_HERDR_CLEANUP_TRACE)
-        await appendFile(
-          process.env.RAYPX_HERDR_CLEANUP_TRACE,
-          JSON.stringify({ stage: "finally", pid: process.pid, child: child.pid, directory }) +
-            "\n",
-        );
       const deadline = setTimeout(() => {
         if (process.platform === "win32") {
           const killer = Bun.spawn(
@@ -52,8 +40,21 @@ export async function herdrInternal(args: string[]) {
         } else child.kill("SIGKILL");
       }, 8000);
       try {
-        if (process.platform === "win32") await stopWindowsHerdrTree(child.pid);
-        else await herdrRequest(socket!, "server.stop").catch(() => {});
+        if (process.platform === "win32" && child.exitCode === null) {
+          // Kill the private server tree while its root still exists. Otherwise
+          // ConPTY helpers can outlive the server and retain its cwd handle.
+          const killer = Bun.spawn(
+            [
+              join(process.env.SystemRoot ?? "C:\\Windows", "System32/taskkill.exe"),
+              "/PID",
+              String(child.pid),
+              "/T",
+              "/F",
+            ],
+            { stdout: "ignore", stderr: "ignore", windowsHide: true },
+          );
+          await killer.exited;
+        } else await herdrRequest(socket!, "server.stop").catch(() => {});
         await child.exited;
       } finally {
         clearTimeout(deadline);

@@ -14,7 +14,6 @@ import { join, resolve } from "node:path";
 import { sealCliPayload, verifyCliPayload } from "../build/cli.js";
 import { taskModel } from "../tasks/model.js";
 import { readBunPin } from "./toolchain.js";
-import { removeOwnedTemporaryDirectory } from "./owned-temporary.js";
 
 const root = resolve(import.meta.dirname, "../../../..");
 if (process.platform !== "win32" || process.arch !== "x64")
@@ -424,6 +423,28 @@ try {
         { cwd: fixture, env: { ...candidateEnv, BUN_BE_BUN: "1" } },
         `RAYPX_SPLIT_BUNX_OK ${Bun.revision}`,
       );
+      const disposableCwd = join(temporary, `cwd 中文 # ${name}`);
+      await mkdir(disposableCwd);
+      await probe(
+        c,
+        "cwd-release",
+        [
+          binary,
+          "-e",
+          'import { rmdirSync } from "node:fs"; if (process.cwd() !== process.argv[1]) throw new Error("cwd changed"); process.chdir(process.argv[2]); rmdirSync(process.argv[1]); console.log("RAYPX_CWD_RELEASED");',
+          disposableCwd,
+          temporary,
+        ],
+        { cwd: disposableCwd, env: { ...candidateEnv, BUN_BE_BUN: "1" } },
+        "RAYPX_CWD_RELEASED",
+      );
+      const nonzero = await run([binary, "-e", "process.exit(37)"], {
+        cwd: fixture,
+        env: { ...candidateEnv, BUN_BE_BUN: "1" },
+      });
+      const exitLog = `${name}-exit-status.log`;
+      await writeFile(join(evidence, exitLog), nonzero.stdout + nonzero.stderr);
+      c.probes["exit-status"] = { exit: nonzero.exit, passed: nonzero.exit === 37, log: exitLog };
       await rm(join(c.payload, "bun-node"), { recursive: true, force: true });
       await verifyCliPayload(c.payload);
       if (split) {
@@ -520,6 +541,6 @@ try {
   process.exitCode = 1;
 } finally {
   await persist();
-  await removeOwnedTemporaryDirectory(temporary);
+  await rm(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   console.log(`Split runtime evidence: ${evidence}`);
 }
