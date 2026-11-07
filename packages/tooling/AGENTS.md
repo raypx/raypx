@@ -72,6 +72,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   run in parallel and the final result validates their selection against the event.
   Preparation builds shared JS inputs only. Herdr runs in the check phase before its
   Go checks, leaving package/smoke phases independent of terminal-test duration.
+  Native checks also accept process/task runners and the installed CLI against the
+  verified prepared payload, with size and acceptance reports retained for seven days.
 - `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.

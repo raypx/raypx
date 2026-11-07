@@ -54,6 +54,18 @@ the renderer and actual native packages. Size evidence does not establish platfo
 acceptance. See the [dated migration measurements](migration-validation.md) for the
 Linux CLI archive and runtime observations.
 
+## Native check gates
+
+Each selected native platform checks cross-platform process/task runners and the
+installed CLI before Herdr and MyGo host checks. The CLI consumes the verified
+immutable payload from the preparation job; acceptance never rebuilds it. The
+prepared payload's size table appears in the job summary. Native acceptance JSON
+and size reports upload on success or failure and remain available for seven days.
+MyGo checks still run after an earlier acceptance failure when the shared payload
+was verified and the workflow has not been cancelled; the failed gate still fails
+the job. Routine runs select Windows; explicit macOS and distribution selections
+retain their existing matrix.
+
 ## Test inventory and preservation
 
 ```sh

@@ -3,12 +3,13 @@ import { join, resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
 
 type Step = {
+  id?: string;
   name?: string;
   uses?: string;
   if?: string;
   run?: string;
   env?: Record<string, string>;
-  with?: Record<string, string>;
+  with?: Record<string, string | number | boolean>;
 };
 type Job = {
   if?: string;
@@ -77,6 +78,7 @@ it("compiles once in prepare and transports an immutable artifact by exact ID", 
   expect(named("Verify prepared CLI and restore executable permissions").run).toContain(
     "distribution.ts verify",
   );
+  expect(named("Verify prepared CLI and restore executable permissions").id).toBe("native-inputs");
   expect(
     prepare.findIndex((step) => step.name === "Sign and seal the shared CLI payload"),
   ).toBeLessThan(prepare.findIndex((step) => step.name === "Archive standalone CLI"));
@@ -102,8 +104,33 @@ it("requires compiled Herdr integration and pinned Go checks in the check phase"
   expect(steps.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
 });
 
+it("accepts process runners and the installed CLI after verifying the shared payload", () => {
+  const inputs = named("Verify prepared CLI and restore executable permissions");
+  const runners = named("Cross-platform process and task runners");
+  const cli = named("Installed CLI package");
+  for (const step of [runners, cli]) {
+    expect(step.if).toBe("matrix.phase == 'checks'");
+    expect(steps.indexOf(step)).toBeGreaterThan(steps.indexOf(inputs));
+    expect(steps.indexOf(step)).toBeLessThan(steps.indexOf(named("Herdr terminal integration")));
+  }
+  expect(runners.run).toContain("bun run --cwd packages/runtime-node test");
+  for (const test of [
+    "tests/integration/task-leaf.test.ts",
+    "src/build/archive.test.ts",
+    "src/validation/build-size.test.ts",
+  ])
+    expect(runners.run).toContain(test);
+  expect(cli.run).toBe("bun run --cwd apps/cli smoke");
+  expect(named("Enable Windows Firewall for isolated provider acceptance").if).toBe(
+    "matrix.phase == 'checks' && runner.os == 'Windows'",
+  );
+  expect(named("Report prepared build sizes").run).toContain("--package cli --require");
+});
+
 it("retains Go, production and interactive smoke acceptance", () => {
-  expect(named("Desktop MyGo checks").if).toBe("matrix.phase == 'checks'");
+  expect(named("Desktop MyGo checks").if).toContain("!cancelled()");
+  expect(named("Desktop MyGo checks").if).toContain("matrix.phase == 'checks'");
+  expect(named("Desktop MyGo checks").if).toContain("steps.native-inputs.outcome == 'success'");
   expect(named("Desktop MyGo checks").run).toContain("mygo:test");
   expect(named("Desktop MyGo checks").run).toContain("mygo:check");
   expect(named("Package desktop").if).toBe("matrix.phase == 'package'");
@@ -112,6 +139,10 @@ it("retains Go, production and interactive smoke acceptance", () => {
   );
   expect(named("Packaged native smoke").if).toBe("matrix.phase == 'smoke'");
   expect(named("Packaged native smoke").run).toContain("native:smoke:interactive");
+  for (const name of ["Upload native acceptance evidence", "Upload build size reports"]) {
+    expect(named(name).if).toBe("always()");
+    expect(named(name).with?.["retention-days"]).toBe(7);
+  }
 });
 
 it("keeps explicit release acceptance independent from routine push cancellation", () => {
