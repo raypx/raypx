@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { enrollTestProfile } from "../helpers/instance";
 import { removeTemporaryDirectory } from "../helpers/temporary";
+import { payloadRuntime } from "../helpers/payload";
 
 if (process.platform !== "win32") throw new Error("Launcher lifecycle requires Windows");
 const payload = resolve(
@@ -54,10 +55,14 @@ try {
       "-NoProfile",
       "-NonInteractive",
       "-Command",
-      "$ErrorActionPreference='Stop'; @(Get-CimInstance Win32_Process -Filter ('ParentProcessId=' + $env:RAYPX_TEST_PARENT_PID) | ForEach-Object { [int]$_.ProcessId }) | ConvertTo-Json -Compress",
+      "$ErrorActionPreference='Stop'; @(Get-CimInstance Win32_Process -Filter ('ParentProcessId=' + $env:RAYPX_TEST_PARENT_PID) | Where-Object { $_.ExecutablePath -eq $env:RAYPX_TEST_RUNTIME_IMAGE } | ForEach-Object { [int]$_.ProcessId }) | ConvertTo-Json -Compress",
     ],
     {
-      env: { ...env, RAYPX_TEST_PARENT_PID: String(child.pid) },
+      env: {
+        ...env,
+        RAYPX_TEST_PARENT_PID: String(child.pid),
+        RAYPX_TEST_RUNTIME_IMAGE: payloadRuntime(payload, manifest.files),
+      },
       stdout: "pipe",
       stderr: "ignore",
       timeout: 20_000,

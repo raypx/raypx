@@ -81,6 +81,7 @@ unsafe extern "system" {
     ) -> i32;
     fn GetStartupInfoW(startup: *mut Startup);
     fn GetStdHandle(kind: u32) -> Handle;
+    fn GetConsoleWindow() -> Handle;
     fn SetHandleInformation(handle: Handle, mask: u32, flags: u32) -> i32;
     fn ResumeThread(thread: Handle) -> u32;
     fn WaitForSingleObject(handle: Handle, milliseconds: u32) -> u32;
@@ -218,7 +219,15 @@ fn run() -> io::Result<u32> {
         }
         let mut child = Process::default();
         // The daemon alone breaks out of a foreground job. Its own IPC stop owns shutdown.
-        let flags = 0x400 | 0x4 | if detached { 0x01000000 | 0x8 } else { 0 };
+        let flags = 0x400
+            | 0x4
+            | if detached {
+                0x01000000 | 0x8
+            } else if GetConsoleWindow().is_null() {
+                0x08000000 // CREATE_NO_WINDOW: preserve a GUI/hidden launch without a new conhost.
+            } else {
+                0
+            };
         check(
             CreateProcessW(
                 wide(bun.as_os_str()).as_ptr(),

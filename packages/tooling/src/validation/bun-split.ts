@@ -199,6 +199,7 @@ async function probe(
   options: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number } = {},
   marker?: string,
 ) {
+  console.log(`${c.name}/${name}: running`);
   const output = await run(args, options);
   const log = `${c.name}-${name}.log`;
   await writeFile(join(evidence, log), output.stdout + output.stderr);
@@ -208,6 +209,7 @@ async function probe(
     log,
   };
   await persist();
+  console.log(`${c.name}/${name}: ${c.probes[name].passed ? "passed" : "failed"}`);
   return c.probes[name].passed;
 }
 try {
@@ -277,11 +279,11 @@ try {
     $name = $file.FullName.Substring($source.Length + 1).Replace('\\', '/')
     $entry = $zip.CreateEntry($name, [IO.Compression.CompressionLevel]::Optimal)
     $entry.LastWriteTime = [DateTimeOffset]::new(2000,1,1,0,0,0,[TimeSpan]::Zero)
-    $input = [IO.File]::OpenRead($file.FullName)
+    $sourceStream = [IO.File]::OpenRead($file.FullName)
     try {
-      $output = $entry.Open()
-      try { $input.CopyTo($output) } finally { $output.Dispose() }
-    } finally { $input.Dispose() }
+      $entryStream = $entry.Open()
+      try { $sourceStream.CopyTo($entryStream) } finally { $entryStream.Dispose() }
+    } finally { $sourceStream.Dispose() }
   }
 } finally { $zip.Dispose() }
 `,
@@ -297,7 +299,7 @@ try {
         if (entry === "raypx.exe" || entry === "runtime.json") continue;
         await cp(join(prepared, entry), join(c.payload, entry), { recursive: true });
       }
-      const copyMs = performance.now() - start;
+      let copyMs = performance.now() - start;
       const binary = join(c.payload, "raypx.exe");
       const split = name === "split-esm";
       const jsStart = performance.now();
@@ -351,12 +353,14 @@ try {
         // MSVC can emit a linker PDB even with stripped symbols; it is not a runtime resource.
         await rm(join(c.payload, "raypx.pdb"), { force: true });
         launcherMs = performance.now() - launcherStart;
+        const runtimeCopyStarted = performance.now();
         await cp(process.execPath, join(c.payload, "bun.exe"));
         await writeFile(join(c.payload, "BUN-LICENSE.md"), bunLicense);
         await writeFile(
           join(c.payload, "README.txt"),
           "Raypx experimental split distribution. Run raypx.exe; keep bun.exe, cli.js, herdr/ and runtime.json together. No global Bun or Node runtime is required. Not a production release.\n",
         );
+        copyMs += performance.now() - runtimeCopyStarted;
       }
       const sealStart = performance.now();
       const sealed = await sealCliPayload(c.payload, identity);
@@ -515,6 +519,6 @@ try {
   process.exitCode = 1;
 } finally {
   await persist();
-  await rm(temporary, { recursive: true, force: true });
+  await rm(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   console.log(`Split runtime evidence: ${evidence}`);
 }
