@@ -126,6 +126,13 @@ separating Bun adds no size benefit here. C also introduces a Rust launcher buil
 and another runtime layout to maintain. Its functional acceptance supports later
 experiments, but does not justify switching packaging or prove Desktop independence.
 
+A is a comparison label: it uses embedded Bun with ESM/depth-0 bytecode. The
+experimental native AOT compiler is a separate route. Further AOT adoption work
+is deferred based on the [AOT executable evidence](bun-aot-investigation-2026-11-07.md):
+retaining eval/bunx produced a larger executable, while trimming those capabilities
+prevented a complete CLI replacement. The existing manual `aot` mode remains a
+reproduction tool; production and routine CI continue with the pinned bytecode build.
+
 The workflow's `bun-split-windows` artifact contains raw samples, immutable
 inventories, build/acceptance logs and daemon timing files for seven days. Full
 executables and ZIPs were not uploaded. Production payload selection is unchanged.
