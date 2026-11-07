@@ -299,6 +299,13 @@ console.log("RAYPX_AOT_FEATURES_OK");
         stderr: text(probe.stderr).slice(0, 4000),
       };
     }
+    if (mode.cli) {
+      // Windows bunx bootstraps runtime aliases beside the experimental executable.
+      // They are probe outputs, not part of the sealed payload handed to acceptance.
+      if (process.platform === "win32")
+        await rm(join(directory, "bun-node"), { recursive: true, force: true });
+      await verifyCliPayload(directory);
+    }
     result.status = Object.values(result.probes).every((probe) => probe.passed)
       ? "probes-passed"
       : "probe-failed";
