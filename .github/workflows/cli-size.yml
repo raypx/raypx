@@ -1,12 +1,19 @@
 name: CLI size experiment
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Pinned compiler size comparison or isolated experimental AOT
+        type: choice
+        options: [size, aot]
+        default: size
 permissions:
   contents: read
 env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   windows:
+    if: inputs.mode != 'aot'
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
@@ -49,4 +56,55 @@ jobs:
           path: |
             .artifacts/cli-size/*/results.json
             .artifacts/cli-size/*/report.md
+          if-no-files-found: error
+  aot:
+    if: inputs.mode == 'aot'
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-bun
+      - run: bun run build:cli
+      - name: Prepare isolated experimental compiler
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "bun-aot.zip"
+          $headers = @{ Accept = "application/octet-stream"; Authorization = "Bearer $env:GITHUB_TOKEN"; "X-GitHub-Api-Version" = "2022-11-28" }
+          Invoke-WebRequest https://api.github.com/repos/oven-sh/bun/releases/assets/715114439 -Headers $headers -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne "C7448CB32FD91F32135A455F032365C48E8C5404D5EBA844B179B8F97B5397D4") {
+            throw "Experimental Bun archive checksum mismatch"
+          }
+          Expand-Archive $archive -DestinationPath (Join-Path $env:RUNNER_TEMP "bun-aot")
+          "RAYPX_AOT_COMPILER=$env:RUNNER_TEMP\bun-aot\bun-windows-x64\bun.exe" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Probe AOT sizes and runtime capabilities
+        id: experiment
+        shell: bash
+        run: bun packages/tooling/src/validation/bun-aot.ts "$RAYPX_AOT_COMPILER" apps/cli/dist
+      - name: Enable isolated provider acceptance
+        if: steps.experiment.outputs.aot-payload != ''
+        shell: pwsh
+        run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+      - name: Accept the smallest candidate retaining runtime capabilities
+        if: steps.experiment.outputs.aot-payload != ''
+        env:
+          RAYPX_CLI_PAYLOAD: ${{ steps.experiment.outputs.aot-payload }}
+        shell: bash
+        run: |
+          bun run --cwd apps/cli smoke
+          RAYPX_HERDR_COMPILED=1 bun run --cwd apps/cli smoke:herdr-terminal
+      - name: Report AOT measurements
+        if: always()
+        shell: bash
+        run: cat .artifacts/bun-aot/*/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: bun-aot-windows
+          include-hidden-files: true
+          path: |
+            .artifacts/bun-aot/*/results.json
+            .artifacts/bun-aot/*/report.md
+            .artifacts/bun-aot/*/*/build.log
           if-no-files-found: error

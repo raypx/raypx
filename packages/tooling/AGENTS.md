@@ -139,6 +139,9 @@ dependencies to keep `node_modules` out of recursive cache discovery.
 `raypx-dev cli:experiment <prepared CLI directory> [--upx <executable>]` compiles
 isolated size/startup candidates under `.artifacts/cli-size`; it never replaces the
 prepared production payload. Its manual workflow uses Windows only.
+The workflow's opt-in `aot` mode uses a checksum-pinned experimental compiler
+through `src/validation/bun-aot.ts`; the controller and production payload keep
+the repository pin. Probe eval and an offline bunx package before artifact acceptance.
 The launcher creates ignored artifact/native directories before tracing:
 directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace
