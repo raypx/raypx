@@ -155,6 +155,37 @@ describe("affected verification", () => {
       verificationPlan(model, ["packages/tooling/src/build/node-deployment.test.ts"]).nativeRunners,
     ).toEqual([]);
   });
+  it("selects Windows acceptance for cross-platform runners and native gate inputs", () => {
+    const { root } = platformProject();
+    for (const name of ["tooling", "runtime-node", "tsconfig"])
+      member(root, name, {
+        metadata: { kind: name === "runtime-node" ? "library" : "tooling", target: "node" },
+        extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
+      });
+    const model = taskModel(root);
+    for (const file of [
+      "packages/tooling/tests/integration/task-leaf.test.ts",
+      "packages/tooling/src/tasks/leaf.ts",
+      "packages/tooling/src/tasks/arguments.ts",
+      "packages/tooling/src/tasks/delegation.ts",
+      "packages/tooling/src/verification/plan.ts",
+      "packages/tooling/src/verification/native-workflow.test.ts",
+      "packages/tooling/src/validation/build-size.test.ts",
+      "packages/runtime-node/src/process.ts",
+      "packages/runtime-node/src/process.test.ts",
+      "packages/runtime-node/src/http.test.ts",
+      "packages/runtime-node/scripts/task.ts",
+      "packages/tsconfig/scripts/task.ts",
+    ]) {
+      const plan = verificationPlan(model, [file], { macos: false });
+      expect(plan.nativeRunners).toEqual(["windows-latest"]);
+      expect(plan.tasks).toContain("desktop#task:mygo:test");
+    }
+    expect(
+      verificationPlan(model, ["packages/tooling/src/browser-tests.ts"], { macos: false })
+        .nativeRunners,
+    ).toEqual([]);
+  });
   it("unions platform-specific changes and keeps release acceptance complete", () => {
     const model = platformProject();
     const files = [

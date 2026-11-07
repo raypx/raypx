@@ -55,7 +55,16 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
     if (!member) return false;
     const relative = file.slice(member.path.length + 1);
     if (member.name === "@raypx/tooling")
-      return /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative);
+      return (
+        /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative) ||
+        /^src\/tasks\/(?:leaf|arguments|delegation)\.ts$/.test(relative) ||
+        /^src\/verification\/(?:plan|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
+        /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative) ||
+        relative === "tests/integration/task-leaf.test.ts"
+      );
+    if (member.name === "@raypx/runtime-node")
+      return relative.startsWith("src/") || relative === "scripts/task.ts";
+    if (member.name === "@raypx/tsconfig") return relative === "scripts/task.ts";
     if (member.native)
       return /^(?:[^/]+\.go$|go\.(?:mod|sum)$|(?:bridge|preferences|mygo\.config)\.ts$|package\.json$|internal\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
         relative,

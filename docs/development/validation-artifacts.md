@@ -65,6 +65,8 @@ MyGo checks still run after an earlier acceptance failure when the shared payloa
 was verified and the workflow has not been cancelled; the failed gate still fails
 the job. Routine runs select Windows; explicit macOS and distribution selections
 retain their existing matrix.
+Changes to the process/task runners, their acceptance tests and native gate selection
+also select Windows checks without requiring a Desktop source change.
 
 ## Test inventory and preservation
 
