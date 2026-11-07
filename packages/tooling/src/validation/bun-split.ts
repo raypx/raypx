@@ -265,6 +265,7 @@ try {
     `
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+Add-Type -AssemblyName System.IO.Compression
 $source = $env:RAYPX_SPLIT_ZIP_SOURCE
 $zip = [IO.Compression.ZipFile]::Open($env:RAYPX_SPLIT_ZIP_OUTPUT, [IO.Compression.ZipArchiveMode]::Create)
 try {
@@ -338,6 +339,8 @@ try {
           launcher.stdout + launcher.stderr,
         );
         if (launcher.exit !== 0) throw new Error("Native launcher compilation failed");
+        // MSVC can emit a linker PDB even with stripped symbols; it is not a runtime resource.
+        await rm(join(c.payload, "raypx.pdb"), { force: true });
         launcherMs = performance.now() - launcherStart;
         await cp(process.execPath, join(c.payload, "bun.exe"));
         await writeFile(join(c.payload, "BUN-LICENSE.md"), bunLicense);
