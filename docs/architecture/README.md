@@ -202,8 +202,10 @@ tasks; application plugins live in `vite.app.config.ts`. Bun runs development
 scripts, `tsc --noEmit` checks types, and VP owns JS builds/tests/lint/format.
 Cargo owns native incremental builds and is called through the same task graph.
 
-The CLI build compiles one standalone executable with Bun, verified platform Herdr
-assets, licenses and an immutable `runtime.json` inventory. Desktop stages the same
+The accepted production CLI packaging embeds stable Bun 1.4.4 with minified ESM
+and depth-0 bytecode ([ADR 0047](0047-bun-cli-production-packaging.md)). The complete
+payload includes verified platform Herdr assets, licenses and an immutable
+`runtime.json` inventory. Desktop stages the same
 prepared payload from `RAYPX_CLI_PAYLOAD` (or the local CLI dist directory), verifies
 its version/platform/architecture and checksums, then launches its absolute path.
 No separate JavaScript runtime or Rust launcher is installed. Project commands
@@ -226,16 +228,17 @@ Later accepted amendments supersede conflicting earlier implementation details.
 Superseded records preserve historical rationale; use the current guides above
 for commands, paths and supported behavior.
 
-| Decision                                                                             | Status                                                         |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| [0034: Extensible foundation](0034-extensible-foundation.md)                         | Boundaries accepted; runtime/toolchain superseded by 0045      |
-| [0035: Local Owner Host](0035-local-owner-host.md)                                   | Accepted; Windows amended by 0037, implementation by 0041/0045 |
-| [0037: Windows daemon](0037-windows-daemon.md)                                       | Accepted; distribution/runtime amended by 0045                 |
-| [0039: Local and server Agent platform](0039-local-server-agent-platform.md)         | Accepted target; rollout tracked in roadmap                    |
-| [0040: Instance enrollment and providers](0040-instance-enrollment-and-providers.md) | Accepted; provider consolidation amendment                     |
-| [0041: Provider capabilities and managed Pi](0041-provider-capabilities-and-pi.md)   | Accepted; effect model amended by 0044                         |
-| [0042: Application services and adapters](0042-application-layering.md)              | Accepted; transaction boundary amended by 0044                 |
-| [0043: Package surfaces](0043-package-surfaces.md)                                   | Accepted                                                       |
-| [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)     | Accepted; SQLite driver amended by 0045                        |
-| [0045: Tauri, Node and pnpm](0045-tauri-node-pnpm.md)                                | Historical baseline before the Bun experiment                  |
-| [0046: Bun and Tauri](0046-bun-tauri-artifacts.md)                                   | Experimental branch runtime and distribution                   |
+| Decision                                                                             | Status                                                            |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| [0034: Extensible foundation](0034-extensible-foundation.md)                         | Boundaries accepted; runtime/toolchain superseded by 0045         |
+| [0035: Local Owner Host](0035-local-owner-host.md)                                   | Accepted; Windows amended by 0037, implementation by 0041/0045    |
+| [0037: Windows daemon](0037-windows-daemon.md)                                       | Accepted; distribution/runtime amended by 0045                    |
+| [0039: Local and server Agent platform](0039-local-server-agent-platform.md)         | Accepted target; rollout tracked in roadmap                       |
+| [0040: Instance enrollment and providers](0040-instance-enrollment-and-providers.md) | Accepted; provider consolidation amendment                        |
+| [0041: Provider capabilities and managed Pi](0041-provider-capabilities-and-pi.md)   | Accepted; effect model amended by 0044                            |
+| [0042: Application services and adapters](0042-application-layering.md)              | Accepted; transaction boundary amended by 0044                    |
+| [0043: Package surfaces](0043-package-surfaces.md)                                   | Accepted                                                          |
+| [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)     | Accepted; SQLite driver amended by 0045                           |
+| [0045: Tauri, Node and pnpm](0045-tauri-node-pnpm.md)                                | Historical baseline before the Bun experiment                     |
+| [0046: Bun and Tauri](0046-bun-tauri-artifacts.md)                                   | Migration implementation; CLI packaging accepted by 0047          |
+| [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md)           | Accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode |

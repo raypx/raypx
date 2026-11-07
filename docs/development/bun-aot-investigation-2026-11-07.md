@@ -7,7 +7,8 @@ replace the Windows or macOS release gates.
 
 **Status after the [Windows packaging comparison](bun-split-experiment.md#windows-results--2026-11-07):
 further AOT adoption work is deferred.** Production retains embedded Bun 1.4.4
-with ESM/depth-0 bytecode. The manual AOT workflow preserves reproducibility of
+with ESM/depth-0 bytecode, accepted by
+[ADR 0047](../architecture/0047-bun-cli-production-packaging.md). The manual AOT workflow preserves reproducibility of
 these measurements and is outside routine CI. Candidate A in the packaging
 comparison names the bytecode baseline; the letter does not denote native AOT.
 

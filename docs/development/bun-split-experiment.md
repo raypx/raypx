@@ -5,6 +5,10 @@ Windows x64 distributions at one commit on one runner. Production continues to
 embed the repository-pinned Bun runtime. This experiment does not build Tauri or
 Desktop installers, change the runtime pin, or extract a shared execution package.
 
+[ADR 0047](../architecture/0047-bun-cli-production-packaging.md) accepts candidate A,
+stable Bun 1.4.4 with an embedded runtime and depth-0 bytecode, as the formal
+production scheme. This page preserves the comparison methodology and evidence.
+
 | Candidate             | Distribution                                                         |
 | --------------------- | -------------------------------------------------------------------- |
 | embedded-bytecode (A) | Current ESM/minified executable with depth-0 bytecode                |
@@ -118,7 +122,7 @@ single measurement including the managed copy and ACL work.
 | B         | 178.7 / 201.5 | 189.6 / 210.0 | 195.0 / 220.9 |                1466.5 |
 | C         | 194.5 / 222.1 | 205.4 / 245.6 | 204.5 / 238.9 |                1366.2 |
 
-**Recommendation: retain A for production.** C saves only 0.89 MiB installed and
+**Accepted production choice: A ([ADR 0047](../architecture/0047-bun-cli-production-packaging.md)).** C saves only 0.89 MiB installed and
 0.42 MiB downloaded, while median launches are 92.8% slower for version, 81.9%
 slower for providers and 72.7% slower for models. B is itself 0.27 MiB installed /
 0.14 MiB ZIP smaller than C, so the small saving comes from removing bytecode;
