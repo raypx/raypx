@@ -4,6 +4,11 @@ Status: experimental implementation for `dev`, developed on `feature/bun-tauri` 
 986f58d5531c159f24da97ed532442bc0071ed82. Replaces ADR 0045's Node/pnpm and
 CLI launcher choices; retains its Tauri native security boundaries.
 
+Packaging amendment (2026-11-07): [ADR 0047](0047-bun-cli-production-packaging.md)
+accepts stable Bun 1.4.4 with an embedded runtime and depth-0 bytecode as the
+formal CLI/daemon production distribution. This record preserves the migration
+context and its separate platform release requirements.
+
 Bun 1.4.4 owns workspace installation, catalogs, scripts, tests, Nitro services
 and standalone CLI compilation. `package.json` is the workspace inventory and
 runtime pin; `bun.lock` is the installation lockfile. VP owns the task graph/cache.

@@ -1,5 +1,9 @@
 # Bun + Tauri experiment
 
+Historical migration and platform evidence. The CLI packaging choice is now
+accepted by [ADR 0047](../architecture/0047-bun-cli-production-packaging.md):
+stable Bun 1.4.4, an embedded runtime and ESM/depth-0 bytecode.
+
 This branch starts at `origin/dev` commit
 `986f58d5531c159f24da97ed532442bc0071ed82`. It retains the Tauri 2.12.5 / Rust
 1.99.1 host and replaces Node/pnpm with Bun 1.4.4 throughout the workspace.

@@ -17,7 +17,8 @@ supersede conflicting earlier ADR text.
 ## Architecture and decisions
 
 - [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
-- [Bun / Tauri experimental decision](architecture/0046-bun-tauri-artifacts.md)
+- [Accepted Bun CLI production packaging](architecture/0047-bun-cli-production-packaging.md)
+- [Bun / Tauri migration implementation](architecture/0046-bun-tauri-artifacts.md)
 - [Bun + Tauri experiment and validation](development/bun-tauri-experiment.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)
