@@ -19,6 +19,7 @@ supersede conflicting earlier ADR text.
 - [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
 - [Bun / Tauri experimental decision](architecture/0046-bun-tauri-artifacts.md)
 - [Bun + Tauri experiment and validation](development/bun-tauri-experiment.md)
+- [Windows embedded and separate Bun comparison](development/bun-split-experiment.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)
 - [Persistent Agent Platform roadmap](roadmap.md) — future scope and dated acceptance
