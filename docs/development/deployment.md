@@ -79,7 +79,7 @@ Build and runtime stages use the pinned `oven/bun` images; Bun is the only runti
 Compose and Railway use `apps/api/Dockerfile`, `apps/web/Dockerfile` and
 `infra/relay/Dockerfile`. Relay bundles its Bun entry with Vite.
 These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
-local Bun install and VP task cache mounts to a temporary Dockerfile and removes
+local Bun install cache mounts to a temporary Dockerfile and removes
 it on exit, including build failure. All install/build commands remain in the
 application Dockerfiles. Compose explicitly selects the API's `migrate` and
 `runtime` targets; the default `deploy` target additionally carries migration
@@ -105,6 +105,12 @@ hooks. Railway builds that default target; Web defaults to `runtime` on both
 platforms. The shared Dockerfiles use layer caching without cache mounts, whose
 service-specific IDs would tie the files to Railway. Manifest or lockfile changes
 can require a fresh download; source-only changes reuse the installed dependency layer.
+
+Image build commands pass `--no-cache` to VP. Its automatic filesystem tracking
+uses seccomp listeners on Linux; nesting them inside Railway's build sandbox can
+fail when launching the native TypeScript compiler with `EBUSY`. Type checks and
+builds still run in full, and Docker layers cache image builds. Development tasks
+outside Docker retain VP caching.
 
 ## Host and deploy
 

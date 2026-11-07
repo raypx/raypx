@@ -21,6 +21,15 @@ it("owns only application services and leaves operator variables and storage unm
       { address: "service.gateway", name: "gateway" },
     ],
   });
+  for (const resource of configuration.resources!)
+    expect(resource).toMatchObject({
+      source: {
+        type: "github",
+        repo: "raypx/raypx",
+        branch: "canary",
+        checkSuites: true,
+      },
+    });
 });
 
 it("uses shared application images, migration hooks and health paths after relocation", async () => {

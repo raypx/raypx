@@ -30,16 +30,13 @@ if ! docker buildx inspect "$builder" >/dev/null 2>&1; then
 fi
 
 # Railway reads the same Dockerfiles but requires service-specific cache mount IDs.
-# Add local cache mounts only for Compose; keep all build commands in apps/.
+# Add local install cache mounts only for Compose; keep build commands in service Dockerfiles.
 dockerfile=$(mktemp "${TMPDIR:-/tmp}/raypx-dockerfile.XXXXXX")
 trap 'rm -f "$dockerfile"' EXIT
 cached_dockerfile() {
   awk '
     /^RUN (VP_GIT_HOOKS=0 )?bun install / {
       sub(/^RUN /, "RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked ")
-    }
-    /^RUN bun run build:/ {
-      sub(/^RUN /, "RUN --mount=type=cache,id=raypx-vp,target=/app/node_modules/.vite/task-cache,sharing=locked ")
     }
     { print }
   ' "$1" > "$dockerfile"

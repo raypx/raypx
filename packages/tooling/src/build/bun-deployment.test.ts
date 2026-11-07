@@ -63,6 +63,16 @@ it("shares identical dependency stages so one builder reuses the install", () =>
   );
 });
 
+it.each([
+  ["apps/api", "api"],
+  ["apps/web", "web"],
+  ["infra/relay", "relay"],
+])("builds %s without nesting VP syscall tracking inside the container sandbox", (path, task) => {
+  expect(stages(`${path}/Dockerfile`).get("build")!.lines).toContain(
+    `RUN bun run build:${task} --no-cache`,
+  );
+});
+
 it("keeps portable Dockerfiles and isolated pre-deploy migration payloads", () => {
   for (const app of ["api", "web"])
     expect(read(`apps/${app}/Dockerfile`)).not.toContain("--mount=type=cache");

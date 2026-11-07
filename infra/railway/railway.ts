@@ -17,7 +17,7 @@ export default defineRailway((context) => {
     overlapSeconds: 0,
   } as const;
   const replicas = { "asia-southeast1-eqsg3a": 1 };
-  const source = github("raypx/raypx", { branch: "canary" });
+  const source = github("raypx/raypx", { branch: "canary", checkSuites: true });
   const sharedInputs = [
     "deploy/*.ts",
     "infra/*/package.json",

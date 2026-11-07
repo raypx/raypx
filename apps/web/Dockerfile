@@ -23,7 +23,8 @@ ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
 ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
-RUN bun run build:web
+# Docker layers own caching; nested VP syscall tracking conflicts with build sandboxes.
+RUN bun run build:web --no-cache
 
 FROM oven/bun:1.4.4-slim AS runtime
 ENV NODE_ENV=production NITRO_PORT=3000 HOST=0.0.0.0

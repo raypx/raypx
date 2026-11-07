@@ -169,7 +169,8 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
           readFileSync(join(root, filePath), "utf8"),
         );
         expect(cached).toContain("id=raypx-bun-install,target=/root/.bun/install/cache");
-        expect(cached).toContain("id=raypx-vp,target=/app/node_modules/.vite/task-cache");
+        expect(cached).not.toContain("id=raypx-vp");
+        expect(cached).toMatch(/RUN bun run build:\w+ --no-cache/);
       }
     } finally {
       rmSync(directory, { recursive: true, force: true });

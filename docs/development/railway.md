@@ -57,6 +57,8 @@ policy checks Caddy and Compose against the same ingress contract.
 API, Web, Relay and Gateway use the raypx/raypx GitHub repository's canary branch.
 Matching pushes trigger automatic deployments using the shared
 `apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
+All four application sources enable Wait for CI (`checkSuites: true`), so GitHub
+checks must finish successfully before automatic deployments proceed.
 Shared package or manifest changes rebuild API and Web;
 both services also watch `deploy/*.ts` for shared build-context preparation changes.
 Relay uses `infra/relay/Dockerfile`, watches `infra/relay/**` and shared build inputs,
@@ -201,10 +203,13 @@ The shared application Dockerfiles use manifest/dependency layer caching without
 cache mounts. Railway requires literal service-specific cache mount IDs, so those
 mounts would prevent portable files. Source-only changes reuse installed layers;
 manifest or lockfile changes can require a fresh download. Compose retains its
-bounded builder and reuses the same image layers. Its `deploy/build.sh` adds Bun/VP
+bounded builder and reuses the same image layers. Its `deploy/build.sh` adds Bun install
 cache mounts to temporary copies of these Dockerfiles and explicitly selects
 `migrate`/`runtime`; it does not build the API's final `deploy` stage. The temporary
 copies are removed on exit.
+Image build commands disable VP caching with `--no-cache` to avoid nesting its
+Linux seccomp filesystem tracking inside Railway's build sandbox. Full type checks
+and builds still run; Docker layers provide image build caching.
 `bun run smoke:deployment` exercises both image profiles with an isolated temporary
 database and Redis. This local gate does not apply IaC or contact Railway services.
 
