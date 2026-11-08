@@ -91,6 +91,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - `raypx-dev deployment:smoke [--platform linux/amd64|linux/arm64]` builds both image
   profiles with an owned bounded builder, isolated temporary services and a synthetic
   API-owned account fixture. Share SSR/API assertions with relocated artifact probes.
+  API bundles the fixture without embedded environment values; mount it read-only into
+  the prepared Bun migration image on the owned network. Measure acceptance, teardown
+  and cleanup separately without recording credentials or overlapping stage durations.
   Always clean only owned resources; retain protected evidence under `.artifacts/deployment/`.
 
 ## Constraints

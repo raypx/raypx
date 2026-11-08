@@ -9,6 +9,10 @@ export interface ValidationProcess {
   stop: () => Promise<void>;
 }
 
+function validLabel(label: string) {
+  return label.length > 0 && label.length <= 128 && !/[^\w-]/.test(label);
+}
+
 /** Own subprocesses and generated evidence; never serialize argv or environment. */
 export class Evidence {
   readonly id = `${new Date().toISOString().replaceAll(/[:.]/g, "-")}-${crypto.randomUUID().slice(0, 8)}`;
@@ -28,7 +32,7 @@ export class Evidence {
   }
   start(label: string, args: string[], env = process.env, cwd = this.root): ValidationProcess {
     this.check();
-    if (!/^[\w-]+$/.test(label) || !args[0]) throw new Error("Invalid validation command");
+    if (!validLabel(label) || !args[0]) throw new Error("Invalid validation command");
     const fd = openSync(join(this.directory, `${label}.log`), "w", 0o600);
     const started = performance.now();
     const child = (() => {
@@ -80,10 +84,28 @@ export class Evidence {
     this.children.push(value);
     return value;
   }
+  async measure<T>(label: string, operation: () => Promise<T>): Promise<T> {
+    if (!validLabel(label)) throw new Error("Invalid validation label");
+    const started = performance.now();
+    let code = 0;
+    try {
+      return await operation();
+    } catch (error) {
+      code = 1;
+      throw error;
+    } finally {
+      const durationMs = performance.now() - started;
+      this.results.push({ label, code, durationMs });
+      console.log(`${label}: ${code === 0 ? "passed" : "failed"} (${Math.round(durationMs)} ms)`);
+    }
+  }
   async command(label: string, args: string[], env = process.env) {
+    const started = performance.now();
     const code = await this.start(label, args, env).exited;
     this.check();
-    console.log(`${label}: ${code === 0 ? "passed" : "failed"}`);
+    console.log(
+      `${label}: ${code === 0 ? "passed" : "failed"} (${Math.round(performance.now() - started)} ms)`,
+    );
     if (code)
       throw new Error(`${label} failed (${code}); see ${join(this.directory, `${label}.log`)}`);
   }

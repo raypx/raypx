@@ -7,10 +7,14 @@ remote read projections, memory and cloud scheduling.
 
 ## Interface
 
-`deployment:fixture` is a test-only account provisioner for `smoke:deployment`.
-It requires the explicit fixture flag, an owned `raypx_deployment_*_test` database
-and an `example.invalid` account. Verification mail stays in-process; never reuse
-this fixture against an operator database or bypass real-user verification.
+`deployment:fixture:build --outfile <absolute-path>` bundles the test-only account
+provisioner for `smoke:deployment` as one minified Bun ESM file, without embedding
+environment values. Tooling mounts that file read-only into the prepared migration
+image on the owned internal network; production API images never carry it.
+At runtime it requires the explicit fixture flag, an owned
+`raypx_deployment_*_test` database and an `example.invalid` account. Verification
+mail stays in-process; never reuse this fixture against an operator database or
+bypass real-user verification.
 
 `/api/auth/*` delegates to Better Auth, including Google/GitHub OAuth and public
 provider discovery. API injects optional paired `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
@@ -78,12 +82,13 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Dockerfile is shared by Compose and Railway. Its default deploy stage carries
-  the standalone Node migration bundle and canonical SQL for pre-deploy migration.
+  the Bun migration sources, production database dependencies and canonical SQL
+  for pre-deploy migration.
   Compose selects the runtime and independent migrate targets explicitly.
   The runtime output also includes private SQL assets for default startup migration.
-  Both migration-capable targets copy the shared migration-build output. The separate
-  fixture target builds and ships only the synthetic deployment account provisioner;
-  production targets do not build or carry that fixture.
+  Both migration-capable targets copy the shared migration payload. The synthetic
+  deployment account provisioner is a separately prepared test bundle mounted only
+  during acceptance; production targets do not build or carry that fixture.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address

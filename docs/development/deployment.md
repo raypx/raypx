@@ -236,6 +236,13 @@ changes, shared build inputs and full release verification. It uses the same
 `smoke:deployment` acceptance as local verification and must pass when selected.
 Ordinary browser component/style changes use source gates; full release verification
 still exercises the images.
+The synthetic account provisioner is bundled once by API and mounted read-only into
+the prepared Bun migration image on the owned internal network. Acceptance does not
+export the full API development image or expose PostgreSQL to the runner. Both
+profiles still verify login, secure cookies and the session through their real gateway.
+`commands.json` and the job log report build, account initialization, acceptance and
+individual resource-cleanup timings. Profile container teardown is measured separately
+from acceptance; stage measurements do not overlap.
 Only `results.json` and `commands.json` are uploaded; raw subprocess logs stay local.
 API environment keys come from `apps/api/server/env.contract.ts`, whose exact keys
 are enforced by the runtime schema. Policy reads this static catalog without

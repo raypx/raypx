@@ -30,6 +30,7 @@
         "server/jobs/runtime/*.ts",
         "vite.app.config.ts",
         "tests/helpers/control-server.ts",
+        "tests/fixtures/deployment.ts",
         "tests/types/*.ts"
       ]
     },

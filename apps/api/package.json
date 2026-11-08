@@ -16,7 +16,7 @@
     "test:postgres": "bun --bun vp test --run --mode postgres",
     "test:redis": "bun --bun vp test --run --mode redis",
     "test:cluster": "bun --bun vp test --run --mode cluster",
-    "deployment:fixture": "bun --no-env-file tests/fixtures/deployment.ts"
+    "deployment:fixture:build": "bun --no-env-file build tests/fixtures/deployment.ts --target=bun --format=esm --minify --packages=bundle --env=disable"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",

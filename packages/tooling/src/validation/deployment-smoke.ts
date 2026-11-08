@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { chmod, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { deploymentServices } from "../build/deployment";
 import { releaseMetadataFile } from "../build/release";
@@ -59,6 +59,7 @@ export async function smokeDeployment(root: string, args: string[]) {
   const project = `raypx-deployment-${id}`,
     release = `${project}-smoke`;
   const evidence = new Evidence(root, "deployment");
+  const fixtureBundle = join(evidence.directory, "deployment-fixture.mjs");
   const images = {
     composeMigrate: `raypx/api-migrate:${release}`,
     composeApi: `raypx/api:${release}`,
@@ -68,7 +69,6 @@ export async function smokeDeployment(root: string, args: string[]) {
     railwayWeb: `${project}/web:smoke`,
     railwayRelay: `${project}/relay:smoke`,
     gateway: `${project}/gateway:smoke`,
-    fixture: `${project}/fixture:smoke`,
   };
   const containers = new Set<string>();
   const network = project,
@@ -133,36 +133,49 @@ export async function smokeDeployment(root: string, args: string[]) {
     let failure: unknown;
     let failureLabel = "";
     try {
-      await docker(["info", "--format", "{{.OSType}}"]);
-      await docker([
-        "network",
-        "create",
-        "--ipv6",
-        "--internal",
-        "--label",
-        `raypx.validation=${id}`,
-        network,
+      await evidence.command("fixture-bundle", [
+        process.execPath,
+        "--no-env-file",
+        "run",
+        "--cwd",
+        "apps/api",
+        "deployment:fixture:build",
+        "--outfile",
+        fixtureBundle,
       ]);
-      ownedNetwork = true;
-      await docker(["network", "create", "--label", `raypx.validation=${id}`, ingress]);
-      ownedIngress = true;
-      await docker([
-        "buildx",
-        "create",
-        "--name",
-        builder,
-        "--driver",
-        "docker-container",
-        "--driver-opt",
-        "memory=3g",
-        "--driver-opt",
-        "memory-swap=4g",
-        "--driver-opt",
-        "cpu-quota=200000",
-        "--driver-opt",
-        "cpu-period=100000",
-      ]);
-      ownedBuilder = true;
+      await chmod(fixtureBundle, 0o644);
+      await evidence.measure("docker-setup", async () => {
+        await docker(["info", "--format", "{{.OSType}}"]);
+        await docker([
+          "network",
+          "create",
+          "--ipv6",
+          "--internal",
+          "--label",
+          `raypx.validation=${id}`,
+          network,
+        ]);
+        ownedNetwork = true;
+        await docker(["network", "create", "--label", `raypx.validation=${id}`, ingress]);
+        ownedIngress = true;
+        await docker([
+          "buildx",
+          "create",
+          "--name",
+          builder,
+          "--driver",
+          "docker-container",
+          "--driver-opt",
+          "memory=3g",
+          "--driver-opt",
+          "memory-swap=4g",
+          "--driver-opt",
+          "cpu-quota=200000",
+          "--driver-opt",
+          "cpu-period=100000",
+        ]);
+        ownedBuilder = true;
+      });
       await evidence.command("compose-build", ["sh", "deploy/build.sh"], {
         ...process.env,
         COMPOSE_PROJECT_NAME: project,
@@ -171,12 +184,11 @@ export async function smokeDeployment(root: string, args: string[]) {
         RAYPX_BUILD_BUILDER: builder,
         DOCKER_DEFAULT_PLATFORM: platform,
       });
-      for (const [label, file, image, target] of [
-        ["railway-api", "apps/api/Dockerfile", images.railwayApi, ""],
-        ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ""],
-        ["railway-relay", "infra/relay/Dockerfile", images.railwayRelay, ""],
-        ["gateway", "infra/railway/Dockerfile", images.gateway, ""],
-        ["fixture", "apps/api/Dockerfile", images.fixture, "build"],
+      for (const [label, file, image] of [
+        ["railway-api", "apps/api/Dockerfile", images.railwayApi],
+        ["railway-web", "apps/web/Dockerfile", images.railwayWeb],
+        ["railway-relay", "infra/relay/Dockerfile", images.railwayRelay],
+        ["gateway", "infra/railway/Dockerfile", images.gateway],
       ]) {
         await evidence.command(`${label}-build`, [
           "docker",
@@ -197,7 +209,6 @@ export async function smokeDeployment(root: string, args: string[]) {
           `VITE_API_URL=${origin}`,
           "--tag",
           image!,
-          ...(target ? ["--target", target] : []),
           ".",
         ]);
       }
@@ -248,7 +259,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           await once(
             "account-fixture",
             `${project}-fixture`,
-            images.fixture,
+            images.composeMigrate,
             {
               TEST_DATABASE_URL: database,
               RAYPX_DEPLOYMENT_FIXTURE: "1",
@@ -256,88 +267,95 @@ export async function smokeDeployment(root: string, args: string[]) {
               FIXTURE_EMAIL: fixture.email,
               FIXTURE_PASSWORD: fixture.password,
             },
-            [],
-            ["bun", "run", "--cwd", "apps/api", "deployment:fixture"],
+            ["--mount", `type=bind,src=${fixtureBundle},dst=/deployment-fixture.mjs,readonly`],
+            ["bun", "--no-env-file", "/deployment-fixture.mjs"],
           );
-        const api = `${project}-api`,
-          relay = `${project}-relay`,
-          web = `${project}-web`,
-          gateway = `${project}-gateway`;
-        await start(
-          api,
-          profile === "compose" ? images.composeApi : images.railwayApi,
-          {
-            NODE_ENV: "production",
-            DATABASE_URL: database,
-            AUTH_URL: origin,
-            AUTH_SECRET: password,
-            ALLOWED_ORIGINS: origin,
-            JOBS_ENABLED: "false",
-            HOST: profile === "railway" ? "::" : "0.0.0.0",
-            REDIS_URL: `redis://${project}-redis:6379`,
-          },
-          ["--memory", "768m"],
-        );
-        await start(
-          relay,
-          profile === "compose" ? images.composeRelay : images.railwayRelay,
-          {
-            NODE_ENV: "production",
-            DATABASE_URL: database,
-            REDIS_URL: `redis://${project}-redis:6379`,
-            ALLOWED_ORIGINS: origin,
-            PORT: String(deploymentServices.relay.port),
-            HOST: profile === "railway" ? "::" : "0.0.0.0",
-          },
-          ["--memory", "512m"],
-        );
-        await start(
-          web,
-          profile === "compose" ? images.composeWeb : images.railwayWeb,
-          { HOST: profile === "railway" ? "::" : "0.0.0.0" },
-          ["--memory", "512m"],
-        );
-        await start(
-          gateway,
-          images.gateway,
-          {
-            PORT: String(deploymentServices.gateway.port),
-            API_UPSTREAM: `${api}:${deploymentServices.api.port}`,
-            RELAY_UPSTREAM: `${relay}:${deploymentServices.relay.port}`,
-            WEB_UPSTREAM: `${web}:${deploymentServices.web.port}`,
-          },
-          ["-p", `127.0.0.1::${deploymentServices.gateway.port}`, "--memory", "128m"],
-          [],
-          ingress,
-        );
-        await docker(["network", "connect", network, gateway]);
-        const address = await docker(["port", gateway, `${deploymentServices.gateway.port}/tcp`]);
-        if (!/^127\.0\.0\.1:\d+$/.test(address))
-          throw new Error("Deployment probe must stay on loopback");
-        const base = `http://${address}`;
-        await untilReady(
-          evidence,
-          async () => (await fetch(`${base}/ready`, { signal: AbortSignal.timeout(3000) })).ok,
-        );
-        const ready = (await (await fetch(`${base}/ready`)).json()) as {
-          checks: Record<string, string>;
-        };
-        if (ready.checks.database !== "ok" || ready.checks.redis !== "ok")
-          throw new Error("Deployment dependency readiness failed");
-        await checkWeb(base);
-        await checkApi(base, { origin, gateway: true });
-        await checkDeploymentSession(base, fixture);
-        const metadata = (await (await fetch(`${base}/assets/${releaseMetadataFile}`)).json()) as {
-          release: string;
-          surface: string;
-        };
-        if (metadata.release !== release || metadata.surface !== "web")
-          throw new Error("Deployment assets have the wrong release metadata");
-        outcomes.push({ profile, passed: true });
-        console.log(
-          `${profile}: migration, readiness, SSR, assets, login, cookie and Relay passed`,
-        );
-        for (const name of [gateway, web, api, relay]) await stop(name);
+        const activeContainers = await evidence.measure(`${profile}-acceptance`, async () => {
+          const api = `${project}-api`,
+            relay = `${project}-relay`,
+            web = `${project}-web`,
+            gateway = `${project}-gateway`;
+          await start(
+            api,
+            profile === "compose" ? images.composeApi : images.railwayApi,
+            {
+              NODE_ENV: "production",
+              DATABASE_URL: database,
+              AUTH_URL: origin,
+              AUTH_SECRET: password,
+              ALLOWED_ORIGINS: origin,
+              JOBS_ENABLED: "false",
+              HOST: profile === "railway" ? "::" : "0.0.0.0",
+              REDIS_URL: `redis://${project}-redis:6379`,
+            },
+            ["--memory", "768m"],
+          );
+          await start(
+            relay,
+            profile === "compose" ? images.composeRelay : images.railwayRelay,
+            {
+              NODE_ENV: "production",
+              DATABASE_URL: database,
+              REDIS_URL: `redis://${project}-redis:6379`,
+              ALLOWED_ORIGINS: origin,
+              PORT: String(deploymentServices.relay.port),
+              HOST: profile === "railway" ? "::" : "0.0.0.0",
+            },
+            ["--memory", "512m"],
+          );
+          await start(
+            web,
+            profile === "compose" ? images.composeWeb : images.railwayWeb,
+            { HOST: profile === "railway" ? "::" : "0.0.0.0" },
+            ["--memory", "512m"],
+          );
+          await start(
+            gateway,
+            images.gateway,
+            {
+              PORT: String(deploymentServices.gateway.port),
+              API_UPSTREAM: `${api}:${deploymentServices.api.port}`,
+              RELAY_UPSTREAM: `${relay}:${deploymentServices.relay.port}`,
+              WEB_UPSTREAM: `${web}:${deploymentServices.web.port}`,
+            },
+            ["-p", `127.0.0.1::${deploymentServices.gateway.port}`, "--memory", "128m"],
+            [],
+            ingress,
+          );
+          await docker(["network", "connect", network, gateway]);
+          const address = await docker(["port", gateway, `${deploymentServices.gateway.port}/tcp`]);
+          if (!/^127\.0\.0\.1:\d+$/.test(address))
+            throw new Error("Deployment probe must stay on loopback");
+          const base = `http://${address}`;
+          await untilReady(
+            evidence,
+            async () => (await fetch(`${base}/ready`, { signal: AbortSignal.timeout(3000) })).ok,
+          );
+          const ready = (await (await fetch(`${base}/ready`)).json()) as {
+            checks: Record<string, string>;
+          };
+          if (ready.checks.database !== "ok" || ready.checks.redis !== "ok")
+            throw new Error("Deployment dependency readiness failed");
+          await checkWeb(base);
+          await checkApi(base, { origin, gateway: true });
+          await checkDeploymentSession(base, fixture);
+          const metadata = (await (
+            await fetch(`${base}/assets/${releaseMetadataFile}`)
+          ).json()) as {
+            release: string;
+            surface: string;
+          };
+          if (metadata.release !== release || metadata.surface !== "web")
+            throw new Error("Deployment assets have the wrong release metadata");
+          outcomes.push({ profile, passed: true });
+          console.log(
+            `${profile}: migration, readiness, SSR, assets, login, cookie and Relay passed`,
+          );
+          return [gateway, web, api, relay];
+        });
+        await evidence.measure(`${profile}-containers-stop`, async () => {
+          for (const name of activeContainers) await stop(name);
+        });
       }
     } catch (error) {
       failed = true;
@@ -354,7 +372,7 @@ export async function smokeDeployment(root: string, args: string[]) {
     } finally {
       for (const name of containers) {
         try {
-          await stop(name);
+          await evidence.measure(`cleanup-${name}`, () => stop(name));
         } catch {
           cleanup.push("container");
         }
@@ -365,29 +383,34 @@ export async function smokeDeployment(root: string, args: string[]) {
       ] as const) {
         if (owned)
           try {
-            await docker(["network", "rm", name]);
+            await evidence.measure(`cleanup-network-${name}`, () =>
+              docker(["network", "rm", name]),
+            );
           } catch {
             cleanup.push("network");
           }
       }
       if (ownedBuilder) {
         try {
-          await docker(["buildx", "rm", "--force", builder], 120_000);
+          await evidence.measure("cleanup-builder", () =>
+            docker(["buildx", "rm", "--force", builder], 120_000),
+          );
         } catch {
           cleanup.push("builder");
         }
       }
-      for (const image of Object.values(images)) {
-        const exists = await docker(["image", "inspect", "--format", "{{.Id}}", image]).then(
-          () => true,
-          () => false,
-        );
-        if (exists)
-          try {
-            await docker(["image", "rm", image]);
-          } catch {
-            cleanup.push("image");
-          }
+      for (const [label, image] of Object.entries(images)) {
+        try {
+          await evidence.measure(`cleanup-image-${label}`, async () => {
+            const exists = await docker(["image", "inspect", "--format", "{{.Id}}", image]).then(
+              () => true,
+              () => false,
+            );
+            if (exists) await docker(["image", "rm", image]);
+          });
+        } catch {
+          cleanup.push("image");
+        }
       }
       await writeFile(
         join(evidence.directory, "results.json"),
