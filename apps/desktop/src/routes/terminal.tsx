@@ -6,8 +6,11 @@ import { StopIcon } from "@raypx/icons/stop";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
+import { Separator } from "@raypx/ui/components/ui/separator";
 import { useTranslations } from "@raypx/i18n/browser";
 import { themeTokens, useTheme } from "@raypx/ui/themes";
 import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop.ts";
@@ -299,34 +302,27 @@ function TerminalPage() {
     <section>
       {project.project && <ProjectTools projectId={project.project} />}
       {unavailable && (
-        <p role="alert" className="mb-5 text-sm text-destructive-text">
-          {tasks("projectUnavailableHint")}
-        </p>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{tasks("projectUnavailableHint")}</AlertDescription>
+        </Alert>
       )}
       <header className="mb-6">
         <h1>{t("title")}</h1>
-        <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
       </header>
       {!isDesktop() && (
-        <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">
-          {c("desktopOnly")}
-        </p>
+        <Alert role="status" className="mb-5">
+          <AlertDescription>{c("desktopOnly")}</AlertDescription>
+        </Alert>
       )}
       {error && (
-        <p
-          role="alert"
-          className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
-        >
-          {error}
-        </p>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
-      <form onSubmit={open} className="flex flex-col gap-4.5">
-        <div className="flex gap-5">
-          <label
-            htmlFor="terminal-executable"
-            className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
-          >
-            {command("executable")}
+      <form onSubmit={open} className="flex flex-col gap-4" aria-describedby="terminal-permissions">
+        <FieldGroup className="grid gap-4 @min-xl/main:grid-cols-2">
+          <Field data-disabled={running || opening}>
+            <FieldLabel htmlFor="terminal-executable">{command("executable")}</FieldLabel>
             <Input
               id="terminal-executable"
               name="executable"
@@ -336,12 +332,9 @@ function TerminalPage() {
                 navigator.platform.includes("Win") ? "C:\\Windows\\System32\\cmd.exe" : "/bin/zsh"
               }
             />
-          </label>
-          <label
-            htmlFor="terminal-cwd"
-            className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
-          >
-            {command("cwd")}
+          </Field>
+          <Field data-disabled={running || opening}>
+            <FieldLabel htmlFor="terminal-cwd">{command("cwd")}</FieldLabel>
             <Input
               id="terminal-cwd"
               name="cwd"
@@ -349,36 +342,32 @@ function TerminalPage() {
               required
               disabled={running || opening}
             />
-          </label>
-        </div>
-        <div className="flex gap-5">
-          <label
-            htmlFor="terminal-args"
-            className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
-          >
-            {command("arguments")}
+          </Field>
+          <Field data-disabled={running || opening}>
+            <FieldLabel htmlFor="terminal-args">{command("arguments")}</FieldLabel>
             <Input id="terminal-args" name="args" defaultValue="[]" disabled={running || opening} />
-          </label>
-          <div className="flex min-h-[34px] flex-wrap items-center gap-5 self-end">
+          </Field>
+          <div className="flex flex-wrap items-center gap-3 self-end">
             {running ? (
               <Button variant="outline" onClick={() => void close()}>
-                <StopIcon size={15} />
+                <StopIcon data-icon="inline-start" />
                 {t("stop")}
               </Button>
             ) : (
               <Button type="submit" disabled={opening || !isDesktop() || unavailable}>
-                <TerminalIcon size={16} />
+                <TerminalIcon data-icon="inline-start" />
                 {opening ? c("working") : t("start")}
               </Button>
             )}
           </div>
-        </div>
-        <p className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
+        </FieldGroup>
+        <p id="terminal-permissions" className="text-xs leading-relaxed text-muted-foreground">
           {t("permissionHint")}
         </p>
       </form>
+      <Separator className="mt-6" />
       <div
-        className="mt-6 flex items-center gap-2 border-t border-border pt-6 pb-3 text-[12px] text-muted-foreground"
+        className="flex items-center gap-2 pt-6 pb-3 text-xs text-muted-foreground"
         role="status"
       >
         {running ? (
@@ -393,14 +382,12 @@ function TerminalPage() {
         )}
       </div>
       <div
-        className="h-[42dvh] min-h-95 overflow-hidden rounded-md border border-border p-4 [&_.xterm]:h-full [&_.xterm-viewport]:rounded-[4px]"
+        className="h-[42dvh] min-h-95 overflow-hidden rounded-lg border border-border p-4 [&_.xterm]:h-full [&_.xterm-viewport]:rounded-sm"
         ref={container}
         aria-label={c("terminal")}
       />
       {!started && (
-        <p className="mt-3 text-[12px] leading-[1.6] font-normal text-muted-foreground">
-          {t("emptyHint")}
-        </p>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("emptyHint")}</p>
       )}
     </section>
   );

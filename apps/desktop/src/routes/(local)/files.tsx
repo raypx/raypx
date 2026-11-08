@@ -1,5 +1,6 @@
 import { createFileRoute, getRouteApi, useBlocker, useRouter } from "@tanstack/react-router";
 import { FolderOpenIcon } from "@raypx/icons/folder-open";
+import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -145,45 +146,40 @@ function FilesPage() {
     <section>
       {data.rootId && <ProjectTools projectId={data.rootId} />}
       {data.rootId && roots && !roots.some((root) => root.id === data.rootId) && (
-        <p role="alert" className="mb-5 text-sm text-destructive-text">
-          {tasks("projectUnavailableHint")}
-        </p>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{tasks("projectUnavailableHint")}</AlertDescription>
+        </Alert>
       )}
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1>{t("title")}</h1>
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
-        </div>
+        <h1>{t("title")}</h1>
         <Button onClick={() => void chooseFolder()} disabled={busy || !desktopAvailable}>
-          <FolderOpenIcon size={16} />
+          <FolderOpenIcon data-icon="inline-start" />
           {t("addRoot")}
         </Button>
       </header>
       {!desktopAvailable && (
-        <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">
-          {c("desktopOnly")}
-        </p>
+        <Alert role="status" className="mb-5">
+          <AlertDescription>{c("desktopOnly")}</AlertDescription>
+        </Alert>
       )}
       {(error || (roots === null && !data.rootId)) && (
-        <p
-          role="alert"
-          className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
-        >
-          {error && error !== fileErrors.error ? t(error) : c("error")}
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>
+            {error && error !== fileErrors.error ? t(error) : c("error")}
+          </AlertDescription>
           {roots === null && (
-            <Button variant="ghost" onClick={() => void refresh()}>
-              {c("refresh")}
-            </Button>
+            <AlertAction>
+              <Button variant="ghost" size="sm" onClick={() => void refresh()}>
+                {c("refresh")}
+              </Button>
+            </AlertAction>
           )}
-        </p>
+        </Alert>
       )}
       {notice && (
-        <p
-          role="status"
-          className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]"
-        >
-          {t(notice)}
-        </p>
+        <Alert role="status" className="mb-5">
+          <AlertDescription>{t(notice)}</AlertDescription>
+        </Alert>
       )}
       {!roots?.length && !data.rootId ? (
         <div className="flex flex-col items-center px-6 py-20 text-center">

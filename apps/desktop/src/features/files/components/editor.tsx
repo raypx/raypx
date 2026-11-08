@@ -12,10 +12,10 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
   const setText = useFilesStore((s) => s.setText);
   if (!editor) return null;
   return (
-    <section className="mt-7 overflow-hidden rounded-[10px] border border-border">
-      <div className="flex items-center justify-between gap-5 border-b border-border px-4 py-3">
-        <h2 className="font-mono text-[13px] [overflow-wrap:anywhere]">{editor.path}</h2>
-        <div className="flex flex-wrap items-center gap-5">
+    <section className="mt-6 overflow-hidden rounded-lg border border-border">
+      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
+        <h2 className="min-w-0 flex-1 font-mono text-sm wrap-anywhere">{editor.path}</h2>
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="ghost" disabled={busy} onClick={() => void onClose()}>
             {c("close")}
           </Button>
@@ -29,7 +29,7 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
       </label>
       <Textarea
         id="file-editor"
-        className="min-h-90 w-full resize-y border-0 bg-background p-5 font-mono text-[13px] leading-[1.7] text-foreground [tab-size:2] focus-visible:-outline-offset-2"
+        className="min-h-90 w-full resize-y rounded-none border-0 p-4 font-mono text-sm leading-relaxed [tab-size:2] focus-visible:-outline-offset-2"
         value={editor.text}
         onChange={(event) => setText(event.target.value)}
         spellCheck={false}

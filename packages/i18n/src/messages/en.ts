@@ -722,7 +722,6 @@ export default {
   },
   files: {
     title: "Files",
-    intro: "Browse and edit files in authorized folders.",
     addRoot: "Choose folder",
     roots: "Folders",
     noRoots: "Start with a folder",
@@ -886,7 +885,6 @@ export default {
       globalAutomation: "General plan",
       projectUnavailable: "Project unavailable",
       title: "Automations",
-      intro: "Runs while Raypx is in the tray. Missed runs are skipped.",
       create: "New automation",
       empty: "Nothing scheduled yet",
       emptyHint: "Scan a folder or run a command on a schedule.",
@@ -1018,7 +1016,6 @@ export default {
   },
   terminal: {
     title: "Terminal",
-    intro: "Run a program in an interactive terminal.",
     start: "Open terminal",
     stop: "Close terminal",
     empty: "Ready when you are",

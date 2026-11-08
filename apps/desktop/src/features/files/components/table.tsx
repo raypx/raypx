@@ -6,7 +6,17 @@ import { FileTextIcon } from "@raypx/icons/file-text";
 import { FolderIcon } from "@raypx/icons/folder";
 import { EditIcon } from "@raypx/icons/edit";
 import { DeleteIcon } from "@raypx/icons/delete";
+import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@raypx/ui/components/ui/table";
+import { IconButton } from "@raypx/ui/icon-button";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store.tsx";
 
@@ -32,15 +42,14 @@ export function FileTable(props: FileTableProps) {
     >
       {(result) =>
         result.status === "error" ? (
-          <p
-            role="alert"
-            className="mb-5 flex items-center gap-2 rounded-lg bg-destructive/8 px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
-          >
-            {c("error")}
-            <Button variant="ghost" onClick={() => void props.onRetry()}>
-              {c("refresh")}
-            </Button>
-          </p>
+          <Alert variant="destructive" className="mb-5">
+            <AlertDescription>{c("error")}</AlertDescription>
+            <AlertAction>
+              <Button variant="ghost" size="sm" onClick={() => void props.onRetry()}>
+                {c("refresh")}
+              </Button>
+            </AlertAction>
+          </Alert>
         ) : (
           <LoadedFileTable {...props} listing={result.listing} />
         )
@@ -62,105 +71,93 @@ function LoadedFileTable({
   const setOperation = useFilesStore((s) => s.setOperation);
   return (
     <>
-      <div className="@max-4xl/main:overflow-x-auto">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
-            <tr>
-              <th className="border-b border-border py-[11px] pr-3 text-xs font-normal text-muted-foreground">
-                {c("name")}
-              </th>
-              <th className="border-b border-border px-3 py-[11px] text-xs font-normal text-muted-foreground">
-                {t("size")}
-              </th>
-              <th className="border-b border-border px-3 py-[11px] text-xs font-normal text-muted-foreground">
-                {t("modified")}
-              </th>
-              <th className="border-b border-border px-3 py-[11px] text-right text-xs font-normal whitespace-nowrap text-muted-foreground">
+      <div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{c("name")}</TableHead>
+              <TableHead>{t("size")}</TableHead>
+              <TableHead>{t("modified")}</TableHead>
+              <TableHead className="text-right">
                 <span className="sr-only">{c("actions")}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {listing.entries.map((entry) => (
-              <tr key={entry.path}>
-                <td className="w-[45%] border-b border-border py-2 pr-3">
+              <TableRow key={entry.path}>
+                <TableCell className="w-[45%] whitespace-normal">
                   <Button
                     variant="ghost"
                     data-slot="file-entry"
-                    className="h-auto max-w-full justify-start gap-[11px] px-0 py-[7px] text-left font-normal whitespace-normal wrap-anywhere disabled:text-muted-foreground [&_svg]:size-4.5 [&_svg]:text-muted-foreground"
+                    className="h-auto max-w-full justify-start px-0 py-2 text-left whitespace-normal wrap-anywhere"
                     disabled={busy || !["file", "directory"].includes(entry.kind)}
                     onClick={() => void onOpen(entry)}
                   >
                     {entry.kind === "directory" ? (
-                      <FolderIcon size={18} />
+                      <FolderIcon data-icon="inline-start" />
                     ) : (
-                      <FileTextIcon size={18} />
+                      <FileTextIcon data-icon="inline-start" />
                     )}{" "}
                     {entry.name}
                   </Button>
-                </td>
-                <td className="border-b border-border px-3 py-2 text-muted-foreground">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {entry.kind === "directory" ? "—" : `${format.number(entry.size, "compact")} B`}
-                </td>
-                <td className="border-b border-border px-3 py-2 text-muted-foreground">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {format.dateTime(new Date(entry.modifiedAt), {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
-                </td>
-                <td className="border-b border-border px-3 py-2 text-right whitespace-nowrap">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`${t("rename")}: ${entry.name}`}
+                </TableCell>
+                <TableCell className="text-right">
+                  <IconButton
+                    label={`${t("rename")}: ${entry.name}`}
                     disabled={busy}
                     onClick={() => setOperation({ type: "move", entry })}
                   >
                     <EditIcon />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`${c("delete")}: ${entry.name}`}
+                  </IconButton>
+                  <IconButton
+                    label={`${c("delete")}: ${entry.name}`}
                     disabled={busy}
                     onClick={() => void onDelete(entry)}
                   >
                     <DeleteIcon />
-                  </Button>
-                </td>
-              </tr>
+                  </IconButton>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         {listing.entries.length === 0 && (
           <p className="p-9 text-center text-muted-foreground">{t("empty")}</p>
         )}
       </div>
       {listing.total > 100 && (
         <div className="mt-5 flex items-center justify-end gap-3 text-xs text-muted-foreground">
-          <Button
+          <IconButton
             variant="outline"
-            size="icon"
             disabled={busy || offset === 0}
             onClick={() => void onPage(Math.max(0, offset - 100))}
-            aria-label={c("previous")}
+            label={c("previous")}
           >
             <ArrowLeftIcon />
-          </Button>
-          <span>
+          </IconButton>
+          <span className="tabular-nums">
             {offset + 1}–{Math.min(offset + 100, listing.total)} / {listing.total}
           </span>
-          <Button
+          <IconButton
             variant="outline"
-            size="icon"
             disabled={busy || offset + 100 >= listing.total}
             onClick={() => void onPage(offset + 100)}
-            aria-label={c("next")}
+            label={c("next")}
           >
             <ArrowRightIcon />
-          </Button>
+          </IconButton>
         </div>
       )}
     </>

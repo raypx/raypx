@@ -14,7 +14,7 @@ export function FileOperationForm({ onSubmit }: { onSubmit: (value: string) => u
   return (
     <form
       key={operation.type === "move" ? operation.entry.path : operation.type}
-      className="mb-5 flex items-center gap-3 rounded-[10px] border border-border p-4"
+      className="mb-5 flex items-center gap-3 rounded-lg border border-border p-4"
       onSubmit={(event) => {
         event.preventDefault();
         void onSubmit(formText(new FormData(event.currentTarget), "path").trim());

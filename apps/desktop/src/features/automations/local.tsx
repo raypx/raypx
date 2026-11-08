@@ -7,13 +7,18 @@ import { EditIcon } from "@raypx/icons/edit";
 import { PlayIcon } from "@raypx/icons/play";
 import { PlusIcon } from "@raypx/icons/plus";
 import { DeleteIcon } from "@raypx/icons/delete";
+import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
+import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { IconButton } from "@raypx/ui/icon-button";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
@@ -170,13 +175,10 @@ export function LocalJobsPage({
   const shown = projectId ? jobs?.filter((job) => job.projectId === projectId) : jobs;
   return (
     <section>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1>{t("local.title")}</h1>
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("local.intro")}</p>
-        </div>
+      <h1 className="sr-only">{t("local.title")}</h1>
+      <header className="mb-6 flex flex-wrap items-center justify-end gap-3">
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
-          <PlusIcon size={16} />
+          <PlusIcon data-icon="inline-start" />
           {t("local.create")}
         </Button>
       </header>
@@ -190,173 +192,174 @@ export function LocalJobsPage({
         </Link>
       )}
       {!desktopAvailable && (
-        <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">
-          {c("desktopOnly")}
-        </p>
+        <Alert role="status" className="mb-4">
+          <AlertDescription className="wrap-anywhere">{c("desktopOnly")}</AlertDescription>
+        </Alert>
       )}
       {(error || data.failed) && (
-        <p
-          role="alert"
-          className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
-        >
-          {error || c("error")}
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription className="wrap-anywhere">{error || c("error")}</AlertDescription>
           {data.failed && (
-            <Button variant="ghost" disabled={busy} onClick={() => void refresh()}>
-              {c("refresh")}
-            </Button>
+            <AlertAction>
+              <Button size="xs" variant="ghost" disabled={busy} onClick={() => void refresh()}>
+                {c("refresh")}
+              </Button>
+            </AlertAction>
           )}
-        </p>
+        </Alert>
       )}
       {editing !== false && (
         <section className="mb-8 rounded-lg border border-border bg-sidebar p-6">
-          <h2 className="mb-5.5">{t("local.create")}</h2>
-          <form
-            key={editing?.id ?? "new"}
-            onSubmit={save}
-            className="flex max-w-180 flex-col gap-[19px] [&_label]:flex [&_label]:flex-col [&_label]:gap-[7px] [&_label]:text-[13px] [&_label]:font-medium [&_input]:min-h-[39px] [&>button]:mt-1"
-          >
-            <label htmlFor="job-project">
-              {t("local.projectAssociation")}
-              <SelectField
-                id="job-project"
-                value={association}
-                onValueChange={setAssociation}
-                options={[
-                  { value: "", label: t("local.globalAutomation") },
-                  ...roots.map((root) => ({ value: root.id, label: root.name })),
-                  ...(association && !roots.some((root) => root.id === association)
-                    ? [{ value: association, label: t("local.projectUnavailable") }]
-                    : []),
-                ]}
-              />
-            </label>
-            <label htmlFor="job-name">
-              {c("name")}
-              <Input
-                id="job-name"
-                name="name"
-                defaultValue={editing?.name ?? ""}
-                maxLength={120}
-                required
-              />
-            </label>
-            <div className="flex gap-5 [&>label]:min-w-0 [&>label]:flex-1">
-              <label htmlFor="job-cron">
-                {t("schedule")}
+          <h2 className="mb-6 text-sm font-medium">{t("local.create")}</h2>
+          <form key={editing?.id ?? "new"} onSubmit={save} className="max-w-3xl">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="job-project">{t("local.projectAssociation")}</FieldLabel>
+                <SelectField
+                  id="job-project"
+                  value={association}
+                  onValueChange={setAssociation}
+                  options={[
+                    { value: "", label: t("local.globalAutomation") },
+                    ...roots.map((root) => ({ value: root.id, label: root.name })),
+                    ...(association && !roots.some((root) => root.id === association)
+                      ? [{ value: association, label: t("local.projectUnavailable") }]
+                      : []),
+                  ]}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="job-name">{c("name")}</FieldLabel>
                 <Input
-                  id="job-cron"
-                  name="cron"
-                  defaultValue={editing?.cron ?? "0 9 * * 1-5"}
+                  id="job-name"
+                  name="name"
+                  defaultValue={editing?.name ?? ""}
+                  maxLength={120}
                   required
                 />
-                <span className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
-                  {t("timezoneHint")}
-                </span>
-              </label>
-              <label htmlFor="job-timezone">
-                {t("timezone")}
-                <Input
-                  id="job-timezone"
-                  name="timezone"
-                  defaultValue={
-                    editing?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone
-                  }
-                  required
-                />
-              </label>
-            </div>
-            <label htmlFor="job-action">
-              {t("action")}
-              <SelectField
-                id="job-action"
-                value={action}
-                onValueChange={setAction}
-                options={[
-                  { value: "directory.scan", label: t("local.scan") },
-                  { value: "command.run", label: t("local.command") },
-                ]}
-              />
-            </label>
-            {action === "directory.scan" ? (
-              <div className="flex gap-5 [&>label]:min-w-0 [&>label]:flex-1">
-                <label htmlFor="job-root">
-                  {t("local.folder")}
-                  <SelectField
-                    id="job-root"
-                    name="rootId"
-                    value={rootId}
-                    onValueChange={setRootId}
-                    required
-                    placeholder={t("local.chooseFolderFirst")}
-                    options={roots.map((root) => ({ value: root.id, label: root.name }))}
-                  />
-                </label>
-                <label htmlFor="job-path">
-                  {t("local.relativePath")}
+              </Field>
+              <FieldGroup className="@md/field-group:flex-row">
+                <Field className="min-w-0 flex-1">
+                  <FieldLabel htmlFor="job-cron">{t("schedule")}</FieldLabel>
                   <Input
-                    id="job-path"
-                    name="path"
-                    defaultValue={
-                      editing && editing.action.type === "directory.scan" ? editing.action.path : ""
-                    }
-                  />
-                </label>
-              </div>
-            ) : (
-              <>
-                <label htmlFor="job-executable">
-                  {commandText("executable")}
-                  <Input
-                    id="job-executable"
-                    name="executable"
-                    defaultValue={command?.executable ?? ""}
+                    id="job-cron"
+                    name="cron"
+                    defaultValue={editing?.cron ?? "0 9 * * 1-5"}
+                    aria-describedby="job-cron-hint"
                     required
                   />
-                </label>
-                <label htmlFor="job-args">
-                  {commandText("arguments")}
+                  <p id="job-cron-hint" className="text-xs/relaxed text-muted-foreground">
+                    {t("timezoneHint")}
+                  </p>
+                </Field>
+                <Field className="min-w-0 flex-1">
+                  <FieldLabel htmlFor="job-timezone">{t("timezone")}</FieldLabel>
                   <Input
-                    id="job-args"
-                    name="args"
-                    defaultValue={JSON.stringify(command?.args ?? [])}
-                  />
-                </label>
-                <label htmlFor="job-cwd">
-                  {commandText("cwd")}
-                  <Input
-                    id="job-cwd"
-                    name="cwd"
+                    id="job-timezone"
+                    name="timezone"
                     defaultValue={
-                      command?.cwd ?? roots.find((root) => root.id === projectId)?.path ?? ""
+                      editing?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone
                     }
                     required
                   />
-                </label>
-                <p className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
-                  {t("local.commandHint")}
-                </p>
-              </>
-            )}
-            <div className="flex flex-wrap items-center gap-5">
-              <Button
-                type="submit"
-                disabled={busy || (action === "directory.scan" && !roots.length)}
-              >
-                {busy ? c("working") : c("save")}
-              </Button>
-              <Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>
-                {c("cancel")}
-              </Button>
-            </div>
+                </Field>
+              </FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="job-action">{t("action")}</FieldLabel>
+                <SelectField
+                  id="job-action"
+                  value={action}
+                  onValueChange={setAction}
+                  options={[
+                    { value: "directory.scan", label: t("local.scan") },
+                    { value: "command.run", label: t("local.command") },
+                  ]}
+                />
+              </Field>
+              {action === "directory.scan" ? (
+                <FieldGroup className="@md/field-group:flex-row">
+                  <Field className="min-w-0 flex-1">
+                    <FieldLabel htmlFor="job-root">{t("local.folder")}</FieldLabel>
+                    <SelectField
+                      id="job-root"
+                      name="rootId"
+                      value={rootId}
+                      onValueChange={setRootId}
+                      required
+                      placeholder={t("local.chooseFolderFirst")}
+                      options={roots.map((root) => ({ value: root.id, label: root.name }))}
+                    />
+                  </Field>
+                  <Field className="min-w-0 flex-1">
+                    <FieldLabel htmlFor="job-path">{t("local.relativePath")}</FieldLabel>
+                    <Input
+                      id="job-path"
+                      name="path"
+                      defaultValue={
+                        editing && editing.action.type === "directory.scan"
+                          ? editing.action.path
+                          : ""
+                      }
+                    />
+                  </Field>
+                </FieldGroup>
+              ) : (
+                <>
+                  <Field>
+                    <FieldLabel htmlFor="job-executable">{commandText("executable")}</FieldLabel>
+                    <Input
+                      id="job-executable"
+                      name="executable"
+                      defaultValue={command?.executable ?? ""}
+                      aria-describedby="job-command-hint"
+                      required
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="job-args">{commandText("arguments")}</FieldLabel>
+                    <Input
+                      id="job-args"
+                      name="args"
+                      defaultValue={JSON.stringify(command?.args ?? [])}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="job-cwd">{commandText("cwd")}</FieldLabel>
+                    <Input
+                      id="job-cwd"
+                      name="cwd"
+                      defaultValue={
+                        command?.cwd ?? roots.find((root) => root.id === projectId)?.path ?? ""
+                      }
+                      required
+                    />
+                  </Field>
+                  <p id="job-command-hint" className="text-sm/relaxed text-muted-foreground">
+                    {t("local.commandHint")}
+                  </p>
+                </>
+              )}
+              <Field orientation="horizontal" className="flex-wrap gap-3">
+                <Button
+                  type="submit"
+                  disabled={busy || (action === "directory.scan" && !roots.length)}
+                >
+                  {busy ? c("working") : c("save")}
+                </Button>
+                <Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>
+                  {c("cancel")}
+                </Button>
+              </Field>
+            </FieldGroup>
           </form>
         </section>
       )}
       {shown?.length === 0 && editing === false ? (
-        <div className="flex flex-col items-center px-6 py-20 text-center">
-          <ClockIcon size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
-          <h2 className="text-xl">{t("local.empty")}</h2>
-          <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">{t("local.emptyHint")}</p>
-        </div>
+        <EmptyState
+          icon={<ClockIcon />}
+          title={t("local.empty")}
+          description={t("local.emptyHint")}
+        />
       ) : (
         <div>
           {shown?.map((job) => (
@@ -364,23 +367,23 @@ export function LocalJobsPage({
               className="flex items-start gap-4 border-t border-border py-6 @max-4xl/main:flex-wrap"
               key={job.id}
             >
-              <div className="grid size-9.5 shrink-0 place-items-center rounded-[9px] border border-border text-muted-foreground">
-                <ClockIcon size={21} />
+              <div className="grid size-10 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground">
+                <ClockIcon size={20} />
               </div>
               <div className="min-w-30 flex-1">
-                <div className="mb-2 flex items-center gap-2.5">
-                  <h2 className="text-[15px]">{job.name}</h2>
-                  <span className="text-xs text-muted-foreground">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-medium wrap-anywhere">{job.name}</h2>
+                  <span className="text-xs wrap-anywhere text-muted-foreground">
                     {job.projectId
                       ? (roots.find((root) => root.id === job.projectId)?.name ??
                         t("local.projectUnavailable"))
                       : t("local.globalAutomation")}
                   </span>
-                  <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
+                  <Badge variant={job.enabled ? "secondary" : "outline"}>
                     {t(job.enabled ? "enabled" : "disabled")}
-                  </span>
+                  </Badge>
                 </div>
-                <p className="flex flex-wrap items-center gap-1.75 text-[12px] text-muted-foreground">
+                <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <code>{job.cron}</code>
                   <span>·</span>
                   {job.timezone}
@@ -388,46 +391,40 @@ export function LocalJobsPage({
                   {t(job.action.type === "directory.scan" ? "local.scan" : "local.command")}
                 </p>
                 {job.nextRuns[0] && job.enabled && (
-                  <p className="mt-1.5 flex flex-wrap items-center gap-1.75 text-[12px] text-muted-foreground">
+                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {t("next")}: {date(job.nextRuns[0])}
                   </p>
                 )}
               </div>
-              <div className="flex max-w-82.5 flex-wrap items-center justify-end gap-0.75 @max-4xl/main:ml-13.5 @max-4xl/main:max-w-none">
+              <div className="flex max-w-sm flex-wrap items-center justify-end gap-1 @max-4xl/main:ml-14 @max-4xl/main:max-w-none">
                 <Button variant="outline" disabled={busy} onClick={() => void run(job)}>
-                  <PlayIcon size={14} />
+                  <PlayIcon data-icon="inline-start" />
                   {t("run")}
                 </Button>
                 <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
                   {t("history")}
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <IconButton
                   disabled={busy}
-                  aria-label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}
+                  label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}
                   onClick={() => void update(job)}
                 >
                   {job.enabled ? <PauseIcon /> : <PlayIcon />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                </IconButton>
+                <IconButton
                   disabled={busy}
-                  aria-label={`${c("edit")}: ${job.name}`}
+                  label={`${c("edit")}: ${job.name}`}
                   onClick={() => edit(job)}
                 >
                   <EditIcon />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                </IconButton>
+                <IconButton
                   disabled={busy}
-                  aria-label={c("deleteNamed", { name: job.name })}
+                  label={c("deleteNamed", { name: job.name })}
                   onClick={() => void remove(job)}
                 >
                   <DeleteIcon />
-                </Button>
+                </IconButton>
               </div>
             </article>
           ))}
@@ -436,8 +433,8 @@ export function LocalJobsPage({
       {dialog}
       {history && (
         <section className="mt-8">
-          <header className="flex items-center justify-between gap-5 border-b border-border py-3 pr-4">
-            <h2 className="text-[length:inherit] leading-[inherit] font-medium wrap-anywhere">
+          <header className="flex items-center justify-between gap-4 border-b border-border py-3 pr-4">
+            <h2 className="text-sm font-medium wrap-anywhere">
               {history.job.name} · {t("history")}
             </h2>
             <Button variant="ghost" onClick={() => setHistory(null)}>
@@ -453,7 +450,7 @@ export function LocalJobsPage({
                   render={
                     <Button
                       variant="ghost"
-                      className="group h-auto w-full flex-wrap justify-start gap-5 rounded-none px-0 py-3.5 text-xs font-normal"
+                      className="group h-auto w-full flex-wrap justify-start gap-4 rounded-none px-0 py-3"
                     />
                   }
                 >
@@ -461,17 +458,15 @@ export function LocalJobsPage({
                     aria-hidden="true"
                     className="group-data-panel-open:rotate-90"
                   />
-                  <span>{date(jobRun.startedAt)}</span>
-                  <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
-                    {c(jobRun.status)}
-                  </span>
-                  <span>
+                  <span className="text-xs tabular-nums">{date(jobRun.startedAt)}</span>
+                  <Badge variant="secondary">{c(jobRun.status)}</Badge>
+                  <span className="text-xs">
                     {jobRun.exitCode === null ? "" : `${t("local.exit")}: ${jobRun.exitCode}`}
                   </span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   {jobRun.output && (
-                    <pre className="max-h-90 overflow-auto rounded-[7px] bg-muted p-4 font-mono text-xs leading-[1.65] whitespace-pre-wrap wrap-anywhere">
+                    <pre className="max-h-96 overflow-auto rounded-lg bg-muted p-4 font-mono text-xs/relaxed whitespace-pre-wrap wrap-anywhere">
                       {jobRun.output}
                     </pre>
                   )}
@@ -480,9 +475,9 @@ export function LocalJobsPage({
             ))
           )}
           {history.job.nextRuns.length > 0 && (
-            <div className="mt-6 text-[12px] text-muted-foreground">
-              <h3 className="text-[13px] font-medium text-foreground">{t("preview")}</h3>
-              <ul className="pl-4.5 leading-[1.9]">
+            <div className="mt-6 text-xs text-muted-foreground">
+              <h3 className="text-sm font-medium text-foreground">{t("preview")}</h3>
+              <ul className="mt-2 pl-4 leading-relaxed tabular-nums">
                 {history.job.nextRuns.map((value) => (
                   <li key={value}>{date(value)}</li>
                 ))}

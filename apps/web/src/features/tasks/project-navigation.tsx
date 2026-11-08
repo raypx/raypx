@@ -60,7 +60,7 @@ export function RemoteProjectNavigation({ accountId }: { accountId: string }) {
               {device.projects.map((project) => (
                 <SidebarMenuButton
                   key={project.id}
-                  className="min-h-10 gap-3 rounded-lg px-3 text-[13px] text-muted-foreground aria-[current=page]:bg-sidebar-accent aria-[current=page]:text-foreground [&_svg]:size-5"
+                  className="h-10 gap-3 rounded-lg px-3 text-sm text-muted-foreground aria-[current=page]:bg-sidebar-accent aria-[current=page]:text-foreground [&_svg]:size-5"
                   render={
                     <Link
                       to="/tasks"

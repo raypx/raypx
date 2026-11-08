@@ -29,7 +29,8 @@ packages own page layout, forms, navigation and product behavior.
   `readThemeCookie`, `themeColors` and `themeMeta` (spread into root head meta).
   Never render `theme-color` through React: the script inserts it and the provider
   updates it, because React 19 hydrates head meta by content and would duplicate it.
-- `styles.css`: DOM Tailwind entry and generated theme values.
+- `styles.css`: DOM Tailwind entry and generated theme values. Shared base rules
+  keep coarse-pointer navigation targets at least 44px and reduced-motion loading states static.
 - `themes/native.css`: pure generated light/dark tokens for Uniwind's native
   Tailwind theme layer. It contains no DOM rules or component code.
 - `styles/app.css`: imports the Tailwind entry once and supplies layered app base

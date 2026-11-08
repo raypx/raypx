@@ -7,6 +7,7 @@ import {
 } from "@raypx/account/client";
 import { useEffect, useRef } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { authClient } from "../features/auth/client.ts";
@@ -40,7 +41,7 @@ function AccountPending() {
   const t = useTranslations("auth");
   return (
     <section>
-      <header className="mb-10">
+      <header className="mb-6">
         <h1>{t("accountTitle")}</h1>
       </header>
       <AccountSkeleton />
@@ -82,18 +83,20 @@ function AccountPage() {
   }
   return (
     <section>
-      <header className="mb-10">
+      <header className="mb-6">
         <h1>{t("accountTitle")}</h1>
       </header>
       {identityChanged ? (
         <AccountSkeleton />
       ) : state.status === "unavailable" ? (
-        <div className="flex flex-wrap items-center gap-4 py-9">
-          <p role="alert">{c("networkError")}</p>
-          <Button variant="outline" disabled={busy} onClick={() => void refresh()}>
-            {c("retry")}
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{c("networkError")}</AlertDescription>
+          <AlertAction>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => void refresh()}>
+              {c("retry")}
+            </Button>
+          </AlertAction>
+        </Alert>
       ) : state.status === "signed-out" ? (
         <SignedOutAccount LinkComponent={AccountLink} />
       ) : (
@@ -103,15 +106,14 @@ function AccountPage() {
           onSignOut={() => auth.signOut(state.account.id)}
         >
           {auth.error && auth.error.kind !== "completion" && (
-            <div
-              role="alert"
-              className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
-            >
-              {c("networkError")}{" "}
-              <Button variant="ghost" disabled={busy} onClick={() => void refresh()}>
-                {c("retry")}
-              </Button>
-            </div>
+            <Alert variant="destructive" className="mb-5">
+              <AlertDescription>{c("networkError")}</AlertDescription>
+              <AlertAction>
+                <Button variant="ghost" size="sm" disabled={busy} onClick={() => void refresh()}>
+                  {c("retry")}
+                </Button>
+              </AlertAction>
+            </Alert>
           )}
         </AccountDetails>
       )}

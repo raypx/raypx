@@ -683,7 +683,6 @@ export default {
   },
   files: {
     title: "文件",
-    intro: "浏览和编辑已授权文件夹中的文件。",
     addRoot: "选择文件夹",
     roots: "文件夹",
     noRoots: "先选择一个文件夹",
@@ -833,7 +832,6 @@ export default {
       globalAutomation: "通用计划",
       projectUnavailable: "项目不可用",
       title: "定时任务",
-      intro: "Raypx 在托盘运行时执行，错过的触发不补跑。",
       create: "新建定时任务",
       empty: "尚未设置定时任务",
       emptyHint: "按计划扫描文件夹或执行命令。",
@@ -948,7 +946,6 @@ export default {
   },
   terminal: {
     title: "终端",
-    intro: "在交互终端中运行程序。",
     start: "打开终端",
     stop: "关闭终端",
     empty: "准备就绪",

@@ -120,6 +120,13 @@
     [data-slot="button"]:has(> svg:only-child) {
       min-width: 44px;
     }
+    [data-slot="sidebar-menu-button"],
+    [data-slot="sidebar-menu-sub-button"],
+    [data-slot="sidebar-trigger"] {
+      /* Keep touch targets above compact navigation utilities, including in the rail. */
+      min-height: 44px !important;
+      min-width: 44px !important;
+    }
     input,
     textarea,
     select {
@@ -136,8 +143,8 @@
     *,
     *::before,
     *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
+      animation: none !important;
+      transition: none !important;
       scroll-behavior: auto !important;
     }
   }
