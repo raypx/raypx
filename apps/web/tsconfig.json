@@ -1,14 +1,15 @@
 {
-  "extends": "@raypx/config/tsconfig-presets/base.json",
+  "extends": "@raypx/tsconfig/browser.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vite.app.config.ts"
+  ],
   "compilerOptions": {
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "types": ["vite/client", "node"],
-    "verbatimModuleSyntax": false
-  },
-  "include": ["src", "test", "vite.config.ts"]
+    "types": ["vite/client", "node"]
+  }
 }

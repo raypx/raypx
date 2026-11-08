@@ -1,0 +1,64 @@
+[
+  {
+    "raw": "better-auth.session_token=value; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=3600",
+    "outcome": "set",
+    "expected": {
+      "name": "better-auth.session_token",
+      "value": "value",
+      "domain": "api.example.test",
+      "path": "/",
+      "secure": true,
+      "httpOnly": true,
+      "sameSite": "lax"
+    }
+  },
+  {
+    "raw": "__Secure-better-auth.session_token=x; Domain=.example.test; Path=/rpc/; Secure; HttpOnly",
+    "outcome": "set",
+    "expected": {
+      "name": "__Secure-better-auth.session_token",
+      "path": "/rpc/",
+      "domain": "api.example.test"
+    }
+  },
+  {
+    "raw": "better-auth.session_token=; Path=/; Secure; HttpOnly; Max-Age=0",
+    "outcome": "remove"
+  },
+  {
+    "raw": "unrelated=private; Path=/",
+    "outcome": "ignore"
+  },
+  {
+    "raw": "better-auth.session_token=x; Domain=evil.test; Path=/; Secure; HttpOnly",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x; Path=/; HttpOnly",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x; Path=/elsewhere; Secure; HttpOnly",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x; Path=/; Secure; HttpOnly; SameSite=invalid",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x; Path=/; Secure; HttpOnly; Max-Age=+10",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x; Path=/; Secure; HttpOnly; Expires=invalid",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x; Path=/; Secure; HttpOnly; Max-Age=9007199254740992",
+    "outcome": "error"
+  },
+  {
+    "raw": "better-auth.session_token=x y; Path=/; Secure; HttpOnly",
+    "outcome": "error"
+  }
+]

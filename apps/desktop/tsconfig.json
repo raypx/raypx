@@ -1,0 +1,7 @@
+{
+  "extends": "@raypx/tsconfig/browser.json",
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/helpers/**/*.ts", "tests/helpers/**/*.tsx"]
+}

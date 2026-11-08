@@ -1,0 +1,5 @@
+{
+  "extends": "@raypx/tsconfig/node.json",
+  "compilerOptions": { "types": ["bun"] },
+  "include": ["scripts/**/*.ts", "tests/**/*.ts", "*.config.ts"]
+}

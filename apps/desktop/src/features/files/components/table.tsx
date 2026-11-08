@@ -1,0 +1,168 @@
+import type { FileEntry, FileListing } from "@raypx/contracts/local";
+import { Await } from "@tanstack/react-router";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { FileTextIcon } from "@raypx/icons/file-text";
+import { FolderIcon } from "@raypx/icons/folder";
+import { EditIcon } from "@raypx/icons/edit";
+import { DeleteIcon } from "@raypx/icons/delete";
+import { Button } from "@raypx/ui/components/ui/button";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFilesStore } from "../store.tsx";
+
+export type FileListingResult = { status: "success"; listing: FileListing } | { status: "error" };
+interface FileTableProps {
+  request: Promise<FileListingResult>;
+  offset: number;
+  onOpen: (entry: FileEntry) => unknown;
+  onDelete: (entry: FileEntry) => unknown;
+  onPage: (offset: number) => unknown;
+  onRetry: () => unknown;
+}
+export function FileTable(props: FileTableProps) {
+  const c = useTranslations("common");
+  return (
+    <Await
+      promise={props.request}
+      fallback={
+        <p role="status" className="p-9 text-center text-muted-foreground">
+          {c("loading")}
+        </p>
+      }
+    >
+      {(result) =>
+        result.status === "error" ? (
+          <p
+            role="alert"
+            className="mb-5 flex items-center gap-2 rounded-lg bg-destructive/8 px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
+          >
+            {c("error")}
+            <Button variant="ghost" onClick={() => void props.onRetry()}>
+              {c("refresh")}
+            </Button>
+          </p>
+        ) : (
+          <LoadedFileTable {...props} listing={result.listing} />
+        )
+      }
+    </Await>
+  );
+}
+function LoadedFileTable({
+  listing,
+  offset,
+  onOpen,
+  onDelete,
+  onPage,
+}: FileTableProps & { listing: FileListing }) {
+  const t = useTranslations("files");
+  const c = useTranslations("common");
+  const format = useFormatter();
+  const busy = useFilesStore((s) => s.busy);
+  const setOperation = useFilesStore((s) => s.setOperation);
+  return (
+    <>
+      <div className="@max-4xl/main:overflow-x-auto">
+        <table className="w-full border-collapse text-left text-[13px]">
+          <thead>
+            <tr>
+              <th className="border-b border-border py-[11px] pr-3 text-xs font-normal text-muted-foreground">
+                {c("name")}
+              </th>
+              <th className="border-b border-border px-3 py-[11px] text-xs font-normal text-muted-foreground">
+                {t("size")}
+              </th>
+              <th className="border-b border-border px-3 py-[11px] text-xs font-normal text-muted-foreground">
+                {t("modified")}
+              </th>
+              <th className="border-b border-border px-3 py-[11px] text-right text-xs font-normal whitespace-nowrap text-muted-foreground">
+                <span className="sr-only">{c("actions")}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {listing.entries.map((entry) => (
+              <tr key={entry.path}>
+                <td className="w-[45%] border-b border-border py-2 pr-3">
+                  <Button
+                    variant="ghost"
+                    data-slot="file-entry"
+                    className="h-auto max-w-full justify-start gap-[11px] px-0 py-[7px] text-left font-normal whitespace-normal wrap-anywhere disabled:text-muted-foreground [&_svg]:size-4.5 [&_svg]:text-muted-foreground"
+                    disabled={busy || !["file", "directory"].includes(entry.kind)}
+                    onClick={() => void onOpen(entry)}
+                  >
+                    {entry.kind === "directory" ? (
+                      <FolderIcon size={18} />
+                    ) : (
+                      <FileTextIcon size={18} />
+                    )}{" "}
+                    {entry.name}
+                  </Button>
+                </td>
+                <td className="border-b border-border px-3 py-2 text-muted-foreground">
+                  {entry.kind === "directory" ? "—" : `${format.number(entry.size, "compact")} B`}
+                </td>
+                <td className="border-b border-border px-3 py-2 text-muted-foreground">
+                  {format.dateTime(new Date(entry.modifiedAt), {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td className="border-b border-border px-3 py-2 text-right whitespace-nowrap">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`${t("rename")}: ${entry.name}`}
+                    disabled={busy}
+                    onClick={() => setOperation({ type: "move", entry })}
+                  >
+                    <EditIcon />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`${c("delete")}: ${entry.name}`}
+                    disabled={busy}
+                    onClick={() => void onDelete(entry)}
+                  >
+                    <DeleteIcon />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {listing.entries.length === 0 && (
+          <p className="p-9 text-center text-muted-foreground">{t("empty")}</p>
+        )}
+      </div>
+      {listing.total > 100 && (
+        <div className="mt-5 flex items-center justify-end gap-3 text-xs text-muted-foreground">
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={busy || offset === 0}
+            onClick={() => void onPage(Math.max(0, offset - 100))}
+            aria-label={c("previous")}
+          >
+            <ArrowLeftIcon />
+          </Button>
+          <span>
+            {offset + 1}–{Math.min(offset + 100, listing.total)} / {listing.total}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={busy || offset + 100 >= listing.total}
+            onClick={() => void onPage(offset + 100)}
+            aria-label={c("next")}
+          >
+            <ArrowRightIcon />
+          </Button>
+        </div>
+      )}
+    </>
+  );
+}

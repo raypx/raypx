@@ -1,0 +1,44 @@
+import { useEffect } from "react";
+import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
+import { isDesktop, localRequest, onLocalEvent } from "../../lib/desktop.ts";
+import type { RootGrant } from "@raypx/contracts/local";
+import { useTranslations } from "@raypx/i18n/browser";
+
+export const Route = createFileRoute("/(local)")({
+  ssr: false,
+  preload: false,
+  staleTime: Infinity,
+  shouldReload: ({ cause }) => cause === "enter",
+  beforeLoad: () => ({ desktopAvailable: isDesktop() }),
+  loader: async ({ context }): Promise<{ roots: RootGrant[] | null }> => {
+    if (!context.desktopAvailable) return { roots: [] };
+    try {
+      return { roots: await localRequest("roots.list", {}) };
+    } catch {
+      return { roots: null };
+    }
+  },
+  component: LocalLayout,
+  pendingComponent: LocalPending,
+});
+
+function LocalPending() {
+  const c = useTranslations("common");
+  return <p role="status">{c("loading")}</p>;
+}
+
+function LocalLayout() {
+  const router = useRouter();
+  const { desktopAvailable } = Route.useRouteContext();
+  useEffect(() => {
+    if (!desktopAvailable) return;
+    return onLocalEvent((event) => {
+      if (
+        event.event === "job.finished" &&
+        router.state.matches.some((match) => match.routeId === "/(local)/automations")
+      )
+        void router.invalidate({ filter: (match) => match.routeId === "/(local)/automations" });
+    });
+  }, [desktopAvailable, router]);
+  return <Outlet />;
+}

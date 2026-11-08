@@ -1,0 +1,48 @@
+# Deployment
+
+This directory owns Dokploy Compose deployment and shared image source staging.
+Build from the repository root with `build.sh`; Compose and Railway share the
+Dockerfiles in apps/api, apps/web and infra/relay. Keep install/build commands in those files.
+`workspaces.ts` discovers Bun workspace patterns from the root manifest before
+project dependency installation. Docker uses the same pinned Bun runtime.
+`manifests.ts` stages workspace metadata before dependency installation. Each
+service installs its own workspace dependency closure and root build tools through
+Bun filters. API's `migration-build` bundles the independent Bun migration command;
+`migrate` and `deploy` copy it with canonical SQL. The separate `fixture` target is
+only for deployment acceptance; production images do not build or ship it.
+`build.sh` adds Compose-only Bun cache mounts to temporary copies and removes them on exit.
+Image builds use VP's `--no-cache` to avoid nesting syscall tracking inside build
+sandboxes with existing seccomp listeners; Docker layers own image build caching.
+Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`
+checks static adapters and API environment forwarding. Run `smoke:deployment`
+for isolated image acceptance; its fixture account and database must remain owned
+and synthetic. Do not convert that fixture into an operator account command.
+Read `docs/development/deployment.md` before changing deployment behavior.
+Railway infrastructure and the gateway belong to the `infra/railway` workspace; see
+`docs/development/railway.md`. Its gateway publishes the shared origin while API,
+Web, Postgres and Redis communicate over Railway's private network. Keep existing
+database services and volumes outside the application's named IaC partial.
+The rules below apply to the Compose host workflow.
+
+- Read deployment configuration from explicit environment variables. Do not infer
+  credentials or hostnames from Git branches or server state.
+- Use the Compose project name for image and route namespaces; networks and
+  default volumes are project-scoped. Keep credentials and data per project.
+- Existing named storage is opt-in through POSTGRES_VOLUME_NAME; never discover
+  or reuse another project's volume automatically.
+- Only Traefik publishes application traffic. Database and application containers
+  have no published host ports; the management panel stays behind SSH.
+- Keep one API and Relay instance by default; the private Redis broker links their lifecycles.
+- Run additive, backward-compatible migrations against that environment's isolated database before replacing API or Relay. Use update.sh; migration failure must preserve the old API and Relay.
+- Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
+- Build versioned images sequentially with a bounded container builder. Preserve
+  previous image versions and persistent volumes for rollbacks.
+- Keep the migration image on database production dependencies; it must not
+  inherit the API build or development tools. Reuse manifest/dependency image layers.
+- Compose and Railway share apps/api/Dockerfile and apps/web/Dockerfile.
+  Keep cache mounts out of these portable files; Railway requires service-specific IDs.
+- Credentials belong in protected host files or Dokploy environment settings;
+  examples contain no credentials. Never print resolved Compose environment values.
+
+Verify Compose syntax with `config --quiet`, build both real images, and probe
+HTTPS, database readiness and login. Do not count missing mail delivery as passed.

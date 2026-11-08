@@ -1,31 +1,93 @@
 {
   "name": "@raypx/ui",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
-  "author": "Zack <heyloyep@gmail.com>",
   "type": "module",
+  "imports": {
+    "#lib/*": "./src/lib/*.ts",
+    "#components/*": "./src/components/*.tsx",
+    "#hooks/*": "./src/hooks/*.ts"
+  },
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./styles.css": "./dist/styles.css"
+    "./page-header": "./src/page-header.tsx",
+    "./section-heading": "./src/section-heading.tsx",
+    "./empty-state": "./src/empty-state.tsx",
+    "./status-badge": "./src/status-badge.tsx",
+    "./select-field": "./src/select-field.tsx",
+    "./data-table": "./src/data-table.tsx",
+    "./password-input": "./src/password-input.tsx",
+    "./confirmation": "./src/confirmation.tsx",
+    "./avatar": "./src/avatar.tsx",
+    "./logo": "./src/logo.tsx",
+    "./logo-mark.webp": "./src/assets/raypx-mark.webp",
+    "./toast": "./src/toast/index.tsx",
+    "./themes": "./src/themes/index.ts",
+    "./themes/config": "./src/themes/config.ts",
+    "./components/ui/*": "./src/components/ui/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./modal": "./src/modal.tsx",
+    "./loading-state": "./src/loading-state.tsx",
+    "./components/ui/tabs": "./src/components/ui/tabs.tsx",
+    "./components/ui/skeleton": "./src/components/ui/skeleton.tsx",
+    "./components/ui/empty": "./src/components/ui/empty.tsx",
+    "./components/ui/alert": "./src/components/ui/alert.tsx",
+    "./components/ui/dialog": "./src/components/ui/dialog.tsx",
+    "./components/ui/sheet": "./src/components/ui/sheet.tsx",
+    "./components/ui/tooltip": "./src/components/ui/tooltip.tsx",
+    "./components/ui/popover": "./src/components/ui/popover.tsx",
+    "./icon-button": "./src/icon-button.tsx",
+    "./help-hint": "./src/help-hint.tsx",
+    "./styles/app.css": "./src/styles/app.css",
+    "./themes/native.css": "./src/styles/native.css"
+  },
+  "scripts": {
+    "check": "bun run scripts/generate-theme.ts --check && tsc --noEmit --project tsconfig.json && tsc --noEmit --project scripts/tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run .component.test.",
+    "test:coverage": "bun --bun vp test --run --coverage",
+    "generate:theme": "bun run scripts/generate-theme.ts"
+  },
+  "dependencies": {
+    "@base-ui/react": "catalog:",
+    "@raypx/icons": "workspace:*",
+    "@tanstack/react-table": "catalog:",
+    "class-variance-authority": "catalog:",
+    "cn": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@raypx/config": "workspace:*",
-    "@testing-library/dom": "10.4.2",
-    "@testing-library/react": "16.3.3",
-    "@types/node": "^22.19.0",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
-    "jsdom": "29.0.1",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@testing-library/jest-dom": "catalog:dev",
+    "@testing-library/react": "catalog:dev",
+    "@testing-library/user-event": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "happy-dom": "catalog:dev",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:dev"
   },
   "peerDependencies": {
-    "react": "19.3.0"
+    "react": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "browser",
+    "entryTargets": {
+      "./logo-mark.webp": "universal",
+      "./themes/config": "universal",
+      "./themes/native.css": "universal"
+    },
+    "sourceTargets": {
+      "src/themes/config.ts": "universal",
+      "src/themes/tokens.ts": "universal",
+      "src/themes/script.ts": "universal",
+      "scripts/**": "node",
+      "src/styles/native.css": "universal"
+    }
   }
 }

@@ -1,0 +1,1065 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "b0cdcb3d-0127-4901-aaff-b37a7ad7ece0",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "ddl": [
+    {
+      "name": "activity",
+      "entityType": "tables"
+    },
+    {
+      "name": "agent_meta",
+      "entityType": "tables"
+    },
+    {
+      "name": "commands",
+      "entityType": "tables"
+    },
+    {
+      "name": "deleted_documents",
+      "entityType": "tables"
+    },
+    {
+      "name": "documents",
+      "entityType": "tables"
+    },
+    {
+      "name": "jobs",
+      "entityType": "tables"
+    },
+    {
+      "name": "journal",
+      "entityType": "tables"
+    },
+    {
+      "name": "meta",
+      "entityType": "tables"
+    },
+    {
+      "name": "outbox",
+      "entityType": "tables"
+    },
+    {
+      "name": "pi_contexts",
+      "entityType": "tables"
+    },
+    {
+      "name": "projects",
+      "entityType": "tables"
+    },
+    {
+      "name": "receipts",
+      "entityType": "tables"
+    },
+    {
+      "name": "requests",
+      "entityType": "tables"
+    },
+    {
+      "name": "roots",
+      "entityType": "tables"
+    },
+    {
+      "name": "runs",
+      "entityType": "tables"
+    },
+    {
+      "name": "tasks",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_project",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_receipt",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_request",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_session",
+      "entityType": "tables"
+    },
+    {
+      "name": "versions",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "activity"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "binding",
+      "entityType": "columns",
+      "table": "activity"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "task_id",
+      "entityType": "columns",
+      "table": "activity"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "activity"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "agent_meta"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "agent_meta"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "commands"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "payload",
+      "entityType": "columns",
+      "table": "commands"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "result",
+      "entityType": "columns",
+      "table": "commands"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "deleted_documents"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "deleted_documents"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "deleted_documents"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "documents"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "documents"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "documents"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "jobs"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "jobs"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "sequence",
+      "entityType": "columns",
+      "table": "journal"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "journal"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "binding",
+      "entityType": "columns",
+      "table": "journal"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "journal"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "key",
+      "entityType": "columns",
+      "table": "meta"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "meta"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "sequence",
+      "entityType": "columns",
+      "table": "outbox"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "outbox"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "binding",
+      "entityType": "columns",
+      "table": "outbox"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "outbox"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_id",
+      "entityType": "columns",
+      "table": "pi_contexts"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "pi_contexts"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "pi_contexts"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "projects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "providers",
+      "entityType": "columns",
+      "table": "projects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "receipts"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "requests"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "binding",
+      "entityType": "columns",
+      "table": "requests"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "requests"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "roots"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "roots"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "runs"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "jobId",
+      "entityType": "columns",
+      "table": "runs"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "startedAt",
+      "entityType": "columns",
+      "table": "runs"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "runs"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "tasks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "tasks"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "path",
+      "entityType": "columns",
+      "table": "terminal_project"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "terminal_project"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "terminal_receipt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "terminal_receipt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "terminal_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "terminal_request"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "key",
+      "entityType": "columns",
+      "table": "terminal_session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "terminal_session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "versions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "versions"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "versions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "versions"
+    },
+    {
+      "columns": ["owner", "id"],
+      "nameExplicit": false,
+      "name": "documents_pk",
+      "entityType": "pks",
+      "table": "documents"
+    },
+    {
+      "columns": ["owner", "id", "revision"],
+      "nameExplicit": false,
+      "name": "versions_pk",
+      "entityType": "pks",
+      "table": "versions"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "activity_pk",
+      "table": "activity",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "agent_meta_pk",
+      "table": "agent_meta",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "commands_pk",
+      "table": "commands",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "deleted_documents_pk",
+      "table": "deleted_documents",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "jobs_pk",
+      "table": "jobs",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["sequence"],
+      "nameExplicit": false,
+      "name": "journal_pk",
+      "table": "journal",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["key"],
+      "nameExplicit": false,
+      "name": "meta_pk",
+      "table": "meta",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["sequence"],
+      "nameExplicit": false,
+      "name": "outbox_pk",
+      "table": "outbox",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["context_id"],
+      "nameExplicit": false,
+      "name": "pi_contexts_pk",
+      "table": "pi_contexts",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "projects_pk",
+      "table": "projects",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "receipts_pk",
+      "table": "receipts",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "requests_pk",
+      "table": "requests",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "roots_pk",
+      "table": "roots",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "runs_pk",
+      "table": "runs",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "tasks_pk",
+      "table": "tasks",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["path"],
+      "nameExplicit": false,
+      "name": "terminal_project_pk",
+      "table": "terminal_project",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "terminal_receipt_pk",
+      "table": "terminal_receipt",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "terminal_request_pk",
+      "table": "terminal_request",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["key"],
+      "nameExplicit": false,
+      "name": "terminal_session_pk",
+      "table": "terminal_session",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "task_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "activity_task",
+      "entityType": "indexes",
+      "table": "activity"
+    },
+    {
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "task_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"activity\".\"value\",'$.status') IN ('streaming','running','queued','sending')",
+      "origin": "manual",
+      "name": "activity_task_active",
+      "entityType": "indexes",
+      "table": "activity"
+    },
+    {
+      "columns": [
+        {
+          "value": "json_extract(\"payload\",'$.binding')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "commands_binding",
+      "entityType": "indexes",
+      "table": "commands"
+    },
+    {
+      "columns": [
+        {
+          "value": "lower(\"id\")",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "documents_canonical_idx",
+      "entityType": "indexes",
+      "table": "documents"
+    },
+    {
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "sequence",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "journal_binding",
+      "entityType": "indexes",
+      "table": "journal"
+    },
+    {
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "json_extract(\"value\",'$.taskId')",
+          "isExpression": true
+        },
+        {
+          "value": "sequence",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "journal_task",
+      "entityType": "indexes",
+      "table": "journal"
+    },
+    {
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "json_extract(\"value\",'$.taskId')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "requests_binding_task",
+      "entityType": "indexes",
+      "table": "requests"
+    },
+    {
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "json_extract(\"value\",'$.expiresAt')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"requests\".\"value\",'$.status') IN ('pending','decided')",
+      "origin": "manual",
+      "name": "requests_binding_pending",
+      "entityType": "indexes",
+      "table": "requests"
+    },
+    {
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.binding')",
+          "isExpression": true
+        },
+        {
+          "value": "json_extract(\"value\",'$.task.createdAt') DESC",
+          "isExpression": true
+        },
+        {
+          "value": "\"id\" ASC",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "tasks_binding_created",
+      "entityType": "indexes",
+      "table": "tasks"
+    },
+    {
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.binding')",
+          "isExpression": true
+        },
+        {
+          "value": "json_extract(\"value\",'$.task.createdAt') DESC",
+          "isExpression": true
+        },
+        {
+          "value": "\"id\" ASC",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"tasks\".\"value\",'$.task.status') IN ('pending','running','waiting','cancelling')",
+      "origin": "manual",
+      "name": "tasks_binding_active",
+      "entityType": "indexes",
+      "table": "tasks"
+    },
+    {
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.binding')",
+          "isExpression": true
+        },
+        {
+          "value": "(json_extract(\"value\",'$.task.createdAt') || ':' || \"id\") DESC",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "tasks_binding_cursor",
+      "entityType": "indexes",
+      "table": "tasks"
+    },
+    {
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.task.provider')",
+          "isExpression": true
+        },
+        {
+          "value": "json_extract(\"value\",'$.sessionId')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"tasks\".\"value\",'$.task.status') IN ('pending','running','waiting','cancelling')",
+      "origin": "manual",
+      "name": "tasks_active_session",
+      "entityType": "indexes",
+      "table": "tasks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "journal_id_unique",
+      "entityType": "uniques",
+      "table": "journal"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "outbox_id_unique",
+      "entityType": "uniques",
+      "table": "outbox"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "terminal_project_id_unique",
+      "entityType": "uniques",
+      "table": "terminal_project"
+    },
+    {
+      "value": "\"revision\" > 0",
+      "name": "revision_positive",
+      "entityType": "checks",
+      "table": "pi_contexts"
+    },
+    {
+      "value": "typeof(\"revision\") = 'integer'",
+      "name": "revision_integer",
+      "entityType": "checks",
+      "table": "pi_contexts"
+    },
+    {
+      "value": "typeof(\"context_id\") = 'text'",
+      "name": "context_id_text",
+      "entityType": "checks",
+      "table": "pi_contexts"
+    },
+    {
+      "value": "typeof(\"value\") = 'text'",
+      "name": "value_text",
+      "entityType": "checks",
+      "table": "pi_contexts"
+    }
+  ],
+  "renames": []
+}

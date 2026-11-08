@@ -1,24 +1,40 @@
 {
   "name": "@raypx/logger",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
-  "author": "Zack <heyloyep@gmail.com>",
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+    ".": "./src/index.ts",
+    "./safe": "./src/safe.ts",
+    "./stream": "./src/stream.ts",
+    "./managed": "./src/managed.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.9.1",
-    "evlog": "catalog:",
-    "hono": "catalog:"
+    "evlog": "catalog:"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@types/node": "^26.6.4",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "node",
+    "entryTargets": {
+      "./safe": "universal",
+      "./managed": "universal"
+    },
+    "sourceTargets": {
+      "src/safe.ts": "universal",
+      "src/managed.ts": "universal"
+    }
   }
 }

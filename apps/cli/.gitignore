@@ -1,0 +1,2 @@
+/dist
+!tests/fixtures/sqlite/node-baseline/profile.sqlite

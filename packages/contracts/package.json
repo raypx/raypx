@@ -1,27 +1,37 @@
 {
   "name": "@raypx/contracts",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
-  "author": "Zack <heyloyep@gmail.com>",
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./health": {
-      "types": "./dist/health.d.ts",
-      "import": "./dist/health.js"
-    }
+    "./api": "./src/api.ts",
+    "./local": "./src/local.ts",
+    "./tasks": "./src/tasks.ts",
+    "./terminal": "./src/terminal.ts",
+    "./local-client": "./src/local-client.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
-    "zod": "4.6.5"
+    "@orpc/contract": "catalog:",
+    "@raypx/core": "workspace:*",
+    "@raypx/instances": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
+    "@raypx/memory-model": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@raypx/config": "workspace:*",
-    "@types/node": "^22.19.0",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
   }
 }

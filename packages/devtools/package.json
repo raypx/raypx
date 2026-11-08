@@ -1,0 +1,53 @@
+{
+  "name": "@raypx/devtools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/client.tsx",
+    "./vite": "./src/vite.ts",
+    "./renderer": "./src/renderer.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --project unit",
+    "test:component": "bun --bun vp test --run --project component"
+  },
+  "dependencies": {
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@testing-library/react": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
+    "@vitejs/devtools-kit": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "happy-dom": "catalog:dev",
+    "vite": "catalog:dev"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.105.3",
+    "@tanstack/react-router": "^1.170.46",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "browser",
+    "entryTargets": {
+      "./vite": "node"
+    },
+    "sourceTargets": {
+      "src/vite.ts": "node"
+    },
+    "entryConsumers": {
+      "./renderer": "The Vite plugin injects this module path as a string into the generated overlay, so no file imports it statically."
+    }
+  }
+}

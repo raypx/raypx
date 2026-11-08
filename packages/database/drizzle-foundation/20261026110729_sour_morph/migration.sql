@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "context_document_canonical_id_idx" ON "raypx_foundation"."context_document" (lower("id"));

@@ -1,0 +1,43 @@
+{
+  "provenance": {
+    "provider": "codex",
+    "version": "codex-cli 0.163.0-alpha.11.2",
+    "transport": "private-unix-request-broker",
+    "cliMode": "terminal",
+    "scenario": "permission-deny",
+    "recordedAt": "2026-10-25T04:51:36.495Z",
+    "source": "real-cli",
+    "redaction": "Identity fields and local paths replaced; event structure/order and numeric usage retained"
+  },
+  "records": [
+    {
+      "input": {
+        "session_id": "recorded-id-1",
+        "turn_id": "recorded-id-2",
+        "transcript_path": "/fixture/transcript.jsonl",
+        "cwd": "/fixture/project",
+        "hook_event_name": "PermissionRequest",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "default",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "printf RAYPX_TERMINAL_P0 > permission-marker.txt",
+          "description": "Allow this exact shell command to write permission-marker.txt for the PermissionRequest hook test?"
+        }
+      },
+      "receivedAt": "2026-10-25T04:51:33.338Z"
+    },
+    {
+      "output": {
+        "hookSpecificOutput": {
+          "hookEventName": "PermissionRequest",
+          "decision": {
+            "behavior": "deny",
+            "message": "P0 contract test declined this request"
+          }
+        }
+      },
+      "sentAt": "2026-10-25T04:51:33.351Z"
+    }
+  ]
+}

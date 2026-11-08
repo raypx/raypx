@@ -1,0 +1,223 @@
+{
+  "task": {
+    "id": "task",
+    "deviceId": "uuid:0",
+    "projectId": "uuid:1",
+    "provider": "codex",
+    "mode": "run",
+    "prompt": "Task with private text",
+    "status": "cancelled",
+    "summary": "",
+    "parentTaskId": null,
+    "createdAt": "time:8",
+    "updatedAt": "time:9"
+  },
+  "journal": [
+    {
+      "id": "uuid:2",
+      "taskId": "task",
+      "kind": "status",
+      "status": "running",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "running",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:8",
+        "updatedAt": "time:9"
+      }
+    },
+    {
+      "id": "uuid:3",
+      "taskId": "task",
+      "kind": "status",
+      "status": "waiting",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "waiting",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:8",
+        "updatedAt": "time:9"
+      }
+    },
+    {
+      "id": "uuid:4",
+      "taskId": "task",
+      "kind": "request",
+      "request": {
+        "id": "uuid:5",
+        "taskId": "task",
+        "kind": "permission",
+        "title": "Run tests",
+        "body": "{\n  \"command\": \"bun test\"\n}",
+        "questions": [],
+        "expiresAt": "time:10",
+        "status": "pending",
+        "decision": null
+      }
+    },
+    {
+      "id": "uuid:6",
+      "taskId": "task",
+      "kind": "request",
+      "request": {
+        "id": "uuid:5",
+        "taskId": "task",
+        "kind": "permission",
+        "title": "Run tests",
+        "body": "{\n  \"command\": \"bun test\"\n}",
+        "questions": [],
+        "expiresAt": "time:10",
+        "status": "cancelled",
+        "decision": null
+      }
+    },
+    {
+      "id": "uuid:7",
+      "taskId": "task",
+      "kind": "status",
+      "status": "cancelled",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "Task with private text",
+        "status": "cancelled",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:8",
+        "updatedAt": "time:9"
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:7",
+              "taskId": "task",
+              "kind": "status",
+              "status": "cancelled",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "cancelled",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:8",
+                "updatedAt": "time:9"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:2",
+              "taskId": "task",
+              "kind": "status",
+              "status": "running",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "running",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:8",
+                "updatedAt": "time:9"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": false,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:3",
+              "taskId": "task",
+              "kind": "status",
+              "status": "waiting",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "Task with private text",
+                "status": "waiting",
+                "summary": "",
+                "parentTaskId": null,
+                "createdAt": "time:8",
+                "updatedAt": "time:9"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {},
+    {}
+  ],
+  "requests": [
+    {
+      "id": "uuid:5",
+      "taskId": "task",
+      "kind": "permission",
+      "title": "Run tests",
+      "body": "{\n  \"command\": \"bun test\"\n}",
+      "questions": [],
+      "expiresAt": "time:10",
+      "status": "cancelled",
+      "decision": null
+    }
+  ],
+  "activity": []
+}

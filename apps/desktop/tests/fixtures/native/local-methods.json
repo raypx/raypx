@@ -1,0 +1,82 @@
+[
+  {
+    "method": "agents.remote",
+    "allowed": false
+  },
+  {
+    "method": "agents.start",
+    "allowed": false
+  },
+  {
+    "method": "agents.command",
+    "allowed": false
+  },
+  {
+    "method": "agents.snapshot",
+    "allowed": false
+  },
+  {
+    "method": "agents.detach",
+    "allowed": false
+  },
+  {
+    "method": "host.authorize",
+    "allowed": false
+  },
+  {
+    "method": "host.session",
+    "allowed": false
+  },
+  {
+    "method": "observed.remote",
+    "allowed": false
+  },
+  {
+    "method": "approvals.local.watch",
+    "allowed": false
+  },
+  {
+    "method": "roots.register",
+    "allowed": false
+  },
+  {
+    "method": "agents.local.execute",
+    "allowed": true
+  },
+  {
+    "method": "agents.projects",
+    "allowed": true
+  },
+  {
+    "method": "agents.capabilities",
+    "allowed": true
+  },
+  {
+    "method": "agents.configure",
+    "allowed": true
+  },
+  {
+    "method": "approvals.local.settings",
+    "allowed": true
+  },
+  {
+    "method": "approvals.local.decide",
+    "allowed": true
+  },
+  {
+    "method": "memory.create",
+    "allowed": true
+  },
+  {
+    "method": "memory.resolve",
+    "allowed": true
+  },
+  {
+    "method": "connectors.install",
+    "allowed": true
+  },
+  {
+    "method": "roots.list",
+    "allowed": true
+  }
+]

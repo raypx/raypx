@@ -1,406 +1,149 @@
-# AI Development Guide for Raypx
-
-This document helps AI assistants understand the Raypx codebase and make effective contributions.
-
-## Project Overview
-
-**Raypx** is a production-ready, type-safe full-stack TypeScript template using:
-- **Bun** - Fast JavaScript runtime
-- **TanStack Start** - Full-stack React framework
-- **Drizzle ORM** - Type-safe database queries
-- **Better Auth** - Authentication system
-- **Monorepo** - Bun workspaces with clear boundaries
-
-## Quick Context
-
-### What This Project Does
-Provides a template for building modern web applications with end-to-end type safety, from database to UI. It's designed to be forked and customized.
-
-### Target Users
-- Developers starting new full-stack projects
-- Teams wanting a type-safe foundation
-- Projects needing authentication and database out of the box
-
-## Architecture Principles
-
-### 1. Layer Separation
-
-```
-Browser ← api-client, hooks, ui, contracts
-Server  ← api, auth
-Infra   ← db, logger, config
-```
-
-**Rules:**
-- Browser packages CANNOT import server packages
-- Server packages CAN import infrastructure packages
-- All layers can use contracts (Zod schemas)
-
-### 2. Type Safety
-
-- **Strict TypeScript** - No `any` types allowed
-- **Runtime Validation** - Zod schemas for all external data
-- **Type Inference** - Drizzle provides database types automatically
-
-### 3. Package Boundaries
-
-Each package has a clear responsibility:
-
-| Package | Purpose | Can Import |
-|---------|---------|------------|
-| `db` | Database access | `logger` |
-| `auth` | Authentication | `db`, `logger` |
-| `logger` | Structured logging | Nothing |
-| `api` | Business logic | `db`, `auth`, `logger`, `contracts` |
-| `contracts` | Schemas | Nothing |
-| `api-client` | HTTP client | `contracts` |
-| `hooks` | React hooks | `api-client` |
-| `ui` | UI components | Nothing |
-| `config` | Build tools | Nothing |
-
-## Code Patterns
-
-### Database Queries
-
-```typescript
-// ✅ Good - Type-safe, clear
-import { getDatabase } from '@raypx/db';
-import { users } from '@raypx/db/schema';
-import { eq } from 'drizzle-orm';
-
-const db = getDatabase();
-const user = await db.select().from(users).where(eq(users.id, userId));
-
-// ❌ Bad - Raw SQL, no types
-const user = await db.execute('SELECT * FROM users WHERE id = ?', [userId]);
-```
-
-### API Routes
-
-```typescript
-// ✅ Good - Type-safe, validated
-import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
-
-const requestSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-});
-
-export const Route = createFileRoute('/api/users')({
-  server: {
-    handlers: {
-      async POST({ request }) {
-        const body = await request.json();
-        const data = requestSchema.parse(body); // Throws if invalid
-        
-        // Use validated data...
-        return Response.json({ success: true });
-      },
-    },
-  },
-});
-
-// ❌ Bad - No validation
-async POST({ request }) {
-  const body = await request.json();
-  const { name, email } = body; // Could be anything!
-  // ...
-}
-```
-
-### Error Handling
-
-```typescript
-// ✅ Good - Specific errors, logging
-import { logger } from '@raypx/logger';
-
-try {
-  const result = await riskyOperation();
-  return Response.json(result);
-} catch (error) {
-  logger.error('Operation failed', {
-    error: error instanceof Error ? error.message : 'Unknown error',
-    context: { userId, timestamp: Date.now() },
-  });
-  
-  return Response.json(
-    { error: 'Operation failed' },
-    { status: 500 }
-  );
-}
-
-// ❌ Bad - Silent failure
-try {
-  const result = await riskyOperation();
-  return Response.json(result);
-} catch (error) {
-  // Nothing!
-}
-```
-
-### Authentication
-
-```typescript
-// ✅ Good - Check auth first
-import { requireAuth } from '@raypx/auth';
-
-export async function GET({ request }) {
-  const session = await requireAuth(request);
-  if (session instanceof Response) return session; // Not authenticated
-  
-  // User is authenticated, safe to proceed
-  const userId = session.user.id;
-  // ...
-}
-
-// ❌ Bad - No auth check
-export async function GET({ request }) {
-  // Directly access sensitive data without checking auth
-  const users = await db.select().from(users);
-  return Response.json(users); // Security issue!
-}
-```
-
-## Common Tasks
-
-### Adding a New API Endpoint
-
-1. **Define schema** in `packages/contracts/src/`
-   ```typescript
-   export const createUserSchema = z.object({
-     name: z.string().min(1),
-     email: z.string().email(),
-   });
-   ```
-
-2. **Create route** in `apps/web/src/routes/`
-   ```typescript
-   // apps/web/src/routes/api.users.ts
-   import { createFileRoute } from '@tanstack/react-router';
-   import { createUserSchema } from '@raypx/contracts';
-   
-   export const Route = createFileRoute('/api/users')({
-     server: {
-       handlers: {
-         async POST({ request }) {
-           const body = await request.json();
-           const data = createUserSchema.parse(body);
-           // Implement logic...
-         },
-       },
-     },
-   });
-   ```
-
-3. **Add client function** in `packages/api-client/src/`
-   ```typescript
-   export async function createUser(data: CreateUser) {
-     const response = await fetch('/api/users', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify(data),
-     });
-     return response.json();
-   }
-   ```
-
-### Adding a Database Table
-
-1. **Define schema** in `packages/db/src/schema.ts`
-   ```typescript
-   export const posts = sqliteTable('posts', {
-     id: integer('id').primaryKey({ autoIncrement: true }),
-     title: text('title').notNull(),
-     content: text('content').notNull(),
-     userId: integer('user_id').notNull().references(() => users.id),
-     createdAt: integer('created_at', { mode: 'timestamp' })
-       .$defaultFn(() => new Date()),
-   });
-   ```
-
-2. **Generate migration**
-   ```bash
-   cd packages/db
-   bun drizzle-kit generate
-   bun drizzle-kit migrate
-   ```
-
-3. **Use in code**
-   ```typescript
-   import { posts } from '@raypx/db/schema';
-   
-   const allPosts = await db.select().from(posts);
-   ```
-
-### Adding a React Hook
-
-1. **Create hook** in `packages/hooks/src/`
-   ```typescript
-   import { useState, useEffect } from 'react';
-   import { getUsers } from '@raypx/api-client';
-   
-   export function useUsers() {
-     const [users, setUsers] = useState([]);
-     const [loading, setLoading] = useState(true);
-     
-     useEffect(() => {
-       getUsers().then(data => {
-         setUsers(data);
-         setLoading(false);
-       });
-     }, []);
-     
-     return { users, loading };
-   }
-   ```
-
-2. **Export from index**
-   ```typescript
-   export { useUsers } from './users';
-   ```
-
-## Testing Strategy
-
-### What to Test
-
-1. **Database Queries** - Ensure schema matches expectations
-2. **API Routes** - Test validation and business logic
-3. **Authentication** - Verify protected routes work
-4. **Utilities** - Test pure functions
-
-### Testing Pattern
-
-```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-
-describe('User API', () => {
-  beforeEach(() => {
-    // Setup: Create fresh database
-  });
-  
-  it('should create user with valid data', async () => {
-    const response = await fetch('/api/users', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'Test', email: 'test@example.com' }),
-    });
-    
-    expect(response.status).toBe(201);
-    const data = await response.json();
-    expect(data.user.email).toBe('test@example.com');
-  });
-  
-  it('should reject invalid email', async () => {
-    const response = await fetch('/api/users', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'Test', email: 'invalid' }),
-    });
-    
-    expect(response.status).toBe(400);
-  });
-});
-```
-
-## Common Pitfalls
-
-### 1. Importing Server Code in Browser
-
-```typescript
-// ❌ WRONG - This will break!
-// In a browser-side component:
-import { getDatabase } from '@raypx/db'; // Server-only!
-
-// ✅ RIGHT - Use API client
-import { getUsers } from '@raypx/api-client';
-```
-
-### 2. Not Validating Input
-
-```typescript
-// ❌ WRONG - Trust user input
-const { name } = await request.json();
-await db.insert(users).values({ name });
-
-// ✅ RIGHT - Validate first
-const schema = z.object({ name: z.string().min(1).max(100) });
-const { name } = schema.parse(await request.json());
-await db.insert(users).values({ name });
-```
-
-### 3. Exposing Sensitive Data
-
-```typescript
-// ❌ WRONG - Return password hash
-const user = await db.select().from(users).where(eq(users.id, id));
-return Response.json(user); // Includes password!
-
-// ✅ RIGHT - Exclude sensitive fields
-const user = await db.select({
-  id: users.id,
-  name: users.name,
-  email: users.email,
-  // password intentionally omitted
-}).from(users).where(eq(users.id, id));
-return Response.json(user);
-```
-
-## Performance Considerations
-
-### Database
-
-- **Use indexes** for frequently queried columns
-- **Batch operations** when possible
-- **Avoid N+1 queries** - use joins or batch fetching
-
-### API
-
-- **Validate early** - Reject bad requests quickly
-- **Use pagination** for list endpoints
-- **Cache expensive operations**
-
-## Documentation Standards
-
-### JSDoc Format
-
-```typescript
-/**
- * Fetches user by ID with caching
- *
- * @param userId - User ID to fetch
- * @returns User object or null if not found
- * @throws {Error} If database connection fails
- *
- * @example
- * ```typescript
- * const user = await getUser('123');
- * if (user) {
- *   console.log(user.name);
- * }
- * ```
- */
-export async function getUser(userId: string) {
-  // Implementation...
-}
-```
-
-## Questions to Ask
-
-When implementing a feature, consider:
-
-1. **Is this browser-safe?** - Can it run in the browser or is it server-only?
-2. **Is input validated?** - Are we checking all external data?
-3. **Is it type-safe?** - Are we using proper TypeScript types?
-4. **Is it logged?** - Do we log errors and important events?
-5. **Is it tested?** - Do we have tests for the happy path and edge cases?
-6. **Is it documented?** - Do we have JSDoc comments?
-
-## Getting Help
-
-- Check [ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design
-- Review existing implementations in similar packages
-- Look at tests for usage examples
-- Check TanStack Start and Drizzle docs for API patterns
-
----
-
-**Remember:** This is a template. Make it your own, but maintain the type safety and clear boundaries.
+# Raypx repository instructions
+
+## Purpose
+
+`canary` uses the Tauri/Rust Desktop host; `dev` retains MyGo/Go. Both keep the
+Bun CLI/daemon. Follow the host implementation and instructions of the checked-out branch.
+
+Raypx is a project-centered personal development workbench with device-local Desktop execution and optional Web remote access.
+Read the nearest workspace AGENTS.md and docs/README.md before changing code.
+The accepted foundation design and current architecture decisions define the implementation.
+
+## Workspaces and boundaries
+
+- Discover workspaces from package.json workspaces; never maintain a package-name allowlist.
+- Infrastructure services and provider tooling live under `infra/*`; declare each
+  workspace's actual app/tooling kind and keep composition roots out of cross-workspace imports.
+- Applications are composition roots and cannot be imported by another workspace.
+- Libraries expose explicit package.json exports; do not import private source paths.
+- Every public entry has an established consumer in another workspace. An entry nobody
+  imports is removed rather than kept for a possible future use; a deliberate exception
+  records `raypx.entryConsumers` with its reason and is validated by `policy`.
+- Every workspace declares raypx.kind and raypx.target. Mixed workspaces declare
+  entryTargets and sourceTargets. Keep platform constraints transitive.
+- Runtime code cannot import tooling or test-only modules. Declare direct dependencies.
+- Keep the complete workspace dependency graph acyclic, including devDependencies.
+- Auth receives its database adapter, configuration and mail interface from API.
+- Remote contracts and local device contracts have separate public entries.
+- Desktop launches the bundled CLI by absolute path. Do not import CLI source.
+- Desktop and CLI execution require one account/origin-bound instance enrollment.
+  A signed local identity permits indefinite offline work; online logout preserves it.
+  Gate remote data and Host authorization separately on login. Never transfer a profile
+  to another account/origin. Only device-owned local work is supported.
+- Theme belongs in UI. Only pure tokens/types are available to every platform.
+- Add packages when their responsibility and actual consumers are established.
+- Core owns task domain schemas, public account models and pure rules; contracts composes wire schemas and
+  exports only transport definitions. Tasks/model owns page state and injected view ports;
+  Tasks/client adapts those models to React. Keep execution in CLI's private harness
+  until a second execution consumer establishes a shared package boundary.
+
+## Toolchain
+
+- Bun 1.4.4 owns install, lockfile, scripts, tests and standalone CLI compilation.
+- Formal CLI packaging is embedded stable Bun with minified ESM and depth-0 bytecode
+  (ADR 0047). Native AOT and separate-runtime layouts remain manual experiments.
+- Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
+  `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
+  and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
+- The optional Cloudflare Relay ingress runs in the provider-managed Workers
+  runtime; its container and all local tooling still use the pinned Bun runtime.
+- Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
+  the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
+  Desktop uses the Tauri Rust host; its bundled CLI retains the pinned Bun runtime.
+- VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
+  `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
+  `vite.app.config.ts`. The TypeScript presets register uncached bootstrap tasks
+  directly to avoid a dependency cycle with Tooling. Cache actual file inputs,
+  explicit build outputs and outcome-affecting environment variables. Preserve
+  inherited environment for leaf commands.
+  mise is the recommended runtime manager; mise.toml
+  only enables reading package.json and never pins `[tools]`. There is no Nix shell.
+- Use the default Bun catalog for shared runtime libraries, catalog:mobile for
+  Mobile-only dependencies and catalog:dev for build/test tools. Keep React and
+  React DOM in the shared default catalog. Keep external versions in these catalogs
+  and use workspace:* for internal dependencies.
+- Keep coverage aligned with Vite+'s bundled Vitest and native modules within
+  Expo's bundled version ranges.
+- React and React DOM share the same exact Expo-supported version across all
+  applications; shared React peers must include that version.
+- Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
+- Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
+- Internal libraries are private ESM source packages unless an actual artifact is required.
+- Desktop uses Tauri 2.12.5 and Rust 1.99.1, pinned in Cargo and rust-toolchain.toml.
+  The independently released Tauri JavaScript API/CLI packages are 2.12.4.
+  Native framework and policy live in apps/desktop/src-tauri; execution stays in CLI.
+  macOS targets 13.5+, Windows uses WebView2, and Linux Desktop acceptance remains unverified.
+- Type checks use tsc --noEmit with an explicit project; Bun runs scripts.
+- Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
+- Root `test` aggregates suites; workspace package.json owns its actual test commands.
+  `test --package` and package-local scripts must select the same suites and prerequisites.
+- Colocate unit tests with their source. Name DOM suites `*.component.test.ts(x)`;
+  keep integration suites and shared test-only setup/fixtures in `tests/`.
+  Application-owned browser acceptance may use `e2e/`; the root E2E workspace
+  discovers Web and Desktop cases there.
+  Root test.config.ts exports runner defaults as a plain Vitest config. Each workspace
+  owns include patterns, projects and overrides using native defineConfig/mergeConfig;
+  do not introduce custom config factories or option schemas. Application Vite plugins
+  must not enter the test runner.
+- Each release candidate/platform compiles one production CLI payload. Consumers set `RAYPX_CLI_PAYLOAD`, verify its immutable inventory and never implicitly build. Sign CLI/Herdr before sharing the payload; outer Desktop signing cannot rewrite it. Strobe consumes prepared artifacts only, retains ownership markers and runs uncached in private homes.
+- Reusable repository validation belongs in Tooling's `src/validation/`. `.artifacts/`
+  holds generated evidence only; never store authored scripts there. `clean:artifacts`
+  removes that evidence and test reports without removing builds or user data.
+
+## Code and data
+
+- Preserve strict TypeScript, type-only imports and exactOptionalPropertyTypes.
+- Do not log credentials, tokens, cookies, passwords or private file content.
+- Device preferences and CLI SQLite profiles stay local and survive logout.
+- Current functionality is the initial baseline. Support current protocols and data formats
+  only. Do not add legacy fallback, compatibility aliases or automatic imports of old data.
+  Reject unsupported versions.
+- The new PostgreSQL database is isolated from the retired product database.
+  Never run new migrations or destructive commands against an old/operator database.
+- File grants constrain built-in file operations. External commands retain OS permissions.
+- Local protocol dates are ISO strings; terminal bytes use base64.
+- Preserve original logos and neutral light/dark visual tokens. Keep keyboard focus,
+  accessible labels, reduced motion and Chinese/English copy.
+- Use existing shadcn/Base UI primitives from `@raypx/ui` for DOM controls.
+  Compose product-specific controls in Blocks or the owning feature package.
+  Use Select, RadioGroup and Collapsible for feature interaction instead of
+  native select/radio/details controls; keep semantic form grouping and labels.
+- Prefer icons and UI affordances over explanatory copy: `IconButton` and `HelpHint`
+  from `@raypx/ui`, empty states and disabled reasons. Follow the copy rules in DESIGN.md.
+- Use Tailwind utilities for feature layout and styling. Keep CSS entry points for
+  imports, source registration, shared theme tokens and necessary global/library rules;
+  do not add feature-specific CSS selectors.
+- Do not edit generated route trees or vendored agent skills by hand.
+- Preserve unrelated user changes. Build/cache files are not source artifacts.
+
+## Verification
+
+Run focused meaningful tests and `bun run verify` for daily delivery. It selects
+affected source checks/tests and Rust host tasks only for native inputs. Shared
+JavaScript dependency/configuration changes broaden source checks without selecting
+builds or native platforms. Use `bun run verify --full` for release preparation or an
+explicit full-validation request; it includes repository-wide audits, builds and
+current-platform artifact probes. PostgreSQL, browser and packaged native acceptance
+run separately; releases require their full selected matrix.
+Report unavailable checks as unavailable; never describe an unrun platform as passed.
+
+## Documentation
+
+Keep each workspace AGENTS.md concise and update it when its interface changes.
+Current architecture and commands live under docs/architecture and docs/development.
+Keep documentation aligned with the implementation and remove obsolete guides.
+
+## Remote control
+
+Opted-in remote Agent tasks use explicit API projections and device-scoped grants.
+On macOS and Windows the independent CLI daemon owns execution, approval arbitration, the
+durable replay journal, the outbound WebSocket and restricted device credentials.
+Desktop connects over authenticated private IPC (Unix socket, or token-guarded loopback
+on Windows; see ADR 0037); GUI Quit does not stop daemon tasks. Relay routes messages; API stores read
+projections. Native handles initial opt-in without exporting cookies or host secrets
+to the renderer. Explicit logout/account changes revoke the affected binding. The independent
+`infra/relay` service owns socket peers; API reaches it over the private Redis broker.
+Shared `@raypx/control` services own authorization and projection rules. Never publish the
+local method router or provider credentials. Desktop connection settings are
+user-level runtime TOML; server origins isolate sessions, remote settings and
+remote authorization.

@@ -1,247 +1,54 @@
 # @raypx/logger
 
-Modern structured logging with **evlog** (UnJS ecosystem)
+Private ESM source workspace for Raypx's shared structured logging. API and CLI
+depend on it through `workspace:*`; no package publication or archive is needed.
+The implementation retains evlog as an external catalog dependency.
 
-## Features
+| Entry                   | Responsibility                                          |
+| ----------------------- | ------------------------------------------------------- |
+| `@raypx/logger`         | Native evlog logger, configuration and error APIs/types |
+| `@raypx/logger/safe`    | Field allowlists, redaction and bounded safe events     |
+| `@raypx/logger/managed` | Bounded delivery, concurrency, statistics and shutdown  |
+| `@raypx/logger/stream`  | Ordered JSON lines on stderr or another Node writable   |
 
-- ✅ Clean, modern API
-- ✅ Structured logging
-- ✅ Multiple log levels (trace, debug, info, warn, error, fatal)
-- ✅ Context support
-- ✅ TypeScript types
-- ✅ Zero dependencies
-- ✅ UnJS ecosystem integration
+Applications configure evlog globally once per process/isolate. Importing the
+workspace or creating a managed drain does not initialize logging. API retains
+its typed HTTP/RPC/Job events, runtime field policy and PostHog reporter; CLI owns
+diagnostic categories. Do not send credentials, bodies, paths or task output.
 
-## Installation
+```ts
+import { createLogger, initLogger } from "@raypx/logger";
+import { createManagedDrain } from "@raypx/logger/managed";
+import { createStreamDrain } from "@raypx/logger/stream";
 
-```bash
-bun add evlog
-```
-
-## Usage
-
-### Quick Start
-
-```typescript
-import { logger } from '@raypx/logger';
-
-// Simple logging
-logger.info('Application started');
-logger.warn('Warning message');
-logger.error('Error occurred');
-
-// With context
-logger.info('User logged in', { userId: 123, email: 'user@example.com' });
-logger.error('Database error', { error: err, query: 'SELECT * FROM users' });
-```
-
-### Custom Logger
-
-```typescript
-import { createLogger } from '@raypx/logger';
-
-const apiLogger = createLogger({
-  name: 'api',
-  level: 'debug',
+const drain = createManagedDrain({
+  policy: { fields: ["operation", "status", "error"] },
+  sink: createStreamDrain(),
 });
-
-apiLogger.debug('Debug message');
-apiLogger.info('Request received', { path: '/api/users', method: 'GET' });
+initLogger({ env: { service: "example" }, silent: true, drain });
+createLogger({ operation: "example.completed" }).emit({ status: 200 });
+await drain.close();
 ```
 
-### Log Levels
+`/safe` and `/managed` have no Node imports and work on Workers. Safe projection
+runs before buffering, strips raw drain context and limits events to 16 KiB by
+default. Errors retain a name and machine code; messages, stacks and causes are
+removed. Shapes retain only explicitly listed string fields.
 
-```typescript
-logger.trace('Trace level');   // Most verbose
-logger.debug('Debug level');
-logger.info('Info level');      // Default
-logger.warn('Warning level');
-logger.error('Error level');
-logger.fatal('Fatal level');    // Most severe
-```
+The managed queue admits at most 1024 queued plus active events by default.
+Overflow drops the new event, and failures never retry. Default concurrency one
+preserves order; larger concurrency permits completion reordering. Delivery starts
+in a microtask and does not wait for the sink in the emitting call.
+`stats()` returns pending/delivered/failed/dropped counts and admission state.
+`flush()` waits for delivery and reports unreported loss once. Concurrent flushes
+share one promise. Call it after producers stop when finite draining is required.
+`close()` stops admission immediately, attempts sink cleanup even after flush
+failure and shares one result. Its default ten-second deadline bounds waiting;
+it cannot cancel arbitrary sink work. Transports own cancellation.
 
-### Structured Context
+The stream drain never ends a caller-owned stream. CLI stdout stays reserved for
+command results and the Desktop protocol.
 
-```typescript
-// Add context to logs
-logger.info('User action', {
-  userId: 123,
-  action: 'create_post',
-  timestamp: Date.now(),
-  metadata: {
-    postId: 456,
-    title: 'My Post',
-  },
-});
-```
-
-## API Reference
-
-### `createLogger(options)`
-
-Create a new logger instance.
-
-**Options:**
-- `name?: string` - Logger name (appears in logs)
-- `level?: string` - Minimum log level ('trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal')
-
-**Returns:** Logger instance
-
-### `logger`
-
-Default logger instance with name 'raypx'.
-
-## Examples
-
-### API Request Logging
-
-```typescript
-import { createLogger } from '@raypx/logger';
-
-const apiLogger = createLogger({ name: 'api' });
-
-export async function handler(request: Request) {
-  const start = Date.now();
-  
-  apiLogger.info('Request received', {
-    method: request.method,
-    url: request.url,
-  });
-  
-  try {
-    const result = await processRequest(request);
-    
-    apiLogger.info('Request completed', {
-      method: request.method,
-      url: request.url,
-      duration: Date.now() - start,
-      status: 200,
-    });
-    
-    return result;
-  } catch (error) {
-    apiLogger.error('Request failed', {
-      method: request.method,
-      url: request.url,
-      duration: Date.now() - start,
-      error: error.message,
-    });
-    
-    throw error;
-  }
-}
-```
-
-### Database Query Logging
-
-```typescript
-import { createLogger } from '@raypx/logger';
-import { getDatabase } from '@raypx/db';
-
-const dbLogger = createLogger({ name: 'database' });
-
-export async function getUsers() {
-  dbLogger.debug('Fetching users');
-  
-  const db = getDatabase();
-  const users = await db.select().from(usersTable);
-  
-  dbLogger.info('Users fetched', { count: users.length });
-  
-  return users;
-}
-```
-
-### Error Logging
-
-```typescript
-import { logger } from '@raypx/logger';
-
-try {
-  await riskyOperation();
-} catch (error) {
-  logger.error('Operation failed', {
-    error: error.message,
-    stack: error.stack,
-    context: {
-      userId: currentUser.id,
-      timestamp: Date.now(),
-    },
-  });
-  
-  throw error;
-}
-```
-
-## Environment Configuration
-
-```typescript
-// packages/logger/src/index.ts
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
-export const logger = createLogger({
-  name: 'raypx',
-  level: isDevelopment ? 'debug' : 'info',
-});
-```
-
-## Integration with Other Packages
-
-### With @raypx/db
-
-```typescript
-import { getDatabase } from '@raypx/db';
-import { createLogger } from '@raypx/logger';
-
-const dbLogger = createLogger({ name: 'db' });
-
-export function getDatabaseWithLogging() {
-  dbLogger.debug('Database connection requested');
-  return getDatabase();
-}
-```
-
-### With @raypx/auth
-
-```typescript
-import { auth } from '@raypx/auth';
-import { createLogger } from '@raypx/logger';
-
-const authLogger = createLogger({ name: 'auth' });
-
-export async function signIn(email: string, password: string) {
-  authLogger.info('Sign in attempt', { email });
-  
-  try {
-    const result = await auth.signIn(email, password);
-    authLogger.info('Sign in successful', { email, userId: result.user.id });
-    return result;
-  } catch (error) {
-    authLogger.error('Sign in failed', { email, error: error.message });
-    throw error;
-  }
-}
-```
-
-## Why evlog?
-
-- **Modern**: Built for modern JavaScript/TypeScript projects
-- **Simple**: Clean API, easy to use
-- **Fast**: Minimal overhead
-- **UnJS**: Part of the UnJS ecosystem (citty, consola, ofetch, etc.)
-- **Type-safe**: Full TypeScript support
-
-## Comparison with Pino
-
-| Feature | evlog | pino |
-|---------|-------|------|
-| **API Style** | Modern, clean | Traditional |
-| **Setup** | Zero config | Needs transport setup |
-| **Size** | Tiny | Larger |
-| **Performance** | Fast | Fastest |
-| **Ecosystem** | UnJS | Node.js |
-| **Maturity** | Newer | Battle-tested |
-
----
-
-**Clean, modern logging for your application** 🪵
+Run `bun run --cwd packages/logger check` and `bun run --cwd packages/logger test`.
+Full root verification also checks the built Bun API and the standalone CLI
+outside the repository. See [source provenance](NOTICE.md).

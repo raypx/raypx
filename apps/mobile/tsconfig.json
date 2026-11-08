@@ -1,0 +1,9 @@
+{
+  "extends": "@raypx/tsconfig/library.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["bun", "react", "uniwind/types"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "*.config.ts"]
+}

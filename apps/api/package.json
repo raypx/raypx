@@ -1,0 +1,64 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "auth:bootstrap-admins": "bun server/administration/bootstrap.ts",
+    "dev": "bun --bun vp dev --config vite.app.config.ts",
+    "start": "bun .output/server/index.mjs",
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:integration": "bun --bun vp test --run tests/integration",
+    "test:coverage": "bun --bun vp test --run --coverage",
+    "build": "bun --bun vp build --config vite.app.config.ts",
+    "test:postgres": "bun --bun vp test --run --mode postgres",
+    "test:redis": "bun --bun vp test --run --mode redis",
+    "test:cluster": "bun --bun vp test --run --mode cluster",
+    "deployment:fixture": "bun --no-env-file tests/fixtures/deployment.ts"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "catalog:",
+    "@orpc/evlog": "catalog:",
+    "@orpc/server": "catalog:",
+    "@raypx/account": "workspace:*",
+    "@raypx/auth": "workspace:*",
+    "@raypx/contracts": "workspace:*",
+    "@raypx/control": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "@raypx/email": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@raypx/instances": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
+    "@raypx/jobs-server": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "@raypx/memory-model": "workspace:*",
+    "@raypx/memory-server": "workspace:*",
+    "@raypx/storage": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "evlog": "catalog:",
+    "hono": "catalog:",
+    "ioredis": "catalog:",
+    "nitro": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/client": "workspace:*",
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vite": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "node",
+    "sourceTargets": {
+      "vite.app.config.ts": "node"
+    }
+  }
+}

@@ -1,0 +1,180 @@
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:${POSTGRES_IMAGE_DIGEST:?Set the verified PostgreSQL manifest digest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set the environment database name}
+      POSTGRES_USER: ${POSTGRES_USER:-raypx}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set the environment database password}
+    command:
+      - postgres
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS:-50}
+      - -c
+      - shared_buffers=${POSTGRES_SHARED_BUFFERS:-128MB}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks: [backend]
+    mem_limit: ${POSTGRES_MEMORY:-512m}
+    cpus: ${POSTGRES_CPUS:-1}
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: raypx/api-migrate:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?Set the image release}
+    pull_policy: never
+    restart: "no"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    mem_limit: ${MIGRATE_MEMORY:-512m}
+    cpus: ${MIGRATE_CPUS:-0.5}
+
+  api:
+    image: raypx/api:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      DATABASE_MIGRATE_ON_START: ${DATABASE_MIGRATE_ON_START:-true}
+      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      AUTH_URL: https://${APP_HOST:?Set the application hostname}
+      AUTH_SECRET: ${AUTH_SECRET:?Set the authentication secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      AUTH_IP_HEADERS: ${AUTH_IP_HEADERS:-x-forwarded-for}
+      AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:?Set the trusted proxy CIDRs}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_DEFAULT_LOCALE: ${MAIL_DEFAULT_LOCALE:-en}
+      AUTH_DOMAIN: ${AUTH_DOMAIN:-}
+      REDIS_URL: ${REDIS_URL:?Set the private Redis/Valkey endpoint for Relay}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-auto}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      POSTHOG_PROJECT_TOKEN: ${POSTHOG_PROJECT_TOKEN:-}
+      POSTHOG_HOST: ${POSTHOG_HOST:-}
+      JOBS_ENABLED: ${JOBS_ENABLED:-true}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend, proxy]
+    mem_limit: ${API_MEMORY:-768m}
+    cpus: ${API_CPUS:-1}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://127.0.0.1:3002/ready', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/health`) || Path(`/ready`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-api.loadbalancer.server.port=3002"
+
+  relay:
+    image: raypx/relay:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      REDIS_URL: ${REDIS_URL:?Set the private Redis/Valkey endpoint for Relay}
+      ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend, proxy]
+    mem_limit: ${RELAY_MEMORY:-512m}
+    cpus: ${RELAY_CPUS:-0.75}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://127.0.0.1:3003/ready', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.rule=Host(`${APP_HOST:?}`) && Path(`/relay`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.priority=110"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.middlewares=${COMPOSE_PROJECT_NAME:?}-relay-headers"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-relay-headers.headers.customrequestheaders.Cookie="
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-relay-headers.headers.customrequestheaders.Authorization="
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-relay.loadbalancer.server.port=3003"
+
+  web:
+    image: raypx/web:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [proxy]
+    mem_limit: ${WEB_MEMORY:-512m}
+    cpus: ${WEB_CPUS:-0.75}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://127.0.0.1:3000/health', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.rule=Host(`${APP_HOST:?}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.priority=1"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-web.loadbalancer.server.port=3000"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-http.rule=Host(`${APP_HOST:?}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-http.entrypoints=web"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-http.service=${COMPOSE_PROJECT_NAME:?}-web"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-http.middlewares=${COMPOSE_PROJECT_NAME:?}-https"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-https.redirectscheme.scheme=https"
+
+volumes:
+  postgres:
+    name: ${POSTGRES_VOLUME_NAME:-${COMPOSE_PROJECT_NAME:?}_postgres}
+
+networks:
+  backend:
+    internal: true
+  proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}

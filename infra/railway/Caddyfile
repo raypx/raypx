@@ -1,0 +1,34 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+	log {
+		format filter {
+			wrap json
+			fields {
+				request delete
+			}
+		}
+	}
+}
+
+:{$PORT:8080} {
+  @relay path /relay
+  handle @relay {
+    reverse_proxy {$RELAY_UPSTREAM} {
+      header_up -Cookie
+      header_up -Authorization
+    }
+  }
+  @api path /api/* /rpc/* /health /ready
+	handle @api {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up X-Forwarded-Proto https
+		}
+	}
+	handle {
+		reverse_proxy {$WEB_UPSTREAM} {
+			header_up X-Forwarded-Proto https
+		}
+	}
+}

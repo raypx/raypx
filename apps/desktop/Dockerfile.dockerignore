@@ -1,0 +1,15 @@
+**
+!Cargo.toml
+!Cargo.lock
+!rust-toolchain.toml
+!apps
+!apps/cli
+!apps/desktop
+!apps/desktop/src-tauri
+!apps/desktop/src-tauri/**
+!apps/desktop/generated
+!apps/desktop/generated/**
+!apps/desktop/tests
+!apps/desktop/tests/fixtures
+!apps/desktop/tests/fixtures/native
+!apps/desktop/tests/fixtures/native/**

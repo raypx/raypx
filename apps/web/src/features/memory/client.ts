@@ -1,0 +1,41 @@
+import { createApiClient } from "@raypx/client/api";
+import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "@raypx/memory/client";
+import { apiUrl } from "../auth/client.ts";
+let api: ReturnType<typeof createApiClient> | undefined;
+const client = () => (api ??= createApiClient({ baseUrl: apiUrl }));
+export const accountMemory: MemoryClientPort = {
+  list: (input = {}, options) => client().memory.list(input, options),
+  get: (input, options) => client().memory.get(input, options),
+  create: (input, options) => client().memory.create(input, options),
+  update: (input, options) => client().memory.update(input, options),
+  archive: (input, options) => client().memory.archive(input, options),
+  delete: (input, options) => client().memory.delete(input, options),
+  history: (input, options) =>
+    client().memory.history({ ...input, limit: input.limit ?? 20 }, options),
+  restore: (input, options) => client().memory.restore(input, options),
+  resolve: (input, options) => client().memory.resolve(input, options),
+};
+export const memoryProjects: MemoryProjectsPort = {
+  list: async (options) =>
+    (await client().devices.list({}, options))
+      .filter((device) => !device.revoked)
+      .flatMap((device) =>
+        device.projects.map((project) => ({
+          deviceId: device.id,
+          projectId: project.id,
+          name: `${device.name} · ${project.name}`,
+        })),
+      ),
+};
+export const memoryUsage: MemoryUsagePort = {
+  scheduledPlans: async ({ id }, options) =>
+    (await client().jobs.list({}, options)).jobs
+      .filter(
+        (job) =>
+          job.action.type === "agent.run" &&
+          job.action.contextSelection?.sources.some(
+            (source) => source.id.toLowerCase() === id.toLowerCase(),
+          ),
+      )
+      .map((job) => ({ id: job.id, name: job.name, enabled: job.enabled })),
+};

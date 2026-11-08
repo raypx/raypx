@@ -1,0 +1,338 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
+import { terminalPermissionSupported } from "@raypx/contracts/terminal";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import type {
+  TerminalDecision,
+  TerminalRequestSummary,
+  TerminalSession,
+} from "@raypx/contracts/terminal";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { Button } from "@raypx/ui/components/ui/button";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { HelpHint } from "@raypx/ui/help-hint";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
+import { Textarea } from "@raypx/ui/components/ui/textarea";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
+import { TerminalIcon } from "@raypx/icons/terminal";
+import { useRemoteQuery } from "./remote-query.ts";
+import type { TaskWorkspacePort } from "../model/port.ts";
+import { ApprovalBody } from "./approval-body.tsx";
+
+type RequestStatus = TerminalRequestSummary["status"];
+/** List label: a pending request shows whether it can still be answered. */
+function summaryLabel(status: RequestStatus, expired: boolean) {
+  switch (status) {
+    case "pending":
+      return expired ? "tasks.expired" : "terminal.approval.pending";
+    case "delivered":
+      return "terminal.approval.delivered";
+    case "outcome_unknown":
+      return "terminal.approval.unknown";
+    case "applied":
+    case "cancelled":
+    case "decided":
+    case "expired":
+      return `tasks.${status}` as const;
+  }
+}
+/** Detail label for a request this device can no longer answer. */
+function closedLabel(status: RequestStatus, current: boolean, supported: boolean) {
+  switch (status) {
+    case "pending":
+      if (!current) return "terminal.approval.changed";
+      if (!supported) return "terminal.approval.unsupported";
+      return "tasks.expired";
+    case "decided":
+      return "tasks.awaitingDevice";
+    case "delivered":
+      return "terminal.approval.delivered";
+    case "outcome_unknown":
+      return "terminal.approval.unknown";
+    case "applied":
+    case "cancelled":
+    case "expired":
+      return `tasks.${status}` as const;
+  }
+}
+type ObservedClient = NonNullable<TaskWorkspacePort["observed"]>;
+type Client = TaskWorkspacePort & { observed: ObservedClient };
+export function ObservedApprovals({
+  client,
+  accountId,
+}: {
+  client: TaskWorkspacePort;
+  accountId: string;
+}) {
+  if (!client.observed) return null;
+  return <ObservedList client={client as Client} accountId={accountId} />;
+}
+function ObservedList({ client, accountId }: { client: Client; accountId: string }) {
+  const t = useTranslations(),
+    c = useTranslations("common"),
+    id = useId();
+  const load = useCallback((signal: AbortSignal) => client.observed.list({}, { signal }), [client]);
+  const { data, error, refresh } = useRemoteQuery(["observed", accountId], load, true, client);
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh]);
+  const [selected, setSelected] = useState<string | null | undefined>();
+  const [history, setHistory] = useState(false),
+    [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!document.hidden) refreshRef.current();
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [client, accountId]);
+  const requests = data?.requests ?? [],
+    pending = requests.filter(
+      (request) => request.status === "pending" && Date.parse(request.expiresAt) > now,
+    );
+  const shown = history ? requests : pending,
+    active = selected === undefined ? pending[0]?.id : selected;
+  return (
+    <section aria-labelledby={id} className="mb-6 border-b border-border pb-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1">
+          <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
+            <TerminalIcon className="size-4" aria-hidden="true" />
+            {t("terminal.approval.title")}
+            {pending.length > 0 && <Badge variant="secondary">{pending.length}</Badge>}
+          </h2>
+          <HelpHint label={t("terminal.approval.help")} description={t("terminal.approval.hint")} />
+        </div>
+        {requests.length > pending.length && (
+          <Button variant="ghost" size="sm" onClick={() => setHistory(!history)}>
+            {t(history ? "terminal.approval.pendingOnly" : "terminal.approval.history")}
+          </Button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="mb-3 text-sm text-destructive-text">
+          {t("terminal.approval.unavailable")}{" "}
+          <Button variant="link" size="sm" onClick={refresh}>
+            {c("refresh")}
+          </Button>
+        </p>
+      )}
+      {!data && !error && (
+        <div
+          className="h-12 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+          aria-label={c("loading")}
+        />
+      )}
+      {data && !shown.length && (
+        <p className="text-sm text-muted-foreground">{t("terminal.approval.empty")}</p>
+      )}
+      <ul className="divide-y divide-border">
+        {shown.map((request) => {
+          const session = data?.sessions.find((value) => value.id === request.sessionId);
+          return (
+            <li key={request.id}>
+              <Collapsible
+                open={active === request.id}
+                onOpenChange={(open) => setSelected(open ? request.id : null)}
+              >
+                <CollapsibleTrigger className="group flex w-full min-w-0 items-center justify-between gap-4 py-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">
+                      {session?.projectName ?? request.title} ·{" "}
+                      {agentProviderMetadata[request.provider].label}
+                    </span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {session?.deviceName ?? ""} · {request.title}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                    {t(summaryLabel(request.status, Date.parse(request.expiresAt) <= now))}
+                    <ChevronDownIcon
+                      className="size-4 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pb-5">
+                  <ObservedRequest
+                    key={`${request.id}:${request.revision}`}
+                    client={client}
+                    accountId={accountId}
+                    summary={request}
+                    session={session}
+                    now={now}
+                    onChanged={(accepted) => {
+                      if (accepted) {
+                        setHistory(true);
+                        setSelected(request.id);
+                      }
+                      refreshRef.current();
+                    }}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+function ObservedRequest({
+  client,
+  accountId,
+  summary,
+  session,
+  now,
+  onChanged,
+}: {
+  client: Client;
+  accountId: string;
+  summary: TerminalRequestSummary;
+  session: (TerminalSession & { deviceName: string }) | undefined;
+  now: number;
+  onChanged: (accepted?: boolean) => void;
+}) {
+  const t = useTranslations(),
+    format = useFormatter(),
+    c = useTranslations("common"),
+    id = useId();
+  const load = useCallback(
+    (signal: AbortSignal) => client.observed.get({ id: summary.id }, { signal }),
+    [client, summary.id],
+  );
+  const {
+    data: request,
+    error,
+    refresh,
+  } = useRemoteQuery(
+    ["observed-request", accountId, summary.id, summary.revision],
+    load,
+    true,
+    client,
+  );
+  const [note, setNote] = useState(""),
+    [busy, setBusy] = useState(false),
+    [uncertain, setUncertain] = useState(false);
+  const receipt = useRef<TerminalDecision | null>(null);
+  const current = request?.epoch === summary.epoch && request.revision === summary.revision;
+  const actionable =
+    current && request?.status === "pending" && Date.parse(request.expiresAt) > now;
+  const supported =
+    request?.kind === "permission" &&
+    session &&
+    terminalPermissionSupported(session.capabilities, request.title);
+  async function decide(type: "allow" | "deny") {
+    if (!request || !actionable || !supported || busy) return;
+    const input = receipt.current ?? {
+      id: request.id,
+      epoch: request.epoch,
+      revision: request.revision,
+      receiptId: crypto.randomUUID(),
+      decision: type === "allow" ? { type: "allow" as const } : { type: "deny" as const, note },
+    };
+    receipt.current = input;
+    setBusy(true);
+    try {
+      await client.observed.decide(input);
+      setUncertain(false);
+      onChanged(true);
+      refresh();
+    } catch {
+      setUncertain(true);
+      onChanged();
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (error)
+    return (
+      <p role="alert" className="text-sm text-destructive-text">
+        {t("terminal.approval.unavailable")}{" "}
+        <Button variant="link" size="sm" onClick={refresh}>
+          {c("refresh")}
+        </Button>
+      </p>
+    );
+  if (!request)
+    return (
+      <div
+        className="h-24 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+        aria-label={c("loading")}
+      />
+    );
+  return (
+    <div className="space-y-4">
+      <ApprovalBody request={request} />
+      {actionable && supported ? (
+        <>
+          <p className="text-xs text-muted-foreground">
+            {t("terminal.approval.waitingHint")} ·{" "}
+            {t("terminal.approval.expires", {
+              time: format.dateTime(new Date(request.expiresAt), { timeStyle: "medium" }),
+            })}
+          </p>
+          <div className="max-w-2xl space-y-2">
+            <label htmlFor={id} className="text-sm font-medium">
+              {t("terminal.approval.denyNote")}
+            </label>
+            <Textarea
+              id={id}
+              value={note}
+              maxLength={8000}
+              disabled={busy || uncertain}
+              onChange={(event) => setNote(event.target.value)}
+              className="min-h-16"
+            />
+          </div>
+          {uncertain ? (
+            <div role="alert" className="space-y-3">
+              <p className="max-w-[65ch] text-sm text-muted-foreground">
+                {t("terminal.approval.unconfirmed")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  disabled={busy}
+                  onClick={() =>
+                    void decide(receipt.current?.decision.type === "allow" ? "allow" : "deny")
+                  }
+                >
+                  {t("terminal.approval.retry")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    onChanged();
+                    refresh();
+                  }}
+                >
+                  {c("refresh")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button disabled={busy} onClick={() => void decide("allow")}>
+                {t("tasks.allowOnce")}
+              </Button>
+              <Button variant="outline" disabled={busy} onClick={() => void decide("deny")}>
+                {t("tasks.deny")}
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t(closedLabel(request.status, current, Boolean(supported)))}
+        </p>
+      )}
+    </div>
+  );
+}

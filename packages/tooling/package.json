@@ -1,0 +1,66 @@
+{
+  "name": "@raypx/tooling",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "raypx-dev": "./bin/raypx-dev.mjs"
+  },
+  "type": "module",
+  "exports": {
+    "./build/nitro": "./src/build/nitro.ts",
+    "./build/deployment": "./src/build/deployment.ts",
+    "./build/analytics": "./src/build/analytics.ts",
+    "./build/start-env": "./src/build/start-env.ts",
+    "./browser-tests": "./src/browser-tests.ts",
+    "./browser-server": "./src/browser-server.ts",
+    "./tasks": "./src/tasks/config.ts",
+    "./build/cli": "./src/build/cli.ts",
+    "./build/archive": "./src/build/archive.ts",
+    "./performance": "./src/performance/run.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:integration": "bun --bun vp test --run tests/integration",
+    "test:inventory": "bun src/cli.ts test inventory",
+    "test:backends": "bun src/cli.ts test backends"
+  },
+  "dependencies": {
+    "@posthog/cli": "catalog:dev",
+    "@raypx-kit/devkit": "catalog:dev",
+    "@raypx-kit/intl": "catalog:",
+    "@raypx/runtime-node": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "nitro": "catalog:"
+  },
+  "raypx": {
+    "kind": "tooling",
+    "target": "bun",
+    "uncachedTasks": [
+      "test"
+    ],
+    "entryTargets": {
+      "./build/nitro": "node",
+      "./build/deployment": "node",
+      "./build/analytics": "node",
+      "./build/start-env": "node",
+      "./tasks": "node",
+      "./browser-tests": "node",
+      "./build/cli": "node",
+      "./build/archive": "node"
+    },
+    "sourceTargets": {
+      "src/build/**": "node",
+      "src/tasks/config.ts": "node",
+      "src/tasks/model.ts": "node",
+      "src/tasks/arguments.ts": "node",
+      "src/tasks/delegation.ts": "node",
+      "src/browser-tests.ts": "node"
+    }
+  }
+}

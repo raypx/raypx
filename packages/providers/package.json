@@ -1,0 +1,41 @@
+{
+  "name": "@raypx/providers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./core": "./src/core/index.ts",
+    "./claude": "./src/claude/index.ts",
+    "./codex": "./src/codex/index.ts",
+    "./pi": "./src/pi/index.ts",
+    "./pi/context": "./src/pi/context.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "catalog:",
+    "@raypx/ai": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal",
+    "entryTargets": {
+      "./pi": "node",
+      "./pi/context": "node"
+    },
+    "sourceTargets": {
+      "src/pi/**": "node"
+    }
+  }
+}

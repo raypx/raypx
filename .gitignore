@@ -1,13 +1,84 @@
-node_modules/
-dist/
-coverage/
-*.tsbuildinfo
+# Logs
 *.log
+
+# Database
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Package manager artifacts
+node_modules.bun
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Coverage and instrumentation. Every workspace produces its own `coverage/`,
+# so these stay here rather than in 13 local files, but they are anchored to the
+# workspace root so a source directory named `coverage` is still committable.
+apps/*/coverage/
+packages/*/coverage/
+*.lcov
+
+# Tool caches
+node_modules/
+*.tsbuildinfo
+*.tgz
+!/vendor/*.tgz
+.cache/
+.vite/
+dist/
+.vite-plus/
+.turbo/
+out/
+.vite-hooks/_/
+
+# Environment. `*.local` is Vite's convention for machine-local overrides and
+# applies to every workspace, so it is hoisted here rather than repeated per app.
 .env
 .env.*
 !.env.example
+!.env.*.example
+*.local
+
+# Editor artifacts. Shared `.vscode/` files are committed on purpose, so only
+# per-developer noise is listed.
+.idea/
+*.sw?
+
+# Local coding-agent preferences
+CLAUDE.local.md
+# Deny everything under .claude/ and share only the skill discovery symlinks.
+# Per-user settings, worktrees, and future agent state stay local by default.
+.claude/*
+!.claude/skills/
+!.claude/skills/*
+
+# Build outputs and test artifacts belong to the workspace that produces them.
+# Each app and `e2e` anchors its own in a local .gitignore.
+
+# OS files
 .DS_Store
-.output/
-.tanstack/
-routeTree.gen.ts
-.vitest/
+
+# Cloud test helpers are TypeScript sources; incidental emitted siblings stay local.
+/packages/database/tests/cloud-*.js*
+/packages/database/tests/cloud-*.d.ts*
+
+# Generated application artifacts
+apps/*/.output/
+apps/*/.tanstack/
+e2e/test-results/
+e2e/playwright-report/
+
+# Retired deployment caches and local secrets stay private.
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+# Generated validation evidence only; reusable scripts belong in packages/tooling.
+.artifacts/
+
+# Retain ignored build caches from older branches until explicitly cleaned.
+/target/
+
+# Generated Tauri host bindings
+apps/desktop/src-tauri/gen/

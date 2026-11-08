@@ -1,9 +1,5 @@
 {
-  "extends": "@raypx/config/tsconfig-presets/node.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "declaration": true
-  },
-  "include": ["src/**/*"]
+  "extends": "@raypx/tsconfig/react-library.json",
+  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"] },
+  "include": ["src", "tests"]
 }

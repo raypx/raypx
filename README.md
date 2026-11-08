@@ -1,141 +1,70 @@
 # Raypx
 
-TypeScript monorepo for personal AI workbench, using Bun workspaces, Vite+, and TanStack Start.
-Currently implements basic engineering, homepage, and service connection check; sessions, model, database, login, and file storage not yet integrated.
+A project-centered personal development workbench. Tauri Desktop and the standalone
+CLI execute on your computer; Web provides optional remote access. Projects, Agent
+sessions, approvals, files, automations and terminals share explicit device ownership.
+The [current architecture](docs/architecture/README.md) defines the implementation.
 
-Author: Zack <heyloyep@gmail.com>
+## Requirements
 
-## Local Development
-
-Install Bun 1.4.0 (see `.bun-version`) and Node.js 22.21.1 (see `.node-version`).
-Bun handles workspaces, dependency installation, project scripts, and production service; Vite+, Vitest, Oxlint, and tsc currently still execute through compatible Node tool entrypoints. Bun does not replace TypeScript type checking.
-
-Root `package.json`'s `devEngines` declares development toolchain Node.js 22.21.1 and package manager Bun 1.4.0,
-consistent with version files, `packageManager`, and `engines.bun`.
-Bun 1.4.0 itself does not enforce `devEngines.onFail`, project supplements with native TypeScript environment checking:
-Before installation and all public root script execution, checks actual Node, Bun versions in PATH and available package manager identifier,
-while validating version declaration consistency. On failure outputs actual vs expected values and exits non-zero.
-Checking requires no dependency installation, nor automatically downloads runtimes; CI explicitly executes before frozen install.
+Bun 1.4.4 and an isolated PostgreSQL database for account flows. Root
+`packageManager` pins Bun; `bun run doctor` checks the active runtime. Native
+Desktop development requires Rust 1.99.1 and Tauri 2.12.5. macOS requires 13.5+;
+Windows uses WebView2. Linux Desktop acceptance remains unverified. Installed
+Desktop and CLI payloads include the Bun runtime. `canary` uses Tauri/Rust;
+`dev` retains the MyGo/Go alternative. Both use the same Bun CLI/daemon;
+the Desktop host choice does not imply a native CLI rewrite.
 
 ```sh
-bun run check:env
-bun install --frozen-lockfile
+bun install
+cp .env.example .env
+# Starts a NEW database on 5433; does not reuse the old volume.
+docker compose up -d postgres valkey
+bun run db:migrate
 bun run dev
 ```
 
-Open http://127.0.0.1:5173. Start provides both pages and `/api` interfaces, homepage displays real connection status with retry support.
-Development command first builds all runtime packages, then starts package watching and Start dev server in parallel.
-No need to globally install `vp`, scripts use repository-fixed Vite+ 1.1.0.
-Workspace and catalog configuration in root `package.json`, dependencies locked in `bun.lock`.
-`bunfig.toml` explicitly adopts isolated linker, each workspace resolves packages by its own dependency declarations;
-when adding package dependencies, declare in the workspace using it, do not rely on accidentally visible transitive dependencies.
-Running project tests uses `bun run test`, executed by Vitest; `bun test` is Bun's own test command.
+Web (TanStack Start SSR) runs on 3000, API on 3002 and independent Relay on 3003.
+They deploy as separate
+Bun services: `bun apps/web/.output/server/index.mjs` and
+`bun apps/api/.output/server/index.mjs`. Web bakes `VITE_API_URL` at build time.
+Relay starts with `bun infra/relay/dist/main.js`; the gateway sends `/relay` to it.
+Its server rendering needs the session cookie: serve both from one origin, or set
+`AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
+Register each local Desktop/CLI profile once to an account and API origin. Its signed
+identity then permits offline local work, including after online logout. Remote
+data and Host authorization require a separate online session and explicit grants.
+On macOS and Windows, the independent CLI daemon owns scheduling and execution;
+closing or quitting Desktop leaves daemon tasks running.
+External tools run with the user's OS permissions.
 
-## Project Structure
-
-`apps/web` is the only application, handles Start file routing, page assembly, SSR, server adapters, and deployment entrypoint.
-`packages/` contains 13 `@raypx/*` workspaces, reused through explicit public entrypoints and `workspace:*` dependencies.
-
-| Package      | Responsibility & Current Content                                                 |
-| ------------ | -------------------------------------------------------------------------------- |
-| `contracts`  | Browser-usable Zod contracts and types, health check entrypoint `@raypx/contracts/health` |
-| `api-client` | Health check HTTP request, response validation, 5 second timeout, and cancellation |
-| `hooks`      | React connection check state, retry, and unmount cancellation                    |
-| `ui`         | Button, connection status display, and base styles, no data fetching or routing  |
-| `api`        | Server health check and JSON 404 handling, entrypoint `@raypx/api/health`       |
-| `ai`         | Model integration skeleton, no model SDK or call implementation                  |
-| `db`         | Database skeleton, no connection, Schema, or migration implementation            |
-| `auth`       | Authentication skeleton, no login or session implementation                      |
-| `storage`    | Storage skeleton, no file or object storage implementation                       |
-| `env`        | Configuration skeleton, separately exposes `./client` and `./server`, no business variable parsing |
-| `logger`     | Server logging skeleton, no logging implementation                               |
-| `tsconfig`   | Static TypeScript configuration, entrypoint `@raypx/tsconfig/*.json`            |
-| `config`     | Tasks, boundaries, test aliases, and style tools, does not carry TypeScript static configuration |
-
-Skeleton packages only provide buildable empty modules and responsibility descriptions. `shared` replaced by `contracts`.
-See [ARCHITECTURE.md](ARCHITECTURE.md) for dependency constraints and extension methods.
-
-## Common Commands
-
-| Command                    | Purpose                                                          |
-| -------------------------- | ---------------------------------------------------------------- |
-| `bun run dev`              | Initial compile then start package watching and Start, no cache  |
-| `bun run build`            | Build packages and application in dependency order, use local cache |
-| `bun run start`            | Start built full-stack service with Bun, no cache                |
-| `bun run lint`             | Oxlint check, warnings also fail check                           |
-| `bun run lint:fix`         | Fix auto-fixable lint issues                                     |
-| `bun run format`           | Oxfmt format, no cache                                           |
-| `bun run format:check`     | Only check format                                                |
-| `bun run check:env`        | Check actual dev tool versions and declaration consistency, no dependency installation needed |
-| `bun run check:boundaries` | Check package dependencies, cycles, public entrypoints, and client import boundaries |
-| `bun run typecheck`        | tsc type check, use cache                                        |
-| `bun run test`             | Each package unit tests and web production integration tests, use cache |
-| `bun run test:watch`       | Watch unit tests, exclude production integration tests           |
-| `bun run test:coverage`    | Complete tests and V8 coverage report                            |
-| `bun run check`            | Build, format, lint, boundaries, type, and test checks, for CI   |
-
-Run individual package tasks: `bun run vp run @raypx/contracts#build`.
-Task definitions in each package `vite.config.ts`, same-named package scripts do not duplicate definitions.
-Runtime packages use tsc to output ESM and declaration files; UI styles sync to artifacts and expose exports.
-`tsconfig` static JSON configuration and `config` TypeScript tool entrypoints directly consumable, no initial build needed; internal scripts executed by Bun,
-Vite+ tools run via Node.js 22.21.1 native type stripping. Neither replaces tsc type checking.
-Runtime package `tsconfig.json` handles build, `tsconfig.test.json` handles source, tests, and Vite configuration noEmit type checking.
-Start auto-generated route tree recovers with build cache.
-
-Build, type check, and tests use local cache, watching, format fix, and production start do not cache.
-Cache input includes transitive dependency source, configuration, and static assets. View recent task summary:
-`bun run vp run --last-details`; clean cache: `bun run vp cache clean`.
-
-## Testing & Code Checks
-
-Vite+ 1.1.0 provides Vitest 5.0.3, Oxlint 1.87.0, and Oxfmt 0.72.0.
-Root `vite.config.ts` manages test projects, TS/TSX coverage, and lint rules, each package defines actual test directories.
-Lint/fmt unified via `vp lint`, `vp fmt`, following root `vite.config.ts`; `.oxlintrc.json` only preserved as unadopted alternative configuration, current vp scripts do not use it.
-Package boundaries continue enforced by `packages/config/src/check-boundaries.ts` AST checking, included in complete check.
-Test API imports from `vite-plus/test`; default environment Node, Hooks and UI use jsdom and Testing Library.
-Tests use precise source aliases to access public package entrypoints, watch does not depend on package pre-compilation.
-
-Oxfmt uniformly uses root `vite.config.ts` `fmt` configuration: two-space indent, double quotes, semicolons, trailing commas, and LF line endings,
-skips generated route tree and build artifacts. `bun run format` writes format, `bun run format:check` only checks; CI's `bun run check` includes format check.
-VS Code workspace recommends Oxc extension, after installation auto-formats on save, using same root configuration.
+## Commands
 
 ```sh
+bun run workspace:list
+bun run workspace:new example --target universal         # preview
+bun run workspace:new example --target universal --write # create
+bun run check
 bun run test
-bun run test:watch
-bun run test:coverage
-bun run vp test run --project contracts
-```
-
-Complete tests prepare artifacts needed for production integration tests. When running `vp test` directly in root directory, need to build first,
-or exclude `production.test.ts`. Coverage output to root `coverage/`, includes HTML and JSON summary,
-no coverage threshold currently set. Independently started production server not counted in Vitest unit test coverage.
-See [TESTING.md](TESTING.md) for more details.
-
-Oxlint checks TypeScript, React, JSX accessibility, and test rules, including floating Promises,
-incorrect async callbacks, Hooks usage, and `.only` tests. tsc handles complete type checking.
-
-## Production Runtime
-
-```sh
+bun run test unit
+bun run test --package tasks
+bun run --cwd packages/tasks test
 bun run build
-bun run start
+bun run verify
+bun run verify --full
+bun run package:desktop
 ```
 
-Default production port 3000, development port 5173. Copy `apps/web/.env.example` to `.env` in same directory,
-can configure production listen `HOST` and `PORT`; containers typically use `HOST=0.0.0.0`.
-Production task runs in web directory, uses Bun to read `.env` and run `.output/server/index.mjs`.
-Nitro fixed at `3.0.260903-beta`, using Bun preset; re-verify build and runtime on upgrade.
-See [ENV.md](ENV.md) for environment variables and configuration boundaries.
+VP discovers tasks from workspace manifests. Engineering commands are exposed
+as `raypx-dev`; the product executable is `raypx`. Workspace discovery reads the
+root `package.json` patterns, including applications, libraries, infrastructure and E2E.
+`verify` checks affected sources/tests; `verify --full` adds repository-wide audits,
+builds and current-platform artifact probes. Database, browser and packaged GUI
+acceptance have separate gates. The Expo Mobile workspace currently provides an
+account/login baseline; it is not the complete Desktop workbench.
+Use `bun run test --help` or the [test command guide](docs/development/testing.md#test-commands)
+for root suites, package-local commands and optional backend/browser gates.
 
-`GET /api/health` returns `{ "status": "ok", "service": "raypx-api" }`.
-Unknown `/api` paths return JSON 404, unknown pages return Start page 404.
-
-## Development Documentation
-
-- [Architecture & Package Dependencies](ARCHITECTURE.md)
-- [Environment Variables](ENV.md)
-- [Code Examples](EXAMPLES.md)
-- [Testing Conventions](TESTING.md)
-- [AI-Assisted Development Guide](CLAUDE.md)
-- [TanStack Start Guide](https://tanstack.com/start/latest/docs/framework/react/build-from-scratch)
-- [Vite+ Tasks & Cache](https://viteplus.dev/guide/run)
+See [documentation](docs/README.md), [architecture](docs/architecture/README.md),
+[infrastructure](infra/README.md),
+[workspace extension](docs/development/workspaces.md) and [verification](docs/development/testing.md).

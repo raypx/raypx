@@ -1,0 +1,49 @@
+{
+  "name": "@raypx/jobs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./client/styles.css": "./src/client/styles.css"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run .component.test."
+  },
+  "dependencies": {
+    "@raypx/core": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/icons": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
+    "@raypx/memory": "workspace:*",
+    "@raypx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@testing-library/jest-dom": "catalog:dev",
+    "@testing-library/react": "catalog:dev",
+    "@testing-library/user-event": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "happy-dom": "catalog:dev",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "browser",
+    "entryTargets": {
+      "./client": "browser",
+      "./client/styles.css": "browser"
+    },
+    "sourceTargets": {
+      "src/client.ts": "browser",
+      "src/client/**": "browser"
+    }
+  }
+}

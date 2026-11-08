@@ -1,0 +1,587 @@
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { hostname } from "node:os";
+import {
+  RelayConnection,
+  relayUrl,
+  systemRelayScheduler,
+  type RelayScheduler,
+  type RelaySocketFactory,
+} from "@raypx/client/relay";
+import {
+  RELAY_VERSION,
+  deviceGrantSchema,
+  type DeviceGrant,
+  type RelayServerFrame,
+} from "@raypx/contracts/tasks";
+import type { HostAgentPort } from "./agent-port";
+import { serverOrigin } from "./origin";
+import type { ControlInfo } from "@raypx/contracts/terminal";
+import { readRemoteControlSettings, type Settings, type Binding } from "./settings";
+export class RemoteControl {
+  private readonly settings: Settings;
+  private storageUnavailable = false;
+  private accountId: string | null = null;
+  private binding: string | undefined;
+  private grant: DeviceGrant | undefined;
+  private connection: RelayConnection | undefined;
+  private timer: (() => void) | undefined;
+  private generation = 0;
+  private error: string | null = null;
+  private renewAt = 0;
+  private connected = false;
+  private ready = false;
+  private cursor = 0;
+  private streamId = "";
+  private snapshotNeeded = false;
+  private readonly snapshotRequests = new Set<string>();
+  private syncing: Promise<void> | undefined;
+  private dirty = false;
+  private detaching = false;
+  private acknowledgement:
+    | {
+        sequence: number;
+        snapshotId?: string;
+        resolve(): void;
+        reject(): void;
+        timer: () => void;
+      }
+    | undefined;
+  private readonly notified = new Set<string>();
+  private apiUrl: string | undefined;
+  private renewing: Promise<boolean> | undefined;
+  private renewalFailures = 0;
+  private renewalTimer: (() => void) | undefined;
+  private draining = false;
+  private readonly commands = new Set<Promise<void>>();
+  private get scheduler() {
+    return this.options.scheduler ?? systemRelayScheduler;
+  }
+  private scheduleRenewal(disconnect = true) {
+    if (this.renewalTimer || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
+    if (disconnect) this.resetConnection();
+    const delay = Math.max(
+      this.renewAt - this.scheduler.now(),
+      Math.min(30_000, 500 * 2 ** Math.min(this.renewalFailures++, 6)) *
+        (0.8 + this.scheduler.random() * 0.2),
+    );
+    this.renewAt = this.scheduler.now() + delay;
+    this.renewalTimer = this.scheduler.timeout(() => {
+      this.renewalTimer = undefined;
+      void this.refreshGrant()
+        .then((restored) => {
+          if (!restored && this.accountId && !this.connected) this.scheduleRenewal(false);
+        })
+        .catch(() => {
+          this.error = "NETWORK_UNAVAILABLE";
+        });
+    }, delay);
+  }
+  constructor(
+    private readonly directory: string,
+    private readonly engine: HostAgentPort,
+    private readonly notify: () => void,
+    private readonly grantRequired: () => void,
+    private readonly options: {
+      socket?: RelaySocketFactory;
+      scheduler?: RelayScheduler;
+      renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
+      authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
+      bindingKey?: (accountId: string, grant: DeviceGrant) => string;
+      syncObserved?: (
+        send: (
+          frame: Extract<import("@raypx/contracts/tasks").RelayClientFrame, { type: "observed" }>,
+        ) => void,
+      ) => Promise<void>;
+      observedAck?: (epoch: string, revision: number) => void;
+      observedReset?: () => void;
+      connected?: (connected: boolean) => void;
+      /** Upper bound on waiting for in-flight commands before a renewed grant reconnects. */
+      drainTimeoutMs?: number;
+    } = {},
+  ) {
+    this.settings = { installationId: crypto.randomUUID(), accounts: {} };
+    try {
+      mkdirSync(directory, { recursive: true });
+      const saved = readRemoteControlSettings(directory);
+      if (saved) this.settings = saved;
+      else this.save();
+    } catch {
+      this.storageUnavailable = true;
+    }
+  }
+  private save() {
+    if (this.storageUnavailable) throw new Error("Remote settings are unavailable");
+    const path = join(this.directory, "remote-control.json");
+    writeFileSync(path + ".tmp", JSON.stringify(this.settings), { mode: 0o600 });
+    renameSync(path + ".tmp", path);
+  }
+  info(accountId: string): ControlInfo {
+    const saved = this.settings.accounts[accountId];
+    return {
+      installationId: this.settings.installationId,
+      name: hostname(),
+      enabled: saved?.enabled ?? false,
+      connected: this.accountId === accountId && this.connected,
+      pendingRevoke: saved?.pendingRevoke ?? null,
+      binding: saved?.binding ?? null,
+      terminalSupported: true,
+      error: this.storageUnavailable
+        ? "SETTINGS_UNAVAILABLE"
+        : this.accountId === accountId
+          ? this.error
+          : null,
+    };
+  }
+  async enable(accountId: string, enabled: boolean) {
+    if (this.storageUnavailable) throw new Error("Remote settings are unavailable");
+    const saved = this.settings.accounts[accountId] ?? { enabled: false };
+    saved.enabled = enabled;
+    if (!enabled && saved.binding) saved.pendingRevoke = saved.binding;
+    this.settings.accounts[accountId] = saved;
+    this.save();
+    if (!enabled && this.accountId === accountId) await this.detach();
+    if (enabled && !this.accountId) {
+      this.accountId = accountId;
+      this.maintenance();
+    }
+    return this.info(accountId);
+  }
+  revoked(accountId: string) {
+    const saved = this.settings.accounts[accountId];
+    if (saved) {
+      delete saved.pendingRevoke;
+      delete saved.binding;
+      this.save();
+    }
+    return this.info(accountId);
+  }
+  async attach(accountId: string, apiUrl: string, raw: DeviceGrant) {
+    const grant = deviceGrantSchema.parse(raw);
+    apiUrl = serverOrigin(apiUrl);
+    if (
+      !this.settings.accounts[accountId]?.enabled ||
+      this.settings.accounts[accountId]?.pendingRevoke
+    )
+      throw new Error("Remote control is disabled");
+    const binding =
+      this.options.bindingKey?.(accountId, grant) ??
+      `${accountId}:${grant.deviceId}:${grant.epoch}`;
+    if (this.binding !== binding) {
+      await this.detach();
+      this.generation++;
+    }
+    this.accountId = accountId;
+    this.binding = binding;
+    this.grant = grant;
+    this.apiUrl = apiUrl;
+    this.error = null;
+    this.renewAt = 0;
+    const saved = this.settings.accounts[accountId];
+    if (!saved) throw new Error("Remote control is disabled");
+    saved.binding = { deviceId: grant.deviceId, epoch: grant.epoch };
+    this.save();
+    this.connect(apiUrl);
+    this.maintenance();
+    return this.info(accountId);
+  }
+  private resetConnection() {
+    this.generation++;
+    this.connection?.stop();
+    this.connection = undefined;
+    if (this.connected) this.options.connected?.(false);
+    this.connected = false;
+    this.ready = false;
+    this.snapshotRequests.clear();
+    this.acknowledgement?.reject();
+  }
+  private connect(apiUrl: string) {
+    this.resetConnection();
+    const generation = this.generation,
+      grant = this.grant;
+    if (!grant || !this.accountId) return;
+    this.connection = new RelayConnection({
+      scheduler: this.scheduler,
+      url: relayUrl(apiUrl, this.accountId),
+      ...(this.options.socket ? { socket: this.options.socket } : {}),
+      authenticate: async () => ({
+        type: "auth",
+        protocolVersion: RELAY_VERSION,
+        role: "device",
+        token: grant.token,
+      }),
+      status: (connected, code) => {
+        if (generation !== this.generation) return;
+        if (!connected) {
+          this.ready = false;
+          if (this.connected) this.options.connected?.(false);
+          this.connected = false;
+          this.error = code ?? "NETWORK_UNAVAILABLE";
+          this.snapshotRequests.clear();
+          this.acknowledgement?.reject();
+          if (code === "DEVICE_REVOKED" && this.accountId)
+            void this.loseAuthorization(this.accountId, code).catch(() => {
+              this.error = code;
+            });
+          if (code === "AUTH_REQUIRED") this.scheduleRenewal();
+        }
+      },
+      message: (frame) => {
+        if (generation === this.generation) {
+          const pending = this.message(frame, generation).catch(() => {
+            if (generation === this.generation) {
+              this.error = "NETWORK_UNAVAILABLE";
+              this.connection?.restart();
+            }
+          });
+          if (frame.type === "command") {
+            this.commands.add(pending);
+            void pending.then(
+              () => this.commands.delete(pending),
+              () => this.commands.delete(pending),
+            );
+          }
+        }
+      },
+    });
+    this.connection.start();
+  }
+  private maintenance() {
+    if (this.timer) this.timer();
+    const check = () => {
+      if (!this.accountId || this.error === "UPGRADE_REQUIRED") return;
+      if (
+        (!this.grant || Date.parse(this.grant.expiresAt) - this.scheduler.now() < 60_000) &&
+        this.scheduler.now() >= this.renewAt &&
+        !this.renewalTimer &&
+        !this.renewing
+      ) {
+        if (!this.grant) this.renewAt = this.scheduler.now() + 15_000;
+        void this.refreshGrant().catch(() => {
+          this.error = "NETWORK_UNAVAILABLE";
+        });
+      }
+    };
+    check();
+    this.timer = this.scheduler.interval(check, 15_000);
+  }
+  /** Native renewal remains active when the renderer is hidden or suspended. */
+  refreshGrant(): Promise<boolean> {
+    if (this.renewing) return this.renewing;
+    const accountId = this.accountId,
+      grant = this.grant,
+      apiUrl = this.apiUrl;
+    if (!accountId || !grant || !apiUrl || !this.options.renewGrant) {
+      this.grantRequired();
+      return Promise.resolve(false);
+    }
+    const generation = this.generation;
+    const pending = (async () => {
+      try {
+        const next = deviceGrantSchema.parse(
+          await this.options.renewGrant!(accountId, {
+            deviceId: grant.deviceId,
+            epoch: grant.epoch,
+          }),
+        );
+        if (
+          generation !== this.generation ||
+          this.accountId !== accountId ||
+          !this.settings.accounts[accountId]?.enabled
+        )
+          return false;
+        if (
+          next.deviceId !== grant.deviceId ||
+          next.epoch !== grant.epoch ||
+          !Number.isFinite(Date.parse(next.expiresAt)) ||
+          Date.parse(next.expiresAt) <= this.scheduler.now()
+        )
+          throw new Error("Invalid renewed grant");
+        this.grant = next;
+        this.error = null;
+        this.draining = true;
+        let timeout: (() => void) | undefined;
+        try {
+          await Promise.race([
+            Promise.allSettled(this.commands),
+            new Promise<void>((resolve) => {
+              timeout = this.scheduler.timeout(resolve, this.options.drainTimeoutMs ?? 10_000);
+            }),
+          ]);
+        } finally {
+          timeout?.();
+          this.draining = false;
+        }
+        if (generation !== this.generation || this.accountId !== accountId) return false;
+        // Reconnect the relay without detaching the host binding or its tasks.
+        this.connect(apiUrl);
+        return true;
+      } catch (error) {
+        if (generation !== this.generation || this.accountId !== accountId) return false;
+        const failure =
+          error && typeof error === "object"
+            ? (error as { code?: string; data?: { error?: { code?: string } } })
+            : {};
+        const code = failure.data?.error?.code ?? failure.code;
+        if (code === "DEVICE_REVOKED") await this.loseAuthorization(accountId, code);
+        else if (code === "AUTH_REQUIRED" || code === "UNAUTHORIZED")
+          await this.loseAuthorization(accountId, "AUTH_REQUIRED");
+        else {
+          this.error = "NETWORK_UNAVAILABLE";
+          this.scheduleRenewal(false);
+        }
+        return false;
+      }
+    })();
+    this.renewing = pending;
+    const completed = () => {
+      if (this.renewing === pending) this.renewing = undefined;
+    };
+    void pending.then(completed, completed);
+    return pending;
+  }
+  private async loseAuthorization(accountId: string, code: "AUTH_REQUIRED" | "DEVICE_REVOKED") {
+    if (this.options.authorizationLost) {
+      await this.options.authorizationLost(code);
+      return;
+    }
+    if (code === "DEVICE_REVOKED") await this.enable(accountId, false);
+    else await this.detach();
+  }
+  private async message(frame: RelayServerFrame, generation: number) {
+    if (generation !== this.generation) return;
+    const binding = this.binding;
+    if (!binding) return;
+    if (frame.type === "observed_ack") {
+      this.options.observedAck?.(frame.epoch, frame.revision);
+    } else if (frame.type === "ready") {
+      const [replay, projects, capabilities] = await Promise.all([
+        this.engine.replay({ binding, after: 0 }),
+        this.engine.projects({}),
+        this.engine.capabilities({}),
+      ]);
+      if (generation !== this.generation) return;
+      const info = await this.engine.events({ binding });
+      if (generation !== this.generation) return;
+      this.connection?.send({
+        type: "announce",
+        streamId: replay.streamId,
+        instanceId: info.instanceId,
+        projects,
+        capabilities,
+      });
+    } else if (frame.type === "resume") {
+      if (frame.syncId) {
+        if (!this.ready || frame.streamId !== this.streamId || !frame.snapshot) return;
+        if (!this.snapshotRequests.has(frame.syncId) && this.snapshotRequests.size >= 64)
+          throw new Error("Snapshot request limit");
+        this.snapshotRequests.add(frame.syncId);
+      } else {
+        this.options.observedReset?.();
+        this.cursor = frame.sequence;
+        this.streamId = frame.streamId;
+        this.snapshotNeeded ||= frame.snapshot;
+        this.ready = true;
+      }
+      await this.wake();
+    } else if (frame.type === "ack") {
+      const pending = this.acknowledgement;
+      if (
+        pending &&
+        frame.streamId === this.streamId &&
+        frame.sequence === pending.sequence &&
+        frame.snapshotId === pending.snapshotId
+      )
+        pending.resolve();
+    } else if (frame.type === "command") {
+      if (this.detaching || this.draining) {
+        this.connection?.send({
+          type: "result",
+          routeId: frame.routeId,
+          result: { ok: false, code: "REQUEST_CLOSED" },
+        });
+        return;
+      }
+      const result =
+        frame.command.request.method === "observed.decide"
+          ? await this.engine.observed({ binding, decision: frame.command.request.input }).then(
+              (value) => ({ ok: true as const, value }),
+              (error: unknown) => ({
+                ok: false as const,
+                code:
+                  error && typeof error === "object" && "code" in error
+                    ? String(error.code)
+                    : "REQUEST_CLOSED",
+              }),
+            )
+          : await this.engine.remote({ binding, command: frame.command });
+      if (generation !== this.generation) return;
+      await this.wake();
+      while (this.syncing && generation === this.generation) await this.syncing;
+      if (generation === this.generation)
+        this.connection?.send({ type: "result", routeId: frame.routeId, result });
+    } else if (frame.type === "error") {
+      this.error = frame.code;
+      if (frame.code === "AUTH_REQUIRED") this.scheduleRenewal();
+      if (frame.code === "ACTIVITY_BASE_MISMATCH") this.snapshotNeeded = true;
+    }
+  }
+  private waitForAck(sequence: number, snapshotId?: string) {
+    return new Promise<void>((resolve, reject) => {
+      const finish = (error: boolean) => {
+        const pending = this.acknowledgement;
+        if (!pending) return;
+        pending.timer();
+        this.acknowledgement = undefined;
+        if (error) reject(new Error("NETWORK_UNAVAILABLE"));
+        else resolve();
+      };
+      this.acknowledgement = {
+        sequence,
+        ...(snapshotId ? { snapshotId } : {}),
+        resolve: () => finish(false),
+        reject: () => finish(true),
+        timer: this.scheduler.timeout(() => finish(true), 10_000),
+      };
+    });
+  }
+  wake(): Promise<void> {
+    this.dirty = true;
+    if (this.syncing) return this.syncing;
+    if (!this.ready || !this.binding) return Promise.resolve();
+    const generation = this.generation;
+    const operation = this.flush(generation)
+      .catch(() => {
+        if (generation === this.generation) {
+          this.error = "NETWORK_UNAVAILABLE";
+          this.connection?.restart();
+        }
+      })
+      .finally(() => {
+        if (this.syncing === operation) this.syncing = undefined;
+        if (this.dirty && this.ready)
+          void this.wake().catch(() => {
+            this.error = "NETWORK_UNAVAILABLE";
+          });
+      });
+    this.syncing = operation;
+    return operation;
+  }
+  private async flush(generation: number) {
+    const binding = this.binding!;
+    while (this.ready && generation === this.generation) {
+      this.dirty = false;
+      const syncId = this.snapshotRequests.values().next().value;
+      if (this.snapshotNeeded || syncId) {
+        let id: string | undefined,
+          offset = 0,
+          ack: Promise<void> | undefined;
+        for (;;) {
+          const page = await this.engine.snapshot({
+            binding,
+            ...(id ? { id } : {}),
+            offset,
+          });
+          if (generation !== this.generation) return;
+          if (!id) {
+            id = page.id;
+            ack = this.waitForAck(page.sequence, id);
+            void ack.catch(() => {});
+          }
+          this.connection?.send({
+            type: "snapshot",
+            id: page.id,
+            ...(syncId ? { syncId } : {}),
+            streamId: page.streamId,
+            sequence: page.sequence,
+            records: page.records,
+            done: page.done,
+          });
+          offset = page.next;
+          if (page.done) {
+            await ack;
+            this.cursor = page.sequence;
+            this.snapshotNeeded = false;
+            if (syncId) this.snapshotRequests.delete(syncId);
+            break;
+          }
+        }
+      }
+      const replay = await this.engine.replay({
+        binding,
+        after: this.cursor,
+      });
+      if (generation !== this.generation) return;
+      if (
+        replay.streamId !== this.streamId ||
+        this.cursor > replay.sequence ||
+        replay.floor > this.cursor + 1
+      ) {
+        this.snapshotNeeded = true;
+        continue;
+      }
+      if (!replay.events.length) {
+        await this.engine.checkpoint({ binding, sequence: this.cursor });
+        if (generation !== this.generation) return;
+        this.connection?.send({ type: "available" });
+        this.connected = true;
+        this.options.connected?.(true);
+        this.renewalFailures = 0;
+        this.renewAt = 0;
+        this.error = null;
+        await this.options.syncObserved?.((frame) => this.connection!.send(frame));
+        if (!this.dirty && !this.snapshotRequests.size) return;
+        continue;
+      }
+      const last = replay.events.at(-1)!;
+      const ack = this.waitForAck(last.sequence);
+      void ack.catch(() => {});
+      this.connection?.send({ type: "events", streamId: this.streamId, events: replay.events });
+      await ack;
+      this.cursor = last.sequence;
+      await this.engine.checkpoint({ binding, sequence: this.cursor });
+      for (const { event } of replay.events)
+        if (
+          event.kind === "request" &&
+          event.request.status === "pending" &&
+          !this.notified.has(event.id)
+        ) {
+          this.notified.add(event.id);
+          if (this.notified.size > 4096) this.notified.delete(this.notified.values().next().value!);
+          this.notify();
+        }
+    }
+  }
+  async detach() {
+    this.renewalTimer?.();
+    this.renewalTimer = undefined;
+    if (this.timer) this.timer();
+    this.timer = undefined;
+    const binding = this.binding;
+    this.detaching = true;
+    if (binding) {
+      await this.engine.detach({ binding }).catch(() => {});
+      if (this.ready) {
+        let cancel: (() => void) | undefined;
+        try {
+          await Promise.race([
+            this.wake(),
+            new Promise<void>((resolve) => {
+              cancel = this.scheduler.timeout(resolve, 2000);
+            }),
+          ]);
+        } finally {
+          cancel?.();
+        }
+      }
+    }
+    this.resetConnection();
+    this.binding = undefined;
+    this.grant = undefined;
+    this.apiUrl = undefined;
+    this.accountId = null;
+    this.error = null;
+    this.detaching = false;
+    this.dirty = false;
+  }
+}

@@ -1,0 +1,294 @@
+import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devkit/verification";
+import { readFileSync } from "node:fs";
+import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
+import { distributionRequested } from "./events.js";
+import { browserReach } from "./platform.js";
+import { toolingImpact } from "./tooling.js";
+
+type Artifact = "api" | "web" | "relay" | "cli";
+export interface VerificationPlan {
+  full: boolean;
+  reasons: string[];
+  files: string[];
+  workspaces: string[];
+  tasks: string[];
+  artifacts: Artifact[];
+  /** Current-platform Rust checks; Linux-only changes need no macOS/Windows runner. */
+  native: boolean;
+  nativeRunners: string[];
+  backend: boolean;
+  deployment: boolean;
+  browser: "none" | "web" | "desktop" | "all";
+}
+export function changedFiles(
+  root: string,
+  base = "origin/canary",
+  ci?: { before?: string; head?: string },
+) {
+  const changed = readChanges(root, base, ci);
+  return {
+    ...changed,
+    reasons: changed.reasons.map((reason) =>
+      reason.replace("full verification", "all source and native checks"),
+    ),
+  };
+}
+function documentation(file: string) {
+  return (
+    file.startsWith("docs/") || /(?:^|\/)(?:README|AGENTS|CHANGELOG|LICENSE)(?:\.md)?$/.test(file)
+  );
+}
+function globalInput(file: string) {
+  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
+    file,
+  );
+}
+
+/** Select native work from its actual inputs, independently of JavaScript dependency reach. */
+function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: boolean) {
+  const runners = ["macos-latest", "windows-latest"];
+  const defaults = macos ? runners : ["windows-latest"];
+  const paths = files.filter((file) => {
+    if (documentation(file)) return false;
+    if (
+      [
+        "Cargo.toml",
+        "Cargo.lock",
+        "rust-toolchain.toml",
+        ".gitattributes",
+        ".github/workflows/native.yml",
+      ].includes(file)
+    )
+      return true;
+    const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
+    if (!member) return false;
+    const relative = file.slice(member.path.length + 1);
+    if (member.name === "@raypx/tooling")
+      return (
+        /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative) ||
+        /^src\/tasks\/(?:leaf|arguments|delegation)\.ts$/.test(relative) ||
+        /^src\/verification\/(?:plan|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
+        /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative) ||
+        relative === "tests/integration/task-leaf.test.ts"
+      );
+    if (member.name === "@raypx/runtime-node")
+      return relative.startsWith("src/") || relative === "scripts/task.ts";
+    if (member.name === "@raypx/tsconfig") return relative === "scripts/task.ts";
+    if (member.native)
+      return /^(?:(?:bridge|preferences)\.ts$|package\.json$|src-tauri\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
+        relative,
+      );
+    if (member.name === "cli")
+      return /^(?:package\.json$|scripts\/(?:prepare-herdr|build|distribution|archive-smoke)\.ts$|src\/main\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|provider-proxy|temporary|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:artifact|daemon-agents|herdr-terminal|windows-payload|terminal-)))/.test(
+        relative,
+      );
+    return (
+      member.name === "@raypx/contracts" &&
+      /^src\/(?:local(?:-client)?|terminal)(?:\/|\.)/.test(relative)
+    );
+  });
+  const selected = new Set<string>();
+  for (const file of paths) {
+    if (/(?:^|[/_.-])(?:windows|win32)(?:[/_.-]|$)/i.test(file)) selected.add("windows-latest");
+    else if (/(?:^|[/_.-])(?:darwin|macos|unix)(?:[/_.-]|$)/i.test(file))
+      selected.add("macos-latest");
+    else if (!/(?:^|[/_.-])linux(?:[/_.-]|$)/i.test(file))
+      for (const runner of defaults) selected.add(runner);
+  }
+  return {
+    native: full || paths.length > 0,
+    nativeRunners: full ? defaults : runners.filter((runner) => selected.has(runner)),
+  };
+}
+
+export function verificationPlan(
+  model: TaskModel,
+  files: string[],
+  options: { full?: boolean; artifacts?: boolean; reasons?: string[]; macos?: boolean } = {},
+): VerificationPlan {
+  const reasons = [...(options.reasons ?? [])];
+  const full = Boolean(options.full);
+  let allSources = full || reasons.length > 0;
+  const native = nativeChanges(model, files, full || reasons.length > 0, options.macos ?? true);
+  // "browser" workspaces are reached only through browser code; "all" may affect any platform.
+  const affected = new Map<string, "browser" | "all">();
+  const mark = (name: string, scope: "browser" | "all") => {
+    const current = affected.get(name);
+    if (current === "all" || current === scope) return false;
+    affected.set(name, scope);
+    return true;
+  };
+  let reach: ReturnType<typeof browserReach> | undefined;
+  let tooling: ReturnType<typeof toolingImpact> | undefined;
+  const isolated = new Set<string>();
+  const platforms = () => (reach ??= browserReach(model.root));
+  for (const file of files) {
+    if (documentation(file)) continue;
+    if (file.startsWith("packages/tooling/")) {
+      const impact = (tooling ??= toolingImpact(model.root))(file);
+      if (impact.global) {
+        allSources = true;
+        reasons.push(`Shared verification input: ${file}`);
+      } else {
+        isolated.add("@raypx/tooling");
+        for (const consumer of impact.consumers) mark(consumer, "all");
+      }
+      continue;
+    }
+    if (globalInput(file)) {
+      allSources = true;
+      reasons.push(`Shared verification input: ${file}`);
+      continue;
+    }
+    const owner = model.members
+      .filter((member) => file.startsWith(member.path + "/"))
+      .sort((a, b) => b.path.length - a.path.length)[0];
+    if (owner)
+      mark(
+        owner.name,
+        platforms().browserOnly(file) && !platforms().leaks(owner.name) ? "browser" : "all",
+      );
+    else if (!/^(?:\.gitignore|\.oxfmtrc[^/]*|\.oxlintrc[^/]*)$/.test(file)) {
+      allSources = true;
+      reasons.push(`Unclassified input: ${file}`);
+    } else {
+      allSources = true;
+      reasons.push(`Shared formatter/linter input: ${file}`);
+    }
+  }
+  if (allSources) for (const member of model.members) mark(member.name, "all");
+  if (native.native)
+    for (const member of model.members.filter((candidate) => candidate.native))
+      mark(member.name, "all");
+  const reached = affectedWorkspaces(model.members, affected, {
+    merge: (before, next) =>
+      before === "all" || next === "all" ? ("all" as const) : ("browser" as const),
+    propagate: (scope, _, consumer) =>
+      scope === "all"
+        ? ("all" as const)
+        : platforms().consumes(consumer.name)
+          ? platforms().leaks(consumer.name)
+            ? ("all" as const)
+            : ("browser" as const)
+          : undefined,
+  });
+  affected.clear();
+  for (const [name, scope] of reached) affected.set(name, scope);
+  for (const name of isolated) affected.set(name, "all");
+  const workspaces = [...affected.keys()].sort();
+  const includeArtifacts = options.artifacts ?? full;
+  const artifacts = includeArtifacts
+    ? (["api", "web", "relay", "cli"] as const).filter(
+        (name) =>
+          affected.has(name) &&
+          model.members.some((member) => member.name === name && member.scripts.build),
+      )
+    : [];
+  const tasks = model.members
+    .filter((member) => affected.has(member.name))
+    .flatMap((member) =>
+      [
+        "check",
+        "test",
+        ...(member.native && native.native ? ["tauri:check", "tauri:test"] : []),
+        ...(includeArtifacts ? ["build"] : []),
+      ]
+        .filter((name) => member.scripts[name])
+        .map((name) => taskRef(member.name, name)),
+    );
+  const browserTests = model.members.find((member) => member.name === "@raypx/e2e");
+  return {
+    full,
+    reasons: [...new Set(reasons)],
+    files,
+    workspaces,
+    tasks,
+    artifacts,
+    ...native,
+    backend: full || (!allSources && affected.has("api")),
+    deployment:
+      full ||
+      (options.reasons?.length ?? 0) > 0 ||
+      files.some((file) => {
+        if (documentation(file) || /\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file))
+          return false;
+        if (
+          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
+            file,
+          ) ||
+          /^packages\/tooling\/src\/(?:build\/|validation\/deployment)/.test(file)
+        )
+          return true;
+        const owner = model.members.find((member) => file.startsWith(member.path + "/"));
+        if (!owner) return false;
+        const relative = file.slice(owner.path.length + 1);
+        if (["api", "web"].includes(owner.name)) {
+          if (
+            /^(?:package\.json$|Dockerfile$|vite[^/]*$|scripts\/|server\/|src\/(?:server\/|start\.|router\.|ssr\.))/.test(
+              relative,
+            )
+          )
+            return true;
+          return !platforms().browserOnly(file);
+        }
+        // Browser-only feature edits use source checks. Shared runtime/build inputs
+        // must still exercise the images consumed by API/Web.
+        return (
+          /^packages\/[^/]+\/(?:package\.json$|vite[^/]*$|src\/)/.test(file) &&
+          (affected.has("api") || affected.has("web")) &&
+          (!platforms().browserOnly(file) || platforms().leaks(owner.name))
+        );
+      }),
+    browser:
+      full ||
+      (browserTests &&
+        files.some((file) => file.startsWith(browserTests.path + "/") && !documentation(file)))
+        ? "all"
+        : "none",
+  };
+}
+
+export function localPlan(
+  root: string,
+  options: { full?: boolean; base?: string; artifacts?: boolean } = {},
+) {
+  const changed = changedFiles(root, options.base);
+  return verificationPlan(taskModel(root), changed.files, { ...options, reasons: changed.reasons });
+}
+export function githubPlan(root: string, eventName: string, event: Record<string, unknown>) {
+  const pull = event.pull_request as { base: { sha: string } } | undefined;
+  const ref = typeof event.ref === "string" ? event.ref : "";
+  const tag = eventName === "push" && ref.startsWith("refs/tags/");
+  const full = eventName === "workflow_dispatch" || tag;
+  const macos = (event.inputs as Record<string, unknown> | undefined)?.macos;
+  const before =
+    eventName === "pull_request"
+      ? pull?.base.sha
+      : typeof event.before === "string"
+        ? event.before
+        : undefined;
+  const changed = before
+    ? changedFiles(root, "HEAD", { before, head: "HEAD" })
+    : {
+        files: [],
+        reasons: full ? [] : ["Event base unavailable; checking all sources and native targets"],
+      };
+  return {
+    ...verificationPlan(taskModel(root), changed.files, {
+      full,
+      artifacts: full,
+      reasons: changed.reasons,
+      macos: tag || (eventName === "workflow_dispatch" && (macos === true || macos === "true")),
+    }),
+    distribution: distributionRequested(
+      eventName,
+      ref,
+      (event.inputs as Record<string, unknown> | undefined)?.distribution,
+    ),
+  };
+}
+export function readGithubPlan(root: string) {
+  const file = process.env.GITHUB_EVENT_PATH;
+  const event = file ? (JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>) : {};
+  return githubPlan(root, process.env.GITHUB_EVENT_NAME ?? "workflow_dispatch", event);
+}

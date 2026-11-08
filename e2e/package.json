@@ -1,0 +1,46 @@
+{
+  "name": "@raypx/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./testing": "./tests/helpers/testing.ts",
+    "./journeys/*": "./tests/journeys/*.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "e2e": "raypx-dev e2e",
+    "e2e:live": "bun --bun playwright test --config playwright.live.config.ts",
+    "e2e:devtools": "bun --bun playwright test --config playwright.devtools.config.ts",
+    "e2e:web": "raypx-dev e2e --web",
+    "e2e:desktop": "raypx-dev e2e --desktop",
+    "e2e:smoke": "raypx-dev e2e --smoke",
+    "e2e:visual": "raypx-dev e2e --visual",
+    "_e2e": "raypx-dev browser:run"
+  },
+  "dependencies": {
+    "@playwright/test": "catalog:dev",
+    "@raypx/account": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/jobs-model": "workspace:*",
+    "@raypx/memory-model": "workspace:*",
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "tooling",
+    "target": "bun",
+    "taskScripts": {
+      "e2e": "_e2e",
+      "e2e:web": "_e2e",
+      "e2e:desktop": "_e2e",
+      "e2e:smoke": "_e2e",
+      "e2e:visual": "_e2e"
+    }
+  }
+}

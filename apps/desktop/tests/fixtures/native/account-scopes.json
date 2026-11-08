@@ -1,0 +1,45 @@
+[
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "same-user-id",
+      "limit": 50
+    },
+    "invalid": true
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "device:local-workspace:v1",
+      "limit": 50
+    },
+    "expected": {
+      "accountId": "device:local-workspace:v1",
+      "limit": 50
+    }
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "",
+      "limit": 50
+    },
+    "invalid": true
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": 42,
+      "limit": 50
+    },
+    "invalid": true
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "用户",
+      "limit": 50
+    },
+    "invalid": true
+  }
+]

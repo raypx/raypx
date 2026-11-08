@@ -1,0 +1,4 @@
+# mise reads the existing Bun pin from package.json; Bun is the only JavaScript runtime.
+# Do not add [tools] versions here; `raypx-dev policy` rejects a second source.
+[settings]
+idiomatic_version_file_enable_tools = ["bun"]

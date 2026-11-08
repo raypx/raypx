@@ -1,0 +1,68 @@
+import type { RootGrant } from "@raypx/contracts/local";
+import { ArrowUpIcon } from "@raypx/icons/arrow-up";
+import { FolderIcon } from "@raypx/icons/folder";
+import { PlusIcon } from "@raypx/icons/plus";
+import { RefreshIcon } from "@raypx/icons/refresh";
+import { Button } from "@raypx/ui/components/ui/button";
+import { SelectField } from "@raypx/ui/select-field";
+import { IconButton } from "@raypx/ui/icon-button";
+import { useTranslations } from "@raypx/i18n/browser";
+import { useFilesStore } from "../store.tsx";
+
+export function FilesToolbar({
+  roots,
+  rootId,
+  path,
+  onDirectory,
+  onRefresh,
+}: {
+  roots: RootGrant[];
+  rootId: string;
+  path: string;
+  onDirectory: (rootId: string, path: string) => unknown;
+  onRefresh: () => unknown;
+}) {
+  const t = useTranslations("files");
+  const c = useTranslations("common");
+  const busy = useFilesStore((s) => s.busy);
+  const setOperation = useFilesStore((s) => s.setOperation);
+  return (
+    <div className="flex flex-wrap items-center gap-3.5 pb-5">
+      <SelectField
+        aria-label={t("roots")}
+        className="w-52 max-w-full"
+        value={roots.some((root) => root.id === rootId) ? rootId : null}
+        placeholder={t("roots")}
+        disabled={busy || roots.length === 0}
+        onValueChange={(value) => void onDirectory(value, "")}
+        options={roots.map((root) => ({ value: root.id, label: root.name }))}
+      />
+      <span
+        className="min-w-[50px] flex-1 truncate font-mono text-muted-foreground"
+        title={path || "/"}
+      >
+        {path || "/"}
+      </span>
+      <div className="ml-auto flex flex-wrap items-center gap-1.25 @max-4xl/main:ml-0">
+        <IconButton
+          label={t("up")}
+          disabled={!path || busy}
+          onClick={() => void onDirectory(rootId, path.split("/").slice(0, -1).join("/"))}
+        >
+          <ArrowUpIcon aria-hidden="true" />
+        </IconButton>
+        <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "file" })}>
+          <PlusIcon size={16} />
+          {t("createFile")}
+        </Button>
+        <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "folder" })}>
+          <FolderIcon size={16} />
+          {t("createFolder")}
+        </Button>
+        <IconButton label={c("refresh")} disabled={busy} onClick={() => void onRefresh()}>
+          <RefreshIcon aria-hidden="true" />
+        </IconButton>
+      </div>
+    </div>
+  );
+}

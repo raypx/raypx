@@ -1,0 +1,2 @@
+CREATE INDEX "control_command_context_owner_idx" ON "raypx_foundation"."control_command" ("user_id",coalesce("body"->>'capturedAt',"body"->'context'->>'capturedAt',''),"id") WHERE jsonb_typeof("body"->'context')='object';--> statement-breakpoint
+CREATE INDEX "control_command_context_expiry_idx" ON "raypx_foundation"."control_command" (coalesce("body"->>'capturedAt',"body"->'context'->>'capturedAt',''),"user_id","id") WHERE jsonb_typeof("body"->'context')='object';

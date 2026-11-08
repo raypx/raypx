@@ -1,0 +1,42 @@
+{
+  "name": "@raypx/email",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "email:dev": "bun --bun vp dev --config vite.app.config.ts",
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vp test --run --coverage"
+  },
+  "dependencies": {
+    "@react-email/components": "catalog:",
+    "@react-email/render": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "resend": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx-kit/email-preview": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vite": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "node",
+    "entryTargets": {},
+    "sourceTargets": {
+      "src/types.ts": "universal",
+      "vite.app.config.ts": "node"
+    }
+  }
+}

@@ -1,0 +1,144 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@raypx/icons/styles.css";
+@import "./theme.css";
+
+@source "../**/*.{ts,tsx}";
+@source not "../**/*.{test,spec}.{ts,tsx}";
+@source not "../**/__tests__/**";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Icon-only sidebar: collapsed by the user, or forced into a rail on narrow screens.
+   The media rule matches useIsMobile, so server HTML paints the rail before hydration. */
+@custom-variant sidebar-icon {
+  &:is(:where(.group\/sidebar)[data-collapsible="icon"] *) {
+    @slot;
+  }
+  @media (max-width: 760px) {
+    &:is(:where(.group\/sidebar)[data-mobile-behavior="rail"] *) {
+      @slot;
+    }
+  }
+}
+
+@theme inline {
+  --font-sans: Inter, "SF Pro Display", "Segoe UI", "Noto Sans SC", system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-text: var(--destructive-text);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-sunken: var(--surface-sunken);
+  --shadow-soft: var(--shadow-soft-value);
+  --shadow-popover: var(--shadow-popover-value);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  :where(button, input, select, textarea) {
+    font-family: inherit;
+  }
+  :where(
+    a:not([data-slot]),
+    button:not([data-slot]),
+    input:not([data-slot]),
+    select,
+    textarea:not([data-slot])
+  ):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  @media (pointer: coarse) {
+    [data-slot="button"],
+    [data-slot="input"],
+    [data-slot="select-trigger"],
+    [data-slot="select-item"],
+    [data-slot="toggle-group-item"],
+    [data-slot="tabs-trigger"],
+    select {
+      min-height: 44px;
+    }
+    [data-slot="button"]:has(> svg:only-child) {
+      min-width: 44px;
+    }
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="button"]:active {
+      transform: none !important;
+    }
+    [data-slot="sheet-content"] {
+      translate: none !important;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

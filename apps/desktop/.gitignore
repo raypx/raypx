@@ -1,0 +1,8 @@
+# Generated renderer, contracts and bundled CLI resources.
+/dist
+/generated/
+/resources/bin/
+/build
+/artifacts
+/src-tauri/target/
+/src-tauri/gen/

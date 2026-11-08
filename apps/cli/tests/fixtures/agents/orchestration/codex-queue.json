@@ -1,0 +1,282 @@
+{
+  "task": {
+    "id": "task",
+    "deviceId": "uuid:0",
+    "projectId": "uuid:1",
+    "provider": "codex",
+    "mode": "run",
+    "prompt": "First turn",
+    "status": "succeeded",
+    "summary": "gp done",
+    "parentTaskId": null,
+    "createdAt": "time:11",
+    "updatedAt": "time:11"
+  },
+  "journal": [
+    {
+      "id": "uuid:2",
+      "taskId": "task",
+      "kind": "status",
+      "status": "running",
+      "summary": "",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "First turn",
+        "status": "running",
+        "summary": "",
+        "parentTaskId": null,
+        "createdAt": "time:11",
+        "updatedAt": "time:11"
+      }
+    },
+    {
+      "id": "uuid:3",
+      "taskId": "task",
+      "kind": "status",
+      "status": "succeeded",
+      "summary": "gp done",
+      "task": {
+        "id": "task",
+        "deviceId": "uuid:0",
+        "projectId": "uuid:1",
+        "provider": "codex",
+        "mode": "run",
+        "prompt": "First turn",
+        "status": "succeeded",
+        "summary": "gp done",
+        "parentTaskId": null,
+        "createdAt": "time:11",
+        "updatedAt": "time:11"
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:4",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:5",
+                "taskId": "task",
+                "order": 2,
+                "revision": 1,
+                "createdAt": "time:11",
+                "updatedAt": "time:11",
+                "kind": "message",
+                "text": "gp done",
+                "status": "streaming",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:6",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:5",
+                "taskId": "task",
+                "order": 2,
+                "revision": 2,
+                "createdAt": "time:11",
+                "updatedAt": "time:11",
+                "kind": "message",
+                "text": "gp done",
+                "status": "complete",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:7",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:8",
+                "taskId": "task",
+                "order": 3,
+                "revision": 1,
+                "createdAt": "time:11",
+                "updatedAt": "time:11",
+                "kind": "message",
+                "text": "gp done",
+                "status": "streaming",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:9",
+              "taskId": "task",
+              "kind": "activity",
+              "entry": {
+                "id": "uuid:8",
+                "taskId": "task",
+                "order": 3,
+                "revision": 2,
+                "createdAt": "time:11",
+                "updatedAt": "time:11",
+                "kind": "message",
+                "text": "gp done",
+                "status": "complete",
+                "truncated": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:2",
+              "taskId": "task",
+              "kind": "status",
+              "status": "running",
+              "summary": "",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "First turn",
+                "parentTaskId": null,
+                "status": "running",
+                "summary": "",
+                "createdAt": "time:11",
+                "updatedAt": "time:11"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "change": {
+        "type": "events",
+        "local": true,
+        "deviceId": "uuid:0",
+        "events": [
+          {
+            "sequence": 1,
+            "event": {
+              "id": "uuid:3",
+              "taskId": "task",
+              "kind": "status",
+              "status": "succeeded",
+              "summary": "gp done",
+              "task": {
+                "id": "task",
+                "deviceId": "uuid:0",
+                "projectId": "uuid:1",
+                "provider": "codex",
+                "mode": "run",
+                "prompt": "First turn",
+                "parentTaskId": null,
+                "status": "succeeded",
+                "summary": "gp done",
+                "createdAt": "time:11",
+                "updatedAt": "time:11"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {},
+    {},
+    {},
+    {}
+  ],
+  "requests": [],
+  "activity": [
+    {
+      "id": "uuid:10",
+      "taskId": "task",
+      "order": 1,
+      "revision": 3,
+      "createdAt": "time:11",
+      "updatedAt": "time:11",
+      "kind": "input",
+      "mode": "queue",
+      "text": "Second",
+      "status": "sent"
+    },
+    {
+      "id": "uuid:5",
+      "taskId": "task",
+      "order": 2,
+      "revision": 2,
+      "createdAt": "time:11",
+      "updatedAt": "time:11",
+      "kind": "message",
+      "text": "gp done",
+      "status": "complete",
+      "truncated": false
+    },
+    {
+      "id": "uuid:8",
+      "taskId": "task",
+      "order": 3,
+      "revision": 2,
+      "createdAt": "time:11",
+      "updatedAt": "time:11",
+      "kind": "message",
+      "text": "gp done",
+      "status": "complete",
+      "truncated": false
+    }
+  ]
+}

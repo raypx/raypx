@@ -1,0 +1,62 @@
+@import "../styles.css";
+
+@layer base {
+  :root {
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    @apply antialiased;
+  }
+
+  body {
+    @apply m-0 bg-background text-foreground;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-app-region: no-drag;
+  }
+
+  button:not(:disabled),
+  select {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  main {
+    @apply outline-none;
+  }
+
+  h1 {
+    @apply text-2xl leading-tight font-semibold tracking-tight max-[760px]:text-xl;
+  }
+
+  h2 {
+    @apply text-lg leading-snug font-semibold tracking-tight;
+  }
+
+  select {
+    @apply min-h-9 max-w-full rounded-md border border-border bg-background px-2.5 text-foreground;
+  }
+
+  @media (pointer: coarse) {
+    select {
+      @apply min-h-11;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

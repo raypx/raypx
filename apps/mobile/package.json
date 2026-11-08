@@ -1,0 +1,66 @@
+{
+  "name": "@raypx/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "bun --bun expo start",
+    "build": "bun --bun expo export --platform ios --platform android",
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run"
+  },
+  "dependencies": {
+    "@better-auth/expo": "catalog:mobile",
+    "@raypx/auth": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "better-auth": "catalog:",
+    "expo": "catalog:mobile",
+    "expo-constants": "catalog:mobile",
+    "expo-linking": "catalog:mobile",
+    "expo-localization": "catalog:mobile",
+    "expo-network": "catalog:mobile",
+    "expo-router": "catalog:mobile",
+    "expo-secure-store": "catalog:mobile",
+    "expo-status-bar": "catalog:mobile",
+    "expo-system-ui": "catalog:mobile",
+    "expo-web-browser": "catalog:mobile",
+    "heroui-native": "catalog:mobile",
+    "react": "catalog:",
+    "react-native": "catalog:mobile",
+    "react-native-gesture-handler": "catalog:mobile",
+    "react-native-reanimated": "catalog:mobile",
+    "react-native-safe-area-context": "catalog:mobile",
+    "react-native-screens": "catalog:mobile",
+    "react-native-svg": "catalog:mobile",
+    "react-native-worklets": "catalog:mobile",
+    "tailwind-merge": "catalog:mobile",
+    "tailwind-variants": "catalog:mobile",
+    "uniwind": "catalog:mobile"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "tailwindcss": "catalog:",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "native",
+    "sourceTargets": {
+      "vite.config.ts": "node",
+      "vitest.config.ts": "node",
+      "metro.config.ts": "node",
+      "metro.config.cjs": "node",
+      "src/**/*.test.ts": "node"
+    },
+    "uncachedTasks": [
+      "build"
+    ]
+  }
+}

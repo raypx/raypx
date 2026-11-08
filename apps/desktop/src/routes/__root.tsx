@@ -1,0 +1,88 @@
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { DesktopShell, ShellSkeleton } from "../components/shell.tsx";
+import { ThemeScript, themeMeta } from "@raypx/ui/themes";
+import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences.tsx";
+import { SessionGate } from "../features/auth/components/session-gate.tsx";
+import { DesktopSignOutProvider } from "../features/auth/sign-out.tsx";
+import { RemoteCoordinator } from "../features/tasks/coordinator.tsx";
+import { DesktopRuntimeProvider } from "../features/engine/provider.tsx";
+import { EngineRouteSync } from "../features/engine/routes.tsx";
+import { getBridge, isDesktop } from "../lib/desktop.ts";
+import { AppAnalytics } from "../features/analytics/provider.tsx";
+import { externalLinkTarget } from "../lib/external-links.ts";
+import appCss from "../styles.css?url";
+
+const Devtools = import.meta.env.DEV
+  ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
+  : null;
+
+export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { charSet: "UTF-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+      ...themeMeta,
+      { title: "Raypx" },
+    ],
+    links: [{ rel: "stylesheet", href: appCss }],
+  }),
+  shellComponent: RootDocument,
+  component: RootComponent,
+});
+
+function RootDocument({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+        <ThemeScript initialThemeSource={desktopInitialThemeSource} />
+      </head>
+      <body className="h-dvh min-w-[800px] overflow-hidden">
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+// Theme, language and the native bridge exist only in the WebView, never in the
+// build-time prerender, so everything localized starts after hydration.
+function RootComponent() {
+  useEffect(() => {
+    if (isDesktop()) void getBridge().catch(() => {});
+    const open = (event: MouseEvent) => {
+      if (!isDesktop() || event.defaultPrevented || event.button !== 0) return;
+      const url = externalLinkTarget(event, location.origin);
+      if (!url) return;
+      event.preventDefault();
+      void getBridge()
+        .then((bridge) => bridge.request.openExternal({ url }))
+        .catch(() => {});
+    };
+    document.addEventListener("click", open, true);
+    return () => document.removeEventListener("click", open, true);
+  }, []);
+  return (
+    <ClientOnly fallback={<ShellSkeleton />}>
+      <DesktopPreferencesProvider>
+        <AppAnalytics>
+          <DesktopRuntimeProvider>
+            <DesktopSignOutProvider>
+              <EngineRouteSync />
+              <SessionGate>
+                <RemoteCoordinator />
+                <DesktopShell />
+              </SessionGate>
+            </DesktopSignOutProvider>
+          </DesktopRuntimeProvider>
+          {Devtools && (
+            <Suspense fallback={null}>
+              <Devtools surface="desktop" stylesheetUrl={appCss} />
+            </Suspense>
+          )}
+        </AppAnalytics>
+      </DesktopPreferencesProvider>
+    </ClientOnly>
+  );
+}

@@ -1,0 +1,22 @@
+# Ignore rules for Oxfmt, which `vp fmt` reads from .gitignore and .prettierignore.
+
+# Generated route trees. Formatting them would be reverted by the next router
+# plugin generation, producing permanent churn and breaking generated-output
+# drift checks.
+**/routeTree.gen.ts
+
+# Generated package build output; checks and formatting target its source.
+packages/*/dist/
+
+# Generated Drizzle migrations and metadata.
+packages/database/drizzle/
+packages/database/drizzle-cloud/
+
+# Vendored agent skills. These are upstream bytes reproduced verbatim so
+# `skills update` can replace them and the lockfile hash stays meaningful.
+# Never hand-edit or reformat them; project-specific guidance belongs in AGENTS.md and docs/.
+.agents/
+
+packages/ui/src/styles/theme.css
+
+packages/database/drizzle-foundation/

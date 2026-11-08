@@ -1,0 +1,12 @@
+@import "@raypx/ui/styles/app.css";
+@import "@raypx/tasks/client/styles.css";
+@import "@raypx/jobs/client/styles.css";
+@import "@raypx/memory/client/styles.css";
+@import "@raypx/auth/client/styles.css";
+@import "@raypx/account/client/styles.css";
+@import "@raypx/analytics/client/styles.css";
+@import "@raypx/blocks/styles.css";
+@import "@raypx/devtools/styles.css";
+
+/* Browser assertions and fixtures are not product class sources. */
+@source not "../e2e/**";

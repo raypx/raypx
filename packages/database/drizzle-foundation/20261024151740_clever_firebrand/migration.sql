@@ -1,0 +1,1 @@
+CREATE INDEX "control_event_replay_idx" ON "raypx_foundation"."control_event" ("user_id","device_id",(("body"->>'cursor')::bigint)) WHERE "body"->'event'->>'kind' != 'activity';

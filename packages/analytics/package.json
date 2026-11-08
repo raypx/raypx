@@ -1,0 +1,54 @@
+{
+  "name": "@raypx/analytics",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
+    "./client": "./src/client/provider.tsx",
+    "./client/application": "./src/client/application.tsx",
+    "./client/settings": "./src/client/settings.tsx",
+    "./client/styles.css": "./src/client/styles.css"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:component": "bun --bun vp test --run .component.test."
+  },
+  "dependencies": {
+    "@raypx-kit/analytics": "catalog:",
+    "@raypx/client": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@testing-library/react": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "happy-dom": "catalog:dev",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal",
+    "entryTargets": {
+      "./browser": "browser",
+      "./client": "browser",
+      "./client/application": "browser",
+      "./client/settings": "browser",
+      "./client/styles.css": "browser"
+    },
+    "sourceTargets": {
+      "src/browser.ts": "browser",
+      "src/client/**": "browser"
+    }
+  }
+}

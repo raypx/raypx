@@ -1,0 +1,87 @@
+import type {
+  AgentEvent,
+  TaskCommand,
+  ModelCatalog,
+  ModelSelection,
+  TaskContinuation,
+  AgentTask,
+  HumanRequest,
+  TaskActivity,
+  TaskInput,
+} from "@raypx/core/tasks";
+import type { RelayRequest, SyncDevice, TaskChange } from "@raypx/contracts/tasks";
+import type { ObservedProjection, TerminalRequest } from "@raypx/contracts/terminal";
+
+export interface TaskReadOptions {
+  signal?: AbortSignal | undefined;
+}
+export interface TaskHistoryPage {
+  task: AgentTask;
+  continuation?: TaskContinuation | undefined;
+  events: { cursor: number; event: AgentEvent }[];
+  requests: HumanRequest[];
+  activity: TaskActivity[];
+  activityBefore?: number | undefined;
+}
+type CommandInput<M extends TaskCommand["method"]> = Extract<TaskCommand, { method: M }>["input"];
+
+export interface TaskChangeSource {
+  subscribe(listener: (change?: TaskChange) => void): () => void;
+}
+
+/** The view needs task use cases, not an HTTP client or a native transport. */
+export interface TaskWorkspacePort extends TaskChangeSource {
+  models?: {
+    list(input?: {}, options?: TaskReadOptions): Promise<ModelCatalog>;
+    setDefault(
+      input: { model: ModelSelection | null },
+      options?: TaskReadOptions,
+    ): Promise<{ default: ModelSelection | null }>;
+  };
+  devices: {
+    list(input?: {}, options?: TaskReadOptions): Promise<SyncDevice[]>;
+  };
+  tasks: {
+    list(
+      input?: {
+        limit?: number | undefined;
+        before?: string | undefined;
+        projectId?: string | undefined;
+        deviceId?: string | undefined;
+      },
+      options?: TaskReadOptions,
+    ): Promise<AgentTask[]>;
+    get(
+      input: { id: string; after?: number | undefined; beforeActivity?: number | undefined },
+      options?: TaskReadOptions,
+    ): Promise<TaskHistoryPage>;
+    create(input: CommandInput<"tasks.create">, options?: TaskReadOptions): Promise<AgentTask>;
+    followUp(input: CommandInput<"tasks.followUp">, options?: TaskReadOptions): Promise<AgentTask>;
+    cancel(input: CommandInput<"tasks.cancel">, options?: TaskReadOptions): Promise<AgentTask>;
+    input(input: CommandInput<"tasks.input">, options?: TaskReadOptions): Promise<TaskInput>;
+  };
+  approvals: {
+    list(input?: {}, options?: TaskReadOptions): Promise<HumanRequest[]>;
+    decide(
+      input: CommandInput<"approvals.decide">,
+      options?: TaskReadOptions,
+    ): Promise<HumanRequest>;
+  };
+  observed?: {
+    list(input?: {}, options?: TaskReadOptions): Promise<ObservedProjection>;
+    get(input: { id: string }, options?: TaskReadOptions): Promise<TerminalRequest>;
+    decide(
+      input: Extract<RelayRequest, { method: "observed.decide" }>["input"],
+      options?: TaskReadOptions,
+    ): Promise<TerminalRequest>;
+  };
+}
+
+export interface DeviceManagementPort extends TaskChangeSource {
+  devices: TaskWorkspacePort["devices"] & {
+    revoke(
+      input: { deviceId: string; epoch: number },
+      options?: TaskReadOptions,
+    ): Promise<{ revoked: true }>;
+  };
+}

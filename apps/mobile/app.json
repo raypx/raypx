@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Raypx",
+    "slug": "raypx",
+    "scheme": "raypx-mobile",
+    "version": "0.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "bundleIdentifier": "com.raypx.mobile",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.raypx.mobile"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-localization"],
+    "updates": {
+      "enabled": false
+    }
+  }
+}

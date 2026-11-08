@@ -1,0 +1,17 @@
+name: Save new successful VP artifacts
+description: Avoid uploading unchanged cache archives
+inputs:
+  key:
+    description: Restored partition's primary key
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      id: changes
+      run: bun run raypx-dev ci:cache changed
+    - uses: actions/cache/save@v6
+      if: steps.changes.outputs.changed == 'true'
+      with:
+        path: node_modules/.vite/task-cache
+        key: ${{ inputs.key }}

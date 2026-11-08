@@ -1,6 +1,3 @@
-import { packageConfig } from "@raypx/config/vite";
-import { defineConfig } from "vite-plus";
+import { workspaceTaskConfig } from "@raypx/tooling/tasks";
 
-export default defineConfig(
-  packageConfig(import.meta.url, { name: "ui", test: true, react: true, dom: true, styles: true }),
-);
+export default workspaceTaskConfig(import.meta.url);

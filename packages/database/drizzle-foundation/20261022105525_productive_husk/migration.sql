@@ -1,0 +1,2 @@
+CREATE INDEX "session_expires_at_idx" ON "raypx_foundation"."session" ("expires_at");--> statement-breakpoint
+CREATE INDEX "verification_expires_at_idx" ON "raypx_foundation"."verification" ("expires_at");

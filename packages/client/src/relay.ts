@@ -1,0 +1,163 @@
+import { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
+import {
+  relayServerSchema,
+  RELAY_VERSION,
+  MAX_RELAY_BYTES,
+  type RelayClientFrame,
+  type RelayServerFrame,
+} from "@raypx/contracts/api";
+
+export { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
+
+export type RelaySocketFactory = (url: string) => WebSocket;
+export function relayUrl(baseUrl: string, accountId?: string) {
+  const url = new URL("/relay", baseUrl);
+  if (
+    url.protocol !== "https:" &&
+    !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname))
+  )
+    throw new Error("RELAY_REQUIRES_HTTPS");
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  if (accountId) url.searchParams.set("account", accountId);
+  return url.href;
+}
+export class RelayConnection {
+  private socket: WebSocket | undefined;
+  private retry: (() => void) | undefined;
+  private heartbeat: (() => void) | undefined;
+  private enabled = false;
+  private generation = 0;
+  private failures = 0;
+  private lastMessage = 0;
+  constructor(
+    private readonly options: {
+      url: string;
+      authenticate: () => Promise<Extract<RelayClientFrame, { type: "auth" }>>;
+      message: (frame: RelayServerFrame) => void;
+      status: (connected: boolean, code?: string) => void;
+      socket?: RelaySocketFactory;
+      scheduler?: RelayScheduler;
+    },
+  ) {}
+  private get scheduler() {
+    return this.options.scheduler ?? systemRelayScheduler;
+  }
+  start() {
+    if (this.enabled) return;
+    this.enabled = true;
+    this.connect();
+  }
+  restart() {
+    this.stop();
+    this.start();
+  }
+  private connect() {
+    if (!this.enabled) return;
+    const generation = ++this.generation;
+    try {
+      const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
+      this.socket = socket;
+      socket.addEventListener("open", () => {
+        void this.options.authenticate().then(
+          (frame) => {
+            if (this.enabled && generation === this.generation) {
+              this.send(frame);
+            }
+          },
+          () => {
+            if (generation === this.generation) socket.close(4001, "Authentication unavailable");
+          },
+        );
+      });
+      socket.addEventListener("message", (event) => {
+        if (generation !== this.generation) return;
+        try {
+          if (
+            typeof event.data !== "string" ||
+            new TextEncoder().encode(event.data).byteLength > MAX_RELAY_BYTES
+          )
+            throw new Error("Invalid relay frame");
+          const raw: unknown = JSON.parse(event.data);
+          if (
+            raw &&
+            typeof raw === "object" &&
+            "type" in raw &&
+            raw.type === "ready" &&
+            (!("protocolVersion" in raw) || raw.protocolVersion !== RELAY_VERSION)
+          ) {
+            socket.close(4006, "UPGRADE_REQUIRED");
+            return;
+          }
+          const frame = relayServerSchema.parse(raw);
+          if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
+          this.lastMessage = this.scheduler.now();
+          if (frame.type === "ready") {
+            this.options.status(true);
+            this.heartbeat = this.scheduler.interval(() => {
+              if (this.scheduler.now() - this.lastMessage > 45_000)
+                socket.close(4000, "Heartbeat timeout");
+              else this.send({ type: "ping" });
+            }, 15_000);
+          }
+          this.options.message(frame);
+        } catch {
+          socket.close(4000, "Invalid relay frame");
+        }
+      });
+      socket.addEventListener("error", () => socket.close());
+      socket.addEventListener("close", (event) => {
+        if (generation !== this.generation) return;
+        if (this.heartbeat) this.heartbeat();
+        this.heartbeat = undefined;
+        this.socket = undefined;
+        this.options.status(
+          false,
+          event.code === 4006
+            ? "UPGRADE_REQUIRED"
+            : event.code === 4003
+              ? "DEVICE_REVOKED"
+              : event.code === 4001
+                ? "AUTH_REQUIRED"
+                : "NETWORK_UNAVAILABLE",
+        );
+        if (event.code === 4006) this.enabled = false;
+        if (this.enabled && generation === this.generation)
+          this.retry = this.scheduler.timeout(
+            () => this.connect(),
+            Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) *
+              (0.8 + this.scheduler.random() * 0.2),
+          );
+      });
+    } catch {
+      this.options.status(false, "NETWORK_UNAVAILABLE");
+      if (this.enabled && generation === this.generation)
+        this.retry = this.scheduler.timeout(
+          () => this.connect(),
+          Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) *
+            (0.8 + this.scheduler.random() * 0.2),
+        );
+    }
+  }
+  send(frame: RelayClientFrame) {
+    const value = JSON.stringify(frame);
+    if (new TextEncoder().encode(value).byteLength > MAX_RELAY_BYTES)
+      throw new Error("RELAY_FRAME_LIMIT");
+    if (this.socket?.readyState !== 1) throw new Error("NETWORK_UNAVAILABLE");
+    if (this.socket.bufferedAmount > 2 * MAX_RELAY_BYTES) {
+      this.socket.close(4000, "Backpressure");
+      throw new Error("NETWORK_UNAVAILABLE");
+    }
+    this.socket.send(value);
+    if (frame.type === "available") this.failures = 0;
+  }
+  stop() {
+    this.enabled = false;
+    this.generation++;
+    if (this.retry) this.retry();
+    if (this.heartbeat) this.heartbeat();
+    this.retry = undefined;
+    this.heartbeat = undefined;
+    this.socket?.close(1000, "Disconnected");
+    this.socket = undefined;
+  }
+}

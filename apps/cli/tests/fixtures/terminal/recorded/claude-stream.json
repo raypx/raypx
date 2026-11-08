@@ -1,0 +1,924 @@
+{
+  "provenance": {
+    "provider": "claude",
+    "version": "2.1.302 (Claude Code)",
+    "transport": "stream-json",
+    "cliMode": "print",
+    "scenario": "stream-and-usage",
+    "recordedAt": "2026-10-25T05:00:53.368Z",
+    "source": "real-cli",
+    "redaction": "Identity fields and local paths replaced; event structure/order and numeric usage retained"
+  },
+  "records": [
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "message_start",
+        "message": {
+          "model": "claude-opus-5-5",
+          "id": "recorded-id-1",
+          "type": "message",
+          "role": "assistant",
+          "content": [],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 2,
+            "cache_creation_input_tokens": 5438,
+            "cache_read_input_tokens": 24382,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 5438,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 16,
+            "service_tier": "standard",
+            "inference_geo": "global",
+            "speed": "standard"
+          },
+          "diagnostics": null,
+          "context_management": null
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-3",
+      "ttft_ms": 4360,
+      "thinking_display": "updates",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_start",
+        "index": 0,
+        "content_block": {
+          "type": "tool_use",
+          "id": "recorded-id-4",
+          "name": "Bash",
+          "input": {},
+          "caller": {
+            "type": "direct"
+          }
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-5",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": ""
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-6",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "{\"comma"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-7",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "nd\": \"p"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-8",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "rintf R"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-9",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "AYPX_TE"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-10",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "RMINAL_"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-11",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "P0 > pe"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-12",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "rmissio"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-13",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "n-marke"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-14",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "r.txt\""
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-15",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": ", \"desc"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-16",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "ription"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-17",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "\": \"Wri"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-18",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "te mark"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-19",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "er text"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-20",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": " to per"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-21",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "mission"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-22",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": "-marker"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-23",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "input_json_delta",
+          "partial_json": ".txt\"}"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-24",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "assistant",
+      "message": {
+        "model": "claude-opus-5-5",
+        "id": "recorded-id-1",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "recorded-id-4",
+            "name": "Bash",
+            "input": {
+              "command": "printf RAYPX_TERMINAL_P0 > permission-marker.txt",
+              "description": "Write marker text to permission-marker.txt"
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ],
+        "container": null,
+        "stop_reason": null,
+        "stop_sequence": null,
+        "stop_details": null,
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 5438,
+          "cache_read_input_tokens": 24382,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 5438,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "output_tokens": 16,
+          "service_tier": "standard",
+          "inference_geo": "global",
+          "speed": "standard"
+        },
+        "diagnostics": null,
+        "context_management": null
+      },
+      "parent_tool_use_id": null,
+      "session_id": "recorded-id-2",
+      "uuid": "recorded-id-25",
+      "timestamp": "2026-10-25T05:00:45.651Z",
+      "wire_tool_inputs": {
+        "toolu_01JcvMAJYYKfMjz3yuctJvjf": {
+          "command": "printf RAYPX_TERMINAL_P0 > permission-marker.txt",
+          "description": "Write marker text to permission-marker.txt"
+        }
+      }
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_stop",
+        "index": 0
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-26",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "message_delta",
+        "delta": {
+          "stop_reason": "tool_use",
+          "stop_sequence": null,
+          "stop_details": null,
+          "container": null
+        },
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 5438,
+          "cache_read_input_tokens": 24382,
+          "output_tokens": 107,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "iterations": [
+            {
+              "input_tokens": 2,
+              "output_tokens": 107,
+              "cache_read_input_tokens": 24382,
+              "cache_creation_input_tokens": 5438,
+              "cache_creation": {
+                "ephemeral_5m_input_tokens": 5438,
+                "ephemeral_1h_input_tokens": 0
+              },
+              "type": "message"
+            }
+          ]
+        },
+        "context_management": {
+          "applied_edits": []
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-27",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "message_stop"
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-28",
+      "api_message_id": "recorded-id-1"
+    },
+    {
+      "type": "user",
+      "message": {
+        "role": "user",
+        "content": [
+          {
+            "tool_use_id": "recorded-id-4",
+            "type": "tool_result",
+            "content": "(Bash completed with no output)",
+            "is_error": false
+          }
+        ]
+      },
+      "parent_tool_use_id": null,
+      "session_id": "recorded-id-2",
+      "uuid": "recorded-id-29",
+      "timestamp": "2026-10-25T05:00:48.966Z",
+      "tool_use_result": {
+        "stdout": "",
+        "stderr": "",
+        "interrupted": false,
+        "isImage": false,
+        "noOutputExpected": false
+      },
+      "tool_result_meta": [
+        {
+          "id": "recorded-id-4",
+          "permission_decision": {
+            "decision": "accept",
+            "source": "hook",
+            "reason_type": "hook"
+          }
+        }
+      ]
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "message_start",
+        "message": {
+          "model": "claude-opus-5-5",
+          "id": "recorded-id-30",
+          "type": "message",
+          "role": "assistant",
+          "content": [],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 2,
+            "cache_creation_input_tokens": 151,
+            "cache_read_input_tokens": 29820,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 151,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 63,
+            "service_tier": "standard",
+            "inference_geo": "global",
+            "speed": "standard"
+          },
+          "diagnostics": null,
+          "context_management": null
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-31",
+      "ttft_ms": 3826,
+      "thinking_display": "updates",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_start",
+        "index": 0,
+        "content_block": {
+          "type": "text",
+          "text": ""
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-32",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "The command "
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-33",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "ran successfully: it wr"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-34",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "ote `RAYPX_"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-35",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "TERMINAL_P"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-36",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "0` to `permission-mar"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-37",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "ker.txt`."
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-38",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": " The permission check"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-39",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": " did"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-40",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "n't block"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-41",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": " it, and it finished without err"
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-42",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_delta",
+        "index": 0,
+        "delta": {
+          "type": "text_delta",
+          "text": "ors or output."
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-43",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "assistant",
+      "message": {
+        "model": "claude-opus-5-5",
+        "id": "recorded-id-30",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "The command ran successfully: it wrote `RAYPX_TERMINAL_P0` to `permission-marker.txt`. The permission check didn't block it, and it finished without errors or output."
+          }
+        ],
+        "container": null,
+        "stop_reason": null,
+        "stop_sequence": null,
+        "stop_details": null,
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 151,
+          "cache_read_input_tokens": 29820,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 151,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "output_tokens": 63,
+          "service_tier": "standard",
+          "inference_geo": "global",
+          "speed": "standard"
+        },
+        "diagnostics": null,
+        "context_management": null
+      },
+      "parent_tool_use_id": null,
+      "session_id": "recorded-id-2",
+      "uuid": "recorded-id-44",
+      "timestamp": "2026-10-25T05:00:52.804Z"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "content_block_stop",
+        "index": 0
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-45",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "message_delta",
+        "delta": {
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "stop_details": null,
+          "container": null
+        },
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 151,
+          "cache_read_input_tokens": 29820,
+          "output_tokens": 63,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "iterations": [
+            {
+              "input_tokens": 2,
+              "output_tokens": 63,
+              "cache_read_input_tokens": 29820,
+              "cache_creation_input_tokens": 151,
+              "cache_creation": {
+                "ephemeral_5m_input_tokens": 151,
+                "ephemeral_1h_input_tokens": 0
+              },
+              "type": "message"
+            }
+          ]
+        },
+        "context_management": {
+          "applied_edits": []
+        }
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-46",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "type": "stream_event",
+      "event": {
+        "type": "message_stop"
+      },
+      "session_id": "recorded-id-2",
+      "parent_tool_use_id": null,
+      "uuid": "recorded-id-47",
+      "api_message_id": "recorded-id-30"
+    },
+    {
+      "duration_api_ms": 8841,
+      "stop_reason": "end_turn",
+      "session_id": "recorded-id-2",
+      "total_cost_usd": 0.0422014,
+      "usage": {
+        "input_tokens": 4,
+        "cache_creation_input_tokens": 5589,
+        "cache_read_input_tokens": 54202,
+        "output_tokens": 170,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 5589
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 63,
+            "cache_read_input_tokens": 29820,
+            "cache_creation_input_tokens": 151,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 151,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 4,
+          "outputTokens": 170,
+          "cacheReadInputTokens": 54202,
+          "cacheCreationInputTokens": 5589,
+          "webSearchRequests": 0,
+          "costUSD": 0.0422014,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 2,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "The command ran successfully: it wrote `RAYPX_TERMINAL_P0` to `permission-marker.txt`. The permission check didn't block it, and it finished without errors or output.",
+      "ttft_ms": 5023,
+      "type": "result",
+      "duration_ms": 12187,
+      "uuid": "recorded-id-48",
+      "ttft_stream_ms": 4414,
+      "time_to_request_ms": 54,
+      "first_content_frame_ms": 4414,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "expectedMessage": "The command ran successfully: it wrote `RAYPX_TERMINAL_P0` to `permission-marker.txt`. The permission check didn't block it, and it finished without errors or output."
+}

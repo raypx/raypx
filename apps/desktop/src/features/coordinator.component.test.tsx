@@ -1,0 +1,57 @@
+/** @vitest-environment happy-dom */
+import { cleanup, render, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vite-plus/test";
+
+const mocks = vi.hoisted(() => ({
+  session: { data: null as { user: { id: string } } | null, isPending: false },
+  sessionRequest: vi.fn(async () => true),
+  detach: vi.fn(async () => true),
+  local: vi.fn(async () => true),
+  info: vi.fn(async () => ({ daemon: true, authorized: true, enabled: true })),
+}));
+vi.mock("./auth/client", () => ({
+  apiUrl: "https://api.example.test",
+  authClient: { useSession: () => mocks.session },
+}));
+vi.mock("./tasks/client", () => ({ taskClient: { setAccount: vi.fn() } }));
+vi.mock("../lib/desktop", () => ({
+  isDesktop: () => true,
+  hasTerminalHooks: () => true,
+  localRequest: mocks.local,
+  onLocalEvent: () => () => {},
+  getBridge: async () => ({
+    request: {
+      controlSession: mocks.sessionRequest,
+      controlDetach: mocks.detach,
+      controlInfo: mocks.info,
+    },
+  }),
+}));
+import { RemoteCoordinator } from "./tasks/coordinator.tsx";
+import { signOutDesktopHost } from "./tasks/host-session.ts";
+
+afterEach(() => {
+  cleanup();
+  mocks.session.data = null;
+  vi.clearAllMocks();
+});
+it("preserves independent authorization across cookie expiry and renderer unmount", async () => {
+  const view = render(<RemoteCoordinator />);
+  expect(mocks.sessionRequest).not.toHaveBeenCalled();
+  mocks.session.data = { user: { id: "account-a" } };
+  view.rerender(<RemoteCoordinator />);
+  await waitFor(() => expect(mocks.info).toHaveBeenCalled());
+  expect(mocks.sessionRequest).toHaveBeenCalledExactlyOnceWith({ accountId: "account-a" });
+  mocks.session.data = null;
+  view.rerender(<RemoteCoordinator />);
+  view.unmount();
+  expect(mocks.detach).not.toHaveBeenCalled();
+  expect(mocks.local).not.toHaveBeenCalled();
+  expect(mocks.sessionRequest).toHaveBeenCalledTimes(1);
+});
+it("revokes remote authorization on explicit sign-out", async () => {
+  await signOutDesktopHost();
+  expect(mocks.sessionRequest).toHaveBeenCalledWith({ accountId: null });
+  expect(mocks.detach).toHaveBeenCalledTimes(1);
+  expect(mocks.local).not.toHaveBeenCalled();
+});

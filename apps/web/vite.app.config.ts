@@ -1,0 +1,58 @@
+import { i18nCatalogs } from "@raypx/i18n/vite";
+import { raypxDevtools } from "@raypx/devtools/vite";
+import { analyticsBuild } from "@raypx/tooling/build/analytics";
+import { startEnvironment } from "@raypx/tooling/build/start-env";
+import { nitroTarget } from "@raypx/tooling/build/nitro";
+import { deploymentServices } from "@raypx/tooling/build/deployment";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import react from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
+import { defineConfig, loadEnv } from "vite-plus";
+
+// Pages render inline hydration and theme scripts, so CSP limits framing, plugins,
+// base URLs and form targets rather than script sources.
+const securityHeaders = {
+  "Content-Security-Policy":
+    "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=15552000; includeSubDomains",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+};
+
+export default defineConfig(() => {
+  const analytics = analyticsBuild("web");
+  return {
+    devtools: { apply: "serve", embeddedVisibility: "passive" },
+    define: analytics.define,
+    plugins: [
+      analytics.plugin,
+      raypxDevtools(),
+      nitro({
+        ...nitroTarget(),
+        routeRules: { "/**": { headers: securityHeaders } },
+        // Trace React and React DOM together so both load the same NODE_ENV build.
+        traceDeps: ["react", "react-dom"],
+      }),
+      tailwindcss(),
+      // Visitors download the default catalog plus their own language only.
+      i18nCatalogs({ catalogs: "lazy" }),
+      startEnvironment(tanstackStart(), loadEnv),
+      react(),
+    ],
+    build: {
+      ...analytics.build,
+      rolldownOptions: {
+        // Base UI marks modules "use client" for RSC; this SSR app has no server components.
+        onLog(level, log, handler) {
+          if (log.code !== "MODULE_LEVEL_DIRECTIVE") handler(level, log);
+        },
+      },
+    },
+    // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
+    resolve: { dedupe: ["react", "react-dom"] },
+    server: { port: deploymentServices.web.port, strictPort: true },
+  };
+});

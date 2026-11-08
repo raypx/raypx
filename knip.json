@@ -1,0 +1,100 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": [
+    "apps/**/*.{js,mjs,ts,tsx}",
+    "packages/**/*.{js,mjs,ts,tsx}",
+    "e2e/**/*.ts",
+    "infra/**/*.ts"
+  ],
+  "ignoreFiles": [
+    "**/*.d.ts",
+    "**/*.gen.ts",
+    "**/.output/**",
+    "**/dist/**",
+    "**/artifacts/**",
+    ".agents/skills/**",
+    "apps/desktop/build/**",
+    ".claude/**",
+    "apps/desktop/src-tauri/gen/**",
+    "apps/desktop/generated/**"
+  ],
+  "workspaces": {
+    ".": {
+      "entry": ["deploy/manifests.ts", "deploy/sources.ts"],
+      "ignoreDependencies": ["skills"]
+    },
+    "apps/api": {
+      "entry": [
+        "server/app/*.ts",
+        "server/runtime/plugin.ts",
+        "server/jobs/runtime/*.ts",
+        "vite.app.config.ts",
+        "tests/helpers/control-server.ts",
+        "tests/types/*.ts"
+      ]
+    },
+    "apps/desktop": {
+      "entry": [
+        "src/routes/**/*.tsx",
+        "tests/native/smoke/*.ts",
+        "vite.app.config.ts",
+        "scripts/host/*.ts",
+        "tests/native/fixtures/*.ts",
+        "e2e/**/*.spec.ts",
+        "perf/*.bench.ts",
+        "perf/browser/main.tsx",
+        "perf/browser/vite.app.config.ts"
+      ]
+    },
+    "apps/web": {
+      "entry": ["src/routes/**/*.{ts,tsx}", "vite.app.config.ts", "e2e/**/*.spec.ts"]
+    },
+    "apps/cli": {
+      "entry": [
+        "src/main.ts",
+        "tests/smoke/*.ts",
+        "tests/fixtures/**/*.{ts,mjs}",
+        "perf/*.bench.ts",
+        "scripts/*.ts"
+      ]
+    },
+    "apps/storybook": {
+      "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
+    },
+    "packages/tooling": {
+      "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
+    },
+    "packages/tsconfig": {
+      "entry": ["scripts/task.ts"]
+    },
+    "packages/email": {
+      "entry": ["vite.app.config.ts"]
+    },
+    "packages/logger": {
+      "entry": ["tests/types/*.ts"]
+    },
+    "packages/database": {
+      "entry": ["src/index.ts", "src/commands.ts", "drizzle.config.ts"],
+      "drizzle": false
+    },
+    "e2e": {
+      "entry": ["tests/**/*.ts", "playwright.config.ts", "playwright.devtools.config.ts"]
+    },
+    "infra/railway": {
+      "entry": ["railway.ts", "scripts/iac-preload.ts"]
+    },
+    "infra/relay": {
+      "entry": ["src/main.ts", "vite.app.config.ts"]
+    },
+    "infra/cloudflare": {
+      "entry": ["src/index.ts", "vite.app.config.ts", "scripts/wrangler.ts"]
+    },
+    "packages/control": {
+      "entry": ["tests/helpers/control.ts"]
+    },
+    "packages/runtime-node": {
+      "entry": ["scripts/task.ts", "src/*.ts"],
+      "ignoreDependencies": ["ws", "undici", "@types/ws"]
+    }
+  }
+}

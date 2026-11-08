@@ -1,27 +1,85 @@
 {
-  "name": "@raypx/web",
-  "version": "0.1.0",
+  "name": "web",
+  "version": "0.0.0",
   "private": true,
-  "author": "Zack <heyloyep@gmail.com>",
   "type": "module",
+  "scripts": {
+    "dev": "raypx-dev env -- bun --bun vp dev --config vite.app.config.ts",
+    "build": "raypx-dev env -- bun --bun vp build --config vite.app.config.ts",
+    "_build": "bun --bun vp build --config vite.app.config.ts",
+    "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
+    "start": "bun .output/server/index.mjs",
+    "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project e2e/tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --project unit",
+    "test:component": "bun --bun vp test --run --project component",
+    "test:coverage": "bun --bun vp test --run --coverage",
+    "e2e": "raypx-dev e2e",
+    "_e2e": "raypx-dev browser:run",
+    "build:e2e": "raypx-dev tasks web#build:e2e"
+  },
   "dependencies": {
-    "@raypx/api": "workspace:*",
-    "@raypx/hooks": "workspace:*",
+    "@raypx/account": "workspace:*",
+    "@raypx/analytics": "workspace:*",
+    "@raypx/auth": "workspace:*",
+    "@raypx/blocks": "workspace:*",
+    "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/icons": "workspace:*",
+    "@raypx/instances": "workspace:*",
+    "@raypx/jobs": "workspace:*",
+    "@raypx/memory": "workspace:*",
+    "@raypx/memory-model": "workspace:*",
+    "@raypx/tasks": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "@tanstack/react-router": "1.170.41",
-    "@tanstack/react-start": "1.168.60",
-    "nitro": "3.0.260903-beta",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-router-ssr-query": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "nitro": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@raypx/contracts": "workspace:*",
-    "@types/node": "^22.19.0",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
-    "@vitejs/plugin-react": "6.1.2",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "@playwright/test": "catalog:dev",
+    "@raypx/devtools": "workspace:*",
+    "@raypx/e2e": "workspace:*",
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "catalog:dev",
+    "@testing-library/jest-dom": "catalog:dev",
+    "@testing-library/react": "catalog:dev",
+    "@testing-library/user-event": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
+    "@vitejs/devtools": "catalog:dev",
+    "@vitejs/plugin-react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "happy-dom": "catalog:dev",
+    "typescript": "catalog:dev",
+    "vite": "catalog:dev",
+    "vite-plus": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "browser",
+    "bundledDependencies": [
+      "@raypx/devtools"
+    ],
+    "taskScripts": {
+      "build": "_build",
+      "e2e": "_e2e",
+      "build:e2e": "_build"
+    },
+    "sourceTargets": {
+      "vite.app.config.ts": "node",
+      "e2e/**": "bun"
+    },
+    "browserTestProject": "web"
   }
 }

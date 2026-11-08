@@ -1,0 +1,4 @@
+{
+  "extends": "@raypx/tsconfig/library.json",
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
+}

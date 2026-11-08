@@ -1,0 +1,12 @@
+{"direction":"host","channel":"request","method":"initialize","reply":{}}
+{"direction":"host","channel":"send","message":{"method":"initialized"}}
+{"direction":"host","channel":"request","method":"thread/resume","message":{"threadId":"synthetic-session"},"reply":{"thread":{"id":"synthetic-session"}}}
+{"direction":"host","channel":"request","method":"turn/start","message":{"threadId":"synthetic-session"},"reply":{"turn":{"id":"synthetic-turn-1"}}}
+{"direction":"gate","name":"started"}
+{"direction":"provider","message":{"method":"turn/completed","params":{"turn":{"id":"synthetic-turn-1","status":"completed"}}}}
+{"direction":"host","channel":"request","method":"turn/start","message":{"input":[{"type":"text","text":"Queued synthetic input"}]},"reply":{"turn":{"id":"synthetic-turn-2"}}}
+{"direction":"gate","name":"queued"}
+{"direction":"provider","message":{"method":"turn/completed","params":{"turn":{"id":"synthetic-turn-2","status":"completed"}}}}
+{"direction":"host","channel":"kill"}
+{"direction":"gate","name":"draining"}
+{"direction":"exit","code":0}

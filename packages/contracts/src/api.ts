@@ -1,0 +1,172 @@
+import { administrationContract } from "./administration.ts";
+export * from "./administration.ts";
+import { instancesContract } from "./instances.ts";
+import { oc } from "@orpc/contract";
+import { z } from "zod";
+import { accountAccessSchema } from "./access.ts";
+export * from "./access.ts";
+import { deviceSchema, deviceGrantSchema } from "./tasks.ts";
+import {
+  taskSchema,
+  humanRequestSchema,
+  agentEventSchema,
+  taskActivitySchema,
+} from "@raypx/core/tasks";
+export * from "./tasks.ts";
+export * from "./configuration.ts";
+import { configurationContract } from "./configuration.ts";
+import { jobsContract } from "./jobs.ts";
+export * from "./jobs.ts";
+import { memoryContract } from "./memory.ts";
+export * from "./memory.ts";
+import {
+  hostAuthorizationSchema,
+  observedProjectionSchema,
+  terminalRequestSchema,
+} from "./terminal.ts";
+export * from "./terminal.ts";
+
+export const accountProfileSchema = z.object({
+  id: z.string().min(1),
+  email: z.email(),
+  name: z.string(),
+});
+export type AccountProfile = z.infer<typeof accountProfileSchema>;
+
+export const apiErrorDataSchema = z.object({
+  error: z.object({
+    code: z.string().min(1),
+    values: z
+      .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+      .optional(),
+  }),
+  requestId: z.string().min(1),
+});
+export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
+
+/** Local execution is deliberately absent from the public HTTP router. */
+export const apiContract = {
+  admin: administrationContract,
+  instances: instancesContract,
+  memory: memoryContract,
+  jobs: jobsContract,
+  hosts: {
+    authorize: oc
+      .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int().positive() }))
+      .output(hostAuthorizationSchema),
+    grant: oc
+      .input(z.object({ credential: z.string().min(64).max(200) }))
+      .output(z.object({ accountId: z.string(), grant: deviceGrantSchema })),
+    revoke: oc
+      .input(z.object({ credential: z.string().min(64).max(200) }))
+      .output(z.object({ revoked: z.literal(true) })),
+  },
+  observed: {
+    list: oc.input(z.object({})).output(observedProjectionSchema),
+    get: oc.input(z.object({ id: z.string().uuid() })).output(terminalRequestSchema),
+  },
+  configuration: configurationContract,
+  devices: {
+    register: oc
+      .input(
+        z.object({
+          installationId: z.string().uuid(),
+          name: z.string().trim().min(1).max(120),
+          platform: z.string().max(30),
+          appVersion: z.string().max(120),
+          reconnect: z.boolean().default(false),
+        }),
+      )
+      .output(deviceGrantSchema),
+    refreshGrant: oc
+      .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
+      .output(deviceGrantSchema),
+    list: oc.input(z.object({})).output(z.array(deviceSchema)),
+    revoke: oc
+      .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
+      .output(z.object({ revoked: z.literal(true) })),
+  },
+  tasks: {
+    list: oc
+      .input(
+        z.object({
+          before: z.string().optional(),
+          limit: z.number().int().min(1).max(100).default(50),
+          projectId: z.string().uuid().optional(),
+          deviceId: z.string().uuid().optional(),
+        }),
+      )
+      .output(z.array(taskSchema)),
+    get: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          after: z.number().int().min(0).default(0),
+          beforeActivity: z.number().int().positive().optional(),
+        }),
+      )
+      .output(
+        z.object({
+          task: taskSchema,
+          events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
+          requests: z.array(humanRequestSchema),
+          activity: z.array(taskActivitySchema),
+          activityBefore: z.number().int().positive().optional(),
+        }),
+      ),
+  },
+  approvals: {
+    list: oc.input(z.object({})).output(z.array(humanRequestSchema)),
+  },
+  relay: {
+    ticket: oc.input(z.object({})).output(z.object({ token: z.string(), expiresAt: z.string() })),
+  },
+  account: {
+    get: oc.input(z.object({})).output(accountProfileSchema),
+    access: oc.input(z.strictObject({})).output(accountAccessSchema),
+  },
+};
+
+/** Native transport policy. Every HTTP procedure must explicitly select its consumer. */
+type NativeExposure<C> = {
+  [Group in keyof C]: { [Method in keyof C[Group]]: "renderer" | "native" | "host" | "web" };
+};
+export const apiExposure = {
+  admin: { overview: "web", health: "web", audit: "web" },
+  instances: {
+    begin: "host",
+    inspect: "renderer",
+    approve: "renderer",
+    poll: "host",
+    check: "host",
+    list: "renderer",
+    revoke: "renderer",
+  },
+  account: { get: "renderer", access: "renderer" },
+  devices: { register: "renderer", refreshGrant: "renderer", list: "renderer", revoke: "renderer" },
+  tasks: { list: "renderer", get: "renderer" },
+  approvals: { list: "renderer" },
+  relay: { ticket: "renderer" },
+  observed: { list: "renderer", get: "renderer" },
+  hosts: { authorize: "native", revoke: "native", grant: "host" },
+  configuration: { public: "renderer", access: "renderer", get: "renderer", update: "renderer" },
+  jobs: {
+    list: "renderer",
+    create: "renderer",
+    update: "renderer",
+    remove: "renderer",
+    run: "renderer",
+    history: "renderer",
+  },
+  memory: {
+    list: "renderer",
+    get: "renderer",
+    create: "renderer",
+    update: "renderer",
+    archive: "renderer",
+    delete: "renderer",
+    history: "renderer",
+    restore: "renderer",
+    resolve: "renderer",
+  },
+} as const satisfies NativeExposure<typeof apiContract>;

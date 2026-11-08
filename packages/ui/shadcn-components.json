@@ -1,0 +1,31 @@
+{
+  "components": [
+    "alert",
+    "avatar",
+    "badge",
+    "button",
+    "checkbox",
+    "collapsible",
+    "dialog",
+    "dropdown-menu",
+    "empty",
+    "field",
+    "input",
+    "input-group",
+    "label",
+    "native-select",
+    "popover",
+    "radio-group",
+    "select",
+    "separator",
+    "sheet",
+    "sidebar",
+    "skeleton",
+    "switch",
+    "table",
+    "tabs",
+    "textarea",
+    "toast",
+    "tooltip"
+  ]
+}
