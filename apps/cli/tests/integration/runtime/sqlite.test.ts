@@ -274,7 +274,6 @@ for (const baseline of ["baseline", "node-baseline"]) {
           fileURLToPath(new URL(`../../fixtures/sqlite/node-baseline/${name}`, import.meta.url)),
           join(target, name),
         );
-    const before = new Database(join(target, "profile.sqlite"), { readonly: true });
     const snapshot = (client: Database) =>
       Object.fromEntries(
         [
@@ -285,8 +284,15 @@ for (const baseline of ["baseline", "node-baseline"]) {
           "host_authorizations",
         ].map((table) => [table, client.query(`SELECT * FROM "${table}" ORDER BY rowid`).all()]),
       );
-    const expected = snapshot(before);
-    before.close();
+    const before = new Database(join(target, "profile.sqlite"), { readwrite: true, create: false });
+    let expected: ReturnType<typeof snapshot>;
+    try {
+      // WAL snapshots may need writable auxiliary files; keep SQL reads only.
+      before.exec("PRAGMA query_only = ON");
+      expected = snapshot(before);
+    } finally {
+      before.close();
+    }
     const storage = profileStorage(target);
     expect(snapshot(storage.database.$client)).toEqual(expected);
     if (baseline === "node-baseline") {
@@ -320,6 +326,7 @@ for (const baseline of ["baseline", "node-baseline"]) {
     expect(actual.instance_credentials).toEqual(expected.instance_credentials);
     expect(actual.host_authorizations).toEqual(expected.host_authorizations);
     expect(actual.roots).toHaveLength((expected.roots?.length ?? 0) + 1);
+    expect(actual.roots).toEqual(expect.arrayContaining(expected.roots!));
     if (baseline === "node-baseline")
       await new InstanceRuntime(target, { keys: instanceKeys(reopened.database) }).assert();
     reopened.close();
