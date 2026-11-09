@@ -1,5 +1,5 @@
 import { formText } from "../../form-data.ts";
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { ClockIcon } from "@raypx/icons/clock";
 import { PauseIcon } from "@raypx/icons/pause";
@@ -25,7 +25,7 @@ import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
 import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/jobs-model";
 import { ScheduleFields } from "./schedule-fields.tsx";
-import { localRequest } from "../../lib/desktop.ts";
+import { localRequest, onLocalEvent } from "../../lib/desktop.ts";
 import { Link } from "@tanstack/react-router";
 
 export function LocalJobsPage({
@@ -59,6 +59,20 @@ export function LocalJobsPage({
   const [association, setAssociation] = useState(projectId ?? "");
   const rootId = selectedRoot ?? roots[0]?.id ?? null;
   const [history, setHistory] = useState<{ job: JobDefinition; runs: JobRun[] } | null>(null);
+  const historyGeneration = useRef(0);
+  const historyTarget = useRef<JobDefinition | null>(null);
+  useEffect(
+    () => () => {
+      historyGeneration.current++;
+      historyTarget.current = null;
+    },
+    [],
+  );
+  function closeHistory() {
+    historyGeneration.current++;
+    historyTarget.current = null;
+    setHistory(null);
+  }
   function edit(job: JobDefinition | null) {
     setEditing(job);
     setAction(job?.action.type ?? "directory.scan");
@@ -148,7 +162,7 @@ export function LocalJobsPage({
     setError("");
     try {
       await localRequest("jobs.delete", { id: job.id });
-      if (history?.job.id === job.id) setHistory(null);
+      if (history?.job.id === job.id || historyTarget.current?.id === job.id) closeHistory();
       await refresh();
     } catch {
       setError(c("error"));
@@ -156,20 +170,40 @@ export function LocalJobsPage({
       setBusy(false);
     }
   }
-  async function showHistory(job: JobDefinition) {
-    setError("");
-    try {
-      setHistory({ job, runs: await localRequest("jobs.history", { id: job.id }) });
-    } catch {
-      setError(c("error"));
-    }
-  }
+  const showHistory = useCallback(
+    async (job: JobDefinition) => {
+      const generation = ++historyGeneration.current;
+      historyTarget.current = job;
+      setError("");
+      try {
+        const runs = await localRequest("jobs.history", { id: job.id });
+        if (generation === historyGeneration.current) setHistory({ job, runs });
+      } catch {
+        if (generation === historyGeneration.current) setError(c("error"));
+      }
+    },
+    [c],
+  );
+  useEffect(() => {
+    if (!desktopAvailable) return;
+    return onLocalEvent((event) => {
+      const job = historyTarget.current;
+      if (
+        job &&
+        ((event.event === "job.finished" && event.data.jobId === job.id) ||
+          (event.event === "engine.status" && event.data.status === "ready"))
+      )
+        void showHistory(job);
+    });
+  }, [desktopAvailable, showHistory]);
   async function run(job: JobDefinition) {
+    const generation = ++historyGeneration.current;
+    historyTarget.current = job;
     setBusy(true);
     setError("");
     try {
       await localRequest("jobs.run", { id: job.id });
-      await showHistory(job);
+      if (generation === historyGeneration.current) await showHistory(job);
       await refresh();
     } catch {
       setError(c("error"));
@@ -423,7 +457,7 @@ export function LocalJobsPage({
             <h2 className="text-sm font-medium wrap-anywhere">
               {history.job.name} · {t("history")}
             </h2>
-            <Button variant="ghost" onClick={() => setHistory(null)}>
+            <Button variant="ghost" onClick={closeHistory}>
               {c("close")}
             </Button>
           </header>

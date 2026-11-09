@@ -262,7 +262,7 @@ export function createLocalRouter({
       case "jobs.run":
         return jobs.run(localParams[method].parse(raw).id);
       case "jobs.history":
-        return state
+        return jobs
           .history(localParams[method].parse(raw).id)
           .map((run) => ({ ...run, output: run.output.slice(0, 8_192) }));
       case "tools.run": {

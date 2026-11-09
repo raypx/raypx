@@ -30,7 +30,7 @@ raypx tools run '{"executable":"/absolute/program","args":[],"cwd":"/absolute/di
 
 Use the current file `version` when editing, moving or deleting. Deletion prompts on an interactive terminal; automation must explicitly pass `--yes`. Built-in file APIs reject traversal and symbolic links. External commands have ordinary OS user permissions and are not restricted by file grants.
 
-`--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically.
+`--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically. Scheduler startup and history reads mark abandoned runs as interrupted only after acquiring their job lease, preserving runs still owned by another process.
 
 Build through VP with root `bun run build:cli`, or run the workspace build with
 `bun run --cwd apps/cli build`. The build checks the SQLite journal and pinned Bun

@@ -52,7 +52,7 @@ export class ExecutionCoordinator {
   private readonly active = new Map<string, ManagedExecution>();
   private readonly bindingVersions = new Map<string, number>();
   private closing = false;
-  private readonly completions = new Set<Promise<void>>();
+  private readonly completions = new Map<Promise<void>, LocalAgentTask>();
   private readonly cancelledStarts = new Set<string>();
   constructor(
     private readonly store: ExecutionRepository,
@@ -77,6 +77,11 @@ export class ExecutionCoordinator {
   isClosing() {
     return this.closing;
   }
+  private drain(matches: (local: LocalAgentTask) => boolean = () => true) {
+    return Promise.allSettled(
+      [...this.completions].filter(([, local]) => matches(local)).map(([completion]) => completion),
+    );
+  }
   async cancelTask(local: LocalAgentTask, starting?: Promise<unknown>) {
     if (!activeTaskStatuses.includes(local.task.status)) return;
     this.cancelledStarts.add(local.task.id);
@@ -84,7 +89,7 @@ export class ExecutionCoordinator {
     if (execution) {
       this.status(local, "cancelling");
       execution.cancel();
-      await Promise.allSettled(this.completions);
+      await this.drain((pending) => pending.task.id === local.task.id);
     } else {
       await starting;
       if (activeTaskStatuses.includes(local.task.status)) this.status(local, "cancelled");
@@ -244,8 +249,11 @@ export class ExecutionCoordinator {
         hook: () => this.hooks.endpoint(task.id),
         environment: () => this.options.environment?.() ?? process.env,
         track: (completion) => {
-          this.completions.add(completion);
-          void completion.finally(() => this.completions.delete(completion));
+          this.completions.set(completion, local);
+          void completion.then(
+            () => this.completions.delete(completion),
+            () => this.completions.delete(completion),
+          );
         },
         ended: () => {
           dispose?.();
@@ -306,14 +314,14 @@ export class ExecutionCoordinator {
     this.bindingVersions.set(binding, (this.bindingVersions.get(binding) ?? 0) + 1);
     for (const execution of this.active.values())
       if (execution.local.binding === binding) execution.cancel();
-    await Promise.allSettled(this.completions);
+    await this.drain((local) => local.binding === binding);
     return { detached: true };
   }
   async close() {
     this.closing = true;
     const executions = [...this.active.values()];
     for (const execution of executions) execution.cancel();
-    await Promise.allSettled(this.completions);
+    await this.drain();
     await this.hooks.close();
   }
 }

@@ -65,6 +65,30 @@ export class JobRuntime {
     this.state.deleteJob(id);
     return { deleted: true };
   }
+  history(id: string): JobRun[] {
+    const history = this.state.history(id);
+    if (!history.some((run) => run.status === "running")) return history;
+    const release = acquireLock(this.state.directory, `job-${id}`);
+    if (!release) return history;
+    try {
+      this.interruptRuns(id);
+      return this.state.history(id);
+    } finally {
+      release();
+    }
+  }
+  // Only the holder of the job lease can establish that a running record is stale.
+  private interruptRuns(id: string) {
+    this.state.db.transaction(() => {
+      for (const run of this.state.history(id))
+        if (run.status === "running")
+          this.state.putRun({
+            ...run,
+            status: "interrupted",
+            finishedAt: new Date().toISOString(),
+          });
+    });
+  }
   async run(id: string): Promise<JobRun> {
     if (this.assertInstance) await this.assertInstance();
     if (this.closing) throw new LocalError("CLOSING", "Job runtime is stopping");
@@ -88,52 +112,48 @@ export class JobRuntime {
       this.recordRun(run, startedAt);
       return run;
     }
-    // Acquiring the kernel-backed job lease proves prior running records are stale.
-    for (const previous of this.state.history(id))
-      if (previous.status === "running")
-        this.state.putRun({
-          ...previous,
-          status: "interrupted",
-          finishedAt: new Date().toISOString(),
-        });
-    this.state.putRun(run);
     const controller = new AbortController();
     let code: string | undefined;
-    const done = (async () => {
+    // Install the active entry before execution, including synchronous storage failures.
+    const done = Promise.resolve().then(async () => {
       try {
-        if (job.action.type === "directory.scan") {
-          const result = await this.files.scan(
-            job.action.rootId,
-            job.action.path,
-            controller.signal,
-          );
-          run.output = JSON.stringify(result);
-          run.status = "success";
-          run.exitCode = 0;
-        } else {
-          const result = await this.processes.run(job.action.command, controller.signal);
-          run.output = result.output;
-          run.exitCode = result.exitCode;
-          run.status = result.cancelled
-            ? "cancelled"
-            : result.exitCode === 0
-              ? "success"
-              : "failed";
+        this.interruptRuns(id);
+        this.state.putRun(run);
+        try {
+          if (job.action.type === "directory.scan") {
+            const result = await this.files.scan(
+              job.action.rootId,
+              job.action.path,
+              controller.signal,
+            );
+            run.output = JSON.stringify(result);
+            run.status = "success";
+            run.exitCode = 0;
+          } else {
+            const result = await this.processes.run(job.action.command, controller.signal);
+            run.output = result.output;
+            run.exitCode = result.exitCode;
+            run.status = result.cancelled
+              ? "cancelled"
+              : result.exitCode === 0
+                ? "success"
+                : "failed";
+          }
+        } catch (error) {
+          code = diagnosticCode(error);
+          run.status = controller.signal.aborted ? "cancelled" : "failed";
+          run.output = error instanceof Error ? error.message : "Task failed";
         }
-      } catch (error) {
-        code = diagnosticCode(error);
-        run.status = controller.signal.aborted ? "cancelled" : "failed";
-        run.output = error instanceof Error ? error.message : "Task failed";
-      } finally {
         run.finishedAt = new Date().toISOString();
         this.state.putRun(run);
+      } finally {
         release();
         this.active.delete(id);
-        this.emit({ version: 1, event: "job.finished", data: { ...run } });
-        this.recordRun(run, startedAt, code);
       }
+      this.emit({ version: 1, event: "job.finished", data: { ...run } });
+      this.recordRun(run, startedAt, code);
       return run;
-    })();
+    });
     this.active.set(id, { controller, done });
     return done;
   }
@@ -149,12 +169,22 @@ export class JobRuntime {
     });
   }
   startScheduler() {
+    if (this.closing) throw new LocalError("CLOSING", "Job runtime is stopping");
     const release = acquireLock(this.state.directory, "scheduler");
     if (!release)
       throw new LocalError("SCHEDULER_BUSY", "Another Desktop engine is scheduling this profile");
-    this.releaseScheduler = release;
-    this.reconcile();
-    this.interval = setInterval(() => this.reconcile(), 1000);
+    try {
+      for (const job of this.state.jobs()) this.history(job.id);
+      this.reconcile();
+      this.interval = setInterval(() => this.reconcile(), 1000);
+      this.releaseScheduler = release;
+    } catch (error) {
+      for (const cron of this.schedules) cron.stop();
+      this.schedules = [];
+      this.revision = -1;
+      release();
+      throw error;
+    }
   }
   private reconcile() {
     const revision = this.state.revision();

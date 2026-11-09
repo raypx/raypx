@@ -80,7 +80,8 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
 - Deletion requires explicit confirmation. File writes require the current version or null for creation.
 - Foreground stdio EOF and explicit daemon stop cancel owned descendants. Daemon proxy EOF
   disconnects one client and cancels its tools/PTYs, preserving Agent tasks and scheduling.
-  Missed Cron triggers are skipped.
+  Missed Cron triggers are skipped. Job history reads and scheduler startup repair abandoned
+  runs only under the job lease; storage failures must release execution and scheduler leases.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - Formal production packaging (ADR 0047) uses stable Bun 1.4.4: VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
 
@@ -209,6 +210,8 @@ ordinary local commands never repair or cancel another host's task records. Neve
 import cloud authentication or expose executable paths through remote contracts.
 Commit task status and its outbox event atomically. Release canonical project locks
 only after process-tree termination and stream draining complete, including detach.
+Cancellation waits only for the targeted task; detach waits only for its binding's
+executions. Daemon shutdown drains every execution, including those already stopping.
 
 Relay receipts keep payload/results; local history clearing instead keeps content-free hashes
 (same retry: NOT_FOUND; changed payload: IDEMPOTENCY_CONFLICT). Keep acknowledged replay

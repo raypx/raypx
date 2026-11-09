@@ -8,6 +8,96 @@ import { runtimeFixtures } from "../../helpers/runtime.ts";
 const { fixture, runtimes } = runtimeFixtures();
 
 describe("device jobs and leases", () => {
+  it("recovers interrupted history on read without replaying a job or changing a live owner's run", async () => {
+    const { runtime, grant, dir } = await fixture();
+    const job = runtime.jobs.create({
+      name: "Scan",
+      cron: "0 9 * * *",
+      timezone: "UTC",
+      enabled: false,
+      action: { type: "directory.scan", rootId: grant.id, path: "" },
+    });
+    const run = {
+      id: crypto.randomUUID(),
+      jobId: job.id,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      status: "running" as const,
+      output: "Retained output",
+      exitCode: null,
+    };
+    runtime.state.putRun(run);
+    const release = acquireLock(runtime.state.directory, `job-${job.id}`)!;
+    const reader = createRuntime({ dataDir: dir });
+    runtimes.push(reader);
+    try {
+      expect(await reader.request("jobs.history", { id: job.id })).toEqual([run]);
+    } finally {
+      release();
+    }
+    await runtime.close();
+    const scan = vi.spyOn(reader.files, "scan");
+    expect(await reader.request("jobs.history", { id: job.id })).toEqual([
+      { ...run, status: "interrupted", finishedAt: expect.any(String) },
+    ]);
+    expect(scan).not.toHaveBeenCalled();
+    expect(reader.state.history(job.id)[0]?.status).toBe("interrupted");
+  });
+
+  it.each(["start", "finish"] as const)(
+    "releases the job lease if persisting the %s record fails",
+    async (phase) => {
+      const { runtime, grant } = await fixture();
+      const job = runtime.jobs.create({
+        name: "Scan",
+        cron: "0 9 * * *",
+        timezone: "UTC",
+        enabled: false,
+        action: { type: "directory.scan", rootId: grant.id, path: "" },
+      });
+      const persist = runtime.state.putRun.bind(runtime.state);
+      const write = vi.spyOn(runtime.state, "putRun").mockImplementation((run) => {
+        if ((run.status === "running") === (phase === "start"))
+          throw new Error("Unavailable run storage");
+        persist(run);
+      });
+      await expect(runtime.jobs.run(job.id)).rejects.toThrow("Unavailable run storage");
+      write.mockRestore();
+      expect(await runtime.jobs.run(job.id)).toMatchObject({ status: "success" });
+    },
+  );
+
+  it("recovers disabled jobs when the scheduler starts and releases its lease after failed recovery", async () => {
+    const { runtime, grant, dir } = await fixture();
+    const job = runtime.jobs.create({
+      name: "Scan",
+      cron: "0 9 * * *",
+      timezone: "UTC",
+      enabled: false,
+      action: { type: "directory.scan", rootId: grant.id, path: "" },
+    });
+    runtime.state.putRun({
+      id: crypto.randomUUID(),
+      jobId: job.id,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      status: "running",
+      output: "",
+      exitCode: null,
+    });
+    const write = vi.spyOn(runtime.state, "putRun").mockImplementation(() => {
+      throw new Error("Unavailable run storage");
+    });
+    expect(() => runtime.jobs.startScheduler()).toThrow("Unavailable run storage");
+    write.mockRestore();
+    const scheduler = createRuntime({ dataDir: dir, mode: "stdio" });
+    runtimes.push(scheduler);
+    expect(scheduler.state.history(job.id)[0]).toMatchObject({
+      status: "interrupted",
+      finishedAt: expect.any(String),
+    });
+  });
+
   it("persists optional project associations while retaining unassigned plans after restart", async () => {
     const { runtime, grant, dir } = await fixture();
     const input = {
