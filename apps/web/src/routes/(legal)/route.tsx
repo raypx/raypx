@@ -1,51 +1,44 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { IconButton } from "@raypx/ui/icon-button";
-import { Logo } from "@raypx/ui/logo";
-import { Separator } from "@raypx/ui/components/ui/separator";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { LegalFooter } from "../../components/legal-footer.tsx";
+import { PublicBackdrop, PublicHeader } from "../../components/public-chrome.tsx";
+import { publicConfigurationQuery } from "../../features/configuration/client.ts";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 export const Route = createFileRoute("/(legal)")({ component: LegalLayout });
 
 function LegalLayout() {
   const t = useTranslations("legal");
-  const c = useTranslations("common");
+  const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <a
-        href="#main"
-        className="sr-only rounded-md bg-background p-3 focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
-      >
-        {c("skipNavigation")}
-      </a>
-      <header className="mx-auto flex min-h-20 w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
-        <Link
-          to="/"
-          aria-label="Raypx"
-          className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Logo />
-        </Link>
-        <div className="ml-auto flex items-center gap-1">
+    <div className="relative isolate flex min-h-dvh flex-col bg-background text-foreground">
+      <PublicBackdrop className="h-[32rem]" />
+      <PublicHeader siteName={siteName} sticky>
+        <div className="flex shrink-0 items-center gap-1">
           <IconButton label={t("backHome")} render={<Link to="/" />} nativeButton={false}>
             <ArrowLeftIcon aria-hidden="true" />
           </IconButton>
           <ThemeToggle />
           <LanguageMenu />
         </div>
-      </header>
-      <Separator />
+      </PublicHeader>
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto w-full max-w-5xl flex-1 px-5 py-10 outline-none sm:px-8 sm:py-14"
+        className="mx-auto w-full max-w-5xl flex-1 px-5 py-10 outline-none sm:px-8 sm:py-16"
       >
         <Outlet />
       </main>
-      <Separator />
-      <LegalFooter expanded className="mx-auto w-full max-w-6xl px-5 py-5 sm:px-8" />
+      <div className="border-t border-border">
+        <LegalFooter
+          expanded
+          siteName={siteName}
+          className="mx-auto w-full max-w-6xl px-5 py-5 sm:px-8"
+        />
+      </div>
     </div>
   );
 }

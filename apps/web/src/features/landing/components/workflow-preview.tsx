@@ -9,6 +9,7 @@ import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { TaskListIcon } from "@raypx/icons/task-list";
 import { TerminalIcon } from "@raypx/icons/terminal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
+import { cn } from "@raypx/ui/lib/utils";
 
 const steps = ["session", "review", "result"] as const;
 type PreviewStep = (typeof steps)[number];
@@ -24,7 +25,7 @@ const stepPositions: Record<PreviewStep, string> = {
 };
 
 /** An illustrative workflow, independent of account state and execution clients. */
-export function WorkflowPreview() {
+export function WorkflowPreview({ className }: { className?: string }) {
   const t = useTranslations("guest");
   const [step, setStep] = useState<PreviewStep>("review");
   const panelRef = useRef<HTMLDivElement>(null);
@@ -53,7 +54,10 @@ export function WorkflowPreview() {
   return (
     <figure
       aria-label={t("previewLabel")}
-      className="min-w-0 overflow-hidden rounded-2xl border border-border bg-sidebar"
+      className={cn(
+        "min-w-0 overflow-hidden rounded-2xl border border-border bg-sidebar",
+        className,
+      )}
     >
       <figcaption className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border bg-muted/60 px-5 py-4">
         <span className="inline-flex items-center gap-2 text-sm font-medium">

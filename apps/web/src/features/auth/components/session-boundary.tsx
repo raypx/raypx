@@ -41,6 +41,39 @@ export function SignInLink({
   );
 }
 
+const gateClass = "mx-auto flex w-full max-w-sm flex-col items-center gap-5 py-12 text-center";
+const enterGate =
+  "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out";
+
+/** Icon tile with two soft concentric halos; decorative only. */
+function GateMedia({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "destructive";
+}) {
+  return (
+    <div className="relative grid size-24 place-items-center">
+      <span aria-hidden="true" className="absolute inset-0 rounded-full border border-border/60" />
+      <span
+        aria-hidden="true"
+        className="absolute inset-3 rounded-full border border-dashed border-border"
+      />
+      <div
+        className={cn(
+          "relative grid size-12 place-items-center rounded-xl border shadow-soft",
+          tone === "destructive"
+            ? "border-destructive/20 bg-destructive/10 text-destructive-text"
+            : "border-border bg-background text-muted-foreground",
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function SignInGate({
   title,
   description,
@@ -51,13 +84,15 @@ export function SignInGate({
   heading?: "h1" | "h2";
 }) {
   return (
-    <section className="flex max-w-lg flex-col items-start gap-5 py-8">
-      <div className="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
+    <section className={cn(gateClass, enterGate)}>
+      <GateMedia>
         <LockIcon aria-hidden="true" className="size-5" />
-      </div>
-      <div className="space-y-2">
-        <Heading className="text-xl leading-snug font-semibold tracking-tight">{title}</Heading>
-        <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+      </GateMedia>
+      <div className="flex flex-col gap-2">
+        <Heading className="text-xl leading-snug font-semibold tracking-tight text-balance">
+          {title}
+        </Heading>
+        <p className="text-sm leading-relaxed text-pretty text-muted-foreground">{description}</p>
       </div>
       <SignInLink />
     </section>
@@ -77,13 +112,17 @@ export function SessionBoundary({
   if (session.isPending) return <LoadingState label={c("loading")} />;
   if (session.error)
     return (
-      <div className="flex max-w-lg flex-col items-start gap-5 py-8" role="alert">
-        <div className="grid size-10 place-items-center rounded-lg bg-destructive/10 text-destructive-text">
+      <div className={cn(gateClass, enterGate)} role="alert">
+        <GateMedia tone="destructive">
           <LockIcon aria-hidden="true" className="size-5" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl leading-snug font-semibold tracking-tight">{c("networkError")}</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">{c("sessionUnavailable")}</p>
+        </GateMedia>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl leading-snug font-semibold tracking-tight text-balance">
+            {c("networkError")}
+          </h2>
+          <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+            {c("sessionUnavailable")}
+          </p>
         </div>
         <Button variant="outline" onClick={() => void session.refetch()}>
           {c("retry")}

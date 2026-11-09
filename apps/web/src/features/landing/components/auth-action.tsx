@@ -8,13 +8,19 @@ import { cn } from "@raypx/ui/lib/utils";
 import { authClient } from "../../auth/client.ts";
 
 /** Share Better Auth's deduplicated session store with the header account menu. */
-export function LandingAuthAction({ className }: { className?: string }) {
+export function LandingAuthAction({
+  className,
+  size = "default",
+}: {
+  className?: string;
+  size?: "default" | "lg";
+}) {
   const c = useTranslations("common");
   const t = useTranslations("guest");
   const session = authClient.useSession();
   if (session.isPending) {
     return (
-      <Button variant="outline" className={className} disabled aria-busy={true}>
+      <Button variant="outline" size={size} className={className} disabled aria-busy={true}>
         <SpinnerIcon
           aria-hidden="true"
           data-icon="inline-start"
@@ -30,7 +36,7 @@ export function LandingAuthAction({ className }: { className?: string }) {
     <Link
       to={signedIn ? "/settings" : "/login"}
       search={signedIn ? {} : { returnTo: "/settings" }}
-      className={cn(buttonVariants({ variant: "outline" }), className)}
+      className={cn(buttonVariants({ variant: "outline", size }), className)}
     >
       <Icon aria-hidden="true" data-icon="inline-start" />
       {t(signedIn ? "connectComputer" : "connect")}

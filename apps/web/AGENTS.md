@@ -71,6 +71,9 @@ application is an independent composition root and is never imported by another 
   language changes preserve form drafts and the current return destination.
   Public headers use `LanguageMenu` and `ThemeToggle` from
   `@raypx/blocks/preference-controls` with the existing preference providers.
+  Landing, authentication and legal layouts compose `PublicHeader` and `PublicBackdrop`
+  from `src/components/public-chrome.tsx`; shared artwork, motion classes and the
+  pointer spotlight live in `src/components/artwork.tsx`.
   Theme clicks cycle light → dark → system → light; the icon and accessible label
   reflect the current preference, and the tooltip shows the next one.
 - `src/features/auth/client.ts` creates the Better Auth client; `src/features/tasks/client.ts`

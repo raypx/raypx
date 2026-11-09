@@ -133,6 +133,12 @@ export default {
     approvalsHint: "Sign in to answer requests.",
     computers: "Connected computers",
     computersHint: "Sign in to see computers connected from Desktop.",
+    computersSummary:
+      "Desktop runs projects on your computer; Web follows its sessions and approvals.",
+    entryProjects: "Projects on your connected computers.",
+    entryApprovals: "Requests that need your answer.",
+    entryAutomations: "Scheduled sessions and their runs.",
+    entryMemory: "Reusable references and templates.",
     privateTitle: "Sign in to continue",
     privateHint: "Your account data is available after you sign in.",
     tasksHint: "Drafts stay on this device until you sign in and send.",
