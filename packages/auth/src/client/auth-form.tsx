@@ -94,6 +94,30 @@ const modes: Record<AuthMode, ModeConfig> = {
 const linkClassName =
   "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
+const socialProviders = {
+  google: { icon: GoogleIcon, label: "continueGoogle" },
+  github: { icon: GithubIcon, label: "continueGithub" },
+} as const;
+
+function authFormTitle(
+  config: ModeConfig,
+  link: ReturnType<typeof readAuthLink>,
+  signedIn: boolean,
+  complete: boolean,
+) {
+  if (link.invalidReset) return "invalidLinkTitle";
+  if (link.verified) return "verifiedTitle";
+  if (signedIn) return "signedInTitle";
+  if (complete) return "resetCompleteTitle";
+  return config.title;
+}
+
+function authSuccessMessage(config: ModeConfig, verified: boolean, succeeded: boolean) {
+  if (verified) return "verified";
+  if (succeeded) return config.success;
+  return null;
+}
+
 export interface AuthFormLinkProps {
   to: "account" | "login" | "signup" | "forgot-password" | "verify-email";
   className: string;
@@ -163,27 +187,18 @@ export function AuthForm({
   const signedIn = succeeded && (mode === "login" || completeOnMount);
   const complete = succeeded && (config.completes === true || completeOnMount);
   const link = readAuthLink(mode, search, auth.error);
-  const messageKey = link.verified ? "verified" : succeeded ? config.success : null;
+  const messageKey = authSuccessMessage(config, link.verified, succeeded);
   const showForm = !link.verified && !link.invalidReset && !complete;
   const terminal = link.invalidReset || link.verified || complete;
-  const title = link.invalidReset
-    ? "invalidLinkTitle"
-    : link.verified
-      ? "verifiedTitle"
-      : signedIn
-        ? "signedInTitle"
-        : complete
-          ? "resetCompleteTitle"
-          : config.title;
+  const title = authFormTitle(config, link, signedIn, complete);
   const intro = terminal ? null : config.intro;
   const coolingDown = config.mail === true && cooldown.remaining > 0;
-  const submitLabel = busy
-    ? c("working")
-    : coolingDown
-      ? t("resendIn", { seconds: String(cooldown.remaining) })
-      : config.submit
-        ? t(config.submit)
-        : c("signIn");
+  function submitLabel() {
+    if (busy) return c("working");
+    if (coolingDown) return t("resendIn", { seconds: String(cooldown.remaining) });
+    if (config.submit) return t(config.submit);
+    return c("signIn");
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!showForm || busy || (config.mail && cooldown.isActive())) return;
@@ -221,7 +236,7 @@ export function AuthForm({
       )}
       <AuthFormHeader
         title={t(title)}
-        intro={intro ? t(intro) : null}
+        intro={intro && t(intro)}
         headingLeading={headingLeading}
         terminal={terminal}
         invalid={link.invalidReset}
@@ -261,29 +276,28 @@ export function AuthForm({
           socialLogin &&
           socialLogin.providers.length > 0 && (
             <div className="flex flex-col gap-3">
-              {socialLogin.providers.map((provider) => (
-                <Button
-                  key={provider}
-                  type="button"
-                  variant="outline"
-                  size="xl"
-                  disabled={busy}
-                  onClick={() =>
-                    void auth.signInSocial({
-                      provider,
-                      callbackURL: socialLogin.callbackURL,
-                      errorCallbackURL: socialLogin.errorCallbackURL,
-                    })
-                  }
-                >
-                  {provider === "google" ? (
-                    <GoogleIcon data-icon="inline-start" />
-                  ) : (
-                    <GithubIcon data-icon="inline-start" />
-                  )}
-                  {t(provider === "google" ? "continueGoogle" : "continueGithub")}
-                </Button>
-              ))}
+              {socialLogin.providers.map((provider) => {
+                const { icon: Icon, label } = socialProviders[provider];
+                return (
+                  <Button
+                    key={provider}
+                    type="button"
+                    variant="outline"
+                    size="xl"
+                    disabled={busy}
+                    onClick={() =>
+                      void auth.signInSocial({
+                        provider,
+                        callbackURL: socialLogin.callbackURL,
+                        errorCallbackURL: socialLogin.errorCallbackURL,
+                      })
+                    }
+                  >
+                    <Icon data-icon="inline-start" />
+                    {t(label)}
+                  </Button>
+                );
+              })}
               <Separator />
             </div>
           )}
@@ -325,11 +339,11 @@ export function AuthForm({
                 <PasswordField
                   label={t(config.password.label)}
                   labelAction={
-                    config.password.purpose === "current" ? (
+                    config.password.purpose === "current" && (
                       <LinkComponent to="forgot-password" className={linkClassName}>
                         {t("forgot")}
                       </LinkComponent>
-                    ) : undefined
+                    )
                   }
                   id="auth-password"
                   purpose={config.password.purpose}
@@ -345,14 +359,14 @@ export function AuthForm({
                 className="mt-1 w-full"
                 disabled={busy || coolingDown}
               >
-                {busy ? (
+                {busy && (
                   <SpinnerIcon
                     data-icon="inline-start"
                     className="motion-safe:animate-spin"
                     aria-hidden="true"
                   />
-                ) : null}
-                {submitLabel}
+                )}
+                {submitLabel()}
                 {!busy && !coolingDown && (
                   <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
                 )}
@@ -442,28 +456,45 @@ function AuthFormNotices({
   terminal: boolean;
 }) {
   const t = useTranslations("auth");
-  return (
-    <>
-      {invalidLink && terminal ? (
+  function invalidLinkNotice() {
+    if (!invalidLink) return null;
+    if (terminal) {
+      return (
         <p role="alert" className="text-center text-sm leading-6 text-muted-foreground">
           {t("invalidLink")}
         </p>
-      ) : invalidLink ? (
-        <Alert variant="destructive">
-          <AlertCircleIcon aria-hidden="true" />
-          <AlertDescription>{t(socialError ? "socialFailed" : "invalidLink")}</AlertDescription>
-        </Alert>
-      ) : null}
-      {success && terminal ? (
+      );
+    }
+    const message = socialError ? "socialFailed" : "invalidLink";
+    return (
+      <Alert variant="destructive">
+        <AlertCircleIcon aria-hidden="true" />
+        <AlertDescription>{t(message)}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  function successNotice() {
+    if (!success) return null;
+    if (terminal) {
+      return (
         <p role="status" className="text-center text-sm leading-6 text-muted-foreground">
           {t(success)}
         </p>
-      ) : success ? (
-        <Alert role="status">
-          <CheckCircleIcon aria-hidden="true" />
-          <AlertDescription>{t(success)}</AlertDescription>
-        </Alert>
-      ) : null}
+      );
+    }
+    return (
+      <Alert role="status">
+        <CheckCircleIcon aria-hidden="true" />
+        <AlertDescription>{t(success)}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <>
+      {invalidLinkNotice()}
+      {successNotice()}
       {error && (
         <Alert variant="destructive">
           <AlertCircleIcon aria-hidden="true" />
@@ -483,36 +514,49 @@ function AuthFormFooter({
   compact: boolean;
   LinkComponent: ComponentType<AuthFormLinkProps>;
 }) {
-  const t = useTranslations("auth");
-  const c = useTranslations("common");
   return (
     <footer
       className={cn("flex flex-col items-center text-center text-sm", compact ? "gap-2" : "gap-3")}
     >
-      {mode === "login" ? (
-        <>
-          <p className="text-muted-foreground">
-            {t("noAccount")}{" "}
-            <LinkComponent to="signup" className={linkClassName + " text-foreground"}>
-              {t("create")}
-            </LinkComponent>
-          </p>
-          <LinkComponent to="verify-email" className={linkClassName + " text-muted-foreground"}>
-            {t("resend")}
-          </LinkComponent>
-        </>
-      ) : (
-        <LinkComponent
-          to="login"
-          className={cn(
-            linkClassName,
-            "inline-flex items-center gap-2 text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <ArrowLeftIcon aria-hidden="true" className="size-4" />
-          {c("signIn")}
-        </LinkComponent>
-      )}
+      <AuthFooterLinks mode={mode} LinkComponent={LinkComponent} />
     </footer>
+  );
+}
+
+function AuthFooterLinks({
+  mode,
+  LinkComponent,
+}: {
+  mode: AuthMode;
+  LinkComponent: ComponentType<AuthFormLinkProps>;
+}) {
+  const t = useTranslations("auth");
+  const c = useTranslations("common");
+  if (mode !== "login") {
+    return (
+      <LinkComponent
+        to="login"
+        className={cn(
+          linkClassName,
+          "inline-flex items-center gap-2 text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <ArrowLeftIcon aria-hidden="true" className="size-4" />
+        {c("signIn")}
+      </LinkComponent>
+    );
+  }
+  return (
+    <>
+      <p className="text-muted-foreground">
+        {t("noAccount")}{" "}
+        <LinkComponent to="signup" className={linkClassName + " text-foreground"}>
+          {t("create")}
+        </LinkComponent>
+      </p>
+      <LinkComponent to="verify-email" className={linkClassName + " text-muted-foreground"}>
+        {t("resend")}
+      </LinkComponent>
+    </>
   );
 }

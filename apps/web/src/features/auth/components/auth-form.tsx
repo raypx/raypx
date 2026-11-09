@@ -13,15 +13,32 @@ import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SocialProvider } from "@raypx/core/auth";
 
+function authLinkLocation(to: AuthFormLinkProps["to"], returnTo: string) {
+  if (to === "account") return { to: returnTo };
+  const destination = `/${to}` as const;
+  if (returnTo === "/") return { to: destination, search: {} };
+  return { to: destination, search: { returnTo } };
+}
+
+function signInDestination(search: string, returnTo: string) {
+  if (new URLSearchParams(search).has("returnTo")) return returnTo;
+  return "/projects";
+}
+
+function authCallbackURLs(returnTo: string) {
+  if (returnTo === "/") return undefined;
+  const destination = encodeURIComponent(returnTo);
+  return {
+    verify: `${webUrl}/verify-email?verified=1&returnTo=${destination}`,
+    reset: `${webUrl}/reset-password?returnTo=${destination}`,
+  };
+}
+
 function AuthLink({ to, className, children }: AuthFormLinkProps) {
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = safeReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
-    <Link
-      to={to === "account" ? returnTo : `/${to}`}
-      {...(to === "account" ? {} : { search: returnTo === "/" ? {} : { returnTo } })}
-      className={className}
-    >
+    <Link {...authLinkLocation(to, returnTo)} className={className}>
       {children}
     </Link>
   );
@@ -35,7 +52,6 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const signInReported = useRef(false);
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = safeReturnTo(new URLSearchParams(search).get("returnTo"));
-  const destination = encodeURIComponent(returnTo);
   const providers = useQuery({
     queryKey: ["auth", "social-providers", apiUrl],
     queryFn: async ({ signal }) => {
@@ -48,15 +64,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     staleTime: 60_000,
     enabled: mode === "login" || mode === "signup",
   });
-  const oauthReturnTo = new URLSearchParams(search).has("returnTo") ? returnTo : "/projects";
-  const oauthDestination = encodeURIComponent(oauthReturnTo);
-  const callbackURLs =
-    returnTo === "/"
-      ? undefined
-      : {
-          verify: `${webUrl}/verify-email?verified=1&returnTo=${destination}`,
-          reset: `${webUrl}/reset-password?returnTo=${destination}`,
-        };
+  const signedInDestination = signInDestination(search, returnTo);
+  const oauthDestination = encodeURIComponent(signedInDestination);
   return (
     <SharedAuthForm
       key={mode}
@@ -66,7 +75,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       client={authClient}
       webUrl={webUrl}
       search={search}
-      callbackURLs={callbackURLs}
+      callbackURLs={authCallbackURLs(returnTo)}
       socialLogin={{
         providers: providers.data ?? [],
         callbackURL: `${webUrl}/login?oauth=success&returnTo=${oauthDestination}`,
@@ -88,7 +97,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         }
         router.options.context.queryClient.clear();
         await navigate({
-          to: new URLSearchParams(search).has("returnTo") ? returnTo : "/projects",
+          to: signedInDestination,
         });
       }}
       LinkComponent={AuthLink}

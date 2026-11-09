@@ -93,6 +93,8 @@ The accepted foundation design and current architecture decisions define the imp
 ## Code and data
 
 - Preserve strict TypeScript, type-only imports and exactOptionalPropertyTypes.
+- Prefer named functions, lookup tables and early returns for conditional logic.
+  Avoid nested ternary expressions; use simple ternaries only when they improve readability.
 - Do not log credentials, tokens, cookies, passwords or private file content.
 - Device preferences and CLI SQLite profiles stay local and survive logout.
 - Current functionality is the initial baseline. Support current protocols and data formats

@@ -49,6 +49,15 @@ export function PasswordChangeDialog({
   const [revokeOthers, setRevokeOthers] = useState(true);
   const authError = useAuthErrorMessage(auth.error, "passwordChangeRefresh");
   const error = mismatch ? t("passwordMismatch") : authError;
+  function isFieldInvalid(name: (typeof fields)[number]["name"]) {
+    if (name === "confirmPassword") return mismatch;
+    return (
+      name === "currentPassword" &&
+      auth.error?.kind === "auth" &&
+      auth.error.key === "currentPasswordInvalid"
+    );
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (auth.busy || changed) return;
@@ -141,12 +150,7 @@ export function PasswordChangeDialog({
             >
               <FieldGroup>
                 {fields.map(({ name, purpose }) => {
-                  const invalid =
-                    name === "confirmPassword"
-                      ? mismatch
-                      : name === "currentPassword" &&
-                        auth.error?.kind === "auth" &&
-                        auth.error.key === "currentPasswordInvalid";
+                  const invalid = isFieldInvalid(name);
                   return (
                     <PasswordField
                       key={name}

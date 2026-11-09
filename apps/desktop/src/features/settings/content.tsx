@@ -10,8 +10,6 @@ import { taskClient } from "../tasks/client.ts";
 
 export default function SettingsContent() {
   const t = useTranslations("settings");
-  const session = authClient.useSession();
-  const accountId = session.isPending || session.error ? null : session.data?.user.id;
   return (
     <>
       <section aria-label={t("device")} className="border-b border-border">
@@ -22,13 +20,20 @@ export default function SettingsContent() {
       <div className="border-b border-border">
         <AnalyticsSettings />
       </div>
-      {accountId ? (
-        <DeviceSettings client={taskClient} accountId={accountId} />
-      ) : !isDesktop() ? (
-        <RemoteBoundary>
-          {(remoteAccount) => <DeviceSettings client={taskClient} accountId={remoteAccount} />}
-        </RemoteBoundary>
-      ) : null}
+      <ConnectedDevicesSettings />
     </>
+  );
+}
+
+function ConnectedDevicesSettings() {
+  const session = authClient.useSession();
+  if (!session.isPending && !session.error && session.data?.user.id) {
+    return <DeviceSettings client={taskClient} accountId={session.data.user.id} />;
+  }
+  if (isDesktop()) return null;
+  return (
+    <RemoteBoundary>
+      {(accountId) => <DeviceSettings client={taskClient} accountId={accountId} />}
+    </RemoteBoundary>
   );
 }
