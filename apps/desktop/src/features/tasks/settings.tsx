@@ -2,6 +2,7 @@ import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { cn } from "@raypx/ui/lib/utils";
 import type { DeviceProject } from "@raypx/contracts/tasks";
@@ -106,28 +107,27 @@ export function AgentSettings() {
       {info?.daemon && (
         <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">{t("daemonHint")}</p>
       )}
-      <ul aria-label={t("agent")} className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-5 flex items-center gap-1">
+        <h3 className="text-sm font-medium">{t("agent")}</h3>
+        <HelpHint label={t("agentHelp")} description={t("cliHint")} />
+      </div>
+      <ul aria-label={t("agent")} className="mt-2 grid gap-2 sm:grid-cols-2">
         {capabilities.map((capability) => (
           <li
             key={capability.provider}
-            className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-sm"
+            className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/40 p-3 text-sm"
           >
-            <span
-              aria-hidden="true"
-              className={cn(
-                "size-1.5 rounded-full",
-                capability.available ? "bg-foreground" : "bg-muted-foreground/40",
+            <div className="min-w-0">
+              <h4 className="font-medium">{agentProviderMetadata[capability.provider].label}</h4>
+              {capability.version && (
+                <p className="mt-0.5 text-xs text-muted-foreground wrap-anywhere">
+                  {capability.version}
+                </p>
               )}
-            />
-            <span>{agentProviderMetadata[capability.provider].label}</span>
-            <span className="text-muted-foreground">
-              {capability.version} · {t(capability.reason)}
-            </span>
+            </div>
+            <Badge variant="outline">{t(capability.reason)}</Badge>
           </li>
         ))}
-        <li className="flex items-center">
-          <HelpHint label={t("agentHelp")} description={t("cliHint")} />
-        </li>
       </ul>
       <div className="mt-6 flex items-center justify-between">
         <h3 className="text-sm font-medium">{t("projects")}</h3>
@@ -152,7 +152,7 @@ export function AgentSettings() {
       {roots.map((root) => (
         <div
           key={root.id}
-          className="flex items-center justify-between gap-4 border-b border-border py-4"
+          className="flex flex-wrap items-center justify-between gap-4 border-b border-border py-4"
         >
           <span className="min-w-0 text-sm [overflow-wrap:anywhere]">{root.name}</span>
           <Button

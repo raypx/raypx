@@ -67,7 +67,47 @@ continues using Raypx's virtualizer, history coverage and reading anchors. Sourc
 copied directly must retain its applicable notices and record its origin/version;
 updates are reviewed selectively alongside local changes.
 
+## Workbench refinements
+
+BeUI Diff Review's file headers and short fold transitions inform the approval
+preview. Each file can fold independently; counts describe only the bounded
+preview, while the original request remains available. Approval decisions still
+apply to the complete request. Consecutive tool events form a compact visual
+group without merging their stable IDs, revisions or virtual reading anchors.
+The current projection supplies tool names and statuses, not tool input/output.
+
+Files keeps the list/editor split, route breadcrumbs, save shortcuts and dirty
+draft protection. Its editor separates filename, parent path and document status;
+the compact list retains file sizes. References search only loaded names and
+categories, after project eligibility. Schedule search and enabled/paused filters
+use the same controlled `AutomationFilters` in local and cloud views, after their
+existing target constraints. Filtering does not close an editor or run history.
+
+Computer details group reported projects and Agent readiness separately from
+connection state and disconnect actions. Administration audit details separate
+request metadata from readable Before/After snapshots; null and unconfirmed
+outcomes remain explicit.
+
+`CollapsibleContent animated` opts into Base UI's measured-height fold: 200ms,
+ease-out, with matching chevrons. Keep padding inside the animated panel. Keyboard
+focus disables the transition, and reduced motion removes it entirely. Routine
+tabs only transition their colors/shadow for pointer use. Streaming messages,
+virtual row placement, search results and page sections do not animate in.
+
 ## Preview and validation
+
+The public homepage pairs its main actions with a labelled interactive workflow
+example: session, Diff review and result. This is illustrative data, not an account
+projection or an executable session. Keep the connected-computer action separate
+and retain its existing session/pending/error behavior. The preview's selected
+indicator and content move in the workflow direction for 200ms after pointer
+input; keyboard and reduced-motion changes are immediate. It has no autoplay,
+infinite effects, animation dependency or private feature reads.
+Keep the homepage concise: icon/name links carry navigation, the Desktop-to-Web
+diagram explains the connection boundary and `HelpHint` exposes draft privacy.
+Workflow examples use code, file changes and receipt markers instead of repeated
+explanatory paragraphs. The example notice remains visible; diagrams never imply
+an observed connection or live account state.
 
 `bun run dev:storybook` previews UI-only specimens, including foundation state
 matrices. Storybook consumes UI public entries and static data; product flows

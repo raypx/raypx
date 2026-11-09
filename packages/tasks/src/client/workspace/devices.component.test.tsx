@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -140,6 +141,23 @@ it("filters computers by name or platform without changing remote grants", async
   expect(screen.getByText("No matching computers.")).toBeInTheDocument();
   fireEvent.change(search, { target: { value: "DARWIN" } });
   expect(screen.getByText("Studio MacBook")).toBeInTheDocument();
+  expect(list).toHaveBeenCalledTimes(1);
+  expect(revoke).not.toHaveBeenCalled();
+});
+
+it("filters connection state and reveals only the selected computer's reported details", async () => {
+  const user = userEvent.setup();
+  const { list, revoke } = devices();
+  await screen.findByRole("heading", { name: /Studio MacBook/ });
+  await user.click(screen.getByRole("button", { name: "Details" }));
+  expect(screen.getByText("No authorized projects.")).toBeVisible();
+  expect(screen.getByText("No Agent status reported.")).toBeVisible();
+  const filter = screen.getByRole("combobox", { name: "All statuses" });
+  filter.focus();
+  await user.keyboard("{ArrowDown}");
+  await user.click(await screen.findByRole("option", { name: "Offline" }));
+  expect(screen.queryByRole("heading", { name: /Studio MacBook/ })).toBeNull();
+  expect(screen.getByText("No matching computers.")).toBeVisible();
   expect(list).toHaveBeenCalledTimes(1);
   expect(revoke).not.toHaveBeenCalled();
 });

@@ -487,3 +487,50 @@ it("permanently deletes an archived reference only after confirmation and keeps 
     expect.objectContaining({ signal: expect.any(AbortSignal) }),
   );
 });
+
+it("searches eligible reference metadata without fetching bodies or losing editor drafts", async () => {
+  const client = fixture();
+  client.list.mockResolvedValue([
+    document(),
+    {
+      ...document(),
+      id: crypto.randomUUID(),
+      name: "Archived guide",
+      category: "Security",
+      archived: true,
+    },
+    {
+      ...document(),
+      id: crypto.randomUUID(),
+      name: "Other project",
+      category: "Security",
+      project: { deviceId, projectId: crypto.randomUUID() },
+    },
+  ]);
+  render(
+    language(
+      <MemoryLibraryPage
+        client={client}
+        ownerKey="device"
+        scope="device"
+        target={{ deviceId, projectId }}
+      />,
+    ),
+  );
+  await screen.findByRole("heading", { name: "Project conventions" });
+  fireEvent.click(screen.getByRole("button", { name: "Edit: Project conventions" }));
+  const content = await screen.findByLabelText("Reference content");
+  fireEvent.change(content, { target: { value: "Keep these edits" } });
+  const search = screen.getByRole("searchbox", { name: "Search references by name or category…" });
+  fireEvent.change(search, { target: { value: " SECURITY " } });
+  expect(screen.getByText("No matching references")).toBeVisible();
+  await userEvent.click(screen.getByRole("checkbox", { name: "Include archived" }));
+  expect(screen.getByRole("heading", { name: "Archived guide" })).toBeVisible();
+  expect(screen.queryByRole("heading", { name: "Other project" })).toBeNull();
+  expect(screen.getByText("1 of 2 references")).toBeVisible();
+  expect(content).toHaveValue("Keep these edits");
+  expect(client.get).toHaveBeenCalledTimes(1);
+  fireEvent.change(search, { target: { value: "" } });
+  expect(screen.getByRole("heading", { name: "Project conventions" })).toBeVisible();
+  expect(client.update).not.toHaveBeenCalled();
+});

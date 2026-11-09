@@ -53,6 +53,11 @@ application is an independent composition root and is never imported by another 
   session is confirmed, home keeps the public project and session actions. Home links projects, approvals,
   automations and memory, and never mounts private project, device, task, job or memory
   reads; the account menu reads permissions only for confirmed sessions.
+  The homepage workflow preview is an explicitly labelled, static-data example.
+  Its Base UI tabs never mount execution clients or private reads. Pointer changes
+  use a short directional transition; keyboard and reduced-motion changes are immediate.
+  Home uses icon/name links, a Desktop-to-Web connection diagram and contextual
+  draft help; the diagram never implies a live connection or reads device state.
   The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before

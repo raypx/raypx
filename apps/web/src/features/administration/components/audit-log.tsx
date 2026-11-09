@@ -1,3 +1,4 @@
+/* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Read-only audit snapshots need keyboard scrolling. */
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -14,8 +15,14 @@ import {
   TableHeader,
   TableRow,
 } from "@raypx/ui/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@raypx/ui/components/ui/dialog";
-import { StatusBadge } from "@raypx/ui/status-badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@raypx/ui/components/ui/dialog";
+import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { PageHeader } from "@raypx/ui/page-header";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { IconButton } from "@raypx/ui/icon-button";
@@ -25,6 +32,33 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { administrationClient } from "../client.ts";
 import { authClient, apiUrl } from "../../auth/client.ts";
+
+const outcomeTones: Record<AuditEntry["outcome"], StatusTone> = {
+  success: "success",
+  failed: "danger",
+  rejected: "warning",
+  pending: "neutral",
+  unknown: "warning",
+};
+function actionLabel(action: AuditEntry["action"]) {
+  if (action === "user.role.update") return "roleUpdate";
+  return "configurationUpdate";
+}
+function AuditSnapshot({ label, value }: { label: string; value: AuditEntry["before"] }) {
+  return (
+    <section className="min-w-0 space-y-2">
+      <h3 className="text-sm font-medium">{label}</h3>
+      <pre
+        role="region"
+        aria-label={label}
+        tabIndex={0}
+        className="max-h-72 min-h-24 overflow-auto rounded-lg bg-muted/50 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere focus-visible:-outline-offset-2"
+      >
+        {JSON.stringify(value, null, 2)}
+      </pre>
+    </section>
+  );
+}
 
 type Cursor = NonNullable<AuditFilter["cursor"]>;
 function dateRange(from: string, to: string) {
@@ -105,22 +139,9 @@ export function AuditLog() {
               <TableCell className="max-w-40 whitespace-normal wrap-anywhere">
                 {entry.actorId ?? t("operator")}
               </TableCell>
+              <TableCell>{t(actionLabel(entry.action))}</TableCell>
               <TableCell>
-                {t(entry.action === "user.role.update" ? "roleUpdate" : "configurationUpdate")}
-              </TableCell>
-              <TableCell>
-                <StatusBadge
-                  label={t(entry.outcome)}
-                  tone={
-                    entry.outcome === "success"
-                      ? "success"
-                      : entry.outcome === "failed"
-                        ? "danger"
-                        : entry.outcome === "unknown"
-                          ? "warning"
-                          : "neutral"
-                  }
-                />
+                <StatusBadge label={t(entry.outcome)} tone={outcomeTones[entry.outcome]} />
               </TableCell>
               <TableCell>
                 <IconButton label={t("details")} onClick={() => setSelected(entry)}>
@@ -283,30 +304,41 @@ export function AuditLog() {
           if (!open) setSelected(null);
         }}
       >
-        <DialogContent closeLabel={c("close")} className="max-h-[85dvh] overflow-auto">
+        <DialogContent closeLabel={c("close")} className="max-h-[85dvh] overflow-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>{t("details")}</DialogTitle>
+            {selected && (
+              <DialogDescription>
+                <time dateTime={selected.startedAt}>
+                  {selected.startedAt.replace("T", " ").replace(/Z$/, " UTC")}
+                </time>
+              </DialogDescription>
+            )}
           </DialogHeader>
           {selected && (
-            <dl className="flex flex-col divide-y divide-border text-sm wrap-anywhere">
-              {[
-                [t("actor"), selected.actorId ?? t("operator")],
-                [t("target"), selected.targetId ?? "—"],
-                [t("requestId"), selected.requestId],
-                [t("outcome"), t(selected.outcome)],
-                [t("errorCode"), selected.errorCode ?? "—"],
-                [t("before"), JSON.stringify(selected.before)],
-                [t("after"), JSON.stringify(selected.after)],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="grid min-w-0 gap-1 py-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-4"
-                >
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="min-w-0 select-text">{value}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-base font-semibold">{t(actionLabel(selected.action))}</h2>
+                <StatusBadge label={t(selected.outcome)} tone={outcomeTones[selected.outcome]} />
+              </div>
+              <dl className="grid gap-x-6 text-sm wrap-anywhere sm:grid-cols-2">
+                {[
+                  [t("actor"), selected.actorId ?? t("operator")],
+                  [t("target"), selected.targetId ?? "—"],
+                  [t("requestId"), selected.requestId],
+                  [t("errorCode"), selected.errorCode ?? "—"],
+                ].map(([label, value]) => (
+                  <div key={label} className="min-w-0 space-y-1 border-b border-border py-3">
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className="min-w-0 select-text">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                <AuditSnapshot label={t("before")} value={selected.before} />
+                <AuditSnapshot label={t("after")} value={selected.after} />
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>

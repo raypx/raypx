@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
+import { SearchIcon } from "@raypx/icons/search";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -87,6 +89,8 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
   const [destination, setDestination] = useState<EditorDestination>();
   const dirty =
     editing !== false && JSON.stringify(draft) !== JSON.stringify(documentDraft(editing, target));
+  const searchId = useId();
+  const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all"),
     [archived, setArchived] = useState(false);
   const [timeline, setTimeline] = useState<{
@@ -343,15 +347,34 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
       if (isActive()) await history(document);
     });
   }
-  const shown = documents?.filter(
+  const eligible = documents?.filter(
+    (document) =>
+      !target ||
+      !document.project ||
+      (document.project.deviceId === target.deviceId &&
+        document.project.projectId === target.projectId),
+  );
+  const search = query.trim().toLocaleLowerCase();
+  const shown = eligible?.filter(
     (document) =>
       (archived || !document.archived) &&
       (kind === "all" || document.kind === kind) &&
-      (!target ||
-        !document.project ||
-        (document.project.deviceId === target.deviceId &&
-          document.project.projectId === target.projectId)),
+      `${document.name} ${document.category}`.toLocaleLowerCase().includes(search),
   );
+  function projectLabel(document: ContextDocumentSummary) {
+    if (!document.project) return t("global");
+    return (
+      projects.find(
+        (project) =>
+          project.deviceId === document.project?.deviceId &&
+          project.projectId === document.project?.projectId,
+      )?.name ?? t("projectUnavailable")
+    );
+  }
+  function emptyTitle() {
+    if (eligible?.length) return t("noMatches");
+    return t("empty");
+  }
   return (
     <section>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -400,7 +423,20 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           onCancel={() => edit("close")}
         />
       )}
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <InputGroup className="min-w-48 flex-1">
+          <InputGroupAddon>
+            <SearchIcon aria-hidden="true" />
+          </InputGroupAddon>
+          <InputGroupInput
+            id={searchId}
+            type="search"
+            aria-label={t("search")}
+            placeholder={t("search")}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </InputGroup>
         <SelectField
           className="w-44 max-w-full"
           aria-label={t("kind")}
@@ -417,18 +453,26 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           {t("includeArchived")}
         </label>
       </div>
+      {documents && (
+        <p className="mb-3 text-xs text-muted-foreground tabular-nums">
+          {t("matchingReferences", {
+            shown: String(shown?.length ?? 0),
+            total: String(eligible?.length ?? 0),
+          })}
+        </p>
+      )}
       {!documents && loading && <LoadingState label={c("loading")} />}
       {shown?.length === 0 && (
         <EmptyState
           className="py-10"
           icon={<BookOpenIcon aria-hidden="true" />}
-          title={t("empty")}
+          title={emptyTitle()}
         />
       )}
       {shown?.map((document) => (
         <article
           key={document.id}
-          className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border py-3"
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border py-4"
         >
           <div className="min-w-0 basis-56 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -441,15 +485,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               <span className="tabular-nums">
                 {t("revision", { revision: String(document.revision) })}
               </span>
-              <span className="wrap-anywhere">
-                {document.project
-                  ? (projects.find(
-                      (project) =>
-                        project.deviceId === document.project?.deviceId &&
-                        project.projectId === document.project?.projectId,
-                    )?.name ?? t("projectUnavailable"))
-                  : t("global")}
-              </span>
+              <span className="wrap-anywhere">{projectLabel(document)}</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1">
@@ -521,7 +557,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               >
                 <ChevronRightIcon
                   aria-hidden="true"
-                  className="shrink-0 group-data-panel-open:rotate-90"
+                  className="shrink-0 group-data-panel-open:rotate-90 motion-safe:transition-transform motion-safe:duration-200 group-focus-visible:transition-none"
                 />
                 <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="tabular-nums">
@@ -538,25 +574,30 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                       {format.dateTime(new Date(version.updatedAt), "timestamp")}
                     </time>
                   </span>
+                  {version.revision === timeline.document.revision && (
+                    <Badge variant="secondary">{t("currentRevision")}</Badge>
+                  )}
                 </span>
               </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-3 pb-4">
-                <p className="text-sm">{version.name}</p>
-                <pre className="max-h-80 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere">
-                  {version.content}
-                </pre>
-                {version.restoredFrom && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("restoredFrom", { revision: String(version.restoredFrom) })}
-                  </p>
-                )}
-                <Button
-                  variant="outline"
-                  disabled={busy || version.revision === timeline.document.revision}
-                  onClick={() => void restore(version)}
-                >
-                  {t("restoreRevision", { revision: String(version.revision) })}
-                </Button>
+              <CollapsibleContent animated>
+                <div className="space-y-3 pb-4 pl-6">
+                  <p className="text-sm">{version.name}</p>
+                  <pre className="max-h-80 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere">
+                    {version.content}
+                  </pre>
+                  {version.restoredFrom && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("restoredFrom", { revision: String(version.restoredFrom) })}
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    disabled={busy || version.revision === timeline.document.revision}
+                    onClick={() => void restore(version)}
+                  >
+                    {t("restoreRevision", { revision: String(version.revision) })}
+                  </Button>
+                </div>
               </CollapsibleContent>
             </Collapsible>
           ))}

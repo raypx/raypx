@@ -23,6 +23,7 @@ import { HelpHint } from "@raypx/ui/help-hint";
 import { IconButton } from "@raypx/ui/icon-button";
 import type { CloudJob, CloudJobInput, CloudJobRun } from "@raypx/jobs-model";
 import type { CloudJobsPort, JobDevicesPort, JobDevice, JobReadOptions } from "./ports.ts";
+import { AutomationFilters } from "./automation-filters.tsx";
 import { JobForm } from "./job-form.tsx";
 import { jobFailure, jobReason } from "./errors.ts";
 import type { MemoryClientPort } from "@raypx/memory/client";
@@ -82,6 +83,8 @@ function CloudJobs({
   const [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false);
   const [error, setError] = useState<ReturnType<typeof jobFailure>>();
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("all");
   const [pendingRuns, setPendingRuns] = useState<string[]>([]);
   const [editing, setEditing] = useState<CloudJob | null | false>(false);
   const [history, setHistory] = useState<{ job: CloudJob; runs: CloudJobRun[] }>();
@@ -275,13 +278,22 @@ function CloudJobs({
     });
   }
   const date = (value: string) => format.dateTime(new Date(value), "timestamp");
-  const shown = data?.jobs.filter(
+  const eligible = data?.jobs.filter(
     (job) =>
       !target ||
       (job.action.type === "agent.run" &&
         job.action.deviceId === target.deviceId &&
         job.action.projectId === target.projectId),
   );
+  const shown = eligible?.filter(
+    (job) =>
+      job.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) &&
+      (status === "all" || job.enabled === (status === "enabled")),
+  );
+  function emptyTitle() {
+    if (eligible?.length) return t("noMatches");
+    return t("cloud.empty");
+  }
   return (
     <section>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -348,22 +360,32 @@ function CloudJobs({
           }}
         />
       )}
+      {Boolean(eligible?.length) && (
+        <AutomationFilters
+          query={query}
+          status={status}
+          onQueryChange={setQuery}
+          onStatusChange={setStatus}
+          shown={shown?.length ?? 0}
+          total={eligible?.length ?? 0}
+        />
+      )}
       {!data && loading && <LoadingState label={c("loading")} />}
       {shown?.length === 0 && editing === false && (
         <EmptyState
           className="py-10"
           icon={<ScheduleIcon aria-hidden="true" />}
-          title={t("cloud.empty")}
-          description={t("cloud.emptyHint")}
+          title={emptyTitle()}
+          description={eligible?.length ? undefined : t("cloud.emptyHint")}
         />
       )}
       {data &&
         shown?.map((job) => (
           <article
             key={job.id}
-            className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border py-3"
+            className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border py-4"
           >
-            <div className="min-w-0 basis-64 flex-1 space-y-1">
+            <div className="min-w-0 basis-64 flex-1 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-sm font-medium wrap-anywhere">{job.name}</h2>
                 <Badge variant={job.enabled ? "secondary" : "outline"}>
@@ -379,7 +401,7 @@ function CloudJobs({
                   t("cloud.targetUnavailable")}
               </p>
               {job.enabled && job.nextRunAt && (
-                <p className="text-xs text-muted-foreground tabular-nums">
+                <p className="text-xs text-foreground tabular-nums">
                   {t("next")}: <time dateTime={job.nextRunAt}>{date(job.nextRunAt)}</time>
                 </p>
               )}
@@ -458,7 +480,7 @@ function CloudJobs({
                 }
               >
                 <ChevronRightIcon
-                  className="shrink-0 group-data-panel-open:rotate-90"
+                  className="shrink-0 group-data-panel-open:rotate-90 motion-safe:transition-transform motion-safe:duration-200 group-focus-visible:transition-none"
                   aria-hidden="true"
                 />
                 <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
@@ -471,28 +493,34 @@ function CloudJobs({
                   <span>{t(run.trigger === "manual" ? "cloud.manual" : "cloud.scheduled")}</span>
                 </span>
               </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-3 pb-4 text-sm">
-                <p>{t(run.action.type === "device.sync" ? "cloud.sync" : "cloud.agent")}</p>
-                {run.action.type === "agent.run" && (
-                  <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere">
-                    {run.action.prompt}
-                  </pre>
-                )}
-                {run.code && <p>{t(`cloud.${jobReason(run.code)}`)}</p>}
-                {run.status === "unknown" && (
-                  <p className="max-w-[65ch] text-muted-foreground">{t("cloud.unknownHint")}</p>
-                )}
-                {run.taskId && <div>{renderTaskLink(run.taskId)}</div>}
-                {run.sync && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("cloud.syncCompleted", { sequence: String(run.sync.sequence) })}
-                  </p>
-                )}
-                {run.finishedAt && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("cloud.finishedAt", { date: date(run.finishedAt) })}
-                  </p>
-                )}
+              <CollapsibleContent animated>
+                <div className="space-y-3 pb-4 pl-6 text-sm">
+                  <p>{t(run.action.type === "device.sync" ? "cloud.sync" : "cloud.agent")}</p>
+                  {run.action.type === "agent.run" && (
+                    <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere">
+                      {run.action.prompt}
+                    </pre>
+                  )}
+                  {run.code && (
+                    <Alert variant={run.status === "failed" ? "destructive" : "default"}>
+                      <AlertDescription>{t(`cloud.${jobReason(run.code)}`)}</AlertDescription>
+                    </Alert>
+                  )}
+                  {run.status === "unknown" && (
+                    <p className="max-w-[65ch] text-muted-foreground">{t("cloud.unknownHint")}</p>
+                  )}
+                  {run.taskId && <div>{renderTaskLink(run.taskId)}</div>}
+                  {run.sync && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("cloud.syncCompleted", { sequence: String(run.sync.sequence) })}
+                    </p>
+                  )}
+                  {run.finishedAt && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("cloud.finishedAt", { date: date(run.finishedAt) })}
+                    </p>
+                  )}
+                </div>
               </CollapsibleContent>
             </Collapsible>
           ))}

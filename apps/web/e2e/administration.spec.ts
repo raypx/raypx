@@ -179,6 +179,13 @@ for (const width of [360, 1440])
           await expect.poll(() => filters.length).toBeGreaterThan(1);
           await page.getByRole("button", { name: copy.details }).click();
           await expect(page.getByRole("dialog")).toContainText("server-request");
+          await expect(page.getByRole("dialog").getByRole("region").first()).toContainText(
+            '"role": "member"',
+          );
+          await capture(page, {
+            path: test.info().outputPath(`audit-detail-${width}-${locale}-${theme}.png`),
+            fullPage: true,
+          });
           await page.keyboard.press("Escape");
           expect(privateReads).toBe(0);
           expect(

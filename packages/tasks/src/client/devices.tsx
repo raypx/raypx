@@ -1,9 +1,17 @@
+import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Gate } from "./workspace-gate.tsx";
 
 import { useCallback, useId, useRef, useState } from "react";
 import { useRemoteQuery } from "./remote-query.ts";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { SelectField } from "@raypx/ui/select-field";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -16,6 +24,12 @@ import { LoadingState } from "@raypx/ui/loading-state";
 import { Modal } from "@raypx/ui/modal";
 
 import type { DeviceManagementPort } from "../model/port.ts";
+
+function deviceStatus(device: SyncDevice) {
+  if (device.revoked) return "revoked";
+  if (device.online) return "online";
+  return "offline";
+}
 
 export function DeviceSettings({
   client,
@@ -34,6 +48,7 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
   const c = useTranslations("common");
   const format = useFormatter();
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("all");
   const searchId = useId();
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
   const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
@@ -42,10 +57,12 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
     true,
     client,
   );
-  const shown = data?.filter((device) =>
-    `${device.name} ${device.platform}`
-      .toLocaleLowerCase()
-      .includes(query.trim().toLocaleLowerCase()),
+  const shown = data?.filter(
+    (device) =>
+      `${device.name} ${device.platform}`
+        .toLocaleLowerCase()
+        .includes(query.trim().toLocaleLowerCase()) &&
+      (status === "all" || deviceStatus(device) === status),
   );
   return (
     <section className="flex flex-col gap-4 pt-4" data-tasks>
@@ -54,23 +71,38 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
         <p className="text-sm text-muted-foreground">{t("devicesHint")}</p>
       </div>
       {Boolean(data?.length) && (
-        <Field>
-          <FieldLabel className="sr-only" htmlFor={searchId}>
-            {t("searchDevices")}
-          </FieldLabel>
-          <InputGroup controlSize="sm">
-            <InputGroupAddon>
-              <SearchIcon aria-hidden="true" />
-            </InputGroupAddon>
-            <InputGroupInput
-              id={searchId}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t("searchDevices")}
-            />
-          </InputGroup>
-        </Field>
+        <div className="flex flex-wrap items-center gap-3">
+          <Field className="min-w-44 flex-1">
+            <FieldLabel className="sr-only" htmlFor={searchId}>
+              {t("searchDevices")}
+            </FieldLabel>
+            <InputGroup controlSize="sm">
+              <InputGroupAddon>
+                <SearchIcon aria-hidden="true" />
+              </InputGroupAddon>
+              <InputGroupInput
+                id={searchId}
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t("searchDevices")}
+              />
+            </InputGroup>
+          </Field>
+          <SelectField
+            className="w-40 max-w-full"
+            aria-label={t("allStatuses")}
+            value={status}
+            onValueChange={setStatus}
+            options={[
+              { value: "all", label: t("allStatuses") },
+              ...(["online", "offline", "revoked"] as const).map((value) => ({
+                value,
+                label: t(value),
+              })),
+            ]}
+          />
+        </div>
       )}
       {error && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -88,34 +120,79 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
       )}
       {Boolean(data?.length) && shown?.length === 0 && <EmptyState title={t("noDevicesMatch")} />}
       {shown?.map((device) => (
-        <div
-          key={device.id}
-          className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4"
-        >
-          <div className="min-w-0 [overflow-wrap:anywhere]">
-            <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
-              <LaptopIcon aria-hidden="true" className="size-4 text-muted-foreground" />
-              {device.name}
-              <Badge variant={device.online && !device.revoked ? "secondary" : "outline"}>
-                {t(device.revoked ? "revoked" : device.online ? "online" : "offline")}
-              </Badge>
-            </h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {device.platform}
-              {device.lastSeenAt && (
-                <> · {format.dateTime(new Date(device.lastSeenAt), "timestamp")}</>
+        <Collapsible key={device.id} className="border-b border-border pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0 [overflow-wrap:anywhere]">
+              <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                <LaptopIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+                {device.name}
+                <Badge variant={device.online && !device.revoked ? "secondary" : "outline"}>
+                  {t(deviceStatus(device))}
+                </Badge>
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {device.platform}
+                {device.lastSeenAt && (
+                  <> · {format.dateTime(new Date(device.lastSeenAt), "timestamp")}</>
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1">
+              <CollapsibleTrigger render={<Button variant="ghost" size="sm" className="group" />}>
+                <ChevronRightIcon
+                  aria-hidden="true"
+                  className="size-3.5 group-data-panel-open:rotate-90 motion-safe:transition-transform motion-safe:duration-200 group-focus-visible:transition-none"
+                />
+                {t("deviceDetails")}
+              </CollapsibleTrigger>
+              {!device.revoked && (
+                <DisconnectComputer
+                  key={device.epoch}
+                  client={client}
+                  device={device}
+                  onChanged={refresh}
+                />
               )}
-            </p>
+            </div>
           </div>
-          {!device.revoked && (
-            <DisconnectComputer
-              key={device.epoch}
-              client={client}
-              device={device}
-              onChanged={refresh}
-            />
-          )}
-        </div>
+          <CollapsibleContent animated>
+            <div className="mt-4 grid gap-4 rounded-lg bg-muted/40 p-3 sm:grid-cols-2">
+              <section className="min-w-0">
+                <h4 className="mb-2 text-xs font-medium text-muted-foreground">{t("projects")}</h4>
+                <ul className="space-y-1.5 text-sm wrap-anywhere">
+                  {device.projects.map((project) => (
+                    <li key={project.id}>{project.name}</li>
+                  ))}
+                </ul>
+                {!device.projects.length && (
+                  <p className="text-sm text-muted-foreground">{t("noDeviceProjects")}</p>
+                )}
+              </section>
+              <section className="min-w-0">
+                <h4 className="mb-2 text-xs font-medium text-muted-foreground">
+                  {t("deviceAgents")}
+                </h4>
+                <ul className="space-y-2">
+                  {device.capabilities.map((capability) => (
+                    <li
+                      key={capability.provider}
+                      className="flex flex-wrap items-center justify-between gap-2 text-sm"
+                    >
+                      <span>
+                        {agentProviderMetadata[capability.provider].shortLabel}{" "}
+                        <span className="text-xs text-muted-foreground">{capability.version}</span>
+                      </span>
+                      <Badge variant="outline">{t(capability.reason)}</Badge>
+                    </li>
+                  ))}
+                </ul>
+                {!device.capabilities.length && (
+                  <p className="text-sm text-muted-foreground">{t("noDeviceAgents")}</p>
+                )}
+              </section>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       ))}
     </section>
   );

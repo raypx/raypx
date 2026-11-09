@@ -352,3 +352,25 @@ it("confirms revision-based deletion of schedule history while preserving create
   await waitFor(() => expect(client.remove).toHaveBeenCalledTimes(1));
   expect(client.remove.mock.calls[0]?.[0]).toEqual({ id: jobId, revision: 4 });
 });
+
+it("combines name and status filters while retaining the run history", async () => {
+  const { client, devices } = fixture();
+  client.list.mockResolvedValue({
+    enabled: true,
+    jobs: [job(), { ...job("Paused review"), id: crypto.randomUUID(), enabled: false }],
+  });
+  render(page({ accountId: "one", client, devices }));
+  await screen.findByRole("heading", { name: "Cloud sync" });
+  fireEvent.click(screen.getAllByRole("button", { name: "Run history" })[0]!);
+  await screen.findByRole("heading", { name: "Cloud sync · Run history" });
+  await choose("Schedule status", "paused");
+  expect(screen.queryByRole("heading", { name: "Cloud sync" })).toBeNull();
+  expect(screen.getByRole("heading", { name: "Paused review" })).toBeVisible();
+  expect(screen.getByText("1 of 2 schedules")).toBeVisible();
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search schedules…" }), {
+    target: { value: "not found" },
+  });
+  expect(screen.getByText("No matching schedules")).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Cloud sync · Run history" })).toBeVisible();
+  expect(client.run).not.toHaveBeenCalled();
+});

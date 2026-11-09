@@ -6,8 +6,9 @@ import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/rea
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import { cn } from "@raypx/ui/lib/utils";
 import { TaskMarkdown } from "./markdown.tsx";
-import { Badge } from "@raypx/ui/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { CodeFolderIcon } from "@raypx/icons/code-folder";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 
@@ -27,7 +28,17 @@ type Row =
   | { id: string; kind: "prompt" | "older" | "summary" }
   | { id: string; kind: "gap"; gap: Gap }
   | { id: string; kind: "activity"; entry: TaskActivity };
+const toolTones: Record<Extract<TaskActivity, { kind: "tool" }>["status"], StatusTone> = {
+  running: "info",
+  succeeded: "success",
+  failed: "danger",
+  interrupted: "warning",
+};
 const noGaps: readonly Gap[] = [];
+
+function isToolRow(row: Row | undefined) {
+  return row?.kind === "activity" && row.entry.kind === "tool";
+}
 
 function inputStatusLabel(status: Extract<TaskActivity, { kind: "input" }>["status"]) {
   if (status === "queued") return "inputQueued";
@@ -194,7 +205,7 @@ function ConversationViewport({
         : total,
     { input: 0, output: 0, cached: 0 },
   );
-  function renderRow(row: Row) {
+  function renderRow(row: Row, index: number) {
     if (row.kind === "older" || row.kind === "gap") {
       const isGap = row.kind === "gap";
       const label = isGap ? "historyGap" : "olderMessages";
@@ -251,12 +262,18 @@ function ConversationViewport({
       );
     if (entry.kind === "tool")
       return (
-        <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs">
+        <div
+          aria-busy={entry.status === "running"}
+          data-first={!isToolRow(rows[index - 1])}
+          data-last={!isToolRow(rows[index + 1])}
+          className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-x border-border bg-muted/30 px-3 py-2.5 text-xs data-[first=true]:rounded-t-lg data-[first=true]:border-t data-[last=true]:rounded-b-lg data-[last=true]:border-b"
+        >
           <CodeFolderIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate font-mono">{entry.name}</span>
-          <Badge variant={entry.status === "failed" ? "destructive" : "outline"}>
-            {t(entry.status)}
-          </Badge>
+          <span className="min-w-0 flex-1 font-mono wrap-anywhere">{entry.name}</span>
+          <StatusBadge tone={toolTones[entry.status]} label={t(entry.status)} />
+          <time dateTime={entry.updatedAt} className="text-muted-foreground tabular-nums">
+            {format.dateTime(new Date(entry.updatedAt), { hour: "2-digit", minute: "2-digit" })}
+          </time>
         </div>
       );
     return null;
@@ -325,10 +342,13 @@ function ConversationViewport({
                   ref={virtualizer.measureElement}
                   data-index={item.index}
                   data-conversation-row={row.id}
-                  className={full ? "pb-5" : "absolute top-0 left-0 w-full pb-5"}
+                  className={cn(
+                    !full && "absolute top-0 left-0 w-full",
+                    isToolRow(row) && isToolRow(rows[item.index + 1]) ? "pb-0" : "pb-5",
+                  )}
                   style={full ? undefined : { transform: `translateY(${item.start}px)` }}
                 >
-                  {renderRow(row)}
+                  {renderRow(row, item.index)}
                 </div>
               );
             })}

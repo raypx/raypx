@@ -7,6 +7,8 @@ Shared browser views for local/cloud jobs.
 ## Interface
 
 - `/client` owns DOM views and injected ports; apps own routing and authentication.
+  Its controlled `AutomationFilters` is shared by cloud views and Desktop local
+  schedules. Apply target/ownership constraints before name/status filters.
 - `@raypx/jobs-model` owns platform-neutral local/cloud schemas, inferred types,
   errors and pure calendar calculations.
 

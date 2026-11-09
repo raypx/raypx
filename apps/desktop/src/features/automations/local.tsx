@@ -1,3 +1,4 @@
+import { AutomationFilters } from "@raypx/jobs/client";
 import { formText } from "../../form-data.ts";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
@@ -52,6 +53,8 @@ export function LocalJobsPage({
   if (data.jobs !== null && data.jobs !== jobs) setJobs(data.jobs);
   if (local.roots !== null && local.roots !== roots) setRoots(local.roots);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("all");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<JobDefinition | null | false>(false);
   const [action, setAction] = useState("directory.scan");
@@ -213,7 +216,16 @@ export function LocalJobsPage({
   }
   const date = (value: string) => format.dateTime(new Date(value), "timestamp");
   const command = editing && editing.action.type === "command.run" ? editing.action.command : null;
-  const shown = projectId ? jobs?.filter((job) => job.projectId === projectId) : jobs;
+  const eligible = jobs?.filter((job) => !projectId || job.projectId === projectId);
+  const shown = eligible?.filter(
+    (job) =>
+      job.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) &&
+      (status === "all" || job.enabled === (status === "enabled")),
+  );
+  function emptyTitle() {
+    if (eligible?.length) return t("noMatches");
+    return t("local.empty");
+  }
   return (
     <section>
       <h1 className="sr-only">{t("local.title")}</h1>
@@ -376,11 +388,21 @@ export function LocalJobsPage({
           </form>
         </section>
       )}
+      {Boolean(eligible?.length) && (
+        <AutomationFilters
+          query={query}
+          status={status}
+          onQueryChange={setQuery}
+          onStatusChange={setStatus}
+          shown={shown?.length ?? 0}
+          total={eligible?.length ?? 0}
+        />
+      )}
       {shown?.length === 0 && editing === false ? (
         <EmptyState
           icon={<ClockIcon />}
-          title={t("local.empty")}
-          description={t("local.emptyHint")}
+          title={emptyTitle()}
+          description={eligible?.length ? undefined : t("local.emptyHint")}
         />
       ) : (
         <div>
@@ -478,20 +500,24 @@ export function LocalJobsPage({
                 >
                   <ChevronRightIcon
                     aria-hidden="true"
-                    className="group-data-panel-open:rotate-90"
+                    className="group-data-panel-open:rotate-90 motion-safe:transition-transform motion-safe:duration-200 group-focus-visible:transition-none"
                   />
                   <span className="text-xs tabular-nums">{date(jobRun.startedAt)}</span>
-                  <Badge variant="secondary">{c(jobRun.status)}</Badge>
+                  <Badge variant={jobRun.status === "failed" ? "destructive" : "secondary"}>
+                    {c(jobRun.status)}
+                  </Badge>
                   <span className="text-xs">
-                    {jobRun.exitCode === null ? "" : `${t("local.exit")}: ${jobRun.exitCode}`}
+                    {jobRun.exitCode !== null && `${t("local.exit")}: ${jobRun.exitCode}`}
                   </span>
                 </CollapsibleTrigger>
-                <CollapsibleContent>
-                  {jobRun.output && (
-                    <pre className="max-h-96 overflow-auto rounded-lg bg-muted p-4 font-mono text-xs/relaxed whitespace-pre-wrap wrap-anywhere">
-                      {jobRun.output}
-                    </pre>
-                  )}
+                <CollapsibleContent animated>
+                  <div className="pb-4 pl-6">
+                    {jobRun.output && (
+                      <pre className="max-h-96 overflow-auto rounded-lg bg-muted p-4 font-mono text-xs/relaxed whitespace-pre-wrap wrap-anywhere">
+                        {jobRun.output}
+                      </pre>
+                    )}
+                  </div>
                 </CollapsibleContent>
               </Collapsible>
             ))

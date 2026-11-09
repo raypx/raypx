@@ -82,7 +82,7 @@ function LoadedFileTable({
     <>
       <div className="@container/file-list min-w-0 overflow-hidden rounded-lg border border-border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead>{c("name")}</TableHead>
               <TableHead className="@max-lg/file-list:hidden">{t("size")}</TableHead>
@@ -105,10 +105,11 @@ function LoadedFileTable({
                     variant="ghost"
                     data-slot="file-entry"
                     data-file-path={entry.path}
+                    aria-label={entry.name}
                     aria-current={
                       entry.kind === "file" && selectedPath === entry.path ? "true" : undefined
                     }
-                    className="w-full justify-start px-1 text-left"
+                    className="h-auto min-h-10 w-full justify-start px-1 py-2 text-left"
                     disabled={busy || !["file", "directory"].includes(entry.kind)}
                     onClick={() => void onOpen(entry)}
                   >
@@ -117,8 +118,11 @@ function LoadedFileTable({
                     ) : (
                       <FileTextIcon data-icon="inline-start" />
                     )}
-                    <span className="truncate" title={entry.name}>
-                      {entry.name}
+                    <span className="min-w-0 flex-1" title={entry.name}>
+                      <span className="block truncate">{entry.name}</span>
+                      {entry.kind === "file" && (
+                        <span className="mt-0.5 block text-xs font-normal text-muted-foreground tabular-nums @lg/file-list:hidden">{`${format.number(entry.size, "compact")} B`}</span>
+                      )}
                     </span>
                   </Button>
                 </TableCell>

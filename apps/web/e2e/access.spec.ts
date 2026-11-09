@@ -32,7 +32,9 @@ test(
     ).toBeVisible();
     await expect(page.getByRole("complementary")).toHaveCount(0);
     await expect(
-      page.getByRole("link", { name: /Sign in to open projects on a computer/ }),
+      page
+        .getByRole("navigation", { name: "Workspace" })
+        .getByRole("link", { name: "Projects", exact: true }),
     ).toHaveAttribute("href", "/projects");
     await expect(page.getByRole("banner").getByRole("link", { name: "Projects" })).toHaveCount(0);
     expect(privateReads).toEqual([]);

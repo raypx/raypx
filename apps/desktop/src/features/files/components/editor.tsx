@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { SaveIcon } from "@raypx/icons/save";
 import { SpinnerIcon } from "@raypx/icons/spinner";
@@ -36,7 +36,26 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
     textarea.current?.focus();
     focused.current = { rootId, path, version: focusVersion };
   }, [busy, focusVersion, path, rootId]);
+  const lineCount = useMemo(() => editor?.text.split("\n").length ?? 0, [editor?.text]);
+  function saveIcon() {
+    if (busy)
+      return (
+        <SpinnerIcon
+          aria-hidden="true"
+          data-icon="inline-start"
+          className="motion-safe:animate-spin"
+        />
+      );
+    return <SaveIcon aria-hidden="true" data-icon="inline-start" />;
+  }
+  function saveLabel() {
+    if (busy) return c("working");
+    return c("save");
+  }
   if (!editor) return null;
+  const segments = editor.path.split("/");
+  const filename = segments.pop();
+  const directory = segments.join("/");
   return (
     <section
       aria-labelledby="file-editor-title"
@@ -44,9 +63,16 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
       className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border @3xl/main:h-full @3xl/main:min-h-0"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-muted/30 px-4 py-3">
-        <h2 id="file-editor-title" className="min-w-0 flex-1 font-mono text-sm wrap-anywhere">
-          {editor.path}
-        </h2>
+        <div className="min-w-0 flex-1">
+          <h2 id="file-editor-title" className="text-sm font-semibold wrap-anywhere">
+            {filename}
+          </h2>
+          {directory && (
+            <p className="mt-0.5 font-mono text-xs text-muted-foreground wrap-anywhere">
+              {directory}/
+            </p>
+          )}
+        </div>
         {dirty && <Badge variant="secondary">{t("unsavedChanges")}</Badge>}
         <div className="ml-auto flex items-center gap-2">
           <Button
@@ -64,16 +90,8 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
             disabled={busy || !dirty}
             onClick={() => void onSave()}
           >
-            {busy ? (
-              <SpinnerIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-                className="motion-safe:animate-spin"
-              />
-            ) : (
-              <SaveIcon aria-hidden="true" data-icon="inline-start" />
-            )}
-            {busy ? c("working") : c("save")}
+            {saveIcon()}
+            {saveLabel()}
           </Button>
         </div>
       </div>
@@ -108,6 +126,10 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
         spellCheck={false}
         disabled={busy}
       />
+      <footer className="flex items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2 text-xs text-muted-foreground tabular-nums">
+        <span>{t("lineCount", { count: String(lineCount) })}</span>
+        <span>UTF-8</span>
+      </footer>
     </section>
   );
 }

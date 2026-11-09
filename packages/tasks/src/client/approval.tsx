@@ -17,6 +17,13 @@ import { failureCode } from "../model/failure.ts";
 
 import { ApprovalBody } from "./approval-body.tsx";
 
+function approvalAction(kind: HumanRequest["kind"], busy: boolean) {
+  if (busy) return "sending";
+  if (kind === "question") return "submitAnswer";
+  if (kind === "plan") return "approvePlan";
+  return "allowOnce";
+}
+
 export function Approval({
   client,
   request,
@@ -83,7 +90,7 @@ export function Approval({
       {task && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{task.prompt}</p>}
       {request.body && <ApprovalBody request={request} />}
       {!closed && (
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4">
           {request.questions.map((question) => (
             <fieldset key={question.id} className="flex flex-col gap-2">
               <legend className="mb-2 text-sm font-medium">{question.text}</legend>
@@ -154,7 +161,7 @@ export function Approval({
               onChange={(event) => setNote(event.target.value)}
             />
           </Field>
-          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+          <div className="flex flex-wrap gap-2 rounded-lg bg-muted/40 p-3">
             <Button
               disabled={
                 busy ||
@@ -167,15 +174,7 @@ export function Approval({
                 )
               }
             >
-              {busy
-                ? t("sending")
-                : t(
-                    request.kind === "question"
-                      ? "submitAnswer"
-                      : request.kind === "plan"
-                        ? "approvePlan"
-                        : "allowOnce",
-                  )}
+              {t(approvalAction(request.kind, busy))}
             </Button>
             <Button
               variant="outline"
@@ -191,7 +190,7 @@ export function Approval({
         <p className="mt-3 text-xs text-muted-foreground">{t("awaitingDevice")}</p>
       )}
       {error && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
+        <p role="alert" className="mt-3 text-sm text-destructive-text">
           {t(error)}
         </p>
       )}

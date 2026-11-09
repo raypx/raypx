@@ -1,7 +1,22 @@
 /** @vitest-environment happy-dom */
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
 import { mocks, page, signIn } from "../tests/helpers/router-auth.tsx";
+
+function expectHomepageEntries() {
+  const navigation = within(screen.getByRole("navigation", { name: "Workspace" }));
+  for (const [name, href] of [
+    ["Projects", "/projects"],
+    ["Waiting", "/approvals"],
+    ["Automations", "/automations"],
+    ["Memory and templates", "/memory"],
+  ] as const) {
+    expect(navigation.getByRole("link", { name })).toHaveAttribute("href", href);
+  }
+  expect(screen.getByRole("link", { name: "Open projects" })).toHaveAttribute("href", "/projects");
+  expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute("href", "/tasks");
+  expect(screen.getByRole("img", { name: "Desktop to Web connection" })).toBeTruthy();
+}
 
 it("renders the landing page without account or private workspace reads", async () => {
   mocks.sessionPending = true;
@@ -10,47 +25,32 @@ it("renders the landing page without account or private workspace reads", async 
   expect(screen.getByRole("heading", { name: "Remote sessions and approvals" })).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
   expect(screen.getAllByRole("button", { name: "Loading…" })).toHaveLength(1);
-  for (const button of screen.getAllByRole("button", { name: "Loading…" }))
-    expect(button).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Loading…" })).toBeDisabled();
+  expectHomepageEntries();
   expect(mocks.loadAccount).not.toHaveBeenCalled();
   expect(mocks.access).not.toHaveBeenCalled();
   expect(mocks.tasks).not.toHaveBeenCalled();
   expect(mocks.devices).not.toHaveBeenCalled();
   expect(mocks.approvals).not.toHaveBeenCalled();
-  expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute("href", "/tasks");
-  expect(screen.getByText("Open a project, or write a session.")).toBeTruthy();
-  expect(screen.getByText("Computers connected from Desktop.")).toBeTruthy();
-  expect(screen.queryByText("Sign in to see computers connected from Desktop.")).toBeNull();
-  expect(screen.queryByText("Appearance and language")).toBeNull();
-  fireEvent.click(screen.getByRole("link", { name: "Projects" }));
+  fireEvent.click(screen.getByRole("link", { name: "Open projects" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
 });
 
-it("keeps the homepage sign-in destinations for confirmed guests", async () => {
+it("keeps the homepage sign-in destinations and draft privacy for confirmed guests", async () => {
   const router = await page("/");
   expect(await screen.findByRole("button", { name: "Sign in" })).toBeEnabled();
   expect(screen.getByRole("link", { name: "Sign in to connect a computer" })).toHaveAttribute(
     "href",
     "/login?returnTo=%2Fsettings",
   );
-  expect(screen.getByText("Open a project, or write a session.")).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute("href", "/tasks");
-  expect(screen.getByRole("link", { name: /Sign in to open projects/ })).toHaveAttribute(
-    "href",
-    "/projects",
-  );
-  expect(screen.getByRole("link", { name: /Sign in to answer requests/ })).toHaveAttribute(
-    "href",
-    "/approvals",
-  );
-  expect(screen.getByRole("link", { name: /Sign in to manage cloud schedules/ })).toHaveAttribute(
-    "href",
-    "/automations",
-  );
+  expectHomepageEntries();
+  const privacy = screen.getByRole("button", { name: "Draft privacy" });
+  fireEvent.click(privacy);
   expect(
-    screen.getByRole("link", { name: /Sign in to manage memory and templates/ }),
-  ).toHaveAttribute("href", "/memory");
-  expect(screen.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
+    await screen.findByText("Drafts stay on this device until you sign in and send."),
+  ).toBeTruthy();
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
 });
@@ -58,31 +58,13 @@ it("keeps the homepage sign-in destinations for confirmed guests", async () => {
 it("shows signed-in homepage actions and account menu without workspace reads", async () => {
   signIn();
   const router = await page("/");
-  expect(screen.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
-  expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute("href", "/tasks");
-  expect(screen.queryByText("Session drafts")).toBeNull();
-  expect(
-    screen.getByText("Continue your sessions and approvals across connected projects."),
-  ).toBeTruthy();
-  expect(
-    screen.getByRole("link", { name: /Open projects on a connected computer/ }),
-  ).toHaveAttribute("href", "/projects");
-  expect(screen.getByRole("link", { name: /Manage scheduled cloud sessions/ })).toHaveAttribute(
-    "href",
-    "/automations",
-  );
-  expect(
-    screen.getByRole("link", { name: /Manage this account's memory and templates/ }),
-  ).toHaveAttribute("href", "/memory");
+  expectHomepageEntries();
   expect(await screen.findByRole("button", { name: "Account menu" })).toBeEnabled();
   expect(screen.getByRole("link", { name: "Connect a computer" })).toHaveAttribute(
     "href",
     "/settings",
   );
-  expect(screen.getByText("Manage computers connected from Desktop.")).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
-  expect(screen.queryByText("Open a project, or write a session.")).toBeNull();
-  expect(screen.queryByText("Sign in to answer requests.")).toBeNull();
   expect(mocks.loadAccount).not.toHaveBeenCalled();
   await waitFor(() => expect(mocks.access).toHaveBeenCalledTimes(1));
   expect(mocks.tasks).not.toHaveBeenCalled();
@@ -90,44 +72,32 @@ it("shows signed-in homepage actions and account menu without workspace reads", 
   expect(mocks.approvals).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Language" }));
   fireEvent.click(await screen.findByRole("menuitemradio", { name: "简体中文" }));
-  expect(await screen.findByRole("link", { name: "项目" })).toHaveAttribute("href", "/projects");
-  expect(screen.getByRole("link", { name: "连接电脑" })).toHaveAttribute("href", "/settings");
-  expect(screen.getByRole("link", { name: /管理按计划运行的云端会话/ })).toHaveAttribute(
+  expect(await screen.findByRole("link", { name: "打开项目" })).toHaveAttribute(
     "href",
-    "/automations",
+    "/projects",
   );
+  expect(screen.getByRole("link", { name: "连接电脑" })).toHaveAttribute("href", "/settings");
+  expect(screen.getByRole("link", { name: "定时任务" })).toHaveAttribute("href", "/automations");
   expect(router.state.location.pathname).toBe("/");
 });
 
 it.each([false, true])(
-  "offers session retry on the homepage with stale session data: %s",
+  "keeps homepage connection actions with stale session data: %s",
   async (stale) => {
     if (stale) signIn();
     mocks.sessionError = true;
     await page("/");
+    expectHomepageEntries();
     expect(screen.getByRole("heading", { name: "Remote sessions and approvals" })).toBeTruthy();
-    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Retry account" })).toBeNull();
     expect(screen.getByRole("button", { name: stale ? "Account menu" : "Sign in" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: stale ? "Sign in" : "Account menu" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
-    expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute("href", "/tasks");
     expect(
       screen.getByRole("link", {
         name: stale ? "Connect a computer" : "Sign in to connect a computer",
       }),
     ).toHaveAttribute("href", stale ? "/settings" : "/login?returnTo=%2Fsettings");
-    expect(
-      screen.getByText(
-        stale
-          ? "Manage computers connected from Desktop."
-          : "Sign in to see computers connected from Desktop.",
-      ),
-    ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
-    expect(
-      screen.queryByText("Continue your sessions and approvals across connected projects."),
-    ).toBeNull();
     expect(mocks.refetch).not.toHaveBeenCalled();
     expect(mocks.loadAccount).not.toHaveBeenCalled();
     expect(mocks.devices).not.toHaveBeenCalled();

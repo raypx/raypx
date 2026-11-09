@@ -42,10 +42,10 @@ export function FilesToolbar({
       />
       <nav
         aria-label={t("breadcrumbs")}
-        className="order-last min-w-0 basis-full @4xl/main:order-none @4xl/main:flex-1 @4xl/main:basis-auto"
+        className="order-last min-w-0 basis-full overflow-x-auto rounded-lg bg-muted/40 px-2 py-1"
         title={path || "/"}
       >
-        <ol className="flex flex-wrap items-center gap-1 text-sm">
+        <ol className="flex w-max min-w-full items-center gap-1 text-sm">
           <li className="shrink-0">
             {path ? (
               <Button
@@ -63,7 +63,7 @@ export function FilesToolbar({
             )}
           </li>
           {segments.map((segment, index) => (
-            <li key={index} className="flex max-w-full items-center gap-1">
+            <li key={index} className="flex shrink-0 items-center gap-1">
               <ChevronRightIcon aria-hidden="true" className="size-3.5 text-muted-foreground" />
               {index === segments.length - 1 ? (
                 <span aria-current="page" className="max-w-52 truncate px-2 font-medium">
