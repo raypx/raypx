@@ -4,15 +4,18 @@ import { EyeIcon } from "@raypx/icons/eye";
 import { EyeOffIcon } from "@raypx/icons/eye-off";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group.tsx";
 import { IconButton } from "./icon-button.tsx";
+import type { ControlSize } from "./control-size.ts";
 
 export interface PasswordInputProps extends Omit<ComponentProps<"input">, "type"> {
   labels: { show: string; hide: string; capsLock?: string };
+  controlSize?: ControlSize;
 }
 
 /** Input props and refs target the input; className sizes the whole control. */
 export function PasswordInput({
   id,
   className,
+  controlSize = "default",
   disabled,
   labels,
   onKeyDown,
@@ -28,7 +31,7 @@ export function PasswordInput({
   const showCapsLock = capsLock && !disabled && Boolean(labels.capsLock);
   const capsLockId = `${inputId}-caps-lock`;
   return (
-    <InputGroup className={className}>
+    <InputGroup className={className} controlSize={controlSize}>
       <InputGroupInput
         autoCapitalize="none"
         spellCheck={false}

@@ -21,7 +21,7 @@ type SelectFieldProps<Value extends string> = Pick<
 > &
   Pick<
     ComponentProps<typeof SelectTrigger>,
-    "id" | "aria-label" | "aria-describedby" | "aria-invalid" | "className"
+    "id" | "aria-label" | "aria-describedby" | "aria-invalid" | "className" | "size"
   > & {
     options: readonly SelectOption<Value>[];
     placeholder?: string;
@@ -32,6 +32,7 @@ type SelectFieldProps<Value extends string> = Pick<
 export function SelectField<Value extends string>({
   id,
   className,
+  size = "default",
   options,
   placeholder,
   onValueChange,
@@ -50,6 +51,7 @@ export function SelectField<Value extends string>({
     >
       <SelectTrigger
         id={id}
+        size={size}
         className={cn("w-full min-w-0", className)}
         aria-label={ariaLabel}
         aria-describedby={ariaDescribedBy}

@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip
 export interface IconButtonProps extends Omit<ButtonProps, "size"> {
   label: string;
   hint?: string;
-  size?: "icon" | "icon-xs" | "icon-sm" | "icon-lg";
+  size?: "icon" | "icon-xs" | "icon-sm" | "icon-lg" | "icon-xl";
 }
 
 export function IconButton({

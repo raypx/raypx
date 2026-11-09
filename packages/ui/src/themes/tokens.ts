@@ -1,6 +1,15 @@
+const controlSizes = {
+  "control-height-xs": "1.5rem",
+  "control-height-sm": "1.75rem",
+  "control-height": "2rem",
+  "control-height-lg": "2.25rem",
+  "control-height-xl": "2.75rem",
+} as const;
+
 /** Neutral semantic tokens. Generated DOM and native CSS share this source. */
 export const themeTokens = {
   light: {
+    ...controlSizes,
     background: "oklch(1 0 0)",
     foreground: "oklch(0.145 0 0)",
     card: "oklch(1 0 0)",
@@ -48,6 +57,7 @@ export const themeTokens = {
     "chart-5": "oklch(0.269 0 0)",
   },
   dark: {
+    ...controlSizes,
     background: "oklch(0.145 0 0)",
     foreground: "oklch(0.985 0 0)",
     card: "oklch(0.205 0 0)",

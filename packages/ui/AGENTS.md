@@ -8,6 +8,10 @@ packages own page layout, forms, navigation and product behavior.
 ## Interface
 
 - `components/ui/*`: Base UI and shadcn primitives, including Table for the Web user list.
+  Controls share `sm` (28px), default (32px), `lg` (36px) and `xl` (44px) heights.
+  Button/SelectTrigger/SelectField use `size`; Input/InputGroup/PasswordInput use
+  `controlSize` to preserve the native input `size` attribute. Use these variants
+  instead of height overrides. Button also has 24px `xs` and matching icon variants.
   DialogContent accepts Base UI `backdropProps`; nested dialogs can opt into their
   own backdrop with `forceRender` for independent dimming and outside dismissal.
 - `components/ui/dialog`: callers supply translated `closeLabel` when displaying

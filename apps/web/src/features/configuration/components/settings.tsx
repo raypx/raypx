@@ -167,7 +167,6 @@ export function ConfigurationForm({
             maxLength={60}
             value={values.siteName}
             onChange={(e) => change({ ...values, siteName: e.target.value })}
-            className="h-10"
           />
         </div>
         <div className={row}>

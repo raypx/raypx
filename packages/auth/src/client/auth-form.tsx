@@ -303,7 +303,7 @@ export function AuthForm({
                     required
                     maxLength={authPolicy.nameMaxLength}
                     disabled={busy}
-                    className="h-11"
+                    controlSize="xl"
                   />
                 </Field>
               )}
@@ -320,7 +320,7 @@ export function AuthForm({
                     defaultValue={link.email}
                     required
                     disabled={busy}
-                    className="h-11"
+                    controlSize="xl"
                   />
                 </Field>
               )}
@@ -339,13 +339,13 @@ export function AuthForm({
                   name="password"
                   required
                   disabled={busy}
-                  className="h-11"
+                  controlSize="xl"
                 />
               )}
               <Button
                 type="submit"
-                size="lg"
-                className="mt-1 h-11 w-full"
+                size="xl"
+                className="mt-1 w-full"
                 disabled={busy || coolingDown}
               >
                 {busy ? (

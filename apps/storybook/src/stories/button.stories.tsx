@@ -15,7 +15,7 @@ const meta = {
       control: "select",
       options: ["default", "outline", "secondary", "ghost", "destructive", "link"],
     },
-    size: { control: "select", options: ["xs", "sm", "default", "lg"] },
+    size: { control: "select", options: ["xs", "sm", "default", "lg", "xl"] },
   },
 } satisfies Meta<typeof Button>;
 
@@ -63,6 +63,9 @@ export const Sizes: Story = {
       </Button>
       <Button {...args} size="lg">
         Large
+      </Button>
+      <Button {...args} size="xl">
+        Form action
       </Button>
     </div>
   ),

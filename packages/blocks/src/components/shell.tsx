@@ -211,7 +211,7 @@ function ShellContents<To extends string>({
       <SidebarMenuItem key={item.to}>
         <SidebarMenuButton
           tooltip={item.label}
-          className="relative min-h-9 gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent/80 hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:shadow-sm max-[760px]:min-h-11 [&_svg]:size-5 [&_svg]:stroke-[1.75]"
+          className="relative min-h-control-lg gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent/80 hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:shadow-sm max-[760px]:min-h-control-xl [&_svg]:size-5 [&_svg]:stroke-[1.75]"
           render={
             <LinkComponent
               to={item.to}
@@ -329,11 +329,7 @@ function ShellContents<To extends string>({
                 />
               }
             >
-              {collapsed ? (
-                <SidebarExpandIcon className="size-[18px]" />
-              ) : (
-                <SidebarCollapseIcon className="size-[18px]" />
-              )}
+              {collapsed ? <SidebarExpandIcon /> : <SidebarCollapseIcon />}
             </TooltipTrigger>
             <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
           </Tooltip>

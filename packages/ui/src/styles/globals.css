@@ -23,6 +23,11 @@
 }
 
 @theme inline {
+  --spacing-control-xs: var(--control-height-xs);
+  --spacing-control-sm: var(--control-height-sm);
+  --spacing-control: var(--control-height);
+  --spacing-control-lg: var(--control-height-lg);
+  --spacing-control-xl: var(--control-height-xl);
   --font-sans: Inter, "SF Pro Display", "Segoe UI", "Noto Sans SC", system-ui, sans-serif;
   --font-heading: var(--font-sans);
   --color-background: var(--background);
@@ -110,22 +115,26 @@
   @media (pointer: coarse) {
     [data-slot="button"],
     [data-slot="input"],
+    [data-slot="input-group"],
     [data-slot="select-trigger"],
     [data-slot="select-item"],
     [data-slot="toggle-group-item"],
     [data-slot="tabs-trigger"],
     select {
-      min-height: 44px;
+      min-height: var(--control-height-xl);
     }
     [data-slot="button"]:has(> svg:only-child) {
-      min-width: 44px;
+      min-width: var(--control-height-xl);
+    }
+    [data-slot="tabs-list"] {
+      min-height: calc(var(--control-height-xl) + 0.5rem);
     }
     [data-slot="sidebar-menu-button"],
     [data-slot="sidebar-menu-sub-button"],
     [data-slot="sidebar-trigger"] {
       /* Keep touch targets above compact navigation utilities, including in the rail. */
-      min-height: 44px !important;
-      min-width: 44px !important;
+      min-height: var(--control-height-xl) !important;
+      min-width: var(--control-height-xl) !important;
     }
     input,
     textarea,

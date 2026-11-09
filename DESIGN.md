@@ -6,6 +6,26 @@ Primary actions are dark on light backgrounds and light on dark backgrounds.
 Express feature styles and responsive states with Tailwind utilities in components.
 CSS entry points register sources and shared styles; avoid feature-specific selectors.
 
+Keep Web and Desktop compact with one control scale: 24px `xs` for inline buttons,
+28px `sm` for dense actions and filters, 32px default for ordinary controls, 36px
+`lg` for prominent actions, and 44px `xl` for standalone authentication forms.
+Use component size variants rather than per-page height overrides. Input,
+InputGroup and PasswordInput call this prop `controlSize` so native input `size`
+still describes character width. SelectField forwards `size` to its trigger.
+Coarse pointers retain at least 44px interaction targets; narrow inputs retain
+16px text to avoid browser zoom. Multiline and content rows grow with their text.
+
+Use 12px secondary/compact text, 14px control/body text, 18px section headings and
+24px page headings. Button icons follow their size: 12px in `xs`, 14px in `sm`
+and 16px by default; navigation icons stay 20px. Controls use the shared radius
+scale: `md` for small controls and `lg` for default and larger controls.
+Use Tailwind's spacing scale, preferring 4px steps, with 2px adjustments inside
+compact controls. Related controls use 8px gaps, groups 16px and sections 24px.
+The shell owns page widths and gutters: document pages cap at 48rem, workbenches
+at 100rem, and tools fill the content region. Pages do not add outer widths or
+gutters. Sidebar navigation and project shortcuts share a 36px minimum row and
+20px icons; touch navigation keeps a 44px minimum.
+
 Desktop opens the most recent valid local project, with project authorization,
 Agent readiness and the first message as its empty state. Web uses a public landing
 page at `/` and opens remote projects at `/projects`;
