@@ -129,3 +129,10 @@ Model composition owns capability-based create/continue rules and frozen submiss
 The model composer reducer owns editor transitions, target/model/budget readiness and draft
 save/cleanup rules, tested without DOM. `useTaskComposer` adapts it to React, storage,
 confirmation and creation; `src/client/composer/` holds its focused subviews.
+
+ModelPicker composes UI's searchable Base UI Combobox with provider groups and
+connection-aware identity. Its compact variant is used by the composer; catalog,
+default-model and readiness behavior stay in the picker. Search and popup state
+are ephemeral. Computer settings filter the loaded list locally without new reads.
+Task views follow the compact list, transcript, result and request patterns using
+the same UI primitives; conversation virtualization and domain state stay unchanged.

@@ -229,15 +229,12 @@ export function AuthForm({
           (!compact && (
             <span
               aria-hidden="true"
-              className="mb-1 grid size-12 place-items-center rounded-2xl border border-border bg-card text-foreground shadow-sm"
+              className="mb-1 grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground"
             >
               <ModeIcon className="size-5" />
             </span>
           ))}
-        <h1
-          id="auth-title"
-          className={cn("font-semibold tracking-tight", compact ? "text-2xl" : "text-3xl")}
-        >
+        <h1 id="auth-title" className="text-2xl font-semibold tracking-tight text-balance">
           {t(config.title)}
         </h1>
         {intro && <p className="text-sm leading-relaxed text-muted-foreground">{t(intro)}</p>}

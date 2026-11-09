@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.ts";
+import { capture } from "../helpers/capture.ts";
 
 import type { AgentTask } from "@raypx/core/tasks";
 
@@ -174,6 +175,14 @@ export function registerTests() {
     await page
       .getByRole("textbox", { name: "Session instructions", exact: true })
       .fill("Run the scheduled repository checks");
+    await page
+      .getByRole("heading", { name: "New cloud automation", exact: true })
+      .scrollIntoViewIfNeeded();
+    await capture(page, {
+      path: test.info().outputPath(`${surface.toLowerCase()}-cloud-automation-form.png`),
+      fullPage: true,
+      animations: "disabled",
+    });
     await page.getByRole("button", { name: "Save changes", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Daily repository checks", exact: true }),
@@ -186,6 +195,11 @@ export function registerTests() {
     expect(creates[0]!.requestId).toMatch(/^[0-9a-f-]{36}$/);
     await page.getByRole("button", { name: "Run now", exact: true }).click();
     await page.getByRole("button", { name: /Manual run/ }).click();
+    await capture(page, {
+      path: test.info().outputPath(`${surface.toLowerCase()}-cloud-automation-history.png`),
+      fullPage: true,
+      animations: "disabled",
+    });
     await page.getByRole("link", { name: "Open related agent session", exact: true }).click();
     await expect(
       page.getByText("Scheduled execution is visible through its task link.", { exact: true }),

@@ -10,7 +10,9 @@ import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
-import { Input } from "@raypx/ui/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
+import { SearchIcon } from "@raypx/icons/search";
+import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { SelectField } from "@raypx/ui/select-field";
 import { isTaskActive } from "../model/task.ts";
 
@@ -79,35 +81,46 @@ export function TaskFilterBar({
     filters.provider !== "" ||
     (!fixedTarget && (filters.device !== "" || filters.project !== ""));
   return (
-    <div className="@container mb-4 space-y-3">
-      <Collapsible className="space-y-3">
+    <div className="@container mb-2 flex flex-col gap-2">
+      <Collapsible className="flex flex-col gap-2">
         <div className="flex items-end gap-2">
           <Field className="min-w-0 flex-1">
             <FieldLabel htmlFor={`${id}-search`} className="sr-only">
               {t("searchTasks")}
             </FieldLabel>
-            <Input
-              id={`${id}-search`}
-              type="search"
-              value={filters.query}
-              maxLength={500}
-              placeholder={t("searchPlaceholder")}
-              onChange={(event) => onChange({ ...filters, query: event.target.value })}
-            />
+            <InputGroup controlSize="sm">
+              <InputGroupAddon>
+                <SearchIcon aria-hidden="true" />
+              </InputGroupAddon>
+              <InputGroupInput
+                id={`${id}-search`}
+                type="search"
+                value={filters.query}
+                maxLength={500}
+                placeholder={t("searchPlaceholder")}
+                onChange={(event) => onChange({ ...filters, query: event.target.value })}
+              />
+            </InputGroup>
           </Field>
           <CollapsibleTrigger
             render={
-              <Button type="button" variant="outline" size="icon" aria-label={t("filters")} />
+              <Button
+                type="button"
+                variant={active ? "secondary" : "outline"}
+                size="icon-sm"
+                aria-label={t("filters")}
+              />
             }
           >
             <AdjustmentsIcon aria-hidden="true" />
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="grid grid-cols-2 gap-3">
+        <CollapsibleContent className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 p-3">
           <Field>
             <FieldLabel htmlFor={`${id}-status`}>{c("status")}</FieldLabel>
             <SelectField<TaskFilters["status"]>
               id={`${id}-status`}
+              size="sm"
               className="w-full"
               value={filters.status}
               onValueChange={(status) => onChange({ ...filters, status })}
@@ -125,13 +138,16 @@ export function TaskFilterBar({
             <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
             <SelectField
               id={`${id}-agent`}
+              size="sm"
               className="w-full"
               value={filters.provider}
               onValueChange={(provider) => onChange({ ...filters, provider })}
               options={[
                 { value: "", label: t("allAgents") },
-                { value: "claude", label: "Claude Code" },
-                { value: "codex", label: "Codex" },
+                ...agentProviders.map((provider) => ({
+                  value: provider,
+                  label: agentProviderMetadata[provider].label,
+                })),
               ]}
             />
           </Field>
@@ -140,6 +156,7 @@ export function TaskFilterBar({
               <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
               <SelectField
                 id={`${id}-device`}
+                size="sm"
                 className="w-full"
                 value={filters.device}
                 onValueChange={(device) => onChange({ ...filters, device })}
@@ -155,6 +172,7 @@ export function TaskFilterBar({
               <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
               <SelectField
                 id={`${id}-project`}
+                size="sm"
                 className="w-full"
                 value={filters.project}
                 onValueChange={(project) => onChange({ ...filters, project })}
@@ -172,20 +190,16 @@ export function TaskFilterBar({
           )}
         </CollapsibleContent>
       </Collapsible>
-      {active ? (
-        <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
-          <p role="status" className="text-xs text-muted-foreground">
-            {t("filteredCount", { count: String(count), total: String(total) })}
-          </p>
+      <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
+        <p role="status" className="text-xs text-muted-foreground tabular-nums">
+          {t("filteredCount", { count: String(count), total: String(total) })}
+        </p>
+        {active && (
           <Button size="sm" variant="ghost" onClick={() => onChange(emptyTaskFilters)}>
             {t("clearFilters")}
           </Button>
-        </div>
-      ) : (
-        <p role="status" className="sr-only">
-          {t("filteredCount", { count: String(count), total: String(total) })}
-        </p>
-      )}
+        )}
+      </div>
     </div>
   );
 }

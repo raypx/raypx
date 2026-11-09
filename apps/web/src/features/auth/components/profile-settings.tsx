@@ -68,10 +68,11 @@ export function ProfileSettings({
   return (
     <form
       onSubmit={(event) => void save(event)}
-      className="rounded-xl border border-border bg-background p-5"
+      aria-busy={busy}
+      className="flex min-w-0 flex-col gap-5"
     >
       <FieldGroup>
-        <Field orientation="responsive">
+        <Field orientation="responsive" data-disabled={busy}>
           <FieldLabel htmlFor={id} className="min-w-0">
             <UserCircleIcon aria-hidden="true" className="size-4 text-muted-foreground" />
             {t("displayName")}
@@ -91,7 +92,7 @@ export function ProfileSettings({
           />
         </Field>
       </FieldGroup>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           {dirty && (
             <Badge variant="outline">

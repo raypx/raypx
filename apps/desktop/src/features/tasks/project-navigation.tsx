@@ -6,7 +6,7 @@ import { PlusIcon } from "@raypx/icons/plus";
 import { SearchIcon } from "@raypx/icons/search";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Input } from "@raypx/ui/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -126,21 +126,20 @@ export function ProjectNavigation() {
               <ChevronDownIcon aria-hidden="true" className="group-data-panel-open:rotate-180" />
               {t("allProjects")}
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 space-y-2">
-              <div className="relative mx-1">
-                <SearchIcon
-                  aria-hidden="true"
-                  className="pointer-events-none absolute top-2.5 left-2.5 size-4 text-muted-foreground"
-                />
-                <Input
+            <CollapsibleContent className="mt-2 flex flex-col gap-2">
+              <InputGroup controlSize="sm" className="mx-1 w-auto">
+                <InputGroupAddon>
+                  <SearchIcon aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type="search"
                   aria-label={t("searchProjects")}
                   placeholder={t("searchProjects")}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  className="pl-8"
                   maxLength={200}
                 />
-              </div>
+              </InputGroup>
               <div className="max-h-60 overflow-y-auto">{items(matches)}</div>
               {!matches.length && (
                 <p className="px-3 text-xs text-muted-foreground">{t("noProjectsMatch")}</p>

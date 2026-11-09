@@ -141,12 +141,9 @@ export function AccountSessions({
       {sessions?.length === 0 && (
         <EmptyState title={t("empty")} icon={<MonitorIcon aria-hidden="true" />} className="py-8" />
       )}
-      <ul className="mt-5 flex flex-col gap-3">
+      <ul className="mt-5 flex flex-col divide-y divide-border border-y border-border">
         {sessions?.map((session) => (
-          <li
-            key={session.id}
-            className="flex flex-wrap items-start gap-3 rounded-lg border border-border p-4"
-          >
+          <li key={session.id} className="flex flex-wrap items-start gap-3 py-4">
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
               <MonitorIcon aria-hidden="true" className="size-5" />
             </span>

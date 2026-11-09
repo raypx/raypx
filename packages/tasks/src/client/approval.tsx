@@ -5,6 +5,8 @@ import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -57,28 +59,40 @@ export function Approval({
     }
   }
   return (
-    <section className="rounded-lg border border-border p-4">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 space-y-1">
-          <h3 className="text-sm font-medium">{request.title || t(request.kind)}</h3>
-          {context}
+    <section
+      aria-busy={busy}
+      className="overflow-hidden rounded-xl border border-border bg-background p-4"
+    >
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex flex-1 items-start gap-2.5">
+          <ShieldCheckIcon
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <h3 className="text-sm font-semibold wrap-anywhere">
+              {request.title || t(request.kind)}
+            </h3>
+            {context}
+          </div>
         </div>
-        <span className="text-xs text-muted-foreground">
+        <Badge variant={request.status === "pending" ? "default" : "secondary"}>
           {t(request.status === "pending" ? "waiting" : request.status)}
-        </span>
+        </Badge>
       </div>
       {task && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{task.prompt}</p>}
       {request.body && <ApprovalBody request={request} />}
       {!closed && (
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 flex flex-col gap-4">
           {request.questions.map((question) => (
-            <fieldset key={question.id} className="space-y-2">
+            <fieldset key={question.id} className="flex flex-col gap-2">
               <legend className="mb-2 text-sm font-medium">{question.text}</legend>
               {question.multiSelect ? (
                 question.options.map((option, index) => (
                   <Field key={option.label} orientation="horizontal">
                     <Checkbox
                       id={`${id}-${question.id}-${index}`}
+                      disabled={busy}
                       checked={answers[question.id]?.includes(option.label) ?? false}
                       onCheckedChange={(checked) =>
                         setAnswers((previous) => ({
@@ -94,6 +108,7 @@ export function Approval({
                 ))
               ) : (
                 <RadioGroup
+                  disabled={busy}
                   value={answers[question.id]?.[0] ?? ""}
                   onValueChange={(value) =>
                     setAnswers((previous) => ({ ...previous, [question.id]: [String(value)] }))
@@ -111,6 +126,7 @@ export function Approval({
                 <FieldLabel htmlFor={`${id}-${question.id}-custom`}>{t("customAnswer")}</FieldLabel>
                 <Input
                   id={`${id}-${question.id}-custom`}
+                  disabled={busy}
                   value={
                     answers[question.id]?.every((value) =>
                       question.options.every((option) => option.label !== value),
@@ -132,12 +148,13 @@ export function Approval({
             <FieldLabel htmlFor={`${id}-note`}>{t("note")}</FieldLabel>
             <Textarea
               id={`${id}-note`}
+              disabled={busy}
               value={note}
               maxLength={8000}
               onChange={(event) => setNote(event.target.value)}
             />
           </Field>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
             <Button
               disabled={
                 busy ||
@@ -150,13 +167,15 @@ export function Approval({
                 )
               }
             >
-              {t(
-                request.kind === "question"
-                  ? "submitAnswer"
-                  : request.kind === "plan"
-                    ? "approvePlan"
-                    : "allowOnce",
-              )}
+              {busy
+                ? t("sending")
+                : t(
+                    request.kind === "question"
+                      ? "submitAnswer"
+                      : request.kind === "plan"
+                        ? "approvePlan"
+                        : "allowOnce",
+                  )}
             </Button>
             <Button
               variant="outline"

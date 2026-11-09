@@ -48,8 +48,8 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
     }
   }
   return (
-    <section className="flex flex-col gap-5" aria-label={t("instances")}>
-      <div className="rounded-xl border border-border bg-background p-5">
+    <section className="flex min-w-0 flex-col gap-6" aria-label={t("instances")} aria-busy={busy}>
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <MonitorIcon aria-hidden="true" className="size-4 text-muted-foreground" />
@@ -78,12 +78,9 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
           />
         )}
         {list.data && list.data.length > 0 && (
-          <ul className="mt-5 flex flex-col gap-3">
+          <ul className="mt-5 flex flex-col divide-y divide-border border-y border-border">
             {list.data.map((instance) => (
-              <li
-                key={instance.instanceId}
-                className="flex flex-wrap items-start gap-3 rounded-lg border border-border p-4"
-              >
+              <li key={instance.instanceId} className="flex flex-wrap items-start gap-3 py-4">
                 <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                   <MonitorIcon aria-hidden="true" className="size-5" />
                 </span>
@@ -133,7 +130,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
         )}
       </div>
       <form
-        className="flex flex-col gap-4 rounded-xl border border-border bg-background p-5"
+        className="flex flex-col gap-4 border-t border-border pt-6"
         onSubmit={(event) => {
           event.preventDefault();
           void act(async () => {

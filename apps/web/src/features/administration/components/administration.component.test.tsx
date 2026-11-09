@@ -134,3 +134,19 @@ it("uses the displayed UTC days on initial load, apply and refresh while keeping
     clock.mockRestore();
   }
 });
+
+it("labels an invalid audit date range without issuing another search", async () => {
+  page(<AuditLog />);
+  await screen.findByText("Unconfirmed");
+  const calls = mocks.audit.mock.calls.length;
+  fireEvent.change(screen.getByLabelText("From (UTC)"), { target: { value: "2020-01-01" } });
+  fireEvent.change(screen.getByLabelText("Through (UTC)"), { target: { value: "2026-11-01" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("up to 366 days");
+  expect(screen.getByLabelText("From (UTC)")).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByLabelText("Through (UTC)")).toHaveAccessibleDescription(
+    "Choose a valid date range of up to 366 days.",
+  );
+  expect(mocks.audit).toHaveBeenCalledTimes(calls);
+  expect(screen.getByText("Unconfirmed")).toBeTruthy();
+});

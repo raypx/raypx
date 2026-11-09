@@ -130,3 +130,16 @@ it("can manage a reconnected computer with a new grant epoch", async () => {
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
   expect(revoke).toHaveBeenCalledTimes(1);
 });
+
+it("filters computers by name or platform without changing remote grants", async () => {
+  const { list, revoke } = devices();
+  await screen.findByText("Studio MacBook");
+  const search = screen.getByRole("searchbox", { name: "Search computers…" });
+  fireEvent.change(search, { target: { value: "windows" } });
+  expect(screen.queryByText("Studio MacBook")).not.toBeInTheDocument();
+  expect(screen.getByText("No matching computers.")).toBeInTheDocument();
+  fireEvent.change(search, { target: { value: "DARWIN" } });
+  expect(screen.getByText("Studio MacBook")).toBeInTheDocument();
+  expect(list).toHaveBeenCalledTimes(1);
+  expect(revoke).not.toHaveBeenCalled();
+});

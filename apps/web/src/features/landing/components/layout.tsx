@@ -11,11 +11,7 @@ export function LandingLayout() {
   const c = useTranslations("common");
   const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";
   return (
-    <div className="relative isolate flex min-h-dvh flex-col bg-background">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[40rem] bg-[radial-gradient(ellipse_at_top,var(--color-muted),transparent_70%)]"
-      />
+    <div className="flex min-h-dvh flex-col bg-background">
       <a
         href="#main"
         className="sr-only rounded-md bg-background p-3 focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
@@ -23,7 +19,7 @@ export function LandingLayout() {
         {c("skipNavigation")}
       </a>
       <header className="sticky top-0 z-20 border-b border-border bg-background">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-10">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-10">
           <Link
             to="/"
             aria-label={siteName}
@@ -46,11 +42,11 @@ export function LandingLayout() {
       <main
         id="main"
         tabIndex={-1}
-        className="@container/main mx-auto w-full max-w-6xl flex-1 px-5 py-8 outline-none sm:px-10 sm:py-14"
+        className="@container/main mx-auto w-full max-w-6xl flex-1 px-5 py-8 outline-none sm:px-10 sm:py-16"
       >
         <Outlet />
       </main>
-      <div className="border-t border-border bg-muted/30">
+      <div className="border-t border-border">
         <LegalFooter
           expanded
           siteName={siteName}

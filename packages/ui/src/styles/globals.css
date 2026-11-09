@@ -102,6 +102,17 @@
   :where(button, input, select, textarea) {
     font-family: inherit;
   }
+  :where(input, textarea) {
+    caret-color: var(--foreground);
+  }
+  ::selection {
+    color: var(--primary-foreground);
+    background: var(--primary);
+  }
+  :where(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
   :where(
     a:not([data-slot]),
     button:not([data-slot]),
@@ -118,6 +129,11 @@
     [data-slot="input-group"],
     [data-slot="select-trigger"],
     [data-slot="select-item"],
+    [data-slot="combobox-trigger"],
+    [data-slot="combobox-input"],
+    [data-slot="combobox-item"],
+    [data-slot="dropdown-menu-item"],
+    [data-slot="dropdown-menu-radio-item"],
     [data-slot="toggle-group-item"],
     [data-slot="tabs-trigger"],
     select {
@@ -128,6 +144,19 @@
     }
     [data-slot="tabs-list"] {
       min-height: calc(var(--control-height-xl) + 0.5rem);
+    }
+    [data-slot="field"][data-orientation="horizontal"],
+    [data-slot="radio-group"] > label {
+      min-height: var(--control-height-xl);
+    }
+    [data-slot="checkbox"]::after,
+    [data-slot="radio-group-item"]::after {
+      inset: -0.875rem;
+    }
+    [data-slot="switch"]::after {
+      content: "";
+      position: absolute;
+      inset: -0.75rem -0.25rem;
     }
     [data-slot="sidebar-menu-button"],
     [data-slot="sidebar-menu-sub-button"],

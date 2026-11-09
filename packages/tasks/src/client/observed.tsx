@@ -15,6 +15,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { TerminalIcon } from "@raypx/icons/terminal";
@@ -100,7 +102,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
   const shown = history ? requests : pending,
     active = selected === undefined ? pending[0]?.id : selected;
   return (
-    <section aria-labelledby={id} className="mb-6 border-b border-border pb-5">
+    <section aria-labelledby={id} className="mb-6 flex flex-col gap-3 border-b border-border pb-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
           <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
@@ -124,16 +126,11 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
           </Button>
         </p>
       )}
-      {!data && !error && (
-        <div
-          className="h-12 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
-          aria-label={c("loading")}
-        />
-      )}
+      {!data && !error && <Skeleton className="h-12" aria-label={c("loading")} />}
       {data && !shown.length && (
         <p className="text-sm text-muted-foreground">{t("terminal.approval.empty")}</p>
       )}
-      <ul className="divide-y divide-border">
+      <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
         {shown.map((request) => {
           const session = data?.sessions.find((value) => value.id === request.sessionId);
           return (
@@ -142,7 +139,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
                 open={active === request.id}
                 onOpenChange={(open) => setSelected(open ? request.id : null)}
               >
-                <CollapsibleTrigger className="group flex w-full min-w-0 items-center justify-between gap-4 py-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <CollapsibleTrigger className="group flex w-full min-w-0 items-center justify-between gap-4 px-3 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">
                       {session?.projectName ?? request.title} ·{" "}
@@ -153,14 +150,22 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                    {t(summaryLabel(request.status, Date.parse(request.expiresAt) <= now))}
+                    <Badge
+                      variant={
+                        request.status === "pending" && Date.parse(request.expiresAt) > now
+                          ? "default"
+                          : "outline"
+                      }
+                    >
+                      {t(summaryLabel(request.status, Date.parse(request.expiresAt) <= now))}
+                    </Badge>
                     <ChevronDownIcon
                       className="size-4 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
                       aria-hidden="true"
                     />
                   </span>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="pb-5">
+                <CollapsibleContent className="px-3 pb-4">
                   <ObservedRequest
                     key={`${request.id}:${request.revision}`}
                     client={client}
@@ -261,15 +266,9 @@ function ObservedRequest({
         </Button>
       </p>
     );
-  if (!request)
-    return (
-      <div
-        className="h-24 animate-pulse rounded-md bg-muted motion-reduce:animate-none"
-        aria-label={c("loading")}
-      />
-    );
+  if (!request) return <Skeleton className="h-24" aria-label={c("loading")} />;
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <ApprovalBody request={request} />
       {actionable && supported ? (
         <>
@@ -279,10 +278,8 @@ function ObservedRequest({
               time: format.dateTime(new Date(request.expiresAt), { timeStyle: "medium" }),
             })}
           </p>
-          <div className="max-w-2xl space-y-2">
-            <label htmlFor={id} className="text-sm font-medium">
-              {t("terminal.approval.denyNote")}
-            </label>
+          <Field className="max-w-2xl">
+            <FieldLabel htmlFor={id}>{t("terminal.approval.denyNote")}</FieldLabel>
             <Textarea
               id={id}
               value={note}
@@ -291,9 +288,9 @@ function ObservedRequest({
               onChange={(event) => setNote(event.target.value)}
               className="min-h-16"
             />
-          </div>
+          </Field>
           {uncertain ? (
-            <div role="alert" className="space-y-3">
+            <div role="alert" className="flex flex-col gap-3">
               <p className="max-w-[65ch] text-sm text-muted-foreground">
                 {t("terminal.approval.unconfirmed")}
               </p>

@@ -7,6 +7,8 @@ import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { TaskMarkdown } from "./markdown.tsx";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { CodeFolderIcon } from "@raypx/icons/code-folder";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 
 type Gap = { id: number; before: number; after: number };
@@ -214,7 +216,7 @@ function ConversationViewport({
     }
     if (row.kind === "prompt")
       return (
-        <article className="rounded-sm bg-muted px-4 py-3">
+        <article className="rounded-xl bg-muted/60 px-4 py-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">{t("you")}</p>
           <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{task.prompt}</p>
         </article>
@@ -224,7 +226,7 @@ function ConversationViewport({
     const entry = row.entry;
     if (entry.kind === "message")
       return (
-        <article className="space-y-2 py-2" aria-busy={entry.status === "streaming"}>
+        <article className="flex flex-col gap-2 py-1" aria-busy={entry.status === "streaming"}>
           <p className="text-xs font-medium text-muted-foreground">
             {agentProviderMetadata[task.provider].shortLabel}{" "}
             {entry.status !== "complete" && (
@@ -239,7 +241,7 @@ function ConversationViewport({
       );
     if (entry.kind === "input")
       return (
-        <article className="rounded-sm bg-muted px-4 py-3">
+        <article className="rounded-xl bg-muted/60 px-4 py-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
             {t("you")} · {t(entry.mode)} · {t(inputStatusLabel(entry.status))}
           </p>
@@ -249,15 +251,18 @@ function ConversationViewport({
       );
     if (entry.kind === "tool")
       return (
-        <p className="flex gap-2 border-l-2 border-border pl-3 font-mono text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{entry.name}</span>
-          <span>{t(entry.status)}</span>
-        </p>
+        <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs">
+          <CodeFolderIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate font-mono">{entry.name}</span>
+          <Badge variant={entry.status === "failed" ? "destructive" : "outline"}>
+            {t(entry.status)}
+          </Badge>
+        </div>
       );
     return null;
   }
   return (
-    <section className="space-y-3">
+    <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-medium">{t("conversation")}</h3>
         <Button
@@ -278,7 +283,7 @@ function ConversationViewport({
           ref={viewport}
           data-conversation
           data-conversation-mode={full ? "full" : "virtual"}
-          className="relative max-h-[min(65vh,48rem)] min-h-48 overflow-auto overscroll-contain rounded-md border border-border p-4 text-sm leading-[1.7]"
+          className="relative max-h-[min(65vh,48rem)] min-h-48 overflow-auto overscroll-contain rounded-xl border border-border bg-background p-3 text-sm leading-[1.7] @min-[40rem]:p-4"
           style={{ overflowAnchor: "none" }}
           tabIndex={0}
           role="region"

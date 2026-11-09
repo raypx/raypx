@@ -5,7 +5,7 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { SelectField } from "@raypx/ui/select-field";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
-import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import {
   cloudJobInputSchema,
   nextJobRuns,
@@ -164,183 +164,189 @@ export function JobForm({
   if (selected && !device)
     options.unshift({ value: selected, label: t("cloud.targetUnavailable") });
   return (
-    <section className="mb-8 rounded-lg border border-border bg-sidebar p-5 @xl/main:p-6">
-      <h2 className="mb-5 text-base font-semibold">{t(job ? "cloud.edit" : "cloud.create")}</h2>
-      <form onSubmit={(event) => void submit(event)} className="flex max-w-3xl flex-col gap-5">
-        <Field>
-          <FieldLabel htmlFor={`${prefix}-name`}>{c("name")}</FieldLabel>
-          <Input
-            id={`${prefix}-name`}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={120}
-            required
-            disabled={busy}
-          />
-        </Field>
-        <div className="grid gap-5 @xl/main:grid-cols-2">
+    <section className="mb-6 rounded-lg border border-border bg-card p-4">
+      <h2 className="mb-4 text-sm font-semibold">{t(job ? "cloud.edit" : "cloud.create")}</h2>
+      <form onSubmit={(event) => void submit(event)} className="max-w-3xl" aria-busy={busy}>
+        <FieldGroup className="gap-4">
           <Field>
-            <FieldLabel htmlFor={`${prefix}-cron`}>{t("schedule")}</FieldLabel>
+            <FieldLabel htmlFor={`${prefix}-name`}>{c("name")}</FieldLabel>
             <Input
-              id={`${prefix}-cron`}
-              value={cron}
-              onChange={(event) => setCron(event.target.value)}
+              id={`${prefix}-name`}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               maxLength={120}
               required
               disabled={busy}
             />
-            <p className="text-xs text-muted-foreground">{t("timezoneHint")}</p>
           </Field>
+          <div className="grid gap-4 @xl/main:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor={`${prefix}-cron`}>{t("schedule")}</FieldLabel>
+              <Input
+                id={`${prefix}-cron`}
+                value={cron}
+                onChange={(event) => setCron(event.target.value)}
+                maxLength={120}
+                required
+                disabled={busy}
+                aria-describedby={`${prefix}-cron-hint`}
+                className="font-mono"
+              />
+              <p id={`${prefix}-cron-hint`} className="text-xs text-muted-foreground">
+                {t("timezoneHint")}
+              </p>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${prefix}-zone`}>{t("timezone")}</FieldLabel>
+              <Input
+                id={`${prefix}-zone`}
+                value={timezone}
+                onChange={(event) => setTimezone(event.target.value)}
+                maxLength={100}
+                required
+                disabled={busy}
+              />
+            </Field>
+          </div>
+          <fieldset className="space-y-2">
+            <legend className="mb-2 text-sm font-medium">{t("action")}</legend>
+            <RadioGroup
+              value={action}
+              onValueChange={(value) =>
+                setAction(value === "agent.run" ? "agent.run" : "device.sync")
+              }
+              disabled={busy || Boolean(target)}
+              aria-describedby={`${prefix}-action-hint`}
+              className="gap-2"
+            >
+              <Field orientation="horizontal">
+                <RadioGroupItem id={`${prefix}-sync`} value="device.sync" />
+                <FieldLabel htmlFor={`${prefix}-sync`}>{t("cloud.sync")}</FieldLabel>
+              </Field>
+              <Field orientation="horizontal">
+                <RadioGroupItem id={`${prefix}-agent`} value="agent.run" />
+                <FieldLabel htmlFor={`${prefix}-agent`}>{t("cloud.agent")}</FieldLabel>
+              </Field>
+            </RadioGroup>
+            <p id={`${prefix}-action-hint`} className="max-w-[65ch] text-xs text-muted-foreground">
+              {t(action === "device.sync" ? "cloud.syncHint" : "cloud.agentHint")}
+            </p>
+          </fieldset>
           <Field>
-            <FieldLabel htmlFor={`${prefix}-zone`}>{t("timezone")}</FieldLabel>
-            <Input
-              id={`${prefix}-zone`}
-              value={timezone}
-              onChange={(event) => setTimezone(event.target.value)}
-              maxLength={100}
+            <FieldLabel htmlFor={`${prefix}-device`}>{t("cloud.computer")}</FieldLabel>
+            <SelectField
+              id={`${prefix}-device`}
+              value={selected || null}
+              onValueChange={chooseDevice}
+              options={options}
+              placeholder={t("cloud.chooseDevice")}
+              disabled={busy || Boolean(target)}
               required
-              disabled={busy}
             />
           </Field>
-        </div>
-        <fieldset className="space-y-3">
-          <legend className="mb-2 text-sm font-medium">{t("action")}</legend>
-          <RadioGroup
-            value={action}
-            onValueChange={(value) =>
-              setAction(value === "agent.run" ? "agent.run" : "device.sync")
-            }
-            disabled={busy || Boolean(target)}
-          >
-            <Field orientation="horizontal">
-              <RadioGroupItem id={`${prefix}-sync`} value="device.sync" />
-              <FieldLabel htmlFor={`${prefix}-sync`}>{t("cloud.sync")}</FieldLabel>
-            </Field>
-            <Field orientation="horizontal">
-              <RadioGroupItem id={`${prefix}-agent`} value="agent.run" />
-              <FieldLabel htmlFor={`${prefix}-agent`}>{t("cloud.agent")}</FieldLabel>
-            </Field>
-          </RadioGroup>
-          <p className="max-w-[65ch] text-xs text-muted-foreground">
-            {t(action === "device.sync" ? "cloud.syncHint" : "cloud.agentHint")}
-          </p>
-        </fieldset>
-        <Field>
-          <FieldLabel htmlFor={`${prefix}-device`}>{t("cloud.computer")}</FieldLabel>
-          <SelectField
-            id={`${prefix}-device`}
-            value={selected || null}
-            onValueChange={chooseDevice}
-            options={options}
-            placeholder={t("cloud.chooseDevice")}
-            disabled={busy || Boolean(target)}
-            required
-          />
-        </Field>
-        {!device && (
-          <p role="status" className="text-sm text-muted-foreground">
-            {t(devices.length ? "cloud.epochHint" : "cloud.noDevices")}
-          </p>
-        )}
-        {action === "agent.run" && (
-          <>
-            <Field>
-              <FieldLabel htmlFor={`${prefix}-project`}>{t("cloud.project")}</FieldLabel>
-              <SelectField
-                id={`${prefix}-project`}
-                value={project || null}
-                onValueChange={setProject}
-                options={(device?.projects ?? []).map((item) => ({
-                  value: item.id,
-                  label: item.name,
-                }))}
-                placeholder={t("cloud.chooseProject")}
-                disabled={busy || Boolean(target)}
-                required
-              />
-            </Field>
-            <div className="grid gap-5 @xl/main:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor={`${prefix}-provider`}>{t("cloud.provider")}</FieldLabel>
-                <SelectField
-                  id={`${prefix}-provider`}
-                  value={provider}
-                  onValueChange={setProvider}
-                  options={(device?.capabilities ?? [])
-                    .filter((item) => item.available && item.provider !== "pi")
-                    .map((item) => ({
-                      value: item.provider,
-                      label: item.provider === "claude" ? "Claude Code" : "Codex",
-                    }))}
-                  disabled={busy}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`${prefix}-mode`}>{t("cloud.mode")}</FieldLabel>
-                <SelectField
-                  id={`${prefix}-mode`}
-                  value={mode}
-                  onValueChange={setMode}
-                  options={[
-                    { value: "run", label: t("cloud.runMode") },
-                    { value: "plan", label: t("cloud.planMode") },
-                  ]}
-                  disabled={busy}
-                />
-              </Field>
-            </div>
-            <Field>
-              <FieldLabel htmlFor={`${prefix}-prompt`}>{t("cloud.prompt")}</FieldLabel>
-              <Textarea
-                id={`${prefix}-prompt`}
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                maxLength={32_000}
-                required
-                disabled={busy}
-                className="max-h-80 min-h-32 overflow-y-auto"
-              />
-            </Field>
-            {contextLibrary && device && project && (
-              <ContextPicker
-                client={contextLibrary}
-                ownerKey={ownerKey}
-                target={{ deviceId: device.id, projectId: project }}
-                value={contextSelection}
-                onChange={setContextSelection}
-                disabled={busy}
-              />
-            )}
-          </>
-        )}
-        {budgetProps && <ContextBudget {...budgetProps} onChange={setBudget} />}
-        <section className="space-y-2 text-xs text-muted-foreground">
-          <h3 className="font-medium text-foreground">{t("preview")}</h3>
-          {preview.length ? (
-            <ul className="space-y-1">
-              {preview.map((date) => (
-                <li key={date}>
-                  {format.dateTime(new Date(date), "timestamp", { timeZone: timezone })}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p role="status">{t("cloud.INVALID_CRON")}</p>
+          {!device && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {t(devices.length ? "cloud.epochHint" : "cloud.noDevices")}
+            </p>
           )}
-        </section>
-        {invalid && (
-          <p role="alert" className="text-sm text-destructive-text">
-            {t("cloud.invalid")}
-          </p>
-        )}
-        <div className="flex gap-3">
-          <Button type="submit" disabled={busy || !available || !preview.length || !budgetReady}>
-            {c(busy ? "working" : "save")}
-          </Button>
-          <Button type="button" variant="ghost" disabled={busy} onClick={onCancel}>
-            {c("cancel")}
-          </Button>
-        </div>
+          {action === "agent.run" && (
+            <>
+              <Field>
+                <FieldLabel htmlFor={`${prefix}-project`}>{t("cloud.project")}</FieldLabel>
+                <SelectField
+                  id={`${prefix}-project`}
+                  value={project || null}
+                  onValueChange={setProject}
+                  options={(device?.projects ?? []).map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
+                  placeholder={t("cloud.chooseProject")}
+                  disabled={busy || Boolean(target)}
+                  required
+                />
+              </Field>
+              <div className="grid gap-4 @xl/main:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor={`${prefix}-provider`}>{t("cloud.provider")}</FieldLabel>
+                  <SelectField
+                    id={`${prefix}-provider`}
+                    value={provider}
+                    onValueChange={setProvider}
+                    options={(device?.capabilities ?? [])
+                      .filter((item) => item.available && item.provider !== "pi")
+                      .map((item) => ({
+                        value: item.provider,
+                        label: item.provider === "claude" ? "Claude Code" : "Codex",
+                      }))}
+                    disabled={busy}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`${prefix}-mode`}>{t("cloud.mode")}</FieldLabel>
+                  <SelectField
+                    id={`${prefix}-mode`}
+                    value={mode}
+                    onValueChange={setMode}
+                    options={[
+                      { value: "run", label: t("cloud.runMode") },
+                      { value: "plan", label: t("cloud.planMode") },
+                    ]}
+                    disabled={busy}
+                  />
+                </Field>
+              </div>
+              <Field>
+                <FieldLabel htmlFor={`${prefix}-prompt`}>{t("cloud.prompt")}</FieldLabel>
+                <Textarea
+                  id={`${prefix}-prompt`}
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                  maxLength={32_000}
+                  required
+                  disabled={busy}
+                  className="max-h-80 min-h-32 resize-y overflow-y-auto leading-relaxed"
+                />
+              </Field>
+              {contextLibrary && device && project && (
+                <ContextPicker
+                  client={contextLibrary}
+                  ownerKey={ownerKey}
+                  target={{ deviceId: device.id, projectId: project }}
+                  value={contextSelection}
+                  onChange={setContextSelection}
+                  disabled={busy}
+                />
+              )}
+            </>
+          )}
+          {budgetProps && <ContextBudget {...budgetProps} onChange={setBudget} />}
+          <section className="space-y-2 border-t border-border pt-4 text-xs text-muted-foreground">
+            <h3 className="font-medium text-foreground">{t("preview")}</h3>
+            {preview.length ? (
+              <ul className="grid gap-x-6 gap-y-1 tabular-nums @xl/main:grid-cols-2">
+                {preview.map((date) => (
+                  <li key={date}>
+                    <time dateTime={date}>
+                      {format.dateTime(new Date(date), "timestamp", { timeZone: timezone })}
+                    </time>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p role="status">{t("cloud.INVALID_CRON")}</p>
+            )}
+          </section>
+          {invalid && <FieldError>{t("cloud.invalid")}</FieldError>}
+          <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+            <Button type="submit" disabled={busy || !available || !preview.length || !budgetReady}>
+              {c(busy ? "working" : "save")}
+            </Button>
+            <Button type="button" variant="ghost" disabled={busy} onClick={onCancel}>
+              {c("cancel")}
+            </Button>
+          </div>
+        </FieldGroup>
       </form>
     </section>
   );

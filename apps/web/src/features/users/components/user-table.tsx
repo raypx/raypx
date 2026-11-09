@@ -8,6 +8,7 @@ import {
 import { assignedRoles, type AuthRole } from "@raypx/auth/access";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
+import { Avatar } from "@raypx/ui/avatar";
 import { DataTable } from "@raypx/ui/data-table";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { IconButton } from "@raypx/ui/icon-button";
@@ -53,14 +54,22 @@ const columns = column.columns([
     cell: function UserNameCell({ row: { original: user } }) {
       const { date, users: t } = useUserTableContext();
       return (
-        <>
-          <span className="font-medium">{user.name}</span>
-          <span className="block text-muted-foreground">{user.email}</span>
-          <span className="mt-1 block text-xs text-muted-foreground @3xl/main:hidden">
-            {t(user.emailVerified ? "verified" : "unverified")}
-            <span className="block">{date.format(new Date(user.createdAt))}</span>
-          </span>
-        </>
+        <div className="flex items-start gap-3">
+          <Avatar
+            name={user.name || user.email}
+            size="small"
+            aria-hidden="true"
+            className="mt-0.5 shrink-0"
+          />
+          <div className="min-w-0">
+            <span className="font-medium">{user.name}</span>
+            <span className="block text-muted-foreground">{user.email}</span>
+            <span className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground @3xl/main:hidden">
+              {t(user.emailVerified ? "verified" : "unverified")}
+              <time dateTime={user.createdAt}>{date.format(new Date(user.createdAt))} UTC</time>
+            </span>
+          </div>
+        </div>
       );
     },
   }),
@@ -81,7 +90,17 @@ const columns = column.columns([
     cell: function RoleCell({ row }) {
       const { users: t } = useUserTableContext();
       const roles = assignedRoles(row.original.role);
-      return roles.length ? roles.map((value) => t(value)).join(", ") : t("unknown");
+      return (
+        <span className="flex flex-wrap gap-1">
+          {roles.length
+            ? roles.map((value) => (
+                <Badge key={value} variant={value === "admin" ? "secondary" : "outline"}>
+                  {t(value)}
+                </Badge>
+              ))
+            : t("unknown")}
+        </span>
+      );
     },
   }),
   column.accessor("createdAt", {
@@ -90,7 +109,11 @@ const columns = column.columns([
     },
     cell: function RegisteredCell({ getValue }) {
       const { date } = useUserTableContext();
-      return date.format(new Date(getValue()));
+      return (
+        <time dateTime={getValue()} className="text-xs tabular-nums">
+          {date.format(new Date(getValue()))} UTC
+        </time>
+      );
     },
   }),
   column.display({
@@ -141,7 +164,10 @@ export function UserTable({
   const c = useTranslations("common");
   const t = useTranslations("users");
   const locale = useLocale();
-  const date = useMemo(() => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }), [locale]);
+  const date = useMemo(
+    () => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }),
+    [locale],
+  );
   const context = useMemo(
     () => ({ accountId, canChange, onEdit, date, common: c, users: t }),
     [accountId, canChange, onEdit, date, c, t],
@@ -156,26 +182,28 @@ export function UserTable({
   });
   return (
     <UserTableContext value={context}>
-      <DataTable
-        label={c("users")}
-        table={table}
-        columnPresentation={{
-          name: {
-            header: { className: "w-1/2 @3xl/main:w-auto" },
-            cellClassName: "max-w-64 whitespace-normal wrap-anywhere",
-          },
-          emailVerified: { header: { className: wideColumn }, cellClassName: wideColumn },
-          role: { cellClassName: "whitespace-normal wrap-anywhere" },
-          createdAt: {
-            header: {
-              className: wideColumn,
-              "aria-sort": table.state.sorting[0]?.desc === false ? "ascending" : "descending",
+      <div className="@max-3xl/main:[&_table]:block @max-3xl/main:[&_tbody]:block @max-3xl/main:[&_tbody>tr]:grid @max-3xl/main:[&_tbody>tr]:grid-cols-[minmax(0,1fr)_auto] @max-3xl/main:[&_thead]:sr-only">
+        <DataTable
+          label={c("users")}
+          table={table}
+          columnPresentation={{
+            name: {
+              cellClassName:
+                "col-span-2 min-w-0 whitespace-normal wrap-anywhere @3xl/main:max-w-64",
             },
-            cellClassName: wideColumn,
-          },
-          actions: { header: { className: "w-12" } },
-        }}
-      />
+            emailVerified: { header: { className: wideColumn }, cellClassName: wideColumn },
+            role: { cellClassName: "self-center whitespace-normal wrap-anywhere" },
+            createdAt: {
+              header: {
+                className: wideColumn,
+                "aria-sort": table.state.sorting[0]?.desc === false ? "ascending" : "descending",
+              },
+              cellClassName: wideColumn,
+            },
+            actions: { header: { className: "w-12" } },
+          }}
+        />
+      </div>
     </UserTableContext>
   );
 }

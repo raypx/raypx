@@ -141,6 +141,7 @@ export default {
     back: "Back to browsing",
   },
   dash: {
+    auditPage: "Page {page}",
     nav: {
       console: "Admin console",
       overview: "Overview",
@@ -194,6 +195,7 @@ export default {
     after: "After",
   },
   users: {
+    clearSearch: "Clear search",
     searchBy: "Search by",
     search: "Search users",
     email: "Email address",
@@ -284,6 +286,10 @@ export default {
     viewError: "Unable to open this view. Reload the app and try again.",
   },
   tasks: {
+    searchDevices: "Search computers…",
+    noDevicesMatch: "No matching computers.",
+    searchModels: "Search models…",
+    noModelsMatch: "No matching models.",
     modelChecking: "Checking model availability…",
     newOutput: "New output · Back to latest",
     backToLatest: "Back to latest",

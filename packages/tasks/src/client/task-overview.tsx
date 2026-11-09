@@ -34,9 +34,13 @@ export function TaskOverview({
     },
   ] as const;
   return (
-    <div className="mb-3 space-y-2">
-      <h2 className="text-base">{t("taskHistory")}</h2>
-      <div role="group" aria-label={t("pageOverview")} className="flex flex-wrap gap-1">
+    <div className="mb-3 flex flex-col gap-2">
+      <h2 className="text-sm font-semibold">{t("taskHistory")}</h2>
+      <div
+        role="group"
+        aria-label={t("pageOverview")}
+        className="flex flex-wrap gap-1 border-b border-border pb-2"
+      >
         {groups.map((group) => (
           <Button
             key={group.status}
@@ -49,7 +53,9 @@ export function TaskOverview({
               <span aria-hidden="true" className="size-1.5 rounded-full bg-foreground" />
             )}
             {t(group.label)}
-            <span className="text-xs text-muted-foreground tabular-nums">{group.count}</span>
+            <span className="min-w-5 rounded-sm bg-muted px-1 text-center text-xs text-muted-foreground tabular-nums">
+              {group.count}
+            </span>
           </Button>
         ))}
       </div>

@@ -147,3 +147,30 @@ it("shows retryable list failures instead of an empty list", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   expect(await screen.findByText(member.email)).toBeTruthy();
 });
+
+it("clears the applied server search and returns to the first page", async () => {
+  page();
+  await screen.findByText(member.email);
+  fireEvent.change(screen.getByLabelText("Search users"), { target: { value: "lin" } });
+  fireEvent.click(screen.getByRole("button", { name: "Search users" }));
+  await waitFor(() =>
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ query: expect.objectContaining({ searchValue: "lin" }) }),
+    ),
+  );
+  await waitFor(() => expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  await waitFor(() =>
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ query: expect.objectContaining({ offset: 20 }) }),
+    ),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
+  expect(screen.getByLabelText("Search users")).toHaveValue("");
+  await waitFor(() => {
+    const query = mocks.list.mock.lastCall?.[0].query;
+    expect(query).toMatchObject({ offset: 0, limit: 20 });
+    expect(query).not.toHaveProperty("searchValue");
+  });
+  expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
+});

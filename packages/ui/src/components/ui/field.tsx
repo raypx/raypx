@@ -13,18 +13,21 @@ const FieldGroup = styledSlot(
   "group/field-group @container/field-group flex w-full flex-col gap-5 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4",
 );
 
-const fieldVariants = cva("group/field flex w-full gap-2 data-[invalid=true]:text-destructive", {
-  variants: {
-    orientation: {
-      vertical: "flex-col *:w-full [&>.sr-only]:w-auto",
-      horizontal:
-        "flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
-      responsive:
-        "flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+const fieldVariants = cva(
+  "group/field flex w-full min-w-0 gap-2 data-[invalid=true]:text-destructive-text",
+  {
+    variants: {
+      orientation: {
+        vertical: "flex-col *:w-full [&>.sr-only]:w-auto",
+        horizontal:
+          "flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+        responsive:
+          "flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+      },
     },
+    defaultVariants: { orientation: "vertical" },
   },
-  defaultVariants: { orientation: "vertical" },
-});
+);
 
 function Field({
   className,
@@ -55,7 +58,7 @@ function FieldError({ className, children, ...props }: ComponentProps<"div">) {
     <div
       role="alert"
       data-slot="field-error"
-      className={cn("text-sm font-normal text-destructive", className)}
+      className={cn("text-sm font-normal text-destructive-text", className)}
       {...props}
     >
       {children}

@@ -51,6 +51,7 @@ experiment reports belong in Git history, rather than the current guides.
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
 - [Shared Hugeicons package](development/icons.md)
+- [Frontend components and source adaptation](development/ui.md)
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Shared logger](../packages/logger/README.md)
 - [Raypx Kit library changes](development/intl-release.md)

@@ -11,7 +11,7 @@ for (const width of [360, 1440])
   for (const locale of ["en", "zh"] as const)
     for (const theme of ["light", "dark"] as const) {
       test(
-        `Web isolated administration overview and audit ${width}px ${locale} ${theme}`,
+        `Web isolated administration and public privacy ${width}px ${locale} ${theme}`,
         { tag: "@web" },
         async ({ page }) => {
           await page.setViewportSize({ width, height: 900 });
@@ -40,6 +40,13 @@ for (const width of [360, 1440])
                   actor: "操作人 ID",
                   apply: "应用筛选",
                   details: "查看详情",
+                  settings: "站点设置",
+                  siteName: "站点名称",
+                  save: "保存修改",
+                  discard: "放弃修改",
+                  privacy: "隐私",
+                  diagnostics: "可选诊断",
+                  health: "服务状态",
                 }
               : {
                   account: "Account menu",
@@ -57,6 +64,13 @@ for (const width of [360, 1440])
                   actor: "Actor ID",
                   apply: "Apply filters",
                   details: "View details",
+                  settings: "Site settings",
+                  siteName: "Site name",
+                  save: "Save changes",
+                  discard: "Discard changes",
+                  privacy: "Privacy",
+                  diagnostics: "Optional diagnostics",
+                  health: "Service status",
                 };
           await page.emulateMedia({ reducedMotion: "reduce" });
           const account = await signedInAccount(page);
@@ -91,6 +105,22 @@ for (const width of [360, 1440])
                   json: {
                     observedAt: new Date().toISOString(),
                     checks: { database: "ok", redis: "not-configured", relay: "unavailable" },
+                  },
+                }),
+          );
+          await page.route("**/rpc/configuration/get", (route) =>
+            route.request().method() === "OPTIONS"
+              ? authResponse(route, null, 204)
+              : authResponse(route, {
+                  json: {
+                    values: {
+                      siteName: "Raypx",
+                      registrationEnabled: true,
+                      cleanupEnabled: false,
+                    },
+                    revision: 1,
+                    updatedAt: null,
+                    deployment: { jobsEnabled: false, mailConfigured: false },
                   },
                 }),
           );
@@ -134,6 +164,13 @@ for (const width of [360, 1440])
             path: test.info().outputPath(`overview-${width}-${locale}-${theme}.png`),
             fullPage: true,
           });
+          await page
+            .getByRole("heading", { name: copy.health, exact: true })
+            .scrollIntoViewIfNeeded();
+          await capture(page, {
+            path: test.info().outputPath(`health-${width}-${locale}-${theme}.png`),
+            fullPage: true,
+          });
           await page.getByRole("link", { name: copy.audit, exact: true }).click();
           await expect(page.getByRole("heading", { name: copy.audit, exact: true })).toBeVisible();
           await expect(page.getByText(copy.unknown, { exact: true })).toBeVisible();
@@ -151,6 +188,41 @@ for (const width of [360, 1440])
             path: test.info().outputPath(`audit-${width}-${locale}-${theme}.png`),
             fullPage: true,
           });
+          await page.getByRole("link", { name: copy.settings, exact: true }).click();
+          await expect(
+            page.getByRole("heading", { name: copy.settings, exact: true }),
+          ).toBeVisible();
+          const siteName = page.getByRole("textbox", { name: copy.siteName, exact: true });
+          await expect(siteName).toHaveValue("Raypx");
+          await expect(page.getByRole("button", { name: copy.save, exact: true })).toBeDisabled();
+          await siteName.fill("Unsaved draft");
+          await expect(page.getByRole("button", { name: copy.save, exact: true })).toBeEnabled();
+          await page.getByRole("button", { name: copy.discard, exact: true }).click();
+          await expect(siteName).toHaveValue("Raypx");
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+          ).toBe(true);
+          await capture(page, {
+            path: test.info().outputPath(`site-settings-${width}-${locale}-${theme}.png`),
+            fullPage: true,
+          });
+          await page.goto(web + "/privacy");
+          await expect(
+            page.getByRole("heading", { level: 1, name: copy.privacy, exact: true }),
+          ).toBeVisible();
+          await expect(page.getByRole("complementary")).toHaveCount(0);
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+          ).toBe(true);
+          await capture(page, {
+            path: test.info().outputPath(`privacy-${width}-${locale}-${theme}.png`),
+            fullPage: true,
+          });
+          const diagnostics = page.getByRole("link", { name: copy.diagnostics, exact: true });
+          await diagnostics.click();
+          await expect(page).toHaveURL(web + "/privacy#diagnostics");
+          await expect(diagnostics).toHaveAttribute("aria-current", "page");
+          expect(privateReads).toBe(0);
         },
       );
     }

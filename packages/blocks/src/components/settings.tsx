@@ -25,11 +25,13 @@ export interface SettingsPageProps {
 
 export function SettingsPage({ title, description, footnote, children }: SettingsPageProps) {
   return (
-    <section className="@container/settings rounded-xl border border-border bg-card p-6 text-card-foreground @max-xl/main:p-4">
-      <header className="mb-5">
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+    <section className="@container/settings flex min-w-0 flex-col text-foreground">
+      <header className="mb-2 border-b border-border pb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-balance">{title}</h1>
         {description && (
-          <p className="mt-2 max-w-prose text-sm text-muted-foreground">{description}</p>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         )}
       </header>
       {children}
@@ -56,7 +58,7 @@ export function SettingsSection({
   return (
     <section
       aria-labelledby={id}
-      className="grid grid-cols-1 items-start gap-3 border-b border-border py-5 @min-xl/settings:grid-cols-[9rem_minmax(0,1fr)] @min-xl/settings:gap-6"
+      className="grid min-w-0 grid-cols-1 items-start gap-3 border-b border-border py-5 last:border-b-0 @min-xl/settings:grid-cols-[minmax(9rem,1fr)_minmax(0,1.4fr)] @min-xl/settings:gap-8"
     >
       <div className="min-w-0 pt-1.5">
         <h2 id={id} className="flex items-center gap-2 text-sm font-medium">
@@ -64,10 +66,14 @@ export function SettingsSection({
           {title}
         </h2>
         {description && (
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
-      <div className="flex min-w-0 flex-col items-start @min-xl/settings:items-end">{children}</div>
+      <div className="flex min-w-0 flex-col items-start gap-2 @min-xl/settings:items-end">
+        {children}
+      </div>
     </section>
   );
 }

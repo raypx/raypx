@@ -21,6 +21,11 @@ and 16px by default; navigation icons stay 20px. Controls use the shared radius
 scale: `md` for small controls and `lg` for default and larger controls.
 Use Tailwind's spacing scale, preferring 4px steps, with 2px adjustments inside
 compact controls. Related controls use 8px gaps, groups 16px and sections 24px.
+Keep workbench surfaces flat: use the background for the main canvas, muted surfaces
+to separate regions, and a single border for grouped controls or editable areas.
+Settings and data lists use labelled rows and separators rather than nested cards.
+Reserve `shadow-popover` for floating menus, search results and popovers; static rows
+do not lift on hover. Use tabular numerals for counts, dates and table measurements.
 The shell owns page widths and gutters: document pages cap at 48rem, workbenches
 at 100rem, and tools fill the content region. Pages do not add outer widths or
 gutters. Sidebar navigation and project shortcuts share a 36px minimum row and
@@ -54,6 +59,19 @@ Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.
 Theme and language follow the device by default and retain explicit local choices.
 Respect reduced motion, narrow screens, long Chinese/English content and large fonts.
+High-frequency controls respond immediately; color and focus transitions use the
+shared 150ms control cadence. Menus and popovers enter in 150ms with ease-out and
+small displacement; sheets may use 200ms. Animate state changes, not page sections
+or every arriving message. Reduced motion removes movement, fades and spinning.
+Keep browser text selection and carets aligned with the neutral palette. Coarse
+pointers receive 44px menu/search targets and expanded checkbox/radio/switch hit areas.
+
+Searchable option sets use the Base UI Combobox from UI. A labelled trigger opens
+a separately labelled search input, grouped options retain their headings, disabled
+choices remain readable and an empty search has a concise status. Escape closes
+the popup and restores focus without changing the selection. Multiline input with
+a context or action toolbar composes InputGroupTextarea and block addons; its
+value, ref, keyboard handlers and submission state remain owned by the caller.
 
 Let icons, layout and interaction carry meaning before prose. Page titles use the
 navigation name; add at most one short subtitle, only for what the controls cannot show.

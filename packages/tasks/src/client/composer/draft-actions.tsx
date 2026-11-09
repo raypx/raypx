@@ -65,7 +65,7 @@ export function ComposerDraftActions({
           </IconButton>
         </div>
         <Button type="submit" disabled={!sendable}>
-          <SendIcon aria-hidden="true" />
+          <SendIcon data-icon="inline-start" aria-hidden="true" />
           {t(busy ? "sending" : guest ? "signInToSend" : "send")}
         </Button>
       </div>

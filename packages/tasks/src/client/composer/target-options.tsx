@@ -48,7 +48,7 @@ export function ComposerTargetOptions({
             type="button"
             variant="ghost"
             size="sm"
-            className="group max-w-full justify-start gap-2 px-0"
+            className="group max-w-full justify-start gap-2"
           />
         }
       >
@@ -58,7 +58,7 @@ export function ComposerTargetOptions({
           {project?.name ?? device?.name}
         </span>
       </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-3 pt-3">
+      <CollapsibleContent className="flex flex-col gap-3 rounded-lg bg-muted/40 p-3">
         {!targetFixed && (
           <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
             <Field>

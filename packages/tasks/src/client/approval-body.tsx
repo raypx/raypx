@@ -9,7 +9,7 @@ import { approvalChanges } from "./approval-changes.ts";
 import { TaskMarkdown } from "./markdown.tsx";
 
 const rawContentClassName =
-  "max-h-112 overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-[1.7] whitespace-pre-wrap wrap-anywhere";
+  "max-h-112 overflow-auto rounded-lg bg-muted/50 p-3 font-mono text-xs leading-[1.7] whitespace-pre-wrap wrap-anywhere";
 const lineNumberClassName = "min-w-[3em] px-[0.5em] text-right text-muted-foreground select-none";
 
 export function ApprovalBody({ request }: { request: Pick<HumanRequest, "kind" | "body"> }) {
@@ -26,11 +26,11 @@ export function ApprovalBody({ request }: { request: Pick<HumanRequest, "kind" |
         </TabsList>
         <HelpHint label={t("changesHelp")} description={t("diffHint")} />
       </div>
-      <TabsContent value="diff" className="space-y-3">
+      <TabsContent value="diff" className="flex flex-col gap-3">
         {files.map((file, index) => (
           <section
             key={`${file.path}:${index}`}
-            className="overflow-hidden rounded-md border border-border"
+            className="overflow-hidden rounded-lg border border-border"
           >
             <h4 className="break-all border-b border-border bg-muted/40 px-3 py-2 font-mono text-xs">
               {file.previousPath && (

@@ -101,7 +101,7 @@ export function TaskInputComposer({
   if (!modes.length) return null;
   return (
     <form
-      className="space-y-3 border-t border-border pt-5"
+      className="flex flex-col gap-3 border-t border-border pt-4"
       onSubmit={(event) => {
         event.preventDefault();
         if (modes.includes("queue")) void send("queue");

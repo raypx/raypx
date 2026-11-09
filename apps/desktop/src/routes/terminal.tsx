@@ -3,6 +3,7 @@ import { formText } from "../form-data.ts";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TerminalIcon } from "@raypx/icons/terminal";
 import { StopIcon } from "@raypx/icons/stop";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
@@ -314,8 +315,8 @@ function TerminalPage() {
           <AlertDescription>{tasks("projectUnavailableHint")}</AlertDescription>
         </Alert>
       )}
-      <header className="mb-6">
-        <h1>{t("title")}</h1>
+      <header className="mb-5">
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
       </header>
       {!isDesktop() && (
         <Alert role="status" className="mb-5">
@@ -327,7 +328,12 @@ function TerminalPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <form onSubmit={open} className="flex flex-col gap-4" aria-describedby="terminal-permissions">
+      <form
+        onSubmit={open}
+        className="flex flex-col gap-4"
+        aria-describedby="terminal-permissions"
+        aria-busy={opening}
+      >
         {!project.cwd && (
           <Field data-disabled={running || opening}>
             <FieldLabel htmlFor="terminal-cwd">{command("cwd")}</FieldLabel>
@@ -343,9 +349,22 @@ function TerminalPage() {
         )}
         <Collapsible open={advanced} onOpenChange={setAdvanced}>
           <CollapsibleTrigger
-            render={<Button type="button" variant="ghost" disabled={running || opening} />}
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="group w-fit"
+                disabled={running || opening}
+              />
+            }
           >
             {t("advanced")}
+            <ChevronDownIcon
+              aria-hidden="true"
+              data-icon="inline-end"
+              className="group-data-panel-open:rotate-180 motion-safe:transition-transform"
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <FieldGroup className="grid gap-4 pt-4 @min-xl/main:grid-cols-2">
@@ -401,26 +420,28 @@ function TerminalPage() {
         </p>
       </form>
       <Separator className="mt-6" />
-      <div
-        className="flex items-center gap-2 pt-6 pb-3 text-xs text-muted-foreground"
-        role="status"
-      >
-        {running ? (
-          <>
-            <span className="size-1.5 rounded-full bg-foreground" />
-            {t("running")}
-          </>
-        ) : exitCode !== null ? (
-          `${t("finished")} (${exitCode})`
-        ) : (
-          t("empty")
-        )}
+      <div className="mt-5 overflow-hidden rounded-lg border border-border">
+        <div
+          className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground tabular-nums"
+          role="status"
+        >
+          {running ? (
+            <>
+              <span className="size-1.5 rounded-full bg-foreground" />
+              {t("running")}
+            </>
+          ) : exitCode !== null ? (
+            `${t("finished")} (${exitCode})`
+          ) : (
+            t("empty")
+          )}
+        </div>
+        <div
+          className="h-[42dvh] min-h-95 overflow-hidden p-4 [&_.xterm]:h-full [&_.xterm-viewport]:rounded-sm"
+          ref={container}
+          aria-label={c("terminal")}
+        />
       </div>
-      <div
-        className="h-[42dvh] min-h-95 overflow-hidden rounded-lg border border-border p-4 [&_.xterm]:h-full [&_.xterm-viewport]:rounded-sm"
-        ref={container}
-        aria-label={c("terminal")}
-      />
       {!started && (
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("emptyHint")}</p>
       )}

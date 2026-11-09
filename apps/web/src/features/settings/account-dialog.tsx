@@ -68,10 +68,7 @@ export default function AccountSettingsDialog({
           {(id) => <InstanceRegistration key={id} accountId={id} />}
         </PrivateSettings>
       </AccountSettingsContent>
-      <AccountSettingsContent
-        value="password"
-        className="rounded-xl border border-border bg-background p-5"
-      >
+      <AccountSettingsContent value="password" className="min-w-0">
         <PrivateSettings>
           {(id) => (
             <PasswordChangeDialog
@@ -88,10 +85,7 @@ export default function AccountSettingsDialog({
           )}
         </PrivateSettings>
       </AccountSettingsContent>
-      <AccountSettingsContent
-        value="sessions"
-        className="rounded-xl border border-border bg-background p-5"
-      >
+      <AccountSettingsContent value="sessions" className="min-w-0">
         <PrivateSettings>
           {(id) =>
             session.data?.session.id ? (

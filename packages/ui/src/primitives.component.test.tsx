@@ -9,7 +9,12 @@ import { Logo } from "./logo.tsx";
 import { Badge } from "./components/ui/badge.tsx";
 import { Button } from "./components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "./components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group.tsx";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupTextarea,
+} from "./components/ui/input-group.tsx";
 import { Toaster, toast } from "./components/ui/toast.tsx";
 
 afterEach(() => cleanup());
@@ -103,6 +108,26 @@ describe("form primitives", () => {
 
     await user.click(screen.getByText("@"));
     expect(screen.getByRole("textbox", { name: "Workspace" })).toHaveFocus();
+  });
+
+  it("keeps multiline input and addon buttons independently operable", async () => {
+    const user = userEvent.setup();
+    render(
+      <InputGroup>
+        <InputGroupTextarea aria-label="Notes" defaultValue="草稿" maxLength={12} />
+        <InputGroupAddon align="block-end">
+          <span>字数 / Characters</span>
+          <Button>Attach</Button>
+        </InputGroupAddon>
+      </InputGroup>,
+    );
+    const textarea = screen.getByRole("textbox", { name: "Notes" });
+    await user.click(screen.getByText("字数 / Characters"));
+    expect(textarea).toHaveFocus();
+    await user.keyboard("{End}{Enter}继续");
+    expect(textarea).toHaveValue("草稿\n继续");
+    await user.click(screen.getByRole("button", { name: "Attach" }));
+    expect(screen.getByRole("button", { name: "Attach" })).toHaveFocus();
   });
 });
 

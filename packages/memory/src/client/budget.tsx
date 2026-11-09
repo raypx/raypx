@@ -103,7 +103,7 @@ function Budget(props: Props) {
     onChange({ key, status, exceeded });
   }, [key, status, exceeded, onChange]);
   return (
-    <div className="space-y-1 text-xs">
+    <div className="space-y-1 text-xs text-muted-foreground tabular-nums">
       {budget && (
         <output
           aria-label={t("promptBudget")}

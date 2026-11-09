@@ -12,6 +12,7 @@ import { cn } from "@raypx/ui/lib/utils";
 import { FolderIcon } from "@raypx/icons/folder";
 import { GitBranchIcon } from "@raypx/icons/git-branch";
 import { LaptopIcon } from "@raypx/icons/laptop";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { DevicesIcon } from "@raypx/icons/devices";
 
 /** Project selection is navigation only; it never creates work. */
@@ -39,7 +40,10 @@ export function ProjectList({
     client,
   );
   return (
-    <section className={compact ? "space-y-2" : "space-y-6"} aria-label={t("connectedComputers")}>
+    <section
+      className={compact ? "flex flex-col gap-2" : "flex flex-col gap-6"}
+      aria-label={t("connectedComputers")}
+    >
       {!compact && (
         <header>
           <h1>{t("projectsTitle")}</h1>
@@ -74,7 +78,10 @@ export function ProjectList({
       {data
         ?.filter((device) => !device.revoked)
         .map((device) => (
-          <section key={device.id} className={compact ? "space-y-2" : "space-y-3"}>
+          <section
+            key={device.id}
+            className={compact ? "flex flex-col gap-2" : "flex flex-col gap-2"}
+          >
             <h2 className="flex items-center gap-2 text-sm font-medium">
               {!compact && (
                 <LaptopIcon aria-hidden="true" className="size-4 text-muted-foreground" />
@@ -106,16 +113,16 @@ export function ProjectList({
                 ))}
               </div>
             ) : (
-              <ul className="grid gap-3 @2xl/main:grid-cols-2 @5xl/main:grid-cols-3">
+              <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
                 {device.projects.map((project) => {
                   const key = `${id}-${device.id}-${project.id}`;
                   return (
                     <li key={project.id}>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         aria-labelledby={`${key}-name`}
                         aria-describedby={`${key}-meta`}
-                        className="h-auto w-full items-start justify-start gap-3 rounded-xl p-4 text-left whitespace-normal"
+                        className="h-auto w-full items-center justify-start gap-3 rounded-none p-3 text-left whitespace-normal"
                         onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
                       >
                         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
@@ -142,6 +149,10 @@ export function ProjectList({
                             )}
                           </span>
                         </span>
+                        <ChevronRightIcon
+                          aria-hidden="true"
+                          className="shrink-0 text-muted-foreground"
+                        />
                       </Button>
                     </li>
                   );

@@ -39,7 +39,7 @@ export function ComposerDraftList({
             type="button"
             variant="ghost"
             size="sm"
-            className="group mb-2 w-full justify-start gap-2 text-muted-foreground"
+            className="group mb-1 w-full justify-start gap-2"
           />
         }
       >
@@ -49,14 +49,14 @@ export function ComposerDraftList({
         <ChevronDownIcon aria-hidden="true" className="ml-auto group-data-panel-open:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border">
           {drafts.map((draft) => (
             <li key={draft.id} className="flex items-center gap-1 px-1">
               <Button
                 type="button"
                 variant="ghost"
                 aria-pressed={draft.id === activeId}
-                className="h-auto min-h-12 min-w-0 flex-1 justify-start gap-2.5 px-2 py-2 text-left whitespace-normal"
+                className="h-auto min-h-12 min-w-0 flex-1 justify-start gap-2.5 px-2 py-2 text-left whitespace-normal aria-pressed:bg-accent"
                 disabled={busy}
                 onClick={() => onOpen(draft)}
               >

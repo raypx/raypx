@@ -4,7 +4,7 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
 import { ModelPicker } from "./model-picker.tsx";
-import { selectOption } from "../../tests/helpers/select.ts";
+import userEvent from "@testing-library/user-event";
 
 const first: ModelSelection = { provider: "local", model: "first", connectionId: "a".repeat(64) };
 const second: ModelSelection = { provider: "local", model: "second", connectionId: "a".repeat(64) };
@@ -41,7 +41,9 @@ it("selects a device default, changes a run model and explicitly saves the defau
     </BrowserLanguageProvider>,
   );
   await waitFor(() => expect(ready).toHaveBeenLastCalledWith(true));
-  await selectOption("Model", JSON.stringify([second.provider, second.model, second.connectionId]));
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("combobox", { name: "Model" }));
+  await user.click(screen.getByRole("option", { name: "local · second · http://localhost:1234" }));
   fireEvent.click(screen.getByRole("button", { name: "Use as device default" }));
   await waitFor(() => expect(setDefault).toHaveBeenCalledWith({ model: second }));
 });
@@ -64,4 +66,88 @@ it("does not apply a late catalog after the picker loses its owner", async () =>
   resolve(catalog);
   await Promise.resolve();
   expect(changed).not.toHaveBeenCalled();
+});
+
+it("searches providers and models with the keyboard, then restores focus", async () => {
+  const user = userEvent.setup();
+  const changed = vi.fn();
+  render(
+    <BrowserLanguageProvider>
+      <ModelPicker
+        client={{ list: async () => catalog, setDefault: async () => ({ default: null }) }}
+        value={first}
+        onChange={changed}
+      />
+    </BrowserLanguageProvider>,
+  );
+  const trigger = screen.getByRole("combobox", { name: "Model" });
+  await waitFor(() => expect(trigger).toBeEnabled());
+  await user.click(trigger);
+  const search = screen.getByRole("combobox", { name: "Search models…" });
+  await user.type(search, "LOCAL");
+  expect(screen.getAllByRole("option")).toHaveLength(2);
+  await user.clear(search);
+  await user.type(search, "second");
+  expect(screen.queryByRole("option", { name: /local · first/ })).not.toBeInTheDocument();
+  await user.keyboard("[ArrowDown][Enter]");
+  await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
+  expect(changed).toHaveBeenLastCalledWith(second);
+  expect(trigger).toHaveFocus();
+});
+
+it("keeps the current unavailable model visible and Escape cancels an empty search", async () => {
+  const user = userEvent.setup();
+  const changed = vi.fn();
+  const unavailable = {
+    ...catalog,
+    models: catalog.models.map((model) => ({ ...model, configured: false })),
+  };
+  render(
+    <BrowserLanguageProvider>
+      <ModelPicker
+        client={{ list: async () => unavailable, setDefault: async () => ({ default: null }) }}
+        value={first}
+        onChange={changed}
+      />
+    </BrowserLanguageProvider>,
+  );
+  const trigger = screen.getByRole("combobox", { name: "Model" });
+  await waitFor(() => expect(trigger).toBeEnabled());
+  await user.click(trigger);
+  expect(screen.getByRole("option", { name: /local · first/ })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  expect(screen.queryByRole("option", { name: /local · second/ })).not.toBeInTheDocument();
+  await user.type(screen.getByRole("combobox", { name: "Search models…" }), "absent");
+  expect(screen.getByText("No matching models.")).toBeVisible();
+  await user.keyboard("[Escape]");
+  await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
+  expect(changed).not.toHaveBeenCalled();
+  expect(trigger).toHaveTextContent("local · first");
+  expect(trigger).toHaveFocus();
+});
+
+it("distinguishes identically named models on separate connections", async () => {
+  const user = userEvent.setup();
+  const target = { ...first, connectionId: "b".repeat(64) };
+  const duplicate = { ...catalog.models[0]!, selection: target, origin: "http://localhost:5678" };
+  const changed = vi.fn();
+  render(
+    <BrowserLanguageProvider>
+      <ModelPicker
+        client={{
+          list: async () => ({ models: [catalog.models[0]!, duplicate], default: first }),
+          setDefault: async () => ({ default: null }),
+        }}
+        value={first}
+        onChange={changed}
+      />
+    </BrowserLanguageProvider>,
+  );
+  const trigger = screen.getByRole("combobox", { name: "Model" });
+  await waitFor(() => expect(trigger).toBeEnabled());
+  await user.click(trigger);
+  await user.click(screen.getByRole("option", { name: "local · first · http://localhost:5678" }));
+  expect(changed).toHaveBeenLastCalledWith(target);
 });

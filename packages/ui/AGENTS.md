@@ -14,6 +14,14 @@ packages own page layout, forms, navigation and product behavior.
   instead of height overrides. Button also has 24px `xs` and matching icon variants.
   DialogContent accepts Base UI `backdropProps`; nested dialogs can opt into their
   own backdrop with `forceRender` for independent dimming and outside dismissal.
+- `components/ui/combobox`: Base UI searchable selection parts. Root retains the
+  generic controlled value/items/filter API. Compose Trigger/Value and a Content
+  containing a labelled Input, Empty and List; grouped List callbacks use Group
+  with `items`, Label and Collection. Item supports disabled choices. The caller
+  supplies labels, item identity, loading/error feedback and search copy.
+- `components/ui/input-group`: InputGroupInput and InputGroupTextarea retain native
+  input/textarea props and refs. Block addons make the group multiline; clicking
+  an addon focuses its input without stealing focus from nested buttons.
 - `components/ui/dialog`: callers supply translated `closeLabel` when displaying
   a built-in close button in DialogContent or DialogFooter; primitives do not own locale.
 - `components/ui/sidebar`: shadcn base-nova Sidebar composition and context.
@@ -41,6 +49,8 @@ packages own page layout, forms, navigation and product behavior.
   defaults. Layout and control utilities live in their owning components.
 - Other explicit subpaths expose reusable visual patterns and the original logo.
 - `logo-mark.webp` exposes the unchanged brand asset for browser and build-tool use.
+- `lib/utils` exposes `cn`, including semantic control-spacing merges. Other `lib`
+  helpers and colocated tests are private; do not expose the directory with a wildcard.
 - `select-field` composes the shadcn Select for labelled string options, including
   disabled options, placeholders and named form values. Prefer it to NativeSelect
   in feature UI so popup appearance and keyboard behavior are shared.
@@ -83,7 +93,7 @@ red that keeps WCAG AA; `destructive` stays the fill and border color.
   base layer so component utilities can override defaults.
 - Keep an independent Vitest config so Vite application plugins never enter tests.
 
-Component suites live beside source as `*.component.test.ts(x)`.
+Unit suites live beside source as `*.test.ts`; DOM suites use `*.component.test.ts(x)`.
 Keep shared test setup in `tests/setup.ts`.
 
 ## Verification
@@ -92,4 +102,5 @@ Keep shared test setup in `tests/setup.ts`.
 bun run --cwd packages/ui generate:theme
 bun run --cwd packages/ui check
 bun run --cwd packages/ui test
+bun run --cwd packages/ui test:unit
 ```

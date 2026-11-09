@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { mocks, page } from "../tests/helpers/router-auth.tsx";
 
@@ -22,6 +22,13 @@ describe("public legal routes", () => {
     expect(mocks.devices).not.toHaveBeenCalled();
     expect(mocks.tasks).not.toHaveBeenCalled();
     expect(mocks.configurationGet).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("link", { name: "Optional diagnostics" }));
+    await waitFor(() => expect(router.state.location.hash).toBe("diagnostics"));
+    expect(screen.getByRole("link", { name: "Optional diagnostics" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Local work" })).not.toHaveAttribute("aria-current");
   });
 
   it.each(["/", "/login", "/signup"])("links to privacy from %s", async (path) => {

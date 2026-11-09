@@ -3,7 +3,20 @@ import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
 import type { TaskWorkspacePort } from "../model/port.ts";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
-import { SelectField } from "@raypx/ui/select-field";
+import {
+  Combobox,
+  ComboboxCollection,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxLabel,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@raypx/ui/components/ui/combobox";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconButton } from "@raypx/ui/icon-button";
 import { SaveIcon } from "@raypx/icons/save";
 import { RefreshIcon } from "@raypx/icons/refresh";
@@ -18,6 +31,7 @@ export function ModelPicker({
   onReady,
   onPending,
   disabled,
+  compact = false,
 }: {
   client: ModelPort;
   value: ModelSelection | undefined;
@@ -25,10 +39,12 @@ export function ModelPicker({
   onReady?: (ready: boolean) => void;
   onPending?: (pending: boolean) => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const t = useTranslations("tasks"),
     id = useId();
   const [reload, setReload] = useState(0);
+  const [query, setQuery] = useState("");
   const [loaded, setLoaded] = useState<{
     client: ModelPort;
     revision: number;
@@ -77,31 +93,90 @@ export function ModelPicker({
       setSaving(false);
     }
   };
+  const available =
+    catalog?.models.filter(
+      (model) => model.configured || (value && key(model.selection) === key(value)),
+    ) ?? [];
+  const groups = [...new Set(available.map((model) => model.provider))].map((provider) => ({
+    label: provider,
+    items: available.filter((model) => model.provider === provider),
+  }));
+  type CatalogModel = ModelCatalog["models"][number];
   return (
-    <Field>
-      <FieldLabel htmlFor={id}>{t("model")}</FieldLabel>
-      <div className="flex items-center gap-2">
-        <SelectField
-          id={id}
-          value={value ? key(value) : null}
-          disabled={disabled || loading || !catalog}
-          placeholder={t("chooseModel")}
-          required
-          onValueChange={(chosen) => {
-            const model = catalog?.models.find((entry) => key(entry.selection) === chosen);
-            if (model) onChange(model.selection);
+    <Field className="min-w-0">
+      <FieldLabel id={`${id}-label`} htmlFor={id} className={compact ? "sr-only" : undefined}>
+        {t("model")}
+      </FieldLabel>
+      <div className="flex min-w-0 items-center gap-1">
+        <Combobox<CatalogModel>
+          items={groups}
+          value={selected ?? null}
+          inputValue={query}
+          onInputValueChange={setQuery}
+          onOpenChange={(open) => {
+            if (!open) setQuery("");
           }}
-          options={
-            catalog?.models
-              .filter((model) => model.configured || (value && key(model.selection) === key(value)))
-              .map((model) => ({
-                value: key(model.selection),
-                label: model.provider + " · " + model.name,
-                disabled: !model.configured,
-              })) ?? []
+          disabled={disabled || loading || !catalog}
+          itemToStringLabel={(model) => `${model.provider} · ${model.name}`}
+          itemToStringValue={(model) => key(model.selection)}
+          isItemEqualToValue={(a, b) => key(a.selection) === key(b.selection)}
+          filter={(model, search) =>
+            `${model.provider} ${model.name}`
+              .toLocaleLowerCase()
+              .includes(search.toLocaleLowerCase())
           }
-        />
+          onValueChange={(model) => {
+            if (model?.configured) onChange(model.selection);
+          }}
+        >
+          <ComboboxTrigger
+            id={id}
+            aria-labelledby={`${id}-label`}
+            size={compact ? "sm" : "default"}
+            className={cn("min-w-0 flex-1", compact && "max-w-80")}
+          >
+            <span className="truncate">
+              {selected
+                ? `${selected.provider} · ${selected.name}`
+                : value
+                  ? `${value.provider} · ${value.model}`
+                  : t("chooseModel")}
+            </span>
+          </ComboboxTrigger>
+          <ComboboxContent className="min-w-64">
+            <div className="p-1">
+              <ComboboxInput aria-label={t("searchModels")} placeholder={t("searchModels")} />
+            </div>
+            <ComboboxEmpty>{t("noModelsMatch")}</ComboboxEmpty>
+            <ComboboxList>
+              {(group: { label: string; items: CatalogModel[] }) => (
+                <ComboboxGroup key={group.label} items={group.items}>
+                  <ComboboxLabel>{group.label}</ComboboxLabel>
+                  <ComboboxCollection>
+                    {(model: CatalogModel) => (
+                      <ComboboxItem
+                        key={key(model.selection)}
+                        value={model}
+                        disabled={!model.configured}
+                        aria-label={`${model.provider} · ${model.name} · ${model.origin}`}
+                      >
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="truncate">{model.name}</span>
+                          <span className="truncate text-xs text-muted-foreground">
+                            {model.origin}
+                          </span>
+                        </span>
+                        {!model.configured && <Badge variant="outline">{t("unconfigured")}</Badge>}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxCollection>
+                </ComboboxGroup>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
         <IconButton
+          size={compact ? "icon-sm" : "icon"}
           label={t("saveModelDefault")}
           disabled={disabled || loading || saving || !selected?.configured}
           onClick={() => void save()}
@@ -109,6 +184,7 @@ export function ModelPicker({
           <SaveIcon />
         </IconButton>
         <IconButton
+          size={compact ? "icon-sm" : "icon"}
           label={t("reloadModels")}
           disabled={disabled || loading}
           onClick={() => {
@@ -119,8 +195,15 @@ export function ModelPicker({
           <RefreshIcon />
         </IconButton>
       </div>
-      {selected && <span className="text-xs text-muted-foreground">{selected.origin}</span>}
-      {!selected?.configured && (
+      {loading && !onPending && (
+        <span role="status" className="text-xs text-muted-foreground">
+          {t("modelChecking")}
+        </span>
+      )}
+      {selected && !compact && (
+        <span className="truncate text-xs text-muted-foreground">{selected.origin}</span>
+      )}
+      {!loading && !selected?.configured && (
         <span role="status" className="text-xs text-muted-foreground">
           {t("modelConfigurationHint")}
         </span>

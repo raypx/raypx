@@ -305,7 +305,7 @@ function Workspace({
       )}
       {!data && !error && <LoadingState label={c("loading")} />}
       {data && view === "approvals" && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           {client.observed && <h2 className="text-base font-semibold">{t("managedRequests")}</h2>}
           {data.requests.length === 0 ? (
             <EmptyState
@@ -415,7 +415,10 @@ function Workspace({
                   />
                 )}
                 {(pages.length > 0 || data.next) && (
-                  <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
+                  <nav
+                    aria-label={t("taskPages")}
+                    className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3"
+                  >
                     <Button
                       variant="outline"
                       disabled={!pages.length}
@@ -486,10 +489,11 @@ function Workspace({
                   }
                 />
               ) : (
-                <div className="flex min-h-72 flex-col items-center justify-center gap-2 px-5 text-center text-muted-foreground">
-                  <TaskListIcon aria-hidden="true" className="size-8" />
-                  <h2 className="text-sm font-normal">{t("selectTask")}</h2>
-                </div>
+                <EmptyState
+                  className="min-h-72"
+                  icon={<TaskListIcon aria-hidden="true" />}
+                  title={t("selectTask")}
+                />
               )}
             </div>
           }

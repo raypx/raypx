@@ -4,7 +4,11 @@ import { useTranslations } from "@raypx/i18n/browser";
 import type { AuthRole } from "@raypx/auth/access";
 import { hasPermission } from "@raypx/account/access";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Input } from "@raypx/ui/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { PageHeader } from "@raypx/ui/page-header";
+import { SearchIcon } from "@raypx/icons/search";
+import { RefreshIcon } from "@raypx/icons/refresh";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import {
   Dialog,
@@ -126,16 +130,28 @@ export function Users({ accountId }: { accountId: string }) {
   }
   return (
     <section className="flex min-w-0 flex-col gap-6">
-      <h1>{c("users")}</h1>
+      <PageHeader
+        title={c("users")}
+        action={
+          <IconButton
+            label={c("refresh")}
+            disabled={users.isFetching}
+            onClick={() => void users.refetch()}
+          >
+            <RefreshIcon aria-hidden="true" />
+          </IconButton>
+        }
+      />
       <form
+        className="rounded-xl border border-border bg-sidebar p-4"
         onSubmit={(event) => {
           event.preventDefault();
           setOffset(0);
           setSearch({ field, value: draft.trim() });
         }}
       >
-        <FieldGroup className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <Field className="sm:w-40 sm:shrink-0">
+        <FieldGroup className="grid gap-3 @xl/main:grid-cols-[8rem_minmax(0,1fr)_9rem_auto] @xl/main:items-end">
+          <Field className="min-w-0">
             <FieldLabel htmlFor="user-search-field">{t("searchBy")}</FieldLabel>
             <SelectField
               id="user-search-field"
@@ -149,14 +165,19 @@ export function Users({ accountId }: { accountId: string }) {
           </Field>
           <Field>
             <FieldLabel htmlFor="user-search">{t("search")}</FieldLabel>
-            <Input
-              id="user-search"
-              value={draft}
-              maxLength={320}
-              onChange={(event) => setDraft(event.target.value)}
-            />
+            <InputGroup>
+              <InputGroupAddon>
+                <SearchIcon aria-hidden="true" />
+              </InputGroupAddon>
+              <InputGroupInput
+                id="user-search"
+                value={draft}
+                maxLength={320}
+                onChange={(event) => setDraft(event.target.value)}
+              />
+            </InputGroup>
           </Field>
-          <Field className="sm:w-40 sm:shrink-0">
+          <Field className="min-w-0">
             <FieldLabel htmlFor="user-sort">{t("created")}</FieldLabel>
             <SelectField
               id="user-sort"
@@ -173,38 +194,62 @@ export function Users({ accountId }: { accountId: string }) {
           </Field>
           <Button type="submit">{t("search")}</Button>
         </FieldGroup>
+        {search.value && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="min-w-0 wrap-anywhere">
+              {search.field === "email" ? t("email") : c("name")}: {search.value}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => {
+                setDraft("");
+                setOffset(0);
+                setSearch({ field, value: "" });
+              }}
+            >
+              {t("clearSearch")}
+            </Button>
+          </div>
+        )}
       </form>
-      {users.isError ? (
-        <div className="flex flex-col items-start gap-3">
-          <p role="alert">
-            {users.error.message === "FORBIDDEN" ? t("forbidden") : c("networkError")}
-          </p>
-          <Button variant="outline" onClick={() => void users.refetch()}>
-            {c("retry")}
-          </Button>
-        </div>
-      ) : users.isPending ? (
-        <LoadingState label={c("loading")} />
-      ) : users.data.users.length === 0 ? (
-        <EmptyState title={t("empty")} />
-      ) : (
-        <UserTable
-          rows={users.data.users}
-          accountId={accountId}
-          canChange={canChange}
-          sortDirection={sortDirection}
-          onEdit={editRole}
-        />
-      )}
+      <div aria-busy={users.isFetching} className="min-w-0">
+        {users.isError ? (
+          <div className="flex flex-col items-start gap-3">
+            <Alert variant="destructive">
+              <AlertDescription>
+                {users.error.message === "FORBIDDEN" ? t("forbidden") : c("networkError")}
+              </AlertDescription>
+            </Alert>
+            <Button variant="outline" onClick={() => void users.refetch()}>
+              {c("retry")}
+            </Button>
+          </div>
+        ) : users.isPending ? (
+          <LoadingState label={c("loading")} />
+        ) : users.data.users.length === 0 ? (
+          <EmptyState title={t("empty")} />
+        ) : (
+          <UserTable
+            rows={users.data.users}
+            accountId={accountId}
+            canChange={canChange}
+            sortDirection={sortDirection}
+            onEdit={editRole}
+          />
+        )}
+      </div>
       <nav
         aria-label={t("pagination")}
-        className="flex flex-wrap items-center justify-between gap-3"
+        className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
       >
-        <p className="text-sm text-muted-foreground">
-          {t("page", {
-            page: String(Math.floor(offset / pageSize) + 1),
-            total: String(users.data?.total ?? 0),
-          })}
+        <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">
+          {users.data &&
+            t("page", {
+              page: String(Math.floor(offset / pageSize) + 1),
+              total: String(users.data?.total ?? 0),
+            })}
         </p>
         <div className="flex gap-2">
           <IconButton
@@ -250,9 +295,9 @@ export function Users({ accountId }: { accountId: string }) {
             />
           </Field>
           {error && (
-            <p role="alert" className="text-destructive-text">
-              {t(error)}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>{t(error)}</AlertDescription>
+            </Alert>
           )}
           <DialogFooter>
             <Button variant="outline" disabled={busy} onClick={() => setSelection(null)}>

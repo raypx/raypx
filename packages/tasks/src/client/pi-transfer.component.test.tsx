@@ -6,7 +6,7 @@ import type { ModelCatalog, ModelSelection, AgentTask } from "@raypx/core/tasks"
 import type { TaskWorkspacePort } from "../model/port.ts";
 import { TaskDetail } from "./task-detail.tsx";
 import { createTaskClient } from "../../tests/helpers/client.ts";
-import { selectOption } from "../../tests/helpers/select.ts";
+import userEvent from "@testing-library/user-event";
 
 it("asks before sending a Pi conversation to a different connection and binds the confirmed revision", async () => {
   localStorage.setItem("raypx_locale", "en");
@@ -127,7 +127,9 @@ it("asks before sending a Pi conversation to a different connection and binds th
   ).not.toBeInTheDocument();
   await act(async () => completeCatalog(catalog));
   fireEvent.change(prompt, { target: { value: "Continue synthetically" } });
-  await selectOption("Model", JSON.stringify([target.provider, target.model, target.connectionId]));
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("combobox", { name: "Model" }));
+  await user.click(screen.getByRole("option", { name: /^second · fixture/ }));
   await waitFor(() =>
     expect(screen.getByRole("button", { name: "Send session" })).not.toBeDisabled(),
   );

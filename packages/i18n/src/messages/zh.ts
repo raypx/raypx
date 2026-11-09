@@ -136,6 +136,7 @@ export default {
     back: "返回浏览",
   },
   dash: {
+    auditPage: "第 {page} 页",
     nav: {
       console: "管理控制台",
       overview: "概览",
@@ -189,6 +190,7 @@ export default {
     after: "变更后",
   },
   users: {
+    clearSearch: "清除搜索",
     searchBy: "搜索字段",
     search: "搜索用户",
     email: "邮箱",
@@ -269,6 +271,10 @@ export default {
     viewError: "无法打开此页面，请重新加载应用后重试。",
   },
   tasks: {
+    searchDevices: "搜索计算机…",
+    noDevicesMatch: "没有匹配的计算机。",
+    searchModels: "搜索模型…",
+    noModelsMatch: "没有匹配的模型。",
     modelChecking: "正在确认模型可用性…",
     newOutput: "有新输出 · 返回最新",
     backToLatest: "返回最新",

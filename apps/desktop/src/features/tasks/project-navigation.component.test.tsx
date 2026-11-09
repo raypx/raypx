@@ -76,7 +76,7 @@ it("limits shortcuts, searches all authorized projects and navigates to a local 
   await screen.findByRole("link", { name: "Project 0" });
   expect(screen.queryByRole("link", { name: "Project 6" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "All projects" }));
-  fireEvent.change(screen.getByRole("textbox", { name: "Search projects" }), {
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search projects" }), {
     target: { value: "Project 6" },
   });
   fireEvent.click(await screen.findByRole("link", { name: "Project 6" }));

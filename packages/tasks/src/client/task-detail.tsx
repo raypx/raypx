@@ -168,7 +168,7 @@ function TaskDetailView({
   if (!data) {
     const message = local && errorCode !== "UPGRADE_REQUIRED" ? "LOCAL_UNAVAILABLE" : errorCode;
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         <p role={error ? "alert" : "status"}>{error ? t(message) : c("loading")}</p>
         {error && (
           <Button variant="outline" onClick={refresh}>
@@ -194,12 +194,12 @@ function TaskDetailView({
     return t("applied");
   }
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       {dialog}
       <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0 space-y-3">
+        <div className="flex min-w-0 flex-col gap-2">
           <Badge variant={taskStatusVariant(data.task.status)}>{t(data.task.status)}</Badge>
-          <h2 className="line-clamp-3 text-xl leading-snug font-semibold [overflow-wrap:anywhere]">
+          <h2 className="line-clamp-3 text-lg leading-snug font-semibold [overflow-wrap:anywhere]">
             {data.task.prompt}
           </h2>
         </div>
@@ -250,7 +250,10 @@ function TaskDetailView({
         </p>
       )}
       {!isTaskActive(data.task) && (
-        <section aria-label={t("taskResult")} className="space-y-3 border-b border-border pb-5">
+        <section
+          aria-label={t("taskResult")}
+          className="flex flex-col gap-3 rounded-xl bg-muted/40 p-4"
+        >
           <h3 className="text-sm font-semibold">
             {t(data.task.status === "succeeded" ? "taskResult" : "failureDetails")}
           </h3>
@@ -292,7 +295,7 @@ function TaskDetailView({
           {t("activity")}
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
+          <ol className="mt-3 flex flex-col gap-2 text-xs text-muted-foreground">
             {data.events.map(({ cursor: eventCursor, event }) => (
               <li key={eventCursor}>{eventLabel(event)}</li>
             ))}
@@ -305,7 +308,7 @@ function TaskDetailView({
         </p>
       )}
       {!isTaskActive(data.task) && (
-        <form onSubmit={(event) => void follow(event)} className="space-y-3">
+        <form onSubmit={(event) => void follow(event)} className="flex flex-col gap-3">
           <Field>
             <FieldLabel htmlFor={followField}>{t("followUp")}</FieldLabel>
             <Textarea

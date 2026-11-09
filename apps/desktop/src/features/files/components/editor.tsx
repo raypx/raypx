@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { SaveIcon } from "@raypx/icons/save";
+import { SpinnerIcon } from "@raypx/icons/spinner";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
@@ -38,9 +40,10 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
   return (
     <section
       aria-labelledby="file-editor-title"
+      aria-busy={busy}
       className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border @3xl/main:h-full @3xl/main:min-h-0"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-muted/30 px-4 py-3">
         <h2 id="file-editor-title" className="min-w-0 flex-1 font-mono text-sm wrap-anywhere">
           {editor.path}
         </h2>
@@ -61,6 +64,15 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
             disabled={busy || !dirty}
             onClick={() => void onSave()}
           >
+            {busy ? (
+              <SpinnerIcon
+                aria-hidden="true"
+                data-icon="inline-start"
+                className="motion-safe:animate-spin"
+              />
+            ) : (
+              <SaveIcon aria-hidden="true" data-icon="inline-start" />
+            )}
             {busy ? c("working") : c("save")}
           </Button>
         </div>

@@ -27,6 +27,53 @@ test(
       await expect(
         page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
       ).toBeVisible();
+      if (["/terminal", "/automations", "/account"].includes(path)) {
+        for (const width of [1280, 800]) {
+          for (const colorScheme of ["light", "dark"] as const) {
+            await page.setViewportSize({ width, height: width === 800 ? 844 : 720 });
+            await page.emulateMedia({ colorScheme });
+            await page.reload();
+            await expect(page.locator("html")).toHaveCSS("color-scheme", colorScheme);
+            const main = page.getByRole("main");
+            await expect(main).toBeVisible();
+            if (path === "/automations") {
+              await expect(
+                main.getByRole("button", { name: "New automation", exact: true }),
+              ).toBeDisabled();
+              await expect(
+                main.getByText("Open the desktop app to use local tools.", { exact: true }),
+              ).toBeVisible();
+            }
+            await expect
+              .poll(() =>
+                main.evaluate((element) => {
+                  const bounds = element.getBoundingClientRect();
+                  return (
+                    bounds.width > 0 &&
+                    bounds.left >= 0 &&
+                    bounds.right <= innerWidth + 1 &&
+                    document.documentElement.scrollWidth <= innerWidth + 1
+                  );
+                }),
+              )
+              .toBe(true);
+            if (path === "/account") {
+              const signIn = main.getByRole("link", { name: "Sign in", exact: true });
+              await expect(signIn).toBeVisible();
+              expect((await signIn.boundingBox())!.height).toBeGreaterThanOrEqual(30);
+            }
+            await capture(page, {
+              path: test
+                .info()
+                .outputPath(`desktop${path.replace("/", "-")}-${width}-${colorScheme}.png`),
+              fullPage: true,
+              animations: "disabled",
+            });
+          }
+        }
+        await page.setViewportSize({ width: 1280, height: 720 });
+        await page.emulateMedia({ colorScheme: "light" });
+      }
     }
     await page.goto(desktop + "/tasks#settings");
     const settings = page.getByRole("dialog", { name: "Settings", exact: true });

@@ -139,6 +139,25 @@ for (const width of [360, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    const identity = row.getByText("member-0@example.test", { exact: true });
+    const geometry = await identity.evaluate((element) => {
+      const text = document.createRange();
+      text.selectNodeContents(element);
+      const cell = element.closest("td")!.getBoundingClientRect();
+      const elementRow = element.closest("tr")!.getBoundingClientRect();
+      return {
+        textLines: text.getClientRects().length,
+        identityWidth: cell.width,
+        rowWidth: elementRow.width,
+        identityBottom: cell.bottom,
+      };
+    });
+    expect(geometry.textLines).toBe(1);
+    if (width === 360) {
+      expect(geometry.identityWidth).toBeGreaterThanOrEqual(geometry.rowWidth - 1);
+      const action = await row.getByRole("button", { name: "Change role" }).boundingBox();
+      expect(action!.y).toBeGreaterThanOrEqual(geometry.identityBottom);
+    }
     await capture(page, { path: test.info().outputPath(`users-${width}.png`), fullPage: true });
   });
 }

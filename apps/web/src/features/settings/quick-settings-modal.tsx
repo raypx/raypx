@@ -27,16 +27,16 @@ export function QuickSettingsModal() {
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
       <DialogContent
         closeLabel={c("close")}
-        className="max-h-[85dvh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl sm:p-6"
+        className="max-h-[85dvh] w-[calc(100%-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-2xl"
       >
-        <DialogHeader>
+        <DialogHeader className="border-b border-border p-5 pr-14">
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {t("localHint")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex min-w-0 flex-col py-2">
+        <div className="@container/settings flex min-w-0 flex-col px-5 pb-5">
           <AppearanceSettings />
           <LanguageSettings />
           <AnalyticsSettings />

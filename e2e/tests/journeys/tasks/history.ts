@@ -108,6 +108,8 @@ export function registerTests() {
         rows.evaluateAll((elements) =>
           elements.every((element, index) => {
             const previousRow = elements[index - 1];
+            const button = element.querySelector("button");
+            if (!button || button.scrollHeight > button.clientHeight + 1) return false;
             return (
               !previousRow ||
               Number(element.getAttribute("data-index")) !==

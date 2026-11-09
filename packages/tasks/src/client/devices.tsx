@@ -1,9 +1,15 @@
 import { Gate } from "./workspace-gate.tsx";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { useRemoteQuery } from "./remote-query.ts";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { LaptopIcon } from "@raypx/icons/laptop";
+import { SearchIcon } from "@raypx/icons/search";
 import { Button } from "@raypx/ui/components/ui/button";
 
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -27,6 +33,8 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const format = useFormatter();
+  const [query, setQuery] = useState("");
+  const searchId = useId();
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
   const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
     ["devices", accountId],
@@ -34,10 +42,36 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
     true,
     client,
   );
+  const shown = data?.filter((device) =>
+    `${device.name} ${device.platform}`
+      .toLocaleLowerCase()
+      .includes(query.trim().toLocaleLowerCase()),
+  );
   return (
-    <section className="pt-6" data-tasks>
-      <h2 className="text-base">{t("devices")}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{t("devicesHint")}</p>
+    <section className="flex flex-col gap-4 pt-4" data-tasks>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-semibold">{t("devices")}</h2>
+        <p className="text-sm text-muted-foreground">{t("devicesHint")}</p>
+      </div>
+      {Boolean(data?.length) && (
+        <Field>
+          <FieldLabel className="sr-only" htmlFor={searchId}>
+            {t("searchDevices")}
+          </FieldLabel>
+          <InputGroup controlSize="sm">
+            <InputGroupAddon>
+              <SearchIcon aria-hidden="true" />
+            </InputGroupAddon>
+            <InputGroupInput
+              id={searchId}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("searchDevices")}
+            />
+          </InputGroup>
+        </Field>
+      )}
       {error && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <p role="alert" className="text-sm text-destructive-text">
@@ -49,17 +83,25 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
         </div>
       )}
       {!data && !error && <LoadingState label={c("loading")} />}
-      {data?.length === 0 && <p className="mt-5 text-sm text-muted-foreground">{t("noDevices")}</p>}
-      {data?.map((device) => (
+      {data?.length === 0 && (
+        <EmptyState icon={<LaptopIcon aria-hidden="true" />} title={t("noDevices")} />
+      )}
+      {Boolean(data?.length) && shown?.length === 0 && <EmptyState title={t("noDevicesMatch")} />}
+      {shown?.map((device) => (
         <div
           key={device.id}
-          className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-5"
+          className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4"
         >
           <div className="min-w-0 [overflow-wrap:anywhere]">
-            <h3 className="text-sm font-medium">{device.name}</h3>
+            <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
+              <LaptopIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+              {device.name}
+              <Badge variant={device.online && !device.revoked ? "secondary" : "outline"}>
+                {t(device.revoked ? "revoked" : device.online ? "online" : "offline")}
+              </Badge>
+            </h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              {device.platform} ·{" "}
-              {t(device.revoked ? "revoked" : device.online ? "online" : "offline")}
+              {device.platform}
               {device.lastSeenAt && (
                 <> · {format.dateTime(new Date(device.lastSeenAt), "timestamp")}</>
               )}

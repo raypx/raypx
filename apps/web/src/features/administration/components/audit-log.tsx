@@ -15,7 +15,12 @@ import {
   TableRow,
 } from "@raypx/ui/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@raypx/ui/components/ui/dialog";
-import { Badge } from "@raypx/ui/components/ui/badge";
+import { StatusBadge } from "@raypx/ui/status-badge";
+import { PageHeader } from "@raypx/ui/page-header";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { IconButton } from "@raypx/ui/icon-button";
+import { RefreshIcon } from "@raypx/icons/refresh";
+import { EyeIcon } from "@raypx/icons/eye";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { administrationClient } from "../client.ts";
@@ -67,11 +72,17 @@ export function AuditLog() {
     retry: false,
   });
   function renderResults() {
-    if (query.isError) return <p role="alert">{c("networkError")}</p>;
+    if (query.isError)
+      return (
+        <Alert variant="destructive">
+          <AlertDescription>{c("networkError")}</AlertDescription>
+        </Alert>
+      );
     if (!query.data) return <LoadingState label={c("loading")} />;
     if (!query.data.entries.length) return <EmptyState title={t("noAudit")} />;
     return (
       <Table aria-label={t("nav.audit")}>
+        <caption className="sr-only">UTC</caption>
         <TableHeader>
           <TableRow>
             <TableHead>{t("time")}</TableHead>
@@ -86,7 +97,7 @@ export function AuditLog() {
         <TableBody>
           {query.data.entries.map((entry) => (
             <TableRow key={entry.id}>
-              <TableCell>
+              <TableCell className="text-xs tabular-nums">
                 <time dateTime={entry.startedAt}>
                   {entry.startedAt.replace("T", " ").slice(0, 19)} UTC
                 </time>
@@ -98,12 +109,23 @@ export function AuditLog() {
                 {t(entry.action === "user.role.update" ? "roleUpdate" : "configurationUpdate")}
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{t(entry.outcome)}</Badge>
+                <StatusBadge
+                  label={t(entry.outcome)}
+                  tone={
+                    entry.outcome === "success"
+                      ? "success"
+                      : entry.outcome === "failed"
+                        ? "danger"
+                        : entry.outcome === "unknown"
+                          ? "warning"
+                          : "neutral"
+                  }
+                />
               </TableCell>
               <TableCell>
-                <Button variant="ghost" onClick={() => setSelected(entry)}>
-                  {t("details")}
-                </Button>
+                <IconButton label={t("details")} onClick={() => setSelected(entry)}>
+                  <EyeIcon aria-hidden="true" />
+                </IconButton>
               </TableCell>
             </TableRow>
           ))}
@@ -113,13 +135,20 @@ export function AuditLog() {
   }
   return (
     <section className="flex min-w-0 flex-col gap-6">
-      <header className="flex items-center justify-between gap-3">
-        <h1>{t("nav.audit")}</h1>
-        <Button variant="outline" onClick={() => void query.refetch()}>
-          {c("refresh")}
-        </Button>
-      </header>
+      <PageHeader
+        title={t("nav.audit")}
+        action={
+          <IconButton
+            label={c("refresh")}
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            <RefreshIcon aria-hidden="true" />
+          </IconButton>
+        }
+      />
       <form
+        className="rounded-xl border border-border bg-sidebar p-4"
         onSubmit={(event) => {
           event.preventDefault();
           const range = dateRange(from, to);
@@ -140,20 +169,24 @@ export function AuditLog() {
         }}
       >
         <FieldGroup className="grid gap-3 sm:grid-cols-2 @3xl/main:grid-cols-3">
-          <Field>
+          <Field data-invalid={invalid}>
             <FieldLabel htmlFor="audit-from">{t("from")} (UTC)</FieldLabel>
             <Input
               id="audit-from"
+              aria-invalid={invalid}
+              aria-describedby={invalid ? "audit-range-error" : undefined}
               type="date"
               required
               value={from}
               onChange={(event) => setFrom(event.target.value)}
             />
           </Field>
-          <Field>
+          <Field data-invalid={invalid}>
             <FieldLabel htmlFor="audit-to">{t("to")} (UTC)</FieldLabel>
             <Input
               id="audit-to"
+              aria-invalid={invalid}
+              aria-describedby={invalid ? "audit-range-error" : undefined}
               type="date"
               required
               value={to}
@@ -209,26 +242,40 @@ export function AuditLog() {
         <Button type="submit" className="mt-3">
           {t("applyFilters")}
         </Button>
-        {invalid && <p role="alert">{t("invalidRange")}</p>}
+        {invalid && (
+          <p id="audit-range-error" role="alert" className="mt-3 text-sm text-destructive-text">
+            {t("invalidRange")}
+          </p>
+        )}
       </form>
-      {renderResults()}
-      <nav aria-label={t("auditPages")} className="flex gap-3">
-        <Button
-          variant="outline"
-          disabled={cursors.length < 2 || query.isFetching}
-          onClick={() => setCursors((current) => current.slice(0, -1))}
-        >
-          {t("previous")}
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!query.data?.next || query.isFetching}
-          onClick={() => {
-            if (query.data?.next) setCursors((current) => [...current, query.data.next]);
-          }}
-        >
-          {t("next")}
-        </Button>
+      <div aria-busy={query.isFetching} className="min-w-0">
+        {renderResults()}
+      </div>
+      <nav
+        aria-label={t("auditPages")}
+        className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
+      >
+        <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">
+          {query.data && !query.isError && t("auditPage", { page: String(cursors.length) })}
+        </p>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={cursors.length < 2 || query.isFetching}
+            onClick={() => setCursors((current) => current.slice(0, -1))}
+          >
+            {t("previous")}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!query.data?.next || query.isFetching}
+            onClick={() => {
+              if (query.data?.next) setCursors((current) => [...current, query.data.next]);
+            }}
+          >
+            {t("next")}
+          </Button>
+        </div>
       </nav>
       <Dialog
         open={selected !== null}
@@ -241,7 +288,7 @@ export function AuditLog() {
             <DialogTitle>{t("details")}</DialogTitle>
           </DialogHeader>
           {selected && (
-            <dl className="flex flex-col gap-3 text-sm wrap-anywhere">
+            <dl className="flex flex-col divide-y divide-border text-sm wrap-anywhere">
               {[
                 [t("actor"), selected.actorId ?? t("operator")],
                 [t("target"), selected.targetId ?? "—"],
@@ -251,9 +298,12 @@ export function AuditLog() {
                 [t("before"), JSON.stringify(selected.before)],
                 [t("after"), JSON.stringify(selected.after)],
               ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="font-medium">{label}</dt>
-                  <dd className="text-muted-foreground">{value}</dd>
+                <div
+                  key={label}
+                  className="grid min-w-0 gap-1 py-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-4"
+                >
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="min-w-0 select-text">{value}</dd>
                 </div>
               ))}
             </dl>

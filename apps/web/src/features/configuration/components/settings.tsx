@@ -4,11 +4,15 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Switch } from "@raypx/ui/components/ui/switch";
+import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { PageHeader } from "@raypx/ui/page-header";
 import { authClient } from "../../auth/client.ts";
 import { configurationClient, configurationError, type Configuration } from "../client.ts";
 
 const row =
-  "grid items-start gap-4 border-b border-border py-6 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] @xl/main:items-center @xl/main:gap-8";
+  "grid items-start gap-4 border-b border-border py-5 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] @xl/main:items-center @xl/main:gap-x-8";
 
 export function ConfigurationSettings() {
   const t = useTranslations("site");
@@ -25,8 +29,10 @@ export function ConfigurationSettings() {
   function content() {
     if (session.error)
       return (
-        <div className="space-y-4 py-8">
-          <p role="alert">{t("unavailable")}</p>
+        <div className="flex flex-col items-start gap-4 py-8">
+          <Alert variant="destructive">
+            <AlertDescription>{t("unavailable")}</AlertDescription>
+          </Alert>
           <Button
             variant="outline"
             disabled={session.isPending}
@@ -45,8 +51,10 @@ export function ConfigurationSettings() {
     if (query.isError) {
       const failure = configurationError(query.error);
       return (
-        <div className="space-y-4 py-8">
-          <p role="alert">{t(failure)}</p>
+        <div className="flex flex-col items-start gap-4 py-8">
+          <Alert variant="destructive">
+            <AlertDescription>{t(failure)}</AlertDescription>
+          </Alert>
           {failure !== "forbidden" && (
             <Button
               variant="outline"
@@ -68,19 +76,16 @@ export function ConfigurationSettings() {
         />
       );
     return (
-      <div role="status" aria-label={t("loading")} className="space-y-8 py-8">
+      <div role="status" aria-label={t("loading")} className="flex flex-col gap-6 py-6">
         {[1, 2, 3].map((n) => (
-          <div key={n} className="h-20 rounded-md bg-muted motion-safe:animate-pulse" />
+          <Skeleton key={n} className="h-20 rounded-lg" />
         ))}
       </div>
     );
   }
   return (
-    <section>
-      <header className="mb-8">
-        <h1>{t("title")}</h1>
-        <p className="mt-2 max-w-prose text-sm text-muted-foreground">{t("intro")}</p>
-      </header>
+    <section className="flex min-w-0 flex-col gap-6">
+      <PageHeader title={t("title")} description={t("intro")} />
       {content()}
     </section>
   );
@@ -145,71 +150,80 @@ export function ConfigurationForm({
   }
   return (
     <form
+      aria-busy={busy}
       onSubmit={(event) => {
         event.preventDefault();
         if (!busy && dirty && !conflict && values.siteName.trim()) save.mutate();
       }}
     >
-      <fieldset disabled={busy} className="min-w-0">
-        <div className={row}>
-          <div>
-            <label htmlFor="site-name" className="text-[15px] font-medium">
-              {t("siteName")}
-            </label>
-            <p id="site-name-hint" className="mt-1.5 text-[13px] text-muted-foreground">
-              {t("siteNameHint")}
-            </p>
-          </div>
-          <Input
-            id="site-name"
-            aria-describedby="site-name-hint"
-            required
-            maxLength={60}
-            value={values.siteName}
-            onChange={(e) => change({ ...values, siteName: e.target.value })}
-          />
-        </div>
-        <div className={row}>
-          <div>
-            <label htmlFor="registration" className="text-[15px] font-medium">
-              {t("registration")}
-            </label>
-            <p id="registration-hint" className="mt-1.5 text-[13px] text-muted-foreground">
-              {t("registrationHint")}
-            </p>
-          </div>
-          <div className="@xl/main:justify-self-end">
-            <Switch
-              id="registration"
-              aria-describedby="registration-hint"
-              checked={values.registrationEnabled}
-              onCheckedChange={(checked) => change({ ...values, registrationEnabled: checked })}
+      <fieldset disabled={busy} className="min-w-0 border-t border-border">
+        <FieldGroup className="gap-0">
+          <Field className={row}>
+            <div>
+              <FieldLabel htmlFor="site-name">{t("siteName")}</FieldLabel>
+              <p
+                id="site-name-hint"
+                className="mt-1 max-w-lg text-sm leading-6 text-muted-foreground"
+              >
+                {t("siteNameHint")}
+              </p>
+            </div>
+            <Input
+              id="site-name"
+              aria-describedby="site-name-hint"
+              required
+              maxLength={60}
+              value={values.siteName}
+              onChange={(e) => change({ ...values, siteName: e.target.value })}
             />
-          </div>
-        </div>
-        <div className={row}>
-          <div>
-            <label htmlFor="cleanup" className="text-[15px] font-medium">
-              {t("cleanup")}
-            </label>
-            <p id="cleanup-hint" className="mt-1.5 text-[13px] text-muted-foreground">
-              {t("cleanupHint")}
+          </Field>
+          <Field className={row}>
+            <div>
+              <FieldLabel htmlFor="registration">{t("registration")}</FieldLabel>
+              <p
+                id="registration-hint"
+                className="mt-1 max-w-lg text-sm leading-6 text-muted-foreground"
+              >
+                {t("registrationHint")}
+              </p>
+            </div>
+            <div className="flex @xl/main:justify-end">
+              <Switch
+                id="registration"
+                aria-describedby="registration-hint"
+                checked={values.registrationEnabled}
+                onCheckedChange={(checked) => change({ ...values, registrationEnabled: checked })}
+              />
+            </div>
+          </Field>
+          <Field className={row}>
+            <div>
+              <FieldLabel htmlFor="cleanup">{t("cleanup")}</FieldLabel>
+              <p
+                id="cleanup-hint"
+                className="mt-1 max-w-lg text-sm leading-6 text-muted-foreground"
+              >
+                {t("cleanupHint")}
+              </p>
+            </div>
+            <div className="flex @xl/main:justify-end">
+              <Switch
+                id="cleanup"
+                aria-describedby="cleanup-hint cleanup-state"
+                checked={values.cleanupEnabled}
+                onCheckedChange={(checked) => change({ ...values, cleanupEnabled: checked })}
+              />
+            </div>
+            <p
+              id="cleanup-state"
+              className="text-xs leading-6 text-muted-foreground @xl/main:col-span-2"
+            >
+              {t(saved.deployment.jobsEnabled ? "jobsAvailable" : "jobsDisabled")}
             </p>
-          </div>
-          <div className="@xl/main:justify-self-end">
-            <Switch
-              id="cleanup"
-              aria-describedby="cleanup-hint cleanup-state"
-              checked={values.cleanupEnabled}
-              onCheckedChange={(checked) => change({ ...values, cleanupEnabled: checked })}
-            />
-          </div>
-          <p id="cleanup-state" className="text-[13px] text-muted-foreground @xl/main:col-span-2">
-            {t(saved.deployment.jobsEnabled ? "jobsAvailable" : "jobsDisabled")}
-          </p>
-        </div>
+          </Field>
+        </FieldGroup>
       </fieldset>
-      <div className="flex flex-wrap items-center gap-3 py-6">
+      <div className="flex flex-wrap items-center gap-3 py-5">
         <Button type="submit" disabled={busy || !dirty || conflict || !values.siteName.trim()}>
           {t(save.isPending ? "saving" : "save")}
         </Button>
@@ -233,10 +247,10 @@ export function ConfigurationForm({
         )}
       </div>
       {(save.isError || reload.isError) && (
-        <div className="space-y-3 pb-6">
-          <p role="alert" className="text-sm text-destructive">
-            {t(configurationError(reload.error ?? save.error))}
-          </p>
+        <div className="flex flex-col items-start gap-3 pb-6">
+          <Alert variant="destructive">
+            <AlertDescription>{t(configurationError(reload.error ?? save.error))}</AlertDescription>
+          </Alert>
           {conflict && (
             <Button type="button" variant="outline" disabled={busy} onClick={() => reload.mutate()}>
               {t("reload")}
@@ -245,7 +259,7 @@ export function ConfigurationForm({
         </div>
       )}
       <section
-        className="space-y-2 border-t border-border pt-6 text-[13px] text-muted-foreground"
+        className="flex flex-col gap-2 border-t border-border pt-5 text-sm leading-6 text-muted-foreground"
         aria-label={t("deployment")}
       >
         <h2 className="text-sm font-medium text-foreground">{t("deployment")}</h2>

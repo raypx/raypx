@@ -10,6 +10,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { BookOpenIcon } from "@raypx/icons/book-open";
@@ -58,7 +59,7 @@ export function AdminShell() {
       to: "/admin",
       exact: true,
       label: t("dash.nav.overview"),
-      icon: <AdjustmentsIcon />,
+      icon: <ShieldCheckIcon />,
     },
     { to: "/admin/users", label: c("users"), icon: <UserCircleIcon /> },
     { to: "/admin/settings", label: t("site.title"), icon: <AdjustmentsIcon /> },

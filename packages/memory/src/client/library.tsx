@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -381,9 +383,9 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
         </div>
       </header>
       {error && (
-        <p role="alert" className="mb-5 text-sm text-destructive-text">
-          {t(error)}
-        </p>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{t(error)}</AlertDescription>
+        </Alert>
       )}
       {editing !== false && (
         <DocumentForm
@@ -398,7 +400,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
           onCancel={() => edit("close")}
         />
       )}
-      <div className="mb-3 flex flex-wrap items-center gap-4">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <SelectField
           className="w-44 max-w-full"
           aria-label={t("kind")}
@@ -426,22 +428,29 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
       {shown?.map((document) => (
         <article
           key={document.id}
-          className="flex flex-wrap items-center gap-4 border-t border-border py-3"
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border py-3"
         >
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-medium wrap-anywhere">{document.name}</h2>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t(document.kind)} · {document.category || t("uncategorized")} ·{" "}
-              {t("revision", { revision: String(document.revision) })} ·{" "}
-              {document.archived && <>{t("archived")} · </>}
-              {document.project
-                ? (projects.find(
-                    (project) =>
-                      project.deviceId === document.project?.deviceId &&
-                      project.projectId === document.project?.projectId,
-                  )?.name ?? t("projectUnavailable"))
-                : t("global")}
-            </p>
+          <div className="min-w-0 basis-56 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-medium wrap-anywhere">{document.name}</h2>
+              <Badge variant="secondary">{t(document.kind)}</Badge>
+              {document.archived && <Badge variant="outline">{t("archived")}</Badge>}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
+              <span>{document.category || t("uncategorized")}</span>
+              <span className="tabular-nums">
+                {t("revision", { revision: String(document.revision) })}
+              </span>
+              <span className="wrap-anywhere">
+                {document.project
+                  ? (projects.find(
+                      (project) =>
+                        project.deviceId === document.project?.deviceId &&
+                        project.projectId === document.project?.projectId,
+                    )?.name ?? t("projectUnavailable"))
+                  : t("global")}
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-1">
             <IconButton label={t("history")} disabled={busy} onClick={() => void history(document)}>
@@ -485,9 +494,9 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
         </article>
       ))}
       {timeline && (
-        <section className="mt-8 space-y-3">
-          <header className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-medium">
+        <section className="mt-6 space-y-2 border-t border-border pt-4">
+          <header className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="min-w-0 text-sm font-semibold wrap-anywhere">
               {timeline.document.name} · {t("history")}
             </h2>
             <Button
@@ -506,24 +515,34 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                 render={
                   <Button
                     variant="ghost"
-                    className="group h-auto w-full justify-start gap-3 px-0 py-3 text-sm"
+                    className="group h-auto w-full justify-start gap-2 px-0 py-3 text-left text-sm whitespace-normal"
                   />
                 }
               >
-                <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
-                {t("revision", { revision: String(version.revision) })}{" "}
-                <span className="text-xs text-muted-foreground">
-                  {t(
-                    version.reason === "restored" && version.restoredFrom === undefined
-                      ? "unarchived"
-                      : version.reason,
-                  )}{" "}
-                  · {format.dateTime(new Date(version.updatedAt), "timestamp")}
+                <ChevronRightIcon
+                  aria-hidden="true"
+                  className="shrink-0 group-data-panel-open:rotate-90"
+                />
+                <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="tabular-nums">
+                    {t("revision", { revision: String(version.revision) })}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {t(
+                      version.reason === "restored" && version.restoredFrom === undefined
+                        ? "unarchived"
+                        : version.reason,
+                    )}{" "}
+                    ·{" "}
+                    <time dateTime={version.updatedAt} className="tabular-nums">
+                      {format.dateTime(new Date(version.updatedAt), "timestamp")}
+                    </time>
+                  </span>
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 pb-4">
                 <p className="text-sm">{version.name}</p>
-                <pre className="max-h-80 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap wrap-anywhere">
+                <pre className="max-h-80 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere">
                   {version.content}
                 </pre>
                 {version.restoredFrom && (

@@ -59,7 +59,7 @@ export function TaskList({
     count: tasks.length,
     getScrollElement: () => viewport.current,
     getItemKey,
-    estimateSize: () => 112,
+    estimateSize: () => 104,
     overscan: 4,
     rangeExtractor,
     useFlushSync: false,
@@ -166,12 +166,12 @@ export function TaskList({
                 onKeyDown={(event) => navigate(event, row.index)}
                 onClick={() => onSelect(task.id)}
                 aria-pressed={selected === task.id}
-                className="h-auto w-full items-stretch gap-2 rounded-none border-b border-border p-4 text-left whitespace-normal hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring aria-pressed:bg-muted flex-col"
+                className="h-auto w-full flex-col items-stretch gap-2 rounded-none border-b border-border px-3 py-3 text-left whitespace-normal hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent"
               >
                 <span className="flex w-full min-w-0 items-start gap-2.5">
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground"
+                    className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground"
                   >
                     <AgentIcon className="size-4" />
                   </span>
@@ -179,7 +179,7 @@ export function TaskList({
                     {task.prompt}
                   </span>
                 </span>
-                <span className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-8.5 text-xs text-muted-foreground">
                   <span>{agentProviderMetadata[task.provider].label}</span>
                   <span className="truncate">
                     {devices

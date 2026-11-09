@@ -140,18 +140,20 @@ export function LocalWelcome() {
     },
   ];
   return (
-    <section className="mx-auto max-w-200">
-      <header className="mb-6">
-        <h1>{t("welcome")}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t("welcomeHint")}</p>
+    <section className="flex min-w-0 flex-col gap-6">
+      <header className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-balance">{t("welcome")}</h1>
+        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+          {t("welcomeHint")}
+        </p>
       </header>
       {!isDesktop() && <p className="mb-5 text-sm text-muted-foreground">{c("desktopOnly")}</p>}
       {(catalog.isLoading || agents.isLoading) && <LoadingState label={c("loading")} />}
-      <ol className="divide-y divide-border rounded-xl border border-border">
+      <ol className="divide-y divide-border border-y border-border">
         {steps.map((step, index) => (
           <li
             key={step.title}
-            className="grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 p-5 @2xl/main:grid-cols-[2rem_minmax(0,1fr)_auto]"
+            className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-x-4 gap-y-3 py-6 @2xl/main:grid-cols-[2rem_minmax(0,1fr)_auto]"
           >
             <span
               aria-hidden="true"
@@ -163,8 +165,8 @@ export function LocalWelcome() {
               {step.done ? <CheckIcon className="size-4" /> : index + 1}
             </span>
             <div className="min-w-0">
-              <h2 className="text-base font-semibold">{step.title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{step.hint}</p>
+              <h2 className="text-sm font-semibold">{step.title}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.hint}</p>
               {step.detail}
             </div>
             <div className="col-start-2 @2xl/main:col-start-3">{step.action}</div>

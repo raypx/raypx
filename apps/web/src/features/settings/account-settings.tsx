@@ -174,7 +174,7 @@ export function AccountSettingsPanel({
           orientation="vertical"
           className="min-h-0 flex-col gap-0 md:flex-row"
         >
-          <aside className="flex shrink-0 flex-col gap-4 border-b border-border bg-muted/30 p-4 md:w-56 md:border-r md:border-b-0 md:py-6">
+          <aside className="flex shrink-0 flex-col gap-4 border-b border-border bg-sidebar p-4 md:w-56 md:border-r md:border-b-0 md:py-6">
             <DialogTitle className="flex items-center gap-2 px-2 pr-10">
               <SettingsIcon aria-hidden="true" className="size-5 text-muted-foreground" />
               {c("settings")}
@@ -277,11 +277,9 @@ export function AccountSettingsPanel({
             ref={scrollRef}
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
           >
-            <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-5 pr-14 backdrop-blur-sm md:px-8 md:pr-14">
+            <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-5 py-5 pr-14 md:px-8 md:pr-14">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                  <SectionIcon aria-hidden="true" className="size-5" />
-                </span>
+                <SectionIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
                 <h1 className="text-base font-semibold">{currentSection.label}</h1>
               </div>
               <Badge variant="outline">
@@ -297,7 +295,7 @@ export function AccountSettingsPanel({
               <VisitedSections value={visited}>
                 {children}
                 <AccountSettingsContent value="preferences">
-                  <div className="@container/settings rounded-xl border border-border bg-background p-5">
+                  <div className="@container/settings min-w-0">
                     <AppearanceSettings />
                     <LanguageSettings />
                     <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
@@ -307,7 +305,7 @@ export function AccountSettingsPanel({
                   </div>
                 </AccountSettingsContent>
                 <AccountSettingsContent value="diagnostics">
-                  <div className="rounded-xl border border-border bg-background px-5">
+                  <div className="min-w-0">
                     <AnalyticsSettings />
                   </div>
                 </AccountSettingsContent>

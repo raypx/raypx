@@ -30,7 +30,7 @@ export function FilesToolbar({
   const segments = path.split("/").filter(Boolean);
   const rootName = roots.find((root) => root.id === rootId)?.name ?? t("roots");
   return (
-    <div className="flex flex-wrap items-center gap-3 pb-5">
+    <div className="flex flex-wrap items-center gap-3 border-b border-border pb-4">
       <SelectField
         aria-label={t("roots")}
         className="w-52 max-w-full"
@@ -91,11 +91,21 @@ export function FilesToolbar({
         >
           <ArrowUpIcon aria-hidden="true" />
         </IconButton>
-        <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "file" })}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          onClick={() => setOperation({ type: "file" })}
+        >
           <PlusIcon data-icon="inline-start" />
           {t("createFile")}
         </Button>
-        <Button variant="outline" disabled={busy} onClick={() => setOperation({ type: "folder" })}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          onClick={() => setOperation({ type: "folder" })}
+        >
           <FolderIcon data-icon="inline-start" />
           {t("createFolder")}
         </Button>

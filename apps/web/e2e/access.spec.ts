@@ -45,6 +45,11 @@ test(
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     );
+    await capture(page, {
+      path: test.info().outputPath("web-landing-home-mobile.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
     await page.setViewportSize({ width: 1280, height: 720 });
     for (const path of ["/projects", "/settings", "/tasks", "/approvals"]) {
       await page.goto(web + path);

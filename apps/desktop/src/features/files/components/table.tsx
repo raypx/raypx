@@ -17,6 +17,8 @@ import {
   TableRow,
 } from "@raypx/ui/components/ui/table";
 import { IconButton } from "@raypx/ui/icon-button";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store.tsx";
 
@@ -35,9 +37,15 @@ export function FileTable(props: FileTableProps) {
     <Await
       promise={props.request}
       fallback={
-        <p role="status" className="p-9 text-center text-muted-foreground">
-          {c("loading")}
-        </p>
+        <div role="status" aria-label={c("loading")} className="flex flex-col gap-4 py-4">
+          {[0, 1, 2, 3].map((row) => (
+            <div key={row} aria-hidden="true" className="flex items-center gap-3">
+              <Skeleton className="size-5 shrink-0" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="ml-auto h-4 w-16" />
+            </div>
+          ))}
+        </div>
       }
     >
       {(result) =>
@@ -72,7 +80,7 @@ function LoadedFileTable({
   const selectedPath = useFilesStore((s) => s.editor?.path);
   return (
     <>
-      <div className="@container/file-list">
+      <div className="@container/file-list min-w-0 overflow-hidden rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -86,8 +94,13 @@ function LoadedFileTable({
           </TableHeader>
           <TableBody>
             {listing.entries.map((entry) => (
-              <TableRow key={entry.path}>
-                <TableCell className="w-full whitespace-normal @lg/file-list:w-[45%]">
+              <TableRow
+                key={entry.path}
+                data-state={
+                  entry.kind === "file" && selectedPath === entry.path ? "selected" : undefined
+                }
+              >
+                <TableCell className="w-full max-w-0 @lg/file-list:w-[45%]">
                   <Button
                     variant="ghost"
                     data-slot="file-entry"
@@ -95,7 +108,7 @@ function LoadedFileTable({
                     aria-current={
                       entry.kind === "file" && selectedPath === entry.path ? "true" : undefined
                     }
-                    className="h-auto max-w-full justify-start px-0 py-2 text-left whitespace-normal wrap-anywhere aria-current:bg-muted aria-current:text-foreground"
+                    className="w-full justify-start px-1 text-left"
                     disabled={busy || !["file", "directory"].includes(entry.kind)}
                     onClick={() => void onOpen(entry)}
                   >
@@ -103,14 +116,16 @@ function LoadedFileTable({
                       <FolderIcon data-icon="inline-start" />
                     ) : (
                       <FileTextIcon data-icon="inline-start" />
-                    )}{" "}
-                    {entry.name}
+                    )}
+                    <span className="truncate" title={entry.name}>
+                      {entry.name}
+                    </span>
                   </Button>
                 </TableCell>
-                <TableCell className="text-muted-foreground @max-lg/file-list:hidden">
+                <TableCell className="text-muted-foreground tabular-nums @max-lg/file-list:hidden">
                   {entry.kind === "directory" ? "—" : `${format.number(entry.size, "compact")} B`}
                 </TableCell>
-                <TableCell className="text-muted-foreground @max-lg/file-list:hidden">
+                <TableCell className="text-muted-foreground tabular-nums @max-lg/file-list:hidden">
                   {format.dateTime(new Date(entry.modifiedAt), {
                     month: "short",
                     day: "numeric",
@@ -139,7 +154,11 @@ function LoadedFileTable({
           </TableBody>
         </Table>
         {listing.entries.length === 0 && (
-          <p className="p-9 text-center text-muted-foreground">{t("empty")}</p>
+          <EmptyState
+            title={t("empty")}
+            icon={<FolderIcon aria-hidden="true" />}
+            className="py-12"
+          />
         )}
       </div>
       {listing.total > 100 && (

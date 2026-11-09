@@ -9,6 +9,9 @@ import { RefreshIcon } from "@raypx/icons/refresh";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { EmptyState } from "@raypx/ui/empty-state";
 import {
   Collapsible,
   CollapsibleContent,
@@ -281,7 +284,7 @@ function CloudJobs({
   );
   return (
     <section>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1">
             <h1>{t("cloud.title")}</h1>
@@ -315,17 +318,19 @@ function CloudJobs({
         </div>
       </header>
       {data && !data.enabled && (
-        <p role="status" className="mb-5 rounded-md bg-muted p-3 text-sm">
-          {t("cloud.JOBS_DISABLED")}
-        </p>
+        <Alert role="status" className="mb-4">
+          <AlertDescription>{t("cloud.JOBS_DISABLED")}</AlertDescription>
+        </Alert>
       )}
       {error && (
-        <div role="alert" className="mb-5 space-y-2 text-sm text-destructive-text">
-          <p>{t(`cloud.${error}`)}</p>
-          {(error === "CONFLICT" || error === "JOB_CONFLICT") && (
-            <p className="text-xs">{t("cloud.conflictHint")}</p>
-          )}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            <p>{t(`cloud.${error}`)}</p>
+            {(error === "CONFLICT" || error === "JOB_CONFLICT") && (
+              <p className="text-xs">{t("cloud.conflictHint")}</p>
+            )}
+          </AlertDescription>
+        </Alert>
       )}
       {editing !== false && data && (
         <JobForm
@@ -345,42 +350,41 @@ function CloudJobs({
       )}
       {!data && loading && <LoadingState label={c("loading")} />}
       {shown?.length === 0 && editing === false && (
-        <div className="py-14 text-center">
-          <ScheduleIcon className="mx-auto mb-4 size-9 text-muted-foreground" />
-          <h2 className="text-lg">{t("cloud.empty")}</h2>
-          <p className="mx-auto mt-2 max-w-[55ch] text-sm text-muted-foreground">
-            {t("cloud.emptyHint")}
-          </p>
-        </div>
+        <EmptyState
+          className="py-10"
+          icon={<ScheduleIcon aria-hidden="true" />}
+          title={t("cloud.empty")}
+          description={t("cloud.emptyHint")}
+        />
       )}
       {data &&
         shown?.map((job) => (
           <article
             key={job.id}
-            className="flex flex-wrap items-start gap-4 border-t border-border py-5"
+            className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border py-3"
           >
-            <div className="min-w-0 flex-1 space-y-2">
+            <div className="min-w-0 basis-64 flex-1 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-medium wrap-anywhere">{job.name}</h2>
-                <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                <h2 className="text-sm font-medium wrap-anywhere">{job.name}</h2>
+                <Badge variant={job.enabled ? "secondary" : "outline"}>
                   {t(job.enabled ? "enabled" : "disabled")}
-                </span>
+                </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground wrap-anywhere">
                 <code>{job.cron}</code> · {job.timezone} ·{" "}
                 {t(job.action.type === "device.sync" ? "cloud.sync" : "cloud.agent")}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground wrap-anywhere">
                 {data.devices.find((item) => item.id === job.action.deviceId)?.name ??
                   t("cloud.targetUnavailable")}
               </p>
               {job.enabled && job.nextRunAt && (
-                <p className="text-xs text-muted-foreground">
-                  {t("next")}: {date(job.nextRunAt)}
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {t("next")}: <time dateTime={job.nextRunAt}>{date(job.nextRunAt)}</time>
                 </p>
               )}
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <Button
                 variant="outline"
                 disabled={busy || !data.enabled}
@@ -392,43 +396,41 @@ function CloudJobs({
               <Button variant="ghost" disabled={busy} onClick={() => void showHistory(job)}>
                 {t("history")}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}
+              <IconButton
+                label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}
+                hint={t(job.enabled ? "pause" : "enable")}
                 disabled={busy}
                 onClick={() => void toggle(job)}
               >
-                {job.enabled ? <PauseIcon /> : <PlayIcon />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={`${c("edit")}: ${job.name}`}
+                {job.enabled ? <PauseIcon aria-hidden="true" /> : <PlayIcon aria-hidden="true" />}
+              </IconButton>
+              <IconButton
+                label={`${c("edit")}: ${job.name}`}
+                hint={c("edit")}
                 disabled={busy}
                 onClick={() => {
                   setEditing(job);
                   setError(undefined);
                 }}
               >
-                <EditIcon />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={c("deleteNamed", { name: job.name })}
+                <EditIcon aria-hidden="true" />
+              </IconButton>
+              <IconButton
+                label={c("deleteNamed", { name: job.name })}
+                hint={c("delete")}
+                className="text-destructive-text"
                 disabled={busy}
                 onClick={() => void remove(job)}
               >
-                <DeleteIcon />
-              </Button>
+                <DeleteIcon aria-hidden="true" />
+              </IconButton>
             </div>
           </article>
         ))}
       {history && (
-        <section className="mt-8 space-y-3">
-          <header className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold">
+        <section className="mt-6 space-y-2 border-t border-border pt-4">
+          <header className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="min-w-0 text-sm font-semibold wrap-anywhere">
               {history.job.name} · {t("history")}
             </h2>
             <Button
@@ -451,19 +453,28 @@ function CloudJobs({
                 render={
                   <Button
                     variant="ghost"
-                    className="group h-auto w-full flex-wrap justify-start gap-3 rounded-none px-0 py-3 text-xs font-normal"
+                    className="group h-auto w-full justify-start gap-2 rounded-none px-0 py-3 text-left text-xs font-normal whitespace-normal"
                   />
                 }
               >
-                <ChevronRightIcon className="group-data-panel-open:rotate-90" aria-hidden="true" />
-                <span>{date(run.startedAt)}</span>
-                <span>{t(`cloud.status_${run.status}`)}</span>
-                <span>{t(run.trigger === "manual" ? "cloud.manual" : "cloud.scheduled")}</span>
+                <ChevronRightIcon
+                  className="shrink-0 group-data-panel-open:rotate-90"
+                  aria-hidden="true"
+                />
+                <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                  <time dateTime={run.startedAt} className="tabular-nums">
+                    {date(run.startedAt)}
+                  </time>
+                  <Badge variant={run.status === "failed" ? "destructive" : "secondary"}>
+                    {t(`cloud.status_${run.status}`)}
+                  </Badge>
+                  <span>{t(run.trigger === "manual" ? "cloud.manual" : "cloud.scheduled")}</span>
+                </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 pb-4 text-sm">
                 <p>{t(run.action.type === "device.sync" ? "cloud.sync" : "cloud.agent")}</p>
                 {run.action.type === "agent.run" && (
-                  <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap wrap-anywhere">
+                  <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere">
                     {run.action.prompt}
                   </pre>
                 )}
