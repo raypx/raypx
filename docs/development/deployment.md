@@ -231,11 +231,13 @@ migrations when reverting an application image; never delete migrations or volum
 Deploy relay v4 Web/API/Desktop together. Older relay peers receive
 `UPGRADE_REQUIRED`; new clients stop retrying a version mismatch.
 
-The CI deployment gate runs for deployment adapters, API/Web runtime or dependency
-changes, shared build inputs and full release verification. It uses the same
-`smoke:deployment` acceptance as local verification and must pass when selected.
-Ordinary browser component/style changes use source gates; full release verification
-still exercises the images.
+The CI `container-smoke` job runs for Dockerfiles, `.dockerignore`, deployment
+adapters/source staging, image acceptance scripts/fixtures and the CI workflow.
+Manual CI runs and release tags also select it. It uses the same `smoke:deployment`
+acceptance as local verification and must pass when selected. Ordinary application
+source, dependencies and application build configuration use source checks and their
+selected backend/browser gates. Railway builds production images after CI succeeds;
+CI's temporary images are not published or reused by Railway.
 The synthetic account provisioner is bundled once by API and mounted read-only into
 the prepared Bun migration image on the owned internal network. Acceptance does not
 export the full API development image or expose PostgreSQL to the runner. Both

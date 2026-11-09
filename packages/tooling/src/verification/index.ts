@@ -90,7 +90,7 @@ export async function ciGate(root: string, args: string[]) {
   if (!decision.required) throw new Error(`CI gate ${name} was not selected by change analysis`);
   if (gate === "js") {
     await sourceChecks(root, plan);
-  } else if (gate === "deployment") {
+  } else if (gate === "container-smoke") {
     await smokeDeployment(root, []);
   } else if (gate === "backend") {
     for (const task of ["test:postgres", "test:redis", "test:cluster"])

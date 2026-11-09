@@ -59,9 +59,11 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   Shared or unknown inputs broaden source checks without requesting release builds/audits. Missing Git
   bases also select native checks conservatively. Browser-target frontend
   changes reach only browser consumers (`src/verification/platform.ts`). Required results
-  distinguish intentional skips from missing/cancelled/failed gates. Deployment inputs,
-  API/Web runtime dependencies and full release runs select an isolated Docker acceptance
-  job for Compose and Railway. Source-only verify remains independent of Docker.
+  distinguish intentional skips from missing/cancelled/failed gates. The `container-smoke`
+  job runs isolated Compose/Railway acceptance for Dockerfiles, deployment adapters and
+  image acceptance inputs, plus manual/tag CI runs. Ordinary source, dependency and
+  application build-config changes use source gates; Railway owns production image builds.
+  Source-only verify remains independent of Docker.
 - Branch/PR native gates run only for native/IPC/terminal/daemon inputs, CLI runtime
   packaging helpers and their regressions, and select
   macOS/Windows by platform-specific filenames; shared native CI inputs default to Windows.

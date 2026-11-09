@@ -161,6 +161,13 @@ base images may remain cached. `.artifacts/deployment/<run>/` retains protected
 command logs plus `commands.json` and `results.json`. Manifests contain labels,
 exit codes and timings, never command arguments or environment values.
 
+CI calls this command through `container-smoke` only for Dockerfiles, `.dockerignore`,
+deployment adapters/source staging, image acceptance scripts/fixtures or the CI workflow,
+and for manual runs and release tags. Ordinary application code, dependencies and
+application build configuration do not select it. An unavailable Git base broadens
+source/native checks without requesting container builds. These temporary images stay
+on the CI runner; Railway owns the production build and deployment after CI passes.
+
 ## Verification planning and cache
 
 Task discovery, dependency closure, argument keys, VP configuration and cache snapshots
@@ -206,14 +213,14 @@ Rust host targets, builds outputs and runs independent artifact probes concurren
 It needs no GUI, database or mail service. Linux CLI artifact acceptance requires
 Docker unless the process already runs in a loopback-only network namespace;
 it executes the prepared payload with `--network none`. This is separate from
-the deployment-image gate. The repository uses Bun for JavaScript
+the `container-smoke` gate. The repository uses Bun for JavaScript
 and Rust 1.99.1 for Desktop; native checks require that pinned Rust toolchain. `verify` and `verify --full`
 are the verification entry points.
 
 GitHub uses the same change planner:
 
 The `changes` job emits one versioned plan bound to the workflow's commit SHA.
-Source, database, browser and deployment workers execute that plan through
+Source, database, browser and container smoke workers execute that plan through
 `RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
 Missing plans, unsupported versions, mismatched commits and an invocation of an
 unselected gate fail. Native workers use the same plan's runner matrix and

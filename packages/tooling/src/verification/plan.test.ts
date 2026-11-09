@@ -280,6 +280,9 @@ describe("affected verification", () => {
     expect(unknown.nativeRunners).toEqual(["windows-latest"]);
     expect(unknown.artifacts).toEqual([]);
     expect(unknown.distribution).toBe(false);
+    expect(unknown.containerSmoke).toBe(false);
+    expect(githubPlan(root, "workflow_dispatch", {}).containerSmoke).toBe(true);
+    expect(githubPlan(root, "push", { ref: "refs/tags/v1.0.0" }).containerSmoke).toBe(true);
   });
   it("keeps a real dependency-only push on source checks and expands its release tag", () => {
     const { root } = project();
@@ -315,12 +318,14 @@ describe("affected verification", () => {
     expect(daily.browser).toBe("none");
     expect(daily.backend).toBe(false);
     expect(daily.distribution).toBe(false);
+    expect(daily.containerSmoke).toBe(false);
     const release = githubPlan(root, "push", { ref: "refs/tags/v1.0.0", before });
     expect(release.artifacts).toEqual(["api"]);
     expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
     expect(release.browser).toBe("all");
     expect(release.backend).toBe(true);
     expect(release.distribution).toBe(true);
+    expect(release.containerSmoke).toBe(true);
   });
   it("uses one public command with explicit full mode and strict options", () => {
     expect(verifyOptions([])).toEqual({});
@@ -344,7 +349,7 @@ it("always selects repository policy/locales and reserves Knip for full verifica
   }
 });
 
-it("selects deployment acceptance for Docker, runtime and shared dependency inputs", () => {
+it("selects container acceptance for image definitions, deployment adapters and acceptance inputs", () => {
   const { model } = project();
   for (const file of [
     "deploy/compose.yaml",
@@ -352,32 +357,55 @@ it("selects deployment acceptance for Docker, runtime and shared dependency inpu
     "infra/railway/Dockerfile",
     "infra/railway/Caddyfile",
     "apps/api/Dockerfile",
-    "packages/api/src/server.ts",
-    "bun.lock",
-    "packages/tokens/src/index.ts",
+    "apps/web/Dockerfile",
+    "infra/relay/Dockerfile",
+    "deploy/manifests.ts",
+    "deploy/sources.ts",
+    ".dockerignore",
+    ".github/workflows/ci.yml",
+    "packages/tooling/src/build/deployment.ts",
+    "packages/tooling/src/validation/deployment-smoke.ts",
+    "packages/tooling/src/validation/evidence.ts",
+    "packages/tooling/src/smoke/checks.ts",
+    "apps/api/tests/fixtures/deployment.ts",
   ])
-    expect(verificationPlan(model, [file]).deployment).toBe(true);
+    expect(verificationPlan(model, [file]).containerSmoke).toBe(true);
   for (const file of [
     "docs/development/deployment.md",
     "packages/independent/tests/a.test.ts",
     "apps/desktop/src/routes/settings.tsx",
+    "packages/api/src/server.ts",
+    "packages/tokens/src/index.ts",
+    "infra/relay/src/server.ts",
+    "infra/cloudflare/src/index.ts",
+    "infra/railway/stack.test.ts",
+    "packages/tooling/src/build/cli.ts",
+    "packages/tooling/src/validation/deployment.test.ts",
+    "packages/tooling/tests/integration/deployment-smoke.test.ts",
+    "package.json",
+    "bun.lock",
+    "bunfig.toml",
+    "vite.config.ts",
+    "tsconfig.json",
   ])
-    expect(verificationPlan(model, [file]).deployment).toBe(false);
-  expect(verificationPlan(model, [], { full: true }).deployment).toBe(true);
+    expect(verificationPlan(model, [file]).containerSmoke).toBe(false);
+  expect(verificationPlan(model, [], { full: true }).containerSmoke).toBe(true);
 });
-it("keeps ordinary browser edits on source gates while deployment configuration selects Docker", () => {
+it("keeps application source, dependencies and build configuration on source gates", () => {
   const model = platformProject();
   for (const file of [
     "packages/web/src/routes/index.tsx",
     "packages/ui/src/index.ts",
     "packages/feature/src/client.ts",
-  ])
-    expect(verificationPlan(model, [file]).deployment).toBe(false);
-  for (const file of [
+    "packages/feature/src/index.ts",
     "packages/web/vite.app.config.ts",
     "packages/web/package.json",
     "packages/api/src/server.ts",
     "packages/contracts/src/index.ts",
   ])
-    expect(verificationPlan(model, [file]).deployment).toBe(true);
+    expect(verificationPlan(model, [file]).containerSmoke).toBe(false);
+  const unknown = verificationPlan(model, [], { reasons: ["Git base unavailable"] });
+  expect(unknown.containerSmoke).toBe(false);
+  expect(unknown.workspaces).toHaveLength(model.members.length);
+  expect(unknown.native).toBe(true);
 });

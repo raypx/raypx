@@ -24,11 +24,11 @@ describe("required CI results", () => {
         browser: "false",
         native: "false",
         distribution: "false",
-        deployment: "false",
+        container_smoke: "false",
       },
     },
     javascript: { result: "success" },
-    deployment: { result: "skipped" },
+    "container-smoke": { result: "skipped" },
     backend: { result: "skipped" },
     browser: { result: "skipped" },
     desktop: { result: "skipped" },
@@ -139,6 +139,7 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
   for (const invalid of [
     { ...plan, tasks: null },
     { ...plan, backend: "false" },
+    { ...plan, containerSmoke: undefined },
     { ...plan, browser: "unknown" },
     { ...plan, browser: ["all"] },
     { ...plan, artifacts: ["unknown"] },
@@ -146,14 +147,16 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
     { ...plan, distribution: true },
   ])
     expect(() =>
-      parseCiPlan(JSON.stringify({ version: 1, revision: "commit-a", plan: invalid }), "commit-a"),
+      parseCiPlan(JSON.stringify({ version: 2, revision: "commit-a", plan: invalid }), "commit-a"),
     ).toThrow(/CI plan/);
   expect(() =>
-    parseCiPlan(JSON.stringify({ version: 2, revision: "commit-a", plan }), "commit-a"),
+    parseCiPlan(JSON.stringify({ version: 1, revision: "commit-a", plan }), "commit-a"),
   ).toThrow("Unsupported");
   vi.stubEnv("RAYPX_CI_PLAN", outputs.plan);
   vi.stubEnv("GITHUB_SHA", "commit-a");
   await expect(ciGate(root, ["backend"])).rejects.toThrow("was not selected");
+  await expect(ciGate(root, ["container-smoke"])).rejects.toThrow("was not selected");
+  await expect(ciGate(root, ["deployment"])).rejects.toThrow("Unknown internal CI gate");
   await expect(ciGate(root, ["unknown"])).rejects.toThrow("Unknown internal CI gate");
 });
 
@@ -161,7 +164,16 @@ it("registers every CI dependency and passes the authoritative plan to each sour
   const workflow = Bun.YAML.parse(
     readFileSync(resolve(import.meta.dirname, "../../../../.github/workflows/ci.yml"), "utf8"),
   ) as {
-    jobs: Record<string, { needs?: string[]; env?: Record<string, string> }>;
+    jobs: Record<
+      string,
+      {
+        needs?: string[];
+        if?: string;
+        env?: Record<string, string>;
+        outputs?: Record<string, string>;
+        steps?: { run?: string }[];
+      }
+    >;
   };
   expect(workflow.jobs.foundation!.needs!.sort()).toEqual(
     ["changes", ...gateDefinitions.map(({ name }) => name)].sort(),
@@ -169,11 +181,19 @@ it("registers every CI dependency and passes the authoritative plan to each sour
   expect(Object.keys(workflow.jobs).sort()).toEqual(
     ["changes", "foundation", ...gateDefinitions.map(({ name }) => name)].sort(),
   );
-  for (const name of ["javascript", "backend", "browser", "deployment"])
+  for (const name of ["javascript", "backend", "browser", "container-smoke"])
     expect(workflow.jobs[name]!.env?.RAYPX_CI_PLAN).toBe("${{ needs.changes.outputs.plan }}");
+  const containerSmoke = workflow.jobs["container-smoke"]!;
+  expect(containerSmoke.if).toBe("needs.changes.outputs.container_smoke == 'true'");
+  expect(
+    containerSmoke.steps?.some((step) => step.run === "bun run raypx-dev ci:gate container-smoke"),
+  ).toBe(true);
+  expect(workflow.jobs.changes!.outputs?.container_smoke).toBe(
+    "${{ steps.plan.outputs.container_smoke }}",
+  );
 });
 
-it("requires selected deployment results and rejects skipped or cancelled acceptance", () => {
+it("requires selected container smoke results and rejects skipped or cancelled acceptance", () => {
   const needs = {
     changes: {
       result: "success",
@@ -182,18 +202,20 @@ it("requires selected deployment results and rejects skipped or cancelled accept
         backend: "false",
         browser: "false",
         distribution: "false",
-        deployment: "true",
+        container_smoke: "true",
       },
     },
     javascript: { result: "success" },
     backend: { result: "skipped" },
     browser: { result: "skipped" },
     desktop: { result: "skipped" },
-    deployment: { result: "success" },
+    "container-smoke": { result: "success" },
   };
   expect(() => assertCiResult(needs)).not.toThrow();
   for (const result of ["skipped", "failure", "cancelled", "abandoned"])
-    expect(() => assertCiResult({ ...needs, deployment: { result } })).toThrow(/deployment/);
+    expect(() => assertCiResult({ ...needs, "container-smoke": { result } })).toThrow(
+      /container-smoke/,
+    );
 });
 
 it("accepts Windows-only manual distribution plans and retains both release-tag targets", () => {

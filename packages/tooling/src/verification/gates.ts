@@ -2,7 +2,7 @@ import type { VerificationPlan } from "./plan.js";
 
 export const gateDefinitions = [
   { name: "javascript", flag: undefined },
-  { name: "deployment", flag: "deployment" },
+  { name: "container-smoke", flag: "container_smoke" },
   { name: "backend", flag: "backend" },
   { name: "browser", flag: "browser" },
   { name: "desktop", flag: "native" },
@@ -21,11 +21,11 @@ export function ciOutputs(plan: VerificationPlan & { distribution: boolean }, re
     rust: String(plan.native),
     native: String(plan.nativeRunners.length > 0),
     native_runners: JSON.stringify(plan.nativeRunners),
-    deployment: String(plan.deployment),
+    container_smoke: String(plan.containerSmoke),
     backend: String(plan.backend),
     browser: String(plan.browser !== "none"),
     distribution: String(plan.distribution),
-    plan: JSON.stringify({ version: 1, revision, plan }),
+    plan: JSON.stringify({ version: 2, revision, plan }),
   };
 }
 
@@ -35,14 +35,14 @@ export function parseCiPlan(
   revision: string,
 ): VerificationPlan & { distribution: boolean } {
   const envelope = JSON.parse(raw) as Record<string, unknown>;
-  if (envelope?.version !== 1 || !revision || envelope.revision !== revision)
+  if (envelope?.version !== 2 || !revision || envelope.revision !== revision)
     throw new Error("Unsupported CI plan or commit revision mismatch");
   const plan = envelope.plan as Record<string, unknown> | undefined;
   const strings = (value: unknown): value is string[] =>
     Array.isArray(value) && value.every((item) => typeof item === "string");
   if (
     !plan ||
-    !["full", "native", "backend", "deployment", "distribution"].every(
+    !["full", "native", "backend", "containerSmoke", "distribution"].every(
       (key) => typeof plan[key] === "boolean",
     ) ||
     !["reasons", "files", "workspaces", "tasks", "artifacts", "nativeRunners"].every((key) =>

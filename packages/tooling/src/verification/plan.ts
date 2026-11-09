@@ -17,7 +17,7 @@ export interface VerificationPlan {
   native: boolean;
   nativeRunners: string[];
   backend: boolean;
-  deployment: boolean;
+  containerSmoke: boolean;
   browser: "none" | "web" | "desktop" | "all";
 }
 export function changedFiles(
@@ -41,6 +41,27 @@ function documentation(file: string) {
 function globalInput(file: string) {
   return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
     file,
+  );
+}
+
+/** Railway builds ordinary source changes; CI images exercise changes to the container path. */
+function containerSmokeInput(file: string) {
+  if (documentation(file)) return false;
+  if (file === "apps/api/tests/fixtures/deployment.ts") return true;
+  if (/\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file)) return false;
+  if (/(?:^|\/)Dockerfile(?:\.[^/]*)?$/.test(file)) return true;
+  return (
+    file.startsWith("deploy/") ||
+    [
+      ".dockerignore",
+      ".github/workflows/ci.yml",
+      "infra/railway/railway.ts",
+      "infra/railway/Caddyfile",
+      "packages/tooling/src/build/deployment.ts",
+      "packages/tooling/src/validation/deployment-smoke.ts",
+      "packages/tooling/src/validation/evidence.ts",
+      "packages/tooling/src/smoke/checks.ts",
+    ].includes(file)
   );
 }
 
@@ -206,39 +227,7 @@ export function verificationPlan(
     artifacts,
     ...native,
     backend: full || (!allSources && affected.has("api")),
-    deployment:
-      full ||
-      (options.reasons?.length ?? 0) > 0 ||
-      files.some((file) => {
-        if (documentation(file) || /\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file))
-          return false;
-        if (
-          /^(?:deploy\/|infra\/|apps\/(?:api|web)\/Dockerfile$|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
-            file,
-          ) ||
-          /^packages\/tooling\/src\/(?:build\/|validation\/deployment)/.test(file)
-        )
-          return true;
-        const owner = model.members.find((member) => file.startsWith(member.path + "/"));
-        if (!owner) return false;
-        const relative = file.slice(owner.path.length + 1);
-        if (["api", "web"].includes(owner.name)) {
-          if (
-            /^(?:package\.json$|Dockerfile$|vite[^/]*$|scripts\/|server\/|src\/(?:server\/|start\.|router\.|ssr\.))/.test(
-              relative,
-            )
-          )
-            return true;
-          return !platforms().browserOnly(file);
-        }
-        // Browser-only feature edits use source checks. Shared runtime/build inputs
-        // must still exercise the images consumed by API/Web.
-        return (
-          /^packages\/[^/]+\/(?:package\.json$|vite[^/]*$|src\/)/.test(file) &&
-          (affected.has("api") || affected.has("web")) &&
-          (!platforms().browserOnly(file) || platforms().leaks(owner.name))
-        );
-      }),
+    containerSmoke: full || files.some(containerSmokeInput),
     browser:
       full ||
       (browserTests &&

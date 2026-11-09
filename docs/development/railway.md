@@ -59,6 +59,11 @@ Matching pushes trigger automatic deployments using the shared
 `apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
 All four application sources enable Wait for CI (`checkSuites: true`), so GitHub
 checks must finish successfully before automatic deployments proceed.
+Ordinary source and dependency changes use the selected source/backend/browser
+checks, then Railway builds the production images. The CI `container-smoke` job
+builds temporary images only for container/deployment configuration or image
+acceptance changes, manual CI runs and release tags. Those images remain on the
+CI runner; Railway does not consume them.
 Shared package or manifest changes rebuild API and Web;
 both services also watch `deploy/*.ts` for shared build-context preparation changes.
 Relay uses `infra/relay/Dockerfile`, watches `infra/relay/**` and shared build inputs,

@@ -34,7 +34,7 @@ jobs:
       rust: ${{ steps.plan.outputs.rust }}
       native: ${{ steps.plan.outputs.native }}
       native_runners: ${{ steps.plan.outputs.native_runners }}
-      deployment: ${{ steps.plan.outputs.deployment }}
+      container_smoke: ${{ steps.plan.outputs.container_smoke }}
       backend: ${{ steps.plan.outputs.backend }}
       browser: ${{ steps.plan.outputs.browser }}
       distribution: ${{ steps.plan.outputs.distribution }}
@@ -169,11 +169,11 @@ jobs:
           name: browser-failures
           path: e2e/test-results
           if-no-files-found: ignore
-  deployment:
+  container-smoke:
     needs: changes
     env:
       RAYPX_CI_PLAN: ${{ needs.changes.outputs.plan }}
-    if: needs.changes.outputs.deployment == 'true'
+    if: needs.changes.outputs.container_smoke == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -181,12 +181,12 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun
-      - name: Build and accept Compose and Railway images
-        run: bun run raypx-dev ci:gate deployment
+      - name: Build and smoke-test Compose and Railway images
+        run: bun run raypx-dev ci:gate container-smoke
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: deployment-results
+          name: container-smoke-results
           path: |
             .artifacts/deployment/**/results.json
             .artifacts/deployment/**/commands.json
@@ -206,7 +206,7 @@ jobs:
     secrets: inherit
   foundation:
     if: always()
-    needs: [changes, javascript, backend, browser, desktop, deployment]
+    needs: [changes, javascript, backend, browser, desktop, container-smoke]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

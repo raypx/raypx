@@ -62,7 +62,7 @@ describe("Tooling impact", () => {
     const selected = plan([file]);
     expect(selected.workspaces).toEqual(["@raypx/tooling"]);
     expect(selected.reasons).toEqual([]);
-    expect(selected.deployment).toBe(false);
+    expect(selected.containerSmoke).toBe(false);
   });
   it.each(["shared.ts", "types.ts"])(
     "follows public export dependencies and actual consumers: %s",
