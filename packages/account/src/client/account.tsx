@@ -24,13 +24,11 @@ export function SignedOutAccount({
   const t = useTranslations("auth");
   const c = useTranslations("common");
   return (
-    <div className="flex flex-col items-start gap-4 py-8">
+    <section className="flex flex-col items-start gap-6 py-8">
       <UserCircleIcon aria-hidden="true" className="size-8 text-muted-foreground" />
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold tracking-tight">{t("signedOut")}</h2>
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-          {t("signedOutIntro")}
-        </p>
+        <h2 className="text-2xl font-semibold tracking-tight text-balance">{t("signedOut")}</h2>
+        <p className="max-w-md text-sm leading-6 text-muted-foreground">{t("signedOutIntro")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <LinkComponent to="login" className={buttonVariants()}>
@@ -41,7 +39,7 @@ export function SignedOutAccount({
           {t("create")}
         </LinkComponent>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -57,11 +55,11 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
   const c = useTranslations("common");
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
+      <header className="mb-2 flex flex-wrap items-center gap-4 border-b border-border pb-6">
         <Avatar name={account.name} size="large" />
         <div className="flex min-w-0 flex-1 basis-48 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="min-w-0 text-base font-semibold [overflow-wrap:anywhere]">
+            <h2 className="min-w-0 text-lg font-semibold tracking-tight [overflow-wrap:anywhere]">
               {account.name}
             </h2>
             <StatusBadge label={t("verifiedLabel")} tone="success" />
@@ -80,7 +78,7 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
           <LogoutIcon aria-hidden="true" data-icon="inline-start" />
           {busy ? c("working") : c("signOut")}
         </Button>
-      </div>
+      </header>
       {children}
     </div>
   );
@@ -89,10 +87,16 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
 export function AccountSkeleton() {
   const c = useTranslations("common");
   return (
-    <div className="flex flex-col gap-4" role="status" aria-label={c("loading")}>
-      <Skeleton className="size-12 rounded-full" />
-      <Skeleton className="h-4 w-full max-w-75" />
-      <Skeleton className="h-4 w-45" />
+    <div
+      className="flex items-center gap-4 border-b border-border pb-6"
+      role="status"
+      aria-label={c("loading")}
+    >
+      <Skeleton className="size-12 shrink-0 rounded-full" />
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <Skeleton className="h-5 w-40 max-w-full" />
+        <Skeleton className="h-4 w-60 max-w-full" />
+      </div>
     </div>
   );
 }

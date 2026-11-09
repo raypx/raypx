@@ -25,13 +25,13 @@ export function SettingsOverlay() {
     >
       <DialogContent
         closeLabel={c("close")}
-        className="flex max-h-[calc(100dvh-4rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(56rem,calc(100%-2rem))]"
+        className="flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(56rem,calc(100%-2rem))]"
       >
-        <DialogHeader className="shrink-0 border-b border-border p-5 pr-14">
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-5 pr-14">
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{t("localHint")}</DialogDescription>
         </DialogHeader>
-        <div className="@container/settings min-h-0 overflow-y-auto overscroll-contain px-5 pb-5">
+        <div className="@container/settings min-h-0 overflow-y-auto overscroll-contain px-6 pb-6">
           <Suspense fallback={<LoadingState label={c("loading")} />}>
             <SettingsContent />
           </Suspense>

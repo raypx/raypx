@@ -78,6 +78,23 @@ test(
     await page.goto(desktop + "/tasks#settings");
     const settings = page.getByRole("dialog", { name: "Settings", exact: true });
     await expect(settings.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
+    for (const width of [1280, 800]) {
+      for (const colorScheme of ["light", "dark"] as const) {
+        await page.setViewportSize({ width, height: width === 800 ? 520 : 800 });
+        await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
+        await expect(page.locator("html")).toHaveCSS("color-scheme", colorScheme);
+        const bounds = await settings.boundingBox();
+        expect(bounds!.height).toBeLessThanOrEqual(page.viewportSize()!.height - 47);
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+        await capture(page, {
+          path: test.info().outputPath(`desktop-settings-${width}-${colorScheme}.png`),
+          animations: "disabled",
+        });
+      }
+    }
+    await page.keyboard.press("Escape");
+    await expect(settings).toBeHidden();
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
     await settings.getByRole("button", { name: "Close", exact: true }).click();
     await expect(page).toHaveURL(desktop + "/tasks");
     expect(privateReads).toEqual([]);
@@ -151,11 +168,15 @@ test(
           ),
     );
     await page.goto(desktop + "/tasks#settings");
-    await expect(page.getByRole("alert")).toHaveText(
+    await expect(page.getByRole("alert")).toContainText(
       "Unable to connect. Check your connection and try again.",
     );
     await expect(page).toHaveURL(desktop + "/tasks#settings");
     await expect(page.getByText("private session diagnostic")).toHaveCount(0);
+    await capture(page, {
+      path: test.info().outputPath("desktop-settings-session-unavailable.png"),
+      animations: "disabled",
+    });
     available = true;
     await page.getByRole("button", { name: "Try again", exact: true }).click();
     await expect(page).toHaveURL(desktop + "/tasks#settings");

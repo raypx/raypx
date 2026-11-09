@@ -5,6 +5,7 @@ import {
   signedInAccount,
   webShellFixture,
   preferencesPersist,
+  authResponse,
 } from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
 
@@ -15,6 +16,113 @@ test(
     await webShellFixture(page);
     await signedInAccount(page);
     await preferencesPersist(page, web);
+  },
+);
+
+test(
+  "Web account settings present profile, sessions and instance registration with scoped actions",
+  { tag: "@web" },
+  async ({ page }) => {
+    await webShellFixture(page);
+    const user = await signedInAccount(page);
+    const session = {
+      userId: user.id,
+      expiresAt: "2026-12-10T09:00:00.000Z",
+      createdAt: "2026-11-09T09:00:00.000Z",
+      updatedAt: "2026-11-09T09:00:00.000Z",
+      ipAddress: "192.0.2.10",
+    };
+    await page.route("**/api/auth/list-sessions", (route) =>
+      authResponse(route, [
+        {
+          ...session,
+          id: "other-session",
+          token: "fixture-private-other-session",
+          userAgent: "Mozilla/5.0 (Windows NT 10.0) Chrome/140.0 Safari/537.36",
+        },
+        {
+          ...session,
+          id: "desktop-session",
+          token: "fixture-private-current-session",
+          userAgent: "Mozilla/5.0 (Macintosh) Safari/605.1",
+        },
+      ]),
+    );
+    const revoked: Record<string, unknown>[] = [];
+    await page.route("**/api/auth/revoke-session", (route) => {
+      revoked.push(route.request().postDataJSON() as Record<string, unknown>);
+      return authResponse(route, { status: true });
+    });
+    const identity = {
+      instanceId: "655c58f4-4c7a-4a93-81d3-6205c6192c01",
+      publicKey: "browser-fixture-public-key-value-00000000",
+      name: "Development Mac",
+      platform: "darwin",
+      appVersion: "0.1.0",
+    };
+    await page.route("**/rpc/instances/list", (route) =>
+      authResponse(route, {
+        json: [
+          {
+            ...identity,
+            version: 1,
+            origin: "https://raypx.example",
+            accountId: user.id,
+            revision: 1,
+            status: "registered",
+            issuedAt: "2026-11-09T09:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    await page.route("**/rpc/instances/inspect", (route) =>
+      authResponse(route, { json: identity }),
+    );
+    await page.goto(`${web}/settings#settings/account`);
+    const settings = page.getByRole("dialog", { name: "Settings", exact: true });
+    await expect(settings.getByRole("textbox", { name: "Display name", exact: true })).toHaveValue(
+      user.name,
+    );
+    await capture(page, {
+      path: test.info().outputPath("account-profile.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+    await settings.getByRole("tab", { name: "Signed-in sessions", exact: true }).click();
+    const sessions = settings.getByRole("tabpanel");
+    await expect(
+      sessions.getByRole("heading", { name: "Safari · macOS", exact: true }),
+    ).toBeVisible();
+    await expect(sessions.getByText("This session", { exact: true })).toBeVisible();
+    await expect(sessions).not.toContainText("fixture-private-");
+    await capture(page, {
+      path: test.info().outputPath("account-sessions.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+    await sessions.getByRole("button", { name: "Sign out session", exact: true }).click();
+    const confirmation = page.getByRole("dialog", { name: "Sign out session", exact: true });
+    await expect(confirmation).toBeVisible();
+    await confirmation.getByRole("button", { name: "Sign out session", exact: true }).click();
+    await expect(confirmation).toHaveCount(0);
+    await expect(
+      sessions.getByRole("heading", { name: "Chrome · Windows", exact: true }),
+    ).toHaveCount(0);
+    expect(revoked).toEqual([{ token: "fixture-private-other-session" }]);
+    await settings.getByRole("tab", { name: "Registered instances", exact: true }).click();
+    await expect(
+      settings.getByRole("heading", { name: "Development Mac", exact: true }),
+    ).toBeVisible();
+    await settings.getByRole("textbox", { name: "Instance code", exact: true }).fill("ABCDEFGH23");
+    await settings.getByRole("button", { name: "Review instance", exact: true }).click();
+    await expect(
+      settings.getByRole("button", { name: "Approve registration", exact: true }),
+    ).toBeVisible();
+    await capture(page, {
+      path: test.info().outputPath("instance-registration.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
   },
 );
 

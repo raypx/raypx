@@ -79,11 +79,11 @@ export function AccountSettingsPanel({
   const sections = (
     [
       { value: "account", label: t("accountTitle"), icon: UserCircleIcon },
-      { value: "preferences", label: s("device"), icon: SettingsIcon },
-      { value: "diagnostics", label: a("title"), icon: ShieldCheckIcon },
       { value: "password", label: t("changePassword"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
       { value: "instances", label: i("instances"), icon: MonitorIcon },
+      { value: "preferences", label: s("device"), icon: SettingsIcon },
+      { value: "diagnostics", label: a("title"), icon: ShieldCheckIcon },
     ] as const
   ).map((item) => ({ ...item, keywords: s(`searchKeywords.${item.value}`) }));
   const searchTerms = query.normalize("NFKC").trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -148,7 +148,7 @@ export function AccountSettingsPanel({
     >
       <DialogContent
         showCloseButton={false}
-        className="h-[min(52rem,90dvh)] max-h-[90dvh] w-[calc(100%-2rem)] gap-0 overflow-hidden p-0 sm:max-w-5xl"
+        className="h-[min(48rem,90dvh)] max-h-[90dvh] w-[calc(100%-2rem)] gap-0 overflow-hidden rounded-[16px] p-0 sm:max-w-[60rem]"
         onKeyDownCapture={(event) => {
           if (!event.currentTarget.contains(event.target as Node)) return;
           if (
@@ -174,7 +174,7 @@ export function AccountSettingsPanel({
           orientation="vertical"
           className="min-h-0 flex-col gap-0 md:flex-row"
         >
-          <aside className="flex shrink-0 flex-col gap-4 border-b border-border bg-sidebar p-4 md:w-56 md:border-r md:border-b-0 md:py-6">
+          <aside className="flex shrink-0 flex-col gap-5 border-b border-border bg-muted/30 p-4 md:w-56 md:border-r md:border-b-0 md:py-6">
             <DialogTitle className="flex items-center gap-2 px-2 pr-10">
               <SettingsIcon aria-hidden="true" className="size-5 text-muted-foreground" />
               {c("settings")}
@@ -248,7 +248,7 @@ export function AccountSettingsPanel({
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className="min-h-10 shrink-0 gap-2 px-3 py-2 md:flex-none"
+                    className={`min-h-10 shrink-0 gap-2 px-3 py-2 md:flex-none ${value === "preferences" ? "mt-4" : ""}`}
                   >
                     <Icon aria-hidden="true" />
                     {label}
@@ -277,10 +277,12 @@ export function AccountSettingsPanel({
             ref={scrollRef}
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
           >
-            <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-5 py-5 pr-14 md:px-8 md:pr-14">
+            <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-5 py-5 pr-14 md:px-8 md:py-6 md:pr-14">
               <div className="flex min-w-0 items-center gap-3">
                 <SectionIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-                <h1 className="text-base font-semibold">{currentSection.label}</h1>
+                <h1 className="text-lg leading-snug font-semibold tracking-tight">
+                  {currentSection.label}
+                </h1>
               </div>
               <Badge variant="outline">
                 {deviceSection ? (
@@ -291,7 +293,7 @@ export function AccountSettingsPanel({
                 {deviceSection ? c("device") : s("accountScope")}
               </Badge>
             </header>
-            <div className="p-5 md:p-8">
+            <div className="p-5 md:px-8 md:py-7">
               <VisitedSections value={visited}>
                 {children}
                 <AccountSettingsContent value="preferences">

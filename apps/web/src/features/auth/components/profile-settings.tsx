@@ -69,7 +69,7 @@ export function ProfileSettings({
     <form
       onSubmit={(event) => void save(event)}
       aria-busy={busy}
-      className="flex min-w-0 flex-col gap-5"
+      className="flex min-w-0 flex-col gap-5 pt-4"
     >
       <FieldGroup>
         <Field orientation="responsive" data-disabled={busy}>
@@ -92,7 +92,19 @@ export function ProfileSettings({
           />
         </Field>
       </FieldGroup>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+      {feedback === "failed" && (
+        <Alert variant="destructive">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertDescription>{c("networkError")}</AlertDescription>
+        </Alert>
+      )}
+      {feedback === "refresh" && (
+        <Alert role="status">
+          <InfoIcon aria-hidden="true" />
+          <AlertDescription>{t("profileRefresh")}</AlertDescription>
+        </Alert>
+      )}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           {dirty && (
             <Badge variant="outline">
@@ -124,18 +136,6 @@ export function ProfileSettings({
           {c(busy ? "working" : "save")}
         </Button>
       </div>
-      {feedback === "failed" && (
-        <Alert variant="destructive" className="mt-4">
-          <AlertCircleIcon aria-hidden="true" />
-          <AlertDescription>{c("networkError")}</AlertDescription>
-        </Alert>
-      )}
-      {feedback === "refresh" && (
-        <Alert role="status" className="mt-4">
-          <InfoIcon aria-hidden="true" />
-          <AlertDescription>{t("profileRefresh")}</AlertDescription>
-        </Alert>
-      )}
     </form>
   );
 }

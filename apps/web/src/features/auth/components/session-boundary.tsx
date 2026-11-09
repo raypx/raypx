@@ -51,15 +51,13 @@ export function SignInGate({
   heading?: "h1" | "h2";
 }) {
   return (
-    <section className="flex flex-col items-start gap-4 py-8">
-      <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-muted to-muted/50 text-muted-foreground ring-1 ring-border/50">
+    <section className="flex max-w-lg flex-col items-start gap-5 py-8">
+      <div className="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
         <LockIcon aria-hidden="true" className="size-5" />
       </div>
       <div className="space-y-2">
-        <Heading className={Heading === "h1" ? undefined : "text-lg font-semibold"}>
-          {title}
-        </Heading>
-        <p className="max-w-[65ch] text-sm text-muted-foreground">{description}</p>
+        <Heading className="text-xl leading-snug font-semibold tracking-tight">{title}</Heading>
+        <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
       </div>
       <SignInLink />
     </section>
@@ -79,13 +77,13 @@ export function SessionBoundary({
   if (session.isPending) return <LoadingState label={c("loading")} />;
   if (session.error)
     return (
-      <div className="flex flex-col items-start gap-4 py-8">
-        <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-destructive/10 to-destructive/5 text-destructive ring-1 ring-destructive/20">
+      <div className="flex max-w-lg flex-col items-start gap-5 py-8" role="alert">
+        <div className="grid size-10 place-items-center rounded-lg bg-destructive/10 text-destructive-text">
           <LockIcon aria-hidden="true" className="size-5" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold">{c("networkError")}</h2>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">{c("sessionUnavailable")}</p>
+          <h2 className="text-xl leading-snug font-semibold tracking-tight">{c("networkError")}</h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">{c("sessionUnavailable")}</p>
         </div>
         <Button variant="outline" onClick={() => void session.refetch()}>
           {c("retry")}

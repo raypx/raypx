@@ -19,7 +19,7 @@ export function LandingLayout() {
         {c("skipNavigation")}
       </a>
       <header className="sticky top-0 z-20 border-b border-border bg-background">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-10">
+        <div className="mx-auto flex min-h-20 max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
           <Link
             to="/"
             aria-label={siteName}
@@ -42,7 +42,7 @@ export function LandingLayout() {
       <main
         id="main"
         tabIndex={-1}
-        className="@container/main mx-auto w-full max-w-6xl flex-1 px-5 py-8 outline-none sm:px-10 sm:py-16"
+        className="@container/main mx-auto w-full max-w-6xl flex-1 px-5 py-10 outline-none sm:px-8 sm:py-16"
       >
         <Outlet />
       </main>
@@ -50,7 +50,7 @@ export function LandingLayout() {
         <LegalFooter
           expanded
           siteName={siteName}
-          className="mx-auto w-full max-w-6xl px-5 py-4 sm:px-10"
+          className="mx-auto w-full max-w-6xl px-5 py-5 sm:px-8"
         />
       </div>
     </div>

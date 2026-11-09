@@ -78,9 +78,12 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
           />
         )}
         {list.data && list.data.length > 0 && (
-          <ul className="mt-5 flex flex-col divide-y divide-border border-y border-border">
+          <ul className="mt-5 flex flex-col divide-y divide-border">
             {list.data.map((instance) => (
-              <li key={instance.instanceId} className="flex flex-wrap items-start gap-3 py-4">
+              <li
+                key={instance.instanceId}
+                className="flex flex-wrap items-start gap-3 py-5 first:pt-0"
+              >
                 <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                   <MonitorIcon aria-hidden="true" className="size-5" />
                 </span>
@@ -179,7 +182,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
         </Button>
       </form>
       {identity && (
-        <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
+        <div className="flex flex-col gap-4 border-l-2 border-border pl-5">
           <div className="flex flex-wrap items-center gap-2">
             <MonitorIcon aria-hidden="true" className="size-5 text-muted-foreground" />
             <h3 className="min-w-0 text-sm font-medium [overflow-wrap:anywhere]">

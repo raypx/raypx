@@ -64,6 +64,7 @@ it.each(["", "?error=TOKEN_EXPIRED", "?token=old&error=TOKEN_EXPIRED"])(
   "offers a new reset link instead of a blocked form for %s",
   (search) => {
     fixture("reset-password", search);
+    expect(screen.getByRole("heading", { name: "Request a new link" })).toBeDefined();
     expect(screen.getByRole("alert").textContent).toContain("invalid or has expired");
     expect(screen.getByRole("link", { name: "Send reset link" }).getAttribute("href")).toBe(
       "/forgot-password",
@@ -78,12 +79,41 @@ it("clears credentials and replaces a completed reset with sign-in", async () =>
   fireEvent.change(password, { target: { value: " new password " } });
   fireEvent.submit(password.closest("form")!);
   await screen.findByText("Password updated. You can sign in now.");
+  expect(screen.getByRole("heading", { name: "Password updated" })).toBeDefined();
   expect(password.value).toBe("");
   expect(screen.queryByLabelText("New password")).toBeNull();
   expect(screen.getByRole("link", { name: "Sign in" })).toBeDefined();
   expect(client.resetPassword).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ token: "reset-token", newPassword: " new password " }),
   );
+});
+
+it("replaces an already verified email form with a translated confirmation and sign-in action", async () => {
+  const { client } = fixture("verify-email", "?verified=1&email=user%40example.test");
+  expect(screen.getByRole("heading", { name: "Email verified" })).toBeDefined();
+  expect(screen.getByRole("status").textContent).toBe(messages.en.auth.verified);
+  expect(screen.queryByLabelText("Email address")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Resend verification email" })).toBeNull();
+  expect(screen.getByRole("link", { name: "Sign in" }).getAttribute("href")).toBe("/login");
+  expect(client.sendVerificationEmail).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "中文" }));
+  await screen.findByRole("heading", { name: "邮箱已验证" });
+  expect(screen.getByRole("status").textContent).toBe(messages.zh.auth.verified);
+});
+
+it("keeps unsubmitted credentials and field associations when changing language", async () => {
+  const { client } = fixture("login");
+  const email = screen.getByLabelText<HTMLInputElement>("Email address");
+  const password = screen.getByLabelText<HTMLInputElement>("Password");
+  fireEvent.change(email, { target: { value: "user@example.test" } });
+  fireEvent.change(password, { target: { value: " unsubmitted password " } });
+  fireEvent.click(screen.getByRole("button", { name: "中文" }));
+  await screen.findByRole("heading", { name: "欢迎回来" });
+  expect(screen.getByLabelText("邮箱地址")).toBe(email);
+  expect(screen.getByLabelText("密码")).toBe(password);
+  expect(email.value).toBe("user@example.test");
+  expect(password.value).toBe(" unsubmitted password ");
+  expect(client.signIn.email).not.toHaveBeenCalled();
 });
 
 it.each([
@@ -137,6 +167,7 @@ it("retries a failed page transition without signing in again or retaining the p
   fireEvent.change(password, { target: { value: "login password" } });
   fireEvent.submit(password.closest("form")!);
   await screen.findByText(/You’re signed in, but the page could not load/);
+  expect(screen.getByRole("heading", { name: "Signed in" })).toBeDefined();
   expect(password.value).toBe("");
   expect(screen.queryByLabelText("Password")).toBeNull();
   onSignedIn.mockResolvedValueOnce(undefined);
@@ -205,6 +236,9 @@ it.each(["forgot-password", "verify-email"] as const)(
     });
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "Resend in 60s" }).disabled).toBe(
       true,
+    );
+    expect(screen.getByLabelText<HTMLInputElement>("Email address").value).toBe(
+      "user@example.test",
     );
     // Enter/programmatic submission must also respect the cooldown.
     fireEvent.submit(form);

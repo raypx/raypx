@@ -2,6 +2,8 @@ import { useId, useRef, useState, type FormEvent } from "react";
 import { LockIcon } from "@raypx/icons/lock";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { CloseIcon } from "@raypx/icons/close";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -99,29 +101,33 @@ export function PasswordChangeDialog({
         <DialogContent
           showCloseButton={false}
           backdropProps={{ forceRender: true }}
-          className="max-h-[90dvh] overflow-y-auto sm:max-w-md"
+          className="gap-6 rounded-2xl p-6 sm:max-w-md"
         >
           <DialogHeader className="pr-8">
-            <DialogTitle>{t("changePassword")}</DialogTitle>
-            <DialogDescription>{t("passwordChangeHint")}</DialogDescription>
+            <DialogTitle className="text-xl leading-7 font-semibold tracking-tight">
+              {t(changed ? "resetCompleteTitle" : "changePassword")}
+            </DialogTitle>
+            <DialogDescription className="leading-6">{t("passwordChangeHint")}</DialogDescription>
           </DialogHeader>
           {changed && (
             <Alert role="status">
+              <CheckCircleIcon aria-hidden="true" />
               <AlertDescription>{t("passwordChanged")}</AlertDescription>
             </Alert>
           )}
           {error && (
             <Alert variant="destructive">
+              <AlertCircleIcon aria-hidden="true" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           {changed ? (
-            <DialogFooter>
-              <DialogClose render={<Button variant="outline" disabled={auth.busy} />}>
+            <DialogFooter className="-mx-6 -mb-6 rounded-b-2xl p-6 pt-4">
+              <DialogClose render={<Button size="xl" variant="outline" disabled={auth.busy} />}>
                 {c("close")}
               </DialogClose>
               {auth.error?.kind === "completion" && (
-                <Button disabled={auth.busy} onClick={() => void auth.retryCompletion()}>
+                <Button size="xl" disabled={auth.busy} onClick={() => void auth.retryCompletion()}>
                   {c(auth.busy ? "working" : "retry")}
                 </Button>
               )}
@@ -148,6 +154,7 @@ export function PasswordChangeDialog({
                       id={`${id}-${name}`}
                       name={name}
                       purpose={purpose}
+                      controlSize="xl"
                       showRequirementsIcon={false}
                       required
                       disabled={auth.busy}
@@ -159,21 +166,22 @@ export function PasswordChangeDialog({
                     />
                   );
                 })}
-                <Field orientation="horizontal" data-disabled={auth.busy}>
+                <Field orientation="horizontal" className="items-start" data-disabled={auth.busy}>
                   <Checkbox
                     id={`${id}-revoke`}
                     checked={revokeOthers}
                     onCheckedChange={setRevokeOthers}
                     disabled={auth.busy}
+                    className="mt-0.5"
                   />
                   <FieldLabel htmlFor={`${id}-revoke`}>{t("sessions.revokeOthers")}</FieldLabel>
                 </Field>
               </FieldGroup>
-              <DialogFooter>
-                <DialogClose render={<Button variant="outline" disabled={auth.busy} />}>
+              <DialogFooter className="-mx-6 -mb-6 rounded-b-2xl p-6 pt-4">
+                <DialogClose render={<Button size="xl" variant="outline" disabled={auth.busy} />}>
                   {c("cancel")}
                 </DialogClose>
-                <Button type="submit" disabled={auth.busy}>
+                <Button type="submit" size="xl" disabled={auth.busy}>
                   {auth.busy && (
                     <SpinnerIcon
                       aria-hidden="true"
@@ -191,7 +199,7 @@ export function PasswordChangeDialog({
               <IconButton
                 label={c("close")}
                 size="icon-sm"
-                className="absolute top-2 right-2"
+                className="absolute top-4 right-4"
                 disabled={auth.busy}
               />
             }

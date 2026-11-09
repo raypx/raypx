@@ -20,6 +20,23 @@ translated copy and icons from `@raypx/icons`.
   Native Mobile uses a separate RN implementation; only pure tokens and brand
   assets cross from UI into Native.
 
+## Authentication composition
+
+`@raypx/auth/client` keeps its injected `AuthForm` contract. Its private presentation
+composes labelled fields, password requirements, request feedback and terminal
+confirmation states; existing hooks own requests, cooldowns and completion retries.
+The form has a 25rem maximum width and no outer gutters. Web owns its centered
+60rem panel, public header and product-facts region; Desktop owns its compact
+single-column panel, native title-bar drag area and return action. Do not add a
+second card inside either panel or expose app-specific routing through Auth.
+
+The application browser suites cover all five modes, both locales/themes, narrow
+and short windows, input preservation during locale changes, link recovery,
+password autocomplete and duplicate submission. Shared Auth component tests cover
+mail cooldowns, errors, credential clearing and completion retries. Browser
+renderer results and screenshot review are recorded separately from native host
+acceptance.
+
 ## Adapting external source
 
 The 2026-11-09 CollectUI archive review selected ReUI's Echo Chat, Flux AgentOps,

@@ -59,6 +59,22 @@ Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.
 Theme and language follow the device by default and retain explicit local choices.
 Respect reduced motion, narrow screens, long Chinese/English content and large fonts.
+
+Authentication uses one centered, bordered panel with a 16px radius. Web keeps the
+original logo and theme/language controls in a shared public header. At 1024px and
+above, the panel caps at 60rem and pairs the form with existing product facts in a
+quiet side region; narrower screens use one column and natural document scrolling.
+The form caps at 25rem. Desktop uses a compact single-column panel inside its
+native title-bar frame, with the return-to-workspace action above it. Applications
+own panel padding; shared Auth owns only field rhythm and feedback. All five modes
+share the same title, description, field, primary-action and footer hierarchy.
+Successful password resets and verified email links replace the form with a clear
+confirmation and next action. Invalid links offer recovery. Email-send states keep
+the address and resend countdown visible; completion refresh retries do not repeat
+credential submission. Password constraints, errors and visibility controls remain
+grouped with the relevant field. These layouts use the same 44px controls in both
+applications and retain password-manager autocomplete.
+
 High-frequency controls respond immediately; color and focus transitions use the
 shared 150ms control cadence. Menus and popovers enter in 150ms with ease-out and
 small displacement; sheets may use 200ms. Animate state changes, not page sections

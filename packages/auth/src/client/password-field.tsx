@@ -87,7 +87,7 @@ export function PasswordField({
         {showRequirements && (
           <p
             id={requirementsId}
-            className="flex items-center gap-2 text-sm text-muted-foreground [&>svg]:size-4 [&>svg]:shrink-0"
+            className="flex items-start gap-2 text-sm leading-5 text-muted-foreground [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0"
           >
             {showRequirementsIcon && <Icon aria-hidden="true" />}
             {t(valid ? "passwordRequirementsMet" : "passwordRequirements", {

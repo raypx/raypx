@@ -46,6 +46,7 @@ it("changes the password once, defaults to revoking other sessions and clears ev
   fireEvent.submit(app.form);
   fireEvent.submit(app.form);
   await screen.findByText("Password changed.");
+  expect(screen.getByRole("heading", { name: "Password updated" })).toBeDefined();
   expect(app.changePassword).toHaveBeenCalledExactlyOnceWith({
     currentPassword: " current password ",
     newPassword: " replacement password ",

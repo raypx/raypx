@@ -21,7 +21,8 @@ application is an independent composition root and is never imported by another 
 - Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate
   first-load JavaScript: `src/routes/(app)/` renders
   `src/components/shell.tsx` (`@raypx/blocks/shell` with the account menu and pending count) for
-  settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
+  settings, task and approval pages; `src/routes/(auth)/` uses the public header and
+  centered authentication panel.
   Import heavy client modules only from the layout or route that needs them.
 - `src/routes/(legal)/` holds public legal pages under a lightweight document layout.
   `/privacy` is account-free and does not load the app shell or account queries.
@@ -103,7 +104,11 @@ application is an independent composition root and is never imported by another 
   lists stay in component memory, never query caches or persisted storage; tokens
   are used only for revocation and never rendered. Remount them on account changes.
   Confirm session revocation with the shared shadcn dialog and keep failures retryable.
-- `src/routes/(auth)/` holds the authentication routes under the logo-only layout.
+- `src/routes/(auth)/` holds the authentication routes under the public logo,
+  theme and language header. A single bordered 16px panel caps at 60rem; at 1024px
+  it pairs the form with product facts in a 5:4 split. Narrower pages use one
+  column, a 25rem form and natural document scrolling. The application owns panel
+  gutters; shared Auth owns fields and feedback.
   Each route renders the thin `src/features/auth/components/auth-form.tsx` adapter
   with its mode. The adapter injects the client, router query and navigation into
   the shared form. The auth layout validates an application-page `returnTo` allowlist;

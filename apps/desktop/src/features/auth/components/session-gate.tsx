@@ -1,9 +1,13 @@
 import { InstanceGate } from "./instance-gate.tsx";
 import { EngineGate } from "../../engine/gate.tsx";
 import type { ReactNode } from "react";
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useLocation, useRouterState } from "@tanstack/react-router";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { useTranslations } from "@raypx/i18n/browser";
+import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
+import { desktopReturnTo } from "../return-to.ts";
 
 const publicPaths = new Set([
   "/login",
@@ -13,16 +17,25 @@ const publicPaths = new Set([
   "/verify-email",
 ]);
 
-function AuthLayout({ children, login }: { children: ReactNode; login: boolean }) {
+function AuthLayout({ children }: { children: ReactNode }) {
+  const t = useTranslations("dash.nav");
+  const search = useLocation({ select: (location) => location.searchStr });
+  const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
-    <div className="flex h-dvh flex-col">
-      <header className="flex h-[max(3rem,var(--raypx-titlebar-height,0px))] shrink-0 items-center px-6 pr-[max(1.5rem,calc(var(--raypx-titlebar-inset-right,0px)+0.75rem))] pl-[max(1.5rem,calc(var(--raypx-titlebar-inset-left,0px)+0.75rem))] [--app-region:drag]">
-        {!login && (
-          <Link to="/" aria-label="Raypx" className="inline-flex [--app-region:no-drag]">
-            <Logo className="[&_[data-slot=logo-mark]]:size-6" />
-          </Link>
-        )}
+    <div className="flex h-dvh flex-col bg-sidebar">
+      <header className="flex h-[max(3.5rem,var(--raypx-titlebar-height,0px))] shrink-0 items-center gap-6 px-6 pr-[max(1.5rem,calc(var(--raypx-titlebar-inset-right,0px)+0.75rem))] pl-[max(1.5rem,calc(var(--raypx-titlebar-inset-left,0px)+0.75rem))] [--app-region:drag]">
+        <Link
+          to="/"
+          aria-label="Raypx"
+          className="inline-flex rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [--app-region:no-drag]"
+        >
+          <Logo className="text-sm [&_[data-slot=logo-mark]]:size-6" />
+        </Link>
         <div className="ml-auto flex items-center gap-1 [--app-region:no-drag]">
+          <Link to={returnTo} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+            <ArrowLeftIcon data-icon="inline-start" />
+            {t("workspace")}
+          </Link>
           <ThemeToggle />
           <LanguageMenu />
         </div>
@@ -30,10 +43,11 @@ function AuthLayout({ children, login }: { children: ReactNode; login: boolean }
       <main
         id="main"
         tabIndex={-1}
-        data-login={login || undefined}
-        className="flex min-h-0 flex-1 flex-col overflow-auto px-6 outline-none data-[login]:max-sm:px-0 data-[login]:[@media(min-height:620px)]:pb-8"
+        className="flex min-h-0 flex-1 flex-col overflow-auto px-6 py-8 outline-none"
       >
-        <div className="my-auto shrink-0">{children}</div>
+        <div className="mx-auto my-auto w-full max-w-[466px] shrink-0 rounded-[16px] border border-border bg-background p-8">
+          {children}
+        </div>
       </main>
     </div>
   );
@@ -41,10 +55,9 @@ function AuthLayout({ children, login }: { children: ReactNode; login: boolean }
 
 export function SessionGate({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (state) => state.location.pathname });
-  const login = path === "/login";
   if (publicPaths.has(path))
     return (
-      <AuthLayout login={login}>
+      <AuthLayout>
         <Outlet />
       </AuthLayout>
     );

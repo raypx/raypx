@@ -97,7 +97,7 @@ export function AccountSessions({
   }, [client, currentSessionId, revision]);
   const others = sessions?.filter((session) => session.id !== currentSessionId) ?? [];
   return (
-    <section aria-labelledby="account-sessions-title">
+    <section className="min-w-0" aria-labelledby="account-sessions-title" aria-busy={loading}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <ShieldCheckIcon aria-hidden="true" className="size-4 text-muted-foreground" />
@@ -123,7 +123,7 @@ export function AccountSessions({
           />
         </IconButton>
       </div>
-      <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("hint")}</p>
+      <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-muted-foreground">{t("hint")}</p>
       {error && (
         <Alert variant="destructive" className="mt-4">
           <AlertCircleIcon aria-hidden="true" />
@@ -141,15 +141,15 @@ export function AccountSessions({
       {sessions?.length === 0 && (
         <EmptyState title={t("empty")} icon={<MonitorIcon aria-hidden="true" />} className="py-8" />
       )}
-      <ul className="mt-5 flex flex-col divide-y divide-border border-y border-border">
+      <ul className="mt-5 flex flex-col divide-y divide-border">
         {sessions?.map((session) => (
-          <li key={session.id} className="flex flex-wrap items-start gap-3 py-4">
+          <li key={session.id} className="flex flex-wrap items-start gap-3 py-5 first:pt-0">
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
               <MonitorIcon aria-hidden="true" className="size-5" />
             </span>
             <div className="min-w-0 flex-1 basis-40">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-medium">
+                <h3 className="text-sm font-medium [overflow-wrap:anywhere]">
                   {sessionLabel(session.userAgent) ?? t("unknown")}
                 </h3>
                 {session.id === currentSessionId && (
@@ -198,7 +198,7 @@ export function AccountSessions({
         ))}
       </ul>
       {others.length > 0 && (
-        <div className="mt-5 flex flex-wrap justify-end border-t border-border pt-5">
+        <div className="mt-1 flex flex-wrap justify-end border-t border-border pt-5">
           <RevokeSession
             title={t("revokeOthers")}
             description={t("revokeOthersHint")}

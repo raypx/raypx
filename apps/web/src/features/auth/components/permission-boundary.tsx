@@ -6,6 +6,8 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { accountAccessQuery } from "../access.ts";
+import { LockIcon } from "@raypx/icons/lock";
+import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 
 /** Private views never mount before the server grants the page's permission. */
 export function PermissionBoundary({
@@ -24,8 +26,9 @@ export function PermissionBoundary({
   if (query.isPending) return <LoadingState label={c("loading")} />;
   if (query.isError)
     return (
-      <div className="flex flex-col items-start gap-4 py-8">
-        <p role="alert">{t("unavailable")}</p>
+      <div className="flex max-w-lg flex-col items-start gap-5 py-8" role="alert">
+        <AlertCircleIcon aria-hidden="true" className="size-6 text-muted-foreground" />
+        <p className="text-sm leading-relaxed">{t("unavailable")}</p>
         <Button
           variant="outline"
           disabled={query.isFetching}
@@ -37,9 +40,12 @@ export function PermissionBoundary({
     );
   if (query.data.accountId !== accountId || !hasPermission(query.data, permission))
     return (
-      <p role="alert" className="py-8">
-        {t("forbidden")}
-      </p>
+      <div role="alert" className="flex max-w-lg flex-col items-start gap-5 py-8">
+        <div className="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
+          <LockIcon aria-hidden="true" className="size-5" />
+        </div>
+        <p className="text-sm leading-relaxed">{t("forbidden")}</p>
+      </div>
     );
   return children;
 }

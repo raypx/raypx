@@ -40,8 +40,8 @@ export const Route = createFileRoute("/account")({
 function AccountPending() {
   const t = useTranslations("auth");
   return (
-    <section>
-      <header className="mb-6">
+    <section className="flex flex-col gap-8">
+      <header className="flex flex-col gap-2">
         <h1>{t("accountTitle")}</h1>
       </header>
       <AccountSkeleton />
@@ -82,8 +82,8 @@ function AccountPage() {
     return router.invalidate({ filter: (match) => match.routeId === Route.id });
   }
   return (
-    <section>
-      <header className="mb-6">
+    <section className="flex flex-col gap-8">
+      <header className="flex flex-col gap-2">
         <h1>{t("accountTitle")}</h1>
       </header>
       {identityChanged ? (

@@ -12,7 +12,10 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   authentication, query and navigation adapters.
   Pass `backLabel: null` to hide the form's back link when the app provides its own
   navigation. Applications can supply back-link text and verification/reset callback URLs.
-  The `compact` form layout reduces spacing and omits the decorative mode icon.
+  Applications own the outer panel, brand content and gutters. The shared form is
+  at most 400px wide; `compact` reduces its internal spacing. All modes use 44px
+  controls. Completion and expired-link states replace the fields with a status
+  heading and the appropriate primary recovery or continuation action.
   Applications can supply `headingLeading` for brand content above the form title.
   Optional `socialLogin` supplies enabled providers and application-owned success/error
   callbacks. OAuth completion refreshes through `onSignedIn` without resubmitting login.

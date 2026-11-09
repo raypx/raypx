@@ -656,13 +656,17 @@ export default {
     sendReset: "Send reset link",
     resetSent: "If this email has an account, a reset link is on its way.",
     resetSaved: "Password updated. You can sign in now.",
+    resetCompleteTitle: "Password updated",
     verify: "Verify your email",
     verifyIntro:
       "Check your inbox for the verification link. Once verified, return here to sign in.",
     resend: "Resend verification email",
     verifySent: "Verification email sent. Check your inbox.",
     verified: "Your email is verified. You can sign in now.",
+    verifiedTitle: "Email verified",
     invalidLink: "This link is invalid or has expired. Request a new email.",
+    invalidLinkTitle: "Request a new link",
+    signedInTitle: "Signed in",
     accountTitle: "Account",
     signedOut: "You’re not signed in",
     signedOutIntro:

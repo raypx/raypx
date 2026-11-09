@@ -22,7 +22,7 @@ export function LegalFooter({
   return (
     <footer
       className={cn(
-        "text-sm text-muted-foreground",
+        "text-xs text-muted-foreground",
         expanded &&
           "flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-8",
         className,

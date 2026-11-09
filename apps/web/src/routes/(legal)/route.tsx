@@ -20,7 +20,7 @@ function LegalLayout() {
       >
         {c("skipNavigation")}
       </a>
-      <header className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
+      <header className="mx-auto flex min-h-20 w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
         <Link
           to="/"
           aria-label="Raypx"
@@ -45,7 +45,7 @@ function LegalLayout() {
         <Outlet />
       </main>
       <Separator />
-      <LegalFooter className="mx-auto w-full max-w-5xl px-5 py-5 sm:px-8" />
+      <LegalFooter expanded className="mx-auto w-full max-w-6xl px-5 py-5 sm:px-8" />
     </div>
   );
 }

@@ -118,10 +118,10 @@ export function InstanceGate({ children }: { children: ReactNode }) {
   return (
     <main
       aria-labelledby="instance-title"
-      className="flex h-dvh flex-col overflow-auto px-6 py-8 pt-[max(2rem,var(--raypx-titlebar-height,0px))]"
+      className="flex h-dvh flex-col overflow-auto bg-sidebar px-6 py-8 pt-[max(3.5rem,var(--raypx-titlebar-height,0px))]"
     >
       <WindowDragRegion />
-      <Empty className="m-auto max-w-lg flex-none gap-6 p-0">
+      <Empty className="m-auto max-w-[466px] flex-none gap-6 rounded-[16px] border border-solid border-border bg-background p-8">
         <EmptyHeader>
           <EmptyMedia variant="icon" className="size-12">
             <MonitorIcon className="size-6" />
@@ -144,7 +144,7 @@ export function InstanceGate({ children }: { children: ReactNode }) {
           )}
         </EmptyHeader>
         <EmptyContent className="gap-4">
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex w-full flex-wrap justify-center gap-2">
             {mismatch && !session.isPending && (
               <>
                 {session.data && (
@@ -211,7 +211,11 @@ export function InstanceGate({ children }: { children: ReactNode }) {
               {t("error")}
             </p>
           )}
-          {canBind && <p className="text-xs/relaxed text-muted-foreground">{t("privacy")}</p>}
+          {canBind && (
+            <p className="mt-2 w-full border-t border-border pt-4 text-xs/relaxed text-muted-foreground">
+              {t("privacy")}
+            </p>
+          )}
         </EmptyContent>
       </Empty>
     </main>
