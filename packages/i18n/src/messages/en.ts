@@ -571,8 +571,7 @@ export default {
     },
   },
   common: {
-    sessionUnavailable:
-      "Unable to verify your session. Please check your connection and try again.",
+    sessionUnavailable: "Unable to verify your session.",
 
     retryAccount: "Retry account",
     users: "Users",

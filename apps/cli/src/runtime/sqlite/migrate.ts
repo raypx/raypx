@@ -7,13 +7,19 @@ import migrations from "./migrations.generated.json";
 
 type AppliedMigration = { name: string; created_at: number; hash: string };
 
+/**
+ * Waiting processes queue behind each owner's whole migration pass, so the lock waits
+ * longer than ordinary writes; a crashed owner releases it through the kernel.
+ */
+const migrationLockTimeoutMs = 30_000;
+
 /** Serialize the migrator's ledger read and transaction across independent processes. */
 export function migrateLocalDatabase(database: LocalDatabase) {
   const client = database.$client;
   const lock = new Database(`${client.filename}.migration-lock.sqlite`, { create: true });
   try {
     if (process.platform !== "win32") chmodSync(lock.filename, 0o600);
-    lock.exec("PRAGMA busy_timeout=5000; BEGIN IMMEDIATE;");
+    lock.exec(`PRAGMA busy_timeout=${migrationLockTimeoutMs}; BEGIN IMMEDIATE;`);
     client.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
     const unsupported = () => {
       throw new LocalError("UNSUPPORTED_SCHEMA", "This profile uses an unsupported SQLite schema");

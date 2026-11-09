@@ -537,7 +537,7 @@ export default {
     },
   },
   common: {
-    sessionUnavailable: "无法验证登录状态，请检查网络连接后重试。",
+    sessionUnavailable: "无法验证登录状态。",
 
     retryAccount: "重试账户",
     users: "用户管理",

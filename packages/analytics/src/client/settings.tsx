@@ -2,9 +2,30 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { useId } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Switch } from "@raypx/ui/components/ui/switch";
-import { StatusBadge } from "@raypx/ui/status-badge";
+import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { useAnalyticsPreferences } from "./provider.tsx";
+
+type PreferenceState = ReturnType<typeof useAnalyticsPreferences>;
+type ConsentKey = "usage" | "errors";
+type StatusKey = "loading" | "unconfigured" | "working" | "enabled" | "disabled";
+
+/** Build configuration is known before stored consent loads, so it decides first. */
+function consentStatus(state: PreferenceState, key: ConsentKey): StatusKey {
+  if (!state.configured) return "unconfigured";
+  if (!state.ready) return "loading";
+  if (state.pending) return "working";
+  return state.consent[key] ? "enabled" : "disabled";
+}
+
+const statusTones: Record<StatusKey, StatusTone> = {
+  loading: "neutral",
+  unconfigured: "neutral",
+  working: "info",
+  enabled: "success",
+  disabled: "neutral",
+};
+
 export function AnalyticsSettings() {
   const t = useTranslations("analytics"),
     c = useTranslations("common"),
@@ -22,53 +43,44 @@ export function AnalyticsSettings() {
         <p className="text-xs leading-relaxed text-muted-foreground">{t("hint")}</p>
       </header>
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-col gap-4">
-          {(["usage", "errors"] as const).map((key) => (
-            <div
-              key={key}
-              className="flex flex-col gap-3 rounded-lg border border-border p-4 @min-sm/analytics:flex-row @min-sm/analytics:items-start @min-sm/analytics:justify-between"
-            >
-              <div className="min-w-0">
-                <label htmlFor={`${id}-${key}`} className="text-sm font-medium">
-                  {t(key)}
-                </label>
-                <p
-                  id={`${id}-${key}-hint`}
-                  className="mt-1 text-xs leading-relaxed text-muted-foreground"
-                >
-                  {t(`${key}Hint`)}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center justify-end gap-3">
-                <StatusBadge
-                  label={
-                    !state.ready
-                      ? c("loading")
-                      : !state.configured
-                        ? t("unconfigured")
-                        : state.pending
-                          ? c("working")
-                          : t(state.consent[key] ? "enabled" : "disabled")
-                  }
-                  tone={
-                    state.pending
-                      ? "info"
-                      : state.ready && state.configured && state.consent[key]
-                        ? "success"
-                        : "neutral"
-                  }
-                />
-                <Switch
-                  id={`${id}-${key}`}
-                  aria-describedby={`${id}-${key}-hint`}
-                  checked={state.consent[key]}
-                  disabled={!state.ready || state.pending || !state.configured}
-                  onCheckedChange={(checked) => state.change({ ...state.consent, [key]: checked })}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ul className="flex flex-col divide-y divide-border border-t border-border">
+          {(["usage", "errors"] as const).map((key) => {
+            const status = consentStatus(state, key);
+            return (
+              <li
+                key={key}
+                className="flex flex-col gap-3 py-4 @min-sm/analytics:flex-row @min-sm/analytics:items-start @min-sm/analytics:justify-between @min-sm/analytics:gap-6"
+              >
+                <div className="min-w-0">
+                  <label htmlFor={`${id}-${key}`} className="text-sm font-medium">
+                    {t(key)}
+                  </label>
+                  <p
+                    id={`${id}-${key}-hint`}
+                    className="mt-1 text-xs leading-relaxed text-muted-foreground"
+                  >
+                    {t(`${key}Hint`)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center justify-end gap-3">
+                  <StatusBadge
+                    label={status === "loading" || status === "working" ? c(status) : t(status)}
+                    tone={statusTones[status]}
+                  />
+                  <Switch
+                    id={`${id}-${key}`}
+                    aria-describedby={`${id}-${key}-hint`}
+                    checked={state.consent[key]}
+                    disabled={!state.ready || state.pending || !state.configured}
+                    onCheckedChange={(checked) =>
+                      state.change({ ...state.consent, [key]: checked })
+                    }
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
         {!state.configured && (
           <p className="text-xs leading-relaxed text-muted-foreground">{t("unavailable")}</p>
         )}

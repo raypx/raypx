@@ -24,11 +24,7 @@ it.each(["en", "zh"] as const)(
       </BrowserLanguageProvider>,
     );
     expect(
-      screen.getByText(
-        locale === "en"
-          ? "Unable to verify your session. Please check your connection and try again."
-          : "无法验证登录状态，请检查网络连接后重试。",
-      ),
+      screen.getByText(locale === "en" ? "Unable to verify your session." : "无法验证登录状态。"),
     ).toBeVisible();
     expect(screen.queryByText("Private")).toBeNull();
     expect(screen.queryByText("private error")).toBeNull();

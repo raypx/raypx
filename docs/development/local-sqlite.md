@@ -51,9 +51,10 @@ features; see the [packaging contract](../architecture/0047-bun-cli-production-p
 Startup holds a separate SQLite migration lock while configuring WAL, checking
 the migration ledger and running `migrate()`. This serializes independent CLI
 processes, including the ledger read that Drizzle performs before its migration
-transaction. Kernel locks release if the owner exits. Daemon/project ownership
-locks also remain separate from the business database, so a long-lived owner
-does not hold its business write lock.
+transaction. Waiters allow 30 seconds for the queue ahead of them, longer than the
+5-second business-write timeout. Kernel locks release if the owner exits.
+Daemon/project ownership locks also remain separate from the business database,
+so a long-lived owner does not hold its business write lock.
 
 Startup opens only `<profile>/profile.sqlite` and initializes it when absent.
 Unmanaged tables, unsupported ledger formats and unknown migration records in

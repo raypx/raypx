@@ -16,6 +16,7 @@ function setup(
   initial: AnalyticsConsent = { usage: false, errors: false },
   save = true,
   read: () => AnalyticsConsent | Promise<AnalyticsConsent> = () => initial,
+  configured = true,
 ) {
   const client = {
     ...createNoopAnalytics(),
@@ -27,7 +28,7 @@ function setup(
   const view = render(
     <StrictMode>
       <BrowserLanguageProvider initialPreference="en">
-        <AnalyticsPreferencesProvider client={client} store={store} configured>
+        <AnalyticsPreferencesProvider client={client} store={store} configured={configured}>
           <AnalyticsIdentity client={client} accountId="account-a" />
           <AnalyticsSettings />
         </AnalyticsPreferencesProvider>
@@ -77,6 +78,14 @@ it("keeps capture disabled until the authoritative async read completes", async 
   resolve({ usage: true, errors: true });
   await waitFor(() => expect(usage.getAttribute("aria-checked")).toBe("true"));
   expect(client.setConsent).toHaveBeenLastCalledWith({ usage: true, errors: true });
+});
+it("shows an unconfigured deployment before stored consent loads", () => {
+  setup(undefined, true, () => new Promise<AnalyticsConsent>(() => {}), false);
+  expect(screen.getAllByText("Not configured")).toHaveLength(2);
+  expect(screen.queryByText("Loading…")).toBeNull();
+  for (const name of ["Usage statistics", "Error reports"]) {
+    expect(screen.getByRole("switch", { name }).getAttribute("aria-disabled")).toBe("true");
+  }
 });
 it("does not restore a late async read after unmount", async () => {
   let resolve!: (value: AnalyticsConsent) => void;
