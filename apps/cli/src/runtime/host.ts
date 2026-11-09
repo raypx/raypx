@@ -81,7 +81,12 @@ export function createHost(options: {
     runtime,
     control: owner,
     terminal: terminalHost,
-    async request(method: LocalMethod, params: unknown, clientId = "stdio"): Promise<unknown> {
+    async request(
+      method: LocalMethod,
+      params: unknown,
+      clientId = "stdio",
+      signal?: AbortSignal,
+    ): Promise<unknown> {
       if (closing) throw new LocalError("CLOSING", "Execution host is stopping");
       if (
         method !== "runtime.info" &&
@@ -108,7 +113,7 @@ export function createHost(options: {
           ? await owner.request(method, params)
           : method.startsWith("approvals.local.") || method.startsWith("connectors.")
             ? await terminalHost.request(method, params, clientId)
-            : await runtime.request(method, params);
+            : await runtime.request(method, params, signal);
       if (method === "runtime.info")
         result = {
           ...(result as Record<string, unknown>),

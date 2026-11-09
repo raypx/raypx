@@ -213,7 +213,12 @@ export async function startDaemon(
             const params = localParams["tools.run"].parse(input.params);
             toolId = params.id ?? crypto.randomUUID();
             client.children.add(toolId);
-            const result = await runtime!.processes.run(params, client.abort.signal, toolId);
+            const result = await host!.request(
+              input.method,
+              { ...params, id: toolId },
+              id,
+              client.abort.signal,
+            );
             return Response.json({ version: 1, id: requestId, result });
           }
           const result = await host!.request(input.method, input.params, id);

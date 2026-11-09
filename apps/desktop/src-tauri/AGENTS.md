@@ -3,7 +3,7 @@
 Rust owns trusted main-WebView IPC, native HTTP/session policy, the picker,
 notifications, window/tray lifecycle and the absolute-path CLI proxy. Execution
 and business schemas stay in the TypeScript CLI/contracts. Generate JSON policy
-with `bun run --cwd apps/desktop run native:generate`; do not hand-edit its outputs.
+with `bun run --cwd apps/desktop native:generate`; do not hand-edit its outputs.
 
 Preserve profile/data paths and the exclusive desktop-instance.sqlite lifetime
 lock. New tauri-sessions.sqlite and system credentials never read or delete

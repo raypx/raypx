@@ -47,7 +47,7 @@ export function createLocalRouter({
   refreshInstance: () => ReturnType<InstanceRuntime["refresh"]>;
   options: { profile?: string; scheduler?: boolean };
 }) {
-  return async (method: LocalMethod, raw: unknown): Promise<unknown> => {
+  return async (method: LocalMethod, raw: unknown, signal?: AbortSignal): Promise<unknown> => {
     // Narrow each schema independently to preserve method-specific types.
     if (
       method !== "runtime.info" &&
@@ -267,7 +267,7 @@ export function createLocalRouter({
           .map((run) => ({ ...run, output: run.output.slice(0, 8_192) }));
       case "tools.run": {
         const p = localParams[method].parse(raw);
-        return processes.run(p, undefined, p.id);
+        return processes.run(p, signal, p.id);
       }
       case "tools.cancel":
         return processes.cancel(localParams[method].parse(raw).id);

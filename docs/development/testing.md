@@ -24,13 +24,13 @@ bun run test coverage
 ### Independent packages
 
 ```sh
-bun run --cwd packages/tasks run test
-bun run --cwd packages/tasks run test:unit
-bun run --cwd packages/tasks run test:component
-bun run --cwd apps/api run test
-bun run --cwd apps/api run test:postgres
-bun run --cwd apps/api run test:redis
-bun run --cwd apps/api run test:cluster
+bun run --cwd packages/tasks test
+bun run --cwd packages/tasks test:unit
+bun run --cwd packages/tasks test:component
+bun run --cwd apps/api test
+bun run --cwd apps/api test:postgres
+bun run --cwd apps/api test:redis
+bun run --cwd apps/api test:cluster
 ```
 
 `test:cluster` requires both `TEST_DATABASE_URL` (an isolated database ending in
@@ -67,14 +67,14 @@ be customized in the owning workspace without changing a shared option schema.
 ```sh
 bun --cwd e2e --bun playwright install --only-shell chromium
 bun run test e2e --package web --smoke -- --workers=1
-bun run --cwd e2e run e2e
-bun run --cwd apps/web run e2e -- settings.spec.ts
-bun run --cwd apps/desktop run e2e -- --grep template
-bun run --cwd e2e run e2e --web --dry-run
+bun run --cwd e2e e2e
+bun run --cwd apps/web e2e -- settings.spec.ts
+bun run --cwd apps/desktop e2e -- --grep template
+bun run --cwd e2e e2e --web --dry-run
 
 bun run test inventory --layers
-bun run --cwd packages/tooling run test:inventory
-bun run --cwd packages/tooling run test:backends
+bun run --cwd packages/tooling test:inventory
+bun run --cwd packages/tooling test:backends
 bun run test backends --with-e2e -- --workers=1
 ```
 
@@ -88,7 +88,7 @@ Inventory and isolated-backend orchestration belong to Tooling and stay reposito
 even when launched from that package. Baseline/mapping filenames resolve against
 the caller's current directory. Prerequisites, generated reports and cleanup are in
 [validation artifacts](validation-artifacts.md). Live inference remains a separate,
-explicit `bun run --cwd apps/desktop run native:agents` gate with its existing prerequisites.
+explicit `bun run --cwd apps/desktop native:agents` gate with its existing prerequisites.
 
 ## Daily acceptance
 
@@ -215,8 +215,8 @@ The complete compiled-artifact gate remains `bun run test e2e`, with every ordin
 assertion. For daily work, select the owning application before building or serving:
 
 ```sh
-bun run --cwd apps/web run e2e
-bun run --cwd apps/desktop run e2e -- settings.spec.ts
+bun run --cwd apps/web e2e
+bun run --cwd apps/desktop e2e -- settings.spec.ts
 bun run test e2e --package web -- --grep template
 bun run test e2e -- --project=desktop
 bun run test e2e --web --smoke
@@ -286,7 +286,7 @@ compiled SSR server under Bun.
 These opt-in checks invoke the configured real Claude Code and Codex CLIs and consume
 provider usage. Default verification uses subprocess fixtures and never invokes them.
 
-Build the CLI, then run `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop run native:agents`.
+Build the CLI, then run `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents`.
 The gate creates temporary projects and uses Desktop's actual LocalEngine transport
 with the complete CLI distribution. It verifies file reads, plan rejection and approval,
 generated `bun:test` suites run by `bun test`, provider session resume across an engine restart, and cancellation
@@ -304,9 +304,9 @@ fails if it observes its test window gaining focus. This is not a fully headless
 native renderer: a test window can still be visible behind the current application.
 
 ```sh
-bun run --cwd apps/desktop run native:smoke
+bun run --cwd apps/desktop native:smoke
 # Explicit foreground GUI acceptance, when it will not interrupt development:
-bun run --cwd apps/desktop run native:smoke:interactive
+bun run --cwd apps/desktop native:smoke:interactive
 ```
 
 `RAYPX_NATIVE_SMOKE_UI=interactive` is the equivalent explicit environment option;

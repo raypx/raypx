@@ -18,6 +18,7 @@ export type Client = {
   actor?: RelayActor;
   ready: boolean;
   chain: Promise<void>;
+  delivery: Promise<void>;
   timer: ReturnType<typeof setTimeout>;
   abort: AbortController;
   cursor?: { streamId: string; sequence: number };
@@ -102,21 +103,53 @@ export class RelayRegistry {
       client.peer.close(4000, "Backpressure");
     }
   }
-  private broadcastLocal(userId: string, frame: RelayServerFrame) {
-    for (const client of this.peers.values())
-      if (client.actor?.role === "viewer" && client.actor.userId === userId)
-        this.send(client, frame);
+  private async broadcastLocal(userId: string, frame: RelayServerFrame) {
+    await Promise.all(
+      [...this.peers.values()].map(async (client) => {
+        const actor = client.actor;
+        if (actor?.role !== "viewer" || actor.userId !== userId) return;
+        // Broker notices may arrive concurrently. Keep each viewer's event order
+        // without waiting for its inbound requests or another viewer's lookup.
+        client.delivery = client.delivery.then(async () => {
+          const current = () =>
+            this.ready() &&
+            this.peers.get(client.peer.id) === client &&
+            client.actor === actor &&
+            !client.abort.signal.aborted;
+          if (!current()) return;
+          try {
+            await this.use((control) => control.credentials.validate(actor));
+          } catch (error) {
+            if (!current()) return;
+            // A recipient's lost session or failed lookup must not close the device
+            // publishing this event or prevent delivery to other admitted viewers.
+            client.abort.abort();
+            clearTimeout(client.timer);
+            const refused = error instanceof ControlError;
+            client.peer.close(
+              refused ? 4001 : 1011,
+              refused ? "AUTH_REQUIRED" : "SERVER_UNAVAILABLE",
+            );
+            return;
+          }
+          if (current()) this.send(client, frame);
+        });
+        return client.delivery;
+      }),
+    );
   }
   async broadcast(
     actor: RelayActor,
     frame: Extract<RelayServerFrame, { type: "changed" | "observed_changed" }>,
   ) {
-    this.broadcastLocal(actor.userId, frame);
-    await this.cluster?.notify({ type: "changed", userId: actor.userId, frame });
+    await Promise.all([
+      this.broadcastLocal(actor.userId, frame),
+      this.cluster?.notify({ type: "changed", userId: actor.userId, frame }),
+    ]);
   }
   async notice(notice: RelayNotice) {
     if (notice.type === "changed") {
-      this.broadcastLocal(notice.userId, notice.frame);
+      await this.broadcastLocal(notice.userId, notice.frame);
       return;
     }
     if (notice.type === "revoke") {

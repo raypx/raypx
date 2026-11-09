@@ -145,11 +145,11 @@ export function createRuntime(options: RuntimeOptions = {}) {
     get agents() {
       return getAgents();
     },
-    request(method: LocalMethod, raw: unknown): Promise<unknown> {
+    request(method: LocalMethod, raw: unknown, signal?: AbortSignal): Promise<unknown> {
       if (closing)
         return Promise.reject(new LocalError("CLOSING", "Local engine is shutting down"));
       const operation = (async () => {
-        return dispatch(method, raw);
+        return dispatch(method, raw, signal);
       })();
       pending.add(operation);
       void operation.then(

@@ -14,6 +14,7 @@ import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 
 export function memoryControlRepository(): ControlRepository & {
   validSession: boolean;
+  inactiveSessions: Set<string>;
   securityVersion: string;
 } {
   let data = new Map<string, ControlRecord>();
@@ -30,7 +31,7 @@ export function memoryControlRepository(): ControlRepository & {
           for (const item of await transaction(draft, userId).list(kind, deviceId))
             draft.delete(key(kind, item.id));
       },
-      sessionActive: async () => repository.validSession,
+      sessionActive: async (id) => repository.validSession && !repository.inactiveSessions.has(id),
       securityVersion: async () =>
         repository.securityVersion +
         ":" +
@@ -191,8 +192,13 @@ export function memoryControlRepository(): ControlRepository & {
       },
     };
   };
-  const repository: ControlRepository & { validSession: boolean; securityVersion: string } = {
+  const repository: ControlRepository & {
+    validSession: boolean;
+    inactiveSessions: Set<string>;
+    securityVersion: string;
+  } = {
     validSession: true,
+    inactiveSessions: new Set(),
     securityVersion: "initial",
     async findGrant(hash) {
       for (const [key, value] of data)

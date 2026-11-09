@@ -82,7 +82,7 @@ for Desktop account URLs, auth client and router search. Shared forms own fields
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
 source-adjacent `*.test.ts` and `*.component.test.ts(x)` suites. Desktop-only compiled
 browser acceptance lives in `e2e/`, uses `@raypx/e2e/testing` fixtures and runs
-through `bun run --cwd apps/desktop run e2e` (root: `test e2e --package desktop`). Shared
+through `bun run --cwd apps/desktop e2e` (root: `test e2e --package desktop`). Shared
 journeys register through `@raypx/e2e/journeys/*`; the `desktop` Playwright project
 selects only this renderer and its compiled assets. It does not establish native WebView acceptance.
 Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. Tauri transport/acceptance tests live in `src-tauri/tests/`; policy unit tests are colocated in Rust modules.

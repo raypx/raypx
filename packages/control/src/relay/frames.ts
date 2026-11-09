@@ -1,7 +1,7 @@
 import { JobError } from "@raypx/jobs-model";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import { terminalRequestSchema } from "@raypx/contracts/terminal";
-import { taskSchema, humanRequestSchema } from "@raypx/core/tasks";
+import { taskSchema, humanRequestSchema, taskInputActivitySchema } from "@raypx/core/tasks";
 import { ControlError, type RelayActor } from "../service.ts";
 import type { Client, DeviceResult, RelayRegistry } from "./registry.ts";
 type FrameType = RelayClientFrame["type"];
@@ -24,7 +24,9 @@ function viewerResult(method: string, result: DeviceResult): DeviceResult {
             ? terminalRequestSchema.parse(result.value)
             : method === "approvals.decide"
               ? humanRequestSchema.parse(result.value)
-              : taskSchema.parse(result.value),
+              : method === "tasks.input"
+                ? taskInputActivitySchema.parse(result.value)
+                : taskSchema.parse(result.value),
       }
     : result;
 }

@@ -47,9 +47,9 @@ existing toolchain; no additional task runner or published package is introduced
 ## Verification
 
 ```sh
-bun run --cwd packages/devtools run test
-bun run --cwd packages/devtools run check
-bun run --cwd e2e run e2e:devtools
+bun run --cwd packages/devtools test
+bun run --cwd packages/devtools check
+bun run --cwd e2e e2e:devtools
 bun run verify
 ```
 

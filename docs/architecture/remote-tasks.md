@@ -75,8 +75,8 @@ session revocation and credential expiry. Account changes, logout, disabling rem
 access cancel affected managed tasks; transient network loss does not. GUI Quit
 preserves daemon-owned tasks on both platforms; explicit daemon stop cancels them.
 
-`infra/relay` uses the Node-compatible `node:http` listener with `ws` under Bun,
-independently of API's Nitro listener. It preserves the protocol's size,
+`infra/relay` uses `Bun.serve` with native WebSockets, independently of API's
+Nitro listener. It preserves the protocol's size,
 authorization and backpressure limits.
 The gateway sends `/relay` to Relay and HTTP authentication/RPC to API; clients
 keep one public origin. Vite supplies the same forwarding during development.

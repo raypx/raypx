@@ -64,8 +64,8 @@ Do not overwrite existing primitives merely to switch icon libraries.
 ## Verification and package size
 
 ```sh
-bun run --cwd packages/icons run check
-bun run --cwd packages/icons run test
+bun run --cwd packages/icons check
+bun run --cwd packages/icons test
 bun run verify
 ```
 

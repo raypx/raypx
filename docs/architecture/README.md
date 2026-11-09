@@ -8,15 +8,15 @@ work; they do not establish shipped behavior or platform acceptance.
 
 ## Runtime and toolchain
 
-| Component    | Current implementation                               | Responsibility                                                          |
-| ------------ | ---------------------------------------------------- | ----------------------------------------------------------------------- |
-| Desktop      | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2 | React SPA, native policy, sessions, windows and CLI transport           |
-| CLI / daemon | TypeScript compiled with Bun 1.4.4                   | Local execution, Agent harness, approvals, scheduling and replay        |
-| Web          | React / TanStack Start SSR, Nitro `bun`              | Browser workbench and authenticated remote views                        |
-| API          | Bun 1.4.4, Nitro / Hono / oRPC                       | Accounts, authorization, remote commands and read projections           |
-| Relay        | Independent Bun HTTP / `ws` service in `infra/relay` | WebSocket peers and delivery through the private Redis broker           |
-| Mobile       | Expo iOS/Android                                     | Account/login baseline; native task views remain future work            |
-| JS tooling   | Bun 1.4.4, VP, TypeScript                            | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks |
+| Component    | Current implementation                                            | Responsibility                                                          |
+| ------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Desktop      | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2              | React SPA, native policy, sessions, windows and CLI transport           |
+| CLI / daemon | TypeScript compiled with Bun 1.4.4                                | Local execution, Agent harness, approvals, scheduling and replay        |
+| Web          | React / TanStack Start SSR, Nitro `bun`                           | Browser workbench and authenticated remote views                        |
+| API          | Bun 1.4.4, Nitro / Hono / oRPC                                    | Accounts, authorization, remote commands and read projections           |
+| Relay        | Independent `Bun.serve` HTTP / WebSocket service in `infra/relay` | WebSocket peers and delivery through the private Redis broker           |
+| Mobile       | Expo iOS/Android                                                  | Account/login baseline; native task views remain future work            |
+| JS tooling   | Bun 1.4.4, VP, TypeScript                                         | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks |
 
 Root `package.json` pins Bun and owns workspace patterns, catalogs and overrides.
 `bun.lock` records installation. `rust-toolchain.toml` pins Rust; the Cargo workspace

@@ -52,6 +52,7 @@ export class RelayHub {
       peer,
       ready: false,
       chain: Promise.resolve(),
+      delivery: Promise.resolve(),
       timer: setTimeout(() => peer.close(4001, "Authentication timeout"), 5000),
       abort: new AbortController(),
     });
@@ -138,7 +139,7 @@ export class RelayHub {
     for (const item of syncs.values())
       if (item.device === id) item.complete(new JobError("DEVICE_OFFLINE", true));
     const cleanup = (async () => {
-      await client.chain;
+      await Promise.allSettled([client.chain, client.delivery]);
       clearTimeout(client.timer);
       if (client.actor?.role === "device") {
         await this.relay.use((control) => control.tasks.disconnect(client.actor!));

@@ -297,7 +297,7 @@ worker and per-file isolation; larger suites set their worker count locally.
 CLI, Desktop and Tooling also own their subprocess test timeouts locally.
 Override task concurrency with `--concurrency-limit=1`
 or `VP_RUN_CONCURRENCY_LIMIT`. A single direct runner can still use
-`bun run --cwd packages/ui run test --maxWorkers=2`.
+`bun run --cwd packages/ui test --maxWorkers=2`.
 
 ```sh
 bun run test --filter=@raypx/ui
