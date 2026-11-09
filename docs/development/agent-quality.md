@@ -8,8 +8,8 @@ acceptance remains a separate Playwright gate.
 
 ## Implementation and acceptance status
 
-The six-part optimization plan is implemented. The following checks cover its
-boundaries without requiring real inference:
+The following automated checks cover the current implementation without requiring
+real inference:
 
 | Area                             | Acceptance                                                                                                                                                                                |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -37,8 +37,8 @@ Local task pagination filters by binding and creation-time/ID cursor in SQLite
 before decoding at most the requested page. Task details select only that task's
 approvals; the pending inbox selects eligible requests joined to active tasks in
 the same binding. Startup reads only unfinished tasks, and managed-session lookup
-uses an indexed existence query. Existing JSON profiles gain indexes without
-rewriting task rows. Byte limits and equal-timestamp cursor navigation remain in place.
+uses an indexed existence query. Profile database indexes do not require rewriting
+the stored task JSON. Byte limits and equal-timestamp cursor navigation remain in place.
 
 The local-read performance regression seeds 10,000 historical tasks and approvals.
 A 100-task page decodes 100 rows, the selected task with two approvals decodes

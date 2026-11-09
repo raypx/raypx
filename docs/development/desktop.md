@@ -1,9 +1,33 @@
 # Tauri Desktop
 
-Runtime connection settings, native API transport and release requirements for
-the Tauri web host. [Desktop workspace commands](../../apps/desktop/README.md)
-and [ADR 0046](../architecture/0046-bun-tauri-artifacts.md) define its entry points
+The canary Desktop uses Tauri 2.12.5 and Rust 1.99.1 for the native host and a
+React SPA for the client. Execution and scheduling belong to the independent
+TypeScript CLI/daemon, whose executable embeds stable Bun 1.4.4 with minified ESM
+and depth-0 bytecode. This guide covers connection settings, native API transport
+and release requirements. [Desktop workspace commands](../../apps/desktop/README.md)
+and [current architecture](../architecture/README.md) define its entry points
 and architectural boundary.
+
+## Renderer navigation
+
+Desktop uses History paths for its main pages. The scoped local protocol resolves
+embedded assets through Tauri 2.12.5's asset resolver, whose existing `index.html`
+fallback supports reloading a deep path such as `/files`. Development uses Vite's
+SPA fallback; the native host adds no second routing or rewrite layer.
+
+Settings opens as `#settings` on the current path and query. The underlying page
+stays mounted, retaining its project, selections and drafts while the dialog is
+open. Closing returns to the matching background history entry, or removes only
+the fragment when opened from a direct link. Native smoke checks a packaged
+deep-path reload and that opening Settings retains the current page and URL.
+
+The Terminal tool opens the daemon's default shell in the current project's
+directory after an explicit click. Advanced options allow a custom executable,
+JSON argument array and directory. With no project selected, the directory must
+be entered explicitly. The daemon verifies absolute executable paths and chooses
+its default from a usable `SHELL` or Windows `ComSpec`, with a verified system
+fallback. External commands run with the operating system user's permissions;
+file grants constrain the built-in file operations.
 
 ## Connection configuration
 
@@ -105,11 +129,6 @@ restores that server's saved state. Theme/language and device-local CLI data sta
 on the same computer. The CLI profile's account/origin binding remains immutable
 after enrollment: connection profiles choose endpoints and never transfer identity.
 
-Earlier versions did not scope their login/remote settings to a server. Those
-unscoped sessions and opt-ins are not imported: sign in and enable remote tasks
-again. Earlier unscoped local Agent history stays in SQLite and is not
-automatically assigned to a deployment.
-
 For isolated testing or a portable setup, `RAYPX_HOME` may name another absolute
 configuration directory. It changes where `config.toml` is read, not the server
 precedence. The GUI launched by Finder/Explorer may not inherit shell variables.
@@ -119,13 +138,12 @@ Native HTTP on macOS and Windows keeps persistent Cookies in Rust-owned `tauri-s
 one row per server scope, isolated from the CLI profile database and Desktop instance lock.
 POSIX directories/files use 0700/0600; Windows uses restricted inheritable DACLs,
 including SQLite auxiliary files. Credentials never enter TOML, renderer storage or sync.
-Old Keychain entries, `credentials.sqlite` and `session-v2.enc` files are not read, imported
-or deleted. An old profile without its database key remains unavailable, with history and
-file grants retained; choose a fresh `local_profile` explicitly. An expired or server-revoked session requires sign-in, and a missing Host authorization requires explicit authorization again.
+Only the current session store is opened; there is no automatic data import.
+A local profile without its database key remains unavailable, retaining its history
+and file grants. Choose a fresh `local_profile` explicitly if a new identity is needed. An expired or server-revoked session requires sign-in, and a missing Host authorization requires explicit authorization again.
 Persistent cookies are AES-GCM ciphertext authenticated against their server scope;
 the OS credential store keeps a separate key for the Tauri data directory. A missing
 key or unreadable ciphertext preserves the stored rows and permits in-memory
-sign-in. Previous-host sessions stay untouched; the first Tauri launch requires
 sign-in. Session-only Cookies stay in memory; persistent Cookies honor expiry and
 sign-out removal.
 
@@ -174,12 +192,14 @@ Build the CLI once with `bun run build:cli`. Set `RAYPX_CLI_PAYLOAD` to its abso
 payload directory when reusing a prepared build. `bun run package:desktop`
 verifies its platform, architecture, application version and integrity inventory,
 copies it unchanged and invokes Tauri. Outputs live in `target/release/bundle`.
-The CLI contains Bun; users need no global JavaScript runtime. Project commands
-use the user's installed tools.
+The production payload contains embedded Bun, bytecode, Herdr and its resources;
+Desktop does not require a separate CLI installation or global JavaScript runtime.
+Project commands use the user's installed tools.
 
 macOS requires 13.5+ and a system WebView. Windows uses WebView2 and a per-user
-NSIS installer. Linux Desktop remains unverified. Cross compilation is rejected
-unless the complete matching CLI runtime is available. The main window uses
+NSIS installer. Linux Desktop remains unverified. Native packaging rejects a target that differs
+from the build process's platform and architecture. Each target needs its own
+matching prepared CLI payload. The main window uses
 native decorations; application layout stays inside their content area.
 
 `bun run --cwd apps/desktop tauri:check` runs Cargo format/check/Clippy;
@@ -207,15 +227,13 @@ are sealed and the outer app is signed/notarized. Windows signs PE resources and
 the NSIS installer. Missing distribution credentials produce an unverified
 artifact; they cannot establish signing, notarization or release acceptance.
 
-The first Tauri release is a signed installer, retaining the existing application
-identifier and data directories. Quit the previous Desktop app, explicitly stop
-its daemon through the current CLI, and wait for lock release before switching. A mismatched daemon
-is never silently taken over. Re-login affects online sessions only; preferences,
-projects, task history, config, offline identity and existing remote consent remain.
+Before replacing an installation, quit Desktop, explicitly stop its daemon and
+wait for lock release. A mismatched daemon is never silently taken over. Installing
+an update preserves local preferences, projects, task history, configuration and
+offline identity; account/origin bindings remain fixed.
 
-Later updates require new `TAURI_SIGNING_PRIVATE_KEY`,
-`RAYPX_TAURI_UPDATER_PUBLIC_KEY` and HTTPS `RAYPX_TAURI_UPDATER_URL`. Never reuse
-the previous updater key/feed. Test packages receive no distribution keys or
-update endpoint.
+Signed updates require `TAURI_SIGNING_PRIVATE_KEY`,
+`RAYPX_TAURI_UPDATER_PUBLIC_KEY` and an HTTPS `RAYPX_TAURI_UPDATER_URL` for this
+application. Test packages receive no distribution keys or update endpoint.
 Only publish an artifact after its platform's installer, GUI and signing matrix
 passes. Record unavailable checks as unverified.

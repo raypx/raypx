@@ -2,10 +2,10 @@
 
 Status: Accepted for planning on 2026-11-01. This defines the greenfield target; current `PRODUCT.md` and implementation remain the shipped baseline until replaced.
 
-Implementation update (2026-11-05): [ADR 0041](0041-provider-capabilities-and-pi.md)
+Implementation update (2026-11-09): [ADR 0041](0041-provider-capabilities-and-pi.md)
 has made Pi selectable for device-local managed tasks through `@raypx/providers`.
-Its original experimental status below is historical. [ADR 0045](0045-tauri-node-pnpm.md)
-defines the current Tauri/Node/pnpm stack; server ownership and pairing here remain
+The [current architecture](README.md) and [ADR 0047](0047-bun-cli-production-packaging.md)
+define the Tauri/Rust host and embedded Bun CLI/daemon; server ownership and pairing here remain
 targets tracked in the [roadmap](../roadmap.md).
 
 ## Context
@@ -16,7 +16,7 @@ Raypx is moving toward persistent Agents that can work on a user's own computer 
 
 Support standalone local, standalone server, and explicitly linked local/server operation. Deliver them in that order. Both deployments use the same Agent domain and Run protocol, with distinct composition roots and persistence adapters. Avoid a second Agent Runtime until the local composition is proven.
 
-A standalone local instance is the first implementation target. [ADR 0040](0040-instance-enrollment-and-providers.md) requires one initial account-bound enrollment, followed by indefinite offline use. The existing CLI daemon owns the first Agent Runtime, its `AgentTask` Run records, `AgentStore` SQLite journal, credentials, private Agent conversations, memory, local files, provider calls, approvals, and recovery. `ManagedExecution` remains the owner of provider turns, inputs, approvals, cancellation and project-lock release. Desktop is a control surface over that daemon and closing the window does not stop local work. The first acceptance uses the existing Codex CLI adapter. Codex and Claude adapters now live in provider packages behind normalized events and a session factory; the future Raypx-owned engine will use the Pi SDK after its durability contract is proven. Pi remains experimental and is not a selectable task provider in this foundation. local model endpoints work without a network, while external models and connectors require an explicit connection and receive only the context needed for a request.
+A standalone local instance is the first implementation target. [ADR 0040](0040-instance-enrollment-and-providers.md) requires one initial account-bound enrollment, followed by indefinite offline use. The existing CLI daemon owns the first Agent Runtime, its `AgentTask` Run records, `AgentStore` SQLite journal, credentials, private Agent conversations, memory, local files, provider calls, approvals, and recovery. `ManagedExecution` remains the owner of provider turns, inputs, approvals, cancellation and project-lock release. Desktop is a control surface over that daemon and closing the window does not stop local work. The first acceptance uses the existing Codex CLI adapter. Codex, Claude and managed local Pi share `@raypx/providers`, normalized events and an injected session factory. Pi is selectable for device-local tasks and is excluded from remote project grants. Local model endpoints work without a network, while external models and connectors require an explicit connection and receive only the context needed for a request.
 
 A server instance is a later deployment of the same CLI Agent Runtime. The first migration target is one headless process with a persistent SQLite profile; PostgreSQL, independent Workers, object storage and multi-tenant sessions are later scale options. A server-owned Agent has one authoritative configuration, conversation, Run history, approval history and event stream on that server.
 

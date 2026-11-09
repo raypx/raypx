@@ -122,8 +122,8 @@ Four entries stay by declaration, each with its reason in `raypx.entryConsumers`
 
 - `i18n/config` is read as a file by Tooling's static catalog reader.
 - `devtools/renderer` is injected as a module string into the overlay by the Vite plugin.
-- `infra/railway` (`.`) is an IaC program the Railway CLI evaluates under Node,
-  selected explicitly with `--file railway.ts` (runtime amended by ADR 0045).
+- `infra/railway` (`.`) is an IaC program the Railway CLI evaluates under Bun,
+  selected explicitly with `--file railway.ts`.
 - `database` (`.`) adds `migrateDatabase` on top of `/connection` for the PostgreSQL
   acceptance harness; production migrates through the package's own `db` commands.
 

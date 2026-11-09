@@ -41,7 +41,7 @@ stylesheet and hosts a React portal, preserving providers and containing styles.
 
 The bridge and renderer share page-local ESM state. Unmount, StrictMode and HMR
 must not duplicate scripts or subscriptions. Production builds remove the guarded
-import and do not enable the plugin or a diagnostics endpoint. Vite+/Node remain the
+import and do not enable the plugin or a diagnostics endpoint. Vite+ and Bun remain the
 existing toolchain; no additional task runner or published package is introduced.
 
 ## Verification

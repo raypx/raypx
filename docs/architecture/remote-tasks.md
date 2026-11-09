@@ -75,8 +75,9 @@ session revocation and credential expiry. Account changes, logout, disabling rem
 access cancel affected managed tasks; transient network loss does not. GUI Quit
 preserves daemon-owned tasks on both platforms; explicit daemon stop cancels them.
 
-`infra/relay` uses Node's `node:http` listener with `ws`, independently of API's
-Nitro listener. It preserves the protocol's size, authorization and backpressure limits.
+`infra/relay` uses the Node-compatible `node:http` listener with `ws` under Bun,
+independently of API's Nitro listener. It preserves the protocol's size,
+authorization and backpressure limits.
 The gateway sends `/relay` to Relay and HTTP authentication/RPC to API; clients
 keep one public origin. Vite supplies the same forwarding during development.
 Both services use `@raypx/control` public entries for credential, context and
@@ -184,7 +185,7 @@ Explicitly installed Claude/Codex Bash hooks are covered separately below.
 The default gate covers real loopback WebSockets, account isolation, one-time
 tickets, reconnect/replay, event deduplication, snapshots, revocation, competing
 host approvals and protocol subprocess fixtures. `bun run verify --full` also
-builds Node artifacts and checks relocated outputs.
+builds Bun artifacts and checks relocated outputs.
 
 `bun run test postgres` checks real migrations and projection persistence across
 API instances. These commands

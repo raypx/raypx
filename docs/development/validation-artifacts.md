@@ -51,8 +51,9 @@ reports only packages in its executed build graph, including restored cache outp
 source-only runs do not produce size rows. Browser gates measure their selected assets.
 Native checks report the CLI payload, while distribution phases additionally report
 the renderer and actual native packages. Size evidence does not establish platform
-acceptance. See the [dated migration measurements](migration-validation.md) for the
-Linux CLI archive and runtime observations.
+acceptance. The [production packaging decision](../architecture/0047-bun-cli-production-packaging.md)
+defines the CLI payload; collect current measurements with these commands rather
+than treating older migration outputs as a current baseline.
 
 Native checks accept the cross-platform process/task runners, installed CLI and Herdr
 against the same verified payload before the Tauri host checks. Windows explicitly
@@ -139,8 +140,11 @@ bun run smoke:deployment --platform linux/arm64
 Docker with Buildx must be available. The default target is `linux/amd64`; foreign
 architectures require Docker's emulation support. Builds run sequentially in an
 owned builder capped at two CPUs and 3 GiB RAM. The command builds the Compose
-migration/API/Web/Relay images, Railway API/Web/Relay images, Caddy gateway and a test-only
-API fixture image. API/Web assertions are shared with relocated artifact probes.
+migration/API/Web/Relay images, Railway API/Web/Relay images and Caddy gateway.
+API's `deployment:fixture:build` bundles the synthetic account provisioner once into
+the evidence directory. The gate mounts it read-only into the prepared Bun migration
+image on the internal network; it neither exports an API development image nor
+publishes a database port. API/Web assertions are shared with relocated artifact probes.
 
 Each run creates its own internal backend and gateway ingress networks, tmpfs PostgreSQL and nonpersistent Redis, using
 synthetic credentials and an `example.invalid` account. Mail verification runs
@@ -199,7 +203,10 @@ non-browser, non-test sources import browser code, its consumers are selected as
 
 Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
 Rust host targets, builds outputs and runs independent artifact probes concurrently.
-It needs no GUI, database or mail service. The repository uses Bun for JavaScript
+It needs no GUI, database or mail service. Linux CLI artifact acceptance requires
+Docker unless the process already runs in a loopback-only network namespace;
+it executes the prepared payload with `--network none`. This is separate from
+the deployment-image gate. The repository uses Bun for JavaScript
 and Rust 1.99.1 for Desktop; native checks require that pinned Rust toolchain. `verify` and `verify --full`
 are the verification entry points.
 
@@ -242,7 +249,7 @@ Manual distribution runs have their own cancellation group, so routine pushes ca
 cancel a release acceptance run. The `macos` and `cold_native` selections also have
 separate cancellation groups. For a Windows-only native comparison, use
 `gh workflow run ci.yml --ref <branch> -f distribution=true -f cold_native=true`.
-This disables Cargo/Go compiler cache restoration and saving on fresh hosted native
+This disables Cargo compiler cache restoration and saving on fresh hosted native
 runners; Bun installation and the shared VP JavaScript cache keep their usual policy.
 Compare the same runner image/architecture and signing configuration. Record preparation,
 package-step duration (native compilation plus installer creation), each job duration

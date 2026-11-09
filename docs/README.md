@@ -11,18 +11,17 @@ Start with the [project overview](../README.md), [product scope](../PRODUCT.md),
 [development setup](development/getting-started.md).
 [Root instructions](../AGENTS.md) define repository rules. Workspace manifests are the inventory:
 `bun run workspace:list` and `bun run test list`. Current guides describe the
-implementation; the roadmap describes future work. Accepted later amendments
-supersede conflicting earlier ADR text.
+implementation; the roadmap lists remaining product work. Decision records explain
+the boundaries behind that implementation. Retired migration plans and dated
+experiment reports belong in Git history, rather than the current guides.
 
 ## Architecture and decisions
 
 - [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
 - [Accepted Bun CLI production packaging](architecture/0047-bun-cli-production-packaging.md)
-- [Bun / Tauri migration implementation](architecture/0046-bun-tauri-artifacts.md)
-- [Bun + Tauri experiment and validation](development/bun-tauri-experiment.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
-- [Decision history and supersession status](architecture/README.md#decision-history)
-- [Persistent Agent Platform roadmap](roadmap.md) — future scope and dated acceptance
+- [Architecture decisions](architecture/README.md#architecture-decisions)
+- [Remaining Agent platform work](roadmap.md) — future scope and acceptance criteria
 
 ## Development and verification
 
@@ -63,11 +62,3 @@ supersede conflicting earlier ADR text.
 - [Infrastructure workspaces](../infra/README.md)
 - [Independent Relay service](../infra/relay/README.md)
 - [Cloudflare Relay ingress](../infra/cloudflare/README.md)
-
-## Migration record
-
-- [2026-11-05 migration validation and measurements](development/migration-validation.md)
-
-This dated evidence does not replace current platform release gates. Follow the
-[Desktop release guide](development/desktop.md#build-and-release) for first
-installation, updater keys and macOS/Windows acceptance requirements.

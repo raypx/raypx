@@ -4,8 +4,9 @@ Status: Accepted, 2026-11-03. Extends ADR 0040. Amended 2026-11-04: provider wor
 consolidated into `@raypx/providers`.
 
 Implementation amendments: [ADR 0044](0044-event-sourced-cli-orchestration.md)
-adds durable orchestration effect intents; [ADR 0045](0045-tauri-node-pnpm.md)
-moves the execution runtime from Bun to Node without changing provider scope.
+adds durable orchestration effect intents. The CLI/daemon runs on embedded stable
+Bun under [ADR 0047](0047-bun-cli-production-packaging.md); Tauri/Rust owns the
+native Desktop host without changing provider scope.
 
 ## Ownership and capabilities
 
@@ -119,5 +120,5 @@ Cron-created Agent tasks through the same runtime; then broader client parity.
 
 2026-11-04. `provider-pi` and `provider-testing` merged into `@raypx/providers` with the
 Codex and Claude adapters ([ADR 0040 amendment](0040-instance-enrollment-and-providers.md#amendment-one-providers-workspace)).
-The Pi entries keep their Node target, remain the only sources that import the Pi SDK or
+The Pi entries keep their `node` platform target for host-compatible APIs, remain the only sources that import the Pi SDK or
 `@raypx/ai`, and still pass the shared adapter conformance suites. Remote Pi stays unavailable.

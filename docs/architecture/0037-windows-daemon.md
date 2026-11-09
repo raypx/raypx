@@ -1,28 +1,27 @@
 # ADR 0037: Windows uses the independent CLI daemon
 
-Status: accepted, 2026-10-28. Supersedes the Windows foreground-owner rule in
-ADR 0035 and ADR 0036.
+Status: accepted, 2026-10-28. Supersedes the earlier Windows foreground-owner rule.
 
-## Current implementation amendment (2026-11-05)
+## Current implementation (2026-11-09)
 
-[ADR 0045](0045-tauri-node-pnpm.md) replaces the original Bun transport and
-single-executable distribution described below. The independent daemon decision,
-token/Host/Origin checks and GUI-independent lifetime remain accepted.
+[ADR 0047](0047-bun-cli-production-packaging.md) defines the embedded stable Bun
+CLI payload. The independent daemon, token/Host/Origin checks and GUI-independent
+lifetime remain accepted.
 
-- Node `node:http` serves the same Unix-socket / Windows loopback protocol;
+- Bun serves the Unix-socket / Windows loopback protocol;
   explicit direct client transport prevents proxy forwarding of private tokens.
-- The Rust launcher and full Node/ESM/pnpm/Herdr directory are copied to a
-  versioned location under `<data>/bin/daemon`. SQLite runtime leases protect
-  copies in use; cleanup takes an exclusive lease before removing an old directory.
-- Connectors install a stable launcher plus a complete payload under
+- The complete compiled CLI/Herdr payload is copied for Windows daemon ownership,
+  retaining its immutable inventory and required resources.
+- Connectors install a stable executable plus a complete payload under
   `~/.raypx/bin/versions/`, selected by `installation.json`. Ownership checks and
   controlled Windows launcher replacement remain required.
-- Tauri's Rust host replaces the Go native adapter. Platform GUI, NSIS upgrade
-  and running-file acceptance remain explicit release gates.
+- Tauri's Rust host owns native policy and launches the bundled CLI by absolute
+  path. Platform GUI, NSIS upgrade and running-file acceptance remain explicit
+  release gates.
 
 See [terminal host](../development/terminal-host.md) for current paths and commands.
 
-## Original decision (2026-10-28)
+## Execution ownership
 
 macOS and Windows Desktop now share one execution model: Desktop launches
 `raypx daemon proxy`, which connects to or starts the profile's independent
@@ -47,10 +46,11 @@ both transports; POSIX keeps owner-only Unix sockets.
 ## Executable lifetime
 
 Windows locks running executables, so a daemon started from the Desktop bundle
-would block the updater. A compiled CLI copies itself to
-`<data>/Raypx/bin/raypx-<version>-<builtAt>.exe` and starts the daemon from there.
-Each launch removes other unlocked copies. Desktop spawns CLI children with
-`CREATE_NO_WINDOW`; the daemon is detached with a hidden window.
+would block the updater. The compiled CLI copies its complete payload to
+`<data>/bin/daemon/<version>-<builtAt>/` and starts `raypx.exe` from there.
+SQLite runtime leases protect copies in use; cleanup takes an exclusive lease
+before removing an old directory and retains locked resources. Desktop spawns CLI
+children with `CREATE_NO_WINDOW`; the daemon is detached with a hidden window.
 
 ## Terminal hooks
 

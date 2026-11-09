@@ -135,10 +135,7 @@ export function checkToolchain(root: string, documents: readonly string[]): stri
     const document = readFileSync(join(root, file), "utf8").replaceAll("**", "");
     for (const [, version] of document.matchAll(/\bBun v?(\d+\.\d+\.\d+)\b/g))
       expect(file, "documented Bun", version, bun);
-    if (
-      file !== "docs/development/migration-validation.md" &&
-      /\bNode v?\d+\.\d+\.\d+\b/.test(document)
-    )
+    if (/\bNode v?\d+\.\d+\.\d+\b/.test(document))
       findings.push(`${file}: documents a Node release; Bun is the only runtime`);
   }
   return [...new Set(findings)];

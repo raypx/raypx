@@ -86,5 +86,5 @@ Logging currently lives in Raypx's private `@raypx/logger` source workspace. API
 and CLI use `workspace:*` and keep evlog in the external runtime catalog. Logger
 needs no Kit release or preview archive while its product workflow settles.
 Future extraction follows the release steps above. Its safe/managed/stream
-behavior is checked by workspace tests and Raypx's Node, Worker and standalone
-CLI artifact gates; packaged-platform acceptance remains separate.
+behavior is checked by workspace tests and Raypx's Bun API and standalone CLI
+artifact gates; Workers and packaged-platform acceptance remain separate.

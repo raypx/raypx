@@ -2,9 +2,10 @@
 
 Status: Accepted, 2026-11-03. Extends ADRs 0040 and 0041.
 
-Implementation amendment (2026-11-05): [ADR 0045](0045-tauri-node-pnpm.md)
-replaces the Go host with Rust/Tauri and the CLI runtime with Node; application
-service, port and composition boundaries remain accepted.
+Current implementation (2026-11-09): Tauri/Rust owns the native Desktop host;
+the TypeScript CLI/daemon uses embedded stable Bun under
+[ADR 0047](0047-bun-cli-production-packaging.md). Application service, port and
+composition boundaries remain accepted.
 
 ## Direction
 
@@ -37,8 +38,10 @@ Its Rust host composes an Engine adapter that owns child-process framing and the
 version-matched daemon proxy.
 
 Application services receive persistence ports. AgentStore borrows ProfileStorage's
-single SQLite writer; cross-record atomic transitions, requests, outbox, receipts,
-forgetting and replay retain their existing transaction boundaries and serialization.
+single SQLite writer. [ADR 0044](0044-event-sourced-cli-orchestration.md) defines
+the atomic decision transaction spanning receipts, events, task/request/input/activity
+projections, relay journal/outbox and effect intents. Forgetting and replay retain
+their atomic operations and serialization.
 
 ProviderRegistry accepts drivers with discovery, scope admission, preparation and
 continuation inspection. Process and SDK drivers prepare the same SessionFactory

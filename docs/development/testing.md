@@ -65,7 +65,7 @@ be customized in the owning workspace without changing a shared option schema.
 ### Browser and repository workflows
 
 ```sh
-bun --bun playwright install chromium
+bun --cwd e2e --bun playwright install --only-shell chromium
 bun run test e2e --package web --smoke -- --workers=1
 bun run --cwd e2e run e2e
 bun run --cwd apps/web run e2e -- settings.spec.ts

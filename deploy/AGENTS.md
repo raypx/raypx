@@ -7,9 +7,11 @@ Dockerfiles in apps/api, apps/web and infra/relay. Keep install/build commands i
 project dependency installation. Docker uses the same pinned Bun runtime.
 `manifests.ts` stages workspace metadata before dependency installation. Each
 service installs its own workspace dependency closure and root build tools through
-Bun filters. API's `migration-build` bundles the independent Bun migration command;
-`migrate` and `deploy` copy it with canonical SQL. The separate `fixture` target is
-only for deployment acceptance; production images do not build or ship it.
+Bun filters. API's `migrate-dependencies` installs the Database production closure;
+`migration-sources` stages its source closure, and `migration-payload` combines them
+with canonical SQL for `migrate` and `deploy`. Deployment acceptance separately
+bundles its synthetic account fixture and mounts it read-only into the migration
+image; production images do not build or ship that fixture.
 `build.sh` adds Compose-only Bun cache mounts to temporary copies and removes them on exit.
 Image builds use VP's `--no-cache` to avoid nesting syscall tracking inside build
 sandboxes with existing seccomp listeners; Docker layers own image build caching.

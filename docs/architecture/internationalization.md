@@ -78,7 +78,7 @@ archive checks verify platform-neutral imports and public declarations without D
 Packaged Desktop checks remain explicit gates; unit tests do
 not claim physical-device or GUI acceptance.
 
-SDK changes are developed through an uncommitted `pnpm link`, pinned to a verified
+SDK changes are developed through an uncommitted `bun link`, pinned to a verified
 `next` snapshot on the branch and replaced by the released exact alpha before
 merge. Do not commit a `file:`/`link:` dependency or import another repository's
 source. See [Raypx Kit library changes](../development/intl-release.md).

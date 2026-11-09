@@ -2,9 +2,10 @@
 
 Status: Accepted, 2026-11-03. Extends ADR 0042.
 
-Runtime amendment (2026-11-05): [ADR 0045](0045-tauri-node-pnpm.md) replaces
-`bun:sqlite` with synchronous `node:sqlite` and Drizzle's `node-sqlite` driver.
-The decision/transaction, journal and process-bound effect semantics remain unchanged.
+Current runtime (2026-11-09): the CLI/daemon uses embedded stable Bun under
+[ADR 0047](0047-bun-cli-production-packaging.md). ProfileStorage owns the synchronous
+`bun:sqlite` writer through Drizzle's `bun-sqlite` driver. The decision/transaction,
+journal and process-bound effect semantics remain unchanged.
 
 ## Direction
 
@@ -15,10 +16,9 @@ relay journal and outbox, and the effect intents in a single SQLite transaction.
 A wire projection keeps the existing `AgentEvent` sequence, so relay, Desktop,
 replay, snapshot and compaction formats do not change.
 
-This supersedes ADR 0042's "retain existing transaction boundaries" sentence.
-That sentence meant each record family kept the boundaries it already had; the
-boundary now spans the whole decision, not each writer. It does not change the
-providers, adapters, IPC or relay protocol.
+The boundary spans the whole decision, rather than each record family's writer.
+It preserves [ADR 0042](0042-application-layering.md)'s application/adapter boundaries
+without changing the providers, IPC or relay protocol.
 
 ## Layer
 
@@ -54,7 +54,7 @@ call `new Date()` or `crypto.randomUUID()` inline; production injects the system
 clock and random UUIDs, and tests inject a fixed clock and monotonic ids.
 Live-process facts are inputs, not hidden reads: whether a request is still
 pending, whether the session is ready, the queue depth and the closing flag are
-passed into the decider. A synchronous `node:sqlite` transaction stands in for a
+passed into the decider. A synchronous `bun:sqlite` transaction stands in for a
 per-thread lock, because one process owns the profile writer.
 
 ## Effects

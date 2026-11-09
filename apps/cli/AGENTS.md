@@ -47,6 +47,9 @@ The runtime owns `ProfileStorage` for `<profile>/profile.sqlite` through private
 `check` verifies the embedded journal; migrate uses a separate process lock and rejects unmanaged/unknown schemas. Keep PRAGMA SQL, rowid-preserving REPLACE and bounded native snapshot cursors explicit.
 
 `runtime/process/herdr.ts` delegates PTY/VT/cursor state to pinned Herdr; Desktop stages its verified runtime/DLLs/licenses. Runtime never downloads binaries.
+`terminal.open` may omit the executable: the daemon verifies its absolute `SHELL`/`ComSpec`
+or an available system fallback. It never guesses from renderer platform hints or searches PATH;
+working directories stay explicit and absolute. `tools.run` still requires an executable.
 `RAYPX_HERDR_BINARY` selects an absolute development binary. Each owner starts an isolated server: client EOF cancels its PTYs; owner EOF stops its server. Never reuse user sessions.
 On Windows keep the EOF supervisor in an independent process group so abrupt owner termination
 still permits cleanup of the default shell and ConPTY descendants.

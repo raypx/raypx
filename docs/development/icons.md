@@ -42,11 +42,10 @@ There are no theme values, UI controls or business behaviors in Icons.
 4. Run Icons' check/test and repository verify. Inspect the actual control with
    keyboard focus, tooltip/accessible name, collapsed rail and reduced motion.
 
-The initial migration has 69 selected components for the 70 distinct Lucide
-glyphs previously used in 57 source files. Both pen/edit affordances use
-`EditIcon`. The selected `CalendarClockIcon`, line arrows, `SentIcon`,
-`HistoryIcon`, `PaletteIcon` and `SunMoonIcon` retain the intended meanings rather
-than accepting the free package's approximate Lucide-name aliases.
+The curated set keeps both pen/edit affordances on `EditIcon`. The selected
+`CalendarClockIcon`, line arrows, `SentIcon`, `HistoryIcon`, `PaletteIcon` and
+`SunMoonIcon` retain the intended meanings rather than accepting the free
+package's approximate Lucide-name aliases.
 
 Keep vendor imports and vendor runtime dependencies inside Icons. Do not export
 the entire Hugeicons catalog, introduce string lookups, provide legacy aliases,
@@ -75,28 +74,6 @@ and decorative icons inside labelled controls. Browser checks cover the compiled
 CSS's inherited stroke width and the actual application surfaces. Renderer builds
 do not imply packaged macOS/Windows or native mobile acceptance.
 
-The earlier baseline experiment used Lucide 1.65.0 and Hugeicons Free 4.4.0 with
-renderer 1.1.10. A Vite+/Rolldown ES-library bundle of all 70 candidate glyphs was
-7,796 B gzip versus 13,658 B gzip, with React external. This isolated measurement
-is not a route-size delta and predates the final curated mapping and shared
-renderer. Source/package changes need actual application build checks.
-
 See the [Hugeicons React guide](https://hugeicons.com/docs/integrations/react/quick-start)
 and [free/Pro licensing](https://hugeicons.com/docs/faqs/license-questions). Only
 the free MIT collection is used; Pro assets and license keys are not required.
-
-## Migration validation (2026-11-02)
-
-All source checks and tests, production Web/Desktop renderer builds and
-`bun run verify` passed on raypx-tokyo. Verify completed 71 tasks, including the
-Linux Rust checks/tests after installing the pinned Rust 1.99.1 toolchain. This does
-not establish packaged macOS/Windows or native mobile acceptance.
-
-Browser probes passed for compiled stroke inheritance, light/dark rendering,
-390px settings, the password visibility button and Desktop renderer settings.
-The shared browser fixtures supply the API's role projection with the matching
-account ID. Guest access remains the default. The previously failing sidebar and
-account-navigation cases now pass, along with their related navigation/settings
-regressions. The complete compiled browser suite passes 32 cases; the 2 cases
-requiring real backend or packaged live-Agent environments remain skipped.
-Generated logs, probe results and screenshots are in `.artifacts/icon-evaluation/`.

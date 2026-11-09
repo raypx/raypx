@@ -1,29 +1,23 @@
 # ADR 0034: Extensible multi-platform foundation
 
-Status: accepted, supersedes conflicting cloud-only, no-local-runtime and all-Bun
-requirements in historical ADRs. Approved by the user for this rebuild.
+Status: accepted. Approved by the user for this rebuild; current implementation
+reconciled 2026-11-09. Supersedes retired cloud-only and no-local-runtime choices.
+See the [current architecture](README.md) for implemented responsibilities and
+[ADR 0047](0047-bun-cli-production-packaging.md) for formal CLI packaging.
 
-Current amendment (2026-11-05): [ADR 0045](0045-tauri-node-pnpm.md) supersedes
-the Bun-only runtime/catalog/install rules below and the former Go desktop host.
-Node/pnpm now own JavaScript execution and installation; Rust owns the Tauri host
-and CLI launcher, and VP remains the single task graph. Manifest discovery,
-composition boundaries and data isolation remain accepted. The dated choices
-below preserve the foundation's history; use the [current architecture](README.md)
-for the implemented stack and workspace responsibilities.
+## Foundation
 
-## Original foundation and earlier amendments
+Web, Desktop, Mobile, API and CLI are application composition roots. Discover
+workspaces from root `package.json`, without package-name allowlists or exhaustive
+documentation inventories. Libraries expose explicit source entries and platform
+metadata; extract a package when its responsibility and actual consumers establish
+the boundary. Applications never import another application's source.
 
-Remove retired business apps/libraries. Keep Web, Desktop, Mobile, API and CLI
-(Mobile was later removed on 2026-10-18; phones use Web until native needs return),
-with eight libraries: auth, client, contracts, database, i18n, mail, ui and tooling.
-Theme is part of UI; local implementation remains inside CLI runtime. Source
-exports and explicit per-entry platform metadata allow future package extraction.
-
-Replace name allowlists and exhaustive documentation inventories with manifest
-discovery. The initial foundation used one Turbo graph and Bun catalogs, a Nix
-development shell and a Node production API. The amendments below supersede those
-toolchain and runtime choices. Before ADR 0045, the compiled CLI included Bun
-and Desktop used a Go host with system WKWebView/WebView2.
+Theme belongs in UI. Local execution remains private to the CLI runtime; Desktop
+launches its bundled executable by absolute path. Web and Desktop share DOM
+authentication forms through Auth's browser client entry, while each application
+owns its routes, clients, query access and navigation adapters. Universal hooks
+and UI primitives keep their existing boundaries.
 
 The account database and migration history are new and independent. Retired SQL
 is available only in Git history and must not be applied by foundation commands.
@@ -33,27 +27,20 @@ Consequences: entrypoint/platform checks and generator templates require mainten
 but ordinary packages no longer require edits to a central architecture whitelist,
 root task catalog or CI package-name matrix.
 
-Amendment (2026-10-15), approved by the user: the Nix development shell was removed.
-Windows needed native installs anyway and every runtime upgrade required per-platform
-hashes. At that stage, `.nvmrc` and the root `packageManager` pinned Node and Bun for
-version managers and CI. The 2026-10-27 Bun amendment below supersedes the Node pin.
-Web became a separate TanStack Start SSR service on Node/Nitro beside API;
-Desktop uses Start SPA mode.
+## Runtime and toolchain
 
-Amendment (2026-10-15): Web and Desktop now share their DOM authentication form
-through auth's browser client entry. Each application keeps its own file routes,
-clients, query access and navigation adapters; universal auth hooks and UI
-primitives keep their existing boundaries.
+Bun 1.4.4 is the JavaScript runtime for local tools, CLI/daemon, Nitro Web/API
+services and deployment images. Root `packageManager` is the single Bun version
+pin; `bun.lock` records installation. `raypx-dev policy` checks runtime consistency
+and rejects `.nvmrc`, `engines.node` and Node setup in CI. There is no Nix shell;
+mise may read the root pin without declaring another runtime version.
 
-Amendment (2026-10-27), approved by the user: VP replaces Turbo as the single
-task runner, prioritizing incremental file-based invalidation. Public Bun scripts
-remain compatible. Lightweight workspace task configs declare dependencies and
-cache policy through Tooling; app plugins live in separate Vite app configs.
-Native SDK preparation stays uncached, with generated files checked after it runs.
-The migration is now active on canary.
+VP owns the sole task graph/cache and incremental file-based invalidation.
+Lightweight workspace task configs declare dependencies and cache policy through
+Tooling; application plugins live in separate Vite app configs. Native preparation
+stays uncached, with generated files checked after it runs.
 
-Amendment (2026-10-27; superseded by ADR 0045), approved by the user: Bun is the only JavaScript runtime,
-including the Web/API Nitro services and deployment images. Root `packageManager`
-is the single Bun version pin; `.nvmrc`, `engines.node` and Node setup in CI were
-removed. `raypx-dev policy` checks runtime consistency and rejects reintroduced
-Node pins. This supersedes the earlier Node production and version-manager choices.
+Web is a separate TanStack Start SSR service on Nitro's Bun preset beside API.
+Desktop uses Start SPA mode inside Tauri 2.12.5/Rust 1.99.1 with the system
+WKWebView/WebView2. Rust owns native UI and policy; the bundled Bun CLI/daemon owns
+execution. The independently released Tauri JavaScript API/CLI packages are 2.12.4.

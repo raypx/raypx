@@ -43,9 +43,10 @@ files by hand. The check command fails if the embedded journal differs from the
 SQL. Future schema changes generate additional migrations; applied migrations
 are immutable.
 
-The Bun SQLite migrator receives this embedded journal. The compiled CLI needs
-only its executable at runtime; it does not look for migration files beside the
-binary or in the repository.
+The Bun SQLite migrator receives this embedded journal. SQLite initialization needs
+no external migration files beside the executable or in the repository. Keep the
+complete CLI payload, including Herdr and its inventory, for execution and terminal
+features; see the [packaging contract](../architecture/0047-bun-cli-production-packaging.md).
 
 Startup holds a separate SQLite migration lock while configuring WAL, checking
 the migration ledger and running `migrate()`. This serializes independent CLI
@@ -61,7 +62,9 @@ in storage initialization.
 
 Default integration tests exercise initialization, reopen, cross-store visibility,
 cross-repository rollback, owner closure, validated stored JSON, rejected formats and six processes starting at
-once. `apps/cli`'s `smoke` and `smoke:pi` commands additionally run copied compiled
+once. Committed SQLite snapshots also verify that opening, writing, rolling back
+and reopening preserve existing rows and the migration ledger. `apps/cli`'s
+`smoke` and `smoke:pi` commands additionally run copied compiled
 executables outside the repository.
 
 Desktop's Rust host separately owns `tauri-sessions.sqlite` for server-scoped

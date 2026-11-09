@@ -1,19 +1,29 @@
 # Terminal host and connectors
 
 Claude and Codex terminal connectors deliver approval requests to the independent
-CLI host. [ADR 0035](../architecture/0035-local-owner-host.md) defines local execution
-ownership. [ADR 0040](../architecture/0040-instance-enrollment-and-providers.md)
+CLI daemon. In canary, the Tauri/Rust Desktop host connects to that daemon;
+the daemon runs TypeScript in its embedded stable Bun 1.4.4 executable, packaged
+with minified ESM and depth-0 bytecode.
+[ADR 0035](../architecture/0035-local-owner-host.md) defines local execution ownership. [ADR 0040](../architecture/0040-instance-enrollment-and-providers.md)
 requires first-time local instance enrollment; local terminal approvals then work
 offline without an active online session. Web delivery is a separately enabled
 cloud scope. Native mobile remains separate.
 
 ## Execution and lifetime
 
-On macOS Desktop launches its bundled, version-matched CLI as `daemon proxy`.
-The proxy connects through a private authenticated Unix socket to a detached CLI
-owner. The owner holds SQLite, scheduling, managed Agent processes, the outbound
-relay connection and terminal RequestBroker. Socket directories are 0700 and
-socket/endpoint files 0600; there is no public local HTTP listener.
+On macOS and Windows, Desktop launches its bundled, version-matched CLI by
+absolute path as `daemon proxy`. The detached CLI owner holds SQLite, scheduling,
+managed Agent processes, the outbound relay connection and terminal RequestBroker.
+macOS uses a private authenticated Unix socket, with 0700 directories and 0600
+socket/endpoint files. Windows uses token-guarded loopback transport and restricted
+file ACLs (ADR 0037). There is no public local control listener.
+
+Desktop's Terminal tool uses the selected project's directory and the daemon's
+default shell, opened only by an explicit action. The daemon chooses a usable
+absolute `SHELL` or Windows `ComSpec`, with a verified system fallback. Advanced
+options allow an explicit executable, arguments and directory; a terminal without
+a selected project requires an explicit directory. Herdr owns the PTY/terminal
+state. External commands have ordinary operating system user permissions.
 
 GUI Quit, renderer reload and loss of one proxy preserve managed Agent work.
 Tools and interactive PTYs belong to their connected client and are cancelled
@@ -25,19 +35,19 @@ uncertain model calls: managed runs become interrupted; pending external request
 fall back, and decided/delivered requests recover as outcome unknown.
 
 A profile has one execution owner enforced by SQLite's OS-backed write lock.
-A competing legacy host fails rather than repairing/cancelling the running owner.
-Windows runs the daemon and hook host over token-guarded loopback (ADR 0037).
+A competing execution owner fails without cancelling or taking over the current owner.
 Linux retains existing CLI support without complete product acceptance.
 
 ## Authorization and server selection
 
-Continue selecting the server in `~/.raypx/config.toml`; do not compile separate
-beta/production clients. Origin and account hash together select cloud host settings
+Select the server in `~/.raypx/config.toml`; the same Desktop package serves each
+configured origin. Origin and account hash together select cloud host settings
 and remote bindings. Terminal settings/history belong to the local profile.
 Provider keys remain on the computer.
 
-For this first Desktop-assisted bootstrap, Native checks the current browser
-account, supplies a trusted Origin, and requests a restricted credential for the registered device/epoch.
+To enable cloud access, the Rust host checks the current signed-in account,
+supplies a trusted Origin and requests a restricted credential for the registered
+device/epoch.
 The credential goes straight to daemon IPC and `host_authorizations` in its existing `profile.sqlite`,
 never the renderer, TOML/JSON files or logs. PostgreSQL stores only its hash. It
 expires after 30 days and can mint only ten-minute grants for that device; it
@@ -54,13 +64,15 @@ bootstrap without sign-out or task detachment. Successful single-session revocat
 removes only credentials issued by that session; bulk session revocation applies
 to all hosts. Each device has one current credential; reauthorization
 rotates its key and derived grants. Password changes and session-security
-revocation invalidate host access. Full Better Auth device-code login remains
-needed for CLI-only onboarding; this phase does not claim that headless login flow.
+revocation invalidate host access. `raypx login` enrolls a local profile by
+requesting human approval at the account page; it does not enable cloud Host
+access. Cloud authorization currently uses the Desktop account session.
 
 ## Terminal connectors
 
-Desktop Agent settings explicitly install/remove owned hooks for Claude and
-Codex. Equivalent commands, after building the standalone binary:
+The Agent section of the global `#settings` dialog explicitly installs or removes
+owned hooks for Claude and Codex. Equivalent commands, after building the
+standalone binary:
 
 ```sh
 raypx daemon start
@@ -73,9 +85,12 @@ raypx connectors uninstall codex
 raypx daemon stop
 ```
 
-Installation copies the compiled CLI into `~/.raypx/bin/raypx`, preserving an
-ownership digest, and inserts an incremental `PermissionRequest` hook into
-`~/.claude/settings.json` or `~/.codex/hooks.json`. Existing settings and unrelated
+Installation verifies and copies the complete CLI/Herdr payload into a managed
+version directory under `~/.raypx/bin/versions/`. The stable `~/.raypx/bin/raypx`
+(`raypx.exe` on Windows) records its ownership digest and version inventory.
+Missing or modified payload resources fail verification. The connector inserts an
+incremental `PermissionRequest` hook into `~/.claude/settings.json` or
+`~/.codex/hooks.json`. Existing settings and unrelated
 hooks stay intact; edits, unsupported JSON formats, concurrent changes and another
 Raypx profile's connector fail without overwriting them. Backups are private.
 Existing file permissions, indentation and newline style are preserved. Symlinked
@@ -117,7 +132,7 @@ immutable decision receipt. The host is the approval authority. Duplicate answer
 with the same receipt return its original result; changing the answer, revision,
 epoch or receipt cannot apply a second decision.
 
-Web and macOS Desktop show a separate terminal-request section. Lists contain
+Web and Desktop expose a separate terminal-request section. Lists contain
 bounded summaries; expansion fetches one tool input. The UI enables only the
 request's validated capabilities, preserves a receipt after uncertain delivery,
 and distinguishes decided, delivered and outcome unknown. Delivered means written
@@ -140,8 +155,11 @@ recovery and old-plaintext retention remain public-hosted-release gates.
 
 Default tests replay redacted real hook fixtures, exercise broker fencing,
 retention/restart, private socket permissions, client disconnect ownership,
-late Native bootstrap and explicit logout versus cookie expiry. `bun run verify`
-also covers all existing workspaces and both deployment builds.
+late native bootstrap and explicit logout versus cookie expiry. `bun run verify`
+selects affected source checks and related tests, with Rust checks for native
+inputs. `bun run verify --full` adds complete suites, builds and current-platform
+artifact probes. Database, browser, packaged native and live-provider acceptance
+are separate gates.
 
 The explicit live acceptance uses a synthetic account, isolated PostgreSQL/API,
 temporary projects/configuration, real authenticated Claude/Codex CLIs and the
@@ -164,9 +182,11 @@ an isolated `TEST_DATABASE_URL` ending in `_test`; packaged Native smoke remains
 an explicit GUI gate. Local HTTP does not verify HTTPS production cookies, Beta,
 hosted relay deployment or mobile behavior.
 
-## Remaining deliveries
+## Scope limits
 
-Expo iOS foreground app, APNs/FCM, E2EE and recovery, full session synchronization,
-ACP/Pi Agent runners, terminal concurrent answering, headless device-code login,
-Linux/Android services, worktree workflows and restartable runners remain separate
-phases. Model calls in `packages/ai` are not an installed Pi Agent runner.
+Mobile background delivery, E2EE/recovery, full terminal session synchronization,
+concurrent native/remote answering and Linux/Android service acceptance are not
+established by these gates. Local managed Pi execution uses its separate SDK
+runner; it does not expand the Claude/Codex terminal-hook contract, and remote
+managed Pi admission remains disabled. Future work is tracked in the
+[roadmap](../roadmap.md).

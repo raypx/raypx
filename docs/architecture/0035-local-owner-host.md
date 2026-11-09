@@ -4,18 +4,18 @@ Status: accepted, 2026-10-27. Incremental implementation from `c3020e4`.
 
 Implementation amendments: [ADR 0037](0037-windows-daemon.md) extends the
 independent daemon to Windows; [ADR 0041](0041-provider-capabilities-and-pi.md)
-adds local managed Pi; [ADR 0045](0045-tauri-node-pnpm.md) replaces the Bun
-runtime and Go desktop host with Node, Tauri and Rust. These amend the
-implementation notes below while preserving local ownership, optional cloud
-channels and approval leases.
+adds local managed Pi. The TypeScript CLI/daemon uses embedded stable Bun;
+Tauri/Rust owns the native Desktop host. See the [current architecture](README.md)
+and [ADR 0047](0047-bun-cli-production-packaging.md) for the accepted runtime and
+distribution, preserving local ownership, optional cloud channels and approval leases.
 
-Each profile has one Owner and one Node + TypeScript Host. Local tasks, project
+Each profile has one Owner and one Bun + TypeScript execution Host. Local tasks, project
 grants, connectors, SQLite, terminal settings and broker work without an active online session after initial instance enrollment (ADR 0040).
 Cloud control owns origin/account credentials, grant renewal, relay and opted-in
 projections. Cloud restore runs in the background; local RPC never joins its
 serial queue. Signing in does not enable remote execution or upload local history.
 The Tauri composition root uses Rust; its checks run through the shared VP graph.
-Native host and distribution policy are recorded in ADR 0045.
+Native host and release policy are recorded in the [Desktop guide](../development/desktop.md).
 
 ## Local terminal ownership
 

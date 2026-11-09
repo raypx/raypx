@@ -1,14 +1,18 @@
 # Raypx CLI
 
-The compiled `raypx` executable needs no installed Node or Bun. Desktop bundles the same version and connects to its independent daemon through private IPC. The daemon owns scheduling. Foreground commands run once and never install a service.
+Raypx's TypeScript CLI and independent daemon run in the compiled `raypx`
+executable, with no installed Node.js or Bun required. The canary Desktop uses a
+Tauri/Rust host and bundles this same CLI payload, connecting through private IPC.
+The daemon owns scheduling; foreground commands own their work and never install
+a service.
 
 The [accepted production packaging](../../docs/architecture/0047-bun-cli-production-packaging.md)
 embeds the Bun 1.4.4 stable runtime with minified ESM and depth-0 bytecode.
-Native AOT and separate-runtime distributions remain manual experiments.
 
 Run `raypx login` once to enroll the selected profile with an account and server
-origin before local execution. Its signed identity permits offline work after
-online logout. `RAYPX_API_URL` selects the enrollment server (default
+origin before local execution. It prints an instance code for approval at the
+account page and waits for that human confirmation. Its signed identity permits
+offline work after online logout. `RAYPX_API_URL` selects the enrollment server (default
 `https://raypx.com`); `RAYPX_WEB_URL` can select a separate account-page origin.
 Enrollment and remote Host authorization are separate.
 
@@ -28,9 +32,30 @@ Use the current file `version` when editing, moving or deleting. Deletion prompt
 
 `--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically.
 
-Build with `bun run --cwd apps/cli build`. VP checks the SQLite journal and the pinned Bun version, then directly compiles `src/main.ts` with ESM, minify and depth-0 bytecode. `dist/` contains the standalone executable, Herdr, LICENSE, README and the complete `runtime.json` inventory. Consumers use `RAYPX_CLI_PAYLOAD` and never compile again. `bun apps/cli/scripts/distribution.ts archive` creates native macOS arm64 / Windows x64 archives and SHA-256 after signing.
+Build through VP with root `bun run build:cli`, or run the workspace build with
+`bun run --cwd apps/cli build`. The build checks the SQLite journal and pinned Bun
+version, then compiles `src/main.ts` with ESM, minification and depth-0 bytecode.
+`apps/cli/dist/` contains the executable, `herdr/`, `LICENSE`, `README.txt` and the
+complete `runtime.json` inventory. Keep the whole payload together. Desktop
+staging, daemon copies and connectors verify its resources and hashes; consumers
+reuse it through `RAYPX_CLI_PAYLOAD` without compiling another copy.
 
-`bun run --cwd apps/cli smoke` runs the actual binary outside the repository with an empty PATH, exercises NDJSON, persistent grants, a PTY and EOF process cancellation. Desktop GUI tests remain separate.
+`bun apps/cli/scripts/distribution.ts archive` creates native macOS arm64 or
+Windows x64 archives and SHA-256 files from the prepared payload. Signing and
+notarization are separate distribution steps. Artifact checks and source tests
+do not establish a platform's installer, GUI or release-signing acceptance.
 
-All stores share `<profile>/profile.sqlite`, initialized with an embedded Drizzle migration.
+Desktop's Terminal tool can open the daemon's default shell in a selected
+project without an executable or JSON argument list. This uses the private
+`terminal.open` contract; it adds no public CLI command. Custom executables remain
+absolute paths, and `raypx tools run` still requires its explicit executable.
+Herdr supplies the PTY and terminal state.
+
+`bun run --cwd apps/cli smoke` runs the actual binary outside the repository with
+an empty PATH, exercising NDJSON, persistent grants, a bundled Herdr PTY and EOF
+process cancellation. Desktop GUI tests and live-provider checks remain separate;
+Linux Desktop acceptance is unverified.
+
+Profile task state, grants and journals use `<profile>/profile.sqlite`, initialized
+with embedded Drizzle migrations.
 See [local SQLite storage](../../docs/development/local-sqlite.md) for schema generation and profile format requirements.

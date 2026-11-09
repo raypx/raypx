@@ -104,6 +104,12 @@ preserve editor text on storage/delivery failures. Drafts never execute until Se
 Desktop opts into `persistEditor` for a separately bounded current-editor slot, restored
 before the composer mounts. Keep its owner/namespace identical to the named draft list.
 The device owner persists across account changes; remote slots remain account-scoped.
+Existing-session instruction and follow-up editors use a separate owner-scoped collection
+bounded to 20 slots of 32,000 characters, identified by computer/project/task/input type.
+Persist validated frozen delivery receipts for deliberate retries; only matching confirmed
+receipts clear text, and late success never clears replacement edits or selects another task.
+Live conversations remain mounted and open on completion. Reading older output exposes
+a return-to-latest action and signals new output without disturbing the reading anchor or full-text mode.
 
 Optional `client.observed` adds a separate terminal-request section. List summaries
 omit tool bodies; expansion loads one request. Render capabilities, revision/epoch

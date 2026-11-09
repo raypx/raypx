@@ -124,7 +124,7 @@ without a TTY. Bare `raypx` still prints help.
 
 Run `bun run --cwd apps/cli smoke:tui` after building for the explicit POSIX PTY
 gate. It requires system Python 3 only for the test harness and uses temporary
-profiles, an empty PATH and a relocated single binary. The full host/owner protocol,
+profiles, an empty PATH and a relocated complete CLI payload. The full host/owner protocol,
 live output and cross-owner controls remain proposed.
 
 ## Build caches
@@ -182,4 +182,6 @@ Before using local files, commands, automations or Agent sessions, register the 
 
 The signed identity remains usable offline and after online logout. Registration enables no remote Host grant and uploads no project content. Account/origin changes cannot take over the profile. The account page lists and revokes registered instances; a successfully synced revocation blocks local execution and preserves stored history. See [the instance decision](../architecture/0040-instance-enrollment-and-providers.md).
 
-See the [Bun + Tauri experiment record](bun-tauri-experiment.md) for prepared payloads and remaining platform gates.
+See the [production CLI packaging decision](../architecture/0047-bun-cli-production-packaging.md)
+for the payload contract and the [Desktop guide](desktop.md#build-and-release) for
+native preparation and platform acceptance.

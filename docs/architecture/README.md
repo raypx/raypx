@@ -21,7 +21,9 @@ work; they do not establish shipped behavior or platform acceptance.
 Root `package.json` pins Bun and owns workspace patterns, catalogs and overrides.
 `bun.lock` records installation. `rust-toolchain.toml` pins Rust; the Cargo workspace
 contains the Tauri host. Rust Tauri is 2.12.5; its independently released npm
-API/CLI packages are 2.12.4. See [ADR 0046](0046-bun-tauri-artifacts.md).
+API/CLI packages are 2.12.4. `canary` uses this Tauri/Rust host; `dev` retains
+MyGo/Go. Both branches keep the Bun CLI/daemon and its
+[production packaging](0047-bun-cli-production-packaging.md).
 
 Desktop targets macOS 13.5+ and Windows. Linux CLI/core checks and GUI compilation
 do not establish Linux Desktop acceptance. Native signing, installer and GUI
@@ -219,26 +221,24 @@ acceptance remain explicit gates. The first Tauri release uses a signed installe
 after exiting the old host and explicitly stopping its daemon; later updates use
 new Tauri updater keys/feed. Platform release requires its GUI, installer and
 signing/notarization matrix. See [testing](../development/testing.md),
-[Desktop release](../development/desktop.md#build-and-release) and the dated
-[migration validation record](../development/migration-validation.md).
+[Desktop release](../development/desktop.md#build-and-release).
 
-## Decision history
+## Architecture decisions
 
-Later accepted amendments supersede conflicting earlier implementation details.
-Superseded records preserve historical rationale; use the current guides above
-for commands, paths and supported behavior.
+These records retain the rationale for current boundaries and the explicitly
+identified future platform target. Current guides define commands, paths and
+supported behavior. Superseded Node/pnpm migration and Bun experiment records
+remain available in Git history.
 
 | Decision                                                                             | Status                                                            |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| [0034: Extensible foundation](0034-extensible-foundation.md)                         | Boundaries accepted; runtime/toolchain superseded by 0045         |
-| [0035: Local Owner Host](0035-local-owner-host.md)                                   | Accepted; Windows amended by 0037, implementation by 0041/0045    |
-| [0037: Windows daemon](0037-windows-daemon.md)                                       | Accepted; distribution/runtime amended by 0045                    |
+| [0034: Extensible foundation](0034-extensible-foundation.md)                         | Accepted; current Tauri/Bun implementation                        |
+| [0035: Local Owner Host](0035-local-owner-host.md)                                   | Accepted; Windows amended by 0037, providers by 0041              |
+| [0037: Windows daemon](0037-windows-daemon.md)                                       | Accepted; production packaging defined by 0047                    |
 | [0039: Local and server Agent platform](0039-local-server-agent-platform.md)         | Accepted target; rollout tracked in roadmap                       |
 | [0040: Instance enrollment and providers](0040-instance-enrollment-and-providers.md) | Accepted; provider consolidation amendment                        |
 | [0041: Provider capabilities and managed Pi](0041-provider-capabilities-and-pi.md)   | Accepted; effect model amended by 0044                            |
 | [0042: Application services and adapters](0042-application-layering.md)              | Accepted; transaction boundary amended by 0044                    |
 | [0043: Package surfaces](0043-package-surfaces.md)                                   | Accepted                                                          |
-| [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)     | Accepted; SQLite driver amended by 0045                           |
-| [0045: Tauri, Node and pnpm](0045-tauri-node-pnpm.md)                                | Historical baseline before the Bun experiment                     |
-| [0046: Bun and Tauri](0046-bun-tauri-artifacts.md)                                   | Migration implementation; CLI packaging accepted by 0047          |
+| [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)     | Accepted; Bun SQLite implementation                               |
 | [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md)           | Accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode |

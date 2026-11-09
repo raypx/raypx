@@ -23,6 +23,10 @@ build writes `dist/client` for the native app origin. Every shell route declares
 `staticData.page` (title key from `PageTitle` in `src/router.tsx` and a Blocks page
 layout); the shell derives breadcrumbs and the page template, so pages never add
 their own outer width or gutters.
+Main routes use browser History paths; the Tauri asset resolver supplies the SPA
+entry for deep paths. Settings is a lazy global dialog selected only by `#settings`,
+preserving the background path/search, mounted editors and scroll. Closing uses
+the matching background history entry or removes only the fragment for a direct link.
 
 `@raypx/contracts/local-client` owns renderer method/parameter/reply inference and validates both sides of IPC; callers never supply reply generics.
 `src/lib/platform.ts` creates isolated DesktopPlatform ports; application composition
@@ -43,7 +47,8 @@ the local branch; job-finished events refresh only the active Jobs route. These 
 
 `/automations` defaults to device schedules; `scope=cloud` mounts the account-gated
 `@raypx/jobs/client` view. Preserve local form/history state across tabs and account
-changes. Local reads use the route loader; mutations invalidate it. Keep root errors
+changes. Local schedule presets and previews use jobs-model calendar rules; invalid
+Cron/time zones stay in the form and never submit. Local reads use the route loader; mutations invalidate it. Keep root errors
 silent and successful lists during reload failure. Cloud state is account/client-keyed,
 aborts on identity change and never loads before login. Validated
 `/tasks?scope=remote&taskId=...` links read projections without executing tasks.
@@ -55,10 +60,16 @@ owner, computer and project. Directory navigation
 pushes history; pagination replaces it. The loader defers its listing promise to
 the table so the editor and toolbar stay mounted during reloads. Features/files
 owns components, mutation actions and a scoped Zustand vanilla store for drafts,
-operations and feedback. URL/server data stay outside that store. Confirm dirty
+operations and feedback. Files uses a responsive list/editor split, ancestor breadcrumbs,
+editor-scoped save shortcuts and focus restoration. URL/server data stay outside that store. Confirm dirty
 directory/route exits once, preserve drafts during pagination, and discard state
 after leaving. Ignore late mutation responses on directory changes or unmount;
 the underlying IPC is not cancelled. Native loaders never run during preloading or SSR.
+
+`/terminal` opens the execution host's default shell only after an explicit action,
+using the selected project's directory. Custom executable, arguments and directory
+stay in advanced options; an unavailable project never falls back to another directory.
+The daemon resolves and validates the shell, not the renderer's platform hints.
 
 ## Ownership
 
@@ -102,7 +113,7 @@ without repeating web sign-out or dropping the device identity.
   Framework APIs live in src-tauri/src/shell.rs; other Rust modules own native policy/transport.
   Opaque business JSON uses TS contracts as the sole business schema authority.
 - Build a prerendered SPA in dist/client and embed it through Tauri frontendDist.
-  Packaged routes use hash history; no frontend server runs in packaged apps.
+  Packaged routes use browser History with Tauri's asset fallback; no frontend server runs in packaged apps.
   The root remains text-free; translated providers initialize inside ClientOnly.
 - Launch only the absolute, version-matched bundled CLI at resources/bin/raypx.
   Stage the immutable compiled Bun CLI payload and its verified Herdr distribution

@@ -1,7 +1,8 @@
 # Extending workspaces
 
 Bun workspaces below cover TypeScript applications and libraries. Desktop also owns
-a Go module in apps/desktop; see the [Desktop guide](desktop.md#build-and-release).
+the Rust host in `apps/desktop/src-tauri`, built through the root Cargo workspace;
+see the [Desktop guide](desktop.md#build-and-release).
 
 Infrastructure lives under `infra/*`, including the independent Relay application
 and provider deployment tooling. Each manifest declares its actual kind/target,
@@ -28,9 +29,11 @@ maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Bun can consume node code;
 other platform crossings require a compatible explicit public entry. A server use
 case behind a universal entry is not safe merely because Bun can execute
-Node-compatible APIs: `memory`, `jobs` and `instances` mark `./server` and `src/server.ts` /
-`src/server/**` as node, following `account`, so a browser import of a server use
-case fails policy instead of reaching a bundled dependency by accident.
+Node-compatible APIs: `@raypx/memory-server` and `@raypx/jobs-server` declare their
+whole workspace as `node`; `account` and `instances` mark their server entries and
+sources explicitly. Browser imports of those server use cases therefore fail
+policy instead of reaching a bundled dependency by accident. The `node` target
+describes compatible host APIs; Bun remains the JavaScript runtime.
 
 Every public entry has an established consumer in another workspace. `policy`
 finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig
@@ -72,9 +75,9 @@ form is covered by both applications' route integration tests. DOM form dependen
 stay behind the browser entry; `/hooks` remains platform-neutral, while `/server`
 does not import DOM code.
 
-Account has three public code entries: the universal root for safe remote read
-state, `/client` for shared DOM views and `/server` for the injected session
-projection service. Web/Desktop own client instances and navigation; API owns HTTP
+Account's public code entries are the universal root for safe remote read state,
+`/access` for permission projections, `/client` for shared DOM views and `/server`
+for the injected session projection service. Web/Desktop own client instances and navigation; API owns HTTP
 and error mapping. Feature CSS is exported through `/client/styles.css` from auth
 and account; these entries register their components as Tailwind sources.
 UI's `/styles/app.css` imports the shared theme and layered app base defaults.
