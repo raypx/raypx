@@ -362,11 +362,25 @@ fn renderer_policy_keeps_native_authorization_and_device_scope_private() {
 fn page_origins_and_external_links_reject_foreign_views_and_credentials() {
     use raypx_desktop::host::{external_url, trusted_url};
     let scope = "abcdef0123456789abcdef0123456789";
-    for path in ["/", "/index.html?view=tasks#/tasks"] {
+    for path in [
+        "/",
+        "/files?rootId=project&path=notes%2Fplan.md",
+        "/tasks?scope=local&project=project#settings",
+        "/terminal#settings",
+    ] {
         assert!(trusted_url(
             &format!("raypx-{scope}://localhost{path}").parse().unwrap(),
             scope
         ));
+        assert_eq!(
+            trusted_url(
+                &format!("http://raypx-{scope}.localhost{path}")
+                    .parse()
+                    .unwrap(),
+                scope
+            ),
+            cfg!(windows)
+        );
     }
     for raw in [
         "https://evil.invalid",

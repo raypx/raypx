@@ -15,7 +15,7 @@ import {
 import userEvent from "@testing-library/user-event";
 
 describe("Desktop local file routes", () => {
-  it("loads jobs and roots in parallel through hash history and contains auxiliary roots failures", async () => {
+  it("loads jobs and roots in parallel through browser history and contains auxiliary roots failures", async () => {
     const jobs = deferred<JobDefinition[]>();
     const roots = deferred<RootGrant[]>();
     mocks.localRequest.mockImplementation((method) => {
@@ -23,7 +23,7 @@ describe("Desktop local file routes", () => {
       if (method === "roots.list") return roots.promise;
       throw new Error(`Unexpected local request: ${method}`);
     });
-    const router = testRouter("/automations", { hash: true });
+    const router = testRouter("/automations", { browser: true });
     const loading = router.load();
     await waitFor(() => {
       expect(mocks.localRequest).toHaveBeenCalledWith("jobs.list", {});
@@ -36,6 +36,8 @@ describe("Desktop local file routes", () => {
     });
     mount(router);
     expect(router.state.location.pathname).toBe("/automations");
+    expect(window.location.pathname).toBe("/automations");
+    expect(window.location.hash).toBe("");
     expect(screen.getByRole("heading", { name: "Nightly scan" })).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText("private roots diagnostic")).toBeNull();
@@ -88,6 +90,60 @@ describe("Desktop local file routes", () => {
     );
     const update = mocks.localRequest.mock.calls.find(([method]) => method === "jobs.update")?.[1];
     expect(update).not.toHaveProperty("projectId");
+  });
+
+  it("previews a schedule preset before saving and sends its Cron expression", async () => {
+    const user = userEvent.setup();
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "jobs.list") return [];
+      if (method === "roots.list") return grants;
+      if (method === "jobs.create") return job();
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/automations");
+    await user.click(screen.getByRole("button", { name: "New automation" }));
+    expect(screen.getByLabelText("Next five runs").querySelectorAll("time")).toHaveLength(5);
+    await user.click(screen.getByRole("combobox", { name: "Repeat" }));
+    await user.click(screen.getByRole("option", { name: "Every day at 09:00" }));
+    expect(screen.getByLabelText("Cron schedule")).toHaveValue("0 9 * * *");
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Daily scan" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
+    await waitFor(() =>
+      expect(mocks.localRequest).toHaveBeenCalledWith(
+        "jobs.create",
+        expect.objectContaining({ cron: "0 9 * * *" }),
+      ),
+    );
+  });
+
+  it("keeps invalid schedule drafts, explains the field and does not send them", async () => {
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "jobs.list") return [job()];
+      if (method === "roots.list") return grants;
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/automations");
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Nightly scan" }));
+    expect(screen.getByRole("heading", { name: "Edit automation" })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Cron schedule"), { target: { value: "invalid" } });
+    expect(screen.getByLabelText("Cron schedule")).toHaveAttribute("aria-invalid", "true");
+    expect(
+      screen.getByText("Enter a valid five-field Cron expression with a future run."),
+    ).toBeTruthy();
+    fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
+    expect(screen.getByLabelText("Cron schedule")).toHaveFocus();
+    expect(mocks.localRequest.mock.calls.some(([method]) => method === "jobs.update")).toBe(false);
+    expect(screen.getByLabelText("Name")).toHaveValue("Nightly scan");
+    fireEvent.change(screen.getByLabelText("Cron schedule"), { target: { value: "0 9 * * 1-5" } });
+    fireEvent.change(screen.getByLabelText("Time zone"), { target: { value: "Invalid/Zone" } });
+    expect(screen.getByLabelText("Time zone")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Enter an IANA time zone, for example Asia/Shanghai.")).toBeTruthy();
+    expect(screen.queryByLabelText("Next five runs")).toBeNull();
+    fireEvent.change(screen.getByLabelText("Time zone"), { target: { value: "Asia/Shanghai" } });
+    expect(screen.getByLabelText("Next five runs").querySelectorAll("time")).toHaveLength(5);
+    expect(screen.getByLabelText("Time zone")).toHaveAttribute("aria-invalid", "false");
   });
 
   it("shows pending UI until the initial jobs loader finishes", async () => {

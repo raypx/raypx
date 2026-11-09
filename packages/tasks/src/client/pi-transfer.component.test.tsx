@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
@@ -66,10 +66,14 @@ it("asks before sending a Pi conversation to a different connection and binds th
       followUp,
     },
   });
+  let completeCatalog: (value: ModelCatalog) => void = () => {};
   const client: TaskWorkspacePort = {
     ...base,
     models: {
-      list: async () => catalog,
+      list: () =>
+        new Promise((resolve) => {
+          completeCatalog = resolve;
+        }),
       setDefault: async ({ model: value }) => ({ default: value }),
     },
   };
@@ -117,6 +121,11 @@ it("asks before sending a Pi conversation to a different connection and binds th
     </QueryClientProvider>,
   );
   const prompt = await screen.findByRole("textbox", { name: "Follow up in the same session" });
+  expect(screen.getByText("Checking model availability…")).toBeInTheDocument();
+  expect(
+    screen.queryByText("The model connection changed. Choose a model again."),
+  ).not.toBeInTheDocument();
+  await act(async () => completeCatalog(catalog));
   fireEvent.change(prompt, { target: { value: "Continue synthetically" } });
   await selectOption("Model", JSON.stringify([target.provider, target.model, target.connectionId]));
   await waitFor(() =>

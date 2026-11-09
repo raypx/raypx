@@ -69,15 +69,16 @@ function LoadedFileTable({
   const format = useFormatter();
   const busy = useFilesStore((s) => s.busy);
   const setOperation = useFilesStore((s) => s.setOperation);
+  const selectedPath = useFilesStore((s) => s.editor?.path);
   return (
     <>
-      <div>
+      <div className="@container/file-list">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>{c("name")}</TableHead>
-              <TableHead>{t("size")}</TableHead>
-              <TableHead>{t("modified")}</TableHead>
+              <TableHead className="@max-lg/file-list:hidden">{t("size")}</TableHead>
+              <TableHead className="@max-lg/file-list:hidden">{t("modified")}</TableHead>
               <TableHead className="text-right">
                 <span className="sr-only">{c("actions")}</span>
               </TableHead>
@@ -86,11 +87,15 @@ function LoadedFileTable({
           <TableBody>
             {listing.entries.map((entry) => (
               <TableRow key={entry.path}>
-                <TableCell className="w-[45%] whitespace-normal">
+                <TableCell className="w-full whitespace-normal @lg/file-list:w-[45%]">
                   <Button
                     variant="ghost"
                     data-slot="file-entry"
-                    className="h-auto max-w-full justify-start px-0 py-2 text-left whitespace-normal wrap-anywhere"
+                    data-file-path={entry.path}
+                    aria-current={
+                      entry.kind === "file" && selectedPath === entry.path ? "true" : undefined
+                    }
+                    className="h-auto max-w-full justify-start px-0 py-2 text-left whitespace-normal wrap-anywhere aria-current:bg-muted aria-current:text-foreground"
                     disabled={busy || !["file", "directory"].includes(entry.kind)}
                     onClick={() => void onOpen(entry)}
                   >
@@ -102,10 +107,10 @@ function LoadedFileTable({
                     {entry.name}
                   </Button>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground @max-lg/file-list:hidden">
                   {entry.kind === "directory" ? "—" : `${format.number(entry.size, "compact")} B`}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground @max-lg/file-list:hidden">
                   {format.dateTime(new Date(entry.modifiedAt), {
                     month: "short",
                     day: "numeric",

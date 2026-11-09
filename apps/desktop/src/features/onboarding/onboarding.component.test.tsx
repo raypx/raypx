@@ -225,14 +225,18 @@ it("preserves projects when provider discovery fails and retries only that read"
   expect(fixture.calls.some((call) => call.method === "agents.local.execute")).toBe(false);
 });
 
-it("restores an authorized project without executing a task", async () => {
-  const fixture = desktopFixture(),
-    project = readyProject(fixture);
-  const { history } = await mount(fixture, <LocalHome />, "/");
-  await waitFor(() => expect(history.location.search).toContain(project.id));
-  expect(history.location.pathname).toBe("/tasks");
-  expect(fixture.calls.some((call) => call.method === "agents.local.execute")).toBe(false);
-});
+it.each(["", "#settings"])(
+  "restores an authorized project without executing a task (%s)",
+  async (hash) => {
+    const fixture = desktopFixture(),
+      project = readyProject(fixture);
+    const { history } = await mount(fixture, <LocalHome />, `/${hash}`);
+    await waitFor(() => expect(history.location.search).toContain(project.id));
+    expect(history.location.pathname).toBe("/tasks");
+    expect(history.location.hash).toBe(hash);
+    expect(fixture.calls.some((call) => call.method === "agents.local.execute")).toBe(false);
+  },
+);
 
 it("keeps an explicit invalid project selected until the person chooses another", async () => {
   const fixture = desktopFixture();

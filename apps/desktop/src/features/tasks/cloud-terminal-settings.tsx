@@ -1,77 +1,106 @@
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { DeviceProject } from "@raypx/contracts/tasks";
+import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { getBridge, localRequest } from "../../lib/desktop.ts";
 
-export function CloudTerminalSettings({
-  accountId,
-  projects,
-  supported = true,
-}: {
-  accountId: string;
-  projects: DeviceProject[];
-  supported?: boolean;
-}) {
+type Settings = { enabled: boolean; rootIds: string[] };
+type Props = { accountId: string; projects: DeviceProject[]; supported?: boolean };
+
+export function CloudTerminalSettings(props: Props) {
+  // Unmount the previous account's drafts and in-flight reads before rendering another account.
+  return <AccountTerminalSettings key={props.accountId} {...props} />;
+}
+
+function AccountTerminalSettings({ accountId, projects, supported = true }: Props) {
   const t = useTranslations("terminal"),
+    c = useTranslations("common"),
     id = useId();
-  const [value, setValue] = useState<{ enabled: boolean; rootIds: string[] }>();
+  const [value, setValue] = useState<Settings>();
   const [localRoots, setLocalRoots] = useState<string[]>([]);
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(false);
+    [loading, setLoading] = useState(true),
+    [readError, setReadError] = useState(false),
+    [saveError, setSaveError] = useState(false);
+  const mounted = useRef(false);
+  const readVersion = useRef(0);
+  const editVersion = useRef(0);
+  const dirty = useRef(false);
+  const roots = useRef<string[]>([]);
   useEffect(() => {
-    let active = true;
-    void Promise.all([
-      getBridge().then((bridge) => bridge.request.terminalSettings({ accountId })),
-      localRequest("approvals.local.settings", {}),
-    ]).then(
-      ([settings, local]) => {
-        if (active) {
-          setValue(settings);
-          setLocalRoots(local.rootIds);
-        }
-      },
-      () => {
-        if (active) setError(true);
-      },
-    );
+    mounted.current = true;
     return () => {
-      active = false;
+      mounted.current = false;
     };
+  }, []);
+  const reload = useCallback(async () => {
+    const request = ++readVersion.current;
+    const revision = editVersion.current;
+    setLoading(true);
+    setReadError(false);
+    try {
+      const [settings, local] = await Promise.all([
+        getBridge().then((bridge) => bridge.request.terminalSettings({ accountId })),
+        localRequest("approvals.local.settings", {}),
+      ]);
+      if (!mounted.current || request !== readVersion.current) return;
+      roots.current = local.rootIds;
+      setLocalRoots(local.rootIds);
+      setValue((old) => {
+        const next = old && (dirty.current || revision !== editVersion.current) ? old : settings;
+        return { ...next, rootIds: next.rootIds.filter((root) => local.rootIds.includes(root)) };
+      });
+    } catch {
+      if (mounted.current && request === readVersion.current) setReadError(true);
+    } finally {
+      if (mounted.current && request === readVersion.current) setLoading(false);
+    }
   }, [accountId]);
   const projectIds = projects
     .map((project) => project.id)
     .sort()
     .join(",");
   useEffect(() => {
-    let active = true;
-    const refresh = () => {
-      void localRequest("approvals.local.settings", {}).then(
-        (local) => {
-          if (!active) return;
-          setLocalRoots(local.rootIds);
-          setValue((old) =>
-            old
-              ? { ...old, rootIds: old.rootIds.filter((root) => local.rootIds.includes(root)) }
-              : old,
-          );
-        },
-        () => {
-          if (active) setError(true);
-        },
-      );
-    };
+    const refresh = () => void reload();
     refresh();
     window.addEventListener("raypx:terminal-settings", refresh);
-    return () => {
-      active = false;
-      window.removeEventListener("raypx:terminal-settings", refresh);
-    };
-  }, [accountId, projectIds]);
+    return () => window.removeEventListener("raypx:terminal-settings", refresh);
+  }, [projectIds, reload]);
+  function edit(next: Settings) {
+    dirty.current = true;
+    editVersion.current++;
+    setValue(next);
+  }
+  async function save() {
+    if (!value || busy || !supported) return;
+    setBusy(true);
+    setSaveError(false);
+    try {
+      const bridge = await getBridge();
+      if (!mounted.current) return;
+      const settings = await bridge.request.terminalConfigure({
+        accountId,
+        ...value,
+        rootIds: value.rootIds.filter((root) => roots.current.includes(root)),
+      });
+      if (!mounted.current) return;
+      editVersion.current++;
+      dirty.current = false;
+      setValue({
+        ...settings,
+        rootIds: settings.rootIds.filter((root) => roots.current.includes(root)),
+      });
+    } catch {
+      if (mounted.current) setSaveError(true);
+    } finally {
+      if (mounted.current) setBusy(false);
+    }
+  }
   return (
-    <section className="mt-6 space-y-4" aria-labelledby={id}>
+    <section className="mt-6 space-y-4" aria-labelledby={id} aria-busy={loading || busy}>
       <h4 id={id} className="text-sm font-medium">
         {t("settings.cloud")}
       </h4>
@@ -81,6 +110,11 @@ export function CloudTerminalSettings({
           {t("settings.upgrade")}
         </p>
       )}
+      {loading && !value && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {c("loading")}
+        </p>
+      )}
       {value && (
         <>
           <label className="flex items-center justify-between gap-4 text-sm">
@@ -88,7 +122,7 @@ export function CloudTerminalSettings({
             <Switch
               checked={value.enabled}
               disabled={busy || !supported}
-              onCheckedChange={(enabled) => setValue({ ...value, enabled })}
+              onCheckedChange={(enabled) => edit({ ...value, enabled })}
             />
           </label>
           {projects
@@ -99,7 +133,7 @@ export function CloudTerminalSettings({
                   checked={value.rootIds.includes(project.id)}
                   disabled={busy || !supported}
                   onCheckedChange={(checked) =>
-                    setValue({
+                    edit({
                       ...value,
                       rootIds: checked
                         ? [...value.rootIds, project.id]
@@ -110,31 +144,30 @@ export function CloudTerminalSettings({
                 {project.name}
               </label>
             ))}
-          <Button
-            disabled={busy || !supported}
-            onClick={() => {
-              setBusy(true);
-              setError(false);
-              void getBridge()
-                .then((bridge) =>
-                  bridge.request.terminalConfigure({
-                    accountId,
-                    ...value,
-                    rootIds: value.rootIds.filter((root) => localRoots.includes(root)),
-                  }),
-                )
-                .then(setValue, () => setError(true))
-                .finally(() => setBusy(false));
-            }}
-          >
-            {t("settings.save")}
+          <Button disabled={busy || loading || readError || !supported} onClick={() => void save()}>
+            {busy ? c("working") : t("settings.save")}
           </Button>
         </>
       )}
-      {error && (
-        <p role="alert" className="text-sm text-destructive-text">
-          {t("settings.failed")}
-        </p>
+      {readError && (
+        <Alert variant="destructive">
+          <AlertDescription>{t("settings.failed")}</AlertDescription>
+          <AlertAction>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={loading || busy}
+              onClick={() => void reload()}
+            >
+              {c("retry")}
+            </Button>
+          </AlertAction>
+        </Alert>
+      )}
+      {saveError && (
+        <Alert variant="destructive">
+          <AlertDescription>{t("settings.failed")}</AlertDescription>
+        </Alert>
       )}
     </section>
   );

@@ -7,6 +7,7 @@ import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { TaskMarkdown } from "./markdown.tsx";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 
 type Gap = { id: number; before: number; after: number };
 type Props = {
@@ -17,6 +18,8 @@ type Props = {
   loadOlder: () => Promise<void>;
   gaps?: readonly Gap[];
   loadGap?: (id: number) => Promise<void>;
+  /** Completed task details already display the outcome outside the transcript. */
+  showSummary?: boolean;
 };
 type Row =
   | { id: string; kind: "prompt" | "older" | "summary" }
@@ -42,6 +45,7 @@ function ConversationViewport({
   loadOlder,
   gaps = noGaps,
   loadGap,
+  showSummary = true,
 }: Props) {
   "use no memo"; // TanStack Virtual's mutable instance is consumed locally on each render.
   const t = useTranslations("tasks");
@@ -51,6 +55,12 @@ function ConversationViewport({
   const anchor = useRef<{ id: string; offset: number } | undefined>(undefined);
   const anchorPadding = useRef(0);
   const [full, setFull] = useState(false);
+  const tail = entries.reduce(
+    (latest, entry) => (entry.kind === "usage" ? latest : `${entry.id}:${entry.revision}`),
+    showSummary ? task.summary : "",
+  );
+  const [reading, setReading] = useState({ away: false, tail });
+  const newOutput = reading.away && Boolean(tail) && reading.tail !== tail;
   const [focused, setFocused] = useState<string | undefined>(undefined);
   const rows = useMemo(() => {
     const result: Row[] = [{ id: "history-start", kind: more ? "older" : "prompt" }];
@@ -62,10 +72,10 @@ function ConversationViewport({
       if (entry.kind !== "usage")
         result.push({ id: `activity:${entry.id}`, kind: "activity", entry });
     }
-    if (!entries.some((entry) => entry.kind === "message") && task.summary)
+    if (showSummary && !entries.some((entry) => entry.kind === "message") && task.summary)
       result.push({ id: "summary", kind: "summary" });
     return result;
-  }, [entries, gaps, more, task.summary]);
+  }, [entries, gaps, more, task.summary, showSummary]);
   const getItemKey = useCallback((index: number) => rows[index]!.id, [rows]);
   const focusedIndex = focused ? rows.findIndex((row) => row.id === focused) : -1;
   const rangeExtractor = useCallback(
@@ -263,49 +273,91 @@ function ConversationViewport({
         </Button>
       </div>
       {full && <p className="text-xs text-muted-foreground">{t("loadedConversationScope")}</p>}
-      <div
-        ref={viewport}
-        data-conversation
-        data-conversation-mode={full ? "full" : "virtual"}
-        className="relative max-h-[min(65vh,48rem)] min-h-48 overflow-auto overscroll-contain rounded-md border border-border p-4 text-sm leading-[1.7]"
-        style={{ overflowAnchor: "none" }}
-        tabIndex={0}
-        role="region"
-        aria-label={t("conversation")}
-        onScroll={() => {
-          const node = viewport.current;
-          if (node) follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 80;
-          rememberAnchor();
-        }}
-        onFocusCapture={(event) =>
-          setFocused(
-            event.target.closest<HTMLElement>("[data-conversation-row]")?.dataset.conversationRow,
-          )
-        }
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setFocused(undefined);
-        }}
-      >
-        <div className="relative" style={full ? undefined : { height: virtualizer.getTotalSize() }}>
-          {(full
-            ? rows.map((_, index) => ({ index, key: rows[index]!.id, start: 0 }))
-            : virtualizer.getVirtualItems()
-          ).map((item) => {
-            const row = rows[item.index]!;
-            return (
-              <div
-                key={item.key}
-                ref={virtualizer.measureElement}
-                data-index={item.index}
-                data-conversation-row={row.id}
-                className={full ? "pb-5" : "absolute top-0 left-0 w-full pb-5"}
-                style={full ? undefined : { transform: `translateY(${item.start}px)` }}
-              >
-                {renderRow(row)}
-              </div>
-            );
-          })}
+      <div className="relative">
+        <div
+          ref={viewport}
+          data-conversation
+          data-conversation-mode={full ? "full" : "virtual"}
+          className="relative max-h-[min(65vh,48rem)] min-h-48 overflow-auto overscroll-contain rounded-md border border-border p-4 text-sm leading-[1.7]"
+          style={{ overflowAnchor: "none" }}
+          tabIndex={0}
+          role="region"
+          aria-label={t("conversation")}
+          onScroll={() => {
+            const node = viewport.current;
+            if (node) {
+              follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 80;
+              const following = follow.current;
+              setReading((previous) =>
+                previous.away === !following && (previous.away || previous.tail === tail)
+                  ? previous
+                  : { away: !following, tail: following ? tail : previous.tail },
+              );
+            }
+            rememberAnchor();
+          }}
+          onFocusCapture={(event) =>
+            setFocused(
+              event.target.closest<HTMLElement>("[data-conversation-row]")?.dataset.conversationRow,
+            )
+          }
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setFocused(undefined);
+          }}
+        >
+          <div
+            className="relative"
+            style={full ? undefined : { height: virtualizer.getTotalSize() }}
+          >
+            {(full
+              ? rows.map((_, index) => ({ index, key: rows[index]!.id, start: 0 }))
+              : virtualizer.getVirtualItems()
+            ).map((item) => {
+              const row = rows[item.index]!;
+              return (
+                <div
+                  key={item.key}
+                  ref={virtualizer.measureElement}
+                  data-index={item.index}
+                  data-conversation-row={row.id}
+                  className={full ? "pb-5" : "absolute top-0 left-0 w-full pb-5"}
+                  style={full ? undefined : { transform: `translateY(${item.start}px)` }}
+                >
+                  {renderRow(row)}
+                </div>
+              );
+            })}
+          </div>
         </div>
+        {reading.away && (
+          <div className="absolute right-3 bottom-3">
+            {newOutput && (
+              <span role="status" className="sr-only">
+                {t("newOutput")}
+              </span>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                follow.current = true;
+                anchor.current = undefined;
+                anchorPadding.current = 0;
+                setReading({ away: false, tail });
+                const node = viewport.current;
+                if (node) {
+                  if (full) node.scrollTop = node.scrollHeight;
+                  else virtualizer.scrollToIndex(rows.length - 1, { align: "end" });
+                  node.focus({ preventScroll: true });
+                }
+              }}
+            >
+              <ChevronDownIcon aria-hidden="true" />
+              {t(newOutput ? "newOutput" : "backToLatest")}
+            </Button>
+          </div>
+        )}
       </div>
       {entries.some((entry) => entry.kind === "usage" && entry.known === false) ? (
         <p className="text-xs text-muted-foreground">{t("usageUnknown")}</p>

@@ -225,6 +225,8 @@ export function registerTests() {
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true);
       await page.getByRole("main").evaluate((element) => element.scrollTo(0, element.scrollHeight));
+      const background = page.locator("main");
+      const backgroundScroll = await background.evaluate((element) => element.scrollTop);
       if (surface === "Web") {
         await page
           .getByRole("complementary")
@@ -237,14 +239,16 @@ export function registerTests() {
         await settings.getByRole("button", { name: "Settings", exact: true }).click();
         await expect(settings).toBeHidden();
       } else {
-        await page.getByRole("link", { name: "Settings", exact: true }).click();
+        await page.getByRole("button", { name: "Settings", exact: true }).click();
       }
       await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
       await expect
-        .poll(() => page.getByRole("main").evaluate((element) => element.scrollTop))
-        .toBe(0);
+        .poll(() => background.evaluate((element) => element.scrollTop))
+        .toBe(surface === "Web" ? 0 : backgroundScroll);
       await page.goBack();
       await expect(page.getByRole("button", { name: "New session", exact: true })).toBeVisible();
+      if (surface === "Desktop")
+        expect(await background.evaluate((element) => element.scrollTop)).toBe(backgroundScroll);
       await page.getByRole("button", { name: "New session", exact: true }).click();
       const createForm = page
         .getByRole("textbox", { name: "What should the agent do?", exact: true })

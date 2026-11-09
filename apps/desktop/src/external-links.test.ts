@@ -12,7 +12,7 @@ it("keeps dev-server router links inside Desktop and identifies only external HT
     return externalLinkTarget(event, origin);
   };
   expect(target("http://localhost:1420/tasks", "http://localhost:1420")).toBeNull();
-  expect(target("views://main/#/tasks", "null")).toBeNull();
+  expect(target("views://main/tasks?scope=local#settings", "null")).toBeNull();
   expect(target("https://raypx.com/docs", "http://localhost:1420")).toBe("https://raypx.com/docs");
   expect(target("javascript:alert(1)", "http://localhost:1420")).toBeNull();
 });

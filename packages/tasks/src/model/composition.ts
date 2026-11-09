@@ -46,13 +46,32 @@ export function canContinueTask(
   continuation: TaskContinuation | undefined,
   devices: SyncDevice[],
   modelReady: boolean,
+  model = task.model,
+) {
+  return continueTaskFailure(task, continuation, devices, modelReady, model) === undefined;
+}
+/** Explain the same capability/model checks that gate continuation. */
+export function continueTaskFailure(
+  task: AgentTask,
+  continuation: TaskContinuation | undefined,
+  devices: SyncDevice[],
+  modelReady: boolean,
+  model = task.model,
 ) {
   const selection = taskSelection(devices, task.deviceId, task.projectId, task.provider);
-  return (
-    !continuation?.blocked &&
-    canCreateTask(selection, "run", task.model, modelReady) &&
-    (!selection.requiresModel || Boolean(continuation))
-  );
+  if (continuation?.blocked) return "PI_RECOVERY_REQUIRED";
+  if (!selection.device) return "SESSION_UNAVAILABLE";
+  if (selection.device.revoked) return "DEVICE_REVOKED";
+  if (!selection.device.online) return "DEVICE_OFFLINE";
+  if (!selection.project) return "projectUnavailableHint";
+  if (!selection.capability?.available || !selection.project.providers.includes(task.provider))
+    return "AGENT_UNAVAILABLE";
+  if (!selection.capability.definition.modes.includes("run")) return "UNSUPPORTED_CAPABILITY";
+  if (selection.requiresModel) {
+    if (!continuation) return "SESSION_UNAVAILABLE";
+    if (!model) return "AI_NOT_CONFIGURED";
+    if (!modelReady) return "AI_MODEL_NOT_FOUND";
+  }
 }
 export function projectOccupied(tasks: AgentTask[], deviceId: string, projectId: string) {
   return tasks.some(

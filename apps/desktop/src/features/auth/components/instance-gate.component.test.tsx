@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
@@ -193,4 +193,44 @@ it("approves enrollment using the native authenticated client before unlocking l
   fireEvent.click(await screen.findByRole("button", { name: /register|bind/i }));
   expect(await screen.findByText("Private local work")).toBeTruthy();
   expect(mocks.approve).toHaveBeenCalledWith({ code: "ABCDEFGH23" });
+});
+
+it("retries the remote session without enrolling or treating an error as sign-out", async () => {
+  const read = new Error("private session error");
+  let finish!: () => void;
+  const refetch = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  mocks.session.mockReturnValue({ data: null, error: read, isPending: false, refetch });
+  const fixture = await page(() => ({ state: "unregistered" }));
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Couldn’t check your sign-in status. Connect to the internet and try again.",
+  );
+  expect(screen.queryByText(/private session/)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(refetch).toHaveBeenCalledOnce();
+  expect(screen.getByRole("button", { name: "Loading…" }).hasAttribute("disabled")).toBe(true);
+  expect(fixture.calls.some((call) => call.method === "instance.begin")).toBe(false);
+  expect(mocks.approve).not.toHaveBeenCalled();
+  mocks.session.mockReturnValue({ data: null, error: null, isPending: false, refetch });
+  await act(async () => finish());
+  expect(await screen.findByRole("link", { name: "Sign in to continue" })).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.queryByText("Private local work")).toBeNull();
+});
+it("keeps a failed remote-session retry available without leaking its transport error", async () => {
+  const refetch = vi.fn().mockRejectedValue(new Error("private transport details"));
+  mocks.session.mockReturnValue({
+    data: null,
+    error: new Error("offline"),
+    isPending: false,
+    refetch,
+  });
+  await page(() => ({ state: "unregistered" }));
+  await act(async () => fireEvent.click(await screen.findByRole("button", { name: "Try again" })));
+  expect(screen.getByRole("button", { name: "Try again" }).hasAttribute("disabled")).toBe(false);
+  expect(screen.queryByText(/private transport/)).toBeNull();
 });

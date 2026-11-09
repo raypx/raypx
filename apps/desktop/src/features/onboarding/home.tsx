@@ -66,6 +66,7 @@ function LocalHomeEntry({ context }: { context: ReturnType<typeof useLocalProjec
       void navigate({
         to: "/tasks",
         search: { scope: "local", ...restore },
+        hash: true,
         replace: true,
       });
   }, [restore, navigate]);

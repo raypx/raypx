@@ -200,6 +200,7 @@ export const localParams = {
   "tools.run": commandSchema.extend({ id: z.string().uuid().optional() }),
   "tools.cancel": z.object({ id: z.string() }),
   "terminal.open": commandSchema.extend({
+    executable: commandSchema.shape.executable.optional(),
     cols: z.number().int().min(2).max(500).default(80),
     rows: z.number().int().min(2).max(300).default(24),
   }),

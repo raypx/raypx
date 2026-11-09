@@ -66,3 +66,22 @@ it("preserves only selected source IDs and revisions without accepting a raw sna
       /sources/,
     );
 });
+
+it("validates frozen existing-session receipts and never restores arbitrary delivery payloads", () => {
+  const input = {
+    id: crypto.randomUUID(),
+    parentTaskId: crypto.randomUUID(),
+    prompt: draft.prompt,
+  };
+  const delivery = { kind: "followUp", input };
+  expect(readTaskDrafts(JSON.stringify([{ ...draft, delivery }]))[0]?.delivery).toEqual(delivery);
+  for (const invalid of [
+    null,
+    { kind: "execute", input },
+    { kind: "followUp", input: { ...input, prompt: "x".repeat(32001) } },
+    { kind: "input", input },
+  ])
+    expect(() => readTaskDrafts(JSON.stringify([{ ...draft, delivery: invalid }]))).toThrow(
+      /Invalid|invalid|Too big/,
+    );
+});

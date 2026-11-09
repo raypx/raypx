@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
-  createHashHistory,
+  createBrowserHistory,
   createMemoryHistory,
   createRouter,
   Outlet,
@@ -147,11 +147,11 @@ beforeEach(() => {
 
 function testRouter(
   url: string,
-  options: { hash?: boolean; isServer?: boolean; isShell?: boolean } = {},
+  options: { browser?: boolean; isServer?: boolean; isShell?: boolean } = {},
 ) {
-  if (options.hash) window.history.replaceState({}, "", `/#${url}`);
-  const history = options.hash
-    ? createHashHistory()
+  if (options.browser) window.history.replaceState({}, "", url);
+  const history = options.browser
+    ? createBrowserHistory()
     : createMemoryHistory({ initialEntries: [url] });
   histories.push(history);
   return createRouter({
@@ -178,8 +178,8 @@ function mount(router: ReturnType<typeof testRouter>) {
   );
 }
 
-async function page(url: string, hash = false) {
-  const router = testRouter(url, { hash });
+async function page(url: string, browser = false) {
+  const router = testRouter(url, { browser });
   await router.load();
   await act(async () => {
     mount(router);
@@ -224,8 +224,158 @@ describe("Files route and workspace", () => {
     fireEvent.change(await screen.findByLabelText("Text editor"), { target: { value: "draft" } });
   }
 
-  it("reads encoded hash search and normalizes invalid pagination", async () => {
+  it("focuses opened files, confirms a dirty switch and returns focus to the list", async () => {
+    mocks.localRequest.mockImplementation(async (method, params) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "roots.list") return grants;
+      if (method === "files.list")
+        return { entries: [entry("readme.txt"), entry("notes.txt")], total: 2, offset: 0 };
+      if (method === "files.read")
+        return { text: (params as { path: string }).path, version: "v1" };
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/files");
+    fireEvent.click(await screen.findByRole("button", { name: /^readme\.txt$/ }));
+    const editor = await screen.findByLabelText("Text editor");
+    await waitFor(() => expect(editor).toHaveFocus());
+    expect(screen.getByRole("button", { name: /^readme\.txt$/ })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    const selected = screen.getByRole("button", { name: /^readme\.txt$/ });
+    selected.focus();
+    fireEvent.click(selected);
+    await waitFor(() => expect(editor).toHaveFocus());
+    fireEvent.change(editor, { target: { value: "draft" } });
+    expect(screen.getByText("Unsaved changes")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "notes.txt" }));
+    await answerConfirmation("Cancel");
+    expect(editor).toHaveValue("draft");
+    expect(mocks.localRequest).not.toHaveBeenCalledWith("files.read", {
+      rootId: "work",
+      path: "notes.txt",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "notes.txt" }));
+    await answerConfirmation("Discard changes");
+    await waitFor(() => expect(editor).toHaveValue("notes.txt"));
+    await waitFor(() => expect(editor).toHaveFocus());
+    fireEvent.click(screen.getByRole("button", { name: "Back to files" }));
+    await waitFor(() => expect(screen.queryByLabelText("Text editor")).toBeNull());
+    expect(screen.getByRole("button", { name: "notes.txt" })).toHaveFocus();
+  });
+
+  it("navigates breadcrumb ancestors and the root through the dirty confirmation", async () => {
+    const path = "design & notes/设计/attachments";
+    const router = await page(`/files?rootId=work&path=${encodeURIComponent(path)}`);
+    const initial = router.history.length;
+    await draft();
+    const breadcrumbs = screen.getByRole("navigation", { name: "Folder path" });
+    fireEvent.click(within(breadcrumbs).getByRole("button", { name: "设计" }));
+    await answerConfirmation("Cancel");
+    expect(router.state.location.search.path).toBe(path);
+    expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
+    fireEvent.click(within(breadcrumbs).getByRole("button", { name: "设计" }));
+    await answerConfirmation("Discard changes");
+    await waitFor(() => expect(router.state.location.search.path).toBe("design & notes/设计"));
+    await waitFor(() => expect(screen.queryByLabelText("Text editor")).toBeNull());
+    expect(mocks.localRequest).toHaveBeenCalledWith(
+      "files.list",
+      expect.objectContaining({ rootId: "work", path: "design & notes/设计", offset: 0 }),
+    );
+    fireEvent.click(within(breadcrumbs).getByRole("button", { name: "Work" }));
+    await waitFor(() => expect(router.state.location.search.path).toBe(""));
+    expect(router.history.length).toBe(initial + 2);
+    expect(within(breadcrumbs).queryByRole("button", { name: "Work" })).toBeNull();
+    expect(within(breadcrumbs).getByText("Work")).toHaveAttribute("aria-current", "page");
+  });
+
+  it.each(["ctrlKey", "metaKey"])(
+    "saves with %s+S and clears stale save feedback when editing",
+    async (modifier) => {
+      mocks.localRequest.mockImplementation(async (method, params) => {
+        if (method.startsWith("instance.")) return { state: "registered" };
+        if (method === "roots.list") return grants;
+        if (method === "files.list") return listing();
+        if (method === "files.read") return { text: "hello", version: "v1" };
+        if (method === "files.write")
+          return { text: (params as { text: string }).text, version: "v2" };
+        throw new Error(`Unexpected local request: ${method}`);
+      });
+      await page("/files");
+      await draft();
+      const editor = screen.getByLabelText("Text editor");
+      fireEvent.keyDown(editor, { key: "s", [modifier]: true });
+      expect(await screen.findByText("File saved.")).toBeVisible();
+      expect(mocks.localRequest).toHaveBeenCalledWith("files.write", {
+        rootId: "work",
+        path: "readme.txt",
+        text: "draft",
+        version: "v1",
+      });
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled(),
+      );
+      fireEvent.change(editor, { target: { value: "next draft" } });
+      expect(screen.queryByText("File saved.")).toBeNull();
+      expect(screen.getByText("Unsaved changes")).toBeVisible();
+      fireEvent.keyDown(editor, { key: "s", [modifier]: true });
+      await waitFor(() =>
+        expect(mocks.localRequest).toHaveBeenCalledWith("files.write", {
+          rootId: "work",
+          path: "readme.txt",
+          text: "next draft",
+          version: "v2",
+        }),
+      );
+    },
+  );
+
+  it("keeps save shortcuts scoped to an editable, dirty, idle editor and ignores IME input", async () => {
+    const saved = deferred<{ text: string; version: string }>();
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "roots.list") return grants;
+      if (method === "files.list") return listing();
+      if (method === "files.read") return { text: "hello", version: "v1" };
+      if (method === "files.write") return saved.promise;
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/files");
+    fireEvent.click(await screen.findByRole("button", { name: /^readme\.txt$/ }));
+    const editor = await screen.findByLabelText("Text editor");
+    await waitFor(() => expect(editor).toHaveFocus());
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true });
+    expect(
+      mocks.localRequest.mock.calls.filter(([method]) => method === "files.write"),
+    ).toHaveLength(0);
+    fireEvent.change(editor, { target: { value: "draft" } });
+    fireEvent.keyDown(screen.getByRole("button", { name: "New folder" }), {
+      key: "s",
+      ctrlKey: true,
+    });
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true, isComposing: true });
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true, keyCode: 229 });
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true, repeat: true });
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true, altKey: true });
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true, shiftKey: true });
+    expect(
+      mocks.localRequest.mock.calls.filter(([method]) => method === "files.write"),
+    ).toHaveLength(0);
+    fireEvent.keyDown(editor, { key: "s", ctrlKey: true });
+    expect(editor).toBeDisabled();
+    fireEvent.keyDown(editor, { key: "s", metaKey: true });
+    expect(
+      mocks.localRequest.mock.calls.filter(([method]) => method === "files.write"),
+    ).toHaveLength(1);
+    await act(async () => saved.resolve({ text: "draft", version: "v2" }));
+    expect(await screen.findByText("File saved.")).toBeVisible();
+  });
+
+  it("reads encoded browser search and normalizes invalid pagination", async () => {
     const router = await page("/files?rootId=work&path=design%20%26%20notes&offset=100", true);
+    expect(window.location.pathname).toBe("/files");
+    expect(new URLSearchParams(window.location.search).get("path")).toBe("design & notes");
+    expect(window.location.hash).toBe("");
     expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
       rootId: "work",
       path: "design & notes",
@@ -418,17 +568,17 @@ describe("Files route and workspace", () => {
     });
     const router = await page("/files");
     fireEvent.click(await screen.findByRole("button", { name: /^readme\.txt$/ }));
-    await act(async () => router.navigate({ to: "/settings" }));
+    await act(async () => router.navigate({ to: "/login" }));
     await act(async () => late.resolve({ text: "old content", version: "v1" }));
-    expect(router.state.location.pathname).toBe("/settings");
+    expect(router.state.location.pathname).toBe("/login");
     await act(async () => router.navigate({ to: "/files" }));
     expect(screen.queryByLabelText("Text editor")).toBeNull();
     const picked = deferred<RootGrant | null>();
     mocks.pickDirectory.mockReturnValue(picked.promise);
     fireEvent.click(screen.getByRole("button", { name: "Choose folder" }));
-    await act(async () => router.navigate({ to: "/settings" }));
+    await act(async () => router.navigate({ to: "/login" }));
     await act(async () => picked.resolve(grants[0]!));
-    expect(router.state.location.pathname).toBe("/settings");
+    expect(router.state.location.pathname).toBe("/login");
   });
 
   it("creates a clean store on return and prevents stale list results from replacing a new location", async () => {
@@ -436,7 +586,7 @@ describe("Files route and workspace", () => {
     await draft();
     let navigation!: Promise<void>;
     act(() => {
-      navigation = router.navigate({ to: "/settings" });
+      navigation = router.navigate({ to: "/login" });
     });
     await answerConfirmation("Discard changes");
     await act(async () => navigation);
@@ -563,7 +713,7 @@ describe("Files route and workspace", () => {
   });
 
   it("does not read native files during preloading or the build shell", async () => {
-    const preload = testRouter("/settings");
+    const preload = testRouter("/login");
     await preload.load();
     await preload.preloadRoute({ to: "/files" });
     const shell = testRouter("/", { isServer: true, isShell: true });

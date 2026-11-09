@@ -6,6 +6,7 @@ import { LocalError } from "../errors";
 import type { Environment } from "./bun";
 import { HerdrTerminalHost } from "./herdr";
 import { resolveHerdrBinary } from "./herdr-release";
+import { terminalCommand } from "./shell";
 
 const MAX_OUTPUT = 1024 * 1024;
 type Child = ReturnType<typeof Bun.spawn>;
@@ -128,8 +129,9 @@ export class ProcessRuntime {
       this.completions.delete(completion);
     }
   }
-  async terminal(command: CommandSpec, cols: number, rows: number) {
+  async terminal(input: Parameters<typeof terminalCommand>[0], cols: number, rows: number) {
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
+    const command = await terminalCommand(input, this.environment());
     await this.validate(command);
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
     const host = await (this.terminalStarting ??= resolveHerdrBinary(

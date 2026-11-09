@@ -33,6 +33,9 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { isDesktop, onLocalEvent } from "../lib/desktop.ts";
 import { useDesktopEngine } from "../features/engine/provider.tsx";
 import { WindowDragRegion } from "./window-drag-region.tsx";
+import { Button } from "@raypx/ui/components/ui/button";
+import { SettingsOverlay } from "../features/settings/overlay.tsx";
+import { useSettingsNavigation } from "../features/settings/navigation.ts";
 
 const pendingClient = createPendingClient(localTaskClient, taskClient);
 
@@ -43,7 +46,6 @@ type DesktopPath =
   | "/memory"
   | "/terminal"
   | "/account"
-  | "/settings"
   | "/tasks"
   | "/approvals";
 
@@ -70,6 +72,7 @@ export function ShellSkeleton() {
 export function DesktopShell() {
   const session = authClient.useSession();
   const router = useRouter();
+  const settings = useSettingsNavigation();
   const auth = useDesktopSignOut();
   const href = useRouterState({ select: (state) => state.location.href });
   const page = useMatches({
@@ -135,8 +138,10 @@ export function DesktopShell() {
           <Tooltip>
             <TooltipTrigger
               render={
-                <Link
-                  to="/settings"
+                <Button
+                  variant="ghost"
+                  onClick={() => void settings.open()}
+                  aria-haspopup="dialog"
                   aria-label={c("settings")}
                   className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 />
@@ -182,6 +187,7 @@ export function DesktopShell() {
       >
         <Outlet />
       </AppShell>
+      <SettingsOverlay />
     </>
   );
 }

@@ -4,9 +4,11 @@ import { web } from "./surfaces.ts";
 import { capture } from "./capture.ts";
 
 export async function preferencesPersist(page: Page, base: string) {
-  await page.goto(`${base}/settings`);
+  await page.goto(`${base}${base === web ? "/settings" : "/#settings"}`);
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+  if (base === web)
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+  else await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeVisible();
   // The visible theme card activates its visually hidden radio.
   await page.getByText("Dark", { exact: true }).click();
   await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();

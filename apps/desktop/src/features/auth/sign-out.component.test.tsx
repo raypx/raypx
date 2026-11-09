@@ -66,8 +66,8 @@ async function page() {
       createRoute({ getParentRoute: () => root, path: "/", component: SignOutPage }),
       createRoute({
         getParentRoute: () => root,
-        path: "/settings",
-        component: () => <p>Settings</p>,
+        path: "/account",
+        component: () => <p>Account</p>,
       }),
       createRoute({ getParentRoute: () => root, path: "/login", component: () => <p>Sign in</p> }),
     ]),
@@ -103,7 +103,7 @@ it.each(["manual", "online", "engine"] as const)(
     expect(screen.queryByText("private cleanup diagnostic")).toBeNull();
     expect(fixture.queries.getQueryData(["remote", "owner"])).toBeUndefined();
     expect(fixture.queries.getQueryData(["local-history"])).toBe("preserve");
-    await act(async () => fixture.router.navigate({ to: "/settings" }));
+    await act(async () => fixture.router.navigate({ to: "/account" }));
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
     expect(screen.getByRole("alert")).toHaveTextContent("Sign-out is incomplete.");
     await act(async () => {

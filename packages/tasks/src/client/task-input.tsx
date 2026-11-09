@@ -1,5 +1,5 @@
 import { agentProviderMetadata } from "@raypx/core/tasks";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import type { AgentTask, TaskActivity, TaskInput } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -8,6 +8,9 @@ import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import type { TaskWorkspacePort } from "../model/port.ts";
 import { failureCode } from "../model/failure.ts";
+import type { WorkspaceScope } from "../model/scope.ts";
+import { useSessionDraft } from "./use-session-draft.ts";
+import { submitShortcut } from "./submit-shortcut.ts";
 
 export function TaskInputComposer({
   client,
@@ -16,6 +19,7 @@ export function TaskInputComposer({
   entries,
   waiting,
   onChanged,
+  scope,
 }: {
   client: TaskWorkspacePort;
   task: AgentTask;
@@ -23,26 +27,45 @@ export function TaskInputComposer({
   entries: TaskActivity[];
   waiting: boolean;
   onChanged: () => void;
+  scope: WorkspaceScope;
 }) {
   const t = useTranslations("tasks"),
     id = useId();
-  const [prompt, setPrompt] = useState(""),
-    [busy, setBusy] = useState(false),
+  const draft = useSessionDraft(scope, task, task.id, "input");
+  const prompt = draft.prompt;
+  const [busy, setBusy] = useState(false),
     [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
-  const active = useRef(false),
-    receipt = useRef<{ id: string; mode: TaskInput["mode"]; prompt: string } | null>(null);
+  const active = useRef(false);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const receipt = draft.delivery?.kind === "input" ? draft.delivery : undefined;
+  const acceptReceipt = useEffectEvent(() => {
+    if (receipt) draft.accepted(receipt);
+    setFailure(undefined);
+  });
   useEffect(() => {
     if (
-      receipt.current &&
-      entries.some((entry) => entry.id === receipt.current?.id && entry.kind === "input")
+      receipt &&
+      entries.some((entry) => entry.id === receipt.input.id && entry.kind === "input")
     ) {
-      if (prompt === receipt.current.prompt) setPrompt("");
-      receipt.current = null;
-      setFailure(undefined);
+      // Reconcile an external authoritative receipt after this subscription update.
+      let cancelled = false;
+      queueMicrotask(() => {
+        if (!cancelled) acceptReceipt();
+      });
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [entries, prompt]);
+  }, [entries, receipt]);
   const canSend = (mode: TaskInput["mode"]) =>
     !busy &&
+    draft.ready &&
     Boolean(prompt.trim()) &&
     modes.includes(mode) &&
     (task.status === "running" || task.status === "waiting") &&
@@ -52,25 +75,27 @@ export function TaskInputComposer({
     active.current = true;
     setBusy(true);
     setFailure(undefined);
-    if (receipt.current?.mode !== mode || receipt.current.prompt !== prompt)
-      receipt.current = { id: crypto.randomUUID(), mode, prompt };
-    const input = receipt.current;
+    const delivery =
+      receipt?.input.mode === mode
+        ? receipt
+        : {
+            kind: "input" as const,
+            input: { id: crypto.randomUUID(), mode, prompt: prompt.trim(), taskId: task.id },
+          };
+    draft.remember(delivery);
     try {
-      await client.tasks.input(
-        { ...input, taskId: task.id },
-        { signal: AbortSignal.timeout(15_000) },
-      );
-      receipt.current = null;
-      setPrompt("");
-      onChanged();
+      await client.tasks.input(delivery.input, { signal: AbortSignal.timeout(15_000) });
+      draft.accepted(delivery);
+      if (mounted.current) onChanged();
     } catch (error) {
       const code = failureCode(error);
-      setFailure(code);
-      if (code !== "NETWORK_UNAVAILABLE" && code !== "LOCAL_UNAVAILABLE") receipt.current = null;
-      onChanged();
+      if (mounted.current) {
+        setFailure(code);
+        onChanged();
+      }
     } finally {
       active.current = false;
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
   if (!modes.length) return null;
@@ -89,17 +114,10 @@ export function TaskInputComposer({
           className="min-h-24"
           value={prompt}
           maxLength={32000}
-          disabled={busy}
-          onChange={(event) => setPrompt(event.target.value)}
+          disabled={busy || !draft.ready}
+          onChange={(event) => draft.edit(event.target.value)}
           onKeyDown={(event) => {
-            if (
-              event.key === "Enter" &&
-              (event.ctrlKey || event.metaKey) &&
-              modes.includes("queue")
-            ) {
-              event.preventDefault();
-              void send("queue");
-            }
+            if (modes.includes("queue")) submitShortcut(event);
           }}
         />
       </Field>
@@ -127,6 +145,11 @@ export function TaskInputComposer({
       {failure && (
         <p role="alert" className="text-sm text-destructive-text">
           {t(failure)}
+        </p>
+      )}
+      {draft.failure && (
+        <p role="alert" className="text-sm text-destructive-text">
+          {t(draft.failure)}
         </p>
       )}
     </form>

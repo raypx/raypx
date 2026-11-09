@@ -4,7 +4,8 @@ import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/al
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { cn } from "@raypx/ui/lib/utils";
 
 import { localRequest } from "../../lib/desktop.ts";
 import { filesSearch } from "../../features/files/search.ts";
@@ -83,7 +84,22 @@ function FilesPage() {
   const dirty = useFilesStore(isDirty);
   const busy = useFilesStore((s) => s.busy);
   const error = useFilesStore((s) => s.error);
-  const notice = useFilesStore((s) => s.notice);
+  const editorPath = useFilesStore((s) => s.editor?.path ?? null);
+  const list = useRef<HTMLElement>(null);
+  const previousEditor = useRef<{ path: string; directory: string; rootId: string } | null>(null);
+  useEffect(() => {
+    if (editorPath !== null) {
+      previousEditor.current = { path: editorPath, directory: data.path, rootId: data.rootId };
+      return;
+    }
+    const previous = previousEditor.current;
+    previousEditor.current = null;
+    if (previous?.directory !== data.path || previous.rootId !== data.rootId) return;
+    const entry = Array.from(
+      list.current?.querySelectorAll<HTMLButtonElement>("[data-file-path]") ?? [],
+    ).find((button) => button.dataset.filePath === previous.path);
+    entry?.focus();
+  }, [data.path, data.rootId, editorPath]);
   useEffect(() => {
     if (roots?.some((root) => root.id === data.rootId)) rememberProject(data.rootId);
   }, [data.rootId, roots]);
@@ -176,11 +192,6 @@ function FilesPage() {
           )}
         </Alert>
       )}
-      {notice && (
-        <Alert role="status" className="mb-5">
-          <AlertDescription>{t(notice)}</AlertDescription>
-        </Alert>
-      )}
       {!roots?.length && !data.rootId ? (
         <div className="flex flex-col items-center px-6 py-20 text-center">
           <FolderOpenIcon size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
@@ -197,27 +208,45 @@ function FilesPage() {
             onRefresh={refresh}
           />
           <FileOperationForm onSubmit={actions.perform} />
-          <FileTable
-            request={data.request}
-            offset={data.offset}
-            onRetry={refresh}
-            onOpen={(entry) =>
-              entry.kind === "directory"
-                ? navigateDirectory(data.rootId, entry.path)
-                : actions.open(entry)
-            }
-            onDelete={actions.remove}
-            onPage={(offset) =>
-              router.navigate({
-                to: "/files",
-                search: { rootId: data.rootId, path: data.path, offset },
-                replace: true,
-              })
-            }
-          />
+          <div
+            className={cn(
+              "grid min-w-0 items-start gap-5",
+              editorPath !== null &&
+                "@3xl/main:h-[max(24rem,calc(100dvh-18rem))] @3xl/main:grid-cols-[minmax(16rem,0.85fr)_minmax(0,1.4fr)]",
+            )}
+          >
+            <section
+              ref={list}
+              aria-label={t("browser")}
+              className={cn(
+                "min-w-0",
+                editorPath !== null &&
+                  "hidden @3xl/main:block @3xl/main:h-full @3xl/main:overflow-auto",
+              )}
+            >
+              <FileTable
+                request={data.request}
+                offset={data.offset}
+                onRetry={refresh}
+                onOpen={(entry) =>
+                  entry.kind === "directory"
+                    ? navigateDirectory(data.rootId, entry.path)
+                    : actions.open(entry)
+                }
+                onDelete={actions.remove}
+                onPage={(offset) =>
+                  router.navigate({
+                    to: "/files",
+                    search: { rootId: data.rootId, path: data.path, offset },
+                    replace: true,
+                  })
+                }
+              />
+            </section>
+            <FileEditor onSave={actions.save} onClose={actions.close} />
+          </div>
         </>
       )}
-      <FileEditor onSave={actions.save} onClose={actions.close} />
       {dialog}
     </section>
   );

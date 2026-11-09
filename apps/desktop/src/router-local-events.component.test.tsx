@@ -55,7 +55,7 @@ describe("Desktop local file routes", () => {
     expect(await screen.findByRole("heading", { name: "After job finished" })).toBeTruthy();
     expect(reads()).toBe(initialReads + 2);
 
-    await act(async () => router.navigate({ to: "/settings" }));
+    await act(async () => router.navigate({ to: "/login" }));
     const beforeUnmountedEvent = mocks.localRequest.mock.calls.length;
     await act(async () => emit("job.finished", { id: "job-1" }));
     expect(mocks.localRequest).toHaveBeenCalledTimes(beforeUnmountedEvent);
@@ -115,11 +115,11 @@ describe("Desktop local file routes", () => {
         mocks.localRequest.mock.calls.filter(([method]) => method === "jobs.list"),
       ).toHaveLength(2);
     });
-    await act(async () => router.navigate({ to: "/settings" }));
-    expect(await screen.findByRole("heading", { name: "Settings" })).toBeTruthy();
+    await act(async () => router.navigate({ to: "/login" }));
+    expect(await screen.findByLabelText("Email address")).toBeTruthy();
     await act(async () => lateJobs.resolve([job("Late automation")]));
-    expect(router.state.location.pathname).toBe("/settings");
-    expect(screen.getByRole("heading", { name: "Settings" })).toBeTruthy();
+    expect(router.state.location.pathname).toBe("/login");
+    expect(screen.getByLabelText("Email address")).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Late automation" })).toBeNull();
   });
 });

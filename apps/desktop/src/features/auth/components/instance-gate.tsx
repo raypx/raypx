@@ -40,8 +40,9 @@ export function InstanceGate({ children }: { children: ReactNode }) {
     c = useTranslations("common");
   const session = authClient.useSession();
   const [registering, setBusy] = useState(false),
-    [failed, setFailed] = useState(false);
-  const busy = registering || auth.busy;
+    [failed, setFailed] = useState(false),
+    [checkingSession, setCheckingSession] = useState(false);
+  const busy = registering || checkingSession || auth.busy;
   const status = useQuery({
     queryKey: ["instance", apiUrl],
     queryFn: () => localRequest("instance.status", {}),
@@ -81,6 +82,16 @@ export function InstanceGate({ children }: { children: ReactNode }) {
   if (status.data?.state === "registered" && !mismatch) return children;
   const canBind = status.data?.state === "unregistered";
   const sessionKnown = !session.isPending && !session.error;
+  async function retrySession() {
+    setCheckingSession(true);
+    try {
+      await session.refetch();
+    } catch {
+      // Session state owns the translated failure; never expose transport details.
+    } finally {
+      setCheckingSession(false);
+    }
+  }
   async function recover(signIn: boolean) {
     setFailed(false);
     const result = await auth.signOut(session.data?.user.id ?? null, signIn ? "/login" : undefined);
@@ -174,7 +185,27 @@ export function InstanceGate({ children }: { children: ReactNode }) {
                 {c("retry")}
               </Button>
             )}
+            {canBind && session.error && (
+              <Button
+                variant="outline"
+                disabled={busy || session.isPending}
+                aria-busy={checkingSession || session.isPending}
+                onClick={() => void retrySession()}
+              >
+                {checkingSession || session.isPending ? c("loading") : c("retry")}
+              </Button>
+            )}
           </div>
+          {canBind && session.error && (
+            <p role="alert" className="text-sm text-destructive-text">
+              {t("sessionCheckFailed")}
+            </p>
+          )}
+          {canBind && session.isPending && !session.error && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {c("loading")}
+            </p>
+          )}
           {failed && (
             <p role="alert" className="text-destructive-text">
               {t("error")}

@@ -1,5 +1,7 @@
 export default {
   instances: {
+    sessionCheckFailed:
+      "Couldn’t check your sign-in status. Connect to the internet and try again.",
     signInOriginal: "Sign in with the original account",
     originMismatch:
       "To use this instance online, select its original server ({origin}) in Desktop connection settings.",
@@ -282,6 +284,9 @@ export default {
     viewError: "Unable to open this view. Reload the app and try again.",
   },
   tasks: {
+    modelChecking: "Checking model availability…",
+    newOutput: "New output · Back to latest",
+    backToLatest: "Back to latest",
     reloadModels: "Reload models",
     unconfigured: "Not configured",
     piInputHint: "Pi queues input until the current turn finishes.",
@@ -721,6 +726,10 @@ export default {
     localHint: "Stored on this device and kept after sign-out.",
   },
   files: {
+    breadcrumbs: "Folder path",
+    backToList: "Back to files",
+    unsavedChanges: "Unsaved changes",
+    browser: "File browser",
     title: "Files",
     addRoot: "Choose folder",
     roots: "Folders",
@@ -886,6 +895,16 @@ export default {
       projectUnavailable: "Project unavailable",
       title: "Automations",
       create: "New automation",
+      edit: "Edit automation",
+      schedulePreset: "Repeat",
+      schedulePresets: {
+        daily: "Every day at 09:00",
+        weekdays: "Weekdays at 09:00",
+        weekly: "Every Monday at 09:00",
+        custom: "Custom Cron",
+      },
+      invalidCron: "Enter a valid five-field Cron expression with a future run.",
+      invalidTimezone: "Enter an IANA time zone, for example Asia/Shanghai.",
       empty: "Nothing scheduled yet",
       emptyHint: "Scan a folder or run a command on a schedule.",
       scan: "Scan folder",
@@ -1015,11 +1034,15 @@ export default {
     invalidArguments: "Enter a JSON array of strings.",
   },
   terminal: {
+    openDefault: "Open terminal in this project",
+    advanced: "Advanced options",
+    defaultShell: "Use system default shell",
     title: "Terminal",
     start: "Open terminal",
     stop: "Close terminal",
     empty: "Ready when you are",
-    emptyHint: "Enter an executable and a working directory to start.",
+    emptyHint:
+      "Open a terminal in this project, or choose a working directory in Advanced options.",
     running: "Session running",
     finished: "Session exited",
     permissionHint: "This process uses your operating system permissions.",

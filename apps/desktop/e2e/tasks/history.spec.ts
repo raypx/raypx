@@ -32,7 +32,7 @@ test(
     await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
     await expect(page.getByText(/Turn on remote access in Desktop/)).toBeVisible();
     expect(remoteReads).toBe(0);
-    await page.goto(desktop + "/settings");
+    await page.goto(desktop + "/tasks#settings");
     await page.getByRole("radio", { name: "Dark", exact: true }).check();
     await page.getByRole("combobox", { name: "Language", exact: true }).click();
     await page.getByRole("option", { name: "简体中文", exact: true }).click();

@@ -171,7 +171,7 @@ export function registerTests() {
       return authResponse(route, { success: true });
     });
     if (surface === "Web") await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${base}/settings`);
+    await page.goto(`${base}${surface === "Web" ? "/settings" : "/"}`);
     await test.step("keyboard, viewport and localized menu", async () => {
       const trigger = page.getByRole("button", { name: "Account menu", exact: true });
       await expect(trigger).toBeVisible();
@@ -194,18 +194,16 @@ export function registerTests() {
       await expect(trigger).toBeFocused();
       await page
         .getByRole("complementary")
-        .getByRole(surface === "Web" ? "button" : "link", { name: "Settings", exact: true })
+        .getByRole("button", { name: "Settings", exact: true })
         .click();
-      await expect(page).toHaveURL(`${base}/settings`);
-      const settings = surface === "Web" ? page.getByRole("dialog") : page.getByRole("main");
+      await expect(page).toHaveURL(`${base}${surface === "Web" ? "/settings" : "/#settings"}`);
+      const settings = page.getByRole("dialog");
       await expect(settings).toBeVisible();
       await settings.getByText("Dark", { exact: true }).click();
       await settings.getByRole("combobox", { name: "Language", exact: true }).click();
       await page.getByRole("option", { name: "简体中文", exact: true }).click();
-      if (surface === "Web") {
-        await page.keyboard.press("Escape");
-        await expect(settings).toBeHidden();
-      }
+      await page.keyboard.press("Escape");
+      await expect(settings).toBeHidden();
       await page.getByRole("button", { name: "账号菜单", exact: true }).focus();
       await page.keyboard.press("Enter");
       await expect(page.getByRole("menuitem", { name: "账号", exact: true })).toBeVisible();
@@ -216,9 +214,18 @@ export function registerTests() {
         animations: "disabled",
       });
       await page.keyboard.press("Escape");
+      if (surface === "Desktop")
+        await page
+          .getByRole("complementary")
+          .getByRole("button", { name: "设置", exact: true })
+          .click();
       await page.getByRole("combobox", { name: "语言", exact: true }).click();
       await page.getByRole("option", { name: "English", exact: true }).click();
       await page.getByText("Light", { exact: true }).click();
+      if (surface === "Desktop") {
+        await page.keyboard.press("Escape");
+        await expect(settings).toBeHidden();
+      }
       if (surface === "Web") await page.setViewportSize({ width: 1280, height: 720 });
     });
     await test.step("avatar and failed sign-out recovery", async () => {

@@ -43,10 +43,10 @@ describe("Desktop local file routes", () => {
   );
 
   it("does not start native jobs requests while preloading navigation", async () => {
-    const router = testRouter("/settings");
+    const router = testRouter("/login");
     await router.load();
     await router.preloadRoute({ to: "/automations" });
-    expect(router.state.location.pathname).toBe("/settings");
+    expect(router.state.location.pathname).toBe("/login");
     expect(mocks.localRequest).not.toHaveBeenCalled();
   });
 
@@ -86,7 +86,7 @@ describe("Desktop local file routes", () => {
         if (method === "files.list") return { entries: [], total: 0, offset: 0 };
         throw new Error(`Unexpected local request: ${method}`);
       });
-      const router = testRouter("/files", { hash: true });
+      const router = testRouter("/files", { browser: true });
       await router.load();
       await act(async () => {
         mount(router);
@@ -96,7 +96,7 @@ describe("Desktop local file routes", () => {
         mocks.localRequest.mock.calls.filter(([method]) => method === "roots.list").length;
       expect(rootReads()).toBe(1);
 
-      await act(async () => router.navigate({ to: "/settings" }));
+      await act(async () => router.navigate({ to: "/login" }));
       authorized = true;
       await act(async () => {
         void router.navigate({ to: destination });

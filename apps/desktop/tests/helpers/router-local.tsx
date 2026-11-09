@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
-  createHashHistory,
+  createBrowserHistory,
   createMemoryHistory,
   createRouter,
   Outlet,
@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   isDesktop: vi.fn<() => boolean>(),
   localRequest: vi.fn<(method: LocalMethod, params: unknown) => Promise<unknown>>(),
   listeners: new Set<(event: LocalEvent) => void>(),
+  terminal: vi.fn(),
 }));
 vi.mock("../../src/lib/desktop", () => ({
   isDesktop: mocks.isDesktop,
@@ -59,7 +60,7 @@ vi.mock("../../src/features/auth/client", () => ({
 vi.mock("../../src/features/tasks/client", () => ({
   taskClient: { account: { get: vi.fn() } },
 }));
-vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));
+vi.mock("@xterm/xterm", () => ({ Terminal: mocks.terminal }));
 
 export const grants: RootGrant[] = [
   { id: "work", name: "Work", path: "/work", createdAt: "2026-10-15T00:00:00.000Z" },
@@ -137,11 +138,11 @@ beforeEach(() => {
 
 export function testRouter(
   url: string,
-  options: { hash?: boolean; isServer?: boolean; isShell?: boolean } = {},
+  options: { browser?: boolean; isServer?: boolean; isShell?: boolean } = {},
 ) {
-  if (options.hash) window.history.replaceState({}, "", `/#${url}`);
-  const history = options.hash
-    ? createHashHistory()
+  if (options.browser) window.history.replaceState({}, "", url);
+  const history = options.browser
+    ? createBrowserHistory()
     : createMemoryHistory({ initialEntries: [url] });
   histories.push(history);
   return createRouter({

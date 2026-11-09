@@ -3,6 +3,8 @@ import {
   modelSelectionSchema,
   type ModelSelection,
   taskContextSelectionSchema,
+  taskFollowUpSchema,
+  taskInputSchema,
   type AgentProvider,
   type TaskContextSelection,
 } from "@raypx/core/tasks";
@@ -20,6 +22,21 @@ export interface DraftInput {
 export interface TaskDraft extends DraftInput {
   id: string;
   updatedAt: string;
+  delivery?: TaskDraftDelivery;
+}
+/** Frozen receipts belong only to the separate existing-session editor collection. */
+export type TaskDraftDelivery =
+  | { kind: "followUp"; input: ReturnType<typeof taskFollowUpSchema.parse> }
+  | { kind: "input"; input: ReturnType<typeof taskInputSchema.parse> };
+
+function readDelivery(value: unknown): TaskDraftDelivery {
+  if (!value || typeof value !== "object") throw new Error("Invalid draft delivery");
+  const delivery = value as Record<string, unknown>;
+  if (delivery.kind === "followUp")
+    return { kind: "followUp", input: taskFollowUpSchema.parse(delivery.input) };
+  if (delivery.kind === "input")
+    return { kind: "input", input: taskInputSchema.parse(delivery.input) };
+  throw new Error("Invalid draft delivery");
 }
 /** Called only by editor/save events, never while rendering a component. */
 export function createTaskDraft(input: DraftInput, id: string): TaskDraft {
@@ -64,6 +81,7 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
       mode: draft.mode,
       ...(contextSelection ? { contextSelection } : {}),
       ...(draft.model === undefined ? {} : { model: modelSelectionSchema.parse(draft.model) }),
+      ...(draft.delivery === undefined ? {} : { delivery: readDelivery(draft.delivery) }),
     } as TaskDraft;
   });
 }

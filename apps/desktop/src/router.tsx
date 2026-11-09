@@ -1,6 +1,6 @@
 import { analytics } from "./features/analytics/client.ts";
 import { createQueryFailureReporter } from "@raypx/analytics/browser";
-import { createHashHistory, createRouter } from "@tanstack/react-router";
+import { createRouter } from "@tanstack/react-router";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { ShellPage } from "@raypx/blocks/shell";
@@ -18,10 +18,6 @@ export function getRouter() {
   return createRouter({
     routeTree,
     defaultOnCatch: (error) => analytics.captureException(error),
-    // Packaged views have no server rewrites, so deep links live in the hash.
-    ...(typeof window !== "undefined" && window.__raypxDesktopHost === "tauri"
-      ? { history: createHashHistory() }
-      : {}),
     defaultPreload: "intent",
     scrollRestoration: true,
     scrollToTopSelectors: ["#main"],
@@ -36,7 +32,6 @@ type PageTitle =
   | "common.approvals"
   | "common.files"
   | "common.jobs"
-  | "common.settings"
   | "common.projects"
   | "common.tasks"
   | "common.terminal"
@@ -44,6 +39,9 @@ type PageTitle =
   | "memory.title";
 
 declare module "@tanstack/react-router" {
+  interface HistoryState {
+    desktopSettingsBackground?: { href: string; index: number };
+  }
   interface Register {
     router: ReturnType<typeof getRouter>;
   }

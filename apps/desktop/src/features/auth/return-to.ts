@@ -4,7 +4,6 @@ const paths = new Set([
   "/tasks",
   "/approvals",
   "/account",
-  "/settings",
   "/automations",
   "/memory",
   "/terminal",

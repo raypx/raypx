@@ -8,6 +8,11 @@ import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Separator } from "@raypx/ui/components/ui/separator";
@@ -63,6 +68,8 @@ function TerminalPage() {
   const mounted = useRef(false);
   const [running, setRunning] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
+  const [cwd, setCwd] = useState(project.cwd);
   const [error, setError] = useState("");
   const [exitCode, setExitCode] = useState<number | null>(null);
   const earlyExits = useRef(new Map<string, number>());
@@ -231,11 +238,11 @@ function TerminalPage() {
   }, [resolvedTheme]);
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (opening || running || !terminal.current || unavailable) return;
+    if (opening || running || !terminal.current || unavailable || !isDesktop()) return;
     const data = new FormData(event.currentTarget);
     let args: string[];
     try {
-      const value: unknown = JSON.parse(formText(data, "args") || "[]");
+      const value: unknown = JSON.parse((advanced && formText(data, "args")) || "[]");
       if (!Array.isArray(value) || value.some((item) => typeof item !== "string"))
         throw new Error("arguments");
       args = value;
@@ -251,10 +258,11 @@ function TerminalPage() {
     earlyExits.current.clear();
     try {
       fit.current?.fit();
+      const executable = advanced ? formText(data, "executable").trim() : "";
       const result = await localRequest("terminal.open", {
-        executable: formText(data, "executable").trim(),
+        ...(executable ? { executable } : {}),
         args,
-        cwd: formText(data, "cwd").trim(),
+        cwd: !advanced && project.cwd ? project.cwd : cwd.trim(),
         timeoutMs: 86400000,
         cols: terminal.current.cols,
         rows: terminal.current.rows,
@@ -320,47 +328,74 @@ function TerminalPage() {
         </Alert>
       )}
       <form onSubmit={open} className="flex flex-col gap-4" aria-describedby="terminal-permissions">
-        <FieldGroup className="grid gap-4 @min-xl/main:grid-cols-2">
-          <Field data-disabled={running || opening}>
-            <FieldLabel htmlFor="terminal-executable">{command("executable")}</FieldLabel>
-            <Input
-              id="terminal-executable"
-              name="executable"
-              required
-              disabled={running || opening}
-              placeholder={
-                navigator.platform.includes("Win") ? "C:\\Windows\\System32\\cmd.exe" : "/bin/zsh"
-              }
-            />
-          </Field>
+        {!project.cwd && (
           <Field data-disabled={running || opening}>
             <FieldLabel htmlFor="terminal-cwd">{command("cwd")}</FieldLabel>
             <Input
               id="terminal-cwd"
               name="cwd"
-              defaultValue={project.cwd}
+              value={cwd}
+              onChange={(event) => setCwd(event.target.value)}
               required
               disabled={running || opening}
             />
           </Field>
-          <Field data-disabled={running || opening}>
-            <FieldLabel htmlFor="terminal-args">{command("arguments")}</FieldLabel>
-            <Input id="terminal-args" name="args" defaultValue="[]" disabled={running || opening} />
-          </Field>
-          <div className="flex flex-wrap items-center gap-3 self-end">
-            {running ? (
-              <Button variant="outline" onClick={() => void close()}>
-                <StopIcon data-icon="inline-start" />
-                {t("stop")}
-              </Button>
-            ) : (
-              <Button type="submit" disabled={opening || !isDesktop() || unavailable}>
-                <TerminalIcon data-icon="inline-start" />
-                {opening ? c("working") : t("start")}
-              </Button>
-            )}
-          </div>
-        </FieldGroup>
+        )}
+        <Collapsible open={advanced} onOpenChange={setAdvanced}>
+          <CollapsibleTrigger
+            render={<Button type="button" variant="ghost" disabled={running || opening} />}
+          >
+            {t("advanced")}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <FieldGroup className="grid gap-4 pt-4 @min-xl/main:grid-cols-2">
+              <Field data-disabled={running || opening}>
+                <FieldLabel htmlFor="terminal-executable">{command("executable")}</FieldLabel>
+                <Input
+                  id="terminal-executable"
+                  name="executable"
+                  disabled={running || opening}
+                  placeholder={t("defaultShell")}
+                />
+              </Field>
+              {project.cwd && (
+                <Field data-disabled={running || opening}>
+                  <FieldLabel htmlFor="terminal-cwd">{command("cwd")}</FieldLabel>
+                  <Input
+                    id="terminal-cwd"
+                    name="cwd"
+                    value={cwd}
+                    onChange={(event) => setCwd(event.target.value)}
+                    required={advanced}
+                    disabled={running || opening}
+                  />
+                </Field>
+              )}
+              <Field data-disabled={running || opening}>
+                <FieldLabel htmlFor="terminal-args">{command("arguments")}</FieldLabel>
+                <Input
+                  id="terminal-args"
+                  name="args"
+                  defaultValue="[]"
+                  disabled={running || opening}
+                />
+              </Field>
+            </FieldGroup>
+          </CollapsibleContent>
+        </Collapsible>
+        <div className="flex flex-wrap items-center gap-3">
+          {running ? (
+            <Button variant="outline" onClick={() => void close()}>
+              <StopIcon data-icon="inline-start" />
+              {t("stop")}
+            </Button>
+          ) : (
+            <Button type="submit" disabled={opening || !isDesktop() || unavailable}>
+              <TerminalIcon data-icon="inline-start" />
+              {opening ? c("working") : t(!advanced && project.cwd ? "openDefault" : "start")}
+            </Button>
+          )}
+        </div>
         <p id="terminal-permissions" className="text-xs leading-relaxed text-muted-foreground">
           {t("permissionHint")}
         </p>

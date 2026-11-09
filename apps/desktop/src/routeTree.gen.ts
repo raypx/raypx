@@ -14,7 +14,6 @@ import { Route as localRouteRouteImport } from './routes/(local)/route'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as MemoryRouteImport } from './routes/memory'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -48,11 +47,6 @@ const ApprovalsRoute = ApprovalsRouteImport.update({
 const MemoryRoute = MemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TasksRoute = TasksRouteImport.update({
@@ -115,7 +109,6 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
-  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/welcome': typeof WelcomeRoute
@@ -132,7 +125,6 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
-  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/welcome': typeof WelcomeRoute
@@ -152,7 +144,6 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
-  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/welcome': typeof WelcomeRoute
@@ -171,7 +162,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/approvals'
     | '/memory'
-    | '/settings'
     | '/tasks'
     | '/terminal'
     | '/welcome'
@@ -188,7 +178,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/approvals'
     | '/memory'
-    | '/settings'
     | '/tasks'
     | '/terminal'
     | '/welcome'
@@ -207,7 +196,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/approvals'
     | '/memory'
-    | '/settings'
     | '/tasks'
     | '/terminal'
     | '/welcome'
@@ -227,7 +215,6 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   ApprovalsRoute: typeof ApprovalsRoute
   MemoryRoute: typeof MemoryRoute
-  SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
   TerminalRoute: typeof TerminalRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -268,13 +255,6 @@ declare module '@tanstack/react-router' {
       path: '/memory'
       fullPath: '/memory'
       preLoaderRoute: typeof MemoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks': {
@@ -399,7 +379,6 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   ApprovalsRoute: ApprovalsRoute,
   MemoryRoute: MemoryRoute,
-  SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
   TerminalRoute: TerminalRoute,
   WelcomeRoute: WelcomeRoute,

@@ -16,6 +16,7 @@ import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import { useDesktopPlatform } from "../../lib/platform-context.tsx";
 import { useProjectCatalog, projectCatalogKey } from "../tasks/project-catalog.ts";
 import { recentProjects, rememberProject } from "../tasks/project-history.ts";
+import { useSettingsNavigation } from "../settings/navigation.ts";
 
 export function LocalWelcome() {
   const { isDesktop, localRequest, pickDirectory } = useDesktopPlatform();
@@ -23,6 +24,7 @@ export function LocalWelcome() {
     tasks = useTranslations("tasks"),
     c = useTranslations("common");
   const navigate = useNavigate();
+  const settings = useSettingsNavigation();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(false);
@@ -189,10 +191,15 @@ export function LocalWelcome() {
           <TerminalWindowIcon aria-hidden="true" />
           {t("exploreLocal")}
         </Link>
-        <Link to="/settings" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-haspopup="dialog"
+          onClick={() => void settings.open()}
+        >
           <SettingsIcon aria-hidden="true" />
           {t("remoteLater")}
-        </Link>
+        </Button>
       </div>
     </section>
   );

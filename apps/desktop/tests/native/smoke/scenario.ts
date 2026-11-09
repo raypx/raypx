@@ -54,6 +54,45 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string,
   }
   throw new Error(message);
 }
+async function navigate(path: string) {
+  // TanStack's browser history observes native pushState without reloading the WebView.
+  await evaluate(`history.pushState(null,"",${JSON.stringify(path)});return true;`);
+}
+async function openSettings() {
+  const page = await evaluate("return location.pathname+location.search");
+  assert.equal(
+    await evaluate(`
+      const main=document.querySelector("#main");
+      if(!main)return false;
+      main.setAttribute("data-native-smoke-settings-main","");
+      history.pushState(null,"",location.pathname+location.search+"#settings");
+      return true;
+    `),
+    true,
+    "Settings requires a mounted workspace",
+  );
+  await waitFor(
+    async () =>
+      Boolean(
+        await evaluate(
+          'return location.hash==="#settings"&&Boolean(document.querySelector("[role=dialog] [data-slot=radio-group-item]"))',
+        ),
+      ),
+    "Settings dialog did not mount",
+  );
+  assert.equal(
+    await evaluate("return location.pathname+location.search"),
+    page,
+    "Settings replaced the current page URL",
+  );
+  assert.equal(
+    await evaluate(
+      'const main=document.querySelector("#main[data-native-smoke-settings-main]");main?.removeAttribute("data-native-smoke-settings-main");return Boolean(main);',
+    ),
+    true,
+    "Settings replaced the underlying page",
+  );
+}
 let stage = "renderer startup";
 let fixtureSession: unknown = null;
 const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
@@ -159,7 +198,7 @@ async function localSessionFixture() {
       ),
     "Synthetic shell session did not mount the desktop workspace",
   );
-  await evaluate('location.hash="/";return true');
+  await navigate("/");
   const homeTitles = [messages.en, messages.zh].flatMap((locale) => [
     locale.localWorkspace.welcome,
     locale.files.title,
@@ -168,7 +207,7 @@ async function localSessionFixture() {
     async () =>
       Boolean(
         await evaluate(
-          `return location.hash.split("?")[0]==="#/"&&${JSON.stringify(homeTitles)}.includes(document.querySelector("#main h1")?.textContent)`,
+          `return location.pathname==="/"&&location.hash===""&&${JSON.stringify(homeTitles)}.includes(document.querySelector("#main h1")?.textContent)`,
         ),
       ),
     "Home navigation did not settle before the tray action",
@@ -320,7 +359,7 @@ try {
       );
     await waitFor(toolbarFits, "Workspace toolbar overlapped the native controls");
     const before = await nativeWindow.state();
-    await evaluate('location.hash="/login?returnTo=%2Ftasks";return true;');
+    await navigate("/login?returnTo=%2Ftasks");
     await waitFor(
       async () =>
         Boolean(
@@ -338,7 +377,7 @@ try {
         ),
       "Login brand was not aligned above the title below the native controls",
     );
-    await evaluate('location.hash="/";return true;');
+    await navigate("/");
     await waitFor(toolbarFits, "Workspace lost its window insets after leaving login");
     const after = await nativeWindow.state();
     assert.equal(after.height, before.height, "Navigating changed the window content height");
@@ -507,7 +546,7 @@ try {
     const references = (await engine.request("memory.list", {})) as ContextDocumentSummary[];
     assert.equal(references.length, 1, "Device references did not survive restart");
     assert.equal(references[0]?.revision, 3);
-    await evaluate('location.hash="/memory";return true');
+    await navigate("/memory");
     await waitFor(
       async () =>
         Boolean(
@@ -605,10 +644,10 @@ try {
     await localSessionFixture();
     await trayAction("pending");
     await waitFor(
-      async () => String(await evaluate("return location.hash")).includes("/approvals"),
+      async () => (await evaluate("return location.pathname")) === "/approvals",
       "Tray review action did not open the approval page",
     );
-    await evaluate('location.hash="/";return true');
+    await navigate("/");
   }
   if (phase === "shell") {
     assert.equal(
@@ -627,16 +666,9 @@ try {
       text: "Raypx native file bridge",
       version: null,
     });
-    await evaluate('location.hash="/settings";return true');
-    await waitFor(
-      async () =>
-        Boolean(
-          await evaluate('return Boolean(document.querySelector("[data-slot=radio-group-item]"))'),
-        ),
-      "Settings route did not mount",
-    );
+    await openSettings();
     // Home is the project overview; authorized files are listed on the files tool.
-    await evaluate('location.hash="/files";return true');
+    await navigate("/files");
     await waitFor(
       async () =>
         Boolean(
@@ -645,6 +677,18 @@ try {
           ),
         ),
       "Renderer did not list the engine's authorized file",
+    );
+    stage = "History deep-path reload";
+    assert.equal(await evaluate("return location.pathname+location.hash"), "/files");
+    await reloadRenderer();
+    await waitFor(
+      async () =>
+        Boolean(
+          await evaluate(
+            'return location.pathname==="/files"&&location.hash===""&&[...document.querySelectorAll("[data-slot=file-entry]")].some(node=>node.textContent.includes("native-smoke.txt"))',
+          ),
+        ),
+      "Packaged History deep path did not reload the authorized file view",
     );
     await evaluate('document.querySelector("[data-slot=file-entry]")?.click(); return true');
     await waitFor(
@@ -662,7 +706,7 @@ try {
       action: { type: "directory.scan", rootId: grant.id, path: "" },
     })) as JobDefinition;
     assert.equal(((await engine.request("jobs.run", { id: job.id })) as JobRun).status, "success");
-    await evaluate('location.hash="/automations"; return true');
+    await navigate("/automations");
     await waitFor(
       async () =>
         Boolean(
@@ -673,7 +717,20 @@ try {
       "Renderer did not list the persisted task",
     );
     stage = "local renderer terminal";
-    await evaluate('location.hash="/terminal"; return true');
+    await navigate("/terminal");
+    const advancedLabels = [messages.en.terminal.advanced, messages.zh.terminal.advanced];
+    await waitFor(
+      async () =>
+        Boolean(
+          await evaluate(
+            `return location.pathname==="/terminal"&&[...document.querySelectorAll("button")].some(node=>${JSON.stringify(advancedLabels)}.includes(node.textContent.trim()))`,
+          ),
+        ),
+      "Terminal route did not mount",
+    );
+    await evaluate(
+      `const trigger=[...document.querySelectorAll("button")].find(node=>${JSON.stringify(advancedLabels)}.includes(node.textContent.trim()));trigger.click();return true;`,
+    );
     await waitFor(
       async () =>
         Boolean(await evaluate('return Boolean(document.querySelector("#terminal-executable"))')),
@@ -688,7 +745,16 @@ try {
         ? ["/d", "/c", "echo raypx-native-pty"]
         : ["-c", "printf 'raypx-native-pty\\n'"];
     await evaluate(
-      `document.querySelector("#terminal-executable").value=${JSON.stringify(shell)};document.querySelector("#terminal-cwd").value=${JSON.stringify(directory)};document.querySelector("#terminal-args").value=${JSON.stringify(JSON.stringify(args))};document.querySelector("#terminal-executable").form.requestSubmit();return true`,
+      `const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;for(const [selector,value] of ${JSON.stringify(
+        [
+          ["#terminal-executable", shell],
+          ["#terminal-cwd", directory],
+          ["#terminal-args", JSON.stringify(args)],
+        ],
+      )}){const input=document.querySelector(selector);set.call(input,value);input.dispatchEvent(new Event("input",{bubbles:true}));}return true`,
+    );
+    await evaluate(
+      'document.querySelector("#terminal-executable").form.requestSubmit();return true;',
     );
     await waitFor(
       async () =>
@@ -700,14 +766,7 @@ try {
       "Renderer terminal did not complete with a successful exit",
     );
     stage = "device preferences";
-    await evaluate('location.hash="/settings";return true');
-    await waitFor(
-      async () =>
-        Boolean(
-          await evaluate('return Boolean(document.querySelector("[data-slot=radio-group-item]"))'),
-        ),
-      "Settings route did not mount",
-    );
+    await openSettings();
     await evaluate('document.querySelector("[data-theme-option=dark]").click();return true');
     await selectLanguage("en");
     await selectLanguage("zh");
@@ -734,7 +793,7 @@ try {
     assert.equal(roots.length, 1);
     const jobs = (await engine.request("jobs.list", {})) as JobDefinition[];
     assert.equal(jobs[0]?.name, "Native smoke scan");
-    await evaluate('location.hash="/files";return true');
+    await navigate("/files");
     await waitFor(
       async () =>
         Boolean(
@@ -744,13 +803,13 @@ try {
         ),
       "Authorized file did not survive process restart",
     );
-    await evaluate('location.hash="/settings";return true');
+    await openSettings();
     await sleep(100);
     console.info(
       "Restart preference values:",
       String(
         await evaluate(
-          `return JSON.stringify(window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}])+":"+document.documentElement.dataset.theme+":"+document.documentElement.lang+":"+location.hash`,
+          `return JSON.stringify(window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}])+":"+document.documentElement.dataset.theme+":"+document.documentElement.lang+":"+location.pathname+location.search+location.hash`,
         ),
       ),
     );
@@ -786,16 +845,7 @@ try {
       });
       assert.equal(login.status, 200);
       await reloadRenderer();
-      await evaluate('location.hash="/settings";return true');
-      await waitFor(
-        async () =>
-          Boolean(
-            await evaluate(
-              'return Boolean(document.querySelector("[data-slot=radio-group-item]"))',
-            ),
-          ),
-        "Settings route did not mount",
-      );
+      await openSettings();
       await evaluate('document.querySelector("[data-theme-option=dark]").click();return true');
       await selectLanguage("en");
       await selectLanguage("zh");

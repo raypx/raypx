@@ -27,7 +27,8 @@ test(
     await page.getByRole("menuitem", { name: "Account", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: user.name, exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeVisible();
     await preferencesPersist(page, desktop);
   },
 );

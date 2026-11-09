@@ -61,7 +61,10 @@ export function useFileActions({
       return run(async (current) => {
         const content = await localRequest("files.read", { rootId, path: entry.path });
         if (current())
-          store.setState({ editor: { rootId, path: entry.path, content, text: content.text } });
+          store.setState((state) => ({
+            editor: { rootId, path: entry.path, content, text: content.text },
+            focusVersion: state.focusVersion + 1,
+          }));
       }, fileErrors.readOnly);
     },
     close: async () => {

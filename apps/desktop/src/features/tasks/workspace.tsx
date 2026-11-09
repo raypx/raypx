@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../analytics/client.ts";
-import { Link, useRouter, useLocation } from "@tanstack/react-router";
+import { useRouter, useLocation } from "@tanstack/react-router";
 import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
 import { ShellActions } from "@raypx/blocks/shell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
@@ -19,6 +19,7 @@ import { LocalWelcome } from "../onboarding/welcome.tsx";
 import { ProjectTools } from "./project-tools.tsx";
 import { useLocalProjectContext } from "./project-context.ts";
 import { rememberProject } from "./project-history.ts";
+import { useSettingsNavigation } from "../settings/navigation.ts";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
 const remote = instrumentTaskClient(taskClient, analytics, "remote");
@@ -32,6 +33,7 @@ export function DesktopTaskWorkspace({
   initialScope?: "local" | "remote";
 }) {
   const router = useRouter();
+  const settings = useSettingsNavigation();
   const search = useLocation({ select: (location) => new URLSearchParams(location.searchStr) });
   const scope = search.get("scope") === "remote" ? "remote" : initialScope;
   const projectId = search.get("project") ?? "";
@@ -49,6 +51,7 @@ export function DesktopTaskWorkspace({
         device: target.deviceId,
         ...(linkedTask ? { taskId: linkedTask } : {}),
       },
+      hash: linkedTask ? true : "",
     });
   }
   const localView = !isDesktop() ? (
@@ -104,9 +107,9 @@ export function DesktopTaskWorkspace({
               scope={remoteScope}
               onSelect={selectRemote}
               connectionAction={
-                <Link to="/settings" className="text-sm underline underline-offset-4">
+                <Button variant="link" aria-haspopup="dialog" onClick={() => void settings.open()}>
                   {t("agentSettings")}
-                </Link>
+                </Button>
               }
             />
           );
@@ -174,6 +177,7 @@ function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
     void router.navigate({
       to: "/tasks",
       search: { scope: "local", project: context.project.id, device: context.device.id },
+      hash: true,
       replace: true,
     });
   }, [context.project, context.device, context.requested, router, taskId]);
@@ -200,6 +204,7 @@ function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
           void router.navigate({
             to: "/tasks",
             search: { scope: "local", project: target.projectId, device: target.deviceId, taskId },
+            hash: true,
             replace: true,
           })
         }

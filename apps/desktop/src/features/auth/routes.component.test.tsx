@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import type { ReactNode } from "react";
 import {
-  createHashHistory,
+  createBrowserHistory,
   createMemoryHistory,
   createRouter,
   Outlet,
@@ -100,9 +100,9 @@ beforeEach(() => {
   window.history.replaceState({}, "", "/");
 });
 
-async function page(url: string, hash = false) {
-  if (hash) window.history.replaceState({}, "", `/#${url}`);
-  const history = hash ? createHashHistory() : createMemoryHistory({ initialEntries: [url] });
+async function page(url: string, browser = false) {
+  if (browser) window.history.replaceState({}, "", url);
+  const history = browser ? createBrowserHistory() : createMemoryHistory({ initialEntries: [url] });
   histories.push(history);
   const router = createRouter({ routeTree, history, defaultPendingMinMs: 0 });
   await router.load();
@@ -225,10 +225,11 @@ describe("Desktop authentication routes", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("reads reset tokens from hash history when the outer URL query is empty", async () => {
+  it("reads reset tokens from the browser URL query", async () => {
     mocks.resetPassword.mockResolvedValue({ data: {}, error: null });
-    const router = await page("/reset-password?token=hash-token", true);
-    expect(window.location.search).toBe("");
+    const router = await page("/reset-password?token=browser-token", true);
+    expect(window.location.search).toBe("?token=browser-token");
+    expect(window.location.hash).toBe("");
     expect(router.state.location.pathname).toBe("/reset-password");
     fireEvent.change(screen.getByLabelText("New password"), {
       target: { value: "replacement-password" },
@@ -236,7 +237,7 @@ describe("Desktop authentication routes", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Reset password" }).closest("form")!);
     await waitFor(() =>
       expect(mocks.resetPassword).toHaveBeenCalledWith({
-        token: "hash-token",
+        token: "browser-token",
         newPassword: "replacement-password",
         fetchOptions: { headers: { "Accept-Language": "en" } },
       }),

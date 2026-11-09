@@ -17,6 +17,7 @@ import { ComposerDraftList } from "./composer/draft-list.tsx";
 import { ComposerTargetOptions } from "./composer/target-options.tsx";
 import { ModelPicker } from "./model-picker.tsx";
 import { useTaskComposer, type TaskComposerProps } from "./use-task-composer.ts";
+import { submitShortcut } from "./submit-shortcut.ts";
 
 export type { ComposerDraft as TaskComposerDraft } from "../model/composer.ts";
 
@@ -83,6 +84,7 @@ function TaskComposerView(props: TaskComposerProps) {
                 placeholder={t("promptPlaceholder")}
                 disabled={state.busy}
                 onChange={(event) => edit({ type: "prompt", prompt: event.target.value })}
+                onKeyDown={submitShortcut}
               />
             </Field>
             <ComposerTargetOptions

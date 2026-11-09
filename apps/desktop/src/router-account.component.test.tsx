@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { useSyncExternalStore, type ReactNode } from "react";
 import {
-  createHashHistory,
+  createBrowserHistory,
   createMemoryHistory,
   createRouter,
   Outlet,
@@ -138,11 +138,11 @@ beforeEach(() => {
 
 function testRouter(
   url = "/account",
-  options: { hash?: boolean; isServer?: boolean; isShell?: boolean } = {},
+  options: { browser?: boolean; isServer?: boolean; isShell?: boolean } = {},
 ) {
-  if (options.hash) window.history.replaceState({}, "", `/#${url}`);
-  const history = options.hash
-    ? createHashHistory()
+  if (options.browser) window.history.replaceState({}, "", url);
+  const history = options.browser
+    ? createBrowserHistory()
     : createMemoryHistory({ initialEntries: [url] });
   histories.push(history);
   return createRouter({
@@ -169,8 +169,8 @@ function mount(router: ReturnType<typeof testRouter>) {
   );
 }
 
-async function page(url = "/account", hash = false) {
-  const router = testRouter(url, { hash });
+async function page(url = "/account", browser = false) {
+  const router = testRouter(url, { browser });
   await router.load();
   mount(router);
   return router;
@@ -189,9 +189,11 @@ describe("Desktop account route", () => {
     expect(mocks.account).not.toHaveBeenCalled();
   });
 
-  it("reads an authenticated profile through hash history with an abort signal", async () => {
+  it("reads an authenticated profile through browser history with an abort signal", async () => {
     const router = await page("/account", true);
     expect(router.state.location.pathname).toBe("/account");
+    expect(window.location.pathname).toBe("/account");
+    expect(window.location.hash).toBe("");
     expect(screen.getByRole("heading", { name: ada.name })).toBeTruthy();
     expect(screen.getByText(ada.email)).toBeTruthy();
     expect(mocks.account).toHaveBeenCalledTimes(1);
@@ -254,11 +256,11 @@ describe("Desktop account route", () => {
     mount(router);
     expect(await screen.findByRole("status", { name: "Loading…" })).toBeTruthy();
     await act(async () => {
-      await router.navigate({ to: "/settings" });
+      await router.navigate({ to: "/login" });
       await loading;
     });
     expect(requestSignal?.aborted).toBe(true);
-    expect(await screen.findByRole("heading", { name: "Settings" })).toBeTruthy();
+    expect(await screen.findByLabelText("Email address")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -350,7 +352,7 @@ describe("Desktop account route", () => {
     expect(screen.queryByText(ada.email)).toBeNull();
     expect(mocks.account).toHaveBeenCalledTimes(1);
     const accountListeners = new Set(mocks.listeners);
-    await act(async () => router.navigate({ to: "/settings" }));
+    await act(async () => router.navigate({ to: "/login" }));
     for (const listener of accountListeners) expect(mocks.listeners.has(listener)).toBe(false);
     await act(async () => setSession(grace));
     expect(mocks.account).toHaveBeenCalledTimes(1);

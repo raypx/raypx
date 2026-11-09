@@ -1,4 +1,4 @@
-import { canContinueTask, followUpPlan, taskSelection } from "../model/composition.ts";
+import { continueTaskFailure, followUpPlan, taskSelection } from "../model/composition.ts";
 import { ModelPicker } from "./model-picker.tsx";
 import type { AgentTask, ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -6,7 +6,7 @@ import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Approval } from "./approval.tsx";
 
 import { ContextSnapshot } from "@raypx/memory/client";
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskWorkspacePort } from "../model/port.ts";
 import type { SequencedEvent, SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
@@ -30,7 +30,9 @@ import { TaskInputComposer } from "./task-input.tsx";
 
 import { TaskMarkdown } from "./markdown.tsx";
 import { useTaskConversation } from "./use-task-conversation.ts";
-import { isLocalWorkspace, type WorkspaceScope } from "../model/scope.ts";
+import { isLocalWorkspace, workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
+import { useSessionDraft } from "./use-session-draft.ts";
+import { submitShortcut } from "./submit-shortcut.ts";
 
 function taskStatusVariant(status: AgentTask["status"]) {
   if (status === "waiting") return "default";
@@ -39,15 +41,7 @@ function taskStatusVariant(status: AgentTask["status"]) {
   return "secondary";
 }
 
-export function TaskDetail({
-  devices,
-  client,
-  id,
-  onChanged,
-  scope,
-  target,
-  onFollowUp,
-}: {
+interface TaskDetailProps {
   client: TaskWorkspacePort;
   id: string;
   devices: SyncDevice[];
@@ -55,7 +49,23 @@ export function TaskDetail({
   scope: WorkspaceScope;
   target?: { projectId: string; deviceId?: string | undefined } | undefined;
   onFollowUp?: ((id: string) => void) | undefined;
-}) {
+}
+
+export function TaskDetail(props: TaskDetailProps) {
+  return (
+    <TaskDetailView key={JSON.stringify([workspaceScopeKey(props.scope), props.id])} {...props} />
+  );
+}
+
+function TaskDetailView({
+  devices,
+  client,
+  id,
+  onChanged,
+  scope,
+  target,
+  onFollowUp,
+}: TaskDetailProps) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const format = useFormatter();
@@ -64,28 +74,38 @@ export function TaskDetail({
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
   const { confirm, dialog } = useConfirmation();
-  const [model, setModel] = useState<ModelSelection>();
+  const [changedModel, setModel] = useState<ModelSelection>();
   const [modelReady, setModelReady] = useState(false);
-  const [prompt, setPrompt] = useState("");
-  const followId = useRef<{
-    prompt: string;
-    id: string;
-    input?: Parameters<TaskWorkspacePort["tasks"]["followUp"]>[0];
-  } | null>(null);
+  const [modelPending, setModelPending] = useState(true);
   const active = useRef(false);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const { data, error, errorCode, refresh, loadingOlder, loadGap, loadOlder } = useTaskConversation(
     client,
     id,
     scope,
     setFailure,
   );
+  const draft = useSessionDraft(scope, data?.task, id, "followUp");
+  const prompt = draft.prompt;
+  const model = changedModel ?? draft.model ?? data?.task.model;
   const requiresModel = data
     ? taskSelection(devices, data.task.deviceId, data.task.projectId, data.task.provider)
         .requiresModel
     : false;
-  const canContinue = Boolean(
-    data && canContinueTask(data.task, data.continuation, devices, modelReady),
-  );
+  const continuationFailure = data
+    ? continueTaskFailure(data.task, data.continuation, devices, modelReady, model)
+    : undefined;
+  const continuationHint =
+    continuationFailure === "AI_MODEL_NOT_FOUND" && modelPending && local && client.models
+      ? "modelChecking"
+      : continuationFailure;
+  const canContinue = Boolean(data && !continuationFailure && draft.ready);
   async function cancel() {
     if (active.current) return;
     active.current = true;
@@ -93,13 +113,14 @@ export function TaskDetail({
     setBusy(true);
     try {
       await client.tasks.cancel({ id }, { signal: AbortSignal.timeout(15_000) });
+      if (!mounted.current) return;
       refresh();
       onChanged();
     } catch (e) {
-      setFailure(failureCode(e));
+      if (mounted.current) setFailure(failureCode(e));
     } finally {
       active.current = false;
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
   async function follow(event: FormEvent) {
@@ -107,14 +128,14 @@ export function TaskDetail({
     if (active.current || !prompt.trim() || !canContinue) return;
     active.current = true;
     setFailure(undefined);
-    if (followId.current?.prompt !== prompt) followId.current = { prompt, id: crypto.randomUUID() };
     setBusy(true);
     try {
-      if (!followId.current.input) {
-        const selected = model ?? data?.task.model;
+      let delivery = draft.delivery?.kind === "followUp" ? draft.delivery : undefined;
+      if (!delivery) {
+        const selected = model;
         const context = data?.continuation;
         if (requiresModel && (!selected || !context)) throw new Error("SESSION_UNAVAILABLE");
-        const plan = followUpPlan(followId.current.id, id, prompt, selected, context);
+        const plan = followUpPlan(crypto.randomUUID(), id, prompt.trim(), selected, context);
         const transfer = plan.transfer;
         if (
           transfer &&
@@ -126,20 +147,22 @@ export function TaskDetail({
           }))
         )
           return;
-        followId.current.input = plan.input;
+        if (!mounted.current) return;
+        delivery = { kind: "followUp", input: plan.input };
+        draft.remember(delivery);
       }
-      const task = await client.tasks.followUp(followId.current.input, {
+      const task = await client.tasks.followUp(delivery.input, {
         signal: AbortSignal.timeout(15_000),
       });
-      followId.current = null;
-      setPrompt("");
+      draft.accepted(delivery);
+      if (!mounted.current) return;
       onChanged();
       onFollowUp?.(task.id);
     } catch (e) {
-      setFailure(failureCode(e));
+      if (mounted.current) setFailure(failureCode(e));
     } finally {
       active.current = false;
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
   if (!data) {
@@ -221,13 +244,8 @@ export function TaskDetail({
           {t("snapshotIncomplete")}
         </p>
       )}
-      {data.task.model && (
-        <p className="text-xs text-muted-foreground">
-          {data.task.model.provider} · {data.task.model.model}
-        </p>
-      )}
       {data.continuation?.blocked && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive-text">
           {t("PI_RECOVERY_REQUIRED")}
         </p>
       )}
@@ -243,40 +261,19 @@ export function TaskDetail({
           )}
         </section>
       )}
-      {isTaskActive(data.task) ? (
-        <Conversation
-          task={data.task}
-          entries={data.activity}
-          gaps={data.activityGaps}
-          loadGap={loadGap}
-          more={data.activityBefore !== undefined}
-          loading={loadingOlder}
-          loadOlder={loadOlder}
-        />
-      ) : (
-        <Collapsible>
-          <CollapsibleTrigger
-            render={<Button type="button" variant="ghost" size="sm" className="group" />}
-          >
-            <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
-            {t("viewConversation")}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-3">
-            <Conversation
-              task={data.task}
-              entries={data.activity}
-              gaps={data.activityGaps}
-              loadGap={loadGap}
-              more={data.activityBefore !== undefined}
-              loading={loadingOlder}
-              loadOlder={loadOlder}
-            />
-          </CollapsibleContent>
-        </Collapsible>
-      )}
+      <TaskConversationPanel
+        task={data.task}
+        entries={data.activity}
+        gaps={data.activityGaps}
+        loadGap={loadGap}
+        more={data.activityBefore !== undefined}
+        loading={loadingOlder}
+        loadOlder={loadOlder}
+      />
       {isTaskActive(data.task) && (
         <TaskInputComposer
           client={client}
+          scope={scope}
           task={data.task}
           entries={data.activity}
           modes={
@@ -307,11 +304,6 @@ export function TaskDetail({
           {data.task.model.provider} · {data.task.model.model}
         </p>
       )}
-      {data.continuation?.blocked && (
-        <p role="alert" className="text-sm text-destructive">
-          {t("PI_RECOVERY_REQUIRED")}
-        </p>
-      )}
       {!isTaskActive(data.task) && (
         <form onSubmit={(event) => void follow(event)} className="space-y-3">
           <Field>
@@ -322,24 +314,27 @@ export function TaskDetail({
               required
               maxLength={32000}
               value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
+              disabled={busy || !draft.ready}
+              onChange={(event) => draft.edit(event.target.value, model)}
+              onKeyDown={submitShortcut}
             />
           </Field>
           {requiresModel && local && client.models && (
             <ModelPicker
               client={client.models}
-              value={model ?? data.task.model}
+              value={model}
               onReady={setModelReady}
+              onPending={setModelPending}
               disabled={busy}
               onChange={(value) => {
                 setModel(value);
-                followId.current = null;
+                draft.edit(prompt, value);
               }}
             />
           )}
-          {!canContinue && (
+          {continuationHint && continuationHint !== "PI_RECOVERY_REQUIRED" && (
             <p role="status" className="text-sm text-muted-foreground">
-              {t("projectUnavailable")}
+              {t(continuationHint)}
             </p>
           )}
           <Button type="submit" disabled={busy || !prompt.trim() || !canContinue}>
@@ -347,11 +342,45 @@ export function TaskDetail({
           </Button>
         </form>
       )}
+      {draft.failure && (
+        <p role="alert" className="text-sm text-destructive-text">
+          {t(draft.failure)}
+        </p>
+      )}
       {failure && (
         <p role="alert" className="text-sm text-destructive">
           {t(failure)}
         </p>
       )}
     </div>
+  );
+}
+
+/** Preserve a live reader when completion adds the result above their conversation. */
+function TaskConversationPanel(props: Parameters<typeof Conversation>[0]) {
+  const t = useTranslations("tasks");
+  const active = isTaskActive(props.task);
+  const [expanded, setExpanded] = useState(active);
+  const [mounted, setMounted] = useState(active);
+  return (
+    <Collapsible
+      open={active || expanded}
+      onOpenChange={(open) => {
+        setExpanded(open);
+        if (open) setMounted(true);
+      }}
+    >
+      {!active && (
+        <CollapsibleTrigger
+          render={<Button type="button" variant="ghost" size="sm" className="group" />}
+        >
+          <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
+          {t("viewConversation")}
+        </CollapsibleTrigger>
+      )}
+      <CollapsibleContent keepMounted={mounted} className={active ? undefined : "pt-3"}>
+        <Conversation {...props} showSummary={active} />
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

@@ -1,6 +1,6 @@
 import { expect, expectTypeOf, it, vi } from "vite-plus/test";
 import { createLocalClient, type LocalClient } from "./local-client.ts";
-import { LOCAL_WORKSPACE_ID } from "./local.ts";
+import { LOCAL_WORKSPACE_ID, localParams } from "./local.ts";
 
 // This function is checked by the workspace typecheck, never executed.
 function typeContract(client: LocalClient) {
@@ -14,6 +14,25 @@ function typeContract(client: LocalClient) {
   void client("roots.register", { path: "/private" });
 }
 void typeContract;
+
+it("selects a default terminal shell without weakening tools.run or accepting an empty executable", async () => {
+  const transport = vi.fn(async () => ({ id: "terminal" }));
+  const client = createLocalClient(transport);
+  await expect(client("terminal.open", { cwd: "/work" })).resolves.toEqual({ id: "terminal" });
+  expect(transport).toHaveBeenCalledWith("terminal.open", {
+    cwd: "/work",
+    args: [],
+    timeoutMs: 600_000,
+    cols: 80,
+    rows: 24,
+  });
+  transport.mockClear();
+  await expect(client("terminal.open", { cwd: "/work", executable: "" })).rejects.toThrow(
+    /executable/,
+  );
+  expect(transport).not.toHaveBeenCalled();
+  expect(localParams["tools.run"].safeParse({ cwd: "/work" }).success).toBe(false);
+});
 
 it("validates project and computer list filters before calling the host", async () => {
   const transport = vi.fn(async () => []),

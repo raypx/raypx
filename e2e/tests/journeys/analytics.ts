@@ -36,7 +36,9 @@ export function registerTests() {
       }
       return authResponse(route, {});
     });
-    await page.goto(`${base}/settings?token=secret-reset-token`);
+    await page.goto(
+      `${base}${surface === "Web" ? "/settings?token=secret-reset-token" : "/?token=secret-reset-token#settings"}`,
+    );
     const usage = page.getByRole("switch", { name: "Usage statistics", exact: true }),
       errors = page.getByRole("switch", { name: "Error reports", exact: true });
     await expect(usage).toBeEnabled();

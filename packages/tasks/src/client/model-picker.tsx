@@ -16,12 +16,14 @@ export function ModelPicker({
   value,
   onChange,
   onReady,
+  onPending,
   disabled,
 }: {
   client: ModelPort;
   value: ModelSelection | undefined;
   onChange: (model: ModelSelection) => void;
   onReady?: (ready: boolean) => void;
+  onPending?: (pending: boolean) => void;
   disabled?: boolean;
 }) {
   const t = useTranslations("tasks"),
@@ -56,9 +58,12 @@ export function ModelPicker({
     return () => controller.abort();
   }, [client, reload]);
   const selected = value && catalog?.models.find((model) => key(model.selection) === key(value));
-  const readiness = useEffectEvent((ready: boolean) => onReady?.(ready));
+  const readiness = useEffectEvent((ready: boolean, pending: boolean) => {
+    onReady?.(ready);
+    onPending?.(pending);
+  });
   useEffect(() => {
-    readiness(Boolean(selected?.configured) && !loading);
+    readiness(Boolean(selected?.configured) && !loading, loading);
   }, [selected?.configured, loading]);
   const save = async () => {
     if (!value || saving) return;

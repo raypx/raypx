@@ -121,3 +121,54 @@ it("keeps the focused link mounted when pointer scrolling leaves its virtual ran
   expect(link).toHaveFocus();
   expect(region.querySelectorAll("[data-conversation-row]").length).toBeLessThan(30);
 });
+
+it.each(["virtual", "full"] as const)(
+  "signals new output while reading earlier %s content and returns to latest without changing modes",
+  async (mode) => {
+    const loadOlder = vi.fn(async () => {});
+    const element = (messages = entries) => (
+      <BrowserLanguageProvider>
+        <Conversation
+          task={task}
+          entries={messages}
+          more={false}
+          loading={false}
+          loadOlder={loadOlder}
+        />
+      </BrowserLanguageProvider>
+    );
+    const view = render(element());
+    const region = screen.getByRole("region", { name: "Conversation" });
+    await screen.findByText(/Reply 199 with/);
+    if (mode === "full")
+      fireEvent.click(screen.getByRole("button", { name: "Show all loaded messages" }));
+    vi.spyOn(region, "scrollHeight", "get").mockReturnValue(24000);
+    region.scrollTo({ top: 1000 });
+    await screen.findByRole("button", { name: "Back to latest" });
+    const offset = region.scrollTop;
+    view.rerender(
+      element([
+        ...entries,
+        {
+          ...entries[199]!,
+          id: "new-message",
+          order: 201,
+          kind: "message",
+          status: "streaming",
+          truncated: false,
+          text: "New streamed output",
+        },
+      ]),
+    );
+    const latest = await screen.findByRole("button", { name: "New output · Back to latest" });
+    expect(region.scrollTop).toBe(offset);
+    expect(region).toHaveAttribute("data-conversation-mode", mode);
+    fireEvent.click(latest);
+    expect(region).toHaveAttribute("data-conversation-mode", mode);
+    expect(region).toHaveFocus();
+    expect(
+      screen.queryByRole("button", { name: "New output · Back to latest" }),
+    ).not.toBeInTheDocument();
+    expect(loadOlder).not.toHaveBeenCalled();
+  },
+);

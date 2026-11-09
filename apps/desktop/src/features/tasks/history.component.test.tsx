@@ -35,20 +35,24 @@ it("retains an offline remote project, permits drafting and blocks sending", asy
   }
 });
 
-it("restores the most recent authorized project and skips unavailable history without executing", async () => {
-  const projectId = device.projects[1]!.id;
-  rememberProject(projectId);
-  rememberProject(crypto.randomUUID());
-  const { router } = await page();
-  await screen.findByRole("heading", { name: "Second project" });
-  await waitFor(() =>
-    expect(new URLSearchParams(router.state.location.searchStr).get("project")).toBe(projectId),
-  );
-  expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
-    false,
-  );
-  expect(mocks.remote).not.toHaveBeenCalled();
-});
+it.each(["", "#settings"])(
+  "restores the most recent authorized project and skips unavailable history without executing (%s)",
+  async (hash) => {
+    const projectId = device.projects[1]!.id;
+    rememberProject(projectId);
+    rememberProject(crypto.randomUUID());
+    const { router } = await page(`/tasks${hash}`);
+    await screen.findByRole("heading", { name: "Second project" });
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.searchStr).get("project")).toBe(projectId),
+    );
+    expect(router.state.location.hash).toBe(hash.slice(1));
+    expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
+      false,
+    );
+    expect(mocks.remote).not.toHaveBeenCalled();
+  },
+);
 
 it("opens older tasks after a short page and returns to newer tasks without losing the cursor", async () => {
   state.tasks = Array.from({ length: 3 }, (_, index) => ({

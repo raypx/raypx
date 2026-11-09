@@ -28,7 +28,6 @@ describe("Desktop shell pages", () => {
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },
       "/memory": { title: "memory.title", layout: "workbench" },
-      "/settings": { title: "common.settings", layout: "document" },
       "/tasks": { title: "common.tasks", layout: "workbench" },
       "/terminal": { title: "common.terminal", layout: "tool" },
       "/welcome": { title: "localWorkspace.welcome", layout: "document" },

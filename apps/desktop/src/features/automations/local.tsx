@@ -23,7 +23,8 @@ import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition, JobInput, JobRun } from "@raypx/jobs-model";
+import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/jobs-model";
+import { ScheduleFields } from "./schedule-fields.tsx";
 import { localRequest } from "../../lib/desktop.ts";
 import { Link } from "@tanstack/react-router";
 
@@ -74,6 +75,12 @@ export function LocalJobsPage({
     if (busy) return;
     const formData = new FormData(event.currentTarget);
     const value = (key: string) => formText(formData, key).trim();
+    try {
+      nextJobRuns({ cron: value("cron"), timezone: value("timezone") });
+    } catch {
+      event.currentTarget.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
+      return;
+    }
     let input: JobInput;
     try {
       const args: unknown = JSON.parse(value("args") || "[]");
@@ -210,7 +217,7 @@ export function LocalJobsPage({
       )}
       {editing !== false && (
         <section className="mb-8 rounded-lg border border-border bg-sidebar p-6">
-          <h2 className="mb-6 text-sm font-medium">{t("local.create")}</h2>
+          <h2 className="mb-6 text-sm font-medium">{t(editing ? "local.edit" : "local.create")}</h2>
           <form key={editing?.id ?? "new"} onSubmit={save} className="max-w-3xl">
             <FieldGroup>
               <Field>
@@ -238,32 +245,11 @@ export function LocalJobsPage({
                   required
                 />
               </Field>
-              <FieldGroup className="@md/field-group:flex-row">
-                <Field className="min-w-0 flex-1">
-                  <FieldLabel htmlFor="job-cron">{t("schedule")}</FieldLabel>
-                  <Input
-                    id="job-cron"
-                    name="cron"
-                    defaultValue={editing?.cron ?? "0 9 * * 1-5"}
-                    aria-describedby="job-cron-hint"
-                    required
-                  />
-                  <p id="job-cron-hint" className="text-xs/relaxed text-muted-foreground">
-                    {t("timezoneHint")}
-                  </p>
-                </Field>
-                <Field className="min-w-0 flex-1">
-                  <FieldLabel htmlFor="job-timezone">{t("timezone")}</FieldLabel>
-                  <Input
-                    id="job-timezone"
-                    name="timezone"
-                    defaultValue={
-                      editing?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone
-                    }
-                    required
-                  />
-                </Field>
-              </FieldGroup>
+              <ScheduleFields
+                cron={editing?.cron ?? "0 9 * * 1-5"}
+                timezone={editing?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone}
+                disabled={busy}
+              />
               <Field>
                 <FieldLabel htmlFor="job-action">{t("action")}</FieldLabel>
                 <SelectField

@@ -20,7 +20,7 @@ test(
       )
         privateReads.push(request.url());
     });
-    for (const path of ["/", "/settings", "/tasks", "/terminal", "/automations", "/account"]) {
+    for (const path of ["/", "/tasks", "/terminal", "/automations", "/account"]) {
       await page.goto(desktop + path);
       await expect(page).toHaveURL(desktop + path);
       await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
@@ -28,6 +28,11 @@ test(
         page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
       ).toBeVisible();
     }
+    await page.goto(desktop + "/tasks#settings");
+    const settings = page.getByRole("dialog", { name: "Settings", exact: true });
+    await expect(settings.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
+    await settings.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(page).toHaveURL(desktop + "/tasks");
     expect(privateReads).toEqual([]);
     // Guests have no connected-computer shortcuts; remote views stay reachable by URL.
     await page.goto(desktop + "/tasks?scope=remote");
@@ -98,15 +103,15 @@ test(
             500,
           ),
     );
-    await page.goto(desktop + "/settings");
+    await page.goto(desktop + "/tasks#settings");
     await expect(page.getByRole("alert")).toHaveText(
       "Unable to connect. Check your connection and try again.",
     );
-    await expect(page).toHaveURL(desktop + "/settings");
+    await expect(page).toHaveURL(desktop + "/tasks#settings");
     await expect(page.getByText("private session diagnostic")).toHaveCount(0);
     available = true;
     await page.getByRole("button", { name: "Try again", exact: true }).click();
-    await expect(page).toHaveURL(desktop + "/settings");
+    await expect(page).toHaveURL(desktop + "/tasks#settings");
     await expect(
       page.getByRole("heading", { name: "Sign in for remote access", exact: true }),
     ).toBeVisible();

@@ -18,6 +18,7 @@ export const fileErrors = {
 export type FileError = (typeof fileErrors)[keyof typeof fileErrors];
 interface FilesState {
   editor: FileEditorState | null;
+  focusVersion: number;
   operation: FileOperation | null;
   busy: boolean;
   error: FileError | null;
@@ -31,12 +32,13 @@ export const isDirty = (state: Pick<FilesState, "editor">) =>
 function createFilesStore() {
   return createStore<FilesState>()((set) => ({
     editor: null,
+    focusVersion: 0,
     operation: null,
     busy: false,
     error: null,
     notice: null,
     setText: (text) =>
-      set((state) => ({ editor: state.editor ? { ...state.editor, text } : null })),
+      set((state) => ({ editor: state.editor ? { ...state.editor, text } : null, notice: null })),
     setOperation: (operation) => set({ operation }),
     resetDirectory: () =>
       set({ editor: null, operation: null, busy: false, error: null, notice: null }),
