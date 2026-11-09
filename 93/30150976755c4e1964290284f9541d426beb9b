@@ -1,0 +1,36 @@
+apps/cli/src/runtime/sqlite/migrate.ts
+  s_2d665babe6fe00::t_5d43756a360be6 10-15,22
+packages/analytics/src/client/preferences.component.test.tsx
+  s_2d665babe6fe00::t_aa656009335acb 19,31,82-88
+  s_2d665babe6fe00::t_e32e079be3c2c6 89
+apps/web/src/features/auth/components/session-boundary.component.test.tsx
+  s_2d665babe6fe00::t_831d3355450f52 27
+docs/development/local-sqlite.md
+  s_2d665babe6fe00::t_de8ca51422b3d9 54
+  s_2d665babe6fe00::t_d68ca57d9c5eaa 55-57
+packages/i18n/src/messages/en.ts
+  s_2d665babe6fe00::t_037b89c6da7e10 574
+packages/analytics/src/client/settings.tsx
+  s_2d665babe6fe00::t_7ac14e00207548 13,16
+  s_2d665babe6fe00::t_4b7a2ce0ed30cd 46
+  s_2d665babe6fe00::t_d90c2475c16517 8-12,14-15,17-28,47-83
+  s_2d665babe6fe00::t_acaff0671b5fa8 5
+packages/i18n/src/messages/zh.ts
+  s_2d665babe6fe00::t_037b89c6da7e10 540
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9330150976755c4e1964290284f9541d426beb9b",
+  "prompts": {},
+  "sessions": {
+    "s_2d665babe6fe00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
