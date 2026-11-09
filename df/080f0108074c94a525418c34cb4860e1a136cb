@@ -1,0 +1,78 @@
+docs/development/ui.md
+  s_21bd334fc20269::t_e8fa5ccd46c0f6 95-99
+apps/web/src/components/public-chrome.tsx
+  s_21bd334fc20269::t_292ec08fee6c85 1-83
+apps/web/src/features/landing/components/layout.tsx
+  s_21bd334fc20269::t_ac151344cafd46 26
+  s_21bd334fc20269::t_c6152e92f2513b 14
+  s_21bd334fc20269::t_6029e47d00a98d 2,8,15-22
+DESIGN.md
+  s_21bd334fc20269::t_e8fa5ccd46c0f6 40-44
+  s_21bd334fc20269::t_5685edf042e747 85-86
+packages/i18n/src/messages/en.ts
+  s_21bd334fc20269::t_b6b2647a9d58cc 136-137
+  s_2d665babe6fe00::t_58d6c972c6305f 138-141
+apps/web/src/features/landing/components/auth-action.tsx
+  s_21bd334fc20269::t_6e9057b63e869a 11-15,17,23,39
+  s_2d665babe6fe00::t_a3063dc2ae044b 16
+apps/web/AGENTS.md
+  s_21bd334fc20269::t_9556d7215c1c77 74-76
+packages/i18n/src/messages/zh.ts
+  s_2d665babe6fe00::t_58d6c972c6305f 131-135
+apps/web/src/features/landing/components/workflow-preview.tsx
+  s_2d665babe6fe00::t_a97e13b961d94d 57
+  s_2d665babe6fe00::t_886698a74bcc5f 12
+  s_2d665babe6fe00::t_6695837ec282a6 28
+  s_21bd334fc20269::t_674628d4d0b1bd 58-60
+apps/web/src/features/auth/components/auth-brand-section.tsx
+  s_21bd334fc20269::t_d62d20ce2521ff 6-10,14-18,20-25,33-40,47-55,57-65
+apps/web/src/components/artwork.tsx
+  s_21bd334fc20269::t_a26c9f219b30bb 1-51,53-56
+  s_21bd334fc20269::t_2a8985ebd33204 52
+apps/web/src/features/auth/components/session-boundary.tsx
+  s_21bd334fc20269::t_0ffd70e2f8abdc 44-76,87-88,90-95,115-116,118-125
+apps/web/src/features/auth/components/auth-form-section.tsx
+  s_21bd334fc20269::t_77877fbcbfbff9 2,4,6,17-18,23,29-34
+apps/web/src/features/landing/components/home.tsx
+  s_21bd334fc20269::t_a681a92d3ce00c 139
+  s_21bd334fc20269::t_33514eb3b7236f 29,195,198,212,224-230,233,235-236,239,242-244,249,254,267,269-271
+  s_2d665babe6fe00::t_53294ac6607de0 4,156
+  s_21bd334fc20269::t_63a0b8da1490a6 37-68
+  s_21bd334fc20269::t_bf041a4d2d37cb 171-188
+  s_21bd334fc20269::t_4a39ef1c365ff8 231,237,240,245-246,255-262
+  s_21bd334fc20269::t_1beebec3db5245 28,161-162,168,190-191,232,234,238,250
+  s_21bd334fc20269::t_070d8737588223 1
+  s_21bd334fc20269::t_c7538c7986e5e4 13,15,17-23,25,33,35,73,75-99,105,120,123-127,133-138,140-141,143-146,148-155,163-167,169-170,189,196-197,199-211,213-223,241,247-248,251-253,263-266,268
+apps/web/src/routes/(legal)/privacy.tsx
+  s_21bd334fc20269::t_4897ecf9e41c89 3-6,27-36,39-45,50,52-56,62,64-69,77,83-86,88-90
+  s_21bd334fc20269::t_3740daab5e9566 91-93
+apps/web/src/features/landing/components/illustrations.tsx
+  s_21bd334fc20269::t_47afc6cbb4a8a1 1-6,8-9,13-15,18-24,26-43,46-68,77-81,84,86-95,108-109,112-121,128-145,148-149,151-154,159-176,179-194,198-202
+  s_21bd334fc20269::t_2331e903f7634d 7,10-12,16-17,25,44-45,69-76,82-83,85,96-107,110-111,122-127,146-147,150,155-158,177-178,195-197
+apps/web/src/routes/(legal)/route.tsx
+  s_21bd334fc20269::t_169e1c9d24527e 2,7-8,15,17-20,27,31,35-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "df080f0108074c94a525418c34cb4860e1a136cb",
+  "prompts": {},
+  "sessions": {
+    "s_21bd334fc20269": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9562c85c-7b43-44b0-bf9d-c4a612e3edd1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_2d665babe6fe00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
