@@ -5,7 +5,7 @@ Status: accepted, 2026-10-27. Incremental implementation from `c3020e4`.
 Implementation amendments: [ADR 0037](0037-windows-daemon.md) extends the
 independent daemon to Windows; [ADR 0041](0041-provider-capabilities-and-pi.md)
 adds local managed Pi. The TypeScript CLI/daemon uses embedded stable Bun;
-Tauri/Rust owns the native Desktop host. See the [current architecture](README.md)
+MyGo/Go owns the native Desktop host. See the [current architecture](README.md)
 and [ADR 0047](0047-bun-cli-production-packaging.md) for the accepted runtime and
 distribution, preserving local ownership, optional cloud channels and approval leases.
 
@@ -14,7 +14,7 @@ grants, connectors, SQLite, terminal settings and broker work without an active 
 Cloud control owns origin/account credentials, grant renewal, relay and opted-in
 projections. Cloud restore runs in the background; local RPC never joins its
 serial queue. Signing in does not enable remote execution or upload local history.
-The Tauri composition root uses Rust; its checks run through the shared VP graph.
+The MyGo composition root uses Go. Its checks run through the shared VP graph.
 Native host and release policy are recorded in the [Desktop guide](../development/desktop.md).
 
 ## Local terminal ownership
@@ -116,7 +116,7 @@ credentials, path grants and content require separate design.
 
 Default tests exercise offline readiness under blocked cloud restore, per-request
 channels, migration safety, withdrawal revision independence, route restrictions,
-adapter lifecycle and Rust host transport. Daily validation uses `bun run verify`;
+adapter lifecycle and Go host transport. Daily validation uses `bun run verify`;
 release preparation adds `bun run verify --full`. Packaged native and live hook
 checks are separate, isolated by profile, `RAYPX_HOME`, `CLAUDE_CONFIG_DIR` and
 `CODEX_HOME`; they do not edit personal hooks

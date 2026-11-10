@@ -2,8 +2,8 @@
 
 ## Purpose
 
-`canary` uses the Tauri/Rust Desktop host; `dev` retains MyGo/Go. Both keep the
-Bun CLI/daemon. Follow the host implementation and instructions of the checked-out branch.
+Desktop uses the MyGo/Go host with the Bun CLI/daemon. The retired Tauri/Rust host is
+archived in `raypx/raypx-tauri`; do not reintroduce it here.
 
 Raypx is a project-centered personal development workbench with device-local Desktop execution and optional Web remote access.
 Read the nearest workspace AGENTS.md and docs/README.md before changing code.
@@ -49,7 +49,7 @@ The accepted foundation design and current architecture decisions define the imp
   runtime; its container and all local tooling still use the pinned Bun runtime.
 - Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
   the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
-  Desktop uses the Tauri Rust host; its bundled CLI retains the pinned Bun runtime.
+  Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
   `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
   `vite.app.config.ts`. The TypeScript presets register uncached bootstrap tasks
@@ -69,10 +69,10 @@ The accepted foundation design and current architecture decisions define the imp
 - Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
-- Desktop uses Tauri 2.12.5 and Rust 1.99.1, pinned in Cargo and rust-toolchain.toml.
-  The independently released Tauri JavaScript API/CLI packages are 2.12.4.
-  Native framework and policy live in apps/desktop/src-tauri; execution stays in CLI.
-  macOS targets 13.5+, Windows uses WebView2, and Linux Desktop acceptance remains unverified.
+- Desktop's Go module lives in `apps/desktop`, with MyGo v0.8.3 and Go 1.27.3.
+  Native builds require `CGO_ENABLED=0`; macOS packages target 13.5+, Windows uses WebView2,
+  and Linux Desktop acceptance remains unverified. `internal/app` owns framework APIs and
+  `internal/desktop` owns native policy and CLI transport. Bun/VP owns JS builds.
 - Type checks use tsc --noEmit with an explicit project; Bun runs scripts.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
@@ -122,9 +122,11 @@ The accepted foundation design and current architecture decisions define the imp
 ## Verification
 
 Run focused meaningful tests and `bun run verify` for daily delivery. It selects
-affected source checks/tests and Rust host tasks only for native inputs. Shared
+affected source checks/tests and Go host tasks only for native inputs. Shared
 JavaScript dependency/configuration changes broaden source checks without selecting
-builds or native platforms. Use `bun run verify --full` for release preparation or an
+builds or native platforms. Go-only changes select host checks; workflow orchestration
+selects Tooling validation and its relevant acceptance gates. Mixed changes combine
+their scopes. Use `bun run verify --full` for release preparation or an
 explicit full-validation request; it includes repository-wide audits, builds and
 current-platform artifact probes. PostgreSQL, browser and packaged native acceptance
 run separately; releases require their full selected matrix.

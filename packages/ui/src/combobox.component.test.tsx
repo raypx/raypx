@@ -78,7 +78,7 @@ it("filters grouped options, submits the identity and restores trigger focus on 
   const trigger = screen.getByRole("combobox", { name: "Language" });
   await user.click(trigger);
   const search = screen.getByRole("combobox", { name: "Find language" });
-  expect(search).toHaveFocus();
+  await waitFor(() => expect(search).toHaveFocus());
   expect(screen.getByRole("option", { name: "Unavailable" })).toHaveAttribute(
     "aria-disabled",
     "true",
@@ -89,7 +89,7 @@ it("filters grouped options, submits the identity and restores trigger focus on 
   await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
   expect(trigger).toHaveTextContent("简体中文");
   expect(new FormData(container.querySelector("form")!).get("language")).toBe("zh");
-  expect(trigger).toHaveFocus();
+  await waitFor(() => expect(trigger).toHaveFocus());
 });
 
 it("reports an empty search and Escape returns to the unchanged selection", async () => {
@@ -103,5 +103,5 @@ it("reports an empty search and Escape returns to the unchanged selection", asyn
   await user.keyboard("[Escape]");
   await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
   expect(trigger).toHaveTextContent("English");
-  expect(trigger).toHaveFocus();
+  await waitFor(() => expect(trigger).toHaveFocus());
 });

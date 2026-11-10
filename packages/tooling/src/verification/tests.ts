@@ -22,6 +22,7 @@ const extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"
 
 /** CI/full mode retains complete suites. Local selection never changes the canonical CI plan. */
 export function localTests(root: string, plan: VerificationPlan): TestSelection[] {
+  if (!plan.tasks.some((task) => task.endsWith("#task:test"))) return [];
   const model = taskModel(root),
     index = discover(root);
   const changed = plan.files.filter((file) => !documentation.test(file));

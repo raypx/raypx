@@ -34,10 +34,11 @@ function fixture() {
           "raypx-dev",
           "typecheck",
           "typecheck:node",
+          "perf:check",
           "native:csp",
           "vp",
-          "tauri:dev",
-          "tauri:build",
+          "mygo:dev",
+          "mygo:build",
         ].map((name) => [name, `bun record.ts ${name}`]),
       ),
     }),
@@ -149,21 +150,22 @@ describe("Desktop task graph entry", () => {
       "native:generate",
       "typecheck",
       "typecheck:node",
+      "perf:check",
     ]);
   });
 
-  it("uses the Tauri development leaf and preserves its arguments", () => {
+  it("uses the MyGo development leaf and preserves its arguments", () => {
     const result = fixture()("dev", { leaf: true, args: ["--verbose"] });
     expect(result.status).toBe(0);
-    expect(result.events).toEqual([{ name: "tauri:dev", args: ["--verbose"], forwarded: {} }]);
+    expect(result.events).toEqual([{ name: "mygo:dev", args: ["--verbose"], forwarded: {} }]);
   });
 
-  it("packages Tauri through the qualified native build leaf", () => {
+  it("packages MyGo through the qualified native build leaf", () => {
     const result = fixture()("native:build", { leaf: true, forwarded: ["-skip-dmg"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
-        name: "tauri:build",
+        name: "mygo:build",
         args: ["-skip-dmg"],
         forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["-skip-dmg"]' },
       },
@@ -197,7 +199,7 @@ describe("Desktop task graph entry", () => {
     ["native:smoke", "smoke-run", []],
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
     ["native:agents", "smoke-agents-run", []],
-  ] as const)("runs the Tauri %s gate inside VP", (task, name, args) => {
+  ] as const)("runs the MyGo %s gate inside VP", (task, name, args) => {
     const result = fixture()(task, { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([{ name, args, forwarded: {} }]);

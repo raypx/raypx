@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace";
 import { taskModel } from "../tasks/model";
+import { platformProject } from "../../tests/helpers/verification";
 import { argumentKey } from "../tasks/arguments";
 import { testLayer, testSources } from "../validation/test-sources";
 import { executionTasks } from "./execution";
@@ -40,6 +41,17 @@ function project() {
 }
 
 describe("local related test selection", () => {
+  it("does not discover JavaScript tests for a Go-only plan", () => {
+    const model = platformProject();
+    const plan = verificationPlan(model, ["packages/desktop/go.mod"]);
+    expect(localTests(model.root, plan)).toEqual([]);
+    expect(executionTasks(plan, "fixture")).toEqual([
+      "fixture#task:policy",
+      "fixture#task:locales",
+      "desktop#task:mygo:check",
+      "desktop#task:mygo:test",
+    ]);
+  });
   it("follows emitted JS imports transitively, retains integration checks and runs complete consumer suites", () => {
     const { root, plan } = project();
     const canonical = plan(["packages/feature/src/value.ts"]);

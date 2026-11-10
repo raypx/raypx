@@ -60,5 +60,5 @@ use an operator account. The normal compiled-artifact E2E gate remains separate
 and asserts that development diagnostics are absent.
 
 Desktop renderer browser tests do not establish native WKWebView/WebView2 evidence.
-Check the Dock and clipboard/manual fallback in an isolated Tauri development window
+Check the Dock and clipboard/manual fallback in an isolated MyGo development window
 on each claimed native platform. Report unavailable native checks explicitly.

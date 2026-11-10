@@ -1,65 +1,92 @@
 # Raypx Desktop
 
-The canary branch uses Tauri 2.12.5 and Rust 1.99.1 to host the React SPA in
-WKWebView or WebView2. The standalone TypeScript CLI/daemon owns execution and
-scheduling. Its production executable embeds stable Bun 1.4.4, minified ESM and
-depth-0 bytecode. Desktop includes the complete verified CLI/Herdr payload and
-works without a separately installed CLI, Bun or Node.js. macOS requires 13.5+;
-Linux Desktop acceptance remains unverified.
+MyGo v0.8.3 hosts the existing React SPA and launches the standalone Bun CLI.
+Go 1.27.3 builds with CGO_ENABLED=0. The CLI owns execution and the independent
+daemon; Herdr remains the terminal runtime. The UI remains React in WKWebView
+(macOS) or WebView2 (Windows). `mygo.config.ts` targets macOS 13.5+. Linux Desktop
+acceptance remains unverified. The current application uses one main window.
 
-- `src-tauri/src/shell.rs`: windows, tray, notifications, picker and trusted IPC.
-- `src-tauri/src/host.rs`: native policy, authorization and daemon proxy lifecycle.
-- `src-tauri/src/{api,sessions,engine,events,config}.rs`: native adapters.
-- `src/lib/tauri.ts`: invoke/channel adapter behind `DesktopPlatform`.
-- `scripts/host`: generated contracts, staging, signing and build orchestration.
-- `tests/native/smoke`: isolated packaged GUI acceptance.
+Packaged routes use hash history. Settings opens as a dialog over the current
+page, preserving its query and drafts. Terminal opens the daemon’s default shell
+in the selected project after an explicit action. Advanced options accept a
+custom executable, arguments and directory.
+
+- `main.go`: embedded frontend/manifests and entry point.
+- `internal/app`: MyGo lifecycle, trusted IPC, windows, tray and native dialogs.
+- `internal/desktop`: native policy, HTTP/session persistence, CLI and event transport.
+- `src`: existing renderer; `bridge.ts` declares its native vocabulary.
+- `resources`: maintained icons/entitlements, plus generated `bin` payloads.
+- `tests/native/host`: quiet Go transport/policy tests.
 
 From the repository root:
 
 ```sh
 bun run --cwd apps/desktop check
 bun run --cwd apps/desktop test
-bun run --cwd apps/desktop tauri:check
-bun run --cwd apps/desktop tauri:test
+bun run --cwd apps/desktop test:unit
+bun run --cwd apps/desktop test:component
+bun run --cwd apps/desktop test:integration
+bun run --cwd apps/desktop mygo:check
+bun run --cwd apps/desktop mygo:check:docker
+bun run --cwd apps/desktop mygo:test
 bun run build:cli
 bun run build:desktop
+bun run --cwd apps/desktop mygo:smoke
 bun run package:desktop
-bun run verify
+bun run verify --full
 ```
 
-VP owns the task graph. Normal Desktop builds check and render the SPA. Explicit
-packaging verifies and copies the prepared Bun CLI payload, then invokes Tauri.
-Installers live in `target/release/bundle`; matching CLI resources are required
-for every target. Root `bun run dev:desktop` starts Tauri and Vite. Cargo owns native compilation.
-`tauri:check:docker` generates policy then runs core Rust tests in a scoped Docker
-context. It does not establish GUI acceptance.
+`mygo:smoke` is a headless artifact check and opens no window. `package:desktop`
+stages matching renderer, CLI and Herdr inputs, then packages under
+`build/<os>-<arch>`. `dev:desktop` starts MyGo with the Vite renderer server.
+Cross-platform packages require matching CLI artifacts and are currently rejected.
+`test:unit` and `test:component` use isolated platform fixtures without native tools,
+real accounts or Provider processes. `test:integration` owns build/package script
+tests; default `test` runs all three Vitest projects. Go policies and host use cases
+accept an EngineClient port, while process framing and compiled CLI acceptance stay
+in the native gates. See the testing guide for the selected macOS/Windows matrix.
+Go policy checks do not require staged renderer files. `mygo:check`/`mygo:test` also
+compile the `native_smoke` build and run its protocol tests. Go tests generate contract
+manifests and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
+compiled CLI for the daemon integration test; only its isolated daemon is stopped.
 
-`tauri:check` runs formatting, compilation and Clippy; `tauri:test` runs policy,
-SQLite lock and real process tests. Linux uses the framework-independent core.
-`native:smoke` and `native:smoke:interactive` build a separate application identity,
-renderer and Cargo feature under `target/native-smoke`. The private test endpoint
-is excluded from production. Interactive acceptance runs only on isolated runners.
-Windows hosted runners install and uninstall the actual per-user NSIS package and
-verify the complete runtime inventory.
+`mygo:check:docker` enters the same VP graph and runs the existing Go checks in
+Docker BuildKit with pinned Go/Bun, without installing JavaScript dependencies.
+Its scoped context contains only the native check inputs. BuildKit caches the
+`go.mod`/`go.sum` download layer and retains both `GOMODCACHE` and `GOCACHE` across
+source edits. Reuse the same builder; `BUILDX_BUILDER` or `--builder <name>` selects
+one. Source edits rerun checks while reusing the Go caches. VP leaves this task
+uncached so Docker owns its layers and Go owns incremental compilation.
+Ephemeral CI builders need separate persistence for cache-mount contents; exporting
+image-layer caches alone does not retain them. This command performs headless Go
+vet/compilation for production and `native_smoke`, without running tests or a GUI.
 
-Main pages use History paths. Settings is a global `#settings` dialog over the
-current path and query; opening it preserves the mounted page and its drafts.
-The Terminal tool opens the daemon's default shell in the selected project's
-directory only after an explicit click. Advanced options accept a custom executable,
-arguments and directory; without a project, a directory must be entered.
+`native:smoke` builds a separate `native_smoke` Go host and renderer in
+`artifacts/native-smoke` and `build/native-smoke`. Quiet presentation stays inactive.
+`native:smoke:interactive` also checks native focus/resize/close; use isolated CI.
+Normal production builds exclude the private endpoint and renderer test hook.
 
-`desktop-instance.sqlite` prevents concurrent hosts. Native owns
-`tauri-sessions.sqlite` and a separate system credential key; device preferences,
-connection settings, profile data and offline enrollment remain local. Missing
-cookie keys preserve stored ciphertext and allow in-memory sign-in. POSIX
-permissions are private; Windows uses restricted inheritable DACLs.
+Register the local instance once to one account and API origin. Its signed
+identity allows local work offline and after online logout. Remote access needs
+separate Host opt-in and online authorization. On macOS/Windows, GUI Quit leaves
+the daemon and its tasks running; explicit daemon shutdown stops its owned work.
 
-Quit disconnects the proxy and releases UI approval leases. Daemon tasks keep
-running. Only explicit daemon shutdown stops its owned work. Remote grants and
-online sessions remain separate from offline instance enrollment.
+Native uses the current data paths and device preferences.
+Native persistent Cookies are encrypted in server-scoped rows of `mygo-sessions-v3.sqlite`.
+MyGo Secrets keeps the key in the system credential store. Upgrading from the
+plaintext session format clears the saved online session and requires signing in
+again. If the vault is unavailable, sign-in lasts only for the running app.
+CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use
+private permissions; Windows uses restricted DACLs. Old credential stores are
+never read, imported or deleted. Existing profiles without their database key
+remain unavailable; select a new `local_profile` explicitly to register again.
+MyGo signed updates use distinct
+keys and manifests. Local unsigned or
+ad-hoc packages do not establish distribution signing, notarization or GUI results.
 
-Before replacing an installation, quit Desktop and explicitly stop its daemon.
-Release installers require platform signing. Automatic updates also require
-Tauri signing keys and an HTTPS update manifest. Platform installer, GUI and
-signing checks, plus macOS notarization, are separate release gates; an unsigned
-package or a source test pass does not establish them. See [the Desktop guide](../../docs/development/desktop.md).
+Desktop-only browser acceptance lives in `e2e/`; run it through
+`bun run test e2e --desktop -- --grep settings` from the repository root. Shared
+Web/Desktop journeys remain in the root `e2e/` workspace. Browser preview tests
+do not replace packaged native acceptance.
+
+See the [single-compile distribution and Strobe acceptance guide](../../docs/development/mygo-bun-migration-plan.md) for prepared payloads and remaining platform gates.

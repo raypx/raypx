@@ -5,7 +5,7 @@ Status: Accepted for planning on 2026-11-01. This defines the greenfield target;
 Implementation update (2026-11-09): [ADR 0041](0041-provider-capabilities-and-pi.md)
 has made Pi selectable for device-local managed tasks through `@raypx/providers`.
 The [current architecture](README.md) and [ADR 0047](0047-bun-cli-production-packaging.md)
-define the Tauri/Rust host and embedded Bun CLI/daemon; server ownership and pairing here remain
+define the MyGo/Go host and embedded Bun CLI/daemon; server ownership and pairing here remain
 targets tracked in the [roadmap](../roadmap.md).
 
 ## Context

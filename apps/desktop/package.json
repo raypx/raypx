@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun scripts/host/task.ts dev",
-    "build": "bun scripts/host/task.ts build",
+    "dev": "bun run scripts/host/task.ts dev",
+    "build": "bun run scripts/host/task.ts build",
     "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
-    "check": "bun scripts/host/task.ts check",
+    "check": "bun run scripts/host/task.ts check",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "typecheck:node": "tsc --noEmit --project tsconfig.node.json",
     "test": "bun --bun vp test --run",
@@ -15,24 +15,27 @@
     "test:component": "bun --bun vp test --run --project component",
     "test:integration": "bun --bun vp test --run --project integration",
     "test:coverage": "bun --bun vp test --run --coverage",
-    "native:dev": "bun scripts/host/task.ts dev",
-    "native:build": "bun scripts/host/task.ts native:build",
+    "native:dev": "bun run scripts/host/task.ts dev",
+    "native:build": "bun run scripts/host/task.ts native:build",
     "native:csp": "bun scripts/host/csp.ts",
-    "native:smoke": "bun scripts/host/task.ts native:smoke",
-    "native:smoke:interactive": "bun scripts/host/task.ts native:smoke:interactive",
-    "native:agents": "bun scripts/host/task.ts native:agents",
-    "build:renderer": "bun scripts/host/task.ts build:renderer",
-    "native:prepare": "bun scripts/host/tauri.ts prepare",
-    "tauri:build": "bun scripts/host/tauri.ts build",
-    "tauri:check": "bun scripts/host/tauri.ts check",
-    "tauri:check:docker": "raypx-dev tasks desktop#tauri:check:docker --",
-    "_tauri:check:docker": "bun run native:generate && docker buildx build --file Dockerfile --target checks --output type=cacheonly ../..",
-    "tauri:test": "bun run native:generate && bun scripts/host/tauri.ts test",
-    "tauri:smoke": "bun scripts/host/tauri.ts smoke",
-    "tauri:dev": "bun scripts/host/tauri.ts dev",
+    "native:smoke": "bun run scripts/host/task.ts native:smoke",
+    "native:smoke:interactive": "bun run scripts/host/task.ts native:smoke:interactive",
+    "native:agents": "bun run scripts/host/task.ts native:agents",
+    "build:renderer": "bun run scripts/host/task.ts build:renderer",
+    "native:prepare": "bun scripts/host/mygo.ts prepare",
+    "mygo:build": "bun scripts/host/mygo.ts build",
+    "mygo:check": "bun scripts/host/mygo.ts check",
+    "mygo:check:docker": "raypx-dev tasks desktop#mygo:check:docker --",
+    "_mygo:check:docker": "docker buildx build --file Dockerfile --target checks --output type=cacheonly ../..",
+    "mygo:test": "bun run native:generate && bun scripts/host/mygo.ts test",
+    "mygo:smoke": "bun scripts/host/mygo.ts smoke",
+    "mygo:dev": "bun scripts/host/mygo.ts dev",
     "native:generate": "bun scripts/host/generate.ts",
     "e2e": "raypx-dev e2e",
-    "_e2e": "raypx-dev browser:run"
+    "_e2e": "raypx-dev browser:run",
+    "perf": "bun perf/run.ts",
+    "perf:check": "tsc --noEmit --project perf/tsconfig.json",
+    "build:perf": "bun --bun vp build --config perf/browser/vite.app.config.ts"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -48,12 +51,12 @@
     "@raypx/jobs-model": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/memory-model": "workspace:*",
+    "@raypx/runtime-node": "workspace:*",
     "@raypx/tasks": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "@tauri-apps/api": "catalog:",
     "@xterm/addon-fit": "catalog:",
     "@xterm/xterm": "catalog:",
     "react": "catalog:",
@@ -61,16 +64,15 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
+    "@hona/strobe": "catalog:dev",
     "@orpc/server": "catalog:",
     "@playwright/test": "catalog:dev",
     "@raypx/devtools": "workspace:*",
     "@raypx/e2e": "workspace:*",
     "@raypx/instances": "workspace:*",
-    "@raypx/runtime-node": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
-    "@tauri-apps/cli": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
     "@testing-library/user-event": "catalog:dev",
@@ -100,13 +102,20 @@
       "config.ts": "universal",
       "scripts/**": "bun",
       "vite.app.config.ts": "bun",
+      "mygo.config.ts": "bun",
       "bridge.ts": "universal",
-      "e2e/**": "bun"
+      "e2e/**": "bun",
+      "perf/**": "bun",
+      "perf/browser/main.tsx": "browser",
+      "perf/browser/styles.css": "browser"
     },
     "taskScripts": {
       "e2e": "_e2e",
-      "tauri:check:docker": "_tauri:check:docker"
+      "mygo:check:docker": "_mygo:check:docker"
     },
-    "browserTestProject": "desktop"
+    "browserTestProject": "desktop",
+    "uncachedTasks": [
+      "perf"
+    ]
   }
 }

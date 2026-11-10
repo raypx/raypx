@@ -27,18 +27,18 @@ build outputs, marking missing/empty outputs unavailable. `--require` fails when
 any selected output is unavailable, after writing the evidence.
 
 The reporter prefers Nitro `.output` over intermediate `dist`; other builds use
-`dist`. Desktop measures the renderer from Tauri's `frontendDist`, with
+`dist`. Desktop measures the MyGo renderer at `dist/client`, with
 `--browser` selecting its compiled browser fixture instead. `--native` adds each
-production `.app`, installer and updater archive under `target/release/bundle`
-(or `CARGO_TARGET_DIR/release/bundle`). It excludes smoke/debug outputs and signature
-sidecars. No installer is inferred from renderer-only or Rust source checks.
+production `.app`, Windows host executable, installer and updater archive under
+`apps/desktop/build/{darwin,windows}-{arm64,amd64}/`. It excludes smoke/debug outputs and signature
+sidecars. No installer is inferred from renderer-only or Go source checks.
 
 Directories report the sum of regular-file bytes and file counts, including maps,
 licenses and bundled dependencies. Symlinks are counted separately in JSON and are
 not followed. This is logical payload size, not filesystem allocation or network
 transfer size. Installer/archive rows report their actual compressed file sizes;
 no synthetic gzip estimate is mixed into directory totals. CLI distributions also
-show the CLI with embedded Bun, Herdr and metadata components. Those components
+show embedded CLI/Bun, Herdr and metadata/license components. Those components
 are included in the CLI total; renderer, `.app`, installer and updater measurements
 overlap and must not be added together.
 
@@ -55,11 +55,19 @@ acceptance. The [production packaging decision](../architecture/0047-bun-cli-pro
 defines the CLI payload; collect current measurements with these commands rather
 than treating older migration outputs as a current baseline.
 
-Native checks accept the cross-platform process/task runners, installed CLI and Herdr
-against the same verified payload before the Tauri host checks. Windows explicitly
-enables the firewall for provider isolation. CLI acceptance JSON and native/size reports
-are retained for seven days. Runner, acceptance-test and native gate selection changes
-select Windows checks; macOS and distribution remain explicit selections.
+## Native check gates
+
+Each selected native platform checks cross-platform process/task runners and the
+installed CLI before Herdr and MyGo host checks. The CLI consumes the verified
+immutable payload from the preparation job; acceptance never rebuilds it. The
+prepared payload's size table appears in the job summary. Native acceptance JSON
+and size reports upload on success or failure and remain available for seven days.
+MyGo checks still run after an earlier acceptance failure when the shared payload
+was verified and the workflow has not been cancelled; the failed gate still fails
+the job. Routine runs select Windows; explicit macOS and distribution selections
+retain their existing matrix.
+Changes to the process/task runners, their acceptance tests and native gate selection
+also select Windows checks without requiring a Desktop source change.
 
 ## Test inventory and preservation
 
@@ -162,11 +170,14 @@ command logs plus `commands.json` and `results.json`. Manifests contain labels,
 exit codes and timings, never command arguments or environment values.
 
 CI calls this command through `container-smoke` only for Dockerfiles, `.dockerignore`,
-deployment adapters/source staging, image acceptance scripts/fixtures or the CI workflow,
+deployment adapters/source staging, image acceptance scripts/fixtures or its reusable
+`.github/workflows/container-smoke.yml`,
 and for manual runs and release tags. Ordinary application code, dependencies and
 application build configuration do not select it. An unavailable Git base broadens
 source/native checks without requesting container builds. These temporary images stay
 on the CI runner; Railway owns the production build and deployment after CI passes.
+The main workflow passes its plan to this reusable worker; changing orchestration or
+display names in `ci.yml` does not by itself request container builds.
 
 ## Verification planning and cache
 
@@ -191,15 +202,21 @@ test files, retaining affected integration suites and filesystem/subprocess asse
 Indirect consumers run complete suites. Configuration, fixtures, deletions, unresolved
 imports or sources without a test dependency fall back to complete suites. Test arguments
 are scoped to each existing package test task and participate in its VP cache key.
-CI and `--full` run complete suites for selected workspaces. Native inputs independently select Rust host tasks.
-The default base is the merge-base
-with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
+CI and `--full` run complete suites for selected workspaces. Native inputs independently select Go host tasks.
+The default base is the merge-base with `origin/canary`; staged, unstaged,
+untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
 Unknown inputs, shared JS configuration/lockfiles, or an unavailable base broaden
 source checks to all workspaces. This does not request release builds, Knip, browser
 acceptance or database jobs. An unavailable Git base also selects native checks
 conservatively because the native inputs are unknown. `bun run knip` remains an
 explicit maintenance command.
+Go-only changes (Go sources and the Desktop module's `go.mod`/`go.sum`) select host
+checks without selecting renderer type checks or JavaScript suites. Workflow files
+and the `native-checks` action select Tooling's type checks/tests plus any relevant
+native/container acceptance. Shared dependency-install/cache actions still broaden
+all source checks. Mixed changes combine these scopes, and full verification selects
+every workspace as before.
 Private Tooling verification/validation code and tests select only Tooling. Public
 helpers follow their exported entry's transitive source dependencies and actual
 workspace imports, then propagate to downstream consumers. Changes to task machinery,
@@ -209,19 +226,39 @@ browser code or import a browser entry, including type-only and test imports. If
 non-browser, non-test sources import browser code, its consumers are selected as before.
 
 Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
-Rust host targets, builds outputs and runs independent artifact probes concurrently.
+Go host targets, builds outputs and runs independent artifact probes concurrently.
 It needs no GUI, database or mail service. Linux CLI artifact acceptance requires
 Docker unless the process already runs in a loopback-only network namespace;
 it executes the prepared payload with `--network none`. This is separate from
 the `container-smoke` gate. The repository uses Bun for JavaScript
-and Rust 1.99.1 for Desktop; native checks require that pinned Rust toolchain. `verify` and `verify --full`
+and Go 1.27.3 for Desktop. `verify` and `verify --full`
 are the verification entry points.
 
 GitHub uses the same change planner:
 
+`verification/index.ts` owns the local command, `plan.ts` owns task selection and
+`execution.ts` runs the shared VP graph. `verification/ci.ts` adapts GitHub events
+and dispatches workers. Deployment acceptance and artifact probes load only when
+their command or stage is selected.
+
+Jobs use short lowercase IDs with hyphens between words and explicit sentence-case
+display names describing their purpose. Matrix names include the runner or platform;
+reusable native jobs use phase labels: **Prepare artifacts**, **Checks**,
+**Packaging** and **Smoke**. The final `foundation` job appears as **CI result**.
+
 The `changes` job emits one versioned plan bound to the workflow's commit SHA.
 Source, database, browser and container smoke workers execute that plan through
 `RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
+The `source` matrix runs **Source checks** and **Source tests** concurrently through
+`ci:gate source checks|tests`. Checks owns format/lint, repository policy, locale parity,
+affected types, selected current-platform Go checks and full-mode builds/artifact probes.
+Tests owns complete selected workspace suites. The planner emits `source_phases` and
+omits the test runner when no suites are selected. Both phases execute the original
+plan; their task selections together cover the combined local verification command.
+VP still owns each task graph and its prerequisites. Checks retains the existing
+`javascript` cache partition; tests uses `source-tests`, avoiding concurrent cache writes
+and separating runner workloads. The first test-phase run starts with an empty cache.
+Both matrix results must succeed for the `source` gate to pass, with fail-fast disabled.
 Missing plans, unsupported versions, mismatched commits and an invocation of an
 unselected gate fail. Native workers use the same plan's runner matrix and
 distribution selection. `verification/gates.ts` registers the required CI jobs;
@@ -235,7 +272,7 @@ artifact probes, not separate database, browser, Docker or macOS/Windows CI gate
 
 Platform-specific filenames containing `windows`/`win32` select Windows;
 `darwin`/`macos`/`unix` select macOS; shared native CI inputs default to Windows. Linux-only
-native files run the Linux Rust checks without requesting macOS/Windows. JavaScript
+native files run the Linux Go checks without requesting macOS/Windows. JavaScript
 dependency reach alone never requests native runners, including renderer changes.
 Native workflow changes default to Windows. Manual dispatch includes macOS only with
 `macos=true`; release tag pushes always require both platforms. Local `verify` continues
@@ -243,20 +280,24 @@ to validate native inputs on the current platform. `foundation` requires every
 selected gate to succeed and permits only intentional skips; an abandoned runner
 is reported as unavailable, never as a passing native check.
 
-Herdr integration and pinned Rust checks run in the native check phase. Cargo caches
-are separate from VP's JS task cache; smoke and production use separate outputs.
-
-The check phase stages a matching CLI, runs Herdr and executes Rust source checks on each selected platform.
+Routine native acceptance prepares and seals the matching CLI, accepts its archive,
+then runs process/task runners, installed CLI, Herdr and Go checks on the same runner.
+It reuses one dependency install and VP cache restoration, and needs no renderer build
+or CLI artifact upload/download. Go checks target the internal and native test packages;
+they do not embed the production renderer. Source verification still checks renderer code.
+The shared `.github/actions/native-checks` action owns these checks and their evidence
+for both routine and distribution runs; changes to it also select native acceptance.
+Go caches are separate from VP's JS task cache; smoke and production use separate outputs.
 Routine checks run Herdr once; distribution runs repeat it three times on Windows
 without blocking the parallel package/smoke phases.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
 dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
-Those runs require Rust checks, production packaging and packaged GUI smoke in parallel.
+Those runs require Go checks, production packaging and packaged GUI smoke in parallel.
 Manual distribution runs have their own cancellation group, so routine pushes cannot
 cancel a release acceptance run. The `macos` and `cold_native` selections also have
 separate cancellation groups. For a Windows-only native comparison, use
 `gh workflow run ci.yml --ref <branch> -f distribution=true -f cold_native=true`.
-This disables Cargo compiler cache restoration and saving on fresh hosted native
+This disables Go compiler cache restoration and saving on fresh hosted native
 runners; Bun installation and the shared VP JavaScript cache keep their usual policy.
 Compare the same runner image/architecture and signing configuration. Record preparation,
 package-step duration (native compilation plus installer creation), each job duration
@@ -265,24 +306,16 @@ Use the uploaded size report for the actual installer, Desktop payload and CLI c
 bytes; GitHub artifact ZIP sizes measure transport compression. One run is a sample,
 not a stable benchmark or evidence for macOS performance. Add `-f macos=true` for
 explicit macOS acceptance.
-Every selected native platform prepares the immutable CLI and shared JS inputs once;
-that job alone saves VP artifacts and consumer phases only restore them. Verification, test and E2E tasks receive the fixed
-`VITE_APP_RELEASE=verification`, so a new commit does not invalidate unchanged tasks. Native Rust
-compilation uses Cargo caches and independent production/smoke target directories.
+Distribution prepares the immutable CLI and shared renderer once per selected platform;
+that job alone saves VP artifacts and consumer phases only restore them. Routine
+acceptance saves successful VP artifacts after its checks. Go setup precedes the Bun
+install in both paths, keeping native cache restoration ahead of dependency extraction.
+Verification, test and E2E tasks receive the fixed
+`VITE_APP_RELEASE=verification`, so a new commit does not invalidate unchanged tasks. Native Go
+compilation uses the Go cache and independent production/smoke package directories.
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
-invalidate restored tasks. Tauri produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
-CI reads rust-toolchain.toml and keys native caches with Cargo.lock and the native
-phase. The smoke cache explicitly follows `target/native-smoke`; check and package
-caches follow `target`. CLI/renderer preparation does not install or cache Rust.
-Linux source jobs install Rust only when selected Rust inputs require it.
-CI source checks set `CARGO_PROFILE_DEV_DEBUG=0` and `CARGO_PROFILE_TEST_DEBUG=0`
-before restoring Cargo caches. These flags enter the cache fingerprint; packaging,
-GUI smoke and local development keep their normal profiles.
-Rustup reads the pinned toolchain, profile and components directly from
-`rust-toolchain.toml`. Cargo restoration precedes Bun dependency installation so
-cache discovery does not recursively scan `node_modules`.
-Cargo also saves reusable dependency outputs when an unrelated acceptance step
-fails; failed source/test results never become successful VP cache entries.
+invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
+CI selects Go through apps/desktop/go.mod and keys its native cache with go.sum.
 The CLI build ignores `.cache/herdr` downloads as task inputs: manifest pins still
 invalidate the build, and restored `dist` already contains the verified binaries.
 The manual `CLI size experiment` workflow compares isolated executable variants and
@@ -293,11 +326,21 @@ The browser job caches Playwright's Chromium headless shell by Playwright versio
 `playwright install-deps` only when `ldd` reports a missing system library.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
 
+The [second attempt of the 2026-11-10 MyGo upgrade run](https://github.com/raypx/raypx/actions/runs/42786812059/attempts/2)
+provides the baseline for combining routine native jobs: 8m11s from this attempt's
+start to completion. Use `run_started_at` for the selected attempt; `created_at`
+belongs to the original attempt, so their difference does not establish queue time.
+Windows preparation took 2m46s and its
+following check job took 4m34s; that second job repeated 60s of Bun/dependency setup,
+24s of VP restoration and an artifact download. Combining routine acceptance removes
+that repeated work and one runner allocation. Go setup remains required. These are
+one run's measurements; hosted queue delays and the improvement need fresh CI runs.
+
 The planner selects components by changed paths. Documentation-only test skipping
 and the bounded platform/version matrix follow
 [Vite's CI](https://github.com/vitejs/vite/blob/main/.github/workflows/ci.yml),
 and an independent tag-triggered release flow from
-[Tauri's release workflow](https://github.com/tauri-apps/tauri-action).
+[MyGo's release workflow](https://github.com/egoist/mygo/blob/main/.github/workflows/release.yml).
 Raypx keeps its existing affected-workspace planner and adds no third-party filtering action.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.
@@ -340,20 +383,20 @@ as entries, including the TypeScript presets' VP-invoked `scripts/task.ts`.
 Drizzle config is analyzed statically, without loading database
 credentials. The Vitest scaffold is a static `.template` file copied into each new
 workspace, so its workspace-relative imports need no Knip resolution exception.
-The read-only JSON adapter recognizes only catalog findings backed by root
-`overrides` references and existing catalog declarations. The read-only adapter supplies root overrides directly; it writes no package-manager configuration. Every other finding fails verification. Rust-launched
-TypeScript fixtures are explicit entries; vendored
+The read-only JSON adapter recognizes only catalog findings backed by actual Bun
+root `overrides` references and existing catalog declarations. Every other finding
+fails verification. Go-launched TypeScript fixtures are explicit entries; vendored
 skills stay outside product analysis. The root `skills` dependency is the CLI used
 by `skills:update`. Root overrides pin `oxc-parser` and `@oxc-project/types` together
 at `0.157.0`. Revalidate Tooling, Knip, type checks and builds when changing this
 pair, including compatibility with Vite+'s declarations. Native parser bindings
-follow the parser package. Vite+ 1.5.0 supplies `@oxc-project/runtime` at
+follow the parser package. Vite+ 1.5.1 supplies `@oxc-project/runtime` at
 `0.157.0`, `oxfmt` at `0.76.0`, and `oxlint-tsgolint` at `7.0.2005` without
 root overrides. Keep `oxlint` and `@oxlint/plugins` overridden together at `1.90.0`
 until the React `immutability` false positive in bundled Oxlint 1.91.0 is fixed
 ([upstream issue](https://github.com/oxc-project/oxc/issues/28401)). Revalidate lint,
 formatting and Tooling before removing these overrides.
-Keep `@vitest/coverage-v8` at `5.1.0`, matching Vite+ 1.5.0's bundled Vitest.
+Keep `@vitest/coverage-v8` at `5.1.0`, matching Vite+ 1.5.1's bundled Vitest.
 Workspaces inheriting the shared coverage configuration declare
 `@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
 

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { nativeSmokeOptions } from "./smoke-options.ts";
+import { nativeSmokeOptions } from "./smoke-options";
 
 it("defaults native smoke and its restart phases to quiet presentation", () => {
   expect(nativeSmokeOptions([], {})).toEqual({ phase: "shell", ui: "quiet" });

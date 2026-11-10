@@ -74,7 +74,7 @@ does not clear device preferences.
 Use type rejection tests, controlled provider tests, browser hydration and storage
 tests and native bootstrap tests. Test both locale
 requests concurrently and keep SSR hydration configuration identical. Package
-archive checks verify platform-neutral imports and public declarations without DOM types.
+archive checks verify Bun/Node imports and public declarations without DOM types.
 Packaged Desktop checks remain explicit gates; unit tests do
 not claim physical-device or GUI acceptance.
 

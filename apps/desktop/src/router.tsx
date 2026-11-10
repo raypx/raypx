@@ -1,6 +1,6 @@
-import { analytics } from "./features/analytics/client.ts";
+import { analytics } from "./features/analytics/client";
 import { createQueryFailureReporter } from "@raypx/analytics/browser";
-import { createRouter } from "@tanstack/react-router";
+import { createHashHistory, createRouter } from "@tanstack/react-router";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { ShellPage } from "@raypx/blocks/shell";
@@ -18,6 +18,10 @@ export function getRouter() {
   return createRouter({
     routeTree,
     defaultOnCatch: (error) => analytics.captureException(error),
+    // Packaged views have no server rewrites, so deep links live in the hash.
+    ...(typeof window !== "undefined" && window.__raypxDesktopHost === "mygo"
+      ? { history: createHashHistory() }
+      : {}),
     defaultPreload: "intent",
     scrollRestoration: true,
     scrollToTopSelectors: ["#main"],

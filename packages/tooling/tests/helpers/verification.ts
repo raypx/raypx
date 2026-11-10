@@ -89,8 +89,8 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
                 ...scripts,
                 "native:build": "bun native.ts",
                 "native:prepare": "bun prepare.ts",
-                "tauri:check": "cargo check",
-                "tauri:test": "cargo test",
+                "mygo:check": "go vet ./...",
+                "mygo:test": "go test ./...",
               }
             : scripts,
       },

@@ -4,33 +4,35 @@
 
 Development diagnostics use the private `@raypx/devtools` bridge under existing
 renderer providers, guarded by `import.meta.env.DEV`. The official Dock runs only
-with Vite serve; no native or IPC clipboard interface is added. Copy failures reveal
+with Vite serve; no Go or IPC clipboard interface is added. Copy failures reveal
 selected JSON for manual copying. Native and compiled builds must not contain
 the diagnostics bootstrap or panel. See the page DevTools development guide.
 
-Tauri composition root with the existing React/Vite renderer, persistent system
-WebView, tray and standalone Bun CLI. src-tauri/AGENTS.md owns Rust host rules;
+MyGo composition root with the existing React/Vite renderer, persistent system
+WebView, tray and standalone Bun CLI. internal/AGENTS.md owns Go host rules;
 README.md lists the layout, build and acceptance commands. Preserve DesktopBridge.
 
 ## Interface
 
-`src-tauri` owns the Rust host, native policy, HTTP/session persistence and CLI
-transport. `scripts/host` owns generation, staging and packaging. `bridge.ts`
-declares the renderer contract; `src/lib/tauri.ts` implements it with invoke/channel.
+`main.go`, `go.mod` and `mygo.config.ts` share the frontend root, following the
+MyGo Web template. `main.go` embeds prepared assets and calls `internal/app`,
+which owns MyGo windows, tray and restricted renderer entry points.
+`internal/desktop` owns framework-independent native transport/policy. `bridge.ts` declares the
+renderer contract.
 The renderer is a TanStack Start SPA: routes live in `src/routes`, `src/router.tsx`
 provides TanStack Query, `src/components/shell.tsx` fills the shared shell, and the
 build writes `dist/client` for the native app origin. Every shell route declares
 `staticData.page` (title key from `PageTitle` in `src/router.tsx` and a Blocks page
 layout); the shell derives breadcrumbs and the page template, so pages never add
 their own outer width or gutters.
-Main routes use browser History paths; the Tauri asset resolver supplies the SPA
-entry for deep paths. Settings is a lazy global dialog selected only by `#settings`,
+Packaged MyGo routes use hash history. Settings is a lazy global dialog selected
+by the route's `settings` fragment, as in `#/files#settings`,
 preserving the background path/search, mounted editors and scroll. Closing uses
 the matching background history entry or removes only the fragment for a direct link.
 
 `@raypx/contracts/local-client` owns renderer method/parameter/reply inference and validates both sides of IPC; callers never supply reply generics.
 `src/lib/platform.ts` creates isolated DesktopPlatform ports; application composition
-in desktop.ts selects Tauri. Components use platform-context for injection. RuntimeProvider
+in desktop.ts selects MyGo. Components use platform-context for injection. RuntimeProvider
 owns engine state and project-catalog invalidation; its controller fences stale reads
 against events and disposal. Project views reuse project-catalog and pure project selection.
 First connection gates project/provider queries; subsequent outages keep the workspace mounted.
@@ -88,18 +90,18 @@ browser acceptance lives in `e2e/`, uses `@raypx/e2e/testing` fixtures and runs
 through `bun run --cwd apps/desktop e2e` (root: `test e2e --package desktop`). Shared
 journeys register through `@raypx/e2e/journeys/*`; the `desktop` Playwright project
 selects only this renderer and its compiled assets. It does not establish native WebView acceptance.
-Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. Tauri transport/acceptance tests live in `src-tauri/tests/`; policy unit tests are colocated in Rust modules.
-These tests exercise real subprocesses and OS locks. TS native smoke drivers use Bun. `tests/native/smoke/` contains the
+Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. MyGo transport/acceptance tests live in `tests/native/host/`; pure policy and engine-port tests live in `internal/desktop/`.
+These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
 Native scripts and their pure policy tests live in `scripts/host/` with Bun types;
 build/filesystem/process integration cases live in `tests/integration/native/`.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
 Use short feature-local filenames such as `form.tsx` and `form.component.test.tsx`; exported symbols retain feature context. Route composition suites live beside the router.
 Native Vitest projects select unit, component and integration suites. `test:unit` and
-`test:component` require no CLI, Rust, WebView, system secrets or Provider installation;
+`test:component` require no CLI, Go, WebView, system secrets or Provider installation;
 native build/process cases run in `test:integration`. Default `test` aggregates all three.
 tests/helpers/desktop provides typed per-case ports; unknown requests fail and events
-never leak between fixtures. Keep real process/IPC acceptance in the Rust/native gates.
+never leak between fixtures. Keep real process/IPC acceptance in the Go/native gates.
 File extensions
 describe source syntax, and each suite declares its required test environment.
 
@@ -114,16 +116,16 @@ without repeating web sign-out or dropping the device identity.
 
 ## Constraints
 
-- Tauri 2.12.5 uses WKWebView/WebView2. Build with Rust 1.99.1 ; macOS packages require 13.5+.
-  Framework APIs live in src-tauri/src/shell.rs; other Rust modules own native policy/transport.
+- MyGo v0.8.3 uses WKWebView/WebView2. Build with Go 1.27.3 and CGO_ENABLED=0; macOS packages require 13.5+.
+  Framework APIs live in internal/app; native transport/policy in internal/desktop.
   Opaque business JSON uses TS contracts as the sole business schema authority.
-- Build a prerendered SPA in dist/client and embed it through Tauri frontendDist.
-  Packaged routes use browser History with Tauri's asset fallback; no frontend server runs in packaged apps.
+- Build a prerendered SPA in dist/client and embed it under generated/frontend.
+  Packaged routes use hash history; no frontend server runs in packaged apps.
   The root remains text-free; translated providers initialize inside ClientOnly.
 - Launch only the absolute, version-matched bundled CLI at resources/bin/raypx.
-  Stage the immutable compiled Bun CLI payload and its verified Herdr distribution
-  in resources/bin/herdr. Staging never rebuilds or re-signs the payload. CLI
-  copies terminal resources into its profile before use, avoiding Windows DLL locks.
+  Stage the verified, prepared Bun executable and complete Herdr distribution;
+  packaging must not rebuild or change the shared signed payload. On Windows,
+  the CLI leases a complete versioned runtime copy before using terminal resources.
 - macOS and Windows connect to the independent daemon; GUI Quit preserves Agent
   work. Spawn CLI children through Command so Windows opens no console. Terminal
   hooks remain daemon-only. Hide/minimize/quit releases UI approval leases.
@@ -137,8 +139,8 @@ without repeating web sign-out or dropping the device identity.
 - Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx; invalid config
   stops startup. Only configured API origins are reachable. Isolate sessions,
   browser storage, remote settings and account-owned history by server origin.
-- Native owns `tauri-sessions.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
-  Server-scoped rows encrypt persistent Cookies with a separate system credential key.
+- Native owns `mygo-sessions-v3.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
+  Server-scoped rows encrypt persistent Cookies with a key from MyGo Secrets.
   Keep both credentials and key out of the renderer and TOML.
   POSIX files are private; Windows uses a restricted inheritable DACL.
   Never read, delete or import old Keychain/credential files. `local_profile` selects
@@ -154,18 +156,18 @@ without repeating web sign-out or dropping the device identity.
   IPC. Deny external navigation/popups. Event delivery is bounded and acknowledged.
 - CSP hashes startup scripts and rejects arbitrary inline JS/eval. Production
   renderer builds eliminate the native-smoke observation hook.
-- Bun/VP owns JS tasks and caches; Cargo owns native compilation caches. Default build
+- Bun/VP owns JS tasks and caches; Go owns native compilation caches. Default build
   checks/builds the renderer. Explicit packaging stages renderer, CLI and Herdr and
-  invokes Tauri uncached. Rust host verification is explicit in the shared task graph.
-- `tauri:check:docker` delegates through VP to the scoped Dockerfile. BuildKit owns
-  layers and Cargo owns compilation caches; generation requires installed JS dependencies.
-  The headless check requires Docker and no staged renderer/CLI.
-- Native smoke exists only in the native-smoke Cargo feature, with random-token
+  invokes MyGo uncached. Go host verification is explicit in the shared task graph.
+- `mygo:check:docker` delegates through VP to the scoped Dockerfile. BuildKit owns
+  module/layer caches and Go owns compilation caches; this opt-in headless check
+  requires Docker, no JS dependency install and no staged renderer/CLI.
+- Native smoke exists only in the native_smoke Go build tag, with random-token
   private IPC, isolated profiles and a separate renderer/package output. Production
   has no socket/eval controls. Inspect actual build metadata and bytes before release.
 - Local tests stay quiet and never activate windows/switch desktops. Foreground
   acceptance runs on isolated CI unless the user explicitly requests a local run.
-- Signed updates use Tauri keys/manifests. Do not reuse the previous update feed.
+- Signed updates use MyGo keys/manifests. Do not reuse the previous update feed.
   Report unsigned/ad-hoc packages, unrun GUI/platform and live-provider gates
   accurately. Linux native acceptance remains unverified.
 
@@ -173,18 +175,16 @@ without repeating web sign-out or dropping the device identity.
 
 Daily changes run affected Desktop check/test through repository `bun run verify`.
 Native host, IPC, native resources/scripts and terminal/daemon changes also run
-tauri:check/tauri:test (including the native-smoke build) and CI on the affected native platforms. Renderer-only changes
-need no native runner. Release preparation adds build:desktop, tauri:smoke (headless),
-package:desktop and repository verify --full. Rust policy tests need no GUI.
+mygo:check/mygo:test (including the native_smoke build) and CI on the affected native platforms. Renderer-only changes
+need no native runner. Release preparation adds build:desktop, mygo:smoke (headless),
+package:desktop and repository verify --full. Go policy tests need no GUI.
+For races: go test -race ./internal/... ./tests/native/host/....
 
-native:smoke builds the separate Tauri host/renderer and checks CLI handshake,
+native:smoke builds the separate MyGo host/renderer and checks CLI handshake,
 local tools/terminal, native event credit, server isolation, restart/persistence
 and tray. Quiet mode uses inactive windows and suppresses notifications/dialogs;
 interactive mode adds focus/close/resize acceptance on isolated CI. Windows hosted
 CI installs/uninstalls the actual per-user NSIS package and verifies payload hashes.
-Desktop-first and CLI-first launches must retain the same daemon PID/epoch across
-GUI Quit. Sanitized phase identities and cleanup status are recorded under
-`.artifacts/native-smoke/` and uploaded by native CI, including failed runs.
 
 native:agents is an opt-in real-provider gate. It requires
 RAYPX_LIVE_AGENTS=1 and isolated data and consume provider inference.

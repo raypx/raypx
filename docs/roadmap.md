@@ -10,7 +10,7 @@ using the [testing gates](development/testing.md).
 ## Current foundation
 
 The independent Bun CLI daemon owns local sessions, processes, approvals,
-scheduling and profile SQLite. Desktop is its Tauri/Rust client. One-time
+scheduling and profile SQLite. Desktop is its MyGo/Go client. One-time
 account/origin-bound enrollment permits subsequent offline work. Claude, Codex
 and device-local Pi use the private CLI harness; `AgentTask` remains the persisted
 Run record. Remote opt-in exposes scoped device work through Relay and API read

@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       react(),
     ],
     resolve: {
-      // A `pnpm link`ed library resolves its own React copy; keep singleton peers unique.
+      // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
       dedupe: ["react", "react-dom"],
     },
     server: {
@@ -39,12 +39,13 @@ export default defineConfig(({ mode }) => {
       host: "localhost",
       watch: {
         ignored: [
-          "**/src-tauri/**",
-          "**/target/**",
+          "**/*.go",
+          "**/go.mod",
+          "**/go.sum",
           "**/generated/**",
           "**/resources/**",
           "**/build/**",
-          "**/src-tauri/target/**",
+          "**/.mygo/**",
           "**/artifacts/**",
         ],
       },

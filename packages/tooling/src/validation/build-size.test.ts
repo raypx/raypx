@@ -80,31 +80,20 @@ it("does not follow directory links into external dependencies or cycles", () =>
 it("separates the configured renderer, browser fixture, app bundle and compressed installers", () => {
   const root = fixture();
   const app = buildMember(root, "native-app");
-  file(
-    root,
-    `${app}/src-tauri/tauri.conf.json`,
-    JSON.stringify({
-      build: { frontendDist: "../dist/client" },
-    }),
-  );
+  file(root, `${app}/mygo.config.ts`, "export default {};");
   file(root, `${app}/dist/client/index.html`, "123");
   file(root, `${app}/dist/server/unused.js`, "not in the native renderer");
   file(root, `${app}/artifacts/browser/client/index.html`, "1234");
-  vi.stubEnv("CARGO_TARGET_DIR", join(root, "native-target"));
-  file(root, "native-target/release/bundle/metadata.json", "{}");
+  file(root, `${app}/build/metadata.json`, "{}");
   expect(collectBuildSizes(root, { packages: [app], native: true }).artifacts[1]).toMatchObject({
     kind: "native",
     status: "missing",
   });
-  file(
-    root,
-    "native-target/release/bundle/macos/Workbench.app/Contents/MacOS/app",
-    Buffer.alloc(20),
-  );
-  file(root, "native-target/release/bundle/dmg/Workbench.dmg", Buffer.alloc(10));
-  file(root, "native-target/release/bundle/nsis/Workbench-setup.exe", Buffer.alloc(9));
-  file(root, "native-target/release/bundle/nsis/Workbench-setup.exe.sig", "signature");
-  file(root, "native-target/native-smoke/release/bundle/nsis/smoke.exe", Buffer.alloc(99));
+  file(root, `${app}/build/darwin-arm64/Workbench.app/Contents/MacOS/app`, Buffer.alloc(20));
+  file(root, `${app}/build/darwin-arm64/Workbench.dmg`, Buffer.alloc(10));
+  file(root, `${app}/build/windows-amd64/Workbench-setup.exe`, Buffer.alloc(9));
+  file(root, `${app}/build/windows-amd64/Workbench-setup.exe.sig`, "signature");
+  file(root, `${app}/build/native-smoke/windows-amd64/smoke.exe`, Buffer.alloc(99));
   const report = collectBuildSizes(root, { packages: [app], native: true });
   expect(report.artifacts).toHaveLength(4);
   expect(report.artifacts.map((item) => item.bytes).sort((a, b) => a - b)).toEqual([3, 9, 10, 20]);

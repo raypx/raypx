@@ -80,5 +80,5 @@ e2e/playwright-report/
 # Retain ignored build caches from older branches until explicitly cleaned.
 /target/
 
-# Generated Tauri host bindings
-apps/desktop/src-tauri/gen/
+# Retired host generated output from existing checkouts
+apps/desktop/src-tauri/

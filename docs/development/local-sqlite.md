@@ -68,17 +68,10 @@ and reopening preserve existing rows and the migration ledger. `apps/cli`'s
 `smoke` and `smoke:pi` commands additionally run copied compiled
 executables outside the repository.
 
-Desktop's Rust host separately owns `tauri-sessions.sqlite` for server-scoped
-persistent cookies. Cookie batches are AES-GCM ciphertext authenticated against
-their server scope; a separate system credential-store key belongs to the Tauri
-data directory. Private filesystem permissions also protect SQLite auxiliaries.
-The host never opens the CLI business database or shares the lifetime exclusive
-`desktop-instance.sqlite` transaction with sessions. Missing keys or unreadable
-ciphertext preserve stored rows and permit in-memory sign-in; a failed session
-write disables that session transport until restart.
-
-Tauri does not read, import or delete previous-host login storage. Sign in once
-after the switch; existing CLI profiles, grants, offline identity and history stay
-local.
-CLI Host authorization is a separate record in `profile.sqlite` and may explicitly
-report memory-only mode. See [Desktop sessions](desktop.md#apply-and-isolate).
+Desktop's Go host separately owns `mygo-sessions-v3.sqlite` for server-scoped persistent
+Cookies. It never opens the CLI database or uses the lifetime exclusive
+`desktop-instance.sqlite` transaction for sessions. Cookies remain native;
+Cookie rows are encrypted with a key held in MyGo's system credential store; filesystem permissions also protect the database.
+An unreadable store keeps sign-in in memory without touching stored rows; a failed
+write disables session transport until restart. Host authorization may explicitly
+report memory-only mode.

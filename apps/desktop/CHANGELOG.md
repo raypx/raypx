@@ -12,11 +12,11 @@
 
 ### Changed
 
-- Replace the native host with Tauri and system WKWebView/WebView2; native windows enforce a minimum content size of 960 × 600.
-- Keep credentials in the Rust host and execution in the bundled TypeScript CLI. Tauri uses a new native session store and system key; sign in once after switching. Preserve local profiles and offline identity, and leave previous-host credentials untouched.
+- Replace the native host with MyGo and system WKWebView/WebView2; native windows enforce a minimum content size of 800 × 620.
+- Keep credentials in the Go host and execution in the bundled CLI. Preserve existing native session storage and OS credential identities during the migration.
 
 - Rebuild the renderer as a TanStack Start SPA with Files, Automations, Terminal, Account and Settings navigation. The window layout appears in the user's theme before the renderer finishes loading.
-- Bundle the matching CLI runtime directory, including Node, pnpm and terminal resources; local execution needs no globally installed JavaScript tools.
+- Bundle the exact matching CLI binary; users do not need a Node or Bun installation for local execution.
 - Keep the window/tray shell and native WebView. Closing hides the window. Quit preserves the independent daemon on macOS and Windows.
 - Use a fresh account foundation for registration, verification, login and password recovery.
 
@@ -26,4 +26,4 @@
 
 ## Conventions
 
-`apps/desktop/package.json` defines the installed Desktop version; the Tauri packaging scripts read it. Version `0.1.0` remains an unreleased placeholder. Rename `Unreleased` to the release version and date when a release is cut.
+`apps/desktop/package.json` defines the installed Desktop version; `mygo.config.ts` reads it for packaging. Version `0.1.0` remains an unreleased placeholder. Rename `Unreleased` to the release version and date when a release is cut.

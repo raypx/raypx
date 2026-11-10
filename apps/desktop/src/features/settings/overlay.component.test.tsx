@@ -1,5 +1,6 @@
 /** @vitest-environment happy-dom */
 import {
+  createHashHistory,
   createMemoryHistory,
   createRootRoute,
   createRoute,
@@ -72,10 +73,14 @@ function Background() {
   }, []);
   return <input aria-label="Background draft" />;
 }
-async function page(initialEntries = ["/files?rootId=work&path=notes&offset=100#selected"]) {
+async function page(
+  history = createMemoryHistory({
+    initialEntries: ["/files?rootId=work&path=notes&offset=100#selected"],
+  }),
+) {
   const root = createRootRoute({ component: Shell });
   const router = createRouter({
-    history: createMemoryHistory({ initialEntries }),
+    history,
     routeTree: root.addChildren([
       createRoute({ getParentRoute: () => root, path: "/files", component: Background }),
       createRoute({
@@ -137,7 +142,9 @@ it("uses browser back and forward to close and reopen the overlay without remoun
 });
 
 it("closes a direct or refreshed settings URL in place instead of returning to the previous page", async () => {
-  const router = await page(["/prior-page", "/files?rootId=work#settings"]);
+  const router = await page(
+    createMemoryHistory({ initialEntries: ["/prior-page", "/files?rootId=work#settings"] }),
+  );
   await screen.findByRole("dialog", { name: "Settings" });
   const index = router.state.location.state.__TSR_index;
   await userEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -178,7 +185,29 @@ it("does not return to a stale background after the current page changes", async
 });
 
 it("opens only the exact settings fragment", async () => {
-  await page(["/files#settings/appearance"]);
+  await page(createMemoryHistory({ initialEntries: ["/files#settings/appearance"] }));
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("textbox", { name: "Settings preference" })).not.toBeInTheDocument();
+});
+
+it("preserves the packaged MyGo route and search when closing a settings deep link", async () => {
+  const search = new URLSearchParams({ rootId: "work", path: "src/设计 & notes", offset: "100" });
+  window.history.replaceState({}, "", `/index.html#/files?${search}#settings`);
+  try {
+    const router = await page(createHashHistory());
+    await screen.findByRole("dialog", { name: "Settings" });
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(router.state.location.pathname).toBe("/files");
+    expect(router.state.location.search).toMatchObject({
+      rootId: "work",
+      path: "src/设计 & notes",
+      offset: 100,
+    });
+    expect(window.location.pathname).toBe("/index.html");
+    expect(window.location.hash).toMatch(/^#\/files\?/);
+    expect(window.location.hash).not.toContain("#settings");
+  } finally {
+    window.history.replaceState({}, "", "/");
+  }
 });

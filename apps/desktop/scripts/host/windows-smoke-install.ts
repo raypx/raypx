@@ -1,11 +1,9 @@
-import { readJsonFile } from "@raypx/runtime-node/files";
-import { spawnProcess } from "@raypx/runtime-node/process";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { lstat, mkdtemp, readFile, rm } from "node:fs/promises";
+import { lstat, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve, win32 } from "node:path";
-import { signingEnvironment } from "./signing.ts";
+import { signingEnvironment } from "./signing";
 
 interface RegistryKeys {
   product: string;
@@ -32,7 +30,7 @@ export interface SmokeInstallation {
 // ProcessStartInfo preserves NSIS's unquoted /D= and _?= tail, even with spaces.
 // Values travel through the environment, never through PowerShell source interpolation.
 async function powershell(script: string, values: Record<string, string>) {
-  const child = spawnProcess(
+  const child = Bun.spawn(
     [
       join(
         process.env.SystemRoot ?? "C:\\Windows",
@@ -147,22 +145,6 @@ async function digest(path: string) {
   for await (const chunk of createReadStream(path)) hash.update(chunk);
   return { path, size: stat.size, sha256: hash.digest("hex") };
 }
-async function nsisMainDigest(path: string) {
-  const stat = await regularFile(path);
-  const binary = await readFile(path);
-  // Tauri patches the bundle type marker before embedding this binary in NSIS.
-  const marker = Buffer.from("__TAURI_BUNDLE_TYPE_VAR_UNK");
-  const nsis = Buffer.from("__TAURI_BUNDLE_TYPE_VAR_NSS");
-  const offset = binary.indexOf(marker);
-  if (
-    marker.length !== nsis.length ||
-    offset < 0 ||
-    binary.indexOf(marker, offset + marker.length) >= 0
-  )
-    throw new Error("Tauri NSIS bundle marker is missing or ambiguous");
-  nsis.copy(binary, offset);
-  return { path, size: stat.size, sha256: createHash("sha256").update(binary).digest("hex") };
-}
 
 const sameLocation = (left: string | null, right: string) =>
   left !== null &&
@@ -173,31 +155,25 @@ const sameLocation = (left: string | null, right: string) =>
 export async function installWindowsSmoke(
   target: string,
   cli: string,
-  options: { arch?: string; commands?: WindowsSmokeCommands; resources?: string } = {},
+  options: { arch?: string; commands?: WindowsSmokeCommands } = {},
 ): Promise<SmokeInstallation> {
-  const arch = { x64: "x64", arm64: "arm64" }[options.arch ?? process.arch];
+  const arch = { x64: "amd64", arm64: "arm64" }[options.arch ?? process.arch];
   if (!arch || !target.split(/[\\/]/).includes("native-smoke"))
     throw new Error("Refusing to install outside the native-smoke output");
-  const manifest = await readJsonFile(resolve(import.meta.dirname, "../../package.json"));
-  const installer = join(target, `bundle/nsis/Raypx Test_${manifest.version}_${arch}-setup.exe`);
+  const manifest = await Bun.file(resolve(import.meta.dirname, "../../package.json")).json();
+  const installer = join(target, `raypx-test-setup-${manifest.version}-${arch}.exe`);
   await regularFile(installer);
-  const resources = options.resources ?? resolve(import.meta.dirname, "../../resources/bin");
   const [expectedMain, expectedCli, cliBuild] = await Promise.all([
-    nsisMainDigest(join(target, "raypx-desktop.exe")),
-    digest(join(resources, "raypx.exe")),
+    digest(join(target, "Raypx Test.exe")),
+    digest(join(target, "bin/raypx.exe")),
     digest(cli),
   ]);
   if (expectedCli.sha256 !== cliBuild.sha256)
     throw new Error("Packaged NSIS CLI differs from the compiled CLI");
-  const runtime = await readJsonFile<{ files: Record<string, string> }>(
-    join(resources, "runtime.json"),
-  );
-  if (runtime.files?.["raypx.exe"] && (await digest(cli)).sha256 !== runtime.files["raypx.exe"])
-    throw new Error("Packaged NSIS CLI differs from the compiled CLI");
-  if (!runtime.files?.["raypx.exe"]) throw new Error("Complete smoke CLI inventory is required");
   const keys = {
-    product: "Software\\raypx\\Raypx Test",
-    uninstall: "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Raypx Test",
+    product: "Software\\Raypx\\NativeSmokeUnused",
+    uninstall:
+      "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\com.raypx.desktop.native-smoke",
   };
   const run = options.commands ?? commands;
   const registered = () => run.registrations(keys);
@@ -206,8 +182,8 @@ export async function installWindowsSmoke(
   const root = await mkdtemp(join(tmpdir(), "raypx-nsis-smoke-"));
   const directory = join(root, "Raypx Test");
   if (/["\r\n]/.test(directory)) throw new Error("Unsafe smoke install directory");
-  const binary = join(directory, "raypx-desktop.exe");
-  const uninstaller = join(directory, "uninstall.exe");
+  const binary = join(directory, "Raypx Test.exe");
+  const uninstaller = join(directory, "Uninstall.exe");
   let disposed = false;
   async function dispose() {
     if (disposed) return;
@@ -249,7 +225,7 @@ export async function installWindowsSmoke(
     disposed = true;
   }
   try {
-    // Tauri uses a per-user installer; /D= selects only our isolated directory.
+    // MyGo uses a per-user installer; /D= selects only our isolated directory.
     // /D= must be the final, unquoted tail, including any spaces in the owned path.
     await run.execute(installer, `/S /D=${directory}`);
     const entries = (await registered()).filter((entry) => entry.product || entry.uninstall);
@@ -284,19 +260,6 @@ export async function installWindowsSmoke(
       throw new Error(
         `Installed smoke ${differences.join(" and ")} differs from the packaged build: ${JSON.stringify(payloads)}`,
       );
-    for (const [name, expected] of Object.entries(runtime.files)) {
-      if (
-        !name.split("/").every((part) => /^[\w. @+-]+$/.test(part) && part !== "." && part !== "..")
-      )
-        throw new Error("Invalid smoke CLI resource");
-      if ((await digest(join(directory, "bin", name))).sha256 !== expected)
-        throw new Error("Installed smoke runtime checksum mismatch");
-    }
-    if (
-      (await digest(join(directory, "bin/runtime.json"))).sha256 !==
-      (await digest(join(resources, "runtime.json"))).sha256
-    )
-      throw new Error("Installed smoke runtime inventory changed");
     await regularFile(uninstaller);
     console.info(`Native smoke NSIS payload hashes verified: ${JSON.stringify(payloads)}`);
     console.info(`Native smoke installed actual NSIS package in ${directory}`);

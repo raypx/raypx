@@ -7,6 +7,7 @@ env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   windows:
+    name: CLI size experiment (Windows)
     runs-on: windows-latest
     timeout-minutes: 20
     steps:

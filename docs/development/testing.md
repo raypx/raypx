@@ -2,9 +2,18 @@
 
 Run focused workspace tests, then `bun run verify` for daily delivery. It checks
 policy/locales, changed-file format/lint and affected types/tests; native inputs
-add current-platform Rust checks. `bun run verify --full` adds repository audits,
+add current-platform Go checks. `bun run verify --full` adds repository audits,
 builds and relocated artifact probes for release preparation. Neither command
 replaces separate database, browser, installed native or live-provider acceptance.
+
+`bun run verify --no-cache` forwards VP's cache control for container filesystems.
+Linux CLI artifact probes automatically run the prepared payload in Docker with
+`--network none`, using the Bun image pinned by `packageManager`. The repository and
+payload are read-only; only `.artifacts/cli` reports are written back. Host environment
+variables are not forwarded and Bun's env-file loading is disabled. A namespace that
+already has only loopback addresses runs directly, so full verification inside an offline container needs no
+nested Docker. Direct `apps/cli` smoke still requires that isolated namespace.
+The four SDK probes fail when outbound network isolation cannot be established.
 
 ## Test commands
 
@@ -95,10 +104,12 @@ explicit `bun run --cwd apps/desktop native:agents` gate with its existing prere
 | Change                                                                            | Daily acceptance                                                                    |
 | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Documentation                                                                     | Changed-file formatting and repository policy; no workspace/native suites           |
+| Go sources or Desktop Go module dependencies                                      | Go host checks/tests and relevant native CI acceptance                              |
+| Workflow orchestration                                                            | Tooling checks/tests and the workflow's relevant acceptance                         |
 | JS/React business code                                                            | Affected workspace types and unit/component/integration tests                       |
 | Shared JS dependency/configuration                                                | All workspace source checks/tests; no release builds or native runners              |
 | API or its affected libraries                                                     | Source checks/tests plus PostgreSQL/Redis integration                               |
-| Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Rust checks and relevant macOS/Windows native checks                                |
+| Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Go checks and relevant macOS/Windows native checks                                  |
 | Browser acceptance tests themselves                                               | Browser acceptance, to validate the changed suite                                   |
 | Release preparation                                                               | Full source/build/audit checks plus separate database/browser/native platform gates |
 
@@ -134,13 +145,10 @@ outside `src/routes/` discovery. Desktop uses native Vitest projects: `unit` for
 source and script policies/adapters, `component` for DOM interactions, and `integration` for
 native build/package cases in `tests/integration/native/`. `test:unit`, `test:component` and `test:integration`
 select exactly those projects; default `test` aggregates them. Unit and component
-cases use per-case typed DesktopPlatform fixtures, with no CLI, Rust host, WebView,
+cases use per-case typed DesktopPlatform fixtures, with no CLI, Go, WebView,
 system secrets or installed Provider. Unhandled fixture requests fail explicitly.
-Rust policy and adapter tests live in `src-tauri/src/` and
-`src-tauri/tests/native.rs`, including real subprocess, private IPC, SQLite lock
-and bundled CLI cases. `tauri:test` prepares the fixtures and runs Cargo tests;
-Linux selects the core without GUI dependencies. Native fixture executables and
-GUI smoke controls require the separate `native-smoke` Cargo feature.
+Go's pure policy and injected-engine cases live in `internal/desktop`; real
+subprocess, IPC, OS-lock and compiled CLI tests remain in `tests/native/host`.
 Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/host/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
@@ -185,7 +193,7 @@ under `tests/postgres/node/`, selected only by the `postgres` mode in
 The existing script names select the mode; the default test command never connects to a database.
 Database seeding and behavior assertions stay in each suite.
 
-### DOM matcher registration
+### DOM matchers with the hoisted install
 
 Register @testing-library/jest-dom/matchers using expect.extend on the expect
 exported by vite-plus/test. Keep the jest-dom/vitest import type-only for assertion
@@ -203,8 +211,8 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 - bun run test e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
 - bun run package:desktop on macOS and Windows checks the actual native package.
-  Release acceptance additionally verifies Rust-owned encrypted session persistence
-  against HTTPS auth, scoped Tauri browser storage on WKWebView/WebView2, matching
+  Release acceptance additionally verifies Go-owned encrypted session persistence
+  against HTTPS auth, scoped MyGo browser storage on WKWebView/WebView2, matching
   bundled CLI resolution, picker grants, daemon scheduling/task survival after GUI
   Quit, explicit daemon shutdown and PTY resize/cancellation. Renderer previews
   cannot establish these native results.
@@ -239,8 +247,8 @@ context, account and response fixtures.
 The conversation browser journey loads at most 200 messages in total: 100 initial
 messages, 50 older messages, 49 gap messages and one new message. Fourfold Chromium
 CPU throttling makes delayed virtual-row measurements observable with this bounded
-fixture. It retains focus, virtual/full-text switching, revision, prepend and gap
-checks, including reading-position drift below 3px after layout settles.
+fixture. It checks the DOM bound, focus, virtual/full-text switching, message revisions
+and explicit loading of earlier and missing messages.
 
 Web's cached `build:e2e` uses the production Nitro Bun build command. It omits the
 normal build's type-check prerequisite; `apps/web check` and `bun run verify` still
@@ -269,7 +277,7 @@ bun run test e2e --web -- --grep template --trace on
 
 Each mode builds only its required surfaces, using synthetic analytics settings
 and the running Bun executable. Desktop browser acceptance builds `artifacts/browser` in
-Vite mode `e2e`; it excludes Tauri preparation, CLI distribution builds and Rust
+Vite mode `e2e`; it excludes MyGo preparation, CLI compilation and Go
 checks. Its Native bridge fails with `DESKTOP_REQUIRED`, so this output cannot
 simulate successful IPC. Normal renderer builds use `dist/client`; packaging embeds that output with
 the compiled CLI and Herdr. Daily `bun run verify` selects native checks only for
@@ -288,9 +296,36 @@ provider usage. Default verification uses subprocess fixtures and never invokes 
 
 Build the CLI, then run `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents`.
 The gate creates temporary projects and uses Desktop's actual LocalEngine transport
-with the complete CLI distribution. It verifies file reads, plan rejection and approval,
-generated `bun:test` suites run by `bun test`, provider session resume across an engine restart, and cancellation
+with the standalone executable. It verifies file reads, plan rejection and approval,
+generated `node:test` suites run by `bun test`, provider session resume across an engine restart, and cancellation
 of a running child process. `RAYPX_LIVE_KEEP=1` retains its temporary evidence directory.
+
+For a real HTTPS environment, provision a dedicated verified `@raypx.example.test`
+account. Store `{ "email": "…", "password": "…", "userId": "…" }` in a private local
+file, never in source or command arguments. Use a fresh temporary native data directory.
+Build Desktop normally. Native reads its API and Web origins from runtime TOML;
+no environment-specific package or `runtime-config.json` is required.
+
+Set `RAYPX_LIVE_AGENTS=1`, `RAYPX_NATIVE_SMOKE_API`,
+`RAYPX_NATIVE_SMOKE_CREDENTIALS` (the private file), and
+`RAYPX_NATIVE_SMOKE_DATA_DIR`, then run `bun run --cwd apps/desktop native:beta`.
+The runner creates `config/config.toml` under that isolated data directory using
+the supplied API origin, without reading or changing the user's `~/.raypx` file.
+After `native-ready.json` appears, set `RAYPX_LIVE_WEB_URL` to the same origin and
+run `bun run --cwd e2e e2e:live` with the same native directory and credentials.
+The isolated headless browser signs in, creates both providers' tasks, checks no
+project writes occur before approval, approves through Web, verifies real files
+and returned results, and reloads the persisted task list. During a pending task,
+Native renews its real grant while hidden and reconnects without cancelling it.
+No mock API, simulated device, credential override or disabled browser security
+is used by this gate. Traces are off to avoid capturing login request bodies.
+
+Web writes `web-complete.json`; the native gate checks local files and its actual
+remote-task renderer. It then restarts the packaged process, checks the real session
+and relay reconnect, and verifies logout clears the session and detaches the device.
+The receipts are `native-complete.json` and `native-restore-complete.json`.
+Remove only the dedicated account and its test records after acceptance; preserve
+other environment data. Real macOS success does not establish Windows HTTPS behavior.
 
 Never replace production cookie security with trusting null origins or disabling
 web security. Do not count browser-preview tests as packaged-platform passes.
@@ -332,5 +367,5 @@ owner at cleanup. Production service installation and iOS are separate gates.
 
 See [Desktop build and release](desktop.md#build-and-release) for platform
 requirements, native-smoke isolation, installed package checks and signatures.
-Browser preview establishes compiled web behavior only. Tauri transport tests run
-through `tauri:test`; native smoke and interactive acceptance remain explicit.
+Browser preview establishes compiled web behavior only. MyGo transport tests run
+through `mygo:test`; native smoke and interactive acceptance remain explicit.

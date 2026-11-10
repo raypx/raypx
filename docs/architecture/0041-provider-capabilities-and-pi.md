@@ -5,7 +5,7 @@ consolidated into `@raypx/providers`.
 
 Implementation amendments: [ADR 0044](0044-event-sourced-cli-orchestration.md)
 adds durable orchestration effect intents. The CLI/daemon runs on embedded stable
-Bun under [ADR 0047](0047-bun-cli-production-packaging.md); Tauri/Rust owns the
+Bun under [ADR 0047](0047-bun-cli-production-packaging.md); MyGo/Go owns the
 native Desktop host without changing provider scope.
 
 ## Ownership and capabilities

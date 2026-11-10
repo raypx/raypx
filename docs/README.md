@@ -1,6 +1,6 @@
 # Raypx documentation
 
-Raypx is a project-centered workbench with Tauri Desktop, a standalone TypeScript
+Raypx is a project-centered workbench with MyGo Desktop, a standalone TypeScript
 CLI/daemon, TanStack Start Web, Bun API and independent Relay. Desktop targets
 macOS 13.5+ and Windows; Expo Mobile currently provides the account/login baseline.
 Register local profiles once for offline work; remote data and execution grants
@@ -11,17 +11,17 @@ Start with the [project overview](../README.md), [product scope](../PRODUCT.md),
 [development setup](development/getting-started.md).
 [Root instructions](../AGENTS.md) define repository rules. Workspace manifests are the inventory:
 `bun run workspace:list` and `bun run test list`. Current guides describe the
-implementation; the roadmap lists remaining product work. Decision records explain
-the boundaries behind that implementation. Retired migration plans and dated
-experiment reports belong in Git history, rather than the current guides.
+implementation; the roadmap describes future work. Decision records explain the
+boundaries behind the implementation.
 
 ## Architecture and decisions
 
 - [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
 - [Accepted Bun CLI production packaging](architecture/0047-bun-cli-production-packaging.md)
+- [MyGo / Bun and immutable CLI artifacts](architecture/0046-mygo-bun-artifacts.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
-- [Architecture decisions](architecture/README.md#architecture-decisions)
-- [Remaining Agent platform work](roadmap.md) — future scope and acceptance criteria
+- [Decision history and supersession status](architecture/README.md#decision-history)
+- [Persistent Agent Platform roadmap](roadmap.md) — future scope and dated acceptance
 
 ## Development and verification
 
@@ -31,10 +31,11 @@ experiment reports belong in Git history, rather than the current guides.
 - [Validation automation, CI, caches and evidence](development/validation-artifacts.md)
 - [Agent quality Evals and performance checks](development/agent-quality.md)
 - [Development DevTools and diagnostic snapshots](development/devtools.md)
+- [Frontend components and source adaptation](development/ui.md)
 
 ## Applications and local execution
 
-- [Tauri Desktop configuration, native transport and release](development/desktop.md)
+- [MyGo Desktop configuration, native transport and release](development/desktop.md)
 - [Standalone CLI commands and profiles](../apps/cli/README.md)
 - [Independent terminal host and connectors](development/terminal-host.md)
 - [Expo mobile development and login](development/mobile.md)
@@ -51,7 +52,6 @@ experiment reports belong in Git history, rather than the current guides.
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
 - [Shared Hugeicons package](development/icons.md)
-- [Frontend components and source adaptation](development/ui.md)
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Shared logger](../packages/logger/README.md)
 - [Raypx Kit library changes](development/intl-release.md)
@@ -63,3 +63,11 @@ experiment reports belong in Git history, rather than the current guides.
 - [Infrastructure workspaces](../infra/README.md)
 - [Independent Relay service](../infra/relay/README.md)
 - [Cloudflare Relay ingress](../infra/cloudflare/README.md)
+
+## Migration record
+
+- [MyGo / Bun migration, standalone archives and Strobe acceptance](development/mygo-bun-migration-plan.md) — implementation and remaining platform gates
+
+This dated evidence does not replace current platform release gates. Follow the
+[Desktop release guide](development/desktop.md#build-and-release) for first
+installation, updater keys and macOS/Windows acceptance requirements.

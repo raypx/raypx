@@ -44,12 +44,13 @@ if (!leaf) {
 if (!leaf) {
   commands = [[bun, "run", "raypx-dev", "tasks", `desktop#${task}`]];
 } else if (task === "native:build") {
-  commands = [[bun, "run", "tauri:build", ...args]];
+  commands = [[bun, "run", "mygo:build", ...args]];
 } else if (task === "check") {
   commands = [
-    [bun, "scripts/host/generate.ts"],
+    [bun, "scripts/host/generate.ts", "--check"],
     [bun, "run", "typecheck"],
     [bun, "run", "typecheck:node", ...args],
+    [bun, "run", "perf:check"],
   ];
 } else if (task === "build") {
   commands = [
@@ -68,7 +69,7 @@ if (!leaf) {
   const mode = task === "native:smoke:interactive" ? ["--interactive"] : [];
   commands = [[bun, "run", `tests/native/smoke/${scenario}`, ...mode, ...args]];
 } else {
-  commands = [[bun, "run", "tauri:dev", ...args]];
+  commands = [[bun, "run", "mygo:dev", ...args]];
 }
 
 for (const command of commands) {

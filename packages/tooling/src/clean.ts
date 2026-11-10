@@ -42,6 +42,7 @@ export async function clean(root: string): Promise<void> {
     "apps/desktop/generated",
     "apps/desktop/resources/bin",
     "apps/desktop/build",
+    "apps/desktop/.mygo",
   ]);
 }
 

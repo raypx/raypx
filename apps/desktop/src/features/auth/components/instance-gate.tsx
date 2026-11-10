@@ -14,10 +14,10 @@ import {
 } from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useDesktopPlatform } from "../../../lib/platform-context.tsx";
-import { apiUrl, authClient, desktopFetch } from "../client.ts";
-import { useDesktopSignOut } from "../sign-out.tsx";
-import { WindowDragRegion } from "../../../components/window-drag-region.tsx";
+import { useDesktopPlatform } from "../../../lib/platform-context";
+import { apiUrl, authClient, desktopFetch } from "../client";
+import { useDesktopSignOut } from "../sign-out";
+import { WindowDragRegion } from "../../../components/window-drag-region";
 
 function gateMessage(
   mismatch: boolean,
@@ -118,7 +118,7 @@ export function InstanceGate({ children }: { children: ReactNode }) {
   return (
     <main
       aria-labelledby="instance-title"
-      className="flex h-dvh flex-col overflow-auto bg-sidebar px-6 py-8 pt-[max(3.5rem,var(--raypx-titlebar-height,0px))]"
+      className="flex h-dvh flex-col overflow-auto bg-sidebar px-6 py-8 pt-[max(3.5rem,var(--mygo-titlebar-height,0px))]"
     >
       <WindowDragRegion />
       <Empty className="m-auto max-w-[466px] flex-none gap-6 rounded-[16px] border border-solid border-border bg-background p-8">

@@ -1,8 +1,8 @@
 # Raypx CLI
 
 Raypx's TypeScript CLI and independent daemon run in the compiled `raypx`
-executable, with no installed Node.js or Bun required. The canary Desktop uses a
-Tauri/Rust host and bundles this same CLI payload, connecting through private IPC.
+executable, with no installed Node.js or Bun required. Desktop uses a
+MyGo/Go host and bundles this same CLI payload, connecting through private IPC.
 The daemon owns scheduling; foreground commands own their work and never install
 a service.
 

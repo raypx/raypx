@@ -106,6 +106,7 @@ const localFilesRoute = localFilesRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof localIndexRoute
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
@@ -119,9 +120,9 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof authVerifyEmailRoute
   '/automations': typeof localAutomationsRoute
   '/files': typeof localFilesRoute
-  '/': typeof localIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof localIndexRoute
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
@@ -135,7 +136,6 @@ export interface FileRoutesByTo {
   '/verify-email': typeof authVerifyEmailRoute
   '/automations': typeof localAutomationsRoute
   '/files': typeof localFilesRoute
-  '/': typeof localIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -159,6 +159,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/account'
     | '/approvals'
     | '/memory'
@@ -172,9 +173,9 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/automations'
     | '/files'
-    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/account'
     | '/approvals'
     | '/memory'
@@ -188,7 +189,6 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/automations'
     | '/files'
-    | '/'
   id:
     | '__root__'
     | '/(auth)'
@@ -225,14 +225,14 @@ declare module '@tanstack/react-router' {
     '/(auth)': {
       id: '/(auth)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(local)': {
       id: '/(local)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof localRouteRouteImport
       parentRoute: typeof rootRouteImport
     }

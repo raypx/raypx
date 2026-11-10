@@ -25,16 +25,21 @@ const root = resolve(import.meta.dirname, "../../../..");
 const workflow = (name: string) =>
   Bun.YAML.parse(readFileSync(join(root, `.github/workflows/${name}.yml`), "utf8")) as {
     jobs: Record<string, Job>;
-    concurrency?: { group?: string };
+    concurrency?: { group: string };
     on: {
       workflow_call?: { inputs: Record<string, { default: boolean }> };
       workflow_dispatch?: { inputs: Record<string, { default: boolean }> };
     };
   };
 const native = workflow("native").jobs;
+const prepare = native.prepare!.steps!;
 const steps = native.verify!.steps!;
-const named = (name: string) => {
-  const step = steps.find((candidate) => candidate.name === name);
+const acceptance = Bun.YAML.parse(
+  readFileSync(join(root, ".github/actions/native-checks/action.yml"), "utf8"),
+) as { inputs: Record<string, { default: string }>; runs: { steps: Step[] } };
+const checks = acceptance.runs.steps;
+const named = (name: string, entries = steps) => {
+  const step = entries.find((candidate) => candidate.name === name);
   if (!step) throw new Error(`Missing native acceptance step: ${name}`);
   return step;
 };
@@ -46,81 +51,96 @@ it("checks selected platforms and adds parallel distribution phases only when re
     "${{ fromJSON(needs.changes.outputs.native_runners) }}",
   );
   expect(ci.desktop?.if).toBe("needs.changes.outputs.native == 'true'");
-  expect(ci.javascript?.steps?.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(
-    true,
+  expect(ci.source?.steps?.find((step) => step.uses === "actions/setup-go@v6")?.if).toBe(
+    "matrix.phase == 'checks' && needs.changes.outputs.go == 'true'",
   );
   expect(ci.foundation?.needs).toContain("desktop");
   expect(ci.desktop?.with?.distribution).toContain("needs.changes.outputs.distribution");
   expect(workflow("native").on.workflow_call?.inputs.distribution?.default).toBe(false);
   expect(native.verify?.needs).toBe("prepare");
+  expect(native.verify?.if).toContain("inputs.distribution");
   expect(native.verify?.strategy?.["fail-fast"]).toBe(false);
-  const selection = native.verify!.strategy!.matrix.phase as string;
-  expect(selection).toContain("inputs.distribution &&");
-  expect(selection.match(/\[[^\]]+\]/g)?.map((json) => JSON.parse(json))).toEqual([
-    ["checks", "package", "smoke"],
-    ["checks"],
-  ]);
+  expect(native.verify?.strategy?.matrix.phase).toEqual(["checks", "package", "smoke"]);
 });
 
-it("prepares shared JS inputs only for parallel distribution phases", () => {
-  const prepare = native.prepare!.steps!;
+it("runs routine acceptance on the compiler runner without a renderer or artifact handoff", () => {
+  const routine = named("Check native inputs", prepare);
+  const distribution = named("Check native inputs");
+  expect(routine.if).toBe("${{ !inputs.distribution }}");
+  expect(distribution.if).toBe("matrix.phase == 'checks'");
+  expect(routine.uses).toBe("./.github/actions/native-checks");
+  expect(distribution.uses).toBe(routine.uses);
+  expect(routine.env?.RAYPX_CLI_PAYLOAD).toBe(native.verify?.env?.RAYPX_CLI_PAYLOAD);
+  expect(acceptance.inputs.distribution?.default).toBe("false");
+  expect(distribution.with?.distribution).toBe("true");
+  expect(prepare.indexOf(routine)).toBeGreaterThan(
+    prepare.indexOf(named("Accept the final CLI archive", prepare)),
+  );
+  expect(named("Prepare distribution renderer", prepare).if).toBe("inputs.distribution");
+  expect(named("Transport the immutable CLI directory", prepare).if).toBe("inputs.distribution");
+  for (const step of prepare.filter((entry) => entry.uses?.startsWith("actions/upload-artifact@")))
+    expect(step.if).toBe("inputs.distribution");
+  expect(checks.some((step) => /build:cli|build:desktop/.test(step.run ?? ""))).toBe(false);
+});
+
+it("compiles once in prepare and transports an immutable artifact by exact ID", () => {
   expect(native.prepare?.if).toBeUndefined();
-  expect(native.verify?.if).toContain("!cancelled()");
   expect(native.verify?.if).toContain("needs.prepare.result == 'success'");
-  expect(prepare.some((step) => step.name === "Herdr terminal integration")).toBe(false);
-  expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(false);
-  expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
-  expect(prepare.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
-  expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
+  expect(native.verify?.if).not.toContain("skipped");
   expect(prepare.filter((step) => step.run?.includes("bun run build:cli"))).toHaveLength(1);
-  expect(steps.some((step) => step.run?.includes("bun run build:cli"))).toBe(false);
+  expect(steps.some((step) => /build:cli|prepare:herdr/.test(step.run ?? ""))).toBe(false);
   expect(native.prepare?.outputs?.["cli-artifact-id"]).toContain(
     "steps.cli-payload.outputs.artifact-id",
   );
-  expect(
-    steps.find((step) => step.uses?.startsWith("actions/download-artifact@"))?.with?.[
-      "artifact-ids"
-    ],
-  ).toBe("${{ needs.prepare.outputs.cli-artifact-id }}");
-  expect(prepare.some((step) => step.name === "Sign and seal the shared CLI payload")).toBe(true);
-  expect(named("Prepare native check or distribution inputs").run).toContain(
+  const download = steps.find((step) => step.uses?.startsWith("actions/download-artifact@"));
+  expect(download?.with?.["artifact-ids"]).toBe("${{ needs.prepare.outputs.cli-artifact-id }}");
+  expect(native.verify?.env?.RAYPX_CLI_PAYLOAD).toContain("apps/cli/dist");
+  expect(named("Verify prepared CLI and restore executable permissions").run).toContain(
     "distribution.ts verify",
   );
-  expect(native.verify?.env?.RAYPX_CLI_PAYLOAD).toContain("apps/cli/dist");
+  expect(named("Verify prepared CLI and restore executable permissions").id).toBe("native-inputs");
+  expect(
+    prepare.findIndex((step) => step.name === "Sign and seal the shared CLI payload"),
+  ).toBeLessThan(prepare.findIndex((step) => step.name === "Archive standalone CLI"));
+  expect(prepare.findIndex((step) => step.name === "Accept the final CLI archive")).toBeLessThan(
+    prepare.findIndex((step) => step.uses?.startsWith("actions/upload-artifact@")),
+  );
+  expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
+  expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
 });
 
-it("requires compiled Herdr integration and pinned Rust checks in the check phase", () => {
-  const herdr = named("Herdr terminal integration");
-  expect(herdr.if).toBe("matrix.phase == 'checks'");
-  expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe("${{ inputs.distribution && '3' || '1' }}");
+it("requires compiled Herdr integration and pinned Go checks in the check phase", () => {
+  const herdr = named("Herdr terminal integration", checks);
+  expect(herdr.env?.RAYPX_HERDR_COMPILED).toBe("1");
+  expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe(
+    "${{ inputs.distribution == 'true' && '3' || '1' }}",
+  );
   expect(herdr.run).toContain('process.platform === "win32"');
   expect(herdr.run).toContain("RAYPX_HERDR_WINDOWS_RUNS");
-  expect(steps.indexOf(named("Prepare native check or distribution inputs"))).toBeLessThan(
-    steps.indexOf(herdr),
-  );
-  expect(steps.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(true);
-});
-
-it("restores Cargo before JavaScript dependencies enter the cache scan", () => {
-  for (const job of [native.verify!, workflow("ci").jobs.javascript!]) {
-    const jobSteps = job.steps!;
-    const rust = jobSteps.findIndex((step) => step.uses === "./.github/actions/setup-rust");
-    const bun = jobSteps.findIndex((step) => step.uses === "./.github/actions/setup-bun");
-    expect(rust).toBeGreaterThanOrEqual(0);
-    expect(bun).toBeGreaterThan(rust);
+  expect(checks.indexOf(named("Verify prepared CLI", checks))).toBeLessThan(checks.indexOf(herdr));
+  for (const entries of [prepare, steps]) {
+    const go = entries.find((step) => step.uses === "actions/setup-go@v6")!;
+    expect(go.with?.["go-version-file"]).toBe("apps/desktop/go.mod");
+    expect(go.with?.["cache-dependency-path"]).toBe("apps/desktop/go.sum");
+    expect(entries.indexOf(go)).toBeLessThan(
+      entries.findIndex((step) => step.uses === "./.github/actions/setup-bun"),
+    );
+    expect(entries.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
   }
+  expect(prepare.find((step) => step.uses === "actions/setup-go@v6")?.if).toBe(
+    "${{ !inputs.distribution }}",
+  );
 });
 
 it("accepts process runners and the installed CLI after verifying the shared payload", () => {
-  const inputs = named("Prepare native check or distribution inputs");
-  const runners = named("Cross-platform process and task runners");
-  const firewall = named("Enable Windows Firewall for isolated provider acceptance");
-  const cli = named("Installed CLI package");
-  expect(inputs.id).toBe("native-inputs");
+  const inputs = named("Verify prepared CLI", checks);
+  const runners = named("Cross-platform process and task runners", checks);
+  const cli = named("Installed CLI package", checks);
   for (const step of [runners, cli]) {
-    expect(step.if).toBe("matrix.phase == 'checks'");
-    expect(steps.indexOf(step)).toBeGreaterThan(steps.indexOf(inputs));
-    expect(steps.indexOf(step)).toBeLessThan(steps.indexOf(named("Herdr terminal integration")));
+    expect(checks.indexOf(step)).toBeGreaterThan(checks.indexOf(inputs));
+    expect(checks.indexOf(step)).toBeLessThan(
+      checks.indexOf(named("Herdr terminal integration", checks)),
+    );
   }
   expect(runners.run).toContain("bun run --cwd packages/runtime-node test");
   for (const test of [
@@ -130,33 +150,29 @@ it("accepts process runners and the installed CLI after verifying the shared pay
   ])
     expect(runners.run).toContain(test);
   expect(cli.run).toBe("bun run --cwd apps/cli smoke");
-  expect(firewall.if).toBe("matrix.phase == 'checks' && runner.os == 'Windows'");
-  expect(firewall.run).toContain(
-    "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True",
+  expect(named("Enable Windows Firewall for isolated provider acceptance", checks).if).toBe(
+    "runner.os == 'Windows'",
   );
-  expect(steps.indexOf(firewall)).toBeGreaterThan(steps.indexOf(inputs));
-  expect(steps.indexOf(firewall)).toBeLessThan(steps.indexOf(cli));
-  expect(named("Report prepared build sizes").run).toContain("--package cli --require");
+  expect(named("Report prepared build sizes", checks).run).toContain("--package cli --require");
 });
 
-it("retains Rust, production and interactive smoke acceptance", () => {
-  expect(named("Desktop Tauri checks").if).toContain("!cancelled()");
-  expect(named("Desktop Tauri checks").if).toContain("matrix.phase == 'checks'");
-  expect(named("Desktop Tauri checks").if).toContain("steps.native-inputs.outcome == 'success'");
-  expect(named("Desktop Tauri checks").run).toContain("tauri:test");
-  expect(named("Desktop Tauri checks").run).toContain("tauri:check");
+it("retains Go, production and interactive smoke acceptance", () => {
+  const go = named("Desktop MyGo checks", checks);
+  expect(go.if).toContain("!cancelled()");
+  expect(go.if).toContain("steps.payload.outcome == 'success'");
+  expect(named("Verify prepared CLI", checks).id).toBe("payload");
+  expect(go.run).toContain("mygo:test");
+  expect(go.run).toContain("mygo:check");
   expect(named("Package desktop").if).toBe("matrix.phase == 'package'");
   expect(named("Verify production Desktop excludes smoke controls").if).toBe(
     "matrix.phase == 'package'",
   );
   expect(named("Packaged native smoke").if).toBe("matrix.phase == 'smoke'");
   expect(named("Packaged native smoke").run).toContain("native:smoke:interactive");
-  expect(named("Preserve prepared Desktop delivery").if).toBe("matrix.phase == 'package'");
-  expect(named("Preserve prepared Desktop delivery").run).toContain("verifyCliPayload");
-  expect(named("Preserve prepared Desktop delivery").run).toContain("GITHUB_SHA");
-  expect(named("Upload native acceptance evidence").with?.path).toContain(".artifacts/cli/*.json");
   for (const name of ["Upload native acceptance evidence", "Upload build size reports"]) {
-    expect(named(name).if).toBe("always()");
+    expect(named(name, checks).if).toBe("always()");
+    expect(named(name, checks).with?.["retention-days"]).toBe(7);
+    expect(named(name).if).toBe("always() && matrix.phase != 'checks'");
     expect(named(name).with?.["retention-days"]).toBe(7);
   }
 });
@@ -170,10 +186,12 @@ it("keeps explicit release acceptance independent from routine push cancellation
 });
 
 it("exposes distribution credentials only to packaging and always cleans them up", () => {
-  const credentials = Object.entries(native.verify!.env!).filter(
+  for (const [, value] of Object.entries(native.verify!.env!).filter(
     ([key]) => key !== "RAYPX_CLI_PAYLOAD",
-  );
-  for (const [, value] of credentials) expect(value).toContain("matrix.phase == 'package'");
+  ))
+    expect(value).toContain("matrix.phase == 'package'");
+  for (const value of Object.values(native.prepare!.env!))
+    expect(value).toContain("inputs.distribution");
   expect(named("Remove temporary macOS signing material").if).toContain("always()");
   expect(named("Remove temporary Windows signing material").if).toContain("always()");
 });
@@ -184,38 +202,8 @@ it("defaults manual CI to Windows and forwards explicit cold native builds", () 
   expect(ci.on.workflow_dispatch?.inputs.cold_native?.default).toBe(false);
   expect(ci.jobs.desktop?.with?.cold_native).toBe("${{ inputs.cold_native || false }}");
   expect(workflow("native").on.workflow_call?.inputs.cold_native?.default).toBe(false);
-  const rustSteps = Object.values(native)
-    .flatMap((job) => job.steps ?? [])
-    .filter((step) => step.uses === "./.github/actions/setup-rust");
-  expect(rustSteps).toHaveLength(1);
-  for (const step of rustSteps) expect(step.with?.cache).toBe("${{ !inputs.cold_native }}");
-  expect(rustSteps[0]?.with?.["check-profile"]).toBe("${{ matrix.phase == 'checks' }}");
-  expect(
-    ci.jobs.javascript?.steps?.find((step) => step.uses === "./.github/actions/setup-rust")?.with?.[
-      "check-profile"
-    ],
-  ).toBe("true");
-  expect(rustSteps[0]?.with?.["cache-key"]).toBe("${{ matrix.phase }}");
-  expect(rustSteps[0]?.with?.["target-directory"]).toBe(
-    "${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}",
-  );
-  const rust = Bun.YAML.parse(
-    readFileSync(join(root, ".github/actions/setup-rust/action.yml"), "utf8"),
-  ) as {
-    inputs: Record<string, { default: string }>;
-    runs: { steps: Step[] };
-  };
-  expect(rust.inputs.cache?.default).toBe("true");
-  expect(rust.inputs["check-profile"]?.default).toBe("false");
-  expect(
-    rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.with?.[
-      "cache-on-failure"
-    ],
-  ).toBe("true");
-  expect(rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.with?.key).toBe(
-    "${{ inputs.cache-key }}",
-  );
-  expect(rust.runs.steps.find((step) => step.uses === "Swatinem/rust-cache@v2")?.if).toBe(
-    "inputs.cache == 'true'",
-  );
+  for (const entries of [prepare, steps]) {
+    const setup = entries.find((step) => step.uses?.startsWith("actions/setup-go@"));
+    expect(setup?.with?.cache).toBe("${{ !inputs.cold_native }}");
+  }
 });

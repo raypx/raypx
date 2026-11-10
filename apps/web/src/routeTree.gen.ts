@@ -145,6 +145,7 @@ const adminAdminUsersRoute = adminAdminUsersRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/approvals': typeof appApprovalsRoute
   '/automations': typeof appAutomationsRoute
@@ -158,13 +159,13 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/privacy': typeof legalPrivacyRoute
-  '/': typeof landingIndexRoute
   '/admin/audit': typeof adminAdminAuditRoute
   '/admin/settings': typeof adminAdminSettingsRoute
   '/admin/users': typeof adminAdminUsersRoute
   '/admin/': typeof adminAdminIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/approvals': typeof appApprovalsRoute
   '/automations': typeof appAutomationsRoute
@@ -178,7 +179,6 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/privacy': typeof legalPrivacyRoute
-  '/': typeof landingIndexRoute
   '/admin/audit': typeof adminAdminAuditRoute
   '/admin/settings': typeof adminAdminSettingsRoute
   '/admin/users': typeof adminAdminUsersRoute
@@ -213,6 +213,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/health'
     | '/approvals'
     | '/automations'
@@ -226,13 +227,13 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/privacy'
-    | '/'
     | '/admin/audit'
     | '/admin/settings'
     | '/admin/users'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/health'
     | '/approvals'
     | '/automations'
@@ -246,7 +247,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/privacy'
-    | '/'
     | '/admin/audit'
     | '/admin/settings'
     | '/admin/users'
@@ -292,35 +292,35 @@ declare module '@tanstack/react-router' {
     '/(admin)': {
       id: '/(admin)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof adminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(app)': {
       id: '/(app)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof appRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)': {
       id: '/(auth)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(landing)': {
       id: '/(landing)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof landingRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(legal)': {
       id: '/(legal)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof legalRouteRouteImport
       parentRoute: typeof rootRouteImport
     }

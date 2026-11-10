@@ -1,4 +1,3 @@
-import { registerTests } from "@raypx/e2e/journeys/tasks/history";
 import {
   test,
   desktop,
@@ -100,8 +99,9 @@ test(
     await older.click();
     await page.getByRole("button", { name: /Review local changes 3/ }).click();
     await expect(page.getByText("Result 3", { exact: true })).toBeVisible();
-    await expect(older).toBeDisabled();
     await capture(page, { path: test.info().outputPath("task-pagination.png"), fullPage: true });
+    await page.getByRole("button", { name: "Back to sessions" }).click();
+    await expect(older).toBeDisabled();
     await newer.click();
     await expect(page.getByRole("button", { name: /Review local changes 2/ })).toBeVisible();
     await newer.click();
@@ -109,5 +109,3 @@ test(
     await expect(newer).toBeDisabled();
   },
 );
-
-registerTests();

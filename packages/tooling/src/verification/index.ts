@@ -1,13 +1,9 @@
-import { smokeDeployment } from "../validation/deployment-smoke";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runTasks } from "../repository";
 import { taskRef, taskModel, taskPlan } from "../tasks/model";
 import { localPlan } from "./plan";
 import { executionTasks, sourceChecks } from "./execution";
-import { ciOutputs, parseCiPlan, requiredGates } from "./gates";
 import { localTests } from "./tests";
-import { reportBuildSizes } from "../validation/build-size";
 
 export function verifyOptions(args: string[]) {
   const options: { full?: boolean; base?: string; dry?: boolean; noCache?: boolean } = {};
@@ -25,7 +21,7 @@ export function verifyOptions(args: string[]) {
 export async function verify(root: string, args: string[]) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0]!)) {
     console.log(
-      "bun run verify              Affected types and related tests; native-input Rust checks\nbun run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run, --no-cache (container filesystem tracing). GUI/database/browser acceptance runs in CI.",
+      "bun run verify              Affected types and related tests; native-input Go checks\nbun run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run, --no-cache (container filesystem tracing). GUI/database/browser acceptance runs in CI.",
     );
     return;
   }
@@ -69,38 +65,11 @@ export async function verify(root: string, args: string[]) {
     );
   report("running");
   try {
-    const metrics = await sourceChecks(root, plan, tests, options.noCache);
+    const metrics = await sourceChecks(root, plan, { tests, noCache: options.noCache ?? false });
     report("passed", metrics);
   } catch (error) {
     report("failed");
     throw error;
   }
   console.log(`Verification passed in ${((performance.now() - started) / 1000).toFixed(1)}s`);
-}
-/** Internal CI gate; user-facing verification remains one command. */
-export async function ciGate(root: string, args: string[]) {
-  const plan = parseCiPlan(process.env.RAYPX_CI_PLAN ?? "{}", process.env.GITHUB_SHA ?? ""),
-    [gate] = args;
-  const name = gate === "js" ? "javascript" : gate;
-  const decision = requiredGates(ciOutputs(plan, process.env.GITHUB_SHA ?? "")).find(
-    (entry) => entry.name === name,
-  );
-  if (args.length !== 1 || !decision || decision.name === "desktop")
-    throw new Error("Unknown internal CI gate");
-  if (!decision.required) throw new Error(`CI gate ${name} was not selected by change analysis`);
-  if (gate === "js") {
-    await sourceChecks(root, plan);
-  } else if (gate === "container-smoke") {
-    await smokeDeployment(root, []);
-  } else if (gate === "backend") {
-    for (const task of ["test:postgres", "test:redis", "test:cluster"])
-      await runTasks(root, `api#${task}`);
-  } else if (gate === "browser") {
-    await runTasks(root, `@raypx/e2e#${plan.browser === "all" ? "e2e" : `e2e:${plan.browser}`}`);
-    reportBuildSizes(root, {
-      packages: plan.browser === "all" ? ["web", "desktop"] : [plan.browser],
-      browser: true,
-      required: true,
-    });
-  } else throw new Error("Unknown internal CI gate");
 }

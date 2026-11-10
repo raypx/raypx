@@ -13,6 +13,8 @@ it("allows 500 Markdown lines and reports current documents above the limit", ()
   writeFileSync(join(root, "notes.md"), `${lines(501)}\n`);
   mkdirSync(join(root, "docs"), { recursive: true });
   writeFileSync(join(root, "docs/guide.md"), `${lines(501)}\n`);
+  mkdirSync(join(root, "e2e/test-results/desktop/failure"), { recursive: true });
+  writeFileSync(join(root, "e2e/test-results/desktop/failure/error-context.md"), lines(501));
   mkdirSync(join(root, ".agents/skills/vendor"), { recursive: true });
   writeFileSync(join(root, ".agents/skills/vendor/SKILL.md"), lines(501));
   mkdirSync(join(root, "skills/example"), { recursive: true });

@@ -1,0 +1,73 @@
+name: Check the prepared native payload
+description: Run process, CLI, terminal and MyGo acceptance against one immutable CLI
+inputs:
+  distribution:
+    description: Repeat Windows terminal acceptance for distribution
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Verify prepared CLI
+      id: payload
+      shell: bash
+      run: bun apps/cli/scripts/distribution.ts verify
+    - name: Report prepared build sizes
+      shell: bash
+      run: bun run size --package cli --require
+    - name: Cross-platform process and task runners
+      shell: bash
+      run: |
+        bun run --cwd packages/runtime-node test
+        bun run --cwd packages/tooling --bun vp test --run tests/integration/task-leaf.test.ts src/build/archive.test.ts src/validation/build-size.test.ts
+    - name: Enable Windows Firewall for isolated provider acceptance
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+    - name: Installed CLI package
+      shell: bash
+      run: bun run --cwd apps/cli smoke
+    - name: Herdr terminal integration
+      env:
+        RAYPX_HERDR_COMPILED: "1"
+        RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution == 'true' && '3' || '1' }}
+      shell: bash
+      run: |
+        bun - <<'TS'
+        const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
+        for (let attempt = 0; attempt < runs; attempt++) {
+          const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
+            stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
+          });
+          const code = await child.exited;
+          if (code !== 0) process.exit(code);
+        }
+        TS
+    - name: Desktop MyGo checks
+      if: ${{ !cancelled() && steps.payload.outcome == 'success' }}
+      env:
+        RAYPX_MYGO_CLI: ${{ github.workspace }}/apps/cli/dist/raypx${{ runner.os == 'Windows' && '.exe' || '' }}
+      shell: bash
+      run: |
+        bun run --cwd apps/desktop mygo:check
+        bun run --cwd apps/desktop mygo:test
+    - name: Upload native acceptance evidence
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: native-evidence-${{ runner.os }}-checks
+        path: |
+          .artifacts/cli/*.json
+          .artifacts/native-*/
+          .artifacts/distribution-signing/*.json
+        include-hidden-files: true
+        if-no-files-found: ignore
+        retention-days: 7
+    - name: Upload build size reports
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: build-sizes-${{ runner.os }}-checks
+        path: .artifacts/sizes/
+        include-hidden-files: true
+        if-no-files-found: ignore
+        retention-days: 7

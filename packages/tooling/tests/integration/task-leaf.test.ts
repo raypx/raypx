@@ -36,7 +36,6 @@ process.exit(23);`,
       RAYPX_LEAF_TEST: "inherited environment",
     },
   });
-  if (result.exitCode !== 23) console.error(result.stderr.toString());
   expect(result.exitCode).toBe(23);
   expect(JSON.parse(readFileSync(join(root, "result.json"), "utf8"))).toEqual({
     args,

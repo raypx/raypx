@@ -1,8 +1,6 @@
 # Development
 
-`canary` is the Tauri/Rust Desktop line; `dev` preserves the MyGo/Go alternative.
-The CLI/daemon remains Bun/TypeScript on both. Switch branches in separate worktrees
-and use each branch's native toolchain, build commands and updater configuration.
+Desktop uses the MyGo/Go host; the CLI/daemon remains Bun/TypeScript.
 
 Use Bun 1.4.4; it is the only JavaScript runtime. package.json `packageManager`
 pins it; to upgrade, change that, then fix what `bun run policy` reports.
@@ -16,15 +14,15 @@ eval "$(mise activate zsh)"         # in ~/.zshrc (bash/fish/PowerShell also sup
 ```
 
 Activated shells switch versions on cd; without activation use `mise exec -- <command>`.
-Raypx uses mise for Bun selection and Rust 1.99.1 for the Tauri host. Rust is
-pinned in `rust-toolchain.toml`. Windows requires WebView2 and its native build
-tools; Linux GUI compilation needs GTK3 and WebKitGTK 4.1 development packages.
+Raypx uses mise for Bun selection and Go 1.27.3 for the native host. The repository does not use a Nix shell.
+Windows Desktop uses WebView2 and the Windows packaging/signing tools. The MyGo
+host builds with `CGO_ENABLED=0`; it does not require a C/C++ compiler for that build.
 The configured macOS package minimum is 13.5.
 Direct Bun installs also work. `bun run doctor` confirms the active runtime. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
-Desktop's Rust host lives in apps/desktop/src-tauri. Daily `bun run verify` selects affected
-JavaScript and Rust checks; `bun run verify --full` checks all current-platform sources
+Desktop's Go module lives in apps/desktop. Daily `bun run verify` selects affected
+JavaScript and Go checks; `bun run verify --full` checks all current-platform sources
 and artifacts for release preparation or an explicit full-validation request.
 Shared JS configuration/lockfile changes broaden source checks without starting
 native runners. See the [Desktop guide](desktop.md#build-and-release).
@@ -135,11 +133,11 @@ and browser reports while preserving builds and staged native resources. See
 and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
-Desktop's renderer artifacts and Tauri generated/resource directories, root
+Desktop's renderer artifacts and MyGo generated/resource directories, root
 `.artifacts`, and browser test results/reports. Removals run in batches of up to eight directories.
 It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. Native development,
-Rust host checks and packaging prepare generated inputs and the matching CLI again.
+Go host checks and packaging prepare generated inputs and the matching CLI again.
 
 VP owns the task graph and its local cache at `node_modules/.vite/task-cache`.
 Use root build/check/test commands for dependency ordering, or `vp run` to invoke

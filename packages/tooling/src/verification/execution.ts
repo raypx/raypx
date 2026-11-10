@@ -2,26 +2,25 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
 import { runTasks } from "../repository";
-import { smoke } from "../smoke";
 import { taskRef, taskModel, taskPlan } from "../tasks/model";
 import { argumentKey } from "../tasks/arguments";
 import type { VerificationPlan } from "./plan";
 import type { TestSelection } from "./tests";
 import { completionReport, precheckTimings, reportTiming } from "./report";
 import { reportBuildSizes } from "../validation/build-size";
+import { sourceTasks, type SourcePhase } from "./gates";
 
 export function executionTasks(
   plan: VerificationPlan,
   rootName: string,
   tests: TestSelection[] = [],
+  phase?: SourcePhase,
 ) {
+  const tasks = phase ? sourceTasks(plan, phase) : plan.tasks;
   return [
-    taskRef(rootName, "policy"),
-    taskRef(rootName, "locales"),
-    ...plan.tasks.filter(
-      (task) => !tests.some((test) => test.task === task && test.mode === "none"),
-    ),
-    ...(plan.full ? [taskRef(rootName, "knip")] : []),
+    ...(phase === "tests" ? [] : [taskRef(rootName, "policy"), taskRef(rootName, "locales")]),
+    ...tasks.filter((task) => !tests.some((test) => test.task === task && test.mode === "none")),
+    ...(plan.full && phase !== "tests" ? [taskRef(rootName, "knip")] : []),
   ];
 }
 
@@ -54,14 +53,14 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
 export async function sourceChecks(
   root: string,
   plan: VerificationPlan,
-  tests: TestSelection[] = [],
-  noCache = false,
+  options: { tests?: TestSelection[]; noCache?: boolean; phase?: SourcePhase } = {},
 ) {
+  const { tests = [], noCache = false, phase } = options;
   const started = performance.now();
-  const style = await sourceStyle(root, plan);
+  const style = phase === "tests" ? { formatMs: 0, lintMs: 0 } : await sourceStyle(root, plan);
   const model = taskModel(root);
   const rootName = model.rootName;
-  const refs = executionTasks(plan, rootName, tests);
+  const refs = executionTasks(plan, rootName, tests, phase);
   const styleMs = Math.round(performance.now() - started),
     taskStarted = performance.now();
   if (refs.length)
@@ -77,13 +76,19 @@ export async function sourceChecks(
     });
   const tasksMs = Math.round(performance.now() - taskStarted);
   const { cacheHits, cachedTasks } = completionReport(root, refs);
-  const prechecks = precheckTimings(root, rootName, cachedTasks);
+  const prechecks =
+    phase === "tests"
+      ? { policyMs: 0, localesMs: 0, cachedChecks: [] }
+      : precheckTimings(root, rootName, cachedTasks);
   const probeStarted = performance.now();
   const builds = taskPlan(model, refs)
     .filter((task) => task.taskId.endsWith("#build"))
     .map((task) => task.taskId.slice(0, -"#build".length));
   if (builds.length) reportBuildSizes(root, { packages: builds, required: true });
-  if (plan.artifacts.length) await smoke(root, plan.artifacts);
+  if (phase !== "tests" && plan.artifacts.length) {
+    const { smoke } = await import("../smoke");
+    await smoke(root, plan.artifacts);
+  }
   const metrics = {
     ...prechecks,
     ...style,
@@ -92,9 +97,10 @@ export async function sourceChecks(
     artifactsMs: Math.round(performance.now() - probeStarted),
     cacheHits,
   };
-  console.log(
-    `Checks: policy ${metrics.policyMs}ms; locales ${metrics.localesMs}ms; format ${metrics.formatMs}ms; lint ${metrics.lintMs}ms; cached: ${metrics.cachedChecks.join(", ") || "none"}`,
-  );
-  reportTiming(plan, metrics);
+  if (phase !== "tests")
+    console.log(
+      `Checks: policy ${metrics.policyMs}ms; locales ${metrics.localesMs}ms; format ${metrics.formatMs}ms; lint ${metrics.lintMs}ms; cached: ${metrics.cachedChecks.join(", ") || "none"}`,
+    );
+  reportTiming(plan, metrics, phase);
   return metrics;
 }

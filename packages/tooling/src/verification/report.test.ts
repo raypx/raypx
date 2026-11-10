@@ -22,7 +22,10 @@ it("replaces stale success evidence before starting checks and records a failed 
     throw new Error("source check failed");
   });
   await expect(verify(root, ["--no-cache"])).rejects.toThrow("source check failed");
-  expect(checks).toHaveBeenCalledWith(root, expect.any(Object), expect.any(Array), true);
+  expect(checks).toHaveBeenCalledWith(root, expect.any(Object), {
+    tests: expect.any(Array),
+    noCache: true,
+  });
   expect(JSON.parse(readFileSync(file, "utf8")).status).toBe("failed");
 });
 

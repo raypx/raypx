@@ -1,7 +1,8 @@
 # Extending workspaces
 
 Bun workspaces below cover TypeScript applications and libraries. Desktop also owns
-the Rust host in `apps/desktop/src-tauri`, built through the root Cargo workspace;
+a MyGo host and Go module in `apps/desktop`.
+For native build and release commands,
 see the [Desktop guide](desktop.md#build-and-release).
 
 Infrastructure lives under `infra/*`, including the independent Relay application

@@ -47,8 +47,8 @@ member `account.access` projection; custom signed-in cases use `accountAccessFix
 The automatic public fixture defaults to guest access. Named steps identify checks
 within a combined journey. See docs/development/testing.md for the coverage map.
 Conversation fixtures load at most 200 messages across initial data, older pages
-and gap fills. The reading-position regression uses fourfold Chromium CPU
-throttling to expose delayed measurements and checks settled positions within 3px.
+and gap fills. Fourfold Chromium CPU throttling exercises the DOM bound, focus,
+full-text mode, message revisions and explicit history loading.
 
 ## Constraints
 

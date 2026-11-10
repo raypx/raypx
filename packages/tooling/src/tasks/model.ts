@@ -98,7 +98,7 @@ function cachedTask(
             .filter((candidate) => candidate.native)
             .map((candidate) => `${candidate.path}/build/**`),
           ...(member.native ? [`${member.path}/build/**`] : []),
-          "**/src-tauri/gen/**",
+          "**/.mygo/**",
           "**/node_modules/.nitro/**",
         ]
       : []),
@@ -187,8 +187,7 @@ function validationCache(context: TaskContext<TaskMember>, locales: boolean): Ta
         ".node-version",
         ".bun-version",
         ".tool-versions",
-        "rust-toolchain.toml",
-        "**/Cargo.{toml,lock}",
+        "**/go.{mod,sum}",
       ];
   return {
     input: [
@@ -249,7 +248,7 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
   }
   if (
     member.native &&
-    ["native:prepare", "tauri:smoke"].includes(name) &&
+    ["native:prepare", "mygo:smoke"].includes(name) &&
     members.some((candidate) => candidate.name === "cli" && candidate.scripts.build)
   )
     result.push(taskRef("cli", "build"));

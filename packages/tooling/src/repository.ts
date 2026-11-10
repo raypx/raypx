@@ -15,7 +15,7 @@ export const discover = (root: string) => discoverWorkspaces(root, { metadataKey
 
 function taskDirectories(member: TaskModel["members"][number]) {
   return [
-    ...(member.native ? ["generated", "resources/bin", "build", "artifacts/browser"] : []),
+    ...(member.native ? ["generated", "resources/bin", "build", ".mygo", "artifacts/browser"] : []),
     ...(member.scripts.build ? ["dist", ".output"] : []),
   ];
 }

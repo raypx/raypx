@@ -15,7 +15,7 @@ lifetime remain accepted.
 - Connectors install a stable executable plus a complete payload under
   `~/.raypx/bin/versions/`, selected by `installation.json`. Ownership checks and
   controlled Windows launcher replacement remain required.
-- Tauri's Rust host owns native policy and launches the bundled CLI by absolute
+- The MyGo Go host owns native policy and launches the bundled CLI by absolute
   path. Platform GUI, NSIS upgrade and running-file acceptance remain explicit
   release gates.
 

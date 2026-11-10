@@ -41,6 +41,6 @@ Tooling; application plugins live in separate Vite app configs. Native preparati
 stays uncached, with generated files checked after it runs.
 
 Web is a separate TanStack Start SSR service on Nitro's Bun preset beside API.
-Desktop uses Start SPA mode inside Tauri 2.12.5/Rust 1.99.1 with the system
-WKWebView/WebView2. Rust owns native UI and policy; the bundled Bun CLI/daemon owns
-execution. The independently released Tauri JavaScript API/CLI packages are 2.12.4.
+Desktop uses Start SPA mode inside MyGo v0.8.3 and Go 1.27.3 with the system
+WKWebView/WebView2. Go owns native UI and policy. The bundled Bun CLI/daemon owns
+execution. [ADR 0046](0046-mygo-bun-artifacts.md) records the host boundary.

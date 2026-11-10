@@ -89,7 +89,7 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
 
 Unit tests live beside runtime, command and TUI source; integration suites stay in
 `tests/integration/`, grouped by capability. Tests focused on one source module,
-including small temporary filesystem fixtures such as `runtime/process/bun.test.ts`,
+including small temporary filesystem fixtures such as `runtime/process/tools.test.ts`,
 stay beside it. Pure parsers, injected provider ports and SDK loops stay in unit;
 runtime/profile composition, SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
 Agent integration suites separate lifecycle/approvals, inputs and context/resume.

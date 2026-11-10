@@ -1,0 +1,32 @@
+name: Container smoke
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: Commit-bound verification plan
+        type: string
+        required: true
+permissions:
+  contents: read
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+jobs:
+  checks:
+    name: Checks
+    env:
+      RAYPX_CI_PLAN: ${{ inputs.plan }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-bun
+      - name: Build and smoke-test Compose and Railway images
+        run: bun run raypx-dev ci:gate container-smoke
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: container-smoke-results
+          path: |
+            .artifacts/deployment/**/results.json
+            .artifacts/deployment/**/commands.json
+          if-no-files-found: ignore

@@ -1,0 +1,120 @@
+name: Prepared artifact performance
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options: [macOS, Windows]
+        required: true
+      base_run:
+        description: Successful distribution workflow run containing base
+        required: true
+        type: string
+      base_artifact:
+        description: Exact desktop-payload artifact ID from base_run
+        required: true
+        type: string
+      head_run:
+        description: Successful distribution workflow run containing head
+        required: true
+        type: string
+      head_artifact:
+        description: Exact desktop-payload artifact ID from head_run
+        required: true
+        type: string
+      ready_selector:
+        description: Verified native accessibility selector; empty records workbench cases as unsupported
+        type: string
+      quit_selector:
+        description: Verified Windows native accessibility selector for Quit (required for daemon recording)
+        type: string
+      browser_fixture:
+        description: Additionally build and measure the production SPA fixture on this checkout (A/A calibration)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: raypx-performance-${{ inputs.platform }}
+  cancel-in-progress: false
+jobs:
+  performance:
+    name: Artifact performance (${{ inputs.platform }})
+    # These labels are reserved for a disposable interactive account and no other native jobs.
+    runs-on: ${{ fromJSON(inputs.platform == 'macOS' && '["self-hosted","raypx-perf","macOS","ARM64"]' || '["self-hosted","raypx-perf","Windows","X64"]') }}
+    timeout-minutes: 120
+    env:
+      RAYPX_STROBE_DISPOSABLE_ACCOUNT: "1"
+      RAYPX_STROBE_READY_SELECTOR: ${{ inputs.ready_selector }}
+      RAYPX_STROBE_RECORD_DAEMON: "1"
+      RAYPX_STROBE_QUIT_SELECTOR: ${{ inputs.quit_selector }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-bun
+      - uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ inputs.base_artifact }}
+          run-id: ${{ inputs.base_run }}
+          github-token: ${{ github.token }}
+          path: .artifacts/performance-input/base
+          merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ inputs.head_artifact }}
+          run-id: ${{ inputs.head_run }}
+          github-token: ${{ github.token }}
+          path: .artifacts/performance-input/head
+          merge-multiple: true
+      - name: Validate and select prepared delivery directories
+        shell: bash
+        run: |
+          bun - <<'TS'
+          import { mkdir, appendFile } from "node:fs/promises";
+          import { resolve, join } from "node:path";
+          import { verifyCliPayload } from "./packages/tooling/src/build/cli.ts";
+          for (const side of ["base", "head"]) {
+            const root = resolve(".artifacts/performance-input", side);
+            const delivery = join(root, "delivery");
+            await mkdir(delivery, { recursive: true });
+            const extract = Bun.spawn(["tar", "-xf", join(root, "desktop-payload.tar"), "-C", delivery], { stdout: "inherit", stderr: "inherit" });
+            if (await extract.exited) throw new Error("Prepared Desktop extraction failed");
+            const payload = process.platform === "darwin" ? join(delivery, "Raypx.app/Contents/Resources/bin") : join(delivery, "bin");
+            await verifyCliPayload(payload, { platform: process.platform, arch: process.arch });
+            const exe = process.platform === "darwin" ? join(delivery, "Raypx.app/Contents/MacOS/Raypx") : join(delivery, "Raypx.exe");
+            await appendFile(process.env.GITHUB_ENV!, `RAYPX_STROBE_${side.toUpperCase()}_EXE=${exe}\nRAYPX_STROBE_CLI_${side.toUpperCase()}=${join(payload, process.platform === "win32" ? "raypx.exe" : "raypx")}\n`);
+          }
+          TS
+      - name: Native then independent WebView2 acceptance
+        id: desktop
+        continue-on-error: true
+        run: bun run raypx-dev tasks desktop#perf -- all
+      - name: Prepared CLI commands
+        id: cli
+        continue-on-error: true
+        run: bun run raypx-dev tasks cli#perf
+      - name: Build only the synthetic production SPA renderer
+        if: inputs.browser_fixture
+        run: bun run raypx-dev tasks desktop#build:perf
+      - name: Browser fixture calibration (Chromium; separate from native acceptance)
+        if: inputs.browser_fixture
+        id: browser
+        continue-on-error: true
+        shell: bash
+        run: |
+          export RAYPX_STROBE_BASE_SPA="$GITHUB_WORKSPACE/apps/desktop/artifacts/performance-spa"
+          export RAYPX_STROBE_HEAD_SPA="$RAYPX_STROBE_BASE_SPA"
+          bun run raypx-dev tasks desktop#perf -- browser
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: performance-${{ inputs.platform }}-${{ github.run_id }}
+          path: .artifacts/performance/
+          if-no-files-found: error
+      - name: Report refused or failed measurements
+        if: always()
+        env:
+          DESKTOP: ${{ steps.desktop.outcome }}
+          CLI: ${{ steps.cli.outcome }}
+          BROWSER: ${{ steps.browser.outcome }}
+        run: bun -e 'if ([process.env.DESKTOP,process.env.CLI,process.env.BROWSER].includes("failure")) throw new Error("Measurements failed or were refused; review the exported evidence. No regression threshold is enforced.")'

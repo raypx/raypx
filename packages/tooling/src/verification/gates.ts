@@ -1,7 +1,18 @@
 import type { VerificationPlan } from "./plan.js";
 
+export type SourcePhase = "checks" | "tests";
+
+/** Keep native checks together; workspace suites run on their own runner. */
+export function sourceTasks(plan: VerificationPlan, phase: SourcePhase) {
+  return plan.tasks.filter((task) => task.endsWith("#task:test") === (phase === "tests"));
+}
+
+export function sourcePhases(plan: VerificationPlan): SourcePhase[] {
+  return sourceTasks(plan, "tests").length ? ["checks", "tests"] : ["checks"];
+}
+
 export const gateDefinitions = [
-  { name: "javascript", flag: undefined },
+  { name: "source", flag: undefined },
   { name: "container-smoke", flag: "container_smoke" },
   { name: "backend", flag: "backend" },
   { name: "browser", flag: "browser" },
@@ -18,7 +29,8 @@ export function requiredGates(flags: Record<string, string>) {
 export function ciOutputs(plan: VerificationPlan & { distribution: boolean }, revision: string) {
   if (!revision) throw new Error("CI plan requires a commit revision");
   return {
-    rust: String(plan.native),
+    source_phases: JSON.stringify(sourcePhases(plan)),
+    go: String(plan.native),
     native: String(plan.nativeRunners.length > 0),
     native_runners: JSON.stringify(plan.nativeRunners),
     container_smoke: String(plan.containerSmoke),

@@ -2,7 +2,7 @@
 
 Status: Accepted, 2026-11-03. Extends ADRs 0040 and 0041.
 
-Current implementation (2026-11-09): Tauri/Rust owns the native Desktop host;
+Current implementation (2026-11-09): MyGo/Go owns the native Desktop host;
 the TypeScript CLI/daemon uses embedded stable Bun under
 [ADR 0047](0047-bun-cli-production-packaging.md). Application service, port and
 composition boundaries remain accepted.
@@ -34,7 +34,7 @@ execution-owner factory. Service construction retains lazy Agent ownership and
 each mode's scheduling/EOF behavior. The factory adds host services only to daemon
 and Windows foreground stdio; entry adapters own signal registration and output.
 Desktop consumes the existing IPC contract through an injectable platform port.
-Its Rust host composes an Engine adapter that owns child-process framing and the
+Its Go host composes an Engine adapter that owns child-process framing and the
 version-matched daemon proxy.
 
 Application services receive persistence ports. AgentStore borrows ProfileStorage's

@@ -2,9 +2,11 @@ import { copyFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project } from "../../tests/helpers/verification.js";
-import { githubPlan, verificationPlan } from "./plan.js";
-import { ciGate } from "./index.js";
-import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates } from "./gates.js";
+import { verificationPlan } from "./plan.js";
+import { githubPlan, ciGate } from "./ci.js";
+import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates, sourcePhases } from "./gates.js";
+import { executionTasks } from "./execution.js";
+import * as execution from "./execution.js";
 import { assertCiResult } from "./result.js";
 import { distributionRequested } from "./events.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
@@ -27,7 +29,7 @@ describe("required CI results", () => {
         container_smoke: "false",
       },
     },
-    javascript: { result: "success" },
+    source: { result: "success" },
     "container-smoke": { result: "skipped" },
     backend: { result: "skipped" },
     browser: { result: "skipped" },
@@ -35,9 +37,7 @@ describe("required CI results", () => {
   };
   it("accepts intentionally skipped gates but rejects missing, cancelled or failed required gates", () => {
     expect(() => assertCiResult(needs)).not.toThrow();
-    expect(() => assertCiResult({ ...needs, javascript: { result: "cancelled" } })).toThrow(
-      "javascript",
-    );
+    expect(() => assertCiResult({ ...needs, source: { result: "cancelled" } })).toThrow("source");
     expect(() =>
       assertCiResult({
         ...needs,
@@ -134,7 +134,7 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
     requiredGates(outputs)
       .filter((gate) => gate.required)
       .map((gate) => gate.name),
-  ).toEqual(["javascript"]);
+  ).toEqual(["source"]);
   expect(() => parseCiPlan(outputs.plan, "commit-b")).toThrow("revision mismatch");
   for (const invalid of [
     { ...plan, tasks: null },
@@ -158,38 +158,118 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
   await expect(ciGate(root, ["container-smoke"])).rejects.toThrow("was not selected");
   await expect(ciGate(root, ["deployment"])).rejects.toThrow("Unknown internal CI gate");
   await expect(ciGate(root, ["unknown"])).rejects.toThrow("Unknown internal CI gate");
+  await expect(ciGate(root, ["source"])).rejects.toThrow("Unknown internal CI gate");
+  await expect(ciGate(root, ["source", "unknown"])).rejects.toThrow("Unknown source CI phase");
+  await expect(ciGate(root, ["source", "tests"])).rejects.toThrow("was not selected");
+});
+
+it.each([false, true])(
+  "partitions source tasks without omissions or duplicate checks (full: %s)",
+  (full) => {
+    const { model } = project();
+    const plan = verificationPlan(model, ["packages/tokens/src/index.ts"], { full });
+    plan.tasks.push("desktop#task:mygo:check", "desktop#task:mygo:test");
+    const checks = executionTasks(plan, "fixture", [], "checks");
+    const tests = executionTasks(plan, "fixture", [], "tests");
+    expect([...checks, ...tests].sort()).toEqual(executionTasks(plan, "fixture").sort());
+    expect(checks.filter((task) => tests.includes(task))).toEqual([]);
+    expect(checks).toContain("desktop#task:mygo:test");
+    expect(checks).toContain("fixture#task:policy");
+    expect(tests).toContain("api#task:test");
+    expect(tests.every((task) => task.endsWith("#task:test"))).toBe(true);
+    expect(checks.includes("api#task:build")).toBe(full);
+    expect(checks.includes("fixture#task:knip")).toBe(full);
+    expect(sourcePhases(plan)).toEqual(["checks", "tests"]);
+    expect(sourcePhases(verificationPlan(model, ["README.md"]))).toEqual(["checks"]);
+  },
+);
+
+it("dispatches both selected source phases from the commit-bound plan", async () => {
+  const { root, model } = project();
+  const plan = {
+    ...verificationPlan(model, ["packages/tokens/src/index.ts"]),
+    distribution: false,
+  };
+  vi.stubEnv("RAYPX_CI_PLAN", ciOutputs(plan, "commit-a").plan);
+  vi.stubEnv("GITHUB_SHA", "commit-a");
+  const checks = vi.spyOn(execution, "sourceChecks").mockResolvedValue({
+    policyMs: 0,
+    localesMs: 0,
+    cachedChecks: [],
+    formatMs: 0,
+    lintMs: 0,
+    styleMs: 0,
+    tasksMs: 0,
+    artifactsMs: 0,
+    cacheHits: 0,
+  });
+  for (const phase of ["checks", "tests"] as const) {
+    await ciGate(root, ["source", phase]);
+    expect(checks).toHaveBeenLastCalledWith(root, plan, { phase });
+  }
 });
 
 it("registers every CI dependency and passes the authoritative plan to each source acceptance worker", () => {
+  type Job = {
+    needs?: string[];
+    if?: string;
+    uses?: string;
+    with?: Record<string, string>;
+    env?: Record<string, string>;
+    outputs?: Record<string, string>;
+    strategy?: { "fail-fast": boolean; matrix: { phase: string } };
+    steps?: { run?: string; uses?: string; with?: Record<string, string> }[];
+  };
   const workflow = Bun.YAML.parse(
     readFileSync(resolve(import.meta.dirname, "../../../../.github/workflows/ci.yml"), "utf8"),
-  ) as {
-    jobs: Record<
-      string,
-      {
-        needs?: string[];
-        if?: string;
-        env?: Record<string, string>;
-        outputs?: Record<string, string>;
-        steps?: { run?: string }[];
-      }
-    >;
-  };
+  ) as { jobs: Record<string, Job> };
   expect(workflow.jobs.foundation!.needs!.sort()).toEqual(
     ["changes", ...gateDefinitions.map(({ name }) => name)].sort(),
   );
   expect(Object.keys(workflow.jobs).sort()).toEqual(
     ["changes", "foundation", ...gateDefinitions.map(({ name }) => name)].sort(),
   );
-  for (const name of ["javascript", "backend", "browser", "container-smoke"])
+  for (const name of ["backend", "browser"]) {
     expect(workflow.jobs[name]!.env?.RAYPX_CI_PLAN).toBe("${{ needs.changes.outputs.plan }}");
+    expect(
+      workflow.jobs[name]!.steps?.some((step) => step.run === `bun run raypx-dev ci:gate ${name}`),
+    ).toBe(true);
+  }
+  const source = workflow.jobs.source!;
+  expect(source.env?.RAYPX_CI_PLAN).toBe("${{ needs.changes.outputs.plan }}");
+  expect(source.strategy?.["fail-fast"]).toBe(false);
+  expect(source.strategy?.matrix.phase).toBe(
+    "${{ fromJSON(needs.changes.outputs.source_phases) }}",
+  );
+  expect(
+    source.steps?.some(
+      (step) => step.run === "bun run raypx-dev ci:gate source ${{ matrix.phase }}",
+    ),
+  ).toBe(true);
+  expect(
+    source.steps?.find((step) => step.uses === "./.github/actions/vp-restore")?.with?.partition,
+  ).toBe("${{ matrix.phase == 'checks' && 'javascript' || 'source-tests' }}");
   const containerSmoke = workflow.jobs["container-smoke"]!;
   expect(containerSmoke.if).toBe("needs.changes.outputs.container_smoke == 'true'");
+  expect(containerSmoke.uses).toBe("./.github/workflows/container-smoke.yml");
+  expect(containerSmoke.with?.plan).toBe("${{ needs.changes.outputs.plan }}");
+  const container = Bun.YAML.parse(
+    readFileSync(
+      resolve(import.meta.dirname, "../../../../.github/workflows/container-smoke.yml"),
+      "utf8",
+    ),
+  ) as { jobs: Record<string, Job> };
+  expect(container.jobs.checks!.env?.RAYPX_CI_PLAN).toBe("${{ inputs.plan }}");
   expect(
-    containerSmoke.steps?.some((step) => step.run === "bun run raypx-dev ci:gate container-smoke"),
+    container.jobs.checks!.steps?.some(
+      (step) => step.run === "bun run raypx-dev ci:gate container-smoke",
+    ),
   ).toBe(true);
   expect(workflow.jobs.changes!.outputs?.container_smoke).toBe(
     "${{ steps.plan.outputs.container_smoke }}",
+  );
+  expect(workflow.jobs.changes!.outputs?.source_phases).toBe(
+    "${{ steps.plan.outputs.source_phases }}",
   );
 });
 
@@ -205,7 +285,7 @@ it("requires selected container smoke results and rejects skipped or cancelled a
         container_smoke: "true",
       },
     },
-    javascript: { result: "success" },
+    source: { result: "success" },
     backend: { result: "skipped" },
     browser: { result: "skipped" },
     desktop: { result: "skipped" },

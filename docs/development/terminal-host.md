@@ -1,8 +1,8 @@
 # Terminal host and connectors
 
 Claude and Codex terminal connectors deliver approval requests to the independent
-CLI daemon. In canary, the Tauri/Rust Desktop host connects to that daemon;
-the daemon runs TypeScript in its embedded stable Bun 1.4.4 executable, packaged
+CLI daemon. The MyGo Desktop host connects to that daemon.
+The daemon runs TypeScript in its embedded stable Bun 1.4.4 executable, packaged
 with minified ESM and depth-0 bytecode.
 [ADR 0035](../architecture/0035-local-owner-host.md) defines local execution ownership. [ADR 0040](../architecture/0040-instance-enrollment-and-providers.md)
 requires first-time local instance enrollment; local terminal approvals then work
@@ -45,7 +45,7 @@ configured origin. Origin and account hash together select cloud host settings
 and remote bindings. Terminal settings/history belong to the local profile.
 Provider keys remain on the computer.
 
-To enable cloud access, the Rust host checks the current signed-in account,
+To enable cloud access, the Go host checks the current signed-in account,
 supplies a trusted Origin and requests a restricted credential for the registered
 device/epoch.
 The credential goes straight to daemon IPC and `host_authorizations` in its existing `profile.sqlite`,
@@ -140,7 +140,7 @@ to the hook, not proof of the Agent applying it. Actual application is verified
 separately by the live acceptance marker. Desktop system notifications work while
 a GUI client is connected; full GUI Quit cannot deliver Desktop notifications.
 While Away is waiting, Desktop exposes a persistent request banner and a tray
-"Review requests" entry that opens local approvals. The Tauri native host owns
+"Review requests" entry that opens local approvals. The MyGo native host owns
 notifications; notification action buttons are not part of this acceptance.
 
 Only new requests qualified for the explicitly enabled cloud project scope are
@@ -156,7 +156,7 @@ recovery and old-plaintext retention remain public-hosted-release gates.
 Default tests replay redacted real hook fixtures, exercise broker fencing,
 retention/restart, private socket permissions, client disconnect ownership,
 late native bootstrap and explicit logout versus cookie expiry. `bun run verify`
-selects affected source checks and related tests, with Rust checks for native
+selects affected source checks and related tests, with Go checks for native
 inputs. `bun run verify --full` adds complete suites, builds and current-platform
 artifact probes. Database, browser, packaged native and live-provider acceptance
 are separate gates.

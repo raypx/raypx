@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from 
 import { join } from "node:path";
 import type { VerificationPlan } from "./plan.ts";
 import { taskRef } from "../tasks/model.ts";
+import type { SourcePhase } from "./gates.ts";
 
 /** An empty or partial VP graph must never appear as successful verification. */
 export function completionReport(root: string, references: string[]) {
@@ -55,10 +56,15 @@ export function reportTiming(
     artifactsMs: number;
     cacheHits: number;
   },
+  phase?: SourcePhase,
 ) {
+  const checks =
+    phase === "tests"
+      ? "Workspace test suites."
+      : `Policy ${metrics.policyMs}ms; locales ${metrics.localesMs}ms; format ${metrics.formatMs}ms; lint ${metrics.lintMs}ms; cached checks: ${metrics.cachedChecks.join(", ") || "none"}. Format/lint stage ${metrics.styleMs}ms; artifacts ${metrics.artifactsMs}ms.`;
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,
-      `Verification scope: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces. Policy ${metrics.policyMs}ms; locales ${metrics.localesMs}ms; format ${metrics.formatMs}ms; lint ${metrics.lintMs}ms; cached checks: ${metrics.cachedChecks.join(", ") || "none"}. Format/lint stage ${metrics.styleMs}ms; VP graph (including policy/locales) ${metrics.tasksMs}ms; artifacts ${metrics.artifactsMs}ms; cache hits ${metrics.cacheHits}.\n`,
+      `Verification scope: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces; phase: ${phase ?? "all"}. ${checks} VP graph ${metrics.tasksMs}ms; cache hits ${metrics.cacheHits}.\n`,
     );
 }

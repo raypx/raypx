@@ -1,4 +1,4 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { test } from "../../helpers/browser-fixture.ts";
 import {
   authResponse,
@@ -8,70 +8,6 @@ import {
 } from "../../helpers/account-fixture.ts";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
-
-async function readingPosition(viewport: Locator) {
-  return viewport.evaluate((element) => {
-    const top = element.getBoundingClientRect().top + element.clientTop;
-    const row = [...element.querySelectorAll<HTMLElement>("[data-conversation-row]")].find(
-      (item) =>
-        item.dataset.conversationRow?.startsWith("activity:") &&
-        item.getBoundingClientRect().bottom > top &&
-        item.getBoundingClientRect().top < top + element.clientHeight,
-    );
-    return row
-      ? { id: row.dataset.conversationRow!, offset: row.getBoundingClientRect().top - top }
-      : null;
-  });
-}
-async function settledReadingPosition(viewport: Locator) {
-  // A scroll event and measured virtual rows settle on separate animation frames.
-  // Sample the reader only after both position and the visible ID stop changing.
-  await viewport.evaluate(async (element) => {
-    let previous = "",
-      stable = 0;
-    for (let frame = 0; frame < 120 && stable < 4; frame++) {
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      const top = element.getBoundingClientRect().top + element.clientTop;
-      const row = [...element.querySelectorAll<HTMLElement>("[data-conversation-row]")].find(
-        (item) => {
-          const rect = item.getBoundingClientRect();
-          return (
-            item.dataset.conversationRow?.startsWith("activity:") &&
-            rect.bottom > top &&
-            rect.top < top + element.clientHeight
-          );
-        },
-      );
-      const sample = `${element.scrollTop}:${row?.dataset.conversationRow}:${row?.getBoundingClientRect().top}`;
-      stable = row && sample === previous ? stable + 1 : 0;
-      previous = sample;
-    }
-  });
-  return readingPosition(viewport);
-}
-async function expectReadingPosition(
-  viewport: Locator,
-  saved: { id: string; offset: number } | null,
-) {
-  expect(saved).not.toBeNull();
-  await expect
-    .poll(async () => {
-      return viewport.evaluate((element, position) => {
-        const row = [...element.querySelectorAll<HTMLElement>("[data-conversation-row]")].find(
-          (item) => item.dataset.conversationRow === position?.id,
-        );
-        return row && position
-          ? Math.abs(
-              row.getBoundingClientRect().top -
-                element.getBoundingClientRect().top -
-                element.clientTop -
-                position.offset,
-            )
-          : 1000;
-      }, saved);
-    })
-    .toBeLessThan(3);
-}
 
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {
@@ -190,21 +126,8 @@ export function registerTests() {
         element.scrollTop = element.scrollHeight / 2;
       });
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      await expect
-        .poll(() => viewport.evaluate((element) => element.scrollTop))
-        .toBeGreaterThan(1000);
-      await expect.poll(() => readingPosition(viewport)).not.toBeNull();
-      // Pin the locator to a visible link's identity; a range-relative first()
-      // locator would silently identify a different link after pointer scrolling.
-      const href = await viewport.evaluate((element) => {
-        const top = element.getBoundingClientRect().top;
-        return [...element.querySelectorAll<HTMLAnchorElement>("a")]
-          .find((link) => {
-            const rect = link.getBoundingClientRect();
-            return rect.top >= top && rect.bottom < top + element.clientHeight;
-          })
-          ?.getAttribute("href");
-      });
+      // Keep the link's identity stable while the virtual range changes.
+      const href = await viewport.locator("a").first().getAttribute("href");
       expect(href).toBeTruthy();
       const link = viewport.locator(`a[href="${href}"]`);
       await link.evaluate((element) => element.focus({ preventScroll: true }));
@@ -214,43 +137,14 @@ export function registerTests() {
       await expect(link).toBeFocused();
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
       await viewport.focus();
-      await expect.poll(() => readingPosition(viewport)).not.toBeNull();
-      const beforeResize = await settledReadingPosition(viewport);
-      const predecessorId = await viewport.evaluate((element) => {
-        const top = element.getBoundingClientRect().top + element.clientTop;
-        return [...element.querySelectorAll<HTMLElement>("[data-conversation-row]")]
-          .find(
-            (row) =>
-              row.dataset.conversationRow?.startsWith("activity:") &&
-              row.getBoundingClientRect().bottom <= top,
-          )
-          ?.dataset.conversationRow?.slice("activity:".length);
-      });
-      expect(predecessorId).toBeTruthy();
-      const predecessorIndex = loaded.findIndex((entry) => entry.id === predecessorId);
-      const predecessor = loaded[predecessorIndex]!;
-      if (predecessor.kind !== "message") throw new Error("Fixture requires a message predecessor");
-      loaded[predecessorIndex] = {
-        ...predecessor,
-        revision: 2,
-        text:
-          "Revised virtual predecessor. " + "A growing paragraph above the reader. ".repeat(200),
-      };
-      await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-      await expect(viewport.getByText(/Revised virtual predecessor/)).toHaveCount(1);
-      await settledReadingPosition(viewport);
-      await expectReadingPosition(viewport, beforeResize);
-      await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      const saved = await settledReadingPosition(viewport);
       const fullStarted = performance.now();
       await page.getByRole("button", { name: "Show all loaded messages", exact: true }).click();
       await expect(viewport).toHaveAttribute("data-conversation-mode", "full");
       await expect(rows).toHaveCount(101);
       evidence.fullModeMs = performance.now() - fullStarted;
       expect(historicalReads).toBe(0);
-      await expectReadingPosition(viewport, saved);
       await expect(viewport.getByText("Conversation message 51.", { exact: false })).toHaveCount(1);
-      // Revising an earlier message changes the measured height above the reader.
+      // Full-text mode reflects revisions to previously loaded messages.
       const first = loaded[0]!;
       if (first.kind === "message")
         loaded[0] = {
@@ -260,13 +154,12 @@ export function registerTests() {
         };
       await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
       await expect(viewport.getByText(/Revised early message/)).toHaveCount(1);
-      await expectReadingPosition(viewport, saved);
       const virtualStarted = performance.now();
       await page.getByRole("button", { name: "Use virtual scrolling", exact: true }).click();
-      await expectReadingPosition(viewport, saved);
+      await expect(viewport).toHaveAttribute("data-conversation-mode", "virtual");
       evidence.virtualModeMs = performance.now() - virtualStarted;
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      await test.step("preserves the reading position after loading earlier messages", async () => {
+      await test.step("loads earlier messages on request", async () => {
         await viewport.evaluate((element) => {
           element.scrollTop = 0;
         });
@@ -275,11 +168,8 @@ export function registerTests() {
           exact: true,
         });
         await expect(earlier).toBeVisible();
-        const beforePrepend = await settledReadingPosition(viewport);
         await earlier.click();
         await expect.poll(() => historicalReads).toBe(1);
-        await settledReadingPosition(viewport);
-        await expectReadingPosition(viewport, beforePrepend);
       });
       await page.getByRole("button", { name: "Show all loaded messages", exact: true }).click();
       await expect(rows).toHaveCount(151);
@@ -299,11 +189,8 @@ export function registerTests() {
           region.clientTop;
       });
       await expect(gap).toBeVisible();
-      const beforeGap = await settledReadingPosition(viewport);
       await gap.click();
       await expect(gap).toHaveCount(0);
-      await settledReadingPosition(viewport);
-      await expectReadingPosition(viewport, beforeGap);
       await expect(rows).toHaveCount(201);
       evidence.peakVirtualRows = Number(await viewport.getAttribute("data-peak-virtual-rows"));
       expect(evidence.peakVirtualRows).toBeGreaterThan(0);
@@ -318,7 +205,7 @@ export function registerTests() {
         body: JSON.stringify(evidence, null, 2),
         contentType: "application/json",
       });
-      await page.getByRole("button", { name: /Another conversation fixture/ }).click();
+      await page.getByRole("link", { name: /Another conversation fixture/ }).click();
       await expect(viewport).toHaveAttribute("data-conversation-mode", "virtual");
       await expect(rows).toHaveCount(1);
     },

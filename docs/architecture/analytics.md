@@ -38,11 +38,10 @@ prompts, files, paths, answers, terminal output and credentials never enter even
 
 Unhandled errors/rejections, React boundaries and router catches use one sanitized
 error path. Error messages become safe codes. Only application `/assets/*.js`
-frames from the current supported HTTP(S) or `views:` origin survive; local paths, query
+frames from the current HTTP(S) or `views:` origin survive; local paths, query
 strings, causes and other frames are discarded. Source-map chunk/release IDs remain.
-The pinned sanitizer does not accept the Desktop host's macOS
-`raypx-<server-scope>:` custom scheme, so those packaged renderer errors retain
-their safe code but lose stack frames. Windows'
+The pinned sanitizer does not accept MyGo's macOS `mygo:` page scheme, so those
+packaged renderer errors retain their safe code but lose stack frames. Windows'
 mapped HTTP origin and browser development checks do not establish macOS source-map resolution.
 Autocapture, automatic pageviews, flags, console/network capture and replay are off.
 The SDK uses its no-external bundle and loads no remote feature scripts.

@@ -9,16 +9,13 @@ import { clean, cleanArtifacts } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
 import { discover, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
-import { smoke } from "./smoke/index.js";
 import { checkKnip } from "./validation/knip.js";
 import { readBunPin } from "./validation/toolchain.js";
 import { browserTestArguments } from "./browser-tests.js";
 import { packageTestArguments, runTests } from "./test-command.js";
-import { verify, ciGate } from "./verification/index.js";
-import { readGithubPlan } from "./verification/plan.js";
+import { verify } from "./verification/index.js";
 import { ciOutputs } from "./verification/gates.js";
 import { cacheSnapshot } from "./verification/cache.js";
-import { smokeDeployment } from "./validation/deployment-smoke.js";
 import { runPrecheck } from "./verification/prechecks.js";
 
 import { reportBuildSizes, sizeOptions } from "./validation/build-size";
@@ -122,6 +119,7 @@ async function main() {
       await verify(root, args);
       break;
     case "ci:plan": {
+      const { readGithubPlan } = await import("./verification/ci.js");
       const plan = readGithubPlan(root);
       console.log(JSON.stringify(plan, null, 2));
       const outputs = ciOutputs(plan, process.env.GITHUB_SHA ?? "");
@@ -134,18 +132,24 @@ async function main() {
         );
       break;
     }
-    case "ci:gate":
+    case "ci:gate": {
+      const { ciGate } = await import("./verification/ci.js");
       await ciGate(root, args);
       break;
+    }
     case "ci:cache":
       await cacheSnapshot(root, args[0] ?? "snapshot");
       break;
-    case "smoke":
+    case "smoke": {
+      const { smoke } = await import("./smoke/index.js");
       await smoke(root);
       break;
-    case "deployment:smoke":
+    }
+    case "deployment:smoke": {
+      const { smokeDeployment } = await import("./validation/deployment-smoke.js");
       await smokeDeployment(root, args);
       break;
+    }
     case "env": {
       const values = args[0] === "--" ? args.slice(1) : args;
       if (!values[0] || /^(?:rpx|raypx-dev)(?:\.exe)?$/.test(values[0]))
@@ -195,7 +199,7 @@ async function main() {
       if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
       console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
-        `Desktop: Tauri; Rust ${Bun.which("cargo") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected JavaScript and Rust checks`,
+        `Desktop: MyGo; Go ${Bun.which("go") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected JavaScript and Go checks`,
       );
       break;
     }

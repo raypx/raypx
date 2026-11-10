@@ -39,8 +39,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify` selects affected JavaScript source/tests and native-input Rust tasks; `verify --full` checks
-  all current-platform JavaScript/Rust sources, builds and probes. `--base` selects a Git
+- `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
+  all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
   base; `--dry-run` prints the plan, local test selection/reasons and expanded VP graph.
   `--no-cache` forwards to VP for container runs where filesystem tracing is unavailable.
   Local tests follow source imports, retaining integration and filesystem/process
@@ -50,10 +50,20 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   Private Tooling gates/tests select Tooling only; exported helpers follow their static
   entry dependencies and actual import consumers. Task machinery, unknown/deleted inputs
   and unresolved export graphs retain all source checks.
+- Local verification lives in `verification/index.ts`; `plan.ts` selects tasks and
+  `execution.ts` runs the VP graph. `verification/ci.ts` adapts GitHub events and dispatches
+  workers. CI, deployment and artifact probes load at their command or selected stage.
+  Go-only inputs select Go checks without renderer suites. Workflow orchestration and
+  `native-checks` action edits select Tooling plus relevant acceptance; shared install/cache
+  actions retain all source checks. Mixed source/configuration changes combine their scopes.
 - CI consumes the same planner through private `ci:plan`/`ci:gate` entries. It emits
   one versioned plan bound to `GITHUB_SHA`; workers consume `RAYPX_CI_PLAN`
   instead of recomputing scope. `verification/gates.ts` owns CI gate registration and
-  selection. The final gate rejects unregistered jobs, inconsistent plan outputs,
+  selection. The `source` matrix runs `ci:gate source checks|tests` on parallel runners.
+  Checks owns style, policy/locales, types, selected current-platform Go checks and
+  full-mode builds/probes; tests owns complete selected workspace suites. The planner
+  omits the test runner when no suites are selected. Each phase has a separate VP cache;
+  checks retains the `javascript` partition. The final gate rejects unregistered jobs, inconsistent plan outputs,
   failed/cancelled jobs and unexplained skips. Local evidence records running,
   passed or failed status so a failed run cannot retain a previous success.
   Shared or unknown inputs broaden source checks without requesting release builds/audits. Missing Git
@@ -61,7 +71,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   changes reach only browser consumers (`src/verification/platform.ts`). Required results
   distinguish intentional skips from missing/cancelled/failed gates. The `container-smoke`
   job runs isolated Compose/Railway acceptance for Dockerfiles, deployment adapters and
-  image acceptance inputs, plus manual/tag CI runs. Ordinary source, dependency and
+  image acceptance inputs and its reusable workflow, plus manual/tag CI runs. Main
+  workflow orchestration edits do not request container builds. Ordinary source, dependency and
   application build-config changes use source gates; Railway owns production image builds.
   Source-only verify remains independent of Docker.
 - Branch/PR native gates run only for native/IPC/terminal/daemon inputs, CLI runtime
@@ -72,20 +83,25 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   JavaScript dependency reach alone does not select native runners. Installers, signing and installed
   GUI acceptance require a tag push or manual `distribution` request; release gates
   run in parallel and the final result validates their selection against the event.
-  Preparation builds shared JS inputs only. Herdr runs in the check phase before its
-  Rust checks, leaving package/smoke phases independent of terminal-test duration.
-  Process/task runners and the installed CLI are accepted against the verified payload;
-  native and size evidence is retained for seven days. Runner, acceptance-test and native
-  gate selection changes select Windows checks even without Desktop source changes.
-- `clean` removes workspace outputs, staged Tauri resources/generated assets and local test artifacts;
+  Routine native acceptance builds the CLI and runs the shared `native-checks` action
+  on one runner, reusing its install and caches without a renderer build or artifact
+  handoff. Distribution alone prepares the renderer and transports the immutable CLI
+  to parallel checks/package/smoke phases. The same action owns process/CLI/Herdr/Go
+  acceptance and evidence in both paths; action changes select native runners.
+  Herdr runs before Go checks, leaving distribution package/smoke independent of terminal-test duration.
+  Native checks also accept process/task runners and the installed CLI against the
+  verified prepared payload, with size and acceptance reports retained for seven days.
+  Changes to those runners, their acceptance tests and native gate selection trigger
+  the default Windows gate even when no Desktop source changes.
+- `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
-- raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
+- raypx-dev env -- <command>, db <operation>, desktop build [MyGo build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
-  before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
-  Native CI checks Rust on each platform.
+  before starting Vite and MyGo. Direct Desktop scripts enter the same VP graph.
+  Native CI checks Go on each platform.
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
 - `./build/deployment` owns service ports, health paths and API ingress routes.
   Policy checks static Docker, Compose and Caddy adapters plus API environment
@@ -110,7 +126,7 @@ Knip runs under Bun, which classifies ws/undici as runtime modules; the Node-com
 HTTP adapter retains their explicit dependencies and types for its Node consumers,
 with a scoped Knip exception in that workspace. Its read-only JSON adapter recognizes catalog entries
 used by Bun root overrides, which Knip currently misses; all other findings fail.
-Native Rust-launched TS fixtures and the presets' dynamically invoked task leaf are
+Native Go-launched TS fixtures and the presets' dynamically invoked task leaf are
 explicit Knip entries. Vendored skills are excluded;
 the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
@@ -136,17 +152,12 @@ while outcome-affecting fields and per-task argument keys participate in fingerp
 independent cached VP runners, so it must run without an enclosing filesystem tracer;
 `test:unit` remains cached and `test:integration` always executes.
 Platform/toolchain identity is also part of each command. Native packaging stays
-outside VP's filesystem tracer; Cargo owns its native compilation cache.
-CLI build inputs exclude the verified Herdr download cache; the complete sealed `dist`
-and manifest pins determine reuse on fresh runners. Native preparation needs no Rust.
-Cargo cache keys and target directories follow the check/package/smoke phase.
-CI source checks omit dev/test debug symbols before Cargo cache lookup; local and
-package/smoke profiles keep their defaults.
-Rustup reads the root toolchain file directly; restore Cargo before installing JS
-dependencies to keep `node_modules` out of recursive cache discovery.
+outside VP's filesystem tracer; Go owns its native compilation cache.
+CLI builds exclude the verified Herdr download cache from task inputs; manifest
+pins and the complete sealed `dist` determine reuse on fresh runners.
 `raypx-dev cli:experiment <prepared CLI directory> [--upx <executable>]` compiles
-isolated size/startup candidates under `.artifacts/cli-size`; it never replaces the
-prepared production payload. Its manual workflow uses Windows only.
+isolated size/startup candidates under `.artifacts/cli-size`, preserving the prepared
+production payload. Its manual workflow uses Windows only.
 The launcher creates ignored artifact/native directories before tracing:
 directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace
@@ -160,11 +171,11 @@ with their cached outputs. Verification records per-check execution times (zero 
 cache hit), format/lint wall times and VP graph wall time including runner overhead.
 Timing evidence never controls cache reuse. Failed checks never publish success.
 Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
-roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
+roots and fixture environments. Linux CLI probes use Docker `--network none` with the pinned
+Bun image, read-only sources/payload and a writable report directory; already isolated
+Linux namespaces run directly. Docker failure never falls back to the host.
+`src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
-Linux full verification accepts the installed CLI in the pinned Bun Docker image with
-`--network none`, read-only source/payload mounts and a writable `.artifacts/cli` evidence mount;
-ordinary source verification requires no Docker.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,

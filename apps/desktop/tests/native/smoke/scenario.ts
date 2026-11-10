@@ -1,7 +1,3 @@
-import { createHash } from "node:crypto";
-import { directHttpClient, serveHttp } from "@raypx/runtime-node/http";
-import { fileExists, readJsonFile } from "@raypx/runtime-node/files";
-import { sleep } from "@raypx/runtime-node/process";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -10,11 +6,11 @@ import type { JobDefinition, JobRun } from "@raypx/jobs-model";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/memory-model";
 import type { ObservedProjection } from "@raypx/contracts/terminal";
 import { messages } from "@raypx/i18n/messages";
-import { DEVICE_PREFERENCES_KEY } from "../../../preferences.ts";
-import { CONNECTION_KEY } from "../../../config.ts";
-import { nativePresentation } from "../../../scripts/host/presentation.ts";
-import { instanceFixture } from "../fixtures/instance-server.ts";
-import { smokeOwnerIdentity } from "./owner.ts";
+import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
+import { CONNECTION_KEY } from "../../../config";
+import { nativePresentation } from "../../../scripts/host/presentation";
+import { instanceFixture } from "../fixtures/instance-server";
+import { smokeOwnerIdentity } from "./owner";
 import {
   engine,
   trayAction,
@@ -26,7 +22,7 @@ import {
   evaluate as evaluateNative,
   measureNativeCors,
   measureNativeStream,
-} from "./host.ts";
+} from "./host";
 
 const presentation = nativePresentation(process.env);
 async function evaluate(script: string): Promise<unknown> {
@@ -37,7 +33,7 @@ async function evaluate(script: string): Promise<unknown> {
       return await evaluateNative(script);
     } catch (error) {
       if (attempt === 2) throw error;
-      await sleep(100);
+      await Bun.sleep(100);
     }
   }
   throw new Error("Renderer bridge is unavailable");
@@ -50,22 +46,22 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string,
     } catch {
       /* Renderer and engine can still be starting. */
     }
-    await sleep(100);
+    await Bun.sleep(100);
   }
   throw new Error(message);
 }
 async function navigate(path: string) {
-  // TanStack's browser history observes native pushState without reloading the WebView.
-  await evaluate(`history.pushState(null,"",${JSON.stringify(path)});return true;`);
+  // MyGo packages the SPA at one path. TanStack reads the logical route from the hash.
+  await evaluate(`location.hash=${JSON.stringify(path)};return true;`);
 }
 async function openSettings() {
-  const page = await evaluate("return location.pathname+location.search");
+  const page = await evaluate('return location.hash.slice(1).split("#")[0]||"/"');
   assert.equal(
     await evaluate(`
       const main=document.querySelector("#main");
       if(!main)return false;
       main.setAttribute("data-native-smoke-settings-main","");
-      history.pushState(null,"",location.pathname+location.search+"#settings");
+      location.hash=(location.hash.slice(1).split("#")[0]||"/")+"#settings";
       return true;
     `),
     true,
@@ -75,13 +71,13 @@ async function openSettings() {
     async () =>
       Boolean(
         await evaluate(
-          'return location.hash==="#settings"&&Boolean(document.querySelector("[role=dialog] [data-slot=radio-group-item]"))',
+          'return location.hash.slice(1).split("#")[1]==="settings"&&Boolean(document.querySelector("[role=dialog] [data-slot=radio-group-item]"))',
         ),
       ),
     "Settings dialog did not mount",
   );
   assert.equal(
-    await evaluate("return location.pathname+location.search"),
+    await evaluate('return location.hash.slice(1).split("#")[0]||"/"'),
     page,
     "Settings replaced the current page URL",
   );
@@ -94,6 +90,14 @@ async function openSettings() {
   );
 }
 let stage = "renderer startup";
+async function assertQuiet() {
+  if (!presentation.activate)
+    assert.equal(
+      (await nativeWindow.state()).activations,
+      0,
+      `Quiet smoke activated the native application during ${stage}`,
+    );
+}
 let fixtureSession: unknown = null;
 const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
 const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
@@ -113,7 +117,7 @@ if (
   throw new Error("Synthetic shell acceptance requires a loopback API build");
 const fixtureServer =
   fixturePhase === "shell" || fixturePhase === "restore"
-    ? await serveHttp({
+    ? Bun.serve({
         hostname: fixtureApi.hostname,
         port: Number(fixtureApi.port),
         fetch: (request) => {
@@ -207,7 +211,7 @@ async function localSessionFixture() {
     async () =>
       Boolean(
         await evaluate(
-          `return location.pathname==="/"&&location.hash===""&&${JSON.stringify(homeTitles)}.includes(document.querySelector("#main h1")?.textContent)`,
+          `return location.hash==="#/"&&${JSON.stringify(homeTitles)}.includes(document.querySelector("#main h1")?.textContent)`,
         ),
       ),
     "Home navigation did not settle before the tray action",
@@ -271,7 +275,7 @@ try {
   console.info(
     "Native smoke renderer status:",
     await evaluate(
-      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.__TAURI_INTERNALS__ });',
+      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.mygo });',
     ),
   );
   // The window starts on about:blank; reloading before navigation would keep it there.
@@ -336,16 +340,20 @@ try {
   };
   assert.equal(info.protocolVersion, 1);
   assert.equal(info.scheduler, true);
-  assert.equal(info.runtime, process.env.RAYPX_NATIVE_SMOKE_BUN);
+  assert.equal(`bun@${info.runtime}`, process.env.RAYPX_NATIVE_SMOKE_BUN);
   const daemonIdentity = await smokeOwnerIdentity(dataDir);
-  assert.equal(info.builtAt, daemonIdentity.builtAt, "GUI and independent CLI builds differ");
+  assert.equal(
+    info.builtAt,
+    daemonIdentity.builtAt,
+    "GUI and independent CLI build identities differ",
+  );
   assert.equal(info.version, daemonIdentity.version);
   if (fixturePhase === "shell") {
     stage = "integrated window controls";
     const chrome = `
       const style = getComputedStyle(document.documentElement);
-      const left = parseFloat(style.getPropertyValue("--raypx-titlebar-inset-left")) || 0;
-      const right = parseFloat(style.getPropertyValue("--raypx-titlebar-inset-right")) || 0;
+      const left = parseFloat(style.getPropertyValue("--mygo-titlebar-inset-left")) || 0;
+      const right = parseFloat(style.getPropertyValue("--mygo-titlebar-inset-right")) || 0;
     `;
     const toolbarFits = async () =>
       Boolean(
@@ -353,7 +361,7 @@ try {
         ${chrome}
         const toggle = document.querySelector('[data-sidebar="trigger"]');
         const toolbar = toggle?.closest("header");
-        return toolbar?.getBoundingClientRect().left >= left &&
+        return left + right > 0 && toolbar?.getBoundingClientRect().left >= left &&
           parseFloat(getComputedStyle(toolbar).paddingRight) >= right;
       `),
       );
@@ -366,16 +374,16 @@ try {
           await evaluate(`
           ${chrome}
           const title = document.querySelector("main #auth-title");
-          const logo = title?.closest("header")?.querySelector("[data-slot=logo]");
+          const logo = document.querySelector("header [data-slot=logo]");
           if (!title || !logo) return false;
           const heading = title.getBoundingClientRect();
           const brand = logo.getBoundingClientRect();
-          const titlebar = parseFloat(style.getPropertyValue("--raypx-titlebar-height")) || 0;
-          return brand.top >= titlebar && brand.bottom <= heading.top &&
-            Math.abs(brand.left - heading.left) < 1;
+          const header = getComputedStyle(logo.closest("header"));
+          return left + right > 0 && brand.left >= left && brand.bottom <= heading.top &&
+            parseFloat(header.paddingRight) >= right;
         `),
         ),
-      "Login brand was not aligned above the title below the native controls",
+      "Login header overlapped the native controls or the form",
     );
     await navigate("/");
     await waitFor(toolbarFits, "Workspace lost its window insets after leaving login");
@@ -385,7 +393,7 @@ try {
     console.info("Native smoke integrated window controls passed");
     stage = "native Channel throughput";
     const runtime = (await evaluate(
-      "return await window.__TAURI_INTERNALS__.invoke('desktop_request',{method:'get_runtime',input:{}})",
+      "return await window.mygo.call('Desktop.Request','get_runtime',{})",
     )) as { compiledFeatures: string[] };
     assert.deepEqual(runtime.compiledFeatures, ["native-smoke"]);
     const stream = await measureNativeStream();
@@ -568,94 +576,89 @@ try {
         away: true,
         waitSeconds: 60,
       });
-      const endpoint = await readJsonFile(
+      const endpoint = await Bun.file(
         join(dataDir, "profiles/native-smoke/terminal-hook.json"),
-      );
-      const hookTransport = directHttpClient(endpoint.socket);
-      try {
-        const hook = async () =>
-          (
-            await hookTransport.fetch("http://localhost/hook", {
-              method: "POST",
-              headers: {
-                authorization: `Bearer ${endpoint.token}`,
-                "content-type": "application/json",
+      ).json();
+      const hook = async () =>
+        (
+          await fetch("http://localhost/hook", {
+            unix: endpoint.socket,
+            method: "POST",
+            headers: {
+              authorization: `Bearer ${endpoint.token}`,
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({
+              provider: "claude",
+              input: {
+                session_id: crypto.randomUUID(),
+                cwd: root.path,
+                hook_event_name: "PermissionRequest",
+                tool_name: "Bash",
+                tool_input: { command: "printf synthetic" },
               },
-              body: JSON.stringify({
-                provider: "claude",
-                input: {
-                  session_id: crypto.randomUUID(),
-                  cwd: root.path,
-                  hook_event_name: "PermissionRequest",
-                  tool_name: "Bash",
-                  tool_input: { command: "printf synthetic" },
-                },
-              }),
-            })
-          ).json();
-        const pending = async () =>
-          ((await engine.request("approvals.local.list", {})) as ObservedProjection).requests.find(
-            (request) => request.status === "pending",
-          );
-        // Native performs the lease renewal, rather than the smoke impersonating it.
-        await sleep(5500);
-        const first = hook();
-        await waitFor(
-          async () => Boolean(await pending()),
-          "Visible Native did not maintain its approval lease",
+            }),
+          })
+        ).json();
+      const pending = async () =>
+        ((await engine.request("approvals.local.list", {})) as ObservedProjection).requests.find(
+          (request) => request.status === "pending",
         );
-        await trayAction("hide");
-        assert.deepEqual(await first, { fallback: true });
-        assert.deepEqual(await hook(), { fallback: true });
-        await trayAction("show");
-        const second = hook();
-        await waitFor(
-          async () => Boolean(await pending()),
-          "Restored Native did not renew its approval lease",
-        );
-        const request = (await pending())!;
-        await engine.request("approvals.local.decide", {
-          decision: {
-            id: request.id,
-            epoch: request.epoch,
-            revision: request.revision,
-            receiptId: crypto.randomUUID(),
-            decision: { type: "allow" },
-          },
-        });
-        assert.notDeepEqual(await second, { fallback: true });
-        await engine.request("approvals.local.configure", {
-          rootIds: [],
-          away: false,
-          waitSeconds: 300,
-        });
-        await engine.request("agents.configure", { rootId: root.id, providers: [] });
-        await engine.request("roots.remove", { id: root.id });
-        await sleep(16_000);
-        await engine.request("runtime.info", {});
-        console.info(
-          "Native smoke signed-out terminal approvals, visibility leases and idle IPC passed",
-        );
-      } finally {
-        await hookTransport.close();
-      }
+      // Native performs the lease renewal, rather than the smoke impersonating it.
+      await Bun.sleep(5500);
+      const first = hook();
+      await waitFor(
+        async () => Boolean(await pending()),
+        "Visible Native did not maintain its approval lease",
+      );
+      await trayAction("hide");
+      assert.deepEqual(await first, { fallback: true });
+      assert.deepEqual(await hook(), { fallback: true });
+      await trayAction("show");
+      const second = hook();
+      await waitFor(
+        async () => Boolean(await pending()),
+        "Restored Native did not renew its approval lease",
+      );
+      const request = (await pending())!;
+      await engine.request("approvals.local.decide", {
+        decision: {
+          id: request.id,
+          epoch: request.epoch,
+          revision: request.revision,
+          receiptId: crypto.randomUUID(),
+          decision: { type: "allow" },
+        },
+      });
+      assert.notDeepEqual(await second, { fallback: true });
+      await engine.request("approvals.local.configure", {
+        rootIds: [],
+        away: false,
+        waitSeconds: 300,
+      });
+      await engine.request("agents.configure", { rootId: root.id, providers: [] });
+      await engine.request("roots.remove", { id: root.id });
+      await Bun.sleep(16_000);
+      await engine.request("runtime.info", {});
+      console.info(
+        "Native smoke signed-out terminal approvals, visibility leases and idle IPC passed",
+      );
     }
     stage = "signed-out local workspace and isolated session fixture";
     await localSessionFixture();
     await trayAction("pending");
     await waitFor(
-      async () => (await evaluate("return location.pathname")) === "/approvals",
+      async () =>
+        (await evaluate("return location.hash.slice(1).split(/[?#]/)[0]")) === "/approvals",
       "Tray review action did not open the approval page",
     );
-    await navigate("/");
   }
   if (phase === "shell") {
     assert.equal(
       await evaluate("return location.protocol"),
-      process.platform === "win32"
-        ? "http:"
-        : `raypx-${createHash("sha256").update(apiOrigin).digest("hex").slice(0, 32)}:`,
+      process.platform === "win32" ? "http:" : "mygo:",
     );
+    await assertQuiet();
     stage = "local renderer file bridge";
     const directory = join(dataDir, "authorized");
     await mkdir(directory, { recursive: true });
@@ -667,8 +670,8 @@ try {
       version: null,
     });
     await openSettings();
-    // Home is the project overview; authorized files are listed on the files tool.
-    await navigate("/files");
+    const filesRoute = `/files?${new URLSearchParams({ rootId: grant.id })}`;
+    await navigate(filesRoute);
     await waitFor(
       async () =>
         Boolean(
@@ -678,17 +681,19 @@ try {
         ),
       "Renderer did not list the engine's authorized file",
     );
-    stage = "History deep-path reload";
-    assert.equal(await evaluate("return location.pathname+location.hash"), "/files");
+    await assertQuiet();
+    stage = "Packaged hash route reload";
+    const filesHash = `#${filesRoute}`;
+    assert.equal(await evaluate("return location.hash"), filesHash);
     await reloadRenderer();
     await waitFor(
       async () =>
         Boolean(
           await evaluate(
-            'return location.pathname==="/files"&&location.hash===""&&[...document.querySelectorAll("[data-slot=file-entry]")].some(node=>node.textContent.includes("native-smoke.txt"))',
+            `return location.hash===${JSON.stringify(filesHash)}&&[...document.querySelectorAll("[data-slot=file-entry]")].some(node=>node.textContent.includes("native-smoke.txt"))`,
           ),
         ),
-      "Packaged History deep path did not reload the authorized file view",
+      "Packaged hash route did not reload the authorized file view",
     );
     await evaluate('document.querySelector("[data-slot=file-entry]")?.click(); return true');
     await waitFor(
@@ -723,7 +728,7 @@ try {
       async () =>
         Boolean(
           await evaluate(
-            `return location.pathname==="/terminal"&&[...document.querySelectorAll("button")].some(node=>${JSON.stringify(advancedLabels)}.includes(node.textContent.trim()))`,
+            `return location.hash.slice(1).split(/[?#]/)[0]==="/terminal"&&[...document.querySelectorAll("button")].some(node=>${JSON.stringify(advancedLabels)}.includes(node.textContent.trim()))`,
           ),
         ),
       "Terminal route did not mount",
@@ -765,11 +770,18 @@ try {
         ),
       "Renderer terminal did not complete with a successful exit",
     );
-    stage = "device preferences";
+    await assertQuiet();
+    stage = "open device settings";
     await openSettings();
+    await assertQuiet();
+    stage = "choose device theme and English";
     await evaluate('document.querySelector("[data-theme-option=dark]").click();return true');
     await selectLanguage("en");
+    await assertQuiet();
+    stage = "choose Simplified Chinese";
     await selectLanguage("zh");
+    await assertQuiet();
+    stage = "persist device preferences";
     await waitFor(
       async () =>
         Boolean(
@@ -780,9 +792,9 @@ try {
       "Theme and language controls did not update",
     );
     await waitFor(async () => {
-      const file = join(dataDir, "preferences.json");
-      if (!(await fileExists(file))) return false;
-      const value = await readJsonFile(file);
+      const file = Bun.file(join(dataDir, "preferences.json"));
+      if (!(await file.exists())) return false;
+      const value = await file.json();
       return value.theme === "dark" && value.locale === "zh";
     }, "Renderer did not persist preferences through the native bridge");
   } else if (otherServer) {
@@ -791,9 +803,10 @@ try {
     stage = "restart local state";
     const roots = (await engine.request("roots.list", {})) as RootGrant[];
     assert.equal(roots.length, 1);
+    const root = roots[0]!;
     const jobs = (await engine.request("jobs.list", {})) as JobDefinition[];
     assert.equal(jobs[0]?.name, "Native smoke scan");
-    await navigate("/files");
+    await navigate(`/files?${new URLSearchParams({ rootId: root.id })}`);
     await waitFor(
       async () =>
         Boolean(
@@ -804,7 +817,6 @@ try {
       "Authorized file did not survive process restart",
     );
     await openSettings();
-    await sleep(100);
     console.info(
       "Restart preference values:",
       String(
@@ -850,9 +862,9 @@ try {
       await selectLanguage("en");
       await selectLanguage("zh");
       await waitFor(async () => {
-        const file = join(dataDir, "preferences.json");
-        if (!(await fileExists(file))) return false;
-        const value = await readJsonFile(file);
+        const file = Bun.file(join(dataDir, "preferences.json"));
+        if (!(await file.exists())) return false;
+        const value = await file.json();
         return value.theme === "dark" && value.locale === "zh";
       }, "Renderer did not persist preferences before restart");
     } else {
@@ -896,12 +908,7 @@ try {
       );
     }
   } else throw new Error("Unknown native smoke phase");
-  if (!presentation.activate)
-    assert.equal(
-      (await nativeWindow.state()).activations,
-      0,
-      "Quiet smoke activated the native application",
-    );
+  await assertQuiet();
   console.info(
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,
   );

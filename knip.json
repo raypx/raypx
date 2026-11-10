@@ -15,7 +15,7 @@
     ".agents/skills/**",
     "apps/desktop/build/**",
     ".claude/**",
-    "apps/desktop/src-tauri/gen/**",
+    "apps/desktop/.mygo/**",
     "apps/desktop/generated/**"
   ],
   "workspaces": {

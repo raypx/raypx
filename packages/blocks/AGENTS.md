@@ -15,7 +15,7 @@ Code outside `src/components/` stays private.
 - `shell`: `AppShell` with skip link, brand, grouped navigation, account slot,
   breadcrumbs, notice slot and `#main`. Both frames fill the viewport and scroll
   main independently of navigation and the top bar. `frame="document"` uses browser
-  spacing; `frame="window"` uses Tauri's title-bar insets to keep the sidebar and
+  spacing; `frame="window"` uses MyGo's title-bar insets to keep the sidebar and
   toolbar clear of native window buttons and expose drag regions. Applications register
   `#main` with their router's scroll restoration/reset behavior.
   Applications pass a `LinkComponent` adapting their router to `ShellLinkProps`;

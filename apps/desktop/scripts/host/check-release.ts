@@ -1,46 +1,44 @@
-import { fileURLToPath as entryFile } from "node:url";
-import { readJsonFile, readBinaryFile } from "@raypx/runtime-node/files";
+import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { verifyCliPayload } from "@raypx/tooling/build/cli";
+import { MYGO_VERSION } from "./packager";
 
 /** Inspect compiler metadata and the shipped bytes, including embedded renderer assets. */
-export function assertProduction(bytes: Uint8Array) {
+export function assertProduction(bytes: Uint8Array, buildInfo: string) {
   const binary = Buffer.from(bytes);
-  if (!binary.includes(Buffer.from("raypx-tauri/2.12.5")))
-    throw new Error("Release is missing the pinned Tauri host marker");
+  const version = /^\tdep\tgithub\.com\/egoist\/mygo\t([^\t\r\n]+)/m.exec(buildInfo)?.[1];
+  if (version !== MYGO_VERSION) throw new Error("Release is missing the pinned MyGo dependency");
   if (
+    /(?:^|[\s,=])native_smoke(?:[\s,]|$)/m.test(buildInfo) ||
     ["RAYPX_NATIVE_SMOKE_SOCKET", "raypx-smoke-local-event"].some((marker) =>
       binary.includes(Buffer.from(marker)),
     )
   )
     throw new Error("Production Desktop includes smoke controls");
+  if (!/mygo_noinspector/.test(buildInfo))
+    throw new Error("Production Desktop must exclude the MyGo inspector");
 }
 
 export async function checkRelease(binary: string) {
-  assertProduction(await readFile(binary));
+  const command = Bun.spawn(["go", "version", "-m", binary], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const metadata = await new Response(command.stdout).text();
+  if (await command.exited) throw new Error("Unable to inspect the Go release executable");
+  assertProduction(await readFile(binary), metadata);
   const resources =
     process.platform === "darwin" ? resolve(dirname(binary), "../Resources") : dirname(binary);
-  const runtime = await verifyCliPayload(join(resources, "bin"), {
-    platform: process.platform,
-    arch: process.arch,
-  });
-  const root = await readJsonFile(resolve(import.meta.dirname, "../../../../package.json"));
-  const desktop = await readJsonFile(resolve(import.meta.dirname, "../../package.json"));
-  const suffix = process.platform === "win32" ? ".exe" : "";
-  if (
-    runtime.version !== desktop.version ||
-    !Number.isSafeInteger(runtime.builtAt) ||
-    runtime.bunVersion !== root.packageManager.replace("bun@", "") ||
-    ["raypx" + suffix, "LICENSE", "README.txt", "herdr/runtime.json"].some(
-      (name) => !runtime.files[name],
-    )
-  )
-    throw new Error("Release CLI runtime is incomplete or does not match the pinned build");
+  const packaged = await verifyCliPayload(join(resources, "bin"));
+  if (process.env.RAYPX_CLI_PAYLOAD) {
+    const prepared = await verifyCliPayload(resolve(process.env.RAYPX_CLI_PAYLOAD));
+    if (JSON.stringify(prepared) !== JSON.stringify(packaged))
+      throw new Error("Desktop modified the shared signed CLI payload");
+  }
   const herdr = join(resources, "bin/herdr");
-  const manifest = await readJsonFile(join(herdr, "runtime.json"));
-  const cli = await readJsonFile(resolve(import.meta.dirname, "../../../cli/package.json"));
+  const manifest = await Bun.file(join(herdr, "runtime.json")).json();
+  const cli = await Bun.file(resolve(import.meta.dirname, "../../../cli/package.json")).json();
   const executable = process.platform === "win32" ? "herdr.exe" : "herdr";
   if (manifest.version !== cli.herdr.version || !manifest.files?.[executable])
     throw new Error("Release Herdr manifest is missing or stale");
@@ -48,25 +46,21 @@ export async function checkRelease(binary: string) {
     if (!name.split("/").every((part) => /^[\w. -]+$/.test(part) && part !== "." && part !== ".."))
       throw new Error("Invalid release Herdr resource path");
     const actual = createHash("sha256")
-      .update(new Uint8Array(await readBinaryFile(join(herdr, name))))
+      .update(new Uint8Array(await Bun.file(join(herdr, name)).arrayBuffer()))
       .digest("hex");
     if (actual !== expected)
       throw new Error("Signed Herdr bytes differ from the packaged runtime manifest");
   }
-  return {
-    binary,
-    framework: "tauri",
-    smokeControls: false,
-    herdrChecksumsVerified: true,
-    cliChecksumsVerified: true,
-  };
+  return { binary, framework: "mygo", smokeControls: false, herdrChecksumsVerified: true };
 }
 
-if (process.argv[1] !== undefined && resolve(process.argv[1]) === entryFile(import.meta.url)) {
-  const directory = resolve(import.meta.dirname, "../../../../target/release");
+if (import.meta.main) {
+  const platform = process.platform === "win32" ? "windows" : process.platform;
+  const arch = process.arch === "x64" ? "amd64" : process.arch;
+  const directory = resolve(import.meta.dirname, "../../build", `${platform}-${arch}`);
   const binary =
     process.platform === "darwin"
-      ? join(directory, "bundle/macos/Raypx.app/Contents/MacOS/raypx-desktop")
-      : join(directory, process.platform === "win32" ? "raypx-desktop.exe" : "raypx-desktop");
+      ? join(directory, "Raypx.app/Contents/MacOS/Raypx")
+      : join(directory, process.platform === "win32" ? "Raypx.exe" : "raypx-desktop");
   console.log(JSON.stringify(await checkRelease(binary)));
 }

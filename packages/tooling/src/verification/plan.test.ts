@@ -2,12 +2,13 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { project, platformProject } from "../../tests/helpers/verification.ts";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { taskModel, taskPlan, taskRef } from "../tasks/model.ts";
-import { changedFiles, githubPlan, verificationPlan } from "./plan.ts";
-import { verifyOptions } from "./index.ts";
-import { executionTasks } from "./execution.ts";
+import { project, platformProject } from "../../tests/helpers/verification";
+import { workspaceFixtures } from "../../tests/helpers/workspace";
+import { taskModel, taskPlan, taskRef } from "../tasks/model";
+import { changedFiles, verificationPlan } from "./plan";
+import { githubPlan } from "./ci";
+import { verifyOptions } from ".";
+import { executionTasks } from "./execution";
 
 const { member } = workspaceFixtures();
 
@@ -29,15 +30,18 @@ describe("affected verification", () => {
       taskModel(other.root).definitions.get(taskRef("fixture", "verify:run"))?.dependsOn,
     ).toEqual([]);
   });
-  it("selects reverse transitive consumers and their artifacts without unrelated packages", () => {
+  it("selects reverse transitive consumers and reserves artifacts for full verification", () => {
     const { model } = project();
-    const plan = verificationPlan(model, ["packages/tokens/src/index.ts"], { artifacts: true });
+    const plan = verificationPlan(model, ["packages/tokens/src/index.ts"]);
     expect(plan.workspaces).toEqual(["@raypx/bridge", "@raypx/tokens", "api"]);
-    expect(plan.artifacts).toEqual(["api"]);
+    expect(plan.artifacts).toEqual([]);
     expect(plan.backend).toBe(true);
     expect(plan.native).toBe(false);
     expect(plan.browser).toBe("none");
-    expect(plan.tasks).toContain("api#task:build");
+    expect(plan.tasks).not.toContain("api#task:build");
+    const full = verificationPlan(model, [], { full: true });
+    expect(full.artifacts).toEqual(["api"]);
+    expect(full.tasks).toContain("api#task:build");
   });
   it("keeps documentation-only feedback independent of JavaScript and native runners", () => {
     const { model } = project();
@@ -56,19 +60,78 @@ describe("affected verification", () => {
     expect(universal.workspaces).toContain("api");
     expect(universal.backend).toBe(true);
     expect(universal.native).toBe(false);
-    expect(universal.tasks).not.toContain("desktop#task:tauri:test");
+    expect(universal.tasks).not.toContain("desktop#task:mygo:test");
   });
   it.each([
     ["packages/desktop/src/index.ts", false],
     ["packages/desktop/src/app.css", false],
     ["packages/desktop/bridge.ts", true],
-    ["packages/desktop/src-tauri/src/main.rs", true],
+    ["packages/desktop/main.go", true],
     ["packages/desktop/package.json", true],
   ])("runs native checks for %s: %s", (file, native) => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.workspaces).toEqual(["desktop"]);
     expect(plan.native).toBe(native);
     expect(plan.browser).toBe("none");
+  });
+  it.each([
+    "packages/desktop/main.go",
+    "packages/desktop/internal/desktop/preferences.go",
+    "packages/desktop/tests/native/host/lifecycle_test.go",
+    "packages/desktop/go.mod",
+    "packages/desktop/go.sum",
+  ])("keeps Go-only changes independent of renderer checks and suites: %s", (file) => {
+    const plan = verificationPlan(platformProject(), [file]);
+    expect(plan.workspaces).toEqual(["desktop"]);
+    expect(plan.tasks).toEqual(["desktop#task:mygo:check", "desktop#task:mygo:test"]);
+    expect(plan.native).toBe(true);
+    expect(plan.artifacts).toEqual([]);
+  });
+  it("retains renderer verification for mixed changes and full native verification", () => {
+    const model = platformProject();
+    const go = "packages/desktop/internal/desktop/preferences.go";
+    const mixed = verificationPlan(model, [go, "packages/desktop/src/index.ts"]);
+    const full = verificationPlan(model, [go], { full: true });
+    for (const plan of [mixed, full]) {
+      expect(plan.tasks).toContain("desktop#task:check");
+      expect(plan.tasks).toContain("desktop#task:test");
+      expect(plan.tasks).toContain("desktop#task:mygo:test");
+    }
+    expect(full.tasks).toContain("api#task:check");
+  });
+  it("limits workflow orchestration to Tooling while retaining shared-action and native acceptance", () => {
+    const { root } = platformProject();
+    member(root, "tooling", {
+      metadata: { kind: "tooling", target: "bun" },
+      extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
+    });
+    const model = taskModel(root);
+    for (const file of ["ci.yml", "container-smoke.yml", "artifact-performance.yml"]) {
+      const plan = verificationPlan(model, [`.github/workflows/${file}`]);
+      expect(plan.workspaces).toEqual(["@raypx/tooling"]);
+      expect(plan.tasks).toEqual(["@raypx/tooling#task:check", "@raypx/tooling#task:test"]);
+      expect(plan.backend).toBe(false);
+    }
+    for (const file of [
+      ".github/workflows/native.yml",
+      ".github/actions/native-checks/action.yml",
+    ]) {
+      const plan = verificationPlan(model, [file], { macos: false });
+      expect(plan.workspaces).toEqual(["@raypx/tooling", "desktop"]);
+      expect(plan.nativeRunners).toEqual(["windows-latest"]);
+      expect(plan.tasks).toContain("desktop#task:mygo:test");
+      expect(plan.tasks).not.toContain("desktop#task:test");
+    }
+    for (const file of [
+      ".github/actions/setup-bun/action.yml",
+      ".github/actions/vp-restore/action.yml",
+    ])
+      expect(verificationPlan(model, [file]).workspaces).toHaveLength(model.members.length);
+    const mixed = verificationPlan(model, [".github/workflows/ci.yml", "packages/ui/src/index.ts"]);
+    expect(mixed.workspaces).toContain("@raypx/tooling");
+    expect(mixed.workspaces).toContain("@raypx/ui");
+    expect(mixed.workspaces).toContain("web");
+    expect(mixed.workspaces).not.toContain("api");
   });
   it("follows type-only and test imports of browser entries", () => {
     const tested = verificationPlan(platformProject({ typedTest: true }), [
@@ -99,20 +162,24 @@ describe("affected verification", () => {
     expect(plan.tasks.every((task) => /#task:(?:check|test)$/.test(task))).toBe(true);
   });
   it.each([
-    ["packages/desktop/src-tauri/src/desktop/process_windows.rs", ["windows-latest"]],
+    ["packages/desktop/internal/desktop/process_windows.go", ["windows-latest"]],
     ["packages/desktop/scripts/host/windows-smoke-install.ts", ["windows-latest"]],
-    ["packages/desktop/src-tauri/src/app/platform_darwin_test.rs", ["macos-latest"]],
-    ["packages/desktop/src-tauri/src/desktop/process_unix.rs", ["macos-latest"]],
-    ["packages/desktop/src-tauri/src/desktop/process_linux.rs", []],
-    ["packages/desktop/src-tauri/Cargo.toml", ["macos-latest", "windows-latest"]],
+    ["packages/desktop/internal/app/platform_darwin_test.go", ["macos-latest"]],
+    ["packages/desktop/internal/desktop/process_unix.go", ["macos-latest"]],
+    ["packages/desktop/internal/desktop/process_linux.go", []],
+    ["packages/desktop/go.mod", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/local.ts", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/terminal.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/main.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/daemon/endpoint.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/host.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/index.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/process/windows.ts", ["windows-latest"]],
     ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/instance.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/tests/helpers/provider-proxy.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/tests/helpers/temporary.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/tests/smoke/windows-payload.ts", ["windows-latest"]],
     ["packages/cli/src/runtime/daemon/remote/control.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/remote-control.ts", ["macos-latest", "windows-latest"]],
     [
@@ -120,12 +187,13 @@ describe("affected verification", () => {
       ["macos-latest", "windows-latest"],
     ],
     [".github/workflows/native.yml", ["macos-latest", "windows-latest"]],
+    [".github/actions/native-checks/action.yml", ["macos-latest", "windows-latest"]],
     [".gitattributes", ["macos-latest", "windows-latest"]],
   ])("selects native runners from the changed input %s", (file, runners) => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.native).toBe(true);
     expect(plan.nativeRunners).toEqual(runners);
-    expect(plan.tasks).toContain("desktop#task:tauri:test");
+    expect(plan.tasks).toContain("desktop#task:mygo:test");
   });
   it("keeps CLI business logic independent of native platform runners", () => {
     const plan = verificationPlan(platformProject(), [
@@ -165,6 +233,8 @@ describe("affected verification", () => {
       "packages/tooling/src/tasks/arguments.ts",
       "packages/tooling/src/tasks/delegation.ts",
       "packages/tooling/src/verification/plan.ts",
+      "packages/tooling/src/verification/ci.ts",
+      "packages/tooling/src/verification/ci.test.ts",
       "packages/tooling/src/verification/native-workflow.test.ts",
       "packages/tooling/src/validation/build-size.test.ts",
       "packages/runtime-node/src/process.ts",
@@ -175,7 +245,7 @@ describe("affected verification", () => {
     ]) {
       const plan = verificationPlan(model, [file], { macos: false });
       expect(plan.nativeRunners).toEqual(["windows-latest"]);
-      expect(plan.tasks).toContain("desktop#task:tauri:test");
+      expect(plan.tasks).toContain("desktop#task:mygo:test");
     }
     expect(
       verificationPlan(model, ["packages/tooling/src/browser-tests.ts"], { macos: false })
@@ -185,8 +255,8 @@ describe("affected verification", () => {
   it("unions platform-specific changes and keeps release acceptance complete", () => {
     const model = platformProject();
     const files = [
-      "packages/desktop/src-tauri/src/process_windows.rs",
-      "packages/desktop/src-tauri/src/process_darwin.rs",
+      "packages/desktop/internal/process_windows.go",
+      "packages/desktop/internal/process_darwin.go",
     ];
     expect(
       verificationPlan(model, ["packages/contracts/src/local.ts"], { macos: false }).nativeRunners,
@@ -206,7 +276,7 @@ describe("affected verification", () => {
     expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
     expect(release.browser).toBe("all");
     expect(release.backend).toBe(true);
-    expect(release.tasks).toContain("desktop#task:tauri:test");
+    expect(release.tasks).toContain("desktop#task:mygo:test");
   });
   it("preserves private VP prerequisites and rejects injected/cyclic task references", () => {
     const { root } = project();
@@ -236,6 +306,7 @@ describe("affected verification", () => {
       "fixture",
     );
     git("update-ref", "refs/remotes/origin/canary", "HEAD");
+    expect(changedFiles(root)).toEqual({ files: [], reasons: [] });
     renameSync(join(root, "old name.ts"), join(root, "new name.ts"));
     git("add", "old name.ts", "new name.ts");
     unlinkSync(join(root, "deleted.ts"));
@@ -329,6 +400,7 @@ describe("affected verification", () => {
   });
   it("uses one public command with explicit full mode and strict options", () => {
     expect(verifyOptions([])).toEqual({});
+    expect(verifyOptions(["--full", "--no-cache"])).toEqual({ full: true, noCache: true });
     expect(verifyOptions(["--full", "--base", "HEAD~1", "--dry-run"])).toEqual({
       full: true,
       base: "HEAD~1",
@@ -362,7 +434,7 @@ it("selects container acceptance for image definitions, deployment adapters and 
     "deploy/manifests.ts",
     "deploy/sources.ts",
     ".dockerignore",
-    ".github/workflows/ci.yml",
+    ".github/workflows/container-smoke.yml",
     "packages/tooling/src/build/deployment.ts",
     "packages/tooling/src/validation/deployment-smoke.ts",
     "packages/tooling/src/validation/evidence.ts",
@@ -371,6 +443,7 @@ it("selects container acceptance for image definitions, deployment adapters and 
   ])
     expect(verificationPlan(model, [file]).containerSmoke).toBe(true);
   for (const file of [
+    ".github/workflows/ci.yml",
     "docs/development/deployment.md",
     "packages/independent/tests/a.test.ts",
     "apps/desktop/src/routes/settings.tsx",

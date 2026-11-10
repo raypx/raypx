@@ -24,14 +24,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.distribution || false }}-${{ inputs.macos || false }}-${{ inputs.cold_native || false }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 env:
-  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   changes:
+    name: Plan verification
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
-      rust: ${{ steps.plan.outputs.rust }}
+      source_phases: ${{ steps.plan.outputs.source_phases }}
+      go: ${{ steps.plan.outputs.go }}
       native: ${{ steps.plan.outputs.native }}
       native_runners: ${{ steps.plan.outputs.native_runners }}
       container_smoke: ${{ steps.plan.outputs.container_smoke }}
@@ -46,8 +48,13 @@ jobs:
       - name: Select affected verification gates
         id: plan
         run: bun run raypx-dev ci:plan
-  javascript:
+  source:
+    name: ${{ matrix.phase == 'checks' && 'Source checks' || 'Source tests' }}
     needs: changes
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: ${{ fromJSON(needs.changes.outputs.source_phases) }}
     env:
       RAYPX_CI_PLAN: ${{ needs.changes.outputs.plan }}
     runs-on: ubuntu-24.04
@@ -56,31 +63,26 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-rust
-        if: needs.changes.outputs.rust == 'true'
-        with:
-          check-profile: "true"
       - uses: ./.github/actions/setup-bun
+      - uses: actions/setup-go@v6
+        if: matrix.phase == 'checks' && needs.changes.outputs.go == 'true'
+        with:
+          go-version-file: apps/desktop/go.mod
+          cache-dependency-path: apps/desktop/go.sum
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:
-          partition: javascript
-      - name: Verify affected source and artifacts
-        run: bun run raypx-dev ci:gate js
-      - name: Upload build size reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-sizes-javascript
-          path: .artifacts/sizes/
-          include-hidden-files: true
-          if-no-files-found: ignore
+          # Keep existing check artifacts; test runners publish a separate cache.
+          partition: ${{ matrix.phase == 'checks' && 'javascript' || 'source-tests' }}
+      - name: Verify selected source phase
+        run: bun run raypx-dev ci:gate source ${{ matrix.phase }}
       - name: Generated sources remain reproducible
         run: git diff --exit-code
       - uses: ./.github/actions/vp-save
         with:
           key: ${{ steps.vp-cache.outputs.key }}
   backend:
+    name: Backend integration
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-24.04
@@ -114,6 +116,7 @@ jobs:
       - uses: ./.github/actions/setup-bun
       - run: bun run raypx-dev ci:gate backend
   browser:
+    name: Browser acceptance
     needs: changes
     env:
       RAYPX_CI_PLAN: ${{ needs.changes.outputs.plan }}
@@ -152,14 +155,6 @@ jobs:
             bun --bun playwright install-deps chromium
           fi
       - run: bun run raypx-dev ci:gate browser
-      - name: Upload build size reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-sizes-browser
-          path: .artifacts/sizes/
-          include-hidden-files: true
-          if-no-files-found: ignore
       - uses: ./.github/actions/vp-save
         with:
           key: ${{ steps.vp-cache.outputs.key }}
@@ -170,28 +165,14 @@ jobs:
           path: e2e/test-results
           if-no-files-found: ignore
   container-smoke:
+    name: Container smoke
     needs: changes
-    env:
-      RAYPX_CI_PLAN: ${{ needs.changes.outputs.plan }}
     if: needs.changes.outputs.container_smoke == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 40
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
-      - name: Build and smoke-test Compose and Railway images
-        run: bun run raypx-dev ci:gate container-smoke
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: container-smoke-results
-          path: |
-            .artifacts/deployment/**/results.json
-            .artifacts/deployment/**/commands.json
-          if-no-files-found: ignore
+    uses: ./.github/workflows/container-smoke.yml
+    with:
+      plan: ${{ needs.changes.outputs.plan }}
   desktop:
+    name: Native acceptance (${{ matrix.os }})
     needs: changes
     if: needs.changes.outputs.native == 'true'
     strategy:
@@ -205,8 +186,9 @@ jobs:
       cold_native: ${{ inputs.cold_native || false }}
     secrets: inherit
   foundation:
+    name: CI result
     if: always()
-    needs: [changes, javascript, backend, browser, desktop, container-smoke]
+    needs: [changes, source, backend, browser, desktop, container-smoke]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

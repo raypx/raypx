@@ -1,244 +1,282 @@
-# Current architecture
+# Architecture
 
-Raypx uses TypeScript for its applications and execution runtime, and Rust for
-the Tauri Desktop host. This page describes the current
-implementation. The [roadmap](../roadmap.md) and
-[ADR 0039](0039-local-server-agent-platform.md) describe future Agent platform
-work; they do not establish shipped behavior or platform acceptance.
+Workspaces are discovered from the root Bun workspace patterns. Applications are
+composition roots; libraries expose explicit source entries; tooling remains out
+of runtime dependency graphs. Manifests are the only workspace inventory.
 
-## Runtime and toolchain
+## Applications
 
-| Component    | Current implementation                                            | Responsibility                                                          |
-| ------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Desktop      | Tauri 2.12.5, Rust 1.99.1, system WKWebView/WebView2              | React SPA, native policy, sessions, windows and CLI transport           |
-| CLI / daemon | TypeScript compiled with Bun 1.4.4                                | Local execution, Agent harness, approvals, scheduling and replay        |
-| Web          | React / TanStack Start SSR, Nitro `bun`                           | Browser workbench and authenticated remote views                        |
-| API          | Bun 1.4.4, Nitro / Hono / oRPC                                    | Accounts, authorization, remote commands and read projections           |
-| Relay        | Independent `Bun.serve` HTTP / WebSocket service in `infra/relay` | WebSocket peers and delivery through the private Redis broker           |
-| Mobile       | Expo iOS/Android                                                  | Account/login baseline; native task views remain future work            |
-| JS tooling   | Bun 1.4.4, VP, TypeScript                                         | Install/lockfile/catalogs, task graph/cache, scripts and no-emit checks |
+Web is a TanStack Start SSR application on Nitro's Bun server preset. Desktop uses the same DOM components in
+a MyGo WKWebView/WebView2 shell, with Go transport and policy bridging its
+version-matched bundled CLI.
+Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
+shell prerendered to index.html. It has no server, so no server functions.
+Desktop mounts its device-local workspace independently of account resolution.
+Remote data and host authorization use a contextual login boundary. Local work
+belongs to the device workspace; old account-owned local history is unsupported. Web supports
+guest browsing and restores an explicitly submitted guest draft after login,
+without automatically sending it. The CLI engine and persisted local state remain
+independent of browser sessions.
+The product entry is project → session → requests → result. A project is one
+authorized directory, identified with its ownership scope and computer. Desktop
+restores valid recent local selection; Web lists remote projects after login and
+opens account settings over the current page with `#settings/account`. Desktop
+keeps its independent `/account` route. URL selection never dispatches execution.
+TaskWorkspacePort list targets flow through HTTP/private IPC into storage filters
+before cursor/limit. Query keys, page probes and draft identities use the same
+target; unavailable targets are explicit and never redirect execution elsewhere.
+Phone browsers use Web. The Expo iOS/Android application in `apps/mobile` requires
+login by default and currently provides email/password login, secure session
+restoration and an account screen. Native task views and push notifications remain
+later work. See [mobile development](../development/mobile.md).
+API uses Vite + Nitro + Hono + oRPC, deployed
+on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.
 
-Root `package.json` pins Bun and owns workspace patterns, catalogs and overrides.
-`bun.lock` records installation. `rust-toolchain.toml` pins Rust; the Cargo workspace
-contains the Tauri host. Rust Tauri is 2.12.5; its independently released npm
-API/CLI packages are 2.12.4. `canary` uses this Tauri/Rust host; `dev` retains
-MyGo/Go. Both branches keep the Bun CLI/daemon and its
-[production packaging](0047-bun-cli-production-packaging.md).
+Web, API and Relay are separate services with Bun as their only deployment target.
+Relay lives in `infra/relay` and owns WebSocket connections. API issues tickets
+and grants, stores read projections and dispatches scheduling through private Redis.
+Both use `@raypx/control` for shared authorization and persistence. The gateway
+keeps `/relay` at the same public origin; the built API owns no WebSocket listener.
+Their outputs run outside the repository.
+See [deployment](../development/deployment.md).
+API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,
+/rpc/_ and /health; everything else is a JSON 404. Web renders on the server with
+device preferences from cookies/Accept-Language and the account from account.get,
+forwarding only Better Auth cookies. It never imports API, auth server or DB code.
+Its server must receive the session cookie: share one origin, or set AUTH_DOMAIN
+to the parent domain of sibling Web/API hosts.
 
-Desktop targets macOS 13.5+ and Windows. Linux CLI/core checks and GUI compilation
-do not establish Linux Desktop acceptance. Native signing, installer and GUI
-results are recorded separately from source checks.
+## Libraries
 
-## Processes and ownership
+Core owns the normalized task, activity, input and human-decision schemas,
+the task-to-Run read projection and pure task rules. It has no transport, React,
+filesystem or database dependency.
+Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
+domain consumers import Core directly, without contract re-export aliases.
+There is one domain schema source and the dependency direction is contracts → core.
+Packages expose surfaces rather than barrels ([ADR 0043](0043-package-surfaces.md)):
+`@raypx/contracts` has no root and composes the jobs and memory schemas internally,
+`@raypx/client` offers `/api`, `/relay` and `/tasks`, and `@raypx/tasks` keeps its
+model helpers on `/model`. Every public entry has a consumer outside its workspace.
 
-```mermaid
-flowchart LR
-  subgraph Device
-    UI[Desktop React SPA] -->|invoke / channel| Native[Tauri Rust host]
-    Native -->|absolute bundled path| Proxy[CLI daemon proxy]
-    Proxy -->|authenticated private IPC| Daemon[Independent Bun CLI daemon]
-    Terminal[Terminal connectors / task CLI] -->|authenticated private IPC| Daemon
-    Daemon --> Profile[(Local profile SQLite)]
-    Daemon --> Providers[Codex / Claude / local Pi]
-  end
-  Browser[Web browser] --> Web[Web SSR]
-  Browser --> API[API]
-  Web --> API
-  Browser <-->|viewer WebSocket| Relay[Relay]
-  UI <-->|viewer WebSocket| Relay
-  Daemon <-->|outbound WebSocket| Relay
-  Native -->|native HTTP / session| API
-  Daemon -->|grant renewal| API
-  Relay <--> Redis[(Private Redis broker)]
-  API <--> Redis
-  API --> PG[(PostgreSQL)]
-```
+Tasks separates its pure `/model` entry from its browser `/client` entry. The model
+owns explicit workspace scopes, compatible draft identities, conversation history
+and the small ports required by the views. Web and Desktop inject their remote or
+private-IPC adapters. React hooks own subscriptions and query state; views consume
+the model instead of implementing cursor, revision and history-gap recovery.
+The domain's activity reducer remains shared with the API projection writer.
 
-Applications are composition roots and cannot import each other. Desktop
-launches the bundled CLI by absolute path and never imports CLI source. The
-renderer uses `DesktopPlatform` / `DesktopBridge`; `src/lib/tauri.ts` adapts that
-boundary to Tauri invoke/channels. Rust owns native HTTP, preferences, directory
-selection, notifications, tray/window policy and the CLI proxy. TypeScript
-contracts remain the authority for business JSON.
+Auth exports server/client/hooks/types. Its platform-neutral React hooks
+share authentication actions and request state across Web and Desktop.
+The browser `/client` entry exports both `createAuthClient` and the shared DOM
+`AuthForm`, composed from those hooks, UI primitives and i18n. Web and Desktop
+inject clients, callback origins, query data and navigation adapters. Applications
+own routing and session refresh; `/server` never imports the DOM form.
+API creates the DB adapter and mailer and injects them; auth never imports their
+concrete packages. Account and remote task/device/approval contracts are exposed
+through RPC; local execution methods are never registered directly. The account safe
+projection is { id, email, name }.
 
-On macOS and Windows the independent daemon owns managed Agent processes,
-scheduling, terminal approval arbitration, the durable replay journal and the
-outbound Relay connection. GUI Quit releases UI approval leases and disconnects
-its proxy; Agent tasks continue. Client-owned tools and PTYs end with their
-client. Explicit daemon stop cancels and drains owned work. Restart marks active
-work interrupted and abandons uncertain effects rather than replaying them.
+Account provides platform-neutral remote read state, browser account views and an
+injected server projection service. API supplies fresh session resolution and
+maps unauthorized responses; Web/Desktop supply navigation and auth actions.
+Auth and client do not depend on account. Shared feature styles live with their
+packages. Blocks composes UI and i18n into router-agnostic application chrome (the
+sidebar shell and settings page sections) that Web and Desktop fill with their own
+links and feature views; it never imports account, auth, tasks or analytics.
+ThemePicker belongs to UI's `themes` entry. Blocks composes the language control
+from UI's shadcn Select and i18n's browser preference hook.
 
-POSIX uses authenticated owner-only Unix sockets. Windows uses token-protected
-loopback TCP with Host/Origin checks. Bun clients use an explicit direct
-transport so proxy environment variables cannot forward private credentials.
-Daemon protocol, version and build identity must match; an incompatible owner
-requires an explicit stop/restart, without automatic task takeover.
-See [terminal host](../development/terminal-host.md) and
-[ADR 0037](0037-windows-daemon.md).
+Contracts/api contains oRPC definitions; contracts/local contains Zod device
+messages. Client is the remote SDK. Local interfaces are never registered on
+public RPC. UI contains DOM components, a `themes` entry and a pure `themes/config` entry.
+I18n contains static English/Chinese catalogs and platform adapters. Its controlled
+Raypx Kit provider delegates translation, formatting and React context to its bundled use-intl.
+Only `useLanguagePreference().setPreference()` changes the product language
+preference; the active locale is derived from that preference and the full ordered
+system locale list. See [internationalization](internationalization.md).
+Database owns current auth and cloud projection schema/migrations; mail owns auth delivery/templates.
 
-The same private CLI runtime handles commands, foreground stdio and daemon
-requests. Ordinary commands and the lightweight `raypx tui` disable scheduling
-and close only their own runtime. The citty tree validates global options,
-preserves operands after `--`, and keeps help/version independent of profile
-opening. Diagnostics use stderr; stdout is command output or bounded NDJSON.
+CLI's device stores use Drizzle's Bun SQLite driver and private typed tables in
+`runtime/sqlite/schema.ts`; server PostgreSQL schemas stay in the database workspace.
+Repositories validate stored JSON and commit revision checks, history and receipts
+in synchronous transactions. One `ProfileStorage` opens, migrates and closes the
+profile writer; repositories borrow that connection and can join one transaction.
+Drizzle migrations initialize the current schema; PRAGMAs and profile locks remain
+SQLite operations. Parameterized Drizzle SQL preserves `REPLACE`
+rowid ordering and the snapshot index hint; dedicated native cursors execute
+Drizzle-built queries to bound snapshot memory. No legacy data imports are run.
 
-## Local state, identity and sessions
+## Browser analytics
 
-One `ProfileStorage` owns `<profile>/profile.sqlite`, migrations and closure.
-Feature repositories borrow its Drizzle `bun-sqlite` writer, backed by
-`bun:sqlite`; cross-repository changes share synchronous transactions. WAL,
-migration journals, revision checks and separate OS-backed migration/owner/project
-locks preserve the existing format and concurrency rules. Stored JSON is
-validated, snapshot queries are bounded, and unsupported formats fail explicitly.
-See [local SQLite](../development/local-sqlite.md).
+Web and Desktop use the consent-controlled Kit analytics client through Raypx's
+private product adapter. Statistics and sanitized error reports are independently
+opt-in. See [analytics](analytics.md) for data boundaries, build configuration and
+source-map publication. This does not replace API/CLI structured logging.
 
-Local execution requires one account/origin-bound instance enrollment. Its signed
-identity permits indefinite offline use and survives online logout. Registration
-does not grant remote Host access or upload history. A profile cannot be rebound
-to another account/origin. Remote data, Host authorization and project opt-in
-have separate login/grant checks. See
-[ADR 0040](0040-instance-enrollment-and-providers.md) and
-[remote tasks](remote-tasks.md).
+## Logging
 
-Tauri keeps server-scoped persistent cookies in a separate
-`tauri-sessions.sqlite`, encrypted with AES-GCM and a new OS credential-store key.
-Previous-host login storage is neither read nor deleted; switching hosts requires
-signing in once. Local projects, history, preferences, TOML settings and offline
-identity remain. The shared `desktop-instance.sqlite` lock prevents concurrent
-Desktop hosts. Missing session keys preserve ciphertext and allow temporary
-in-memory sign-in. These stores never share the CLI business writer.
+API and CLI use the private `@raypx/logger` source workspace, which exposes evlog directly. Each
+composition root calls `initLogger` once per process
+and creates event loggers with `createLogger`; event data is added through `set`
+and `error`, then completed with `emit`. Every drained event first passes
+`withEventPolicy` from `@raypx/logger/safe`: only the app's listed fields
+(`API_LOG_FIELDS`, the CLI field list) and the fixed envelope leave the process,
+sensitive values are replaced and errors keep only a name and code. API and CLI use
+the workspace's `/managed` drain for safe buffering, statistics and idempotent shutdown;
+the CLI and Bun API write JSON lines to
+stderr. Applications own environment
+parsing, permitted fields, output and shutdown.
 
-Only the owned main WebView can call native commands. Native policy restricts
-origins, paths, headers, request sizes, navigation and directory grants. Events
-use bounded queues, sequence numbers and ACKs. Cookies and host credentials
-never enter renderer replies or storage. API-origin scopes isolate WebView
-storage, native sessions and remote bindings. Theme/language preferences are
-stored atomically by the host and restored before renderer scripts, independently
-of CLI availability. See [Desktop configuration and policy](../development/desktop.md).
+Only explicitly allowed fields and safe error summaries reach the drain.
+Credentials, cookies, tokens, request bodies, command arguments, filesystem paths
+and file or task output are not diagnostic fields. Arbitrary error messages,
+stacks and causes must not pass through as event data.
 
-Built-in file operations require canonical directory grants and reject traversal
-and symlinks; writes are version-checked and delete needs confirmation. External
-commands use executable/argv/cwd and retain normal OS permissions. A directory
-grant is not a process sandbox. Protocol dates are ISO strings and terminal bytes
-are base64. Cron uses five fields and an IANA zone, skips missed triggers and does
-not retry interrupted commands automatically.
+API logs non-RPC HTTP requests through Hono and RPC calls through the official
+`@orpc/evlog` adapter. Their scopes are mutually exclusive so one RPC invocation
+does not also produce a Hono completion event. Request and operation identifiers
+support correlation without exposing request payloads or changing safe API
+error responses. The runtime drain enqueues events without waiting for the sink,
+so a slow diagnostic destination does not delay an RPC response. Explicit
+`flush` and `close` wait for queued delivery; Nitro owns draining pending log
+writes during shutdown. API's event types and runtime field policy remain local;
+The logger workspace owns no application routes or event categories. Managed admission includes
+queued and in-flight events (1024 maximum); overflow drops new events, failures
+do not retry, and close bounds waiting to ten seconds. Sinks own cancellation.
+PostHog error reporting has an independent capacity of 16 and concurrency of four,
+with two-second HTTP deadlines. Report loss and non-2xx responses are counted;
+best-effort reporting never changes primary log delivery or the HTTP result.
 
-## Agent execution and shared libraries
+CLI diagnostics use the logger's `/stream` stderr drain; stdout remains reserved
+for human command results or the Desktop NDJSON protocol. CLI shutdown flushes
+pending diagnostics without adding records to protocol output. Runtime and
+packaged-platform acceptance remain separate verification gates.
 
-The Agent harness stays private to CLI. `AgentRuntime` is its ingress/composition
-facade; command/query services own use cases and read projections.
-`ExecutionCoordinator` owns active handles and lock release after draining;
-`ManagedExecution` owns turns, queued input, approvals and cancellation.
-`@raypx/providers` supplies Claude/Codex process adapters and the in-process Pi
-SDK through narrow ports. Pi is available for device-local tasks; remote
-announcements do not grant it. See [ADR 0041](0041-provider-capabilities-and-pi.md)
-and [application layering](0042-application-layering.md).
+Logger is maintained inside Raypx while the workflow settles. It needs no Kit
+publication or preview archive. See the [workspace guide](../../packages/logger/README.md).
 
-Orchestration is event-sourced inside CLI. A pure decider receives commands and
-live process facts. One sink atomically commits receipts, domain events,
-task/request/activity projections, Relay journal/outbox and effect intents.
-Approvals commit before a provider receives the answer. Effects are process-bound
-and never retried after restart. The wire projection preserves current
-`AgentEvent`, replay and snapshot formats. See
-[ADR 0044](0044-event-sourced-cli-orchestration.md).
+Other unpublished Kit library archives may be tracked under `vendor/` for a reproducible
+review branch, with source provenance, an archive checksum and the lockfile.
+Provenance records either a clean source commit or the base commit, explicit
+uncommitted state and per-file source checksums. The archive must be replaced by
+an exact published alpha before merging. See
+[Raypx Kit library changes](../development/intl-release.md) for archive checks and
+the publication gate.
 
-| Boundary        | Owner and rule                                                                                                                |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Domain          | Core owns task/input/decision schemas and pure rules; no transport, React, files or database                                  |
-| Models and wire | Memory/jobs/auth models own pure schemas; Contracts composes HTTP, Relay and private local messages from them                 |
-| Task views      | Tasks `/model` owns pure page state and injected ports; `/client` adapts it to React; apps inject remote/private IPC adapters |
-| Remote clients  | Client exposes `/api`, `/relay` and `/tasks`; it does not execute providers                                                   |
-| Authentication  | API injects the DB adapter, mailer and config into Auth; Web/Desktop inject clients and navigation                            |
-| Shared services | Control owns remote authorization/projection rules; API composes PostgreSQL/auth/mail; Relay owns sockets                     |
-| Persistence     | Database owns server PostgreSQL schema/migrations; CLI privately owns device SQLite schema                                    |
-| UI              | UI owns DOM primitives and theme; Blocks composes router-independent chrome; pure theme tokens/types stay platform-neutral    |
-| Locale          | I18n owns Chinese/English catalogs and platform adapters; language preference drives the active locale                        |
-| Host helpers    | Runtime-node exposes filesystem/process/HTTP adapters, not CLI business composition                                           |
+## Device runtime
 
-Libraries expose explicit entries with established consumers. Manifests declare
-kind/target and per-entry/source targets; policy checks transitive platform
-constraints, private imports and the complete acyclic dependency graph, including
-development dependencies. Runtime code cannot import tooling or test entries.
-Extract a package only when its responsibility and consumers are established.
-See [package surfaces](0043-package-surfaces.md) and
-[workspace guide](../development/workspaces.md).
+The same CLI runtime handles human commands and Desktop NDJSON requests. Desktop
+never imports CLI source. An explicit citty command tree handles the existing
+JSON-parameter commands and scoped help. Global options are validated before
+dispatch; operands after `--` stay positional. Raypx owns errors, output and
+shutdown instead of citty's `runMain`. Help/version do not open a profile;
+they retain the executable's diagnostic completion lifecycle.
+The private Agent harness stays inside CLI. `AgentRuntime` owns task lookup,
+command receipts, replay and the active execution registry. `ManagedExecution`
+owns each run's turns, input queue, approvals, cancellation and lock release after
+process draining. The private `@raypx/providers` library's Claude and Codex entries translate their
+private protocols through a narrow process port; its Pi entry hosts the in-process SDK session. The
+daemon's private `runtime/daemon/remote` transport owns remote connection and synchronization; it
+does not own provider execution policy.
+Agent orchestration is event-sourced inside the CLI ([ADR 0044](0044-event-sourced-cli-orchestration.md)).
+A pure decider in `runtime/agents/domain/` turns commands and live process facts
+into events and effects; one sink commits the receipt, events, projections, relay
+journal/outbox and effect intents in a single SQLite transaction. The wire
+projection keeps today's `AgentEvent` sequence, so relay, Desktop, replay and
+snapshot formats are unchanged. Effects are process-bound: restart abandons open
+effects and interrupts active tasks instead of replaying them.
+`raypx tui` adds a lazy line-oriented task browser with a session-owned in-process
+runtime and scheduling disabled. It shares the local request boundary, confirms
+manual execution, and closes its own runtime on quit/EOF/signals. Both input and
+output must be terminals; scripts keep using explicit commands and JSON. This
+lightweight entry precedes the proposed host/owner protocol and full-screen TUI.
+Files use canonical root grants, relative paths,
+symlink/traversal checks, bounded UTF-8 and atomic writes. Delete requires confirmation.
+External commands use executable + argv + cwd, with shell use explicit; they retain
+normal OS permissions. PTY output is bytes encoded as base64; dates are ISO strings.
 
-## Web, API and Relay
+SQLite stores profiles, roots, schedules and bounded run history. A profile has
+one scheduling owner and per-job execution locks. Cron uses five fields and an
+IANA zone, skips missed triggers, and never retries interrupted commands on restart.
+On macOS and Windows, the independent CLI daemon owns scheduling; GUI Quit only
+disconnects Desktop. Stopping that daemon cancels its managed work. Foreground
+commands/TUI close only their own runtime and never start a scheduler. Local state
+and theme/locale preferences survive account logout.
+Files uses route search for directory/pagination, a scoped Zustand store for
+unsaved UI state, and route loaders for native reads. Root grants are shared at
+the local route boundary. Only the file table suspends while its listing reloads.
 
-Web runs TanStack Start SSR on Nitro `bun`; Desktop uses Start SPA mode
-with file routes and a prerendered shell, without server functions. Both reuse
-React, TanStack, shadcn/Base UI and shared feature views. Device-local Desktop
-selection does not depend on an active browser session; Web remote data does.
-Selecting a project or URL never dispatches execution or silently changes targets.
-Task filters reach storage before pagination; unavailable targets remain explicit.
+## Extension
 
-API's Nitro listener owns shutdown and mounts one Hono Fetch app at `/api/auth/*`,
-`/rpc/*` and health/readiness endpoints. Web resolves accounts through API and
-forwards only Better Auth cookies; it imports no auth server or database code.
-Web and API need a shared public origin or an explicitly configured parent cookie
-domain. API issues tickets/grants, routes commands and stores read projections.
-It executes no local provider and owns no WebSocket listener.
+See [workspaces](../development/workspaces.md). Keep testing/runtime modules at
+their current owners until a second actual consumer justifies extraction.
 
-Relay owns socket peers; API reaches it through private Redis using shared Control
-rules. On remote `tasks.create`, Relay's composition resolves account-selected
-memory revisions and commits the frozen context receipt before delivery; normal
-memory CRUD remains in API RPC. This is command acceptance, not a second memory
-API. The gateway routes `/relay` to that independent service at the public origin.
-Optional Cloudflare ingress uses the provider-managed Workers runtime; the Relay
-container and local tooling use the pinned Bun runtime. Web, API, migration and Relay build
-outputs run outside the repository. See
-[deployment](../development/deployment.md) and [infrastructure](../../infra/README.md).
+Desktop also persists validated theme/language preferences in an atomic native
+file and restores them before renderer scripts. WebKit custom-scheme localStorage
+alone is insufficient across full process restarts. This storage is independent
+of the CLI so preferences remain usable if the local engine is unavailable.
 
-API/CLI configure `@raypx/logger` once per process. Allowed fields pass redaction
-before bounded delivery; raw errors, credentials, cookies, task content and paths
-are excluded. API HTTP/RPC scopes avoid duplicate completion events, and shutdown
-drains pending logs. CLI logs remain on stderr. See
-[logger](../../packages/logger/README.md). Browser statistics and sanitized error
-reports are separately opt-in; see [analytics](analytics.md). Language and native
-preference restoration are detailed in [internationalization](internationalization.md).
+## Remote Agent tasks
 
-## Build, distribution and acceptance
+[Remote tasks and approvals](remote-tasks.md) describes opted-in Desktop execution,
+account-scoped device grants and Relay + Replay synchronization over outbound
+WebSockets. The shared tasks feature owns browser views; API routes commands and
+stores read projections. Desktop/CLI owns execution, approvals and terminal state,
+with a durable sequenced journal for reconnect replay and snapshot recovery.
 
-VP is the only task graph/cache. Lightweight `vite.config.ts` files register
-tasks; application plugins live in `vite.app.config.ts`. Bun runs development
-scripts, `tsc --noEmit` checks types, and VP owns JS builds/tests/lint/format.
-Cargo owns native incremental builds and is called through the same task graph.
+## Local Owner Host
+
+[ADR 0035](0035-local-owner-host.md) defines the current local-first ownership,
+cloud opt-in, terminal approval leases and migration boundary. Each profile owns
+one Bun/TypeScript execution Host. Foreground and daemon transports use the same
+`runtime/host.ts` composition for routing, cloud restore and teardown.
+Local tasks, connectors and approvals require initial instance enrollment and then work offline; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
+[ADR 0038](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
+token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks run through shared verification.
+
+## Persistent Agent platform target
+
+[ADR 0039](0039-local-server-agent-platform.md) defines the greenfield target:
+a registered, offline-capable local Agent platform, a server-owned Agent platform, and an
+explicitly linked mode where the server owns shared Agent Runs and the local Host
+provides scoped project tools. The rollout order is recorded in the
+[roadmap](../roadmap.md); the current sections above continue to describe shipped
+architecture until each target phase is implemented.
+
+## Registered instances and providers
+
+[ADR 0040](0040-instance-enrollment-and-providers.md) defines account-bound enrollment, offline identity, revocation and provider adapter boundaries; its amendment consolidates the adapters into one `@raypx/providers` workspace. Registration does not grant remote Host access or upload local history.
+
+[ADR 0042](0042-application-layering.md) defines application services, driver preparation,
+source-layer enforcement and transport/view adapters for the current implementation.
+
+## Decision history
+
+Later accepted amendments supersede conflicting earlier text. The topic guides
+above describe current implementation; these records preserve the decisions.
+
+- [0034: Extensible foundation](0034-extensible-foundation.md)
+- [0035: Local Owner Host](0035-local-owner-host.md)
+- [0037: Windows daemon](0037-windows-daemon.md)
+- [0038: MyGo Desktop host](0038-mygo-desktop-host.md)
+- [0039: Local and server Agent platform](0039-local-server-agent-platform.md)
+- [0040: Instance enrollment and providers](0040-instance-enrollment-and-providers.md)
+- [0041: Provider capabilities and managed Pi](0041-provider-capabilities-and-pi.md)
+- [0042: Application services and adapters](0042-application-layering.md)
+- [0043: Package surfaces](0043-package-surfaces.md)
+- [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)
+
+- [0046: MyGo / Bun and immutable CLI artifacts](0046-mygo-bun-artifacts.md) — current; CLI packaging formalized by 0047
+- [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md) — accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode
+
+## Distribution and performance
 
 The accepted production CLI packaging embeds stable Bun 1.4.4 with minified ESM
-and depth-0 bytecode ([ADR 0047](0047-bun-cli-production-packaging.md)). The complete
-payload includes verified platform Herdr assets, licenses and an immutable
-`runtime.json` inventory. Desktop stages the same
-prepared payload from `RAYPX_CLI_PAYLOAD` (or the local CLI dist directory), verifies
-its version/platform/architecture and checksums, then launches its absolute path.
-No separate JavaScript runtime or Rust launcher is installed. Project commands
-use the user's environment. GUI Quit disconnects the proxy while the independent
-daemon retains execution. See [CLI distribution](../../apps/cli/README.md) and
-[terminal connectors](../development/terminal-host.md).
-
-`bun run verify` selects affected source/native checks; `--full` adds audits,
-builds and artifact probes. Database, browser, live-provider and packaged native
-acceptance remain explicit gates. The first Tauri release uses a signed installer
-after exiting the old host and explicitly stopping its daemon; later updates use
-new Tauri updater keys/feed. Platform release requires its GUI, installer and
-signing/notarization matrix. See [testing](../development/testing.md),
-[Desktop release](../development/desktop.md#build-and-release).
-
-## Architecture decisions
-
-These records retain the rationale for current boundaries and the explicitly
-identified future platform target. Current guides define commands, paths and
-supported behavior. Superseded Node/pnpm migration and Bun experiment records
-remain available in Git history.
-
-| Decision                                                                             | Status                                                            |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| [0034: Extensible foundation](0034-extensible-foundation.md)                         | Accepted; current Tauri/Bun implementation                        |
-| [0035: Local Owner Host](0035-local-owner-host.md)                                   | Accepted; Windows amended by 0037, providers by 0041              |
-| [0037: Windows daemon](0037-windows-daemon.md)                                       | Accepted; production packaging defined by 0047                    |
-| [0039: Local and server Agent platform](0039-local-server-agent-platform.md)         | Accepted target; rollout tracked in roadmap                       |
-| [0040: Instance enrollment and providers](0040-instance-enrollment-and-providers.md) | Accepted; provider consolidation amendment                        |
-| [0041: Provider capabilities and managed Pi](0041-provider-capabilities-and-pi.md)   | Accepted; effect model amended by 0044                            |
-| [0042: Application services and adapters](0042-application-layering.md)              | Accepted; transaction boundary amended by 0044                    |
-| [0043: Package surfaces](0043-package-surfaces.md)                                   | Accepted                                                          |
-| [0044: Event-sourced CLI orchestration](0044-event-sourced-cli-orchestration.md)     | Accepted; Bun SQLite implementation                               |
-| [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md)           | Accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode |
+and depth-0 bytecode ([ADR 0047](0047-bun-cli-production-packaging.md)). Each
+candidate/platform compiles the standalone CLI once from source. Desktop, archives
+and acceptance consume the same signed complete payload by immutable artifact ID. No Node runtime or Rust launcher
+is shipped. See [the unified migration and Strobe acceptance guide](../development/mygo-bun-migration-plan.md).
+The `@raypx/runtime-node` package retains Node-compatible process/HTTP helpers under Bun; its name
+is not a requirement for a global Node runtime. Strobe is a development-only dependency and never
+enters production bundles. macOS/Windows release acceptance remains a separate matrix.

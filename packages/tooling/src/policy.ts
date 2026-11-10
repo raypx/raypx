@@ -16,7 +16,13 @@ const MAX_MARKDOWN_LINES = 500;
 export function checkMarkdownLength(root: string): string[] {
   return globSync("**/*.md", {
     cwd: root,
-    exclude: ["**/node_modules/**", ".agents/**", ".claude/**", "**/dist/**"],
+    exclude: [
+      "**/node_modules/**",
+      ".agents/**",
+      ".claude/**",
+      "**/dist/**",
+      "e2e/test-results/**",
+    ],
   }).flatMap((file) => {
     // Skill aliases must retain the same vendored exclusion as their canonical directory.
     const canonical = relative(root, realpathSync(join(root, file))).replaceAll("\\", "/");

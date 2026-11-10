@@ -148,6 +148,13 @@ test("Web homepage ambient motion runs while visible and stops under reduced mot
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("[data-packet]").first()).toHaveCSS("opacity", "0");
+  // Media-query listeners redraw the canvas during the next rendering cycle.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
   const still = await frame();
   await page.waitForTimeout(500);
   expect(await frame()).toBe(still);

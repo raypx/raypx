@@ -1,19 +1,22 @@
 # Raypx
 
-A project-centered personal development workbench. Tauri Desktop and the standalone
+A project-centered personal development workbench. MyGo Desktop and the standalone
 CLI execute on your computer; Web provides optional remote access. Projects, Agent
 sessions, approvals, files, automations and terminals share explicit device ownership.
 The [current architecture](docs/architecture/README.md) defines the implementation.
 
 ## Requirements
 
-Bun 1.4.4 and an isolated PostgreSQL database for account flows. Root
-`packageManager` pins Bun; `bun run doctor` checks the active runtime. Native
-Desktop development requires Rust 1.99.1 and Tauri 2.12.5. macOS requires 13.5+;
-Windows uses WebView2. Linux Desktop acceptance remains unverified. Installed
-Desktop and CLI payloads include the Bun runtime. `canary` uses Tauri/Rust;
-`dev` retains the MyGo/Go alternative. Both use the same Bun CLI/daemon;
-the Desktop host choice does not imply a native CLI rewrite.
+Bun 1.4.4 and an isolated PostgreSQL database for account flows. Bun is the only
+JavaScript runtime; `packageManager` pins it. With [mise](https://mise.jdx.dev),
+run `mise trust && mise install` once; direct installs also work.
+`bun run doctor` confirms it.
+Native Desktop development and packaging require Go 1.27.3 and MyGo 0.8.3, with
+`CGO_ENABLED=0`. The configured macOS minimum is 13.5; Windows uses WebView2.
+Linux CLI support does not establish Linux Desktop acceptance. See the
+[MyGo Desktop guide](docs/development/desktop.md#build-and-release).
+Desktop bundles the same compiled Bun CLI/daemon with its MyGo host; users do not
+install Bun.
 
 ```sh
 bun install

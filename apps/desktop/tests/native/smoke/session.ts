@@ -1,4 +1,3 @@
-import { sleep } from "@raypx/runtime-node/process";
 import { lstat, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 
@@ -57,7 +56,7 @@ export async function removeSmokeDirectory(directory: string) {
         );
         throw error;
       }
-      await sleep(500);
+      await Bun.sleep(500);
     }
   }
 }

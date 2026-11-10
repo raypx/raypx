@@ -16,7 +16,10 @@ export async function cleanupSmokeBundles(
 ) {
   if ((options.platform ?? process.platform) !== "darwin") return;
   const command = options.run ?? run;
-  const root = resolve(project, "../../target/native-smoke/release/bundle/macos");
+  const root = resolve(
+    project,
+    `build/native-smoke/darwin-${process.arch === "x64" ? "amd64" : process.arch}`,
+  );
   const state = await lstat(root).catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "ENOENT") throw error;
     return undefined;

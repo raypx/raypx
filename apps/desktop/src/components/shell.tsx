@@ -79,6 +79,7 @@ export function DesktopShell() {
   const router = useRouter();
   const settings = useSettingsNavigation();
   const auth = useDesktopSignOut();
+  const routeReady = useRouterState({ select: (state) => !state.isLoading });
   const href = useRouterState({ select: (state) => state.location.href });
   const page = useMatches({
     select: (matches) =>
@@ -147,90 +148,95 @@ export function DesktopShell() {
   return (
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />
-      <AppShell
-        storageKey={desktopStorageKey("raypx_sidebar_open")}
-        frame="window"
-        brand={{ to: "/", label: "Raypx" }}
-        actions={actions}
-        contextNavigation={
-          <div className="space-y-6">
-            <ProjectNavigation />
-            {accountId && <RemoteProjectNavigation key={accountId} accountId={accountId} />}
-          </div>
-        }
-        navigationLabels={[c("workspace")]}
-        navigation={[
-          [
-            { ...pages[0], exact: true },
-            {
-              to: "/approvals",
-              label: c("approvals"),
-              icon: <InboxIcon />,
-              badge: (
-                <PendingCount
-                  key={accountId ?? "signed-out"}
-                  client={accountId ? pendingClient : localTaskClient}
-                  accountId={accountId ?? LOCAL_WORKSPACE_ID}
-                />
-              ),
-            },
-            pages[2],
-            pages[3],
-          ],
-        ]}
-        accountAction={
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  onClick={() => void settings.open()}
-                  aria-haspopup="dialog"
-                  aria-label={c("settings")}
-                  className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                />
-              }
-            >
-              <SettingsIcon aria-hidden="true" className="size-5 stroke-[1.75]" />
-            </TooltipTrigger>
-            <TooltipContent side="top">{c("settings")}</TooltipContent>
-          </Tooltip>
-        }
-        breadcrumbs={page ? [t(page.title)] : []}
-        layout={page?.layout ?? "document"}
-        LinkComponent={ShellLink}
-        notice={
-          <>
-            <TerminalRequestNotice accountId={accountId} />
-            {engine.status === "error" && isDesktop() && (
-              <EngineNotice code={engine.code} restart={restart} />
-            )}
-          </>
-        }
-        account={
-          <AccountMenu
-            key={accountId ?? "signed-out"}
-            user={accountId ? (session.data?.user ?? null) : null}
-            pending={session.isPending}
-            busy={auth.busy}
-            error={Boolean(auth.error && auth.error.kind !== "completion")}
-            onNavigate={(destination) =>
-              destination === "login"
-                ? void router.navigate({
-                    to: "/login",
-                    search: { returnTo: desktopReturnTo(href) },
-                  })
-                : void router.navigate({ to: `/${destination}` })
-            }
-            onSignOut={async () => {
-              const result = await auth.signOut(accountId, "/");
-              return result.status === "success";
-            }}
-          />
-        }
+      <div
+        className="h-full"
+        data-raypx-workbench-ready={engine.status === "ready" && routeReady ? "true" : undefined}
       >
-        <Outlet />
-      </AppShell>
+        <AppShell
+          storageKey={desktopStorageKey("raypx_sidebar_open")}
+          frame="window"
+          brand={{ to: "/", label: "Raypx" }}
+          actions={actions}
+          contextNavigation={
+            <div className="space-y-6">
+              <ProjectNavigation />
+              {accountId && <RemoteProjectNavigation key={accountId} accountId={accountId} />}
+            </div>
+          }
+          navigationLabels={[c("workspace")]}
+          navigation={[
+            [
+              { ...pages[0], exact: true },
+              {
+                to: "/approvals",
+                label: c("approvals"),
+                icon: <InboxIcon />,
+                badge: (
+                  <PendingCount
+                    key={accountId ?? "signed-out"}
+                    client={accountId ? pendingClient : localTaskClient}
+                    accountId={accountId ?? LOCAL_WORKSPACE_ID}
+                  />
+                ),
+              },
+              pages[2],
+              pages[3],
+            ],
+          ]}
+          accountAction={
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    onClick={() => void settings.open()}
+                    aria-haspopup="dialog"
+                    aria-label={c("settings")}
+                    className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                  />
+                }
+              >
+                <SettingsIcon aria-hidden="true" className="size-5 stroke-[1.75]" />
+              </TooltipTrigger>
+              <TooltipContent side="top">{c("settings")}</TooltipContent>
+            </Tooltip>
+          }
+          breadcrumbs={page ? [t(page.title)] : []}
+          layout={page?.layout ?? "document"}
+          LinkComponent={ShellLink}
+          notice={
+            <>
+              <TerminalRequestNotice accountId={accountId} />
+              {engine.status === "error" && isDesktop() && (
+                <EngineNotice code={engine.code} restart={restart} />
+              )}
+            </>
+          }
+          account={
+            <AccountMenu
+              key={accountId ?? "signed-out"}
+              user={accountId ? (session.data?.user ?? null) : null}
+              pending={session.isPending}
+              busy={auth.busy}
+              error={Boolean(auth.error && auth.error.kind !== "completion")}
+              onNavigate={(destination) =>
+                destination === "login"
+                  ? void router.navigate({
+                      to: "/login",
+                      search: { returnTo: desktopReturnTo(href) },
+                    })
+                  : void router.navigate({ to: `/${destination}` })
+              }
+              onSignOut={async () => {
+                const result = await auth.signOut(accountId, "/");
+                return result.status === "success";
+              }}
+            />
+          }
+        >
+          <Outlet />
+        </AppShell>
+      </div>
       <SettingsOverlay />
       <DesktopCommandMenu
         open={searchOpen}

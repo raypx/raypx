@@ -1,32 +1,27 @@
-import { serveHttp } from "@raypx/runtime-node/http";
-import { readJsonFile } from "@raypx/runtime-node/files";
+import { mkdir, mkdtemp, writeFile, readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts.ts";
-import { nativeSmokeOptions } from "../../../scripts/host/smoke-options.ts";
-import { buildSmoke, runTauriSmoke } from "./launch.ts";
-import type { SmokeInstallation } from "./launch.ts";
-import { prepareSmokeDirectory, removeSmokeDirectory } from "./session.ts";
+import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts";
+import { nativeSmokeOptions } from "../../../scripts/host/smoke-options";
+import { buildSmoke, runMyGoSmoke } from "./launch";
+import type { SmokeInstallation } from "./launch";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
 import {
   assertSmokeOwnerRunning,
   stopSmokeOwner,
   startSmokeOwner,
   smokeOwnerIdentity,
-} from "./owner.ts";
+} from "./owner";
 
+const { packageManager } = await Bun.file(
+  resolve(import.meta.dirname, "../../../../../package.json"),
+).json();
 const { phase, ui } = nativeSmokeOptions(process.argv.slice(2), process.env);
-const phases: { phase: string; daemon: Awaited<ReturnType<typeof smokeOwnerIdentity>> }[] = [];
-let payloadCommit: string | undefined;
 
 async function run(smokePhase: string, directory: string, restoredServer = false) {
   if (!installation) throw new Error("Native smoke installation is unavailable");
-  const runtime = await readJsonFile(
-    resolve(import.meta.dirname, "../../../resources/bin/runtime.json"),
-  );
-  payloadCommit = runtime.commit;
-  await runTauriSmoke(installation, smokePhase, directory, {
+  await runMyGoSmoke(installation, smokePhase, directory, {
     ...process.env,
     RAYPX_HOME: join(directory, "config"),
     CLAUDE_CONFIG_DIR: join(directory, "claude"),
@@ -36,20 +31,18 @@ async function run(smokePhase: string, directory: string, restoredServer = false
     RAYPX_NATIVE_SMOKE_PHASE: smokePhase,
     RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
     RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
-    RAYPX_NATIVE_SMOKE_BUN: runtime.bunVersion,
+    RAYPX_NATIVE_SMOKE_BUN: packageManager,
   });
   const beforeQuit = JSON.parse(await readFile(join(directory, "daemon-before-quit.json"), "utf8"));
-  const afterQuit = await smokeOwnerIdentity(directory);
-  assert.deepEqual(afterQuit, beforeQuit, "GUI Quit changed the independent daemon PID/epoch");
-  phases.push({ phase: smokePhase, daemon: afterQuit });
+  assert.deepEqual(
+    await smokeOwnerIdentity(directory),
+    beforeQuit,
+    "GUI Quit changed the independent daemon PID/epoch",
+  );
 }
 const directory = await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));
 const loopbackOrigin = async () => {
-  const server = await serveHttp({
-    hostname: "127.0.0.1",
-    port: 0,
-    fetch: () => new Response(null),
-  });
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
   const origin = `http://127.0.0.1:${server.port}`;
   await server.stop(true);
   return origin;
@@ -64,8 +57,6 @@ async function configure(origin: string) {
 }
 let directoryPrepared = false;
 let installation: SmokeInstallation | undefined;
-let verified = false;
-let cleaned = false;
 try {
   await prepareSmokeDirectory(directory);
   directoryPrepared = true;
@@ -97,47 +88,23 @@ try {
     );
   }
   if (phase === "write") await run("read", directory);
-  verified = true;
 } finally {
-  try {
-    if (directoryPrepared) {
-      let ownerStopped = false;
-      try {
-        // GUI Quit preserves its independent owner on both macOS and Windows.
-        ownerStopped = await stopSmokeOwner(directory);
-        if (ownerStopped) await removeSmokeDirectory(directory);
-        else {
-          console.error(`Native smoke teardown incomplete; retained ${directory}`);
-          process.exitCode = 1;
-        }
-      } finally {
-        try {
-          await installation?.dispose();
-        } finally {
-          await cleanupSmokeBundles(resolve(import.meta.dirname, "../../.."));
-        }
+  if (directoryPrepared) {
+    let ownerStopped = false;
+    try {
+      // GUI Quit preserves its independent owner on both macOS and Windows.
+      ownerStopped = await stopSmokeOwner(directory);
+      if (ownerStopped) await removeSmokeDirectory(directory);
+      else {
+        console.error(`Native smoke teardown incomplete; retained ${directory}`);
+        process.exitCode = 1;
       }
-      cleaned = ownerStopped;
+    } finally {
+      try {
+        await installation?.dispose();
+      } finally {
+        await cleanupSmokeBundles(resolve(import.meta.dirname, "../../.."));
+      }
     }
-  } finally {
-    const evidence = resolve(import.meta.dirname, "../../../../../.artifacts/native-smoke");
-    await mkdir(evidence, { recursive: true });
-    await writeFile(
-      join(evidence, `${Date.now()}.json`),
-      JSON.stringify(
-        {
-          status: verified && cleaned ? "passed" : "failed",
-          framework: "tauri",
-          commit: payloadCommit ?? process.env.GITHUB_SHA ?? null,
-          platform: process.platform,
-          arch: process.arch,
-          phase,
-          ui,
-          phases,
-        },
-        null,
-        2,
-      ),
-    );
   }
 }

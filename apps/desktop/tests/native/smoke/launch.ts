@@ -1,10 +1,10 @@
-import { spawnProcess, sleep } from "@raypx/runtime-node/process";
+import { sleep } from "@raypx/runtime-node/process";
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install.ts";
-import { signingEnvironment } from "../../../scripts/host/signing.ts";
+import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install";
+import { signingEnvironment } from "../../../scripts/host/signing";
 
 const cwd = resolve(import.meta.dirname, "../../..");
 export function shouldInstallWindowsSmoke(
@@ -24,25 +24,14 @@ export interface SmokeInstallation {
 }
 
 export async function assertSmokeBinary(binary: string, env: NodeJS.ProcessEnv) {
-  const directory = await mkdtemp(join(tmpdir(), "raypx-native-probe-"));
-  const receipt = join(directory, "probe");
-  try {
-    const probe = spawnProcess([binary, "--native-smoke-probe"], {
-      cwd,
-      env: { ...env, RAYPX_NATIVE_SMOKE_PROBE_FILE: receipt },
-      stdin: "ignore",
-      stdout: "ignore",
-      stderr: "pipe",
-    });
-    const [error, code] = await Promise.all([new Response(probe.stderr).text(), probe.exited]);
-    const result = await readFile(receipt, "utf8").catch(() => undefined);
-    if (code !== 0 || result !== "raypx-native-smoke/1\n")
-      throw new Error(
-        `Native smoke binary did not attest the smoke feature (${code}; receipt ${result ? "invalid" : "missing"}): ${error.trim()}`,
-      );
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+  const probe = Bun.spawn(["go", "version", "-m", binary], {
+    env,
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  const metadata = await new Response(probe.stdout).text();
+  if ((await probe.exited) || !/(?:^|[\s,=])native_smoke(?:[\s,]|$)/m.test(metadata))
+    throw new Error("Native smoke artifact validation: executable lacks native_smoke build tag");
 }
 
 export async function buildSmoke(): Promise<SmokeInstallation> {
@@ -65,39 +54,40 @@ export async function buildSmoke(): Promise<SmokeInstallation> {
       "native-smoke",
     ],
     [process.execPath, "scripts/host/csp.ts", "artifacts/native-smoke/client"],
-    [process.execPath, "scripts/host/tauri.ts", "build"],
+    [process.execPath, "scripts/host/mygo.ts", "build", "-skip-dmg"],
   ]) {
-    const child = spawnProcess(command, {
+    const child = Bun.spawn(command, {
       cwd,
       env,
       stdin: "ignore",
       stdout: "inherit",
       stderr: "inherit",
     });
-    if (await child.exited) throw new Error("Tauri native-smoke packaging failed");
+    if (await child.exited) throw new Error("MyGo native-smoke packaging failed");
   }
-  const output = resolve(cwd, "../../target/native-smoke/release");
-  const installation = shouldInstallWindowsSmoke(process.platform, process.env)
-    ? await installWindowsSmoke(output, resolve(cwd, "resources/bin/raypx.exe"))
-    : {
-        binary:
-          process.platform === "win32"
-            ? join(output, "raypx-desktop.exe")
-            : join(output, "bundle/macos/Raypx Test.app/Contents/MacOS/raypx-desktop"),
-        dispose: async () => {},
-      };
-  await assertSmokeBinary(installation.binary, env);
-  return installation;
+  const platform = process.platform === "win32" ? "windows" : "darwin";
+  const arch = process.arch === "x64" ? "amd64" : process.arch;
+  const output = join(cwd, "build/native-smoke", `${platform}-${arch}`);
+  if (shouldInstallWindowsSmoke(process.platform, process.env))
+    return installWindowsSmoke(output, resolve(cwd, "../cli/dist/raypx.exe"));
+  return {
+    binary:
+      process.platform === "win32"
+        ? join(output, "Raypx Test.exe")
+        : join(output, "Raypx Test.app/Contents/MacOS/Raypx Test"),
+    dispose: async () => {},
+  };
 }
 
-export async function runTauriSmoke(
+export async function runMyGoSmoke(
   installation: SmokeInstallation,
   phase: string,
   directory: string,
   env: NodeJS.ProcessEnv,
 ) {
   const { binary } = installation;
-  if (!existsSync(binary)) throw new Error("Build the Tauri native-smoke release first");
+  await assertSmokeBinary(binary, env);
+  if (!existsSync(binary)) throw new Error("Build the MyGo native-smoke release first");
   const nonce = crypto.randomUUID();
   const endpoint =
     process.platform === "win32"
@@ -109,16 +99,17 @@ export async function runTauriSmoke(
     RAYPX_NATIVE_SMOKE_TOKEN: crypto.randomUUID() + crypto.randomUUID(),
     RAYPX_NATIVE_SMOKE_COMPLETE_FILE: join(directory, `native-smoke-complete-${phase}-${nonce}`),
   };
-  const native = spawnProcess([binary], {
+  const native = Bun.spawn([binary], {
     cwd,
     env: environment,
     stdin: "ignore",
     stdout: "inherit",
     stderr: "inherit",
   });
-  const scenario = spawnProcess(
+  const scenario = Bun.spawn(
     [
       process.execPath,
+      "run",
       resolve(import.meta.dirname, phase === "agents" ? "agents.ts" : "scenario.ts"),
     ],
     { cwd, env: environment, stdin: "ignore", stdout: "inherit", stderr: "inherit" },
@@ -182,7 +173,7 @@ export async function runTauriSmoke(
     }
     const code = await Promise.race([
       native.exited,
-      sleep(5_000).then(() => {
+      Bun.sleep(5_000).then(() => {
         throw new Error("Desktop did not quit after smoke assertions");
       }),
     ]);

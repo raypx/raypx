@@ -1,7 +1,5 @@
 import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devkit/verification";
-import { readFileSync } from "node:fs";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
-import { distributionRequested } from "./events.js";
 import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";
 
@@ -13,7 +11,7 @@ export interface VerificationPlan {
   workspaces: string[];
   tasks: string[];
   artifacts: Artifact[];
-  /** Current-platform Rust checks; Linux-only changes need no macOS/Windows runner. */
+  /** Current-platform Go checks; Linux-only changes need no macOS/Windows runner. */
   native: boolean;
   nativeRunners: string[];
   backend: boolean;
@@ -54,7 +52,7 @@ function containerSmokeInput(file: string) {
     file.startsWith("deploy/") ||
     [
       ".dockerignore",
-      ".github/workflows/ci.yml",
+      ".github/workflows/container-smoke.yml",
       "infra/railway/railway.ts",
       "infra/railway/Caddyfile",
       "packages/tooling/src/build/deployment.ts",
@@ -72,13 +70,9 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
   const paths = files.filter((file) => {
     if (documentation(file)) return false;
     if (
-      [
-        "Cargo.toml",
-        "Cargo.lock",
-        "rust-toolchain.toml",
-        ".gitattributes",
-        ".github/workflows/native.yml",
-      ].includes(file)
+      file === ".gitattributes" ||
+      file === ".github/workflows/native.yml" ||
+      file.startsWith(".github/actions/native-checks/")
     )
       return true;
     const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
@@ -88,7 +82,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
       return (
         /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative) ||
         /^src\/tasks\/(?:leaf|arguments|delegation)\.ts$/.test(relative) ||
-        /^src\/verification\/(?:plan|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
+        /^src\/verification\/(?:plan|ci|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
         /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative) ||
         relative === "tests/integration/task-leaf.test.ts"
       );
@@ -96,7 +90,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
       return relative.startsWith("src/") || relative === "scripts/task.ts";
     if (member.name === "@raypx/tsconfig") return relative === "scripts/task.ts";
     if (member.native)
-      return /^(?:(?:bridge|preferences)\.ts$|package\.json$|src-tauri\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
+      return /^(?:[^/]+\.go$|go\.(?:mod|sum)$|(?:bridge|preferences|mygo\.config)\.ts$|package\.json$|internal\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
         relative,
       );
     if (member.name === "cli")
@@ -125,7 +119,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
 export function verificationPlan(
   model: TaskModel,
   files: string[],
-  options: { full?: boolean; artifacts?: boolean; reasons?: string[]; macos?: boolean } = {},
+  options: { full?: boolean; reasons?: string[]; macos?: boolean } = {},
 ): VerificationPlan {
   const reasons = [...(options.reasons ?? [])];
   const full = Boolean(options.full);
@@ -145,6 +139,14 @@ export function verificationPlan(
   const platforms = () => (reach ??= browserReach(model.root));
   for (const file of files) {
     if (documentation(file)) continue;
+    if (
+      (file.startsWith(".github/workflows/") ||
+        file.startsWith(".github/actions/native-checks/")) &&
+      model.members.some((member) => member.name === "@raypx/tooling")
+    ) {
+      isolated.add("@raypx/tooling");
+      continue;
+    }
     if (file.startsWith("packages/tooling/")) {
       const impact = (tooling ??= toolingImpact(model.root))(file);
       if (impact.global) {
@@ -164,6 +166,8 @@ export function verificationPlan(
     const owner = model.members
       .filter((member) => file.startsWith(member.path + "/"))
       .sort((a, b) => b.path.length - a.path.length)[0];
+    // Go host inputs are verified by Go; they do not import renderer TypeScript.
+    if (owner?.native && native.native && /(?:\.go$|\/go\.(?:mod|sum)$)/.test(file)) continue;
     if (owner)
       mark(
         owner.name,
@@ -178,9 +182,6 @@ export function verificationPlan(
     }
   }
   if (allSources) for (const member of model.members) mark(member.name, "all");
-  if (native.native)
-    for (const member of model.members.filter((candidate) => candidate.native))
-      mark(member.name, "all");
   const reached = affectedWorkspaces(model.members, affected, {
     merge: (before, next) =>
       before === "all" || next === "all" ? ("all" as const) : ("browser" as const),
@@ -196,9 +197,11 @@ export function verificationPlan(
   affected.clear();
   for (const [name, scope] of reached) affected.set(name, scope);
   for (const name of isolated) affected.set(name, "all");
-  const workspaces = [...affected.keys()].sort();
-  const includeArtifacts = options.artifacts ?? full;
-  const artifacts = includeArtifacts
+  const nativeMembers = model.members.filter((member) => member.native && native.native);
+  const workspaces = [
+    ...new Set([...affected.keys(), ...nativeMembers.map((member) => member.name)]),
+  ].sort();
+  const artifacts = full
     ? (["api", "web", "relay", "cli"] as const).filter(
         (name) =>
           affected.has(name) &&
@@ -206,13 +209,12 @@ export function verificationPlan(
       )
     : [];
   const tasks = model.members
-    .filter((member) => affected.has(member.name))
+    .filter((member) => affected.has(member.name) || nativeMembers.includes(member))
     .flatMap((member) =>
       [
-        "check",
-        "test",
-        ...(member.native && native.native ? ["tauri:check", "tauri:test"] : []),
-        ...(includeArtifacts ? ["build"] : []),
+        ...(affected.has(member.name) ? ["check", "test"] : []),
+        ...(member.native && native.native ? ["mygo:check", "mygo:test"] : []),
+        ...(full ? ["build"] : []),
       ]
         .filter((name) => member.scripts[name])
         .map((name) => taskRef(member.name, name)),
@@ -237,47 +239,7 @@ export function verificationPlan(
   };
 }
 
-export function localPlan(
-  root: string,
-  options: { full?: boolean; base?: string; artifacts?: boolean } = {},
-) {
+export function localPlan(root: string, options: { full?: boolean; base?: string } = {}) {
   const changed = changedFiles(root, options.base);
   return verificationPlan(taskModel(root), changed.files, { ...options, reasons: changed.reasons });
-}
-export function githubPlan(root: string, eventName: string, event: Record<string, unknown>) {
-  const pull = event.pull_request as { base: { sha: string } } | undefined;
-  const ref = typeof event.ref === "string" ? event.ref : "";
-  const tag = eventName === "push" && ref.startsWith("refs/tags/");
-  const full = eventName === "workflow_dispatch" || tag;
-  const macos = (event.inputs as Record<string, unknown> | undefined)?.macos;
-  const before =
-    eventName === "pull_request"
-      ? pull?.base.sha
-      : typeof event.before === "string"
-        ? event.before
-        : undefined;
-  const changed = before
-    ? changedFiles(root, "HEAD", { before, head: "HEAD" })
-    : {
-        files: [],
-        reasons: full ? [] : ["Event base unavailable; checking all sources and native targets"],
-      };
-  return {
-    ...verificationPlan(taskModel(root), changed.files, {
-      full,
-      artifacts: full,
-      reasons: changed.reasons,
-      macos: tag || (eventName === "workflow_dispatch" && (macos === true || macos === "true")),
-    }),
-    distribution: distributionRequested(
-      eventName,
-      ref,
-      (event.inputs as Record<string, unknown> | undefined)?.distribution,
-    ),
-  };
-}
-export function readGithubPlan(root: string) {
-  const file = process.env.GITHUB_EVENT_PATH;
-  const event = file ? (JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>) : {};
-  return githubPlan(root, process.env.GITHUB_EVENT_NAME ?? "workflow_dispatch", event);
 }
