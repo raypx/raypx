@@ -1,0 +1,64 @@
+packages/i18n/src/messages/en.ts
+  s_2d665babe6fe00::t_f2daba2596a6b2 505
+  s_2d665babe6fe00::t_5e1037c1638fa4 404
+  s_2d665babe6fe00::t_a85be055a1a4d0 503-504
+packages/tasks/src/model/run-steps.test.ts
+  s_2d665babe6fe00::t_b198419febc727 1-64,69-87,95-118
+  s_2d665babe6fe00::t_d3984bcf92c553 65-68,88-94
+packages/tasks/src/client/run-timeline.component.test.tsx
+  s_2d665babe6fe00::t_a7a5f4a69dd8df 1-46
+packages/tasks/src/client/task-detail.tsx
+  s_2d665babe6fe00::t_296acb39e7dde6 11,186
+  s_2d665babe6fe00::t_a85be055a1a4d0 21-22,291-298,301
+packages/tasks/src/client/run-timeline.tsx
+  s_2d665babe6fe00::t_f2daba2596a6b2 120
+  s_2d665babe6fe00::t_209589413ca485 1-78,81-108,110-119,121-162
+  s_2d665babe6fe00::t_296acb39e7dde6 79-80
+  s_2d665babe6fe00::t_8e9161d3b3754d 109
+packages/tasks/src/client/format-duration.ts
+  s_2d665babe6fe00::t_c5cae6e58b0aa1 1-19
+e2e/tests/journeys/tasks/conversation.ts
+  s_2d665babe6fe00::t_f2daba2596a6b2 97-106,108,241-246
+  s_2d665babe6fe00::t_97e183eaf13e6f 247-249
+packages/tasks/src/client/conversation.tsx
+  s_2d665babe6fe00::t_5e1037c1638fa4 11-12,37-46,269-273
+  s_2d665babe6fe00::t_190d9c8bfefb95 383-393
+DESIGN.md
+  s_2d665babe6fe00::t_b200ac5d0b17bc 132-133
+  s_2d665babe6fe00::t_77cc36b1e3e573 134-136
+packages/tasks/src/client/tool-activity.component.test.tsx
+  s_2d665babe6fe00::t_0d8e871b4ed15c 1-46
+packages/tasks/src/model/run-steps.ts
+  s_2d665babe6fe00::t_d3984bcf92c553 57-58,77-78
+  s_2d665babe6fe00::t_a749e0b29be348 1-56,59-76,79-82
+packages/tasks/src/client/shimmer-text.tsx
+  s_2d665babe6fe00::t_4762e75bfdef11 1-44
+packages/tasks/src/client/tool-activity.tsx
+  s_2d665babe6fe00::t_c5cae6e58b0aa1 13
+  s_2d665babe6fe00::t_4c0897ba5888f0 1-12,14-24,27,34,48,52-102,104-108,112-119
+  s_2d665babe6fe00::t_190d9c8bfefb95 25-26,28-33,35-47,49-51,103
+  s_2d665babe6fe00::t_296acb39e7dde6 109-111
+packages/tasks/AGENTS.md
+  s_2d665babe6fe00::t_b200ac5d0b17bc 58-63
+  s_2d665babe6fe00::t_77cc36b1e3e573 64-67
+packages/i18n/src/messages/zh.ts
+  s_2d665babe6fe00::t_a85be055a1a4d0 476-477
+  s_2d665babe6fe00::t_8b3e925101d57d 381
+  s_2d665babe6fe00::t_f2daba2596a6b2 478
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "82cb43c32481aa87f7f98336eb0594f0ad59a61a",
+  "prompts": {},
+  "sessions": {
+    "s_2d665babe6fe00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
