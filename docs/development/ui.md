@@ -1,9 +1,9 @@
 # Frontend components and source adaptation
 
 Raypx's Web and Desktop interfaces use the same `@raypx/ui` shadcn base-nova
-components backed by Base UI. `DESIGN.md` defines the neutral light/dark palette,
-control sizes, layout density and motion. Feature code uses Tailwind utilities,
-translated copy and icons from `@raypx/icons`.
+components backed by Base UI. `DESIGN.md` defines the neutral light/dark palette, the
+scoped public-page accent, control sizes, layout density and motion. Feature code
+uses Tailwind utilities, translated copy and icons from `@raypx/icons`.
 
 ## Ownership
 
@@ -93,34 +93,31 @@ ease-out, with matching chevrons. Keep padding inside the animated panel. Keyboa
 focus disables the transition, and reduced motion removes it entirely. Routine
 tabs only transition their colors/shadow for pointer use. Streaming messages,
 virtual row placement, search results and workbench page sections do not animate in.
-Public pages render their content without entrances. The homepage's application
-frame uses `scrollSettle` from `src/components/brand-accent.ts`, a scroll-linked scale
-and offset that never changes opacity. The same module defines the logo palette as
-`--brand-*` properties on the landing and authentication layouts. Homepage ambient loops are the only
+Public pages render their content without entrances. `src/components/brand-accent.ts`
+defines the logo palette as `--brand-*` properties for the landing and authentication
+layouts, plus `accentGradient` and `scrollSettle`, a scroll-linked scale and offset for
+the homepage frame that never changes opacity. Homepage ambient loops are the only
 autoplaying motion: `ParticleField` draws a canvas constellation and `FlowPackets`
 animates the connection line with the Web Animations API; both stop offscreen and in
 hidden tabs, and the frame light is a CSS rotation hidden under reduced motion.
 `useDemoPlayback` in `demo-playback.ts` plays the example's steps after it has been
-visible for a moment; `demoStage` derives each frame from progress so playback only
+visible for a moment; `demoStage` derives each frame from progress, so playback only
 fades content and the frame keeps its height. Hover, step-card focus, offscreen and
-hidden tabs hold it; choosing a step or the autoplay toggle stops it.
-Pointer-follow spotlights and artwork shifts respond to hover only. Reduced motion
-removes all of it.
+hidden tabs hold it; choosing a step or the autoplay toggle stops it. Pointer-follow
+spotlights and artwork shifts respond to hover only. Reduced motion removes all of it.
 
 ## Preview and validation
 
-The public homepage pairs its main actions with a labelled interactive workflow
-example: session, Diff review and result. This is illustrative data, not an account
-projection or an executable session. Keep the connected-computer action separate
-and retain its existing session/pending/error behavior. The preview's selected
-indicator and content move in the workflow direction for 200ms after pointer
-input; keyboard and reduced-motion changes are immediate. It has no autoplay,
-infinite effects, animation dependency or private feature reads.
-Keep the homepage concise: icon/name links carry navigation, the Desktop-to-Web
-diagram explains the connection boundary and `HelpHint` exposes draft privacy.
-Workflow examples use code, file changes and receipt markers instead of repeated
-explanatory paragraphs. The example notice remains visible; diagrams never imply
-an observed connection or live account state.
+The public homepage pairs its main actions with a labelled workflow example (session,
+diff review and result) in an application frame. This is illustrative data, not an
+account projection or an executable session. Step cards select the example and show
+playback progress; keep the connected-computer action separate and retain its existing
+session/pending/error behavior. Workspace links show labelled example interfaces with
+fixed sample data. Examples use code, file changes and receipt markers instead of
+explanatory paragraphs, `HelpHint` exposes draft privacy, the example notice remains
+visible and diagrams never imply an observed connection or live account state. The
+landing E2E spec turns autoplay off before its manual checks and separately covers
+autoplay, hover hold, the toggle, ambient motion and reduced motion.
 
 `bun run dev:storybook` previews UI-only specimens, including foundation state
 matrices. Storybook consumes UI public entries and static data; product flows

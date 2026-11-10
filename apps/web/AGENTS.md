@@ -38,39 +38,37 @@ application is an independent composition root and is never imported by another 
 - `(app)/route.tsx` resolves account context with `queryClient.fetchQuery(accountQuery())`
   while keeping the application shell public. Guests can browse projects, tasks, approvals
   and preferences; `SessionBoundary` mounts private views only after a confirmed session.
-  `src/routes/(landing)/` owns the public `/` homepage with its own header and
-  document layout, without account loaders or the workspace shell. A client-only `UserButton` shares
-  the sidebar account menu, with a fixed-size SSR placeholder. The landing header keeps
-  that account button when the session check fails; the computer card keeps its connect
-  action. Sidebar
-  session errors stay on the retry control. Landing views
-  live under `features/landing/components/`. They subscribe to Better Auth's shared
-  session store after hydration: confirmed sessions open projects first and connect
-  computers through settings; guests open projects and sessions from the hero, and
-  sign-in return paths stay on the computer action.
-  Pending checks show a disabled loading action. A failed check keeps the connect or
-  sign-in action. Until the
-  session is confirmed, home keeps the public project and session actions. Home links projects, approvals,
-  automations and memory, and never mounts private project, device, task, job or memory
-  reads; the account menu reads permissions only for confirmed sessions.
-  The homepage workflow preview is an explicitly labelled, static-data example.
-  Its Base UI tabs never mount execution clients or private reads. Pointer and autoplay
-  changes use a short directional transition; keyboard and reduced-motion changes are immediate.
-  Home stacks a centered hero with contextual draft help, the preview in an
-  application frame chosen by step-card tabs, a three-step overview, workspace links
-  with labelled example interfaces, and a Desktop-to-Web connection band. Step tabs
-  and workspace links use their titles as accessible names and describe themselves
-  with their hints; the diagram never implies a live connection or reads device state.
-  Ambient homepage motion (hero particles, frame light, connection packets) is
-  decorative, pauses offscreen or in hidden tabs and is still under reduced motion.
-  The example plays its steps until a visitor chooses one or turns the labelled
-  autoplay toggle off; hover and step-card focus hold it and reduced motion starts it off.
-  The landing layout defines the logo palette as `--brand-*` properties and clips
-  horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
-  The `(app)/projects` route owns
-  `/projects`, including its guest sign-in gate and remote project list.
-  An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before
-  `router.invalidate()`.
+  `src/routes/(landing)/` owns the public `/` homepage with its own header and document
+  layout, without account loaders or the workspace shell; its views live under
+  `features/landing/components/`. A client-only `UserButton` shares the sidebar account
+  menu with a fixed-size SSR placeholder and stays when the session check fails; sidebar
+  session errors stay on the retry control. Landing views subscribe to Better Auth's
+  shared session store after hydration: confirmed sessions open projects first and
+  connect computers through settings; guests open projects and sessions from the hero,
+  and sign-in return paths stay on the computer action. Pending checks show a disabled
+  loading action, a failed check keeps the connect or sign-in action, and until the
+  session is confirmed home keeps the public project and session actions. Home links
+  projects, approvals, automations and memory and never mounts private project, device,
+  task, job or memory reads; the account menu reads permissions only for confirmed
+  sessions.
+  Home stacks a centered hero with contextual draft help, the workflow preview in an
+  application frame chosen by step-card tabs, a three-step overview, workspace links with
+  labelled example interfaces and a Desktop-to-Web connection band. The preview is an
+  explicitly labelled static-data example whose Base UI tabs never mount execution
+  clients or private reads. `useDemoPlayback` plays its steps until a visitor chooses one
+  or turns the labelled autoplay toggle off; hover and step-card focus hold it, and
+  reduced motion starts it off. Pointer and autoplay changes use a short directional
+  transition; keyboard and reduced-motion changes are immediate. Step tabs and workspace
+  links use their titles as accessible names and their hints as descriptions; the
+  diagram never implies a live connection or reads device state. Hero particles, the
+  frame light and connection packets are decorative, pause offscreen or in hidden tabs
+  and stay still under reduced motion. The landing layout applies the `--brand-*`
+  palette and clips horizontal overflow (`overflow-x-clip`, which keeps the sticky
+  header).
+  The `(app)/projects` route owns `/projects`, including its guest sign-in gate and
+  remote project list. An unavailable API renders retryable feedback rather than a
+  signed-out state. Account state is rechecked on navigation; sign-out handlers call
+  `queryClient.clear()` before `router.invalidate()`.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
   The root passes this request snapshot to the language provider so SSR and the first
   client render use the same locale and catalog; browser storage is restored only
@@ -124,9 +122,12 @@ application is an independent composition root and is never imported by another 
   Confirm session revocation with the shared shadcn dialog and keep failures retryable.
 - `src/routes/(auth)/` holds the authentication routes under the public logo,
   theme and language header. A single bordered 16px panel caps at 60rem; at 1024px
-  it pairs the form with product facts in a 5:4 split. Narrower pages use one
-  column, a 25rem form and natural document scrolling. The application owns panel
-  gutters; shared Auth owns fields and feedback.
+  it pairs the form with numbered product facts and a labelled example approval in a
+  5:4 split. The layout applies the `--brand-*` palette and renders without entrances.
+  Narrower pages use one column, a 25rem form and natural document scrolling. The
+  application owns panel gutters; shared Auth owns fields and feedback. When signup
+  cannot show the form, its unavailable and closed states keep an `h1`, a centered
+  status and a full-width action like the form's completion states.
   Each route renders the thin `src/features/auth/components/auth-form.tsx` adapter
   with its mode. The adapter injects the client, router query and navigation into
   the shared form. The auth layout validates an application-page `returnTo` allowlist;

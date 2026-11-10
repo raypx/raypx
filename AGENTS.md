@@ -104,8 +104,9 @@ The accepted foundation design and current architecture decisions define the imp
   Never run new migrations or destructive commands against an old/operator database.
 - File grants constrain built-in file operations. External commands retain OS permissions.
 - Local protocol dates are ISO strings; terminal bytes use base64.
-- Preserve original logos and neutral light/dark visual tokens. Keep keyboard focus,
-  accessible labels, reduced motion and Chinese/English copy.
+- Preserve original logos and neutral light/dark visual tokens. The logo-palette accent
+  is limited to public-page decoration as scoped in DESIGN.md; the workbench stays
+  neutral. Keep keyboard focus, accessible labels, reduced motion and Chinese/English copy.
 - Use existing shadcn/Base UI primitives from `@raypx/ui` for DOM controls.
   Compose product-specific controls in Blocks or the owning feature package.
   Use Select, RadioGroup and Collapsible for feature interaction instead of

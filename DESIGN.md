@@ -1,7 +1,9 @@
 # Raypx visual system
 
 Keep original logos and brand artwork. Use neutral light/dark semantic tokens, Base UI
-for DOM primitives, Tailwind v4, Hugeicons Free through `@raypx/icons` and the existing system font stack.
+for DOM primitives, Tailwind v4, Hugeicons Free through `@raypx/icons` and the existing
+system font stack. The only color beyond the neutral palette is the logo accent that
+public pages may use as decoration, scoped in the public-page rules below.
 Primary actions are dark on light backgrounds and light on dark backgrounds.
 Express feature styles and responsive states with Tailwind utilities in components.
 CSS entry points register sources and shared styles; avoid feature-specific selectors.
@@ -33,32 +35,35 @@ gutters. Sidebar navigation and project shortcuts share a 36px minimum row and
 
 Desktop opens the most recent valid local project, with project authorization,
 Agent readiness and the first message as its empty state. Web uses a public landing
-page at `/` and opens remote projects at `/projects`;
-account details live at `/account`. The landing header uses a compact account avatar
-with the same account, settings and permission-filtered administration menu as the
-sidebar. Its footer groups brand copyright with privacy and GitHub links. Local work remains available before login.
-Public pages (landing, authentication, privacy) share one header, which gains a surface
-only after scrolling, and may add texture: a masked neutral dot grid, framed surfaces
-and artwork built from tokens and Hugeicons. Artwork is `aria-hidden` and moves only on
-hover; privacy artwork stays abstract. The homepage and the authentication side region
-may use the logo palette (sky, blue, violet, pink) for glows, gradient marks and
-selection accents, never for controls or text that must be read, and may show example
-interfaces with fixed sample data when each frame is labelled as an example. The
-workbench keeps the neutral tokens. The homepage shows its content
-on first paint: a centered hero, the labelled example in an application frame chosen by
-step cards, a three-step overview, workspace links with example interfaces and the
-connection band. The frame may settle with scroll where view timelines exist, without
-changing opacity. The homepage alone may run ambient loops: a particle constellation
-behind the hero that reacts to a mouse pointer, a light travelling around the example
-frame and packets along the connection line, and the example may play its steps. They
-pause offscreen and in hidden tabs; reduced motion leaves one still frame or hides them.
-The playing example holds while its content is hovered or a step card has focus, stops
-when a visitor chooses a step and always offers a labelled autoplay toggle. Authentication and privacy
-pages render their content on first paint, without entrances or loops; no content
-waits for scrolling to appear.
-Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.
+page at `/` and opens remote projects at `/projects`; account details live at
+`/account`. Local work remains available before login. Remote actions offer contextual
+sign-in and return to the requested page. Web layouts also serve phone browsers.
 The Expo iOS/Android app requires login by default and opens its account screen
 after authentication. Native task views and push notifications are later work.
+
+Public pages (landing, authentication, privacy) share one header, which gains a surface
+only after scrolling. The landing header adds a compact account avatar with the same
+account, settings and permission-filtered administration menu as the sidebar, and the
+landing footer groups brand copyright with privacy and GitHub links. Public pages may
+add texture: a masked neutral dot grid, framed surfaces and artwork built from tokens
+and Hugeicons. Artwork is `aria-hidden`; privacy artwork stays abstract. The homepage
+and the authentication side region may use the logo palette (sky, blue, violet, pink)
+for glows, gradient marks and selection accents, never for controls or text that must
+be read, and may show example interfaces with fixed sample data when each frame is
+labelled as an example. The workbench never uses the logo palette.
+
+The homepage shows its content on first paint: a centered hero, the labelled example in
+an application frame chosen by step cards, a three-step overview, workspace links with
+example interfaces and the Desktop-to-Web connection band. It alone may run ambient
+loops: a particle constellation behind the hero that reacts to a mouse pointer, a light
+travelling around the example frame, packets along the connection line and the example
+playing its steps. They pause offscreen and in hidden tabs; reduced motion leaves one
+still frame or hides them. The playing example holds while its content is hovered or a
+step card has focus, stops when a visitor chooses a step and always offers a labelled
+autoplay toggle. The frame may also settle with scroll where view timelines exist,
+without changing opacity. Other artwork moves only on hover. Authentication and privacy
+pages render without entrances or loops, and no public content waits for scrolling to
+appear.
 
 Desktop and Web share one sidebar order: Projects and the pending inbox, then project
 shortcuts, then Automations and Memory above one fixed footer row for the account and
@@ -83,13 +88,12 @@ Authentication uses one centered, bordered panel with a 16px radius. Web keeps t
 original logo and theme/language controls in a shared public header. At 1024px and
 above, the panel caps at 60rem and pairs the form with numbered product facts and a
 labelled example approval in a static side region; narrower screens use one column
-and natural document scrolling. Registration states that replace the form (unavailable,
-closed) use the same centered status, title and full-width action as the form's own
-completion states.
-The form caps at 25rem. Desktop uses a compact single-column panel inside its
-native title-bar frame, with the return-to-workspace action above it. Applications
-own panel padding; shared Auth owns only field rhythm and feedback. All five modes
-share the same title, description, field, primary-action and footer hierarchy.
+and natural document scrolling. The form caps at 25rem. Desktop uses a compact
+single-column panel inside its native title-bar frame, with the return-to-workspace
+action above it. Applications own panel padding; shared Auth owns only field rhythm and
+feedback. All five modes share the same title, description, field, primary-action and
+footer hierarchy, and registration states that replace the form (unavailable, closed)
+use the same centered status, title and full-width action as its completion states.
 Successful password resets and verified email links replace the form with a clear
 confirmation and next action. Invalid links offer recovery. Email-send states keep
 the address and resend countdown visible; completion refresh retries do not repeat
@@ -100,7 +104,7 @@ applications and retain password-manager autocomplete.
 High-frequency controls respond immediately; color and focus transitions use the
 shared 150ms control cadence. Menus and popovers enter in 150ms with ease-out and
 small displacement; sheets may use 200ms. Animate state changes, not workbench page
-sections or every arriving message; public pages follow the entrance rule above.
+sections or every arriving message; public pages follow the motion rules above.
 Reduced motion removes movement, fades and spinning.
 Keep browser text selection and carets aligned with the neutral palette. Coarse
 pointers receive 44px menu/search targets and expanded checkbox/radio/switch hit areas.
