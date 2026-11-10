@@ -401,6 +401,7 @@ export default {
       "All loaded messages are shown. Load earlier messages for more history.",
     you: "You",
     streaming: "Writing…",
+    agentWorking: "{agent} is working…",
     olderMessages: "Load earlier messages",
     loadingHistory: "Loading history…",
     messageTruncated:
@@ -499,6 +500,9 @@ export default {
     delivery_failed: "Delivery failed",
     result: "Agent result",
     activity: "Activity",
+    toolCalls: "{count, plural, one {# tool call} other {# tool calls}}",
+    toolFailures: "{count} failed",
+    noActivity: "No activity yet.",
     followUp: "Follow up in the same session",
     permission: "Permission",
     question: "Question",

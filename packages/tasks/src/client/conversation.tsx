@@ -8,8 +8,8 @@ import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { TaskMarkdown } from "./markdown.tsx";
-import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
-import { CodeFolderIcon } from "@raypx/icons/code-folder";
+import { ShimmerText } from "./shimmer-text.tsx";
+import { ToolActivityRow } from "./tool-activity.tsx";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 
 type Gap = { id: number; before: number; after: number };
@@ -28,16 +28,20 @@ type Row =
   | { id: string; kind: "prompt" | "older" | "summary" }
   | { id: string; kind: "gap"; gap: Gap }
   | { id: string; kind: "activity"; entry: TaskActivity };
-const toolTones: Record<Extract<TaskActivity, { kind: "tool" }>["status"], StatusTone> = {
-  running: "info",
-  succeeded: "success",
-  failed: "danger",
-  interrupted: "warning",
-};
 const noGaps: readonly Gap[] = [];
 
 function isToolRow(row: Row | undefined) {
   return row?.kind === "activity" && row.entry.kind === "tool";
+}
+
+/** Live work with no streaming text or running tool shows a quiet working line. */
+function showsWorking(task: AgentTask, entries: TaskActivity[]) {
+  if (task.status !== "running") return false;
+  return !entries.some(
+    (entry) =>
+      (entry.kind === "message" && entry.status === "streaming") ||
+      (entry.kind === "tool" && entry.status === "running"),
+  );
 }
 
 function inputStatusLabel(status: Extract<TaskActivity, { kind: "input" }>["status"]) {
@@ -262,19 +266,11 @@ function ConversationViewport({
       );
     if (entry.kind === "tool")
       return (
-        <div
-          aria-busy={entry.status === "running"}
-          data-first={!isToolRow(rows[index - 1])}
-          data-last={!isToolRow(rows[index + 1])}
-          className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-x border-border bg-muted/30 px-3 py-2.5 text-xs data-[first=true]:rounded-t-lg data-[first=true]:border-t data-[last=true]:rounded-b-lg data-[last=true]:border-b"
-        >
-          <CodeFolderIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 font-mono wrap-anywhere">{entry.name}</span>
-          <StatusBadge tone={toolTones[entry.status]} label={t(entry.status)} />
-          <time dateTime={entry.updatedAt} className="text-muted-foreground tabular-nums">
-            {format.dateTime(new Date(entry.updatedAt), { hour: "2-digit", minute: "2-digit" })}
-          </time>
-        </div>
+        <ToolActivityRow
+          entry={entry}
+          first={!isToolRow(rows[index - 1])}
+          last={!isToolRow(rows[index + 1])}
+        />
       );
     return null;
   }
@@ -384,6 +380,17 @@ function ConversationViewport({
           </div>
         )}
       </div>
+      {showsWorking(task, entries) && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="size-1.5 rounded-full bg-current motion-safe:animate-pulse"
+          />
+          <ShimmerText active>
+            {t("agentWorking", { agent: agentProviderMetadata[task.provider].shortLabel })}
+          </ShimmerText>
+        </p>
+      )}
       {entries.some((entry) => entry.kind === "usage" && entry.known === false) ? (
         <p className="text-xs text-muted-foreground">{t("usageUnknown")}</p>
       ) : (

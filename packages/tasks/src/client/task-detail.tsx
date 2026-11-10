@@ -8,7 +8,7 @@ import { Approval } from "./approval.tsx";
 import { ContextSnapshot } from "@raypx/memory/client";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskWorkspacePort } from "../model/port.ts";
-import type { SequencedEvent, SyncDevice } from "@raypx/contracts/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
@@ -18,6 +18,8 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { TaskStatusBadge } from "./task-status.tsx";
+import { RunTimeline } from "./run-timeline.tsx";
+import { runSteps } from "../model/run-steps.ts";
 
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 
@@ -181,11 +183,7 @@ function TaskDetailView({
         {t("sessionOutsideProject")}
       </p>
     );
-  function eventLabel(event: SequencedEvent["event"]) {
-    if (event.kind === "status") return t(event.status);
-    if (event.kind === "request") return event.request.title;
-    return t("applied");
-  }
+  const steps = runSteps(data.events, data.requests);
   return (
     <div className="flex flex-col gap-5">
       {dialog}
@@ -290,13 +288,17 @@ function TaskDetailView({
         <CollapsibleTrigger render={<Button variant="ghost" size="sm" className="group" />}>
           <ChevronRightIcon aria-hidden="true" className="group-data-panel-open:rotate-90" />
           {t("activity")}
+          {steps.length > 0 && (
+            <span
+              aria-hidden="true"
+              className="rounded-sm bg-muted px-1 text-xs text-muted-foreground tabular-nums"
+            >
+              {steps.length}
+            </span>
+          )}
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <ol className="mt-3 flex flex-col gap-2 text-xs text-muted-foreground">
-            {data.events.map(({ cursor: eventCursor, event }) => (
-              <li key={eventCursor}>{eventLabel(event)}</li>
-            ))}
-          </ol>
+          <RunTimeline steps={steps} live={isTaskActive(data.task)} />
         </CollapsibleContent>
       </Collapsible>
       {data.task.model && (

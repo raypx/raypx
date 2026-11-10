@@ -55,6 +55,16 @@ Search and status/agent/computer filters apply only to the loaded page; show the
 matching/loaded count and retain cursor navigation even when no rows match.
 Lists, details and approvals render session states through `TaskStatusBadge`
 (`client/task-status.tsx`), so every state keeps the same label, variant and shape.
+Conversation tool calls render through `ToolActivityRow` (`client/tool-activity.tsx`):
+an intent icon from the tool name, a live or final duration, the status label and
+the update time. `ShimmerText` animates running names with the Web Animations API
+and stays static under reduced motion. A running session with no streaming text or
+running tool shows a working line outside the virtual list, so row counts and
+scroll anchoring are unchanged.
+The Activity disclosure renders `RunTimeline` from `runSteps` (`model/run-steps.ts`):
+one row per status change, one per human request at its current status and one
+summary per run of tool calls, with the step in flight marked `aria-current`.
+Messages and streaming deltas stay in the conversation.
 Use shadcn controls and confirmation dialogs for disconnecting a computer. Keep
 failed mutations open for a deliberate retry and block duplicate submissions.
 Style components with Tailwind utilities. The client CSS entry only registers

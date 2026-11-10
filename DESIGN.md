@@ -129,7 +129,11 @@ narrow screens. Session workspaces pair a persistent composer and project-scoped
 with a session list and a separate detail column. Completed sessions lead with the
 result and collapse the process. Overview counts describe the loaded page and switch
 filters in one segmented row; pending answers and running work are distinct. Use
-actual statuses, never synthetic progress. Session statuses share one badge whose
+actual statuses, never synthetic progress. Tool calls show an intent icon, a live or
+final duration and their status; while a session runs with no visible output, one
+quiet working line says so. The Activity disclosure reads as one run: a glyph spine
+of status changes, human requests and tool-call summaries, with the step in flight
+banded. Session statuses share one badge whose
 shape carries the state: a pulsing dot while work runs, a solid dot when an answer
 is needed, a check when completed and an alert on failure. Metadata rows separate
 their items with middle dots. Stack columns on narrow screens and focus the opened

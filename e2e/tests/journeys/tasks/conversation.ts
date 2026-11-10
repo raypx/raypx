@@ -94,8 +94,18 @@ export function registerTests() {
         const before = route.request().postDataJSON()?.json?.before;
         return authResponse(route, { json: before ? [] : [task] });
       });
+      const tool = activity.find((entry) => entry.kind === "tool");
+      const events = [
+        { kind: "status" as const, status: "running" as const, summary: "" },
+        ...(tool ? [{ kind: "activity" as const, entry: tool }] : []),
+        { kind: "request" as const, request: approval },
+        { kind: "status" as const, status: "waiting" as const, summary: "" },
+      ].map((event, index) => ({
+        cursor: index + 1,
+        event: { id: crypto.randomUUID(), taskId: task.id, ...event },
+      }));
       await page.route("**/rpc/tasks/get", (route) =>
-        authResponse(route, { json: { task, activity, events: [], requests: [approval] } }),
+        authResponse(route, { json: { task, activity, events, requests: [approval] } }),
       );
       await page.route("**/rpc/devices/list", (route) =>
         authResponse(route, {
@@ -228,6 +238,15 @@ export function registerTests() {
       const activityToggle = page.getByRole("button", { name: "Activity", exact: true });
       await activityToggle.click();
       await expect(activityToggle).toHaveAttribute("aria-expanded", "true");
+      const run = page.getByRole("list").filter({ hasText: "1 tool call" });
+      await expect(run.getByRole("listitem")).toHaveCount(4);
+      await expect(
+        run.getByRole("listitem").filter({ hasText: "Update task delivery" }),
+      ).toContainText("Needs you");
+      await run.scrollIntoViewIfNeeded();
+      await capture(page, {
+        path: test.info().outputPath(`${surface.toLowerCase()}-activity.png`),
+      });
       await activityToggle.press("Space");
       await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
       const composer = page.getByRole("textbox", { name: "Add an instruction", exact: true });
