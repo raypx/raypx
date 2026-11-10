@@ -1,6 +1,6 @@
 import { continueTaskFailure, followUpPlan, taskSelection } from "../model/composition.ts";
 import { ModelPicker } from "./model-picker.tsx";
-import type { AgentTask, ModelSelection } from "@raypx/core/tasks";
+import type { ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Approval } from "./approval.tsx";
@@ -17,7 +17,7 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
-import { Badge } from "@raypx/ui/components/ui/badge";
+import { TaskStatusBadge } from "./task-status.tsx";
 
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 
@@ -33,13 +33,6 @@ import { useTaskConversation } from "./use-task-conversation.ts";
 import { isLocalWorkspace, workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
 import { useSessionDraft } from "./use-session-draft.ts";
 import { submitShortcut } from "./submit-shortcut.ts";
-
-function taskStatusVariant(status: AgentTask["status"]) {
-  if (status === "waiting") return "default";
-  if (status === "failed" || status === "interrupted" || status === "delivery_failed")
-    return "destructive";
-  return "secondary";
-}
 
 interface TaskDetailProps {
   client: TaskWorkspacePort;
@@ -198,7 +191,11 @@ function TaskDetailView({
       {dialog}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-2">
-          <Badge variant={taskStatusVariant(data.task.status)}>{t(data.task.status)}</Badge>
+          <TaskStatusBadge
+            status={data.task.status}
+            label={t(data.task.status)}
+            className="self-start"
+          />
           <h2 className="line-clamp-3 text-lg leading-snug font-semibold [overflow-wrap:anywhere]">
             {data.task.prompt}
           </h2>
@@ -213,7 +210,7 @@ function TaskDetailView({
           </Button>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border pb-5 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border pb-5 text-xs text-muted-foreground *:empty:hidden *:not-first:before:mr-2 *:not-first:before:text-muted-foreground/50 *:not-first:before:content-['·']">
         <span>{agentProviderMetadata[data.task.provider].label}</span>
         <span>{devices.find((device) => device.id === data.task.deviceId)?.name}</span>
         <span>

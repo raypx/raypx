@@ -1,6 +1,7 @@
 import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import { cn } from "@raypx/ui/lib/utils";
 import { isTaskActive } from "../model/task.ts";
 import type { TaskFilters } from "./task-filters.tsx";
 
@@ -34,30 +35,35 @@ export function TaskOverview({
     },
   ] as const;
   return (
-    <div className="mb-3 flex flex-col gap-2">
+    <div className="mb-3 flex min-w-0 flex-col gap-2">
       <h2 className="text-sm font-semibold">{t("taskHistory")}</h2>
       <div
         role="group"
         aria-label={t("pageOverview")}
-        className="flex flex-wrap gap-1 border-b border-border pb-2"
+        className="flex max-w-full gap-0.5 self-start overflow-x-auto rounded-lg bg-muted p-0.5 [scrollbar-width:none]"
       >
-        {groups.map((group) => (
-          <Button
-            key={group.status}
-            size="sm"
-            variant={filters.status === group.status ? "secondary" : "ghost"}
-            aria-pressed={filters.status === group.status}
-            onClick={() => onChange({ ...filters, status: group.status })}
-          >
-            {group.label === "needsYou" && group.count > 0 && (
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-foreground" />
-            )}
-            {t(group.label)}
-            <span className="min-w-5 rounded-sm bg-muted px-1 text-center text-xs text-muted-foreground tabular-nums">
-              {group.count}
-            </span>
-          </Button>
-        ))}
+        {groups.map((group) => {
+          const selected = filters.status === group.status;
+          return (
+            <Button
+              key={group.status}
+              size="sm"
+              variant="ghost"
+              aria-pressed={selected}
+              onClick={() => onChange({ ...filters, status: group.status })}
+              className={cn(
+                "shrink-0 gap-1.5 px-2 text-muted-foreground hover:bg-background/60 hover:text-foreground",
+                selected && "bg-background text-foreground shadow-sm hover:bg-background",
+              )}
+            >
+              {group.label === "needsYou" && group.count > 0 && (
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-foreground" />
+              )}
+              {t(group.label)}
+              <span className="text-xs text-muted-foreground tabular-nums">{group.count}</span>
+            </Button>
+          );
+        })}
       </div>
     </div>
   );

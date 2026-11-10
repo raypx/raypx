@@ -127,9 +127,14 @@ and change together.
 Application chrome composes the shadcn Sidebar, with a persistent icon rail on
 narrow screens. Session workspaces pair a persistent composer and project-scoped drafts
 with a session list and a separate detail column. Completed sessions lead with the
-result and collapse the process. Overview counts describe the loaded
-page; pending answers and running work are distinct. Use actual statuses, never
-synthetic progress. Stack columns on narrow screens and focus the opened detail.
+result and collapse the process. Overview counts describe the loaded page and switch
+filters in one segmented row; pending answers and running work are distinct. Use
+actual statuses, never synthetic progress. Session statuses share one badge whose
+shape carries the state: a pulsing dot while work runs, a solid dot when an answer
+is needed, a check when completed and an alert on failure. Metadata rows separate
+their items with middle dots. Stack columns on narrow screens and focus the opened
+detail. Charts use thin columns with rounded data ends on one baseline, label only
+the extreme and the latest value, show every value on hover and keep a table view.
 
 Terminal requests have a separate section from managed tasks. Load tool inputs only
 on expansion; show waiting, decided, delivered and uncertain outcomes accurately.

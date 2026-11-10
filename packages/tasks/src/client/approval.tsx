@@ -6,6 +6,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
 import { Badge } from "@raypx/ui/components/ui/badge";
+import { TaskStatusBadge } from "./task-status.tsx";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -83,9 +84,11 @@ export function Approval({
             {context}
           </div>
         </div>
-        <Badge variant={request.status === "pending" ? "default" : "secondary"}>
-          {t(request.status === "pending" ? "waiting" : request.status)}
-        </Badge>
+        {request.status === "pending" ? (
+          <TaskStatusBadge status="waiting" label={t("waiting")} />
+        ) : (
+          <Badge variant="secondary">{t(request.status)}</Badge>
+        )}
       </div>
       {task && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{task.prompt}</p>}
       {request.body && <ApprovalBody request={request} />}

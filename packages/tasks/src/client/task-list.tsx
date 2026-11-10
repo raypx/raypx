@@ -14,7 +14,7 @@ import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { AgentIcon } from "@raypx/icons/agent";
-import { Badge } from "@raypx/ui/components/ui/badge";
+import { TaskStatusBadge } from "./task-status.tsx";
 
 export function TaskList({
   tasks,
@@ -180,24 +180,19 @@ export function TaskList({
                   </span>
                 </span>
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-8.5 text-xs text-muted-foreground">
-                  <span>{agentProviderMetadata[task.provider].label}</span>
-                  <span className="truncate">
-                    {devices
-                      .find((device) => device.id === task.deviceId)
-                      ?.projects.find((project) => project.id === task.projectId)?.name ??
-                      devices.find((device) => device.id === task.deviceId)?.name}
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="shrink-0">{agentProviderMetadata[task.provider].label}</span>
+                    <span aria-hidden="true" className="text-muted-foreground/50">
+                      ·
+                    </span>
+                    <span className="truncate">
+                      {devices
+                        .find((device) => device.id === task.deviceId)
+                        ?.projects.find((project) => project.id === task.projectId)?.name ??
+                        devices.find((device) => device.id === task.deviceId)?.name}
+                    </span>
                   </span>
-                  <Badge
-                    variant={
-                      ["failed", "interrupted", "delivery_failed"].includes(task.status)
-                        ? "destructive"
-                        : task.status === "waiting"
-                          ? "default"
-                          : "secondary"
-                    }
-                  >
-                    {t(task.status)}
-                  </Badge>
+                  <TaskStatusBadge status={task.status} label={t(task.status)} />
                 </span>
               </Button>
             </li>

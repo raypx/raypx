@@ -344,8 +344,13 @@ export function registerTests() {
       ).toBe(true);
       if (surface === "Web") {
         await page.goto(base + "/settings");
-        await page.getByText("Dark", { exact: true }).click();
-        await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
+        // A click that lands before hydration is lost; retry until the choice sticks.
+        await expect(async () => {
+          await page.getByText("Dark", { exact: true }).click();
+          await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked({
+            timeout: 1000,
+          });
+        }).toPass();
         await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
         await page.getByRole("combobox", { name: "Language", exact: true }).click();
         await page.getByRole("option", { name: "简体中文", exact: true }).click();

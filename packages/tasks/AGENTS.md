@@ -53,6 +53,8 @@ task IDs. Keep the keyboard tab stop mounted; arrows and Home/End reach every ro
 Changing pages resets the list viewport without changing task execution or storage.
 Search and status/agent/computer filters apply only to the loaded page; show the
 matching/loaded count and retain cursor navigation even when no rows match.
+Lists, details and approvals render session states through `TaskStatusBadge`
+(`client/task-status.tsx`), so every state keeps the same label, variant and shape.
 Use shadcn controls and confirmation dialogs for disconnecting a computer. Keep
 failed mutations open for a deliberate retry and block duplicate submissions.
 Style components with Tailwind utilities. The client CSS entry only registers

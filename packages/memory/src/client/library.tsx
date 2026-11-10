@@ -480,7 +480,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
               <Badge variant="secondary">{t(document.kind)}</Badge>
               {document.archived && <Badge variant="outline">{t("archived")}</Badge>}
             </div>
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground *:not-first:before:mr-2 *:not-first:before:text-muted-foreground/50 *:not-first:before:content-['·']">
               <span>{document.category || t("uncategorized")}</span>
               <span className="tabular-nums">
                 {t("revision", { revision: String(document.revision) })}
