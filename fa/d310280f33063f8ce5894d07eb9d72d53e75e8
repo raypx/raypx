@@ -1,0 +1,38 @@
+.github/workflows/ci.yml
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 36,200
+AGENTS.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 121,123-127
+packages/tooling/src/verification/plan.ts
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 18,68,70,72-73,84-86,98,100-102,104-105,110-116,118-120,122-124,131-132,160,173
+packages/tooling/src/verification/result.ts
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 33-34
+  s_ec0bb2776ccc14::t_62dbac4813a9a1 35-36
+packages/tooling/src/verification/plan.test.ts
+  s_ec0bb2776ccc14::t_264af6838907cc 109-110,113-114,129-135,185-187,190,201-202,281-282,286-308,318
+  s_ec0bb2776ccc14::t_eba41d238387e5 54,58,71,89,92,94-101,108,122,124-125,127,136-138,203-208,256,277-279
+  s_ec0bb2776ccc14::t_1008bf3c5ff72c 309-311,315-317
+  s_ec0bb2776ccc14::t_17603fdc990f0a 319-320,322
+docs/development/getting-started.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 28-29
+apps/desktop/AGENTS.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 171-172
+packages/tooling/AGENTS.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 60
+  s_ec0bb2776ccc14::t_ac3c9c40d7c8e7 72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fad310280f33063f8ce5894d07eb9d72d53e75e8",
+  "prompts": {},
+  "sessions": {
+    "s_ec0bb2776ccc14": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18a9d-da3e-7a33-a95c-3a5ab61ef99d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

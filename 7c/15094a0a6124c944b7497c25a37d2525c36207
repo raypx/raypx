@@ -37,6 +37,14 @@ packages/tasks/src/client/task-detail.tsx
         "model": "claude-opus-5-5"
       },
       "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
     }
   }
 }

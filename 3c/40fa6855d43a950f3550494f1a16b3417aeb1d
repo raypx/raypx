@@ -1,0 +1,97 @@
+packages/tooling/src/verification/report.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-3,8-19,21-23,26-65
+apps/cli/tests/integration/runtime/agents/snapshot-performance.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1,6
+apps/cli/tests/helpers/agent-snapshot.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-86
+packages/tooling/src/verification/gates.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-4,6-197
+packages/tooling/tests/integration/cache-delegation.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-33
+apps/cli/tests/integration/runtime/agents/snapshot-query-performance.test.ts
+  s_bde8ab449bf331::t_96854caa34c664 3
+  s_bde8ab449bf331::t_98096373b51b8a 1-2,4-104
+packages/tooling/tests/integration/cache-build.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1,3-6,8-41,69-91
+  s_bde8ab449bf331::t_96854caa34c664 2,7
+apps/cli/src/runtime/agents/provider-protocol.test.ts
+  s_bde8ab449bf331::t_cfaeeca4480c28 1,6-187
+apps/desktop/tests/helpers/router-local.tsx
+  s_bde8ab449bf331::t_f5452b2ca1d1cd 28-31,33-62,64-140,142,146-181
+  s_bde8ab449bf331::t_f3e259b22972a6 1-4,6-18,20-22,25-27
+packages/tooling/tests/helpers/cache-validation.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-3,6-53,55-85
+packages/tooling/tests/integration/cache.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-2
+apps/cli/tests/integration/runtime/agents/snapshot-activity-performance.test.ts
+  s_bde8ab449bf331::t_96854caa34c664 2
+  s_bde8ab449bf331::t_98096373b51b8a 1,3-131
+packages/tooling/src/verification/plan.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-4,13-58,60-64,66-101,108-115,122-127,129-138,185-187,190,201-208,210-258,271-279,281-383
+apps/web/src/router-session.component.test.tsx
+  s_bde8ab449bf331::t_50aeb52d0d681c 1-3,5-176
+apps/cli/tests/integration/runtime/agents/snapshot-consistency.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 3-9,11-124
+  s_bde8ab449bf331::t_96854caa34c664 1-2,10
+packages/tooling/tests/integration/cache-validation.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-3,6-73
+apps/cli/package.json
+  s_bde8ab449bf331::t_4f13a650d66a2d 21
+packages/tooling/tests/integration/cache-platform.test.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-18,20-21,23,26-27,29-75
+packages/tooling/tests/helpers/verification.ts
+  s_bde8ab449bf331::t_98096373b51b8a 1-2,5-52,54-91,94-103
+apps/web/tests/helpers/router-auth.tsx
+  s_bde8ab449bf331::t_f5452b2ca1d1cd 18-77,79-168
+  s_bde8ab449bf331::t_37ac82f846b369 1-17
+apps/cli/AGENTS.md
+  s_bde8ab449bf331::t_cc4bc7bc0e9d6c 150
+apps/cli/src/runtime/agents/provider-replay.test.ts
+  s_bde8ab449bf331::t_59cc3bff6c8182 1
+apps/cli/src/runtime/agents/provider-sdk.test.ts
+  s_bde8ab449bf331::t_fc289ceb8ded4e 2,4-181
+apps/cli/tests/helpers/provider-session.ts
+  s_bde8ab449bf331::t_0dd4f5ab4fcdf0 2-162
+apps/desktop/src/router-automations.component.test.tsx
+  s_bde8ab449bf331::t_20ce58d54202de 1-4,6-13,15-17,19-25,27-38,41-94,149-287
+apps/desktop/src/router-local-events.component.test.tsx
+  s_bde8ab449bf331::t_0c155e41c8c847 1-4,7-57,59-117,120,123-125
+apps/desktop/src/router-local-scope.component.test.tsx
+  s_bde8ab449bf331::t_79af13bb57fcfe 1-3,5-29
+apps/desktop/src/router-local.component.test.tsx
+  s_bde8ab449bf331::t_fbe3ce6a74f1bb 2-4
+apps/web/src/router-access.component.test.tsx
+  s_bde8ab449bf331::t_caee8e072064b8 1-4,6-110
+apps/web/src/router-auth.component.test.tsx
+  s_bde8ab449bf331::t_6c90a13a9a8fcf 2-3
+apps/web/src/router-landing.component.test.tsx
+  s_bde8ab449bf331::t_1080fe6d9c39ea 1-3,5-19,25-35,54-61,77-81,83,85-94,99-109,132-172,174-176,185-187
+apps/web/src/router-legal.component.test.tsx
+  s_bde8ab449bf331::t_994629922d7b05 1-3,5-33
+apps/web/src/router-recovery.component.test.tsx
+  s_bde8ab449bf331::t_c36c1264466bf5 1-3,5-112
+packages/tooling/tests/helpers/cache.ts
+  s_bde8ab449bf331::t_8960f398f8dbcf 1-4,8-96,98-142
+packages/tooling/tests/integration/cache-config.test.ts
+  s_bde8ab449bf331::t_6a527d0547afb9 1-3,5-20
+packages/tooling/tests/integration/cache-reports.test.ts
+  s_bde8ab449bf331::t_2293dfd350b5fa 1-3,5-27
+packages/tooling/tests/integration/cache-source.test.ts
+  s_bde8ab449bf331::t_37d5da62470ab7 1-3,5-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3c40fa6855d43a950f3550494f1a16b3417aeb1d",
+  "prompts": {},
+  "sessions": {
+    "s_bde8ab449bf331": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a475-e1b0-7262-89fb-921c4cb128b7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

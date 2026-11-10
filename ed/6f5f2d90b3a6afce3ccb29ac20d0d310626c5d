@@ -1,0 +1,32 @@
+packages/auth/src/client/auth-link.ts
+  s_7d592a64ee8156::t_b779843b3df207 2-36
+packages/auth/src/client/auth-form.tsx
+  s_7d592a64ee8156::t_3b332d1b3b5b0d 34,35-47,49-50,51-59,60-68,69-76,77-84,85-92,94-95,171,213-219,307,321,338,340,349,360,370,387,422-444,508,527-534,549,555
+  s_7d592a64ee8156::t_4fed86465d7635 445-446,448-449,451-452,455,457-458,494-495,498-507
+  s_7d592a64ee8156::t_2bd05d1b01bbd2 204
+  s_7d592a64ee8156::t_d322535f4efeac 561-562
+  s_7d592a64ee8156::t_f71134c49b4134 259,304
+  s_7d592a64ee8156::t_b382cb393164f4 189,191
+  s_7d592a64ee8156::t_d55c0e1f881bd7 246-249,252
+  s_7d592a64ee8156::t_2c9358d7f85beb 48
+  s_7d592a64ee8156::t_51fd02913be3cb 331
+  s_7d592a64ee8156::t_ae5f039bf68e65 195,207-208,211-212
+packages/auth/src/client/auth-link.test.ts
+  s_7d592a64ee8156::t_ea191b5c651fb6 1,3-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ed6f5f2d90b3a6afce3ccb29ac20d0d310626c5d",
+  "prompts": {},
+  "sessions": {
+    "s_7d592a64ee8156": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "99d88939-2217-464b-aab4-9f4335e9eb7f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

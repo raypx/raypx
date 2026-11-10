@@ -1,0 +1,22 @@
+apps/desktop/src-tauri/src/engine.rs
+  s_33df189f0a0908::t_8eddbc729898d0 287-296,302-303
+  s_33df189f0a0908::t_61f4d5c0467e4e 280,282-285,300
+apps/desktop/tests/native/smoke/scenario.ts
+  s_33df189f0a0908::t_8203369d65024f 45-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f02c905cbf8e63b17e8f65ec5f8fa2257f610a9a",
+  "prompts": {},
+  "sessions": {
+    "s_33df189f0a0908": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ac17-2dcf-7351-8a8a-608fc4a8aba0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

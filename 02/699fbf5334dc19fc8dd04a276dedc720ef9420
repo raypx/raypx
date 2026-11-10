@@ -1,0 +1,102 @@
+apps/desktop/src/routes/(local)/files.tsx
+  s_b1d06560260ce6::t_10d2042e50706c 169
+e2e/tests/journeys/memory.ts
+  s_b1d06560260ce6::t_531ddccd3cb0f1 304
+packages/i18n/src/messages/en.ts
+  s_b1d06560260ce6::t_10d2042e50706c 93,102,104,108,132-133,135,138,140,281,283,286-287,321-322,325,348,350,378,390,403-405,424,436,439,444,447-448,461-463,499,510,517,541-542,545,546-547,736,745,753,786,816-817,819,825,833,856,864,887,1069
+apps/desktop/src/features/onboarding/welcome.tsx
+  s_b1d06560260ce6::t_7301d7e4640948 192
+  s_b1d06560260ce6::t_a40c2f7f9be256 7,9,58,60-64,66,68-71,74-75,77-84,86,88-98,100-106,110,112-122,124-127,133-135,137-141,153-155,158-163,166-167,170-174,191
+packages/memory/src/library.component.test.tsx
+  s_b1d06560260ce6::t_531ddccd3cb0f1 457
+apps/web/src/features/auth/components/session-boundary.tsx
+  s_b1d06560260ce6::t_7301d7e4640948 5,25-28
+  s_b1d06560260ce6::t_77bbef498d8003 4,29-37,40,61
+packages/jobs/src/client/cloud-jobs.tsx
+  s_b1d06560260ce6::t_10d2042e50706c 22-23,300-301,304,307-309,318
+apps/web/src/router-memory.component.test.tsx
+  s_b1d06560260ce6::t_531ddccd3cb0f1 79
+apps/desktop/src/features/tasks/settings.tsx
+  s_b1d06560260ce6::t_7301d7e4640948 102
+  s_b1d06560260ce6::t_3974b5bb5f56d0 4,6-7,93-101,104-106,116-117,119,126,183
+apps/desktop/src/router-memory.component.test.tsx
+  s_b1d06560260ce6::t_531ddccd3cb0f1 78
+packages/i18n/src/messages/zh.ts
+  s_b1d06560260ce6::t_10d2042e50706c 88,97,99,103,127-128,130,133,135,267,269,271-272,303-304,306,329,331,356,366,378-380,399,410,413,418,421-422,435-437,473,483,489,511-512,515,516-517,696,705,713,745,772-774,779,787,809,816,834,998
+AGENTS.md
+  s_b1d06560260ce6::t_7909b655f26b6b 113-114
+DESIGN.md
+  s_b1d06560260ce6::t_a93e21bd083d6a 92-99
+apps/desktop/src/features/files/components/toolbar.tsx
+  s_1af469ca4ae7e1::t_50a8ec50204aa4 9,87-88,93,112,114
+apps/desktop/src/features/tasks/drafts.component.test.tsx
+  s_1af469ca4ae7e1::t_b24f55fb8657e0 220
+apps/web/src/components/shell.tsx
+  s_b1d06560260ce6::t_4c83c9c7a0f0c6 33,126-129,132,135-137,139-142
+apps/web/src/features/tasks/guest.tsx
+  s_1af469ca4ae7e1::t_0bd689ffe948c1 2,27,66,68-70
+apps/web/src/routes/(app)/approvals.tsx
+  s_b1d06560260ce6::t_0913cbd9c06583 19,23
+apps/web/src/routes/(app)/settings.tsx
+  s_b1d06560260ce6::t_ab52ae72a01fdd 18,25
+apps/web/src/router-settings.component.test.tsx
+  s_b1d06560260ce6::t_1993c94d1520d6 46
+e2e/tests/control.spec.ts
+  s_b1d06560260ce6::t_5004f153f73bf7 125
+packages/tasks/src/client/approval-body.tsx
+  s_b1d06560260ce6::t_91176e33e77d0e 13,113-117,121
+packages/tasks/src/client/observed.tsx
+  s_b1d06560260ce6::t_18e8c85fea0d60 12,106-108,111-112,114
+apps/desktop/src/features/files/routes.component.test.tsx
+  s_b1d06560260ce6::t_05b4dc617a4f6c 211,410
+e2e/tests/journeys/tasks/conversation.ts
+  s_b1d06560260ce6::t_4a031e32aea208 290
+packages/memory/src/client/library.tsx
+  s_b76297079ed048::t_7d4eb51a0b9625 20-22,37,380-386,390-392,401,441,465,471,491-492,494-497,502-504,507-509,511,513,515-516
+packages/tasks/src/client/approval.tsx
+  s_b76297079ed048::t_82dc0743d5765c 1,31,37-38,85,87
+packages/tasks/src/client/projects.tsx
+  s_b76297079ed048::t_9e41478363b41f 6,10-11,34,50,62-71,73-77,85,89-97,101-109,111-115,117-121,123-124,126-128,130-140,142-145,147-151,156-161
+packages/tasks/src/client/task-composer.tsx
+  s_b76297079ed048::t_abcc677c372084 44,46,48
+packages/tasks/src/client/task-filters.tsx
+  s_b76297079ed048::t_a666103fb01518 88-90
+packages/tasks/src/client/task-panels.tsx
+  s_b76297079ed048::t_10af0509d07d47 111
+packages/tasks/src/client/workspace.tsx
+  s_b76297079ed048::t_2c412d7c082de0 28,534-550,552-557
+packages/ui/src/empty-state.tsx
+  s_b76297079ed048::t_3aedda39c61a4e 20,32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02699fbf5334dc19fc8dd04a276dedc720ef9420",
+  "prompts": {},
+  "sessions": {
+    "s_1af469ca4ae7e1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a71-7e9c-7500-a120-516965fd9fd2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_b1d06560260ce6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19a53-77d7-7591-9ba6-d73547de66ec",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_b76297079ed048": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c160bfb7-095d-4ecb-9492-d634186f7005",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

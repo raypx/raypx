@@ -31,6 +31,14 @@ apps/web/AGENTS.md
         "model": "claude-opus-5-5"
       },
       "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
     }
   }
 }

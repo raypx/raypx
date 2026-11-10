@@ -1,0 +1,97 @@
+package.json
+  s_c530aa5309e2aa::t_e6f82e04172931 22
+apps/web/package.json
+  s_c530aa5309e2aa::t_e6f82e04172931 41
+packages/tasks/src/client/workspace.tsx
+  s_c530aa5309e2aa::t_ca888c4ddb7df7 174-184,223-227,264,271,279,306-307,309-379,381-384,386-402,404-411,413-414
+apps/desktop/src/features/auth/components/session-gate.tsx
+  s_9835e924464762::t_74151abea0f08f 38
+apps/desktop/src/features/auth/components/form.tsx
+  s_9835e924464762::t_72fe8fa1d904a0 36
+apps/web/src/features/users/components/users.component.test.tsx
+  s_c530aa5309e2aa::t_da8c94b8bdb5f5 74-98
+apps/web/src/features/administration/components/audit-log.tsx
+  s_c530aa5309e2aa::t_6b1616718b3780 74,81-83,86-99,101-111,124-125,129-135
+packages/ui/src/data-table.tsx
+  s_c530aa5309e2aa::t_00b8bbd7947ab0 1-3,12-20,22-24,26-37,39-49,54-62
+  s_c530aa5309e2aa::t_00725bac6d1d6a 4-10
+  s_c530aa5309e2aa::t_54ff037ae0cb28 21,25,38,50-53
+apps/desktop/src/components/window-drag-region.tsx
+  s_9835e924464762::t_74151abea0f08f 1
+  s_9835e924464762::t_df693148199a23 2-5,7-9
+packages/tasks/src/client/task-detail.tsx
+  s_c530aa5309e2aa::t_709329db973ca0 3,11,37-43,168-169,172,180,191-195,201,300
+apps/web/src/features/users/components/users.tsx
+  s_c530aa5309e2aa::t_5b89e158ce1bad 1,3-4,42-43,49-54,62,69,181-194
+packages/ui/package.json
+  s_c530aa5309e2aa::t_e6f82e04172931 17,54
+apps/desktop/src/features/engine/gate.tsx
+  s_9835e924464762::t_df693148199a23 17
+packages/tasks/src/client/conversation.tsx
+  s_c530aa5309e2aa::t_a265857c78c3c1 32-37,198-200,203,213,216
+  s_c530aa5309e2aa::t_ccdff04a30d4d7 246
+packages/blocks/AGENTS.md
+  s_9835e924464762::t_df693148199a23 19
+packages/ui/AGENTS.md
+  s_c530aa5309e2aa::t_6a7eafe81cfd3f 57-59
+apps/web/AGENTS.md
+  s_c530aa5309e2aa::t_6a7eafe81cfd3f 235-236
+packages/auth/AGENTS.md
+  s_9835e924464762::t_74151abea0f08f 19
+  s_9835e924464762::t_72fe8fa1d904a0 13-14
+packages/blocks/src/components/shell.tsx
+  s_9835e924464762::t_df693148199a23 157-160,241-244,254,257-262,316-317,356,360
+packages/auth/src/client/auth-form.tsx
+  s_9835e924464762::t_c79d8c72aa5fba 489
+  s_9835e924464762::t_5e485388d0c9ed 21,105,122,230,292
+  s_9835e924464762::t_72fe8fa1d904a0 111,209-211,213-221
+  s_9835e924464762::t_74151abea0f08f 106,123
+  s_9835e924464762::t_d9f12d9f87de17 479,483,491
+apps/desktop/tests/native/smoke/scenario.ts
+  s_9835e924464762::t_0780613c54e60d 368-372,375,378
+  s_9835e924464762::t_165226d70b292b 310-313,351-352,358-359,365-366,376-377
+  s_9835e924464762::t_8e6644ce325e8e 344-346,349-350,353-355,357,360-361,363-364,367,379,381-385
+packages/i18n/src/messages/zh.ts
+  s_c530aa5309e2aa::t_6a7eafe81cfd3f 200-201
+packages/blocks/src/components/shell.component.test.tsx
+  s_9835e924464762::t_12533263b3aca7 76
+apps/desktop/src/components/shell.tsx
+  s_9835e924464762::t_df693148199a23 65-69
+apps/web/src/features/users/components/user-table.tsx
+  s_c530aa5309e2aa::t_6a7eafe81cfd3f 27-30,181
+  s_c530aa5309e2aa::t_b868e671dde4f0 8-10,12-15,17,21-26,31,151-166,175-180,182-183,208-209
+  s_c530aa5309e2aa::t_00725bac6d1d6a 2-7,18-20
+  s_c530aa5309e2aa::t_14ec47deb1eb79 1,32-56,73-92,104-111,117-150,171-174,184,202,207
+packages/i18n/src/messages/en.ts
+  s_c530aa5309e2aa::t_6a7eafe81cfd3f 205-206
+apps/desktop/src/preferences.component.test.tsx
+  s_9835e924464762::t_37f7d0c7ce3725 3,55-56,63-68,70-73
+apps/desktop/src/features/auth/components/instance-gate.tsx
+  s_9835e924464762::t_df693148199a23 70-76,119-120,122-123
+bun.lock
+  s_9835e924464762::t_acd6f58625aea5 237,884,942,2100-2101,2126-2127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1b5ea35d775ade83e8759ecec2fd83df8e1541d3",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c530aa5309e2aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a552-74dc-7bc3-b02e-49f8badf037e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

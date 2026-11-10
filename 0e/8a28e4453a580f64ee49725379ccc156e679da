@@ -1,5 +1,7 @@
 packages/tasks/tests/helpers/select.ts
   s_21bd334fc20269::t_f746b53fa938a9 7-30
+apps/web/tests/helpers/select.ts
+  s_3a4b502e70ec90::t_443ce370ad2a4b 7-30
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -12,6 +14,14 @@ packages/tasks/tests/helpers/select.ts
         "tool": "claude",
         "id": "9562c85c-7b43-44b0-bf9d-c4a612e3edd1",
         "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
       },
       "human_author": "Zack <heyloyep@gmail.com>"
     }

@@ -1,0 +1,85 @@
+apps/cli/src/runtime/jobs/index.ts
+  s_f954b539ac93b6::t_2929c80f604f2b 26,95,112,116,160-166,168-170,205-209
+  s_f954b539ac93b6::t_a8163ce5984924 167
+apps/cli/src/diagnostics.test.ts
+  s_f954b539ac93b6::t_eaed4715e79f53 1,4-15
+apps/cli/src/diagnostics.ts
+  s_f954b539ac93b6::t_2929c80f604f2b 5-6,8-9,11,13-20,22-37,40-42
+  s_f954b539ac93b6::t_a8163ce5984924 12,21
+apps/api/server/api.ts
+  s_f954b539ac93b6::t_0d70e78143dfef 172-181
+  s_f954b539ac93b6::t_28accca9add6f3 24,30,34-52,162,167,169-171,182-183,190-193
+apps/api/AGENTS.md
+  s_f954b539ac93b6::t_a9a2eee9932be7 129-132
+packages/i18n/src/config.ts
+  s_f954b539ac93b6::t_d03d74f92de36f 1-8
+packages/i18n/src/constants.ts
+  s_f954b539ac93b6::t_638ea4c8fe7ef3 7-12,14-16
+  s_f954b539ac93b6::t_d03d74f92de36f 2-3,13,17
+docs/development/getting-started.md
+  s_f954b539ac93b6::t_638ea4c8fe7ef3 86,130-131
+apps/api/package.json
+  s_f954b539ac93b6::t_28accca9add6f3 41
+  s_f954b539ac93b6::t_01ef854516641f 23
+apps/cli/src/transport/stdio.ts
+  s_f954b539ac93b6::t_2929c80f604f2b 7-11,23-27
+docs/development/intl-release.md
+  s_f954b539ac93b6::t_61e18a6e2ade1e 7-8,32-38,40-41,51,56,58-60,62-67,69,74-76,84
+  s_f954b539ac93b6::t_e1d39bc037c9a7 44-50,52-53,55
+.github/workflows/ci.yml
+  s_f954b539ac93b6::t_81423b2a9dee0a 51,139
+apps/cli/src/logging.ts
+  s_f954b539ac93b6::t_47a1b3dd715236 46-50,53-54
+  s_f954b539ac93b6::t_2929c80f604f2b 21-23,43-44,55,57
+packages/i18n/AGENTS.md
+  s_f954b539ac93b6::t_d03d74f92de36f 11
+packages/i18n/package.json
+  s_f954b539ac93b6::t_d03d74f92de36f 12
+apps/api/server/logging.ts
+  s_f954b539ac93b6::t_28accca9add6f3 1,58-59,62-66,68,71-79
+apps/cli/src/main.ts
+  s_f954b539ac93b6::t_47a1b3dd715236 20
+  s_f954b539ac93b6::t_2929c80f604f2b 5-6
+  s_f954b539ac93b6::t_a8652d21f5dba2 55
+packages/tooling/src/policy.ts
+  s_f954b539ac93b6::t_d03d74f92de36f 69-91,93-105
+apps/api/tests/integration/logging.test.ts
+  s_f954b539ac93b6::t_603a676da70291 2,8-25,33-39,43-45,48-49,52-64,66-88,90-135,153-219,260-322,376,381-384,387-394,399-400,402-407
+  s_f954b539ac93b6::t_a961c87bb20ffe 42,46,51,323-345,356-375,401
+  s_f954b539ac93b6::t_4bf658a87db0f3 220-259,346-355
+  s_f954b539ac93b6::t_f6a5c9cdbcb3a0 377-380,385-386,395-398
+packages/tooling/AGENTS.md
+  s_f954b539ac93b6::t_d03d74f92de36f 118-119
+apps/cli/AGENTS.md
+  s_f954b539ac93b6::t_2929c80f604f2b 73,75-76
+  s_f954b539ac93b6::t_47a1b3dd715236 74
+  s_f954b539ac93b6::t_a8163ce5984924 77-78
+bun.lock
+  s_f954b539ac93b6::t_380a20badd1d81 23,41,2753,3461,3617
+packages/tooling/src/locales.test.ts
+  s_f954b539ac93b6::t_69100e536c4e90 9-17,21,36,56,71,87,104,120-146,149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "267f087c12a5fde3bdc582bd4d1b2c82391c34f5",
+  "prompts": {},
+  "sessions": {
+    "s_39220a977d51e9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1529c-f793-72d1-8e11-95b77bf63ba5",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f954b539ac93b6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15280-26fa-7263-8096-fa81374ca693",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

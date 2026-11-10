@@ -1,0 +1,47 @@
+packages/auth/src/client/password-field.tsx
+  s_9835e924464762::t_161496570c278e 67
+packages/jobs/src/client/cloud-jobs.tsx
+  s_9835e924464762::t_161496570c278e 66,223,287-288,290,313,319,324,326,350,352,366,371,375,379,390,393,398,432,446,460-461,464,470,472,477,482
+packages/i18n/src/messages/zh.ts
+  s_9835e924464762::t_161496570c278e 138,140,143,570-572,812,829-834,835-944
+apps/desktop/src/features/automations/local.tsx
+  s_9835e924464762::t_161496570c278e 43,182,191,379-380,391,464-465
+  s_9835e924464762::t_7b92646e75a725 44,102
+packages/jobs/src/client/job-form.tsx
+  s_9835e924464762::t_161496570c278e 45,162,164-165,168,183,192,195,207,217,221,225,229,235,242,248,257,264,279,285-286,293,318,328,333
+  s_9835e924464762::t_d5d2f4fd79c099 46
+apps/web/src/components/shell.tsx
+  s_9835e924464762::t_161496570c278e 103-104,107
+  s_9835e924464762::t_f1f5274be8b7f8 106
+apps/desktop/src/routes/(local)/automations.tsx
+  s_9835e924464762::t_161496570c278e 47,83
+apps/web/src/components/admin-shell.tsx
+  s_9835e924464762::t_161496570c278e 57-59,62,81-82,85,92,94
+  s_9835e924464762::t_ebb18a41e00d68 61,84
+apps/desktop/src/routes/terminal.tsx
+  s_9835e924464762::t_161496570c278e 55,243
+apps/web/src/features/administration/components/overview.tsx
+  s_9835e924464762::t_161496570c278e 48
+apps/desktop/src/features/tasks/reauthorize.tsx
+  s_9835e924464762::t_161496570c278e 73
+apps/web/src/routes/(app)/automations.tsx
+  s_9835e924464762::t_161496570c278e 25
+packages/i18n/src/messages/en.ts
+  s_9835e924464762::t_161496570c278e 142,144,147,604-606,865,882-887,888-1014
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "553264612299630f9f4909c5e6b3445b4bc5a993",
+  "prompts": {},
+  "sessions": {
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}

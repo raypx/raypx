@@ -9,6 +9,13 @@ AGENTS.md
 apps/web/AGENTS.md
   s_2d665babe6fe00::t_2ecf7ce057b495 41-67,125-130
   s_2d665babe6fe00::t_6af67ae3523b3e 68-71
+package.json
+  s_7ebdb0b32aa724::t_9d85a3e7a3378c 165,179
+docs/development/getting-started.md
+  s_be0cafefd5c0be::t_dea7b55358cd91 152,165-170
+vite.config.ts
+  s_7ebdb0b32aa724::t_dc50be2da2e0a9 34-38
+  s_be0cafefd5c0be::t_62652fa882565a 9-11
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -21,6 +28,22 @@ apps/web/AGENTS.md
         "tool": "claude",
         "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
         "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_be0cafefd5c0be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a176ee-3d90-7a50-b1c2-93b35b041162",
+        "model": "gpt-6-astra"
       },
       "human_author": "Zack <heyloyep@gmail.com>"
     }
