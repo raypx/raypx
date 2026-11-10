@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@raypx/ui/lib/utils";
-import { accentGradient } from "./accent.ts";
+import { accentGradient } from "../../../components/brand-accent.ts";
 
 /** One packet heads to Web (a session), the other returns to Desktop (an answer). */
 const routes = [
@@ -82,7 +82,7 @@ export function FlowPackets() {
           key={route.from}
           data-packet=""
           className={cn(
-            "absolute top-1/2 size-2 -translate-1/2 rounded-full opacity-0 shadow-[0_0_10px_2px_color-mix(in_oklch,var(--landing-violet)_55%,transparent)]",
+            "absolute top-1/2 size-2 -translate-1/2 rounded-full opacity-0 shadow-[0_0_10px_2px_color-mix(in_oklch,var(--brand-violet)_55%,transparent)]",
             accentGradient,
           )}
         />

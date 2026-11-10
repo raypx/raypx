@@ -18,7 +18,7 @@ import { DotGrid, SpotlightLayer, useSpotlight } from "../../../components/artwo
 import { LandingAuthAction } from "./auth-action.tsx";
 import { ApprovalsArt, AutomationsArt, MemoryArt, ProjectsArt } from "./illustrations.tsx";
 import { WorkflowPreview } from "./workflow-preview.tsx";
-import { accentGradient } from "./accent.ts";
+import { accentGradient } from "../../../components/brand-accent.ts";
 import { FlowPackets } from "./flow-packets.tsx";
 import { ParticleField } from "./particle-field.tsx";
 
@@ -54,9 +54,9 @@ function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[34rem]"
       >
-        <div className="absolute top-0 left-[8%] h-72 w-[42%] rounded-full bg-[var(--landing-sky)] opacity-[0.16] blur-[90px] dark:opacity-[0.22]" />
-        <div className="absolute top-10 right-[10%] h-72 w-[38%] rounded-full bg-[var(--landing-violet)] opacity-[0.14] blur-[90px] dark:opacity-[0.24]" />
-        <div className="absolute top-40 left-[34%] h-56 w-[32%] rounded-full bg-[var(--landing-pink)] opacity-[0.1] blur-[90px] dark:opacity-[0.16]" />
+        <div className="absolute top-0 left-[8%] h-72 w-[42%] rounded-full bg-[var(--brand-sky)] opacity-[0.16] blur-[90px] dark:opacity-[0.22]" />
+        <div className="absolute top-10 right-[10%] h-72 w-[38%] rounded-full bg-[var(--brand-violet)] opacity-[0.14] blur-[90px] dark:opacity-[0.24]" />
+        <div className="absolute top-40 left-[34%] h-56 w-[32%] rounded-full bg-[var(--brand-pink)] opacity-[0.1] blur-[90px] dark:opacity-[0.16]" />
       </div>
       <div
         aria-hidden="true"
@@ -76,7 +76,7 @@ function Hero() {
         </p>
         <h1
           id="landing-home-title"
-          className="max-w-[16ch] bg-linear-to-br from-foreground from-45% via-foreground/85 to-[var(--landing-violet)] bg-clip-text pb-1 text-[2.75rem] leading-[1.06] font-semibold tracking-tighter text-balance text-transparent forced-colors:bg-none forced-colors:text-[CanvasText] @xl/main:text-6xl @4xl/main:text-7xl"
+          className="max-w-[16ch] bg-linear-to-br from-foreground from-45% via-foreground/85 to-[var(--brand-violet)] bg-clip-text pb-1 text-[2.75rem] leading-[1.06] font-semibold tracking-tighter text-balance text-transparent forced-colors:bg-none forced-colors:text-[CanvasText] @xl/main:text-6xl @4xl/main:text-7xl"
         >
           {t("title")}
         </h1>
@@ -279,11 +279,11 @@ function ComputersBand() {
       <DotGrid className="mask-[radial-gradient(ellipse_60%_90%_at_75%_50%,#000_10%,transparent_80%)]" />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -bottom-24 -z-10 h-72 w-2/3 rounded-full bg-[var(--landing-violet)] opacity-[0.12] blur-[80px] dark:opacity-[0.2]"
+        className="pointer-events-none absolute -right-16 -bottom-24 -z-10 h-72 w-2/3 rounded-full bg-[var(--brand-violet)] opacity-[0.12] blur-[80px] dark:opacity-[0.2]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 right-1/4 -z-10 h-56 w-1/2 rounded-full bg-[var(--landing-sky)] opacity-[0.1] blur-[80px] dark:opacity-[0.18]"
+        className="pointer-events-none absolute -top-24 right-1/4 -z-10 h-56 w-1/2 rounded-full bg-[var(--brand-sky)] opacity-[0.1] blur-[80px] dark:opacity-[0.18]"
       />
       <SpotlightLayer />
       <div className="relative grid items-center gap-10 p-6 @xl/main:p-8 @4xl/main:grid-cols-2 @4xl/main:gap-16 @4xl/main:p-12">

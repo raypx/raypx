@@ -7,10 +7,6 @@ import { cn } from "@raypx/ui/lib/utils";
  * and transitions).
  */
 
-/** One-shot load entrance. Apply to wrappers, never to controls, so hover timing is untouched. */
-export const enterOnLoad =
-  "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:blur-in-xs motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:fill-mode-both";
-
 /** Neutral dot grid; the parent positions it (`relative isolate`) and callers mask it. */
 export function DotGrid({ className }: { className?: string }) {
   return (

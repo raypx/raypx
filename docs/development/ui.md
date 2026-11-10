@@ -93,12 +93,10 @@ ease-out, with matching chevrons. Keep padding inside the animated panel. Keyboa
 focus disables the transition, and reduced motion removes it entirely. Routine
 tabs only transition their colors/shadow for pointer use. Streaming messages,
 virtual row placement, search results and workbench page sections do not animate in.
-Authentication and privacy pages are the exception: `src/components/artwork.tsx`
-provides a one-shot load entrance (`enterOnLoad`, applied to wrappers rather than
-controls). The homepage renders its content without entrances; its application frame
-uses `scrollSettle` from `features/landing/components/accent.ts`, a scroll-linked scale
+Public pages render their content without entrances. The homepage's application
+frame uses `scrollSettle` from `src/components/brand-accent.ts`, a scroll-linked scale
 and offset that never changes opacity. The same module defines the logo palette as
-`--landing-*` properties on the landing layout. Homepage ambient loops are the only
+`--brand-*` properties on the landing and authentication layouts. Homepage ambient loops are the only
 autoplaying motion: `ParticleField` draws a canvas constellation and `FlowPackets`
 animates the connection line with the Web Animations API; both stop offscreen and in
 hidden tabs, and the frame light is a CSS rotation hidden under reduced motion.

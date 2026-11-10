@@ -7,7 +7,7 @@ import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { LegalFooter } from "../../../components/legal-footer.tsx";
 import { PublicBackdrop, PublicHeader } from "../../../components/public-chrome.tsx";
 import { cn } from "@raypx/ui/lib/utils";
-import { landingAccentVars } from "./accent.ts";
+import { brandAccentVars } from "../../../components/brand-accent.ts";
 
 export function LandingLayout() {
   const c = useTranslations("common");
@@ -16,7 +16,7 @@ export function LandingLayout() {
     <div
       className={cn(
         "relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background",
-        landingAccentVars,
+        brandAccentVars,
       )}
     >
       <PublicBackdrop />

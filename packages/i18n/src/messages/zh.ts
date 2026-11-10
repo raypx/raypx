@@ -246,7 +246,8 @@ export default {
     unavailable: "暂时无法验证权限，请重试。",
   },
   site: {
-    registrationUnavailable: "注册服务暂不可用，请稍后重试。",
+    unavailableTitle: "注册暂不可用",
+    registrationUnavailable: "暂时无法确认是否开放注册，请稍后重试。",
     checkingRegistration: "正在检查注册状态…",
 
     title: "站点设置",

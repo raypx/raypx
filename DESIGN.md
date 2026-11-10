@@ -40,10 +40,11 @@ sidebar. Its footer groups brand copyright with privacy and GitHub links. Local 
 Public pages (landing, authentication, privacy) share one header, which gains a surface
 only after scrolling, and may add texture: a masked neutral dot grid, framed surfaces
 and artwork built from tokens and Hugeicons. Artwork is `aria-hidden` and moves only on
-hover; on authentication and privacy pages it stays abstract. The homepage alone may use
-the logo palette (sky, blue, violet, pink) for glows, gradient marks and selection
-accents, never for controls or text that must be read, and may show example interfaces
-with fixed sample data when each frame is labelled as an example. It shows its content
+hover; privacy artwork stays abstract. The homepage and the authentication side region
+may use the logo palette (sky, blue, violet, pink) for glows, gradient marks and
+selection accents, never for controls or text that must be read, and may show example
+interfaces with fixed sample data when each frame is labelled as an example. The
+workbench keeps the neutral tokens. The homepage shows its content
 on first paint: a centered hero, the labelled example in an application frame chosen by
 step cards, a three-step overview, workspace links with example interfaces and the
 connection band. The frame may settle with scroll where view timelines exist, without
@@ -52,9 +53,9 @@ behind the hero that reacts to a mouse pointer, a light travelling around the ex
 frame and packets along the connection line, and the example may play its steps. They
 pause offscreen and in hidden tabs; reduced motion leaves one still frame or hides them.
 The playing example holds while its content is hovered or a step card has focus, stops
-when a visitor chooses a step and always offers a labelled autoplay toggle. Authentication and privacy pages
-may play one short load entrance and nothing else loops; no content waits for
-scrolling to appear.
+when a visitor chooses a step and always offers a labelled autoplay toggle. Authentication and privacy
+pages render their content on first paint, without entrances or loops; no content
+waits for scrolling to appear.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.
 The Expo iOS/Android app requires login by default and opens its account screen
 after authentication. Native task views and push notifications are later work.
@@ -80,8 +81,11 @@ Respect reduced motion, narrow screens, long Chinese/English content and large f
 
 Authentication uses one centered, bordered panel with a 16px radius. Web keeps the
 original logo and theme/language controls in a shared public header. At 1024px and
-above, the panel caps at 60rem and pairs the form with existing product facts in a
-quiet side region; narrower screens use one column and natural document scrolling.
+above, the panel caps at 60rem and pairs the form with numbered product facts and a
+labelled example approval in a static side region; narrower screens use one column
+and natural document scrolling. Registration states that replace the form (unavailable,
+closed) use the same centered status, title and full-width action as the form's own
+completion states.
 The form caps at 25rem. Desktop uses a compact single-column panel inside its
 native title-bar frame, with the return-to-workspace action above it. Applications
 own panel padding; shared Auth owns only field rhythm and feedback. All five modes

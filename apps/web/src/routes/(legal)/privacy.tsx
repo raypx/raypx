@@ -3,7 +3,6 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { ClockIcon } from "@raypx/icons/clock";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { cn } from "@raypx/ui/lib/utils";
-import { enterOnLoad } from "../../components/artwork.tsx";
 
 export const Route = createFileRoute("/(legal)/privacy")({
   head: () => ({ meta: [{ title: "Privacy | Raypx" }] }),
@@ -24,12 +23,7 @@ function PrivacyPage() {
   const t = useTranslations("legal");
   return (
     <article className="flex flex-col gap-10 sm:gap-14">
-      <header
-        className={cn(
-          "flex max-w-prose flex-col items-start gap-5 border-b border-border pb-10",
-          enterOnLoad,
-        )}
-      >
+      <header className="flex max-w-prose flex-col items-start gap-5 border-b border-border pb-10">
         <span className="grid size-12 place-items-center rounded-xl border border-border bg-background shadow-soft">
           <ShieldCheckIcon aria-hidden="true" className="size-6" />
         </span>

@@ -12,7 +12,7 @@ type Particle = {
   phase: number;
 };
 
-const paletteVars = ["--landing-sky", "--landing-blue", "--landing-violet", "--landing-pink"];
+const paletteVars = ["--brand-sky", "--brand-blue", "--brand-violet", "--brand-pink"];
 const fallbackColor: Rgb = [88, 141, 246];
 const linkDistance = 130;
 const pointerRadius = 150;

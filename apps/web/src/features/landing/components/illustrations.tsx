@@ -7,7 +7,7 @@ import { FolderIcon } from "@raypx/icons/folder";
 import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import { cn } from "@raypx/ui/lib/utils";
 import { DotGrid } from "../../../components/artwork.tsx";
-import { accentGradient } from "./accent.ts";
+import { accentGradient } from "../../../components/brand-accent.ts";
 
 /**
  * Example interfaces for the homepage workspace links. Each frame is labelled as an
@@ -27,7 +27,7 @@ function ArtFrame({ children }: { children: ReactNode }) {
       className="relative isolate h-48 overflow-hidden border-b border-border bg-muted/40"
     >
       <DotGrid className="mask-[radial-gradient(ellipse_at_center,#000_20%,transparent_75%)]" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_70%_at_50%_100%,color-mix(in_oklch,var(--landing-violet)_18%,transparent),transparent)] opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-300" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_70%_at_50%_100%,color-mix(in_oklch,var(--brand-violet)_18%,transparent),transparent)] opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-300" />
       <span className="absolute top-3 right-3 z-10 rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm">
         {t("example")}
       </span>
@@ -63,7 +63,7 @@ export function ProjectsArt() {
               <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate font-medium">{project.name}</span>
               {"active" in project && (
-                <span className="size-1.5 shrink-0 rounded-full bg-[var(--landing-sky)]" />
+                <span className="size-1.5 shrink-0 rounded-full bg-[var(--brand-sky)]" />
               )}
             </div>
           ))}
@@ -74,7 +74,7 @@ export function ProjectsArt() {
           </span>
           {["delivery.test.ts", "receipt.test.ts"].map((file) => (
             <span key={file} className="flex min-w-0 items-center gap-1.5">
-              <CheckIcon className="size-3 shrink-0 text-[var(--landing-sky)]" />
+              <CheckIcon className="size-3 shrink-0 text-[var(--brand-sky)]" />
               <span className="truncate opacity-80">{file}</span>
             </span>
           ))}
@@ -170,7 +170,7 @@ export function MemoryArt() {
             key={name}
             className={cn(
               "relative flex w-44 shrink-0 flex-col gap-2 rounded-xl border border-border bg-background p-3 shadow-soft",
-              index === 0 && "border-[var(--landing-violet)]/40",
+              index === 0 && "border-[var(--brand-violet)]/40",
             )}
           >
             {index === 0 && (

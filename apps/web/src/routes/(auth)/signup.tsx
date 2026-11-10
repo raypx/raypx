@@ -1,52 +1,109 @@
+import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
-import { Button } from "@raypx/ui/components/ui/button";
+import type { IconComponent } from "@raypx/icons";
+import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
+import { cn } from "@raypx/ui/lib/utils";
 import { AuthForm } from "../../features/auth/components/auth-form.tsx";
 import { publicConfigurationQuery } from "../../features/configuration/client.ts";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
+import { ArrowRightIcon } from "@raypx/icons/arrow-right";
+import { SpinnerIcon } from "@raypx/icons/spinner";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 
 export const Route = createFileRoute("/(auth)/signup")({
   component: SignupPage,
 });
 
+const statusClass = "mx-auto flex w-full max-w-[25rem] flex-col";
+const footerLinkClass =
+  "self-center rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 function SignupPage() {
   const search = Route.useSearch();
   const query = useQuery(publicConfigurationQuery());
   const t = useTranslations("site");
   if (query.data?.registrationEnabled) return <AuthForm mode="signup" />;
-  return (
-    <section className="mx-auto flex w-full max-w-[25rem] flex-col items-start gap-5">
-      {query.isPending ? (
+  if (query.isPending) {
+    return (
+      <section className={statusClass}>
         <LoadingState label={t("checkingRegistration")} />
-      ) : query.isError ? (
-        <>
-          <AlertCircleIcon aria-hidden="true" className="size-6 text-muted-foreground" />
-          <p role="alert" className="text-sm leading-relaxed">
-            {t("registrationUnavailable")}
-          </p>
-          <Button onClick={() => void query.refetch()} disabled={query.isFetching}>
-            {t("retry")}
-          </Button>
-        </>
-      ) : (
-        <>
-          <div className="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
-            <UserCircleIcon aria-hidden="true" className="size-5" />
-          </div>
-          <h1 className="text-2xl leading-tight font-semibold tracking-tight">{t("closed")}</h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">{t("closedHint")}</p>
-        </>
-      )}
-      <Link
-        to="/login"
-        search={search}
-        className="inline-flex min-h-8 items-center rounded-sm text-sm underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      </section>
+    );
+  }
+  if (query.isError) {
+    return (
+      <RegistrationStatus
+        icon={AlertCircleIcon}
+        title={t("unavailableTitle")}
+        description={t("registrationUnavailable")}
+        alert
       >
+        <Button
+          size="xl"
+          className="w-full"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        >
+          {query.isFetching && (
+            <SpinnerIcon
+              data-icon="inline-start"
+              aria-hidden="true"
+              className="motion-safe:animate-spin"
+            />
+          )}
+          {t("retry")}
+        </Button>
+        <Link to="/login" search={search} className={footerLinkClass}>
+          {t("signIn")}
+        </Link>
+      </RegistrationStatus>
+    );
+  }
+  return (
+    <RegistrationStatus icon={UserCircleIcon} title={t("closed")} description={t("closedHint")}>
+      <Link to="/login" search={search} className={cn(buttonVariants({ size: "xl" }), "w-full")}>
         {t("signIn")}
+        <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
       </Link>
+    </RegistrationStatus>
+  );
+}
+
+/** Matches the shared form's terminal states: centered status, title, action, then links. */
+function RegistrationStatus({
+  icon: Icon,
+  title,
+  description,
+  alert = false,
+  children,
+}: {
+  icon: IconComponent;
+  title: string;
+  description: string;
+  alert?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby="auth-title" className={cn(statusClass, "gap-5")}>
+      <header className="mb-2 flex flex-col items-center gap-2 text-center">
+        <Icon aria-hidden="true" className="mb-3 size-9 text-foreground" />
+        <h1
+          id="auth-title"
+          className="text-2xl leading-8 font-semibold tracking-tight text-balance"
+        >
+          {title}
+        </h1>
+        <p
+          role={alert ? "alert" : undefined}
+          className="text-sm leading-6 text-pretty text-muted-foreground"
+        >
+          {description}
+        </p>
+      </header>
+      {children}
     </section>
   );
 }

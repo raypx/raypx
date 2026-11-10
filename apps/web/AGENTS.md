@@ -65,7 +65,7 @@ application is an independent composition root and is never imported by another 
   decorative, pauses offscreen or in hidden tabs and is still under reduced motion.
   The example plays its steps until a visitor chooses one or turns the labelled
   autoplay toggle off; hover and step-card focus hold it and reduced motion starts it off.
-  The landing layout defines the logo palette as `--landing-*` properties and clips
+  The landing layout defines the logo palette as `--brand-*` properties and clips
   horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
   The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
@@ -81,8 +81,9 @@ application is an independent composition root and is never imported by another 
   Public headers use `LanguageMenu` and `ThemeToggle` from
   `@raypx/blocks/preference-controls` with the existing preference providers.
   Landing, authentication and legal layouts compose `PublicHeader` and `PublicBackdrop`
-  from `src/components/public-chrome.tsx`; shared artwork, motion classes and the
-  pointer spotlight live in `src/components/artwork.tsx`.
+  from `src/components/public-chrome.tsx`; shared artwork and the pointer spotlight
+  live in `src/components/artwork.tsx`, and the logo palette (`--brand-*`) in
+  `src/components/brand-accent.ts`.
   Theme clicks cycle light → dark → system → light; the icon and accessible label
   reflect the current preference, and the tooltip shows the next one.
 - `src/features/auth/client.ts` creates the Better Auth client; `src/features/tasks/client.ts`

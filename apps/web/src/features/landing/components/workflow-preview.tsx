@@ -17,7 +17,7 @@ import { TerminalIcon } from "@raypx/icons/terminal";
 import { IconButton } from "@raypx/ui/icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
 import { cn } from "@raypx/ui/lib/utils";
-import { accentGradient, scrollSettle } from "./accent.ts";
+import { accentGradient, scrollSettle } from "../../../components/brand-accent.ts";
 import {
   demoStage,
   isPreviewStep,
@@ -113,11 +113,11 @@ export function WorkflowPreview() {
       <div className="relative min-w-0">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-[8%] -top-16 bottom-1/4 -z-10 bg-[radial-gradient(closest-side,color-mix(in_oklch,var(--landing-blue)_32%,transparent),transparent)] opacity-60 blur-3xl dark:opacity-80"
+          className="pointer-events-none absolute inset-x-[8%] -top-16 bottom-1/4 -z-10 bg-[radial-gradient(closest-side,color-mix(in_oklch,var(--brand-blue)_32%,transparent),transparent)] opacity-60 blur-3xl dark:opacity-80"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/4 right-0 -bottom-10 left-1/2 -z-10 bg-[radial-gradient(closest-side,color-mix(in_oklch,var(--landing-pink)_26%,transparent),transparent)] opacity-60 blur-3xl dark:opacity-70"
+          className="pointer-events-none absolute top-1/4 right-0 -bottom-10 left-1/2 -z-10 bg-[radial-gradient(closest-side,color-mix(in_oklch,var(--brand-pink)_26%,transparent),transparent)] opacity-60 blur-3xl dark:opacity-70"
         />
         <div
           className={cn(
@@ -129,7 +129,7 @@ export function WorkflowPreview() {
             aria-hidden="true"
             className="pointer-events-none absolute -inset-px overflow-hidden rounded-[inherit] p-px [mask:linear-gradient(#000_0_0)_content-box_exclude,linear-gradient(#000_0_0)] motion-reduce:hidden"
           >
-            <span className="absolute top-1/2 left-1/2 aspect-square w-[150%] -translate-1/2 animate-spin bg-[conic-gradient(from_0deg,transparent_0deg,transparent_240deg,var(--landing-sky)_290deg,var(--landing-violet)_320deg,var(--landing-pink)_345deg,transparent_360deg)] [animation-duration:8s]" />
+            <span className="absolute top-1/2 left-1/2 aspect-square w-[150%] -translate-1/2 animate-spin bg-[conic-gradient(from_0deg,transparent_0deg,transparent_240deg,var(--brand-sky)_290deg,var(--brand-violet)_320deg,var(--brand-pink)_345deg,transparent_360deg)] [animation-duration:8s]" />
           </span>
           <figure
             aria-label={t("previewLabel")}
@@ -137,9 +137,9 @@ export function WorkflowPreview() {
           >
             <figcaption className="grid h-11 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-border bg-muted/60 px-4">
               <span aria-hidden="true" className="flex gap-1.5">
-                <span className="size-2.5 rounded-full bg-[var(--landing-pink)]/70" />
-                <span className="size-2.5 rounded-full bg-[var(--landing-violet)]/70" />
-                <span className="size-2.5 rounded-full bg-[var(--landing-sky)]/70" />
+                <span className="size-2.5 rounded-full bg-[var(--brand-pink)]/70" />
+                <span className="size-2.5 rounded-full bg-[var(--brand-violet)]/70" />
+                <span className="size-2.5 rounded-full bg-[var(--brand-sky)]/70" />
               </span>
               <span className="hidden min-w-0 items-center justify-center gap-2 text-xs font-medium @md/preview:flex">
                 <FolderOpenIcon
@@ -243,7 +243,7 @@ export function WorkflowPreview() {
                   </TabsContent>
                   <TabsContent value="review" className={cn(panelClass, "flex flex-col gap-4")}>
                     <div className="flex items-center justify-end">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--landing-violet)]/30 bg-[var(--landing-violet)]/8 px-2.5 py-0.5 text-xs text-foreground/80">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-violet)]/30 bg-[var(--brand-violet)]/8 px-2.5 py-0.5 text-xs text-foreground/80">
                         <ShieldCheckIcon aria-hidden="true" className="size-3.5" />
                         {t("previewNeedsYou")}
                       </span>
@@ -260,10 +260,10 @@ export function WorkflowPreview() {
                       >
                         <code>
                           <span className="block px-4 opacity-65">- send(input);</span>
-                          <span className="block border-l-2 border-[var(--landing-sky)] bg-background/10 px-4 pl-3.5 dark:bg-foreground/10">
+                          <span className="block border-l-2 border-[var(--brand-sky)] bg-background/10 px-4 pl-3.5 dark:bg-foreground/10">
                             + await persist(input);
                           </span>
-                          <span className="block border-l-2 border-[var(--landing-sky)] bg-background/10 px-4 pl-3.5 dark:bg-foreground/10">
+                          <span className="block border-l-2 border-[var(--brand-sky)] bg-background/10 px-4 pl-3.5 dark:bg-foreground/10">
                             + await sendOnce(input);
                           </span>
                           <span className="block px-4 opacity-60"> return receipt;</span>
@@ -413,7 +413,7 @@ function ApprovalRow({ stage }: { stage: "waiting" | "pressing" | "approved" }) 
   if (stage === "approved") {
     return (
       <div aria-hidden="true" className="flex justify-end text-xs">
-        <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--landing-violet)]/30 bg-[var(--landing-violet)]/10 px-2.5 py-1 font-medium">
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--brand-violet)]/30 bg-[var(--brand-violet)]/10 px-2.5 py-1 font-medium">
           <CheckIcon className="size-3.5" />
           {t("previewApproved")}
         </span>
@@ -427,7 +427,7 @@ function ApprovalRow({ stage }: { stage: "waiting" | "pressing" | "approved" }) 
         className={cn(
           "rounded-md bg-foreground px-2.5 py-1 text-background motion-safe:transition-[scale,box-shadow] motion-safe:duration-150",
           stage === "pressing" &&
-            "scale-95 ring-2 ring-[var(--landing-violet)]/50 ring-offset-2 ring-offset-background",
+            "scale-95 ring-2 ring-[var(--brand-violet)]/50 ring-offset-2 ring-offset-background",
         )}
       >
         {t("exampleApprove")}

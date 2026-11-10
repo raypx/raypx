@@ -253,7 +253,8 @@ export default {
     unavailable: "Unable to verify permissions. Please try again.",
   },
   site: {
-    registrationUnavailable: "Registration is temporarily unavailable. Please try again later.",
+    unavailableTitle: "Registration unavailable",
+    registrationUnavailable: "Couldn't check whether registration is open. Try again in a moment.",
     checkingRegistration: "Checking registration availability…",
 
     title: "Site settings",
