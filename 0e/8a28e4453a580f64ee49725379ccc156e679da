@@ -1,0 +1,19 @@
+packages/tasks/tests/helpers/select.ts
+  s_21bd334fc20269::t_f746b53fa938a9 7-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0e8a28e4453a580f64ee49725379ccc156e679da",
+  "prompts": {},
+  "sessions": {
+    "s_21bd334fc20269": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9562c85c-7b43-44b0-bf9d-c4a612e3edd1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
