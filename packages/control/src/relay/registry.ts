@@ -1,4 +1,4 @@
-import { JobError } from "@raypx/jobs/model";
+import { JobError } from "@raypx/core/jobs";
 import type { JobDispatchResult } from "@raypx/jobs/server";
 import {
   MAX_RELAY_BYTES,

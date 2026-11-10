@@ -5,7 +5,7 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { SelectField } from "@raypx/ui/select-field";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition } from "@raypx/jobs/model";
+import type { JobDefinition } from "@raypx/core/jobs";
 import { ScheduleFields } from "./schedule-fields.tsx";
 
 /** The create/edit form. Selections are controlled so the page can validate them on save. */

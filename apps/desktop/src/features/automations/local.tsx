@@ -9,7 +9,7 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
-import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/jobs/model";
+import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/core/jobs";
 import { LocalJobForm } from "./local-form.tsx";
 import { LocalJobHistory } from "./local-history.tsx";
 import { LocalJobList } from "./local-list.tsx";

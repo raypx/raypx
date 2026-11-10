@@ -9,7 +9,7 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 
-`/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). Desktop generates its Go RPC allowlists from this policy. `/local`: versioned local CLI/Desktop protocol. There is no root entry and no `./jobs` or `./memory` entry: `/api` composes those vertical-owner schemas internally, and a consumer that needs one imports it from its owning package.
+`/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). Desktop generates its Go RPC allowlists from this policy. `/local`: versioned local CLI/Desktop protocol. There is no root entry and no `./jobs` or `./memory` entry: transport entries compose Core's domain schemas, and domain consumers import Core directly.
 
 ## Ownership
 
@@ -70,7 +70,7 @@ carries an authoritative `context` snapshot.
 Private `memory.*` IPC always addresses the device-profile library, accepts no
 account ID, and uses the same version/CAS inputs as the account library.
 
-`/api` composes `memory.*` from `@raypx/memory/model` document/version schemas.
+`/api` composes `memory.*` from `@raypx/core/memory` document/version schemas.
 Resolve accepts explicit revision references and a task target, with an optional
 prompt for complete budget validation; the server derives the account from session.
 

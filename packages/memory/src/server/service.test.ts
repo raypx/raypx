@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { ContextError, type ContextDocument, type ContextVersion } from "../model.ts";
+import { ContextError, type ContextDocument, type ContextVersion } from "@raypx/core/memory";
 import { ContextLibraryService, type ContextLibraryRepository } from "../server.ts";
 
 const target = {

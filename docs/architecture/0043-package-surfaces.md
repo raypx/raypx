@@ -1,5 +1,7 @@
 # ADR 0043: Package surfaces
 
+Memory/job model ownership and the corresponding dependency consequences are superseded by [ADR 0048](0048-core-feature-models.md).
+
 Status: Accepted, 2026-11-03. Extends ADR 0042. Revised 2026-11-10: memory and
 scheduled jobs are one workspace each instead of separate `-model` and `-server`
 workspaces, and this record now states the current decision in full.

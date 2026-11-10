@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { contextDocument, contextVersion, controlOwner, user } from "@raypx/database/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import type { ContextDocumentInput } from "@raypx/memory/model";
+import type { ContextDocumentInput } from "@raypx/core/memory";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { createContextRepository } from "@raypx/control/postgres";
 

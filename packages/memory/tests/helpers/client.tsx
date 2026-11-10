@@ -4,7 +4,7 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { ContextDocument, ContextVersion } from "../../src/model.ts";
+import type { ContextDocument, ContextVersion } from "@raypx/core/memory";
 import type { MemoryClientPort } from "../../src/client.ts";
 
 export const deviceId = "11111111-1111-4111-8111-111111111111",

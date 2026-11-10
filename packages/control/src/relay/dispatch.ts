@@ -1,4 +1,4 @@
-import { JobError, type CloudJobRun } from "@raypx/jobs/model";
+import { JobError, type CloudJobRun } from "@raypx/core/jobs";
 import type { JobDispatchResult } from "@raypx/jobs/server";
 import { taskSchema } from "@raypx/core/tasks";
 import { ControlError, type ControlService } from "../service.ts";

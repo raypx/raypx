@@ -9,7 +9,7 @@ import {
   type CloudJob,
   type CloudJobInput,
   type CloudJobRun,
-} from "@raypx/jobs/model";
+} from "@raypx/core/jobs";
 import type { CloudJobsRepository, JobClaim } from "@raypx/jobs/server";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 

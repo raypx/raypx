@@ -1,7 +1,7 @@
 import { isAbsolute, join } from "node:path";
 import { stat } from "node:fs/promises";
 import type { LocalEvent, ToolResult } from "@raypx/contracts/local";
-import type { CommandSpec } from "@raypx/jobs/model";
+import type { CommandSpec } from "@raypx/core/jobs";
 import { LocalError } from "../errors";
 import type { Environment } from "./bun";
 import { HerdrTerminalHost } from "./herdr";

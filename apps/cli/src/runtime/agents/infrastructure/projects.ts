@@ -1,5 +1,5 @@
 import type { DeviceProject } from "@raypx/contracts/tasks";
-import { ContextError } from "@raypx/memory/model";
+import { ContextError } from "@raypx/core/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopBinding } from "../model";
 import type { TaskContextTarget, AgentProvider } from "@raypx/core/tasks";

@@ -30,7 +30,7 @@ import {
   type CloudJobExecutor,
   type CloudJobsRepository,
 } from "@raypx/jobs/server";
-import { JobError } from "@raypx/jobs/model";
+import { JobError } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "../jobs/repository.ts";
 import { createScheduleTick } from "../jobs/tick.ts";
 import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";

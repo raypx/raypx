@@ -7,7 +7,7 @@ Agent execution.
 
 ## Account cloud automations
 
-`@raypx/jobs/model` owns shared local/cloud schemas and pure Cron calendar rules.
+`@raypx/core/jobs` owns shared local/cloud schemas and pure Cron calendar rules.
 `@raypx/jobs/server` owns injected cloud use cases; `@raypx/jobs/client` owns shared
 browser views. The model package has only Core, Zod and Cron dependencies. Contracts
 composes local IPC and account RPC schemas from the model. API owns PostgreSQL and

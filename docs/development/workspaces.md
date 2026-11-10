@@ -152,11 +152,11 @@ private harness owns task policy, persistence, approval and cancellation. See
 
 ## Scheduled jobs
 
-`@raypx/jobs` is one workspace with three surfaces: `/model` owns pure job schemas,
-inferred types and calendar rules, `/server` owns injected cloud scheduling use cases
-and ports, and `/client` owns shared browser views and their ports. Contracts composes wire
-schemas from the model package; API supplies SQL/Relay adapters, while CLI supplies
-local scheduling and execution.
+`@raypx/core/jobs` owns pure job schemas, inferred types and calendar rules.
+`@raypx/jobs/server` owns injected cloud scheduling use cases and ports, and
+`@raypx/jobs/client` owns shared browser views and their ports. Contracts composes
+wire schemas from Core; API supplies SQL/Relay adapters, while CLI supplies local
+scheduling and execution.
 Cloud schedules do not claim local plans or move them between accounts. See
 [server jobs](server-jobs.md).
 

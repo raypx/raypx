@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { rootGrantSchema } from "@raypx/contracts/local";
-import { jobInputSchema, jobRunSchema } from "@raypx/jobs/model";
+import { jobInputSchema, jobRunSchema } from "@raypx/core/jobs";
 import { storedRecord } from "../sqlite/records";
 import { Database } from "bun:sqlite";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { and, asc, desc, eq, lt, notInArray, or, sql } from "drizzle-orm";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobInput, JobRun } from "@raypx/jobs/model";
+import type { JobInput, JobRun } from "@raypx/core/jobs";
 import { LocalError } from "../errors";
 import { type ProfileStorage, type LocalDatabase } from "../sqlite";
 import { jobs, meta, roots, runs } from "../sqlite/schema";

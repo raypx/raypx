@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { cloudJob, cloudJobRun, controlTask, user } from "@raypx/database/schema";
 import { and, eq, sql } from "drizzle-orm";
-import type { CloudJobInput } from "@raypx/jobs/model";
+import type { CloudJobInput } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "../../../server/jobs/repository.ts";
 
 const url = process.env.TEST_DATABASE_URL;

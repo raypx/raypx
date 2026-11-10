@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./model": "./src/model.ts",
     "./server": "./src/server.ts",
     "./client": "./src/client.ts",
     "./client/styles.css": "./src/client/styles.css"
@@ -21,7 +20,6 @@
     "@raypx/icons": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "croner": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

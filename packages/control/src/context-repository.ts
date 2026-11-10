@@ -14,7 +14,7 @@ import {
   type ContextDocument,
   type ContextDocumentInput,
   type ContextVersion,
-} from "@raypx/memory/model";
+} from "@raypx/core/memory";
 import type { ContextLibraryRepository } from "@raypx/memory/server";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];

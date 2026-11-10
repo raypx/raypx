@@ -2,7 +2,7 @@ import { capture } from "../helpers/capture.ts";
 import { expect } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.ts";
 
-import type { ContextDocument, ContextDocumentInput, ContextVersion } from "@raypx/memory/model";
+import type { ContextDocument, ContextDocumentInput, ContextVersion } from "@raypx/core/memory";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
 import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.ts";

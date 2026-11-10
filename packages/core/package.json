@@ -10,7 +10,9 @@
     "./tasks": "./src/tasks.ts",
     "./activity": "./src/activity.ts",
     "./task-text": "./src/task-text.ts",
-    "./permissions": "./src/permissions.ts"
+    "./permissions": "./src/permissions.ts",
+    "./memory": "./src/memory.ts",
+    "./jobs": "./src/jobs.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -19,6 +21,7 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
+    "croner": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

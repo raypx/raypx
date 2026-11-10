@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { ContextError } from "@raypx/memory/model";
+import { ContextError } from "@raypx/core/memory";
 import { taskExecutionPrompt, type TaskContextSnapshot } from "@raypx/core/tasks";
 import { ControlService } from "@raypx/control";
 import { connected, memoryControlRepository } from "../tests/helpers/control.ts";

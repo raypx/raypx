@@ -62,7 +62,7 @@ it("keeps contracts free of React, UI, presentation and platform-server surfaces
       new Map<string, SourceNode>([[contracts, { path: contracts, dependencies: [], requests }]]),
     );
 
-  expect(violationsFor(["@raypx/core/tasks", "@raypx/jobs/model", "zod", "./access.js"])).toEqual(
+  expect(violationsFor(["@raypx/core/tasks", "@raypx/core/jobs", "zod", "./access.js"])).toEqual(
     [],
   );
   expect(violationsFor(["react"])).toHaveLength(1);

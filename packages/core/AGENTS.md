@@ -7,6 +7,10 @@ adapters, execution hosts and product views. Schemas are the single source of in
 
 ## Interface
 
+- `/memory` owns document/version schemas, mutation inputs and domain errors.
+- `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
+  calculations. Cron instances stay paused and are stopped after calculation;
+  runtime timers and scheduling remain with the execution/server owners.
 - `/auth` exports public account/session types, social provider identifiers and
   trusted-origin normalization shared by Auth, API, Control, Relay and Web.
 - `/permissions` exports the framework-free role names and application permission

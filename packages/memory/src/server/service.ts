@@ -24,7 +24,7 @@ import {
   type ContextDeleteInput,
   type ContextHistoryInput,
   type ContextRestoreInput,
-} from "../model.ts";
+} from "@raypx/core/memory";
 import type { ContextLibraryServiceOptions } from "./types.ts";
 
 const getSchema = z.strictObject({ id: taskContextIdSchema });

@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { JobError, type CloudJob, type CloudJobRun } from "../model.ts";
+import { JobError, type CloudJob, type CloudJobRun } from "@raypx/core/jobs";
 import {
   CloudJobsService,
   type CloudJobsRepository,

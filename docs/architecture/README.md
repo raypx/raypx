@@ -54,8 +54,11 @@ filesystem or database dependency.
 Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
 domain consumers import Core directly, without contract re-export aliases.
 There is one domain schema source and the dependency direction is contracts → core.
+Core also owns memory document/version schemas and job schemas/calendar rules
+([ADR 0048](0048-core-feature-models.md)); Contracts has no dependency on the
+browser feature workspaces. Memory and Jobs expose server and client entries.
 Packages expose surfaces rather than barrels ([ADR 0043](0043-package-surfaces.md)):
-`@raypx/contracts` has no root and composes the jobs and memory schemas internally,
+`@raypx/contracts` has no root and composes Core's job and memory schemas internally,
 `@raypx/client` offers `/api`, `/relay` and `/tasks`, and `@raypx/tasks` keeps its
 model helpers on `/model`. Every public entry has a consumer outside its workspace.
 
@@ -253,8 +256,9 @@ source-layer enforcement and transport/view adapters for the current implementat
 
 ## Decision history
 
-Later accepted amendments supersede conflicting earlier text. The topic guides
-above describe current implementation; these records preserve the decisions.
+Accepted ADR bodies preserve historical decisions. New records supersede earlier
+decisions through short links; this index and the topic guides describe the
+current implementation.
 
 - [0034: Extensible foundation](0034-extensible-foundation.md)
 - [0035: Local Owner Host](0035-local-owner-host.md)
@@ -269,6 +273,8 @@ above describe current implementation; these records preserve the decisions.
 
 - [0046: MyGo / Bun and immutable CLI artifacts](0046-mygo-bun-artifacts.md) — current; CLI packaging formalized by 0047
 - [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md) — accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode
+
+- [0048: Core feature domain models](0048-core-feature-models.md) — accepted; supersedes Memory/Jobs model ownership in 0043
 
 ## Distribution and performance
 

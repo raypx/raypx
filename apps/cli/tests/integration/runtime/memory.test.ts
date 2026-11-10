@@ -7,7 +7,7 @@ import { Database } from "bun:sqlite";
 import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
 import { createRuntime } from "../../helpers/enrolled";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import type { ContextDocument, ContextDocumentInput } from "@raypx/memory/model";
+import type { ContextDocument, ContextDocumentInput } from "@raypx/core/memory";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { runtimeFixtures } from "../../helpers/runtime";
 

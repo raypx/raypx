@@ -1,4 +1,4 @@
-import type { CloudJob, CloudJobCreateInput, CloudJobInput, CloudJobRun } from "../model.ts";
+import type { CloudJob, CloudJobCreateInput, CloudJobInput, CloudJobRun } from "@raypx/core/jobs";
 import type { AgentProvider } from "@raypx/core/tasks";
 
 export interface JobReadOptions {

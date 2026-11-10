@@ -8,7 +8,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { JobDefinition } from "@raypx/jobs/model";
+import type { JobDefinition } from "@raypx/core/jobs";
 
 export function LocalJobList({
   jobs,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { TaskContextSelection, TaskContextTarget } from "@raypx/core/tasks";
-import type { ContextDocument, ContextDocumentSummary } from "../model.ts";
+import type { ContextDocument, ContextDocumentSummary } from "@raypx/core/memory";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";

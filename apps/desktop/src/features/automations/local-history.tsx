@@ -7,7 +7,7 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { useTranslations } from "@raypx/i18n/browser";
-import type { JobDefinition, JobRun } from "@raypx/jobs/model";
+import type { JobDefinition, JobRun } from "@raypx/core/jobs";
 
 /** Past runs of one job and the upcoming times its schedule resolves to. */
 export function LocalJobHistory({

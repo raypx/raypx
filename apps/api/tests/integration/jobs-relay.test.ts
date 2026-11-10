@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import type { CloudJobAction, CloudJobRun } from "@raypx/jobs/model";
+import type { CloudJobAction, CloudJobRun } from "@raypx/core/jobs";
 
 import type { AgentTask } from "@raypx/core/tasks";
 import { createRelayJobExecutor } from "@raypx/control/relay";

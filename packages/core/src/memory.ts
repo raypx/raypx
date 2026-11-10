@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { taskContextTargetSchema, taskContextIdSchema } from "@raypx/core/tasks";
+import { taskContextTargetSchema, taskContextIdSchema } from "./tasks.ts";
 
 export class ContextError extends Error {
   constructor(readonly code: string) {

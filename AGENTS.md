@@ -32,7 +32,7 @@ The accepted foundation design and current architecture decisions define the imp
   to another account/origin. Only device-owned local work is supported.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
-- Core owns task domain schemas, public account models and pure rules; contracts composes wire schemas and
+- Core owns task, memory and job domain schemas, public account models and pure rules; contracts composes wire schemas and
   exports only transport definitions. Tasks/model owns page state and injected view ports;
   Tasks/client adapts those models to React. Keep execution in CLI's private harness
   until a second execution consumer establishes a shared package boundary.
@@ -133,6 +133,10 @@ run separately; releases require their full selected matrix.
 Report unavailable checks as unavailable; never describe an unrun platform as passed.
 
 ## Documentation
+
+Accepted ADR bodies are historical decision records. Supersede them with a new
+record and a short supersession link; describe the current implementation in
+`docs/architecture/README.md` and its topic guides.
 
 Keep each workspace AGENTS.md concise and update it when its interface changes.
 Current architecture and commands live under docs/architecture and docs/development.

@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  terminalProviderSchema,
-  taskModeSchema,
-  taskContextSelectionSchema,
-} from "@raypx/core/tasks";
+import { terminalProviderSchema, taskModeSchema, taskContextSelectionSchema } from "./tasks.ts";
 
 // These local schemas preserve the established CLI/Desktop wire format.
 export const commandSchema = z.object({
@@ -112,3 +108,5 @@ export type CloudJobCreateInput = z.infer<typeof cloudJobCreateSchema>;
 export type CloudJob = z.infer<typeof cloudJobSchema>;
 export type CloudJobRun = z.infer<typeof cloudJobRunSchema>;
 export type CloudJobRunStatus = z.infer<typeof cloudJobRunStatusSchema>;
+
+export { JobError, nextJobRuns, type JobSchedule } from "./jobs/schedule.ts";

@@ -19,7 +19,7 @@ rate limits. References and history are always filtered by the resolved account.
 Project references require an authorized device/project. Revoked devices are
 ineligible for new context resolution.
 
-`@raypx/memory/model` owns document and task-context schemas. `@raypx/memory/server`
+`@raypx/core/memory` owns document and task-context schemas. `@raypx/memory/server`
 owns injected library use cases; `@raypx/memory` owns shared browser views and ports.
 API composes Control's PostgreSQL adapter and project authorization; CLI supplies
 SQLite and local authorization. Contracts composes the model schemas into separate

@@ -16,7 +16,7 @@ import {
   contextDocumentSummarySchema,
   contextDocumentSchema,
   contextVersionSchema,
-} from "@raypx/memory/model";
+} from "@raypx/core/memory";
 
 /** Account context documents and immutable revisions; no client-selected owner. */
 export const memoryContract = {
