@@ -18,12 +18,12 @@ it("persists installation identity and account intent while keeping credentials 
     role: "device",
     token: f.grant.token,
   });
-  const restored = new RemoteControl(
-    f.directory,
-    agentPort(async () => ({})),
-    () => {},
-    () => {},
-  );
+  const restored = new RemoteControl({
+    directory: f.directory,
+    engine: agentPort(async () => ({})),
+    notify: () => {},
+    grantRequired: () => {},
+  });
   expect(restored.info("account").installationId).toBe(f.value.info("account").installationId);
 });
 
@@ -77,12 +77,12 @@ it("keeps startup available when local connection metadata is corrupt", async ()
   const directory = mkdtempSync(join(tmpdir(), "raypx-relay-corrupt-"));
   writeFileSync(join(directory, "remote-control.json"), "{broken");
   try {
-    const value = new RemoteControl(
+    const value = new RemoteControl({
       directory,
-      agentPort(async () => ({})),
-      () => {},
-      () => {},
-    );
+      engine: agentPort(async () => ({})),
+      notify: () => {},
+      grantRequired: () => {},
+    });
     expect(value.info("account").error).toBe("SETTINGS_UNAVAILABLE");
     await expect(value.enable("account", true)).rejects.toThrow("Remote settings are unavailable");
   } finally {

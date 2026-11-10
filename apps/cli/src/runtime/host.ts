@@ -8,6 +8,7 @@ import { createRuntime } from "./index";
 import { DaemonControl } from "./daemon/control";
 import { LocalTerminalControl } from "./daemon/terminal-control";
 import type { HostVault } from "./daemon/vault";
+import { backgroundFailure as reportBackgroundFailure } from "./background";
 import { LocalError } from "./errors";
 
 /** Shared execution, terminal and cloud ownership behind each local transport. */
@@ -22,10 +23,7 @@ export function createHost(options: {
   vault?: HostVault;
 }) {
   let control: DaemonControl | undefined;
-  const backgroundFailure = () =>
-    console.error(
-      JSON.stringify({ operation: `${options.owner}.background`, code: "BACKGROUND_FAILED" }),
-    );
+  const backgroundFailure = reportBackgroundFailure(`${options.owner}.background`);
   const emit = (event: LocalEvent) => {
     options.emit?.(event);
     if (
@@ -75,7 +73,7 @@ export function createHost(options: {
         .assert()
         .then(() => owner.restore())
         .catch((error: unknown) => {
-          if (!(error instanceof InstanceError)) backgroundFailure();
+          if (!(error instanceof InstanceError)) backgroundFailure(error);
         });
     },
     runtime,

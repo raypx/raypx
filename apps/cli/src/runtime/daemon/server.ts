@@ -8,6 +8,7 @@ import { createExecutionOwner, type ExecutionHost } from "../owner";
 import { onShutdown } from "../../transport/shutdown";
 import type { LocalRuntime } from "../index";
 import { acquireLock, profilePath } from "../state";
+import { backgroundFailure as reportBackgroundFailure } from "../background";
 import { errorPayload, LocalError } from "../errors";
 import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint";
 import type { DaemonControl } from "./control";
@@ -69,8 +70,7 @@ export async function startDaemon(
     control: DaemonControl | undefined,
     server: ReturnType<typeof Bun.serve> | undefined;
   let stopping = false;
-  const backgroundFailure = () =>
-    console.error(JSON.stringify({ operation: "daemon.background", code: "BACKGROUND_FAILED" }));
+  const backgroundFailure = reportBackgroundFailure("daemon.background");
   let heartbeat: ReturnType<typeof setInterval> | undefined;
   let closing: Promise<void> | undefined,
     resolveStopped = () => {};

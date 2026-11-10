@@ -3,7 +3,7 @@ import { afterEach, expect, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RemoteControl } from "../../src/runtime/daemon/remote/control";
+import { RemoteControl, type RemoteControlOptions } from "../../src/runtime/daemon/remote/control";
 import {
   RELAY_VERSION,
   relayClientSchema,
@@ -19,7 +19,7 @@ export function hostFixtures() {
     for (const cleanup of cleanups.splice(0)) await cleanup();
   });
   async function control(
-    options: NonNullable<ConstructorParameters<typeof RemoteControl>[4]> = {},
+    options: Partial<RemoteControlOptions> = {},
     rejectAuthentication = () => false,
     supportedVersion?: () => number,
   ) {
@@ -121,7 +121,13 @@ export function hostFixtures() {
     );
     const notify = vi.fn(),
       renew = vi.fn(),
-      value = new RemoteControl(directory, agentPort(request), notify, renew, options);
+      value = new RemoteControl({
+        ...options,
+        directory,
+        engine: agentPort(request),
+        notify,
+        grantRequired: renew,
+      });
     const grant = {
       deviceId: crypto.randomUUID(),
       epoch: 1,

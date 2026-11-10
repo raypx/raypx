@@ -12,13 +12,49 @@ import {
   RELAY_VERSION,
   deviceGrantSchema,
   type DeviceGrant,
+  type RelayClientFrame,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
 import type { HostAgentPort } from "./agent-port";
+import { failureCode } from "./failure";
 import { serverOrigin } from "./origin";
+import {
+  acceptsCommands,
+  initialRelaySession,
+  relaySession,
+  type RelaySessionEvent,
+} from "./session";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import { readRemoteControlSettings, type Settings, type Binding } from "./settings";
+
+type ObservedFrame = Extract<RelayClientFrame, { type: "observed" }>;
+type FrameOf<Type extends RelayServerFrame["type"]> = Extract<RelayServerFrame, { type: Type }>;
+export type RemoteControlOptions = {
+  /** Holds this binding's `remote-control.json`. */
+  directory: string;
+  engine: HostAgentPort;
+  /** A remote request is now pending locally. */
+  notify: () => void;
+  /** The grant cannot be renewed without the user. */
+  grantRequired: () => void;
+  socket?: RelaySocketFactory;
+  scheduler?: RelayScheduler;
+  renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
+  authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
+  bindingKey?: (accountId: string, grant: DeviceGrant) => string;
+  syncObserved?: (send: (frame: ObservedFrame) => void) => Promise<void>;
+  observedAck?: (epoch: string, revision: number) => void;
+  observedReset?: () => void;
+  connected?: (connected: boolean) => void;
+  /** Upper bound on waiting for in-flight commands before a renewed grant reconnects. */
+  drainTimeoutMs?: number;
+};
+
 export class RemoteControl {
+  private readonly directory: string;
+  private readonly engine: HostAgentPort;
+  private readonly notify: () => void;
+  private readonly grantRequired: () => void;
   private readonly settings: Settings;
   private storageUnavailable = false;
   private accountId: string | null = null;
@@ -26,18 +62,15 @@ export class RemoteControl {
   private grant: DeviceGrant | undefined;
   private connection: RelayConnection | undefined;
   private timer: (() => void) | undefined;
-  private generation = 0;
+  private session = initialRelaySession;
   private error: string | null = null;
   private renewAt = 0;
-  private connected = false;
-  private ready = false;
   private cursor = 0;
   private streamId = "";
   private snapshotNeeded = false;
   private readonly snapshotRequests = new Set<string>();
   private syncing: Promise<void> | undefined;
   private dirty = false;
-  private detaching = false;
   private acknowledgement:
     | {
         sequence: number;
@@ -52,8 +85,24 @@ export class RemoteControl {
   private renewing: Promise<boolean> | undefined;
   private renewalFailures = 0;
   private renewalTimer: (() => void) | undefined;
-  private draining = false;
   private readonly commands = new Set<Promise<void>>();
+  /** Every lifecycle change goes through the pure `relaySession` transition. */
+  private transition(event: RelaySessionEvent) {
+    const previous = this.session;
+    this.session = relaySession(previous, event);
+    const available = this.session.phase === "available";
+    if (available && event.type === "caught_up") this.options.connected?.(true);
+    if (!available && previous.phase === "available") this.options.connected?.(false);
+  }
+  private get generation() {
+    return this.session.epoch;
+  }
+  private get ready() {
+    return this.session.phase !== "offline";
+  }
+  private get connected() {
+    return this.session.phase === "available";
+  }
   private get scheduler() {
     return this.options.scheduler ?? systemRelayScheduler;
   }
@@ -77,29 +126,12 @@ export class RemoteControl {
         });
     }, delay);
   }
-  constructor(
-    private readonly directory: string,
-    private readonly engine: HostAgentPort,
-    private readonly notify: () => void,
-    private readonly grantRequired: () => void,
-    private readonly options: {
-      socket?: RelaySocketFactory;
-      scheduler?: RelayScheduler;
-      renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
-      authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
-      bindingKey?: (accountId: string, grant: DeviceGrant) => string;
-      syncObserved?: (
-        send: (
-          frame: Extract<import("@raypx/contracts/tasks").RelayClientFrame, { type: "observed" }>,
-        ) => void,
-      ) => Promise<void>;
-      observedAck?: (epoch: string, revision: number) => void;
-      observedReset?: () => void;
-      connected?: (connected: boolean) => void;
-      /** Upper bound on waiting for in-flight commands before a renewed grant reconnects. */
-      drainTimeoutMs?: number;
-    } = {},
-  ) {
+  constructor(private readonly options: RemoteControlOptions) {
+    const directory = options.directory;
+    this.directory = directory;
+    this.engine = options.engine;
+    this.notify = options.notify;
+    this.grantRequired = options.grantRequired;
     this.settings = { installationId: crypto.randomUUID(), accounts: {} };
     try {
       mkdirSync(directory, { recursive: true });
@@ -116,6 +148,10 @@ export class RemoteControl {
     writeFileSync(path + ".tmp", JSON.stringify(this.settings), { mode: 0o600 });
     renameSync(path + ".tmp", path);
   }
+  private reportedError(accountId: string) {
+    if (this.storageUnavailable) return "SETTINGS_UNAVAILABLE";
+    return this.accountId === accountId ? this.error : null;
+  }
   info(accountId: string): ControlInfo {
     const saved = this.settings.accounts[accountId];
     return {
@@ -126,11 +162,7 @@ export class RemoteControl {
       pendingRevoke: saved?.pendingRevoke ?? null,
       binding: saved?.binding ?? null,
       terminalSupported: true,
-      error: this.storageUnavailable
-        ? "SETTINGS_UNAVAILABLE"
-        : this.accountId === accountId
-          ? this.error
-          : null,
+      error: this.reportedError(accountId),
     };
   }
   async enable(accountId: string, enabled: boolean) {
@@ -169,7 +201,7 @@ export class RemoteControl {
       `${accountId}:${grant.deviceId}:${grant.epoch}`;
     if (this.binding !== binding) {
       await this.detach();
-      this.generation++;
+      this.transition({ type: "retired" });
     }
     this.accountId = accountId;
     this.binding = binding;
@@ -185,15 +217,17 @@ export class RemoteControl {
     this.maintenance();
     return this.info(accountId);
   }
-  private resetConnection() {
-    this.generation++;
-    this.connection?.stop();
-    this.connection = undefined;
-    if (this.connected) this.options.connected?.(false);
-    this.connected = false;
-    this.ready = false;
+  /** Drops everything that was only valid while the relay socket was up. */
+  private disconnected(event: RelaySessionEvent) {
+    this.transition(event);
     this.snapshotRequests.clear();
     this.acknowledgement?.reject();
+  }
+  private resetConnection() {
+    // Retire first so nothing the old connection reports while stopping is taken as current.
+    this.disconnected({ type: "retired" });
+    this.connection?.stop();
+    this.connection = undefined;
   }
   private connect(apiUrl: string) {
     this.resetConnection();
@@ -213,12 +247,8 @@ export class RemoteControl {
       status: (connected, code) => {
         if (generation !== this.generation) return;
         if (!connected) {
-          this.ready = false;
-          if (this.connected) this.options.connected?.(false);
-          this.connected = false;
           this.error = code ?? "NETWORK_UNAVAILABLE";
-          this.snapshotRequests.clear();
-          this.acknowledgement?.reject();
+          this.disconnected({ type: "dropped" });
           if (code === "DEVICE_REVOKED" && this.accountId)
             void this.loseAuthorization(this.accountId, code).catch(() => {
               this.error = code;
@@ -299,7 +329,7 @@ export class RemoteControl {
           throw new Error("Invalid renewed grant");
         this.grant = next;
         this.error = null;
-        this.draining = true;
+        this.transition({ type: "draining", active: true });
         let timeout: (() => void) | undefined;
         try {
           await Promise.race([
@@ -310,7 +340,7 @@ export class RemoteControl {
           ]);
         } finally {
           timeout?.();
-          this.draining = false;
+          this.transition({ type: "draining", active: false });
         }
         if (generation !== this.generation || this.accountId !== accountId) return false;
         // Reconnect the relay without detaching the host binding or its tasks.
@@ -318,11 +348,7 @@ export class RemoteControl {
         return true;
       } catch (error) {
         if (generation !== this.generation || this.accountId !== accountId) return false;
-        const failure =
-          error && typeof error === "object"
-            ? (error as { code?: string; data?: { error?: { code?: string } } })
-            : {};
-        const code = failure.data?.error?.code ?? failure.code;
+        const code = failureCode(error);
         if (code === "DEVICE_REVOKED") await this.loseAuthorization(accountId, code);
         else if (code === "AUTH_REQUIRED" || code === "UNAUTHORIZED")
           await this.loseAuthorization(accountId, "AUTH_REQUIRED");
@@ -352,79 +378,103 @@ export class RemoteControl {
     if (generation !== this.generation) return;
     const binding = this.binding;
     if (!binding) return;
-    if (frame.type === "observed_ack") {
-      this.options.observedAck?.(frame.epoch, frame.revision);
-    } else if (frame.type === "ready") {
-      const [replay, projects, capabilities] = await Promise.all([
-        this.engine.replay({ binding, after: 0 }),
-        this.engine.projects({}),
-        this.engine.capabilities({}),
-      ]);
-      if (generation !== this.generation) return;
-      const info = await this.engine.events({ binding });
-      if (generation !== this.generation) return;
-      this.connection?.send({
-        type: "announce",
-        streamId: replay.streamId,
-        instanceId: info.instanceId,
-        projects,
-        capabilities,
-      });
-    } else if (frame.type === "resume") {
-      if (frame.syncId) {
-        if (!this.ready || frame.streamId !== this.streamId || !frame.snapshot) return;
-        if (!this.snapshotRequests.has(frame.syncId) && this.snapshotRequests.size >= 64)
-          throw new Error("Snapshot request limit");
-        this.snapshotRequests.add(frame.syncId);
-      } else {
-        this.options.observedReset?.();
-        this.cursor = frame.sequence;
-        this.streamId = frame.streamId;
-        this.snapshotNeeded ||= frame.snapshot;
-        this.ready = true;
-      }
-      await this.wake();
-    } else if (frame.type === "ack") {
-      const pending = this.acknowledgement;
-      if (
-        pending &&
-        frame.streamId === this.streamId &&
-        frame.sequence === pending.sequence &&
-        frame.snapshotId === pending.snapshotId
-      )
-        pending.resolve();
-    } else if (frame.type === "command") {
-      if (this.detaching || this.draining) {
-        this.connection?.send({
-          type: "result",
-          routeId: frame.routeId,
-          result: { ok: false, code: "REQUEST_CLOSED" },
-        });
+    switch (frame.type) {
+      case "observed_ack":
+        this.options.observedAck?.(frame.epoch, frame.revision);
         return;
-      }
-      const result =
-        frame.command.request.method === "observed.decide"
-          ? await this.engine.observed({ binding, decision: frame.command.request.input }).then(
-              (value) => ({ ok: true as const, value }),
-              (error: unknown) => ({
-                ok: false as const,
-                code:
-                  error && typeof error === "object" && "code" in error
-                    ? String(error.code)
-                    : "REQUEST_CLOSED",
-              }),
-            )
-          : await this.engine.remote({ binding, command: frame.command });
-      if (generation !== this.generation) return;
-      await this.wake();
-      while (this.syncing && generation === this.generation) await this.syncing;
-      if (generation === this.generation)
-        this.connection?.send({ type: "result", routeId: frame.routeId, result });
-    } else if (frame.type === "error") {
-      this.error = frame.code;
-      if (frame.code === "AUTH_REQUIRED") this.scheduleRenewal();
-      if (frame.code === "ACTIVITY_BASE_MISMATCH") this.snapshotNeeded = true;
+      case "ready":
+        return this.announce(binding, generation);
+      case "resume":
+        return this.resume(frame);
+      case "ack":
+        this.acknowledge(frame);
+        return;
+      case "command":
+        return this.command(frame, binding, generation);
+      case "error":
+        this.error = frame.code;
+        if (frame.code === "AUTH_REQUIRED") this.scheduleRenewal();
+        if (frame.code === "ACTIVITY_BASE_MISMATCH") this.snapshotNeeded = true;
+        return;
+      // Frames addressed to other relay roles carry nothing for a device.
+      case "changed":
+      case "observed_changed":
+      case "pong":
+      case "result":
+        return;
     }
+  }
+  private async announce(binding: string, generation: number) {
+    const [replay, projects, capabilities] = await Promise.all([
+      this.engine.replay({ binding, after: 0 }),
+      this.engine.projects({}),
+      this.engine.capabilities({}),
+    ]);
+    if (generation !== this.generation) return;
+    const info = await this.engine.events({ binding });
+    if (generation !== this.generation) return;
+    this.connection?.send({
+      type: "announce",
+      streamId: replay.streamId,
+      instanceId: info.instanceId,
+      projects,
+      capabilities,
+    });
+  }
+  private async resume(frame: FrameOf<"resume">) {
+    if (frame.syncId) {
+      if (!this.ready || frame.streamId !== this.streamId || !frame.snapshot) return;
+      if (!this.snapshotRequests.has(frame.syncId) && this.snapshotRequests.size >= 64)
+        throw new Error("Snapshot request limit");
+      this.snapshotRequests.add(frame.syncId);
+    } else {
+      this.options.observedReset?.();
+      this.cursor = frame.sequence;
+      this.streamId = frame.streamId;
+      this.snapshotNeeded ||= frame.snapshot;
+      this.transition({ type: "resumed" });
+    }
+    await this.wake();
+  }
+  private acknowledge(frame: FrameOf<"ack">) {
+    const pending = this.acknowledgement;
+    if (
+      pending &&
+      frame.streamId === this.streamId &&
+      frame.sequence === pending.sequence &&
+      frame.snapshotId === pending.snapshotId
+    )
+      pending.resolve();
+  }
+  private execute(binding: string, command: FrameOf<"command">["command"]) {
+    if (command.request.method !== "observed.decide")
+      return this.engine.remote({ binding, command });
+    return this.engine.observed({ binding, decision: command.request.input }).then(
+      (value) => ({ ok: true as const, value }),
+      (error: unknown) => ({
+        ok: false as const,
+        code:
+          error && typeof error === "object" && "code" in error
+            ? String(error.code)
+            : "REQUEST_CLOSED",
+      }),
+    );
+  }
+  private async command(frame: FrameOf<"command">, binding: string, generation: number) {
+    if (!acceptsCommands(this.session)) {
+      this.connection?.send({
+        type: "result",
+        routeId: frame.routeId,
+        result: { ok: false, code: "REQUEST_CLOSED" },
+      });
+      return;
+    }
+    const result = await this.execute(binding, frame.command);
+    if (generation !== this.generation) return;
+    await this.wake();
+    while (this.syncing && generation === this.generation) await this.syncing;
+    if (generation === this.generation)
+      this.connection?.send({ type: "result", routeId: frame.routeId, result });
   }
   private waitForAck(sequence: number, snapshotId?: string) {
     return new Promise<void>((resolve, reject) => {
@@ -524,8 +574,9 @@ export class RemoteControl {
         await this.engine.checkpoint({ binding, sequence: this.cursor });
         if (generation !== this.generation) return;
         this.connection?.send({ type: "available" });
-        this.connected = true;
-        this.options.connected?.(true);
+        this.transition({ type: "caught_up" });
+        // The socket reconnected mid-flush; its own resume starts the next flush.
+        if (!this.connected) return;
         this.renewalFailures = 0;
         this.renewAt = 0;
         this.error = null;
@@ -558,7 +609,7 @@ export class RemoteControl {
     if (this.timer) this.timer();
     this.timer = undefined;
     const binding = this.binding;
-    this.detaching = true;
+    this.transition({ type: "detaching", active: true });
     if (binding) {
       await this.engine.detach({ binding }).catch(() => {});
       if (this.ready) {
@@ -581,7 +632,7 @@ export class RemoteControl {
     this.apiUrl = undefined;
     this.accountId = null;
     this.error = null;
-    this.detaching = false;
+    this.transition({ type: "detaching", active: false });
     this.dirty = false;
   }
 }

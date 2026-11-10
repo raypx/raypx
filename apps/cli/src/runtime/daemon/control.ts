@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { join } from "node:path";
 import { createApiClient, isMissingProcedure } from "@raypx/client/api";
 import { RemoteControl } from "./remote/control.ts";
+import { failureCode } from "./remote/failure.ts";
 import { serverOrigin } from "./remote/origin.ts";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import {
@@ -11,7 +12,9 @@ import {
 } from "@raypx/contracts/terminal";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { LocalRuntime } from "../index.ts";
+import { backgroundFailure } from "../background.ts";
 import { LocalError } from "../errors.ts";
+import { hostState, initialHostState, type HostEvent } from "./host-state.ts";
 import type { LocalTerminalControl } from "./terminal-control.ts";
 import {
   bindingKey,
@@ -22,6 +25,34 @@ import {
 } from "./vault.ts";
 
 type Scope = { accountId: string; apiUrl: string };
+type Selection = { accountId: string | null; apiUrl: string };
+type ControlMethod = Extract<
+  LocalMethod,
+  | "host.session"
+  | "observed.remote"
+  | "host.info"
+  | "host.refresh"
+  | "host.enable"
+  | "host.revoked"
+  | "host.authorize"
+  | "host.detach"
+  | "host.terminal.settings"
+  | "host.terminal.configure"
+>;
+type ControlInput<Method extends ControlMethod> = ReturnType<(typeof localParams)[Method]["parse"]>;
+type ControlHandlers = {
+  [Method in ControlMethod]: (input: ControlInput<Method>) => unknown;
+};
+type ObservedWaiter = { binding: string; generation: number; epoch: string; revision: number };
+/** Failures that end the binding, keyed to the code reported to Desktop. */
+const authorizationFailures = new Map([
+  ["AUTH_REQUIRED", "AUTH_REQUIRED"],
+  ["DEVICE_REVOKED", "DEVICE_REVOKED"],
+  ["UNAUTHORIZED", "UNAUTHORIZED"],
+  ["NOT_FOUND", "UPGRADE_REQUIRED"],
+]);
+const sameScope = (left: Selection, right: Selection) =>
+  left.accountId === right.accountId && left.apiUrl === right.apiUrl;
 export { terminalProjectPaths } from "./terminal-control.ts";
 const remoteBinding = (binding: HostBinding) =>
   `host:${bindingKey(binding.apiUrl, binding.accountId)}:${binding.deviceId}:${binding.epoch}`;
@@ -35,27 +66,13 @@ const writeJson = (file: string, value: unknown) => {
 export class DaemonControl {
   private readonly vault: HostVault;
   private readonly controls = new Map<string, RemoteControl>();
-  private current: HostBinding | undefined;
-  private persistent = false;
+  private state = initialHostState;
   private readonly authorizationErrors = new Map<string, string>();
   private retry: ReturnType<typeof setTimeout> | undefined;
   private revision = 0;
-  private observedInitialized = false;
-  private connectionGeneration = 0;
   private readonly network = new AbortController();
-  private ack:
-    | {
-        binding: string;
-        generation: number;
-        epoch: string;
-        revision: number;
-        resolve(): void;
-        reject(): void;
-      }
-    | undefined;
-  private selectionGeneration = 0;
+  private ack: (ObservedWaiter & { resolve(): void; reject(): void }) | undefined;
   private queue = Promise.resolve();
-  private closing = false;
   constructor(
     private readonly directory: string,
     private readonly runtime: LocalRuntime,
@@ -66,26 +83,71 @@ export class DaemonControl {
   ) {
     this.vault = vault ?? createHostVault(runtime.state.db);
     this.terminal.onCloudChange(() => {
-      void this.wake().catch(() => this.backgroundFailure());
+      void this.wake().catch(this.backgroundFailure);
     });
+  }
+  /** Every lifecycle change goes through the pure `hostState` transition. */
+  private apply(event: HostEvent) {
+    this.state = hostState(this.state, event);
+  }
+  private get current() {
+    return this.state.binding;
+  }
+  private get persistent() {
+    return this.state.persistent;
+  }
+  private get closing() {
+    return this.state.closing;
+  }
+  private get selectionGeneration() {
+    return this.state.selection;
+  }
+  private get connectionGeneration() {
+    return this.state.observedEpoch;
+  }
+  private get observedInitialized() {
+    return this.state.observedSynced;
   }
   private scope(value: Scope): Scope {
     return { accountId: value.accountId, apiUrl: serverOrigin(value.apiUrl) };
   }
+  /** The account Desktop last selected; absent before any selection, throws when corrupt. */
+  private selection(): Selection | undefined {
+    const file = join(this.directory, "host-session.json");
+    if (!existsSync(file)) return undefined;
+    const source = readFileSync(file, "utf8");
+    if (source.length > 8192) throw new Error("Invalid selection");
+    const selected = localParams["host.session"].parse(JSON.parse(source));
+    return { accountId: selected.accountId, apiUrl: serverOrigin(selected.apiUrl) };
+  }
   private selectedScope(scope: Scope) {
     try {
-      const source = readFileSync(join(this.directory, "host-session.json"), "utf8");
-      if (source.length > 8192) throw new Error("Invalid selection");
-      const selected = localParams["host.session"].parse(JSON.parse(source));
-      if (selected.accountId === scope.accountId && serverOrigin(selected.apiUrl) === scope.apiUrl)
-        return scope;
+      const selected = this.selection();
+      if (selected && sameScope(selected, scope)) return scope;
     } catch {
       /* Missing/corrupt selection cannot authorize a different cloud scope. */
     }
     throw new LocalError("AUTH_REQUIRED", "Select this cloud account first");
   }
-  private isCurrent(scope: Scope) {
-    return this.current?.apiUrl === scope.apiUrl && this.current.accountId === scope.accountId;
+  private isCurrent(scope: Selection) {
+    return this.current !== undefined && sameScope(this.current, scope);
+  }
+  /** Whether an observed-state exchange still belongs to the live connection and binding. */
+  private observes(binding: string, generation: number) {
+    return (
+      generation === this.connectionGeneration &&
+      this.current !== undefined &&
+      remoteBinding(this.current) === binding
+    );
+  }
+  /** Stops new cloud work for a scope at once; the queued detach completes it. */
+  private retire(scope: Scope) {
+    if (!this.isCurrent(scope)) return;
+    this.apply({ type: "selected" });
+    this.terminal.detachCloud();
+  }
+  private async detachIfCurrent(scope: Scope) {
+    if (this.isCurrent(scope)) await this.detachCurrent();
   }
   private path(scope: Scope) {
     const path = join(this.directory, "hosts", bindingKey(scope.apiUrl, scope.accountId));
@@ -110,9 +172,9 @@ export class DaemonControl {
       await this.runtime.instanceAccess.assert();
       return run(this.runtime.agents);
     };
-    const control = new RemoteControl(
-      this.path(scope),
-      {
+    const control = new RemoteControl({
+      directory: this.path(scope),
+      engine: {
         observed: (input) => this.request("observed.remote", input),
         projects: () => withAgent((agents) => agents.remoteProjects()),
         capabilities: () => withAgent((agents) => agents.remoteCapabilities()),
@@ -125,60 +187,57 @@ export class DaemonControl {
           withAgent((agents) => agents.checkpoint(binding, sequence)),
         detach: ({ binding }) => withAgent((agents) => agents.detach(binding)),
       },
-      () =>
+      notify: () =>
         this.emit({
           version: 1,
           event: "agent.changed",
           data: { pendingRequest: "remote", notificationOnly: true },
         }),
-      () => this.emit({ version: 1, event: "sync.grantRequired", data: {} }),
-      {
-        connected: () => {
-          if (this.current && this.isCurrent(scope))
-            this.terminal.connected(remoteBinding(this.current));
-        },
-        authorizationLost: (code) => {
-          const expected = this.current;
-          if (this.isCurrent(scope)) this.terminal.detachCloud();
-          return this.serial(async () => {
-            if (!expected || this.current !== expected || !this.isCurrent(scope)) return;
-            try {
-              await this.detachCurrent();
-            } finally {
-              this.authorizationErrors.set(key, code);
-              this.emit({ version: 1, event: "sync.grantRequired", data: {} });
-              this.emit({ version: 1, event: "observed.changed", data: {} });
-            }
-          });
-        },
-        bindingKey: (accountId, grant) =>
-          remoteBinding({ ...grant, accountId, apiUrl: scope.apiUrl }),
-        renewGrant: async () => {
-          const current = this.current;
-          if (!current || !this.isCurrent(scope))
-            throw new LocalError("AUTH_REQUIRED", "Host authorization is unavailable");
-          return this.grant(current);
-        },
-        syncObserved: (send) => this.syncObserved(scope, send),
-        observedReset: () => {
-          this.ack?.reject();
-          this.ack = undefined;
-          this.connectionGeneration++;
-          this.observedInitialized = false;
-        },
-        observedAck: (epoch, revision) => {
-          if (
-            this.current &&
-            this.isCurrent(scope) &&
-            this.ack?.binding === remoteBinding(this.current) &&
-            this.ack.generation === this.connectionGeneration &&
-            this.ack.epoch === epoch &&
-            this.ack.revision === revision
-          )
-            this.ack.resolve();
-        },
+      grantRequired: () => this.emit({ version: 1, event: "sync.grantRequired", data: {} }),
+      connected: () => {
+        if (this.current && this.isCurrent(scope))
+          this.terminal.connected(remoteBinding(this.current));
       },
-    );
+      authorizationLost: (code) => {
+        const expected = this.current;
+        if (this.isCurrent(scope)) this.terminal.detachCloud();
+        return this.serial(async () => {
+          if (!expected || this.current !== expected || !this.isCurrent(scope)) return;
+          try {
+            await this.detachCurrent();
+          } finally {
+            this.authorizationErrors.set(key, code);
+            this.emit({ version: 1, event: "sync.grantRequired", data: {} });
+            this.emit({ version: 1, event: "observed.changed", data: {} });
+          }
+        });
+      },
+      bindingKey: (accountId, grant) =>
+        remoteBinding({ ...grant, accountId, apiUrl: scope.apiUrl }),
+      renewGrant: async () => {
+        const current = this.current;
+        if (!current || !this.isCurrent(scope))
+          throw new LocalError("AUTH_REQUIRED", "Host authorization is unavailable");
+        return this.grant(current);
+      },
+      syncObserved: (send) => this.syncObserved(scope, send),
+      observedReset: () => {
+        this.ack?.reject();
+        this.ack = undefined;
+        this.apply({ type: "observed_reset" });
+      },
+      observedAck: (epoch, revision) => {
+        const pending = this.ack;
+        if (
+          pending &&
+          this.isCurrent(scope) &&
+          this.observes(pending.binding, pending.generation) &&
+          pending.epoch === epoch &&
+          pending.revision === revision
+        )
+          pending.resolve();
+      },
+    });
     this.controls.set(key, control);
     return control;
   }
@@ -212,25 +271,15 @@ export class DaemonControl {
         if (source.length > 8192) return;
         const binding = hostBindingSchema.parse(JSON.parse(source));
         binding.apiUrl = serverOrigin(binding.apiUrl);
-        const selected = join(this.directory, "host-session.json");
-        if (existsSync(selected)) {
-          const value = localParams["host.session"].parse(
-            JSON.parse(readFileSync(selected, "utf8")),
-          );
-          if (
-            value.accountId !== binding.accountId ||
-            serverOrigin(value.apiUrl) !== binding.apiUrl
-          )
-            return;
-        }
+        const selected = this.selection();
+        if (selected && !sameScope(selected, binding)) return;
         if (
           !this.control(binding).info(binding.accountId).enabled ||
           !(await this.vault.get(binding))
         )
           return;
         if (this.closing || generation !== this.selectionGeneration) return;
-        this.current = binding;
-        this.persistent = true;
+        this.apply({ type: "bound", binding, persistent: true });
         this.attachTerminal(binding);
         await this.reconnect(binding);
       } catch {
@@ -246,42 +295,29 @@ export class DaemonControl {
         await this.control(binding).attach(binding.accountId, binding.apiUrl, grant);
     } catch (error) {
       if (this.closing || this.current !== binding) return;
-      const code = isMissingProcedure(error)
-        ? "NOT_FOUND"
-        : error && typeof error === "object"
-          ? ((error as { data?: { error?: { code?: string } } }).data?.error?.code ??
-            (error as { code?: string }).code)
-          : undefined;
-      if (
-        code === "AUTH_REQUIRED" ||
-        code === "DEVICE_REVOKED" ||
-        code === "UNAUTHORIZED" ||
-        code === "NOT_FOUND"
-      ) {
+      const code = isMissingProcedure(error) ? "NOT_FOUND" : failureCode(error);
+      const reported = code === undefined ? undefined : authorizationFailures.get(code);
+      if (reported) {
         await this.detachCurrent();
-        this.authorizationErrors.set(
-          bindingKey(binding.apiUrl, binding.accountId),
-          code === "NOT_FOUND" ? "UPGRADE_REQUIRED" : code,
-        );
+        this.authorizationErrors.set(bindingKey(binding.apiUrl, binding.accountId), reported);
         this.emit({ version: 1, event: "sync.grantRequired", data: {} });
         return;
       }
       if (this.isCurrent(binding) && !this.closing)
         this.retry = setTimeout(() => {
           this.retry = undefined;
-          void this.reconnect(binding).catch(() => this.backgroundFailure());
+          void this.reconnect(binding).catch(this.backgroundFailure);
         }, 15_000);
     }
   }
   info(scope: Scope): ControlInfo {
+    const error = this.authorizationErrors.get(bindingKey(scope.apiUrl, scope.accountId));
     return {
       ...this.control(scope).info(scope.accountId),
       daemon: this.independent,
       persistent: this.isCurrent(scope) && this.persistent,
       authorized: this.isCurrent(scope),
-      ...(this.authorizationErrors.has(bindingKey(scope.apiUrl, scope.accountId))
-        ? { error: this.authorizationErrors.get(bindingKey(scope.apiUrl, scope.accountId))! }
-        : {}),
+      ...(error === undefined ? {} : { error }),
     };
   }
   private async authorize(scope: Scope, raw: HostAuthorization, generation: number) {
@@ -291,12 +327,9 @@ export class DaemonControl {
       Date.parse(authorization.expiresAt) <= Date.now()
     )
       throw new LocalError("AUTH_REQUIRED", "Invalid host authorization");
-    const selected = join(this.directory, "host-session.json");
-    if (existsSync(selected)) {
-      const value = localParams["host.session"].parse(JSON.parse(readFileSync(selected, "utf8")));
-      if (value.accountId !== scope.accountId || serverOrigin(value.apiUrl) !== scope.apiUrl)
-        throw new LocalError("AUTH_REQUIRED", "Account selection changed before authorization");
-    }
+    const selected = this.selection();
+    if (selected && !sameScope(selected, scope))
+      throw new LocalError("AUTH_REQUIRED", "Account selection changed before authorization");
     clearTimeout(this.retry);
     this.retry = undefined;
     if (this.current && !this.isCurrent(scope)) await this.detachCurrent();
@@ -313,8 +346,7 @@ export class DaemonControl {
       throw new LocalError("AUTH_REQUIRED", "Account selection changed");
     const previous = this.current;
     if (previous && remoteBinding(previous) !== remoteBinding(binding)) await this.detachCurrent();
-    this.current = binding;
-    this.persistent = persistent;
+    this.apply({ type: "bound", binding, persistent });
     this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
     writeJson(join(this.directory, "host-binding.json"), binding);
     const control = this.control(scope);
@@ -329,12 +361,10 @@ export class DaemonControl {
     const current = this.current;
     if (!current) return;
     const authorization = await this.vault.get(current);
-    this.current = undefined;
-    this.persistent = false;
+    this.apply({ type: "unbound" });
     this.ack?.reject();
     this.ack = undefined;
     this.terminal.detachCloud();
-    this.observedInitialized = false;
     await this.control(current).detach();
     if (authorization)
       await createApiClient({ baseUrl: current.apiUrl })
@@ -347,15 +377,9 @@ export class DaemonControl {
     rmSync(join(this.directory, "host-binding.json"), { force: true });
     await this.vault.remove(current);
   }
-  private async selectAccount(scope: { accountId: string | null; apiUrl: string }) {
-    const file = join(this.directory, "host-session.json"),
-      next = { accountId: scope.accountId, apiUrl: serverOrigin(scope.apiUrl) };
-    writeJson(file, next);
-    if (
-      this.current &&
-      (this.current.accountId !== next.accountId || this.current.apiUrl !== next.apiUrl)
-    )
-      await this.detachCurrent();
+  private async selectAccount(next: Selection) {
+    writeJson(join(this.directory, "host-session.json"), next);
+    if (this.current && !this.isCurrent(next)) await this.detachCurrent();
     return true;
   }
   private attachTerminal(binding: HostBinding) {
@@ -387,58 +411,43 @@ export class DaemonControl {
       const batch = initial ? { sessions: [], requests: [] } : this.terminal.projection(binding);
       if (!initial && !batch.requests.length) return;
       const revision = ++this.revision;
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          if (this.ack?.revision === revision) this.ack = undefined;
-          reject(new LocalError("NETWORK_UNAVAILABLE", "Terminal synchronization timed out"));
-        }, 10_000);
-        this.ack = {
-          binding,
-          generation,
-          epoch,
-          revision,
-          resolve: () => {
-            clearTimeout(timeout);
-            this.ack = undefined;
-            resolve();
-          },
-          reject: () => {
-            clearTimeout(timeout);
-            this.ack = undefined;
-            reject(new LocalError("NETWORK_UNAVAILABLE", "Terminal channel disconnected"));
-          },
-        };
-        try {
-          this.terminal.sent(binding, batch.requests);
-          send({ type: "observed", epoch, revision, ...batch });
-        } catch {
-          this.ack?.reject();
-        }
+      await this.observedAcknowledged({ binding, generation, epoch, revision }, () => {
+        this.terminal.sent(binding, batch.requests);
+        send({ type: "observed", epoch, revision, ...batch });
       }).catch((error: unknown) => {
         // Retiring a connection rejects its waiter. Do not let that old failure
         // reconnect or invalidate the replacement connection that just resumed.
-        if (
-          this.closing ||
-          generation !== this.connectionGeneration ||
-          !this.current ||
-          remoteBinding(this.current) !== binding
-        )
-          return;
+        if (this.closing || !this.observes(binding, generation)) return;
         throw error;
       });
-      if (
-        generation !== this.connectionGeneration ||
-        !this.current ||
-        remoteBinding(this.current) !== binding
-      )
-        return;
-      this.observedInitialized = true;
+      if (!this.observes(binding, generation)) return;
+      this.apply({ type: "observed_synced" });
       this.terminal.acknowledged(binding, batch.requests);
     }
   }
-  private backgroundFailure() {
-    console.error(JSON.stringify({ operation: "daemon.background", code: "BACKGROUND_FAILED" }));
+  /** Sends one observed batch and settles on its acknowledgement, a disconnect or a timeout. */
+  private observedAcknowledged(waiter: ObservedWaiter, send: () => void) {
+    return new Promise<void>((resolve, reject) => {
+      const settle = (failure?: string) => {
+        clearTimeout(timeout);
+        if (this.ack?.revision === waiter.revision) this.ack = undefined;
+        if (failure) reject(new LocalError("NETWORK_UNAVAILABLE", failure));
+        else resolve();
+      };
+      const timeout = setTimeout(() => settle("Terminal synchronization timed out"), 10_000);
+      this.ack = {
+        ...waiter,
+        resolve: () => settle(),
+        reject: () => settle("Terminal channel disconnected"),
+      };
+      try {
+        send();
+      } catch {
+        this.ack?.reject();
+      }
+    });
   }
+  private readonly backgroundFailure = backgroundFailure("daemon.background");
   wake() {
     return this.current ? this.control(this.current).wake() : Promise.resolve();
   }
@@ -446,93 +455,82 @@ export class DaemonControl {
     this.terminal.projectsChanged();
     await this.wake();
   }
-  async request(method: LocalMethod, raw: unknown): Promise<unknown> {
-    if (this.closing) throw new LocalError("CLOSING", "Daemon is stopping");
-    if (method === "host.session") {
-      const input = localParams[method].parse(raw);
-      this.selectionGeneration++;
-      if (
-        this.current &&
-        (input.accountId !== this.current.accountId ||
-          serverOrigin(input.apiUrl) !== this.current.apiUrl)
-      )
-        this.terminal.detachCloud();
-      return this.serial(() => this.selectAccount(input));
-    }
-    if (method === "observed.remote") {
-      const input = localParams[method].parse(raw);
+  private readonly methods: ControlHandlers = {
+    "host.session": (input) => {
+      const next = { accountId: input.accountId, apiUrl: serverOrigin(input.apiUrl) };
+      this.apply({ type: "selected" });
+      if (this.current && !this.isCurrent(next)) this.terminal.detachCloud();
+      return this.serial(() => this.selectAccount(next));
+    },
+    "observed.remote": (input) => {
       if (!this.current || input.binding !== remoteBinding(this.current))
         throw new LocalError("REQUEST_CLOSED", "Terminal binding is no longer active");
       return this.terminal.remoteDecision(input.binding, input.decision);
-    }
-    if (method === "host.info") return this.info(this.scope(localParams[method].parse(raw)));
-    if (method === "host.refresh") {
-      const scope = this.scope(localParams[method].parse(raw));
+    },
+    "host.info": (input) => this.info(this.scope(input)),
+    "host.refresh": (input) => {
+      const scope = this.scope(input);
       return this.isCurrent(scope) ? this.control(scope).refreshGrant() : false;
-    }
-    if (method === "host.enable") {
-      const input = localParams[method].parse(raw),
-        scope = this.scope(input);
-      if (!input.enabled && this.isCurrent(scope)) {
-        this.selectionGeneration++;
-        this.terminal.detachCloud();
-      }
+    },
+    "host.enable": (input) => {
+      const scope = this.scope(input);
+      if (!input.enabled) this.retire(scope);
       return this.serial(async () => {
-        if (!input.enabled && this.isCurrent(scope)) await this.detachCurrent();
+        if (!input.enabled) await this.detachIfCurrent(scope);
         return {
           ...(await this.control(scope).enable(scope.accountId, input.enabled)),
           daemon: this.independent,
           persistent: this.isCurrent(scope) && this.persistent,
         };
       });
-    }
-    if (method === "host.revoked") {
-      const scope = this.scope(localParams[method].parse(raw));
-      if (this.isCurrent(scope)) {
-        this.selectionGeneration++;
-        this.terminal.detachCloud();
-      }
+    },
+    "host.revoked": (input) => {
+      const scope = this.scope(input);
+      this.retire(scope);
       return this.serial(async () => {
-        if (this.isCurrent(scope)) await this.detachCurrent();
+        await this.detachIfCurrent(scope);
         return {
           ...this.control(scope).revoked(scope.accountId),
           daemon: this.independent,
           persistent: false,
         };
       });
-    }
-    if (method === "host.authorize") {
-      const input = localParams[method].parse(raw);
+    },
+    "host.authorize": (input) => {
       const generation = this.selectionGeneration;
       return this.serial(() => this.authorize(this.scope(input), input.authorization, generation));
-    }
-    if (method === "host.detach") {
-      const scope = this.scope(localParams[method].parse(raw));
-      if (this.isCurrent(scope)) {
-        this.selectionGeneration++;
-        this.terminal.detachCloud();
-      }
+    },
+    "host.detach": (input) => {
+      const scope = this.scope(input);
+      this.retire(scope);
       return this.serial(async () => {
-        if (this.isCurrent(scope)) await this.detachCurrent();
+        await this.detachIfCurrent(scope);
         return true;
       });
-    }
-    if (method === "host.terminal.settings")
-      return this.terminal.cloudSettings(
-        this.selectedScope(this.scope(localParams[method].parse(raw))),
-      );
-    if (method === "host.terminal.configure") {
-      const input = localParams[method].parse(raw);
+    },
+    "host.terminal.settings": (input) =>
+      this.terminal.cloudSettings(this.selectedScope(this.scope(input))),
+    "host.terminal.configure": (input) => {
       const result = this.terminal.configureCloud(this.selectedScope(this.scope(input)), input);
-      void this.wake().catch(() => this.backgroundFailure());
+      void this.wake().catch(this.backgroundFailure);
       return result;
-    }
-    throw new LocalError("INVALID_METHOD", "Unknown daemon control method");
+    },
+  };
+  private handles(method: LocalMethod): method is ControlMethod {
+    return Object.hasOwn(this.methods, method);
+  }
+  async request(method: LocalMethod, raw: unknown): Promise<unknown> {
+    if (this.closing) throw new LocalError("CLOSING", "Daemon is stopping");
+    if (!this.handles(method))
+      throw new LocalError("INVALID_METHOD", "Unknown daemon control method");
+    // The table type pairs each handler with its own schema; only this lookup erases it.
+    const handler = this.methods[method] as (input: unknown) => unknown;
+    return handler(localParams[method].parse(raw));
   }
   async close() {
     clearTimeout(this.retry);
     this.retry = undefined;
-    this.closing = true;
+    this.apply({ type: "closed" });
     this.network.abort();
     this.terminal.detachCloud();
     await this.queue;

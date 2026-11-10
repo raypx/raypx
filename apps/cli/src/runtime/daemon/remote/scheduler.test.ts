@@ -40,7 +40,11 @@ async function fixture() {
     return { ok: true, value: {} };
   });
   const required = vi.fn();
-  const value = new RemoteControl(directory, agentPort(request), () => {}, required, {
+  const value = new RemoteControl({
+    directory,
+    engine: agentPort(request),
+    notify: () => {},
+    grantRequired: required,
     scheduler,
     renewGrant,
     socket: () => {
