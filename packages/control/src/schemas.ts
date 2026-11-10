@@ -1,12 +1,7 @@
 import { z } from "zod";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import {
-  taskSchema,
-  humanRequestSchema,
-  agentEventSchema,
-  capabilitySchema,
-  taskContextSnapshotSchema,
-} from "@raypx/core/tasks";
+import { capabilitySchema, taskContextSnapshotSchema } from "@raypx/core/tasks";
+import { taskProjectionSchemas } from "@raypx/tasks/server";
 import { deviceProjectSchema, relayRequestSchema } from "@raypx/contracts/tasks";
 import {
   terminalSessionSchema,
@@ -37,15 +32,7 @@ const controlRecordSchemas = {
     observedRevision: z.number().int().nonnegative().optional(),
   }),
   project: deviceProjectSchema.extend({ ...record, projectId: z.uuid() }),
-  task: taskSchema.extend({ epoch }),
-  request: humanRequestSchema.extend({ deviceId: record.deviceId }),
-  event: z.object({
-    ...record,
-    taskId: z.uuid(),
-    streamId: z.string(),
-    cursor: z.number().int().nonnegative(),
-    event: agentEventSchema,
-  }),
+  ...taskProjectionSchemas,
   command: z.object({
     ...record,
     request: relayRequestSchema.optional(),

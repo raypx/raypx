@@ -13,7 +13,9 @@ persistence, identity, project authorization and clocks remain caller-owned. `/c
 and `/server` import Core and never each other.
 
 `/client` owns browser management, context selection, immutable task-context views and
-browser-only ports. CLI owns SQLite; Control's `/postgres` entry owns account persistence.
+browser-only ports. CLI owns SQLite; `/server/postgres` owns account persistence.
+Keep the concrete PostgreSQL entry separate from `/server` so the CLI's injected
+device library does not load the server database adapter.
 Applications compose identity, authentication, routing and device authorization.
 
 ## Constraints

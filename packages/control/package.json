@@ -19,7 +19,7 @@
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/jobs": "workspace:*",
-    "@raypx/memory": "workspace:*",
+    "@raypx/tasks": "workspace:*",
     "drizzle-orm": "catalog:",
     "ioredis": "catalog:",
     "zod": "catalog:"

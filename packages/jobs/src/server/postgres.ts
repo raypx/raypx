@@ -10,7 +10,7 @@ import {
   type CloudJobInput,
   type CloudJobRun,
 } from "@raypx/core/jobs";
-import type { CloudJobsRepository, JobClaim } from "@raypx/jobs/server";
+import type { CloudJobsRepository, JobClaim } from "./types.ts";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];

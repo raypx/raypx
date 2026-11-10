@@ -1,5 +1,7 @@
 # ADR 0034: Extensible multi-platform foundation
 
+The cross-application React pin is superseded by [ADR 0050](0050-mobile-react-boundary.md).
+
 Status: accepted. Approved by the user for this rebuild; current implementation
 reconciled 2026-11-09. Supersedes retired cloud-only and no-local-runtime choices.
 See the [current architecture](README.md) for implemented responsibilities and

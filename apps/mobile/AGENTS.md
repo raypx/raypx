@@ -38,8 +38,10 @@ platform-neutral hooks and i18n catalogs. System language and appearance are def
 ## Verification
 
 Use Bun 1.4.4 for scripts. VP registers check/test/build; Expo owns Metro bundling.
-React and React DOM use the shared root catalog at Expo's supported version.
-Mobile-only dependencies use catalog:mobile; shared runtime libraries use catalog:
+React and its types use catalog:mobile at Expo's supported version independently
+of DOM applications. Metro resolves React/JSX imports from shared source through
+Mobile's own dependency, preserving one native React instance.
+Mobile dependencies use catalog:mobile; shared runtime libraries use catalog:
 and build/test tools use catalog:dev. Keep native versions aligned with Expo's SDK.
 Check dependency alignment with `bun --bun expo install --check` in this workspace.
 Build exports both native JS bundles and is uncached because Expo consumes public

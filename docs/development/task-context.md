@@ -20,8 +20,8 @@ Project references require an authorized device/project. Revoked devices are
 ineligible for new context resolution.
 
 `@raypx/core/memory` owns document and task-context schemas. `@raypx/memory/server`
-owns injected library use cases; `@raypx/memory` owns shared browser views and ports.
-API composes Control's PostgreSQL adapter and project authorization; CLI supplies
+owns injected library use cases; `@raypx/memory/client` owns shared browser views and ports.
+API composes Memory's `/server/postgres` adapter and Control's project authorization; CLI supplies
 SQLite and local authorization. Contracts composes the model schemas into separate
 account RPC and private IPC entries. Core owns task context selections, immutable
 snapshots and pure prompt composition. Browser-only ports stay in the client entry.

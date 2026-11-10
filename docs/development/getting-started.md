@@ -66,8 +66,9 @@ Bun catalogs hold third-party versions: the default `catalog:` contains shared
 runtime libraries, `catalog:mobile` contains Mobile-only dependencies, and
 `catalog:dev` contains build, test and development tools. Shared
 libraries keep the same catalog even when a test workspace lists them under
-`devDependencies`. All workspaces share one exact React
-version. Environment, TypeScript presets and logging are local `@raypx` workspaces;
+`devDependencies`. DOM applications share one exact React/React DOM version;
+Mobile pins its Expo-supported React in `catalog:mobile`. Shared peer ranges must
+support both. Environment, TypeScript presets and logging are local `@raypx` workspaces;
 remaining `@raypx-kit/*` dependencies are independently released external libraries.
 Do not add another task runner. Web and API run under Bun in dev, build, preview
 and production: scripts call `bun --bun vp`, and each output starts with
@@ -79,8 +80,9 @@ claiming delivery. Tests inject an explicit in-memory mail transport.
 
 Bun uses the isolated install layout: each workspace resolves only the packages it
 declares, so a missing dependency fails at install or build time instead of
-resolving through another workspace. One exact React version keeps a single
-physical instance. Policy still checks every declared production import.
+resolving through another workspace. DOM bundlers deduplicate React; Mobile's
+Metro resolver selects its own React/JSX instance for shared source. Policy still
+checks every declared production import.
 
 ## Local CLI
 

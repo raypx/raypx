@@ -4,7 +4,6 @@ export {
   eventWindowPrune,
   contextCommandPrune,
 } from "./repository.ts";
-export { createContextRepository } from "./context-repository.ts";
 export type {
   ControlRepository,
   ControlReader,

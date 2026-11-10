@@ -7,7 +7,8 @@ import { createConfigurationService } from "../configuration/service.ts";
 import type { ConfigurationRepository } from "../configuration/types.ts";
 import type { Cache } from "../cache/types.ts";
 import type { ObjectStorage } from "@raypx/storage";
-import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
+import { createControlRepository } from "@raypx/control/postgres";
+import { createContextRepository } from "@raypx/memory/server/postgres";
 import { ControlService, ControlProjects } from "@raypx/control";
 import { createAuditedAuthAdapter } from "../administration/auth-adapter.ts";
 import {
@@ -31,7 +32,7 @@ import {
   type CloudJobsRepository,
 } from "@raypx/jobs/server";
 import { JobError } from "@raypx/core/jobs";
-import { createCloudJobsRepository } from "../jobs/repository.ts";
+import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
 import { createScheduleTick } from "../jobs/tick.ts";
 import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
 

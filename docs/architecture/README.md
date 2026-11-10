@@ -4,7 +4,36 @@ Workspaces are discovered from the root Bun workspace patterns. Applications are
 composition roots; libraries expose explicit source entries; tooling remains out
 of runtime dependency graphs. Manifests are the only workspace inventory.
 
-## Applications
+## Process topology
+
+```mermaid
+flowchart LR
+  Browser[Web browser] --> Web[Web SSR / Bun]
+  Browser --> Gateway[Public gateway]
+  Mobile[Expo app] --> Gateway
+  Gateway --> API[API / Bun]
+  Gateway --> Relay[Relay / Bun]
+  API --> PG[(Account PostgreSQL)]
+  Relay --> PG
+  API <--> Redis[(Private Redis broker)]
+  Relay <--> Redis
+  Renderer[Desktop renderer] --> Native[MyGo / Go host]
+  Native --> API
+  Native -->|Private IPC| Daemon[CLI daemon / Bun]
+  Daemon -->|Outbound WebSocket| Relay
+  Daemon --> SQLite[(Device profile SQLite)]
+  Daemon --> Tools[Providers / project tools]
+```
+
+PostgreSQL stores account data and remote read projections. The device profile
+owns local work, enrollment identity, execution receipts and its replay journal.
+Remote authorization enables an outbound channel; it does not transfer ownership
+of local work or upload unrelated history. Closing Desktop disconnects its UI
+without stopping daemon tasks.
+
+## User interfaces
+
+### Web and Desktop
 
 Web is a TanStack Start SSR application on Nitro's Bun server preset. Desktop uses the same DOM components in
 a MyGo WKWebView/WebView2 shell, with Go transport and policy bridging its
@@ -25,10 +54,17 @@ keeps its independent `/account` route. URL selection never dispatches execution
 TaskWorkspacePort list targets flow through HTTP/private IPC into storage filters
 before cursor/limit. Query keys, page probes and draft identities use the same
 target; unavailable targets are explicit and never redirect execution elsewhere.
+
+### Mobile
+
 Phone browsers use Web. The Expo iOS/Android application in `apps/mobile` requires
 login by default and currently provides email/password login, secure session
 restoration and an account screen. Native task views and push notifications remain
-later work. See [mobile development](../development/mobile.md).
+later work. Its Expo-supported React version lives in the Mobile catalog;
+Web/Desktop use the DOM catalog. See [mobile development](../development/mobile.md).
+
+## Backend data flow
+
 API uses Vite + Nitro + Hono + oRPC, deployed
 on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.
 
@@ -46,7 +82,7 @@ forwarding only Better Auth cookies. It never imports API, auth server or DB cod
 Its server must receive the session cookie: share one origin, or set AUTH_DOMAIN
 to the parent domain of sibling Web/API hosts.
 
-## Libraries
+## Domain and feature boundaries
 
 Core owns the normalized task, activity, input and human-decision schemas,
 the task-to-Run read projection and pure task rules. It has no transport, React,
@@ -67,7 +103,12 @@ owns explicit workspace scopes, compatible draft identities, conversation histor
 and the small ports required by the views. Web and Desktop inject their remote or
 private-IPC adapters. React hooks own subscriptions and query state; views consume
 the model instead of implementing cursor, revision and history-gap recovery.
-The domain's activity reducer remains shared with the API projection writer.
+The domain's activity reducer remains shared with Tasks' server projection writer.
+`@raypx/tasks/server` owns the projection and its stored task/event/request schemas;
+Control injects its authorized transaction ports. Memory and Jobs own account
+repositories on their `/server/postgres` entries, kept separate from their injected
+`/server` use cases so the CLI loads no account database adapter. See
+[feature server ownership](0049-feature-server-ownership.md).
 
 Auth exports server/client/hooks/types. Its platform-neutral React hooks
 share authentication actions and request state across Web and Desktop.
@@ -275,6 +316,8 @@ current implementation.
 - [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md) — accepted; stable Bun 1.4.4, embedded runtime and depth-0 bytecode
 
 - [0048: Core feature domain models](0048-core-feature-models.md) — accepted; supersedes Memory/Jobs model ownership in 0043
+- [0049: Feature server ownership](0049-feature-server-ownership.md) — accepted; projections and repositories belong to features
+- [0050: Independent Mobile React](0050-mobile-react-boundary.md) — accepted; Expo pins do not constrain DOM releases
 
 ## Distribution and performance
 

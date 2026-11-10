@@ -59,13 +59,14 @@ The accepted foundation design and current architecture decisions define the imp
   mise is the recommended runtime manager; mise.toml
   only enables reading package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for shared runtime libraries, catalog:mobile for
-  Mobile-only dependencies and catalog:dev for build/test tools. Keep React and
-  React DOM in the shared default catalog. Keep external versions in these catalogs
+  Mobile dependencies (including its Expo-supported React/types) and catalog:dev for
+  build/test tools. DOM React and React DOM use the shared default catalog. Keep external versions in these catalogs
   and use workspace:* for internal dependencies.
 - Keep coverage aligned with Vite+'s bundled Vitest and native modules within
   Expo's bundled version ranges.
-- React and React DOM share the same exact Expo-supported version across all
-  applications; shared React peers must include that version.
+- DOM React and React DOM share one exact version. Mobile owns its Expo-supported
+  React version in catalog:mobile; shared React peers must support both. Metro
+  resolves React and JSX subpaths through Mobile so shared sources use one native instance.
 - Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.

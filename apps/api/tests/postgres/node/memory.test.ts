@@ -4,7 +4,7 @@ import { contextDocument, contextVersion, controlOwner, user } from "@raypx/data
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { ContextDocumentInput } from "@raypx/core/memory";
 import { ContextLibraryService } from "@raypx/memory/server";
-import { createContextRepository } from "@raypx/control/postgres";
+import { createContextRepository } from "@raypx/memory/server/postgres";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

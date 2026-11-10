@@ -1,5 +1,11 @@
 # @raypx/tasks
 
+`/server` owns the remote task read projection and stored task/event/request
+schemas. Its injected ports provide account reads and device-authorized transactions;
+it never imports Control, a database adapter or an application. Keep connection
+fencing, snapshot/event commits and frozen-context receipt release atomic. Core
+owns domain rules and CLI owns execution and the durable device journal.
+
 Shared Agent task and approval views for Web and Desktop.
 Workspace composition, task details, approvals and device management live in separate
 client modules. Approval reads do not depend on task-list availability. Test fixtures

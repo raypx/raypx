@@ -7,31 +7,34 @@ import {
   type SequencedEvent,
 } from "@raypx/contracts/tasks";
 import { taskActivityPage, applyActivityEvent } from "@raypx/core/activity";
-import { type AgentEvent } from "@raypx/core/tasks";
-import type { ControlRepository, ControlTransaction } from "../ports.ts";
+import { activeTaskStatuses, type AgentTask, type AgentEvent } from "@raypx/core/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
+import type { TaskProjectionPorts, ProjectionActor, ProjectionTransaction } from "./ports.ts";
+import type { TaskProjectionRecords } from "./records.ts";
 
-import {
-  ControlError,
-  type Event,
-  type RelayActor,
-  required,
-  canonical,
-  terminal,
-} from "../records.ts";
-import type { ControlCredentials } from "./credentials.ts";
-import { releaseContextCommand } from "../context-receipts.ts";
-export class TaskProjection {
+const canonical = (value: unknown) =>
+  JSON.stringify(normalizeTaskJson(value), (_key, item: unknown) =>
+    item && typeof item === "object" && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
+      : item,
+  );
+const terminal = (task: AgentTask) => !activeTaskStatuses.includes(task.status);
+
+export class TaskProjection<Actor extends ProjectionActor> {
   constructor(
-    private readonly repository: ControlRepository,
-    private readonly clock: () => number,
-    private readonly credentials: ControlCredentials,
+    private readonly ports: TaskProjectionPorts<Actor>,
+    private readonly clock: () => number = Date.now,
   ) {}
+  private required<T>(value: T | undefined): T {
+    if (!value) throw this.ports.error("NOT_FOUND");
+    return value;
+  }
   private now() {
     return new Date(this.clock()).toISOString();
   }
   /** Internal routing metadata; only PostgreSQL can assign the active connection. */
   connection(userId: string, deviceId: string) {
-    return this.repository.read(userId, async (tx) => {
+    return this.ports.read(userId, async (tx) => {
       const device = await tx.get("device", deviceId);
       if (!device || device.revoked || !device.connectionId) return null;
       return {
@@ -44,10 +47,10 @@ export class TaskProjection {
       };
     });
   }
-  async announce(actor: RelayActor, input: Extract<RelayClientFrame, { type: "announce" }>) {
+  async announce(actor: Actor, input: Extract<RelayClientFrame, { type: "announce" }>) {
     let snapshot = false,
       sequence = 0;
-    await this.credentials.withDevice(
+    await this.ports.withDevice(
       actor,
       async (tx, device) => {
         snapshot = device.streamId !== input.streamId || !device.initialized;
@@ -73,27 +76,19 @@ export class TaskProjection {
     );
     return { type: "resume" as const, streamId: input.streamId, sequence, snapshot };
   }
-  touch(actor: RelayActor) {
-    return this.credentials.withDevice(actor, async (_tx, device) => {
+  touch(actor: Actor) {
+    return this.ports.withDevice(actor, async (_tx, device) => {
       device.lastSeenAt = this.now();
     });
   }
-  disconnect(actor: RelayActor) {
-    return this.repository.deviceTransaction(actor.userId, actor.deviceId, async (tx) => {
-      if (actor.role !== "device") return;
-      const device = await tx.get("device", actor.deviceId);
-      if (device?.connectionId === actor.connectionId) {
-        device.lastSeenAt = null;
-        device.connectionId = null;
-        await tx.put("device", device);
-      }
-    });
+  disconnect(actor: Actor) {
+    return this.ports.disconnect(actor);
   }
-  private async record(tx: ControlTransaction, actor: RelayActor, record: SnapshotRecord) {
+  private async record(tx: ProjectionTransaction, actor: Actor, record: SnapshotRecord) {
     if (record.kind === "task") {
-      if (record.task.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
+      if (record.task.deviceId !== actor.deviceId) throw this.ports.error("NOT_FOUND");
       const old = await tx.get("task", record.task.id);
-      if (old && old.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
+      if (old && old.deviceId !== actor.deviceId) throw this.ports.error("NOT_FOUND");
       await tx.put("task", {
         ...record.task,
         ...(record.task.activityIncomplete === undefined && old?.activityIncomplete
@@ -101,7 +96,7 @@ export class TaskProjection {
           : {}),
         epoch: actor.epoch,
       });
-      await releaseContextCommand(tx, record.task);
+      await tx.releaseContext(record.task);
     } else if (record.kind === "activity") {
       await this.activity(
         tx,
@@ -111,23 +106,23 @@ export class TaskProjection {
         0,
       );
     } else {
-      const task = required(await tx.get("task", record.request.taskId));
-      if (task.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
+      const task = this.required(await tx.get("task", record.request.taskId));
+      if (task.deviceId !== actor.deviceId) throw this.ports.error("NOT_FOUND");
       const old = await tx.get("request", record.request.id);
-      if (old && old.taskId !== task.id) throw new ControlError("NOT_FOUND");
+      if (old && old.taskId !== task.id) throw this.ports.error("NOT_FOUND");
       await tx.put("request", { ...record.request, deviceId: actor.deviceId });
     }
   }
   private async activity(
-    tx: ControlTransaction,
-    actor: RelayActor,
+    tx: ProjectionTransaction,
+    actor: Actor,
     event: Extract<AgentEvent, { kind: "activity" }>,
     streamId: string,
     cursor: number,
   ) {
-    const task = required(await tx.get("task", event.taskId));
+    const task = this.required(await tx.get("task", event.taskId));
     if (task.deviceId !== actor.deviceId || event.entry.taskId !== task.id)
-      throw new ControlError("NOT_FOUND");
+      throw this.ports.error("NOT_FOUND");
     // Streaming revisions replace the read projection; they do not duplicate the full
     // message in cloud storage on every delta. The executor owns the replay journal.
     const id = `${actor.deviceId}:activity:${event.entry.id}`,
@@ -139,12 +134,12 @@ export class TaskProjection {
         old.event.entry.kind !== event.entry.kind ||
         old.event.entry.order !== event.entry.order
       )
-        throw new ControlError("EVENT_CONFLICT");
+        throw this.ports.error("EVENT_CONFLICT");
       if (
         old.event.entry.revision === event.entry.revision &&
         canonical(old.event.entry) !== canonical(event.entry)
       )
-        throw new ControlError("EVENT_CONFLICT");
+        throw this.ports.error("EVENT_CONFLICT");
       if (old.event.entry.revision >= event.entry.revision) return;
     }
     await tx.put("event", {
@@ -156,9 +151,9 @@ export class TaskProjection {
       event,
     });
   }
-  async snapshot(actor: RelayActor, streamId: string, sequence: number, records: SnapshotRecord[]) {
-    await this.credentials.withDevice(actor, async (tx, device) => {
-      if (device.streamId !== streamId) throw new ControlError("STREAM_CHANGED");
+  async snapshot(actor: Actor, streamId: string, sequence: number, records: SnapshotRecord[]) {
+    await this.ports.withDevice(actor, async (tx, device) => {
+      if (device.streamId !== streamId) throw this.ports.error("STREAM_CHANGED");
       for (const record of records) await this.record(tx, actor, record);
       const ids = new Set(
         records.filter((record) => record.kind === "task").map((record) => record.task.id),
@@ -169,25 +164,25 @@ export class TaskProjection {
           await tx.put("task", { ...task, status: "interrupted", updatedAt: this.now() });
       const tasks = new Map((await tx.list("task", device.id)).map((task) => [task.id, task]));
       for (const request of await tx.list("request", device.id))
-        if (request.status === "pending" && terminal(required(tasks.get(request.taskId))))
+        if (request.status === "pending" && terminal(this.required(tasks.get(request.taskId))))
           await tx.put("request", { ...request, status: "cancelled" });
       device.cursor = sequence;
       device.initialized = true;
       await tx.pruneEvents(device.id, streamId, true);
     });
   }
-  async events(actor: RelayActor, streamId: string, events: SequencedEvent[]) {
+  async events(actor: Actor, streamId: string, events: SequencedEvent[]) {
     let cursor = 0;
-    await this.credentials.withDevice(actor, async (tx, device) => {
-      if (device.streamId !== streamId) throw new ControlError("STREAM_CHANGED");
+    await this.ports.withDevice(actor, async (tx, device) => {
+      if (device.streamId !== streamId) throw this.ports.error("STREAM_CHANGED");
       let previous = 0;
       for (const item of events) {
-        if (item.sequence <= previous) throw new ControlError("EVENT_CONFLICT");
+        if (item.sequence <= previous) throw this.ports.error("EVENT_CONFLICT");
         previous = item.sequence;
         const key = `${device.id}:${streamId}:${item.event.id}`,
           old = await tx.get("event", key);
         if (old && canonical(old.event) !== canonical(item.event))
-          throw new ControlError("EVENT_CONFLICT");
+          throw this.ports.error("EVENT_CONFLICT");
         if (item.sequence <= device.cursor) continue;
         const event = item.event;
         if (event.kind === "status") {
@@ -197,15 +192,15 @@ export class TaskProjection {
               event.task.status !== event.status ||
               event.task.summary !== event.summary)
           )
-            throw new ControlError("INVALID_EVENT");
+            throw this.ports.error("INVALID_EVENT");
           if (event.task) await this.record(tx, actor, { kind: "task", task: event.task });
           else {
-            const task = required(await tx.get("task", event.taskId));
-            if (task.deviceId !== device.id) throw new ControlError("NOT_FOUND");
+            const task = this.required(await tx.get("task", event.taskId));
+            if (task.deviceId !== device.id) throw this.ports.error("NOT_FOUND");
             await tx.put("task", { ...task, status: event.status, summary: event.summary });
           }
         } else if (event.kind === "request") {
-          if (event.request.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
+          if (event.request.taskId !== event.taskId) throw this.ports.error("INVALID_EVENT");
           await this.record(tx, actor, { kind: "request", request: event.request });
         } else if (event.kind === "activity_delta") {
           const projection = await tx.get("event", `${device.id}:activity:${event.entryId}`);
@@ -213,7 +208,7 @@ export class TaskProjection {
             projection?.event.kind === "activity" ? projection.event.entry : undefined,
             event,
           );
-          if (!entry) throw new ControlError("ACTIVITY_BASE_MISMATCH");
+          if (!entry) throw this.ports.error("ACTIVITY_BASE_MISMATCH");
           await this.activity(
             tx,
             actor,
@@ -222,7 +217,7 @@ export class TaskProjection {
             item.sequence,
           );
         } else if (event.kind === "activity") {
-          if (event.entry.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
+          if (event.entry.taskId !== event.taskId) throw this.ports.error("INVALID_EVENT");
           await this.activity(tx, actor, event, streamId, item.sequence);
         } else {
           const request = await tx.get("request", event.requestId);
@@ -259,7 +254,7 @@ export class TaskProjection {
       deviceId?: string | undefined;
     },
   ) {
-    return this.repository.read(userId, (tx) =>
+    return this.ports.read(userId, (tx) =>
       tx.list("task", input.deviceId, {
         limit: input.limit,
         ...(input.before ? { beforeTask: input.before } : {}),
@@ -268,8 +263,8 @@ export class TaskProjection {
     );
   }
   getTask(userId: string, id: string, after: number, beforeActivity?: number) {
-    return this.repository.read(userId, async (tx) => {
-      const task = required(await tx.get("task", id));
+    return this.ports.read(userId, async (tx) => {
+      const task = this.required(await tx.get("task", id));
       const events = await tx.list("event", task.deviceId, {
         taskId: id,
         activity: false,
@@ -299,7 +294,7 @@ export class TaskProjection {
     });
   }
   listApprovals(userId: string) {
-    return this.repository.read(userId, (tx) =>
+    return this.ports.read(userId, (tx) =>
       tx.list("request", undefined, { pendingApprovals: true, limit: 100 }),
     );
   }
@@ -307,7 +302,7 @@ export class TaskProjection {
     userId: string,
     cursors: RelayCursor[],
   ): Promise<Extract<RelayServerFrame, { type: "changed" }>[]> {
-    return this.repository.read(userId, async (tx) => {
+    return this.ports.read(userId, async (tx) => {
       const output: Extract<RelayServerFrame, { type: "changed" }>[] = [];
       for (const device of await tx.list("device")) {
         if (!device.streamId) continue;
@@ -325,7 +320,7 @@ export class TaskProjection {
             (event) => event.streamId === device.streamId && event.cursor > (cursor?.sequence ?? 0),
           )
           .sort((a, b) => a.cursor - b.cursor);
-        const byCursor = new Map<number, Event>();
+        const byCursor = new Map<number, TaskProjectionRecords["event"]>();
         for (const event of rows)
           if (!byCursor.has(event.cursor) || event.event.kind === "activity")
             byCursor.set(event.cursor, event);

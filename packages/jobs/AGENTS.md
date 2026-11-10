@@ -13,6 +13,9 @@ Injected cloud use cases and shared browser views for local/cloud jobs.
   errors and pure calendar calculations.
 - `/server` owns injected cloud scheduling use cases and repository ports for Node
   hosts. Persistence, identity, relay and clocks remain caller-owned.
+- `/server/postgres` implements the account-owned PostgreSQL repository. API supplies
+  its connection; migrations stay with Database. Injected `/server` never imports
+  this concrete adapter.
 
 ## Boundaries
 

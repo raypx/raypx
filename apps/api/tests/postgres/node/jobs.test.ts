@@ -3,7 +3,7 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { cloudJob, cloudJobRun, controlTask, user } from "@raypx/database/schema";
 import { and, eq, sql } from "drizzle-orm";
 import type { CloudJobInput } from "@raypx/core/jobs";
-import { createCloudJobsRepository } from "../../../server/jobs/repository.ts";
+import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

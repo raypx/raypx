@@ -3,7 +3,10 @@
 ## Purpose
 
 The Bun HTTP composition root for authentication, account and administrator RPC,
-remote read projections, memory and cloud scheduling.
+remote read projections, memory and cloud scheduling. Feature workspaces own the
+server implementations: Tasks/server owns task projections, Memory/server/postgres
+owns account contexts, and Jobs/server/postgres owns cloud scheduling persistence.
+API injects the owned database and authorization/transport ports.
 
 ## Interface
 

@@ -8,7 +8,8 @@
     "./client": "./src/client.ts",
     "./client/pending-count": "./src/client/pending-count.tsx",
     "./client/styles.css": "./src/client/styles.css",
-    "./client/task-composer": "./src/client/task-composer.tsx"
+    "./client/task-composer": "./src/client/task-composer.tsx",
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -27,7 +28,8 @@
     "@tanstack/react-virtual": "catalog:",
     "diff": "catalog:",
     "react-markdown": "catalog:",
-    "remark-gfm": "catalog:"
+    "remark-gfm": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
@@ -54,11 +56,14 @@
       "./client": "browser",
       "./client/pending-count": "browser",
       "./client/styles.css": "browser",
-      "./client/task-composer": "browser"
+      "./client/task-composer": "browser",
+      "./server": "node"
     },
     "sourceTargets": {
       "src/client.ts": "browser",
-      "src/client/**": "browser"
+      "src/client/**": "browser",
+      "src/server.ts": "node",
+      "src/server/**": "node"
     }
   }
 }

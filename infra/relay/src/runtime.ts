@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { connectDatabase } from "@raypx/database/connection";
 import { ControlService, ControlProjects } from "@raypx/control";
-import { createControlRepository, createContextRepository } from "@raypx/control/postgres";
+import { createControlRepository } from "@raypx/control/postgres";
+import { createContextRepository } from "@raypx/memory/server/postgres";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { startRelayServer } from "./server";

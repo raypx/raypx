@@ -15,6 +15,14 @@ const config = {
     // Shared ESM packages spell emitted imports as .js. Resolve their relative
     // imports to TypeScript source, as Bun and Vite already do.
     resolveRequest(context, moduleName, platform) {
+      // Shared source packages have DOM test dependencies of their own. Every
+      // native React import, including JSX subpaths, must use this app's copy.
+      if (moduleName === "react" || moduleName.startsWith("react/"))
+        return context.resolveRequest(
+          { ...context, originModulePath: resolve(directory, "package.json") },
+          moduleName,
+          platform,
+        );
       const workspaceSource =
         context.originModulePath.startsWith(packagesRoot) &&
         !context.originModulePath.includes(`${sep}node_modules${sep}`);
