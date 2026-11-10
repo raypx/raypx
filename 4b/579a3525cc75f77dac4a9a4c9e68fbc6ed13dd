@@ -1,0 +1,237 @@
+apps/cli/src/runtime/process/herdr.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 8
+apps/desktop/src/router-local-events.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+e2e/tests/journeys/cloud-jobs.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 7
+packages/memory/src/model.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/desktop/src/features/automations/local-history.tsx
+  s_ddf44ba41dbc53::t_70dab7859a4b4b 1-83
+packages/jobs/src/cloud-jobs.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 9
+apps/api/tests/integration/jobs.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 9-10
+packages/memory/src/budget.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+apps/api/package.json
+  s_ddf44ba41dbc53::t_00e6bda94656b8 34,36
+packages/memory/src/client/budget.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 9
+packages/jobs/package.json
+  s_ddf44ba41dbc53::t_837284370ab726 7-8,15,23-25,43,46-47,51-53
+  s_ddf44ba41dbc53::t_68b87dc0251c56 16
+packages/memory/tests/helpers/client.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 7
+infra/relay/README.md
+  s_ddf44ba41dbc53::t_434a353f2f01f9 15
+e2e/tests/journeys/memory.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+apps/desktop/AGENTS.md
+  s_ddf44ba41dbc53::t_434a353f2f01f9 55
+docs/architecture/0043-package-surfaces.md
+  s_ddf44ba41dbc53::t_ed0fa2b5927140 5-15,21-22,73,75
+packages/jobs/src/model.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+apps/api/tests/integration/jobs-relay.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+apps/cli/src/runtime/errors.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+packages/control/src/relay/client.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+docs/development/workspaces.md
+  s_ddf44ba41dbc53::t_ed0fa2b5927140 33-34,155-157
+apps/cli/src/diagnostics.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 3
+packages/control/src/relay/frames.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/desktop/src/router-automation-history.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 4
+apps/desktop/tests/native/smoke/scenario.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5-6
+packages/memory/src/client/library.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 42
+  s_ddf44ba41dbc53::t_1a1f9dd033bacf 110-111,113
+apps/desktop/tests/helpers/router-local.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 19
+apps/cli/src/runtime/agents/index.ts
+  s_ddf44ba41dbc53::t_2f8635baedea4f 27
+apps/api/server/jobs/repository.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 12-13
+packages/control/src/relay/hub.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/cli/tests/integration/commands/index.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 7
+packages/jobs/src/client/cloud-jobs.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 24
+packages/contracts/src/local-client.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 28-29
+apps/desktop/src/features/automations/local-list.tsx
+  s_ddf44ba41dbc53::t_70dab7859a4b4b 1-107
+packages/contracts/src/jobs-composition.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+packages/memory/AGENTS.md
+  s_ddf44ba41dbc53::t_ed0fa2b5927140 5-6,10-14
+  s_ddf44ba41dbc53::t_f5c3ce1963a312 15
+apps/cli/src/tui/session.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/api/tests/postgres/node/memory.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5-6
+apps/api/AGENTS.md
+  s_ddf44ba41dbc53::t_434a353f2f01f9 68
+packages/control/src/relay-jobs.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2-3
+packages/jobs/src/client/ports.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/cli/src/runtime/agents/infrastructure/projects.ts
+  s_ddf44ba41dbc53::t_2f8635baedea4f 8
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+docs/development/task-context.md
+  s_ddf44ba41dbc53::t_434a353f2f01f9 22
+packages/control/src/relay/redis.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 3
+apps/cli/src/tui/index.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+packages/control/src/application/commands.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+apps/api/server/jobs/tick.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+packages/control/src/relay/registry.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+apps/cli/tests/integration/runtime/memory.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 10-11
+packages/jobs/src/server/service.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-7,9-285
+  s_ddf44ba41dbc53::t_d09c56e8324d6a 8
+packages/jobs/src/server.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+packages/memory/src/library.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+packages/contracts/AGENTS.md
+  s_ddf44ba41dbc53::t_434a353f2f01f9 73
+packages/contracts/src/local.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 20,45
+packages/jobs/AGENTS.md
+  s_ddf44ba41dbc53::t_ed0fa2b5927140 5,12-15,19-20
+apps/cli/src/runtime/process/shell.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 4
+apps/cli/src/runtime/agents/application/commands.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 15
+packages/jobs/src/server/types.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-58
+packages/control/src/relay/cluster.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+packages/contracts/src/memory.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 19
+packages/contracts/package.json
+  s_ddf44ba41dbc53::t_00e6bda94656b8 24-25
+apps/cli/package.json
+  s_ddf44ba41dbc53::t_00e6bda94656b8 33,35
+packages/memory/src/client/port.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 17
+apps/desktop/src/features/automations/local-form.tsx
+  s_ddf44ba41dbc53::t_70dab7859a4b4b 1-164
+apps/api/server/app/options.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 10-11
+infra/relay/src/runtime.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 6
+packages/control/src/relay/jobs.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+packages/jobs/src/server/service.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-249
+apps/api/server/jobs/tick.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/cli/src/runtime/memory/repository.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 9-10
+apps/cli/src/runtime/state/index.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 3,10
+packages/control/src/context-repository.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 17-18
+packages/control/src/context-routing.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+packages/control/src/relay/dispatch.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+apps/desktop/src/router-automations.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+packages/memory/package.json
+  s_ddf44ba41dbc53::t_68b87dc0251c56 16
+  s_ddf44ba41dbc53::t_837284370ab726 7-8,15,22-23,44-45,49-51
+apps/cli/src/runtime/agents/application/coordinator.test.ts
+  s_ddf44ba41dbc53::t_2f8635baedea4f 1-196
+apps/api/tests/cluster/relay.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 13
+apps/cli/src/runtime/process/index.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 4
+apps/cli/src/runtime/jobs/index.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+packages/memory/src/client/form.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 8
+apps/desktop/src/features/automations/local.tsx
+  s_ddf44ba41dbc53::t_70dab7859a4b4b 13-15,251-264,283-293,296
+  s_ddf44ba41dbc53::t_00e6bda94656b8 12
+apps/api/tests/integration/memory.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 3-4
+apps/desktop/src/features/automations/schedule-fields.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+apps/api/tests/postgres/node/jobs.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+packages/tooling/src/validation/source-layers.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 65,75-76
+packages/memory/src/server/service.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2,4-294
+  s_ddf44ba41dbc53::t_d09c56e8324d6a 3
+packages/contracts/src/jobs.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 8
+infra/relay/package.json
+  s_ddf44ba41dbc53::t_00e6bda94656b8 21
+e2e/package.json
+  s_ddf44ba41dbc53::t_00e6bda94656b8 29-30
+packages/memory/src/server.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-2
+packages/control/package.json
+  s_ddf44ba41dbc53::t_00e6bda94656b8 21-22
+apps/web/src/router-memory.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 12
+apps/cli/src/runtime/memory/index.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+packages/jobs/src/client/job-form.tsx
+  s_ddf44ba41dbc53::t_837284370ab726 9
+docs/development/server-jobs.md
+  s_ddf44ba41dbc53::t_434a353f2f01f9 10-11
+apps/cli/src/tui/session.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1
+apps/api/server/rpc/boundary.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 12-15
+packages/memory/src/server/types.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-58
+packages/memory/src/picker.component.test.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+packages/memory/src/client/picker.tsx
+  s_ddf44ba41dbc53::t_00e6bda94656b8 3
+apps/api/server/runtime/shared.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 32-33,36
+packages/control/src/relay-client.test.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 5
+packages/memory/src/server/service.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 1-190
+apps/cli/src/runtime/router.ts
+  s_ddf44ba41dbc53::t_00e6bda94656b8 2
+bun.lock
+  s_ddf44ba41dbc53::t_6b489ac17ff6c4 34,36,65,67,269-270,316,458-459,475-476,644-645,683
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "4b579a3525cc75f77dac4a9a4c9e68fbc6ed13dd",
+  "prompts": {},
+  "sessions": {
+    "s_ddf44ba41dbc53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "726aff97-c83d-4352-a79b-bc6cb0adaba5",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
