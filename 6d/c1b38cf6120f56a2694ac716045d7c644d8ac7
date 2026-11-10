@@ -1,0 +1,54 @@
+apps/cli/src/runtime/daemon/control.ts
+  s_ddf44ba41dbc53::t_4bd925a26b6044 5,28-41,43-55,74,114-122,125-126,132-145,147-150,274-275,298-300,302,314,320,330-332,380-382,414-416,420,423,428-448,458-460,462-465,469-472,474-477,479,486-489,491,498-499,502-505,507,510-513,517-525
+  s_ddf44ba41dbc53::t_dfaa90cb2d0d11 17,69,89-110,146,227,282,349,364,424,461,533
+  s_ddf44ba41dbc53::t_ff83ff251c7d7d 15,86,309,450,515
+  s_ddf44ba41dbc53::t_1465380fb17ca4 42,175-177,190,196-199,201-226,228-240
+  s_ddf44ba41dbc53::t_38f691f2a64bee 526-528
+apps/cli/src/runtime/daemon/remote/control.ts
+  s_ddf44ba41dbc53::t_1465380fb17ca4 15,19,29-52,54-57,129-134,151-154,165,220,225,351,381-398,404-434,436-463,466-468,470,472-477
+  s_ddf44ba41dbc53::t_dfaa90cb2d0d11 21-26,65,89-105,204,221-222,227-228,251,332,343,435,464,577-579,612,635
+  s_ddf44ba41dbc53::t_400d1d52ac36dd 223-224,399-403
+apps/cli/src/runtime/daemon/remote/failure.ts
+  s_ddf44ba41dbc53::t_d640728b955390 1-6
+apps/cli/src/runtime/background.ts
+  s_ddf44ba41dbc53::t_ef9d1dc63f0f51 1-16
+apps/cli/tests/integration/runtime/daemon/remote/replay.test.ts
+  s_ddf44ba41dbc53::t_1465380fb17ca4 21-26,80,82-85
+apps/cli/src/runtime/daemon/host-state.ts
+  s_ddf44ba41dbc53::t_89656a73bfc2b3 1-65
+apps/cli/src/runtime/daemon/remote/session.ts
+  s_ddf44ba41dbc53::t_f0490960f7e672 5
+  s_ddf44ba41dbc53::t_daad72c982e75b 1-4,6-64
+apps/cli/src/runtime/daemon/remote/scheduler.test.ts
+  s_ddf44ba41dbc53::t_1465380fb17ca4 43-47
+apps/cli/src/runtime/daemon/host-state.test.ts
+  s_ddf44ba41dbc53::t_f93bb0393a6f34 2-70
+  s_ddf44ba41dbc53::t_0ba59ebbb5f011 1
+apps/cli/src/runtime/daemon/server.ts
+  s_ddf44ba41dbc53::t_ff83ff251c7d7d 73
+  s_ddf44ba41dbc53::t_95a0f3b59c90a8 11
+apps/cli/src/runtime/daemon/remote/session.test.ts
+  s_ddf44ba41dbc53::t_0ba59ebbb5f011 1
+  s_ddf44ba41dbc53::t_ee6228464fbf03 2-72
+apps/cli/src/runtime/host.ts
+  s_ddf44ba41dbc53::t_95a0f3b59c90a8 11
+  s_ddf44ba41dbc53::t_ff83ff251c7d7d 26,76
+apps/cli/tests/helpers/remote-control.ts
+  s_ddf44ba41dbc53::t_1465380fb17ca4 6,22,124-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6dc1b38cf6120f56a2694ac716045d7c644d8ac7",
+  "prompts": {},
+  "sessions": {
+    "s_ddf44ba41dbc53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "726aff97-c83d-4352-a79b-bc6cb0adaba5",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
