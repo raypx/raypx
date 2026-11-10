@@ -1,0 +1,50 @@
+DESIGN.md
+  s_2d665babe6fe00::t_3e6bd9ac304099 42-51
+docs/development/ui.md
+  s_2d665babe6fe00::t_3e6bd9ac304099 98-102
+apps/web/src/features/landing/components/accent.ts
+  s_2d665babe6fe00::t_3e9d5499a8e019 1-17
+  s_2d665babe6fe00::t_802123930a0335 18
+apps/web/src/features/landing/components/layout.tsx
+  s_2d665babe6fe00::t_592f7f8727ec41 9-10,16-21
+apps/web/src/features/landing/components/illustrations.tsx
+  s_2d665babe6fe00::t_0f6343c82f3eb9 39-42,102-105,112-114
+  s_2d665babe6fe00::t_497398487ad2e7 50,92-93,96,134,167
+  s_2d665babe6fe00::t_e6f786ad683a00 2,5,10,13-15,18-19,23,27,30-33,51,54-69,71-81,89,97,100-101,106-111,115-120,127-131,135-156,162,168-193
+apps/web/e2e/landing-visual.spec.ts
+  s_2d665babe6fe00::t_0f6343c82f3eb9 53,91
+  s_2d665babe6fe00::t_2858b87e25bd2c 34,42,50-51,77,88-90,102
+apps/web/AGENTS.md
+  s_2d665babe6fe00::t_3e6bd9ac304099 60-65
+packages/i18n/src/messages/en.ts
+  s_2d665babe6fe00::t_592f7f8727ec41 143-150
+packages/i18n/src/messages/zh.ts
+  s_2d665babe6fe00::t_592f7f8727ec41 137-144
+apps/web/src/features/landing/components/workflow-preview.tsx
+  s_2d665babe6fe00::t_7cefac2e957a38 1,16,36-38,40,66-86,88-98,104-114,116-118,122-125,127,129-132,135-144,146-147,150-156,158-189,191-224,226-253,255-258,260,263-264,266-323
+  s_2d665babe6fe00::t_ea8b7f835a70e5 120-121,126,133-134
+  s_2d665babe6fe00::t_db6842c5bd0924 157
+  s_2d665babe6fe00::t_937d1caac370e1 265
+  s_2d665babe6fe00::t_802123930a0335 99
+  s_2d665babe6fe00::t_3e9d5499a8e019 101
+apps/web/src/features/landing/components/home.tsx
+  s_2d665babe6fe00::t_592f7f8727ec41 272-279,312-326
+  s_2d665babe6fe00::t_50ab12c6295169 21,49,55-58,60-66,71,107,141-144
+  s_2d665babe6fe00::t_0f6343c82f3eb9 51-54,131-134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d9f8f245867169b933d0c42e48ebc4db9e6335c1",
+  "prompts": {},
+  "sessions": {
+    "s_2d665babe6fe00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
