@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import { posix, win32 } from "node:path";
-import type { CommandSpec } from "@raypx/jobs-model";
+import type { CommandSpec } from "@raypx/jobs/model";
 import { LocalError } from "../errors";
 import type { Environment } from "./bun";
 

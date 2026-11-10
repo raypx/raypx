@@ -10,7 +10,7 @@ import {
   type RelayClientFrame,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
-import type { CloudJobAction, CloudJobRun } from "@raypx/jobs-model";
+import type { CloudJobAction, CloudJobRun } from "@raypx/jobs/model";
 import type { AgentTask } from "@raypx/core/tasks";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";

@@ -39,7 +39,7 @@ import {
   type ContextDocument,
   type ContextDocumentSummary,
   type ContextVersion,
-} from "@raypx/memory-model";
+} from "../model.ts";
 import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.ts";
 import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
 import { DocumentForm, documentDraft } from "./form.tsx";
@@ -107,13 +107,10 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
     if (!isActive() || current !== generation.current) return;
     if (docs.status === "fulfilled") setDocuments(docs.value);
     if (targets.status === "fulfilled") setProjects(targets.value);
-    setError(
-      docs.status === "rejected"
-        ? memoryFailure(docs.reason)
-        : targets.status === "rejected"
-          ? memoryFailure(targets.reason)
-          : undefined,
+    const failed = [docs, targets].find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
     );
+    setError(failed ? memoryFailure(failed.reason) : undefined);
     setLoading(false);
   }, [isActive, client, projectPort, request]);
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { localParams, LOCAL_WORKSPACE_ID, type LocalMethod } from "@raypx/contracts/local";
-import { ContextError } from "@raypx/memory-model";
+import { ContextError } from "@raypx/memory/model";
 import type { InstanceRuntime, InstanceAccess } from "./instances";
 import type { MemoryRuntime } from "./memory";
 import type { AgentRuntime } from "./agents";

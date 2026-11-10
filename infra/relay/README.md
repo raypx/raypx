@@ -12,7 +12,7 @@ revisions and persists their immutable context snapshot with the command before
 delivery. This preserves retry identity if a reference changes while a response is
 lost. Memory document CRUD remains on API RPC; Relay does not expose those use cases.
 Relay's PostgreSQL connection backs shared `@raypx/control` services for socket
-credential checks and durable remote command state. Its `@raypx/memory-server`
+credential checks and durable remote command state. Its `@raypx/memory/server`
 dependency is limited to resolving those selected revisions into the snapshot;
 login/session handling and memory CRUD remain API-only.
 

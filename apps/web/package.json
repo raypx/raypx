@@ -31,7 +31,6 @@
     "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
-    "@raypx/memory-model": "workspace:*",
     "@raypx/tasks": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",

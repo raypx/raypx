@@ -2,22 +2,24 @@
 
 Status: Accepted, 2026-11-03. Extends ADR 0042.
 
-Runtime amendment (2026-11-06): pure memory schemas live in `@raypx/memory-model`;
-scheduled-job schemas and calendar rules live in `@raypx/jobs-model`. The
-injected Node use cases live in `@raypx/memory-server` and `@raypx/jobs-server`,
-while browser views live in `@raypx/jobs`. This keeps UI dependencies out of
-protocol, API, Control and Relay dependency graphs. Public account/session types,
-social provider identifiers and trusted-origin rules live in `@raypx/core/auth`,
-alongside Core's permission vocabulary; the separate auth model workspace is
-removed. This replaces the vertical schema ownership recorded below; see the current
-[workspace guide](../development/workspaces.md).
+Runtime amendment (2026-11-10): memory and scheduled jobs are each one workspace
+with three surfaces, replacing the 2026-11-06 split into `-model` and `-server`
+workspaces. `@raypx/memory/model` and `@raypx/jobs/model` hold pure schemas and
+calendar rules, `/server` holds the injected Node use cases, and `/client` holds
+browser views. `entryTargets` and `sourceTargets` keep each surface's platform
+honest, as `account` and `instances` already do; protocol, API, Control and Relay
+import only `/model` and `/server`, so no UI module enters their bundles. Their
+workspace dependency closure does now include the UI workspaces. Public
+account/session types, social provider identifiers and trusted-origin rules live in
+`@raypx/core/auth`, alongside Core's permission vocabulary; the separate auth model
+workspace is removed. See the current [workspace guide](../development/workspaces.md).
 
 Account models remain framework-free in Core. Better Auth and shared authentication
 forms stay in `@raypx/auth`. The explicit `/auth` entry keeps these concerns separate
 without another workspace for a small set of shared types and pure rules.
 
-Job model, server and client code have separate dependency boundaries. Contracts
-composes domain schemas without importing UI or server implementation code.
+Job and memory model, server and client code are separate entries of one workspace.
+Contracts composes domain schemas without importing UI or server implementation code.
 
 ## Direction
 
@@ -68,9 +70,9 @@ are imported from `@raypx/core/tasks` and `@raypx/contracts/tasks`, their owners
 ## Contracts
 
 `@raypx/contracts` drops `.`, `./jobs` and `./memory`. It composes wire schemas from
-the pure `@raypx/jobs-model` and `@raypx/memory-model` entries. Browser views stay in
+the pure `@raypx/jobs/model` and `@raypx/memory/model` entries. Browser views stay in
 `@raypx/jobs/client` and `@raypx/memory/client`; injected server use cases live in
-`@raypx/jobs-server` and `@raypx/memory-server`. A consumer that needs a domain
+`@raypx/jobs/server` and `@raypx/memory/server`. A consumer that needs a domain
 schema imports it from its model owner, not through contracts.
 
 ## Enforcement

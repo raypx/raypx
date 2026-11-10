@@ -24,7 +24,7 @@ import { type StateStore } from "../state/index.ts";
 import { LocalError } from "../errors.ts";
 import { AgentStore } from "./store.ts";
 import { desktopBinding } from "./model.ts";
-import { ExecutionCoordinator } from "./application/execution.ts";
+import { ExecutionCoordinator } from "./application/coordinator.ts";
 import { LocalExecutionProjects } from "./infrastructure/projects.ts";
 import manifest from "../../../package.json";
 

@@ -30,9 +30,8 @@ maps package-relative globs to targets; the most-specific matching pattern wins.
 Universal code has no platform host dependencies. Bun can consume node code;
 other platform crossings require a compatible explicit public entry. A server use
 case behind a universal entry is not safe merely because Bun can execute
-Node-compatible APIs: `@raypx/memory-server` and `@raypx/jobs-server` declare their
-whole workspace as `node`; `account` and `instances` mark their server entries and
-sources explicitly. Browser imports of those server use cases therefore fail
+Node-compatible APIs: `memory`, `jobs`, `account` and `instances` mark their server
+entries and sources as `node` explicitly. Browser imports of those server use cases therefore fail
 policy instead of reaching a bundled dependency by accident. The `node` target
 describes compatible host APIs; Bun remains the JavaScript runtime.
 
@@ -153,9 +152,9 @@ private harness owns task policy, persistence, approval and cancellation. See
 
 ## Scheduled jobs
 
-`@raypx/jobs-model` owns pure job schemas, inferred types and calendar rules.
-`@raypx/jobs-server` owns injected cloud scheduling use cases and ports. `@raypx/jobs`
-exposes `/client` for shared browser views and their ports. Contracts composes wire
+`@raypx/jobs` is one workspace with three surfaces: `/model` owns pure job schemas,
+inferred types and calendar rules, `/server` owns injected cloud scheduling use cases
+and ports, and `/client` owns shared browser views and their ports. Contracts composes wire
 schemas from the model package; API supplies SQL/Relay adapters, while CLI supplies
 local scheduling and execution.
 Cloud schedules do not claim local plans or move them between accounts. See

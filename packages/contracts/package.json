@@ -21,8 +21,8 @@
     "@orpc/contract": "catalog:",
     "@raypx/core": "workspace:*",
     "@raypx/instances": "workspace:*",
-    "@raypx/jobs-model": "workspace:*",
-    "@raypx/memory-model": "workspace:*",
+    "@raypx/jobs": "workspace:*",
+    "@raypx/memory": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

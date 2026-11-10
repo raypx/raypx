@@ -1,5 +1,5 @@
-import { JobError, type CloudJobAction, type CloudJobRun } from "@raypx/jobs-model";
-import type { CloudJobExecutor, JobDispatchResult } from "@raypx/jobs-server";
+import { JobError, type CloudJobAction, type CloudJobRun } from "@raypx/jobs/model";
+import type { CloudJobExecutor, JobDispatchResult } from "@raypx/jobs/server";
 import { ControlError, type ControlService } from "../service.ts";
 
 export interface RelayJobTransport {

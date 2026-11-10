@@ -9,7 +9,7 @@ import {
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { ContextDocumentSummary } from "@raypx/memory-model";
+import type { ContextDocumentSummary } from "@raypx/memory/model";
 import type { MemoryUsagePort } from "@raypx/memory/client";
 const mocks = vi.hoisted(() => ({
   account: null as string | null,

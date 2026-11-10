@@ -14,8 +14,8 @@ import {
   type ContextDocument,
   type ContextDocumentInput,
   type ContextVersion,
-} from "@raypx/memory-model";
-import type { ContextLibraryRepository } from "@raypx/memory-server";
+} from "@raypx/memory/model";
+import type { ContextLibraryRepository } from "@raypx/memory/server";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type DocumentRow = typeof contextDocument.$inferSelect;

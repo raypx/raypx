@@ -6,8 +6,8 @@ import {
   type ContextDocument,
   type ContextDocumentInput,
   type ContextVersion,
-} from "@raypx/memory-model";
-import type { ContextLibraryRepository } from "@raypx/memory-server";
+} from "@raypx/memory/model";
+import type { ContextLibraryRepository } from "@raypx/memory/server";
 import { type LocalDatabase } from "../sqlite/index.ts";
 import { deletedDocuments, documents, versions } from "../sqlite/schema.ts";
 

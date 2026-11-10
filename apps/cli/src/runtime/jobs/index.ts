@@ -1,5 +1,5 @@
 import { Cron } from "croner";
-import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/jobs-model";
+import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/jobs/model";
 import type { LocalEvent } from "@raypx/contracts/local";
 
 import { LocalError } from "../errors.ts";

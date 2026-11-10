@@ -1,5 +1,5 @@
-import { JobError, type CloudJobRun } from "@raypx/jobs-model";
-import type { JobDispatchResult } from "@raypx/jobs-server";
+import { JobError, type CloudJobRun } from "@raypx/jobs/model";
+import type { JobDispatchResult } from "@raypx/jobs/server";
 import { taskSchema } from "@raypx/core/tasks";
 import { ControlError, type ControlService } from "../service.ts";
 import type { RelayOperation, RelayReply } from "./cluster.ts";

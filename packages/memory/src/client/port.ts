@@ -14,7 +14,7 @@ import type {
   ContextRestoreInput,
   ContextUpdateInput,
   ContextVersion,
-} from "@raypx/memory-model";
+} from "../model.ts";
 export interface MemoryReadOptions {
   signal?: AbortSignal | undefined;
 }

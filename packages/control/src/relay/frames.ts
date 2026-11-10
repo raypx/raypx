@@ -1,4 +1,4 @@
-import { JobError } from "@raypx/jobs-model";
+import { JobError } from "@raypx/jobs/model";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import { terminalRequestSchema } from "@raypx/contracts/terminal";
 import { taskSchema, humanRequestSchema, taskInputActivitySchema } from "@raypx/core/tasks";

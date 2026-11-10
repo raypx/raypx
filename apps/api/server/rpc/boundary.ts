@@ -9,10 +9,10 @@ import { hasPermission, type AccountPermission } from "@raypx/account/access";
 import { createAccessPolicy } from "../access.ts";
 import { createAccountService } from "@raypx/account/server";
 import type { RateRule } from "../rate-limit/types.ts";
-import type { CloudJobsService } from "@raypx/jobs-server";
-import { JobError } from "@raypx/jobs-model";
-import { ContextError } from "@raypx/memory-model";
-import type { ContextLibraryService } from "@raypx/memory-server";
+import type { CloudJobsService } from "@raypx/jobs/server";
+import { JobError } from "@raypx/jobs/model";
+import { ContextError } from "@raypx/memory/model";
+import type { ContextLibraryService } from "@raypx/memory/server";
 import type { InstanceService } from "@raypx/instances/server";
 import { InstanceError } from "@raypx/instances";
 // Per-account limits for procedures that create grants, devices or relay tickets.

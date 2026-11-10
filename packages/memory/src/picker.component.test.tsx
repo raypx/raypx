@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
-import type { ContextDocument } from "@raypx/memory-model";
+import type { ContextDocument } from "./model.ts";
 import { useState } from "react";
 import type { TaskContextSelection } from "@raypx/core/tasks";
 import { ContextPicker, ContextSnapshot } from "./client.ts";

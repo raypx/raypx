@@ -17,7 +17,7 @@ import {
   contextDeleteSchema,
   contextHistorySchema,
   contextRestoreSchema,
-} from "@raypx/memory-model";
+} from "@raypx/memory/model";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
 /** Private device-profile owner, independent of any remote account or deployment. */
@@ -42,7 +42,7 @@ export const fileEntrySchema = z.object({
   version: z.string(),
 });
 export type FileEntry = z.infer<typeof fileEntrySchema>;
-import { commandSchema, jobInputSchema } from "@raypx/jobs-model";
+import { commandSchema, jobInputSchema } from "@raypx/jobs/model";
 export const localParams = {
   "instance.status": z.strictObject({}),
   "instance.begin": z.strictObject({ origin: z.string().url() }),

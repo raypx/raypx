@@ -24,7 +24,6 @@ function forbidden(owner: string, target: string, request: string) {
     owner === "contracts" &&
     (/^react(?:-dom)?(?:\/|$)/.test(request) ||
       /^@raypx\/(?:ui|i18n|icons|client|auth)(?:\/|$)/.test(request) ||
-      /^@raypx\/(?:jobs-server|memory-server)(?:\/|$)/.test(request) ||
       /^@raypx\/[^/]+\/(?:server|client|crypto)(?:\/|$)/.test(request))
   )
     return true;

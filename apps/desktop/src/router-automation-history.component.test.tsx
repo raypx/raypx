@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
-import type { JobRun } from "@raypx/jobs-model";
+import type { JobRun } from "@raypx/jobs/model";
 import { mocks, grants, job, deferred, emit, page } from "../tests/helpers/router-local.tsx";
 
 const first = job("First scan");

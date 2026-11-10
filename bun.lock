@@ -31,11 +31,9 @@
         "@raypx/email": "workspace:*",
         "@raypx/env": "workspace:*",
         "@raypx/instances": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
-        "@raypx/jobs-server": "workspace:*",
+        "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
-        "@raypx/memory-server": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/storage": "workspace:*",
         "drizzle-orm": "catalog:",
         "evlog": "catalog:",
@@ -64,10 +62,9 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/instances": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
+        "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
-        "@raypx/memory-server": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/providers": "workspace:*",
         "@raypx/runtime-node": "workspace:*",
         "citty": "catalog:",
@@ -104,9 +101,7 @@
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
         "@raypx/jobs": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
         "@raypx/memory": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
         "@raypx/runtime-node": "workspace:*",
         "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
@@ -226,7 +221,6 @@
         "@raypx/instances": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
         "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-query": "catalog:",
@@ -272,8 +266,8 @@
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -319,7 +313,7 @@
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/env": "workspace:*",
-        "@raypx/memory-server": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "drizzle-orm": "catalog:",
       },
       "devDependencies": {
@@ -461,8 +455,8 @@
         "@orpc/contract": "catalog:",
         "@raypx/core": "workspace:*",
         "@raypx/instances": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -478,10 +472,8 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
-        "@raypx/jobs-server": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
-        "@raypx/memory-server": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "drizzle-orm": "catalog:",
         "ioredis": "catalog:",
         "zod": "catalog:",
@@ -647,9 +639,10 @@
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/ui": "workspace:*",
+        "croner": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
@@ -664,35 +657,6 @@
       },
       "peerDependencies": {
         "react": "^19.3.0",
-      },
-    },
-    "packages/jobs-model": {
-      "name": "@raypx/jobs-model",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/core": "workspace:*",
-        "croner": "catalog:",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@raypx/tooling": "workspace:*",
-        "@raypx/tsconfig": "workspace:*",
-        "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
-      },
-    },
-    "packages/jobs-server": {
-      "name": "@raypx/jobs-server",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/core": "workspace:*",
-        "@raypx/jobs-model": "workspace:*",
-      },
-      "devDependencies": {
-        "@raypx/tooling": "workspace:*",
-        "@raypx/tsconfig": "workspace:*",
-        "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
       },
     },
     "packages/logger": {
@@ -715,8 +679,8 @@
         "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
         "@raypx/ui": "workspace:*",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
@@ -731,36 +695,6 @@
       },
       "peerDependencies": {
         "react": "^19.3.0",
-      },
-    },
-    "packages/memory-model": {
-      "name": "@raypx/memory-model",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/core": "workspace:*",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@raypx/tooling": "workspace:*",
-        "@raypx/tsconfig": "workspace:*",
-        "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
-      },
-    },
-    "packages/memory-server": {
-      "name": "@raypx/memory-server",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/core": "workspace:*",
-        "@raypx/memory-model": "workspace:*",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@raypx/tooling": "workspace:*",
-        "@raypx/tsconfig": "workspace:*",
-        "@types/node": "catalog:dev",
-        "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
       },
     },
     "packages/providers": {
@@ -1886,17 +1820,9 @@
 
     "@raypx/jobs": ["@raypx/jobs@workspace:packages/jobs"],
 
-    "@raypx/jobs-model": ["@raypx/jobs-model@workspace:packages/jobs-model"],
-
-    "@raypx/jobs-server": ["@raypx/jobs-server@workspace:packages/jobs-server"],
-
     "@raypx/logger": ["@raypx/logger@workspace:packages/logger"],
 
     "@raypx/memory": ["@raypx/memory@workspace:packages/memory"],
-
-    "@raypx/memory-model": ["@raypx/memory-model@workspace:packages/memory-model"],
-
-    "@raypx/memory-server": ["@raypx/memory-server@workspace:packages/memory-server"],
 
     "@raypx/mobile": ["@raypx/mobile@workspace:apps/mobile"],
 

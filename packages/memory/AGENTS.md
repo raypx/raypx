@@ -2,10 +2,16 @@
 
 ## Purpose
 
-Browser views for versioned user-selected memory and task templates. Pure schemas live in
-`@raypx/memory-model`; injected server use cases live in `@raypx/memory-server`.
+Versioned user-selected memory and task templates: pure schemas, injected server use
+cases and browser views.
 
 ## Interface
+
+`/model` owns document and task-context schemas shared by transports, server use cases,
+device execution and browser views; keep it free of UI, persistence and transport code.
+`/server` owns injected account/device use cases and repository ports for Node hosts;
+persistence, identity, project authorization and clocks remain caller-owned. `/client`
+and `/server` import `/model` by relative path and never each other.
 
 `/client` owns browser management, context selection, immutable task-context views and
 browser-only ports. CLI owns SQLite; Control's `/postgres` entry owns account persistence.

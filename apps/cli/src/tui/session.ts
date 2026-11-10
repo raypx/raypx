@@ -1,4 +1,4 @@
-import type { JobDefinition, JobRun } from "@raypx/jobs-model";
+import type { JobDefinition, JobRun } from "@raypx/jobs/model";
 import type { TuiTerminal } from "./terminal.ts";
 import { messages, outputLines, safeText, type TuiLocale } from "./text.ts";
 

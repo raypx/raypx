@@ -5,7 +5,7 @@ import type {
   ContextDocumentSummary,
   ContextDeleteResult,
   ContextVersion,
-} from "@raypx/memory-model";
+} from "../model.ts";
 
 export interface ContextResolvedSource {
   current: ContextDocumentSummary;
