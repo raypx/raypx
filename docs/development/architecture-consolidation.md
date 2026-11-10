@@ -9,7 +9,7 @@ reported independently from source and headless checks.
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
 | 1. Core domains        | Memory/job schemas and pure calculations in Core; no Contracts dependency on feature/UI workspaces; old model entries removed                                             | Package graph, Core/Contracts and feature tests, policy                                       | Verified |
 | 2. Backend roles       | One server artifact with api/relay/both roles; default combined deployment works without Redis; separate/cluster role remains supported                                   | Role and transport integration tests; build; deployment configuration and isolated acceptance | Verified |
-| 3. Thin Desktop        | ADR before implementation; daemon owns sessions, API proxy and event stream; native host retains OS UI and launch capabilities; renderer gets no credentials              | ADR 0052 accepted; session/native implementation and verification pending                     | Pending  |
+| 3. Thin Desktop        | ADR before implementation; daemon owns sessions, API proxy and event stream; native host retains OS UI and launch capabilities; renderer gets no credentials              | ADR 0052 accepted; daemon channel implemented; native/renderer switch and removal pending     | Pending  |
 | 4. Ordered streams     | Managed and observed relay channels share cursor/ack/timeout/reset mechanics                                                                                              | Replay, reset, expiry and stale-ack tests for both consumers                                  | Verified |
 | 5. Feature servers     | Task projections owned by Tasks server; context persistence owned by Memory server; Jobs persistence owned by Jobs server; Control retains transport/device authorization | Acyclic workspace/source graph; API/Relay/PostgreSQL tests                                    | Verified |
 | 6. Cancellation scopes | Each daemon connection owns an AbortController; replacements cancel pending work and stale completions cannot mutate state                                                | Replacement/disconnect race tests for managed and observed channels                           | Verified |
@@ -67,6 +67,15 @@ record their actual availability and results. Commit and push all completed work
   Types, policy, locales, formatting/lint and current-platform headless Go checks
   passed. Cache was disabled because container filesystem tracing reused an old
   test result in the initial run. Native GUI/macOS/Windows acceptance was not run.
-- Desktop's security/lifecycle decision is recorded in ADR 0052 before its code
-  migration. Go still owns the old session/API/event transport until item 3 is
-  implemented and verified; that remaining work is not complete.
+- Desktop's security/lifecycle decision was recorded in ADR 0052 before its code
+  migration. The daemon now implements encrypted profile sessions, selected-origin
+  API policy, account/Host authorization and a separate bounded renderer WebSocket
+  channel using the shared ACK primitive. A finite private bootstrap never exports
+  the administrative credential. Go still owns the active Desktop session/API/event
+  transport; switching native/renderer consumers and removing it remains incomplete.
+- Daemon Desktop slice: six focused suites cover cookies, real SQLite encryption,
+  HTTPS persistence, authorization races and loopback channel lifecycle; the
+  gateway regression delivers a maximum-size escaped text file without dropping
+  queued WebSocket frames. `bun run verify --no-cache` passed 26/26 selected tasks
+  in 127.8 seconds (CLI 561 passed / one skipped; Desktop 304 passed), including
+  current-platform headless Go checks. Native GUI/platform gates remain unrun.

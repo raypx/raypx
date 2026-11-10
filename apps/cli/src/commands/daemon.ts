@@ -40,12 +40,19 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
       stop: "Stop the host and cancel managed work",
       restart: "Stop the previous host, cancel managed work and start this version",
       proxy: "Private Desktop client transport",
+      desktop: "Private finite Desktop bootstrap",
       install: "Install the macOS user service",
       uninstall: "Remove the macOS user service",
     },
     async (action, inputs) => {
       if (inputs.length)
         throw new LocalError("INVALID_INPUT", "Daemon commands do not accept operands");
+      if (action === "desktop") {
+        if (invocation.yes)
+          throw new LocalError("INVALID_INPUT", "Desktop bootstrap does not accept --yes");
+        await (await import("../transport/desktop")).bootstrapDesktop(options);
+        return;
+      }
       if (action === "run" || action === "proxy") {
         if (invocation.json || invocation.yes)
           throw new LocalError("INVALID_INPUT", "Daemon transports do not accept --json or --yes");

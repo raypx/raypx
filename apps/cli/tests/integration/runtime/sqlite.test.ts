@@ -294,6 +294,28 @@ for (const baseline of ["baseline", "node-baseline"]) {
       before.close();
     }
     const storage = profileStorage(target);
+    const migratedLedger = storage.database.$client
+      .query<
+        { id: number; name: string; hash: string; created_at: number; applied_at: string },
+        []
+      >("SELECT * FROM __drizzle_migrations ORDER BY id")
+      .all();
+    // A current schema may append migrations to the immutable baseline. Every
+    // old ledger row and business record must remain byte-for-byte unchanged.
+    expect(migratedLedger.slice(0, expected.__drizzle_migrations!.length)).toEqual(
+      expected.__drizzle_migrations,
+    );
+    expect(migratedLedger).toEqual(
+      migrations.map((migration, index) => ({
+        id: index + 1,
+        name: migration.name,
+        hash: "",
+        created_at: migration.timestamp,
+        applied_at: expect.any(String),
+      })),
+    );
+    expect(storage.database.$client.query("SELECT * FROM desktop_sessions").all()).toEqual([]);
+    expected = { ...expected, __drizzle_migrations: migratedLedger };
     expect(snapshot(storage.database.$client)).toEqual(expected);
     if (baseline === "node-baseline") {
       const instance = new InstanceRuntime(target, { keys: instanceKeys(storage.database) });
@@ -321,6 +343,7 @@ for (const baseline of ["baseline", "node-baseline"]) {
     storage.close();
     const reopened = profileStorage(target);
     const actual = snapshot(reopened.database.$client);
+    expect(reopened.database.$client.query("SELECT * FROM desktop_sessions").all()).toEqual([]);
     expect(actual.__drizzle_migrations).toEqual(expected.__drizzle_migrations);
     expect(actual.tasks).toEqual(expected.tasks);
     expect(actual.instance_credentials).toEqual(expected.instance_credentials);

@@ -435,6 +435,16 @@ export class DaemonControl {
     this.terminal.projectsChanged();
     await this.wake();
   }
+  /** A new Desktop origin retires a previous cloud binding even after the GUI was closed. */
+  async selectDesktopOrigin(apiUrl: string) {
+    const origin = serverOrigin(apiUrl);
+    const selected = this.selection();
+    if (
+      (this.current && this.current.apiUrl !== origin) ||
+      (selected && selected.apiUrl !== origin)
+    )
+      await this.request("host.session", { accountId: null, apiUrl: origin });
+  }
   private readonly methods: ControlHandlers = {
     "host.session": (input) => {
       const next = { accountId: input.accountId, apiUrl: serverOrigin(input.apiUrl) };

@@ -1,10 +1,12 @@
 import { getBridge, isDesktop } from "./desktop.ts";
 
-/** Native owns cookies; renderer code receives only the ordinary API response. */
+/** The daemon owns cookies; renderer code receives only the ordinary API response. */
 export function createDesktopFetch(baseUrl: string) {
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     if (!isDesktop()) return globalThis.fetch(input, init);
     const request = new Request(input, init);
+    if (request.method !== "GET" && request.method !== "POST")
+      throw new Error("Invalid desktop API method");
     const url = new URL(request.url);
     if (url.origin !== new URL(baseUrl).origin) throw new Error("Invalid desktop API origin");
     request.signal.throwIfAborted();

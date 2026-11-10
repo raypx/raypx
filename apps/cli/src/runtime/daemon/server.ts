@@ -21,6 +21,7 @@ import { cliBuild } from "./build";
 import { refreshStableCli } from "./connectors";
 import { privateSocketDirectory } from "../terminal/socket";
 import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http";
+import { DesktopGateway } from "./desktop/gateway.ts";
 
 type Client = {
   stream: ReadableStreamDefaultController<Uint8Array>;
@@ -65,6 +66,7 @@ export async function startDaemon(
   const clients = new Map<string, Client>(),
     encoder = new TextEncoder();
   let host: ExecutionHost | undefined;
+  let desktop: DesktopGateway | undefined;
   let terminal: LocalTerminalControl | undefined;
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
@@ -91,6 +93,7 @@ export async function startDaemon(
     }
   };
   const emit = (event: LocalEvent) => {
+    desktop?.emit(event);
     if (
       (event.event === "terminal.exit" || event.event === "tool.finished") &&
       typeof event.data.id === "string"
@@ -116,6 +119,7 @@ export async function startDaemon(
       try {
         for (const id of clients.keys()) releaseClient(id);
         try {
+          await desktop?.close();
           await host?.close();
         } finally {
           await server?.stop(true);
@@ -137,6 +141,7 @@ export async function startDaemon(
     refreshStableCli();
     host = createExecutionOwner({ ...options, mode: "daemon", emit });
     ({ runtime, terminal, control } = host);
+    desktop = new DesktopGateway(host, directory);
     server = Bun.serve({
       ...(address.socket === undefined
         ? { hostname: "127.0.0.1", port: 0 }
@@ -145,9 +150,24 @@ export async function startDaemon(
       fetch: async (request, transport) => {
         transport.timeout(request, 0);
         if (foreignLoopbackRequest(request, address)) return new Response(null, { status: 403 });
+        const url = new URL(request.url);
+        if (url.pathname === "/desktop/native" && request.method === "POST" && !stopping) {
+          const token = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
+          if (!desktop!.permitsNative(token)) return new Response(null, { status: 403 });
+          try {
+            if (Number(request.headers.get("content-length")) > 64 * 1024)
+              return new Response(null, { status: 413 });
+            const body = await request.text();
+            if (Buffer.byteLength(body) > 64 * 1024) return new Response(null, { status: 413 });
+            return Response.json({
+              result: await desktop!.native(token, JSON.parse(body), request.signal),
+            });
+          } catch (error) {
+            return Response.json({ error: { code: errorPayload(error).code } }, { status: 403 });
+          }
+        }
         if (request.headers.get("authorization") !== `Bearer ${endpoint.token}`)
           return new Response(null, { status: 403 });
-        const url = new URL(request.url);
         if (url.pathname === "/info" && request.method === "GET")
           return Response.json({
             protocol: 1,
@@ -166,6 +186,16 @@ export async function startDaemon(
           return Response.json({ stopped: true });
         }
         if (stopping) return new Response(null, { status: 503 });
+        if (url.pathname === "/desktop" && request.method === "POST") {
+          try {
+            const body = await request.text();
+            if (Buffer.byteLength(body) > 64 * 1024) return new Response(null, { status: 413 });
+            const result = await desktop!.administrative(JSON.parse(body));
+            return Response.json({ result: { ...result, nativeAddress: address } });
+          } catch (error) {
+            return Response.json({ error: { code: errorPayload(error).code } });
+          }
+        }
         const id = url.searchParams.get("client");
         if (!id || !/^[a-f0-9-]{36}$/.test(id)) return new Response(null, { status: 400 });
         if (url.pathname === "/events" && request.method === "GET") {

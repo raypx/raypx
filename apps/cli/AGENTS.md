@@ -21,6 +21,14 @@ one bounded request; signals abort it and close its client. Keep finite JSON
 output, stable LocalError codes, and prompts/credentials/provider errors out of
 diagnostics. Returned tool calls remain data for a caller to authorize and execute.
 
+Private `daemon desktop` is a finite, bounded stdin/JSON bootstrap for ADR 0052.
+Administrative IPC issues a separate native capability and a one-use renderer
+WebSocket capability; neither grants the other's methods. `daemon/desktop` owns
+the selected-origin API policy, account verification, encrypted session table and
+bounded acknowledged events. Native visibility/pickers use private IPC. Renderer
+disconnect cancels HTTP/tools/PTYs and its approval lease, preserving durable tasks.
+The existing Go renderer transport is pending migration to this channel.
+
 Public commands use an explicit citty tree; `roots` and the existing JSON params remain supported.
 Validate global options strictly before dispatch, preserving operands after `--`. Generate scoped
 help with `renderUsage`; never use `runMain` or let citty print errors or exit the process.

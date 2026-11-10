@@ -89,19 +89,21 @@ export const hostAuthorizationSchema = z.object({
   expiresAt: z.iso.datetime(),
 });
 export type HostAuthorization = z.infer<typeof hostAuthorizationSchema>;
-export interface ControlInfo {
-  installationId: string;
-  name: string;
-  enabled: boolean;
-  connected: boolean;
-  pendingRevoke: { deviceId: string; epoch: number } | null;
-  binding: { deviceId: string; epoch: number } | null;
-  error: string | null;
-  daemon?: boolean;
-  persistent?: boolean;
-  authorized?: boolean;
-  terminalSupported?: boolean;
-}
+const controlBindingSchema = z.object({ deviceId: z.uuid(), epoch: z.number().int().positive() });
+export const controlInfoSchema = z.object({
+  installationId: z.string(),
+  name: z.string(),
+  enabled: z.boolean(),
+  connected: z.boolean(),
+  pendingRevoke: controlBindingSchema.nullable(),
+  binding: controlBindingSchema.nullable(),
+  error: z.string().nullable(),
+  daemon: z.boolean().optional(),
+  persistent: z.boolean().optional(),
+  authorized: z.boolean().optional(),
+  terminalSupported: z.boolean().optional(),
+});
+export type ControlInfo = z.infer<typeof controlInfoSchema>;
 
 /** The same permission gate is used by protocol parsing, hook installation and UI. */
 export function terminalPermissionSupported(

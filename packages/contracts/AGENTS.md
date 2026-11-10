@@ -9,6 +9,11 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 
+`/desktop`: bounded API request/reply DTOs and the separate renderer channel's
+capability/authentication/request/ACK frames. This entry never describes the
+administrative daemon router. The daemon derives renderer local admission from
+`/local-client` and API admission from `apiExposure`; no second business allowlist.
+
 `/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). Desktop generates its Go RPC allowlists from this policy. `/local`: versioned local CLI/Desktop protocol. There is no root entry and no `./jobs` or `./memory` entry: transport entries compose Core's domain schemas, and domain consumers import Core directly.
 
 ## Ownership

@@ -31,6 +31,14 @@ other processes still use separate connections. The database and auxiliaries use
    migrated. Credential repositories borrow `ProfileStorage`, including `login` and
    `ai complete`; offline `ai providers/models` never create a profile database.
 
+4. The Desktop channel migration adds `desktop_sessions`: one authenticated,
+   encrypted cookie payload per API origin. AES-256-GCM associated data binds it
+   to format version, profile directory and exact server origin. Session-only
+   cookies stay in memory. Missing/wrong keys and unreadable ciphertext preserve
+   rows and use memory only; failed writes poison the transport until daemon
+   restart. Unsupported versions fail explicitly. The native bootstrap supplies
+   the OS key over private IPC; cookies/keys never enter the renderer channel.
+
 ```sh
 bun run --cwd apps/cli db:generate
 bun run --cwd apps/cli check
@@ -75,3 +83,8 @@ Cookie rows are encrypted with a key held in MyGo's system credential store; fil
 An unreadable store keeps sign-in in memory without touching stored rows; a failed
 write disables session transport until restart. Host authorization may explicitly
 report memory-only mode.
+
+ADR 0052's daemon session/channel implementation is available through private
+`daemon desktop` bootstrap. Switching the Go host and renderer and removing their
+old cookie/API/event implementation is still pending. That switch does not import,
+delete or read the previous Go session store or its OS key namespace.

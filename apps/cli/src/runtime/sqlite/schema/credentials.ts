@@ -24,3 +24,17 @@ export const hostAuthorizations = sqliteTable(
     check("host_epoch_positive", sql`${table.epoch} > 0`),
   ],
 );
+
+/** Desktop session cookies share the profile writer; payloads are authenticated ciphertext. */
+export const desktopSessions = sqliteTable(
+  "desktop_sessions",
+  {
+    origin: text("origin").primaryKey(),
+    version: integer("version").notNull(),
+    encrypted: blob("encrypted", { mode: "buffer" }).notNull(),
+  },
+  (table) => [
+    check("desktop_session_version", sql`${table.version} > 0`),
+    check("desktop_session_size", sql`length(${table.encrypted}) BETWEEN 28 AND 262172`),
+  ],
+);

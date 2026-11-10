@@ -13,5 +13,10 @@
     "name": "20261104024215_dapper_the_captain",
     "timestamp": 1793760135000,
     "sql": "CREATE TABLE `host_authorizations` (\n\t`api_url` text NOT NULL,\n\t`account_id` text NOT NULL,\n\t`device_id` text NOT NULL,\n\t`epoch` integer NOT NULL,\n\t`authorization` text NOT NULL,\n\tCONSTRAINT `host_authorizations_pk` PRIMARY KEY(`api_url`, `account_id`, `device_id`, `epoch`),\n\tCONSTRAINT \"host_epoch_positive\" CHECK(\"epoch\" > 0)\n);\n--> statement-breakpoint\nCREATE TABLE `instance_credentials` (\n\t`instance_id` text PRIMARY KEY,\n\t`private_key` blob NOT NULL,\n\tCONSTRAINT \"instance_key_size\" CHECK(length(\"private_key\") BETWEEN 1 AND 4096)\n);\n"
+  },
+  {
+    "name": "20261110150843_nappy_golden_guardian",
+    "timestamp": 1794323323000,
+    "sql": "CREATE TABLE `desktop_sessions` (\n\t`origin` text PRIMARY KEY,\n\t`version` integer NOT NULL,\n\t`encrypted` blob NOT NULL,\n\tCONSTRAINT \"desktop_session_version\" CHECK(\"version\" > 0),\n\tCONSTRAINT \"desktop_session_size\" CHECK(length(\"encrypted\") BETWEEN 28 AND 262172)\n);\n"
   }
 ]
