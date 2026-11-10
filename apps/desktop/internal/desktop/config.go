@@ -240,10 +240,20 @@ func ReadBounded(path string, limit int64) ([]byte, error) {
 	return data, nil
 }
 func PrivateDirectory(path string) error {
+	if !filepath.IsAbs(path) {
+		return errors.New("Private directory must be absolute")
+	}
+	if info, err := os.Lstat(path); err == nil {
+		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return errors.New("Invalid private directory")
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
 	if err := os.MkdirAll(path, 0700); err != nil {
 		return err
 	}
-	return os.Chmod(path, 0700)
+	return protectPrivatePath(path, true)
 }
 func AtomicWrite(path string, data []byte) error {
 	if err := PrivateDirectory(filepath.Dir(path)); err != nil {

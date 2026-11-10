@@ -1,34 +1,31 @@
 # MyGo Desktop host
 
-Go composition root for the existing React SPA and version-matched standalone
-Bun CLI. No self-drawn UI. Framework APIs belong in app/; desktop/ owns transport and native policy without
-importing MyGo. main.go at the app root only embeds assets and calls app.Run. Keep DesktopBridge wire
-contracts and JSON business payloads. Launch the bundled CLI by absolute path;
-never require an installed Bun or Node. Quit closes only the daemon proxy.
-The main window uses MyGo's hidden title bar on every route and keeps native
-window buttons. The renderer reserves their insets using MyGo's CSS variables.
+Go composes the React SPA with windows, tray, notifications, dialogs, updater,
+device preferences and the stable lifetime SQLite instance lock. Framework APIs
+belong in app/; desktop/ owns framework-independent native capabilities. Launch
+only the absolute version-matched bundled CLI. CGO_ENABLED=0 is required.
 
-Keep credentials/cookies native, API origins and renderer methods allowlisted,
-IPC limited to the owned main page, event delivery bounded and acknowledged,
-and directory grants owned by the native picker. Preserve the existing SQLite
-instance lock and data paths. Dependencies must build
-with CGO_ENABLED=0. Generated assets and binaries stay ignored.
+ADR 0052 moves session, HTTP/account policy and renderer events to the daemon.
+Go runs finite `daemon desktop` bootstrap and holds a separate narrow native
+capability for visibility, directory picks, notifications and binding release.
+The renderer uses its own first-frame-authenticated loopback WebSocket. Never
+forward business methods through Go or expose the administrative daemon token.
+Restrict native calls to the owned main page; preserve external URL checks.
 
-Go owns server-scoped persistent Cookies in `mygo-sessions-v3.sqlite`, independently of the
-lifetime instance-lock transaction. The cookie jar depends only on the SessionStore
-port. The app supplies the AES-GCM key through MyGo Secrets. Unavailable keys keep
-the session in memory. Preserve private POSIX permissions and restricted inheritable
-Windows DACLs. Use the `mygo-session-key-v3-` vault namespace. Never read, import or delete historical host sessions; unsupported new-store versions fail. `Config.LocalProfile` selects the bundled CLI profile only.
+MyGo Secrets uses `raypx-desktop-session-v1-` scoped to canonical native directory
+and canonical CLI profile directory. Create only when the daemon reports no
+stored sessions in the entire profile. An unavailable key permits memory-only
+sign-in; keys travel through stdin/private IPC only. Never read, import, modify
+or delete the old Go session database or its vault namespace.
 
-Tests live in ../tests/native/host/. From apps/desktop run
-`go test -race ./internal/... ./tests/native/host/...` and `go vet ./...`, then
-the repository Bun verification. Headless artifact checks must use temporary profiles and never
-read production credentials or activate a GUI. Report unrun packaged GUI/platform
-checks accurately.
+Preserve native data paths, the exclusive `desktop-instance.sqlite` lock and
+atomic preference writes. Private paths use POSIX permissions or inheritable
+Windows DACLs. GUI Quit releases UI capabilities, preserving daemon Agent work.
+Desktop injects NativeClient through Options; no Go event queue or business schema.
 
-Desktop depends on EngineClient and receives CLI metadata and dependencies through
-Options. Keep concrete process framing in Engine and event credit in EventStream.
-Pure renderer policy tests live beside policy.go without opening profiles or processes;
-host use-case tests inject an engine. tests/native/host retains real transport,
-subprocess, OS-lock and compiled CLI acceptance. Test ports must preserve native
-authorization and request admission rather than bypassing them.
+Source-adjacent tests cover native admission; tests/native/host covers finite
+subprocesses, IPC, cancellation, locks and explicit compiled CLI acceptance.
+Cookie/API/account/ACK behavior lives in CLI's daemon Desktop suites. Run Go
+checks through repository verification; native_smoke must compile too. Headless
+checks never activate a GUI or read production credentials. Packaged WKWebView/
+WebView2 Origin, mixed-content and OS-secret acceptance remain platform gates.

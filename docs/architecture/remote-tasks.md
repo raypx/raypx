@@ -9,12 +9,13 @@ dispatches scheduling directly to its RelayHub (or over private Redis in split r
 ## Communication
 
 Web / Desktop UI ↔ Relay service ↔ CLI daemon ↔ Claude Code / Codex (macOS, Windows).
-Desktop native ↔ private daemon proxy for local views on both platforms.
+Desktop renderer ↔ separate authenticated loopback daemon WebSocket for local views;
+native bootstrap/OS capabilities use private IPC (ADR 0052).
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
 Relay v4 is the only supported version. Context and authoritative snapshot sync
 are required parts of the protocol. Deploy the API, Web, Desktop and bundled CLI
 with matching contracts; mixed protocol versions stop with `UPGRADE_REQUIRED`.
-The local engine uses version-matched NDJSON over stdio. Codex uses its local
+Desktop bootstraps the version-matched CLI with finite stdin/JSON. Codex uses its local
 stdio app-server; Claude uses persistent stream-JSON input/output and authenticated session hooks on
 loopback. Provider wire messages and credentials remain on the computer.
 
@@ -27,8 +28,8 @@ and sends heartbeats to detect broken connections. Reconnect uses bounded backof
 
 ## Desktop local tasks
 
-Desktop opens This computer by default. Its renderer calls Native and the bundled
-CLI daemon through private `agents.local.*` methods over its NDJSON proxy for creation, reads, approvals,
+Desktop opens This computer by default. Its renderer calls the bundled CLI daemon
+through renderer-safe `agents.local.*` methods over the separate WebSocket for creation, reads, approvals,
 follow-ups and cancellation. Local execution requires an authorized project and
 an available provider and first-time account/origin-bound instance enrollment.
 Its signed identity permits offline execution after online logout. Remote views and host authorization require a confirmed

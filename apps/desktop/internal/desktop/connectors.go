@@ -8,9 +8,14 @@ import (
 	"time"
 )
 
+type response struct {
+	value any
+	err   error
+}
+
 func (d *Desktop) repair(parent context.Context, input JSON) (any, error) {
 	provider, _ := input["provider"].(string)
-	if !contains([]string{"claude", "codex"}, provider) {
+	if provider != "claude" && provider != "codex" {
 		return nil, errors.New("INSTALLATION_FAILED")
 	}
 	encoded, _ := json.Marshal(JSON{"configDirs": d.Config.Directories})

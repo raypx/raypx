@@ -8,14 +8,13 @@ import (
 	"unsafe"
 )
 
-func TestWindowsSessionACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
+func TestWindowsPrivateDirectoryACLProtectsFutureFiles(t *testing.T) {
 	directory := t.TempDir()
-	store, err := host.OpenSessions(directory, testSessionKey)
-	if err != nil {
+	if err := host.PrivateDirectory(directory); err != nil {
 		t.Fatal(err)
 	}
-	defer store.Close()
-	if err := store.Server("scope").Save([]byte("[]")); err != nil {
+	path := filepath.Join(directory, "preferences.json")
+	if err := host.AtomicWrite(path, []byte("{}")); err != nil {
 		t.Fatal(err)
 	}
 	user, err := windows.GetCurrentProcessToken().GetTokenUser()
@@ -23,7 +22,7 @@ func TestWindowsSessionACLRestrictsDatabaseAndAuxiliaries(t *testing.T) {
 		t.Fatal(err)
 	}
 	allowed := map[string]bool{user.User.Sid.String(): true, "S-1-5-18": true}
-	for _, path := range []string{directory, filepath.Join(directory, "mygo-sessions-v3.sqlite"), filepath.Join(directory, "mygo-sessions-v3.sqlite-wal"), filepath.Join(directory, "mygo-sessions-v3.sqlite-shm")} {
+	for _, path := range []string{directory, path} {
 		descriptor, err := windows.GetNamedSecurityInfo(path, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
 		if err != nil {
 			t.Fatal(err)

@@ -47,7 +47,6 @@ if (!leaf) {
   commands = [[bun, "run", "mygo:build", ...args]];
 } else if (task === "check") {
   commands = [
-    [bun, "scripts/host/generate.ts", "--check"],
     [bun, "run", "typecheck"],
     [bun, "run", "typecheck:node", ...args],
     [bun, "run", "perf:check"],

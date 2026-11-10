@@ -2,6 +2,8 @@
 
 Status: Accepted, 2026-11-03. Extends ADRs 0040 and 0041.
 
+Desktop session/API/event transport superseded by [ADR 0052](0052-daemon-desktop-channel.md).
+
 Current implementation (2026-11-09): MyGo/Go owns the native Desktop host;
 the TypeScript CLI/daemon uses embedded stable Bun under
 [ADR 0047](0047-bun-cli-production-packaging.md). Application service, port and

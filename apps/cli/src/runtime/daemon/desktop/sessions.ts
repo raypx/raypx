@@ -9,6 +9,12 @@ import { sessionLimit, type SessionStore } from "./cookies.ts";
 export function sessionRecordStore(database: LocalDatabase, apiUrl: string) {
   const origin = serverOrigin(apiUrl);
   return {
+    hasRows() {
+      return (
+        database.select({ origin: desktopSessions.origin }).from(desktopSessions).limit(1).get() !==
+        undefined
+      );
+    },
     read() {
       return database
         .select()

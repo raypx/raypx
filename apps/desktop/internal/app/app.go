@@ -61,11 +61,6 @@ func Run(bundled fs.FS) error {
 	if err != nil {
 		return err
 	}
-	var methods []string
-	data, err := fs.ReadFile(bundled, "generated/local-methods.json")
-	if err != nil || json.Unmarshal(data, &methods) != nil {
-		return errors.New("Local method manifest missing")
-	}
 	// Host initialization blocks on SQLite and the CLI, so it runs off the native event loop.
 	var owned atomic.Pointer[host.Desktop]
 	bridge := &Bridge{}
@@ -103,10 +98,10 @@ func Run(bundled fs.FS) error {
 		go func() {
 			var err error
 			desktop, err := host.New(config, directory, host.Options{
-				CLI:     host.CLIConfig{Binary: binary, Version: appVersion, Args: smokeArgs(), Daemon: runtime.GOOS == "darwin" || runtime.GOOS == "windows"},
-				Methods: methods,
-				SessionKey: func(create bool) ([]byte, error) {
-					return loadSessionKey(directory, create)
+				CLI:        host.CLIConfig{Binary: binary, Version: appVersion, Args: smokeArgs()},
+				PageOrigin: pageOrigin(config.Scope),
+				SessionKey: func(profile string, create bool) ([]byte, error) {
+					return loadSessionKey(directory, profile, create)
 				},
 			})
 			if err != nil {
@@ -171,7 +166,7 @@ func Run(bundled fs.FS) error {
 				go func() {
 					ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 					defer cancel()
-					_ = desktop.Events.Send(ctx, host.JSON{"version": 1, "event": "approval.open", "data": host.JSON{"scope": scope}})
+					desktop.OpenApprovals(ctx, scope)
 				}()
 			}
 			menu := mygo.NewMenu([]*mygo.MenuItem{{Label: "Show Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { show() }}, {Label: "Review requests / 处理请求", Click: func(*mygo.MenuItem, *mygo.Window) { pending() }}, {Label: "Hide window", Click: func(*mygo.MenuItem, *mygo.Window) { window.Hide(); go desktop.Visible(false) }}, mygo.Separator(), {Label: "Check for updates / 检查更新", Disabled: !mygo.Updater.Enabled(), Click: func(*mygo.MenuItem, *mygo.Window) { go checkUpdates(window, desktop, quit) }}, {Label: "Quit Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { quit() }}})
@@ -215,16 +210,9 @@ func Run(bundled fs.FS) error {
 				_ = json.Unmarshal(data, &notifications)
 			}
 			notificationSlot := make(chan struct{}, 1)
-			desktop.Events.Observe = func(event host.JSON) {
-				name, _ := event["event"].(string)
-				data, _ := event["data"].(map[string]any)
-				_, pendingRequest := data["pendingRequest"].(string)
-				if !interactive() || quitting.Load() || (name != "agent.changed" && name != "observed.changed") || !pendingRequest {
+			desktop.Notify = func(scope string) {
+				if !interactive() || quitting.Load() {
 					return
-				}
-				scope := "remote"
-				if name == "observed.changed" || data["local"] == true {
-					scope = "local"
 				}
 				pendingMu.Lock()
 				pendingScope = scope
@@ -279,7 +267,11 @@ func Run(bundled fs.FS) error {
 				quit()
 				return
 			}
-			go desktop.Start()
+			go func() {
+				if desktop.Start() && desktop.Client.Status()["sessionRecovery"] == "temporary" && interactive() && !quitting.Load() {
+					_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: window, Title: "Raypx", Message: "Sign in again if your saved session is unavailable. / 登录存储不可用时，请重新登录。"})
+				}
+			}()
 			go func() {
 				ticker := time.NewTicker(5 * time.Second)
 				defer ticker.Stop()
@@ -298,9 +290,7 @@ func Run(bundled fs.FS) error {
 				quit()
 				return
 			}
-			if desktop.API.Cookies.Recovery != "" && interactive() {
-				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: window, Title: "Raypx", Message: "Sign in again if your saved session is unavailable. / 登录存储不可用时，请重新登录。"})
-			}
+
 		}()
 	})
 	signals := make(chan os.Signal, 1)
@@ -313,4 +303,14 @@ func Run(bundled fs.FS) error {
 		desktop.Close()
 	}
 	return err
+}
+
+func pageOrigin(scope string) string {
+	if mygo.IsDev() {
+		return "http://localhost:1420"
+	}
+	if runtime.GOOS == "windows" {
+		return "http://" + scope + ".mygo.localhost"
+	}
+	return "mygo://" + scope
 }

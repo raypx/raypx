@@ -113,8 +113,8 @@ export async function prepare(
   if ((await probe.exited) || version !== manifest.version) throw new Error("CLI version mismatch");
   const generated = join(paths.desktop, "generated");
   await mkdir(generated, { recursive: true });
-  const { generateNativeContracts } = await import("./generate");
-  await generateNativeContracts(paths.desktop);
+  const { generateNativeAssets } = await import("./generate");
+  await generateNativeAssets(paths.desktop);
   await writeFile(join(generated, "version.json"), JSON.stringify(manifest.version) + "\n");
   const frontend = join(generated, "frontend");
   await rm(frontend, { recursive: true, force: true });

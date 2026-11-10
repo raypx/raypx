@@ -18,8 +18,9 @@ flowchart LR
   Relay --> PG
   Backend -. Optional cluster/cache .-> Redis[(Private Redis)]
   Renderer[Desktop renderer] --> Native[MyGo / Go host]
-  Native --> API
-  Native -->|Private IPC| Daemon[CLI daemon / Bun]
+  Native -->|Finite bootstrap / native IPC| Daemon[CLI daemon / Bun]
+  Renderer -->|Authenticated loopback WebSocket| Daemon
+  Daemon --> API
   Daemon -->|Outbound WebSocket| Relay
   Daemon --> SQLite[(Device profile SQLite)]
   Daemon --> Tools[Providers / project tools]
@@ -36,8 +37,10 @@ without stopping daemon tasks.
 ### Web and Desktop
 
 Web is a TanStack Start SSR application on Nitro's Bun server preset. Desktop uses the same DOM components in
-a MyGo WKWebView/WebView2 shell, with Go transport and policy bridging its
-version-matched bundled CLI.
+a MyGo WKWebView/WebView2 shell. Go owns OS capabilities and finite bootstrap of
+its version-matched bundled CLI; the renderer uses a separate authenticated daemon
+WebSocket. The daemon owns sessions, API/account policy and acknowledged events
+([ADR 0052](0052-daemon-desktop-channel.md)).
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
 Desktop mounts its device-local workspace independently of account resolution.
@@ -197,7 +200,7 @@ with two-second HTTP deadlines. Report loss and non-2xx responses are counted;
 best-effort reporting never changes primary log delivery or the HTTP result.
 
 CLI diagnostics use the logger's `/stream` stderr drain; stdout remains reserved
-for human command results or the Desktop NDJSON protocol. CLI shutdown flushes
+for command results, finite Desktop bootstrap or private stdio protocols. CLI shutdown flushes
 pending diagnostics without adding records to protocol output. Runtime and
 packaged-platform acceptance remain separate verification gates.
 
@@ -214,7 +217,7 @@ the publication gate.
 
 ## Device runtime
 
-The same CLI runtime handles human commands and Desktop NDJSON requests. Desktop
+The same CLI runtime handles human commands and the Desktop daemon channel. Desktop
 never imports CLI source. An explicit citty command tree handles the existing
 JSON-parameter commands and scoped help. Global options are validated before
 dispatch; operands after `--` stay positional. Raypx owns errors, output and
@@ -331,7 +334,7 @@ current implementation.
 - [0050: Independent Mobile React](0050-mobile-react-boundary.md) — accepted; Expo pins do not constrain DOM releases
 
 - [0051 — Backend runtime roles](0051-backend-runtime-roles.md)
-- [0052: Daemon-owned Desktop channel](0052-daemon-desktop-channel.md) — accepted; native/session migration pending
+- [0052: Daemon-owned Desktop channel](0052-daemon-desktop-channel.md) — current
 - [0053: Relay streams and cancellation](0053-relay-stream-cancellation.md) — shared ACK mechanics and connection scopes
 
 ## Distribution and performance

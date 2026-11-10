@@ -54,26 +54,6 @@ func (b *Bridge) Request(ctx context.Context, method string, input host.JSON) (a
 	}
 	return desktop.Request(ctx, method, input)
 }
-func (b *Bridge) Subscribe(ctx context.Context, ch *mygo.Channel[host.JSON]) error {
-	desktop, err := b.caller(ctx)
-	if err != nil {
-		return err
-	}
-	off := desktop.Events.Subscribe(ch.Send)
-	defer off()
-	if err := ch.Send(host.JSON{"ready": true}); err != nil {
-		return err
-	}
-	<-ctx.Done()
-	return nil
-}
-func (b *Bridge) Acknowledge(ctx context.Context, sequence uint64) (bool, error) {
-	desktop, err := b.caller(ctx)
-	if err != nil {
-		return false, err
-	}
-	return desktop.Events.Acknowledge(sequence), nil
-}
 
 type nativeUI struct{ window *mygo.Window }
 

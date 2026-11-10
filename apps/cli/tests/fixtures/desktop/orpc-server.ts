@@ -56,28 +56,29 @@ const router = {
   },
 };
 const handler = new RPCHandler(router);
-const server = Bun.serve({
-  hostname: "127.0.0.1",
-  port: 0,
-  async fetch(request) {
-    if (request.headers.get("origin") !== "views://main")
-      return new Response("Unexpected native Origin", { status: 400 });
-    if (new URL(request.url).pathname === "/rpc/hosts/authorize") {
-      const wire: unknown = await request.clone().json();
-      const deviceId = field(field(wire, "json"), "deviceId");
-      if (deviceId === "legacy") return new Response("Not found", { status: 404 });
-      if (deviceId === "redirect")
-        return Response.json(
-          { json: { credential: "redirect-must-not-be-accepted" } },
-          { status: 302, headers: { location: "https://external.example.test" } },
-        );
-    }
-    const result = await handler.handle(request, { prefix: "/rpc", context: { request } });
-    if (!result.matched) return new Response("Not found", { status: 404 });
-    const headers = new Headers(result.response.headers);
-    if (new URL(request.url).pathname === "/rpc/account/get")
-      headers.set("set-cookie", `better-auth.fixture=${secret}; Path=/; HttpOnly; Max-Age=3600`);
-    return new Response(result.response.body, { status: result.response.status, headers });
-  },
-});
-console.info(JSON.stringify({ origin: server.url.origin }));
+export function startOrpcFixture() {
+  return Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      if (request.headers.get("origin") !== "views://main")
+        return new Response("Unexpected native Origin", { status: 400 });
+      if (new URL(request.url).pathname === "/rpc/hosts/authorize") {
+        const wire: unknown = await request.clone().json();
+        const deviceId = field(field(wire, "json"), "deviceId");
+        if (deviceId === "legacy") return new Response("Not found", { status: 404 });
+        if (deviceId === "redirect")
+          return Response.json(
+            { json: { credential: "redirect-must-not-be-accepted" } },
+            { status: 302, headers: { location: "https://external.example.test" } },
+          );
+      }
+      const result = await handler.handle(request, { prefix: "/rpc", context: { request } });
+      if (!result.matched) return new Response("Not found", { status: 404 });
+      const headers = new Headers(result.response.headers);
+      if (new URL(request.url).pathname === "/rpc/account/get")
+        headers.set("set-cookie", `better-auth.fixture=${secret}; Path=/; HttpOnly; Max-Age=3600`);
+      return new Response(result.response.body, { status: result.response.status, headers });
+    },
+  });
+}

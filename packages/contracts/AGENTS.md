@@ -14,7 +14,7 @@ capability/authentication/request/ACK frames. This entry never describes the
 administrative daemon router. The daemon derives renderer local admission from
 `/local-client` and API admission from `apiExposure`; no second business allowlist.
 
-`/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). Desktop generates its Go RPC allowlists from this policy. `/local`: versioned local CLI/Desktop protocol. There is no root entry and no `./jobs` or `./memory` entry: transport entries compose Core's domain schemas, and domain consumers import Core directly.
+`/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). The daemon derives Desktop RPC admission from this policy. `/local`: versioned local CLI/Desktop protocol. There is no root entry and no `./jobs` or `./memory` entry: transport entries compose Core's domain schemas, and domain consumers import Core directly.
 
 ## Ownership
 

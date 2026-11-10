@@ -76,6 +76,7 @@
       "devDependencies": {
         "@earendil-works/pi-agent-core": "catalog:",
         "@hona/strobe": "catalog:dev",
+        "@orpc/server": "catalog:",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -115,7 +116,6 @@
       },
       "devDependencies": {
         "@hona/strobe": "catalog:dev",
-        "@orpc/server": "catalog:",
         "@playwright/test": "catalog:dev",
         "@raypx/devtools": "workspace:*",
         "@raypx/e2e": "workspace:*",

@@ -14,19 +14,38 @@ func (d *Desktop) Visible(value bool) {
 	d.lease.Unlock()
 	d.UpdateLease()
 }
-
 func (d *Desktop) UpdateLease() {
 	d.lease.Lock()
 	defer d.lease.Unlock()
-	if !d.stopped.Load() && d.UI != nil {
-		d.visible = d.UI.IsVisible()
-	}
-	active := !d.stopped.Load() && d.visible && d.Engine.Status()["status"] == "ready" && d.Engine.Features()["localTerminalApprovals"] == true
-	if !active && !d.active {
+	if d.stopped.Load() || d.Client.Status()["status"] != "ready" {
 		return
 	}
-	d.active = active
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	if d.UI != nil {
+		d.visible = d.UI.IsVisible()
+	}
+	ctx, cancel := context.WithTimeout(d.lifetime, 4*time.Second)
 	defer cancel()
-	_, _ = d.Engine.Request(ctx, "approvals.local.watch", JSON{"active": active})
+	_, _ = d.Client.Native(ctx, JSON{"action": "visible", "active": d.visible})
+	value, err := d.Client.Native(ctx, JSON{"action": "notifications"})
+	if err != nil {
+		return
+	}
+	snapshot, _ := value.(map[string]any)
+	binding, _ := snapshot["bindingId"].(string)
+	if binding != d.notificationBinding {
+		d.notificationBinding = binding
+		d.notificationRevision = 0
+	}
+	revision, _ := snapshot["revision"].(float64)
+	if revision <= d.notificationRevision {
+		return
+	}
+	d.notificationRevision = revision
+	scope, _ := snapshot["scope"].(string)
+	if d.Notify != nil {
+		d.Notify(scope)
+	}
+}
+func (d *Desktop) OpenApprovals(ctx context.Context, scope string) {
+	_, _ = d.Client.Native(ctx, JSON{"action": "open_approvals", "scope": scope})
 }

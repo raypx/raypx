@@ -11,7 +11,7 @@ export function assertProduction(bytes: Uint8Array, buildInfo: string) {
   if (version !== MYGO_VERSION) throw new Error("Release is missing the pinned MyGo dependency");
   if (
     /(?:^|[\s,=])native_smoke(?:[\s,]|$)/m.test(buildInfo) ||
-    ["RAYPX_NATIVE_SMOKE_SOCKET", "raypx-smoke-local-event"].some((marker) =>
+    ["RAYPX_NATIVE_SMOKE_SOCKET", "raypx-smoke-local-event", "__raypxSmokeRequest"].some((marker) =>
       binary.includes(Buffer.from(marker)),
     )
   )

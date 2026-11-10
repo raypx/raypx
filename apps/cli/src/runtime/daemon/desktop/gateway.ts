@@ -232,10 +232,11 @@ export class DesktopGateway {
       .strictObject({ action: z.literal("prepare"), apiUrl: originSchema })
       .safeParse(raw);
     if (prepare.success) {
-      const row = sessionRecordStore(this.host.runtime.state.db, prepare.data.apiUrl).read();
+      const records = sessionRecordStore(this.host.runtime.state.db, prepare.data.apiUrl);
+      const row = records.read();
       if (row && row.version !== 1)
         throw new LocalError("SESSION_VERSION_UNSUPPORTED", "Unsupported stored session version");
-      return { createKey: row === undefined };
+      return { createKey: !records.hasRows(), profileDirectory: this.directory };
     }
     const input = bootstrapSchema.parse(raw);
     let api = this.sessions.get(input.apiUrl);
@@ -275,8 +276,14 @@ export class DesktopGateway {
       {},
       binding.id,
       binding.abort.signal,
-    )) as { features?: { localTerminalApprovals?: boolean } };
+    )) as {
+      version: string;
+      protocolVersion: number;
+      features?: { localTerminalApprovals?: boolean };
+    };
     return {
+      version: runtime.version,
+      protocolVersion: runtime.protocolVersion,
       nativeCapability: binding.capability,
       channel: this.ticket(binding),
       recovery: api.cookies.recovery ?? null,
@@ -305,7 +312,7 @@ export class DesktopGateway {
       case "pick":
         return this.host.request("roots.register", { path: input.path }, binding.id, operation);
       case "notifications":
-        return binding.notifications;
+        return { ...binding.notifications, bindingId: binding.id };
       case "open_approvals":
         for (const peer of this.peers)
           if (peer.authenticated && peer.binding === binding)

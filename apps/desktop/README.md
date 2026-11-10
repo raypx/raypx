@@ -13,7 +13,7 @@ custom executable, arguments and directory.
 
 - `main.go`: embedded frontend/manifests and entry point.
 - `internal/app`: MyGo lifecycle, trusted IPC, windows, tray and native dialogs.
-- `internal/desktop`: native policy, HTTP/session persistence, CLI and event transport.
+- `internal/desktop`: OS capabilities, finite CLI bootstrap and narrow native IPC.
 - `src`: existing renderer; `bridge.ts` declares its native vocabulary.
 - `resources`: maintained icons/entitlements, plus generated `bin` payloads.
 - `tests/native/host`: quiet Go transport/policy tests.
@@ -43,11 +43,11 @@ Cross-platform packages require matching CLI artifacts and are currently rejecte
 `test:unit` and `test:component` use isolated platform fixtures without native tools,
 real accounts or Provider processes. `test:integration` owns build/package script
 tests; default `test` runs all three Vitest projects. Go policies and host use cases
-accept an EngineClient port, while process framing and compiled CLI acceptance stay
+accept a NativeClient port, while finite subprocess/IPC and compiled CLI acceptance stay
 in the native gates. See the testing guide for the selected macOS/Windows matrix.
 Go policy checks do not require staged renderer files. `mygo:check`/`mygo:test` also
-compile the `native_smoke` build and run its protocol tests. Go tests generate contract
-manifests and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
+compile the `native_smoke` build and run its protocol tests. Go tests generate notification
+copy and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
 compiled CLI for the daemon integration test; only its isolated daemon is stopped.
 
 `mygo:check:docker` enters the same VP graph and runs the existing Go checks in
@@ -72,14 +72,14 @@ separate Host opt-in and online authorization. On macOS/Windows, GUI Quit leaves
 the daemon and its tasks running; explicit daemon shutdown stops its owned work.
 
 Native uses the current data paths and device preferences.
-Native persistent Cookies are encrypted in server-scoped rows of `mygo-sessions-v3.sqlite`.
-MyGo Secrets keeps the key in the system credential store. Upgrading from the
-plaintext session format clears the saved online session and requires signing in
-again. If the vault is unavailable, sign-in lasts only for the running app.
-CLI identity and Host credentials stay in its `profile.sqlite`. POSIX files use
-private permissions; Windows uses restricted DACLs. Old credential stores are
-never read, imported or deleted. Existing profiles without their database key
-remain unavailable; select a new `local_profile` explicitly to register again.
+The daemon encrypts persistent Cookies in its existing profile SQLite database.
+MyGo Secrets supplies a key scoped to the canonical native/profile directories
+through finite private bootstrap. The renderer calls the daemon directly over an
+independently authenticated loopback WebSocket; Go holds only native capabilities.
+Missing keys preserve stored rows and permit sign-in in daemon memory. A failed
+write disables session transport until daemon restart. Previous Go session stores
+and keys are never read, imported or deleted. CLI identity and Host credentials
+stay in its profile; preferences and the lifetime native instance lock stay local.
 MyGo signed updates use distinct
 keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.

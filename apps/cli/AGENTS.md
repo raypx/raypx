@@ -7,10 +7,10 @@ The standalone Raypx local execution host. It embeds Bun and requires no global 
 ## Interface
 
 `raypx daemon start|run|status|stop|restart|install|uninstall` owns the macOS and Windows execution host
-(`install` is macOS-only); private `daemon proxy` connects Desktop over authenticated IPC:
+(`install` is macOS-only); private `daemon proxy` supports diagnostic/performance probes over authenticated IPC:
 a Unix socket on POSIX, token-guarded loopback TCP on Windows (`runtime/local-http.ts`, ADR 0037). Explicit
 `connectors install|repair|uninstall claude|codex` manages owned terminal hooks.
-`raypx files`, `raypx jobs`, `raypx tools`, and private `raypx stdio` share the runtime. On Windows, direct `raypx stdio` still composes the foreground owner; EOF cancels its work. Desktop uses the daemon. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
+`raypx files`, `raypx jobs`, `raypx tools`, and private `raypx stdio` share the runtime. On Windows, direct `raypx stdio` still composes the foreground owner; EOF cancels its work. Desktop uses the daemon. `--json` is finite machine output. Desktop bundles a version-matched binary, bootstraps with finite stdin/JSON and connects its renderer directly to the daemon channel.
 
 `raypx ai providers|models|complete` lazily loads `@raypx/ai` for Pi SDK model calls.
 CLI owns `[ai]` in `~/.raypx/config.toml` (`RAYPX_HOME` may select an absolute
@@ -27,7 +27,7 @@ WebSocket capability; neither grants the other's methods. `daemon/desktop` owns
 the selected-origin API policy, account verification, encrypted session table and
 bounded acknowledged events. Native visibility/pickers use private IPC. Renderer
 disconnect cancels HTTP/tools/PTYs and its approval lease, preserving durable tasks.
-The existing Go renderer transport is pending migration to this channel.
+Go holds only the separate native capability; it owns no business HTTP/session/event transport.
 
 Public commands use an explicit citty tree; `roots` and the existing JSON params remain supported.
 Validate global options strictly before dispatch, preserving operands after `--`. Generate scoped

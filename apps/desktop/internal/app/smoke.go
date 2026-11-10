@@ -6,15 +6,12 @@ import (
 	"bufio"
 	"context"
 	"crypto/subtle"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"regexp"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -80,23 +77,6 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, act
 								return nil, errors.New("Smoke script exceeds limit")
 							}
 							return window.Page().EvalContext(ctx, script)
-						case "engineRequest":
-							method, _ := input["method"].(string)
-							return desktop.Engine.Request(ctx, method, input["params"])
-						case "apiRequest":
-							return desktop.API.Request(ctx, input, false)
-						case "engineReplace":
-							return desktop.Engine.ReplaceOwner(), nil
-						case "engineStop":
-							// Smoke always composes the process engine; the port omits Stop.
-							engine, ok := desktop.Engine.(*host.Engine)
-							if !ok {
-								return nil, errors.New("Smoke engine unavailable")
-							}
-							engine.Stop()
-							return true, nil
-						case "refreshGrant":
-							return desktop.RefreshGrant(ctx)
 						case "window":
 							switch input["action"] {
 							case nil:
@@ -136,8 +116,6 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, act
 							return true, nil
 						case "cors":
 							return smokeCors(ctx, input)
-						case "stream":
-							return smokeStream(ctx, window, desktop)
 						}
 						return nil, errors.New("Unknown smoke method")
 					})
@@ -197,38 +175,4 @@ func ServeSmoke(conn net.Conn, token string, dispatch func(context.Context, stri
 			_ = json.NewEncoder(conn).Encode(response)
 		}()
 	}
-}
-
-func smokeStream(ctx context.Context, window *mygo.Window, desktop *host.Desktop) (any, error) {
-	const packets = 640
-	const packetBytes = 32 * 1024
-	id := fmt.Sprint(time.Now().UnixNano())
-	observer := fmt.Sprintf(`const stats=window.__raypxSmokeStreamStats={id:%q,count:0,bytes:0,ordered:true,intact:true}; const listener=e=>{const d=e.detail.event?.data;if(d?.nativeSmokeStream!==stats.id)return;const bytes=atob(d.data);stats.ordered&&=d.streamIndex===stats.count;stats.intact&&=bytes==='x'.repeat(d.rawBytes);stats.count++;stats.bytes+=bytes.length;};window.addEventListener('raypx-smoke-local-event',listener);window.__raypxSmokeStreamRestore=()=>window.removeEventListener('raypx-smoke-local-event',listener);return true`, id)
-	if _, err := window.Page().EvalContext(ctx, observer); err != nil {
-		return nil, err
-	}
-	defer window.Page().Eval("window.__raypxSmokeStreamRestore?.()")
-	desktop.Events.ResetMetrics()
-	started := time.Now()
-	ticker := time.NewTicker(2 * time.Second / packets)
-	defer ticker.Stop()
-	data := base64.StdEncoding.EncodeToString([]byte(strings.Repeat("x", packetBytes)))
-	for index := 0; index < packets; index++ {
-		select {
-		case <-ticker.C:
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		}
-		err := desktop.Events.Send(ctx, host.JSON{"version": 1, "event": "terminal.output", "data": host.JSON{"terminalId": "native-smoke-stream", "data": data, "nativeSmokeStream": id, "streamIndex": index, "rawBytes": packetBytes}})
-		if err != nil {
-			return nil, err
-		}
-	}
-	if err := desktop.Events.Flush(ctx); err != nil {
-		return nil, err
-	}
-	elapsed := time.Since(started)
-	renderer, err := window.Page().EvalContext(ctx, "return window.__raypxSmokeStreamStats")
-	outstanding, maximum := desktop.Events.Metrics()
-	return host.JSON{"renderer": renderer, "packets": packets, "bytes": packets * packetBytes, "elapsedMs": elapsed.Milliseconds(), "bytesPerSecond": float64(packets*packetBytes) / elapsed.Seconds(), "outstandingBytes": outstanding, "maxOutstandingBytes": maximum, "creditBytes": host.CreditBytes}, err
 }

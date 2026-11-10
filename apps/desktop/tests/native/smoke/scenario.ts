@@ -391,21 +391,20 @@ try {
     assert.equal(after.height, before.height, "Navigating changed the window content height");
     assert.equal(after.visible, true, "Navigating hid the window");
     console.info("Native smoke integrated window controls passed");
-    stage = "native Channel throughput";
+    stage = "daemon WebSocket throughput";
     const runtime = (await evaluate(
       "return await window.mygo.call('Desktop.Request','get_runtime',{})",
     )) as { compiledFeatures: string[] };
     assert.deepEqual(runtime.compiledFeatures, ["native-smoke"]);
     const stream = await measureNativeStream();
-    console.info(`Native smoke Channel: ${JSON.stringify(stream)}`);
-    assert.equal(stream.renderer.ordered, true, "Native Channel reordered terminal packets");
-    assert.equal(stream.renderer.intact, true, "Native Channel corrupted terminal bytes");
-    assert.equal(stream.renderer.count, stream.packets, "Native Channel lost terminal packets");
-    assert.equal(stream.renderer.bytes, stream.bytes, "Native Channel changed terminal bytes");
-    assert.equal(stream.outstandingBytes, 0, "Native Channel did not drain acknowledgements");
-    assert.ok(
-      stream.maxOutstandingBytes <= stream.creditBytes,
-      "Native Channel exceeded its credit bound",
+    console.info(`Daemon WebSocket throughput: ${JSON.stringify(stream)}`);
+    assert.equal(stream.renderer.intact, true, "Daemon channel corrupted file contents");
+    assert.equal(stream.renderer.count, stream.packets, "Daemon channel lost file responses");
+    assert.equal(stream.renderer.bytes, stream.bytes, "Daemon channel changed file contents");
+    assert.deepEqual(
+      stream.events,
+      { count: 8, bytes: 8 * 256 * 1024, intact: true, ordered: true },
+      "Daemon event stream did not drain intact and ordered through renderer acknowledgements",
     );
     stage = "native WebView cross-origin security";
     console.info("Native smoke WebView CORS:", await measureNativeCors());

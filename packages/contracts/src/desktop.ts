@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { localEventSchema } from "./local";
 
 /** Selected-origin HTTP transport. Cookie and administrative headers are never caller inputs. */
 export const desktopApiRequestSchema = z.strictObject({
@@ -51,3 +52,24 @@ export const desktopClientFrameSchema = z.discriminatedUnion("type", [
   }),
 ]);
 export type DesktopClientFrame = z.infer<typeof desktopClientFrameSchema>;
+
+export const desktopServerFrameSchema = z.discriminatedUnion("type", [
+  z.strictObject({ type: z.literal("ready"), protocol: z.literal(1), streamId: z.uuid() }),
+  z.strictObject({
+    type: z.literal("response"),
+    id: z.uuid(),
+    result: z.unknown().optional(),
+    error: z
+      .strictObject({
+        code: z.string().regex(/^[A-Z][A-Z0-9_]{0,127}$/),
+        message: z.string().max(128),
+      })
+      .optional(),
+  }),
+  z.strictObject({
+    type: z.literal("event"),
+    streamId: z.uuid(),
+    sequence: z.number().int().positive(),
+    event: localEventSchema,
+  }),
+]);

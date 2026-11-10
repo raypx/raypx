@@ -12,7 +12,8 @@ cloud scope. Native mobile remains separate.
 ## Execution and lifetime
 
 On macOS and Windows, Desktop launches its bundled, version-matched CLI by
-absolute path as `daemon proxy`. The detached CLI owner holds SQLite, scheduling,
+absolute path for finite `daemon desktop` bootstrap. The renderer connects directly
+to a separate authenticated loopback WebSocket; narrow native IPC stays private (ADR 0052). The detached CLI owner holds SQLite, scheduling,
 managed Agent processes, the outbound relay connection and terminal RequestBroker.
 macOS uses a private authenticated Unix socket, with 0700 directories and 0600
 socket/endpoint files. Windows uses token-guarded loopback transport and restricted
@@ -25,7 +26,7 @@ options allow an explicit executable, arguments and directory; a terminal withou
 a selected project requires an explicit directory. Herdr owns the PTY/terminal
 state. External commands have ordinary operating system user permissions.
 
-GUI Quit, renderer reload and loss of one proxy preserve managed Agent work.
+GUI Quit, renderer reload and loss of one renderer channel preserve managed Agent work.
 Tools and interactive PTYs belong to their connected client and are cancelled
 when that client disconnects. Explicit account logout, account/origin changes,
 device revoke and disabling remote access cancel the affected binding. Merely
@@ -45,7 +46,7 @@ configured origin. Origin and account hash together select cloud host settings
 and remote bindings. Terminal settings/history belong to the local profile.
 Provider keys remain on the computer.
 
-To enable cloud access, the Go host checks the current signed-in account,
+To enable cloud access, the daemon checks the current signed-in account,
 supplies a trusted Origin and requests a restricted credential for the registered
 device/epoch.
 The credential goes straight to daemon IPC and `host_authorizations` in its existing `profile.sqlite`,

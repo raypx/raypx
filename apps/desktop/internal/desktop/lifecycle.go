@@ -10,7 +10,7 @@ func (d *Desktop) Start() bool {
 	if d.stopped.Load() {
 		return false
 	}
-	ok := d.Engine.Start()
+	ok := d.Client.Start()
 	d.UpdateLease()
 	return ok
 }
@@ -32,11 +32,8 @@ func (d *Desktop) Close() {
 			case <-leaseDone:
 			case <-time.After(2 * time.Second):
 			}
-			d.Engine.Close()
+			d.Client.Close()
 			d.requests.Wait()
-			if d.sessions != nil {
-				_ = d.sessions.Close()
-			}
 			if d.instance != nil {
 				_, _ = d.instance.ExecContext(context.Background(), "ROLLBACK")
 				_ = d.instance.Close()

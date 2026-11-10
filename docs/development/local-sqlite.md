@@ -76,15 +76,14 @@ and reopening preserve existing rows and the migration ledger. `apps/cli`'s
 `smoke` and `smoke:pi` commands additionally run copied compiled
 executables outside the repository.
 
-Desktop's Go host separately owns `mygo-sessions-v3.sqlite` for server-scoped persistent
-Cookies. It never opens the CLI database or uses the lifetime exclusive
-`desktop-instance.sqlite` transaction for sessions. Cookies remain native;
-Cookie rows are encrypted with a key held in MyGo's system credential store; filesystem permissions also protect the database.
-An unreadable store keeps sign-in in memory without touching stored rows; a failed
-write disables session transport until restart. Host authorization may explicitly
-report memory-only mode.
+Desktop sessions live in `desktop_sessions` inside the existing CLI profile
+writer. Persistent cookies use AES-GCM with profile-directory and canonical-origin
+associated data. MyGo supplies a new OS key scoped to its canonical native data
+and CLI profile directories; no key or cookie enters renderer messages. Session-only
+cookies remain in daemon memory. Missing keys/unreadable ciphertext preserve rows
+and permit memory-only sign-in; failed persistence disables transport until daemon
+restart. Unsupported stored versions fail explicitly.
 
-ADR 0052's daemon session/channel implementation is available through private
-`daemon desktop` bootstrap. Switching the Go host and renderer and removing their
-old cookie/API/event implementation is still pending. That switch does not import,
-delete or read the previous Go session store or its OS key namespace.
+Go retains the independent lifetime `desktop-instance.sqlite` lock and device
+preference file. It never opens the CLI database. The previous Go session store
+and key namespace are never read, imported, rewritten or deleted. See ADR 0052.

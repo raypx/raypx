@@ -6,7 +6,7 @@ const metadata =
 it("accepts a production MyGo executable with its inspector excluded", () => {
   expect(() => assertProduction(Buffer.from("production renderer"), metadata)).not.toThrow();
 });
-it.each(["RAYPX_NATIVE_SMOKE_SOCKET", "raypx-smoke-local-event"])(
+it.each(["RAYPX_NATIVE_SMOKE_SOCKET", "raypx-smoke-local-event", "__raypxSmokeRequest"])(
   "rejects shipped test control %s",
   (marker) => {
     expect(() => assertProduction(Buffer.from(marker), metadata)).toThrow("smoke controls");

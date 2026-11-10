@@ -90,7 +90,7 @@ browser acceptance lives in `e2e/`, uses `@raypx/e2e/testing` fixtures and runs
 through `bun run --cwd apps/desktop e2e` (root: `test e2e --package desktop`). Shared
 journeys register through `@raypx/e2e/journeys/*`; the `desktop` Playwright project
 selects only this renderer and its compiled assets. It does not establish native WebView acceptance.
-Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. MyGo transport/acceptance tests live in `tests/native/host/`; pure policy and engine-port tests live in `internal/desktop/`.
+Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay behavior is tested at its CLI, Control and Client owners. MyGo transport/acceptance tests live in `tests/native/host/`; native admission and capability-port tests live in `internal/desktop/`.
 These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
 Native scripts and their pure policy tests live in `scripts/host/` with Bun types;
@@ -133,18 +133,21 @@ without repeating web sign-out or dropping the device identity.
   roots.register. Only native directory pickers grant roots. Connector recovery
   uses the bundled CLI and native-owned config directories. Validate external URLs.
 - Cookie/Set-Cookie and restricted host credentials never enter renderer responses.
-  Keep allowlisted paths/headers, deadlines, cancellation and SQLite session storage
-  native. Sanitize errors. Persistence failure disables session transport; unreadable
+  Keep allowlisted paths/headers, deadlines, cancellation and encrypted profile
+  session storage in the daemon. Sanitize errors. Persistence failure disables session transport; unreadable
   session storage keeps sign-in in memory and preserves stored rows.
 - Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx; invalid config
   stops startup. Only configured API origins are reachable. Isolate sessions,
   browser storage, remote settings and account-owned history by server origin.
-- Native owns `mygo-sessions-v3.sqlite`, separate from the lifetime `desktop-instance.sqlite` lock.
-  Server-scoped rows encrypt persistent Cookies with a key from MyGo Secrets.
-  Keep both credentials and key out of the renderer and TOML.
-  POSIX files are private; Windows uses a restricted inheritable DACL.
-  Never read, delete or import old Keychain/credential files. `local_profile` selects
-  the CLI profile explicitly (default `default`); never reset or rebind an old profile.
+- Daemon owns `desktop_sessions` in its existing profile SQLite. Native supplies
+  the OS key through finite stdin/private IPC, scoped to canonical native/profile
+  directories in the new `raypx-desktop-session-v1-` namespace. Never read/import/
+  delete old Go session stores or keys. Missing keys preserve rows and allow memory
+  sign-in. `local_profile` selects the CLI profile explicitly (default `default`).
+- Renderer uses a separate bounded loopback WebSocket with one-use capability,
+  exact owned Origin/Host and first-frame authentication. Go holds a distinct narrow
+  native capability; no business/API proxy or event queue. Native bootstrap remains
+  available after a channel failure for explicit version-mismatch recovery.
 - Keep native data paths and the lifetime desktop-instance.sqlite exclusive lock
   stable; never unlink an owned lock. Preferences remain
   device-local. Native reports raw JSON and read/missing/unreadable; renderer
@@ -181,7 +184,7 @@ package:desktop and repository verify --full. Go policy tests need no GUI.
 For races: go test -race ./internal/... ./tests/native/host/....
 
 native:smoke builds the separate MyGo host/renderer and checks CLI handshake,
-local tools/terminal, native event credit, server isolation, restart/persistence
+local tools/terminal, daemon channel throughput, server isolation, restart/persistence
 and tray. Quiet mode uses inactive windows and suppresses notifications/dialogs;
 interactive mode adds focus/close/resize acceptance on isolated CI. Windows hosted
 CI installs/uninstalls the actual per-user NSIS package and verifies payload hashes.

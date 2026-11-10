@@ -3,6 +3,7 @@ package app
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -10,14 +11,19 @@ import (
 	"github.com/egoist/mygo"
 )
 
-func loadSessionKey(directory string, create bool) ([]byte, error) {
+func loadSessionKey(directory, profileDirectory string, create bool) ([]byte, error) {
 	canonical, err := filepath.EvalSymlinks(directory)
 	if err != nil {
 		return nil, err
 	}
 	// Separate data directories have separate instance locks and must not race
 	// to initialize the same vault entry. MyGo also scopes it by app identifier.
-	name := fmt.Sprintf("mygo-session-key-v3-%x", sha256.Sum256([]byte(canonical)))
+	profile, err := filepath.EvalSymlinks(profileDirectory)
+	if err != nil {
+		return nil, err
+	}
+	identity, _ := json.Marshal([]string{canonical, profile})
+	name := fmt.Sprintf("raypx-desktop-session-v1-%x", sha256.Sum256(identity))
 	key, err := mygo.Secrets.Get(name)
 	if !create || !errors.Is(err, mygo.ErrSecretNotFound) {
 		return key, err

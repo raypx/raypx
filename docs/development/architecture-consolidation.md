@@ -5,15 +5,15 @@ This implementation follows the seven architecture changes requested on
 committed, pushed changes for every item below. Native platform acceptance is
 reported independently from source and headless checks.
 
-| Item                   | Required result                                                                                                                                                           | Evidence to collect                                                                           | Status   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
-| 1. Core domains        | Memory/job schemas and pure calculations in Core; no Contracts dependency on feature/UI workspaces; old model entries removed                                             | Package graph, Core/Contracts and feature tests, policy                                       | Verified |
-| 2. Backend roles       | One server artifact with api/relay/both roles; default combined deployment works without Redis; separate/cluster role remains supported                                   | Role and transport integration tests; build; deployment configuration and isolated acceptance | Verified |
-| 3. Thin Desktop        | ADR before implementation; daemon owns sessions, API proxy and event stream; native host retains OS UI and launch capabilities; renderer gets no credentials              | ADR 0052 accepted; daemon channel implemented; native/renderer switch and removal pending     | Pending  |
-| 4. Ordered streams     | Managed and observed relay channels share cursor/ack/timeout/reset mechanics                                                                                              | Replay, reset, expiry and stale-ack tests for both consumers                                  | Verified |
-| 5. Feature servers     | Task projections owned by Tasks server; context persistence owned by Memory server; Jobs persistence owned by Jobs server; Control retains transport/device authorization | Acyclic workspace/source graph; API/Relay/PostgreSQL tests                                    | Verified |
-| 6. Cancellation scopes | Each daemon connection owns an AbortController; replacements cancel pending work and stale completions cannot mutate state                                                | Replacement/disconnect race tests for managed and observed channels                           | Verified |
-| 7. Governance          | Mobile React catalog independent from DOM apps; immutable ADR convention; current architecture organized by process/data flow with topology                               | Manifests, install/policy, architecture documentation                                         | Verified |
+| Item                   | Required result                                                                                                                                                           | Evidence to collect                                                                             | Status   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------- |
+| 1. Core domains        | Memory/job schemas and pure calculations in Core; no Contracts dependency on feature/UI workspaces; old model entries removed                                             | Package graph, Core/Contracts and feature tests, policy                                         | Verified |
+| 2. Backend roles       | One server artifact with api/relay/both roles; default combined deployment works without Redis; separate/cluster role remains supported                                   | Role and transport integration tests; build; deployment configuration and isolated acceptance   | Verified |
+| 3. Thin Desktop        | ADR before implementation; daemon owns sessions, API proxy and event stream; native host retains OS UI and launch capabilities; renderer gets no credentials              | ADR 0052; native/renderer switch; policy, races, compiled CLI/Go and production artifact checks | Verified |
+| 4. Ordered streams     | Managed and observed relay channels share cursor/ack/timeout/reset mechanics                                                                                              | Replay, reset, expiry and stale-ack tests for both consumers                                    | Verified |
+| 5. Feature servers     | Task projections owned by Tasks server; context persistence owned by Memory server; Jobs persistence owned by Jobs server; Control retains transport/device authorization | Acyclic workspace/source graph; API/Relay/PostgreSQL tests                                      | Verified |
+| 6. Cancellation scopes | Each daemon connection owns an AbortController; replacements cancel pending work and stale completions cannot mutate state                                                | Replacement/disconnect race tests for managed and observed channels                             | Verified |
+| 7. Governance          | Mobile React catalog independent from DOM apps; immutable ADR convention; current architecture organized by process/data flow with topology                               | Manifests, install/policy, architecture documentation                                           | Verified |
 
 Preserve the local Owner Host, event-sourced CLI orchestration, explicit public
 entries, account/origin enrollment, local offline identity, and policy enforcement.
@@ -71,11 +71,30 @@ record their actual availability and results. Commit and push all completed work
   migration. The daemon now implements encrypted profile sessions, selected-origin
   API policy, account/Host authorization and a separate bounded renderer WebSocket
   channel using the shared ACK primitive. A finite private bootstrap never exports
-  the administrative credential. Go still owns the active Desktop session/API/event
-  transport; switching native/renderer consumers and removing it remains incomplete.
+  the administrative credential. The renderer now uses this channel directly;
+  Go retains only OS capabilities and finite native bootstrap/private IPC.
 - Daemon Desktop slice: six focused suites cover cookies, real SQLite encryption,
   HTTPS persistence, authorization races and loopback channel lifecycle; the
   gateway regression delivers a maximum-size escaped text file without dropping
   queued WebSocket frames. `bun run verify --no-cache` passed 26/26 selected tasks
   in 127.8 seconds (CLI 561 passed / one skipped; Desktop 304 passed), including
   current-platform headless Go checks. Native GUI/platform gates remain unrun.
+- Native/renderer migration: Go's cookie jar, session database, API policy/proxy,
+  business method manifests and acknowledged event queue were removed. Existing
+  cookie/API/account fixture vectors and the actual oRPC fixture now run at the
+  daemon boundary. New tests cover late bootstrap/authentication replacement,
+  page closure, native visibility plus renderer approval leases, bounded finite
+  subprocesses, private IPC cancellation and stdin-only session keys. Previous
+  Go session files and vault namespace remain untouched.
+- Final `bun run verify --no-cache` passed all 73 selected tasks in 272.7 seconds:
+  CLI 622 tests passed (one skipped); Desktop 310 tests passed. Types, policy,
+  locales, formatting/lint and current-platform production/native_smoke Go checks
+  passed. The final native task cleanup separately passed its 20 integration
+  tests, script types and lint.
+- Production Desktop renderer build and Linux MyGo headless artifact check passed
+  against the prepared immutable CLI payload. The actual compiled CLI/Go channel
+  passed fresh enrollment, native/renderer authority separation and local reads
+  after enrollment. Production binary inspection found the pinned MyGo dependency,
+  inspector exclusion and no smoke controls. Packaged smoke now exercises actual
+  file responses and acknowledged tool events, but WKWebView/WebView2, OS vault,
+  GUI/tray and live-provider acceptance were not run on this Linux host.

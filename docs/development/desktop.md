@@ -113,7 +113,7 @@ Closing the window only hides it and does not reload configuration. Invalid or
 unreadable configuration stops startup with a native error dialog; Raypx does
 not fall back to another server.
 
-The normalized API origin scopes the MyGo page origin, native cookie partition,
+The normalized API origin scopes the MyGo page origin, daemon cookie partition,
 remote opt-in and device binding; ports count as distinct origins. Switching back
 restores that server's saved state. Theme/language and device-local CLI data stay
 on the same computer. The CLI profile's account/origin binding remains immutable
@@ -129,55 +129,54 @@ configuration directory. It changes where `config.toml` is read, not the server
 precedence. The GUI launched by Finder/Explorer may not inherit shell variables.
 Native smoke tests always use their own temporary configuration directory.
 
-Native HTTP on macOS and Windows keeps persistent Cookies in Go-owned `mygo-sessions-v3.sqlite`,
-one row per server scope, isolated from the CLI profile database and Desktop instance lock.
-POSIX directories/files use 0700/0600; Windows uses restricted inheritable DACLs,
-including SQLite auxiliary files. Credentials never enter TOML, renderer storage or sync.
-Old Keychain entries, `credentials.sqlite` and `session-v2.enc` files are not read, imported
-or deleted. An old profile without its database key remains unavailable, with history and
-file grants retained; choose a fresh `local_profile` explicitly. An expired or server-revoked session requires sign-in, and a missing Host authorization requires explicit authorization again.
-Persistent Cookies are AES-GCM ciphertext authenticated against their server scope;
-MyGo Secrets keeps the data-directory key in the system credential store. A missing
-key or unreadable ciphertext preserves the stored rows and permits in-memory
-sign-in. Upgrading the previous plaintext session format clears those old rows
-and requires sign-in again. Session-only Cookies stay in memory; persistent
-Cookies honor expiry and sign-out removal.
+Persistent cookies live encrypted in `desktop_sessions` in the existing CLI
+profile database. AES-GCM authenticates the profile directory and canonical API
+origin. MyGo Secrets stores a new key under `raypx-desktop-session-v1-`, scoped to
+both canonical native-data and CLI-profile directories. Native sends it only via
+finite stdin and private daemon IPC; credentials never enter TOML or renderer
+storage. Key creation is allowed only when the profile has no stored sessions.
+Missing keys or unreadable ciphertext preserve rows and permit memory-only sign-in.
+A failed write disables transport until an explicit `raypx daemon restart` for
+that profile. Session-only cookies remain in memory; persistent cookies honor
+expiry and sign-out. Unsupported formats fail without conversion.
 
-## Native API transport
+The previous Go session database, its key namespace and other historical credential
+stores are never read, imported or deleted. Signed offline enrollment, device-owned
+history, preferences and file grants survive logout. Account/origin changes revoke
+the affected remote binding without transferring the profile.
 
-The Go host's `API.RPC` calls account/get and hosts/authorize/revoke through the
-same native HTTP adapter as renderer API requests. Business payloads stay opaque
-JSON; TypeScript contracts remain authoritative.
+## Desktop daemon channel
 
-`apiExposure` in `@raypx/contracts/api` assigns every procedure to renderer, native
-or independent host access. `native:generate` derives the Go RPC path policy;
-Desktop check verifies its tracked output without requiring ignored build assets.
-Packaging and native test preparation use the same generator. Native cookie and
-credential isolation remains enforced by the Go HTTP adapter.
+[ADR 0052](../architecture/0052-daemon-desktop-channel.md) defines the boundary.
+Go launches the absolute version-matched CLI with finite `daemon desktop` bootstrap.
+Administrative IPC stays private (Unix socket on POSIX; token-guarded loopback on
+Windows). It returns a distinct narrow native capability; the administrative token
+never leaves the CLI. Native retains windows, tray, OS dialogs, updates, preferences,
+instance lock, directory grants, visibility and notification polling.
 
-The adapter enforces configured origin, allowlisted paths/headers, Origin:
-`views://main`, request/response limits, deadlines, cancellation, redirect refusal
-and atomic persisted Cookie batches. Host credentials never enter renderer replies.
-The renderer cannot invoke hosts/authorize/revoke through native HTTP.
+The renderer receives a one-use capability and connects directly to a separate
+`127.0.0.1` WebSocket listener. Exact Host and the owned WebView/dev Origin are
+required; `Origin: null` is rejected. Authentication is the first frame, with no
+capability in the URL. Protocol, frames, pending work, event bytes and unacknowledged
+sequence deadlines are bounded. The renderer ACKs exact stream/sequence after
+dispatch. Replacement or disconnect cancels HTTP, tools, PTYs and UI approval leases;
+accepted durable Agent tasks keep running. Native binding heartbeats expire after
+20 seconds if the GUI disappears.
 
-Requests use the oRPC JSON envelope. Current contracts represent dates as strings;
-nonempty serialization metadata, blobs and maps are rejected. HTTP 401 maps to
-AUTH_REQUIRED; recognized NOT_FOUND/FORBIDDEN/BAD_REQUEST errors preserve only
-their fixed code. Server messages/data are not forwarded. A plain/malformed 404
-maps to MISSING_PROCEDURE and authorization fails. The current hosts API is required;
-there is no browser-grant fallback.
-Redirects cannot become successful authorization responses.
+The daemon derives renderer method admission from `localResults` and RPC admission
+from `apiExposure`. Account verification and Host authorization use its cookie API.
+It enforces selected-origin paths/headers, `Origin: views://main`, request/response
+limits, deadlines, cancellation, redirect refusal and atomic cookie persistence.
+Cookies, Set-Cookie and restricted Host credentials never enter renderer replies.
+Auth-body tokens are redacted. oRPC serializer metadata is rejected; safe fixed
+error codes replace private server messages. Go owns no API proxy, cookie jar,
+session database or acknowledged event queue.
 
-Run `bun run --cwd apps/desktop mygo:test`. The Go tests launch the actual oRPC 2
-TypeScript router in tests/native/fixtures/orpc-server.ts with the pinned Bun,
-on an ephemeral loopback port. They verify Cookie continuity, native credentials,
-account/authorize/revoke calls, status-less errors, missing procedures, redirect
-refusal and unsupported metadata. No GUI, database or provider login is needed.
-Loopback protocol checks do not establish production HTTPS persistence acceptance.
-
-The native HTTP Origin is intentionally distinct from the MyGo renderer URL
-(`mygo://<server-scope>/`, mapped to HTTP on Windows). Changing the host framework
-does not make renderer origins trusted API callers or expose session cookies.
+CLI's Desktop suites cover the actual oRPC serializer, synthetic HTTPS persistence,
+SQLite/key isolation, account races and loopback lifetime. Go tests cover finite
+subprocess/IPC, OS locks and explicit compiled CLI integration. Packaged WKWebView
+and WebView2 Origin/mixed-content, OS vault, tray and GUI behavior remain separate
+platform acceptance gates; headless success does not establish those results.
 
 ## Build and release
 
@@ -208,8 +207,8 @@ Desktop keeps these defaults; enable `PageOptions.PinchZoom` or
 
 Native smoke uses the separate `native_smoke` Go build tag and token-authenticated
 Unix socket or Windows named pipe to drive TS assertions. Production contains no
-smoke listener or eval controls. Shared Go JSON fixtures cover configuration,
-Cookies, API and local methods; a Bun fixture also exercises the actual preload.
+smoke listener or eval controls. Go fixtures cover configuration and native lifetime; CLI owns the cookie/API/local
+policy vectors. A compiled Bun fixture also exercises the actual preload.
 
 Production MyGo builds omit the native UI inspector. After packaging run
 `bun apps/desktop/scripts/host/check-release.ts`: it checks the actual host's

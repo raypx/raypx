@@ -102,3 +102,23 @@ export async function restartSmokeOwner(directory: string, options: Options = {}
   const result = await command("restart", directory, options);
   return result !== undefined && result.code === 0;
 }
+
+/** Test driver authority stays in Bun; the native host never exposes this router. */
+export async function smokeOwnerRequest(directory: string, method: string, params: unknown) {
+  const endpoint = await Bun.file(join(directory, "profiles/native-smoke/daemon.json")).json();
+  const response = await fetch(
+    endpoint.socket ? "http://localhost/rpc" : `http://127.0.0.1:${endpoint.port}/rpc`,
+    {
+      ...(endpoint.socket ? { unix: endpoint.socket } : { proxy: false }),
+      method: "POST",
+      headers: { authorization: `Bearer ${endpoint.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ version: 1, id: crypto.randomUUID(), method, params }),
+      signal: AbortSignal.timeout(30_000),
+      redirect: "error",
+    },
+  );
+  assert.equal(response.status, 200);
+  const packet = (await response.json()) as { result?: unknown; error?: { code: string } };
+  if (packet.error) throw new Error(packet.error.code);
+  return packet.result;
+}

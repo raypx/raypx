@@ -15,6 +15,8 @@ import { startDaemon } from "../../../../helpers/enrolled.ts";
 import { startDaemon as startUnenrolledDaemon } from "../../../../../src/runtime/daemon/server.ts";
 import { daemonFetch } from "../../../../../src/runtime/daemon/endpoint.ts";
 import { localFetch, type LocalAddress } from "../../../../../src/runtime/local-http.ts";
+import { readTerminalEndpoint, terminalFetch } from "../../../../../src/runtime/terminal/host.ts";
+import type { ObservedProjection } from "@raypx/contracts/terminal";
 
 const pageOrigin = `mygo://${"a".repeat(32)}`;
 type Packet = {
@@ -222,6 +224,71 @@ it("keeps an unenrolled renderer available for first-time instance registration"
   });
   expect(peer.socket.readyState).toBe(WebSocket.OPEN);
 });
+
+it.skipIf(process.platform === "win32")(
+  "holds the approval lease only while the native window and authenticated renderer are available",
+  async () => {
+    const { descriptor, native, project, host } = await fixture();
+    const peer = await connect(descriptor.channel);
+    await peer.ready;
+    const root = (await native({ action: "pick", path: project })) as { id: string; path: string };
+    await peer.local("agents.configure", { rootId: root.id, providers: ["claude"] });
+    await peer.local("approvals.local.configure", {
+      rootIds: [root.id],
+      away: true,
+      waitSeconds: 60,
+    });
+    const endpoint = readTerminalEndpoint(join(host.runtime.state.directory, "terminal"));
+    const hook = () =>
+      terminalFetch(endpoint, "hook", "/hook", {
+        provider: "claude",
+        input: {
+          hook_event_name: "PermissionRequest",
+          session_id: crypto.randomUUID(),
+          cwd: root.path,
+          tool_name: "Bash",
+          tool_input: { command: "printf synthetic" },
+        },
+      }).then((response) => response.json());
+    expect(await hook()).toEqual({ fallback: true });
+    await native({ action: "visible", active: true });
+    const hidden = hook();
+    await expect
+      .poll(async () => {
+        const projection = (await peer.local("approvals.local.list")) as ObservedProjection;
+        return projection.requests.filter((request) => request.status === "pending").length;
+      })
+      .toBe(1);
+    expect(await native({ action: "notifications" })).toMatchObject({
+      scope: "local",
+      revision: expect.any(Number),
+      bindingId: expect.any(String),
+    });
+    await native({ action: "visible", active: false });
+    expect(await hidden).toEqual({ fallback: true });
+    await native({ action: "visible", active: true });
+    const disconnected = hook();
+    await expect
+      .poll(async () => {
+        const projection = (await peer.local("approvals.local.list")) as ObservedProjection;
+        return projection.requests.filter((request) => request.status === "pending").length;
+      })
+      .toBe(1);
+    peer.socket.close();
+    expect(await disconnected).toEqual({ fallback: true });
+    const reconnected = await connect((await native({ action: "channel" })) as DesktopChannel);
+    await reconnected.ready;
+    const released = hook();
+    await expect
+      .poll(async () => {
+        const projection = (await reconnected.local("approvals.local.list")) as ObservedProjection;
+        return projection.requests.filter((request) => request.status === "pending").length;
+      })
+      .toBe(1);
+    await native({ action: "release" });
+    expect(await released).toEqual({ fallback: true });
+  },
+);
 
 it("delivers the maximum supported text file even when JSON escaping exceeds one MiB", async () => {
   const { descriptor, project, native } = await fixture();
@@ -467,3 +534,19 @@ it.skipIf(process.platform === "win32")(
       .toMatchObject([{ id: input.id, status: "succeeded" }]);
   },
 );
+
+it("does not create a replacement vault key when another origin still has encrypted sessions", async () => {
+  const { host } = await fixture();
+  const { sessionRecordStore } =
+    await import("../../../../../src/runtime/daemon/desktop/sessions.ts");
+  const records = sessionRecordStore(host.runtime.state.db, "https://saved.example.test");
+  records.write(Buffer.alloc(40, 3));
+  const response = await daemonFetch(host.endpoint, "/desktop", {
+    action: "prepare",
+    apiUrl: "https://fresh.example.test",
+  });
+  expect(await response.json()).toMatchObject({
+    result: { createKey: false, profileDirectory: host.runtime.state.directory },
+  });
+  expect(records.read()?.encrypted).toEqual(Buffer.alloc(40, 3));
+});

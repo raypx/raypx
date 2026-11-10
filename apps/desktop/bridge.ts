@@ -18,7 +18,7 @@ export interface DesktopRuntime {
   features?: { localTerminalApprovals: boolean };
   compiledFeatures?: string[];
 }
-/** The native command vocabulary. The Go host validates the generated manifest. */
+/** Product methods; the adapter routes business calls directly to the daemon. */
 export const DESKTOP_METHODS = {
   openExternal: "open_external",
   apiFetch: "api_fetch",

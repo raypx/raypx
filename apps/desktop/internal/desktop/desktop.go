@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"runtime"
+	"strconv"
 	"sync"
 	"sync/atomic"
 )
@@ -15,80 +17,48 @@ type UI interface {
 	OpenExternal(string) error
 }
 
-// EngineClient is the host's execution boundary; process framing belongs to Engine.
-type EngineClient interface {
-	Status() JSON
-	Features() JSON
-	Request(context.Context, string, any) (any, error)
-	Start() bool
-	ReplaceOwner() bool
-	Close()
-}
-
 type CLIConfig struct {
 	Binary  string
 	Version string
 	Args    []string
-	Daemon  bool
 }
-
 type Options struct {
 	CLI        CLIConfig
-	Methods    []string
-	Engine     func(*EventStream) EngineClient
+	Client     NativeClient
 	SessionKey SessionKey
+	PageOrigin string
 }
 type Desktop struct {
-	closeOnce          sync.Once
-	admission          sync.Mutex
-	closing            bool
-	requests           sync.WaitGroup
-	lifetime           context.Context
-	cancel             context.CancelFunc
-	Config             Config
-	Engine             EngineClient
-	Events             *EventStream
-	API                *API
-	Preferences        *Preferences
-	UI                 UI
-	Tray               atomic.Bool
-	methods            map[string]bool
-	cli                CLIConfig
-	instance           *sql.Conn
-	database           *sql.DB
-	sessions           *Sessions
-	control            sync.Mutex
-	account            string
-	generation         atomic.Uint64
-	authorizationError bool
-	lease              sync.Mutex
-	active             bool
-	visible            bool
-	stopped            atomic.Bool
+	closeOnce            sync.Once
+	admission            sync.Mutex
+	closing              bool
+	requests             sync.WaitGroup
+	lifetime             context.Context
+	cancel               context.CancelFunc
+	Config               Config
+	Client               NativeClient
+	Preferences          *Preferences
+	UI                   UI
+	Tray                 atomic.Bool
+	cli                  CLIConfig
+	instance             *sql.Conn
+	database             *sql.DB
+	lease                sync.Mutex
+	visible              bool
+	stopped              atomic.Bool
+	Notify               func(scope string)
+	notificationRevision float64
+	notificationBinding  string
 }
 
 func New(config Config, directory string, options Options) (*Desktop, error) {
-	if err := protectSessions(directory); err != nil {
+	if err := PrivateDirectory(directory); err != nil {
 		return nil, err
 	}
 	db, instance, err := AcquireInstance(directory)
 	if err != nil {
 		return nil, err
 	}
-	sessions, err := OpenSessions(directory, options.SessionKey)
-	if err != nil {
-		instance.Close()
-		db.Close()
-		return nil, err
-	}
-	jar, err := OpenCookies(config.APIURL, sessions.Server(config.Scope))
-	if err != nil {
-		sessions.Close()
-		instance.Close()
-		db.Close()
-		return nil, err
-	}
-	events := NewEvents()
 	cli := options.CLI
 	cli.Args = append([]string(nil), cli.Args...)
 	if len(cli.Args) == 0 {
@@ -98,18 +68,16 @@ func New(config Config, directory string, options Options) (*Desktop, error) {
 		}
 		cli.Args = []string{"--profile", profile}
 	}
-	var engine EngineClient
-	if options.Engine != nil {
-		engine = options.Engine(events)
-	} else {
-		engine = NewEngine(cli.Binary, cli.Version, cli.Args, cli.Daemon, events)
+	client := options.Client
+	if client == nil {
+		pageOrigin := options.PageOrigin
+		if pageOrigin == "" {
+			pageOrigin = "mygo://" + config.Scope
+		}
+		client = NewDaemonClient(cli, config, pageOrigin, options.SessionKey)
 	}
 	lifetime, cancel := context.WithCancel(context.Background())
-	d := &Desktop{Config: config, Engine: engine, cli: cli, Events: events, API: NewAPI(config.APIURL, jar), Preferences: OpenPreferences(directory), methods: map[string]bool{}, database: db, sessions: sessions, instance: instance, lifetime: lifetime, cancel: cancel}
-	for _, method := range options.Methods {
-		d.methods[method] = true
-	}
-	return d, nil
+	return &Desktop{Config: config, Client: client, cli: cli, Preferences: OpenPreferences(directory), database: db, instance: instance, lifetime: lifetime, cancel: cancel}, nil
 }
 
 func (d *Desktop) Preload() string {
@@ -117,9 +85,9 @@ func (d *Desktop) Preload() string {
 	prefs, _ := json.Marshal(d.Preferences.Snapshot())
 	encodedConfig, _ := json.Marshal(string(config))
 	encodedPrefs, _ := json.Marshal(string(prefs))
-	return "(()=>{function freeze(v){if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v)}}const c=JSON.parse(" + string(encodedConfig) + "),p=JSON.parse(" + string(encodedPrefs) + ");freeze(c);freeze(p);Object.defineProperties(window,{__raypxConnection:{value:c},__raypxDevicePreferences:{value:p},__raypxTerminalHooks:{value:" + map[bool]string{true: "true", false: "false"}[d.cli.Daemon] + "},__raypxDesktopHost:{value:'mygo'}})})();"
+	return "(()=>{function freeze(v){if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v)}}const c=JSON.parse(" + string(encodedConfig) + "),p=JSON.parse(" + string(encodedPrefs) + ");freeze(c);freeze(p);Object.defineProperties(window,{__raypxConnection:{value:c},__raypxDevicePreferences:{value:p},__raypxTerminalHooks:{value:" + strconv.FormatBool(runtime.GOOS == "darwin" || runtime.GOOS == "windows") + "},__raypxDesktopHost:{value:'mygo'}})})();"
 }
 
 func (d *Desktop) Runtime() JSON {
-	return JSON{"appVersion": d.cli.Version, "platform": platformName(), "trayEnabled": d.Tray.Load(), "engine": d.Engine.Status(), "features": d.Engine.Features(), "compiledFeatures": compiledFeatures()}
+	return JSON{"appVersion": d.cli.Version, "platform": platformName(), "trayEnabled": d.Tray.Load(), "engine": d.Client.Status(), "features": d.Client.Features(), "compiledFeatures": compiledFeatures()}
 }

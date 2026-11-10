@@ -2,6 +2,8 @@
 
 Status: accepted, 2026-10-28. Supersedes the earlier Windows foreground-owner rule.
 
+Desktop session/API/event transport superseded by [ADR 0052](0052-daemon-desktop-channel.md).
+
 ## Current implementation (2026-11-09)
 
 [ADR 0047](0047-bun-cli-production-packaging.md) defines the embedded stable Bun

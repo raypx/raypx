@@ -73,7 +73,7 @@ The accepted foundation design and current architecture decisions define the imp
 - Desktop's Go module lives in `apps/desktop`, with MyGo v0.8.3 and Go 1.27.3.
   Native builds require `CGO_ENABLED=0`; macOS packages target 13.5+, Windows uses WebView2,
   and Linux Desktop acceptance remains unverified. `internal/app` owns framework APIs and
-  `internal/desktop` owns native policy and CLI transport. Bun/VP owns JS builds.
+  `internal/desktop` owns OS capabilities and finite CLI bootstrap. Bun/VP owns JS builds.
 - Type checks use tsc --noEmit with an explicit project; Bun runs scripts.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
@@ -148,8 +148,10 @@ Keep documentation aligned with the implementation and remove obsolete guides.
 Opted-in remote Agent tasks use explicit API projections and device-scoped grants.
 On macOS and Windows the independent CLI daemon owns execution, approval arbitration, the
 durable replay journal, the outbound WebSocket and restricted device credentials.
-Desktop connects over authenticated private IPC (Unix socket, or token-guarded loopback
-on Windows; see ADR 0037); GUI Quit does not stop daemon tasks. Relay routes messages; API stores read
+Desktop bootstraps over authenticated private IPC (Unix socket or token-guarded
+loopback on Windows); its renderer uses a separate authenticated loopback WebSocket
+(ADR 0052). The daemon owns sessions, API policy and acknowledged events. GUI Quit
+does not stop daemon tasks. Relay routes messages; API stores read
 projections. Native handles initial opt-in without exporting cookies or host secrets
 to the renderer. Explicit logout/account changes revoke the affected binding. The backend in `apps/api` owns HTTP and socket peers through `SERVER_ROLE=api|relay|both`.
 The default both role uses direct calls; split roles require the private Redis broker.

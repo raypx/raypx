@@ -6,10 +6,6 @@ import (
 	"path/filepath"
 )
 
-func (d *Desktop) RendererParams(method string, params any) (any, error) {
-	return rendererParams(d.Config, d.methods, method, params)
-}
-
 func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, error) {
 	ctx, finish, err := d.admit(ctx)
 	if err != nil {
@@ -25,11 +21,10 @@ func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, 
 	switch method {
 	case "get_runtime":
 		return d.Runtime(), nil
-	case "api_fetch":
-		return d.API.Request(ctx, input, false)
-	case "api_cancel":
-		id, _ := input["id"].(string)
-		return d.API.Cancel(id), nil
+	case "get_channel":
+		return d.Client.Channel(ctx)
+	case "repair_connector":
+		return d.repair(ctx, input)
 	case "get_analytics_preferences":
 		return d.Preferences.Read()["analytics"], nil
 	case "save_analytics_preferences":
@@ -70,47 +65,17 @@ func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, 
 		if !filepath.IsAbs(path) {
 			return nil, errors.New("Invalid directory selection")
 		}
-		return d.Engine.Request(ctx, "roots.register", JSON{"path": path})
+		return d.Client.Native(ctx, JSON{"action": "pick", "path": path})
 	case "restart_engine":
 		var ok bool
 		if input["replaceOwner"] == true {
-			ok = d.Engine.ReplaceOwner()
+			ok = d.Client.ReplaceOwner()
 		} else {
-			ok = d.Engine.Start()
+			ok = d.Client.Start()
 		}
 		d.UpdateLease()
 		return ok, nil
-	case "control_session":
-		id, _ := input["accountId"].(string)
-		return d.session(ctx, id)
-	case "control_attach":
-		return d.attach(ctx, input)
-	case "control_detach":
-		d.control.Lock()
-		id := d.account
-		d.control.Unlock()
-		if id != "" {
-			if _, err := d.controlRequest(ctx, "host.detach", JSON{"accountId": id}); err != nil {
-				return nil, err
-			}
-		}
-		return true, nil
-	case "control_info", "control_enable", "control_revoked", "terminal_settings", "terminal_configure":
-		mapped := map[string]string{"control_info": "host.info", "control_enable": "host.enable", "control_revoked": "host.revoked", "terminal_settings": "host.terminal.settings", "terminal_configure": "host.terminal.configure"}[method]
-		return d.controlRequest(ctx, mapped, input)
-	case "local_request":
-		name, _ := input["method"].(string)
-		params, err := d.RendererParams(name, input["params"])
-		if err != nil {
-			return nil, err
-		}
-		if name == "connectors.install" {
-			p, _ := params.(map[string]any)
-			if p["recoverModified"] == true {
-				return d.repair(ctx, p)
-			}
-		}
-		return d.Engine.Request(ctx, name, params)
+
 	}
 	return nil, errors.New("Desktop method is not permitted")
 }

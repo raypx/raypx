@@ -211,7 +211,7 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 - bun run test e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
 - bun run package:desktop on macOS and Windows checks the actual native package.
-  Release acceptance additionally verifies Go-owned encrypted session persistence
+  Release acceptance additionally verifies daemon-owned encrypted session persistence
   against HTTPS auth, scoped MyGo browser storage on WKWebView/WebView2, matching
   bundled CLI resolution, picker grants, daemon scheduling/task survival after GUI
   Quit, explicit daemon shutdown and PTY resize/cancellation. Renderer previews

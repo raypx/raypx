@@ -7,85 +7,73 @@ import (
 	"testing"
 )
 
-type testEngine struct{ starts, closes, requests int }
+type testNative struct{ starts, closes, requests int }
 
-func (*testEngine) Status() JSON         { return JSON{"status": "ready"} }
-func (*testEngine) Features() JSON       { return JSON{"localTerminalApprovals": false} }
-func (e *testEngine) Start() bool        { e.starts++; return true }
-func (e *testEngine) ReplaceOwner() bool { return e.Start() }
-func (e *testEngine) Close()             { e.closes++ }
-func (e *testEngine) Request(_ context.Context, method string, _ any) (any, error) {
-	e.requests++
-	if method == "files.list" {
-		return JSON{"entries": []any{}}, nil
-	}
-	return nil, errors.New("unexpected test engine request")
+func (*testNative) Status() JSON         { return JSON{"status": "ready"} }
+func (*testNative) Features() JSON       { return JSON{"localTerminalApprovals": false} }
+func (c *testNative) Start() bool        { c.starts++; return true }
+func (c *testNative) ReplaceOwner() bool { return c.Start() }
+func (c *testNative) Close()             { c.closes++ }
+func (*testNative) Channel(context.Context) (any, error) {
+	return nil, errors.New("test channel unavailable")
 }
-
-func TestLocalProfileSelectsBundledCLIWithoutExposingNativeConfig(t *testing.T) {
+func (c *testNative) Native(_ context.Context, input JSON) (any, error) {
+	c.requests++
+	if input["action"] == "notifications" {
+		return JSON{"revision": 0.0}, nil
+	}
+	return true, nil
+}
+func TestLocalProfileSelectsBundledCLIWithoutOpeningOldSessions(t *testing.T) {
 	for _, profile := range []string{"default", "fresh-profile"} {
 		config, err := ParseConfig([]byte("local_profile='" + profile + "'\n"))
-		if err != nil || config.LocalProfile != profile {
-			t.Fatal("Local profile was not parsed")
+		if err != nil {
+			t.Fatal(err)
 		}
-		desktop, err := New(config, t.TempDir(), Options{CLI: CLIConfig{Binary: "/never-launched"},
-			Engine: func(*EventStream) EngineClient { return &testEngine{} },
-		})
+		desktop, err := New(config, t.TempDir(), Options{CLI: CLIConfig{Binary: "/never-launched"}, Client: &testNative{}})
 		if err != nil {
 			t.Fatal(err)
 		}
 		if !reflect.DeepEqual(desktop.cli.Args, []string{"--profile", profile}) {
-			t.Fatal("CLI did not receive the selected profile")
+			t.Fatal("selected profile lost")
 		}
-		store := desktop.sessions
 		desktop.Close()
-		if _, err := store.Server(config.Scope).Load(); err == nil {
-			t.Fatal("Desktop leaked its session connection")
-		}
 	}
 	for _, source := range []string{"local_profile=42", "local_profile='../other'", "local_profile=''"} {
 		if _, err := ParseConfig([]byte(source)); err == nil {
-			t.Fatal("Invalid local profile was accepted")
+			t.Fatal("invalid profile accepted")
 		}
 	}
 }
-
-func TestDesktopUsesEnginePortAndClosesItOnce(t *testing.T) {
+func TestDesktopExposesOnlyNativeUseCases(t *testing.T) {
 	config, _ := ParseConfig(nil)
-	engine := &testEngine{}
-	desktop, err := New(config, t.TempDir(), Options{
-		CLI:     CLIConfig{Binary: "/never-launched", Version: "test", Daemon: true},
-		Methods: []string{"files.list", "roots.register"},
-		Engine:  func(*EventStream) EngineClient { return engine },
-	})
+	client := &testNative{}
+	desktop, err := New(config, t.TempDir(), Options{CLI: CLIConfig{Binary: "/never-launched", Version: "test"}, Client: client})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer desktop.Close()
-	if !desktop.Start() || engine.starts != 1 {
-		t.Fatal("engine was not started")
+	if !desktop.Start() || client.starts != 1 {
+		t.Fatal("client not started")
+	}
+	client.requests = 0
+	for _, method := range []string{"local_request", "api_fetch", "control_session", "roots.register", "visible", "notifications", "host.authorize", "release"} {
+		if _, err := desktop.Request(context.Background(), method, JSON{}); err == nil {
+			t.Fatalf("Go admitted business/private method %s", method)
+		}
+	}
+	if client.requests != 0 {
+		t.Fatal("denied method reached IPC")
 	}
 	if desktop.Runtime()["appVersion"] != "test" {
-		t.Fatal("lost composition metadata")
-	}
-	if _, err := desktop.Request(context.Background(), "local_request", JSON{"method": "roots.register", "params": JSON{}}); err == nil {
-		t.Fatal("renderer bypassed directory picker")
-	}
-	if engine.requests != 0 {
-		t.Fatal("denied request reached engine")
-	}
-	if _, err := desktop.Request(context.Background(), "local_request", JSON{"method": "files.list", "params": JSON{}}); err != nil {
-		t.Fatal(err)
-	}
-	if engine.requests != 1 {
-		t.Fatal("request was not forwarded once")
+		t.Fatal("lost metadata")
 	}
 	desktop.Close()
 	desktop.Close()
-	if engine.closes != 1 || desktop.Start() {
-		t.Fatal("closed engine was reused")
+	if client.closes != 1 || desktop.Start() {
+		t.Fatal("closed client reused")
 	}
 	if _, err := desktop.Request(context.Background(), "get_runtime", nil); err == nil {
-		t.Fatal("closed host admitted a request")
+		t.Fatal("closed host admitted request")
 	}
 }
