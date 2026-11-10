@@ -1,142 +1,128 @@
 # ADR 0043: Package surfaces
 
-Status: Accepted, 2026-11-03. Extends ADR 0042.
+Status: Accepted, 2026-11-03. Extends ADR 0042. Revised 2026-11-10: memory and
+scheduled jobs are one workspace each instead of separate `-model` and `-server`
+workspaces, and this record now states the current decision in full.
 
-Runtime amendment (2026-11-10): memory and scheduled jobs are each one workspace
-with three surfaces, replacing the 2026-11-06 split into `-model` and `-server`
-workspaces. `@raypx/memory/model` and `@raypx/jobs/model` hold pure schemas and
-calendar rules, `/server` holds the injected Node use cases, and `/client` holds
-browser views. `entryTargets` and `sourceTargets` keep each surface's platform
-honest, as `account` and `instances` already do; protocol, API, Control and Relay
-import only `/model` and `/server`, so no UI module enters their bundles. Their
-workspace dependency closure does now include the UI workspaces. Public
-account/session types, social provider identifiers and trusted-origin rules live in
-`@raypx/core/auth`, alongside Core's permission vocabulary; the separate auth model
-workspace is removed. See the current [workspace guide](../development/workspaces.md).
+## Context
 
-Account models remain framework-free in Core. Better Auth and shared authentication
-forms stay in `@raypx/auth`. The explicit `/auth` entry keeps these concerns separate
-without another workspace for a small set of shared types and pure rules.
+A workspace can be imported through one root that re-exports everything, or through
+named entries. A mixed root hides which layer a module belongs to and gives every
+consumer the union of every other consumer's dependencies: Web's sign-in chunk once
+carried relay scheduling because both came from the `@raypx/client` root.
 
-Job and memory model, server and client code are separate entries of one workspace.
-Contracts composes domain schemas without importing UI or server implementation code.
+A domain such as memory or scheduled jobs also has three audiences with different
+platforms: pure schemas for transports and devices, injected use cases for Node
+hosts, and views for browsers. They need separate dependency boundaries, but a
+boundary does not have to be a workspace.
 
-## Direction
+## Decision
 
 A package entry is a surface, not a barrel. Each public subpath carries one cohesive
-responsibility, and a consumer imports the exact surface it operates on. A root `.`
-entry that re-exports unrelated concerns is a compatibility crutch: it hides which
-layer a module belongs to and drags the union of every consumer's dependencies into
-each one. Packages therefore declare explicit subpaths and no root.
+responsibility and a consumer imports the surface it operates on.
 
-Two rules follow from that and are enforced by Tooling:
+- **No mixed roots.** A root entry exists only where it is itself one surface, as in
+  `account`, `instances`, `database` and `logger`. No root re-exports another
+  workspace's vocabulary or several unrelated concerns.
+- **Every public entry has a consumer** in another workspace. An entry nobody imports
+  is removed, not kept for a possible future use.
+- **A platform boundary is an entry before it is a workspace.** One workspace may hold
+  universal, Node and browser surfaces when `raypx.entryTargets` and
+  `raypx.sourceTargets` declare them. A separate workspace is justified by a separate
+  responsibility or release, not by a platform difference alone.
+- **A domain schema is imported from its owner.** Contracts composes wire messages
+  from domain models and does not re-export them.
 
-- **No mixed roots.** `@raypx/client` no longer offers `.`; it exposes `/api`, `/relay`
-  and `/tasks`. `@raypx/tasks` and `@raypx/contracts` drop their roots the same way.
-- **Every public entry has a consumer** (finalized with the entry-consumer check; see
-  the "Enforcement" section).
+## Surfaces
 
-## Client
+### Client
 
-`@raypx/client` splits by transport concern:
+`@raypx/client` has no root and splits by transport concern:
 
-- `/api`: `createApiClient` with `ApiClient`, `ApiHeaders`, `FetchCallable` and
-  `CreateApiClientOptions`, plus `isMissingProcedure`.
-- `/relay`: `RelayConnection`, `relayUrl`, `RelaySocketFactory`, and the scheduler
-  vocabulary (`RelayScheduler`, `systemRelayScheduler`) that was previously exported
-  from its own module.
+- `/api`: `createApiClient`, its option and header types, `FetchCallable` and
+  `isMissingProcedure`.
+- `/relay`: `RelayConnection`, `relayUrl`, `RelaySocketFactory` and the scheduler
+  vocabulary (`RelayScheduler`, `systemRelayScheduler`).
 - `/tasks`: `createTaskClient` and `TaskClient`.
 
-The root also re-exported contract types — `RelayClientFrame`, `RelayServerFrame`,
-`RelayCommand` and `TaskChange`. Those are wire vocabulary, not client API. They now
-come from `@raypx/contracts/tasks` directly, which is where they are authored.
+Relay frames and task changes are wire vocabulary. Consumers import them from
+`@raypx/contracts/tasks`, where they are authored.
 
-Removing the root makes the split self-enforcing: a bare `@raypx/client` import fails
-to resolve, so no lint rule is needed to keep consumers on a real surface. The visible
-payoff is in the Web bundle — the sign-in chunk no longer contains relay scheduling,
-because sign-in imports only `/api`.
+### Tasks
 
-## Tasks
+`@raypx/tasks` has no root. `/model` owns page state, injected view ports and the pure
+task helpers; `/client` and its sub-entries adapt that model to React. Domain types
+come from `@raypx/core/tasks` and `@raypx/contracts/tasks`.
 
-`@raypx/tasks` drops `.`. The two pure helpers it held, `isTaskActive` and `taskCursor`,
-move to `src/model/task.ts` and export from `/model` alongside the rest of the page
-model. Internal views and models import them by relative path; external consumers use
-`/model`.
+### Memory and scheduled jobs
 
-The workspace keeps `/model`, `/client` and its client sub-entries. Domain types that
-the root used to re-export (`AgentTask`, `HumanRequest`, `HumanDecision`, `SyncDevice`)
-are imported from `@raypx/core/tasks` and `@raypx/contracts/tasks`, their owners.
+`@raypx/memory` and `@raypx/jobs` each expose three surfaces:
 
-## Contracts
+| Entry     | Target    | Owns                                                           |
+| --------- | --------- | -------------------------------------------------------------- |
+| `/model`  | universal | Schemas, inferred types, errors and pure calendar calculations |
+| `/server` | node      | Injected use cases and repository ports                        |
+| `/client` | browser   | Views and their injected ports                                 |
 
-`@raypx/contracts` drops `.`, `./jobs` and `./memory`. It composes wire schemas from
-the pure `@raypx/jobs/model` and `@raypx/memory/model` entries. Browser views stay in
-`@raypx/jobs/client` and `@raypx/memory/client`; injected server use cases live in
-`@raypx/jobs/server` and `@raypx/memory/server`. A consumer that needs a domain
-schema imports it from its model owner, not through contracts.
+`/client` and `/server` import `/model` by relative path and never each other.
+Persistence, identity, authorization, relay and clocks stay with the caller of
+`/server`; applications own routing and authentication around `/client`.
+
+Each surface was briefly its own workspace. The model and server workspaces held
+between 70 and 310 lines of source behind a full set of manifest, compiler, task and
+instruction files, and the target metadata already expresses the same boundary for
+`account` and `instances`. The cost of merging is stated under Consequences.
+
+### Contracts
+
+`@raypx/contracts` has no root and no `/jobs` or `/memory` entry. It composes wire
+schemas from `@raypx/jobs/model`, `@raypx/memory/model` and Core. A consumer that needs
+a domain schema imports it from that owner.
+
+### Accounts
+
+Public account and session types, social provider identifiers, trusted-origin
+normalization and the post-login destination rule live in `@raypx/core/auth`, beside
+Core's permission vocabulary. Better Auth and the shared authentication forms stay in
+`@raypx/auth`. There is no separate auth model workspace.
 
 ## Enforcement
 
-- The devkit entry-target checks keep each entry's platform honest.
-- `packages/tooling/src/validation/source-layers.ts` gains a `contracts` layer that
-  forbids React, UI, i18n, icons, client, host, auth and any `server`/`client`/`crypto`
-  subpath transitively from `packages/contracts/src/`, in addition to the
-  infrastructure rule (OS/runtime host modules, Drizzle, database and provider packages)
-  every layered owner shares.
-- A new entry-consumer check in Tooling's `policy()` requires every `exports` key of a
-  library or tooling workspace to have an importer in another workspace or in a
-  repository-root configuration file. Suites, files under `tests/` and the `e2e`
-  workspace count only as test importers, which are enough for `./testing*` entries and
-  tooling workspaces but not for a library's production surface. Exceptions are
-  declared per workspace as `raypx.entryConsumers` with a reason, so a deliberate
-  single-consumer entry documents itself instead of silently rotting.
+Tooling's `policy` rejects a violation of any rule above:
 
-An entry with no consumer is deleted rather than kept "just in case".
+- Entry and source targets keep each surface on its platform. A browser import of a
+  `node` entry fails, even though Bun could execute it.
+- The `contracts` source layer forbids React, `ui`, `i18n`, `icons`, `client`, `auth`
+  and every `/server`, `/client` or `/crypto` subpath, transitively from
+  `packages/contracts/src/`. Every layered owner also shares the infrastructure rule:
+  no OS or runtime host module, Drizzle, database or provider package.
+- The entry-consumer check requires each `exports` key of a library or tooling
+  workspace to have an importer in another workspace or in repository-root
+  configuration. Suites, files under `tests/` and the `e2e` workspace count as test
+  importers: they are enough for `./testing*` entries and tooling workspaces, not for
+  a library's production surface.
 
-Knip's `includeEntryExports` — the same rule applied to symbols inside an entry — is
-not enabled yet. Turning it on for `packages/*` reports 194 unused exports, most of
-them component exports from `@raypx/ui` that exist for consumers to compose, plus
-wire schemas a package exports for composition. Reducing that list means either
-un-exporting genuine API or carrying a large ignore inventory, and neither belongs in
-this change. It stays a follow-up: adopt the flag once the remaining list is small
-enough to review.
-
-## Entries with no consumer
-
-The check found eighteen entries without a production importer. Fourteen were removed:
-
-- `@raypx/core` (`.`): its subpaths already covered everything the root re-exported.
-  The internal barrel went with it; Core's own tests import the owning modules.
-- `@raypx/ui` (`.`): an empty `export {}` stub kept only to have a root.
-- `ui/styles.css` and `ui/styles/globals.css`: applications import `ui/styles/app.css`.
-- `ui/components/ui/toast`: a duplicate explicit key. The module is still reachable
-  through the `./components/ui/*` pattern, which this change does not narrow.
-- `database/env`, `email/types`, `env/runtime`, `tooling/repository`.
-- `i18n/server` and `i18n/testing`: nothing ran them, so the modules and their tests
-  were deleted as well. Tooling reads catalogs through `@raypx-kit/intl` directly.
-- `logger/context` and `logger/pipeline`: the modules stay internal; the package type
-  fixture and unit tests import them by relative path.
-- `devtools/snapshot`: only the package's own panel imports it, by relative path.
-
-`ui/toast` stays: Storybook's feedback stories consume it.
-
-Four entries stay by declaration, each with its reason in `raypx.entryConsumers`:
+A deliberate exception records its reason in `raypx.entryConsumers`, validated against
+the exported keys. Three exist:
 
 - `i18n/config` is read as a file by Tooling's static catalog reader.
-- `devtools/renderer` is injected as a module string into the overlay by the Vite plugin.
-- `infra/railway` (`.`) is an IaC program the Railway CLI evaluates under Bun,
-  selected explicitly with `--file railway.ts`.
-- `database` (`.`) adds `migrateDatabase` on top of `/connection` for the PostgreSQL
-  acceptance harness; production migrates through the package's own `db` commands.
+- `devtools/renderer` is injected as a module path string by the Vite plugin.
+- `infra/railway` (`.`) is an IaC program the Railway CLI evaluates under Bun.
 
-Pruning is not the whole cleanup: removing an entry leaves its module's exports
-unused, which Knip reports even without the entry-export flag. Those exports are
-trimmed to what the module still provides its remaining consumer.
+Knip applies the same rule to symbols inside a module and runs in full verification.
+Its `includeEntryExports` flag stays off: entries such as `@raypx/ui` components and
+composable wire schemas exist to be composed by consumers, so an unused-symbol report
+on them would be an ignore list rather than a signal.
 
 ## Consequences
 
-- Consumers name a surface, so a dependency review shows which transport a workspace
-  actually uses.
-- Deleting a surface is a compile error at every call site instead of a runtime import
+- A dependency review shows which transport or platform surface a workspace uses.
+- Removing a surface is a resolution error at every call site, not a runtime import
   of a barrel that still happens to export the symbol.
-- New entries cost one consumer. A speculative entry has no place to live.
+- A new entry costs one consumer; a speculative entry has nowhere to live.
+- Contracts, API, Control and Relay now list `@raypx/memory` and `@raypx/jobs` as
+  workspace dependencies, so their dependency closure includes the UI workspaces
+  those packages need for `/client`. No UI module reaches their bundles, because they
+  import only `/model` and `/server` and the checks above reject anything else. The
+  boundary is held by `policy` rather than by the package graph; removing those checks
+  would remove the boundary.
