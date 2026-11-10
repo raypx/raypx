@@ -35,3 +35,24 @@ export function normalizeTrustedOrigins(values: readonly string[]): string[] {
     ),
   ];
 }
+
+/**
+ * The in-app destination to resume after authentication, or `/` when `value` is not
+ * one of the application's own pages. Only the pathname is matched; search and hash
+ * are kept. Never execute an intent carried by the result.
+ */
+export function resumablePath(value: unknown, pages: ReadonlySet<string>): string {
+  if (typeof value !== "string" || value.length > 2048 || !value.startsWith("/")) return "/";
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    // Control characters, spaces and backslashes are how browsers get talked off-origin.
+    if (code <= 32 || code === 92 || code === 127) return "/";
+  }
+  try {
+    const url = new URL(value, "https://return.invalid");
+    if (url.origin !== "https://return.invalid" || !pages.has(url.pathname)) return "/";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/";
+  }
+}

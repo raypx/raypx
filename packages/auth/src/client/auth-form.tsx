@@ -8,13 +8,10 @@ import {
 } from "react";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
-import { AlertCircleIcon } from "@raypx/icons/alert-circle";
-import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { GithubIcon } from "@raypx/icons/github";
 import { GoogleIcon } from "@raypx/icons/google";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
-import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -24,105 +21,27 @@ import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from ".
 import type { SocialProvider } from "@raypx/core/auth";
 import { authPolicy } from "../policy.ts";
 import { readAuthLink, type AuthMode } from "./auth-link.ts";
-import { formText } from "./form-text.ts";
 import { PasswordField } from "./password-field.tsx";
 import { useMailCooldown } from "./use-mail-cooldown.ts";
 import { useAuthErrorMessage } from "./use-auth-error-message.ts";
 
 export type { AuthMode } from "./auth-link.ts";
 
-interface ModeConfig {
-  title: "login" | "signup" | "reset" | "verify";
-  intro: "intro" | "signupIntro" | "resetIntro" | "verifyIntro" | null;
-  /** Submit label; `null` reuses the common sign-in action. */
-  submit: "create" | "sendReset" | "reset" | "resend" | null;
-  success: "verifyIntro" | "resetSent" | "resetSaved" | "verifySent" | null;
-  name?: true;
-  email?: true;
-  password?: { purpose: "current" | "new"; label: "password" | "newPassword" };
-  /** Success clears and replaces the form instead of allowing another request. */
-  completes?: true;
-  /** Each request sends an email and starts the resend cooldown. */
-  mail?: true;
-}
+import {
+  AuthFormFooter,
+  AuthFormHeader,
+  AuthFormNotices,
+  linkClassName,
+  type AuthFormLinkProps,
+} from "./auth-form-parts.tsx";
+import { authFormTitle, authSuccessMessage, modes, requestMode } from "./auth-modes.ts";
 
-const modes: Record<AuthMode, ModeConfig> = {
-  login: {
-    title: "login",
-    intro: "intro",
-    submit: null,
-    success: null,
-    email: true,
-    password: { purpose: "current", label: "password" },
-    completes: true,
-  },
-  signup: {
-    title: "signup",
-    intro: "signupIntro",
-    submit: "create",
-    success: "verifyIntro",
-    name: true,
-    email: true,
-    password: { purpose: "new", label: "password" },
-  },
-  "forgot-password": {
-    title: "reset",
-    intro: "resetIntro",
-    submit: "sendReset",
-    success: "resetSent",
-    email: true,
-    mail: true,
-  },
-  "reset-password": {
-    title: "reset",
-    intro: null,
-    submit: "reset",
-    success: "resetSaved",
-    password: { purpose: "new", label: "newPassword" },
-    completes: true,
-  },
-  "verify-email": {
-    title: "verify",
-    intro: "verifyIntro",
-    submit: "resend",
-    success: "verifySent",
-    email: true,
-    mail: true,
-  },
-};
-
-const linkClassName =
-  "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+export type { AuthFormLinkProps } from "./auth-form-parts.tsx";
 
 const socialProviders = {
   google: { icon: GoogleIcon, label: "continueGoogle" },
   github: { icon: GithubIcon, label: "continueGithub" },
 } as const;
-
-function authFormTitle(
-  config: ModeConfig,
-  link: ReturnType<typeof readAuthLink>,
-  signedIn: boolean,
-  complete: boolean,
-) {
-  if (link.invalidReset) return "invalidLinkTitle";
-  if (link.verified) return "verifiedTitle";
-  if (signedIn) return "signedInTitle";
-  if (complete) return "resetCompleteTitle";
-  return config.title;
-}
-
-function authSuccessMessage(config: ModeConfig, verified: boolean, succeeded: boolean) {
-  if (verified) return "verified";
-  if (succeeded) return config.success;
-  return null;
-}
-
-export interface AuthFormLinkProps {
-  to: "account" | "login" | "signup" | "forgot-password" | "verify-email";
-  className: string;
-  children: ReactNode;
-}
 
 export interface AuthFormProps {
   mode: AuthMode;
@@ -382,181 +301,5 @@ export function AuthForm({
         )}
       </div>
     </section>
-  );
-}
-
-function AuthFormHeader({
-  title,
-  intro,
-  headingLeading,
-  terminal,
-  invalid,
-  compact,
-}: {
-  title: string;
-  intro: string | null;
-  headingLeading: ReactNode;
-  terminal: boolean;
-  invalid: boolean;
-  compact: boolean;
-}) {
-  const StatusIcon = invalid ? AlertCircleIcon : CheckCircleIcon;
-  return (
-    <header
-      className={cn(
-        "flex flex-col gap-2",
-        compact ? "mb-6" : "mb-7",
-        terminal && "items-center text-center",
-      )}
-    >
-      {headingLeading}
-      {terminal && <StatusIcon aria-hidden="true" className="mb-3 size-9 text-foreground" />}
-      <h1 id="auth-title" className="text-2xl leading-8 font-semibold tracking-tight text-balance">
-        {title}
-      </h1>
-      {intro && <p className="text-sm leading-6 text-muted-foreground">{intro}</p>}
-    </header>
-  );
-}
-
-function requestMode(
-  auth: ReturnType<typeof useAuthActions>,
-  mode: AuthMode,
-  data: FormData,
-  token: string,
-  onSuccess: AuthActionSuccess,
-) {
-  const email = formText(data, "email");
-  const password = formText(data, "password");
-  switch (mode) {
-    case "login":
-      return auth.signIn({ email, password }, onSuccess);
-    case "signup":
-      return auth.signUp({ name: formText(data, "name"), email, password }, onSuccess);
-    case "forgot-password":
-      return auth.requestPasswordReset({ email }, onSuccess);
-    case "reset-password":
-      return auth.resetPassword({ newPassword: password, token }, onSuccess);
-    case "verify-email":
-      return auth.sendVerificationEmail({ email }, onSuccess);
-  }
-}
-
-function AuthFormNotices({
-  invalidLink,
-  socialError,
-  success,
-  error,
-  terminal,
-}: {
-  invalidLink: boolean;
-  socialError: boolean;
-  success: ModeConfig["success"] | "verified";
-  error: string;
-  terminal: boolean;
-}) {
-  const t = useTranslations("auth");
-  function invalidLinkNotice() {
-    if (!invalidLink) return null;
-    if (terminal) {
-      return (
-        <p role="alert" className="text-center text-sm leading-6 text-muted-foreground">
-          {t("invalidLink")}
-        </p>
-      );
-    }
-    const message = socialError ? "socialFailed" : "invalidLink";
-    return (
-      <Alert variant="destructive">
-        <AlertCircleIcon aria-hidden="true" />
-        <AlertDescription>{t(message)}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  function successNotice() {
-    if (!success) return null;
-    if (terminal) {
-      return (
-        <p role="status" className="text-center text-sm leading-6 text-muted-foreground">
-          {t(success)}
-        </p>
-      );
-    }
-    return (
-      <Alert role="status">
-        <CheckCircleIcon aria-hidden="true" />
-        <AlertDescription>{t(success)}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  return (
-    <>
-      {invalidLinkNotice()}
-      {successNotice()}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircleIcon aria-hidden="true" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-    </>
-  );
-}
-
-function AuthFormFooter({
-  mode,
-  compact,
-  LinkComponent,
-}: {
-  mode: AuthMode;
-  compact: boolean;
-  LinkComponent: ComponentType<AuthFormLinkProps>;
-}) {
-  return (
-    <footer
-      className={cn("flex flex-col items-center text-center text-sm", compact ? "gap-2" : "gap-3")}
-    >
-      <AuthFooterLinks mode={mode} LinkComponent={LinkComponent} />
-    </footer>
-  );
-}
-
-function AuthFooterLinks({
-  mode,
-  LinkComponent,
-}: {
-  mode: AuthMode;
-  LinkComponent: ComponentType<AuthFormLinkProps>;
-}) {
-  const t = useTranslations("auth");
-  const c = useTranslations("common");
-  if (mode !== "login") {
-    return (
-      <LinkComponent
-        to="login"
-        className={cn(
-          linkClassName,
-          "inline-flex items-center gap-2 text-muted-foreground hover:text-foreground",
-        )}
-      >
-        <ArrowLeftIcon aria-hidden="true" className="size-4" />
-        {c("signIn")}
-      </LinkComponent>
-    );
-  }
-  return (
-    <>
-      <p className="text-muted-foreground">
-        {t("noAccount")}{" "}
-        <LinkComponent to="signup" className={linkClassName + " text-foreground"}>
-          {t("create")}
-        </LinkComponent>
-      </p>
-      <LinkComponent to="verify-email" className={linkClassName + " text-muted-foreground"}>
-        {t("resend")}
-      </LinkComponent>
-    </>
   );
 }

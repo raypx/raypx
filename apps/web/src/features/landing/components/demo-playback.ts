@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 export const previewSteps = ["session", "review", "result"] as const;
 export type PreviewStep = (typeof previewSteps)[number];
 
-export const stepDurations: Record<PreviewStep, number> = {
+const stepDurations: Record<PreviewStep, number> = {
   session: 6000,
   review: 5200,
   result: 4200,
@@ -11,8 +11,8 @@ export const stepDurations: Record<PreviewStep, number> = {
 const startDelay = 1200;
 const commitInterval = 50;
 
-export type AgentStage = "hidden" | "working" | "done";
-export type ApprovalStage = "waiting" | "pressing" | "approved";
+type AgentStage = "hidden" | "working" | "done";
+type ApprovalStage = "waiting" | "pressing" | "approved";
 export type DemoStage = {
   typed: number;
   agent: AgentStage;
