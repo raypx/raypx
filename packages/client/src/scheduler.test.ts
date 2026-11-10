@@ -28,7 +28,7 @@ it.each([undefined, 1, 2, 3, "4", 5])(
       await socket.sent((frame) => frame.type === "auth");
       socket.receive({ type: "ready", role: "viewer", protocolVersion });
       expect(await socket.closed.promise).toBe(4006);
-      expect(status).toHaveBeenLastCalledWith(false, "UPGRADE_REQUIRED");
+      expect(status).toHaveBeenLastCalledWith(false, "UPGRADE_REQUIRED", expect.any(AbortSignal));
       expect(message).not.toHaveBeenCalled();
       expect(scheduler.pending).toBe(0);
     } finally {
@@ -84,7 +84,7 @@ it("drives retry backoff, heartbeat expiry and stop entirely through its schedul
   expect(scheduler.pending).toBe(0);
   scheduler.advance(100_000);
   expect(sockets).toHaveLength(4);
-  expect(status).toHaveBeenLastCalledWith(false, "NETWORK_UNAVAILABLE");
+  expect(status).toHaveBeenLastCalledWith(false, "NETWORK_UNAVAILABLE", expect.any(AbortSignal));
 });
 
 it("fences authentication that resolves after stop and resets backoff after live traffic", async () => {
@@ -122,4 +122,98 @@ it("fences authentication that resolves after stop and resets backoff after live
   expect(scheduler.nextDelay).toBe(400);
   connection.stop();
   expect(scheduler.pending).toBe(0);
+});
+
+it("aborts each socket scope before reconnect and ignores callbacks from the closed socket", async () => {
+  const scheduler = new ManualScheduler(),
+    sockets: RelaySocket[] = [];
+  const authenticated: AbortSignal[] = [],
+    delivered: AbortSignal[] = [];
+  const connection = new RelayConnection({
+    url: "wss://relay.example.test/relay",
+    scheduler,
+    status: () => {},
+    authenticate: async (signal) => {
+      authenticated.push(signal);
+      return { type: "auth", role: "viewer", protocolVersion: 4, token: "synthetic" };
+    },
+    message: (_frame, signal) => {
+      delivered.push(signal);
+    },
+    socket: () => {
+      const socket = new RelaySocket();
+      sockets.push(socket);
+      return socket.asWebSocket();
+    },
+  });
+  try {
+    connection.start();
+    const first = sockets[0]!;
+    first.open();
+    await first.sent((frame) => frame.type === "auth");
+    first.receive({ type: "ready", role: "viewer", protocolVersion: 4 });
+    const old = delivered[0]!;
+    expect(old).toBe(authenticated[0]);
+    first.close(1012);
+    expect(old.aborted).toBe(true);
+    scheduler.advance(400);
+    const next = sockets[1]!;
+    next.open();
+    await next.sent((frame) => frame.type === "auth");
+    next.receive({ type: "ready", role: "viewer", protocolVersion: 4 });
+    expect(delivered[1]!.aborted).toBe(false);
+    expect(delivered[1]).not.toBe(old);
+    first.receive({ type: "pong" });
+    first.open();
+    await Promise.resolve();
+    expect(delivered).toHaveLength(2);
+    expect(authenticated).toHaveLength(2);
+    connection.stop();
+    expect(delivered[1]!.aborted).toBe(true);
+    expect(scheduler.pending).toBe(0);
+  } finally {
+    connection.stop();
+  }
+});
+
+it("ignores an old retry callback already queued when the connection was replaced", () => {
+  const scheduler = new ManualScheduler(),
+    retries: (() => void)[] = [],
+    sockets: RelaySocket[] = [];
+  const connection = new RelayConnection({
+    url: "wss://relay.example.test/relay",
+    scheduler: {
+      now: scheduler.now,
+      random: scheduler.random,
+      interval: scheduler.interval,
+      timeout: (callback, delay) => {
+        retries.push(callback);
+        return scheduler.timeout(callback, delay);
+      },
+    },
+    authenticate: async () => ({
+      type: "auth",
+      role: "viewer",
+      protocolVersion: 4,
+      token: "synthetic",
+    }),
+    status: () => {},
+    message: () => {},
+    socket: () => {
+      const socket = new RelaySocket();
+      sockets.push(socket);
+      return socket.asWebSocket();
+    },
+  });
+  try {
+    connection.start();
+    sockets[0]!.close(1012);
+    connection.restart();
+    expect(sockets).toHaveLength(2);
+    retries[0]!();
+    expect(sockets).toHaveLength(2);
+    expect(sockets[1]!.readyState).toBe(0);
+  } finally {
+    connection.stop();
+  }
 });

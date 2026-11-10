@@ -26,6 +26,8 @@ async function fixture(seed = false) {
   let connection: { send(data: string): unknown; close(code?: number): unknown } | undefined;
   let denied = false,
     stored: HostAuthorization | undefined;
+  let holdGrant = false;
+  let pendingGrant: { finish(response: Response): void; signal: AbortSignal } | undefined;
   const api = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -36,6 +38,10 @@ async function fixture(seed = false) {
       }
       if (new URL(request.url).pathname === "/rpc/hosts/revoke")
         return Response.json({ json: { revoked: true } });
+      if (holdGrant && new URL(request.url).pathname === "/rpc/hosts/grant")
+        return new Promise<Response>((finish) => {
+          pendingGrant = { finish, signal: request.signal };
+        });
       if (denied)
         return Response.json(
           {
@@ -183,6 +189,10 @@ async function fixture(seed = false) {
       denied = true;
     },
     hasKey: () => Boolean(stored),
+    holdGrant: () => {
+      holdGrant = true;
+    },
+    pendingGrant: () => pendingGrant,
     close: async () => {
       await host.close();
       await api.stop(true);
@@ -190,6 +200,49 @@ async function fixture(seed = false) {
     },
   };
 }
+
+it("cancels an authorization request on logout and ignores a late grant response", async () => {
+  const f = await fixture();
+  try {
+    const info = f.host.control.info(f.scope);
+    f.holdGrant();
+    const authorization = f
+      .request("host.authorize", {
+        ...f.scope,
+        authorization: {
+          accountId: f.scope.accountId,
+          deviceId: info.binding!.deviceId,
+          epoch: info.binding!.epoch,
+          credential: "k".repeat(64),
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        },
+      })
+      .catch((error: unknown) => error);
+    await expect.poll(() => f.pendingGrant()).toBeDefined();
+    const selected = f.request("host.session", { ...f.scope, accountId: null });
+    await expect(authorization).resolves.toMatchObject({ name: "AbortError" });
+    await selected;
+    await expect.poll(() => f.pendingGrant()!.signal.aborted).toBe(true);
+    f.pendingGrant()!.finish(
+      Response.json({
+        json: {
+          accountId: f.scope.accountId,
+          grant: {
+            ...info.binding,
+            token: "a".repeat(64),
+            expiresAt: new Date(Date.now() + 600000).toISOString(),
+          },
+        },
+      }),
+    );
+    await f.host.control.wake();
+    expect(f.host.control.info(f.scope).authorized).toBe(false);
+    expect(f.hasKey()).toBe(false);
+    expect(existsSync(join(profilePath({ dataDir: f.dataDir }), "host-binding.json"))).toBe(false);
+  } finally {
+    await f.close();
+  }
+});
 it("cannot restore a detached binding after its credential deletion fails", async () => {
   const f = await fixture();
   try {

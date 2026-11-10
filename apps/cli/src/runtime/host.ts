@@ -86,6 +86,7 @@ export function createHost(options: {
       signal?: AbortSignal,
     ): Promise<unknown> {
       if (closing) throw new LocalError("CLOSING", "Execution host is stopping");
+      signal?.throwIfAborted();
       if (
         method !== "runtime.info" &&
         !method.startsWith("instance.") &&
@@ -93,9 +94,11 @@ export function createHost(options: {
         !["tools.cancel", "terminal.close"].includes(method)
       )
         await runtime.instanceAccess.assert();
+      signal?.throwIfAborted();
       if (method === "host.session") {
         const input = localParams["host.session"].parse(params);
         const status = await runtime.instanceAccess.status();
+        signal?.throwIfAborted();
         if (
           input.accountId &&
           status.binding &&

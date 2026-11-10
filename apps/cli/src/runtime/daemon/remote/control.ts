@@ -16,6 +16,8 @@ import {
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
 import type { HostAgentPort } from "./agent-port";
+import { AcknowledgedStream } from "../acknowledged-stream";
+import { abortable } from "../cancellation";
 import { failureCode } from "./failure";
 import { serverOrigin } from "./origin";
 import {
@@ -39,11 +41,11 @@ export type RemoteControlOptions = {
   grantRequired: () => void;
   socket?: RelaySocketFactory;
   scheduler?: RelayScheduler;
-  renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
+  renewGrant?: (accountId: string, binding: Binding, signal: AbortSignal) => Promise<DeviceGrant>;
   authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
   bindingKey?: (accountId: string, grant: DeviceGrant) => string;
-  syncObserved?: (send: (frame: ObservedFrame) => void) => Promise<void>;
-  observedAck?: (epoch: string, revision: number) => void;
+  syncObserved?: (send: (frame: ObservedFrame) => void, signal: AbortSignal) => Promise<void>;
+  observedAck?: (epoch: string, revision: number, signal: AbortSignal) => void;
   observedReset?: () => void;
   connected?: (connected: boolean) => void;
   /** Upper bound on waiting for in-flight commands before a renewed grant reconnects. */
@@ -65,21 +67,19 @@ export class RemoteControl {
   private session = initialRelaySession;
   private error: string | null = null;
   private renewAt = 0;
-  private cursor = 0;
-  private streamId = "";
+  private readonly stream: AcknowledgedStream;
+  private bindingLifetime = new AbortController();
+  private streamSignal: AbortSignal | undefined;
+  private get cursor() {
+    return this.stream.cursor?.sequence ?? 0;
+  }
+  private get streamId() {
+    return this.stream.cursor?.streamId ?? "";
+  }
   private snapshotNeeded = false;
   private readonly snapshotRequests = new Set<string>();
   private syncing: Promise<void> | undefined;
   private dirty = false;
-  private acknowledgement:
-    | {
-        sequence: number;
-        snapshotId?: string;
-        resolve(): void;
-        reject(): void;
-        timer: () => void;
-      }
-    | undefined;
   private readonly notified = new Set<string>();
   private apiUrl: string | undefined;
   private renewing: Promise<boolean> | undefined;
@@ -94,9 +94,6 @@ export class RemoteControl {
     if (available && event.type === "caught_up") this.options.connected?.(true);
     if (!available && previous.phase === "available") this.options.connected?.(false);
   }
-  private get generation() {
-    return this.session.epoch;
-  }
   private get ready() {
     return this.session.phase !== "offline";
   }
@@ -108,6 +105,8 @@ export class RemoteControl {
   }
   private scheduleRenewal(disconnect = true) {
     if (this.renewalTimer || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
+    const signal = this.bindingLifetime.signal;
+    if (signal.aborted) return;
     if (disconnect) this.resetConnection();
     const delay = Math.max(
       this.renewAt - this.scheduler.now(),
@@ -115,18 +114,22 @@ export class RemoteControl {
         (0.8 + this.scheduler.random() * 0.2),
     );
     this.renewAt = this.scheduler.now() + delay;
-    this.renewalTimer = this.scheduler.timeout(() => {
+    const timer = this.scheduler.timeout(() => {
+      if (signal.aborted || this.renewalTimer !== timer) return;
       this.renewalTimer = undefined;
       void this.refreshGrant()
         .then((restored) => {
+          if (signal.aborted) return;
           if (!restored && this.accountId && !this.connected) this.scheduleRenewal(false);
         })
         .catch(() => {
-          this.error = "NETWORK_UNAVAILABLE";
+          if (!signal.aborted) this.error = "NETWORK_UNAVAILABLE";
         });
     }, delay);
+    this.renewalTimer = timer;
   }
   constructor(private readonly options: RemoteControlOptions) {
+    this.stream = new AcknowledgedStream(this.scheduler);
     const directory = options.directory;
     this.directory = directory;
     this.engine = options.engine;
@@ -188,7 +191,8 @@ export class RemoteControl {
     }
     return this.info(accountId);
   }
-  async attach(accountId: string, apiUrl: string, raw: DeviceGrant) {
+  async attach(accountId: string, apiUrl: string, raw: DeviceGrant, parent?: AbortSignal) {
+    parent?.throwIfAborted();
     const grant = deviceGrantSchema.parse(raw);
     apiUrl = serverOrigin(apiUrl);
     if (
@@ -203,6 +207,27 @@ export class RemoteControl {
       await this.detach();
       this.transition({ type: "retired" });
     }
+    parent?.throwIfAborted();
+    this.bindingLifetime.abort();
+    const lifetime = new AbortController();
+    this.bindingLifetime = lifetime;
+    if (parent)
+      parent.addEventListener(
+        "abort",
+        () => {
+          if (lifetime.signal.aborted) return;
+          lifetime.abort();
+          this.renewalTimer?.();
+          this.renewalTimer = undefined;
+          this.timer?.();
+          this.timer = undefined;
+          this.resetConnection();
+        },
+        { once: true, signal: lifetime.signal },
+      );
+    this.renewing = undefined;
+    this.transition({ type: "draining", active: false });
+    this.transition({ type: "detaching", active: false });
     this.accountId = accountId;
     this.binding = binding;
     this.grant = grant;
@@ -221,7 +246,10 @@ export class RemoteControl {
   private disconnected(event: RelaySessionEvent) {
     this.transition(event);
     this.snapshotRequests.clear();
-    this.acknowledgement?.reject();
+    this.stream.reset();
+    this.streamSignal = undefined;
+    this.syncing = undefined;
+    this.options.observedReset?.();
   }
   private resetConnection() {
     // Retire first so nothing the old connection reports while stopping is taken as current.
@@ -231,8 +259,8 @@ export class RemoteControl {
   }
   private connect(apiUrl: string) {
     this.resetConnection();
-    const generation = this.generation,
-      grant = this.grant;
+    const grant = this.grant,
+      bindingSignal = this.bindingLifetime.signal;
     if (!grant || !this.accountId) return;
     this.connection = new RelayConnection({
       scheduler: this.scheduler,
@@ -244,33 +272,37 @@ export class RemoteControl {
         role: "device",
         token: grant.token,
       }),
-      status: (connected, code) => {
-        if (generation !== this.generation) return;
+      status: (connected, code, signal) => {
+        if (connected && signal) {
+          this.streamSignal = signal;
+          signal.addEventListener(
+            "abort",
+            () => {
+              if (this.streamSignal === signal) this.disconnected({ type: "dropped" });
+            },
+            { once: true },
+          );
+        }
         if (!connected) {
           this.error = code ?? "NETWORK_UNAVAILABLE";
           this.disconnected({ type: "dropped" });
           if (code === "DEVICE_REVOKED" && this.accountId)
             void this.loseAuthorization(this.accountId, code).catch(() => {
-              this.error = code;
+              if (!bindingSignal.aborted) this.error = code;
             });
           if (code === "AUTH_REQUIRED") this.scheduleRenewal();
         }
       },
-      message: (frame) => {
-        if (generation === this.generation) {
-          const pending = this.message(frame, generation).catch(() => {
-            if (generation === this.generation) {
-              this.error = "NETWORK_UNAVAILABLE";
-              this.connection?.restart();
-            }
-          });
-          if (frame.type === "command") {
-            this.commands.add(pending);
-            void pending.then(
-              () => this.commands.delete(pending),
-              () => this.commands.delete(pending),
-            );
+      message: (frame, signal) => {
+        const pending = this.message(frame, signal).catch(() => {
+          if (!signal.aborted) {
+            this.error = "NETWORK_UNAVAILABLE";
+            this.connection?.restart();
           }
+        });
+        if (frame.type === "command") {
+          this.commands.add(pending);
+          void pending.finally(() => this.commands.delete(pending));
         }
       },
     });
@@ -278,8 +310,9 @@ export class RemoteControl {
   }
   private maintenance() {
     if (this.timer) this.timer();
+    const signal = this.bindingLifetime.signal;
     const check = () => {
-      if (!this.accountId || this.error === "UPGRADE_REQUIRED") return;
+      if (signal.aborted || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
       if (
         (!this.grant || Date.parse(this.grant.expiresAt) - this.scheduler.now() < 60_000) &&
         this.scheduler.now() >= this.renewAt &&
@@ -288,7 +321,7 @@ export class RemoteControl {
       ) {
         if (!this.grant) this.renewAt = this.scheduler.now() + 15_000;
         void this.refreshGrant().catch(() => {
-          this.error = "NETWORK_UNAVAILABLE";
+          if (!signal.aborted) this.error = "NETWORK_UNAVAILABLE";
         });
       }
     };
@@ -305,17 +338,23 @@ export class RemoteControl {
       this.grantRequired();
       return Promise.resolve(false);
     }
-    const generation = this.generation;
+    const signal = this.bindingLifetime.signal;
     const pending = (async () => {
       try {
         const next = deviceGrantSchema.parse(
-          await this.options.renewGrant!(accountId, {
-            deviceId: grant.deviceId,
-            epoch: grant.epoch,
-          }),
+          await abortable(signal, () =>
+            this.options.renewGrant!(
+              accountId,
+              {
+                deviceId: grant.deviceId,
+                epoch: grant.epoch,
+              },
+              signal,
+            ),
+          ),
         );
         if (
-          generation !== this.generation ||
+          signal.aborted ||
           this.accountId !== accountId ||
           !this.settings.accounts[accountId]?.enabled
         )
@@ -332,22 +371,24 @@ export class RemoteControl {
         this.transition({ type: "draining", active: true });
         let timeout: (() => void) | undefined;
         try {
-          await Promise.race([
-            Promise.allSettled(this.commands),
-            new Promise<void>((resolve) => {
-              timeout = this.scheduler.timeout(resolve, this.options.drainTimeoutMs ?? 10_000);
-            }),
-          ]);
+          await abortable(signal, () =>
+            Promise.race([
+              Promise.allSettled(this.commands),
+              new Promise<void>((resolve) => {
+                timeout = this.scheduler.timeout(resolve, this.options.drainTimeoutMs ?? 10_000);
+              }),
+            ]),
+          );
         } finally {
           timeout?.();
-          this.transition({ type: "draining", active: false });
+          if (!signal.aborted) this.transition({ type: "draining", active: false });
         }
-        if (generation !== this.generation || this.accountId !== accountId) return false;
+        if (signal.aborted || this.accountId !== accountId) return false;
         // Reconnect the relay without detaching the host binding or its tasks.
         this.connect(apiUrl);
         return true;
       } catch (error) {
-        if (generation !== this.generation || this.accountId !== accountId) return false;
+        if (signal.aborted || this.accountId !== accountId) return false;
         const code = failureCode(error);
         if (code === "DEVICE_REVOKED") await this.loseAuthorization(accountId, code);
         else if (code === "AUTH_REQUIRED" || code === "UNAUTHORIZED")
@@ -374,23 +415,23 @@ export class RemoteControl {
     if (code === "DEVICE_REVOKED") await this.enable(accountId, false);
     else await this.detach();
   }
-  private async message(frame: RelayServerFrame, generation: number) {
-    if (generation !== this.generation) return;
+  private async message(frame: RelayServerFrame, signal: AbortSignal) {
+    if (signal.aborted) return;
     const binding = this.binding;
     if (!binding) return;
     switch (frame.type) {
       case "observed_ack":
-        this.options.observedAck?.(frame.epoch, frame.revision);
+        this.options.observedAck?.(frame.epoch, frame.revision, signal);
         return;
       case "ready":
-        return this.announce(binding, generation);
+        return this.announce(binding, signal);
       case "resume":
         return this.resume(frame);
       case "ack":
         this.acknowledge(frame);
         return;
       case "command":
-        return this.command(frame, binding, generation);
+        return this.command(frame, binding, signal);
       case "error":
         this.error = frame.code;
         if (frame.code === "AUTH_REQUIRED") this.scheduleRenewal();
@@ -404,15 +445,15 @@ export class RemoteControl {
         return;
     }
   }
-  private async announce(binding: string, generation: number) {
+  private async announce(binding: string, signal: AbortSignal) {
     const [replay, projects, capabilities] = await Promise.all([
-      this.engine.replay({ binding, after: 0 }),
-      this.engine.projects({}),
-      this.engine.capabilities({}),
+      abortable(signal, () => this.engine.replay({ binding, after: 0 }, signal)),
+      abortable(signal, () => this.engine.projects({}, signal)),
+      abortable(signal, () => this.engine.capabilities({}, signal)),
     ]);
-    if (generation !== this.generation) return;
-    const info = await this.engine.events({ binding });
-    if (generation !== this.generation) return;
+    if (signal.aborted) return;
+    const info = await abortable(signal, () => this.engine.events({ binding }, signal));
+    if (signal.aborted) return;
     this.connection?.send({
       type: "announce",
       streamId: replay.streamId,
@@ -429,27 +470,23 @@ export class RemoteControl {
       this.snapshotRequests.add(frame.syncId);
     } else {
       this.options.observedReset?.();
-      this.cursor = frame.sequence;
-      this.streamId = frame.streamId;
+      this.stream.reset({ streamId: frame.streamId, sequence: frame.sequence });
       this.snapshotNeeded ||= frame.snapshot;
       this.transition({ type: "resumed" });
     }
     await this.wake();
   }
   private acknowledge(frame: FrameOf<"ack">) {
-    const pending = this.acknowledgement;
-    if (
-      pending &&
-      frame.streamId === this.streamId &&
-      frame.sequence === pending.sequence &&
-      frame.snapshotId === pending.snapshotId
-    )
-      pending.resolve();
+    this.stream.acknowledge({
+      streamId: frame.streamId,
+      sequence: frame.sequence,
+      ...(frame.snapshotId ? { snapshotId: frame.snapshotId } : {}),
+    });
   }
-  private execute(binding: string, command: FrameOf<"command">["command"]) {
+  private execute(binding: string, command: FrameOf<"command">["command"], signal: AbortSignal) {
     if (command.request.method !== "observed.decide")
-      return this.engine.remote({ binding, command });
-    return this.engine.observed({ binding, decision: command.request.input }).then(
+      return this.engine.remote({ binding, command }, signal);
+    return this.engine.observed({ binding, decision: command.request.input }, signal).then(
       (value) => ({ ok: true as const, value }),
       (error: unknown) => ({
         ok: false as const,
@@ -460,7 +497,7 @@ export class RemoteControl {
       }),
     );
   }
-  private async command(frame: FrameOf<"command">, binding: string, generation: number) {
+  private async command(frame: FrameOf<"command">, binding: string, signal: AbortSignal) {
     if (!acceptsCommands(this.session)) {
       this.connection?.send({
         type: "result",
@@ -469,57 +506,39 @@ export class RemoteControl {
       });
       return;
     }
-    const result = await this.execute(binding, frame.command);
-    if (generation !== this.generation) return;
+    // Admission is durable: abort only the obsolete response, never accepted execution.
+    const result = await abortable(signal, () => this.execute(binding, frame.command, signal));
+    if (signal.aborted) return;
     await this.wake();
-    while (this.syncing && generation === this.generation) await this.syncing;
-    if (generation === this.generation)
-      this.connection?.send({ type: "result", routeId: frame.routeId, result });
-  }
-  private waitForAck(sequence: number, snapshotId?: string) {
-    return new Promise<void>((resolve, reject) => {
-      const finish = (error: boolean) => {
-        const pending = this.acknowledgement;
-        if (!pending) return;
-        pending.timer();
-        this.acknowledgement = undefined;
-        if (error) reject(new Error("NETWORK_UNAVAILABLE"));
-        else resolve();
-      };
-      this.acknowledgement = {
-        sequence,
-        ...(snapshotId ? { snapshotId } : {}),
-        resolve: () => finish(false),
-        reject: () => finish(true),
-        timer: this.scheduler.timeout(() => finish(true), 10_000),
-      };
-    });
+    while (this.syncing && !signal.aborted) await this.syncing;
+    if (!signal.aborted) this.connection?.send({ type: "result", routeId: frame.routeId, result });
   }
   wake(): Promise<void> {
     this.dirty = true;
     if (this.syncing) return this.syncing;
     if (!this.ready || !this.binding) return Promise.resolve();
-    const generation = this.generation;
-    const operation = this.flush(generation)
+    const signal = this.streamSignal;
+    if (!signal || signal.aborted) return Promise.resolve();
+    const operation = this.flush(signal)
       .catch(() => {
-        if (generation === this.generation) {
+        if (!signal.aborted) {
           this.error = "NETWORK_UNAVAILABLE";
           this.connection?.restart();
         }
       })
       .finally(() => {
         if (this.syncing === operation) this.syncing = undefined;
-        if (this.dirty && this.ready)
+        if (!signal.aborted && this.dirty && this.ready)
           void this.wake().catch(() => {
-            this.error = "NETWORK_UNAVAILABLE";
+            if (!signal.aborted) this.error = "NETWORK_UNAVAILABLE";
           });
       });
     this.syncing = operation;
     return operation;
   }
-  private async flush(generation: number) {
+  private async flush(signal: AbortSignal) {
     const binding = this.binding!;
-    while (this.ready && generation === this.generation) {
+    while (this.ready && !signal.aborted) {
       this.dirty = false;
       const syncId = this.snapshotRequests.values().next().value;
       if (this.snapshotNeeded || syncId) {
@@ -527,15 +546,23 @@ export class RemoteControl {
           offset = 0,
           ack: Promise<void> | undefined;
         for (;;) {
-          const page = await this.engine.snapshot({
-            binding,
-            ...(id ? { id } : {}),
-            offset,
-          });
-          if (generation !== this.generation) return;
+          const page = await abortable(signal, () =>
+            this.engine.snapshot(
+              {
+                binding,
+                ...(id ? { id } : {}),
+                offset,
+              },
+              signal,
+            ),
+          );
+          if (signal.aborted) return;
           if (!id) {
             id = page.id;
-            ack = this.waitForAck(page.sequence, id);
+            ack = this.stream.wait(
+              { streamId: page.streamId, sequence: page.sequence, snapshotId: id },
+              signal,
+            );
             void ack.catch(() => {});
           }
           this.connection?.send({
@@ -550,18 +577,23 @@ export class RemoteControl {
           offset = page.next;
           if (page.done) {
             await ack;
-            this.cursor = page.sequence;
+            signal.throwIfAborted();
             this.snapshotNeeded = false;
             if (syncId) this.snapshotRequests.delete(syncId);
             break;
           }
         }
       }
-      const replay = await this.engine.replay({
-        binding,
-        after: this.cursor,
-      });
-      if (generation !== this.generation) return;
+      const replay = await abortable(signal, () =>
+        this.engine.replay(
+          {
+            binding,
+            after: this.cursor,
+          },
+          signal,
+        ),
+      );
+      if (signal.aborted) return;
       if (
         replay.streamId !== this.streamId ||
         this.cursor > replay.sequence ||
@@ -571,8 +603,10 @@ export class RemoteControl {
         continue;
       }
       if (!replay.events.length) {
-        await this.engine.checkpoint({ binding, sequence: this.cursor });
-        if (generation !== this.generation) return;
+        await abortable(signal, () =>
+          this.engine.checkpoint({ binding, sequence: this.cursor }, signal),
+        );
+        if (signal.aborted) return;
         this.connection?.send({ type: "available" });
         this.transition({ type: "caught_up" });
         // The socket reconnected mid-flush; its own resume starts the next flush.
@@ -580,17 +614,25 @@ export class RemoteControl {
         this.renewalFailures = 0;
         this.renewAt = 0;
         this.error = null;
-        await this.options.syncObserved?.((frame) => this.connection!.send(frame));
+        await abortable(signal, () =>
+          this.options.syncObserved?.((frame) => {
+            signal.throwIfAborted();
+            this.connection!.send(frame);
+          }, signal),
+        );
         if (!this.dirty && !this.snapshotRequests.size) return;
         continue;
       }
       const last = replay.events.at(-1)!;
-      const ack = this.waitForAck(last.sequence);
+      const ack = this.stream.wait({ streamId: this.streamId, sequence: last.sequence }, signal);
       void ack.catch(() => {});
       this.connection?.send({ type: "events", streamId: this.streamId, events: replay.events });
       await ack;
-      this.cursor = last.sequence;
-      await this.engine.checkpoint({ binding, sequence: this.cursor });
+      signal.throwIfAborted();
+      await abortable(signal, () =>
+        this.engine.checkpoint({ binding, sequence: this.cursor }, signal),
+      );
+      signal.throwIfAborted();
       for (const { event } of replay.events)
         if (
           event.kind === "request" &&
@@ -604,6 +646,10 @@ export class RemoteControl {
     }
   }
   async detach() {
+    const lifetime = this.bindingLifetime;
+    lifetime.abort();
+    this.renewing = undefined;
+    this.transition({ type: "draining", active: false });
     this.renewalTimer?.();
     this.renewalTimer = undefined;
     if (this.timer) this.timer();
@@ -612,6 +658,7 @@ export class RemoteControl {
     this.transition({ type: "detaching", active: true });
     if (binding) {
       await this.engine.detach({ binding }).catch(() => {});
+      if (this.bindingLifetime !== lifetime) return;
       if (this.ready) {
         let cancel: (() => void) | undefined;
         try {
@@ -626,6 +673,7 @@ export class RemoteControl {
         }
       }
     }
+    if (this.bindingLifetime !== lifetime) return;
     this.resetConnection();
     this.binding = undefined;
     this.grant = undefined;

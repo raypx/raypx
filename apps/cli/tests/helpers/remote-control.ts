@@ -24,8 +24,8 @@ export function hostFixtures() {
     supportedVersion?: () => number,
   ) {
     const directory = mkdtempSync(join(tmpdir(), "raypx-relay-native-"));
-    const streamId = crypto.randomUUID(),
-      instanceId = crypto.randomUUID();
+    let streamId: string = crypto.randomUUID();
+    const instanceId = crypto.randomUUID();
     const frames: RelayClientFrame[] = [],
       urls: string[] = [],
       journal: SequencedEvent[] = [],
@@ -77,6 +77,7 @@ export function hostFixtures() {
             });
           }
           if (frame.type === "announce") {
+            streamId = frame.streamId;
             peer.send({ type: "resume", streamId, sequence: cursor, snapshot: !initialized });
           }
           if (frame.type === "snapshot" && frame.done) {
@@ -124,7 +125,7 @@ export function hostFixtures() {
       value = new RemoteControl({
         ...options,
         directory,
-        engine: agentPort(request),
+        engine: options.engine ?? agentPort(request),
         notify,
         grantRequired: renew,
       });

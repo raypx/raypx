@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { RemoteControl } from "./control.ts";
+import { RemoteControl, type RemoteControlOptions } from "./control.ts";
 import {
   deferred,
   ManualScheduler,
@@ -14,7 +14,7 @@ const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
 });
-async function fixture() {
+async function fixture(options: Pick<RemoteControlOptions, "syncObserved"> = {}) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-control-clock-"));
   const scheduler = new ManualScheduler(),
     sockets: RelaySocket[] = [];
@@ -41,6 +41,7 @@ async function fixture() {
   });
   const required = vi.fn();
   const value = new RemoteControl({
+    ...options,
     directory,
     engine: agentPort(request),
     notify: () => {},
@@ -152,7 +153,7 @@ it("bounds renewal drain and fences a command that completes on the replaced soc
   });
   await started.promise;
   const renewal = f.value.refreshGrant();
-  await f.renewGrant.mock.results[0]!.value;
+  await expect.poll(() => f.scheduler.pending).toBe(3);
   expect(f.sockets).toHaveLength(1);
   socket.receive({
     type: "command",
@@ -192,4 +193,108 @@ it("restarts an unacknowledged snapshot exactly at the injected acknowledgement 
   await syncing;
   expect(f.sockets).toHaveLength(2);
   expect(f.value.info("account").error).toBe("NETWORK_UNAVAILABLE");
+});
+
+it("reconnects while an old projection ignores cancellation, then ignores its late result", async () => {
+  const f = await fixture(),
+    first = await f.ready();
+  const started = deferred(),
+    oldRead = deferred<unknown>();
+  const original = f.request.getMockImplementation()!;
+  let blocked = false;
+  f.request.mockImplementation(async (method) => {
+    if (method === "agents.replay" && !blocked) {
+      blocked = true;
+      started.resolve();
+      return oldRead.promise;
+    }
+    return original(method);
+  });
+  const oldFlush = f.value.wake();
+  await started.promise;
+  first.close(1012);
+  // The old read remains pending, but no longer owns the synchronization slot.
+  await oldFlush;
+  f.scheduler.advance(400);
+  const replacement = await f.ready();
+  expect(f.value.info("account").connected).toBe(true);
+  const before = replacement.frames.length;
+  oldRead.resolve({ streamId: "obsolete", sequence: 999, floor: 999, events: [] });
+  await oldRead.promise;
+  await f.value.wake();
+  expect(replacement.frames.slice(before).some((frame) => frame.type === "snapshot")).toBe(false);
+  expect(f.value.info("account").connected).toBe(true);
+  expect(f.sockets).toHaveLength(2);
+  expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
+});
+
+it("aborts a pending observed projection on socket loss without resetting its replacement", async () => {
+  const started = deferred<AbortSignal>(),
+    abandoned = deferred();
+  let attempts = 0;
+  const f = await fixture({
+    syncObserved: async (_send, signal) => {
+      if (attempts++ === 0) {
+        started.resolve(signal);
+        await abandoned.promise;
+      }
+    },
+  });
+  const first = await f.ready(),
+    signal = await started.promise;
+  const oldFlush = f.value.wake();
+  first.close(1012);
+  expect(signal.aborted).toBe(true);
+  await oldFlush;
+  f.scheduler.advance(400);
+  await f.ready();
+  await f.value.wake();
+  expect(attempts).toBeGreaterThan(1);
+  abandoned.resolve();
+  await abandoned.promise;
+  await f.value.wake();
+  expect(f.value.info("account").connected).toBe(true);
+  expect(f.sockets).toHaveLength(2);
+});
+
+it("retires a binding immediately even when credential renewal ignores cancellation", async () => {
+  const f = await fixture(),
+    binding = new AbortController();
+  await f.value.attach("account", "https://relay.example.test", f.grant, binding.signal);
+  await f.ready();
+  const pendingGrant =
+    deferred<ReturnType<typeof f.renewGrant> extends Promise<infer Grant> ? Grant : never>();
+  f.renewGrant.mockImplementation(() => pendingGrant.promise);
+  const renewal = f.value.refreshGrant();
+  binding.abort();
+  expect(await renewal).toBe(false);
+  expect(f.value.info("account").connected).toBe(false);
+  expect(f.scheduler.pending).toBe(0);
+  const sockets = f.sockets.length;
+  pendingGrant.resolve({ ...f.grant, token: "obsolete" });
+  await pendingGrant.promise;
+  f.scheduler.advance(100_000);
+  expect(f.sockets).toHaveLength(sockets);
+  expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
+});
+
+it("keeps a replacement usable when an old detach completes late", async () => {
+  const f = await fixture();
+  await f.ready();
+  const started = deferred(),
+    stopped = deferred<unknown>();
+  f.request.mockImplementationOnce(async (method) => {
+    expect(method).toBe("agents.detach");
+    started.resolve();
+    return stopped.promise;
+  });
+  const oldDetach = f.value.detach();
+  await started.promise;
+  await f.value.attach("account", "https://relay.example.test", f.grant);
+  const replacement = await f.ready();
+  stopped.resolve({ accepted: true });
+  await oldDetach;
+  expect(f.value.info("account").connected).toBe(true);
+  expect(replacement.readyState).toBe(1);
+  expect(f.scheduler.pending).toBe(2);
 });

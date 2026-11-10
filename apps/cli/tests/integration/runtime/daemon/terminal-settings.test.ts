@@ -131,6 +131,7 @@ it.skipIf(process.platform === "win32")(
       expect(grantAborted).toBe(false);
     } finally {
       await host.close();
+      await expect.poll(() => grantAborted).toBe(true);
       await api.stop(true);
       rmSync(dataDir, { recursive: true, force: true });
     }

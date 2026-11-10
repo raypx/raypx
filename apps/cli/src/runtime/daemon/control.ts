@@ -2,6 +2,8 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { join } from "node:path";
 import { createApiClient, isMissingProcedure } from "@raypx/client/api";
 import { RemoteControl } from "./remote/control.ts";
+import { AcknowledgedStream } from "./acknowledged-stream";
+import { abortable } from "./cancellation";
 import { failureCode } from "./remote/failure.ts";
 import { serverOrigin } from "./remote/origin.ts";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
@@ -43,7 +45,6 @@ type ControlInput<Method extends ControlMethod> = ReturnType<(typeof localParams
 type ControlHandlers = {
   [Method in ControlMethod]: (input: ControlInput<Method>) => unknown;
 };
-type ObservedWaiter = { binding: string; generation: number; epoch: string; revision: number };
 /** Failures that end the binding, keyed to the code reported to Desktop. */
 const authorizationFailures = new Map([
   ["AUTH_REQUIRED", "AUTH_REQUIRED"],
@@ -70,8 +71,9 @@ export class DaemonControl {
   private readonly authorizationErrors = new Map<string, string>();
   private retry: ReturnType<typeof setTimeout> | undefined;
   private revision = 0;
-  private readonly network = new AbortController();
-  private ack: (ObservedWaiter & { resolve(): void; reject(): void }) | undefined;
+  private selectionScope = new AbortController();
+  private bindingScope = new AbortController();
+  private readonly observed = new AcknowledgedStream();
   private queue = Promise.resolve();
   constructor(
     private readonly directory: string,
@@ -88,6 +90,12 @@ export class DaemonControl {
   }
   /** Every lifecycle change goes through the pure `hostState` transition. */
   private apply(event: HostEvent) {
+    if (this.closing) return;
+    if (event.type === "bound" || event.type === "unbound" || event.type === "closed") {
+      this.bindingScope.abort();
+      this.observed.reset();
+      if (event.type === "bound") this.bindingScope = new AbortController();
+    }
     this.state = hostState(this.state, event);
   }
   private get current() {
@@ -99,11 +107,9 @@ export class DaemonControl {
   private get closing() {
     return this.state.closing;
   }
-  private get selectionGeneration() {
-    return this.state.selection;
-  }
-  private get connectionGeneration() {
-    return this.state.observedEpoch;
+  private replaceSelection() {
+    this.selectionScope.abort();
+    this.selectionScope = new AbortController();
   }
   private get observedInitialized() {
     return this.state.observedSynced;
@@ -132,18 +138,11 @@ export class DaemonControl {
   private isCurrent(scope: Selection) {
     return this.current !== undefined && sameScope(this.current, scope);
   }
-  /** Whether an observed-state exchange still belongs to the live connection and binding. */
-  private observes(binding: string, generation: number) {
-    return (
-      generation === this.connectionGeneration &&
-      this.current !== undefined &&
-      remoteBinding(this.current) === binding
-    );
-  }
   /** Stops new cloud work for a scope at once; the queued detach completes it. */
   private retire(scope: Scope) {
     if (!this.isCurrent(scope)) return;
-    this.apply({ type: "selected" });
+    this.replaceSelection();
+    this.bindingScope.abort();
     this.terminal.detachCloud();
   }
   private async detachIfCurrent(scope: Scope) {
@@ -168,23 +167,33 @@ export class DaemonControl {
     if (old) return old;
     const withAgent = async <T>(
       run: (agents: LocalRuntime["agents"]) => T | Promise<T>,
+      signal?: AbortSignal,
     ): Promise<T> => {
+      signal?.throwIfAborted();
       await this.runtime.instanceAccess.assert();
+      signal?.throwIfAborted();
       return run(this.runtime.agents);
     };
     const control = new RemoteControl({
       directory: this.path(scope),
       engine: {
-        observed: (input) => this.request("observed.remote", input),
-        projects: () => withAgent((agents) => agents.remoteProjects()),
-        capabilities: () => withAgent((agents) => agents.remoteCapabilities()),
-        events: ({ binding }) => withAgent((agents) => agents.events(binding)),
-        replay: ({ binding, after }) => withAgent((agents) => agents.replay(binding, after)),
-        snapshot: ({ binding, id, offset }) =>
-          withAgent((agents) => agents.snapshot(binding, id, offset)),
-        remote: ({ binding, command }) => withAgent((agents) => agents.remote(binding, command)),
-        checkpoint: ({ binding, sequence }) =>
-          withAgent((agents) => agents.checkpoint(binding, sequence)),
+        observed: (input, signal) => {
+          signal?.throwIfAborted();
+          return this.request("observed.remote", input);
+        },
+        projects: (_input, signal) => withAgent((agents) => agents.remoteProjects(), signal),
+        capabilities: (_input, signal) =>
+          withAgent((agents) => agents.remoteCapabilities(), signal),
+        events: ({ binding }, signal) => withAgent((agents) => agents.events(binding), signal),
+        replay: ({ binding, after }, signal) =>
+          withAgent((agents) => agents.replay(binding, after), signal),
+        snapshot: ({ binding, id, offset }, signal) =>
+          withAgent((agents) => agents.snapshot(binding, id, offset), signal),
+        // Signal guards admission. Agent command receipts/execution outlive the socket.
+        remote: ({ binding, command }, signal) =>
+          withAgent((agents) => agents.remote(binding, command), signal),
+        checkpoint: ({ binding, sequence }, signal) =>
+          withAgent((agents) => agents.checkpoint(binding, sequence), signal),
         detach: ({ binding }) => withAgent((agents) => agents.detach(binding)),
       },
       notify: () =>
@@ -214,43 +223,38 @@ export class DaemonControl {
       },
       bindingKey: (accountId, grant) =>
         remoteBinding({ ...grant, accountId, apiUrl: scope.apiUrl }),
-      renewGrant: async () => {
+      renewGrant: async (_accountId, _binding, signal) => {
         const current = this.current;
         if (!current || !this.isCurrent(scope))
           throw new LocalError("AUTH_REQUIRED", "Host authorization is unavailable");
-        return this.grant(current);
+        return this.grant(current, AbortSignal.any([signal, this.bindingScope.signal]));
       },
-      syncObserved: (send) => this.syncObserved(scope, send),
+      syncObserved: (send, signal) => this.syncObserved(scope, send, signal),
       observedReset: () => {
-        this.ack?.reject();
-        this.ack = undefined;
+        if (!this.isCurrent(scope)) return;
+        this.observed.reset();
         this.apply({ type: "observed_reset" });
       },
-      observedAck: (epoch, revision) => {
-        const pending = this.ack;
-        if (
-          pending &&
-          this.isCurrent(scope) &&
-          this.observes(pending.binding, pending.generation) &&
-          pending.epoch === epoch &&
-          pending.revision === revision
-        )
-          pending.resolve();
+      observedAck: (epoch, revision, signal) => {
+        if (!signal.aborted && this.isCurrent(scope))
+          this.observed.acknowledge({ streamId: epoch, sequence: revision });
       },
     });
     this.controls.set(key, control);
     return control;
   }
-  private async grant(binding: HostBinding) {
-    const authorization = await this.vault.get(binding);
+  private async grant(binding: HostBinding, signal: AbortSignal) {
+    const authorization = await abortable(signal, () => this.vault.get(binding));
     if (!authorization || Date.parse(authorization.expiresAt) <= Date.now())
       throw Object.assign(
         new LocalError("AUTH_REQUIRED", "Authorize this daemon again in Desktop"),
         { data: { error: { code: "AUTH_REQUIRED" } } },
       );
-    const response = await createApiClient({ baseUrl: binding.apiUrl }).hosts.grant(
-      { credential: authorization.credential },
-      { signal: AbortSignal.any([this.network.signal, AbortSignal.timeout(10_000)]) },
+    const response = await abortable(signal, () =>
+      createApiClient({ baseUrl: binding.apiUrl }).hosts.grant(
+        { credential: authorization.credential },
+        { signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]) },
+      ),
     );
     if (
       response.accountId !== binding.accountId ||
@@ -261,9 +265,9 @@ export class DaemonControl {
     return response.grant;
   }
   restore() {
-    const generation = this.selectionGeneration;
+    const signal = this.selectionScope.signal;
     return this.serial(async () => {
-      if (this.closing || generation !== this.selectionGeneration) return;
+      if (this.closing || signal.aborted) return;
       const file = join(this.directory, "host-binding.json");
       if (!existsSync(file)) return;
       try {
@@ -275,10 +279,10 @@ export class DaemonControl {
         if (selected && !sameScope(selected, binding)) return;
         if (
           !this.control(binding).info(binding.accountId).enabled ||
-          !(await this.vault.get(binding))
+          !(await abortable(signal, () => this.vault.get(binding)))
         )
           return;
-        if (this.closing || generation !== this.selectionGeneration) return;
+        if (this.closing || signal.aborted) return;
         this.apply({ type: "bound", binding, persistent: true });
         this.attachTerminal(binding);
         await this.reconnect(binding);
@@ -288,13 +292,14 @@ export class DaemonControl {
     });
   }
   private async reconnect(binding: HostBinding) {
-    if (this.closing || this.current !== binding) return;
+    const signal = this.bindingScope.signal;
+    if (this.closing || signal.aborted || this.current !== binding) return;
     try {
-      const grant = await this.grant(binding);
-      if (!this.closing && this.current === binding)
-        await this.control(binding).attach(binding.accountId, binding.apiUrl, grant);
+      const grant = await this.grant(binding, signal);
+      if (!this.closing && !signal.aborted && this.current === binding)
+        await this.control(binding).attach(binding.accountId, binding.apiUrl, grant, signal);
     } catch (error) {
-      if (this.closing || this.current !== binding) return;
+      if (this.closing || signal.aborted || this.current !== binding) return;
       const code = isMissingProcedure(error) ? "NOT_FOUND" : failureCode(error);
       const reported = code === undefined ? undefined : authorizationFailures.get(code);
       if (reported) {
@@ -320,7 +325,8 @@ export class DaemonControl {
       ...(error === undefined ? {} : { error }),
     };
   }
-  private async authorize(scope: Scope, raw: HostAuthorization, generation: number) {
+  private async authorize(scope: Scope, raw: HostAuthorization, signal: AbortSignal) {
+    signal.throwIfAborted();
     const authorization = hostAuthorizationSchema.parse(raw);
     if (
       authorization.accountId !== scope.accountId ||
@@ -340,19 +346,21 @@ export class DaemonControl {
       epoch: authorization.epoch,
       expiresAt: authorization.expiresAt,
     };
-    const persistent = await this.vault.set(binding, authorization);
-    const grant = await this.grant(binding);
-    if (this.closing || generation !== this.selectionGeneration)
+    const persistent = await abortable(signal, () => this.vault.set(binding, authorization));
+    const grant = await this.grant(binding, signal);
+    if (this.closing || signal.aborted)
       throw new LocalError("AUTH_REQUIRED", "Account selection changed");
     const previous = this.current;
     if (previous && remoteBinding(previous) !== remoteBinding(binding)) await this.detachCurrent();
+    signal.throwIfAborted();
     this.apply({ type: "bound", binding, persistent });
     this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
     writeJson(join(this.directory, "host-binding.json"), binding);
     const control = this.control(scope);
-    await control.enable(scope.accountId, true);
+    await abortable(signal, () => control.enable(scope.accountId, true));
+    signal.throwIfAborted();
     this.attachTerminal(binding);
-    await control.attach(scope.accountId, scope.apiUrl, grant);
+    await control.attach(scope.accountId, scope.apiUrl, grant, this.bindingScope.signal);
     return this.info(scope);
   }
   private async detachCurrent() {
@@ -362,8 +370,7 @@ export class DaemonControl {
     if (!current) return;
     const authorization = await this.vault.get(current);
     this.apply({ type: "unbound" });
-    this.ack?.reject();
-    this.ack = undefined;
+    this.observed.reset();
     this.terminal.detachCloud();
     await this.control(current).detach();
     if (authorization)
@@ -397,55 +404,28 @@ export class DaemonControl {
   private async syncObserved(
     scope: Scope,
     send: (frame: Extract<RelayClientFrame, { type: "observed" }>) => void,
+    connection: AbortSignal,
   ) {
-    const generation = this.connectionGeneration;
-    while (
-      this.current &&
-      this.isCurrent(scope) &&
-      generation === this.connectionGeneration &&
-      this.terminal.epoch
-    ) {
+    const signal = AbortSignal.any([connection, this.bindingScope.signal]);
+    while (!signal.aborted && this.current && this.isCurrent(scope) && this.terminal.epoch) {
       const binding = remoteBinding(this.current),
         epoch = this.terminal.epoch;
       const initial = !this.observedInitialized;
       const batch = initial ? { sessions: [], requests: [] } : this.terminal.projection(binding);
       if (!initial && !batch.requests.length) return;
       const revision = ++this.revision;
-      await this.observedAcknowledged({ binding, generation, epoch, revision }, () => {
-        this.terminal.sent(binding, batch.requests);
-        send({ type: "observed", epoch, revision, ...batch });
-      }).catch((error: unknown) => {
-        // Retiring a connection rejects its waiter. Do not let that old failure
-        // reconnect or invalidate the replacement connection that just resumed.
-        if (this.closing || !this.observes(binding, generation)) return;
-        throw error;
-      });
-      if (!this.observes(binding, generation)) return;
+      await this.observed
+        .wait({ streamId: epoch, sequence: revision }, signal, () => {
+          this.terminal.sent(binding, batch.requests);
+          send({ type: "observed", epoch, revision, ...batch });
+        })
+        .catch((error: unknown) => {
+          if (!signal.aborted) throw error;
+        });
+      if (signal.aborted) return;
       this.apply({ type: "observed_synced" });
       this.terminal.acknowledged(binding, batch.requests);
     }
-  }
-  /** Sends one observed batch and settles on its acknowledgement, a disconnect or a timeout. */
-  private observedAcknowledged(waiter: ObservedWaiter, send: () => void) {
-    return new Promise<void>((resolve, reject) => {
-      const settle = (failure?: string) => {
-        clearTimeout(timeout);
-        if (this.ack?.revision === waiter.revision) this.ack = undefined;
-        if (failure) reject(new LocalError("NETWORK_UNAVAILABLE", failure));
-        else resolve();
-      };
-      const timeout = setTimeout(() => settle("Terminal synchronization timed out"), 10_000);
-      this.ack = {
-        ...waiter,
-        resolve: () => settle(),
-        reject: () => settle("Terminal channel disconnected"),
-      };
-      try {
-        send();
-      } catch {
-        this.ack?.reject();
-      }
-    });
   }
   private readonly backgroundFailure = backgroundFailure("daemon.background");
   wake() {
@@ -458,8 +438,11 @@ export class DaemonControl {
   private readonly methods: ControlHandlers = {
     "host.session": (input) => {
       const next = { accountId: input.accountId, apiUrl: serverOrigin(input.apiUrl) };
-      this.apply({ type: "selected" });
-      if (this.current && !this.isCurrent(next)) this.terminal.detachCloud();
+      this.replaceSelection();
+      if (this.current && !this.isCurrent(next)) {
+        this.bindingScope.abort();
+        this.terminal.detachCloud();
+      }
       return this.serial(() => this.selectAccount(next));
     },
     "observed.remote": (input) => {
@@ -497,8 +480,8 @@ export class DaemonControl {
       });
     },
     "host.authorize": (input) => {
-      const generation = this.selectionGeneration;
-      return this.serial(() => this.authorize(this.scope(input), input.authorization, generation));
+      const signal = this.selectionScope.signal;
+      return this.serial(() => this.authorize(this.scope(input), input.authorization, signal));
     },
     "host.detach": (input) => {
       const scope = this.scope(input);
@@ -531,11 +514,10 @@ export class DaemonControl {
     clearTimeout(this.retry);
     this.retry = undefined;
     this.apply({ type: "closed" });
-    this.network.abort();
+    this.selectionScope.abort();
     this.terminal.detachCloud();
     await this.queue;
-    this.ack?.reject();
-    this.ack = undefined;
+    this.observed.reset();
     for (const control of this.controls.values()) await control.detach();
   }
 }

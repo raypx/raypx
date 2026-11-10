@@ -77,8 +77,9 @@ export async function startDaemon(
   const stopped = new Promise<void>((resolve) => {
     resolveStopped = resolve;
   });
-  const releaseClient = (id: string) => {
+  const releaseClient = (id: string, expected = clients.get(id)) => {
     const client = clients.get(id);
+    if (!client || client !== expected) return;
     clients.delete(id);
     client?.abort.abort();
     terminal?.releaseClient(id);
@@ -169,15 +170,17 @@ export async function startDaemon(
         if (!id || !/^[a-f0-9-]{36}$/.test(id)) return new Response(null, { status: 400 });
         if (url.pathname === "/events" && request.method === "GET") {
           if (clients.has(id) || clients.size >= 32) return new Response(null, { status: 409 });
+          let client: Client;
           const stream = new ReadableStream<Uint8Array>(
             {
               start(controller) {
-                clients.set(id, {
+                client = {
                   stream: controller,
                   children: new Set(),
                   pending: 0,
                   abort: new AbortController(),
-                });
+                };
+                clients.set(id, client);
                 controller.enqueue(
                   encoder.encode(
                     JSON.stringify({
@@ -189,12 +192,12 @@ export async function startDaemon(
                 );
               },
               cancel() {
-                releaseClient(id);
+                releaseClient(id, client);
               },
             },
             { highWaterMark: 16 * 1024 * 1024, size: (chunk) => chunk?.byteLength ?? 0 },
           );
-          request.signal.addEventListener("abort", () => releaseClient(id), { once: true });
+          request.signal.addEventListener("abort", () => releaseClient(id, client), { once: true });
           return new Response(stream, {
             headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" },
           });
@@ -221,7 +224,7 @@ export async function startDaemon(
             );
             return Response.json({ version: 1, id: requestId, result });
           }
-          const result = await host!.request(input.method, input.params, id);
+          const result = await host!.request(input.method, input.params, id, client.abort.signal);
           if (
             input.method === "terminal.open" &&
             result &&
@@ -229,7 +232,7 @@ export async function startDaemon(
             "id" in result &&
             typeof result.id === "string"
           ) {
-            if (clients.has(id)) client.children.add(result.id);
+            if (clients.get(id) === client) client.children.add(result.id);
             else runtime!.processes.cancel(result.id);
           }
           return Response.json({ version: 1, id: requestId, result: result ?? null });

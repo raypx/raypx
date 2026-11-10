@@ -9,10 +9,10 @@ reported independently from source and headless checks.
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
 | 1. Core domains        | Memory/job schemas and pure calculations in Core; no Contracts dependency on feature/UI workspaces; old model entries removed                                             | Package graph, Core/Contracts and feature tests, policy                                       | Verified |
 | 2. Backend roles       | One server artifact with api/relay/both roles; default combined deployment works without Redis; separate/cluster role remains supported                                   | Role and transport integration tests; build; deployment configuration and isolated acceptance | Verified |
-| 3. Thin Desktop        | ADR before implementation; daemon owns sessions, API proxy and event stream; native host retains OS UI and launch capabilities; renderer gets no credentials              | Security boundary tests, daemon tests, Go checks, platform acceptance availability            | Pending  |
-| 4. Ordered streams     | Managed and observed relay channels share cursor/ack/timeout/reset mechanics                                                                                              | Replay, reset, expiry and stale-ack tests for both consumers                                  | Pending  |
+| 3. Thin Desktop        | ADR before implementation; daemon owns sessions, API proxy and event stream; native host retains OS UI and launch capabilities; renderer gets no credentials              | ADR 0052 accepted; session/native implementation and verification pending                     | Pending  |
+| 4. Ordered streams     | Managed and observed relay channels share cursor/ack/timeout/reset mechanics                                                                                              | Replay, reset, expiry and stale-ack tests for both consumers                                  | Verified |
 | 5. Feature servers     | Task projections owned by Tasks server; context persistence owned by Memory server; Jobs persistence owned by Jobs server; Control retains transport/device authorization | Acyclic workspace/source graph; API/Relay/PostgreSQL tests                                    | Verified |
-| 6. Cancellation scopes | Each daemon connection owns an AbortController; replacements cancel pending work and stale completions cannot mutate state                                                | Replacement/disconnect race tests for managed and observed channels                           | Pending  |
+| 6. Cancellation scopes | Each daemon connection owns an AbortController; replacements cancel pending work and stale completions cannot mutate state                                                | Replacement/disconnect race tests for managed and observed channels                           | Verified |
 | 7. Governance          | Mobile React catalog independent from DOM apps; immutable ADR convention; current architecture organized by process/data flow with topology                               | Manifests, install/policy, architecture documentation                                         | Verified |
 
 Preserve the local Owner Host, event-sourced CLI orchestration, explicit public
@@ -54,3 +54,19 @@ record their actual availability and results. Commit and push all completed work
   Live Cloudflare/Railway deployment and native GUI acceptance were not run.
   Hono CLI could not start on Bun 1.4.4 (`node:module.registerHooks` unavailable);
   the HTTP boundary was covered by integration tests and real artifact/image probes.
+
+- Relay streams/scopes (ADR 0053): one acknowledged-stream primitive now serves
+  managed replay/snapshots and observed projections. Exact ACK, deadline, reset,
+  delayed callbacks, uncooperative reads/renewal, logout during grant, observed
+  reconnection and late detach are covered. A real SQLite/provider fixture proves
+  an accepted task stays running across Relay loss, replays on reconnect and
+  completes without the old response reaching the replacement socket.
+- `bun run verify --no-cache` passed all 20 selected tasks in 99.2 seconds for
+  items 4 and 6: CLI 84 suites / 504 tests passed (one skipped); Client's 12 related
+  tests passed; Desktop 304, API 125, Web 163, Account 9 and Analytics 14 passed.
+  Types, policy, locales, formatting/lint and current-platform headless Go checks
+  passed. Cache was disabled because container filesystem tracing reused an old
+  test result in the initial run. Native GUI/macOS/Windows acceptance was not run.
+- Desktop's security/lifecycle decision is recorded in ADR 0052 before its code
+  migration. Go still owns the old session/API/event transport until item 3 is
+  implemented and verified; that remaining work is not complete.

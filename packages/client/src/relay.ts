@@ -9,6 +9,12 @@ import {
 
 export { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
 
+const closeReasons = new Map([
+  [4006, "UPGRADE_REQUIRED"],
+  [4003, "DEVICE_REVOKED"],
+  [4001, "AUTH_REQUIRED"],
+]);
+
 export type RelaySocketFactory = (url: string) => WebSocket;
 export function relayUrl(baseUrl: string, accountId?: string) {
   const url = new URL("/relay", baseUrl);
@@ -26,15 +32,16 @@ export class RelayConnection {
   private retry: (() => void) | undefined;
   private heartbeat: (() => void) | undefined;
   private enabled = false;
-  private generation = 0;
+  private lifetime: AbortController | undefined;
+  private scope: AbortController | undefined;
   private failures = 0;
   private lastMessage = 0;
   constructor(
     private readonly options: {
       url: string;
-      authenticate: () => Promise<Extract<RelayClientFrame, { type: "auth" }>>;
-      message: (frame: RelayServerFrame) => void;
-      status: (connected: boolean, code?: string) => void;
+      authenticate: (signal: AbortSignal) => Promise<Extract<RelayClientFrame, { type: "auth" }>>;
+      message: (frame: RelayServerFrame, signal: AbortSignal) => void;
+      status: (connected: boolean, code?: string, signal?: AbortSignal) => void;
       socket?: RelaySocketFactory;
       scheduler?: RelayScheduler;
     },
@@ -45,6 +52,7 @@ export class RelayConnection {
   start() {
     if (this.enabled) return;
     this.enabled = true;
+    this.lifetime = new AbortController();
     this.connect();
   }
   restart() {
@@ -53,24 +61,36 @@ export class RelayConnection {
   }
   private connect() {
     if (!this.enabled) return;
-    const generation = ++this.generation;
+    const lifetime = this.lifetime!;
+    this.scope?.abort();
+    const scope = new AbortController();
+    this.scope = scope;
     try {
       const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
       this.socket = socket;
       socket.addEventListener("open", () => {
-        void this.options.authenticate().then(
-          (frame) => {
-            if (this.enabled && generation === this.generation) {
-              this.send(frame);
-            }
-          },
-          () => {
-            if (generation === this.generation) socket.close(4001, "Authentication unavailable");
-          },
-        );
+        if (scope.signal.aborted) return;
+        void Promise.resolve()
+          .then(() => {
+            scope.signal.throwIfAborted();
+            return this.options.authenticate(scope.signal);
+          })
+          .then(
+            (frame) => {
+              if (!lifetime.signal.aborted && !scope.signal.aborted) {
+                this.send(frame);
+              }
+            },
+            () => {
+              if (!scope.signal.aborted) socket.close(4001, "Authentication unavailable");
+            },
+          )
+          .catch(() => {
+            if (!scope.signal.aborted) socket.close(4001, "Authentication unavailable");
+          });
       });
       socket.addEventListener("message", (event) => {
-        if (generation !== this.generation) return;
+        if (scope.signal.aborted) return;
         try {
           if (
             typeof event.data !== "string" ||
@@ -92,47 +112,53 @@ export class RelayConnection {
           if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
           this.lastMessage = this.scheduler.now();
           if (frame.type === "ready") {
-            this.options.status(true);
+            this.options.status(true, undefined, scope.signal);
+            if (scope.signal.aborted) return;
+            this.heartbeat?.();
             this.heartbeat = this.scheduler.interval(() => {
+              if (scope.signal.aborted) return;
               if (this.scheduler.now() - this.lastMessage > 45_000)
                 socket.close(4000, "Heartbeat timeout");
               else this.send({ type: "ping" });
             }, 15_000);
           }
-          this.options.message(frame);
+          this.options.message(frame, scope.signal);
         } catch {
           socket.close(4000, "Invalid relay frame");
         }
       });
-      socket.addEventListener("error", () => socket.close());
+      socket.addEventListener("error", () => {
+        if (!scope.signal.aborted) socket.close();
+      });
       socket.addEventListener("close", (event) => {
-        if (generation !== this.generation) return;
+        if (scope.signal.aborted) return;
+        scope.abort();
         if (this.heartbeat) this.heartbeat();
         this.heartbeat = undefined;
         this.socket = undefined;
+        if (event.code === 4006) this.enabled = false;
         this.options.status(
           false,
-          event.code === 4006
-            ? "UPGRADE_REQUIRED"
-            : event.code === 4003
-              ? "DEVICE_REVOKED"
-              : event.code === 4001
-                ? "AUTH_REQUIRED"
-                : "NETWORK_UNAVAILABLE",
+          closeReasons.get(event.code) ?? "NETWORK_UNAVAILABLE",
+          scope.signal,
         );
-        if (event.code === 4006) this.enabled = false;
-        if (this.enabled && generation === this.generation)
+        if (this.enabled && !lifetime.signal.aborted)
           this.retry = this.scheduler.timeout(
-            () => this.connect(),
+            () => {
+              if (!lifetime.signal.aborted) this.connect();
+            },
             Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) *
               (0.8 + this.scheduler.random() * 0.2),
           );
       });
     } catch {
-      this.options.status(false, "NETWORK_UNAVAILABLE");
-      if (this.enabled && generation === this.generation)
+      scope.abort();
+      this.options.status(false, "NETWORK_UNAVAILABLE", scope.signal);
+      if (this.enabled && !lifetime.signal.aborted)
         this.retry = this.scheduler.timeout(
-          () => this.connect(),
+          () => {
+            if (!lifetime.signal.aborted) this.connect();
+          },
           Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) *
             (0.8 + this.scheduler.random() * 0.2),
         );
@@ -152,7 +178,10 @@ export class RelayConnection {
   }
   stop() {
     this.enabled = false;
-    this.generation++;
+    this.lifetime?.abort();
+    this.scope?.abort();
+    this.lifetime = undefined;
+    this.scope = undefined;
     if (this.retry) this.retry();
     if (this.heartbeat) this.heartbeat();
     this.retry = undefined;

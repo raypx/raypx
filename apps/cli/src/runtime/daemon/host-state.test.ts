@@ -18,6 +18,10 @@ it("keeps the exact binding object it was given", () => {
   expect(bound.persistent).toBe(true);
 });
 
+it("requires a live binding before accepting observed progress", () => {
+  expect(hostState(initialHostState, { type: "observed_synced" })).toBe(initialHostState);
+});
+
 it("drops persistence and observed progress together with the binding", () => {
   const unbound = run([
     { type: "bound", binding, persistent: true },
@@ -25,34 +29,27 @@ it("drops persistence and observed progress together with the binding", () => {
     { type: "unbound" },
   ]);
   expect(unbound).toMatchObject({ binding: undefined, persistent: false, observedSynced: false });
-  // Unbinding does not restart the observed stream numbering.
-  expect(unbound.observedEpoch).toBe(initialHostState.observedEpoch);
 });
 
-it("restarts observed progress under a new epoch when the relay stream resets", () => {
+it("restarts observed progress when the relay stream resets", () => {
   const reset = run([
     { type: "bound", binding, persistent: false },
     { type: "observed_synced" },
     { type: "observed_reset" },
   ]);
-  expect(reset).toMatchObject({ observedEpoch: 1, observedSynced: false });
+  expect(reset).toMatchObject({ observedSynced: false });
   expect(reset.binding).toBe(binding);
-});
-
-it("advances the selection without touching the binding", () => {
-  const selected = run([{ type: "bound", binding, persistent: true }, { type: "selected" }]);
-  expect(selected).toMatchObject({ selection: 1, persistent: true });
-  expect(selected.binding).toBe(binding);
 });
 
 it("stays closing once closed and keeps the binding for the next start", () => {
   const closed = run([
     { type: "bound", binding, persistent: true },
     { type: "closed" },
-    { type: "selected" },
+    { type: "bound", binding: { ...binding, accountId: "replacement" }, persistent: false },
   ]);
   expect(closed.closing).toBe(true);
   expect(closed.binding).toBe(binding);
+  expect(closed.persistent).toBe(true);
 });
 
 it("never mutates the state it was given", () => {

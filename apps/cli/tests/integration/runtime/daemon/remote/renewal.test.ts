@@ -104,7 +104,11 @@ it("renews expiring grants entirely in Native without waking the renderer or det
     )
     .toBe(true);
   await expect.poll(() => f.value.info("account").connected).toBe(true);
-  expect(renewGrant).toHaveBeenCalledWith("account", { deviceId: f.grant.deviceId, epoch: 1 });
+  expect(renewGrant).toHaveBeenCalledWith(
+    "account",
+    { deviceId: f.grant.deviceId, epoch: 1 },
+    expect.any(AbortSignal),
+  );
   expect(f.renew).not.toHaveBeenCalled();
   expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
 });
@@ -123,6 +127,7 @@ it("does not reconnect a late native grant after logout and detaches on an expir
       }),
   });
   const pending = f.value.refreshGrant();
+  await expect.poll(() => complete).toBeTypeOf("function");
   await f.value.detach();
   complete({ ...f.grant, token: "late-token" });
   expect(await pending).toBe(false);

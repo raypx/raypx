@@ -273,6 +273,13 @@ WebSockets. The shared tasks feature owns browser views; API routes commands and
 stores read projections. Desktop/CLI owns execution, approvals and terminal state,
 with a durable sequenced journal for reconnect replay and snapshot recovery.
 
+Managed task replay and observed terminal projections use one acknowledged-stream
+primitive for exact cursor ACKs, deadlines, committed progress and reset. Socket
+replacement aborts its own pending reads and responses; automatic reconnect gets
+a fresh cancellation scope. Account selection and Host binding independently
+cancel authorization/renewal. Accepted Agent commands remain durable across a
+transport loss. See [ADR 0053](0053-relay-stream-cancellation.md).
+
 ## Local Owner Host
 
 [ADR 0035](0035-local-owner-host.md) defines the current local-first ownership,
@@ -324,6 +331,8 @@ current implementation.
 - [0050: Independent Mobile React](0050-mobile-react-boundary.md) — accepted; Expo pins do not constrain DOM releases
 
 - [0051 — Backend runtime roles](0051-backend-runtime-roles.md)
+- [0052: Daemon-owned Desktop channel](0052-daemon-desktop-channel.md) — accepted; native/session migration pending
+- [0053: Relay streams and cancellation](0053-relay-stream-cancellation.md) — shared ACK mechanics and connection scopes
 
 ## Distribution and performance
 

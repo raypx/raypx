@@ -21,16 +21,10 @@ it("keeps availability when the relay resumes a live stream again", () => {
   expect(relaySession(available, { type: "resumed" })).toBe(available);
 });
 
-it("keeps the epoch across a dropped socket and advances it when the connection is replaced", () => {
+it("withdraws availability on socket loss or replacement", () => {
   const available = run([{ type: "resumed" }, { type: "caught_up" }]);
-  expect(relaySession(available, { type: "dropped" })).toMatchObject({
-    epoch: available.epoch,
-    phase: "offline",
-  });
-  expect(relaySession(available, { type: "retired" })).toMatchObject({
-    epoch: available.epoch + 1,
-    phase: "offline",
-  });
+  expect(relaySession(available, { type: "dropped" }).phase).toBe("offline");
+  expect(relaySession(available, { type: "retired" }).phase).toBe("offline");
 });
 
 it("refuses commands while draining or detaching, independently of the connection", () => {

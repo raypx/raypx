@@ -11,6 +11,10 @@ the injectable `FetchCallable` and isMissingProcedure. `/relay` exports RelayCon
 relayUrl and the injectable `RelaySocketFactory`, plus `RelayScheduler` and `systemRelayScheduler`, which expose a
 browser-safe clock, timer cancellation and random source; RelayConnection accepts one optional
 scheduler for deterministic retry and heartbeat tests, retaining system defaults at runtime.
+Each socket attempt owns an AbortSignal, passed to authenticate/message and as the
+third status argument. Close/replacement aborts it before reporting disconnection;
+automatic reconnect creates a new scope. Consumers must scope pending work and
+outgoing responses to that signal. Stop also cancels the retry lifetime.
 `/tasks` exports createTaskClient and TaskClient. Import relay, task-change and command frame
 types from `@raypx/contracts/tasks` directly; the client does not re-export them.
 Task mutations use the relay; HTTP reads retain

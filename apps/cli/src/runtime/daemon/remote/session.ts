@@ -6,8 +6,6 @@ type RelayPhase = "offline" | "ready" | "available";
 
 /** One device's relay connection lifecycle. Values are immutable; `relaySession` derives the next. */
 export interface RelaySession {
-  /** Advances whenever the connection is replaced; work begun under an older epoch is stale. */
-  readonly epoch: number;
   readonly phase: RelayPhase;
   /** A renewed grant is waiting for in-flight commands before it reconnects. */
   readonly draining: boolean;
@@ -28,7 +26,6 @@ export type RelaySessionEvent =
   | { type: "detaching"; active: boolean };
 
 export const initialRelaySession: RelaySession = {
-  epoch: 0,
   phase: "offline",
   draining: false,
   detaching: false,
@@ -42,7 +39,7 @@ type Transitions = {
 };
 
 const transitions: Transitions = {
-  retired: (state) => ({ ...state, epoch: state.epoch + 1, phase: "offline" }),
+  retired: (state) => ({ ...state, phase: "offline" }),
   dropped: (state) => ({ ...state, phase: "offline" }),
   // A repeated resume on a live stream must not withdraw availability.
   resumed: (state) => (state.phase === "offline" ? { ...state, phase: "ready" } : state),
