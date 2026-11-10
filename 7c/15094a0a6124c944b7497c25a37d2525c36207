@@ -1,0 +1,42 @@
+packages/tasks/src/client/task-overview.tsx
+  s_2d665babe6fe00::t_bb710270520e1e 38,43,45-66
+  s_2d665babe6fe00::t_30268553f4324c 4
+packages/tasks/src/client/approval.tsx
+  s_2d665babe6fe00::t_dda2a310fcf661 9,87-91
+packages/tasks/AGENTS.md
+  s_2d665babe6fe00::t_1452882332346c 56-57
+e2e/tests/journeys/tasks/conversation.ts
+  s_2d665babe6fe00::t_c1397179fc427e 347-353
+apps/web/src/features/administration/components/overview.tsx
+  s_2d665babe6fe00::t_4e4c094c6f0fb4 95-111
+  s_2d665babe6fe00::t_d11ca85258e692 11-12,28-94,112-115,199,254
+DESIGN.md
+  s_2d665babe6fe00::t_1452882332346c 130-137
+packages/memory/src/client/library.tsx
+  s_2d665babe6fe00::t_47a1dc61d9d500 483
+packages/tasks/src/client/task-list.tsx
+  s_2d665babe6fe00::t_894491d75368a4 17,183-188,193,195
+  s_2d665babe6fe00::t_dda2a310fcf661 189-192
+packages/tasks/src/client/task-status.tsx
+  s_2d665babe6fe00::t_90191e9a3eb6b7 1-69
+packages/tasks/src/client/task-detail.tsx
+  s_2d665babe6fe00::t_894491d75368a4 20,194-198
+  s_2d665babe6fe00::t_965afe81907e3e 3
+  s_2d665babe6fe00::t_dda2a310fcf661 213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7c15094a0a6124c944b7497c25a37d2525c36207",
+  "prompts": {},
+  "sessions": {
+    "s_2d665babe6fe00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
