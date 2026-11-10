@@ -1,0 +1,678 @@
+apps/desktop/scripts/host/csp.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 3
+  s_8587c3f54e2a10::t_8003421dc57503 11
+apps/desktop/tests/integration/native/mygo.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 5,7,18-20,22-33
+  s_e7b2efd2e44eee::t_8cc1461a633b87 3-4,6,9-17,21,35-57,59-69,71-134,136-137,139-140,142
+apps/desktop/src/lib/connection.test.ts
+  s_8587c3f54e2a10::t_e1f9a8b20dc235 12,24
+  s_2d665babe6fe00::t_def09ddde4e6df 3-4
+CONTEXT.md
+  s_2d665babe6fe00::t_def09ddde4e6df 9
+apps/desktop/tests/integration/native/prepare-cli.test.ts
+  s_e7b2efd2e44eee::t_8cc1461a633b87 1,6,8-9,11-13,16-23,25-29,31-39,41-51
+  s_2d665babe6fe00::t_def09ddde4e6df 5
+packages/tooling/src/repository.ts
+  s_ec0bb2776ccc14::t_bdb02c91603552 18
+apps/desktop/src/features/auth/components/instance-gate.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 18-20,121
+  s_e7b2efd2e44eee::t_b4b4346b26654b 17
+e2e/tests/journeys/tasks/conversation-performance.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1,129-130,147,159,162,208
+apps/desktop/tests/native/host/page_origin_test.go
+  s_8587c3f54e2a10::t_51f9af9aa66aa9 1,3-4,6-17,20-25,27-48
+  s_2d665babe6fe00::t_def09ddde4e6df 2,5,18-19,26,49
+apps/desktop/src/features/settings/overlay.component.test.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 3,76-80,83,145-147,188,192-212
+  s_2d665babe6fe00::t_f539c335b1c178 213
+packages/tooling/src/verification/tests.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 25
+apps/desktop/perf/fixture.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-8,10-20,22-35,37-58,60-72,74-85,87-97,99-121,123-126,128-143,145-166,168-187,189-191,193-204,206-256,258-267,269
+docs/README.md
+  s_2d665babe6fe00::t_def09ddde4e6df 3,14-15,21,23-24,34,38,66-73
+apps/desktop/tests/native/smoke/cors.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 18,35
+apps/desktop/tests/native/host/shutdown_test.go
+  s_8587c3f54e2a10::t_c6d64306cee50b 1-43,45-82,84-145,147-189,191-240
+  s_78fa1c2f4443be::t_cdce2b36484077 44,83,146,190
+docs/architecture/0046-mygo-bun-artifacts.md
+  s_2d665babe6fe00::t_def09ddde4e6df 1-46
+apps/desktop/internal/desktop/desktop.go
+  s_8587c3f54e2a10::t_89cd446c28a815 1-16,41-48,50-55,57-58,60-69,74-77,91,107,110-119,121-123,125
+  s_e7b2efd2e44eee::t_2ca98951f1ebf6 17-35,40,49,56,70,92-93,101-106,109,124
+  s_e7b2efd2e44eee::t_619226a552e6c4 83,94-95,99-100
+  s_e7b2efd2e44eee::t_4d609618b7658f 120
+  s_e7b2efd2e44eee::t_88999394977925 73
+  s_9835e924464762::t_d03bc91105f176 39,78
+  s_78fa1c2f4443be::t_02cd887d4484d7 59,71-72,79-82,84,86,108
+  s_9835e924464762::t_d766b2af0fc43b 36-38
+  s_2d665babe6fe00::t_def09ddde4e6df 85,87-90
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 96-98
+e2e/AGENTS.md
+  s_2d665babe6fe00::t_def09ddde4e6df 50-51
+apps/desktop/main.go
+  s_8587c3f54e2a10::t_dcbcbefccf30ef 1-19
+apps/desktop/scripts/host/mygo.ts
+  s_8587c3f54e2a10::t_a68f30d0196327 1,4,8-10,14,16-18,24-30,32-46,48-70,73,82,84,87,90-94,96-100,107-115,119-120,122-123,125-130,136-137,142-143,145-146,150-151,161,163,175,177-182,184,186-193,195-198,200,205,207
+  s_2d665babe6fe00::t_def09ddde4e6df 11-12,95,101-106,116-118,131-134
+  s_a3446c4a758722::t_e33361ba644173 3,203
+  s_78fa1c2f4443be::t_eabaed8663f3ac 152-160,164-173
+  s_78fa1c2f4443be::t_6a05577576fdf1 149
+packages/tooling/src/verification/gates.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 3-13,15,32-33
+apps/desktop/tests/native/host/sessions_windows_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 1-12,14-25,27-53
+  s_9835e924464762::t_9b50bb60c97d8b 13
+  s_2d665babe6fe00::t_def09ddde4e6df 26
+apps/desktop/bridge.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 5-6
+  s_8587c3f54e2a10::t_580b3bf2df27ac 21
+packages/tooling/src/cli.ts
+  s_8587c3f54e2a10::t_c8b190351982a7 202
+  s_2d665babe6fe00::t_def09ddde4e6df 16,122,135-136,139,143-144,147-149,152
+apps/desktop/internal/desktop/approvals.go
+  s_8587c3f54e2a10::t_73816602f4b54c 1-32
+apps/desktop/internal/desktop/events.go
+  s_e7b2efd2e44eee::t_4d609618b7658f 1-119
+  s_e7b2efd2e44eee::t_1790a1928969df 120-124
+docs/development/devtools.md
+  s_6291eb9cf26850::t_ba19b4c59b6281 63
+docs/architecture/internationalization.md
+  s_2d665babe6fe00::t_def09ddde4e6df 77
+apps/desktop/src/router-local.component.test.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 5-6
+apps/desktop/tests/native/host/sessions_test.go
+  s_2d665babe6fe00::t_def09ddde4e6df 1-3,5,7-17,22-26,28-39,41-68,80,108,110-114,116,120-127,178-181,183-254,256-322,324-342,344-358,360-377
+  s_9835e924464762::t_eb49a1df4402bd 4,6,18-21,27,40,69-79,81-107,109,115,117-119,128-177,182,255,323,343,359
+apps/desktop/perf/browser/index.html
+  s_2d665babe6fe00::t_def09ddde4e6df 1-12
+apps/desktop/CHANGELOG.md
+  s_8587c3f54e2a10::t_597ef72ee27178 15-16,29
+  s_2d665babe6fe00::t_def09ddde4e6df 19
+apps/desktop/tests/native/host/fixtures_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 95
+  s_2d665babe6fe00::t_def09ddde4e6df 110-115,157-176
+  s_8587c3f54e2a10::t_a5d5aca2e2a034 1-94,96-109,116-156,177-178
+apps/desktop/internal/desktop/desktop_test.go
+  s_e7b2efd2e44eee::t_b0d6bf6c988910 26-39,41,44-50
+  s_e7b2efd2e44eee::t_d27bf566af8a99 51-52
+  s_78fa1c2f4443be::t_cdce2b36484077 40,42-43,58
+  s_78fa1c2f4443be::t_ece213742b5d15 57,59
+  s_e7b2efd2e44eee::t_081232175159a8 69-91
+  s_e7b2efd2e44eee::t_a1ca0a9d301d9a 1-5,7-24,53-56,60-68
+  s_e7b2efd2e44eee::t_407d8009d4cbb3 6,25
+apps/desktop/src/router.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 1,3,21,23-24
+  s_8587c3f54e2a10::t_3a2dacea5cff85 22
+apps/web/src/routeTree.gen.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 148,168,216,236,295,302,309,316,323
+packages/tooling/src/verification/report.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 25-28
+apps/desktop/README.md
+  s_c530aa5309e2aa::t_fd1d3477bc8f72 48-49
+  s_78fa1c2f4443be::t_f055e9da70b142 74
+  s_2d665babe6fe00::t_def09ddde4e6df 5-7,9-13,15,30,53-62,69-72,75,84,87-90,92
+  s_9835e924464762::t_f6b21fa0978145 76-83
+  s_8587c3f54e2a10::t_67d19f5644c78f 4,14,16-19,29,31,34,36,39-42,50-52,64-67,85
+  s_e7b2efd2e44eee::t_1ddce60a99aaf5 26-28,43-47
+  s_a3446c4a758722::t_e33361ba644173 3
+apps/desktop/internal/app/smoke_windows.go
+  s_8587c3f54e2a10::t_4806a0fe12652c 1-17
+apps/desktop/internal/desktop/requests.go
+  s_e7b2efd2e44eee::t_96d4857dc8db03 10
+  s_8587c3f54e2a10::t_62cc85fc810ec7 1-9,11-116
+packages/tooling/src/verification/plan.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 5-11,33,35,37,41-44,63,69,77-135,165,168-170,173,180-182,190,196,236-237,248,258-259,279,403,437,446
+  s_c530aa5309e2aa::t_1f19c1cae1e5cd 167
+  s_a3446c4a758722::t_90a369a71cb6d9 309
+packages/tooling/src/verification/plan.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 14,55,73-75,85,93,122,142-149,169-170,200-204,212,215-217,242
+apps/desktop/mygo.config.ts
+  s_8587c3f54e2a10::t_59c9b29d5ae3e8 1-38,40-43
+  s_2d665babe6fe00::t_def09ddde4e6df 39
+apps/desktop/tests/native/host/orpc_test.go
+  s_8587c3f54e2a10::t_302f2cf6098f02 1-46
+  s_8587c3f54e2a10::t_04237c8a78486b 47-91
+apps/desktop/perf/run.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-60
+apps/desktop/internal/desktop/features_smoke.go
+  s_8587c3f54e2a10::t_4806a0fe12652c 1-7
+apps/web/e2e/landing-visual.spec.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 151-157
+apps/desktop/scripts/host/smoke-artifacts.ts
+  s_8587c3f54e2a10::t_1286aeae05196d 19-22
+packages/tooling/src/verification/gates.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 5-9,32,40,137,161-209,213-222,225,232,234-251,254-262,264-266,271-273,288
+packages/tooling/AGENTS.md
+  s_8587c3f54e2a10::t_f4aa971abe30cb 43,104,155
+  s_8587c3f54e2a10::t_e53df20672da33 96,99,103
+  s_2d665babe6fe00::t_def09ddde4e6df 42,53-58,62-66,74-75,86-95,129,156-157,159-160,174-177
+docs/architecture/0034-extensible-foundation.md
+  s_a3446c4a758722::t_e33361ba644173 44
+  s_2d665babe6fe00::t_def09ddde4e6df 45-46
+apps/desktop/internal/AGENTS.md
+  s_8587c3f54e2a10::t_183702c35d2737 1-7,10-13,15-16,23-27
+  s_2d665babe6fe00::t_def09ddde4e6df 8-9,17,21
+  s_e7b2efd2e44eee::t_ae09f47ce4a3c4 22
+  s_9835e924464762::t_f6b21fa0978145 19-20
+  s_78fa1c2f4443be::t_f055e9da70b142 14,18
+  s_e7b2efd2e44eee::t_17e8329eb640a1 28-34
+.github/workflows/cli-size.yml
+  s_2d665babe6fe00::t_def09ddde4e6df 10
+apps/desktop/internal/desktop/config.go
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 73-76,192-194
+  s_2d665babe6fe00::t_def09ddde4e6df 162,216
+  s_e7b2efd2e44eee::t_619226a552e6c4 77,92,189-191,195-197
+  s_8587c3f54e2a10::t_1b48ce3a9dabd7 1-72,78-91,93-161,163-188,198-215,217-328
+.github/workflows/performance.yml
+  s_2d665babe6fe00::t_def09ddde4e6df 1-120
+apps/desktop/scripts/host/packager.ts
+  s_a3446c4a758722::t_908d9e18396368 41-42
+  s_2d665babe6fe00::t_def09ddde4e6df 1-3,6-18,22-27,31-38,43-77
+  s_8587c3f54e2a10::t_66f8557d88551a 19-21
+  s_a3446c4a758722::t_e33361ba644173 4-5,28-30,39-40
+packages/tooling/src/tasks/model.ts
+  s_8587c3f54e2a10::t_15305baa277d15 101,251
+  s_2d665babe6fe00::t_def09ddde4e6df 190
+apps/desktop/tests/native/smoke/agents-run.ts
+  s_8587c3f54e2a10::t_a85ffd6dc945a7 5
+  s_2d665babe6fe00::t_def09ddde4e6df 6,8-9
+  s_8587c3f54e2a10::t_80c039c8c32739 4,7,32
+packages/tooling/src/verification/execution.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 11,17,19,21-23,56,58,60,63,79-82,88-91,100-104
+apps/desktop/src/components/window-drag-region.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 6
+apps/desktop/tests/native/smoke/scenario.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 9-11,13,36,49,54-55,58,64,74,80,120,214,343,345-349,355-356,364,377,381-383,386,579,581-598,600-605,607-613,615-616,618-645,651-652,685,696,731,795-797,865-867
+  s_78fa1c2f4443be::t_5b2408fade4a77 12
+  s_78fa1c2f4443be::t_5391f726798509 614,617
+  s_a3446c4a758722::t_929c89cfc09935 673-674,686-687,693,806,809
+  s_a3446c4a758722::t_a26714093401db 93-100,661,684,773-774,776-777,780-781,783-784,911
+  s_8587c3f54e2a10::t_9a7432f9cf4bcb 25,278,396,659
+apps/desktop/perf/enroll.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-135
+docs/development/mygo-bun-migration-plan.md
+  s_2d665babe6fe00::t_def09ddde4e6df 1-332
+.gitattributes
+  s_2d665babe6fe00::t_def09ddde4e6df 6
+apps/desktop/tests/native/fixtures/orpc-server.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 59
+apps/desktop/tests/native/host/regressions_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 133,185
+  s_8587c3f54e2a10::t_a12ad4dd712d66 1-132,134-184,186-205
+apps/desktop/tests/native/host/smoke_protocol_test.go
+  s_8587c3f54e2a10::t_9252c9aa5fba13 1-42
+apps/desktop/src/lib/mygo.ts
+  s_8587c3f54e2a10::t_d874750f449a3a 1,3-7,10-11,14-17,19,22,24,26,29,31,35,38-47,49-65,72,79-81,83,86,90
+  s_2d665babe6fe00::t_def09ddde4e6df 48
+packages/tooling/src/verification/native-workflow.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 28,35,37-42,54-55,61,63,66-86,89,91,95-98,101-109,112-117,120-128,130-132,136-138,140-143,153-154,156,159-165,173-175,189,191-194,205-208
+apps/desktop/tests/integration/native/docker.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-28
+apps/desktop/scripts/host/check-release.ts
+  s_8587c3f54e2a10::t_082f57486c85ab 8,13,19-20,24-30,40-41,49,54,58-60,63-64
+  s_2d665babe6fe00::t_def09ddde4e6df 1,33-38,57
+  s_a3446c4a758722::t_e33361ba644173 5,10-11
+apps/desktop/internal/desktop/control.go
+  s_8587c3f54e2a10::t_5c482295545212 1-35,37-135
+docs/architecture/analytics.md
+  s_2d665babe6fe00::t_def09ddde4e6df 41,43-44
+docs/architecture/0039-local-server-agent-platform.md
+  s_2d665babe6fe00::t_def09ddde4e6df 8
+apps/desktop/perf/browser/main.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 1-154
+apps/desktop/internal/desktop/process_unix.go
+  s_8587c3f54e2a10::t_ace0d5744198b0 1-7
+apps/desktop/internal/desktop/smoke_profile.go
+  s_2d665babe6fe00::t_def09ddde4e6df 1-28
+docs/development/getting-started.md
+  s_2d665babe6fe00::t_def09ddde4e6df 17-19
+  s_2d665babe6fe00::t_ea7080c0048769 3
+  s_8587c3f54e2a10::t_2ddd1e8c66d02f 24-25
+  s_8587c3f54e2a10::t_7baab425027e9b 136,140
+apps/desktop/vite.app.config.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 33
+  s_8587c3f54e2a10::t_9a4683731a7aef 42-44,48
+apps/desktop/scripts/host/generate.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 6,8,21,35-36,38-49,51-55
+apps/desktop/scripts/host/prepare-cli.ts
+  s_8587c3f54e2a10::t_483d6debef3b59 12
+  s_2d665babe6fe00::t_def09ddde4e6df 1-3,6-11,13-17,19-26,28-29
+packages/tooling/src/verification/report.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 5,59,61-64,68
+apps/desktop/internal/desktop/process_windows.go
+  s_8587c3f54e2a10::t_093f539edcfef9 1-12
+packages/tooling/src/verification/tests.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 6,44-54
+docs/development/testing.md
+  s_2d665babe6fe00::t_def09ddde4e6df 5,9-17,107-108,112,196,214-215,250-251,280,299-300,303-329,370-371
+  s_e7b2efd2e44eee::t_1ddce60a99aaf5 148,150-151
+apps/desktop/scripts/host/smoke-owner.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 2,7,12,22
+.github/workflows/native.yml
+  s_2d665babe6fe00::t_def09ddde4e6df 24,26,40-45,51-52,54-57,111,117,123-128,165,167,173-180,211,224,226-227,229-231,315-334,373,385
+  s_8587c3f54e2a10::t_4ead3f46f5743a 191-193,196,198,200,268,272-274,276,290,292,305,341-345
+apps/desktop/scripts/host/smoke-launch.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 2
+apps/desktop/tests/native/fixtures/instance-server.ts
+  s_78fa1c2f4443be::t_cdcf0b2cf58fb6 64-65
+apps/desktop/internal/app/platform.go
+  s_8587c3f54e2a10::t_fcf45f553fc709 1-57
+apps/desktop/src/components/shell.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 82,151-153,155-239
+apps/desktop/scripts/host/task.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 50,53
+  s_8587c3f54e2a10::t_58a889ae8b56a0 47,72
+apps/desktop/internal/desktop/policy.go
+  s_e7b2efd2e44eee::t_c0483db799c049 30-33
+  s_e7b2efd2e44eee::t_75b496b1b70b50 1-29
+apps/desktop/Dockerfile
+  s_2d665babe6fe00::t_def09ddde4e6df 2-22
+docs/architecture/0037-windows-daemon.md
+  s_2d665babe6fe00::t_def09ddde4e6df 18
+apps/desktop/internal/desktop/instance.go
+  s_8587c3f54e2a10::t_2bc3f978f77be4 1-33
+apps/desktop/tests/native/smoke/host.ts
+  s_78fa1c2f4443be::t_66d7ccb6728fe3 33
+  s_2d665babe6fe00::t_def09ddde4e6df 1-2,4,45,98
+apps/desktop/tests/integration/native/windows-smoke-install.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 10
+  s_e7b2efd2e44eee::t_8cc1461a633b87 16,18,20-21,26,46,51,63,90,94,113,121,129,170
+apps/desktop/perf/workbench.bench.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-42
+apps/desktop/AGENTS.md
+  s_9835e924464762::t_f6b21fa0978145 143
+  s_6291eb9cf26850::t_ba19b4c59b6281 7
+  s_2d665babe6fe00::t_def09ddde4e6df 28-29,93,126-128,142,162-164,179-180
+  s_a3446c4a758722::t_e33361ba644173 119
+  s_8587c3f54e2a10::t_3388146a16766a 11-12,17-21,94,120,122-123,159,165,170,181,183
+  s_e7b2efd2e44eee::t_17e8329eb640a1 35,101,104
+  s_c530aa5309e2aa::t_43849230be4bc5 178
+  s_8587c3f54e2a10::t_2275e4a67fd6af 161
+apps/desktop/tests/native/host/instances_test.go
+  s_2d665babe6fe00::t_def09ddde4e6df 1-67
+apps/desktop/internal/app/app.go
+  s_78fa1c2f4443be::t_ae0a8573a873d1 54-57
+  s_8587c3f54e2a10::t_2f771e8a3b5c9e 217,232-235,237-257
+  s_2d665babe6fe00::t_def09ddde4e6df 42-44,124-126,131-145
+  s_c530aa5309e2aa::t_a0e85c4095b8bc 69
+  s_78fa1c2f4443be::t_123e8b1f63c1d9 266
+  s_8587c3f54e2a10::t_c5a9746e660316 1-41,45-53,58-68,70-104,112-123,127-130,146-216,218-231,236,258-265,267-316
+  s_9835e924464762::t_8fc072d967c315 105-111
+apps/desktop/tests/native/host/smoke_profile_test.go
+  s_2d665babe6fe00::t_def09ddde4e6df 1-37
+.github/workflows/container-smoke.yml
+  s_2d665babe6fe00::t_def09ddde4e6df 1-32
+apps/cli/AGENTS.md
+  s_2d665babe6fe00::t_def09ddde4e6df 92
+packages/tooling/src/validation/build-size.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 93,120-121,124,127-135
+packages/tooling/src/clean.test.ts
+  s_8587c3f54e2a10::t_9450c56f0098f2 39-40
+apps/desktop/tests/integration/native/task.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 37,153
+  s_e7b2efd2e44eee::t_8cc1461a633b87 40-41,157,160,163,168,202
+apps/desktop/tests/integration/native/smoke-artifacts.test.ts
+  s_e7b2efd2e44eee::t_8cc1461a633b87 13-16
+  s_2d665babe6fe00::t_def09ddde4e6df 5
+apps/desktop/scripts/host/csp.ts
+  s_8587c3f54e2a10::t_1d2ade342957d4 20
+  s_2d665babe6fe00::t_def09ddde4e6df 4,29,38
+apps/desktop/go.sum
+  s_8587c3f54e2a10::t_9b08c569cfc990 3-4,9-66
+  s_a3446c4a758722::t_15c858e0365ced 7-8
+  s_2d665babe6fe00::t_5c0e4ea31604c8 1-2,5-6
+packages/tooling/src/verification/index.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 24,68
+apps/desktop/src/lib/mygo.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 2
+  s_8587c3f54e2a10::t_e5d47838cf68d1 3-4,7-8,11-38,40-43,45-47,51,53-55,58-59,61-63,65,67,71-72,74-79,82
+docs/development/workspaces.md
+  s_2d665babe6fe00::t_def09ddde4e6df 4-5
+packages/tooling/src/verification/execution.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-46
+apps/desktop/tests/native/smoke/launch.ts
+  s_8587c3f54e2a10::t_1950a8b00efa7d 59,66,68-72,74-77,82,90
+  s_2d665babe6fe00::t_def09ddde4e6df 1,3,6-7,27-34,57,73,78-79,89,102,109,112,176
+packages/tooling/tests/helpers/verification.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 92-93
+apps/desktop/tests/native/host/host_test.go
+  s_2d665babe6fe00::t_def09ddde4e6df 296-306
+  s_78fa1c2f4443be::t_cdce2b36484077 132-133,138-147,155,163-165,179-180,185-188,286
+  s_8587c3f54e2a10::t_d77a507f3d9ea9 1-131,135-137,148-154,156-162,166-178,181-184,189-285,287-295,307-312
+  s_9835e924464762::t_dd337be131de25 134
+apps/desktop/internal/app/updates.go
+  s_8587c3f54e2a10::t_bdbf236a748f53 1-38
+apps/desktop/scripts/host/signing.test.ts
+  s_8587c3f54e2a10::t_11743d56395305 7,10-11
+  s_2d665babe6fe00::t_def09ddde4e6df 2
+apps/desktop/internal/desktop/connectors.go
+  s_8587c3f54e2a10::t_7ff830b1a0c50d 1-16,19-57
+  s_e7b2efd2e44eee::t_2ca98951f1ebf6 17-18
+docs/roadmap.md
+  s_2d665babe6fe00::t_def09ddde4e6df 13
+apps/desktop/internal/desktop/sessions_windows.go
+  s_78fa1c2f4443be::t_2398c807a85821 1-38
+apps/desktop/perf/browser.bench.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-50
+docs/development/desktop.md
+  s_2d665babe6fe00::t_def09ddde4e6df 1-5,10-20,116,122-126,132,136-140,142-144,148,153-154,156,171-176,178-180,185-226,230-253,255-257
+  s_a3446c4a758722::t_e33361ba644173 184,227-229,254
+packages/blocks/AGENTS.md
+  s_2d665babe6fe00::t_def09ddde4e6df 18
+docs/architecture/0035-local-owner-host.md
+  s_2d665babe6fe00::t_def09ddde4e6df 8,17,119
+apps/desktop/Dockerfile.dockerignore
+  s_2d665babe6fe00::t_def09ddde4e6df 4-8,10-18
+apps/desktop/internal/desktop/rpc_paths.generated.go
+  s_0fc40799f2bf44::t_5e00666fad652c 6
+  s_2d665babe6fe00::t_36c99633aace65 1-5,7-46
+apps/desktop/tests/integration/native/smoke-probe.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 7,16
+packages/tooling/src/validation/build-size.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 83,87,92-96
+apps/desktop/.gitignore
+  s_8587c3f54e2a10::t_e2f65d7b7a3a61 1,3,6-7
+apps/desktop/perf/browser/styles.css
+  s_2d665babe6fe00::t_def09ddde4e6df 1-3
+package.json
+  s_2d665babe6fe00::t_def09ddde4e6df 18,21,23,46,50,62,92-93,96,101,111-112,114-116,118,125
+apps/desktop/tests/native/smoke/run.ts
+  s_8587c3f54e2a10::t_3138a61b790873 7-8
+  s_2d665babe6fe00::t_def09ddde4e6df 1,5-6,15,17-19,24,34,37-41,45,92-102,104,106
+  s_8587c3f54e2a10::t_a85ffd6dc945a7 9
+docs/development/local-sqlite.md
+  s_78fa1c2f4443be::t_f055e9da70b142 72-73,75-77
+  s_2d665babe6fe00::t_def09ddde4e6df 71,74
+AGENTS.md
+  s_8587c3f54e2a10::t_1741e36a0ab27a 52,75
+  s_a3446c4a758722::t_e33361ba644173 72
+  s_2d665babe6fe00::t_def09ddde4e6df 73-74,125,127-129
+  s_2d665babe6fe00::t_ea7080c0048769 5-6
+apps/desktop/src/lib/desktop.ts
+  s_e7b2efd2e44eee::t_eb49a627c5834d 1,4,9
+apps/desktop/tests/native/fixtures/preferences-preload.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 6,35-36
+apps/desktop/e2e/tasks/history.spec.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 103-104
+PRODUCT.md
+  s_2d665babe6fe00::t_def09ddde4e6df 37
+apps/desktop/internal/desktop/policy_test.go
+  s_e7b2efd2e44eee::t_a1ca0a9d301d9a 1,3,5-18
+  s_e7b2efd2e44eee::t_f8fef4155a69d6 19-30
+apps/desktop/src/features/auth/components/session-gate.tsx
+  s_2d665babe6fe00::t_def09ddde4e6df 1,26
+  s_e7b2efd2e44eee::t_b4b4346b26654b 2
+apps/desktop/scripts/host/check-release.test.ts
+  s_a3446c4a758722::t_e33361ba644173 4-5,25
+  s_2d665babe6fe00::t_def09ddde4e6df 2-3
+  s_8587c3f54e2a10::t_6785acc275b5f8 6-7,12,15-24,26-29
+apps/desktop/internal/app/smoke.go
+  s_78fa1c2f4443be::t_6b4377af890c5e 91-96
+  s_78fa1c2f4443be::t_123e8b1f63c1d9 19,42-43,53,100-114,122,124-126,130-135
+  s_78fa1c2f4443be::t_4525d5ba1c5bf1 127-129
+  s_8587c3f54e2a10::t_9252c9aa5fba13 15,75,153-156,190-192
+  s_8587c3f54e2a10::t_807e0041562f0e 181-189,193-234
+  s_8587c3f54e2a10::t_78b06887819e25 1-14,17-18,20-25,36-41,44-49,64-74,76-90,97-99,115-119,121,123,136-152,157-180
+  h_f0766e80fd3864 16,50-52,54-55,61-63,120
+  s_a3446c4a758722::t_5dcde258e21bea 56-60
+  s_2d665babe6fe00::t_def09ddde4e6df 26-35
+README.md
+  s_a3446c4a758722::t_e33361ba644173 14
+  s_2d665babe6fe00::t_c8f1e434f4df1e 18-19
+  s_2d665babe6fe00::t_def09ddde4e6df 3,10-13,15-17
+.gitignore
+  s_2d665babe6fe00::t_def09ddde4e6df 83-84
+apps/desktop/perf/conversation.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-6,8-68,70-72,74-233
+docs/architecture/0038-mygo-desktop-host.md
+  s_2d665babe6fe00::t_def09ddde4e6df 3-4,6-11,17-20,24-26,48-49,52-53,57,59
+  s_78fa1c2f4443be::t_f055e9da70b142 16,31-32
+  h_f0766e80fd3864 45
+  s_a3446c4a758722::t_e33361ba644173 5
+  s_8587c3f54e2a10::t_e2e862660140c2 1-2,12-13,15,21-23,27-30,41-42,47,50-51,54-56,58,60-61
+  s_e7b2efd2e44eee::t_3f88fd49aeaf55 14
+  s_9835e924464762::t_f6b21fa0978145 33-40
+  s_c530aa5309e2aa::t_681bc98877dd05 43-44,46
+docs/architecture/0041-provider-capabilities-and-pi.md
+  s_2d665babe6fe00::t_def09ddde4e6df 8
+apps/desktop/internal/app/smoke_disabled.go
+  s_8587c3f54e2a10::t_4806a0fe12652c 1-9,11-13
+  s_2d665babe6fe00::t_def09ddde4e6df 10
+  s_8587c3f54e2a10::t_c4af9682d81e76 15-16
+  s_78fa1c2f4443be::t_123e8b1f63c1d9 14
+apps/desktop/tests/native/smoke/session.ts
+  s_8587c3f54e2a10::t_a85ffd6dc945a7 59
+packages/tasks/AGENTS.md
+  s_2d665babe6fe00::t_def09ddde4e6df 91-92
+apps/desktop/package.json
+  s_2d665babe6fe00::t_def09ddde4e6df 7-8,10,18-19,21-32,35-38,54,67,107-110,114,116-119
+  s_8587c3f54e2a10::t_395e87e09738d5 105
+packages/tooling/src/clean.ts
+  s_8587c3f54e2a10::t_f1cb4cc1caff7a 45
+apps/desktop/src/routeTree.gen.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 109,125,162,178,228,235
+apps/desktop/tests/native/host/approvals_test.go
+  s_78fa1c2f4443be::t_cdce2b36484077 40
+  s_8587c3f54e2a10::t_0e585855fe9111 1-36,38-39,41-116
+  s_2d665babe6fe00::t_def09ddde4e6df 37
+apps/desktop/internal/app/check.go
+  s_8587c3f54e2a10::t_44d77e8c042cee 1-57
+apps/cli/README.md
+  s_2d665babe6fe00::t_ea7080c0048769 4
+  s_2d665babe6fe00::t_def09ddde4e6df 5
+docs/architecture/README.md
+  s_7ba9979b26fc9e::t_29911611de9df0 179-181
+  s_7ba9979b26fc9e::t_dcf4dad12c60df 178
+  s_d865119810acc0::t_8f5706a4700ae4 35-39
+  s_8587c3f54e2a10::t_f0e8896049cc44 236
+  s_7ba9979b26fc9e::t_ba8647cf82fe37 249
+  s_2d665babe6fe00::t_def09ddde4e6df 1-9,11-34,40-177,182-235,237-248,250-273,276-282
+  s_8587c3f54e2a10::t_c6fdb75030ffe0 10
+.github/actions/native-checks/action.yml
+  s_2d665babe6fe00::t_def09ddde4e6df 1-2,4-5,10-46,48-49,51-67,69-73
+apps/desktop/perf/startup.bench.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-47
+apps/desktop/perf/tsconfig.json
+  s_2d665babe6fe00::t_def09ddde4e6df 1-12
+apps/desktop/internal/desktop/api.go
+  s_8587c3f54e2a10::t_786128bd144aa4 1-52,54-214
+  s_2d665babe6fe00::t_def09ddde4e6df 53
+docs/architecture/0042-application-layering.md
+  s_2d665babe6fe00::t_def09ddde4e6df 5,37
+apps/desktop/internal/app/session_key.go
+  s_2d665babe6fe00::t_def09ddde4e6df 20
+  s_9835e924464762::t_8fc072d967c315 1-19,21-33
+knip.json
+  s_2d665babe6fe00::t_def09ddde4e6df 18
+apps/desktop/internal/desktop/cookies.go
+  s_78fa1c2f4443be::t_02cd887d4484d7 15-18,122,128,134-135,137,141-142,148,167-168,170,232,239-244,246
+  s_8587c3f54e2a10::t_ead7650a35f6aa 1-14,19-47,49-121,123-127,129-133,136,138-140,143-147,149-166,169,171-231,233-238,245,247-253
+  s_8587c3f54e2a10::t_dbcddd5b1fb4e4 48
+docs/development/terminal-host.md
+  s_8587c3f54e2a10::t_4c7c5a7a2e974b 143
+  s_2d665babe6fe00::t_def09ddde4e6df 4-5,48,159
+packages/tooling/src/markdown-length.test.ts
+  s_a3446c4a758722::t_e33361ba644173 16-17
+apps/desktop/scripts/host/signing.ts
+  s_8587c3f54e2a10::t_502da4a01b2136 12-15
+packages/tooling/src/policy.ts
+  s_a3446c4a758722::t_e33361ba644173 19-23,25
+  s_a3446c4a758722::t_bb8d875a534ae4 24
+apps/desktop/scripts/host/windows-smoke-install.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 33,158
+  s_8587c3f54e2a10::t_dac68134ab1caa 3,6,160,163-164,167-168,174-176,185-186,228
+apps/desktop/internal/desktop/sessions.go
+  s_9835e924464762::t_d03bc91105f176 5-6,9,16-19,26-31,69,92-107,109-124,135-137,139-140,142-144,146-147,153-156,164-171,181-185
+  s_9835e924464762::t_b583869d477273 126-127,131
+  s_78fa1c2f4443be::t_acee40eeee4f11 14-15,20-25,32-50,52-68,70-72,74-91,108,128-129,134,138,148-152,157-163,172-180,186-189
+  s_2d665babe6fe00::t_def09ddde4e6df 1-4,7-8,10-13,51,73,125,130,132-133,141,145,190-191
+apps/desktop/internal/app/smoke_cors.go
+  s_8587c3f54e2a10::t_cdc30fa2b8074c 35-65
+  s_8587c3f54e2a10::t_1e709afcfd93df 1-34
+apps/desktop/internal/app/smoke_unix.go
+  s_2d665babe6fe00::t_def09ddde4e6df 25
+  s_8587c3f54e2a10::t_4806a0fe12652c 1-18
+  s_8587c3f54e2a10::t_e9c99e235a16f3 19-24
+apps/desktop/src/lib/native-transport.test.ts
+  s_8587c3f54e2a10::t_31be1bcd31fbef 8,16
+  s_2d665babe6fe00::t_def09ddde4e6df 7,20,37
+apps/desktop/internal/desktop/platform.go
+  s_8587c3f54e2a10::t_b99fc4648a8c0d 1-42
+apps/desktop/internal/desktop/engine.go
+  s_8587c3f54e2a10::t_e6bf52f2a0c2b3 1-228,230-271,273,275-293,295-375,377-405
+  s_2d665babe6fe00::t_def09ddde4e6df 229,272,274,294,376
+.github/workflows/ci.yml
+  s_8587c3f54e2a10::t_48b1766ed2e723 67,69-71
+  s_2d665babe6fe00::t_def09ddde4e6df 27,30,35-36,51-52,54-57,68,75-78,85,119,168,171-173,175,189,191
+apps/desktop/go.mod
+  s_a3446c4a758722::t_b8d22ccb12e4ad 7
+  s_8587c3f54e2a10::t_bde73ea2ba85ee 1-5,8,12-15,17-21,23-25
+  s_e7b2efd2e44eee::t_378b8880032277 10
+  s_2d665babe6fe00::t_def09ddde4e6df 6,9,11,16,22
+apps/desktop/internal/desktop/sessions_unix.go
+  s_78fa1c2f4443be::t_2398c807a85821 1-13
+apps/desktop/tsconfig.node.json
+  s_8587c3f54e2a10::t_8dea37c721c5b2 14
+apps/desktop/internal/desktop/stream_smoke.go
+  s_8587c3f54e2a10::t_b35342dc1eb768 16-28
+  s_8587c3f54e2a10::t_1e709afcfd93df 1-15
+apps/desktop/tests/native/smoke/driver.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 18-20
+apps/desktop/perf/conversation.bench.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-17,19-27,30-37,39-45,47-58
+apps/desktop/scripts/host/agent-options.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 2
+apps/desktop/internal/app/bridge.go
+  s_8587c3f54e2a10::t_e06446a52efcb3 1-90,92
+  s_2d665babe6fe00::t_def09ddde4e6df 91
+packages/tooling/src/verification/ci.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-77
+docs/development/validation-artifacts.md
+  s_2d665babe6fe00::t_ea7080c0048769 206-207
+  s_2d665babe6fe00::t_def09ddde4e6df 30,32-34,41,58-70,173-174,179-180,205,214-219,229,234,239-248,252-261,275,283-290,295,300,309-315,317-318,329-338,343,386-388,393,399
+apps/desktop/internal/desktop/features.go
+  s_8587c3f54e2a10::t_4806a0fe12652c 1-7
+apps/desktop/scripts/host/smoke-options.test.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 2
+apps/desktop/internal/desktop/lifecycle.go
+  s_8587c3f54e2a10::t_70bd0e01cce7da 1-36,40-73
+  s_78fa1c2f4443be::t_02cd887d4484d7 37-38
+  s_e7b2efd2e44eee::t_04dd9f46afe6ee 39
+apps/desktop/perf/browser/vite.app.config.ts
+  s_2d665babe6fe00::t_def09ddde4e6df 1-9
+packages/ui/src/combobox.component.test.tsx
+  s_a3446c4a758722::t_9c7cac147d37b9 81,92,106
+bun.lock
+  s_2d665babe6fe00::t_df868f6780792d 110,123,937,940,942,966,972,978,983-986,989,999,1007,1009-1010,1773,2031,2033,2035,2041,2043,2045,2075,2079,2081,2087,2089,2091,2103,2105,2109,2115,2135,2251,2277,2279,2281,2283,2285,2287,2289,2291,3181,3183,3399,3431,3541,3543,3625,3691,3693,3855,3857,3859,3861,3863,3865,3867,3869,3871,3873,3875,3877
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "49613767008681ebf102051bb9e9801cbb04e8bf",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_0fc40799f2bf44": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ad3-4075-7941-aceb-b5dc81e71036",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_2d665babe6fe00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e33916f-58b9-4be8-9021-cc4b0d22dfb0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": null
+    },
+    "s_6291eb9cf26850": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18acf-dd29-7b63-88c0-81c47bb95fda",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_78fa1c2f4443be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "20306bfb-8e67-4366-a3cc-b92f37841bb8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_7ba9979b26fc9e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "977d44ed-8f5f-4f79-94af-9f98b8b0341c",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_9835e924464762": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a58e-88c3-7121-bbd4-56927e4768a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_a3446c4a758722": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c463-d628-74a1-9951-4a2491204f7d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c530aa5309e2aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a552-74dc-7bc3-b02e-49f8badf037e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_d865119810acc0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ae8-8b2d-7ee1-837c-54b1c1726478",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_e7b2efd2e44eee": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a1c4-537f-7660-9625-6986c48a6509",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_ec0bb2776ccc14": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18a9d-da3e-7a33-a95c-3a5ab61ef99d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
