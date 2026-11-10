@@ -61,6 +61,8 @@ application is an independent composition root and is never imported by another 
   with labelled example interfaces, and a Desktop-to-Web connection band. Step tabs
   and workspace links use their titles as accessible names and describe themselves
   with their hints; the diagram never implies a live connection or reads device state.
+  Ambient homepage motion (hero particles, frame light, connection packets) is
+  decorative, pauses offscreen or in hidden tabs and is still under reduced motion.
   The landing layout defines the logo palette as `--landing-*` properties and clips
   horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
   The `(app)/projects` route owns

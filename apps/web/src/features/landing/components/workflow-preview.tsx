@@ -109,10 +109,16 @@ export function WorkflowPreview() {
         />
         <div
           className={cn(
-            "rounded-[1.375rem] border border-border bg-background/60 p-1.5 shadow-popover backdrop-blur-sm",
+            "relative isolate rounded-[1.375rem] border border-border bg-background/60 p-1.5 shadow-popover backdrop-blur-sm",
             scrollSettle,
           )}
         >
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-px overflow-hidden rounded-[inherit] p-px [mask:linear-gradient(#000_0_0)_content-box_exclude,linear-gradient(#000_0_0)] motion-reduce:hidden"
+          >
+            <span className="absolute top-1/2 left-1/2 aspect-square w-[150%] -translate-1/2 animate-spin bg-[conic-gradient(from_0deg,transparent_0deg,transparent_240deg,var(--landing-sky)_290deg,var(--landing-violet)_320deg,var(--landing-pink)_345deg,transparent_360deg)] [animation-duration:8s]" />
+          </span>
           <figure
             aria-label={t("previewLabel")}
             className="@container/preview min-w-0 overflow-hidden rounded-[1rem] border border-border bg-background"

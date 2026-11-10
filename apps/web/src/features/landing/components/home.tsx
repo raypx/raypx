@@ -19,6 +19,8 @@ import { LandingAuthAction } from "./auth-action.tsx";
 import { ApprovalsArt, AutomationsArt, MemoryArt, ProjectsArt } from "./illustrations.tsx";
 import { WorkflowPreview } from "./workflow-preview.tsx";
 import { accentGradient } from "./accent.ts";
+import { FlowPackets } from "./flow-packets.tsx";
+import { ParticleField } from "./particle-field.tsx";
 
 type WorkspacePath = "/projects" | "/approvals" | "/automations" | "/memory";
 
@@ -55,6 +57,12 @@ function Hero() {
         <div className="absolute top-0 left-[8%] h-72 w-[42%] rounded-full bg-[var(--landing-sky)] opacity-[0.16] blur-[90px] dark:opacity-[0.22]" />
         <div className="absolute top-10 right-[10%] h-72 w-[38%] rounded-full bg-[var(--landing-violet)] opacity-[0.14] blur-[90px] dark:opacity-[0.24]" />
         <div className="absolute top-40 left-[34%] h-56 w-[32%] rounded-full bg-[var(--landing-pink)] opacity-[0.1] blur-[90px] dark:opacity-[0.16]" />
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[40rem] mask-[radial-gradient(ellipse_75%_70%_at_50%_30%,#000_25%,transparent_100%)]"
+      >
+        <ParticleField />
       </div>
       <header className="flex max-w-3xl min-w-0 flex-col items-center gap-6 text-center">
         <p className="relative inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-background/70 py-1 pr-3 pl-1.5 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-sm">
@@ -315,6 +323,7 @@ function ConnectionDiagram({ label }: { label: string }) {
             accentGradient,
           )}
         />
+        <FlowPackets />
         <span
           className={cn(
             "absolute left-1/2 grid size-10 -translate-x-1/2 place-items-center rounded-full p-px shadow-soft motion-safe:transition-[scale] motion-safe:duration-300 motion-safe:group-hover:scale-110",

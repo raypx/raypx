@@ -98,8 +98,12 @@ provides a one-shot load entrance (`enterOnLoad`, applied to wrappers rather tha
 controls). The homepage renders its content without entrances; its application frame
 uses `scrollSettle` from `features/landing/components/accent.ts`, a scroll-linked scale
 and offset that never changes opacity. The same module defines the logo palette as
-`--landing-*` properties on the landing layout. Pointer-follow spotlights and artwork
-shifts respond to hover only. Reduced motion removes all of it.
+`--landing-*` properties on the landing layout. Homepage ambient loops are the only
+autoplaying motion: `ParticleField` draws a canvas constellation and `FlowPackets`
+animates the connection line with the Web Animations API; both stop offscreen and in
+hidden tabs, and the frame light is a CSS rotation hidden under reduced motion.
+Pointer-follow spotlights and artwork shifts respond to hover only. Reduced motion
+removes all of it.
 
 ## Preview and validation
 

@@ -121,3 +121,28 @@ for (const view of views) {
     await expect(privacy).toBeFocused();
   });
 }
+
+test("Web homepage ambient motion runs while visible and stops under reduced motion", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+  await page.route("**/rpc/configuration/public", (route) =>
+    authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+  );
+  await page.goto(web + "/");
+  const canvas = page.locator("canvas");
+  await expect(canvas).toHaveAttribute("aria-hidden", "true");
+  const frame = () => canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL());
+  const first = await frame();
+  await expect.poll(frame).not.toBe(first);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("[data-packet]").first()).toHaveCSS("opacity", "0");
+  const still = await frame();
+  await page.waitForTimeout(500);
+  expect(await frame()).toBe(still);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
+});

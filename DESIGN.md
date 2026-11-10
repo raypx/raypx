@@ -47,8 +47,12 @@ with fixed sample data when each frame is labelled as an example. It shows its c
 on first paint: a centered hero, the labelled example in an application frame chosen by
 step cards, a three-step overview, workspace links with example interfaces and the
 connection band. The frame may settle with scroll where view timelines exist, without
-changing opacity. Authentication and privacy pages may play one short load entrance;
-nothing autoplays, loops or hides content until scrolled.
+changing opacity. The homepage alone may run ambient loops: a particle constellation
+behind the hero that reacts to a mouse pointer, a light travelling around the example
+frame and packets along the connection line. They pause offscreen and in hidden tabs;
+reduced motion leaves one still frame or hides them. Authentication and privacy pages
+may play one short load entrance and nothing else loops; no content waits for
+scrolling to appear.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.
 The Expo iOS/Android app requires login by default and opens its account screen
 after authentication. Native task views and push notifications are later work.
