@@ -1,0 +1,28 @@
+packages/tooling/src/verification/plan.test.ts
+  s_a3446c4a758722::t_90a369a71cb6d9 243-256
+docs/development/validation-artifacts.md
+  s_a3446c4a758722::t_90a369a71cb6d9 203-204
+packages/tooling/src/verification/plan.ts
+  s_a3446c4a758722::t_90a369a71cb6d9 25
+packages/tooling/src/policy.ts
+  s_a3446c4a758722::t_e33361ba644173 19-23,25
+  s_a3446c4a758722::t_bb8d875a534ae4 24
+packages/tooling/src/markdown-length.test.ts
+  s_a3446c4a758722::t_e33361ba644173 16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0eb0f2197f548cbe27b45429f63736bc0218e6f8",
+  "prompts": {},
+  "sessions": {
+    "s_a3446c4a758722": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c463-d628-74a1-9951-4a2491204f7d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
