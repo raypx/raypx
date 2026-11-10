@@ -47,6 +47,10 @@ Code outside `src/components/` stays private.
   width or gutters. `ShellPage<Title>` is the route metadata shape: applications
   declare `staticData.page` with a value-free message key, an optional `guestTitle`
   and the layout, and derive breadcrumbs and `layout` from the deepest match.
+  `actions` adds commands under the brand (`ShellAction`: a link element or button, with
+  an optional shortcut hint).
+- `command-palette`: `CommandPalette`, a ⌘K / Ctrl+K dialog over host-supplied groups,
+  and `useCommandShortcut` for the platform's key hint. The host owns the open state.
 - `settings`: `SettingsPage` (header and sections inside a `document` template),
   `SettingsSection` (heading-labelled row with a control and optional icon), and the device preference
   sections `AppearanceSettings` (needs UI's ThemeProvider) and `LanguageSettings`

@@ -67,3 +67,23 @@ export function TaskStatusBadge({
     </Badge>
   );
 }
+
+/**
+ * The compact form for dense navigation: only states that ask for a look (running,
+ * waiting, failed) show a mark, and each carries its label for assistive technology.
+ */
+export function TaskStatusMark({ status, label }: { status: TaskStatus; label: string }) {
+  const kind = statusIndicator(status);
+  if (kind !== "live" && kind !== "attention" && kind !== "problem") return null;
+  return (
+    <span
+      className={cn(
+        "grid size-4 shrink-0 place-items-center",
+        kind === "problem" ? "text-destructive-text" : "text-foreground",
+      )}
+    >
+      <StatusIndicator kind={kind} />
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}

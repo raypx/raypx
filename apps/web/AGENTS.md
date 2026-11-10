@@ -114,7 +114,9 @@ application is an independent composition root and is never imported by another 
   password changes and their account refresh prevent dismissal while pending.
   The `/projects` page lists authorized remote projects grouped by computer.
   Project/session selection lives in validated URL search. The composer consumes
-  that target and never executes on navigation or guest draft restoration.
+  that target and never executes on navigation or guest draft restoration. The
+  shell opens the composer with `/tasks?compose=true`; the route clears the flag
+  after focusing the editor.
   Account views in `features/auth/components` call the existing Better Auth client methods.
   Name saves invalidate the account query before reloading route context. Session
   lists stay in component memory, never query caches or persisted storage; tokens
@@ -207,10 +209,11 @@ The task composer and cloud schedules receive the same account library as an
 explicit React prop. Guest draft handoff never carries private source references.
 Task details show the immutable creation snapshot without reading current documents.
 
-Task and approval routes use `@raypx/tasks/client`; the shell imports only
-`@raypx/tasks/client/pending-count`. Both use account-keyed state and
-visibility-aware relay subscriptions. Settings lists device connections. Never render agent
-content as HTML or send a raw local method, path or executable to the API.
+Task and approval routes and sidebar session groups use `@raypx/tasks/client`.
+The shell imports the inbox badge from `@raypx/tasks/client/pending-count`.
+Remote reads use account-keyed state and visibility-aware relay subscriptions.
+Settings lists device connections. Never render agent content as HTML or send a
+raw local method, path or executable to the API.
 
 ## Development diagnostics
 

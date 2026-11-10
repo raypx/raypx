@@ -21,7 +21,13 @@ export const Route = createFileRoute("/(app)/tasks")({
   staticData: { page: { title: "common.tasks", layout: "workbench" } },
   validateSearch: (
     search: Record<string, unknown>,
-  ): { taskId?: string; project?: string; device?: string; guestDraft?: string } => ({
+  ): {
+    taskId?: string;
+    project?: string;
+    device?: string;
+    guestDraft?: string;
+    compose?: true;
+  } => ({
     ...(typeof search.project === "string" && uuid.test(search.project)
       ? { project: search.project }
       : {}),
@@ -34,6 +40,7 @@ export const Route = createFileRoute("/(app)/tasks")({
     ...(typeof search.guestDraft === "string" && uuid.test(search.guestDraft)
       ? { guestDraft: search.guestDraft }
       : {}),
+    ...(search.compose === true ? { compose: true as const } : {}),
   }),
   component: Page,
 });
@@ -45,7 +52,7 @@ function Page() {
   );
 }
 function SignedInTasks({ accountId }: { accountId: string }) {
-  const { taskId, project, device, guestDraft } = Route.useSearch();
+  const { taskId, project, device, guestDraft, compose } = Route.useSearch();
   const router = useRouter();
   const resume = useGuestDraft(apiUrl, accountId);
   const g = useTranslations("guest");
@@ -59,6 +66,7 @@ function SignedInTasks({ accountId }: { accountId: string }) {
         device: target.deviceId,
         ...(linkedTask ? { taskId: linkedTask } : {}),
         ...(guestDraft ? { guestDraft } : {}),
+        ...(compose && !linkedTask ? { compose } : {}),
       },
     });
   if (!resume.ready) return <LoadingState label={g("restoring")} />;
@@ -109,6 +117,18 @@ function SignedInTasks({ accountId }: { accountId: string }) {
           initialDraft={resume.draft}
           onDraftRestored={resume.restored}
           initialTaskId={taskId}
+          newSession={compose}
+          onNewSessionShown={() =>
+            void router.navigate({
+              to: "/tasks",
+              search: {
+                ...(project ? { project } : {}),
+                ...(device ? { device } : {}),
+                ...(guestDraft ? { guestDraft } : {}),
+              },
+              replace: true,
+            })
+          }
           {...(project ? { projectId: project } : {})}
           onTaskChange={(id) =>
             void router.navigate({

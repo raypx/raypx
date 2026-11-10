@@ -83,6 +83,7 @@ it("opens older tasks after a short page and returns to newer tasks without losi
   fireEvent.click(screen.getByRole("button", { name: "Older sessions" }));
   fireEvent.click(await screen.findByRole("button", { name: /Task 3/ }));
   await screen.findByText("Result 3");
+  fireEvent.click(screen.getByRole("button", { name: "Back to sessions" }));
   expect(screen.getByRole("button", { name: "Older sessions" }).hasAttribute("disabled")).toBe(
     true,
   );
@@ -121,6 +122,8 @@ it("keeps long task lists virtualized while keyboard navigation can reach every 
   fireEvent.click(last);
   await screen.findByText("Virtual result 100");
   expect(last.getAttribute("aria-pressed")).toBe("true");
+  fireEvent.click(screen.getByRole("button", { name: "Back to sessions" }));
+  await waitFor(() => expect(document.activeElement).toBe(last));
   fireEvent.keyDown(last, { key: "Home" });
   await waitFor(() => expect(document.activeElement).toBe(first));
   fireEvent.keyDown(first, { key: "ArrowDown" });

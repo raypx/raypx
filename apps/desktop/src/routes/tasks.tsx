@@ -4,7 +4,13 @@ export const Route = createFileRoute("/tasks")({
   staticData: { page: { title: "common.tasks", layout: "workbench" } },
   validateSearch: (
     search: Record<string, unknown>,
-  ): { scope?: "local" | "remote"; project?: string; device?: string; taskId?: string } => ({
+  ): {
+    scope?: "local" | "remote";
+    project?: string;
+    device?: string;
+    taskId?: string;
+    compose?: true;
+  } => ({
     ...(typeof search.device === "string" && /^[0-9a-f-]{36}$/i.test(search.device)
       ? { device: search.device }
       : {}),
@@ -16,6 +22,7 @@ export const Route = createFileRoute("/tasks")({
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(search.taskId)
       ? { taskId: search.taskId }
       : {}),
+    ...(search.compose === true ? { compose: true as const } : {}),
   }),
   component: Tasks,
 });

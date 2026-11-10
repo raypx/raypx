@@ -38,6 +38,7 @@ export function DesktopTaskWorkspace({
   const scope = search.get("scope") === "remote" ? "remote" : initialScope;
   const projectId = search.get("project") ?? "";
   const deviceId = search.get("device") ?? "";
+  const compose = search.get("compose") === "true";
   const rawTask = search.get("taskId");
   const taskId = rawTask && /^[0-9a-f-]{36}$/i.test(rawTask) ? rawTask : undefined;
   const t = useTranslations("tasks"),
@@ -50,6 +51,7 @@ export function DesktopTaskWorkspace({
         project: target.projectId,
         device: target.deviceId,
         ...(linkedTask ? { taskId: linkedTask } : {}),
+        ...(compose && !linkedTask ? { compose } : {}),
       },
       hash: linkedTask ? true : "",
     });
@@ -57,7 +59,7 @@ export function DesktopTaskWorkspace({
   const localView = !isDesktop() ? (
     <p className="text-sm text-muted-foreground">{c("desktopOnly")}</p>
   ) : view === "tasks" ? (
-    <LocalProjectSessions taskId={taskId} />
+    <LocalProjectSessions taskId={taskId} compose={compose} />
   ) : (
     <TaskWorkspace
       client={local}
@@ -122,10 +124,17 @@ export function DesktopTaskWorkspace({
               contextLibrary={accountMemory}
               actionsSlot={ShellActions}
               persistEditor
-              storageNamespace={apiUrl}
               projectId={projectId}
               {...(deviceId ? { deviceId } : {})}
               initialTaskId={taskId}
+              newSession={compose}
+              onNewSessionShown={() =>
+                void router.navigate({
+                  to: "/tasks",
+                  search: { scope: "remote", project: projectId, device: deviceId },
+                  replace: true,
+                })
+              }
               onTaskChange={(id) =>
                 void router.navigate({
                   to: "/tasks",
@@ -167,7 +176,13 @@ export function DesktopTaskWorkspace({
   );
 }
 
-function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
+function LocalProjectSessions({
+  taskId,
+  compose,
+}: {
+  taskId?: string | undefined;
+  compose: boolean;
+}) {
   const context = useLocalProjectContext();
   const router = useRouter();
   const c = useTranslations("common"),
@@ -176,11 +191,16 @@ function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
     if (!context.project || !context.device || taskId || context.requested) return;
     void router.navigate({
       to: "/tasks",
-      search: { scope: "local", project: context.project.id, device: context.device.id },
+      search: {
+        scope: "local",
+        project: context.project.id,
+        device: context.device.id,
+        ...(compose ? { compose } : {}),
+      },
       hash: true,
       replace: true,
     });
-  }, [context.project, context.device, context.requested, router, taskId]);
+  }, [context.project, context.device, context.requested, router, taskId, compose]);
   useEffect(() => {
     if (context.project) rememberProject(context.project.id);
   }, [context.project]);
@@ -222,10 +242,22 @@ function LocalProjectSessions({ taskId }: { taskId?: string | undefined }) {
         contextLibrary={localMemory}
         actionsSlot={ShellActions}
         persistEditor
-        storageNamespace={apiUrl}
         projectId={projectId}
         {...(deviceId ? { deviceId } : {})}
         initialTaskId={taskId}
+        newSession={compose}
+        onNewSessionShown={() =>
+          void router.navigate({
+            to: "/tasks",
+            search: {
+              scope: "local",
+              project: projectId,
+              ...(deviceId ? { device: deviceId } : {}),
+            },
+            hash: true,
+            replace: true,
+          })
+        }
         onTaskChange={(id) =>
           void router.navigate({
             to: "/tasks",

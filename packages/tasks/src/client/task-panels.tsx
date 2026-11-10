@@ -1,163 +1,25 @@
-import {
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+import type { ReactNode } from "react";
 
-const widthKey = "raypx.task-list-width.v1";
-const clamp = (value: number) => Math.max(30, Math.min(50, value));
-const defaultWidth = { value: 38 };
-function widthStore(key: string) {
-  let raw: string | null | undefined;
-  let snapshot = defaultWidth;
-  return {
-    read: () => {
-      try {
-        const next = localStorage.getItem(key);
-        if (next !== raw) {
-          raw = next;
-          const value = Number(next);
-          snapshot = { value: value >= 30 && value <= 50 ? value : 38 };
-        }
-        return snapshot;
-      } catch {
-        return snapshot;
-      }
-    },
-    subscribe: (listener: () => void) => {
-      const changed = (event: StorageEvent) => {
-        if (event.key === key || event.key === null) {
-          raw = undefined;
-          listener();
-        }
-      };
-      window.addEventListener("storage", changed);
-      return () => window.removeEventListener("storage", changed);
-    },
-  };
-}
-
-/** A bounded split view on desktop, and a list/detail navigation on small windows. */
+/**
+ * One pane at a time: the project's composer and session history, or the open session.
+ * The shell sidebar lists recent sessions, so the page no longer splits list and detail;
+ * both panes share one reading column.
+ */
 export function TaskPanels({
   list,
   detail,
   detailVisible,
-  storageKey = widthKey,
 }: {
   list: ReactNode;
   detail: ReactNode;
   detailVisible: boolean;
-  storageKey?: string | undefined;
 }) {
-  const t = useTranslations("tasks");
-  const root = useRef<HTMLDivElement>(null);
-  const storage = useMemo(() => widthStore(storageKey), [storageKey]);
-  const savedWidth = useSyncExternalStore(storage.subscribe, storage.read, () => defaultWidth);
-  const [changedWidth, setWidth] = useState<{
-    storage: typeof storage;
-    snapshot: typeof savedWidth;
-    value: number;
-  }>();
-  // Transient sizing belongs to this namespace and this persisted snapshot only.
-  const width =
-    changedWidth?.storage === storage && changedWidth.snapshot === savedWidth
-      ? changedWidth.value
-      : savedWidth.value;
-  function resize(value: number) {
-    setWidth({ storage, snapshot: savedWidth, value });
-  }
-  const [height, setHeight] = useState<number>();
-  useLayoutEffect(() => {
-    const node = root.current;
-    if (!node) return;
-    const measure = () =>
-      setHeight(Math.max(320, window.innerHeight - node.getBoundingClientRect().top - 24));
-    measure();
-    const observer =
-      typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
-    if (node.parentElement) observer?.observe(node.parentElement);
-    window.addEventListener("resize", measure);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-  function persist(value: number) {
-    try {
-      localStorage.setItem(storageKey, String(value));
-    } catch {
-      /* Keep the current in-memory width. */
-    }
-  }
   return (
-    <div
-      ref={root}
-      data-task-panels
-      className="grid grid-cols-1 items-start @min-[58rem]:grid-cols-[minmax(20rem,var(--task-list-width))_0.75rem_minmax(0,1fr)]"
-      style={
-        {
-          "--task-list-width": `${width}%`,
-          "--task-pane-height": height ? `${height}px` : "65dvh",
-        } as CSSProperties
-      }
-    >
-      <div
-        data-task-pane="list"
-        className={`min-w-0 space-y-5 @min-[58rem]:flex @min-[58rem]:h-[var(--task-pane-height)] @min-[58rem]:min-h-0 @min-[58rem]:flex-col @min-[58rem]:gap-5 @min-[58rem]:space-y-0 @min-[58rem]:overflow-y-auto @min-[58rem]:overscroll-contain @min-[58rem]:pr-3 @min-[58rem]:[&>[data-task-composer]]:shrink-0 ${detailVisible ? "hidden @min-[58rem]:flex" : ""}`}
-      >
+    <div data-task-panels className="mx-auto flex w-full max-w-4xl min-w-0 flex-col">
+      <div data-task-pane="list" hidden={detailVisible} className="min-w-0 space-y-5">
         {list}
       </div>
-      <div
-        role="separator"
-        tabIndex={0}
-        aria-label={t("resizeTaskPanels")}
-        aria-orientation="vertical"
-        aria-valuemin={30}
-        aria-valuemax={50}
-        aria-valuenow={Math.round(width)}
-        className="group hidden h-full min-h-72 touch-none cursor-col-resize items-stretch justify-center outline-none @min-[58rem]:flex focus-visible:bg-accent"
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.preventDefault();
-          event.currentTarget.setPointerCapture(event.pointerId);
-        }}
-        onPointerMove={(event) => {
-          if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-          const bounds = root.current!.getBoundingClientRect();
-          if (bounds.width) resize(clamp(((event.clientX - bounds.left) / bounds.width) * 100));
-        }}
-        onPointerUp={(event) => {
-          if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-          event.currentTarget.releasePointerCapture(event.pointerId);
-          persist(width);
-        }}
-        onKeyDown={(event) => {
-          const value = new Map([
-            ["Home", 30],
-            ["End", 50],
-            ["ArrowLeft", clamp(width - 2)],
-            ["ArrowRight", clamp(width + 2)],
-          ]).get(event.key);
-          if (value === undefined) return;
-          event.preventDefault();
-          resize(value);
-          persist(value);
-        }}
-      >
-        <span
-          aria-hidden="true"
-          className="w-px bg-border group-hover:bg-foreground/35 group-focus-visible:bg-foreground"
-        />
-      </div>
-      <div
-        data-task-pane="detail"
-        className={`min-w-0 @min-[58rem]:max-h-[var(--task-pane-height)] @min-[58rem]:overflow-y-auto @min-[58rem]:overscroll-contain @min-[58rem]:pl-5 ${!detailVisible ? "hidden @min-[58rem]:block" : ""}`}
-      >
+      <div data-task-pane="detail" hidden={!detailVisible} className="min-w-0">
         {detail}
       </div>
     </div>

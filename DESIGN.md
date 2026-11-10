@@ -65,9 +65,12 @@ without changing opacity. Other artwork moves only on hover. Authentication and 
 pages render without entrances or loops, and no public content waits for scrolling to
 appear.
 
-Desktop and Web share one sidebar order: Projects and the pending inbox, then project
-shortcuts, then Automations and Memory above one fixed footer row for the account and
-the settings shortcut. Use consistent 20px icons with 1.75 strokes, visible keyboard focus and
+Desktop and Web share one sidebar order: New session and Search (⌘K / Ctrl K) under the
+brand, then Projects, the pending inbox, Automations and Memory, then projects with their
+recent sessions, above one fixed footer row for the account and the settings shortcut.
+Each project entry opens its page; a chevron folds its newest conversations (follow-ups
+fold into the session they continue), and only running, waiting or failed sessions show
+a status mark. The command palette searches actions, pages, projects and recent sessions. Use consistent 20px icons with 1.75 strokes, visible keyboard focus and
 labelled tooltips in the collapsed rail; keep pending counts visible. Desktop separates
 local projects, with bounded recent shortcuts and searchable expansion, from connected
 computers, which appear only after sign-in. Guests get a direct sign-in action; the
@@ -125,8 +128,9 @@ carries an accessible label and a tooltip. Chinese and English copy stay equally
 and change together.
 
 Application chrome composes the shadcn Sidebar, with a persistent icon rail on
-narrow screens. Session workspaces pair a persistent composer and project-scoped drafts
-with a session list and a separate detail column. Completed sessions lead with the
+narrow screens. Session workspaces show one pane at a time in a reading column: the
+project's persistent composer, drafts and full session history, or the open session with
+a Back to sessions action. Completed sessions lead with the
 result and collapse the process. Overview counts describe the loaded page and switch
 filters in one segmented row; pending answers and running work are distinct. Use
 actual statuses, never synthetic progress. Tool calls show an intent icon, a live or

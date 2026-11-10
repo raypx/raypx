@@ -37,8 +37,11 @@ First connection gates project/provider queries; subsequent outages keep the wor
 EngineRouteSync lives outside that gate and refreshes local route loaders on readiness,
 including an initial failure before the local layout mounts.
 `preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
-sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...&device=...`. Project and computer filters apply before storage pagination, never create
-work or reads remote/account-owned projects. Account and settings share the footer.
+sidebar shortcuts, keeps a bounded device-local recent selection and opens
+`/tasks?scope=local&project=...&device=...`. Sidebar session groups reuse the shared
+Tasks view. Project and computer filters apply before storage pagination. The shell
+opens the composer with `compose=true`, which the route clears after focusing the
+editor. Account and settings share the footer.
 
 `src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group, like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
 SSR for native route lifecycles, provides the desktop capability in `beforeLoad` and shares root grants between Files and Jobs. Refresh grants when entering this

@@ -138,7 +138,10 @@ it.each(["before", "after"])(
       await fixture.publish();
     }
     await screen.findByRole("button", { name: "Approve plan" });
-    expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toHaveValue("");
+    // The opened session replaces the composer pane, which keeps an empty prompt behind it.
+    expect(
+      screen.getByRole("textbox", { name: "What should the agent do?", hidden: true }),
+    ).toHaveValue("");
     expect(fixture.create).toHaveBeenCalledTimes(1);
   },
 );

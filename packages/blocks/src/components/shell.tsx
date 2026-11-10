@@ -8,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
   type ComponentType,
+  type ReactElement,
   type ReactNode,
   type CSSProperties,
 } from "react";
@@ -61,6 +62,17 @@ export interface ShellNavItem<To extends string> {
   badge?: ReactNode;
 }
 
+/** A command at the top of the sidebar, such as starting a session or opening search. */
+export interface ShellAction {
+  label: string;
+  icon: ReactNode;
+  /** A key hint beside the label; the application binds the keys themselves. */
+  shortcut?: { label: string; keys: string };
+  /** An application link element for navigation; without it the action is a button. */
+  render?: ReactElement;
+  onSelect?: () => void;
+}
+
 /**
  * Page templates own content width, gutters and vertical rhythm. Their breakpoints
  * follow the content column (`@…/main`), whose width changes with the sidebar.
@@ -76,6 +88,9 @@ export interface ShellPage<Title extends string = string> {
   layout: PageLayout;
 }
 
+const itemClass =
+  "relative min-h-control-lg gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground motion-reduce:transition-none max-[760px]:min-h-control-xl [&_svg]:size-5 [&_svg]:stroke-[1.75]";
+
 const pageLayouts: Record<PageLayout, string> = {
   // Settings and account stay in a reading column so labels sit with their controls.
   document: "max-w-3xl px-8 pt-10 pb-16 @max-xl/main:px-5 @max-xl/main:pt-8 @max-xl/main:pb-12",
@@ -90,6 +105,8 @@ export interface AppShellProps<To extends string> {
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
   brand: { to: To; label: string; description?: string };
+  /** Commands under the brand that stay put while navigation scrolls. */
+  actions?: readonly ShellAction[];
   /** Main navigation groups, with optional captions supplied by navigationLabels. */
   navigation: readonly (readonly ShellNavItem<To>[])[];
   navigationLabels?: readonly string[];
@@ -174,6 +191,7 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
 function ShellContents<To extends string>({
   frame = "document",
   brand,
+  actions,
   navigation,
   navigationLabels,
   contextNavigation,
@@ -206,12 +224,37 @@ function ShellContents<To extends string>({
     }),
     [toolbarStart, toolbarEnd],
   );
+  function renderAction(action: ShellAction) {
+    return (
+      <SidebarMenuItem key={action.label}>
+        <SidebarMenuButton
+          tooltip={action.label}
+          className={itemClass}
+          {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
+          {...(action.render ? { render: action.render } : { onClick: action.onSelect })}
+        >
+          <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center">
+            {action.icon}
+          </span>
+          <span className="min-w-0 flex-1 truncate sidebar-icon:sr-only">{action.label}</span>
+          {action.shortcut && (
+            <kbd
+              aria-hidden="true"
+              className="ml-auto shrink-0 font-sans text-xs text-muted-foreground/70 sidebar-icon:hidden"
+            >
+              {action.shortcut.label}
+            </kbd>
+          )}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
   function renderItem(item: ShellNavItem<To>) {
     return (
       <SidebarMenuItem key={item.to}>
         <SidebarMenuButton
           tooltip={item.label}
-          className="relative min-h-control-lg gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground motion-reduce:transition-none max-[760px]:min-h-control-xl [&_svg]:size-5 [&_svg]:stroke-[1.75]"
+          className={itemClass}
           render={
             <LinkComponent
               to={item.to}
@@ -273,6 +316,9 @@ function ShellContents<To extends string>({
             <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground sidebar-icon:hidden">
               {brand.description}
             </p>
+          )}
+          {actions && actions.length > 0 && (
+            <SidebarMenu className="mt-4 gap-1">{actions.map(renderAction)}</SidebarMenu>
           )}
         </SidebarHeader>
         <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">

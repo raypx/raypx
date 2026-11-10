@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import { FolderIcon } from "@raypx/icons/folder";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SearchIcon } from "@raypx/icons/search";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -12,9 +11,11 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
 } from "@raypx/ui/components/ui/sidebar";
+import { ProjectSessionGroup, type SessionLinkProps } from "@raypx/tasks/client";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
+import { apiUrl } from "../auth/client.ts";
+import { localTaskClient } from "./local-client.ts";
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,15 +25,38 @@ import { useDesktopPlatform } from "../../lib/platform-context.tsx";
 import { useProjectCatalog } from "./project-catalog.ts";
 import { recentProjects, rememberProject } from "./project-history.ts";
 
-/** Local project shortcuts never depend on a browser account or remote task data. */
+const localScope = { kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID } as const;
+
+function SessionLink({ projectId, deviceId, taskId, onClick, ...props }: SessionLinkProps) {
+  return (
+    <Link
+      to="/tasks"
+      search={{
+        scope: "local",
+        project: projectId,
+        device: deviceId,
+        ...(taskId ? { taskId } : {}),
+      }}
+      activeOptions={{ exact: true }}
+      onClick={(event) => {
+        rememberProject(projectId);
+        onClick?.(event);
+      }}
+      {...props}
+    />
+  );
+}
+
+/** Local projects with their recent sessions; never depends on a browser account. */
 export function ProjectNavigation() {
   const t = useTranslations("tasks");
   const platform = useDesktopPlatform();
   const location = useLocation();
   const search = new URLSearchParams(location.searchStr);
-  const selected = !["remote", "account", "cloud"].includes(search.get("scope") ?? "local")
-    ? (search.get("project") ?? search.get("rootId"))
-    : null;
+  const local = !["remote", "account", "cloud"].includes(search.get("scope") ?? "local");
+  const selected = local ? (search.get("project") ?? search.get("rootId")) : null;
+  const activeTaskId =
+    (local && location.pathname === "/tasks" && search.get("taskId")) || undefined;
   const recent = recentProjects();
   const [query, setQuery] = useState("");
   const [allOpen, setAllOpen] = useState(false);
@@ -45,34 +69,24 @@ export function ProjectNavigation() {
     };
     return rank(a.id) - rank(b.id);
   });
-  function remember(id: string) {
-    rememberProject(id);
-  }
-  function items(values: typeof projects) {
+  const device = data?.[0];
+  function items(values: typeof projects, firstOpen: boolean) {
+    if (!device) return null;
     return (
       <SidebarMenu className="gap-1">
-        {values.map((project) => (
-          <SidebarMenuItem key={project.id}>
-            <SidebarMenuButton
-              tooltip={project.name}
-              className="min-h-control-lg gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground aria-[current=page]:bg-sidebar-accent aria-[current=page]:text-foreground [&_svg]:size-5"
-              render={
-                <Link
-                  to="/tasks"
-                  search={{
-                    scope: "local",
-                    project: project.id,
-                    ...(data?.[0] ? { device: data[0].id } : {}),
-                  }}
-                  aria-current={selected === project.id ? "page" : undefined}
-                  onClick={() => remember(project.id)}
-                />
-              }
-            >
-              <FolderIcon aria-hidden="true" className="shrink-0 stroke-[1.75]" />
-              <span className="truncate">{project.name}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+        {values.map((project, index) => (
+          <ProjectSessionGroup
+            key={project.id}
+            client={localTaskClient}
+            scope={localScope}
+            projectId={project.id}
+            deviceId={device.id}
+            name={project.name}
+            current={selected === project.id}
+            activeTaskId={selected === project.id ? activeTaskId : undefined}
+            defaultOpen={firstOpen && index === 0}
+            SessionLink={SessionLink}
+          />
         ))}
       </SidebarMenu>
     );
@@ -110,7 +124,7 @@ export function ProjectNavigation() {
             {t("addFirstProject")}
           </Link>
         ) : (
-          !showAll && items(projects.slice(0, 5))
+          !showAll && items(projects.slice(0, 5), true)
         )}
         {projects.length > 5 && (
           <Collapsible open={allOpen} onOpenChange={setAllOpen}>
@@ -140,7 +154,7 @@ export function ProjectNavigation() {
                   maxLength={200}
                 />
               </InputGroup>
-              <div className="max-h-60 overflow-y-auto">{items(matches)}</div>
+              <div className="max-h-60 overflow-y-auto">{items(matches, false)}</div>
               {!matches.length && (
                 <p className="px-3 text-xs text-muted-foreground">{t("noProjectsMatch")}</p>
               )}

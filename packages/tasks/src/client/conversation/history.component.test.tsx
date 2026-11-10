@@ -118,6 +118,7 @@ it.each(["owner", "task", "unmount"] as const)(
       fireEvent.click(await screen.findByRole("button", { name: /History task 1/ }));
       await screen.findByText("account-b: History task 1");
     } else if (transition === "task") {
+      fireEvent.click(screen.getByRole("button", { name: "Back to sessions" }));
       fireEvent.click(screen.getByRole("button", { name: /History task 2/ }));
       await screen.findByText("account-a: History task 2");
     } else view.unmount();

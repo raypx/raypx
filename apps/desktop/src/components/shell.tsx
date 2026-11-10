@@ -12,10 +12,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui
 import { createPendingClient, localTaskClient } from "../features/tasks/local-client.ts";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to.ts";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Link,
   Outlet,
+  useLocation,
   useMatches,
   useRouter,
   useRouterState,
@@ -26,7 +27,11 @@ import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { InboxIcon } from "@raypx/icons/inbox";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { BookOpenIcon } from "@raypx/icons/book-open";
-import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
+import { AppShell, type ShellAction, type ShellLinkProps } from "@raypx/blocks/shell";
+import { useCommandShortcut } from "@raypx/blocks/command-palette";
+import { PlusIcon } from "@raypx/icons/plus";
+import { SearchIcon } from "@raypx/icons/search";
+import { DesktopCommandMenu } from "./command-menu.tsx";
 import { EngineNotice } from "../features/engine/notice.tsx";
 import { desktopStorageKey } from "../lib/storage.ts";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -86,6 +91,19 @@ export function DesktopShell() {
   const c = useTranslations("common");
   const memory = useTranslations("memory");
   const { engine, restart } = useDesktopEngine();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const shortcut = useCommandShortcut();
+  // New session starts in the project on screen; otherwise in the most recent project.
+  const target = useLocation({
+    select: (location) => {
+      if (location.pathname !== "/tasks") return null;
+      const search = new URLSearchParams(location.searchStr);
+      const project = search.get("project"),
+        device = search.get("device");
+      if (!project || !device) return null;
+      return `${search.get("scope") === "remote" ? "remote" : "local"}:${device}:${project}`;
+    },
+  });
   useEffect(() => {
     const stop = onLocalEvent((event) => {
       if (event.event === "approval.open")
@@ -99,6 +117,33 @@ export function DesktopShell() {
     };
   }, [router]);
   const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
+  const pages = [
+    { to: "/", label: c("projects"), icon: <FolderOpenIcon /> },
+    { to: "/approvals", label: c("approvals"), icon: <InboxIcon /> },
+    { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
+    { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
+  ] as const;
+  const [targetScope, targetDevice, targetProject] = target?.split(":") ?? [];
+  const actions: ShellAction[] = [
+    {
+      label: c("newSession"),
+      icon: <PlusIcon />,
+      render: (
+        <Link
+          to="/tasks"
+          search={{
+            scope: targetScope === "remote" ? "remote" : "local",
+            ...(targetDevice && targetProject
+              ? { device: targetDevice, project: targetProject }
+              : {}),
+            compose: true,
+          }}
+          activeOptions={{ exact: true }}
+        />
+      ),
+    },
+    { label: c("search"), icon: <SearchIcon />, shortcut, onSelect: () => setSearchOpen(true) },
+  ];
   return (
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />
@@ -106,6 +151,7 @@ export function DesktopShell() {
         storageKey={desktopStorageKey("raypx_sidebar_open")}
         frame="window"
         brand={{ to: "/", label: "Raypx" }}
+        actions={actions}
         contextNavigation={
           <div className="space-y-6">
             <ProjectNavigation />
@@ -115,7 +161,7 @@ export function DesktopShell() {
         navigationLabels={[c("workspace")]}
         navigation={[
           [
-            { to: "/", label: c("projects"), icon: <FolderOpenIcon />, exact: true },
+            { ...pages[0], exact: true },
             {
               to: "/approvals",
               label: c("approvals"),
@@ -128,11 +174,9 @@ export function DesktopShell() {
                 />
               ),
             },
+            pages[2],
+            pages[3],
           ],
-        ]}
-        secondaryNavigation={[
-          { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
-          { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
         ]}
         accountAction={
           <Tooltip>
@@ -188,6 +232,12 @@ export function DesktopShell() {
         <Outlet />
       </AppShell>
       <SettingsOverlay />
+      <DesktopCommandMenu
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        pages={pages}
+        onSettings={() => void settings.open()}
+      />
     </>
   );
 }

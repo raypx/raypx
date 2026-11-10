@@ -246,18 +246,3 @@ it("filters the loaded page by project without creating or refetching tasks", as
     mac.projects = [];
   }
 });
-
-it("resizes the split view with the keyboard, clamps its width and saves the device preference", async () => {
-  workspace();
-  const separator = await screen.findByRole("separator", {
-    name: "Resize session list and details",
-  });
-  fireEvent.keyDown(separator, { key: "End" });
-  expect(separator).toHaveAttribute("aria-valuenow", "50");
-  fireEvent.keyDown(separator, { key: "ArrowRight" });
-  expect(separator).toHaveAttribute("aria-valuenow", "50");
-  fireEvent.keyDown(separator, { key: "Home" });
-  fireEvent.keyDown(separator, { key: "ArrowRight" });
-  expect(separator).toHaveAttribute("aria-valuenow", "32");
-  expect(localStorage.getItem("raypx.task-list-width.v1")).toBe("32");
-});

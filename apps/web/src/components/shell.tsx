@@ -9,7 +9,7 @@ import { hasPermission } from "@raypx/account/access";
 import { PermissionBoundary } from "../features/auth/components/permission-boundary.tsx";
 import { analytics } from "../features/analytics/client.ts";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { UserButton } from "./user-button.tsx";
 import { authClient } from "../features/auth/client.ts";
@@ -19,17 +19,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Link,
   Outlet,
+  useLocation,
   useMatches,
   useRouter,
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
+import { PlusIcon } from "@raypx/icons/plus";
+import { SearchIcon } from "@raypx/icons/search";
+import { useCommandShortcut } from "@raypx/blocks/command-palette";
+import { WebCommandMenu } from "./command-menu.tsx";
 import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { InboxIcon } from "@raypx/icons/inbox";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { ScheduleIcon } from "@raypx/icons/schedule";
 import { BookOpenIcon } from "@raypx/icons/book-open";
-import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
+import {
+  AppShell,
+  type ShellAction,
+  type ShellLinkProps,
+  type ShellNavItem,
+} from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
 import { QuickSettingsModal } from "../features/settings/quick-settings-modal.tsx";
@@ -60,6 +70,18 @@ export function WebShell() {
   const site = useQuery(publicConfigurationQuery());
   const siteName = site.data?.siteName ?? "Raypx";
   const { openModal } = useQuickSettingsStore();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const shortcut = useCommandShortcut();
+  // New session starts in the project on screen; elsewhere it opens the project picker.
+  const target = useLocation({
+    select: (location) => {
+      if (location.pathname !== "/tasks") return null;
+      const search = new URLSearchParams(location.searchStr);
+      const project = search.get("project"),
+        device = search.get("device");
+      return project && device ? `${device}:${project}` : null;
+    },
+  });
 
   useEffect(() => {
     taskClient.setAccount?.(accountId);
@@ -95,25 +117,55 @@ export function WebShell() {
           <PendingCount key={accountId ?? "signed-out"} client={taskClient} accountId={accountId} />
         ) : undefined,
     },
-  ];
-  const secondaryNavigation: ShellNavItem<WebPath>[] = [
     { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
     { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
   ];
-  secondaryNavigation.push({
-    to: "/admin",
-    label: t("dash.nav.console"),
-    icon: <AdjustmentsIcon />,
-  });
+  const secondaryNavigation: ShellNavItem<WebPath>[] = [
+    { to: "/admin", label: t("dash.nav.console"), icon: <AdjustmentsIcon /> },
+  ];
+  const pages = [...navigation, ...secondaryNavigation].filter((item) =>
+    canAccessWebPage(access, item.to),
+  );
+  const [targetDevice, targetProject] = target?.split(":") ?? [];
+  const actions: ShellAction[] = [
+    ...(canAccessWebPage(access, "/tasks")
+      ? [
+          {
+            label: c("newSession"),
+            icon: <PlusIcon />,
+            render: (
+              <Link
+                to="/tasks"
+                search={{
+                  ...(targetDevice && targetProject
+                    ? { device: targetDevice, project: targetProject }
+                    : {}),
+                  compose: true,
+                }}
+                activeOptions={{ exact: true }}
+              />
+            ),
+          },
+        ]
+      : []),
+    {
+      label: c("search"),
+      icon: <SearchIcon />,
+      shortcut,
+      onSelect: () => setSearchOpen(true),
+    },
+  ];
+  const projectsVisible = Boolean(accountId && hasPermission(access, "projects.read"));
   return (
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />
       <AppShell
         brand={{ to: "/", label: siteName }}
+        actions={actions}
         navigation={[navigation.filter((item) => canAccessWebPage(access, item.to))]}
         navigationLabels={[c("workspace")]}
         contextNavigation={
-          accountId && hasPermission(access, "projects.read") ? (
+          accountId && projectsVisible ? (
             <RemoteProjectNavigation key={accountId} accountId={accountId} />
           ) : undefined
         }
@@ -151,6 +203,13 @@ export function WebShell() {
         )}
       </AppShell>
       <QuickSettingsModal />
+      <WebCommandMenu
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        accountId={projectsVisible ? accountId : null}
+        pages={pages}
+        onSettings={openModal}
+      />
     </>
   );
 }

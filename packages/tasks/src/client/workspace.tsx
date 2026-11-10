@@ -51,7 +51,6 @@ interface Props {
   scope: WorkspaceScope | null;
   pending?: boolean;
   persistEditor?: boolean;
-  storageNamespace?: string;
   initialDraft?: TaskComposerDraft | undefined;
   onDraftRestored?: (() => void) | undefined;
   projectId?: string;
@@ -59,6 +58,10 @@ interface Props {
   onProjectChange?: (project: string) => void;
   initialTaskId?: string | undefined;
   onTaskChange?: ((taskId: string | undefined) => void) | undefined;
+  /** Opens and focuses an empty composer once the project loads, such as from a New session link. */
+  newSession?: boolean | undefined;
+  /** Lets the host clear its request so a reload or Back does not reopen the composer. */
+  onNewSessionShown?: (() => void) | undefined;
   onOpenTask?: ((task: AgentTask) => void) | undefined;
   contextLibrary?: MemoryClientPort | undefined;
   /** Hosts a project's actions in application chrome, such as the shell top bar. */
@@ -86,12 +89,13 @@ function Workspace({
   initialDraft,
   onDraftRestored,
   persistEditor = false,
-  storageNamespace,
   projectId,
   deviceId,
   onProjectChange,
   initialTaskId,
   onTaskChange,
+  newSession = false,
+  onNewSessionShown,
   onOpenTask,
   contextLibrary,
   actionsSlot: ActionsSlot,
@@ -166,7 +170,13 @@ function Workspace({
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState<boolean>();
   const [detailVisible, setDetailVisible] = useState(Boolean(initialTaskId));
-  const linkedTask = useRef(initialTaskId);
+  const [linkedTask, setLinkedTask] = useState(initialTaskId);
+  if (linkedTask !== initialTaskId) {
+    setLinkedTask(initialTaskId);
+    // Leaving a session keeps it selected so the history list can restore focus to it.
+    if (initialTaskId) setSelected(initialTaskId);
+    setDetailVisible(Boolean(initialTaskId));
+  }
   function selectTask(id: string | null) {
     setSelected(id);
     onTaskChange?.(id ?? undefined);
@@ -174,20 +184,27 @@ function Workspace({
   function openTaskDetails(id: string) {
     selectTask(id);
     setDetailVisible(true);
-    // Stacked layouts move focus to details instead of leaving them below the fold.
-    const panel = detail.current?.closest("[data-task-panels]");
-    if (!panel || getComputedStyle(panel).gridTemplateColumns.split(" ").length !== 1) return;
+    // The session replaces the hidden list, so focus moves with it.
     requestAnimationFrame(() => {
       detail.current?.scrollIntoView?.({ block: "start", behavior: "instant" });
       detail.current?.focus({ preventScroll: true });
     });
   }
+  function startNewSession() {
+    setOptionsOpen(true);
+    setEditorOpen(true);
+    setDetailVisible(false);
+    requestAnimationFrame(() => composer.current?.focus());
+  }
+  const composerReady = view === "tasks" && Boolean(data);
+  const shownNewSession = useRef(false);
   useEffect(() => {
-    if (linkedTask.current === initialTaskId) return;
-    linkedTask.current = initialTaskId;
-    setSelected(initialTaskId ?? null);
-    setDetailVisible(Boolean(initialTaskId));
-  }, [initialTaskId]);
+    if (!newSession) shownNewSession.current = false;
+    if (!newSession || !composerReady || shownNewSession.current) return;
+    shownNewSession.current = true;
+    startNewSession();
+    onNewSessionShown?.();
+  });
   const [returnToList, setReturnToList] = useState(0);
   const previousProject = useRef(projectId);
   useEffect(() => {
@@ -243,14 +260,7 @@ function Workspace({
         />
       </IconButton>
       {view === "tasks" && data && (
-        <Button
-          onClick={() => {
-            setOptionsOpen(true);
-            setEditorOpen(true);
-            setDetailVisible(false);
-            requestAnimationFrame(() => composer.current?.focus());
-          }}
-        >
+        <Button onClick={startNewSession}>
           <PlusIcon aria-hidden="true" />
           <span className="max-[760px]:sr-only">{t("create")}</span>
         </Button>
@@ -330,11 +340,6 @@ function Workspace({
       )}
       {data && view === "tasks" && (
         <TaskPanels
-          storageKey={
-            storageNamespace
-              ? JSON.stringify(["raypx.task-list-width.v1", storageNamespace])
-              : undefined
-          }
           detailVisible={detailVisible}
           list={
             <>
@@ -352,7 +357,7 @@ function Workspace({
                 draftKey={workspaceDraftKey(scope, projectId, deviceId)}
                 optionsOpen={optionsOpen}
                 onOptionsOpenChange={setOptionsOpen}
-                editorOpen={editorOpen ?? data.tasks.length === 0}
+                editorOpen={editorOpen ?? true}
                 onEditorOpenChange={setEditorOpen}
                 promptRef={composer}
                 onCreated={(task) => {
@@ -362,11 +367,7 @@ function Workspace({
                   refresh();
                 }}
               />
-              <section
-                ref={taskHistory}
-                aria-label={t("taskHistory")}
-                className="@min-[58rem]:flex @min-[58rem]:min-h-0 @min-[58rem]:flex-1 @min-[58rem]:flex-col"
-              >
+              <section ref={taskHistory} aria-label={t("taskHistory")}>
                 {data.tasks.length > 0 && (
                   <TaskOverview
                     tasks={data.tasks}
@@ -459,10 +460,11 @@ function Workspace({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="mb-4 @min-[58rem]:hidden"
+                  className="mb-4 -ml-2"
                   onClick={() => {
                     setDetailVisible(false);
                     setReturnToList((value) => value + 1);
+                    onTaskChange?.(undefined);
                   }}
                 >
                   <ArrowLeftIcon aria-hidden="true" />

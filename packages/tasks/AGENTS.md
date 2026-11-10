@@ -10,6 +10,9 @@ previews. /client exports DOM components and visibility-aware subscriptions;
 TaskWorkspacePort is the canonical model interface. /client/pending-count
 exports only the approval badge for always-mounted shells, without the workspace or virtualizer.
 `/client/task-composer` exposes the standalone composer and its plain draft type.
+`/client` exposes `ProjectSessionGroup` for expandable sidebar history with
+application-owned links. `/model` exposes `sessionThreads`, which groups follow-ups
+within a loaded task page and orders conversations by their latest activity.
 Applications can inject a restored draft and a guest sign-in/persistence adapter;
 guest submissions call that adapter without invoking task creation. The application
 owns authentication and handoff storage. Restored text always waits for an explicit Send.
@@ -43,8 +46,6 @@ these lifecycle signals retain conservative checkpoint-only coverage.
 History pagination aborts on unmount or scope/task changes; late adapter results
 cannot merge history, report failures or refresh the old owner. Timeouts release
 both query loading and the paging control even when a transport ignores its signal.
-Transient split widths belong to their storage namespace and snapshot; subsequent
-storage changes supersede them, while failed writes retain only an in-memory width.
 Draft enums require literal values; coerced arrays/objects are invalid stored inputs.
 Task lists navigate by creation-time/ID cursors. Probe the next cursor even after
 a short page: a local response may reach its byte limit before its record limit.
@@ -95,12 +96,11 @@ bounded Diff plus the complete original request. In-flight controls depend on th
 host's advertised inputModes; explain Claude interrupt versus Codex current-turn
 steer. Recover lost input receipts by authoritative entry ID without resending.
 
-Task workspace keeps the composer/drafts and paged virtual task list in the left
-column, with the selected task in the right column when space allows. Stacked
-layouts switch between list and detail, preserving the selected row and filters.
-The wide split can be resized by pointer or keyboard and stores only its width
-as a device preference. Existing-task views start with a compact editor; opening
-and closing it preserves unsent text. Saved drafts expand on demand. Finished
+Task workspace uses one reading column for either the composer, drafts and paged
+virtual history or the selected session. Returning to history preserves the selected
+row and filters. The host can request editor focus through `newSession` and clear
+the request through `onNewSessionShown` once the editor is ready. Opening and
+closing the editor preserves unsent text. Saved drafts expand on demand. Finished
 tasks show their outcome before the expandable full conversation.
 Applications own project/computer selection in their URL and pass `projectId` and
 `deviceId` as a controlled execution target. List reads and next-page probes send

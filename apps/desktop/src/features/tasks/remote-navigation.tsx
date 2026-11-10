@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
-import { FolderIcon } from "@raypx/icons/folder";
+import { ProjectSessionGroup, type SessionLinkProps } from "@raypx/tasks/client";
 import { cn } from "@raypx/ui/lib/utils";
 import {
   SidebarGroup,
@@ -14,12 +14,31 @@ import {
 import { taskClient } from "./client.ts";
 import { apiUrl } from "../auth/client.ts";
 
+function SessionLink({ projectId, deviceId, taskId, ...props }: SessionLinkProps) {
+  return (
+    <Link
+      to="/tasks"
+      search={{
+        scope: "remote",
+        device: deviceId,
+        project: projectId,
+        ...(taskId ? { taskId } : {}),
+      }}
+      activeOptions={{ exact: true }}
+      {...props}
+    />
+  );
+}
+
+/** Projects on the account's other computers, each with its recent sessions. */
 export function RemoteProjectNavigation({ accountId }: { accountId: string }) {
   const t = useTranslations("tasks"),
     queries = useQueryClient();
   const search = useLocation({ select: (location) => new URLSearchParams(location.searchStr) });
-  const active =
-    search.get("scope") === "remote" ? `${search.get("device")}:${search.get("project")}` : null;
+  const remote = search.get("scope") === "remote";
+  const active = remote ? `${search.get("device")}:${search.get("project")}` : null;
+  const activeTaskId = (remote && search.get("taskId")) || undefined;
+  const scope = { kind: "remote", namespace: apiUrl, accountId } as const;
   const key = ["desktop-remote-projects", apiUrl, accountId];
   const { data } = useQuery({
     queryKey: key,
@@ -55,22 +74,24 @@ export function RemoteProjectNavigation({ accountId }: { accountId: string }) {
                 <span className="truncate">{device.name}</span>
                 <span className="sr-only">{t(device.online ? "online" : "offline")}</span>
               </p>
-              {device.projects.map((project) => (
-                <SidebarMenuButton
-                  key={project.id}
-                  className="min-h-control-lg gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground aria-[current=page]:bg-sidebar-accent aria-[current=page]:text-foreground [&_svg]:size-5"
-                  render={
-                    <Link
-                      to="/tasks"
-                      search={{ scope: "remote", device: device.id, project: project.id }}
-                      aria-current={active === `${device.id}:${project.id}` ? "page" : undefined}
+              <SidebarMenu className="gap-1">
+                {device.projects.map((project) => {
+                  const current = active === `${device.id}:${project.id}`;
+                  return (
+                    <ProjectSessionGroup
+                      key={project.id}
+                      client={taskClient}
+                      scope={scope}
+                      projectId={project.id}
+                      deviceId={device.id}
+                      name={project.name}
+                      current={current}
+                      activeTaskId={current ? activeTaskId : undefined}
+                      SessionLink={SessionLink}
                     />
-                  }
-                >
-                  <FolderIcon aria-hidden="true" className="shrink-0 stroke-[1.75]" />
-                  <span className="truncate">{project.name}</span>
-                </SidebarMenuButton>
-              ))}
+                  );
+                })}
+              </SidebarMenu>
             </SidebarMenuItem>
           ))}
         <SidebarMenuItem>

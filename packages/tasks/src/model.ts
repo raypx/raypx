@@ -29,3 +29,4 @@ export type {
   TaskWorkspacePort,
 } from "./model/port.ts";
 export { isTaskActive, taskCursor } from "./model/task.ts";
+export { sessionThreads, type SessionThread } from "./model/session-threads.ts";
