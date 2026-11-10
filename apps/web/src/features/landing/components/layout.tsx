@@ -11,7 +11,7 @@ export function LandingLayout() {
   const c = useTranslations("common");
   const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";
   return (
-    <div className="relative isolate flex min-h-dvh flex-col bg-background">
+    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background">
       <PublicBackdrop />
       <PublicHeader siteName={siteName} sticky>
         <nav aria-label={c("home")} className="flex shrink-0 items-center gap-1">

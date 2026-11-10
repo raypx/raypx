@@ -16,6 +16,9 @@ function expectHomepageEntries() {
   expect(screen.getByRole("link", { name: "Open projects" })).toHaveAttribute("href", "/projects");
   expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute("href", "/tasks");
   expect(screen.getByRole("img", { name: "Desktop to Web connection" })).toBeTruthy();
+  const steps = screen.getByRole("heading", { name: "How it works" }).nextElementSibling;
+  expect(steps?.tagName).toBe("OL");
+  expect(within(steps as HTMLElement).getAllByRole("listitem")).toHaveLength(3);
 }
 
 it("renders the landing page without account or private workspace reads", async () => {

@@ -40,8 +40,11 @@ sidebar. Its footer groups brand copyright with privacy and GitHub links. Local 
 Public pages (landing, authentication, privacy) share one header, which gains a surface
 only after scrolling, and may add texture: a masked neutral dot grid, framed surfaces
 and abstract artwork built from tokens and Hugeicons. Artwork is `aria-hidden`, never
-imitates real projects, sessions or statuses, and moves only on hover. Public pages may
-play one short load entrance and scroll-linked reveals; nothing autoplays or loops.
+imitates real projects, sessions or statuses, and moves only on hover. The homepage
+shows its content on first paint: a centered hero, the labelled example in an
+application frame, a three-step overview, illustrated workspace links and the
+connection band. Authentication and privacy pages may play one short load entrance;
+nothing autoplays, loops or waits for scrolling to appear.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.
 The Expo iOS/Android app requires login by default and opens its account screen
 after authentication. Native task views and push notifications are later work.
@@ -83,7 +86,8 @@ applications and retain password-manager autocomplete.
 High-frequency controls respond immediately; color and focus transitions use the
 shared 150ms control cadence. Menus and popovers enter in 150ms with ease-out and
 small displacement; sheets may use 200ms. Animate state changes, not workbench page
-sections or every arriving message; public pages follow the entrance rule above. Reduced motion removes movement, fades and spinning.
+sections or every arriving message; public pages follow the entrance rule above.
+Reduced motion removes movement, fades and spinning.
 Keep browser text selection and carets aligned with the neutral palette. Coarse
 pointers receive 44px menu/search targets and expanded checkbox/radio/switch hit areas.
 

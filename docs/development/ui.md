@@ -93,9 +93,9 @@ ease-out, with matching chevrons. Keep padding inside the animated panel. Keyboa
 focus disables the transition, and reduced motion removes it entirely. Routine
 tabs only transition their colors/shadow for pointer use. Streaming messages,
 virtual row placement, search results and workbench page sections do not animate in.
-Public pages are the exception: `src/components/artwork.tsx` provides a one-shot load
-entrance (`enterOnLoad`, applied to wrappers rather than controls) and scroll-linked
-reveals (`enterOnScroll`) that only run where CSS view timelines exist. Pointer-follow
+Authentication and privacy pages are the exception: `src/components/artwork.tsx`
+provides a one-shot load entrance (`enterOnLoad`, applied to wrappers rather than
+controls). The homepage renders its content without entrances. Pointer-follow
 spotlights and artwork shifts respond to hover only. Reduced motion removes all of it.
 
 ## Preview and validation

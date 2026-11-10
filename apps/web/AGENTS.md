@@ -56,8 +56,11 @@ application is an independent composition root and is never imported by another 
   The homepage workflow preview is an explicitly labelled, static-data example.
   Its Base UI tabs never mount execution clients or private reads. Pointer changes
   use a short directional transition; keyboard and reduced-motion changes are immediate.
-  Home uses icon/name links, a Desktop-to-Web connection diagram and contextual
-  draft help; the diagram never implies a live connection or reads device state.
+  Home stacks a centered hero with contextual draft help, the preview in an
+  application frame, a three-step overview, illustrated workspace links whose
+  accessible names are their titles, and a Desktop-to-Web connection band; the
+  diagram never implies a live connection or reads device state. The landing layout
+  clips horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
   The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before

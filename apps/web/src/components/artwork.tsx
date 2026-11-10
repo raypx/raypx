@@ -11,10 +11,6 @@ import { cn } from "@raypx/ui/lib/utils";
 export const enterOnLoad =
   "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:blur-in-xs motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:fill-mode-both";
 
-/** Scroll-linked entrance where view timelines exist; other browsers render statically. */
-export const enterOnScroll =
-  "motion-safe:supports-[animation-timeline:view()]:animate-in motion-safe:supports-[animation-timeline:view()]:fade-in motion-safe:supports-[animation-timeline:view()]:slide-in-from-bottom-8 motion-safe:supports-[animation-timeline:view()]:fill-mode-both motion-safe:supports-[animation-timeline:view()]:[animation-timeline:view()] motion-safe:supports-[animation-timeline:view()]:[animation-range:entry_0%_entry_60%]";
-
 /** Neutral dot grid; the parent positions it (`relative isolate`) and callers mask it. */
 export function DotGrid({ className }: { className?: string }) {
   return (
