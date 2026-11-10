@@ -1,0 +1,19 @@
+packages/ui/src/combobox.component.test.tsx
+  s_a3446c4a758722::t_9c7cac147d37b9 81,92,106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "bc809760da0c0f419932aa1768eaa570fd7d044b",
+  "prompts": {},
+  "sessions": {
+    "s_a3446c4a758722": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c463-d628-74a1-9951-4a2491204f7d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
