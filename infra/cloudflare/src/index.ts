@@ -8,8 +8,8 @@ interface Env extends RelaySecrets {
 }
 
 export class RelayContainer extends Container<Env> {
-  override defaultPort = 3003;
-  override requiredPorts = [3003];
+  override defaultPort = 3002;
+  override requiredPorts = [3002];
   override sleepAfter = "10m";
   override envVars = containerEnvironment(this.env);
 

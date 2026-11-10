@@ -4,11 +4,10 @@ Infrastructure is organized as private Bun workspaces with their own dependencie
 deployment commands, type checks and tests. Install dependencies from the repository
 root with `bun install`.
 
-| Workspace              | Responsibility                                               | Guide                              |
-| ---------------------- | ------------------------------------------------------------ | ---------------------------------- |
-| `@raypx/infra-railway` | Railway API, Web, Relay and gateway service definitions      | [Railway](railway/README.md)       |
-| `relay`                | Independent Bun WebSocket service and private-broker routing | [Relay](relay/README.md)           |
-| `relay-cloudflare`     | Optional Workers ingress and Bun Relay Container deployment  | [Cloudflare](cloudflare/README.md) |
+| Workspace              | Responsibility                                              | Guide                              |
+| ---------------------- | ----------------------------------------------------------- | ---------------------------------- |
+| `@raypx/infra-railway` | Railway API, Web, Relay and gateway service definitions     | [Railway](railway/README.md)       |
+| `relay-cloudflare`     | Optional Workers ingress and Bun Relay Container deployment | [Cloudflare](cloudflare/README.md) |
 
 Run focused checks from the repository root:
 

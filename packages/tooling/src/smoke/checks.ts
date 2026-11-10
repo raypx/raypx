@@ -1,5 +1,8 @@
 /** Shared acceptance behavior for relocated outputs and real deployment images. */
-export async function checkApi(base: string, options: { origin?: string; gateway?: boolean } = {}) {
+export async function checkApi(
+  base: string,
+  options: { origin?: string; gateway?: boolean; relay?: boolean } = {},
+) {
   for (const path of [
     "/rpc/__missing",
     "/api/__missing",
@@ -21,7 +24,7 @@ export async function checkApi(base: string, options: { origin?: string; gateway
   const unavailable = (await signup.json()) as { code?: string };
   if (signup.status !== 503 || unavailable.code !== "MAIL_NOT_CONFIGURED")
     throw new Error("Unconfigured mail must reject signup before any database or delivery attempt");
-  if (!options.gateway) {
+  if (!options.gateway && !options.relay) {
     if ((await fetch(`${base}/relay`)).status !== 404)
       throw new Error("The API artifact must not host Relay sockets");
     return;

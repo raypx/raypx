@@ -303,26 +303,6 @@
         "vite-plus": "catalog:dev",
       },
     },
-    "infra/relay": {
-      "name": "relay",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/contracts": "workspace:*",
-        "@raypx/control": "workspace:*",
-        "@raypx/core": "workspace:*",
-        "@raypx/database": "workspace:*",
-        "@raypx/env": "workspace:*",
-        "@raypx/memory": "workspace:*",
-        "drizzle-orm": "catalog:",
-      },
-      "devDependencies": {
-        "@raypx/tooling": "workspace:*",
-        "@raypx/tsconfig": "workspace:*",
-        "@types/bun": "catalog:dev",
-        "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
-      },
-    },
     "packages/account": {
       "name": "@raypx/account",
       "version": "0.0.0",
@@ -3211,8 +3191,6 @@
     "regjsgen": ["regjsgen@0.8.0", "", {}, "sha512-RvwtGe3d7LvWiDQXeQw8p5asZUmfU1G/l6WbUXeHta7Y2PEIvBTwH6E2EfmYUK8pxcxEdEmaomqyp0vZZ7C+3Q=="],
 
     "regjsparser": ["regjsparser@0.13.4", "", { "dependencies": { "jsesc": "~3.1.0" }, "bin": { "regjsparser": "bin/parser" } }, "sha512-EWV80YgFaVgFrjGCAsV7oybp4GOxbls5RzBg8OB0nKEVXsBJR1JlV8Di1JhCROg3MzTfe1RI8yitIm1eOs68iA=="],
-
-    "relay": ["relay@workspace:infra/relay"],
 
     "relay-cloudflare": ["relay-cloudflare@workspace:infra/cloudflare"],
 

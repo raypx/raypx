@@ -3,7 +3,9 @@ import { ControlService } from "@raypx/control";
 import { RelayHub } from "@raypx/control/relay";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 import { relayServerSchema, type RelayServerFrame } from "@raypx/contracts/tasks";
-import { startRelayServer } from "../../src/server.js";
+import { serveBackend } from "../fixtures/backend-server.ts";
+import { Hono } from "hono";
+import { checkReadiness } from "../../server/app/readiness.ts";
 
 const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {
@@ -13,13 +15,23 @@ function fixture(databaseReady: () => Promise<unknown> = async () => {}) {
   const repository = memoryControlRepository();
   const control = new ControlService(repository);
   const hub = new RelayHub(async (use) => use(control));
-  const server = startRelayServer({
-    hub,
-    databaseReady,
-    allowedOrigins: ["https://app.example.test"],
-    hostname: "127.0.0.1",
-    port: 0,
+  const app = new Hono();
+  app.get("/health", (c) => c.json({ status: "ok", service: "relay" }));
+  app.get("/ready", async (c) => {
+    const checks = await checkReadiness({ database: databaseReady });
+    const ok = checks.database === "ok";
+    return c.json({ status: ok ? "ok" : "unavailable", checks }, ok ? 200 : 503);
   });
+  const listener = serveBackend({ hub, app, allowedOrigins: ["https://app.example.test"] });
+  let closing: Promise<void> | undefined;
+  const server = {
+    url: listener.url,
+    close: () =>
+      (closing ??= (async () => {
+        await hub.shutdown();
+        await listener.stop(true);
+      })()),
+  };
   cleanups.push(server.close);
   return { ...server, repository, control, hub, auth: controlAuth() };
 }

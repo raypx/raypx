@@ -1,5 +1,6 @@
 /** Static deployment inputs; the runtime schema must declare exactly these keys. */
 export default {
+  SERVER_ROLE: "input",
   NODE_ENV: "derived",
   ADMIN_EMAILS: "input",
   JOBS_ENABLED: "input",

@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vite-plus/test";
 import cleanupTask from "./runtime/cleanup.ts";
 
 const mocks = vi.hoisted(() => ({ runtime: vi.fn() }));
-vi.mock("../runtime/server.js", () => ({ getApiRuntime: mocks.runtime }));
+vi.mock("../runtime/backend.js", () => ({ getBackendRuntime: mocks.runtime }));
 beforeEach(() => vi.resetAllMocks());
 
 const result = {
@@ -18,4 +18,8 @@ it("uses the server runtime without closing the shared HTTP pool", async () => {
   expect(await cleanupTask.run()).toEqual({ result });
   expect(runtime.jobs.cleanup).toHaveBeenCalledOnce();
   expect(runtime.close).not.toHaveBeenCalled();
+});
+it("does not run maintenance in the relay role", async () => {
+  mocks.runtime.mockResolvedValue({ role: "relay" });
+  expect(await cleanupTask.run()).toEqual({ result: { status: "disabled" } });
 });

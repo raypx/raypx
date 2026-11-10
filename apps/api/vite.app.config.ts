@@ -10,6 +10,7 @@ export default defineConfig({
   plugins: [
     nitro({
       ...nitroTarget(),
+      features: { websocket: true },
       serverAssets: [
         {
           baseName: "database-migrations",
@@ -34,6 +35,7 @@ export default defineConfig({
       },
       plugins: ["./server/runtime/plugin.ts"],
       routes: {
+        "/relay": { handler: "./server/app/relay.ts" },
         "/api/auth/**": { handler, format: "web" },
         "/rpc/**": { handler, format: "web" },
         [deploymentServices.api.health]: { handler, format: "web" },
@@ -45,17 +47,5 @@ export default defineConfig({
   server: {
     port: deploymentServices.api.port,
     strictPort: true,
-    proxy: {
-      "/relay": {
-        target: `http://localhost:${deploymentServices.relay.port}`,
-        ws: true,
-        configure(proxy) {
-          proxy.on("proxyReqWs", (request) => {
-            request.removeHeader("cookie");
-            request.removeHeader("authorization");
-          });
-        },
-      },
-    },
   },
 });

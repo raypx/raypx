@@ -38,16 +38,17 @@ instead of PostgreSQL. API sessions remain persisted in PostgreSQL.
 
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
-Start `docker compose up -d postgres valkey` (PostgreSQL on 5433, Valkey on 6380),
+Start `docker compose up -d postgres` (PostgreSQL on 5433, Valkey on 6380),
 then run `bun run dev`. API startup applies pending foundation migrations before
 initializing its runtime. Set `DATABASE_MIGRATE_ON_START=false` to skip this step
 when migrations are managed separately; `bun run db:migrate` remains available explicitly.
 Never point API startup or migration commands at the retired database or volume.
 bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation schema of DATABASE_URL.
 
-bun run dev starts Web (Start SSR on 3000), API (3002) and Relay (3003). The API Vite
-development proxy forwards `/relay` to the independent service; production uses
-the shared gateway. See [Relay](../../infra/relay/README.md).
+bun run dev starts Web (Start SSR on 3000) and the combined backend (3002).
+Nitro hosts `/relay` alongside HTTP. Redis is optional for this default topology;
+set `SERVER_ROLE=api` and run another copy with `SERVER_ROLE=relay` only when
+using a shared private broker. See [backend roles](../architecture/0051-backend-runtime-roles.md).
 bun run dev:desktop starts Desktop development;
 bun run package:desktop packages it with its version-matched CLI. Phones use the Web
 application for the remote workbench. An Expo Mobile account/login baseline is

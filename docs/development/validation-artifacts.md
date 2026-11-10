@@ -372,7 +372,7 @@ Task inputs ignore `node_modules` listings and tool caches such as `.nitro`, `.v
 changes. Keep the cache between runs. `bun run clean` removes task/transform caches while
 preserving dependency packages, sources and local user data.
 
-The root `dev` entry selects Web, API and the independent Relay and allows three task slots. Preparation
+The root `dev` entry selects Web and the combined backend and allows two task slots. Preparation
 and compilation dependencies complete before the long-running dev commands start.
 
 ## Unused code and coverage tooling

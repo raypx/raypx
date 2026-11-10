@@ -66,8 +66,8 @@ it("uses shared application images, migration hooks and health paths after reloc
     },
     {
       build: {
-        dockerfilePath: "infra/relay/Dockerfile",
-        watchPatterns: expect.arrayContaining(["infra/relay/**", "infra/railway/railway.ts"]),
+        dockerfilePath: "apps/api/Dockerfile",
+        watchPatterns: expect.arrayContaining(["apps/api/**", "infra/railway/railway.ts"]),
       },
       deploy: { healthcheckPath: deploymentServices.relay.ready },
     },

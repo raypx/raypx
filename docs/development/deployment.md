@@ -1,136 +1,75 @@
 # Compose deployment and environments
 
-Every Dokploy Compose service uses the same `deploy/build.sh` and
-`deploy/compose.yaml`. Each project supplies its own environment variables.
-`deploy/.env.example` is the common template; there is no beta/production branch
-or credential discovery in the scripts.
+The default topology is Web + one Bun backend + PostgreSQL. `apps/api` builds a
+single Nitro artifact; `SERVER_ROLE=both` hosts HTTP and `/relay` together, with
+direct scheduling/revocation calls. Redis is optional for shared caches and
+multi-node routing. See [ADR 0051](../architecture/0051-backend-runtime-roles.md).
 
-## Project boundaries
+## Project boundaries and configuration
 
-Dokploy runs Compose with its service's unique project name (`appName`). Use that
-exact value as `COMPOSE_PROJECT_NAME` when prebuilding images. For a manual
-installation, choose a unique project name and keep it stable across updates.
+Dokploy and manual installations use `deploy/compose.yaml`, `deploy/build.sh` and
+an explicitly supplied environment. Copy `deploy/.env.example` to a protected
+`0600` file and set each project's domain, database password, authentication
+secret and proxy addresses. Env files are ignored and excluded from image builds.
+The build script reads exported public inputs; it never executes env files.
 
-- Image tags are `raypx/api:<project>-<release>`, `raypx/web:<project>-<release>`
-  `raypx/relay:<project>-<release>` and `raypx/api-migrate:<project>-<release>`.
-- Traefik routers/services use the Compose project name.
-- Backend networks and PostgreSQL volumes are scoped to that project.
-- Domain, database password, authentication secret, administrators, mail and
-  resource limits are explicitly configured for each project.
+Use the existing Dokploy appName as `COMPOSE_PROJECT_NAME`. Image tags are
+`raypx/api:<project>-<release>`, `raypx/web:<project>-<release>` and
+`raypx/api-migrate:<project>-<release>`. Routers, networks and default PostgreSQL
+volumes are scoped to that project. Preserve the project name across updates.
+Choose a new release identifier whenever source or build inputs change.
 
-Two projects can use the same source version and the same internal database name.
-Their containers and storage remain separate. Generate independent credentials.
-The Web API origin is baked into browser and SSR artifacts, so each project builds
-for its own `APP_HOST`. Choose a new release identifier whenever source or build
-inputs change, including a changed host.
+Use URL-safe `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`; Compose
+assembles the database URL. `AUTH_SECRET` must be independent per project. All
+production API-enabled roles require explicit database, secret, HTTPS auth URL
+and exact allowed origins. `POSTGRES_IMAGE_DIGEST` must be the verified
+64-character manifest digest for postgres:17-alpine. Keep its prior value for
+rollback. No floating-tag fallback is provided.
 
-`POSTGRES_VOLUME_NAME` is an optional override for adopting known existing storage.
-Leave it empty for the default `<compose-project>_postgres` volume. Never point it
-at another project's data, and never run new migrations against an old/operator
-database. See [Beta environment](#beta-environment) for the original deployment's transition.
+`POSTGRES_VOLUME_NAME` optionally selects known existing foundation storage.
+Never discover another project's volume, reuse a retired database or run these
+migrations against an operator database. New projects use their own isolated
+volume and credentials.
 
-## Configuration
+`RESEND_API_KEY` and a verified `MAIL_FROM` enable account mail; unconfigured mail
+retains `MAIL_NOT_CONFIGURED`. Optional OAuth, storage, analytics, cookie domain
+and locale settings are explicit in the template. `JOBS_ENABLED` enables server
+maintenance and cloud scheduling. Empty optional values disable integrations.
+A configured Redis outage fails readiness and closes cluster peers; it never
+falls back to local routing or queues uncertain execution for retry.
 
-Copy `deploy/.env.example` to `deploy/.env` (or any explicitly selected env file),
-set permissions `0600` and fill required values. Actual `.env`/`.env.*` files are
-ignored by Git and excluded from Docker contexts. `.env.*.example` templates remain
-trackable. Each independent checkout/project can simply use `.env`; multiple
-files in one checkout can use `.env.beta` and `.env.prod` with `--env-file`.
-
-Compose/Dokploy injects the variables. The build script receives exported public
-build variables and does not load or execute env files. Missing required runtime
-variables fail during Compose validation. Application secrets are never build args.
-
-Use URL-safe `POSTGRES_PASSWORD`, `POSTGRES_USER` and `POSTGRES_DB` because Compose
-assembles `DATABASE_URL` from them. `AUTH_SECRET` is independent per project. All
-instances use `NODE_ENV=production`, HTTPS and secure cookies.
-`RESEND_API_KEY` and a verified `MAIL_FROM` enable registration, verification and
-password-reset mail. Otherwise the explicit mail guard remains active.
-`JOBS_ENABLED` controls maintenance scheduling.
-
-The template also forwards optional `AUTH_DOMAIN`, `MAIL_DEFAULT_LOCALE`,
-Google/GitHub OAuth credentials (see [social login](accounts.md#social-login)),
-S3 storage settings and server `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`.
-`REDIS_URL` is required for the private broker shared by API and Relay.
-Empty optional values keep the corresponding integration disabled. These settings
-do not provision Redis, storage or mail services; supply the intended environment's
-endpoints and credentials. Browser analytics uses its separate public build values.
-
-`@raypx/tooling/build/deployment` owns service ports, readiness paths and API ingress
-routes. Vite and Railway use that contract directly. `bun run policy` checks the
-static Compose, Docker and Caddy adapters against it, and rejects API settings
-missing from Compose or the environment template.
-
-## Build
+## Build and host
 
 ```sh
 COMPOSE_PROJECT_NAME=raypx-app APP_HOST=app.example.com RAYPX_RELEASE=git-sha sh deploy/build.sh
 ```
 
-The script builds migration, API, Relay and Web sequentially. It creates
-`RAYPX_BUILD_BUILDER` (default `raypx-builder`) on first use. Creation limits default
-to two CPUs, 3 GiB memory and 4 GiB memory plus swap. `BUILD_MEMORY`,
-`BUILD_MEMORY_SWAP` and `BUILD_CPU_QUOTA` override creation settings; the fixed CPU
-period is 100000 microseconds, so quota 200000 means two CPUs. Change existing
-limits explicitly or choose a new builder name. A stopped builder starts on the
-next build. Reuse one bounded builder for the shared manifest and dependency image layers.
+Builds run sequentially: migration, backend, Web. Web bakes its API origin into
+SSR/browser assets. API and Relay roles use the same backend output and image.
+The portable Dockerfiles are `apps/api/Dockerfile` and `apps/web/Dockerfile`;
+Compose and Railway use the same sources. Both use pinned Bun images and run as
+the bun user.
 
-Build and runtime stages use the pinned `oven/bun` images; Bun is the only runtime.
-Compose and Railway use `apps/api/Dockerfile`, `apps/web/Dockerfile` and
-`infra/relay/Dockerfile`. Relay bundles its Bun entry with Vite.
-These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
-local Bun install cache mounts to a temporary Dockerfile and removes
-it on exit, including build failure. All install/build commands remain in the
-application Dockerfiles. Compose explicitly selects the API's `migrate` and
-`runtime` targets; the default `deploy` target additionally carries migration
-dependencies for Railway's isolated pre-deploy command.
-API and Web share identical manifest and dependency stages: `deploy/manifests.ts`
-extracts package manifests and `bun.lock`, so source edits reuse the installed
-dependencies and only manifest or lockfile changes reinstall. The script
-supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`. Migration images
-install only database production dependencies and run as the `bun` user.
-`deploy/workspaces.ts` supplies dependency-free workspace discovery to manifest
-extraction and `deploy/sources.ts`. Source staging follows database's production
-workspace dependencies (including optional and peer dependencies), copying their
-manifests and `src/` trees at their original paths. Development dependencies and
-unrelated source trees are excluded. Database's `drizzle-foundation` remains an
-explicit asset in the shared `migration-payload` stage. Both migration-capable
-image targets copy that same stage, so adding a production workspace dependency
-does not require another Dockerfile source-copy entry.
+`RAYPX_BUILD_BUILDER` defaults to raypx-builder. Creation limits default to two
+CPUs, 3 GiB memory and 4 GiB including swap; BUILD_MEMORY, BUILD_MEMORY_SWAP and
+BUILD_CPU_QUOTA override creation. Reuse a bounded builder for the shared
+manifest/dependency layers. `build.sh` adds install cache mounts only to temporary
+Dockerfiles and removes them on exit. VP gets --no-cache inside Docker to avoid
+nested seccomp tracing; Docker owns image caching.
 
-The API provides three deployable targets: `migrate` is an isolated database job,
-`runtime` contains only the API output, and the default `deploy` target extends
-`runtime` with production database dependencies and migration sources for pre-deploy
-hooks. Railway builds that default target; Web defaults to `runtime` on both
-platforms. The shared Dockerfiles use layer caching without cache mounts, whose
-service-specific IDs would tie the files to Railway. Manifest or lockfile changes
-can require a fresh download; source-only changes reuse the installed dependency layer.
+The backend Dockerfile offers `runtime` (Nitro output), `migrate` (isolated DB
+job) and default `deploy` (runtime plus pre-deploy migration payload). The payload
+follows the Database production dependency closure and carries canonical SQL.
+Startup migrations also use private bundled SQL unless
+`DATABASE_MIGRATE_ON_START=false`. Every migration path shares the transaction
+advisory lock and ledger. Failure aborts startup safely and removes temporary SQL.
 
-Image build commands pass `--no-cache` to VP. Its automatic filesystem tracking
-uses seccomp listeners on Linux; nesting them inside Railway's build sandbox can
-fail when launching the native TypeScript compiler with `EBUSY`. Type checks and
-builds still run in full, and Docker layers cache image builds. Development tasks
-outside Docker retain VP caching.
-
-## Host and deploy
-
-Use SSH keys, verify a second key connection before disabling password login and
-keep Dokploy's port 3000 behind an SSH tunnel. Both host and Docker forwarding
-firewalls must block public management access. Allow TCP 22, 80 and 443; UDP 443 is
-optional for HTTP/3. Only Traefik publishes application traffic.
-
-Point `APP_HOST` at the host. `TRAEFIK_NETWORK` defaults to `<COMPOSE_PROJECT_NAME>-ingress`, which
-must already exist and contain only this project's Web/API/Relay containers and Traefik.
-Create a distinct network for each project and explicitly connect Traefik with a
-stable address. Do not attach application containers to the shared Dokploy network. Set the certificate account email before requesting TLS using
-`TRAEFIK_CERT_RESOLVER` (default `letsencrypt`). Check public HTTPS
-and the origin certificate when using a reverse proxy. Web and API share an origin for cookies and relay.
-
-Set Traefik entry-point `forwardedHeaders.trustedIPs` to trusted edge ranges.
-`AUTH_IP_HEADERS=x-forwarded-for` and `AUTH_TRUSTED_PROXIES` include those ranges
-plus Traefik's exact `/32` or `/128` address. Never trust an entire shared Docker
-subnet. The server entry verifies the real socket peer before accepting forwarding
-headers. Keep untrusted forwarding disabled.
+Only Traefik publishes traffic. Keep the management panel behind SSH and block
+public database/application ports. Set APP_HOST, DNS, TLS and the exact project
+TRAEFIK_NETWORK. Attach only this project's containers and Traefik. Trust exact
+proxy /32 or /128 addresses in AUTH_TRUSTED_PROXIES; never trust a shared subnet.
+Traefik sends /api/, /rpc/, /health, /ready and /relay to the backend; other paths
+go to Web. It strips Cookie and Authorization only on the relay route.
 
 Validate without printing resolved secrets:
 
@@ -138,118 +77,72 @@ Validate without printing resolved secrets:
 docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 ```
 
-Give each Dokploy service the same raw Compose file and its own variables. Images
-must exist on that host (`pull_policy: never`). Set Dokploy build concurrency to
-one; disable automatic image cleanup for this local-image strategy. Keep prior
-release tags and the migration image until explicitly retired.
+## Optional split roles
 
-PostgreSQL becomes healthy, migration exits successfully, then API and Web start.
-API startup also applies pending migrations by default. Its output bundles the SQL
-as private Nitro server assets, so this works with the standalone runtime image and
-a relocated `.output` directory. Set `DATABASE_MIGRATE_ON_START=false` to skip the
-API startup step. This switch does not disable explicit migration jobs or Railway's
-pre-deploy hook: these remain in place before Relay/API replacement. Repeated startup
-checks apply only pending migrations. All entry points share a transaction-scoped
-PostgreSQL advisory lock before reading the migration ledger, waiting up to 120 seconds
-for another migrator; subsequent DDL lock waits remain capped at ten seconds.
-Any migration failure aborts API startup without opening the application runtime.
-The SQL staging directory is removed after each attempt, and startup errors expose
-neither connection details nor SQL. Existing database backups and maintenance-window
-requirements still apply.
-The independent Relay and API share an explicit private `REDIS_URL` and PostgreSQL.
-Gateway `/relay` traffic reaches Relay directly; API owns HTTP authentication and
-RPC. The broker has no offline queue or automatic delivery retry.
-Configured Redis outages disconnect Relay clients and fail its readiness probe;
-`/health` remains liveness-only. Keep the broker private to this deployment.
-The provided Compose update script still manages one API container.
-`POSTGRES_MEMORY`/`POSTGRES_CPUS`, `MIGRATE_MEMORY`/`MIGRATE_CPUS`,
-`API_MEMORY`/`API_CPUS`, `RELAY_MEMORY`/`RELAY_CPUS` and `WEB_MEMORY`/`WEB_CPUS` configure runtime limits. Budget
-for all projects, Dokploy and builds on a shared host.
+`deploy/compose.split.yaml` overlays the default topology. API sets SERVER_ROLE=api;
+Relay sets SERVER_ROLE=relay and uses the **same raypx/api image**, on port 3002.
+Both require the same private REDIS_URL and foundation PostgreSQL. Relay receives
+no AUTH_SECRET, cookie configuration, mail or provider credentials, runs no jobs
+and performs no migrations. Supply the private broker separately.
 
-Check `/health`, database-aware `/ready`, signed-out redirects, real login,
-WebSocket upgrades and that images/routes/volumes belong to the intended project.
-Browser checks do not validate packaged Desktop or unconfigured mail flows.
+```sh
+docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.split.yaml config --quiet
+sh deploy/update.sh /absolute/path/to/protected.env --split
+```
 
-Run `bun run smoke:deployment` to build and exercise both deployment image targets
-locally. The shared checks cover migrations, dependency readiness, guest SSR,
-assets, authenticated sessions, secure cookie attributes, Relay and recorded build
-release metadata. See [validation evidence](validation-artifacts.md) for isolation,
-cleanup and the limits of this local acceptance.
+Railway can keep its separate role services; Cloudflare uses this backend image
+with the relay role. See [Railway](railway.md) and [Cloudflare](../../infra/cloudflare/README.md).
+When changing an existing split deployment to combined mode, stop the old Relay
+using its existing configuration before replacing backend/routing. Keep its old
+image and protected configuration for rollback; do not delete its database or
+volumes. Reconcile the selected topology explicitly during maintenance.
 
 ## Update and recover
 
-Build images before updating runtime `RAYPX_RELEASE`, then deploy the same service.
-Back up its database before migrations. Preserve project name and named storage.
-Image rollback does not reverse schema changes; confirm compatibility first.
-Use the exact Dokploy project name for manual `docker compose -p` operations.
-Never use `down --volumes` or reset a deployment database.
+Build images before changing RAYPX_RELEASE, back up the intended database and
+retain protected settings plus running image digests. Use:
 
-## Digest and migration compatibility
+```sh
+sh deploy/update.sh /absolute/path/to/protected.env
+```
 
-Set `POSTGRES_IMAGE_DIGEST` to the verified 64-character manifest digest for
-`postgres:17-alpine`; there is no floating-tag fallback. Resolve it from the
-official registry in the deployment environment and retain the previous digest
-for rollback. An unavailable registry is not evidence of a verified image.
+The script validates Compose, captures immutable previous images, waits for
+PostgreSQL, stops backend writers, runs migration, then replaces backend and Web
+with health waits. --split also captures/stops/replaces Relay. Transactional index
+migrations require a maintenance window; ordinary Compose reconciliation does not
+stop old writers first. Do not run a second writer against this database during
+migration. Database locks have bounded waits.
 
-All migrations must remain compatible with the old API: use expand/contract,
-adding indexes/tables/optional fields first. A later release may remove the old
-shape only after every consumer has migrated. The current control indexes are
-additive. An image rollback must not require reversing a migration.
+On migration failure the untouched previous backend starts again. Replacement or
+health failure restores captured images by digest, and still returns failure.
+A failed first installation stays stopped. Temporary rollback overrides are
+removed. This is an outage deployment; schema rollback never runs automatically.
+Never use down --volumes, delete migration history or reset a deployment database.
 
-After backup and image builds, use `sh deploy/update.sh /absolute/path/to/.env`.
-It validates Compose without printing secrets, records the running API/Relay/Web image
-digests, waits for PostgreSQL, **stops API and Relay**, runs the isolated migration and then
-replaces Relay, API and Web with health waits. Schedule a maintenance window for the whole
-operation: the generated index migrations use transactional `CREATE INDEX` and
-cannot serve device writes concurrently. Do not run a separate old API against
-this database during migration. Migration connections use a ten-second lock timeout;
-an unexpected external writer causes a bounded failure rather than an indefinite wait.
-Generated migration history is unchanged. This is a single-API deployment with an
-outage, rather than a zero-downtime replica rollout.
-For releases containing these index migrations, disable Dokploy's automatic
-redeploy and run the update script on the host during the agreed maintenance
-window. An ordinary Compose reconciliation alone does not stop the old writer
-before starting the migration job.
+Image rollback uses the supplied environment and cannot restore externally changed
+secrets. Retain the prior protected environment and database backup separately.
+If automatic recovery fails, inspect logs privately and restore known images
+through a protected Compose override with the same project and volumes.
 
-On migration failure the script restarts the untouched previous API and Relay containers. On
-Relay, API or Web replacement/health failure it stops the failed services and recreates
-the previous running images by their immutable local digests. It returns failure
-even if recovery succeeds. A first deployment has no previous image to restore;
-failed services remain stopped. The script removes its protected temporary Compose
-override on exit. Database schema is never rolled back automatically.
+## Verification
 
-Before deployment retain the previous protected environment file, image digests
-and a database backup separately. Image rollback uses the environment file passed
-to the update; it cannot recover secrets or settings overwritten outside the script.
-If automatic recovery fails, inspect `docker compose ... logs --tail 100 api migrate`
-in a protected terminal, validate the previous environment with `config --quiet`,
-then use a protected Compose override specifying the captured `sha256:` images and
-`up -d --no-deps --wait api relay web`. Keep the same project name and volume. Verify
-`/health`, `/ready`, login and relay before ending maintenance. Retain additive
-migrations when reverting an application image; never delete migrations or volumes.
+Check HTTPS and origin certificate, /health, database/relay-aware /ready, redirects,
+SSR assets, real login, secure cookies and authenticated WebSocket dispatch/revoke.
+Unconfigured mail or unrun native/browser acceptance is unavailable, not passed.
 
-Deploy relay v4 Web/API/Desktop together. Older relay peers receive
-`UPGRADE_REQUIRED`; new clients stop retrying a version mismatch.
+`bun run smoke:deployment` builds the real Compose runtime/migration images and
+Railway deploy image. It first exercises the combined backend without starting
+Redis, then split roles from one image with a temporary broker. Both profiles
+verify synthetic account login, cookies, SSR, assets, readiness and Relay through
+the real gateway. Owned temporary databases/containers/networks/images are removed.
+The fixture is separately bundled and mounted read-only into the migration image;
+production images contain no synthetic provisioner. No operator resources are used.
+See [validation evidence](validation-artifacts.md).
 
-The CI `container-smoke` job runs for Dockerfiles, `.dockerignore`, deployment
-adapters/source staging, image acceptance scripts/fixtures and the CI workflow.
-Manual CI runs and release tags also select it. It uses the same `smoke:deployment`
-acceptance as local verification and must pass when selected. Ordinary application
-source, dependencies and application build configuration use source checks and their
-selected backend/browser gates. Railway builds production images after CI succeeds;
-CI's temporary images are not published or reused by Railway.
-The synthetic account provisioner is bundled once by API and mounted read-only into
-the prepared Bun migration image on the owned internal network. Acceptance does not
-export the full API development image or expose PostgreSQL to the runner. Both
-profiles still verify login, secure cookies and the session through their real gateway.
-`commands.json` and the job log report build, account initialization, acceptance and
-individual resource-cleanup timings. Profile container teardown is measured separately
-from acceptance; stage measurements do not overlap.
-Only `results.json` and `commands.json` are uploaded; raw subprocess logs stay local.
-API environment keys come from `apps/api/server/env.contract.ts`, whose exact keys
-are enforced by the runtime schema. Policy reads this static catalog without
-executing app code or loading environment files, and checks runtime Docker stages
-including inherited Railway settings.
+Container/deployment inputs select this gate in CI. The images are temporary and
+never published. Only results.json and commands.json are uploaded; raw logs remain
+local. Policy reads env.contract.ts without executing app code and checks all
+forwarded settings, role defaults, image ports and ingress maps.
 
 ## Production environment
 
@@ -268,7 +161,7 @@ Keep these identifiers stable across deployments. Production has independent
 database and authentication secrets. Its database is a new foundation database;
 Beta and retired product data are not imported or migrated.
 
-Release from a verified `canary` commit. Build the migration, API, Relay and Web images
+Release from a verified `canary` commit. Build the migration, backend and Web images
 for `APP_HOST=raypx.com` and the exact Compose project name before changing the
 service's `RAYPX_RELEASE`. Set `APP_HOST=raypx.com` in its runtime environment,
 with matching auth, Web, relay and OAuth callback origins. DNS, the origin
@@ -307,12 +200,5 @@ For the original beta database, explicitly keep `POSTGRES_DB=raypx_beta` and
 New projects leave the volume override empty and get project-scoped storage.
 Back up configuration and the database before changing the Compose configuration.
 
-New image tags use `<compose-project>-<release>`. Build the new tags, or explicitly
-alias old images after verifying they were built for the same hostname and source
-version. For example, original `beta-20261024-01` images can keep source version
-`20261024-01` under the existing Compose project's image prefix.
-
-To keep the original bounded builder and caches, set
-`RAYPX_BUILD_BUILDER=raypx-beta-builder` on that host. The shared default for new
-hosts is `raypx-builder`. Hostnames, credentials and storage are explicit values;
-the scripts do not infer or migrate existing resources.
+To reuse a bounded builder, set `RAYPX_BUILD_BUILDER` explicitly. Hostnames,
+credentials and storage are never inferred or migrated by the scripts.

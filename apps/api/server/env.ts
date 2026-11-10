@@ -2,6 +2,7 @@ import { normalizeTrustedOrigins } from "@raypx/core/auth";
 import { defineEnv, type Preset, z } from "@raypx/env";
 import type apiEnvironmentSources from "./env.contract.ts";
 const server = {
+  SERVER_ROLE: z.enum(["api", "both"]).default("both"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   ADMIN_EMAILS: z
     .string()
@@ -55,6 +56,8 @@ const list = (value: string | undefined) =>
 
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
   const env = defineEnv({ extends: [apiServerEnv], runtimeEnv, isServer: true });
+  if (env.SERVER_ROLE === "api" && !env.REDIS_URL)
+    throw new Error("The api role requires REDIS_URL; use both for a single backend");
   if (env.NODE_ENV === "production") {
     if (
       !runtimeEnv.DATABASE_URL ||
@@ -99,3 +102,30 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
   };
 }
 export type ApiEnvironment = ReturnType<typeof getApiEnvironment>;
+
+export function getServerRole(runtimeEnv: Record<string, string | undefined> = process.env) {
+  return z.enum(["api", "relay", "both"]).parse(runtimeEnv.SERVER_ROLE || "both");
+}
+
+/** Relay intentionally never parses authentication, mail or signing configuration. */
+export function getRelayEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
+  const env = defineEnv({
+    isServer: true,
+    runtimeEnv,
+    server: {
+      NODE_ENV: server.NODE_ENV,
+      DATABASE_URL: z.url(),
+      REDIS_URL: z.url(),
+      ALLOWED_ORIGINS: z.string().min(1),
+    },
+  });
+  if (!/^postgres(?:ql)?:$/.test(new URL(env.DATABASE_URL).protocol))
+    throw new Error("Invalid Relay database protocol");
+  if (!/^rediss?:$/.test(new URL(env.REDIS_URL).protocol))
+    throw new Error("Invalid Relay broker protocol");
+  if (env.ALLOWED_ORIGINS.includes("*")) throw new Error("Relay requires exact allowed origins");
+  const allowedOrigins = normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(","));
+  if (!allowedOrigins.length) throw new Error("Relay requires allowed origins");
+  return { ...env, allowedOrigins };
+}
+export type RelayEnvironment = ReturnType<typeof getRelayEnvironment>;

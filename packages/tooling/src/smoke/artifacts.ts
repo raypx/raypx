@@ -19,24 +19,27 @@ function probeApp(
 }
 
 export async function probeApi(root: string): Promise<void> {
-  await probeApp(
-    root,
-    "api",
-    (base) => ({
-      NODE_ENV: "test",
-      DATABASE_MIGRATE_ON_START: "false",
-      DATABASE_URL: "postgres://raypx:raypx@127.0.0.1:1/raypx_artifact_test",
-      AUTH_URL: base,
-      AUTH_SECRET: "raypx-artifact-test-secret-32-characters",
-      RESEND_API_KEY: "",
-      MAIL_FROM: "",
-      ALLOWED_ORIGINS: base,
-    }),
-    checkApi,
-  );
-  console.log(
-    "Bun API artifact probe passed (relocated output, health, 404s, mail guard, no Relay listener)",
-  );
+  for (const role of ["api", "both"] as const) {
+    await probeApp(
+      root,
+      "api",
+      (base) => ({
+        NODE_ENV: "test",
+        SERVER_ROLE: role,
+        DATABASE_MIGRATE_ON_START: "false",
+        DATABASE_URL: "postgres://raypx:raypx@127.0.0.1:1/raypx_artifact_test",
+        ...(role === "api" ? { REDIS_URL: "redis://127.0.0.1:1" } : {}),
+        AUTH_URL: base,
+        AUTH_SECRET: "raypx-artifact-test-secret-32-characters",
+        RESEND_API_KEY: "",
+        MAIL_FROM: "",
+        ALLOWED_ORIGINS: base,
+      }),
+      (base) => checkApi(base, { relay: role === "both" }),
+    );
+  }
+  await probeRelay(root);
+  console.log("Bun backend artifact probe passed (same relocated output, api/both/relay roles)");
 }
 
 export async function probeWeb(root: string): Promise<void> {
@@ -44,14 +47,14 @@ export async function probeWeb(root: string): Promise<void> {
   console.log("Bun Web artifact probe passed (relocated output, SSR locale, assets, 404s)");
 }
 
-export async function probeRelay(root: string): Promise<void> {
+async function probeRelay(root: string): Promise<void> {
   await probeArtifact({
     name: "relay",
-    output: join(root, "infra/relay/dist"),
-    entry: ".output/main.js",
+    output: join(root, "apps/api/.output"),
     node: process.execPath,
     environment: (base) => ({
       NODE_ENV: "test",
+      SERVER_ROLE: "relay",
       DATABASE_URL: "postgres://raypx:raypx@127.0.0.1:1/raypx_artifact_test",
       REDIS_URL: "redis://127.0.0.1:1",
       ALLOWED_ORIGINS: base,

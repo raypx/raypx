@@ -2,7 +2,7 @@
 
 This directory owns Dokploy Compose deployment and shared image source staging.
 Build from the repository root with `build.sh`; Compose and Railway share the
-Dockerfiles in apps/api, apps/web and infra/relay. Keep install/build commands in those files.
+Dockerfiles in apps/api and apps/web. Keep install/build commands in those files.
 `workspaces.ts` discovers Bun workspace patterns from the root manifest before
 project dependency installation. Docker uses the same pinned Bun runtime.
 `manifests.ts` stages workspace metadata before dependency installation. Each
@@ -34,7 +34,8 @@ The rules below apply to the Compose host workflow.
   or reuse another project's volume automatically.
 - Only Traefik publishes application traffic. Database and application containers
   have no published host ports; the management panel stays behind SSH.
-- Keep one API and Relay instance by default; the private Redis broker links their lifecycles.
+- Default to one combined backend without Redis. compose.split.yaml selects api/relay roles
+  from the same image; both split roles require Redis. update.sh --split selects that topology.
 - Run additive, backward-compatible migrations against that environment's isolated database before replacing API or Relay. Use update.sh; migration failure must preserve the old API and Relay.
 - Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
 - Build versioned images sequentially with a bounded container builder. Preserve

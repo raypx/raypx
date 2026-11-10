@@ -34,14 +34,14 @@ Runtime variables are deliberately unmanaged by IaC. This preserves secrets and
 operator settings on Railway. Configure references in the dashboard or with
 railway variable set --skip-deploys; never commit decrypted variables.
 
-| Service  | Variables                                                                                                                                                                                                         |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000; RELAY_UPSTREAM=${{relay.RAILWAY_PRIVATE_DOMAIN}}:3003 |
-| api      | NODE_ENV=production; HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters                |
-| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                        |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                 |
-| relay    | NODE_ENV=production; HOST=::; PORT=3003; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; ALLOWED_ORIGINS matches API                                                                     |
-| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                         |
+| Service  | Variables                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000; RELAY_UPSTREAM=${{relay.RAILWAY_PRIVATE_DOMAIN}}:3002   |
+| api      | NODE_ENV=production; SERVER_ROLE=api; HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters |
+| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                          |
+| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                   |
+| relay    | NODE_ENV=production; SERVER_ROLE=relay; HOST=::; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; ALLOWED_ORIGINS matches API                                              |
+| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                           |
 
 Optional mail, administrator, storage and analytics settings remain explicit
 per-environment settings. Without RESEND_API_KEY and a verified MAIL_FROM, mail
@@ -66,10 +66,10 @@ acceptance changes, manual CI runs and release tags. Those images remain on the
 CI runner; Railway does not consume them.
 Shared package or manifest changes rebuild API and Web;
 both services also watch `deploy/*.ts` for shared build-context preparation changes.
-Relay uses `infra/relay/Dockerfile`, watches `infra/relay/**` and shared build inputs,
-and probes `/ready`. Gateway watches its proxy configuration and the IaC file.
-Provision Relay and set `RELAY_UPSTREAM` before publishing the split gateway/API;
-see [the independent service](../../infra/relay/README.md).
+Relay uses the same `apps/api/Dockerfile` and watches `apps/api/**` plus shared
+inputs. Its unmanaged runtime variables must set `SERVER_ROLE=relay`; API sets
+`SERVER_ROLE=api`. Both use port 3002. Set `RELAY_UPSTREAM` before publishing the
+split gateway. The two services can consume the same prepared backend image.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
 
@@ -144,7 +144,7 @@ a Gateway path error.
 | Caddy configuration fails at startup                      | Runtime `API_UPSTREAM`, `WEB_UPSTREAM` and `RELAY_UPSTREAM`; build-time validation uses placeholders and does not verify Railway variables |
 | Healthcheck `/ready` fails                                | Gateway port and logs, then API private DNS, port `3002` and readiness; Gateway forwards `/ready` to API                                   |
 | Gateway is healthy but pages return 502                   | Web private DNS, port `3000`, and Web readiness; Gateway readiness only checks the API route                                               |
-| Pages work but remote connections fail                    | Relay service, private DNS, port `3003`, `RELAY_UPSTREAM`, and the authenticated `/relay` WebSocket flow                                   |
+| Pages work but remote connections fail                    | Relay service, private DNS, port `3002`, `RELAY_UPSTREAM`, and the authenticated `/relay` WebSocket flow                                   |
 
 After deployment, check the public HTTPS origin, `/ready`, SSR assets, login and
 Relay connectivity separately. A green Gateway healthcheck does not prove Web or

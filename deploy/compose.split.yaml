@@ -1,0 +1,41 @@
+# Optional distributed topology. Both roles use the SAME backend image.
+# docker compose -f deploy/compose.yaml -f deploy/compose.split.yaml ...
+services:
+  api:
+    environment:
+      SERVER_ROLE: api
+      REDIS_URL: ${REDIS_URL:?Split roles require a private Redis/Valkey broker}
+    labels:
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.service=${COMPOSE_PROJECT_NAME:?}-relay"
+
+  relay:
+    image: raypx/api:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: relay
+      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      REDIS_URL: ${REDIS_URL:?Split roles require a private Redis/Valkey broker}
+      ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend, proxy]
+    mem_limit: ${RELAY_MEMORY:-512m}
+    cpus: ${RELAY_CPUS:-0.75}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://127.0.0.1:3002/ready', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-relay.loadbalancer.server.port=3002"

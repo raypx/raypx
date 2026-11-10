@@ -12,7 +12,7 @@ vi.mock("node:os", async (original) => ({
   ...(await original<typeof import("node:os")>()),
   networkInterfaces,
 }));
-vi.mock("./artifacts", () => ({ probeApi: vi.fn(), probeWeb: vi.fn(), probeRelay: vi.fn() }));
+vi.mock("./artifacts", () => ({ probeApi: vi.fn(), probeWeb: vi.fn() }));
 const { smoke } = await import("./index.ts");
 const { fixture } = workspaceFixtures();
 

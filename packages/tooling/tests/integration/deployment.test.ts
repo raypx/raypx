@@ -5,30 +5,17 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "../../../..");
-it("refuses a pre-split API topology before stopping services or running migrations", () => {
-  const directory = mkdtempSync(join(tmpdir(), "raypx-relay-cutover-"));
-  try {
-    const log = join(directory, "commands"),
-      environment = join(directory, ".env");
-    writeFileSync(environment, "COMPOSE_PROJECT_NAME=isolated-test\n");
-    writeFileSync(
-      join(directory, "docker"),
-      `#!/bin/sh
-printf '%s\\n' "$*" >> "$RAYPX_DEPLOY_TEST_LOG"
-case "$*" in *"ps -q api") echo old-api ;; esac
-`,
-      { mode: 0o700 },
-    );
-    const result = spawnSync("/bin/sh", [join(root, "deploy/update.sh"), environment], {
-      env: { ...process.env, PATH: `${directory}:/usr/bin:/bin`, RAYPX_DEPLOY_TEST_LOG: log },
+it("rejects an unknown topology option before Docker is invoked", () => {
+  const result = spawnSync(
+    "/bin/sh",
+    [join(root, "deploy/update.sh"), "/unused.env", "--unknown"],
+    {
+      env: { PATH: "/usr/bin:/bin" },
       encoding: "utf8",
-    });
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("split-service cutover");
-    expect(readFileSync(log, "utf8")).not.toMatch(/stop|run --rm|up -d/);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+    },
+  );
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain("Usage:");
 });
 it.each([false, true])(
   "replaces services only after a successful migration (failure=%s)",
@@ -56,11 +43,11 @@ it.each([false, true])(
       expect(commands[0]).toContain("config --quiet");
       expect(result.status).toBe(fail ? 7 : 0);
       expect(commands.filter((line) => /--wait (api|relay|web)/.test(line)).length).toBe(
-        fail ? 0 : 3,
+        fail ? 0 : 2,
       );
       expect(
         commands
-          .filter((line) => /(?:up -d|run --rm|stop api relay$)/.test(line))
+          .filter((line) => /(?:up -d|run --rm|stop api$)/.test(line))
           .map((line) =>
             line.slice(
               line.indexOf("stop api") >= 0
@@ -72,12 +59,11 @@ it.each([false, true])(
           ),
       ).toEqual(
         fail
-          ? ["up -d postgres", "stop api relay", "run --rm migrate"]
+          ? ["up -d postgres", "stop api", "run --rm migrate"]
           : [
               "up -d postgres",
-              "stop api relay",
+              "stop api",
               "run --rm migrate",
-              "up -d --no-deps --wait relay",
               "up -d --no-deps --wait api",
               "up -d --no-deps --wait web",
             ],
@@ -150,20 +136,12 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
       expect(commands.map(([image, target]) => [image, target])).toEqual([
         ["api-migrate", "migrate"],
         ["api", "runtime"],
-        ...(fail
-          ? []
-          : [
-              ["relay", "runtime"],
-              ["web", "runtime"],
-            ]),
+        ...(fail ? [] : [["web", "runtime"]]),
       ]);
       for (const [image, , file] of commands) {
         expect(existsSync(file!)).toBe(false);
         const cached = readFileSync(join(directory, `${image}.Dockerfile`), "utf8");
-        const filePath =
-          image === "relay"
-            ? "infra/relay/Dockerfile"
-            : `apps/${image === "web" ? "web" : "api"}/Dockerfile`;
+        const filePath = `apps/${image === "web" ? "web" : "api"}/Dockerfile`;
         // Only mounts differ; commands, sources and runtime targets remain canonical.
         expect(cached.replace(/--mount=type=cache,\S+ /g, "")).toBe(
           readFileSync(join(root, filePath), "utf8"),
@@ -236,19 +214,24 @@ esac
 `,
         { mode: 0o700 },
       );
-      const result = spawnSync("/bin/sh", [join(root, "deploy/update.sh"), environment], {
-        env: {
-          ...process.env,
-          PATH: `${directory}:/usr/bin:/bin`,
-          RAYPX_DEPLOY_TEST_LOG: log,
-          RAYPX_DEPLOY_TEST_FAIL: failure,
-          RAYPX_DEPLOY_TEST_CAPTURE: captured,
+      const result = spawnSync(
+        "/bin/sh",
+        [join(root, "deploy/update.sh"), environment, "--split"],
+        {
+          env: {
+            ...process.env,
+            PATH: `${directory}:/usr/bin:/bin`,
+            RAYPX_DEPLOY_TEST_LOG: log,
+            RAYPX_DEPLOY_TEST_FAIL: failure,
+            RAYPX_DEPLOY_TEST_CAPTURE: captured,
+          },
+          encoding: "utf8",
         },
-        encoding: "utf8",
-      });
+      );
       expect(result.status).toBe(9);
       const commands = readFileSync(log, "utf8");
-      expect(commands).toContain("stop api relay web");
+      expect(commands).toContain("stop api web");
+      expect(commands).toContain("stop relay");
       expect(commands).toContain("up -d --no-deps --wait api relay web");
       const override = readFileSync(captured, "utf8");
       expect(override).toContain(`sha256:${"a".repeat(64)}`);

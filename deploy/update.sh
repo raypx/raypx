@@ -2,17 +2,26 @@
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 environment=${1:?Pass the protected environment file explicitly}
-compose() { docker compose --env-file "$environment" -f "$root/deploy/compose.yaml" "$@"; }
+# Pass --split explicitly when the deployment uses compose.split.yaml.
+case "${2:-}" in
+  "") split=false ;;
+  --split) split=true ;;
+  *) printf '%s\n' 'Usage: update.sh <protected-env-file> [--split]' >&2; exit 1 ;;
+esac
+compose() {
+  if [ "$split" = true ]; then
+    docker compose --env-file "$environment" -f "$root/deploy/compose.yaml" -f "$root/deploy/compose.split.yaml" "$@"
+  else
+    docker compose --env-file "$environment" -f "$root/deploy/compose.yaml" "$@"
+  fi
+}
 compose config --quiet
 # Index-only foundation migrations are generated inside a transaction. Run them
 # in a maintenance window so CREATE INDEX cannot stall the old API's writers.
 previous_api=$(compose ps -q api)
-previous_relay=$(compose ps -a -q relay)
 previous_web=$(compose ps -q web)
-if [ -n "$previous_api" ] && [ -z "$previous_relay" ]; then
-  printf '%s\n' 'Existing deployment has no independent Relay. Follow the split-service cutover guide before using update.sh.' >&2
-  exit 1
-fi
+previous_relay=
+if [ "$split" = true ]; then previous_relay=$(compose ps -a -q relay); fi
 rollback=$(mktemp "${TMPDIR:-/tmp}/raypx-rollback.XXXXXXXX")
 phase=prepare
 restore_services=
@@ -42,7 +51,8 @@ finish() {
       fi
     elif [ "$phase" = replace ]; then
       # Stop a failed first deployment too, rather than leaving it restarting.
-      compose stop api relay web || true
+      compose stop api web || true
+      if [ "$split" = true ]; then compose stop relay || true; fi
       if [ -n "$restore_services" ]; then
         # Deliberately split only the fixed service names captured above.
         # shellcheck disable=SC2086
@@ -62,10 +72,11 @@ capture_image relay "$previous_relay"
 capture_image web "$previous_web"
 compose up -d postgres
 phase=migrate
-compose stop api relay
+compose stop api
+if [ "$split" = true ]; then compose stop relay; fi
 compose run --rm migrate
 phase=replace
-compose up -d --no-deps --wait relay
+if [ "$split" = true ]; then compose up -d --no-deps --wait relay; fi
 compose up -d --no-deps --wait api
 compose up -d --no-deps --wait web
 phase=complete

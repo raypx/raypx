@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { networkInterfaces, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { run } from "@raypx/runtime-node/process";
-import { probeApi, probeWeb, probeRelay } from "./artifacts";
+import { probeApi, probeWeb } from "./artifacts";
 import { readBunPin } from "../validation/toolchain.ts";
 
 async function probeCli(root: string) {
@@ -59,14 +59,10 @@ async function probeCli(root: string) {
   );
 }
 
-export async function smoke(
-  root: string,
-  selected: readonly string[] = ["api", "web", "relay", "cli"],
-) {
+export async function smoke(root: string, selected: readonly string[] = ["api", "web", "cli"]) {
   const outcomes = await Promise.allSettled([
     ...(selected.includes("api") ? [probeApi(root)] : []),
     ...(selected.includes("web") ? [probeWeb(root)] : []),
-    ...(selected.includes("relay") ? [probeRelay(root)] : []),
     ...(selected.includes("cli") ? [probeCli(root)] : []),
   ]);
   const failed = outcomes.filter((result) => result.status === "rejected");

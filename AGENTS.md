@@ -151,8 +151,8 @@ durable replay journal, the outbound WebSocket and restricted device credentials
 Desktop connects over authenticated private IPC (Unix socket, or token-guarded loopback
 on Windows; see ADR 0037); GUI Quit does not stop daemon tasks. Relay routes messages; API stores read
 projections. Native handles initial opt-in without exporting cookies or host secrets
-to the renderer. Explicit logout/account changes revoke the affected binding. The independent
-`infra/relay` service owns socket peers; API reaches it over the private Redis broker.
+to the renderer. Explicit logout/account changes revoke the affected binding. The backend in `apps/api` owns HTTP and socket peers through `SERVER_ROLE=api|relay|both`.
+The default both role uses direct calls; split roles require the private Redis broker.
 Shared `@raypx/control` services own authorization and projection rules. Never publish the
 local method router or provider credentials. Desktop connection settings are
 user-level runtime TOML; server origins isolate sessions, remote settings and

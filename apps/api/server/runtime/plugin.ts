@@ -1,15 +1,15 @@
 import { definePlugin } from "nitro";
-import { closeApiRuntime, getApiRuntime } from "./server.ts";
+import { closeBackendRuntime, getBackendRuntime } from "./backend.ts";
 
 export default definePlugin(async (nitroApp) => {
   try {
-    await getApiRuntime();
+    await getBackendRuntime();
   } catch {
     // Nitro traps rejected plugin promises; explicitly stop this failed startup.
     console.error(
-      "API startup failed. Check runtime configuration, database availability and migrations.",
+      "Backend startup failed. Check runtime role, configuration, database availability and migrations.",
     );
     process.exit(1);
   }
-  nitroApp.hooks.hook("close", closeApiRuntime);
+  nitroApp.hooks.hook("close", closeBackendRuntime);
 });

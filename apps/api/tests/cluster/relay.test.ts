@@ -16,6 +16,7 @@ import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 import { createApiRuntime } from "../../server/runtime/server.js";
+import { serveBackend } from "../fixtures/backend-server.ts";
 import { getApiEnvironment } from "../../server/env.js";
 import { connected, controlAuth, observed } from "@raypx/control/testing";
 
@@ -176,6 +177,7 @@ function task(f: Awaited<ReturnType<typeof fixture>>, id: string): AgentTask {
 it("owns broker readiness per API runtime and closes one without stopping the other", async () => {
   const environment = getApiEnvironment({
     NODE_ENV: "test",
+    SERVER_ROLE: "api",
     DATABASE_URL: url,
     DATABASE_MIGRATE_ON_START: "false", // beforeAll owns migrations outside Nitro.
     REDIS_URL: redisUrl,
@@ -197,118 +199,132 @@ it("owns broker readiness per API runtime and closes one without stopping the ot
   });
 });
 
-it("dispatches and revokes through the API broker while sockets run in a separate Relay process", async () => {
-  const auth = controlAuth(`independent-${crypto.randomUUID()}`);
-  await database.db.insert(user).values(auth.user);
-  await database.db.insert(session).values({
-    id: auth.session.id,
-    userId: auth.user.id,
-    token: crypto.randomUUID(),
-    expiresAt: auth.session.expiresAt,
-  });
-  cleanups.push(async () => {
-    await database.db.delete(user).where(eq(user.id, auth.user.id));
-  });
-  const runtime = await createApiRuntime(
-    getApiEnvironment({
-      NODE_ENV: "test",
-      DATABASE_URL: url,
-      DATABASE_MIGRATE_ON_START: "false",
-      REDIS_URL: redisUrl,
-    }),
-  );
-  cleanups.push(runtime.close);
-  const f = await connected(runtime.control, auth);
-  const credential = await runtime.control.credentials.authorizeHost(auth, f.grant);
-  const host = await runtime.control.credentials.hostGrant(credential.credential);
-  const listener = serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
-  const port = listener.port!;
-  await listener.stop(true);
-  const child = Bun.spawn(
-    [
-      process.execPath,
-      "--no-env-file",
-      resolve(import.meta.dirname, "../../../../infra/relay/src/main.ts"),
-    ],
-    {
-      env: {
+it.each(["api", "both"] as const)(
+  "dispatches and revokes in the %s role (both needs no Redis)",
+  async (role) => {
+    const auth = controlAuth(`independent-${crypto.randomUUID()}`);
+    await database.db.insert(user).values(auth.user);
+    await database.db.insert(session).values({
+      id: auth.session.id,
+      userId: auth.user.id,
+      token: crypto.randomUUID(),
+      expiresAt: auth.session.expiresAt,
+    });
+    cleanups.push(async () => {
+      await database.db.delete(user).where(eq(user.id, auth.user.id));
+    });
+    const runtime = await createApiRuntime(
+      getApiEnvironment({
         NODE_ENV: "test",
+        SERVER_ROLE: role,
         DATABASE_URL: url,
-        REDIS_URL: redisUrl,
-        HOST: "127.0.0.1",
-        PORT: String(port),
-        ALLOWED_ORIGINS: "https://app.example.test",
-        PATH: process.env.PATH ?? "",
+        DATABASE_MIGRATE_ON_START: "false",
+        ...(role === "api" ? { REDIS_URL: redisUrl } : {}),
+      }),
+    );
+    cleanups.push(runtime.close);
+    expect(runtime.hub === runtime.relay).toBe(role === "both");
+    expect(runtime.relay.ready()).toBe(true);
+    const f = await connected(runtime.control, auth);
+    const credential = await runtime.control.credentials.authorizeHost(auth, f.grant);
+    const host = await runtime.control.credentials.hostGrant(credential.credential);
+    const listener = serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
+    const port = listener.port!;
+    await listener.stop(true);
+    if (role === "both") {
+      const local = serveBackend(runtime, port);
+      cleanups.push(async () => {
+        await local.stop(true);
+      });
+    } else {
+      const child = Bun.spawn(
+        [
+          process.execPath,
+          "--no-env-file",
+          resolve(import.meta.dirname, "../fixtures/relay-process.ts"),
+        ],
+        {
+          env: {
+            NODE_ENV: "test",
+            SERVER_ROLE: "relay",
+            DATABASE_URL: url,
+            REDIS_URL: redisUrl,
+            HOST: "127.0.0.1",
+            PORT: String(port),
+            ALLOWED_ORIGINS: "https://app.example.test",
+            PATH: process.env.PATH ?? "",
+          },
+          stdout: "ignore",
+          stderr: "pipe",
+        },
+      );
+      cleanups.push(async () => {
+        child.kill("SIGTERM");
+        await child.exited;
+      });
+    }
+    const base = `http://127.0.0.1:${port}`;
+    await expect
+      .poll(
+        async () =>
+          fetch(`${base}/ready`).then(
+            (response) => response.status,
+            () => 0,
+          ),
+        { timeout: 10_000 },
+      )
+      .toBe(200);
+    expect((await runtime.app.fetch(new Request("http://localhost/relay"))).status).toBe(404);
+    const device = await wire({ url: `ws://127.0.0.1:${port}/relay` }, "device", host.grant.token);
+    device.send(f.announce);
+    await device.take("resume");
+    device.send({ type: "available" });
+    await expect
+      .poll(
+        async () => (await runtime.control.tasks.connection(auth.user.id, f.grant.deviceId))?.ready,
+      )
+      .toBe(true);
+    const jobAction: CloudJobAction = {
+      type: "agent.run",
+      deviceId: f.grant.deviceId,
+      epoch: f.grant.epoch,
+      projectId: f.input.projectId,
+      provider: "codex",
+      mode: "run",
+      prompt: "Independent Relay",
+    };
+    const job = run(jobAction),
+      pending = runtime.relay.dispatch(auth.user.id, job, new AbortController().signal);
+    const command = await device.take("command");
+    device.send({
+      type: "result",
+      routeId: command.routeId,
+      result: {
+        ok: true,
+        value: {
+          ...f.input,
+          id: job.id,
+          prompt: jobAction.prompt,
+          parentTaskId: null,
+          status: "running",
+          summary: "",
+          createdAt: job.startedAt,
+          updatedAt: job.startedAt,
+        },
       },
-      stdout: "ignore",
-      stderr: "pipe",
-    },
-  );
-  cleanups.push(async () => {
-    child.kill("SIGTERM");
-    await child.exited;
-  });
-  const base = `http://127.0.0.1:${port}`;
-  await expect
-    .poll(
-      async () =>
-        fetch(`${base}/ready`).then(
-          (response) => response.status,
-          () => 0,
-        ),
-      { timeout: 10_000 },
-    )
-    .toBe(200);
-  expect((await runtime.app.fetch(new Request("http://localhost/relay"))).status).toBe(404);
-  const device = await wire({ url: `ws://127.0.0.1:${port}/relay` }, "device", host.grant.token);
-  device.send(f.announce);
-  await device.take("resume");
-  device.send({ type: "available" });
-  await expect
-    .poll(
-      async () => (await runtime.control.tasks.connection(auth.user.id, f.grant.deviceId))?.ready,
-    )
-    .toBe(true);
-  const jobAction: CloudJobAction = {
-    type: "agent.run",
-    deviceId: f.grant.deviceId,
-    epoch: f.grant.epoch,
-    projectId: f.input.projectId,
-    provider: "codex",
-    mode: "run",
-    prompt: "Independent Relay",
-  };
-  const job = run(jobAction),
-    pending = runtime.relay.dispatch(auth.user.id, job, new AbortController().signal);
-  const command = await device.take("command");
-  device.send({
-    type: "result",
-    routeId: command.routeId,
-    result: {
-      ok: true,
-      value: {
-        ...f.input,
-        id: job.id,
-        prompt: jobAction.prompt,
-        parentTaskId: null,
-        status: "running",
-        summary: "",
-        createdAt: job.startedAt,
-        updatedAt: job.startedAt,
-      },
-    },
-  });
-  expect(await pending).toEqual({ type: "task", taskId: job.id, status: "running" });
-  await runtime.control.credentials.revoke(auth.user.id, {
-    deviceId: f.grant.deviceId,
-    epoch: f.grant.epoch,
-  });
-  await runtime.relay.revoke(auth.user.id, f.grant.deviceId);
-  await expect.poll(() => device.closed).toContain(4003);
-  await runtime.close();
-  expect((await fetch(`${base}/health`)).status).toBe(200);
-  expect((await fetch(`${base}/ready`)).status).toBe(200);
-});
+    });
+    expect(await pending).toEqual({ type: "task", taskId: job.id, status: "running" });
+    await runtime.control.credentials.revoke(auth.user.id, {
+      deviceId: f.grant.deviceId,
+      epoch: f.grant.epoch,
+    });
+    await runtime.relay.revoke(auth.user.id, f.grant.deviceId);
+    await expect.poll(() => device.closed).toContain(4003);
+    await runtime.close();
+    expect((await fetch(`${base}/health`)).status).toBe(200);
+    expect((await fetch(`${base}/ready`)).status).toBe(role === "api" ? 200 : 503);
+  },
+);
 
 it("routes a viewer command and committed task/observed changes across two socket servers", async () => {
   const f = await fixture();

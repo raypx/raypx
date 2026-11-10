@@ -1,10 +1,11 @@
-import { CLIENT_IP_HEADER, getApiRuntime } from "../runtime/server.ts";
+import { CLIENT_IP_HEADER } from "../runtime/server.ts";
+import { getBackendRuntime } from "../runtime/backend.ts";
 
 export default {
   async fetch(request: Request & { ip?: string }): Promise<Response> {
     // Replace any client-supplied value with the socket address resolved by the server.
     const headers = new Headers(request.headers);
-    const runtime = await getApiRuntime();
+    const runtime = await getBackendRuntime();
     headers.delete(CLIENT_IP_HEADER);
     const ip = runtime.clientIp(request.ip, request.headers);
     if (ip) headers.set(CLIENT_IP_HEADER, ip);

@@ -3,7 +3,7 @@ import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";
 
-type Artifact = "api" | "web" | "relay" | "cli";
+type Artifact = "api" | "web" | "cli";
 export interface VerificationPlan {
   full: boolean;
   reasons: string[];
@@ -202,7 +202,7 @@ export function verificationPlan(
     ...new Set([...affected.keys(), ...nativeMembers.map((member) => member.name)]),
   ].sort();
   const artifacts = full
-    ? (["api", "web", "relay", "cli"] as const).filter(
+    ? (["api", "web", "cli"] as const).filter(
         (name) =>
           affected.has(name) &&
           model.members.some((member) => member.name === name && member.scripts.build),

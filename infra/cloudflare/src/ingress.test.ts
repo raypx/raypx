@@ -141,8 +141,9 @@ describe("container environment", () => {
     expect(containerEnvironment({ ...env, AUTH_SECRET: "must-not-leak" } as typeof env)).toEqual({
       ...env,
       NODE_ENV: "production",
-      HOST: "0.0.0.0",
-      PORT: "3003",
+      SERVER_ROLE: "relay",
+      NITRO_HOST: "0.0.0.0",
+      NITRO_PORT: "3002",
     });
   });
 

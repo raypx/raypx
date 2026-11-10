@@ -11,12 +11,12 @@ flowchart LR
   Browser[Web browser] --> Web[Web SSR / Bun]
   Browser --> Gateway[Public gateway]
   Mobile[Expo app] --> Gateway
-  Gateway --> API[API / Bun]
-  Gateway --> Relay[Relay / Bun]
+  Gateway --> Backend[Backend / Bun: both]
+  Backend --> API[HTTP API]
+  Backend --> Relay[RelayHub]
   API --> PG[(Account PostgreSQL)]
   Relay --> PG
-  API <--> Redis[(Private Redis broker)]
-  Relay <--> Redis
+  Backend -. Optional cluster/cache .-> Redis[(Private Redis)]
   Renderer[Desktop renderer] --> Native[MyGo / Go host]
   Native --> API
   Native -->|Private IPC| Daemon[CLI daemon / Bun]
@@ -68,15 +68,19 @@ Web/Desktop use the DOM catalog. See [mobile development](../development/mobile.
 API uses Vite + Nitro + Hono + oRPC, deployed
 on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.
 
-Web, API and Relay are separate services with Bun as their only deployment target.
-Relay lives in `infra/relay` and owns WebSocket connections. API issues tickets
-and grants, stores read projections and dispatches scheduling through private Redis.
-Both use `@raypx/control` for shared authorization and persistence. The gateway
-keeps `/relay` at the same public origin; the built API owns no WebSocket listener.
-Their outputs run outside the repository.
-See [deployment](../development/deployment.md).
+Web and the backend are separate Bun services. `apps/api` builds one Nitro output
+with `SERVER_ROLE=api|relay|both`, selected at startup. The default `both` role
+composes HTTP services and RelayHub in one process: scheduling and revocation call
+the hub directly. PostgreSQL is required; Redis is optional for shared caches and
+multi-node routing. An explicitly configured broker must be healthy.
+
+Split `api` and `relay` roles use that same artifact and require Redis. Relay-only
+startup reads no Auth/mail/signing configuration and exposes no login or RPC.
+Cloudflare runs the same backend image with the relay role. The gateway keeps
+`/relay` at the public origin. See [ADR 0051](0051-backend-runtime-roles.md) and
+[deployment](../development/deployment.md).
 API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,
-/rpc/_ and /health; everything else is a JSON 404. Web renders on the server with
+/rpc/_, /health and /ready; `/relay` uses Nitro WebSocket hooks. Other paths are JSON 404s. Web renders on the server with
 device preferences from cookies/Accept-Language and the account from account.get,
 forwarding only Better Auth cookies. It never imports API, auth server or DB code.
 Its server must receive the session cookie: share one origin, or set AUTH_DOMAIN
@@ -318,6 +322,8 @@ current implementation.
 - [0048: Core feature domain models](0048-core-feature-models.md) — accepted; supersedes Memory/Jobs model ownership in 0043
 - [0049: Feature server ownership](0049-feature-server-ownership.md) — accepted; projections and repositories belong to features
 - [0050: Independent Mobile React](0050-mobile-react-boundary.md) — accepted; Expo pins do not constrain DOM releases
+
+- [0051 — Backend runtime roles](0051-backend-runtime-roles.md)
 
 ## Distribution and performance
 

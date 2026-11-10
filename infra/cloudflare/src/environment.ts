@@ -24,8 +24,9 @@ export function containerEnvironment(env: RelaySecrets): Record<string, string> 
   }
   return {
     NODE_ENV: "production",
-    HOST: "0.0.0.0",
-    PORT: "3003",
+    SERVER_ROLE: "relay",
+    NITRO_HOST: "0.0.0.0",
+    NITRO_PORT: "3002",
     DATABASE_URL: env.DATABASE_URL,
     REDIS_URL: env.REDIS_URL,
     ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,

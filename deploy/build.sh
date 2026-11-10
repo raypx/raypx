@@ -54,11 +54,6 @@ docker buildx build --builder "$builder" --load \
   --file "$dockerfile" --target runtime \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/api:$release" .
-cached_dockerfile infra/relay/Dockerfile
-docker buildx build --builder "$builder" --load \
-  --file "$dockerfile" --target runtime \
-  --build-arg "VITE_APP_RELEASE=$release" \
-  --tag "raypx/relay:$release" .
 cached_dockerfile apps/web/Dockerfile
 docker buildx build --builder "$builder" --load \
   --file "$dockerfile" --target runtime \

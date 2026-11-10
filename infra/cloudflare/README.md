@@ -1,10 +1,10 @@
 # Cloudflare Relay
 
 `relay-cloudflare` adds an optional Workers + Containers deployment for the
-[independent Bun Relay](../relay/README.md). Railway remains available. API/Web
+[Bun backend relay role](../../docs/architecture/0051-backend-runtime-roles.md). Railway remains available. API/Web
 stay at their existing origins; API and this Relay share PostgreSQL and Redis.
 The Worker is a managed ingress, and the container runs the existing
-`infra/relay/Dockerfile` with repository-root build context.
+`apps/api/Dockerfile` with repository-root build context.
 
 The Worker forwards `GET /relay` WebSocket upgrades, `GET /health` and `GET /ready`.
 Other paths return 404. Queries, unsupported methods and unapproved browser
@@ -43,7 +43,7 @@ container before switching traffic. Migrations remain API's isolated migration j
 Do not point development or verification at an operator database.
 
 The container receives only these three bindings plus `NODE_ENV=production`,
-`HOST=0.0.0.0` and `PORT=3003`. API's `AUTH_SECRET`, cookies, mail and provider
+`SERVER_ROLE=relay`, `NITRO_HOST=0.0.0.0` and `NITRO_PORT=3002`. API's `AUTH_SECRET`, cookies, mail and provider
 credentials stay with API. Worker invocation logging is disabled. Never put
 secrets in `vars`, Docker build arguments, Git, URLs or CLI flags.
 
@@ -80,7 +80,7 @@ configuration are ignored and excluded from the image context.
 The Bun launcher generates a temporary config beside `wrangler.json`, adds only
 the public Git SHA (or `VITE_APP_RELEASE`) as the image build argument, and removes
 it after Wrangler exits. VP owns Worker builds/checks and caching. The container
-build continues to use the existing Bun Relay build. CI outside a Git checkout
+build continues to use the same Nitro backend build. CI outside a Git checkout
 must supply a public `VITE_APP_RELEASE` identifier.
 
 ## Deployment and cutover

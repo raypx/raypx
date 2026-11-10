@@ -59,8 +59,8 @@ export default defineRailway((context) => {
     replicas,
     build: {
       builder: "DOCKERFILE",
-      dockerfilePath: "infra/relay/Dockerfile",
-      watchPatterns: ["infra/relay/**", "infra/railway/railway.ts", ...sharedInputs],
+      dockerfilePath: "apps/api/Dockerfile",
+      watchPatterns: ["apps/api/**", "infra/railway/railway.ts", ...sharedInputs],
     },
     healthcheck: deploymentServices.relay.ready,
     healthcheckTimeout: 180,

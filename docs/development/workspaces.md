@@ -5,7 +5,7 @@ a MyGo host and Go module in `apps/desktop`.
 For native build and release commands,
 see the [Desktop guide](desktop.md#build-and-release).
 
-Infrastructure lives under `infra/*`, including the independent Relay application
+Infrastructure provider tooling lives under `infra/*`; API/Relay runtime roles share `apps/api`
 and provider deployment tooling. Each manifest declares its actual kind/target,
 dependencies, deployment commands and checks. These are
 discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).

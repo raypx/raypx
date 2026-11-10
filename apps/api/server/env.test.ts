@@ -1,6 +1,18 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { getApiEnvironment } from "./env.ts";
+import { getApiEnvironment, getServerRole } from "./env.ts";
 afterEach(() => vi.unstubAllEnvs());
+it("defaults to a combined backend and requires a broker for split API", () => {
+  expect(getApiEnvironment({}).SERVER_ROLE).toBe("both");
+  expect(() => getApiEnvironment({ SERVER_ROLE: "api" })).toThrow("requires REDIS_URL");
+  expect(
+    getApiEnvironment({ SERVER_ROLE: "api", REDIS_URL: "redis://localhost:6380" }).SERVER_ROLE,
+  ).toBe("api");
+  expect(getServerRole({ SERVER_ROLE: "relay" })).toBe("relay");
+  expect(() => getServerRole({ SERVER_ROLE: "worker" })).toThrow("Invalid option");
+  expect(() => getApiEnvironment({ SERVER_ROLE: "relay" })).toThrow(
+    "Invalid environment variables",
+  );
+});
 it("uses only explicit runtime inputs without inheriting deployment connections", () => {
   vi.stubEnv("DATABASE_URL", "postgres://fixture:fixture@operator.example:5432/operator");
   vi.stubEnv("REDIS_URL", "redis://operator.example:6379");

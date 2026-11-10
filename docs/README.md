@@ -1,7 +1,7 @@
 # Raypx documentation
 
 Raypx is a project-centered workbench with MyGo Desktop, a standalone TypeScript
-CLI/daemon, TanStack Start Web, Bun API and independent Relay. Desktop targets
+CLI/daemon, TanStack Start Web, Bun backend with API/Relay roles. Desktop targets
 macOS 13.5+ and Windows; Expo Mobile currently provides the account/login baseline.
 Register local profiles once for offline work; remote data and execution grants
 require separate online authorization.
@@ -61,7 +61,7 @@ boundaries behind the implementation.
 - [Compose deployment, production and Beta environments](development/deployment.md)
 - [Railway deployment and domains](development/railway.md)
 - [Infrastructure workspaces](../infra/README.md)
-- [Independent Relay service](../infra/relay/README.md)
+- [Backend runtime roles](architecture/0051-backend-runtime-roles.md)
 - [Cloudflare Relay ingress](../infra/cloudflare/README.md)
 
 ## Migration record

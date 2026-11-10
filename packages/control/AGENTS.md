@@ -1,6 +1,6 @@
 # @raypx/control
 
-Shared account/device control-plane services for API and the independent Relay.
+Shared account/device control-plane services for the backend API and Relay roles.
 The root composes ControlService and its injected context resolver. `/postgres`
 owns device/relay persistence; `/relay` owns bounded private broker
 transport, socket routing and scheduling ports. `/testing` is test-only.

@@ -1,11 +1,13 @@
 import type { Task } from "nitro/types";
-import { getApiRuntime } from "../../runtime/server.ts";
+import { getBackendRuntime } from "../../runtime/backend.ts";
 
 export default {
   meta: { name: "maintenance:cleanup", description: "Remove expired foundation records" },
   async run() {
     try {
-      return { result: await (await getApiRuntime()).jobs.cleanup() };
+      const runtime = await getBackendRuntime();
+      if (runtime.role === "relay") return { result: { status: "disabled" } };
+      return { result: await runtime.jobs.cleanup() };
     } catch {
       throw new Error("Cleanup task failed");
     }

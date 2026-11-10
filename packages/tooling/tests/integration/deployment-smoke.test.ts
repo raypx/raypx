@@ -6,12 +6,7 @@ import { deploymentSmokePlatform, smokeDeployment } from "../../src/validation/d
 
 function prepareBuildInputs(root: string) {
   const repository = resolve(import.meta.dirname, "../../../..");
-  for (const file of [
-    "deploy/build.sh",
-    "apps/api/Dockerfile",
-    "apps/web/Dockerfile",
-    "infra/relay/Dockerfile",
-  ]) {
+  for (const file of ["deploy/build.sh", "apps/api/Dockerfile", "apps/web/Dockerfile"]) {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     copyFileSync(join(repository, file), join(root, file));
   }

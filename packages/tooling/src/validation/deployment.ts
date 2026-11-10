@@ -32,16 +32,22 @@ export function checkDeployment(root: string): string[] {
       if (source === "input" && !template.has(key))
         findings.push(`deploy/.env.example: missing API setting ${key}`);
     }
-    for (const app of ["api", "web", "relay"] as const) {
+    if (services.relay)
+      findings.push("deploy/compose.yaml: default topology must use one combined backend");
+    if (!environment.SERVER_ROLE?.includes("both"))
+      findings.push("deploy/compose.yaml: default backend role must be both");
+    if (environment.REDIS_URL?.includes(":?"))
+      findings.push("deploy/compose.yaml: the combined backend must not require Redis");
+    for (const app of ["api", "web"] as const) {
       const service = deploymentServices[app];
-      const file = app === "relay" ? "infra/relay/Dockerfile" : `apps/${app}/Dockerfile`;
+      const file = `apps/${app}/Dockerfile`;
       const source = read(file);
       const stages = dockerStages(source);
       if (
         ![stages.runtime, stages.final].every(
           (stage) =>
-            stage?.environment.get(app === "relay" ? "PORT" : "NITRO_PORT") ===
-              String(service.port) && stage.ports.has(String(service.port)),
+            stage?.environment.get("NITRO_PORT") === String(service.port) &&
+            stage.ports.has(String(service.port)),
         )
       )
         findings.push(`${file}: runtime port must be ${service.port}`);
@@ -96,7 +102,7 @@ export function checkDeployment(root: string): string[] {
       findings.push(
         "infra/railway/Caddyfile: Relay ingress routes differ from the deployment contract",
       );
-    const relayRule = services.relay?.labels?.find((line) => /-relay.rule=/.test(line)) ?? "";
+    const relayRule = services.api?.labels?.find((line) => /-relay.rule=/.test(line)) ?? "";
     if (
       !same(
         [...relayRule.matchAll(/Path\(`([^`]+)`\)/g)].map((match) => match[1]!),
@@ -106,9 +112,18 @@ export function checkDeployment(root: string): string[] {
       findings.push(
         "deploy/compose.yaml: Relay ingress routes differ from the deployment contract",
       );
-    for (const key of ["DATABASE_URL", "REDIS_URL", "ALLOWED_ORIGINS"])
-      if (!services.relay?.environment?.[key])
-        findings.push(`deploy/compose.yaml: Relay does not forward ${key}`);
+    const split = Bun.YAML.parse(read("deploy/compose.split.yaml")) as {
+      services: Record<string, ComposeService & { image?: string }>;
+    };
+    if (
+      split.services.api?.environment?.SERVER_ROLE !== "api" ||
+      split.services.relay?.environment?.SERVER_ROLE !== "relay" ||
+      !split.services.relay.image?.startsWith("raypx/api:") ||
+      !split.services.api.environment.REDIS_URL?.includes(":?")
+    )
+      findings.push(
+        "deploy/compose.split.yaml: split roles must share the backend image and require Redis",
+      );
   } catch {
     findings.push(
       "Deployment contract could not be read; check Compose, Dockerfiles and API environment declarations",

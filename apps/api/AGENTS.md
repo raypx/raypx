@@ -69,7 +69,7 @@ Deleting a plan removes its run log, while existing managed tasks remain unchang
 
 `memory.*` requires an account session on every read and write; mutations also require
 trusted Origin, CAS and account limits. `@raypx/memory/server` owns shared use cases;
-`@raypx/control/postgres` atomically stores current documents and immutable
+`@raypx/memory/server/postgres` atomically stores current documents and immutable
 versions. Resolve joins current eligibility with selected revisions without account
 write locking. Sources are frozen on task creation and obey core's full prompt budget.
 Context command replay bodies expire after 24 hours and are limited to 4096 rows/8 MiB
@@ -116,13 +116,13 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   PostHog error tracking after the field policy, best effort (`server/error-reports.ts`).
 - `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
-- Production requires explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
+- Production API-enabled roles require explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
   `server/env.contract.ts` is the static deployment input catalog. The runtime schema
   must declare exactly its keys; tooling reads this data without importing API runtime.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
 - Close the PostgreSQL pool idempotently through Nitro's close hook.
 - No old business endpoints, worker or local execution endpoints. API starts one listener;
-  independent Relay sockets belong to `infra/relay`.
+  Nitro hosts `/relay` in the both/relay roles; the api role exposes no peers.
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
 - Never import another app. Local CLI execution stays outside the HTTP API.
@@ -149,12 +149,14 @@ TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/
 read projections. `/postgres` provides the control/context adapters. Account
 mutations take an exclusive owner lock; device projection transactions take a
 shared security fence and device advisory lock. Read-only reads take neither lock.
-HTTP RPC exposes reads, device management and one-time viewer tickets. Relay v4
-sockets run in the independent `infra/relay` app; API never imports that app or
-hosts peers. Execution and first-answer decisions belong to the CLI.
-Each API runtime owns only a private Redis broker client for scheduling and
-revocation. Without REDIS_URL, login remains available but remote execution is
-unavailable. PostgreSQL owns connection identity. Never retry uncertain delivery
+HTTP RPC exposes reads, device management and one-time viewer tickets. Nitro hosts
+Relay v4 WebSockets in the `both` (default) and `relay` roles. One build supports
+all roles. Combined scheduling/revocation calls RelayHub directly; configured Redis
+attaches cluster routing and shared caches. Split api/relay roles require Redis.
+The relay role parses only DB, broker and origins, never constructs Auth, cookies,
+mail or signer, and skips scheduled jobs and migration. `runtime/backend.ts` owns
+process selection/lifecycle; `runtime/server.ts` composes API-enabled roles.
+PostgreSQL owns connection identity. Never retry uncertain delivery
 or put credentials on the bus. `test:cluster` uses owned PostgreSQL/Redis and
 includes cross-process Relay dispatch, revocation and independent lifecycle checks.
 Relay v4 requires an explicit protocol version. Preserve full activity checkpoints

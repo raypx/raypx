@@ -64,10 +64,8 @@ export async function smokeDeployment(root: string, args: string[]) {
     composeMigrate: `raypx/api-migrate:${release}`,
     composeApi: `raypx/api:${release}`,
     composeWeb: `raypx/web:${release}`,
-    composeRelay: `raypx/relay:${release}`,
     railwayApi: `${project}/api:smoke`,
     railwayWeb: `${project}/web:smoke`,
-    railwayRelay: `${project}/relay:smoke`,
     gateway: `${project}/gateway:smoke`,
   };
   const containers = new Set<string>();
@@ -187,7 +185,6 @@ export async function smokeDeployment(root: string, args: string[]) {
       for (const [label, file, image] of [
         ["railway-api", "apps/api/Dockerfile", images.railwayApi],
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb],
-        ["railway-relay", "infra/relay/Dockerfile", images.railwayRelay],
         ["gateway", "infra/railway/Dockerfile", images.gateway],
       ]) {
         await evidence.command(`${label}-build`, [
@@ -233,19 +230,21 @@ export async function smokeDeployment(root: string, args: string[]) {
         },
         ["--tmpfs", "/var/lib/postgresql/data", "--memory", "512m"],
       );
-      await start(
-        `${project}-redis`,
-        await pinned("valkey/valkey:8-alpine"),
-        {},
-        ["--memory", "256m"],
-        ["valkey-server", "--save", "", "--appendonly", "no"],
-      );
       await untilReady(evidence, async () => {
         await docker(["exec", `${project}-db`, "pg_isready", "-U", "deployment", "-d", dbName]);
         return true;
       });
       for (const profile of ["compose", "railway"] as const) {
         evidence.check();
+        if (profile === "railway") {
+          await start(
+            `${project}-redis`,
+            await pinned("valkey/valkey:8-alpine"),
+            {},
+            ["--memory", "256m"],
+            ["valkey-server", "--save", "", "--appendonly", "no"],
+          );
+        }
         const migrate = profile === "compose" ? images.composeMigrate : images.railwayApi;
         await once(
           `${profile}-migrate`,
@@ -286,23 +285,26 @@ export async function smokeDeployment(root: string, args: string[]) {
               ALLOWED_ORIGINS: origin,
               JOBS_ENABLED: "false",
               HOST: profile === "railway" ? "::" : "0.0.0.0",
-              REDIS_URL: `redis://${project}-redis:6379`,
+              SERVER_ROLE: profile === "compose" ? "both" : "api",
+              ...(profile === "railway" ? { REDIS_URL: `redis://${project}-redis:6379` } : {}),
             },
             ["--memory", "768m"],
           );
-          await start(
-            relay,
-            profile === "compose" ? images.composeRelay : images.railwayRelay,
-            {
-              NODE_ENV: "production",
-              DATABASE_URL: database,
-              REDIS_URL: `redis://${project}-redis:6379`,
-              ALLOWED_ORIGINS: origin,
-              PORT: String(deploymentServices.relay.port),
-              HOST: profile === "railway" ? "::" : "0.0.0.0",
-            },
-            ["--memory", "512m"],
-          );
+          if (profile === "railway")
+            await start(
+              relay,
+              images.railwayApi,
+              {
+                NODE_ENV: "production",
+                DATABASE_URL: database,
+                REDIS_URL: `redis://${project}-redis:6379`,
+                ALLOWED_ORIGINS: origin,
+                SERVER_ROLE: "relay",
+                NITRO_PORT: String(deploymentServices.relay.port),
+                HOST: profile === "railway" ? "::" : "0.0.0.0",
+              },
+              ["--memory", "512m"],
+            );
           await start(
             web,
             profile === "compose" ? images.composeWeb : images.railwayWeb,
@@ -315,7 +317,7 @@ export async function smokeDeployment(root: string, args: string[]) {
             {
               PORT: String(deploymentServices.gateway.port),
               API_UPSTREAM: `${api}:${deploymentServices.api.port}`,
-              RELAY_UPSTREAM: `${relay}:${deploymentServices.relay.port}`,
+              RELAY_UPSTREAM: `${profile === "compose" ? api : relay}:${deploymentServices.relay.port}`,
               WEB_UPSTREAM: `${web}:${deploymentServices.web.port}`,
             },
             ["-p", `127.0.0.1::${deploymentServices.gateway.port}`, "--memory", "128m"],
@@ -334,7 +336,11 @@ export async function smokeDeployment(root: string, args: string[]) {
           const ready = (await (await fetch(`${base}/ready`)).json()) as {
             checks: Record<string, string>;
           };
-          if (ready.checks.database !== "ok" || ready.checks.redis !== "ok")
+          if (
+            ready.checks.database !== "ok" ||
+            ready.checks.relay !== "ok" ||
+            (profile === "railway" ? ready.checks.redis !== "ok" : "redis" in ready.checks)
+          )
             throw new Error("Deployment dependency readiness failed");
           await checkWeb(base);
           await checkApi(base, { origin, gateway: true });
@@ -351,7 +357,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           console.log(
             `${profile}: migration, readiness, SSR, assets, login, cookie and Relay passed`,
           );
-          return [gateway, web, api, relay];
+          return [gateway, web, api, ...(profile === "railway" ? [relay] : [])];
         });
         await evidence.measure(`${profile}-containers-stop`, async () => {
           for (const name of activeContainers) await stop(name);

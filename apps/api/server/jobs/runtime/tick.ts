@@ -1,11 +1,13 @@
 import type { Task } from "nitro/types";
-import { getApiRuntime } from "../../runtime/server.ts";
+import { getBackendRuntime } from "../../runtime/backend.ts";
 
 export default {
   meta: { name: "schedules:tick", description: "Reconcile and dispatch due device schedules" },
   async run() {
     try {
-      return { result: await (await getApiRuntime()).jobs.tick() };
+      const runtime = await getBackendRuntime();
+      if (runtime.role === "relay") return { result: { enabled: false } };
+      return { result: await runtime.jobs.tick() };
     } catch {
       throw new Error("Schedule task failed");
     }

@@ -1,7 +1,12 @@
-import { createRemoteRelay, RedisRelayCluster, createRelayJobExecutor } from "@raypx/control/relay";
+import {
+  createRemoteRelay,
+  RedisRelayCluster,
+  createRelayJobExecutor,
+  RelayHub,
+} from "@raypx/control/relay";
 import { connectDatabase } from "@raypx/database/connection";
 import { createStreamDrain } from "@raypx/logger/stream";
-import { getApiEnvironment, type ApiEnvironment } from "../env.ts";
+import { type ApiEnvironment } from "../env.ts";
 import { createApiLogging } from "../logging.ts";
 import { errorReports } from "../error-reports.ts";
 import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.ts";
@@ -12,7 +17,9 @@ import { createClientIpReader } from "../app/client-ip.ts";
 /** Socket address written by the server entry; the default auth rate-limit key. */
 export const CLIENT_IP_HEADER = "x-raypx-client-ip";
 type ServerRuntime = ApiRuntime & {
-  relay: Awaited<ReturnType<typeof createRemoteRelay>>;
+  relay: RelayHub | Awaited<ReturnType<typeof createRemoteRelay>>;
+  hub: RelayHub | undefined;
+  allowedOrigins: string[];
   clientIp: ReturnType<typeof createClientIpReader>;
 };
 
@@ -25,6 +32,7 @@ export async function createApiRuntime(
     environment: environment.NODE_ENV,
     sink: errorReports(environment, createStreamDrain()),
   });
+  let relay: ServerRuntime["relay"];
   // Without AUTH_IP_HEADERS a direct deployment limits by socket address.
   const runtime = await createRuntime(
     { ...environment, ipAddressHeaders: [CLIENT_IP_HEADER], trustedProxies: [] },
@@ -40,24 +48,35 @@ export async function createApiRuntime(
         }),
       connect: () => connectDatabase(environment.DATABASE_URL),
       closeLogger: () => logger.close(),
-      ...(environment.REDIS_URL
-        ? {
-            redis: connectRedis(environment.REDIS_URL),
-            relayReadiness: async () => {
-              if (!relay?.ready()) throw new Error("Relay unavailable");
-            },
-          }
-        : {}),
+      relayReadiness: async () => {
+        if (!relay?.ready()) throw new Error("Relay unavailable");
+      },
+      ...(environment.REDIS_URL ? { redis: connectRedis(environment.REDIS_URL) } : {}),
     },
   );
-  const relay = await createRemoteRelay(
-    runtime.control,
-    environment.REDIS_URL ? new RedisRelayCluster(environment.REDIS_URL) : undefined,
-  );
+  const hub =
+    environment.SERVER_ROLE === "both"
+      ? new RelayHub(async (use) => use(runtime.control))
+      : undefined;
+  const cluster = environment.REDIS_URL ? new RedisRelayCluster(environment.REDIS_URL) : undefined;
+  try {
+    if (hub) {
+      relay = hub;
+      if (cluster) await hub.attachCluster(cluster).catch(() => {});
+    } else {
+      relay = await createRemoteRelay(runtime.control, cluster);
+    }
+  } catch (error) {
+    await hub?.shutdown().catch(() => {});
+    await runtime.close();
+    throw error;
+  }
   let closing: Promise<void> | undefined;
   return {
     ...runtime,
     relay,
+    hub,
+    allowedOrigins: environment.allowedOrigins,
     clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
     close: () =>
       (closing ??= (async () => {
@@ -68,12 +87,4 @@ export async function createApiRuntime(
         }
       })()),
   };
-}
-
-let runtimePromise: Promise<ServerRuntime> | undefined;
-export function getApiRuntime(): Promise<ServerRuntime> {
-  return (runtimePromise ??= Promise.resolve().then(() => createApiRuntime(getApiEnvironment())));
-}
-export async function closeApiRuntime(): Promise<void> {
-  await (await runtimePromise)?.close();
 }

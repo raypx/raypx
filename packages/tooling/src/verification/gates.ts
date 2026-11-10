@@ -66,7 +66,7 @@ export function parseCiPlan(
     throw new Error("CI plan is incomplete");
   const decoded = plan as unknown as VerificationPlan & { distribution: boolean };
   if (
-    decoded.artifacts.some((name) => !["api", "web", "relay", "cli"].includes(name)) ||
+    decoded.artifacts.some((name) => !["api", "web", "cli"].includes(name)) ||
     decoded.nativeRunners.some((name) => !["macos-latest", "windows-latest"].includes(name)) ||
     new Set(decoded.nativeRunners).size !== decoded.nativeRunners.length ||
     (!decoded.native && decoded.nativeRunners.length > 0) ||

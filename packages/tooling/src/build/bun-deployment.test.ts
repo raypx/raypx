@@ -66,7 +66,6 @@ it("shares identical dependency stages so one builder reuses the install", () =>
 it.each([
   ["apps/api", "api"],
   ["apps/web", "web"],
-  ["infra/relay", "relay"],
 ])("builds %s without nesting VP syscall tracking inside the container sandbox", (path, task) => {
   expect(stages(`${path}/Dockerfile`).get("build")!.lines).toContain(
     `RUN bun run build:${task} --no-cache`,
@@ -98,6 +97,6 @@ it("probes Compose health with Bun instead of Node", () => {
   const probes = [...compose.matchAll(/test:\n\s+- CMD\n\s+- (\S+)\n\s+- -e/g)].map(
     (match) => match[1],
   );
-  expect(probes).toEqual(["bun", "bun", "bun"]);
+  expect(probes).toEqual(["bun", "bun"]);
   expect(compose).not.toMatch(/^\s+- node$/m);
 });

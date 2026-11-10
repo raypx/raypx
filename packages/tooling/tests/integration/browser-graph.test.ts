@@ -145,7 +145,7 @@ it("full verification builds Bun services and the optional edge without deployin
   );
   expect(tasks).toContain("api#build");
   expect(tasks).toContain("web#build");
-  expect(tasks).toContain("relay#build");
+  expect(tasks).not.toContain("relay#build");
   expect(tasks).toContain("relay-cloudflare#build");
   expect(tasks.some((task) => /#(?:deploy|plan(?::[^#]+)?|dev)$/.test(task))).toBe(false);
 });
