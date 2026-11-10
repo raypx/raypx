@@ -1,0 +1,29 @@
+packages/i18n/src/catalog-provider.component.test.tsx
+  s_28c89274dc9d17::t_dd998d165781bd 2-5,14-17,86-123
+  s_28c89274dc9d17::t_327c4c46f80af0 124
+packages/i18n/src/catalog-store.test.ts
+  s_28c89274dc9d17::t_dd998d165781bd 23-34
+packages/i18n/src/catalog-store.ts
+  s_28c89274dc9d17::t_71c805aa827937 10,14-19,30,33,38,45,49-50
+  s_28c89274dc9d17::t_975b441f9fb3ec 36
+  s_28c89274dc9d17::t_433cff817638f3 8-9,11-13,24,26-29
+packages/i18n/src/catalog-provider.tsx
+  s_28c89274dc9d17::t_142f7a84b10994 26,30-32
+  s_28c89274dc9d17::t_1ced5c7edf2fd3 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "75aa0897d2ad4f033f6b56b63a693db55ab63784",
+  "prompts": {},
+  "sessions": {
+    "s_28c89274dc9d17": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "597e7ad1-f88d-4d51-bc64-30cb1ef64b54",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
