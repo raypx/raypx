@@ -20,6 +20,18 @@ describe("catalog store", () => {
     expect(store.snapshot()).toEqual({ en, zh });
   });
 
+  it("returns one settled promise per catalog so use() reads it synchronously", async () => {
+    const store = createCatalogStore({ en, zh: async () => zh });
+    const bundled = store.load("en");
+    expect(store.load("en")).toBe(bundled);
+    expect(bundled).toMatchObject({ status: "fulfilled", value: en });
+    const split = store.load("zh");
+    expect(store.load("zh")).toBe(split);
+    await split;
+    expect(store.load("zh")).toBe(split);
+    expect(split).toMatchObject({ status: "fulfilled", value: zh });
+  });
+
   it("retries a catalog after its chunk fails", async () => {
     const load = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(zh);
     const store = createCatalogStore({ en, zh: load });

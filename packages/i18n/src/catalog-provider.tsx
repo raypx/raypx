@@ -23,10 +23,13 @@ export function createCatalogLanguageProvider(store: CatalogStore) {
   return function CatalogLanguageProvider(props: LanguageProviderProps) {
     const locale = localeRuntime.resolvePreference(props.preference, props.systemLocales);
     const loaded = useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
-    const ready = loaded[locale];
+    const ready = loaded[locale] !== undefined;
     const [lastReady, setLastReady] = useState(locale);
     if (ready && lastReady !== locale) setLastReady(locale);
-    const current = ready ?? loaded[lastReady] ?? use(store.load(locale));
+    const shown = !ready && loaded[lastReady] ? lastReady : locale;
+    // use() runs on every render: a render that suspended must call it again when it
+    // resumes, and the store's settled promise returns its catalog synchronously.
+    const current = use(store.load(shown));
     useEffect(() => {
       // A failed load keeps the previous catalog; the next switch retries.
       if (!ready) store.load(locale).catch(() => {});

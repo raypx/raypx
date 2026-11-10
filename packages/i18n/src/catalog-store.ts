@@ -5,34 +5,49 @@ type CatalogSource = Messages | (() => Promise<Messages>);
 export type CatalogSources = Readonly<Record<Locale, CatalogSource>>;
 export type LoadedCatalogs = Readonly<Partial<Record<Locale, Messages>>>;
 
-/** Loads each catalog once and notifies subscribers; bundled catalogs are ready at once. */
+type CatalogRequest = Promise<Messages> & { status?: "fulfilled"; value?: Messages };
+
+/** React's thenable fields let `use()` read a settled catalog without suspending. */
+function settle(request: CatalogRequest, catalog: Messages) {
+  request.status = "fulfilled";
+  request.value = catalog;
+}
+
+/**
+ * Loads each catalog once and notifies subscribers; bundled catalogs are ready at once.
+ * Every catalog keeps one stable promise, so `use()` sees the same thenable on each render.
+ */
 export function createCatalogStore(sources: CatalogSources) {
   let loaded: LoadedCatalogs = Object.fromEntries(
     Object.entries(sources).filter(([, source]) => typeof source !== "function"),
   );
-  const pending = new Map<Locale, Promise<Messages>>();
+  const requests = new Map<Locale, CatalogRequest>();
   const listeners = new Set<() => void>();
+  for (const [locale, catalog] of Object.entries(loaded) as [Locale, Messages][]) {
+    const request: CatalogRequest = Promise.resolve(catalog);
+    settle(request, catalog);
+    requests.set(locale, request);
+  }
 
   function load(locale: Locale): Promise<Messages> {
-    const ready = loaded[locale];
-    if (ready) return Promise.resolve(ready);
-    const existing = pending.get(locale);
+    const existing = requests.get(locale);
     if (existing) return existing;
     const source = sources[locale] as () => Promise<Messages>;
-    const promise = source().then(
+    const request: CatalogRequest = source().then(
       (catalog) => {
+        settle(request, catalog);
         loaded = { ...loaded, [locale]: catalog };
         for (const listener of listeners) listener();
         return catalog;
       },
       (error: unknown) => {
         // A failed chunk request may succeed on the next switch.
-        pending.delete(locale);
+        requests.delete(locale);
         throw error;
       },
     );
-    pending.set(locale, promise);
-    return promise;
+    requests.set(locale, request);
+    return request;
   }
 
   return {

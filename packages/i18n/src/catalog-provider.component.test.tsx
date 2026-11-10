@@ -1,6 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { Suspense, useState } from "react";
-import { afterEach, describe, expect, it } from "vite-plus/test";
+import { StrictMode, Suspense, startTransition, useState } from "react";
+import { hydrateRoot, type Root } from "react-dom/client";
+import { renderToString } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { createCatalogLanguageProvider } from "./catalog-provider.tsx";
 import { createCatalogStore } from "./catalog-store.ts";
 import en from "./messages/en.ts";
@@ -9,7 +11,10 @@ import type { LocalePreference } from "./preferences.ts";
 import { useLanguagePreference, useLocale, useTranslations } from "./react.ts";
 import type { Messages } from "./types.ts";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function deferred() {
   let resolve!: (catalog: Messages) => void;
@@ -77,5 +82,44 @@ describe("lazy catalog provider", () => {
     expect(screen.getByTestId("loading")).toBeTruthy();
     await act(async () => chunk.resolve(zh));
     expect(screen.getByTestId("message").textContent).toBe("设置");
+  });
+
+  it("resumes a hydration that waited for the server language's catalog", async () => {
+    // Mirrors the web root: StrictMode, transition hydration and no Suspense boundary
+    // above the provider, with the server language's chunk still loading.
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const app = (Provider: ReturnType<typeof createCatalogLanguageProvider>) => (
+      <StrictMode>
+        <Provider
+          preference="zh"
+          onPreferenceChange={() => {}}
+          systemLocales={["en-US"]}
+          messages={{} as never}
+        >
+          <Probe />
+        </Provider>
+      </StrictMode>
+    );
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(
+      app(createCatalogLanguageProvider(createCatalogStore({ en, zh }))),
+    );
+    document.body.append(container);
+    const chunk = deferred();
+    const Provider = createCatalogLanguageProvider(
+      createCatalogStore({ en, zh: () => chunk.promise }),
+    );
+    let root: Root | undefined;
+    await act(async () => {
+      startTransition(() => {
+        root = hydrateRoot(container, app(Provider));
+      });
+    });
+    expect(screen.getByTestId("message").textContent).toBe("设置");
+    await act(async () => chunk.resolve(zh));
+    expect(screen.getByTestId("state").textContent).toBe("zh:zh");
+    expect(consoleError).not.toHaveBeenCalled();
+    act(() => root?.unmount());
+    container.remove();
   });
 });
