@@ -18,6 +18,7 @@ import { DotGrid, SpotlightLayer, useSpotlight } from "../../../components/artwo
 import { LandingAuthAction } from "./auth-action.tsx";
 import { ApprovalsArt, AutomationsArt, MemoryArt, ProjectsArt } from "./illustrations.tsx";
 import { WorkflowPreview } from "./workflow-preview.tsx";
+import { accentGradient } from "./accent.ts";
 
 type WorkspacePath = "/projects" | "/approvals" | "/automations" | "/memory";
 
@@ -45,16 +46,29 @@ function Hero() {
   return (
     <section
       aria-labelledby="landing-home-title"
-      className="flex min-w-0 flex-col items-center gap-14 @3xl/main:gap-16"
+      className="relative isolate flex min-w-0 flex-col items-center gap-14 @3xl/main:gap-16"
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[34rem]"
+      >
+        <div className="absolute top-0 left-[8%] h-72 w-[42%] rounded-full bg-[var(--landing-sky)] opacity-[0.16] blur-[90px] dark:opacity-[0.22]" />
+        <div className="absolute top-10 right-[10%] h-72 w-[38%] rounded-full bg-[var(--landing-violet)] opacity-[0.14] blur-[90px] dark:opacity-[0.24]" />
+        <div className="absolute top-40 left-[34%] h-56 w-[32%] rounded-full bg-[var(--landing-pink)] opacity-[0.1] blur-[90px] dark:opacity-[0.16]" />
+      </div>
       <header className="flex max-w-3xl min-w-0 flex-col items-center gap-6 text-center">
-        <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-sm">
-          <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-foreground" />
+        <p className="relative inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-background/70 py-1 pr-3 pl-1.5 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-sm">
+          <span
+            aria-hidden="true"
+            className={cn("grid size-4.5 shrink-0 place-items-center rounded-full", accentGradient)}
+          >
+            <span className="size-1.5 rounded-full bg-background" />
+          </span>
           <span className="truncate">{auth("brandTitle")}</span>
         </p>
         <h1
           id="landing-home-title"
-          className="max-w-[16ch] bg-linear-to-b from-foreground to-foreground/65 bg-clip-text pb-1 text-[2.75rem] leading-[1.06] font-semibold tracking-tight text-balance text-transparent forced-colors:bg-none forced-colors:text-[CanvasText] @xl/main:text-6xl @4xl/main:text-7xl"
+          className="max-w-[16ch] bg-linear-to-br from-foreground from-45% via-foreground/85 to-[var(--landing-violet)] bg-clip-text pb-1 text-[2.75rem] leading-[1.06] font-semibold tracking-tighter text-balance text-transparent forced-colors:bg-none forced-colors:text-[CanvasText] @xl/main:text-6xl @4xl/main:text-7xl"
         >
           {t("title")}
         </h1>
@@ -90,15 +104,7 @@ function Hero() {
           <HelpHint label={t("draftPrivacy")} description={t("tasksHint")} />
         </div>
       </header>
-      <div className="relative mx-auto w-full max-w-5xl min-w-0">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 -top-12 bottom-1/3 -z-10 bg-[radial-gradient(closest-side,color-mix(in_oklch,var(--foreground)_9%,transparent),transparent)] blur-2xl"
-        />
-        <div className="rounded-[1.375rem] border border-border bg-muted/50 p-1.5 shadow-soft backdrop-blur-sm">
-          <WorkflowPreview className="rounded-[1rem]" />
-        </div>
-      </div>
+      <WorkflowPreview />
     </section>
   );
 }
@@ -122,14 +128,20 @@ function HowItWorks() {
             key={title}
             className="relative flex min-w-0 gap-4 border-t border-border pt-6 @3xl/main:flex-col @3xl/main:gap-5"
           >
-            <span aria-hidden="true" className="absolute -top-px left-0 h-px w-12 bg-foreground" />
+            <span
+              aria-hidden="true"
+              className={cn("absolute -top-px left-0 h-0.5 w-12", accentGradient)}
+            />
             <span className="flex shrink-0 items-center justify-between gap-3 self-start @3xl/main:self-stretch">
               <span className="grid size-11 place-items-center rounded-xl border border-border bg-card shadow-soft">
                 <Icon aria-hidden="true" className="size-5" />
               </span>
               <span
                 aria-hidden="true"
-                className="hidden text-xs font-medium text-muted-foreground tabular-nums @3xl/main:inline"
+                className={cn(
+                  "hidden bg-clip-text font-mono text-sm font-medium text-transparent tabular-nums forced-colors:bg-none forced-colors:text-[CanvasText] @3xl/main:inline",
+                  accentGradient,
+                )}
               >
                 {String(index + 1).padStart(2, "0")}
               </span>
@@ -257,6 +269,14 @@ function ComputersBand() {
       className="group relative isolate overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-soft"
     >
       <DotGrid className="mask-[radial-gradient(ellipse_60%_90%_at_75%_50%,#000_10%,transparent_80%)]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -bottom-24 -z-10 h-72 w-2/3 rounded-full bg-[var(--landing-violet)] opacity-[0.12] blur-[80px] dark:opacity-[0.2]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 right-1/4 -z-10 h-56 w-1/2 rounded-full bg-[var(--landing-sky)] opacity-[0.1] blur-[80px] dark:opacity-[0.18]"
+      />
       <SpotlightLayer />
       <div className="relative grid items-center gap-10 p-6 @xl/main:p-8 @4xl/main:grid-cols-2 @4xl/main:gap-16 @4xl/main:p-12">
         <div className="flex min-w-0 flex-col items-start gap-6">
@@ -289,9 +309,21 @@ function ConnectionDiagram({ label }: { label: string }) {
     >
       <DiagramNode icon={LaptopIcon} label="Desktop" />
       <span aria-hidden="true" className="relative flex min-w-10 flex-1 items-center">
-        <span className="h-0 w-full border-t border-dashed border-foreground/30 group-hover:border-foreground/50 motion-safe:transition-colors motion-safe:duration-300" />
-        <span className="absolute left-1/2 grid size-9 -translate-x-1/2 place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-soft group-hover:text-foreground motion-safe:transition-[color,scale] motion-safe:duration-300 motion-safe:group-hover:scale-110">
-          <ShieldCheckIcon className="size-4" />
+        <span
+          className={cn(
+            "h-px w-full opacity-60 [mask-image:repeating-linear-gradient(90deg,#000_0_6px,transparent_6px_10px)] group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-300",
+            accentGradient,
+          )}
+        />
+        <span
+          className={cn(
+            "absolute left-1/2 grid size-10 -translate-x-1/2 place-items-center rounded-full p-px shadow-soft motion-safe:transition-[scale] motion-safe:duration-300 motion-safe:group-hover:scale-110",
+            accentGradient,
+          )}
+        >
+          <span className="grid size-full place-items-center rounded-full bg-background text-foreground">
+            <ShieldCheckIcon className="size-4" />
+          </span>
         </span>
       </span>
       <DiagramNode icon={GlobalIcon} label="Web" />

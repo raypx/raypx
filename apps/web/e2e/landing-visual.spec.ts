@@ -31,6 +31,7 @@ for (const view of views) {
     const labels = {
       en: {
         preview: "Interactive example",
+        steps: "Example workflow",
         session: "Session",
         review: "Review",
         result: "Result",
@@ -38,6 +39,7 @@ for (const view of views) {
       },
       zh: {
         preview: "交互演示",
+        steps: "示例工作流",
         session: "会话",
         review: "审阅",
         result: "结果",
@@ -45,11 +47,10 @@ for (const view of views) {
       },
     }[view.locale];
     const preview = page.getByRole("figure", { name: labels.preview });
+    const stepTab = (name: string) =>
+      page.getByRole("tablist", { name: labels.steps }).getByRole("tab", { name, exact: true });
     const panel = () => preview.locator('[role="tabpanel"]:not([inert])');
-    await expect(preview.getByRole("tab", { name: labels.review })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    await expect(stepTab(labels.review)).toHaveAttribute("aria-selected", "true");
     await expect(panel()).toContainText("await persist(input)");
     const previewHeight = await preview.evaluate((element: HTMLElement) => element.offsetHeight);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
@@ -73,7 +74,7 @@ for (const view of views) {
     });
     const animationDurations = () =>
       page.evaluate(() => Reflect.get(window, "landingAnimationDurations") as number[]);
-    await preview.getByRole("tab", { name: labels.session }).click();
+    await stepTab(labels.session).click();
     await expect(panel()).toContainText("read src/delivery.ts");
     await expect(preview).toHaveJSProperty("offsetHeight", previewHeight);
     expect(await animationDurations()).toEqual([200]);
@@ -84,13 +85,10 @@ for (const view of views) {
       });
     }
 
-    await preview.getByRole("tab", { name: labels.session }).press("End");
-    await expect(preview.getByRole("tab", { name: labels.result })).toBeFocused();
-    await preview.getByRole("tab", { name: labels.result }).press("Enter");
-    await expect(preview.getByRole("tab", { name: labels.result })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    await stepTab(labels.session).press("End");
+    await expect(stepTab(labels.result)).toBeFocused();
+    await stepTab(labels.result).press("Enter");
+    await expect(stepTab(labels.result)).toHaveAttribute("aria-selected", "true");
     expect(await animationDurations()).toEqual([200]);
     await expect(preview).toHaveJSProperty("offsetHeight", previewHeight);
     if (view.width === 1440 || view.width === 360) {
@@ -101,7 +99,7 @@ for (const view of views) {
     }
 
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await preview.getByRole("tab", { name: labels.review }).click();
+    await stepTab(labels.review).click();
     await expect(panel()).toContainText("await persist(input)");
     expect(await animationDurations()).toEqual([200]);
     expect(privateReads).toEqual([]);

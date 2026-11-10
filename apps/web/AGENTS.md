@@ -57,10 +57,12 @@ application is an independent composition root and is never imported by another 
   Its Base UI tabs never mount execution clients or private reads. Pointer changes
   use a short directional transition; keyboard and reduced-motion changes are immediate.
   Home stacks a centered hero with contextual draft help, the preview in an
-  application frame, a three-step overview, illustrated workspace links whose
-  accessible names are their titles, and a Desktop-to-Web connection band; the
-  diagram never implies a live connection or reads device state. The landing layout
-  clips horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
+  application frame chosen by step-card tabs, a three-step overview, workspace links
+  with labelled example interfaces, and a Desktop-to-Web connection band. Step tabs
+  and workspace links use their titles as accessible names and describe themselves
+  with their hints; the diagram never implies a live connection or reads device state.
+  The landing layout defines the logo palette as `--landing-*` properties and clips
+  horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
   The `(app)/projects` route owns
   `/projects`, including its guest sign-in gate and remote project list.
   An unavailable API renders retryable feedback rather than a signed-out state. Account state is rechecked on navigation; sign-out handlers call `queryClient.clear()` before

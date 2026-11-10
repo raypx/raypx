@@ -95,8 +95,11 @@ tabs only transition their colors/shadow for pointer use. Streaming messages,
 virtual row placement, search results and workbench page sections do not animate in.
 Authentication and privacy pages are the exception: `src/components/artwork.tsx`
 provides a one-shot load entrance (`enterOnLoad`, applied to wrappers rather than
-controls). The homepage renders its content without entrances. Pointer-follow
-spotlights and artwork shifts respond to hover only. Reduced motion removes all of it.
+controls). The homepage renders its content without entrances; its application frame
+uses `scrollSettle` from `features/landing/components/accent.ts`, a scroll-linked scale
+and offset that never changes opacity. The same module defines the logo palette as
+`--landing-*` properties on the landing layout. Pointer-follow spotlights and artwork
+shifts respond to hover only. Reduced motion removes all of it.
 
 ## Preview and validation
 

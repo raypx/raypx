@@ -6,12 +6,19 @@ import { publicConfigurationQuery } from "../../configuration/client.ts";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { LegalFooter } from "../../../components/legal-footer.tsx";
 import { PublicBackdrop, PublicHeader } from "../../../components/public-chrome.tsx";
+import { cn } from "@raypx/ui/lib/utils";
+import { landingAccentVars } from "./accent.ts";
 
 export function LandingLayout() {
   const c = useTranslations("common");
   const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";
   return (
-    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background">
+    <div
+      className={cn(
+        "relative isolate flex min-h-dvh flex-col overflow-x-clip bg-background",
+        landingAccentVars,
+      )}
+    >
       <PublicBackdrop />
       <PublicHeader siteName={siteName} sticky>
         <nav aria-label={c("home")} className="flex shrink-0 items-center gap-1">
