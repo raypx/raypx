@@ -1,0 +1,48 @@
+docs/development/desktop.md
+  s_a3446c4a758722::t_e33361ba644173 184,227-229,254
+apps/desktop/scripts/host/check-release.ts
+  s_a3446c4a758722::t_e33361ba644173 5,10-11
+docs/architecture/0038-mygo-desktop-host.md
+  s_a3446c4a758722::t_e33361ba644173 5
+apps/desktop/AGENTS.md
+  s_a3446c4a758722::t_e33361ba644173 119
+apps/desktop/README.md
+  s_a3446c4a758722::t_e33361ba644173 3
+README.md
+  s_a3446c4a758722::t_e33361ba644173 14
+AGENTS.md
+  s_a3446c4a758722::t_e33361ba644173 72
+apps/desktop/scripts/host/mygo.ts
+  s_a3446c4a758722::t_e33361ba644173 3,203
+apps/desktop/go.mod
+  s_a3446c4a758722::t_b8d22ccb12e4ad 7
+apps/desktop/scripts/host/packager.ts
+  s_a3446c4a758722::t_e33361ba644173 4-5,28-30,39-40
+  s_a3446c4a758722::t_908d9e18396368 41-42
+docs/architecture/0034-extensible-foundation.md
+  s_a3446c4a758722::t_e33361ba644173 44
+apps/desktop/go.sum
+  s_a3446c4a758722::t_15c858e0365ced 7-8
+apps/desktop/scripts/host/check-release.test.ts
+  s_a3446c4a758722::t_e33361ba644173 4-5,25
+apps/desktop/internal/app/smoke.go
+  s_a3446c4a758722::t_5dcde258e21bea 56-60
+apps/desktop/tests/native/smoke/scenario.ts
+  s_a3446c4a758722::t_a26714093401db 93-100,661,684,773-774,776-777,780-781,783-784,911
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ad66d89ea3fe66959c76e035992c96096ca87f2f",
+  "prompts": {},
+  "sessions": {
+    "s_a3446c4a758722": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c463-d628-74a1-9951-4a2491204f7d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
