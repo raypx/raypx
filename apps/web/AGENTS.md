@@ -54,8 +54,8 @@ application is an independent composition root and is never imported by another 
   automations and memory, and never mounts private project, device, task, job or memory
   reads; the account menu reads permissions only for confirmed sessions.
   The homepage workflow preview is an explicitly labelled, static-data example.
-  Its Base UI tabs never mount execution clients or private reads. Pointer changes
-  use a short directional transition; keyboard and reduced-motion changes are immediate.
+  Its Base UI tabs never mount execution clients or private reads. Pointer and autoplay
+  changes use a short directional transition; keyboard and reduced-motion changes are immediate.
   Home stacks a centered hero with contextual draft help, the preview in an
   application frame chosen by step-card tabs, a three-step overview, workspace links
   with labelled example interfaces, and a Desktop-to-Web connection band. Step tabs
@@ -63,6 +63,8 @@ application is an independent composition root and is never imported by another 
   with their hints; the diagram never implies a live connection or reads device state.
   Ambient homepage motion (hero particles, frame light, connection packets) is
   decorative, pauses offscreen or in hidden tabs and is still under reduced motion.
+  The example plays its steps until a visitor chooses one or turns the labelled
+  autoplay toggle off; hover and step-card focus hold it and reduced motion starts it off.
   The landing layout defines the logo palette as `--landing-*` properties and clips
   horizontal overflow (`overflow-x-clip`, which keeps the sticky header).
   The `(app)/projects` route owns

@@ -36,6 +36,7 @@ for (const view of views) {
         review: "Review",
         result: "Result",
         privacy: "Draft privacy",
+        autoplay: "Autoplay demo",
       },
       zh: {
         preview: "交互演示",
@@ -44,6 +45,7 @@ for (const view of views) {
         review: "审阅",
         result: "结果",
         privacy: "草稿与隐私",
+        autoplay: "自动播放演示",
       },
     }[view.locale];
     const preview = page.getByRole("figure", { name: labels.preview });
@@ -52,6 +54,13 @@ for (const view of views) {
     const panel = () => preview.locator('[role="tabpanel"]:not([inert])');
     await expect(stepTab(labels.review)).toHaveAttribute("aria-selected", "true");
     await expect(panel()).toContainText("await persist(input)");
+    // Stop the self-playing example so the manual steps below are deterministic.
+    const autoplay = page.getByRole("button", { name: labels.autoplay, exact: true });
+    await expect(async () => {
+      await autoplay.click();
+      await expect(autoplay).toHaveAttribute("aria-pressed", "false", { timeout: 500 });
+    }).toPass();
+    await expect(stepTab(labels.review)).toHaveAttribute("aria-selected", "true");
     const previewHeight = await preview.evaluate((element: HTMLElement) => element.offsetHeight);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
@@ -145,4 +154,60 @@ test("Web homepage ambient motion runs while visible and stops under reduced mot
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
   );
+});
+
+test("Web homepage demo plays itself, holds on hover and stops on request", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+  await page.route("**/rpc/configuration/public", (route) =>
+    authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+  );
+  await page.goto(web + "/");
+  const showcase = page.locator("[data-autoplay]");
+  const steps = page.getByRole("tablist", { name: "Example workflow" });
+  const autoplay = page.getByRole("button", { name: "Autoplay demo", exact: true });
+  await expect(autoplay).toHaveAttribute("aria-pressed", "true");
+  await expect(showcase).toHaveAttribute("data-autoplay", "playing", { timeout: 10_000 });
+  await expect(steps.getByRole("tab", { name: "Result", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+    { timeout: 15_000 },
+  );
+
+  await page
+    .getByRole("figure", { name: "Interactive example" })
+    .locator("pre, ul")
+    .first()
+    .hover();
+  await expect(showcase).toHaveAttribute("data-autoplay", "paused");
+  await page.mouse.move(4, 4);
+  await expect(showcase).toHaveAttribute("data-autoplay", "playing");
+
+  await autoplay.click();
+  await expect(autoplay).toHaveAttribute("aria-pressed", "false");
+  await expect(showcase).toHaveAttribute("data-autoplay", "off");
+  const selected = await steps.locator('[aria-selected="true"]').textContent();
+  await page.waitForTimeout(1500);
+  expect(await steps.locator('[aria-selected="true"]').textContent()).toBe(selected);
+});
+
+test("Web homepage demo stays still under reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+  await page.route("**/rpc/configuration/public", (route) =>
+    authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+  );
+  await page.goto(web + "/");
+  await expect(page.getByRole("button", { name: "Autoplay demo", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(page.locator("[data-autoplay]")).toHaveAttribute("data-autoplay", "off");
+  await page.waitForTimeout(2500);
+  await expect(
+    page
+      .getByRole("tablist", { name: "Example workflow" })
+      .getByRole("tab", { name: "Review", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
 });

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { IconComponent } from "@raypx/icons";
 import { BookOpenIcon } from "@raypx/icons/book-open";
@@ -7,20 +7,24 @@ import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { FileTextIcon } from "@raypx/icons/file-text";
 import { InboxIcon } from "@raypx/icons/inbox";
+import { PauseIcon } from "@raypx/icons/pause";
+import { PlayIcon } from "@raypx/icons/play";
 import { ScheduleIcon } from "@raypx/icons/schedule";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { TaskListIcon } from "@raypx/icons/task-list";
+import { SpinnerIcon } from "@raypx/icons/spinner";
 import { TerminalIcon } from "@raypx/icons/terminal";
+import { IconButton } from "@raypx/ui/icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
 import { cn } from "@raypx/ui/lib/utils";
 import { accentGradient, scrollSettle } from "./accent.ts";
-
-const steps = ["session", "review", "result"] as const;
-type PreviewStep = (typeof steps)[number];
-
-function isPreviewStep(value: unknown): value is PreviewStep {
-  return steps.some((step) => step === value);
-}
+import {
+  demoStage,
+  isPreviewStep,
+  previewSteps,
+  useDemoPlayback,
+  type PreviewStep,
+} from "./demo-playback.ts";
 
 /** The product's own navigation icons; decorative, without names, counts or states. */
 const railIcons: readonly { icon: IconComponent; active?: true }[] = [
@@ -31,23 +35,29 @@ const railIcons: readonly { icon: IconComponent; active?: true }[] = [
 ];
 
 const panelClass = "col-start-1 row-start-1 data-ending-style:hidden";
+const reveal = "motion-safe:transition-[opacity,translate] motion-safe:duration-300";
 
 /**
  * An illustrative workflow, independent of account state and execution clients: the
- * application frame shows the selected step and the step cards below select it. Panels
- * share one grid cell so the frame keeps its height.
+ * application frame shows the selected step, the step cards below select it and the
+ * example plays itself until a visitor takes over. Panels share one grid cell, and
+ * playback only fades content, so the frame keeps its height.
  */
 export function WorkflowPreview() {
   const t = useTranslations("guest");
-  const [step, setStep] = useState<PreviewStep>("review");
+  const { rootRef, step, select, enabled, toggle, state, progress, changeSource, hold } =
+    useDemoPlayback("review");
   const panelRef = useRef<HTMLDivElement>(null);
   const pointerChange = useRef(false);
   const previousStep = useRef(step);
+  const prompt = t("previewPrompt");
+  const stage = demoStage(step, progress, prompt.length);
 
   useEffect(() => {
-    const direction = steps.indexOf(step) - steps.indexOf(previousStep.current);
+    const direction = previewSteps.indexOf(step) - previewSteps.indexOf(previousStep.current);
     previousStep.current = step;
-    if (!pointerChange.current || !direction) return;
+    const animated = pointerChange.current || changeSource === "autoplay";
+    if (!animated || !direction) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const panel = panelRef.current?.querySelector<HTMLElement>(
       '[role="tabpanel"]:not([hidden]):not([inert])',
@@ -61,7 +71,7 @@ export function WorkflowPreview() {
       { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
     );
     return () => animation.cancel();
-  }, [step]);
+  }, [step, changeSource]);
 
   const cards = [
     {
@@ -86,9 +96,11 @@ export function WorkflowPreview() {
 
   return (
     <Tabs
+      ref={rootRef}
       value={step}
+      data-autoplay={state}
       onValueChange={(value) => {
-        if (isPreviewStep(value)) setStep(value);
+        if (isPreviewStep(value)) select(value);
       }}
       onPointerDownCapture={() => {
         pointerChange.current = true;
@@ -136,8 +148,19 @@ export function WorkflowPreview() {
                 />
                 <span className="truncate">Raypx</span>
               </span>
-              <span className="col-start-3 justify-self-end rounded-full border border-border bg-background px-2 py-0.5 text-xs whitespace-nowrap text-muted-foreground">
-                {t("previewLabel")}
+              <span className="col-start-3 flex items-center gap-1 justify-self-end">
+                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs whitespace-nowrap text-muted-foreground">
+                  {t("previewLabel")}
+                </span>
+                <IconButton
+                  size="icon-xs"
+                  label={t("previewAutoplay")}
+                  hint={t(enabled ? "previewPause" : "previewPlay")}
+                  aria-pressed={enabled}
+                  onClick={toggle}
+                >
+                  {enabled ? <PauseIcon aria-hidden="true" /> : <PlayIcon aria-hidden="true" />}
+                </IconButton>
               </span>
             </figcaption>
             <div className="flex min-w-0">
@@ -157,16 +180,39 @@ export function WorkflowPreview() {
                   </span>
                 ))}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col">
+              <div
+                className="flex min-w-0 flex-1 flex-col"
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "mouse") hold.setHovered(true);
+                }}
+                onPointerLeave={() => hold.setHovered(false)}
+              >
                 <div
                   ref={panelRef}
-                  className="mx-auto grid min-h-72 w-full max-w-2xl overflow-hidden px-5 py-6 sm:px-6 @2xl/preview:min-h-80 @2xl/preview:py-8"
+                  className="mx-auto grid min-h-80 w-full max-w-2xl overflow-hidden px-5 py-6 sm:px-6 @2xl/preview:min-h-88 @2xl/preview:py-8"
                 >
                   <TabsContent value="session" className={cn(panelClass, "flex flex-col gap-6")}>
-                    <div className="ml-auto max-w-sm rounded-2xl rounded-br-md bg-foreground px-4 py-3 text-sm leading-6 text-background">
-                      {t("previewPrompt")}
+                    <div
+                      className={cn(
+                        "ml-auto max-w-sm rounded-2xl rounded-br-md bg-foreground px-4 py-3 text-sm leading-6 text-background",
+                        stage.typed === 0 && "invisible",
+                      )}
+                    >
+                      {prompt.slice(0, stage.typed)}
+                      {stage.typed < prompt.length && (
+                        <span
+                          aria-hidden="true"
+                          className="ml-0.5 inline-block h-4 w-px translate-y-0.5 bg-background motion-safe:animate-pulse"
+                        />
+                      )}
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div
+                      className={cn(
+                        "flex flex-col gap-3",
+                        reveal,
+                        stage.agent === "hidden" && "translate-y-1 opacity-0",
+                      )}
+                    >
                       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                         <span
                           aria-hidden="true"
@@ -181,10 +227,17 @@ export function WorkflowPreview() {
                       </div>
                       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs">
                         <code className="min-w-0 wrap-anywhere">read src/delivery.ts</code>
-                        <CheckIcon
-                          aria-hidden="true"
-                          className="size-4 shrink-0 text-muted-foreground"
-                        />
+                        {stage.agent === "working" ? (
+                          <SpinnerIcon
+                            aria-hidden="true"
+                            className="size-4 shrink-0 text-muted-foreground motion-safe:animate-spin"
+                          />
+                        ) : (
+                          <CheckIcon
+                            aria-hidden="true"
+                            className="size-4 shrink-0 text-muted-foreground"
+                          />
+                        )}
                       </div>
                     </div>
                   </TabsContent>
@@ -217,6 +270,7 @@ export function WorkflowPreview() {
                         </code>
                       </pre>
                     </div>
+                    <ApprovalRow stage={stage.approval} />
                   </TabsContent>
                   <TabsContent value="result" className={cn(panelClass, "flex flex-col gap-5")}>
                     <div className="flex items-center gap-3">
@@ -232,7 +286,13 @@ export function WorkflowPreview() {
                       <h3 className="text-lg font-medium">{t("previewResultTitle")}</h3>
                     </div>
                     <ul className="divide-y divide-border rounded-xl border border-border text-sm">
-                      <li className="flex items-center gap-3 px-4 py-3.5">
+                      <li
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3.5",
+                          reveal,
+                          stage.resultRows < 1 && "opacity-0",
+                        )}
+                      >
                         <FileTextIcon
                           aria-hidden="true"
                           className="size-4 shrink-0 text-muted-foreground"
@@ -244,7 +304,13 @@ export function WorkflowPreview() {
                           +2 −1
                         </span>
                       </li>
-                      <li className="flex items-center gap-3 px-4 py-3.5">
+                      <li
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3.5",
+                          reveal,
+                          stage.resultRows < 2 && "opacity-0",
+                        )}
+                      >
                         <InboxIcon
                           aria-hidden="true"
                           className="size-4 shrink-0 text-muted-foreground"
@@ -269,9 +335,18 @@ export function WorkflowPreview() {
       <TabsList
         aria-label={t("previewSteps")}
         className="grid w-full grid-cols-3 items-stretch gap-2 bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-auto @2xl/main:gap-4"
+        onFocus={() => hold.setFocused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) hold.setFocused(false);
+        }}
       >
         {cards.map((card, index) => (
-          <StepCard key={card.value} index={index} {...card} />
+          <StepCard
+            key={card.value}
+            index={index}
+            progress={card.value === step ? progress : null}
+            {...card}
+          />
         ))}
       </TabsList>
     </Tabs>
@@ -284,12 +359,14 @@ function StepCard({
   title,
   hint,
   index,
+  progress,
 }: {
   value: PreviewStep;
   icon: IconComponent;
   title: string;
   hint: string;
   index: number;
+  progress: number | null;
 }) {
   const id = useId();
   return (
@@ -301,8 +378,9 @@ function StepCard({
     >
       <span
         aria-hidden="true"
+        style={progress === null ? undefined : { transform: `scaleX(${progress})` }}
         className={cn(
-          "absolute inset-x-0 top-0 h-0.5 opacity-0 group-data-active/step:opacity-100 motion-safe:transition-opacity motion-safe:duration-200",
+          "absolute inset-x-0 top-0 h-0.5 origin-left opacity-0 group-data-active/step:opacity-100 motion-safe:transition-[opacity,transform] motion-safe:duration-100 motion-safe:ease-linear",
           accentGradient,
         )}
       />
@@ -327,5 +405,33 @@ function StepCard({
         {hint}
       </span>
     </TabsTrigger>
+  );
+}
+
+function ApprovalRow({ stage }: { stage: "waiting" | "pressing" | "approved" }) {
+  const t = useTranslations("guest");
+  if (stage === "approved") {
+    return (
+      <div aria-hidden="true" className="flex justify-end text-xs">
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--landing-violet)]/30 bg-[var(--landing-violet)]/10 px-2.5 py-1 font-medium">
+          <CheckIcon className="size-3.5" />
+          {t("previewApproved")}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div aria-hidden="true" className="flex justify-end gap-2 text-xs">
+      <span className="rounded-md border border-border px-2.5 py-1">{t("exampleDeny")}</span>
+      <span
+        className={cn(
+          "rounded-md bg-foreground px-2.5 py-1 text-background motion-safe:transition-[scale,box-shadow] motion-safe:duration-150",
+          stage === "pressing" &&
+            "scale-95 ring-2 ring-[var(--landing-violet)]/50 ring-offset-2 ring-offset-background",
+        )}
+      >
+        {t("exampleApprove")}
+      </span>
+    </div>
   );
 }

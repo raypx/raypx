@@ -49,8 +49,10 @@ step cards, a three-step overview, workspace links with example interfaces and t
 connection band. The frame may settle with scroll where view timelines exist, without
 changing opacity. The homepage alone may run ambient loops: a particle constellation
 behind the hero that reacts to a mouse pointer, a light travelling around the example
-frame and packets along the connection line. They pause offscreen and in hidden tabs;
-reduced motion leaves one still frame or hides them. Authentication and privacy pages
+frame and packets along the connection line, and the example may play its steps. They
+pause offscreen and in hidden tabs; reduced motion leaves one still frame or hides them.
+The playing example holds while its content is hovered or a step card has focus, stops
+when a visitor chooses a step and always offers a labelled autoplay toggle. Authentication and privacy pages
 may play one short load entrance and nothing else loops; no content waits for
 scrolling to appear.
 Remote actions offer contextual sign-in and return to the requested page. Web layouts also serve phone browsers.

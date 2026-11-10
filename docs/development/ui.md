@@ -102,6 +102,10 @@ and offset that never changes opacity. The same module defines the logo palette 
 autoplaying motion: `ParticleField` draws a canvas constellation and `FlowPackets`
 animates the connection line with the Web Animations API; both stop offscreen and in
 hidden tabs, and the frame light is a CSS rotation hidden under reduced motion.
+`useDemoPlayback` in `demo-playback.ts` plays the example's steps after it has been
+visible for a moment; `demoStage` derives each frame from progress so playback only
+fades content and the frame keeps its height. Hover, step-card focus, offscreen and
+hidden tabs hold it; choosing a step or the autoplay toggle stops it.
 Pointer-follow spotlights and artwork shifts respond to hover only. Reduced motion
 removes all of it.
 
