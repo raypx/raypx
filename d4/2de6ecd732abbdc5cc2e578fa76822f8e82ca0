@@ -1,0 +1,19 @@
+docs/architecture/0043-package-surfaces.md
+  s_ddf44ba41dbc53::t_c2b082ed9096d3 3-5,7,9-12,14-17,19,22-46,48-49,51,53-55,57,59,61-65,67-69,71-74,76,78-80,82,84-87,91-106,109-110,112-115,119-120,122-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d42de6ecd732abbdc5cc2e578fa76822f8e82ca0",
+  "prompts": {},
+  "sessions": {
+    "s_ddf44ba41dbc53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "726aff97-c83d-4352-a79b-bc6cb0adaba5",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
