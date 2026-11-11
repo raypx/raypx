@@ -43,7 +43,7 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, act
 	if err != nil {
 		return err
 	}
-	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { listener.Close() })
+	mygo.App.OnQuit(func() { listener.Close() })
 	// Interactive runs wait for focus; quiet runs prove no activation. A background
 	// macOS app can make its window key without activating, so count the app there.
 	var focuses, activations atomic.Int64

@@ -11,7 +11,7 @@ import (
 
 var checking atomic.Bool
 
-func checkUpdates(window *mygo.Window, desktop *host.Desktop, quit func()) {
+func checkUpdates(window *mygo.Window, desktop *host.Desktop, finishQuit func(relaunch bool)) {
 	if !checking.CompareAndSwap(false, true) {
 		return
 	}
@@ -30,9 +30,8 @@ func checkUpdates(window *mygo.Window, desktop *host.Desktop, quit func()) {
 	desktop.Close()
 	if err := update.Install(ctx, nil); err != nil {
 		_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: window, Title: "Raypx", Message: "Unable to install the signed update. Restart Raypx. / 无法安装签名更新，请重启。"})
-		quit()
+		finishQuit(false)
 		return
 	}
-	mygo.App.Relaunch()
-	quit()
+	finishQuit(true)
 }

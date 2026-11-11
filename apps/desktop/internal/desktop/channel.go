@@ -270,8 +270,11 @@ func (c *DaemonClient) startLocked() bool {
 }
 func (c *DaemonClient) Native(parent context.Context, input JSON) (any, error) {
 	timeout := 4 * time.Second
-	if input["action"] == "pick" {
+	switch input["action"] {
+	case "pick":
 		timeout = 30 * time.Second
+	case "stop_quit_tasks":
+		timeout = 15 * time.Second
 	}
 	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()

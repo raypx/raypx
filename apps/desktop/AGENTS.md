@@ -129,8 +129,9 @@ without repeating web sign-out or dropping the device identity.
   Stage the verified, prepared Bun executable and complete Herdr distribution;
   packaging must not rebuild or change the shared signed payload. On Windows,
   the CLI leases a complete versioned runtime copy before using terminal resources.
-- macOS and Windows connect to the independent daemon; GUI Quit preserves Agent
-  work. Spawn CLI children through Command so Windows opens no console. Terminal
+- macOS and Windows connect to the independent daemon. Interactive Quit lets the
+  user leave active Agent tasks running or explicitly stop them before exiting.
+  Spawn CLI children through Command so Windows opens no console. Terminal
   hooks remain daemon-only. Hide/minimize/quit releases UI approval leases.
 - Renderer IPC cannot call host.*, approvals.local.watch, observed.remote or
   roots.register. Only native directory pickers grant roots. Connector recovery

@@ -42,6 +42,7 @@ export class AgentRuntime {
   private readonly execution: ExecutionCoordinator;
   private readonly projectsService: LocalExecutionProjects;
   private readonly commands: AgentCommandService;
+  private readonly starting = new Map<string, ReturnType<ExecutionCoordinator["start"]>>();
   private readonly snapshots = new Map<
     string,
     { binding: string; expires: number; sequence: number; records: SnapshotRecord[] }
@@ -194,6 +195,24 @@ export class AgentRuntime {
   localDetach(accountId: string) {
     return this.detach(desktopBinding(accountId));
   }
+  activeTaskIds() {
+    return this.store.tasks({ activeOnly: true }).map(({ task }) => task.id);
+  }
+  async stopTasks(ids: readonly string[]) {
+    await Promise.all(
+      ids.map(async (id) => {
+        const local = this.store.get(id);
+        if (local) await this.execution.cancelTask(local, this.starting.get(id));
+      }),
+    );
+    if (
+      ids.some((id) => {
+        const local = this.store.get(id);
+        return local && activeTaskStatuses.includes(local.task.status);
+      })
+    )
+      throw new LocalError("QUIT_TASKS_NOT_STOPPED", "Some tasks are still in progress");
+  }
   async capabilities(): Promise<AgentCapability[]> {
     return this.providers.discover();
   }
@@ -315,7 +334,14 @@ export class AgentRuntime {
     return { accepted: true };
   }
   start(...args: Parameters<ExecutionCoordinator["start"]>) {
-    return this.execution.start(...args);
+    const id = args[2].id;
+    const operation = this.execution.start(...args);
+    this.starting.set(id, operation);
+    const done = () => {
+      if (this.starting.get(id) === operation) this.starting.delete(id);
+    };
+    void operation.then(done, done);
+    return operation;
   }
   detach(binding: string) {
     return this.execution.detach(binding);

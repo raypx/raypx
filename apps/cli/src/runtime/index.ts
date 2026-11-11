@@ -145,6 +145,8 @@ export function createRuntime(options: RuntimeOptions = {}) {
     get agents() {
       return getAgents();
     },
+    activeAgentTaskIds: () => agentHost?.activeTaskIds() ?? [],
+    stopAgentTasks: (ids: readonly string[]) => agentHost?.stopTasks(ids),
     request(method: LocalMethod, raw: unknown, signal?: AbortSignal): Promise<unknown> {
       if (closing)
         return Promise.reject(new LocalError("CLOSING", "Local engine is shutting down"));

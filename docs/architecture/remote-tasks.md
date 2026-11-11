@@ -73,8 +73,9 @@ host credential. Device epochs fence
 revoked connections; connection identities fence stale sockets. A revoke closes
 connected devices, whose execution owner cancels the binding. Heartbeats also detect
 session revocation and credential expiry. Account changes, logout, disabling remote
-access cancel affected managed tasks; transient network loss does not. GUI Quit
-preserves daemon-owned tasks on both platforms; explicit daemon stop cancels them.
+access cancel affected managed tasks. Transient network loss preserves them.
+On GUI Quit, the user can keep daemon-owned tasks running or explicitly stop the
+active tasks checked by the dialog. Stopping the daemon cancels its tasks.
 
 The backend's Nitro listener owns Relay WebSockets. It preserves first-frame
 authentication, exact origins, frame bounds and backpressure. `SERVER_ROLE=both`

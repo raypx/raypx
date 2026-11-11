@@ -64,6 +64,8 @@ const nativeInputSchema = z.discriminatedUnion("action", [
   z.strictObject({ action: z.literal("open_approvals"), scope: z.enum(["local", "remote"]) }),
   z.strictObject({ action: z.literal("notifications") }),
   z.strictObject({ action: z.literal("release") }),
+  z.strictObject({ action: z.literal("quit_tasks") }),
+  z.strictObject({ action: z.literal("stop_quit_tasks"), confirmation: z.uuid() }),
   z.strictObject({ action: z.literal("quit") }),
 ]);
 type Binding = {
@@ -78,6 +80,7 @@ type Binding = {
   visible: boolean;
   lease: AbortController;
   ticket?: { capability: string; expires: number };
+  quitTasks?: { confirmation: string; ids: string[] };
   expires: number;
   notifications: { revision: number; scope: "local" | "remote" };
 };
@@ -382,6 +385,23 @@ export class DesktopGateway {
       case "release":
         this.retire(binding);
         return true;
+      case "quit_tasks": {
+        const ids = this.host.runtime.activeAgentTaskIds();
+        delete binding.quitTasks;
+        if (!ids.length) return { count: 0 };
+        const confirmation = crypto.randomUUID();
+        binding.quitTasks = { confirmation, ids };
+        return { count: ids.length, confirmation };
+      }
+      case "stop_quit_tasks": {
+        const selection = binding.quitTasks;
+        if (!selection || selection.confirmation !== input.confirmation)
+          throw new LocalError("QUIT_TASKS_CHANGED", "The task confirmation is no longer current");
+        operation.throwIfAborted();
+        delete binding.quitTasks;
+        await this.host.runtime.stopAgentTasks(selection.ids);
+        return { stopped: true };
+      }
       case "quit":
         this.retire(binding);
         this.executions.release(binding.owner);

@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -65,10 +64,11 @@ func Run(bundled fs.FS) error {
 	var owned atomic.Pointer[host.Desktop]
 	bridge := &Bridge{}
 	var quitting atomic.Bool
+	var confirmingQuit atomic.Bool
 	var shutdown sync.Once
 	var pendingMu sync.Mutex
 	pendingScope := "local"
-	quit := func() {
+	finishQuit := func(relaunch bool) {
 		shutdown.Do(func() {
 			quitting.Store(true)
 			go func() {
@@ -76,14 +76,33 @@ func Run(bundled fs.FS) error {
 				if desktop := owned.Load(); desktop != nil {
 					desktop.Close()
 				}
-				mygo.App.Quit()
+				if relaunch {
+					mygo.App.Relaunch()
+				} else {
+					mygo.App.Quit()
+				}
 			}()
 		})
+	}
+	quit := func() { finishQuit(false) }
+	requestQuit := func() {
+		if quitting.Load() || !confirmingQuit.CompareAndSwap(false, true) {
+			return
+		}
+		go func() {
+			defer confirmingQuit.Store(false)
+			if desktop := owned.Load(); desktop != nil && interactive() {
+				if !confirmQuit(desktop.Client.Native, mygo.Dialog.Message, nativeLanguage(desktop)) {
+					return
+				}
+			}
+			quit()
+		}()
 	}
 	mygo.App.OnBeforeQuit(func(e *mygo.QuitEvent) {
 		if !quitting.Load() {
 			e.PreventDefault()
-			quit()
+			requestQuit()
 		}
 	})
 	// Keep the event loop alive while controlled shutdown closes its proxy.
@@ -178,7 +197,7 @@ func Run(bundled fs.FS) error {
 					desktop.OpenApprovals(ctx, scope)
 				}()
 			}
-			menu := mygo.NewMenu([]*mygo.MenuItem{{Label: "Show Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { show() }}, {Label: "Review requests / 处理请求", Click: func(*mygo.MenuItem, *mygo.Window) { pending() }}, {Label: "Hide window", Click: func(*mygo.MenuItem, *mygo.Window) { window.Hide(); go desktop.Visible(false) }}, mygo.Separator(), {Label: "Check for updates / 检查更新", Disabled: !mygo.Updater.Enabled(), Click: func(*mygo.MenuItem, *mygo.Window) { go checkUpdates(window, desktop, quit) }}, {Label: "Quit Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { quit() }}})
+			menu := mygo.NewMenu([]*mygo.MenuItem{{Label: "Show Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { show() }}, {Label: "Review requests / 处理请求", Click: func(*mygo.MenuItem, *mygo.Window) { pending() }}, {Label: "Hide window", Click: func(*mygo.MenuItem, *mygo.Window) { window.Hide(); go desktop.Visible(false) }}, mygo.Separator(), {Label: "Check for updates / 检查更新", Disabled: !mygo.Updater.Enabled(), Click: func(*mygo.MenuItem, *mygo.Window) { go checkUpdates(window, desktop, finishQuit) }}, {Label: "Quit Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { requestQuit() }}})
 			icon, _ := fs.ReadFile(bundled, "resources/tray.png")
 			tray, err := mygo.NewTray(mygo.TrayOptions{ID: "main", Icon: icon, IconIsTemplate: true, ToolTip: "Raypx", Menu: menu})
 			if err == nil {
@@ -186,10 +205,15 @@ func Run(bundled fs.FS) error {
 				tray.OnClick(show)
 			}
 			window.OnClose(func(e *mygo.CloseEvent) {
-				if desktop.Tray.Load() && !quitting.Load() {
-					e.PreventDefault()
+				if quitting.Load() {
+					return
+				}
+				e.PreventDefault()
+				if desktop.Tray.Load() {
 					window.Hide()
 					go desktop.Visible(false)
+				} else {
+					requestQuit()
 				}
 			})
 			window.OnClosed(func() {
@@ -235,19 +259,7 @@ func Run(bundled fs.FS) error {
 				// CLI event delivery or approval lease responses on that answer.
 				go func() {
 					defer func() { <-notificationSlot }()
-					locale, _ := desktop.Preferences.Read()["locale"].(string)
-					if locale == "" || locale == "system" {
-						preferred := mygo.App.PreferredLanguages()
-						if len(preferred) > 0 {
-							locale = preferred[0]
-						} else {
-							locale = os.Getenv("LANG")
-						}
-					}
-					language := "en"
-					if strings.HasPrefix(strings.ToLower(locale), "zh") {
-						language = "zh"
-					}
+					language := nativeLanguage(desktop)
 					notification := mygo.NewNotification(mygo.NotificationOptions{Title: "Raypx", Body: notifications[language]})
 					notification.OnClick(pending)
 					_ = notification.Show()

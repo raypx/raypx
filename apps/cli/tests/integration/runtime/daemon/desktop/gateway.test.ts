@@ -188,6 +188,9 @@ it("exposes a separate authenticated listener and refuses admin/native authority
   const peer = await connect(descriptor.channel);
   await peer.ready;
   expect(await peer.local("roots.list")).toEqual([]);
+  expect(await native({ action: "quit_tasks" })).toEqual({ count: 0 });
+  for (const method of ["quit_tasks", "stop_quit_tasks"])
+    await expect(peer.request(method, {})).rejects.toMatchObject({ code: "METHOD_NOT_PERMITTED" });
   for (const method of [
     "roots.register",
     "host.info",

@@ -85,16 +85,21 @@ export class ExecutionCoordinator {
   async cancelTask(local: LocalAgentTask, starting?: Promise<unknown>) {
     if (!activeTaskStatuses.includes(local.task.status)) return;
     this.cancelledStarts.add(local.task.id);
-    const execution = this.active.get(local.task.id);
-    if (execution) {
-      this.status(local, "cancelling");
-      execution.cancel();
-      await this.drain((pending) => pending.task.id === local.task.id);
-    } else {
-      await starting;
-      if (activeTaskStatuses.includes(local.task.status)) this.status(local, "cancelled");
+    try {
+      const execution = this.active.get(local.task.id);
+      if (execution) {
+        if (local.task.status !== "cancelling") this.status(local, "cancelling");
+        execution.cancel();
+        await this.drain((pending) => pending.task.id === local.task.id);
+      } else {
+        await starting?.catch(() => {});
+        const current = this.store.get(local.task.id);
+        if (current && activeTaskStatuses.includes(current.task.status))
+          this.status(current, "cancelled");
+      }
+    } finally {
+      this.cancelledStarts.delete(local.task.id);
     }
-    this.cancelledStarts.delete(local.task.id);
   }
   private emit(local: LocalAgentTask, event: AgentEvent) {
     this.store.event(local.binding, event);

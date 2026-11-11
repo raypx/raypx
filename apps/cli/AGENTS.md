@@ -30,6 +30,8 @@ disconnect cancels HTTP and its approval lease, preserving accepted tools/PTYs a
 durable tasks. Desktop execution ownership is native owner + origin + enrolled
 identity, registered before startup; only explicit GUI Quit, cancellation, deadline
 or daemon stop ends it. Scoped list/result/terminal restore never replay input.
+Native Quit checks active Agent tasks in the profile and issues a binding-scoped,
+one-use confirmation to stop the checked tasks through ordinary task cancellation.
 Bootstrap replacement is serialized and preserves the old binding on preparation
 failure. Later keys recover temporary sessions; native-confirmed reset clears only
 Desktop sessions across origins, preserving Host vault and local data (ADR 0054).

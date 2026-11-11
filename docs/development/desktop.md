@@ -179,8 +179,12 @@ HTTP requests and UI approval leases while accepted tools and PTYs keep running.
 Native binding heartbeats expire after 20 seconds of awake time if the GUI
 disappears; suspension does not retire a binding. Explicit GUI Quit stops that
 native owner's tools and terminals across all origins, using
-management IPC if the binding has expired. Agent tasks keep their durable lifecycle;
-explicit execution cancellation, deadlines and daemon stop still terminate work.
+management IPC if the binding has expired. The native Quit dialog checks active
+local and remote Agent tasks in the current daemon profile. It offers keeping
+them running in the background, stopping the checked tasks and quitting, or
+cancelling Quit. The stop confirmation is single-use and tied to the native
+binding. Tasks that start after the check continue independently. If the check is
+unavailable, the user can quit and leave work running or stay in Desktop.
 
 Execution ownership combines native owner, origin and enrolled identity. Renderer
 queries and process control cannot select or cross that scope. Switching origin

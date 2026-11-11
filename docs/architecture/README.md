@@ -30,8 +30,9 @@ PostgreSQL stores account data and remote read projections. The device profile
 owns local work, enrollment identity, execution receipts and its replay journal.
 Remote authorization enables an outbound channel; it does not transfer ownership
 of local work or upload unrelated history. Closing Desktop disconnects its UI
-without stopping daemon Agent tasks. Explicit GUI Quit stops its terminals and
-tools across origins; transport loss preserves them for scoped recovery.
+without stopping daemon Agent tasks. Explicit GUI Quit lets the user decide
+whether to stop active Agent tasks. It stops the GUI's terminals and tools across
+origins. Transport loss preserves them for scoped recovery.
 
 ## User interfaces
 

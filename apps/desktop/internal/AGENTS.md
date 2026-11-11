@@ -23,7 +23,9 @@ verify key storage before the session-table transaction. Keep Host vault intact.
 
 Preserve native data paths, the exclusive `desktop-instance.sqlite` lock and
 atomic preference writes. Private paths use POSIX permissions or inheritable
-Windows DACLs. GUI Quit releases UI capabilities, preserving daemon Agent work.
+Windows DACLs. Interactive GUI Quit checks active Agent tasks through the native
+capability. The dialog lets the user keep them running, stop the checked tasks or
+cancel quitting. GUI Quit releases UI capabilities.
 Its private owner ID also cleans all owned tools/terminals across origins, with
 administrative fallback after capability expiry. Rebootstrap/connection release
 preserves execution. Request contexts own deadlines; only transport failures
