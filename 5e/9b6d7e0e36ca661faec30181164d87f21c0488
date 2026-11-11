@@ -1,0 +1,32 @@
+packages/tooling/src/verification/native-workflow.test.ts
+  s_a3446c4a758722::t_2c08977a5dce2e 15,48-51
+  s_ddf44ba41dbc53::t_4fdcf5c215b8e7 52
+.github/workflows/ci.yml
+  s_a3446c4a758722::t_2c08977a5dce2e 175
+.github/workflows/native.yml
+  s_a3446c4a758722::t_2c08977a5dce2e 165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5e9b6d7e0e36ca661faec30181164d87f21c0488",
+  "prompts": {},
+  "sessions": {
+    "s_a3446c4a758722": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c463-d628-74a1-9951-4a2491204f7d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_ddf44ba41dbc53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "726aff97-c83d-4352-a79b-bc6cb0adaba5",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
