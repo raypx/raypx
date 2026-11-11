@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { uploadAnalyticsMaps } from "./analytics.js";
-import { readFileSync, appendFileSync } from "node:fs";
+import { appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
@@ -157,33 +157,10 @@ async function main() {
       await run(values[0], values.slice(1), process.cwd(), developmentEnvironment(root));
       break;
     }
-    case "db": {
-      const operation = args[0] ?? "migrate";
-      const manifest = JSON.parse(
-        readFileSync(join(root, "packages/database/package.json"), "utf8"),
-      );
-      if (!["migrate", "generate", "studio"].includes(operation) || !manifest.scripts[operation])
-        throw new Error(`Unsupported database operation: ${operation}`);
-      await run(
-        process.execPath,
-        ["run", operation, ...args.slice(1)],
-        join(root, "packages/database"),
-        developmentEnvironment(root),
-      );
-      break;
-    }
     case "analytics":
       if (args[0] !== "sourcemaps")
         throw new Error("Usage: raypx-dev analytics sourcemaps <web|desktop>");
       await uploadAnalyticsMaps(root, args[1]);
-      break;
-    case "desktop":
-      if (args[0] !== "build") throw new Error("Usage: raypx-dev desktop build");
-      await runTasks(
-        root,
-        "desktop#native:build",
-        args[1] === "--" ? args.slice(1) : ["--", ...args.slice(1)],
-      );
       break;
     case "clean": {
       await clean(root);
@@ -205,7 +182,7 @@ async function main() {
     }
     case undefined:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | deployment:smoke | env | db | desktop | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | deployment:smoke | env | clean | clean:artifacts | doctor",
       );
       break;
     default:

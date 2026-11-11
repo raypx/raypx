@@ -98,7 +98,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
-- raypx-dev env -- <command>, db <operation>, desktop build [MyGo build arguments]
+- raypx-dev env -- <command>. Root database scripts load the development environment
+  through this command and delegate to Database. `package:desktop` selects the
+  existing `desktop#native:build` task.
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
