@@ -1,0 +1,21 @@
+apps/desktop/tests/native/host/channel_test.go
+  s_264de935e5c852::t_70fe75cc81853d 99-109
+packages/tooling/src/validation/deployment-smoke.ts
+  s_264de935e5c852::t_423144f15fe3f9 234-245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "58134c6d020c0322c6d6042cd20cecd41ac9032e",
+  "prompts": {},
+  "sessions": {
+    "s_264de935e5c852": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a9ea-3c3e-7372-a0d1-bdf7fbb4f216",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
