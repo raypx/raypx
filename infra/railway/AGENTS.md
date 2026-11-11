@@ -13,6 +13,8 @@ and CLI dependencies here, with versions in the root development catalog.
 `plan` and `deploy` explicitly select that file and use `scripts/iac-preload.ts`;
 both must remain uncached. Review the plan before applying. Keep one API replica
 with the combined backend role and route `/relay` to it through Gateway.
+Keep Wait for CI enabled and Watch Paths empty for the canary application services
+so a later push can deploy changes from an unsuccessful run.
 Preserve the separate Compose runtime and migration image targets. API's default
 deploy target includes pre-deploy migration dependencies.
 

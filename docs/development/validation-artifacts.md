@@ -251,6 +251,11 @@ reusable native jobs use phase labels: **Prepare artifacts**, **Checks**,
 **Packaging** and **Smoke**. The final `foundation` job appears as **CI result**.
 
 The `changes` job emits one versioned plan bound to the workflow's commit SHA.
+Canary pushes use the latest successful push run of the current baseline policy
+whose commit is an ancestor of the checked-out revision. This carries changes
+from failed or cancelled pushes into the next run. If no verified ancestor is
+available, the planner runs full verification to establish one. Pull requests and
+other branches continue to use their GitHub event base.
 Source, database, browser and container smoke workers execute that plan through
 `RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
 The `source` matrix runs **Source checks** and **Source tests** concurrently through

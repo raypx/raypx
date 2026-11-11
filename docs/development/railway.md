@@ -54,17 +54,16 @@ policy checks Caddy and Compose against the same ingress contract.
 ## Apply and deploy
 
 API, Web and Gateway use the raypx/raypx GitHub repository's canary branch.
-Matching pushes trigger automatic deployments using the shared
-`apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
-All three application sources enable Wait for CI (`checkSuites: true`), so GitHub
-checks must finish successfully before automatic deployments proceed.
+Keep **Wait for CI** enabled and **Watch Paths** empty on all three services.
+Railway considers every canary push for deployment, including a documentation-only
+push. CI checks changes since the latest verified canary ancestor, so a later
+push still checks the changes left by a failed or cancelled run. A green
+documentation-only push can rebuild all three services.
 Ordinary source and dependency changes use the selected source/backend/browser
 checks, then Railway builds the production images. The CI `container-smoke` job
 builds temporary images only for container/deployment configuration or image
 acceptance changes, manual CI runs and release tags. Those images remain on the
 CI runner; Railway does not consume them.
-Shared package or manifest changes rebuild API and Web;
-both services also watch `deploy/*.ts` for shared build-context preparation changes.
 The API container serves Relay on the same listener as HTTP. During migration
 from a Gateway image that still reads `RELAY_UPSTREAM`, set that variable to the
 same API address as `API_UPSTREAM`. Remove it after the new Gateway image is active
@@ -76,7 +75,7 @@ API and Web require `apps/api/Dockerfile` and `apps/web/Dockerfile`; Gateway req
 `infra/railway/Dockerfile`. Its Docker build context remains the repository root.
 
 For a Dockerfile path cutover, pause the affected service's GitHub autodeploys, review
-`config plan`, then apply the new paths and watch patterns. Keep any
+`config plan`, then apply the new paths. Keep any
 `RAILWAY_DOCKERFILE_PATH` variable aligned with the same shared path. Deploy the
 latest commit for API, wait for readiness, then deploy Web and verify it before
 re-enabling autodeploys. Pushing the IaC file alone does not update live settings.
@@ -101,19 +100,9 @@ service settings, confirm the following values:
 | Healthcheck Path / timeout | `/ready` / 180 seconds                                  |
 | Public domain target port  | `8080`                                                  |
 
-Replace Gateway's Watch Paths with these four entries:
-
-```text
-infra/railway/Dockerfile
-infra/railway/Caddyfile
-infra/railway/railway.ts
-.dockerignore
-```
-
-Remove the old `deploy/railway/*` and `.railway/railway.ts` entries. Watch Paths
-control automatic deployment triggers; they do not change the Dockerfile path or
-repair an existing failed build. The Dockerfile copies `infra/railway/Caddyfile`
-relative to the repository root, so narrowing the build context breaks `COPY`.
+Clear Gateway's Watch Paths and keep Wait for CI enabled. The Dockerfile copies
+`infra/railway/Caddyfile` relative to the repository root, so narrowing the build
+context breaks `COPY`.
 
 Check whether Gateway has a service or shared `RAILWAY_DOCKERFILE_PATH` override.
 If present, align its effective value with `infra/railway/Dockerfile`; leave it

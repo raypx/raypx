@@ -18,24 +18,15 @@ export default defineRailway((context) => {
   } as const;
   const replicas = { "asia-southeast1-eqsg3a": 1 };
   const source = github("raypx/raypx", { branch: "canary", checkSuites: true });
-  const sharedInputs = [
-    "deploy/*.ts",
-    "infra/*/package.json",
-    "packages/**",
-    "package.json",
-    "bun.lock",
-    "vite.config.ts",
-    "tsconfig.json",
-    ".dockerignore",
-  ];
 
+  // A later push must be eligible to deploy changes from a failed or cancelled CI run.
   const api = service("api", {
     source,
     replicas,
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "apps/api/Dockerfile",
-      watchPatterns: ["apps/api/**", "infra/railway/railway.ts", ...sharedInputs],
+      watchPatterns: [],
     },
     preDeploy: "bun run --cwd packages/database migrate",
     healthcheck: deploymentServices.api.ready,
@@ -48,7 +39,7 @@ export default defineRailway((context) => {
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "apps/web/Dockerfile",
-      watchPatterns: ["apps/web/**", "infra/railway/railway.ts", ...sharedInputs],
+      watchPatterns: [],
     },
     healthcheck: deploymentServices.web.health,
     healthcheckTimeout: 180,
@@ -60,12 +51,7 @@ export default defineRailway((context) => {
     build: {
       builder: "DOCKERFILE",
       dockerfilePath: "infra/railway/Dockerfile",
-      watchPatterns: [
-        "infra/railway/Dockerfile",
-        "infra/railway/Caddyfile",
-        "infra/railway/railway.ts",
-        ".dockerignore",
-      ],
+      watchPatterns: [],
     },
     healthcheck: deploymentServices.gateway.ready,
     healthcheckTimeout: 180,

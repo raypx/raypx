@@ -31,7 +31,7 @@ it("owns only application services and leaves operator variables and storage unm
     });
 });
 
-it("uses shared application images, migration hooks and health paths after relocation", async () => {
+it("deploys the whole canary revision after CI, even after a docs-only push", async () => {
   const configuration = await program(
     createRailwayContext({ projectId, environment: "production" }),
     project,
@@ -40,11 +40,7 @@ it("uses shared application images, migration hooks and health paths after reloc
     {
       build: {
         dockerfilePath: "apps/api/Dockerfile",
-        watchPatterns: expect.arrayContaining([
-          "apps/api/**",
-          "deploy/*.ts",
-          "infra/railway/railway.ts",
-        ]),
+        watchPatterns: [],
       },
       deploy: {
         preDeployCommand: ["bun run --cwd packages/database migrate"],
@@ -55,21 +51,14 @@ it("uses shared application images, migration hooks and health paths after reloc
     {
       build: {
         dockerfilePath: "apps/web/Dockerfile",
-        watchPatterns: expect.arrayContaining([
-          "apps/web/**",
-          "deploy/*.ts",
-          "infra/railway/railway.ts",
-        ]),
+        watchPatterns: [],
       },
       deploy: { healthcheckPath: deploymentServices.web.health },
     },
     {
       build: {
         dockerfilePath: "infra/railway/Dockerfile",
-        watchPatterns: expect.arrayContaining([
-          "infra/railway/Dockerfile",
-          "infra/railway/Caddyfile",
-        ]),
+        watchPatterns: [],
       },
       deploy: { healthcheckPath: deploymentServices.gateway.ready },
     },

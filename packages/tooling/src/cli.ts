@@ -120,7 +120,7 @@ async function main() {
       break;
     case "ci:plan": {
       const { readGithubPlan } = await import("./verification/ci.js");
-      const plan = readGithubPlan(root);
+      const plan = await readGithubPlan(root);
       console.log(JSON.stringify(plan, null, 2));
       const outputs = ciOutputs(plan, process.env.GITHUB_SHA ?? "");
       if (process.env.GITHUB_OUTPUT)

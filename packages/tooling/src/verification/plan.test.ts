@@ -6,7 +6,7 @@ import { project, platformProject } from "../../tests/helpers/verification";
 import { workspaceFixtures } from "../../tests/helpers/workspace";
 import { taskModel, taskPlan, taskRef } from "../tasks/model";
 import { changedFiles, verificationPlan } from "./plan";
-import { githubPlan } from "./ci";
+import { githubPlan, readGithubPlan } from "./ci";
 import { verifyOptions } from ".";
 import { executionTasks } from "./execution";
 
@@ -14,6 +14,7 @@ const { member } = workspaceFixtures();
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -387,7 +388,7 @@ describe("affected verification", () => {
       "-qm",
       "dependency",
     );
-    const daily = githubPlan(root, "push", { ref: "refs/heads/canary", before });
+    const daily = githubPlan(root, "push", { ref: "refs/heads/canary", before }, before);
     expect(daily.workspaces).toHaveLength(taskModel(root).members.length);
     expect(daily.nativeRunners).toEqual([]);
     expect(daily.artifacts).toEqual([]);
@@ -402,6 +403,84 @@ describe("affected verification", () => {
     expect(release.backend).toBe(true);
     expect(release.distribution).toBe(true);
     expect(release.containerSmoke).toBe(true);
+  });
+  it("carries failed Web changes through later canary pushes until the combined revision passes", async () => {
+    const { root } = platformProject();
+    const git = (...args: string[]) =>
+      execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: "pipe" }).trim();
+    function commit(message: string) {
+      git("add", ".");
+      git(
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "commit",
+        "-qm",
+        message,
+      );
+      return git("rev-parse", "HEAD");
+    }
+    git("init", "-q");
+    const baseline = commit("verified baseline");
+    const webFile = "packages/web/src/index.ts";
+    writeFileSync(join(root, webFile), "export const changed = true;");
+    const failed = commit("Web change");
+    mkdirSync(join(root, "docs"));
+    writeFileSync(join(root, "docs/first.md"), "first note");
+    const legacy = commit("old docs-only green run");
+    writeFileSync(join(root, "docs/next.md"), "next note");
+    const head = commit("docs-only follow-up");
+    const event = join(root, ".git/event.json");
+    writeFileSync(event, JSON.stringify({ ref: "refs/heads/canary", before: legacy }));
+    vi.stubEnv("GITHUB_EVENT_PATH", event);
+    vi.stubEnv("GITHUB_EVENT_NAME", "push");
+    vi.stubEnv("GITHUB_API_URL", "https://api.github.example");
+    vi.stubEnv("GITHUB_REPOSITORY", "fixture/project");
+    vi.stubEnv("GITHUB_TOKEN", "fixture-token");
+    vi.stubEnv("GITHUB_SHA", head);
+    function run(sha: string, conclusion = "success", title = `Canary CI v1 ${sha}`) {
+      return { head_sha: sha, conclusion, display_title: title };
+    }
+    const request = vi.fn(async () =>
+      Response.json({
+        workflow_runs: [
+          run(head),
+          run(legacy, "success", "old docs-only green run"),
+          run(failed, "failure"),
+          run("1".repeat(40)),
+          run(baseline),
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", request);
+    const retry = await readGithubPlan(root);
+    expect(request).toHaveBeenCalledWith(
+      new URL(
+        "https://api.github.example/repos/fixture/project/actions/workflows/ci.yml/runs?branch=canary&event=push&status=success&per_page=100",
+      ),
+      expect.any(Object),
+    );
+    expect(retry.full).toBe(false);
+    expect(retry.files).toContain(webFile);
+    expect(retry.tasks).toContain("web#task:test");
+
+    writeFileSync(join(root, "docs/next.md"), "updated note");
+    vi.stubEnv("GITHUB_SHA", commit("docs after green"));
+    writeFileSync(event, JSON.stringify({ ref: "refs/heads/canary", before: head }));
+    request.mockResolvedValueOnce(Response.json({ workflow_runs: [run(head)] }));
+    expect(await readGithubPlan(root)).toMatchObject({
+      full: false,
+      files: ["docs/next.md"],
+      tasks: [],
+    });
+
+    request.mockResolvedValueOnce(new Response(null, { status: 503 }));
+    expect(await readGithubPlan(root)).toMatchObject({
+      full: true,
+      containerSmoke: true,
+      distribution: false,
+    });
   });
   it("uses one public command with explicit full mode and strict options", () => {
     expect(verifyOptions([])).toEqual({});

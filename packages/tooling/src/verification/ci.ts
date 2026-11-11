@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { runTasks } from "../repository";
 import { taskModel } from "../tasks/model";
@@ -6,24 +7,31 @@ import { distributionRequested } from "./events";
 import { ciOutputs, parseCiPlan, requiredGates, sourcePhases } from "./gates";
 import { sourceChecks } from "./execution";
 
-export function githubPlan(root: string, eventName: string, event: Record<string, unknown>) {
+const canaryRef = "refs/heads/canary";
+
+export function githubPlan(
+  root: string,
+  eventName: string,
+  event: Record<string, unknown>,
+  canaryBase?: string,
+) {
   const pull = event.pull_request as { base: { sha: string } } | undefined;
   const ref = typeof event.ref === "string" ? event.ref : "";
   const tag = eventName === "push" && ref.startsWith("refs/tags/");
-  const full = eventName === "workflow_dispatch" || tag;
+  const canary = eventName === "push" && ref === canaryRef;
+  const establishBaseline = canary && !canaryBase;
+  const full = eventName === "workflow_dispatch" || tag || establishBaseline;
   const macos = (event.inputs as Record<string, unknown> | undefined)?.macos;
-  const before =
-    eventName === "pull_request"
-      ? pull?.base.sha
-      : typeof event.before === "string"
-        ? event.before
-        : undefined;
+  let before = typeof event.before === "string" ? event.before : undefined;
+  if (canary) before = canaryBase;
+  if (eventName === "pull_request") before = pull?.base.sha;
+  const reasons: string[] = [];
+  if (establishBaseline)
+    reasons.push("No verified canary ancestor; establishing a baseline with full verification");
+  else if (!full) reasons.push("Event base unavailable; checking all sources and native targets");
   const changed = before
     ? changedFiles(root, "HEAD", { before, head: "HEAD" })
-    : {
-        files: [],
-        reasons: full ? [] : ["Event base unavailable; checking all sources and native targets"],
-      };
+    : { files: [], reasons };
   return {
     ...verificationPlan(taskModel(root), changed.files, {
       full,
@@ -38,10 +46,58 @@ export function githubPlan(root: string, eventName: string, event: Record<string
   };
 }
 
-export function readGithubPlan(root: string) {
+async function verifiedCanaryAncestor(root: string) {
+  const {
+    GITHUB_API_URL: api,
+    GITHUB_REPOSITORY: repository,
+    GITHUB_SHA: head,
+    GITHUB_TOKEN: token,
+  } = process.env;
+  if (!api || !repository || !head || !token) return;
+  const url = new URL(`${api}/repos/${repository}/actions/workflows/ci.yml/runs`);
+  url.search = new URLSearchParams({
+    branch: "canary",
+    event: "push",
+    status: "success",
+    per_page: "100",
+  }).toString();
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return;
+    const { workflow_runs: runs } = (await response.json()) as {
+      workflow_runs?: { head_sha: string; display_title: string; conclusion: string }[];
+    };
+    if (!Array.isArray(runs)) return;
+    for (const run of runs) {
+      const sha = run.head_sha;
+      // Older successful runs could have skipped changes from a failed push.
+      if (
+        run.conclusion !== "success" ||
+        sha === head ||
+        !/^[0-9a-f]{40}$/.test(sha) ||
+        run.display_title !== `Canary CI v1 ${sha}`
+      )
+        continue;
+      if (
+        spawnSync("git", ["merge-base", "--is-ancestor", sha, "HEAD"], { cwd: root }).status === 0
+      )
+        return sha;
+    }
+  } catch {
+    // An unavailable Actions API cannot be used as proof of verification.
+  }
+}
+
+export async function readGithubPlan(root: string) {
   const file = process.env.GITHUB_EVENT_PATH;
   const event = file ? (JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>) : {};
-  return githubPlan(root, process.env.GITHUB_EVENT_NAME ?? "workflow_dispatch", event);
+  const name = process.env.GITHUB_EVENT_NAME ?? "workflow_dispatch";
+  const canaryBase =
+    name === "push" && event.ref === canaryRef ? await verifiedCanaryAncestor(root) : undefined;
+  return githubPlan(root, name, event, canaryBase);
 }
 
 /** Workers consume the commit-bound plan; local verification has no CI prerequisites. */
