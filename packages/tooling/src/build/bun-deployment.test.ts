@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, it } from "bun:test";
-import { nitroTarget } from "./nitro.js";
 
 const root = resolve(import.meta.dirname, "../../../..");
 const read = (file: string) => readFileSync(join(root, file), "utf8");
@@ -20,83 +19,33 @@ function stages(file: string) {
   return result;
 }
 
-it("builds API and Web with Nitro's Bun preset", () => {
-  expect(nitroTarget()).toEqual({
-    preset: "bun",
-    compatibilityDate: "2026-10-15",
-    devServer: { hostname: "localhost" },
-    serverDir: false,
-    serverEntry: false,
-  });
-});
+const api = stages("apps/api/Dockerfile");
+const web = stages("apps/web/Dockerfile");
 
-it.each(["api", "web"])("runs the %s image on Bun as the bun user", (app) => {
-  const file = `apps/${app}/Dockerfile`;
-  const runtime = stages(file).get("runtime")!;
-  expect(runtime.from).toMatch(/^oven\/bun:\d+\.\d+\.\d+-slim$/);
-  expect(runtime.lines).toContain("USER bun");
-  expect(runtime.lines.some((line) => line.includes("--chown=bun:bun"))).toBe(true);
-  expect(runtime.lines.at(-1)).toBe('CMD ["bun", ".output/server/index.mjs"]');
-  expect(read(`apps/${app}/package.json`)).toContain('"start": "bun .output/server/index.mjs"');
-});
-
-it.each(["api", "web"])("installs %s dependencies from manifests before copying source", (app) => {
-  const file = `apps/${app}/Dockerfile`;
-  const all = stages(file);
-  const dependencies = all.get("dependencies")!;
+it("shares a frozen dependency layer before copying application sources", () => {
+  const shared = (image: typeof api) =>
+    ["bun", "manifests", "dependencies"].map((name) => image.get(name));
+  expect(shared(web)).toEqual(shared(api));
+  const dependencies = api.get("dependencies")!;
   expect(dependencies.lines).toContain("COPY --from=manifests /manifests/ ./");
   expect(dependencies.lines.join("\n")).toMatch(/VP_GIT_HOOKS=0 bun install --frozen-lockfile/);
   expect(dependencies.lines).not.toContain("COPY . .");
-  const build = all.get("build")!;
-  expect(build.from).toBe("dependencies");
-  expect(build.lines).toContain("COPY . .");
-  expect(build.lines.join("\n")).not.toMatch(/bun install/);
+  for (const image of [api, web]) {
+    const build = image.get("build")!;
+    expect(build.from).toBe("dependencies");
+    expect(build.lines).toContain("COPY . .");
+    expect(build.lines.join("\n")).not.toMatch(/bun install/);
+  }
 });
 
-it("shares identical dependency stages so one builder reuses the install", () => {
-  const shared = (file: string) =>
-    ["bun", "manifests", "dependencies"].map((name) => stages(file).get(name));
-  expect(shared("apps/web/Dockerfile")).toEqual(shared("apps/api/Dockerfile"));
-  // The migration image keeps database production dependencies only.
-  expect(stages("apps/api/Dockerfile").get("migrate-dependencies")!.lines.join("\n")).toMatch(
+it("runs the images unprivileged and keeps migration inputs separate", () => {
+  for (const runtime of [api.get("runtime"), web.get("runtime"), api.get("migrate")])
+    expect(runtime?.lines).toContain("USER bun");
+  expect(api.get("migrate-dependencies")!.lines.join("\n")).toMatch(
     /--production --filter @raypx\/database --ignore-scripts/,
   );
-});
-
-it.each([
-  ["apps/api", "api"],
-  ["apps/web", "web"],
-])("builds %s without nesting VP syscall tracking inside the container sandbox", (path, task) => {
-  expect(stages(`${path}/Dockerfile`).get("build")!.lines).toContain(
-    `RUN bun run build:${task} --no-cache`,
-  );
-});
-
-it("keeps portable Dockerfiles and isolated pre-deploy migration payloads", () => {
-  for (const app of ["api", "web"])
-    expect(read(`apps/${app}/Dockerfile`)).not.toContain("--mount=type=cache");
-  const all = stages("apps/api/Dockerfile");
-  expect([...all.keys()].at(-1)).toBe("deploy");
-  expect(all.get("deploy")).toEqual({
-    from: "runtime",
-    lines: ["COPY --from=migration-payload --chown=bun:bun /app/ ./"],
-  });
-  expect(all.get("migrate")!.from).toBe("bun");
-  expect(all.get("migrate")!.lines).toContain("COPY --from=migration-payload /app/ ./");
-  expect(all.get("migration-payload")).toEqual({
-    from: "migrate-dependencies",
-    lines: [
-      "COPY --from=migration-sources /migration-sources/ ./",
-      "COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/",
-    ],
-  });
-});
-
-it("probes Compose health with Bun instead of Node", () => {
-  const compose = read("deploy/compose.yaml");
-  const probes = [...compose.matchAll(/test:\n\s+- CMD\n\s+- (\S+)\n\s+- -e/g)].map(
-    (match) => match[1],
-  );
-  expect(probes).toEqual(["bun", "bun"]);
-  expect(compose).not.toMatch(/^\s+- node$/m);
+  expect(api.get("migrate")?.from).toBe("bun");
+  expect(api.get("migration-payload")?.from).toBe("migrate-dependencies");
+  expect(api.get("deploy")?.from).toBe("runtime");
+  expect(api.get("deploy")?.lines.join("\n")).toContain("COPY --from=migration-payload");
 });

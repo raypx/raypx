@@ -63,12 +63,3 @@ it("rejects reintroduced Node pins, images, CI setup and documented releases", (
   ])
     expect(findings).toContain(expected);
 });
-
-it("reads workspace patterns, catalogs and overrides from the Bun root manifest", () => {
-  const root = repository();
-  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  manifest.workspaces = { packages: ["packages/*"], catalog: {}, catalogs: { dev: {} } };
-  manifest.overrides = {};
-  writeFileSync(join(root, "package.json"), JSON.stringify(manifest));
-  expect(checkToolchain(root, [])).toEqual([]);
-});

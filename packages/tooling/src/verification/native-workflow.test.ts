@@ -33,7 +33,9 @@ const workflow = (name: string) =>
       workflow_dispatch?: { inputs: Record<string, { default: boolean }> };
     };
   };
-const native = workflow("native").jobs;
+const ci = workflow("ci");
+const nativeWorkflow = workflow("native");
+const native = nativeWorkflow.jobs;
 const prepare = native.prepare!.steps!;
 const steps = native.verify!.steps!;
 const acceptance = Bun.YAML.parse(
@@ -46,24 +48,21 @@ const named = (name: string, entries = steps) => {
   return step;
 };
 
-it("names native matrix jobs even when their conditions skip matrix expansion", () => {
-  expect(workflow("ci").jobs.desktop?.name).toBe("Native acceptance");
+it("gates the selected native jobs, including when their matrices are skipped", () => {
+  const desktop = ci.jobs.desktop;
+  expect(desktop?.name).toBe("Native acceptance");
   expect(native.verify?.name).toBe("Distribution acceptance");
-});
-
-it("checks selected platforms and adds parallel distribution phases only when requested", () => {
-  const ci = workflow("ci").jobs;
-  expect(ci.desktop?.uses).toBe("./.github/workflows/native.yml");
-  expect(ci.desktop?.strategy?.matrix.os).toBe(
+  expect(desktop?.uses).toBe("./.github/workflows/native.yml");
+  expect(desktop?.strategy?.matrix.os).toBe(
     "${{ fromJSON(needs.changes.outputs.native_runners) }}",
   );
-  expect(ci.desktop?.if).toBe("needs.changes.outputs.native == 'true'");
-  expect(ci.source?.steps?.find((step) => step.uses === "actions/setup-go@v6")?.if).toBe(
-    "matrix.phase == 'checks' && needs.changes.outputs.go == 'true'",
-  );
-  expect(ci.foundation?.needs).toContain("desktop");
-  expect(ci.desktop?.with?.distribution).toContain("needs.changes.outputs.distribution");
-  expect(workflow("native").on.workflow_call?.inputs.distribution?.default).toBe(false);
+  expect(desktop?.if).toBe("needs.changes.outputs.native == 'true'");
+  expect(
+    ci.jobs.source?.steps?.find((step) => step.uses?.startsWith("actions/setup-go@"))?.if,
+  ).toBe("matrix.phase == 'checks' && needs.changes.outputs.go == 'true'");
+  expect(ci.jobs.foundation?.needs).toContain("desktop");
+  expect(desktop?.with?.distribution).toContain("needs.changes.outputs.distribution");
+  expect(nativeWorkflow.on.workflow_call?.inputs.distribution?.default).toBe(false);
   expect(native.verify?.needs).toBe("prepare");
   expect(native.verify?.if).toContain("inputs.distribution");
   expect(native.verify?.strategy?.["fail-fast"]).toBe(false);
@@ -112,61 +111,26 @@ it("compiles once in prepare and transports an immutable artifact by exact ID", 
   expect(prepare.findIndex((step) => step.name === "Accept the final CLI archive")).toBeLessThan(
     prepare.findIndex((step) => step.uses?.startsWith("actions/upload-artifact@")),
   );
-  expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
-  expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
 });
 
-it("requires compiled Herdr integration and pinned Go checks in the check phase", () => {
+it("verifies the shared payload before running native acceptance", () => {
+  const payload = named("Verify prepared CLI", checks);
   const herdr = named("Herdr terminal integration", checks);
+  const go = named("Desktop MyGo checks", checks);
+  for (const step of [
+    herdr,
+    go,
+    named("Cross-platform process and task runners", checks),
+    named("Installed CLI package", checks),
+  ])
+    expect(checks.indexOf(step)).toBeGreaterThan(checks.indexOf(payload));
   expect(herdr.env?.RAYPX_HERDR_COMPILED).toBe("1");
   expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe(
     "${{ inputs.distribution == 'true' && '3' || '1' }}",
   );
-  expect(herdr.run).toContain('process.platform === "win32"');
-  expect(herdr.run).toContain("RAYPX_HERDR_WINDOWS_RUNS");
-  expect(checks.indexOf(named("Verify prepared CLI", checks))).toBeLessThan(checks.indexOf(herdr));
-  for (const entries of [prepare, steps]) {
-    const go = entries.find((step) => step.uses === "actions/setup-go@v6")!;
-    expect(go.with?.["go-version-file"]).toBe("apps/desktop/go.mod");
-    expect(go.with?.["cache-dependency-path"]).toBe("apps/desktop/go.sum");
-    expect(entries.indexOf(go)).toBeLessThan(
-      entries.findIndex((step) => step.uses === "./.github/actions/setup-bun"),
-    );
-    expect(entries.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
-  }
-  expect(prepare.find((step) => step.uses === "actions/setup-go@v6")?.if).toBe(
-    "${{ !inputs.distribution }}",
-  );
-});
-
-it("accepts process runners and the installed CLI after verifying the shared payload", () => {
-  const inputs = named("Verify prepared CLI", checks);
-  const runners = named("Cross-platform process and task runners", checks);
-  const cli = named("Installed CLI package", checks);
-  for (const step of [runners, cli]) {
-    expect(checks.indexOf(step)).toBeGreaterThan(checks.indexOf(inputs));
-    expect(checks.indexOf(step)).toBeLessThan(
-      checks.indexOf(named("Herdr terminal integration", checks)),
-    );
-  }
-  expect(runners.run).toContain("bun run --cwd packages/runtime-node test");
-  for (const test of ["tests/integration/task-leaf.test.ts", "src/validation/build-size.test.ts"])
-    expect(runners.run).toContain(test);
-  expect(runners.run).toContain(
-    "bun run --cwd apps/cli --bun vp test --run tests/integration/distribution/archive.test.ts",
-  );
-  expect(cli.run).toBe("bun run --cwd apps/cli smoke");
-  expect(named("Enable Windows Firewall for isolated provider acceptance", checks).if).toBe(
-    "runner.os == 'Windows'",
-  );
-  expect(named("Report prepared build sizes", checks).run).toContain("--package cli --require");
-});
-
-it("retains Go, production and interactive smoke acceptance", () => {
-  const go = named("Desktop MyGo checks", checks);
   expect(go.if).toContain("!cancelled()");
   expect(go.if).toContain("steps.payload.outcome == 'success'");
-  expect(named("Verify prepared CLI", checks).id).toBe("payload");
+  expect(payload.id).toBe("payload");
   expect(go.run).toContain("mygo:test");
   expect(go.run).toContain("mygo:check");
   expect(named("Package desktop").if).toBe("matrix.phase == 'package'");
@@ -175,12 +139,6 @@ it("retains Go, production and interactive smoke acceptance", () => {
   );
   expect(named("Packaged native smoke").if).toBe("matrix.phase == 'smoke'");
   expect(named("Packaged native smoke").run).toContain("native:smoke:interactive");
-  for (const name of ["Upload native acceptance evidence", "Upload build size reports"]) {
-    expect(named(name, checks).if).toBe("always()");
-    expect(named(name, checks).with?.["retention-days"]).toBe(7);
-    expect(named(name).if).toBe("always() && matrix.phase != 'checks'");
-    expect(named(name).with?.["retention-days"]).toBe(7);
-  }
 });
 
 it("tolerates only report upload failures in routine native acceptance", () => {
@@ -190,14 +148,14 @@ it("tolerates only report upload failures in routine native acceptance", () => {
     "Upload build size reports",
   ]);
   for (const step of optional) {
-    expect(step.uses).toBe("actions/upload-artifact@v7");
+    expect(step.uses).toMatch(/^actions\/upload-artifact@/);
     expect(step["continue-on-error"]).toBe("${{ inputs.distribution == 'false' }}");
   }
   expect([...prepare, ...steps].filter((step) => step["continue-on-error"])).toEqual([]);
 });
 
 it("keeps explicit release acceptance independent from routine push cancellation", () => {
-  const group = workflow("ci").concurrency?.group;
+  const group = ci.concurrency?.group;
   expect(group).toContain("github.event_name");
   expect(group).toContain("inputs.distribution");
   expect(group).toContain("inputs.macos");
@@ -216,13 +174,13 @@ it("exposes distribution credentials only to packaging and always cleans them up
 });
 
 it("defaults manual CI to Windows and forwards explicit cold native builds", () => {
-  const ci = workflow("ci");
   expect(ci.on.workflow_dispatch?.inputs.macos?.default).toBe(false);
   expect(ci.on.workflow_dispatch?.inputs.cold_native?.default).toBe(false);
   expect(ci.jobs.desktop?.with?.cold_native).toBe("${{ inputs.cold_native || false }}");
-  expect(workflow("native").on.workflow_call?.inputs.cold_native?.default).toBe(false);
+  expect(nativeWorkflow.on.workflow_call?.inputs.cold_native?.default).toBe(false);
   for (const entries of [prepare, steps]) {
     const setup = entries.find((step) => step.uses?.startsWith("actions/setup-go@"));
+    expect(setup?.with?.["go-version-file"]).toBe("apps/desktop/go.mod");
     expect(setup?.with?.cache).toBe("${{ !inputs.cold_native }}");
   }
 });

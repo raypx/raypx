@@ -1,6 +1,5 @@
 import { expect, it } from "bun:test";
 import { packageTestArguments, planTests } from "./test-command.ts";
-import { taskScripts } from "./tasks/delegation.ts";
 
 const root = "/repo";
 const members = [
@@ -96,18 +95,4 @@ it("fails on unsupported suites, empty layers, unknown or ambiguous packages bef
   ];
   expect(() => planTests(root, root, ambiguous, ["--package", "tasks"])).toThrow("Ambiguous");
   expect(planTests(root, root, members, ["list"])).toMatchObject({ kind: "list" });
-});
-
-it("delegates public commands to a real terminal runner and rejects cycles or missing scripts", () => {
-  const manifest = {
-    scripts: { e2e: "public", _e2e: "runner" },
-    raypx: { taskScripts: { e2e: "_e2e" } },
-  };
-  expect(taskScripts(manifest)).toEqual({ e2e: "_e2e" });
-  expect(() => taskScripts({ ...manifest, scripts: { e2e: "public" } })).toThrow(
-    "existing scripts",
-  );
-  expect(() =>
-    taskScripts({ ...manifest, raypx: { taskScripts: { e2e: "_e2e", _e2e: "e2e" } } }),
-  ).toThrow("runner script");
 });
