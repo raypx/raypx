@@ -14,6 +14,7 @@ import {
   type TaskCache,
 } from "@raypx-kit/devkit/tasks";
 import { browserTestTasks, type BrowserSurface } from "../browser-tests.ts";
+import { toolingConsumerCheckInputs, workspaceCheckInput } from "./check-inputs.ts";
 import { taskScripts } from "./delegation.ts";
 export { taskRef };
 interface TaskMember extends Member {
@@ -56,19 +57,38 @@ function leafCommand(root: string, member: TaskMember, name: string) {
   return `bun ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))} ${commit}`;
 }
 
-function checkInputs(member: TaskMember, context: TaskContext<TaskMember>): TaskCache["input"] {
+function checkInputs(
+  member: TaskMember,
+  context: TaskContext<TaskMember>,
+  consumerInputs?: (path: string) => string[],
+): TaskCache["input"] {
+  const usesVerification = [
+    member.scripts.check,
+    member.scripts.precheck,
+    member.scripts.postcheck,
+  ].some(
+    (script) => script && /\braypx-dev\b|tooling[\\/]src[\\/](?:verification|cli\.)/.test(script),
+  );
   return [
     { pattern: "tsconfig*.json", base: "workspace" },
-    ...context.dependencyClosure(member).map((candidate) => ({
-      pattern: `${candidate.path}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc}`,
-      base: "workspace" as const,
-    })),
+    ...context
+      .dependencyClosure(member)
+      .flatMap((candidate) =>
+        (consumerInputs &&
+        !usesVerification &&
+        candidate !== member &&
+        candidate.name === "@raypx/tooling"
+          ? consumerInputs(candidate.path)
+          : [workspaceCheckInput(candidate.path)]
+        ).map((pattern) => ({ pattern, base: "workspace" as const })),
+      ),
   ];
 }
 function cachedTask(
   member: TaskMember,
   name: string,
   context: TaskContext<TaskMember>,
+  consumerInputs?: (path: string) => string[],
 ): TaskCache | false {
   if (member.uncachedTasks.includes(name)) return false;
   const build = name === "build" || name === "build:renderer" || name === "build:e2e";
@@ -105,7 +125,9 @@ function cachedTask(
   ];
   const input: TaskCache["input"] = [
     { auto: true },
-    ...(name === "check" || (member.name === "cli" && build) ? checkInputs(member, context) : []),
+    ...(name === "check" || (member.name === "cli" && build)
+      ? checkInputs(member, context, consumerInputs)
+      : []),
     ...(member.name === "cli" && build
       ? [
           { pattern: "packages/tooling/src/build/*.ts", base: "workspace" as const },
@@ -270,6 +292,7 @@ export function taskModel(
   root: string,
   selection = taskSelection(root, "RAYPX_VERIFY_TASKS", "RAYPX_VERIFY_ROOT"),
 ): TaskModel {
+  let toolingInputs: string[] | undefined;
   return createTaskModel<TaskMember>(
     root,
     {
@@ -298,7 +321,14 @@ export function taskModel(
       define: (member, name, context) => ({
         command: leafCommand(root, member, name),
         dependsOn: prerequisites(member, name, context.members),
-        cache: cachedTask(member, name, context),
+        cache: cachedTask(
+          member,
+          name,
+          context,
+          name === "check"
+            ? (path) => (toolingInputs ??= toolingConsumerCheckInputs(root, path))
+            : undefined,
+        ),
       }),
       aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
       rootTasks: (context) => ({

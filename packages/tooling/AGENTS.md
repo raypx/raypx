@@ -163,6 +163,10 @@ directory enumeration can otherwise invalidate JS tasks when those paths first a
 Type checks explicitly fingerprint source/config files in the transitive workspace
 dependency closure, retaining dependency declarations under build outputs; Bun's
 native typechecker reads are not fully covered by automatic tracing on Linux.
+Consumer type checks omit `src/verification/` from Tooling's explicit inputs
+when the public export graph resolves without reaching it. Tooling's own check
+keeps the complete inputs, as do consumers that invoke the verification CLI or
+have an unresolved Tooling export graph. VP still tracks actual reads.
 Workspace coverage and validation/browser reports are excluded across that closure;
 authored source folders with the same names remain inputs. Root policy/locale tasks use
 VP caching with explicit discovery/source/catalog/config inputs plus automatic tracing.

@@ -57,10 +57,12 @@
     "sourceTargets": {
       "src/build/**": "node",
       "src/tasks/config.ts": "node",
+      "src/tasks/check-inputs.ts": "node",
       "src/tasks/model.ts": "node",
       "src/tasks/arguments.ts": "node",
       "src/tasks/delegation.ts": "node",
-      "src/browser-tests.ts": "node"
+      "src/browser-tests.ts": "node",
+      "src/tooling-entries.ts": "node"
     }
   }
 }
