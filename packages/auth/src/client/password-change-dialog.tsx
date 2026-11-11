@@ -46,6 +46,7 @@ export function PasswordChangeDialog({
   const auth = usePasswordChange(client);
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const currentPasswordInput = useRef<HTMLInputElement>(null);
   const [changed, setChanged] = useState(false);
   const [mismatch, setMismatch] = useState(false);
   const [revokeOthers, setRevokeOthers] = useState(true);
@@ -111,6 +112,7 @@ export function PasswordChangeDialog({
         </div>
         <DialogContent
           showCloseButton={false}
+          initialFocus={currentPasswordInput}
           backdropProps={{ forceRender: true }}
           className="gap-6 rounded-2xl p-6 sm:max-w-md"
         >
@@ -156,6 +158,7 @@ export function PasswordChangeDialog({
                   return (
                     <PasswordField
                       key={name}
+                      ref={purpose === "current" ? currentPasswordInput : undefined}
                       label={t(name)}
                       labelAction={purpose === "current" && !auth.busy ? recoveryLink : undefined}
                       id={`${id}-${name}`}
