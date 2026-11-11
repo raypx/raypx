@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition, JobRun } from "@raypx/core/jobs";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/core/memory";
-import type { ObservedProjection } from "@raypx/contracts/terminal";
+import type { ControlInfo, ObservedProjection } from "@raypx/contracts/terminal";
 import { messages } from "@raypx/i18n/messages";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
 import { CONNECTION_KEY } from "../../../config";
@@ -17,7 +17,6 @@ import {
   nativeWindow,
   apiOrigin,
   desktopApi,
-  control,
   quitDesktop,
   evaluate as evaluateNative,
   measureNativeCors,
@@ -296,11 +295,11 @@ try {
   );
   if (fixturePhase === "shell") {
     stage = "local instance enrollment";
-    const begun = (await engine.request("instance.begin", { origin: apiOrigin })) as {
+    const begun = (await engine.rendererRequest("instance.begin", { origin: apiOrigin })) as {
       registered: boolean;
     };
     if (!begun.registered)
-      assert.deepEqual(await engine.request("instance.poll", {}), { status: "approved" });
+      assert.deepEqual(await engine.rendererRequest("instance.poll", {}), { status: "approved" });
     await reloadRenderer();
   }
   if (otherServer) {
@@ -498,15 +497,17 @@ try {
       // Synthetic acceptance data only. Never print cookie values or response bodies.
       console.info(`Native smoke cookie probe: ${JSON.stringify(probe)}`);
     }
+    // Seed preferences for a synthetic account while the renderer is signed out.
+    const scope = { accountId: "config-isolation", apiUrl: apiOrigin };
     assert.equal(
-      (await control.info("config-isolation")).enabled,
+      ((await engine.request("host.info", scope)) as ControlInfo).enabled,
       restoredServer,
       "Remote opt-in state crossed server settings",
     );
     await evaluate(
       'localStorage.setItem(JSON.stringify(["raypx.desktop",window.__raypxConnection.apiUrl,"raypx-server-acceptance"]),"saved");return true',
     );
-    await control.enable("config-isolation", true);
+    await engine.request("host.enable", { ...scope, enabled: true });
   }
   if (phase === "shell" || (phase === "restore" && !otherServer)) {
     stage = "device memory before login and across restart";

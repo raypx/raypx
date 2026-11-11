@@ -2,7 +2,6 @@ import {
   type TaskContextSelection,
   type TaskContextSnapshot,
   type TaskContextTarget,
-  activeTaskStatuses,
   type AgentTask,
 } from "@raypx/core/tasks";
 
@@ -25,7 +24,6 @@ export type ResolveTaskContext = (
   target: TaskContextTarget,
   prompt: string,
 ) => Promise<TaskContextSnapshot>;
-export type Event = ControlRecords["event"];
 export interface RelayActor {
   role: "viewer" | "device";
   userId: string;
@@ -52,6 +50,4 @@ export const canonical = (value: unknown) =>
       ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
       : item,
   );
-export const terminal = (task: AgentTask) => !activeTaskStatuses.includes(task.status);
-
 export const CONTEXT_COMMAND_TTL_MS = 24 * 60 * 60 * 1000;

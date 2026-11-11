@@ -1,6 +1,5 @@
 import type { DesktopApiRequest, DesktopApiResponse } from "../../../api";
 import type { DesktopRuntime } from "../../../bridge";
-import type { ControlInfo } from "@raypx/contracts/terminal";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { smokeOwnerRequest, stopSmokeOwner } from "./owner";
@@ -57,6 +56,7 @@ export const engine = {
   status: async () => (await runtime()).engine,
   features: async () => (await runtime()).features ?? { localTerminalApprovals: false },
   request: (method: string, params: unknown) => smokeOwnerRequest(directory, method, params),
+  rendererRequest: (method: string, params: unknown) => invoke("local_request", { method, params }),
   start: () => invoke<boolean>("restart_engine", {}),
   replaceOwner: () => invoke<boolean>("restart_engine", { replaceOwner: true }),
   stop: async () => {
@@ -65,24 +65,6 @@ export const engine = {
 };
 export const desktopApi = {
   request: (input: DesktopApiRequest) => invoke<DesktopApiResponse>("api_fetch", input),
-};
-export const control = {
-  info: (accountId: string) => invoke<ControlInfo>("control_info", { accountId }),
-  enable: (accountId: string, enabled: boolean) =>
-    invoke<ControlInfo>("control_enable", { accountId, enabled }),
-  refreshGrant: async () => {
-    const response = await desktopApi.request({
-      path: "/api/auth/get-session",
-      method: "GET",
-      headers: {},
-    });
-    const session = JSON.parse(response.body);
-    if (!session?.user?.id) return false;
-    return (await smokeOwnerRequest(directory, "host.refresh", {
-      accountId: session.user.id,
-      apiUrl: apiOrigin,
-    })) as boolean;
-  },
 };
 export const nativeWindow = {
   state: () => driver.request<WindowState>("window"),
@@ -142,6 +124,7 @@ export async function measureNativeStream() {
       window.removeEventListener('raypx-smoke-local-event', observe);
     }
   `)) as { count: number; bytes: number; intact: boolean; ordered: boolean };
+  await smokeOwnerRequest(directory, "roots.remove", { id: root.id });
   return {
     renderer,
     events,

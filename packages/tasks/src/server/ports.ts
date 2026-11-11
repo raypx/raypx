@@ -3,7 +3,7 @@ import type { DeviceProject } from "@raypx/contracts/tasks";
 import type { TaskProjectionRecords } from "./records.ts";
 
 /** The mutable projection fields inside an authorized device transaction. */
-export interface ProjectionDevice {
+interface ProjectionDevice {
   id: string;
   revoked: boolean;
   epoch: number;
@@ -45,7 +45,7 @@ type Query = {
     descending?: boolean;
   };
 };
-export interface ProjectionReader {
+interface ProjectionReader {
   get<K extends Kind>(kind: K, id: string): Promise<Records[K] | undefined>;
   list<K extends Kind>(
     kind: K,
