@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 import { afterEach, it, expect, vi } from "vite-plus/test";
-import { extractArchive } from "./archive.ts";
+import { extractArchive } from "../../../scripts/archive.ts";
 
 const roots: string[] = [];
 afterEach(() => {

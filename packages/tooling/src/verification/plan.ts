@@ -81,7 +81,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
     const relative = file.slice(member.path.length + 1);
     if (member.name === "@raypx/tooling")
       return (
-        /^src\/build\/(?:cli|archive)(?:\.test)?\.ts$/.test(relative) ||
+        /^src\/build\/cli(?:\.test)?\.ts$/.test(relative) ||
         /^src\/tasks\/(?:leaf|arguments|delegation)\.ts$/.test(relative) ||
         /^src\/verification\/(?:plan|ci|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
         /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative) ||
@@ -95,7 +95,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
         relative,
       );
     if (member.name === "cli")
-      return /^(?:package\.json$|scripts\/(?:prepare-herdr|build|distribution|archive-smoke)\.ts$|src\/main\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|provider-proxy|temporary|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:artifact|daemon-agents|herdr-terminal|windows-payload|terminal-)))/.test(
+      return /^(?:package\.json$|scripts\/(?:prepare-herdr|build|distribution|archive|archive-smoke)\.ts$|src\/main\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/integration\/distribution\/archive\.test\.ts$|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|provider-proxy|temporary|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:artifact|daemon-agents|herdr-terminal|windows-payload|terminal-)))/.test(
         relative,
       );
     return (

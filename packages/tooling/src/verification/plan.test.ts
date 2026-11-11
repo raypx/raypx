@@ -211,10 +211,15 @@ describe("affected verification", () => {
       extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
     });
     const model = taskModel(root);
-    for (const file of ["cli.ts", "archive.ts", "archive.test.ts"])
-      expect(verificationPlan(model, [`packages/tooling/src/build/${file}`]).nativeRunners).toEqual(
-        ["macos-latest", "windows-latest"],
-      );
+    for (const file of [
+      "packages/tooling/src/build/cli.ts",
+      "packages/cli/scripts/archive.ts",
+      "packages/cli/tests/integration/distribution/archive.test.ts",
+    ])
+      expect(verificationPlan(model, [file]).nativeRunners).toEqual([
+        "macos-latest",
+        "windows-latest",
+      ]);
     expect(
       verificationPlan(model, ["packages/tooling/src/build/node-deployment.test.ts"]).nativeRunners,
     ).toEqual([]);

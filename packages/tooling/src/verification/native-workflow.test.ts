@@ -150,12 +150,11 @@ it("accepts process runners and the installed CLI after verifying the shared pay
     );
   }
   expect(runners.run).toContain("bun run --cwd packages/runtime-node test");
-  for (const test of [
-    "tests/integration/task-leaf.test.ts",
-    "src/build/archive.test.ts",
-    "src/validation/build-size.test.ts",
-  ])
+  for (const test of ["tests/integration/task-leaf.test.ts", "src/validation/build-size.test.ts"])
     expect(runners.run).toContain(test);
+  expect(runners.run).toContain(
+    "bun run --cwd apps/cli --bun vp test --run tests/integration/distribution/archive.test.ts",
+  );
   expect(cli.run).toBe("bun run --cwd apps/cli smoke");
   expect(named("Enable Windows Firewall for isolated provider acceptance", checks).if).toBe(
     "runner.os == 'Windows'",

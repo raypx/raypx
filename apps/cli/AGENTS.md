@@ -113,6 +113,8 @@ Injected suites separate Pi tool durability and provider gate/drain replay (`tes
 Temporary profiles and execution hosts are owned by `tests/helpers/runtime.ts` and
 `tests/helpers/agents.ts`; each case still receives a fresh runtime and directory.
 `tests/smoke/artifact.ts` validates the built executable separately from the unit tests.
+`scripts/archive.ts` owns CLI release extraction. The distribution integration suite
+checks the native archive tools and Unicode paths on the selected platform.
 `tests/smoke/tui.ts` owns the explicit PTY smoke gate.
 Its Python driver lives in `tests/fixtures/tui/`; simulated Agent executables and
 their child processes live in `tests/fixtures/agents/` and run from temporary profiles.

@@ -15,7 +15,6 @@
     "./browser-server": "./src/browser-server.ts",
     "./tasks": "./src/tasks/config.ts",
     "./build/cli": "./src/build/cli.ts",
-    "./build/archive": "./src/build/archive.ts",
     "./performance": "./src/performance/run.ts"
   },
   "scripts": {
@@ -51,8 +50,7 @@
       "./build/start-env": "node",
       "./tasks": "node",
       "./browser-tests": "node",
-      "./build/cli": "node",
-      "./build/archive": "node"
+      "./build/cli": "node"
     },
     "sourceTargets": {
       "src/build/**": "node",
