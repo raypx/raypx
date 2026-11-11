@@ -8,6 +8,7 @@ import { ciOutputs, parseCiPlan, requiredGates, sourcePhases } from "./gates";
 import { sourceChecks } from "./execution";
 
 const canaryRef = "refs/heads/canary";
+const canaryBaselinePolicy = "# raypx canary baseline policy v1";
 
 export function githubPlan(
   root: string,
@@ -73,17 +74,18 @@ async function verifiedCanaryAncestor(root: string) {
     if (!Array.isArray(runs)) return;
     for (const run of runs) {
       const sha = run.head_sha;
-      // Older successful runs could have skipped changes from a failed push.
+      if (run.conclusion !== "success" || sha === head || !/^[0-9a-f]{40}$/.test(sha)) continue;
       if (
-        run.conclusion !== "success" ||
-        sha === head ||
-        !/^[0-9a-f]{40}$/.test(sha) ||
-        run.display_title !== `Canary CI v1 ${sha}`
+        spawnSync("git", ["merge-base", "--is-ancestor", sha, "HEAD"], { cwd: root }).status !== 0
       )
         continue;
-      if (
-        spawnSync("git", ["merge-base", "--is-ancestor", sha, "HEAD"], { cwd: root }).status === 0
-      )
+      // Existing v1 runs encoded the policy in their title. New runs record it in ci.yml.
+      if (run.display_title === `Canary CI v1 ${sha}`) return sha;
+      const workflow = spawnSync("git", ["show", `${sha}:.github/workflows/ci.yml`], {
+        cwd: root,
+        encoding: "utf8",
+      });
+      if (workflow.status === 0 && workflow.stdout.split(/\r?\n/).includes(canaryBaselinePolicy))
         return sha;
     }
   } catch {

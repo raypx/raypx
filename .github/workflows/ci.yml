@@ -1,5 +1,5 @@
 name: CI
-run-name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/canary' && format('Canary CI v1 {0}', github.sha) || github.event.pull_request.title || github.ref_name }}
+# raypx canary baseline policy v1
 on:
   pull_request:
   push:

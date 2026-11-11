@@ -1,6 +1,6 @@
 import { stubEnv, stubGlobal } from "../../tests/helpers/stubs.ts";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import { project, platformProject } from "../../tests/helpers/verification";
@@ -462,10 +462,20 @@ describe("affected verification", () => {
     expect(retry.files).toContain(webFile);
     expect(retry.tasks).toContain("web#task:test");
 
+    mkdirSync(join(root, ".github/workflows"), { recursive: true });
+    writeFileSync(
+      join(root, ".github/workflows/ci.yml"),
+      readFileSync(new URL("../../../../.github/workflows/ci.yml", import.meta.url)),
+    );
+    const renamed = commit("fix(ci): use commit subjects for run titles");
     writeFileSync(join(root, "docs/next.md"), "updated note");
     stubEnv("GITHUB_SHA", commit("docs after green"));
-    writeFileSync(event, JSON.stringify({ ref: "refs/heads/canary", before: head }));
-    request.mockResolvedValueOnce(Response.json({ workflow_runs: [run(head)] }));
+    writeFileSync(event, JSON.stringify({ ref: "refs/heads/canary", before: renamed }));
+    request.mockResolvedValueOnce(
+      Response.json({
+        workflow_runs: [run(renamed, "success", "fix(ci): use commit subjects for run titles")],
+      }),
+    );
     expect(await readGithubPlan(root)).toMatchObject({
       full: false,
       files: ["docs/next.md"],
