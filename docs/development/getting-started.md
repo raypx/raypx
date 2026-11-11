@@ -29,7 +29,9 @@ native runners. See the [Desktop guide](desktop.md#build-and-release).
 
 `bun install` runs the root `prepare` script, which installs the Vite+ Git hook
 dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:
-oxfmt and oxlint fixes on staged files only. Check it with `bun --bun vp hooks status`;
+oxfmt and oxlint fixes on staged files only. The `commit-msg` hook checks the
+[commit subject format](../../CONTRIBUTING.md#commit-messages). Check hook installation
+with `bun --bun vp hooks status`.
 `VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun run verify`.
 
 Remote tasks require Redis. `docker compose up -d valkey` starts Valkey on 6380; set

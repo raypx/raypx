@@ -135,6 +135,8 @@ Report unavailable checks as unavailable; never describe an unrun platform as pa
 
 ## Documentation
 
+Use the commit message format in [CONTRIBUTING.md](CONTRIBUTING.md#commit-messages).
+
 Accepted ADR bodies are historical decision records. Supersede them with a new
 record and a short supersession link; describe the current implementation in
 `docs/architecture/README.md` and its topic guides.

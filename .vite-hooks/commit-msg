@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+exec bun packages/tooling/src/validation/commit-message.ts "$1"
