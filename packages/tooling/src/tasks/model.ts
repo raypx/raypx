@@ -22,10 +22,11 @@ interface TaskMember extends Member {
   native: boolean;
   browserProject?: BrowserSurface;
   uncachedTasks: string[];
+  delegates: Record<string, string>;
 }
 export type TaskModel = Model<TaskMember>;
 function reportDirectories(context: TaskContext<TaskMember>) {
-  return workspacePatterns(JSON.parse(readFileSync(join(context.root, "package.json"), "utf8")))
+  return workspacePatterns({ workspaces: context.manifest.workspaces })
     .filter((path) => !path.startsWith("!"))
     .flatMap((path) =>
       ["coverage", ".artifacts", "test-results", "playwright-report"].map(
@@ -33,29 +34,54 @@ function reportDirectories(context: TaskContext<TaskMember>) {
       ),
     );
 }
-function platform(root: string) {
-  const { packageManager } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+function platform({ manifest: { packageManager } }: TaskContext<TaskMember>) {
   return `${process.platform}-${process.arch}-${String(packageManager).replace("@", "")}`;
 }
 
-function leafCommand(root: string, member: TaskMember, name: string) {
-  const file = relative(
+function cliRevision(root: string) {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch {
+    return "no-git-fixture";
+  }
+}
+
+const desktopHostTasks = new Set([
+  "native:build",
+  "check",
+  "build",
+  "build:renderer",
+  "dev",
+  "native:smoke",
+  "native:smoke:interactive",
+  "native:agents",
+]);
+
+function scriptCommand(context: TaskContext<TaskMember>, member: TaskMember, name: string) {
+  const { root } = context;
+  const delegate = member.delegates[name];
+  const script =
+    !delegate && member.native && desktopHostTasks.has(name)
+      ? ["scripts/host/task.ts", "--leaf", name]
+      : [delegate ?? name];
+  const identity = [`RAYPX_CACHE_PLATFORM=${JSON.stringify(platform(context))}`];
+  if (member.name === "cli" && name === "build")
+    identity.push(`RAYPX_CLI_CACHE_REVISION=${JSON.stringify(cliRevision(root))}`);
+  const bun = `${identity.join(" ")} bun`;
+  const runner = script.map((arg) => JSON.stringify(arg)).join(" ");
+  const args = process.env[argumentKey(taskRef(member.name, name))];
+  // VP CLI arguments belong to one entry task. Related tests and aggregate commands
+  // can supply different arguments to each workspace script in the same VP run.
+  if (!args || args === "[]") return `${bun} run ${runner}`;
+  const adapter = relative(
     join(root, member.path),
     join(root, "packages/tooling/src/tasks/leaf.ts"),
   ).replaceAll("\\", "/");
-  let commit = "";
-  if (member.name === "cli" && name === "build") {
-    try {
-      commit = execFileSync("git", ["rev-parse", "HEAD"], {
-        cwd: root,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-      }).trim();
-    } catch {
-      commit = "no-git-fixture";
-    }
-  }
-  return `bun ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))} ${commit}`;
+  return `${bun} ${JSON.stringify(adapter)} ${JSON.stringify(name)} ${runner}`;
 }
 
 function checkInputs(
@@ -130,6 +156,7 @@ function cachedTask(
   ];
   const input: TaskCache["input"] = [
     { auto: true },
+    "package.json",
     ...(lifecycleApi
       ? taskLifecycleInputs(lifecycleApi.path).map((pattern) => ({
           pattern,
@@ -309,7 +336,7 @@ export function taskModel(
     {
       discovery: { metadataKey: "raypx" },
       member(workspace, member) {
-        taskScripts(workspace.manifest);
+        const delegates = taskScripts(workspace.manifest);
         const uncachedTasks =
           (workspace.manifest.raypx as { uncachedTasks?: string[] } | undefined)?.uncachedTasks ??
           [];
@@ -327,10 +354,11 @@ export function taskModel(
           ...(browserProject ? { browserProject } : {}),
           native: Boolean(member.scripts["native:build"] && member.scripts["native:prepare"]),
           uncachedTasks,
+          delegates,
         };
       },
       define: (member, name, context) => ({
-        command: leafCommand(root, member, name),
+        command: scriptCommand(context, member, name),
         dependsOn: prerequisites(member, name, context.members),
         cache: cachedTask(
           member,
@@ -341,14 +369,15 @@ export function taskModel(
             : undefined,
         ),
       }),
-      aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+      // VP can schedule an aggregate with dependencies and no command to spawn.
+      aggregateCommand: "",
       rootTasks: (context) => ({
         // Applications expose local E2E entries, while the root runs one shared Playwright process.
         ...Object.fromEntries(
           browserTestTasks.map((name) => [
             name,
             {
-              command: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+              command: "",
               dependsOn: context.members
                 .filter((member) => !member.browserProject && member.scripts[name])
                 .map((member) => taskRef(member.name, name)),
@@ -357,12 +386,12 @@ export function taskModel(
           ]),
         ),
         policy: {
-          command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(root))}`,
+          command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(context))}`,
           dependsOn: [],
           cache: validationCache(context, false),
         },
         locales: {
-          command: `bun packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(root))}`,
+          command: `bun packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(context))}`,
           dependsOn: [],
           cache: validationCache(context, true),
         },

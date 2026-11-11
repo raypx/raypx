@@ -18,9 +18,9 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:integration": "bun --bun vp test --run tests/integration",
+    "test": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=2 --timeout=30000",
+    "test:unit": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=2 --timeout=30000 --path-ignore-patterns=\"tests/integration/**\"",
+    "test:integration": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=2 --timeout=30000 --path-ignore-patterns=\"{!(tests),!(tests)/**,tests/!(integration)/**}\"",
     "test:inventory": "bun src/cli.ts test inventory",
     "test:backends": "bun src/cli.ts test backends"
   },
@@ -28,20 +28,17 @@
     "@posthog/cli": "catalog:dev",
     "@raypx-kit/devkit": "catalog:dev",
     "@raypx-kit/intl": "catalog:",
-    "@raypx/runtime-node": "workspace:*"
+    "@raypx/runtime-node": "workspace:*",
+    "@xmldom/xmldom": "catalog:dev"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
-    "@vitest/coverage-v8": "catalog:dev",
     "nitro": "catalog:"
   },
   "raypx": {
     "kind": "tooling",
     "target": "bun",
-    "uncachedTasks": [
-      "test"
-    ],
     "entryTargets": {
       "./build/nitro": "node",
       "./build/deployment": "node",

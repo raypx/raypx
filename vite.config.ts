@@ -1,8 +1,8 @@
-import { repositoryTaskConfig } from "@raypx/tooling/tasks";
+import { workspaceTaskConfig } from "@raypx/tooling/tasks";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  ...repositoryTaskConfig(import.meta.url),
+  ...workspaceTaskConfig(import.meta.url),
   fmt: {},
   staged: {
     "*.{ts,tsx,json,md,css,toml}": "bun --bun vp fmt --write",

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "bun:test";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -18,7 +18,7 @@ it("rejects an unknown topology option before Docker is invoked", () => {
   expect(result.stderr).toContain("Usage:");
 });
 it.each([false, true])(
-  "replaces services only after a successful migration (failure=%s)",
+  "replaces services only after a successful migration (failure=%j)",
   (fail) => {
     const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-order-"));
     try {
@@ -91,7 +91,7 @@ it("rejects invalid release tags before invoking Docker", () => {
   }
 });
 it.each([false, true])(
-  "builds shared Compose targets with local caches and cleans temporary Dockerfiles (failure=%s)",
+  "builds shared Compose targets with local caches and cleans temporary Dockerfiles (failure=%j)",
   (fail) => {
     const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-build-"));
     try {

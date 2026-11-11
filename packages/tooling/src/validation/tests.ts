@@ -1,8 +1,12 @@
-import { copyFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { discover } from "../repository.js";
+import { argumentKey } from "../tasks/arguments.js";
+import { taskRef } from "../tasks/model.js";
+import { bunReportName } from "./bun-test-report.js";
 import { Evidence } from "./evidence.js";
 import { baselineCases, collectInventory, compareCases, ownerMap } from "./inventory.js";
+import { usesBunTest } from "./test-sources.js";
 
 export async function auditTests(root: string, args: string[], cwd = root) {
   let layers = false,
@@ -26,27 +30,55 @@ export async function auditTests(root: string, args: string[], cwd = root) {
   const before = baseline ? baselineCases(await Bun.file(baseline).json()) : undefined;
   const mapping = owners ? ownerMap(await Bun.file(owners).json()) : {};
   const evidence = new Evidence(root, "tests");
+  const { workspaces } = discover(root);
   await evidence.run(async () => {
     const reports: string[] = [];
     for (const layer of layers ? ["unit", "component", "integration"] : ["all"]) {
       const task = layer === "all" ? "test" : `test:${layer}`;
       const report = `audit-${evidence.id}-${layer}.json`;
       reports.push(report);
-      await evidence.command(layer, [
-        process.execPath,
-        "--no-env-file",
-        join(root, "packages/tooling/src/cli.ts"),
-        "tasks",
-        task,
-        "--no-cache",
-        "--",
-        "--reporter=json",
-        `--outputFile=node_modules/.cache/raypx-tests/${report}`,
-      ]);
-      for (const workspace of discover(root).workspaces) {
-        if (!workspace.manifest.scripts?.[task]) continue;
-        const source = join(root, workspace.path, "node_modules/.cache/raypx-tests", report);
-        const file = `${encodeURIComponent(workspace.manifest.name)}-${layer}.json`;
+      const selected = workspaces
+        .filter((workspace) => workspace.manifest.scripts?.[task])
+        .map((workspace) => {
+          const bun = usesBunTest(workspace.manifest.scripts?.test);
+          const filename = bun ? bunReportName(report) : report;
+          const output = `node_modules/.cache/raypx-tests/${filename}`;
+          return {
+            workspace,
+            ref: taskRef(workspace.manifest.name, task),
+            output,
+            reportArgs: bun
+              ? ["--reporter=junit", `--reporter-outfile=${output}`]
+              : ["--reporter=json", `--outputFile=${output}`],
+          };
+        });
+      await Promise.all(
+        selected.map(({ workspace, output }) =>
+          mkdir(dirname(join(root, workspace.path, output)), { recursive: true }),
+        ),
+      );
+      await evidence.command(
+        layer,
+        [
+          process.execPath,
+          "--no-env-file",
+          join(root, "packages/tooling/src/cli.ts"),
+          "tasks",
+          "verify:run",
+          "--no-cache",
+        ],
+        {
+          ...process.env,
+          RAYPX_VERIFY_ROOT: root,
+          RAYPX_VERIFY_TASKS: JSON.stringify(selected.map(({ ref }) => ref)),
+          ...Object.fromEntries(
+            selected.map(({ ref, reportArgs }) => [argumentKey(ref), JSON.stringify(reportArgs)]),
+          ),
+        },
+      );
+      for (const { workspace, output } of selected) {
+        const source = join(root, workspace.path, output);
+        const file = `${encodeURIComponent(workspace.manifest.name)}-${layer}.${output.endsWith(".xml") ? "xml" : "json"}`;
         await copyFile(source, join(evidence.directory, file));
       }
     }

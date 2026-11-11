@@ -9,7 +9,6 @@ import { clean, cleanArtifacts } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
 import { discover, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
-import { checkKnip } from "./validation/knip.js";
 import { readBunPin } from "./validation/toolchain.js";
 import { browserTestArguments } from "./browser-tests.js";
 import { packageTestArguments, runTests } from "./test-command.js";
@@ -48,7 +47,7 @@ async function main() {
       runPrecheck(root, args[0] ?? "");
       break;
     case "knip":
-      checkKnip(root);
+      await run(process.execPath, ["run", "knip"], root);
       break;
     case "test":
       await runTests(root, process.cwd(), args);

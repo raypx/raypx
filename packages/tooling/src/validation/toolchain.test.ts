@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "bun:test";
 import { checkToolchain, readBunPin } from "./toolchain";
 import { workspaceFixtures } from "../../tests/helpers/workspace";
 

@@ -5,6 +5,3 @@ import { taskModel } from "./model.ts";
 export function workspaceTaskConfig(url: string) {
   return taskConfig(taskModel(repositoryRoot(dirname(fileURLToPath(url)))), url);
 }
-export function repositoryTaskConfig(url: string) {
-  return workspaceTaskConfig(url);
-}

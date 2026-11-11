@@ -54,9 +54,10 @@ so a pure export cannot conceal DOM/host imports behind private files.
 
 VP discovers lightweight `vite.config.ts` files. `@raypx/tooling/tasks` derives
 private `task:*` definitions from the package scripts and declares build dependencies.
+VP runs those Bun scripts directly; aggregate tasks only declare dependencies.
 Root `test [suite]` aggregates declared package commands; `test --package` selects
 one owner. Public commands with build prerequisites can use `raypx.taskScripts`
-to select a private runner inside VP's leaf; see [test commands](testing.md#test-commands).
+to select a private runner; see [test commands](testing.md#test-commands).
 Actual file reads determine incremental invalidation; source-only libraries need no
 build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
 in `vite.app.config.ts`, while independent Vitest configs keep test initialization

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 
@@ -129,11 +129,6 @@ it("browser-only acceptance excludes CLI builds and full Desktop checks", () => 
   expect(tasks).not.toContain("web#check");
   expect(tasks).not.toContain("cli#build");
 });
-it("runs task-runner integration tests without an enclosing filesystem tracer", () => {
-  const tasks = graph(["tasks", "test"]).tasks;
-  expect(tasks.find((task) => task.taskId === "@raypx/tooling#test")?.cache).toBe(false);
-  expect(tasks.find((task) => task.taskId === "@raypx/core#test")?.cache).not.toBe(false);
-});
 it.each(["web", "desktop"])("the %s entry builds only its selected surface", (surface) => {
   const tasks = graph(["tasks", `e2e:${surface}`]).tasks.map((task) => task.taskId);
   expect(tasks.includes("web#build:e2e")).toBe(surface === "web");
@@ -179,7 +174,7 @@ it("changing browser selectors or workers preserves dependency task definitions"
   ]);
   for (const taskId of ["web#build:e2e", "desktop#build:renderer"]) {
     const dependency = selected.tasks.find((task) => task.taskId === taskId)!;
-    expect(dependency).toEqual(plain.tasks.find((task) => task.taskId === taskId));
+    expect(dependency).toEqual(plain.tasks.find((task) => task.taskId === taskId)!);
   }
 });
 

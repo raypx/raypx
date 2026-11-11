@@ -1,11 +1,11 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { stubEnv } from "../../tests/helpers/stubs.ts";
+import { expect, it, mock } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readBuiltRelease, resolveRelease } from "./release.ts";
 import { analyticsBuild } from "./analytics.ts";
 
-afterEach(() => vi.unstubAllEnvs());
 it("resolves explicit, Railway and verification identities without inventing a production release", () => {
   const root = mkdtempSync(join(tmpdir(), "raypx-release-"));
   try {
@@ -39,10 +39,10 @@ it("rejects invalid recorded releases rather than inferring them from the upload
 });
 
 it("emits only public client metadata matching the release embedded in JavaScript", () => {
-  vi.stubEnv("VITE_APP_RELEASE", "built-commit");
-  vi.stubEnv("POSTHOG_CLI_API_KEY", "private-value");
+  stubEnv("VITE_APP_RELEASE", "built-commit");
+  stubEnv("POSTHOG_CLI_API_KEY", "private-value");
   const config = analyticsBuild("web");
-  const emitFile = vi.fn((_asset: { source: string; fileName: string }) => "asset");
+  const emitFile = mock((_asset: { source: string; fileName: string }) => "asset");
   config.plugin.generateBundle.call({ environment: { name: "ssr" }, emitFile });
   expect(emitFile).not.toHaveBeenCalled();
   config.plugin.generateBundle.call({ environment: { name: "client" }, emitFile });

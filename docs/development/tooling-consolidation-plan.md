@@ -205,14 +205,11 @@ tooling 一侧的全部相对导入（至少包括 `tasks/model` 的 `taskModel`
 ### 6.4 manifest
 
 - `packages/dev-cli/package.json`：`name: "@raypx/dev-cli"`，`bin.raypx-dev`，无 `exports`，
-  `raypx.kind: "tooling"`，`raypx.target: "bun"`，保留 `uncachedTasks: ["test"]`，
+  `raypx.kind: "tooling"`，`raypx.target: "bun"`，
   带走 `test:inventory`、`test:backends`、`test:integration` 脚本和 `@posthog/cli`、
   `@raypx-kit/intl` 等只被私有代码使用的依赖。
 - `packages/tooling/package.json`：删除 `bin`、移走的脚本和不再需要的依赖，
   清理 `sourceTargets` 中已不存在的路径。
-- AGENTS.md 中"tooling 完整测试会启动独立的缓存 VP runner，必须不在文件系统
-  tracer 内运行"这一约束跟随集成测试转移到 `dev-cli`。确认 tooling 剩余测试
-  是否仍需要 `uncachedTasks`，不需要就去掉。
 
 ### 6.5 验证
 
@@ -301,4 +298,3 @@ devkit 的通用性收敛（只做下面列出的，不做其他重构）：
 - `raypx/raypx-kit` 仓库里 devkit 包的去留（冻结、弃用或继续维护）由所有者另行决定。
 - `@raypx-kit/intl`、`@raypx-kit/analytics`、`@raypx-kit/email-preview` 和
   `drizzle-kit` 分支包保持外部依赖。
-- 集成测试（`cache-*.test.ts`）的合并提速，等本方案完成、有耗时数据后单独评估。

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "bun:test";
 import { backendEnvironment } from "./backends.ts";
 
 it("replaces operator endpoints without forcing test JSX transforms into production browser builds", () => {

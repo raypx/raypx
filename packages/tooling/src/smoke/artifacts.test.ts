@@ -1,12 +1,13 @@
 import { join } from "node:path";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, mock, spyOn } from "bun:test";
 
-const probeArtifact = vi.hoisted(() => vi.fn(async (_options: unknown) => {}));
-vi.mock("@raypx-kit/devkit/artifact", () => ({ probeArtifact }));
+const probeArtifact = mock(async (_options: unknown) => {});
+await mock.module("@raypx-kit/devkit/artifact", () => ({ probeArtifact }));
 const { probeApi, probeWeb } = await import("./artifacts.js");
+afterEach(() => mock.restore());
 beforeEach(() => {
   probeArtifact.mockClear();
-  vi.spyOn(console, "log").mockImplementation(() => {});
+  spyOn(console, "log").mockImplementation(() => {});
 });
 
 it.each([

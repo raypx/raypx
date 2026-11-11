@@ -370,8 +370,10 @@ Qualified `package#task` references accept scoped arguments after `--`. When for
 arguments with a filter, use a qualified reference to avoid changing dependency tasks.
 `--dry-run` prints a dependency plan without executing tasks. VP uses private `task:*`
 names so package scripts remain independently runnable without task/script conflicts.
-There is no second scheduler. `vp run --filter @raypx/ui task:test` is the equivalent
-native task entry; `vp run test` at root enters the normal root launcher.
+VP runs package scripts directly. Use `bun --bun vp run --filter @raypx/ui task:test`
+to enter the native task, or `bun run test` to use the root launcher. Verification
+uses an argument adapter only for tasks that receive their own file filters in a
+shared graph.
 
 VP records local results in `node_modules/.vite/task-cache`. Use `--verbose` or
 `vp run --last-details` for cache misses and task timings. Cached logs describe an
@@ -392,9 +394,9 @@ as entries, including the TypeScript presets' VP-invoked `scripts/task.ts`.
 Drizzle config is analyzed statically, without loading database
 credentials. The Vitest scaffold is a static `.template` file copied into each new
 workspace, so its workspace-relative imports need no Knip resolution exception.
-The read-only JSON adapter recognizes only catalog findings backed by actual Bun
-root `overrides` references and existing catalog declarations. Every other finding
-fails verification. Go-launched TypeScript fixtures are explicit entries; vendored
+The root script runs Knip's `knip-bun` binary. Root dependency overrides use
+`resolutions` so Knip can track catalog references directly. Go-launched TypeScript
+fixtures are explicit entries; vendored
 skills stay outside product analysis. The root `skills` dependency is the CLI used
 by `skills:update`. Root overrides pin `oxc-parser` and `@oxc-project/types` together
 at `0.157.0`. Revalidate Tooling, Knip, type checks and builds when changing this

@@ -35,8 +35,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   CI appends tables to its summary after selected builds/cache restoration and uploads
   reports. Sizes count regular files, excluding symlinks; components/bundles overlap
   and must not be added together. Measurement never launches a build or smoke task.
-- `raypx.taskScripts` delegates a public package script to a terminal runner inside
-  VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
+- `raypx.taskScripts` selects a private package script for the VP task. Validate
+  both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
 - `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
@@ -128,33 +128,37 @@ Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
 Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
 Knip runs under Bun, which classifies ws/undici as runtime modules; the Node-compatible
 HTTP adapter retains their explicit dependencies and types for its Node consumers,
-with a scoped Knip exception in that workspace. Its read-only JSON adapter recognizes catalog entries
-used by Bun root overrides, which Knip currently misses; all other findings fail.
+with a scoped Knip exception in that workspace. Root transitive dependency overrides
+use Bun's `resolutions` field so Knip can track their catalog references directly.
 Native Go-launched TS fixtures and the presets' dynamically invoked task leaf are
 explicit Knip entries. Vendored skills are excluded;
 the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
 evidence only. Inventory compares case multiplicity and checks exact file selection.
+It assigns each runner its own report flags and reads both Bun JUnit and Vitest JSON.
 Backend validation provisions only owned temporary services, resolves binaries from
 PATH or explicit binary settings, and stops children before deleting their data.
 Read i18n's public static `./config` through workspace discovery for locale policy;
 do not add the i18n runtime to root tooling's dependency closure.
 Preserve the shared happy-dom setup and independent workspace test runners.
-The shared setup lives in `tests/setup/dom.ts`. Root `test.config.ts` is a plain
+Tooling's own suites use `bun:test` with two isolated file workers and a 30-second
+default timeout. The scripts load the repository's `bunfig.toml` explicitly and
+keep layer selection in their command-line filters. The shared setup for Vitest
+consumers lives in `tests/setup/dom.ts`.
+Root `test.config.ts` is a plain
 Vitest defaults object; workspace configs use native `defineConfig`/`mergeConfig`
 and own their include patterns, projects and overrides. Do not wrap Vitest options
 in another factory or restricted interface. Scaffolded test workspaces include
 source-adjacent tests and `tests/` fixtures in strict checking and merge these defaults in their own config.
 `./tasks` exposes Node-compatible, lightweight task configuration. Its model derives
 all members and scripts from manifests, registers private `task:*` definitions and
-explicit dependencies; VP alone schedules them. Leaf scripts stay available for
-direct debugging. Leaves preserve Devkit's task argument keys and execute Bun through
-Runtime Node's cross-platform runner, retaining exit status, inherited streams and
-interrupt forwarding on Windows command shims. Task definitions inherit the environment with `untrackedEnv`,
-while outcome-affecting fields and per-task argument keys participate in fingerprints.
-`raypx.uncachedTasks` opts specific scripts out. Tooling's complete test suite starts
-independent cached VP runners, so it must run without an enclosing filesystem tracer;
-`test:unit` remains cached and `test:integration` always executes.
+explicit dependencies; VP alone schedules them. VP invokes Bun package scripts
+directly. Aggregates declare dependencies with an empty command. The scoped
+argument adapter is used when the launcher sends different arguments to individual
+tasks in the same graph. Task definitions inherit the environment with `untrackedEnv`;
+outcome-affecting fields and per-task argument keys participate in fingerprints.
+`raypx.uncachedTasks` opts specific scripts out. VP caches Tooling's `test` and
+`test:unit` tasks. The focused `test:integration` task runs on demand.
 Platform/toolchain identity is also part of each command. Native packaging stays
 outside VP's filesystem tracer; Go owns its native compilation cache.
 CLI builds exclude the verified Herdr download cache from task inputs; manifest
@@ -202,7 +206,7 @@ Keep scaffold and locale policy suites separate; shared temporary workspace fixt
 live in `tests/helpers/workspace.ts` and register cleanup for each suite.
 The inventory regression requires a focused command for each active test layer,
 rejects empty layer commands and `.only`, and keeps PostgreSQL/Redis and Playwright
-outside ordinary Vitest layers. Scaffolding with tests creates a strict default
+outside ordinary test layers. Scaffolding with tests creates a strict default
 runner; add focused commands when their first real suites exist.
 Workspace scaffolding copies static configuration from `src/templates/workspace/`
 into generated TypeScript paths. Every scaffold registers a lightweight task config.

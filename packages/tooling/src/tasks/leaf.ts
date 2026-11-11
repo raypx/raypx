@@ -1,24 +1,10 @@
 import { runTaskLeaf } from "@raypx-kit/devkit/tasks";
-import { taskScripts } from "./delegation.js";
+
+const command = process.argv.slice(3);
+if (!command.length) throw new Error("A workspace task runner is required");
 process.exitCode = await runTaskLeaf({
   runtime: process.execPath,
-  command(manifest, name, args) {
-    const delegated = taskScripts(manifest)[name];
-    const native = manifest.scripts["native:build"] && manifest.scripts["native:prepare"];
-    return delegated
-      ? [process.execPath, "run", delegated, ...args]
-      : native &&
-          [
-            "native:build",
-            "check",
-            "build",
-            "build:renderer",
-            "dev",
-            "native:smoke",
-            "native:smoke:interactive",
-            "native:agents",
-          ].includes(name)
-        ? [process.execPath, "run", "scripts/host/task.ts", "--leaf", name, ...args]
-        : [process.execPath, "run", name, ...args];
+  command(_, _name, args) {
+    return [process.execPath, "run", ...command, ...args];
   },
 });

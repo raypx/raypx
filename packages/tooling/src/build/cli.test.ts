@@ -1,7 +1,8 @@
+import { rejects } from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { it, expect } from "vite-plus/test";
+import { it, expect } from "bun:test";
 import { sealCliPayload, verifyCliPayload } from "./cli";
 it("seals signed bytes without changing identity and rejects altered, extra or linked resources", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx-payload-"));
@@ -20,24 +21,22 @@ it("seals signed bytes without changing identity and rejects altered, extra or l
       herdrVersion: "0.9.5",
     };
     await sealCliPayload(root, identity);
-    await expect(verifyCliPayload(root, identity)).resolves.toMatchObject(identity);
-    await expect(verifyCliPayload(root, { commit: "b".repeat(40) })).rejects.toThrow(
-      "commit mismatch",
-    );
+    expect(await verifyCliPayload(root, identity)).toMatchObject(identity);
+    await rejects(verifyCliPayload(root, { commit: "b".repeat(40) }), /commit mismatch/);
     await writeFile(join(root, "raypx"), "signed bytes");
-    await expect(verifyCliPayload(root)).rejects.toThrow("integrity");
+    await rejects(verifyCliPayload(root), /integrity/);
     await sealCliPayload(root);
-    await expect(verifyCliPayload(root, identity)).resolves.toMatchObject(identity);
+    expect(await verifyCliPayload(root, identity)).toMatchObject(identity);
     await writeFile(join(root, "untracked"), "unexpected");
-    await expect(verifyCliPayload(root)).rejects.toThrow('"unexpected":["untracked"]');
+    await rejects(verifyCliPayload(root), /"unexpected":\["untracked"\]/);
     await rm(join(root, "untracked"));
     await rm(join(root, "LICENSE"));
-    await expect(verifyCliPayload(root)).rejects.toThrow('"missing":["LICENSE"]');
+    await rejects(verifyCliPayload(root), /"missing":\["LICENSE"\]/);
     await writeFile(join(root, "LICENSE"), "unsigned");
 
     if (process.platform === "win32") return;
     await symlink(join(root, "LICENSE"), join(root, "escape"), "file");
-    await expect(verifyCliPayload(root)).rejects.toThrow("regular files");
+    await rejects(verifyCliPayload(root), /regular files/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

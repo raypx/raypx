@@ -10,6 +10,7 @@ import { checkToolchain } from "./validation/toolchain.ts";
 import { checkSourceLayers } from "./validation/source-layers.ts";
 import { checkDeployment } from "./validation/deployment.ts";
 import { checkEntryConsumers } from "./validation/entries.ts";
+import { usesBunTest } from "./validation/test-sources.ts";
 
 const MAX_MARKDOWN_LINES = 500;
 
@@ -46,6 +47,7 @@ export function policy(root: string): string[] {
     if (!existsSync(file)) findings.push(`${workspace.path}: missing AGENTS.md`);
     if (
       workspace.manifest.scripts?.test &&
+      !usesBunTest(workspace.manifest.scripts.test) &&
       !existsSync(join(root, workspace.path, "vitest.config.ts"))
     )
       findings.push(`${workspace.path}: tests need an independent vitest.config.ts`);

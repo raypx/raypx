@@ -1,15 +1,13 @@
+import { rejects } from "node:assert/strict";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, mock, spyOn } from "bun:test";
 import { project } from "../../tests/helpers/verification.ts";
 import { verify } from "./index.ts";
 import { completionReport, precheckTimings } from "./report.ts";
 import * as execution from "./execution.ts";
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.restoreAllMocks();
-});
+afterEach(() => mock.restore());
 
 it("replaces stale success evidence before starting checks and records a failed run", async () => {
   const { root } = project();
@@ -17,11 +15,11 @@ it("replaces stale success evidence before starting checks and records a failed 
   mkdirSync(directory, { recursive: true });
   const file = join(directory, "latest.json");
   writeFileSync(file, JSON.stringify({ status: "passed" }));
-  const checks = vi.spyOn(execution, "sourceChecks").mockImplementationOnce(async () => {
+  const checks = spyOn(execution, "sourceChecks").mockImplementationOnce(async () => {
     expect(JSON.parse(readFileSync(file, "utf8")).status).toBe("running");
     throw new Error("source check failed");
   });
-  await expect(verify(root, ["--no-cache"])).rejects.toThrow("source check failed");
+  await rejects(verify(root, ["--no-cache"]), /source check failed/);
   expect(checks).toHaveBeenCalledWith(root, expect.any(Object), {
     tests: expect.any(Array),
     noCache: true,

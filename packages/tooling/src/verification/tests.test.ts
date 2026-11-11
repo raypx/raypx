@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "bun:test";
 import { workspaceFixtures } from "../../tests/helpers/workspace";
 import { taskModel } from "../tasks/model";
 import { platformProject } from "../../tests/helpers/verification";
@@ -79,6 +79,18 @@ describe("local related test selection", () => {
     expect(
       localTests(root, canonical).find((test) => test.workspace === "@raypx/consumer")?.mode,
     ).toBe("none");
+  });
+  it("passes exact file paths to Bun when a related suite is selected", () => {
+    const { root, plan, write } = project();
+    const directory = member(root, "bun-runner", {
+      extra: { scripts: { test: "bun --no-env-file --no-install test --parallel=2" } },
+    });
+    const changed = `${directory}/src/model.test.ts`;
+    write(changed);
+    write(`${directory}/src/unrelated.test.ts`);
+    expect(localTests(root, plan([changed]))).toMatchObject([
+      { workspace: "@raypx/bun-runner", mode: "related", files: ["./src/model.test.ts"] },
+    ]);
   });
   it("selects the CLI task lifecycle suite for its API subprocess inputs", () => {
     const { root, plan, write } = project();

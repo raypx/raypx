@@ -102,6 +102,7 @@
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.3.0",
         "@vitest/coverage-v8": "5.1.0",
+        "@xmldom/xmldom": "0.9.12",
         "@raypx-kit/devkit": "0.0.0-alpha.6",
         "@raypx-kit/email-preview": "0.0.0-alpha.4",
         "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.4",
@@ -164,7 +165,7 @@
     "deps:audit": "bun audit",
     "skills:update": "DO_NOT_TRACK=1 bun --bun skills update --project --yes",
     "analytics:sourcemaps": "raypx-dev analytics sourcemaps",
-    "knip": "raypx-dev knip",
+    "knip": "knip-bun",
     "perf:tasks": "raypx-dev tasks perf:tasks",
     "eval:agents": "raypx-dev tasks cli#eval:agents --",
     "dev:mobile": "raypx-dev tasks dev --filter mobile"
@@ -179,7 +180,7 @@
     "typescript": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
-  "overrides": {
+  "resolutions": {
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
     "@oxc-project/types": "0.157.0",

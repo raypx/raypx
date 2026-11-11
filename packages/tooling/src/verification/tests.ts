@@ -4,7 +4,7 @@ import { imports } from "@raypx-kit/devkit/architecture";
 import { resolveImport, workspaceFor } from "@raypx-kit/devkit/workspaces";
 import { discover } from "../repository.ts";
 import { taskModel, taskRef } from "../tasks/model.ts";
-import { testLayer, testSources } from "../validation/test-sources.ts";
+import { testLayer, testSources, usesBunTest } from "../validation/test-sources.ts";
 import type { VerificationPlan } from "./plan.ts";
 import { relatedTaskLifecycle } from "../tasks/task-lifecycle.ts";
 
@@ -123,8 +123,9 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
         )
       )
         return all("Configuration, fixture, setup or non-code input");
-      // Arbitrary scripts keep their own argument contract; only Vitest entries accept file filters.
-      if (!/\bvp test\b/.test(member.scripts.test!)) return all("Custom test runner");
+      // Only known test runners accept file filters.
+      const bun = usesBunTest(member.scripts.test);
+      if (!bun && !/\bvp test\b/.test(member.scripts.test!)) return all("Custom test runner");
       const sources = testSources(join(root, member.path)).filter(
         (file) => testLayer(file) !== "external",
       );
@@ -148,7 +149,7 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
         return {
           ...entry,
           mode: "related",
-          files: selected,
+          files: bun ? selected.map((file) => `./${file}`) : selected,
           reasons: [
             "Changed tests and transitive source imports; retain integration and filesystem/process checks",
           ],

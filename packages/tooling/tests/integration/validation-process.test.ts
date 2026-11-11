@@ -1,6 +1,7 @@
+import { rejects } from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "bun:test";
 import { Evidence, type ValidationProcess } from "../../src/validation/evidence.ts";
 import { workspaceFixtures } from "../helpers/workspace.ts";
 
@@ -9,7 +10,7 @@ const { fixture } = workspaceFixtures();
 it("stops owned background processes after a failed gate and keeps argv/environment out of the run manifest", async () => {
   const evidence = new Evidence(fixture(), "validation");
   let service: ValidationProcess | undefined;
-  await expect(
+  await rejects(
     evidence.run(async () => {
       service = evidence.start("service", [
         process.execPath,
@@ -22,7 +23,8 @@ it("stops owned background processes after a failed gate and keeps argv/environm
         { ...process.env, PRIVATE_TOKEN: "private-token" },
       );
     }),
-  ).rejects.toThrow("failed-gate failed (7)");
+    /failed-gate failed \(7\)/,
+  );
   expect(service?.alive()).toBe(false);
   const manifest = readFileSync(join(evidence.directory, "commands.json"), "utf8");
   expect(JSON.parse(manifest)).toEqual(

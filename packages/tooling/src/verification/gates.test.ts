@@ -1,6 +1,8 @@
+import { rejects } from "node:assert/strict";
+import { stubEnv } from "../../tests/helpers/stubs.ts";
 import { copyFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { project } from "../../tests/helpers/verification.js";
 import { verificationPlan } from "./plan.js";
 import { githubPlan, ciGate } from "./ci.js";
@@ -12,10 +14,7 @@ import { distributionRequested } from "./events.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 
 const { fixture } = workspaceFixtures();
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.restoreAllMocks();
-});
+afterEach(() => mock.restore());
 
 describe("required CI results", () => {
   const needs = {
@@ -152,19 +151,19 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
   expect(() =>
     parseCiPlan(JSON.stringify({ version: 1, revision: "commit-a", plan }), "commit-a"),
   ).toThrow("Unsupported");
-  vi.stubEnv("RAYPX_CI_PLAN", outputs.plan);
-  vi.stubEnv("GITHUB_SHA", "commit-a");
-  await expect(ciGate(root, ["backend"])).rejects.toThrow("was not selected");
-  await expect(ciGate(root, ["container-smoke"])).rejects.toThrow("was not selected");
-  await expect(ciGate(root, ["deployment"])).rejects.toThrow("Unknown internal CI gate");
-  await expect(ciGate(root, ["unknown"])).rejects.toThrow("Unknown internal CI gate");
-  await expect(ciGate(root, ["source"])).rejects.toThrow("Unknown internal CI gate");
-  await expect(ciGate(root, ["source", "unknown"])).rejects.toThrow("Unknown source CI phase");
-  await expect(ciGate(root, ["source", "tests"])).rejects.toThrow("was not selected");
+  stubEnv("RAYPX_CI_PLAN", outputs.plan);
+  stubEnv("GITHUB_SHA", "commit-a");
+  await rejects(ciGate(root, ["backend"]), /was not selected/);
+  await rejects(ciGate(root, ["container-smoke"]), /was not selected/);
+  await rejects(ciGate(root, ["deployment"]), /Unknown internal CI gate/);
+  await rejects(ciGate(root, ["unknown"]), /Unknown internal CI gate/);
+  await rejects(ciGate(root, ["source"]), /Unknown internal CI gate/);
+  await rejects(ciGate(root, ["source", "unknown"]), /Unknown source CI phase/);
+  await rejects(ciGate(root, ["source", "tests"]), /was not selected/);
 });
 
 it.each([false, true])(
-  "partitions source tasks without omissions or duplicate checks (full: %s)",
+  "partitions source tasks without omissions or duplicate checks (full: %j)",
   (full) => {
     const { model } = project();
     const plan = verificationPlan(model, ["packages/tokens/src/index.ts"], { full });
@@ -190,9 +189,9 @@ it("dispatches both selected source phases from the commit-bound plan", async ()
     ...verificationPlan(model, ["packages/tokens/src/index.ts"]),
     distribution: false,
   };
-  vi.stubEnv("RAYPX_CI_PLAN", ciOutputs(plan, "commit-a").plan);
-  vi.stubEnv("GITHUB_SHA", "commit-a");
-  const checks = vi.spyOn(execution, "sourceChecks").mockResolvedValue({
+  stubEnv("RAYPX_CI_PLAN", ciOutputs(plan, "commit-a").plan);
+  stubEnv("GITHUB_SHA", "commit-a");
+  const checks = spyOn(execution, "sourceChecks").mockResolvedValue({
     policyMs: 0,
     localesMs: 0,
     cachedChecks: [],

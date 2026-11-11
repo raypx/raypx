@@ -1,23 +1,24 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
-import { clean } from "./clean.ts";
+import { rejects } from "node:assert/strict";
+import { afterEach, expect, it, mock } from "bun:test";
 
-const mocks = vi.hoisted(() => ({ rm: vi.fn() }));
-vi.mock("node:fs/promises", () => ({ rm: mocks.rm }));
-vi.mock("./repository.js", () => ({
+const rm = mock<typeof import("node:fs/promises").rm>();
+await mock.module("node:fs/promises", () => ({ rm }));
+await mock.module("./repository.js", () => ({
   discover: () => ({ workspaces: [{ path: "packages/feature" }] }),
 }));
-afterEach(() => vi.resetAllMocks());
+const { clean } = await import("./clean.ts");
+afterEach(() => rm.mockReset());
 
 it("bounds parallel removals and waits for every batch", async () => {
   let release!: () => void;
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
   });
-  mocks.rm.mockReturnValue(blocked);
+  rm.mockReturnValue(blocked);
 
   const pending = clean("/fixture");
   await Promise.resolve();
-  expect(mocks.rm).toHaveBeenCalledTimes(8);
+  expect(rm).toHaveBeenCalledTimes(8);
   let complete = false;
   const completed = pending.then(() => {
     complete = true;
@@ -27,11 +28,11 @@ it("bounds parallel removals and waits for every batch", async () => {
 
   release();
   await completed;
-  expect(mocks.rm.mock.calls.length).toBeGreaterThan(8);
+  expect(rm.mock.calls.length).toBeGreaterThan(8);
   expect(complete).toBe(true);
 });
 
 it("reports a failed removal to the caller", async () => {
-  mocks.rm.mockResolvedValue(undefined).mockRejectedValueOnce(new Error("Permission denied"));
-  await expect(clean("/fixture")).rejects.toThrow("Permission denied");
+  rm.mockResolvedValue(undefined).mockRejectedValueOnce(new Error("Permission denied"));
+  await rejects(clean("/fixture"), /Permission denied/);
 });

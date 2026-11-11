@@ -1,6 +1,6 @@
 import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "bun:test";
 import { workspaceFixtures } from "../../tests/helpers/workspace";
 import { taskModel } from "../tasks/model";
 import { verificationPlan } from "./plan";
