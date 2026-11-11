@@ -45,7 +45,7 @@ export async function relaySocket(
   send(auth);
   return { socket, messages, send, take, closed: () => closed };
 }
-export async function relayFixture() {
+export async function relayFixture(allowedOrigins: string[] = []) {
   const repository = memoryControlRepository(),
     control = new ControlService(repository),
     auth = controlAuth();
@@ -54,14 +54,17 @@ export async function relayFixture() {
     control,
     authHandler: async () => new Response(null),
     readSession: async (headers) => (headers.get("cookie") === "fixture" ? auth : null),
-    allowedOrigins: [],
+    allowedOrigins,
     onRevoke: (userId, deviceId) => hub.revoke(userId, deviceId),
   });
+  const peers = new Set<Bun.ServerWebSocket<{ id: string }>>();
+  let relayPaused = false;
   const server = serve<{ id: string }>({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request, listener) {
       if (new URL(request.url).pathname === "/relay") {
+        if (relayPaused) return new Response(null, { status: 503 });
         if (listener.upgrade(request, { data: { id: crypto.randomUUID() } })) return;
         return new Response(null, { status: 426 });
       }
@@ -69,6 +72,7 @@ export async function relayFixture() {
     },
     websocket: {
       open(socket) {
+        peers.add(socket);
         hub.open({
           id: socket.data.id,
           send: (frame) => {
@@ -81,6 +85,7 @@ export async function relayFixture() {
         if (typeof value === "string") void hub.receive(socket.data.id, value);
       },
       close(socket) {
+        peers.delete(socket);
         void hub.close(socket.data.id);
       },
     },
@@ -91,6 +96,10 @@ export async function relayFixture() {
     auth,
     hub,
     base: server.url.origin,
+    pauseRelay(paused: boolean) {
+      relayPaused = paused;
+      if (paused) for (const peer of peers) peer.close(1012, "Fixture relay outage");
+    },
     close: async () => {
       await hub.shutdown();
       await server.stop(true);

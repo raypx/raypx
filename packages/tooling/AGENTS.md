@@ -47,6 +47,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   assertions; indirect consumers and unknown/configuration/deleted inputs use complete
   suites. CI and `--full` always run complete selected workspace suites. File arguments
   use the existing per-task argument keys, never aggregate dependency arguments.
+  API relay fixture edits also select the CLI task lifecycle suite. Both fixture
+  files are explicit inputs to the CLI test cache.
   Private Tooling gates/tests select Tooling only; exported helpers follow their static
   entry dependencies and actual import consumers. Task machinery, unknown/deleted inputs
   and unresolved export graphs retain all source checks.

@@ -2,6 +2,7 @@ import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devk
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";
+import { relatedTaskLifecycle } from "../tasks/task-lifecycle.js";
 
 type Artifact = "api" | "web" | "cli";
 export interface VerificationPlan {
@@ -197,9 +198,14 @@ export function verificationPlan(
   affected.clear();
   for (const [name, scope] of reached) affected.set(name, scope);
   for (const name of isolated) affected.set(name, "all");
+  const lifecycle = relatedTaskLifecycle(model, files);
   const nativeMembers = model.members.filter((member) => member.native && native.native);
   const workspaces = [
-    ...new Set([...affected.keys(), ...nativeMembers.map((member) => member.name)]),
+    ...new Set([
+      ...affected.keys(),
+      ...nativeMembers.map((member) => member.name),
+      ...(lifecycle ? [lifecycle.workspace] : []),
+    ]),
   ].sort();
   const artifacts = full
     ? (["api", "web", "cli"] as const).filter(
@@ -219,6 +225,8 @@ export function verificationPlan(
         .filter((name) => member.scripts[name])
         .map((name) => taskRef(member.name, name)),
     );
+  if (lifecycle && !affected.has(lifecycle.workspace))
+    tasks.push(taskRef(lifecycle.workspace, "test"));
   const browserTests = model.members.find((member) => member.name === "@raypx/e2e");
   return {
     full,

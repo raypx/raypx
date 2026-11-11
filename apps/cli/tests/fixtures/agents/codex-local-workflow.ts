@@ -1,4 +1,4 @@
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { exitForVersion } from "./version.ts";
 
 type RpcMessage = {
@@ -12,6 +12,14 @@ exitForVersion("codex");
 const send = (value: Record<string, unknown>) => process.stdout.write(JSON.stringify(value) + "\n");
 let buffer = "";
 let resumed = false;
+async function requestReportApproval() {
+  while (existsSync("hold-approval")) await Bun.sleep(10);
+  send({
+    id: "write-report",
+    method: "item/commandExecution/requestApproval",
+    params: { command: "write report.txt", reason: "Create the approved report" },
+  });
+}
 process.stdin.on("data", (chunk: Buffer) => {
   buffer += chunk.toString();
   let newline;
@@ -33,13 +41,7 @@ process.stdin.on("data", (chunk: Buffer) => {
       if (resumed) {
         send({ method: "item/agentMessage/delta", params: { delta: "Follow-up completed" } });
         send({ method: "turn/completed", params: { turn: { status: "completed" } } });
-      } else {
-        send({
-          id: "write-report",
-          method: "item/commandExecution/requestApproval",
-          params: { command: "write report.txt", reason: "Create the approved report" },
-        });
-      }
+      } else void requestReportApproval();
     }
     if (message.id === "write-report") {
       if (message.result?.decision === "accept") {

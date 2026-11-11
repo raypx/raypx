@@ -6,6 +6,7 @@ import { discover } from "../repository.ts";
 import { taskModel, taskRef } from "../tasks/model.ts";
 import { testLayer, testSources } from "../validation/test-sources.ts";
 import type { VerificationPlan } from "./plan.ts";
+import { relatedTaskLifecycle } from "../tasks/task-lifecycle.ts";
 
 export interface TestSelection {
   workspace: string;
@@ -26,6 +27,7 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
   const model = taskModel(root),
     index = discover(root);
   const changed = plan.files.filter((file) => !documentation.test(file));
+  const lifecycle = relatedTaskLifecycle(model, changed);
   const broad = plan.full || plan.reasons.length > 0;
   const parsed = new Map<string, { paths: string[]; opaque: boolean }>();
   function edges(file: string) {
@@ -98,14 +100,19 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
       if (broad)
         return all(plan.full ? "Full verification" : "Shared or unknown verification inputs");
       const own = changed.filter((file) => file.startsWith(member.path + "/"));
-      if (!own.length)
-        return changed.every((file) => testOnly.test(file))
-          ? {
-              ...entry,
-              mode: "none",
-              reasons: ["Only another workspace's tests changed"],
-            }
-          : all("Affected consumer: run its complete suite");
+      const lifecycleFile = lifecycle?.workspace === member.name ? lifecycle.file : undefined;
+      if (!own.length) {
+        if (!changed.every((file) => testOnly.test(file)))
+          return all("Affected consumer: run its complete suite");
+        if (lifecycleFile)
+          return {
+            ...entry,
+            mode: "related",
+            files: [lifecycleFile],
+            reasons: ["The CLI lifecycle suite launches the changed API relay fixture"],
+          };
+        return { ...entry, mode: "none", reasons: ["Only another workspace's tests changed"] };
+      }
       if (own.some((file) => !existsSync(join(root, file)))) return all("Deleted or renamed input");
       if (
         own.some(
@@ -124,6 +131,7 @@ export function localTests(root: string, plan: VerificationPlan): TestSelection[
       if (!sources.length)
         return all("No ordinary test sources found; let the runner validate its suite");
       const files = new Set(own);
+      if (lifecycleFile) files.add(`${member.path}/${lifecycleFile}`);
       const sourceChanged = own.some((file) => !testOnly.test(file));
       try {
         const selected = sources.filter(

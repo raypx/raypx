@@ -32,6 +32,7 @@
         "tests/helpers/control-server.ts",
         "tests/fixtures/deployment.ts",
         "tests/fixtures/relay-process.ts",
+        "tests/fixtures/task-lifecycle-relay.ts",
         "tests/types/*.ts"
       ]
     },

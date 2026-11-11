@@ -118,6 +118,26 @@ Source-only daily checks and CI gates have different prerequisites. The
 selection, CI plans, native platform matrices, task caches and machine load.
 Report unavailable or unrun platforms explicitly.
 
+### Local and remote task lifecycle
+
+Run `bun run test --package cli -- task-lifecycle.test.ts` from the repository root.
+The CLI integration suite starts one daemon, authorizes one temporary project, and
+uses the Desktop loopback channel and the remote task SDK against the API's
+loopback relay fixture. It uses real profile SQLite, in-memory cloud projections,
+and a synthetic Codex subprocess that writes a report only after approval.
+
+The scenario recovers a pending local approval after a renderer disconnect,
+replays a remote approval created during a relay outage, and retries the original
+remote create command while checking the provider starts only once. It verifies
+that device revocation cancels the pending remote task and rejects further remote
+actions while local work remains available. Removing the local directory grant
+then prevents another provider start. Both histories stay in their own scopes.
+The same suite checks that GUI Quit can leave a local task pending and that native
+confirmation stops only the selected local or remote tasks. Go dialog tests cover
+the three choices and an unavailable task check.
+The fixture needs no PostgreSQL, provider credentials, or GUI. Packaged native
+acceptance and PostgreSQL persistence have separate gates.
+
 ## Test locations
 
 Reusable validation and evidence cleanup are documented in

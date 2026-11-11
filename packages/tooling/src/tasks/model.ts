@@ -16,6 +16,7 @@ import {
 import { browserTestTasks, type BrowserSurface } from "../browser-tests.ts";
 import { toolingConsumerCheckInputs, workspaceCheckInput } from "./check-inputs.ts";
 import { taskScripts } from "./delegation.ts";
+import { taskLifecycleInputs } from "./task-lifecycle.ts";
 export { taskRef };
 interface TaskMember extends Member {
   native: boolean;
@@ -93,6 +94,10 @@ function cachedTask(
   if (member.uncachedTasks.includes(name)) return false;
   const build = name === "build" || name === "build:renderer" || name === "build:e2e";
   if (!build && !["check", "test", "test:unit", "test:component"].includes(name)) return false;
+  const lifecycleApi =
+    name === "test" && member.name === "cli"
+      ? context.members.find((candidate) => candidate.name === "api")
+      : undefined;
   const exclusions = [
     "**/node_modules/.vitest-cache/**",
     "**/node_modules/.vite/**",
@@ -125,6 +130,12 @@ function cachedTask(
   ];
   const input: TaskCache["input"] = [
     { auto: true },
+    ...(lifecycleApi
+      ? taskLifecycleInputs(lifecycleApi.path).map((pattern) => ({
+          pattern,
+          base: "workspace" as const,
+        }))
+      : []),
     ...(name === "check" || (member.name === "cli" && build)
       ? checkInputs(member, context, consumerInputs)
       : []),

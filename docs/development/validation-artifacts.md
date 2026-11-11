@@ -223,6 +223,8 @@ Private Tooling verification/validation code and tests select only Tooling. Publ
 helpers follow their exported entry's transitive source dependencies and actual
 workspace imports, then propagate to downstream consumers. Changes to task machinery,
 unknown/deleted Tooling inputs or unresolved public graphs retain all source checks.
+Changes to the API relay fixture or its helper select the CLI task lifecycle test
+locally and the CLI suite in CI. The CLI test cache fingerprints both fixture files.
 Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
 browser code or import a browser entry, including type-only and test imports. If a workspace's
 non-browser, non-test sources import browser code, its consumers are selected as before.
