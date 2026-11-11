@@ -34,6 +34,12 @@ const controlMethods = {
   terminal_settings: "host.terminal.settings",
   terminal_configure: "host.terminal.configure",
 } as const satisfies Record<keyof typeof controlInputs, LocalMethod>;
+/** Requests that replace or end the cookie session this control verified its account with. */
+const sessionMutations = new Set([
+  "/api/auth/sign-in/email",
+  "/api/auth/sign-up/email",
+  "/api/auth/sign-out",
+]);
 const unauthorized = () => new LocalError("AUTH_REQUIRED", "AUTH_REQUIRED");
 export type ConnectorDirectories = z.infer<(typeof localParams)["connectors.status"]>["configDirs"];
 
@@ -55,6 +61,12 @@ export class DesktopControl {
     const profile = accountProfileSchema.parse(await this.api.rpc("account.get", {}, signal));
     signal.throwIfAborted();
     if (profile.id !== account) throw unauthorized();
+  }
+  /** Forgets the verified account in this control without telling the daemon to detach. */
+  private deselect() {
+    this.selection.abort();
+    this.selection = new AbortController();
+    this.selected = null;
   }
   async select(account: string | null, client: string, parent: AbortSignal) {
     this.selection.abort();
@@ -101,12 +113,14 @@ export class DesktopControl {
     if (method === "api_fetch") {
       const input = z.object({ path: z.string() }).parse(raw);
       const path = new URL(input.path, this.origin).pathname;
-      if (
-        ["/api/auth/sign-in/email", "/api/auth/sign-up/email", "/api/auth/sign-out"].includes(path)
-      ) {
+      if (sessionMutations.has(path)) {
         this.httpScope.abort();
         this.httpScope = new AbortController();
-        await this.select(null, client, signal);
+        // Only an explicit sign-out revokes host access. Signing in must not: the daemon's
+        // credential outlives a cookie session, and the account that results is verified
+        // by the next `control_session`, which retires the binding if it differs.
+        if (path === "/api/auth/sign-out") await this.select(null, client, signal);
+        else this.deselect();
       }
       return this.api.request(raw, client, AbortSignal.any([signal, this.httpScope.signal]));
     }

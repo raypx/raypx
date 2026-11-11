@@ -5,7 +5,7 @@ import { desktopClientFrameSchema, type DesktopChannel } from "@raypx/contracts/
 import { localParams, type LocalEvent } from "@raypx/contracts/local";
 import { errorPayload, LocalError } from "../../errors.ts";
 import type { ExecutionHost } from "../../owner.ts";
-import { AcknowledgedStream } from "../acknowledged-stream.ts";
+import { AwakeClock } from "../awake-clock.ts";
 import { abortable } from "../cancellation.ts";
 import { serverOrigin } from "../remote/origin.ts";
 import { DesktopApi } from "./api.ts";
@@ -15,6 +15,14 @@ import { encryptedSessionStore, sessionRecordStore } from "./sessions.ts";
 
 const capability = () => crypto.randomUUID() + crypto.randomUUID();
 const frameLimit = 8 * 1024 * 1024;
+/** Unacknowledged event bytes a renderer may hold; one larger event still travels alone. */
+const eventCredit = 1024 * 1024;
+/** A renderer that acknowledges nothing for this long while events are outstanding is gone. */
+const stallLimit = 10_000;
+/** Events a renderer may have outstanding, sent or queued. */
+const eventLimit = 1024;
+const leaseDuration = 20_000;
+const maintenanceInterval = 5000;
 const matches = (expected: string, actual: string) => {
   const left = Buffer.from(expected),
     right = Buffer.from(actual);
@@ -77,8 +85,10 @@ type Peer = {
   bytes: number;
   sequence: number;
   streamId: string;
-  stream: AcknowledgedStream;
-  sending: boolean;
+  /** Sent events awaiting a cumulative acknowledgement, oldest first. */
+  unacked: { sequence: number; size: number }[];
+  inflight: number;
+  stall: ReturnType<typeof setTimeout> | undefined;
 };
 
 /** A distinct loopback listener: administrative IPC is never upgraded or exposed to a page. */
@@ -89,6 +99,9 @@ export class DesktopGateway {
   private readonly operations = new Set<Promise<unknown>>();
   private readonly server: ReturnType<typeof Bun.serve<Peer>>;
   private readonly maintenance: ReturnType<typeof setInterval>;
+  // The native host renews its lease every few seconds. Measuring that lease in awake
+  // time keeps a suspended machine from retiring the binding and cancelling its work.
+  private readonly clock = new AwakeClock(maintenanceInterval);
   private closed = false;
   constructor(
     private readonly host: ExecutionHost,
@@ -105,7 +118,7 @@ export class DesktopGateway {
           this.closed ||
           !binding ||
           binding.abort.signal.aborted ||
-          binding.expires < Date.now() ||
+          this.expired(binding) ||
           request.method !== "GET" ||
           url.pathname !== "/desktop" ||
           url.search ||
@@ -126,8 +139,9 @@ export class DesktopGateway {
           bytes: 0,
           sequence: 0,
           streamId: crypto.randomUUID(),
-          stream: new AcknowledgedStream(),
-          sending: false,
+          unacked: [],
+          inflight: 0,
+          stall: undefined,
         };
         if (!server.upgrade(request, { data: peer })) {
           clearTimeout(peer.authentication);
@@ -150,7 +164,7 @@ export class DesktopGateway {
             if (
               typeof raw !== "string" ||
               peer.abort.signal.aborted ||
-              peer.binding.expires < Date.now() ||
+              this.expired(peer.binding) ||
               (!peer.authenticated && raw.length > 4096)
             )
               return this.release(peer);
@@ -184,8 +198,7 @@ export class DesktopGateway {
             }
             if (frame.type === "authenticate") return this.release(peer);
             if (frame.type === "ack") {
-              if (!peer.stream.acknowledge({ streamId: frame.streamId, sequence: frame.sequence }))
-                this.release(peer);
+              this.acknowledge(peer, frame.streamId, frame.sequence);
               return;
             }
             if (frame.type === "cancel") {
@@ -222,8 +235,10 @@ export class DesktopGateway {
       },
     });
     this.maintenance = setInterval(() => {
-      if (this.binding && this.binding.expires < Date.now()) this.retire(this.binding);
-    }, 5000);
+      // Reading the clock every tick is what lets it tell suspension from silence.
+      const now = this.clock.now();
+      if (this.binding && this.binding.expires < now) this.retire(this.binding);
+    }, maintenanceInterval);
     this.maintenance.unref();
   }
   async administrative(raw: unknown) {
@@ -266,7 +281,7 @@ export class DesktopGateway {
       abort: new AbortController(),
       lease: new AbortController(),
       visible: false,
-      expires: Date.now() + 20_000,
+      expires: this.clock.now() + leaseDuration,
       control: new DesktopControl(api, this.host, input.configDirs),
       notifications: { revision: 0, scope: "local" },
     };
@@ -296,11 +311,11 @@ export class DesktopGateway {
       !binding ||
       !matches(binding.capability, token) ||
       binding.abort.signal.aborted ||
-      binding.expires < Date.now()
+      this.expired(binding)
     )
       throw new LocalError("FORBIDDEN", "Desktop native capability unavailable");
     const input = nativeInputSchema.parse(raw);
-    binding.expires = Date.now() + 20_000;
+    binding.expires = this.clock.now() + leaseDuration;
     const operation = AbortSignal.any([signal, binding.abort.signal]);
     switch (input.action) {
       case "channel":
@@ -332,9 +347,12 @@ export class DesktopGateway {
     return (
       !!binding &&
       !binding.abort.signal.aborted &&
-      binding.expires >= Date.now() &&
+      !this.expired(binding) &&
       matches(binding.capability, token)
     );
+  }
+  private expired(binding: Binding) {
+    return binding.expires < this.clock.now();
   }
   private ticket(binding: Binding): DesktopChannel {
     const ticket = { capability: capability(), expires: Date.now() + 30_000 };
@@ -405,35 +423,53 @@ export class DesktopGateway {
   }
   private enqueue(peer: Peer, event: unknown) {
     const size = Buffer.byteLength(JSON.stringify(event));
-    if (size > 8 * 1024 * 1024 || peer.bytes + size > 8 * 1024 * 1024 || peer.events.length >= 1024)
+    if (
+      size > frameLimit ||
+      peer.bytes + size > frameLimit ||
+      peer.events.length + peer.unacked.length >= eventLimit
+    )
       return this.release(peer);
     peer.events.push({ sequence: ++peer.sequence, event, size });
     peer.bytes += size;
-    void this.flush(peer).catch(() => this.release(peer));
+    this.pump(peer);
   }
-  private async flush(peer: Peer) {
-    if (peer.sending) return;
-    peer.sending = true;
-    try {
-      while (!peer.abort.signal.aborted && peer.events.length) {
-        const event = peer.events[0]!;
-        await peer.stream.wait(
-          { streamId: peer.streamId, sequence: event.sequence },
-          peer.abort.signal,
-          () =>
-            this.send(peer, {
-              type: "event",
-              streamId: peer.streamId,
-              sequence: event.sequence,
-              event: event.event,
-            }),
-        );
-        peer.events.shift();
-        peer.bytes -= event.size;
-      }
-    } finally {
-      peer.sending = false;
+  /** Sends queued events while the renderer has credit; acknowledgements reopen the window. */
+  private pump(peer: Peer) {
+    while (!peer.abort.signal.aborted && peer.events.length) {
+      const event = peer.events[0]!;
+      if (peer.inflight > 0 && peer.inflight + event.size > eventCredit) return;
+      peer.events.shift();
+      peer.unacked.push({ sequence: event.sequence, size: event.size });
+      peer.inflight += event.size;
+      peer.stall ??= setTimeout(() => this.release(peer), stallLimit);
+      this.send(peer, {
+        type: "event",
+        streamId: peer.streamId,
+        sequence: event.sequence,
+        event: event.event,
+      });
     }
+  }
+  /** An acknowledgement covers every event up to its sequence; it must name a sent one. */
+  private acknowledge(peer: Peer, streamId: string, sequence: number) {
+    const oldest = peer.unacked[0],
+      newest = peer.unacked.at(-1);
+    if (
+      streamId !== peer.streamId ||
+      !oldest ||
+      !newest ||
+      sequence < oldest.sequence ||
+      sequence > newest.sequence
+    )
+      return this.release(peer);
+    while (peer.unacked.length && peer.unacked[0]!.sequence <= sequence) {
+      const delivered = peer.unacked.shift()!;
+      peer.inflight -= delivered.size;
+      peer.bytes -= delivered.size;
+    }
+    clearTimeout(peer.stall);
+    peer.stall = peer.unacked.length ? setTimeout(() => this.release(peer), stallLimit) : undefined;
+    this.pump(peer);
   }
   private send(peer: Peer, packet: unknown) {
     const encoded = JSON.stringify(packet);
@@ -474,7 +510,10 @@ export class DesktopGateway {
     if (peer.abort.signal.aborted) return;
     peer.abort.abort();
     clearTimeout(peer.authentication);
-    peer.stream.reset();
+    clearTimeout(peer.stall);
+    peer.stall = undefined;
+    peer.unacked.length = 0;
+    peer.inflight = 0;
     this.peers.delete(peer);
     for (const child of peer.children) this.host.runtime.processes.cancel(child);
     this.host.terminal.releaseClient(peer.id);

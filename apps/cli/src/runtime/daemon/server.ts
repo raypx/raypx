@@ -163,7 +163,10 @@ export async function startDaemon(
               result: await desktop!.native(token, JSON.parse(body), request.signal),
             });
           } catch (error) {
-            return Response.json({ error: { code: errorPayload(error).code } }, { status: 403 });
+            // A refusal means the capability is gone and the host must bootstrap again.
+            // An operation that failed still reached its owner: report its code as data.
+            if (!desktop!.permitsNative(token)) return new Response(null, { status: 403 });
+            return Response.json({ error: { code: errorPayload(error).code } });
           }
         }
         if (request.headers.get("authorization") !== `Bearer ${endpoint.token}`)

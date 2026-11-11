@@ -351,6 +351,46 @@ it("requires an exact stream ACK and disconnects a renderer whose bounded event 
   await blocked.ended;
 });
 
+it("sends events within the renderer's credit without waiting for each acknowledgement", async () => {
+  const { host, descriptor } = await fixture();
+  const peer = await connect(descriptor.channel, { ack: false });
+  await peer.ready;
+  const events = () => peer.packets.filter((packet) => packet.type === "event");
+  await expect.poll(() => events().length).toBe(1);
+  for (let index = 0; index < 50; index++)
+    host.emit({ version: 1, event: "agent.changed", data: {} });
+  // Nothing has been acknowledged, yet the whole burst is already on the wire in order.
+  await expect.poll(() => events().length).toBe(51);
+  expect(events().map((packet) => packet.sequence)).toEqual(
+    Array.from({ length: 51 }, (_, index) => index + 1),
+  );
+  // One acknowledgement covers everything up to its sequence and keeps the channel open.
+  peer.socket.send(JSON.stringify({ type: "ack", streamId: events()[0]!.streamId, sequence: 51 }));
+  host.emit({ version: 1, event: "agent.changed", data: {} });
+  await expect.poll(() => events().length).toBe(52);
+  expect(await peer.local("roots.list")).toEqual([]);
+  // An acknowledgement for an event that was never sent is a protocol violation.
+  peer.socket.send(JSON.stringify({ type: "ack", streamId: events()[0]!.streamId, sequence: 999 }));
+  await peer.ended;
+});
+
+it("reports a failed native operation as data and keeps the capability usable", async () => {
+  const { descriptor, native } = await fixture();
+  const response = await localFetch(descriptor.nativeAddress, "/desktop/native", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${descriptor.nativeCapability}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ action: "pick", path: join(tmpdir(), crypto.randomUUID()) }),
+  });
+  expect(response.status).toBe(200);
+  const envelope = (await response.json()) as { result?: unknown; error?: { code: string } };
+  expect(envelope.result).toBeUndefined();
+  expect(envelope.error?.code).toMatch(/^[A-Z][A-Z0-9_]*$/);
+  expect(await native({ action: "visible", active: true })).toBe(true);
+});
+
 it("closes peers that never authenticate or acknowledge an event by the deadline", async () => {
   const { descriptor } = await fixture();
   const anonymous = new WebSocket(descriptor.channel.url, { headers: { origin: pageOrigin } });

@@ -87,6 +87,12 @@ func (o *boundedOutput) Write(p []byte) (int, error) {
 
 var machineCode = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,127}$`)
 
+// NativeError is a failure the daemon reported for one native operation. The channel
+// itself is healthy; only a transport failure or a refused capability retires it.
+type NativeError struct{ Code string }
+
+func (e *NativeError) Error() string { return e.Code }
+
 func finiteCLI(ctx context.Context, cli CLIConfig, args []string, input any) ([]byte, error) {
 	if !filepath.IsAbs(cli.Binary) {
 		return nil, errors.New("BUNDLED_CLI_REQUIRED")
@@ -222,7 +228,8 @@ func (c *DaemonClient) Native(parent context.Context, input JSON) (any, error) {
 		return nil, errors.New("HOST_UNAVAILABLE")
 	}
 	result, err := nativeRequest(ctx, client, current, input)
-	if err != nil && parent.Err() == nil && c.lifetime.Err() == nil {
+	var operation *NativeError
+	if err != nil && !errors.As(err, &operation) && parent.Err() == nil && c.lifetime.Err() == nil {
 		c.mu.Lock()
 		if c.binding == current {
 			c.status = JSON{"status": "error", "code": "HOST_UNAVAILABLE"}
@@ -269,9 +276,9 @@ func nativeRequest(ctx context.Context, client *http.Client, current *binding, i
 	}
 	if envelope.Error != nil {
 		if machineCode.MatchString(envelope.Error.Code) {
-			return nil, errors.New(envelope.Error.Code)
+			return nil, &NativeError{Code: envelope.Error.Code}
 		}
-		return nil, errors.New("HOST_UNAVAILABLE")
+		return nil, errors.New("INVALID_NATIVE_RESPONSE")
 	}
 	var value any
 	if len(envelope.Result) == 0 || json.Unmarshal(envelope.Result, &value) != nil {

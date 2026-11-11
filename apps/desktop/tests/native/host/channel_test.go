@@ -88,6 +88,14 @@ func nativeFixture(t *testing.T, unix bool) (*host.DaemonClient, <-chan host.JSO
 			<-r.Context().Done()
 			return
 		}
+		if input["action"] == "pick" {
+			if os.Getenv("RAYPX_TEST_PICK") == "refused" {
+				w.WriteHeader(403)
+				return
+			}
+			json.NewEncoder(w).Encode(host.JSON{"error": host.JSON{"code": "INSTANCE_REQUIRED"}})
+			return
+		}
 		value := any(true)
 		if input["action"] == "channel" {
 			value = host.JSON{"protocol": 1, "url": "ws://127.0.0.1:12345/desktop", "capability": strings.Repeat("r", 72), "expiresAt": time.Now().Add(time.Second * 30).Format(time.RFC3339Nano)}
@@ -331,5 +339,43 @@ func TestNativeIPCShutdownCancelsInFlightRequests(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("native request survived shutdown")
+	}
+}
+
+func TestNativeOperationFailureKeepsTheChannel(t *testing.T) {
+	client, _ := nativeFixture(t, false)
+	if !client.Start() {
+		t.Fatal(client.Status())
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err := client.Native(ctx, host.JSON{"action": "pick", "path": "/project"})
+	var operation *host.NativeError
+	if !errors.As(err, &operation) || operation.Code != "INSTANCE_REQUIRED" {
+		t.Fatalf("expected the daemon's operation code, got %v", err)
+	}
+	// A rejected directory is the renderer's problem to show, not a lost host.
+	if client.Status()["status"] != "ready" {
+		t.Fatal(client.Status())
+	}
+	if _, err := client.Native(ctx, host.JSON{"action": "visible", "active": true}); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestRefusedNativeCapabilityRetiresTheChannel(t *testing.T) {
+	t.Setenv("RAYPX_TEST_PICK", "refused")
+	client, _ := nativeFixture(t, false)
+	if !client.Start() {
+		t.Fatal(client.Status())
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err := client.Native(ctx, host.JSON{"action": "pick", "path": "/project"})
+	var operation *host.NativeError
+	if err == nil || errors.As(err, &operation) {
+		t.Fatalf("expected a transport failure, got %v", err)
+	}
+	if client.Status()["code"] != "HOST_UNAVAILABLE" {
+		t.Fatal(client.Status())
 	}
 }

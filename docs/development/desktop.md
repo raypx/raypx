@@ -158,10 +158,16 @@ The renderer receives a one-use capability and connects directly to a separate
 `127.0.0.1` WebSocket listener. Exact Host and the owned WebView/dev Origin are
 required; `Origin: null` is rejected. Authentication is the first frame, with no
 capability in the URL. Protocol, frames, pending work, event bytes and unacknowledged
-sequence deadlines are bounded. The renderer ACKs exact stream/sequence after
-dispatch. Replacement or disconnect cancels HTTP, tools, PTYs and UI approval leases;
+sequence deadlines are bounded. Events are sent within a one-MiB credit window; the
+renderer ACKs a stream/sequence after dispatch and each ACK covers every earlier
+event. Replacement or disconnect cancels HTTP, tools, PTYs and UI approval leases;
 accepted durable Agent tasks keep running. Native binding heartbeats expire after
-20 seconds if the GUI disappears.
+20 seconds if the GUI disappears. That lease counts only time the daemon was running,
+so a suspended computer does not retire the binding. A native operation the daemon
+rejects returns its error code as data; only a refused capability is a 403, and only a
+refusal or transport failure makes the host bootstrap again. Signing in or up through
+the API proxy clears the page's verified account without detaching the daemon; an
+explicit sign-out or a different verified account revokes the Host binding.
 
 The daemon derives renderer method admission from `localResults` and RPC admission
 from `apiExposure`. Account verification and Host authorization use its cookie API.

@@ -212,3 +212,53 @@ it("overwrites native-owned origin and connector directories and rejects native-
     ),
   ).rejects.toThrow("Native connector recovery required");
 });
+
+it("keeps the daemon's host binding when a cookie session is replaced by signing in again", async () => {
+  const owner = host();
+  const api = new DesktopApi(new SessionCookies(origin), async (request) =>
+    request.url.includes("/api/auth/")
+      ? Response.json({ success: true })
+      : Response.json({ json: profile }),
+  );
+  const control = new DesktopControl(api, owner, undefined);
+  await control.select("owner", "page", signal());
+  owner.request.mockClear();
+  for (const path of ["/api/auth/sign-in/email", "/api/auth/sign-up/email"])
+    await control.request(
+      "api_fetch",
+      { path, method: "POST", headers: {}, body: "{}" },
+      "page",
+      signal(),
+    );
+  // Nothing told the daemon to drop its account: an expired cookie is not a logout.
+  expect(owner.request).not.toHaveBeenCalled();
+  // The page still has to prove the resulting account before it may act for it.
+  await expect(
+    control.request("control_info", { accountId: "owner" }, "page", signal()),
+  ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
+  await control.select("owner", "page", signal());
+  expect(owner.request.mock.calls.map(([method, params]) => [method, params])).toEqual([
+    ["host.session", { accountId: "owner", apiUrl: origin }],
+  ]);
+});
+
+it("revokes host access on an explicit sign-out request", async () => {
+  const owner = host();
+  const api = new DesktopApi(new SessionCookies(origin), async (request) =>
+    request.url.includes("/api/auth/")
+      ? Response.json({ success: true })
+      : Response.json({ json: profile }),
+  );
+  const control = new DesktopControl(api, owner, undefined);
+  await control.select("owner", "page", signal());
+  owner.request.mockClear();
+  await control.request(
+    "api_fetch",
+    { path: "/api/auth/sign-out", method: "POST", headers: {}, body: "{}" },
+    "page",
+    signal(),
+  );
+  expect(owner.request.mock.calls.map(([method, params]) => [method, params])).toEqual([
+    ["host.session", { accountId: null, apiUrl: origin }],
+  ]);
+});
