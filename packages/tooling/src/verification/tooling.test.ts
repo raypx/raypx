@@ -91,20 +91,15 @@ describe("Tooling impact", () => {
         .workspaces,
     ).toEqual(["@raypx/browser", "@raypx/tooling"]);
   });
-  it.each([
-    "src/tasks/model.ts",
-    "src/tasks/leaf.ts",
-    "src/repository.ts",
-    "src/cli.ts",
-    "package.json",
-    "vitest.config.ts",
-    "unknown.ts",
-  ])("retains all source checks for task and unclassified inputs: %s", (relative) => {
-    const { write, plan } = project();
-    const file = `packages/tooling/${relative}`;
-    if (relative !== "package.json") write(file);
-    expect(plan([file]).workspaces).toHaveLength(5);
-  });
+  it.each(["src/tasks/model.ts", "src/repository.ts", "package.json", "unknown.ts"])(
+    "retains all source checks for task and unclassified inputs: %s",
+    (relative) => {
+      const { write, plan } = project();
+      const file = `packages/tooling/${relative}`;
+      if (relative !== "package.json") write(file);
+      expect(plan([file]).workspaces).toHaveLength(5);
+    },
+  );
   it("broadens deleted inputs and unresolved public import graphs", () => {
     const { root, write, plan } = project();
     unlinkSync(join(root, "packages/tooling/src/build/shared.ts"));

@@ -141,7 +141,7 @@ PATH or explicit binary settings, and stops children before deleting their data.
 Read i18n's public static `./config` through workspace discovery for locale policy;
 do not add the i18n runtime to root tooling's dependency closure.
 Preserve the shared happy-dom setup and independent workspace test runners.
-Tooling's own suites use `bun:test` with two isolated file workers and a 30-second
+Tooling's own suites use `bun:test` with four isolated file workers and a 30-second
 default timeout. The scripts load the repository's `bunfig.toml` explicitly and
 keep layer selection in their command-line filters. The shared setup for Vitest
 consumers lives in `tests/setup/dom.ts`.

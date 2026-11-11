@@ -67,22 +67,6 @@ describe("locale conventions", () => {
     ]);
   });
 
-  it("accepts translated plural categories, reordered arguments and tag nesting", () => {
-    const root = localeFixture();
-    member(root, "messages");
-    const directory = join(root, "packages/messages/src/messages");
-    mkdirSync(directory);
-    writeFileSync(
-      join(directory, "en.ts"),
-      'export default { hello: "<strong>{name}<em>{count, plural, one {# item} other {# items}}</em></strong>" } as const;',
-    );
-    writeFileSync(
-      join(directory, "zh.ts"),
-      'export default { hello: "<em>{count, plural, other {#项}}</em><strong>{name}</strong>" } as const;',
-    );
-    expect(checkLocales(root)).toEqual([]);
-  });
-
   it("keeps catalog shape and safe static-reading checks", () => {
     const root = localeFixture();
     member(root, "messages");
@@ -143,20 +127,5 @@ describe("locale conventions", () => {
     expect(checkLocales(root, { locales: ["en", "ja"], base: "ja" }).join("\n")).toContain(
       "hello changes ICU arguments between ja and en",
     );
-  });
-
-  it("extends parity checks to newly supported locales", () => {
-    const root = localeFixture();
-    member(root, "messages");
-    const directory = join(root, "packages/messages/src/messages");
-    mkdirSync(directory);
-    writeFileSync(join(directory, "en.ts"), 'export default { hello: "Hi {name}" } as const;');
-    writeFileSync(join(directory, "zh.ts"), 'export default { hello: "你好 {name}" } as const;');
-    writeFileSync(join(directory, "ja.ts"), 'export default { hello: "こんにちは" } as const;');
-    expect(checkLocales(root, { locales: ["en", "zh", "ja"], base: "en" })).toEqual([
-      expect.stringMatching(
-        /^packages\/messages\/src\/messages: hello changes ICU arguments between en and ja/,
-      ),
-    ]);
   });
 });

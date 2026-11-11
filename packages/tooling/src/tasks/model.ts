@@ -331,6 +331,8 @@ export function taskModel(
   selection = taskSelection(root, "RAYPX_VERIFY_TASKS", "RAYPX_VERIFY_ROOT"),
 ): TaskModel {
   let toolingInputs: string[] | undefined;
+  const consumerInputs = (path: string) =>
+    (toolingInputs ??= toolingConsumerCheckInputs(root, path));
   return createTaskModel<TaskMember>(
     root,
     {
@@ -357,18 +359,22 @@ export function taskModel(
           delegates,
         };
       },
-      define: (member, name, context) => ({
-        command: scriptCommand(context, member, name),
-        dependsOn: prerequisites(member, name, context.members),
-        cache: cachedTask(
-          member,
-          name,
-          context,
-          name === "check"
-            ? (path) => (toolingInputs ??= toolingConsumerCheckInputs(root, path))
-            : undefined,
-        ),
-      }),
+      define(member, name, context) {
+        let cache: TaskCache | false | undefined;
+        return {
+          command: scriptCommand(context, member, name),
+          dependsOn: prerequisites(member, name, context.members),
+          // Config loading emits one owner's tasks. Build input lists only when read.
+          get cache() {
+            return (cache ??= cachedTask(
+              member,
+              name,
+              context,
+              name === "check" ? consumerInputs : undefined,
+            ));
+          },
+        };
+      },
       // VP can schedule an aggregate with dependencies and no command to spawn.
       aggregateCommand: "",
       rootTasks: (context) => ({

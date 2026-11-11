@@ -18,9 +18,9 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=2 --timeout=30000",
-    "test:unit": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=2 --timeout=30000 --path-ignore-patterns=\"tests/integration/**\"",
-    "test:integration": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=2 --timeout=30000 --path-ignore-patterns=\"{!(tests),!(tests)/**,tests/!(integration)/**}\"",
+    "test": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=4 --timeout=30000",
+    "test:unit": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=4 --timeout=30000 --path-ignore-patterns=\"tests/integration/**\"",
+    "test:integration": "bun --no-env-file --no-install test --config=../../bunfig.toml --parallel=4 --timeout=30000 --path-ignore-patterns=\"{!(tests),!(tests)/**,tests/!(integration)/**}\"",
     "test:inventory": "bun src/cli.ts test inventory",
     "test:backends": "bun src/cli.ts test backends"
   },

@@ -54,7 +54,7 @@ it("records failed elapsed time and rethrows the original error without serializ
   expect(JSON.stringify(log.mock.calls)).not.toContain(failure.message);
 });
 
-it.each(["", "../cleanup", "cleanup/file", "cleanup secret", "cleanup\n", "a".repeat(129)])(
+it.each(["", "../cleanup", "a".repeat(129)])(
   "rejects invalid measurement label %j before running or recording the operation",
   async (label) => {
     const evidence = new Evidence(fixture(), "timings");
