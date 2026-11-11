@@ -1,4 +1,4 @@
-import type { TaskWorkspacePort } from "../../src/model/port.ts";
+import type { TaskWorkspacePort } from "../../src/model/port.js";
 
 type Overrides = {
   tasks?: Partial<TaskWorkspacePort["tasks"]>;

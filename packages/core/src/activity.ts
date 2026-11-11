@@ -1,4 +1,4 @@
-import type { AgentEvent, TaskActivity } from "./tasks.ts";
+import type { AgentEvent, TaskActivity } from "./tasks.js";
 
 /** Undefined means the consumer must recover an authoritative checkpoint. */
 export function applyActivityEvent(

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { AppShell, type ShellLinkProps } from "./shell.tsx";
+import { AppShell, type ShellLinkProps } from "./shell.js";
 
 type Path = "/" | "/tasks" | "/settings";
 

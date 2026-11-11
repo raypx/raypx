@@ -6,8 +6,8 @@ import {
   rootGrantSchema,
   type LocalParams,
   type LocalMethod,
-} from "./local.ts";
-import { deviceSchema, deviceProjectSchema } from "./tasks.ts";
+} from "./local.js";
+import { deviceSchema, deviceProjectSchema } from "./tasks.js";
 import {
   taskSchema,
   modelSelectionSchema,
@@ -19,7 +19,7 @@ import {
   taskActivitySchema,
   taskContextSnapshotSchema,
 } from "@raypx/core/tasks";
-import { observedProjectionSchema, terminalRequestSchema } from "./terminal.ts";
+import { observedProjectionSchema, terminalRequestSchema } from "./terminal.js";
 import {
   contextDocumentSchema,
   contextDocumentSummarySchema,

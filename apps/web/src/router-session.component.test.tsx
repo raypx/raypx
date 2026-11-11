@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
-import { mocks, page } from "../tests/helpers/router-auth.tsx";
+import { mocks, page } from "../tests/helpers/router-auth.js";
 
 describe("authentication routes", () => {
   it("lets guests compose without reading private data", async () => {

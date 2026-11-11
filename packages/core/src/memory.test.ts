@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { contextDocumentInputSchema } from "./memory.ts";
+import { contextDocumentInputSchema } from "./memory.js";
 
 const project = {
   deviceId: "11111111-1111-4111-8111-111111111111",

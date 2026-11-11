@@ -6,13 +6,13 @@ import {
 } from "@raypx/control/relay";
 import { connectDatabase } from "@raypx/database/connection";
 import { createStreamDrain } from "@raypx/logger/stream";
-import { type ApiEnvironment } from "../env.ts";
-import { createApiLogging } from "../logging.ts";
-import { errorReports } from "../error-reports.ts";
-import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.ts";
-import { connectRedis } from "./redis.ts";
-import { migrateApiDatabase } from "./migrations.ts";
-import { createClientIpReader } from "../app/client-ip.ts";
+import { type ApiEnvironment } from "../env.js";
+import { createApiLogging } from "../logging.js";
+import { errorReports } from "../error-reports.js";
+import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.js";
+import { connectRedis } from "./redis.js";
+import { migrateApiDatabase } from "./migrations.js";
+import { createClientIpReader } from "../app/client-ip.js";
 
 /** Socket address written by the server entry; the default auth rate-limit key. */
 export const CLIENT_IP_HEADER = "x-raypx-client-ip";

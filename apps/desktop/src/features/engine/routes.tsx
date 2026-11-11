@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { useDesktopEngine } from "./provider.tsx";
+import { useDesktopEngine } from "./provider.js";
 
 /** Mounted outside the gate so a failed initial loader can recover before its layout mounts. */
 export function EngineRouteSync() {

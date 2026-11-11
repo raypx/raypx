@@ -11,10 +11,10 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { desktopFixture } from "../../../tests/helpers/desktop.ts";
-import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.tsx";
-import { EngineGate } from "./gate.tsx";
-import { EngineRouteSync } from "./routes.tsx";
+import { desktopFixture } from "../../../tests/helpers/desktop.js";
+import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.js";
+import { EngineGate } from "./gate.js";
+import { EngineRouteSync } from "./routes.js";
 
 const views: (() => void)[] = [];
 afterEach(() => {

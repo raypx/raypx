@@ -1,7 +1,7 @@
 import { and, eq, isNotNull, lt } from "drizzle-orm";
-import type { LocalDatabase } from "../../../sqlite/index.ts";
-import { taskEffects } from "../../../sqlite/schema.ts";
-import type { Effect } from "../../domain/commands.ts";
+import type { LocalDatabase } from "../../../sqlite/index.js";
+import { taskEffects } from "../../../sqlite/schema.js";
+import type { Effect } from "../../domain/commands.js";
 
 /** Settled effects older than this are pruned at startup. */
 const SETTLED_EFFECT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;

@@ -1,17 +1,17 @@
 import { localParams, LOCAL_WORKSPACE_ID, type LocalMethod } from "@raypx/contracts/local";
 import { ContextError } from "@raypx/core/memory";
-import type { InstanceRuntime, InstanceAccess } from "./instances";
-import type { MemoryRuntime } from "./memory";
-import type { AgentRuntime } from "./agents";
-import type { FileRuntime } from "./files";
-import type { JobRuntime } from "./jobs";
-import type { ProcessRuntime } from "./process";
-import type { BundledBun } from "./process/bun";
-import type { StateStore } from "./state";
-import type { PiHost } from "./agents/pi/host";
-import { LocalError } from "./errors";
+import type { InstanceRuntime, InstanceAccess } from "./instances/index.js";
+import type { MemoryRuntime } from "./memory/index.js";
+import type { AgentRuntime } from "./agents/index.js";
+import type { FileRuntime } from "./files/index.js";
+import type { JobRuntime } from "./jobs/index.js";
+import type { ProcessRuntime } from "./process/index.js";
+import type { BundledBun } from "./process/bun.js";
+import type { StateStore } from "./state/index.js";
+import type { PiHost } from "./agents/pi/host.js";
+import { LocalError } from "./errors.js";
 import manifest from "../../package.json";
-import { cliBuild } from "./daemon/build";
+import { cliBuild } from "./daemon/build.js";
 const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown): T => {
   try {
     return schema.parse(input);

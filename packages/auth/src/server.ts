@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { admin } from "better-auth/plugins/admin";
-import { accountAccessControl, accountRoles, assignedRoles } from "./access.ts";
+import { accountAccessControl, accountRoles, assignedRoles } from "./access.js";
 import {
   APIError,
   createAuthEndpoint,
@@ -15,7 +15,7 @@ import {
   type AuthUser,
   type SocialProvider,
 } from "@raypx/core/auth";
-import { authPolicy } from "./policy.ts";
+import { authPolicy } from "./policy.js";
 
 export interface AuthMailInput {
   email: string;

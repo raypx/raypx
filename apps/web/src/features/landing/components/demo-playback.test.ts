@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { demoStage, isPreviewStep, nextStep, previewSteps } from "./demo-playback.ts";
+import { demoStage, isPreviewStep, nextStep, previewSteps } from "./demo-playback.js";
 
 describe("homepage demo playback", () => {
   it("cycles through the steps in order", () => {

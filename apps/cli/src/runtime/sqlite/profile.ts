@@ -1,8 +1,8 @@
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { migrateLocalDatabase } from "./migrate";
-import { protectProfile } from "./permissions";
+import { migrateLocalDatabase } from "./migrate.js";
+import { protectProfile } from "./permissions.js";
 
 /** Only the profile owner opens and migrates the shared writer. */
 function openProfileDatabase(directory: string) {

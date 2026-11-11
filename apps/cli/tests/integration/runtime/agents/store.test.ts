@@ -1,12 +1,12 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { desktopBinding, type LocalAgentTask } from "../../../../src/runtime/agents/model";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { StateStore } from "../../../../src/runtime/state";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { desktopBinding, type LocalAgentTask } from "../../../../src/runtime/agents/model.js";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
+import { StateStore } from "../../../../src/runtime/state/index.js";
 
 import { taskSchema, type AgentEvent } from "@raypx/core/tasks";
 import { Database } from "bun:sqlite";

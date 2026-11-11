@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { createHash } from "node:crypto";
-import { secureHtml } from "./csp";
+import { secureHtml } from "./csp.js";
 
 it("allows only the exact prerendered scripts and the native WebView policy", () => {
   const script = "window.theme='dark'",

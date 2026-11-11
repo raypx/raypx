@@ -6,8 +6,8 @@ import {
   type RelayServerFrame,
   type SnapshotRecord,
 } from "@raypx/contracts/tasks";
-import { ControlError, type ControlService, type RelayActor } from "../service.ts";
-import type { RelayCluster, RelayNotice } from "./cluster.ts";
+import { ControlError, type ControlService, type RelayActor } from "../service.js";
+import type { RelayCluster, RelayNotice } from "./cluster.js";
 export interface RelayPeer {
   id: string;
   send(frame: RelayServerFrame): void;

@@ -7,8 +7,8 @@ import {
 } from "@raypx/contracts/terminal";
 
 import type { TerminalProvider } from "@raypx/core/tasks";
-import { LocalError } from "../errors.ts";
-import { terminalCapabilities } from "./protocol.ts";
+import { LocalError } from "../errors.js";
+import { terminalCapabilities } from "./protocol.js";
 
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);

@@ -1,4 +1,4 @@
-import { getBridge, isDesktop } from "./desktop.ts";
+import { getBridge, isDesktop } from "./desktop.js";
 
 /** The daemon owns cookies; renderer code receives only the ordinary API response. */
 export function createDesktopFetch(baseUrl: string) {

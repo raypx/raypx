@@ -1,8 +1,8 @@
 import { agentProviderMetadata } from "@raypx/core/tasks";
-import { Gate } from "./workspace-gate.tsx";
+import { Gate } from "./workspace-gate.js";
 
 import { useCallback, useId, useRef, useState } from "react";
-import { useRemoteQuery } from "./remote-query.ts";
+import { useRemoteQuery } from "./remote-query.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { SelectField } from "@raypx/ui/select-field";
@@ -23,7 +23,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Modal } from "@raypx/ui/modal";
 
-import type { DeviceManagementPort } from "../model/port.ts";
+import type { DeviceManagementPort } from "../model/port.js";
 
 function deviceStatus(device: SyncDevice) {
   if (device.revoked) return "revoked";

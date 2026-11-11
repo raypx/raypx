@@ -4,13 +4,13 @@ import cookieCases from "../../../../fixtures/desktop/cookies.json";
 import localCases from "../../../../fixtures/desktop/local-methods.json";
 import accountCases from "../../../../fixtures/desktop/account-scopes.json";
 import { localResults } from "@raypx/contracts/local-client";
-import { DesktopApi } from "../../../../../src/runtime/daemon/desktop/api.ts";
+import { DesktopApi } from "../../../../../src/runtime/daemon/desktop/api.js";
 import {
   SessionCookies,
   parseSessionCookie,
-} from "../../../../../src/runtime/daemon/desktop/cookies.ts";
-import { DesktopControl } from "../../../../../src/runtime/daemon/desktop/control.ts";
-import { startOrpcFixture } from "../../../../fixtures/desktop/orpc-server.ts";
+} from "../../../../../src/runtime/daemon/desktop/cookies.js";
+import { DesktopControl } from "../../../../../src/runtime/daemon/desktop/control.js";
+import { startOrpcFixture } from "../../../../fixtures/desktop/orpc-server.js";
 const origin = "https://api.example.test";
 const signal = () => new AbortController().signal;
 it.each(apiCases)("preserves HTTP admission for $input.path", async (row) => {

@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient } from "@raypx/client/api";
-import { apiUrl } from "../auth/client.ts";
+import { apiUrl } from "../auth/client.js";
 
 export const configurationClient = createApiClient({
   baseUrl: apiUrl,

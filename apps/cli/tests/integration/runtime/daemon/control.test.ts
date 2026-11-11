@@ -1,14 +1,14 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
 import { expect, it, vi } from "vite-plus/test";
 import { existsSync, mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../../helpers/enrolled";
-import type { HostVault } from "../../../../src/runtime/daemon/vault";
-import { profilePath } from "../../../../src/runtime/state";
-import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host";
-import { TerminalStore } from "../../../../src/runtime/terminal/store";
-import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol";
+import { startDaemon } from "../../../helpers/enrolled.js";
+import type { HostVault } from "../../../../src/runtime/daemon/vault.js";
+import { profilePath } from "../../../../src/runtime/state/index.js";
+import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host.js";
+import { TerminalStore } from "../../../../src/runtime/terminal/store.js";
+import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol.js";
 import type {
   HostAuthorization,
   ObservedProjection,

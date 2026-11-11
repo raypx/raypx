@@ -70,6 +70,8 @@ SafeAreaProvider and HeroUINativeProviderRaw. The raw provider supplies componen
 configuration and system reduced-motion support without unused toast/portal hosts.
 
 `metro.config.ts` wraps the existing source resolver with `withUniwindConfig`.
+The resolver maps relative `.js` imports in this app and shared workspace sources
+to their TypeScript files, while preserving dependency resolution in `node_modules`.
 Uniwind needs no Babel plugin; Expo's default Babel preset automatically enables
 the installed Worklets plugin for Reanimated. Reanimated, Worklets, Gesture Handler
 and SVG versions follow Expo's bundled native versions in the `mobile` catalog.

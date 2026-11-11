@@ -2,10 +2,10 @@ import { MonitorIcon } from "@raypx/icons/monitor";
 import { MoonIcon } from "@raypx/icons/moon";
 import { SunIcon } from "@raypx/icons/sun";
 import { use } from "react";
-import { cn } from "../lib/utils.ts";
-import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
-import type { UserTheme } from "./config.ts";
-import { ThemeContext } from "./provider.tsx";
+import { cn } from "../lib/utils.js";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.js";
+import type { UserTheme } from "./config.js";
+import { ThemeContext } from "./provider.js";
 
 const previewClasses: Record<UserTheme, string> = {
   light: "bg-white before:border-[#e5e5e5] before:bg-[#f5f5f5] [&>span]:bg-[#e5e5e5]",

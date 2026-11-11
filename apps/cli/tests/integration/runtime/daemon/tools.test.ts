@@ -4,10 +4,10 @@ import { expect, it } from "vite-plus/test";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../../../src/runtime/daemon/server.ts";
-import { instanceKeys } from "../../../../src/runtime/instances/keys.ts";
-import { createDaemonClient } from "../../../../src/transport/daemon-client.ts";
-import { removeTemporaryDirectory } from "../../../helpers/temporary.ts";
+import { startDaemon } from "../../../../src/runtime/daemon/server.js";
+import { instanceKeys } from "../../../../src/runtime/instances/keys.js";
+import { createDaemonClient } from "../../../../src/transport/daemon-client.js";
+import { removeTemporaryDirectory } from "../../../helpers/temporary.js";
 
 async function fixture(state: "unregistered" | "registered" | "revoked") {
   const dataDir = await mkdtemp(join(tmpdir(), "raypx-daemon-tools-"));

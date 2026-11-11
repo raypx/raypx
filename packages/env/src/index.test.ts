@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 
-import { createEnv, defineEnv, EnvError, z, type Preset } from "./index.ts";
-import { runtimeEnv } from "./runtime.ts";
+import { createEnv, defineEnv, EnvError, z, type Preset } from "./index.js";
+import { runtimeEnv } from "./runtime.js";
 
 describe("env", () => {
   it("normalizes blank values without mutating the input", () => {

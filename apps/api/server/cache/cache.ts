@@ -1,4 +1,4 @@
-import type { Cache, CacheParser, CacheStore } from "./types.ts";
+import type { Cache, CacheParser, CacheStore } from "./types.js";
 
 export interface CacheOptions {
   /** Prepended to every key so features never collide in a shared store. */

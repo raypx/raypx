@@ -11,16 +11,16 @@ import {
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import type { DesktopChannel } from "@raypx/contracts/desktop";
-import { startDaemon } from "../../../../helpers/enrolled.ts";
-import { connectDesktop, desktopGateway, pageOrigin } from "../../../../helpers/desktop-channel.ts";
-import { startDaemon as startUnenrolledDaemon } from "../../../../../src/runtime/daemon/server.ts";
-import { daemonFetch } from "../../../../../src/runtime/daemon/endpoint.ts";
-import { localFetch } from "../../../../../src/runtime/local-http.ts";
-import { readTerminalEndpoint, terminalFetch } from "../../../../../src/runtime/terminal/host.ts";
+import { startDaemon } from "../../../../helpers/enrolled.js";
+import { connectDesktop, desktopGateway, pageOrigin } from "../../../../helpers/desktop-channel.js";
+import { startDaemon as startUnenrolledDaemon } from "../../../../../src/runtime/daemon/server.js";
+import { daemonFetch } from "../../../../../src/runtime/daemon/endpoint.js";
+import { localFetch } from "../../../../../src/runtime/local-http.js";
+import { readTerminalEndpoint, terminalFetch } from "../../../../../src/runtime/terminal/host.js";
 import type { ObservedProjection } from "@raypx/contracts/terminal";
 
-import { AwakeClock } from "../../../../../src/runtime/daemon/awake-clock.ts";
-import { HerdrTerminalHost } from "../../../../../src/runtime/process/herdr.ts";
+import { AwakeClock } from "../../../../../src/runtime/daemon/awake-clock.js";
+import { HerdrTerminalHost } from "../../../../../src/runtime/process/herdr.js";
 
 const cleanups: (() => unknown)[] = [];
 afterEach(async () => {
@@ -41,7 +41,7 @@ async function fixture(agent = false, enrolled = true, initial: Record<string, u
   mkdirSync(bin);
   if (agent) {
     cpSync(join(import.meta.dirname, "../../../../fixtures/agents"), bin, { recursive: true });
-    writeFileSync(join(bin, "codex"), `#!${process.execPath}\nimport "./codex-interactive.ts";`, {
+    writeFileSync(join(bin, "codex"), `#!${process.execPath}\nimport "./codex-interactive.js";`, {
       mode: 0o700,
     });
   }
@@ -514,7 +514,7 @@ it.skipIf(process.platform === "win32")(
 it("does not create a replacement vault key when another origin still has encrypted sessions", async () => {
   const { host } = await fixture();
   const { sessionRecordStore } =
-    await import("../../../../../src/runtime/daemon/desktop/sessions.ts");
+    await import("../../../../../src/runtime/daemon/desktop/sessions.js");
   const records = sessionRecordStore(host.runtime.state.db, "https://saved.example.test");
   records.write(Buffer.alloc(40, 3));
   const response = await daemonFetch(host.endpoint, "/desktop", {
@@ -540,7 +540,7 @@ it("keeps the active channel on a failed session reset and reboots cleanly after
   const f = await fixture();
   const { sql } = await import("drizzle-orm");
   const { sessionRecordStore } =
-    await import("../../../../../src/runtime/daemon/desktop/sessions.ts");
+    await import("../../../../../src/runtime/daemon/desktop/sessions.js");
   const records = sessionRecordStore(f.host.runtime.state.db, "https://saved.example.test");
   records.write(Buffer.alloc(28, 3));
   await f.native({ action: "pick", path: f.project });
@@ -802,7 +802,7 @@ it("recovers a cached memory session when a later bootstrap supplies the key", a
   await peer.ready;
   await peer.request("api_fetch", { path: "/api/auth/get-session", method: "GET", headers: {} });
   const { sessionRecordStore, encryptedSessionStore } =
-    await import("../../../../../src/runtime/daemon/desktop/sessions.ts");
+    await import("../../../../../src/runtime/daemon/desktop/sessions.js");
   const records = sessionRecordStore(f.host.runtime.state.db, apiUrl);
   expect(records.read()).toBeUndefined();
   await f.bootstrap({ apiUrl });

@@ -9,7 +9,7 @@ import {
   piStore,
   piFinal as final,
   piAllow as allow,
-} from "../../../../tests/helpers/pi.ts";
+} from "../../../../tests/helpers/pi.js";
 
 it("provider failures are sanitized and never automatically retried", async () => {
   for (const stream of [

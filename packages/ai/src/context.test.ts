@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import type { Api, Model, Message } from "@earendil-works/pi-ai";
-import { prepareModelContext } from "./context.ts";
+import { prepareModelContext } from "./context.js";
 const model: Model<Api> = {
   id: "target",
   name: "target",

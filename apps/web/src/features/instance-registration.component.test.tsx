@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { InstanceRegistration } from "./auth/components/instance-registration.tsx";
+import { InstanceRegistration } from "./auth/components/instance-registration.js";
 
 const mocks = vi.hoisted(() => ({
   inspect: vi.fn(),
@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   revoke: vi.fn(),
 }));
 vi.mock("@raypx/client/api", () => ({ createApiClient: () => ({ instances: mocks }) }));
-vi.mock("./auth/client", () => ({ apiUrl: "https://account.example" }));
+vi.mock("./auth/client.js", () => ({ apiUrl: "https://account.example" }));
 beforeEach(() => {
   vi.resetAllMocks();
   localStorage.setItem("raypx_locale", "en");

@@ -10,7 +10,7 @@ import {
   page,
   showDrafts,
   runningTask,
-} from "../../../tests/helpers/tasks/workspace.tsx";
+} from "../../../tests/helpers/tasks/workspace.js";
 
 setupWorkspaceTests();
 

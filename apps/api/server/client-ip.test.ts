@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { createClientIpReader } from "./app/client-ip.ts";
+import { createClientIpReader } from "./app/client-ip.js";
 
 it("ignores spoofed forwarding from other containers and strips only trusted rightmost hops", () => {
   const read = createClientIpReader(["x-forwarded-for"], ["172.30.0.2/32", "203.0.113.0/24"]);

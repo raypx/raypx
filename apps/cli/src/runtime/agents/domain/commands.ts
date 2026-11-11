@@ -6,7 +6,7 @@ import type {
   TaskActivity,
   taskInputSchema,
 } from "@raypx/core/tasks";
-import type { ActivityDraft, LocalAgentTask, TokenUsage } from "./state.ts";
+import type { ActivityDraft, LocalAgentTask, TokenUsage } from "./state.js";
 
 /**
  * Inputs the host submits to the decider. Relay, local and device entry points

@@ -2,17 +2,17 @@ import { mkdir, mkdtemp, writeFile, readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts";
-import { nativeSmokeOptions } from "../../../scripts/host/smoke-options";
-import { buildSmoke, runMyGoSmoke } from "./launch";
-import type { SmokeInstallation } from "./launch";
-import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
+import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts.js";
+import { nativeSmokeOptions } from "../../../scripts/host/smoke-options.js";
+import { buildSmoke, runMyGoSmoke } from "./launch.js";
+import type { SmokeInstallation } from "./launch.js";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "./session.js";
 import {
   assertSmokeOwnerRunning,
   stopSmokeOwner,
   startSmokeOwner,
   smokeOwnerIdentity,
-} from "./owner";
+} from "./owner.js";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),

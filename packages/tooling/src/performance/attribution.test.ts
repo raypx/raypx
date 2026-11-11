@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { processAccounting } from "./attribution";
+import { processAccounting } from "./attribution.js";
 
 it("defers the check schema but rejects absent measured process accounting", () => {
   expect(processAccounting({ kind: "check" }, true).status).toBe("deferred");

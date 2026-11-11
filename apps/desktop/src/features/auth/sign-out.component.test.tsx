@@ -15,17 +15,17 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { DesktopPlatformProvider } from "../../lib/platform-context.tsx";
-import { desktopFixture, deferred } from "../../../tests/helpers/desktop.ts";
-import { DesktopSignOutProvider, useDesktopSignOut } from "./sign-out.tsx";
+import { DesktopPlatformProvider } from "../../lib/platform-context.js";
+import { desktopFixture, deferred } from "../../../tests/helpers/desktop.js";
+import { DesktopSignOutProvider, useDesktopSignOut } from "./sign-out.js";
 
 expect.extend(matchers);
 const mocks = vi.hoisted(() => ({ signOut: vi.fn(), reset: vi.fn() }));
-vi.mock("./client", () => ({
+vi.mock("./client.js", () => ({
   webUrl: "https://app.example.test",
   authClient: { signOut: mocks.signOut },
 }));
-vi.mock("../analytics/client", () => ({ analytics: { reset: mocks.reset } }));
+vi.mock("../analytics/client.js", () => ({ analytics: { reset: mocks.reset } }));
 
 const views: (() => void)[] = [];
 afterEach(() => {

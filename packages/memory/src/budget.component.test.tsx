@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
 import type { ContextDocument } from "@raypx/core/memory";
 import { taskExecutionBudget } from "@raypx/core/tasks";
-import { ContextBudget } from "./client.ts";
+import { ContextBudget } from "./client.js";
 import {
   version,
   deferred,
@@ -14,7 +14,7 @@ import {
   deviceId,
   projectId,
   setupMemoryClientTests,
-} from "../tests/helpers/client.tsx";
+} from "../tests/helpers/client.js";
 setupMemoryClientTests();
 
 it("measures the selected historical version and updates on typing without refetching bodies", async () => {

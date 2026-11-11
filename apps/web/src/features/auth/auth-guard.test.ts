@@ -1,8 +1,8 @@
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient } from "@tanstack/react-query";
 const load = vi.hoisted(() => vi.fn());
-vi.mock("./account", () => ({ loadAccount: load }));
-import { authPageGuard } from "./auth-guard.ts";
+vi.mock("./account.js", () => ({ loadAccount: load }));
+import { authPageGuard } from "./auth-guard.js";
 const account = {
   status: "signed-in",
   account: { id: "a", name: "Ada", email: "ada@example.test" },

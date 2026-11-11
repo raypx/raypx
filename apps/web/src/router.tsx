@@ -1,10 +1,10 @@
-import { analytics } from "./features/analytics/client.ts";
+import { analytics } from "./features/analytics/client.js";
 import { createQueryFailureReporter } from "@raypx/analytics/browser";
 import { createRouter } from "@tanstack/react-router";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import type { ShellPage } from "@raypx/blocks/shell";
-import { routeTree } from "./routeTree.gen";
+import { routeTree } from "./routeTree.gen.js";
 
 export function getRouter() {
   // One QueryClient per router: per request on the server, once in the browser.

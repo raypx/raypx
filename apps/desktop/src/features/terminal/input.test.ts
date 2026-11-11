@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { terminalKey } from "./input.ts";
+import { terminalKey } from "./input.js";
 const event = {
   type: "keydown",
   isComposing: false,

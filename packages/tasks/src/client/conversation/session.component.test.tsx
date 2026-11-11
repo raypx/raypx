@@ -4,14 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import type { AgentTask, TaskActivity, TaskInput } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import type { TaskWorkspacePort } from "../../model/port.ts";
-import { type WorkspaceScope, workspaceScopeKey } from "../../model/scope.ts";
-import { createTaskDraft, MAX_TASK_DRAFTS, readTaskDrafts } from "../../model/drafts.ts";
-import { TaskDetail } from "../task-detail.tsx";
-import { TaskComposer } from "../task-composer.tsx";
+import type { TaskWorkspacePort } from "../../model/port.js";
+import { type WorkspaceScope, workspaceScopeKey } from "../../model/scope.js";
+import { createTaskDraft, MAX_TASK_DRAFTS, readTaskDrafts } from "../../model/drafts.js";
+import { TaskDetail } from "../task-detail.js";
+import { TaskComposer } from "../task-composer.js";
 import { createRef } from "react";
-import { createTaskClient } from "../../../tests/helpers/client.ts";
-import { mockTaskLayout } from "../../../tests/helpers/layout.ts";
+import { createTaskClient } from "../../../tests/helpers/client.js";
+import { mockTaskLayout } from "../../../tests/helpers/layout.js";
 
 beforeEach(() => {
   mockTaskLayout("all");

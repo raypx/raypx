@@ -1,4 +1,4 @@
-import { THEME_STORAGE_KEY, themeColors } from "./config.ts";
+import { THEME_STORAGE_KEY, themeColors } from "./config.js";
 
 export interface ThemeScriptOptions {
   /** Persistence key read before first paint; `false` skips stored preferences. */

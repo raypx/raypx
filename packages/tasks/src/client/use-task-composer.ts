@@ -12,7 +12,7 @@ import type { SyncDevice } from "@raypx/contracts/tasks";
 import { contextBudgetKey, type MemoryClientPort } from "@raypx/memory/client";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { prepareTaskSubmission, type TaskSubmission } from "../model/composition.ts";
+import { prepareTaskSubmission, type TaskSubmission } from "../model/composition.js";
 import {
   composerContextTarget,
   composerDraft,
@@ -27,11 +27,11 @@ import {
   type ComposerAction,
   type ComposerBudget,
   type ComposerDraft,
-} from "../model/composer.ts";
-import type { DraftInput, TaskDraft } from "../model/drafts.ts";
-import { failureCode } from "../model/failure.ts";
-import type { TaskWorkspacePort } from "../model/port.ts";
-import { useTaskDrafts } from "./use-task-drafts.ts";
+} from "../model/composer.js";
+import type { DraftInput, TaskDraft } from "../model/drafts.js";
+import { failureCode } from "../model/failure.js";
+import type { TaskWorkspacePort } from "../model/port.js";
+import { useTaskDrafts } from "./use-task-drafts.js";
 
 export interface TaskComposerProps {
   editorOpen?: boolean;

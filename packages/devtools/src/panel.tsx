@@ -4,8 +4,8 @@ import { useRouterState } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
-import { messages } from "./messages.ts";
-import type { PageDiagnosticsSnapshot } from "./snapshot.ts";
+import { messages } from "./messages.js";
+import type { PageDiagnosticsSnapshot } from "./snapshot.js";
 
 export function DiagnosticsPanel({
   read,

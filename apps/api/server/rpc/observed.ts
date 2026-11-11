@@ -1,4 +1,4 @@
-import type { RpcBoundary } from "./boundary.ts";
+import type { RpcBoundary } from "./boundary.js";
 export function createObservedHandlers({
   os,
   controlCall,

@@ -1,12 +1,12 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import type { AnalyticsClient } from "@raypx-kit/analytics";
 import { useTranslations } from "@raypx/i18n/browser";
-import { analyticsPage, type AnalyticsPreferenceStore } from "../index.ts";
+import { analyticsPage, type AnalyticsPreferenceStore } from "../index.js";
 import {
   AnalyticsPreferencesProvider,
   AnalyticsErrorBoundary,
   useAnalyticsPreferences,
-} from "./provider.tsx";
+} from "./provider.js";
 
 function PageObserver({
   client,

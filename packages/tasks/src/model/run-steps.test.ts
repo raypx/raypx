@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import type { AgentEvent, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { runSteps } from "./run-steps.ts";
+import { runSteps } from "./run-steps.js";
 
 const taskId = "0f8b2c64-2f4e-4d0a-8b8f-6c7d5e4f3a2b";
 let next = 0;

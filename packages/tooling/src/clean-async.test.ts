@@ -5,7 +5,7 @@ vi.mock("node:fs/promises", () => ({ rm }));
 vi.mock("./repository.js", () => ({
   discover: () => ({ workspaces: [{ path: "packages/feature" }] }),
 }));
-const { clean } = await import("./clean.ts");
+const { clean } = await import("./clean.js");
 afterEach(() => rm.mockReset());
 
 it("bounds parallel removals and waits for every batch", async () => {

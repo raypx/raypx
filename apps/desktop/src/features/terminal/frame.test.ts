@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { terminalFrame } from "./frame.ts";
+import { terminalFrame } from "./frame.js";
 describe("terminal screen frames", () => {
   it("queues a reset before complete frames and preserves incremental Unicode bytes", () => {
     const bytes = new TextEncoder().encode("中文\x1b[1;2H");

@@ -1,7 +1,7 @@
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { sealCliPayload, verifyCliPayload } from "@raypx/tooling/build/cli";
-import { prepareHerdr } from "../src/runtime/process/herdr-release";
+import { prepareHerdr } from "../src/runtime/process/herdr-release.js";
 import manifest from "../package.json";
 import repository from "../../../package.json";
 

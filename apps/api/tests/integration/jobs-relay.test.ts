@@ -4,7 +4,7 @@ import type { CloudJobAction, CloudJobRun } from "@raypx/core/jobs";
 import type { AgentTask } from "@raypx/core/tasks";
 import { createRelayJobExecutor } from "@raypx/control/relay";
 import { connected } from "@raypx/control/testing";
-import { relayFixture, relaySocket } from "../helpers/relay.ts";
+import { relayFixture, relaySocket } from "../helpers/relay.js";
 
 function jobRun(action: CloudJobAction): CloudJobRun {
   const id = crypto.randomUUID(),

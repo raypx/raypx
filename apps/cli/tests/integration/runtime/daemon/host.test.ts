@@ -10,9 +10,9 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon, createRuntime } from "../../../helpers/enrolled.ts";
-import { daemonFetch } from "../../../../src/runtime/daemon/endpoint.ts";
-import { localFetch } from "../../../../src/runtime/local-http.ts";
+import { startDaemon, createRuntime } from "../../../helpers/enrolled.js";
+import { daemonFetch } from "../../../../src/runtime/daemon/endpoint.js";
+import { localFetch } from "../../../../src/runtime/local-http.js";
 
 import type { AgentTask } from "@raypx/core/tasks";
 
@@ -25,7 +25,7 @@ it.skipIf(process.platform === "win32")(
     mkdirSync(project);
     mkdirSync(bin);
     cpSync(join(import.meta.dirname, "../../../fixtures/agents"), bin, { recursive: true });
-    writeFileSync(join(bin, "codex"), `#!${process.execPath}\nimport "./codex-interactive.ts";`, {
+    writeFileSync(join(bin, "codex"), `#!${process.execPath}\nimport "./codex-interactive.js";`, {
       mode: 0o700,
     });
     const host = await startDaemon({ dataDir, agentExecutables: { codex: join(bin, "codex") } });

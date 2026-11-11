@@ -2,7 +2,7 @@ import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { MYGO_VERSION } from "./packager";
+import { MYGO_VERSION } from "./packager.js";
 
 /** Inspect compiler metadata and the shipped bytes, including embedded renderer assets. */
 export function assertProduction(bytes: Uint8Array, buildInfo: string) {

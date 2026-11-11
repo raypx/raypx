@@ -2,7 +2,7 @@ import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox";
 import { CheckIcon } from "@raypx/icons/check";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { cn } from "#lib/utils";
-import { controlSizeVariants, type ControlSize } from "../../control-size.ts";
+import { controlSizeVariants, type ControlSize } from "../../control-size.js";
 
 const Combobox = ComboboxPrimitive.Root;
 const ComboboxValue = ComboboxPrimitive.Value;

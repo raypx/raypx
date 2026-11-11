@@ -1,7 +1,7 @@
 import { JobError, type CloudJobRun } from "@raypx/core/jobs";
-import { ControlError, type ControlService } from "../service.ts";
-import type { RelayCluster, RelayReply } from "./cluster.ts";
-import type { RelayJobTransport } from "./jobs.ts";
+import { ControlError, type ControlService } from "../service.js";
+import type { RelayCluster, RelayReply } from "./cluster.js";
+import type { RelayJobTransport } from "./jobs.js";
 
 /** API-side broker client. Socket peers and execution remain in the Relay service. */
 export async function createRemoteRelay(control: ControlService, cluster?: RelayCluster) {

@@ -1,6 +1,6 @@
 import type { JobDefinition, JobRun } from "@raypx/core/jobs";
-import type { TuiTerminal } from "./terminal.ts";
-import { messages, outputLines, safeText, type TuiLocale } from "./text.ts";
+import type { TuiTerminal } from "./terminal.js";
+import { messages, outputLines, safeText, type TuiLocale } from "./text.js";
 
 export interface TuiService {
   listJobs(): Promise<JobDefinition[]>;

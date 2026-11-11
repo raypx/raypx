@@ -10,8 +10,8 @@ import { TerminalIcon } from "@raypx/icons/terminal";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { cn } from "@raypx/ui/lib/utils";
-import { formatDuration } from "./format-duration.ts";
-import { ShimmerText } from "./shimmer-text.tsx";
+import { formatDuration } from "./format-duration.js";
+import { ShimmerText } from "./shimmer-text.js";
 
 type ToolActivity = Extract<TaskActivity, { kind: "tool" }>;
 

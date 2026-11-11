@@ -2,13 +2,13 @@ import { describe, expect, it } from "vite-plus/test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProcessRuntime } from "../../../src/runtime/process/index.ts";
-import { HerdrTerminalHost } from "../../../src/runtime/process/herdr.ts";
+import { ProcessRuntime } from "../../../src/runtime/process/index.js";
+import { HerdrTerminalHost } from "../../../src/runtime/process/herdr.js";
 import {
   digestHerdr,
   herdrVersion,
   verifyHerdrDirectory,
-} from "../../../src/runtime/process/herdr-release.ts";
+} from "../../../src/runtime/process/herdr-release.js";
 
 describe("Herdr admission and distribution", () => {
   it("keeps ordinary commands independent of Herdr and rejects an invalid selection", async () => {

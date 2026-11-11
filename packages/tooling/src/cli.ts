@@ -17,7 +17,7 @@ import { ciOutputs } from "./verification/gates.js";
 import { cacheSnapshot } from "./verification/cache.js";
 import { runPrecheck } from "./verification/prechecks.js";
 
-import { reportBuildSizes, sizeOptions } from "./validation/build-size";
+import { reportBuildSizes, sizeOptions } from "./validation/build-size.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);

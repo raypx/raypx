@@ -1,10 +1,10 @@
-import { analytics } from "./features/analytics/client";
+import { analytics } from "./features/analytics/client.js";
 import { createQueryFailureReporter } from "@raypx/analytics/browser";
 import { createHashHistory, createRouter } from "@tanstack/react-router";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { ShellPage } from "@raypx/blocks/shell";
-import { routeTree } from "./routeTree.gen";
+import { routeTree } from "./routeTree.gen.js";
 
 export function getRouter() {
   // Remote calls are POST and never retried (see @raypx/client).

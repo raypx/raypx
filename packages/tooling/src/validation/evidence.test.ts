@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { Evidence } from "./evidence";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { Evidence } from "./evidence.js";
 
 const { fixture } = workspaceFixtures();
 afterEach(() => vi.restoreAllMocks());

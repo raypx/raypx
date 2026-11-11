@@ -1,4 +1,4 @@
-import { profileStorage } from "../../../helpers/sqlite";
+import { profileStorage } from "../../../helpers/sqlite.js";
 import { expect, it } from "vite-plus/test";
 import { mkdtemp, mkdir, realpath, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -8,11 +8,11 @@ import {
   startTerminalHost,
   terminalFetch,
   readTerminalEndpoint,
-} from "../../../../src/runtime/terminal/host";
-import { TerminalStore } from "../../../../src/runtime/terminal/store";
-import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol";
+} from "../../../../src/runtime/terminal/host.js";
+import { TerminalStore } from "../../../../src/runtime/terminal/store.js";
+import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol.js";
 import { createHash } from "node:crypto";
-import { localFetch, loopbackTransport } from "../../../../src/runtime/local-http";
+import { localFetch, loopbackTransport } from "../../../../src/runtime/local-http.js";
 import type { TerminalSession } from "@raypx/contracts/terminal";
 it.skipIf(loopbackTransport())(
   "reclaims only its owned socket directory after a host crash",

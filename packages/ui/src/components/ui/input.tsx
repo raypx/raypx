@@ -2,7 +2,7 @@ import { Input as InputPrimitive } from "@base-ui/react/input";
 import type { ComponentProps } from "react";
 
 import { cn } from "#lib/utils";
-import { controlSizeVariants, type ControlSize } from "../../control-size.ts";
+import { controlSizeVariants, type ControlSize } from "../../control-size.js";
 
 export interface InputProps extends ComponentProps<"input"> {
   controlSize?: ControlSize;

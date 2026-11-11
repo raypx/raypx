@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import type { LocalDatabase } from "../../../sqlite/index.ts";
+import type { LocalDatabase } from "../../../sqlite/index.js";
 import {
   activity,
   journal,
@@ -8,10 +8,10 @@ import {
   taskEffects,
   taskEvents,
   tasks,
-} from "../../../sqlite/schema.ts";
+} from "../../../sqlite/schema.js";
 import type { HumanRequest } from "@raypx/core/tasks";
-import type { CommandReceipts } from "./commands.ts";
-import { journalTaskId, requestTaskId, taskBinding } from "./queries.ts";
+import type { CommandReceipts } from "./commands.js";
+import { journalTaskId, requestTaskId, taskBinding } from "./queries.js";
 
 /** Deletes cleared tasks with their records and forgets commands that only referenced them. */
 export function clearTasks(

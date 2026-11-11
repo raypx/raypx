@@ -4,9 +4,9 @@ import {
   type HumanRequest,
   type TaskActivity,
 } from "@raypx/core/tasks";
-import type { Effect, EffectCommand, LiveFacts, OrchestrationCommand } from "./commands.ts";
-import type { OrchestrationEvent } from "./events.ts";
-import type { LocalAgentTask } from "./state.ts";
+import type { Effect, EffectCommand, LiveFacts, OrchestrationCommand } from "./commands.js";
+import type { OrchestrationEvent } from "./events.js";
+import type { LocalAgentTask } from "./state.js";
 
 /** The live-process facts a decision reads; none of them touch storage. */
 export interface DecideFacts {

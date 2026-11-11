@@ -1,8 +1,8 @@
 import { gunzipSync } from "node:zlib";
 import { expect } from "@playwright/test";
-import { test } from "../helpers/browser-fixture.ts";
-import { capture } from "../helpers/capture.ts";
-import { authResponse, signedInAccount } from "../helpers/account-fixture.ts";
+import { test } from "../helpers/browser-fixture.js";
+import { capture } from "../helpers/capture.js";
+import { authResponse, signedInAccount } from "../helpers/account-fixture.js";
 
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {

@@ -5,14 +5,14 @@ export {
   LOCALE_OPTIONS,
   LOCALE_STORAGE_KEY,
   SUPPORTED_LOCALES,
-} from "./constants.ts";
-export { parseAcceptLanguage } from "./accept-language.ts";
-export { getLocaleCookie, serializeLocaleCookie } from "./cookie.ts";
-export { createFormatter, type Formatter, type FormatterOptions } from "./formatter.ts";
-export { formats } from "./formats.ts";
-export { isLocale, normalizeLocale, matchLocale } from "./normalize.ts";
-export { resolveLocale } from "./resolve.ts";
-export { createTranslator, type CreateTranslatorOptions, type Translator } from "./translator.ts";
+} from "./constants.js";
+export { parseAcceptLanguage } from "./accept-language.js";
+export { getLocaleCookie, serializeLocaleCookie } from "./cookie.js";
+export { createFormatter, type Formatter, type FormatterOptions } from "./formatter.js";
+export { formats } from "./formats.js";
+export { isLocale, normalizeLocale, matchLocale } from "./normalize.js";
+export { resolveLocale } from "./resolve.js";
+export { createTranslator, type CreateTranslatorOptions, type Translator } from "./translator.js";
 export {
   readErrorCode,
   readErrorDetails,
@@ -20,7 +20,7 @@ export {
   translateKnownErrorCode,
   type ErrorCodeMap,
   type LocalizedErrorDetails,
-} from "./errors.ts";
+} from "./errors.js";
 export type {
   IntlRuntimeOptions,
   LocaleOption,
@@ -34,4 +34,4 @@ export type {
   NamespaceOf,
   TranslationValue,
   TranslationValues,
-} from "./types.ts";
+} from "./types.js";

@@ -2,7 +2,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
 import { accessForRole } from "@raypx/account/access";
-import { mocks, page, signIn } from "../tests/helpers/router-auth.tsx";
+import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 it.each(["/", "/settings", "/admin"])(
   "opens account settings above %s without replacing its route",

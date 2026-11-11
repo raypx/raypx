@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { parseSessionCookie, SessionCookies } from "./cookies.ts";
+import { parseSessionCookie, SessionCookies } from "./cookies.js";
 
 const origin = new URL("https://api.example.test");
 const now = Date.parse("2026-11-10T00:00:00Z");

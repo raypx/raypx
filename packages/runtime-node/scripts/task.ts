@@ -1,6 +1,6 @@
 import { taskArguments } from "@raypx-kit/devkit/tasks";
 import { readFileSync } from "node:fs";
-import { runProcess } from "../src/process.ts";
+import { runProcess } from "../src/process.js";
 
 const name = process.argv[2];
 if (!name) throw new Error("A workspace task name is required");

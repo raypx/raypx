@@ -5,9 +5,9 @@ import {
   MAX_TASK_DRAFTS,
   type TaskDraft,
   type TaskDraftDelivery,
-} from "../model/drafts.ts";
-import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
-import { useTaskDrafts } from "./use-task-drafts.ts";
+} from "../model/drafts.js";
+import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
+import { useTaskDrafts } from "./use-task-drafts.js";
 
 type DraftFailure = "draft.saveFailed" | "draft.limit" | "draft.cleanupFailed";
 

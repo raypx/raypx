@@ -1,7 +1,7 @@
 import { rmSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { afterEach } from "vite-plus/test";
-import { ProfileStorage } from "../../src/runtime/sqlite/index.ts";
+import { ProfileStorage } from "../../src/runtime/sqlite/index.js";
 
 const profiles: ProfileStorage[] = [];
 afterEach(() => {

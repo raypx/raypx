@@ -1,5 +1,5 @@
 import { spawnProcess, findExecutable } from "@raypx/runtime-node/process";
-import { enrollTestProfile } from "../helpers/instance.ts";
+import { enrollTestProfile } from "../helpers/instance.js";
 import assert from "node:assert/strict";
 import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

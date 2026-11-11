@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   refreshGrant: vi.fn(async () => ({ deviceId: "device", epoch: 1 })),
   local: vi.fn(async (_method: string) => []),
 }));
-vi.mock("./auth/client", () => ({
+vi.mock("./auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://web.example.test",
   authClient: {
@@ -27,16 +27,16 @@ vi.mock("./auth/client", () => ({
     }),
   },
 }));
-vi.mock("./tasks/client", () => ({
+vi.mock("./tasks/client.js", () => ({
   taskClient: { setAccount: vi.fn(), devices: { refreshGrant: mocks.refreshGrant } },
 }));
-vi.mock("./tasks/local-client", () => ({
+vi.mock("./tasks/local-client.js", () => ({
   accountLocalTaskClient: { setAccount: vi.fn() },
 }));
-vi.mock("./tasks/terminal-settings", () => ({
+vi.mock("./tasks/terminal-settings.js", () => ({
   TerminalSettings: () => null,
 }));
-vi.mock("../lib/desktop", () => ({
+vi.mock("../lib/desktop.js", () => ({
   isDesktop: () => true,
   hasTerminalHooks: () => true,
   onLocalEvent: () => () => {},
@@ -64,8 +64,8 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { AgentSettings } from "./tasks/settings.tsx";
-import { RemoteCoordinator } from "./tasks/coordinator.tsx";
+import { AgentSettings } from "./tasks/settings.js";
+import { RemoteCoordinator } from "./tasks/coordinator.js";
 
 beforeEach(() => {
   mocks.recent = false;

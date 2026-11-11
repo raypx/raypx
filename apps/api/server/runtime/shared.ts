@@ -1,31 +1,31 @@
 import { InstanceService } from "@raypx/instances/server";
 import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
-import { createInstanceRepository } from "../instances/repository.ts";
-import { createConfigurationRepository } from "../configuration/repository.ts";
-import { createAccessPolicy } from "../access.ts";
-import { createConfigurationService } from "../configuration/service.ts";
-import type { ConfigurationRepository } from "../configuration/types.ts";
-import type { Cache } from "../cache/types.ts";
+import { createInstanceRepository } from "../instances/repository.js";
+import { createConfigurationRepository } from "../configuration/repository.js";
+import { createAccessPolicy } from "../access.js";
+import { createConfigurationService } from "../configuration/service.js";
+import type { ConfigurationRepository } from "../configuration/types.js";
+import type { Cache } from "../cache/types.js";
 import type { ObjectStorage } from "@raypx/storage";
 import { createControlRepository } from "@raypx/control/postgres";
 import { createContextRepository } from "@raypx/memory/server/postgres";
 import { ControlService, ControlProjects } from "@raypx/control";
-import { createAuditedAuthAdapter } from "../administration/auth-adapter.ts";
+import { createAuditedAuthAdapter } from "../administration/auth-adapter.js";
 import {
   createAdministrationRepository,
   type AdministrationRepository,
-} from "../administration/repository.ts";
-import { AuditService } from "../administration/audit.ts";
+} from "../administration/repository.js";
+import { AuditService } from "../administration/audit.js";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
 import { configurationDefaults } from "@raypx/contracts/api";
-import type { ApiLogging } from "../logging.ts";
-import { createApiApp } from "../api.ts";
-import { createCleanupJob } from "../jobs/cleanup.ts";
-import type { RedisResources } from "./redis.ts";
-import type { ApiEnvironment } from "../env.ts";
-import { createAdapters, createAuthConfig } from "./adapters.ts";
-import { createLifecycle } from "./lifecycle.ts";
+import type { ApiLogging } from "../logging.js";
+import { createApiApp } from "../api.js";
+import { createCleanupJob } from "../jobs/cleanup.js";
+import type { RedisResources } from "./redis.js";
+import type { ApiEnvironment } from "../env.js";
+import { createAdapters, createAuthConfig } from "./adapters.js";
+import { createLifecycle } from "./lifecycle.js";
 import {
   CloudJobsService,
   type CloudJobExecutor,
@@ -33,7 +33,7 @@ import {
 } from "@raypx/jobs/server";
 import { JobError } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
-import { createScheduleTick } from "../jobs/tick.ts";
+import { createScheduleTick } from "../jobs/tick.js";
 import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
 
 export interface RuntimeProviders {

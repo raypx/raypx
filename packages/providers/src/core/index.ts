@@ -1,5 +1,5 @@
 import type { AgentTask } from "@raypx/core/tasks";
-import type { AskApproval, TransportFactory } from "./transport.ts";
+import type { AskApproval, TransportFactory } from "./transport.js";
 
 /** A session lifetime, including SDK streams, that must drain before releasing ownership. */
 export interface ExecutionHandle {
@@ -41,7 +41,7 @@ export type AdapterEvent =
   | {
       type: "activity";
       handle: ExecutionHandle;
-      event: import("./conversation.ts").ConversationEvent;
+      event: import("./conversation.js").ConversationEvent;
     }
   | { type: "session"; handle: ExecutionHandle; id: string }
   | { type: "turn-id"; handle: ExecutionHandle; id: string }
@@ -61,10 +61,10 @@ export type ProcessAdapterFactory = (
   transportFactory: TransportFactory,
 ) => ProviderSession;
 
-export type { AgentTransport, TransportFactory, AskApproval } from "./transport.ts";
-export { object } from "./transport.ts";
+export type { AgentTransport, TransportFactory, AskApproval } from "./transport.js";
+export { object } from "./transport.js";
 
-export type { ConversationEvent, ConversationEntry, TokenTotals } from "./conversation.ts";
+export type { ConversationEvent, ConversationEntry, TokenTotals } from "./conversation.js";
 
 export interface SessionStart {
   directory: string;

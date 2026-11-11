@@ -9,16 +9,20 @@ import { TaskContextError, activeTaskStatuses } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import type { TaskChange } from "@raypx/contracts/tasks";
 import type { TokenTotals } from "@raypx/providers/core";
-import type { LocalAgentTask } from "../model";
-import { isDesktopBinding } from "../model";
-import type { ExecutionStore } from "../harness/ports";
-import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports";
-import type { Effect, LiveFacts } from "../domain/commands";
-import { ManagedExecution, initialExecutionPrompt, executionSession } from "../harness/execution";
-import { ConversationRecorder } from "../activity";
-import { LocalError } from "../../errors";
-import type { ProviderRegistry } from "./providers";
-import { ProviderEventIngestor } from "./ingest";
+import type { LocalAgentTask } from "../model.js";
+import { isDesktopBinding } from "../model.js";
+import type { ExecutionStore } from "../harness/ports.js";
+import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports.js";
+import type { Effect, LiveFacts } from "../domain/commands.js";
+import {
+  ManagedExecution,
+  initialExecutionPrompt,
+  executionSession,
+} from "../harness/execution.js";
+import { ConversationRecorder } from "../activity.js";
+import { LocalError } from "../../errors.js";
+import type { ProviderRegistry } from "./providers.js";
+import { ProviderEventIngestor } from "./ingest.js";
 
 export interface ExecutionRepository extends ExecutionStore {
   settleEffect(id: string, status: "done" | "failed"): void;

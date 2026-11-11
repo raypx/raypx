@@ -6,7 +6,7 @@ import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { SelectField } from "@raypx/ui/select-field";
 import type { ContextDocument, ContextDocumentInput } from "@raypx/core/memory";
-import type { MemoryProjectsPort } from "./port.ts";
+import type { MemoryProjectsPort } from "./port.js";
 
 export function documentDraft(
   document: ContextDocument | null,

@@ -8,7 +8,7 @@ import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { Avatar } from "@raypx/ui/avatar";
 import { StatusBadge } from "@raypx/ui/status-badge";
 import { useTranslations } from "@raypx/i18n/browser";
-import type { AccountProfile } from "../index.ts";
+import type { AccountProfile } from "../index.js";
 
 export interface AccountLinkProps {
   to: "login" | "signup";

@@ -8,9 +8,9 @@ import {
   DialogTitle,
 } from "@raypx/ui/components/ui/dialog";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { useSettingsNavigation } from "./navigation.ts";
+import { useSettingsNavigation } from "./navigation.js";
 
-const SettingsContent = lazy(() => import("./content.tsx"));
+const SettingsContent = lazy(() => import("./content.js"));
 
 export function SettingsOverlay() {
   const { opened, close } = useSettingsNavigation();

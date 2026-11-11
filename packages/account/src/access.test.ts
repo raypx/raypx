@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { accessForRole, accessForAssignedRoles, hasPermission } from "./access.ts";
+import { accessForRole, accessForAssignedRoles, hasPermission } from "./access.js";
 
 describe("account permissions", () => {
   it("composes Better Auth roles and denies unsupported assignments", () => {

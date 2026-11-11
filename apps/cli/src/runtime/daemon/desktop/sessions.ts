@@ -1,10 +1,10 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
-import type { LocalDatabase } from "../../sqlite/index.ts";
-import { desktopSessions } from "../../sqlite/schema/credentials.ts";
-import { LocalError } from "../../errors.ts";
-import { serverOrigin } from "../remote/origin.ts";
-import { sessionLimit, type SessionStore } from "./cookies.ts";
+import type { LocalDatabase } from "../../sqlite/index.js";
+import { desktopSessions } from "../../sqlite/schema/credentials.js";
+import { LocalError } from "../../errors.js";
+import { serverOrigin } from "../remote/origin.js";
+import { sessionLimit, type SessionStore } from "./cookies.js";
 
 export function sessionRecordStore(database: LocalDatabase, apiUrl: string) {
   const origin = serverOrigin(apiUrl);

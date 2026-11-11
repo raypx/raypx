@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import type { AgentTask } from "@raypx/core/tasks";
-import { sessionThreads } from "./session-threads.ts";
+import { sessionThreads } from "./session-threads.js";
 
 let next = 0;
 const uuid = () => `00000000-0000-4000-8000-${String(++next).padStart(12, "0")}`;

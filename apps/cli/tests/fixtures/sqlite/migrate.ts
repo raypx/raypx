@@ -1,9 +1,9 @@
-import { ProfileStorage } from "../../../src/runtime/sqlite";
-import { StateStore } from "../../../src/runtime/state";
-import { AgentStore } from "../../../src/runtime/agents/store";
-import { TerminalStore } from "../../../src/runtime/terminal/store";
-import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
-import { SqlitePiContextStore } from "../../../src/runtime/agents/harness/context/sqlite";
+import { ProfileStorage } from "../../../src/runtime/sqlite/index.js";
+import { StateStore } from "../../../src/runtime/state/index.js";
+import { AgentStore } from "../../../src/runtime/agents/store.js";
+import { TerminalStore } from "../../../src/runtime/terminal/store.js";
+import { SqliteContextRepository } from "../../../src/runtime/memory/repository.js";
+import { SqlitePiContextStore } from "../../../src/runtime/agents/harness/context/sqlite.js";
 
 process.stdout.write("ready\n");
 await Bun.stdin.text();

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { assertProduction } from "./check-release";
+import { assertProduction } from "./check-release.js";
 
 const metadata =
   "\tdep\tgithub.com/egoist/mygo\tv0.8.3\th1:fixture\n\tbuild -tags=mygo_noinspector\n";

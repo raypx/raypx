@@ -1,4 +1,4 @@
-import type { RpcBoundary } from "./boundary.ts";
+import type { RpcBoundary } from "./boundary.js";
 export function createMemoryHandlers({ os, memoryCall }: Pick<RpcBoundary, "os" | "memoryCall">) {
   return {
     list: os.memory.list.handler(({ context }) =>

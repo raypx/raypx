@@ -1,14 +1,14 @@
-import { resolveRelease } from "./build/release";
+import { resolveRelease } from "./build/release.js";
 import { developmentEnvironment } from "@raypx-kit/devkit/process";
 import { run } from "@raypx/runtime-node/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
-import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests";
+import { browserTestArguments, isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
 import { join } from "node:path";
 import {
   runTasks as executeTasks,
   prepareTaskDirectories as prepareDirectories,
 } from "@raypx-kit/devkit/tasks";
-import { taskModel, taskPlan, taskRef, type TaskModel } from "./tasks/model";
+import { taskModel, taskPlan, taskRef, type TaskModel } from "./tasks/model.js";
 
 /** Raypx conventions for the shared @raypx-kit/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });

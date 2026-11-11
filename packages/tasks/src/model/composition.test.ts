@@ -6,7 +6,7 @@ import {
   taskSelection,
   canContinueTask,
   continueTaskFailure,
-} from "./composition.ts";
+} from "./composition.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
 it("refuses an unavailable capability and requires a model according to the definition", () => {

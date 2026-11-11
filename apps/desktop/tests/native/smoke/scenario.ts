@@ -6,11 +6,11 @@ import type { JobDefinition, JobRun } from "@raypx/core/jobs";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/core/memory";
 import type { ControlInfo, ObservedProjection } from "@raypx/contracts/terminal";
 import { messages } from "@raypx/i18n/messages";
-import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
-import { CONNECTION_KEY } from "../../../config";
-import { nativePresentation } from "../../../scripts/host/presentation";
-import { instanceFixture } from "../fixtures/instance-server";
-import { smokeOwnerIdentity } from "./owner";
+import { DEVICE_PREFERENCES_KEY } from "../../../preferences.js";
+import { CONNECTION_KEY } from "../../../config.js";
+import { nativePresentation } from "../../../scripts/host/presentation.js";
+import { instanceFixture } from "../fixtures/instance-server.js";
+import { smokeOwnerIdentity } from "./owner.js";
 import {
   engine,
   trayAction,
@@ -21,7 +21,7 @@ import {
   evaluate as evaluateNative,
   measureNativeCors,
   measureNativeStream,
-} from "./host";
+} from "./host.js";
 
 const presentation = nativePresentation(process.env);
 async function evaluate(script: string): Promise<unknown> {

@@ -6,8 +6,8 @@ import type {
   MemoryUsagePort,
 } from "@raypx/memory/client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { localRequest } from "../../lib/desktop.ts";
-import { apiUrl, desktopFetch } from "../auth/client.ts";
+import { localRequest } from "../../lib/desktop.js";
+import { apiUrl, desktopFetch } from "../auth/client.js";
 let api: ReturnType<typeof createApiClient> | undefined;
 const client = () => (api ??= createApiClient({ baseUrl: apiUrl, fetch: desktopFetch }));
 export const accountMemory: MemoryClientPort = {

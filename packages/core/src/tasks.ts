@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { agentProviderSchema, questionSchema, decisionSchema } from "./human.ts";
-import { taskContextSelectionSchema, taskContextSnapshotSchema } from "./task-context.ts";
+import { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
+import { taskContextSelectionSchema, taskContextSnapshotSchema } from "./task-context.js";
 export {
   taskContextIdSchema,
   taskContextTargetSchema,
@@ -13,7 +13,7 @@ export {
   type TaskContextTarget,
   type TaskContextSelection,
   type TaskContextSnapshot,
-} from "./task-context.ts";
+} from "./task-context.js";
 export {
   agentProviderSchema,
   terminalProviderSchema,
@@ -22,7 +22,7 @@ export {
   agentProviderMetadata,
   questionSchema,
   decisionSchema,
-} from "./human.ts";
+} from "./human.js";
 
 export const providerDefinitionSchema = z.object({
   version: z.literal(1),

@@ -1,22 +1,22 @@
-import { createLocalRouter } from "./router";
-import { PiHost } from "./agents/pi/host";
-import { InstanceRuntime } from "./instances";
-import { instanceKeys } from "./instances/keys";
+import { createLocalRouter } from "./router.js";
+import { PiHost } from "./agents/pi/host.js";
+import { InstanceRuntime } from "./instances/index.js";
+import { instanceKeys } from "./instances/keys.js";
 import { join } from "node:path";
 import { type LocalMethod } from "@raypx/contracts/local";
-import { MemoryRuntime } from "./memory";
-import { AgentRuntime } from "./agents";
-import { FileRuntime } from "./files";
-import { JobRuntime } from "./jobs";
-import { ProcessRuntime } from "./process";
-import { BundledBun } from "./process/bun";
-import { StateStore, profilePath, acquireLock } from "./state";
-import { LocalError } from "./errors";
+import { MemoryRuntime } from "./memory/index.js";
+import { AgentRuntime } from "./agents/index.js";
+import { FileRuntime } from "./files/index.js";
+import { JobRuntime } from "./jobs/index.js";
+import { ProcessRuntime } from "./process/index.js";
+import { BundledBun } from "./process/bun.js";
+import { StateStore, profilePath, acquireLock } from "./state/index.js";
+import { LocalError } from "./errors.js";
 
-import { recordDiagnostic } from "../diagnostics";
-import type { RuntimeOptions } from "./options";
+import { recordDiagnostic } from "../diagnostics.js";
+import type { RuntimeOptions } from "./options.js";
 
-import { ProfileStorage } from "./sqlite";
+import { ProfileStorage } from "./sqlite/index.js";
 
 export function createRuntime(options: RuntimeOptions = {}) {
   const scheduler = options.mode === "stdio" || options.mode === "daemon";

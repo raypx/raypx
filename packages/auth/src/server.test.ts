@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { createAuth, projectAuthUser, recipientLocale } from "./server.ts";
+import { createAuth, projectAuthUser, recipientLocale } from "./server.js";
 
 it("projects Better Auth role fields and strips credentials", () => {
   expect(

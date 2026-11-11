@@ -1,10 +1,10 @@
-import { enrolledInstance } from "../../helpers/enrolled";
+import { enrolledInstance } from "../../helpers/enrolled.js";
 import { expect, it } from "vite-plus/test";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createExecutionOwner } from "../../../src/runtime/owner";
-import type { HostVault } from "../../../src/runtime/daemon/vault";
+import { createExecutionOwner } from "../../../src/runtime/owner.js";
+import type { HostVault } from "../../../src/runtime/daemon/vault.js";
 import type { HostAuthorization } from "@raypx/contracts/terminal";
 import type { LocalEvent } from "@raypx/contracts/local";
 import { relayClientSchema } from "@raypx/contracts/tasks";

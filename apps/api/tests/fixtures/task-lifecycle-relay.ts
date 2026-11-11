@@ -1,4 +1,4 @@
-import { relayFixture } from "../helpers/relay.ts";
+import { relayFixture } from "../helpers/relay.js";
 
 if (!process.send) throw new Error("Task lifecycle fixture requires a parent test process");
 

@@ -5,8 +5,8 @@ import { ShellToolbar } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { FolderIcon } from "@raypx/icons/folder";
-import { apiUrl, authClient } from "../auth/client.ts";
-import { taskClient } from "./client.ts";
+import { apiUrl, authClient } from "../auth/client.js";
+import { taskClient } from "./client.js";
 
 const tab =
   "relative flex h-full shrink-0 items-center px-2.5 text-sm whitespace-nowrap text-muted-foreground outline-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:after:bg-foreground";

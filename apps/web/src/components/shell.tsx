@@ -1,20 +1,20 @@
-import { publicConfigurationQuery } from "../features/configuration/client.ts";
+import { publicConfigurationQuery } from "../features/configuration/client.js";
 import {
   accountAccessQuery,
   canAccessWebPage,
   webPages,
   type WebPath,
-} from "../features/auth/access.ts";
+} from "../features/auth/access.js";
 import { hasPermission } from "@raypx/account/access";
-import { PermissionBoundary } from "../features/auth/components/permission-boundary.tsx";
-import { analytics } from "../features/analytics/client.ts";
+import { PermissionBoundary } from "../features/auth/components/permission-boundary.js";
+import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { useEffect, useRef, useState } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
-import { UserButton } from "./user-button.tsx";
-import { authClient } from "../features/auth/client.ts";
-import { taskClient } from "../features/tasks/client.ts";
-import { RemoteProjectNavigation } from "../features/tasks/project-navigation.tsx";
+import { UserButton } from "./user-button.js";
+import { authClient } from "../features/auth/client.js";
+import { taskClient } from "../features/tasks/client.js";
+import { RemoteProjectNavigation } from "../features/tasks/project-navigation.js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Link,
@@ -27,7 +27,7 @@ import {
 import { PlusIcon } from "@raypx/icons/plus";
 import { SearchIcon } from "@raypx/icons/search";
 import { useCommandShortcut } from "@raypx/blocks/command-palette";
-import { WebCommandMenu } from "./command-menu.tsx";
+import { WebCommandMenu } from "./command-menu.js";
 import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { InboxIcon } from "@raypx/icons/inbox";
 import { SettingsIcon } from "@raypx/icons/settings";
@@ -42,8 +42,8 @@ import {
 } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { useTranslations } from "@raypx/i18n/browser";
-import { QuickSettingsModal } from "../features/settings/quick-settings-modal.tsx";
-import { useQuickSettingsStore } from "../features/settings/quick-settings-store.ts";
+import { QuickSettingsModal } from "../features/settings/quick-settings-modal.js";
+import { useQuickSettingsStore } from "../features/settings/quick-settings-store.js";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath | "/">) {
   return (

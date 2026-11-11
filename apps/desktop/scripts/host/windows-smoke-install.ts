@@ -3,7 +3,7 @@ import { createReadStream } from "node:fs";
 import { lstat, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve, win32 } from "node:path";
-import { signingEnvironment } from "./signing";
+import { signingEnvironment } from "./signing.js";
 
 interface RegistryKeys {
   product: string;

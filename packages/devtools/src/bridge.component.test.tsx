@@ -11,9 +11,9 @@ import {
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
-import { DevtoolsBridge } from "./client.tsx";
-import { panelStore } from "./runtime.ts";
-import setupRenderer from "./renderer.ts";
+import { DevtoolsBridge } from "./client.js";
+import { panelStore } from "./runtime.js";
+import setupRenderer from "./renderer.js";
 import type { DockClientScriptContext } from "@vitejs/devtools-kit/client";
 
 afterEach(() => {

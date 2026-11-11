@@ -2,8 +2,8 @@ import { JobError } from "@raypx/core/jobs";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import { terminalRequestSchema } from "@raypx/contracts/terminal";
 import { taskSchema, humanRequestSchema, taskInputActivitySchema } from "@raypx/core/tasks";
-import { ControlError, type RelayActor } from "../service.ts";
-import type { Client, DeviceResult, RelayRegistry } from "./registry.ts";
+import { ControlError, type RelayActor } from "../service.js";
+import type { Client, DeviceResult, RelayRegistry } from "./registry.js";
 type FrameType = RelayClientFrame["type"];
 type Frame<T extends FrameType> = Extract<RelayClientFrame, { type: T }>;
 interface FrameContext {

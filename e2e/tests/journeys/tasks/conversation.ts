@@ -1,9 +1,9 @@
 import { expect } from "@playwright/test";
-import { test } from "../../helpers/browser-fixture.ts";
-import { capture } from "../../helpers/capture.ts";
-import { authResponse, signedInAccount, webShellFixture } from "../../helpers/account-fixture.ts";
-import { selectOption } from "../../helpers/select.ts";
-import { expectViewportShell } from "../../helpers/layout.ts";
+import { test } from "../../helpers/browser-fixture.js";
+import { capture } from "../../helpers/capture.js";
+import { authResponse, signedInAccount, webShellFixture } from "../../helpers/account-fixture.js";
+import { selectOption } from "../../helpers/select.js";
+import { expectViewportShell } from "../../helpers/layout.js";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 

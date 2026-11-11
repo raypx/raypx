@@ -82,7 +82,8 @@ The accepted foundation design and current architecture decisions define the imp
   keep integration suites and shared test-only setup/fixtures in `tests/`.
   Application-owned browser acceptance may use `e2e/`; the root E2E workspace
   discovers Web and Desktop cases there.
-  Root test.config.ts exports runner defaults as a plain Vitest config. Each workspace
+  Root vite.config.ts discovers native test projects from package.json workspaces;
+  test.config.ts exports runner defaults as a plain Vitest config. Each workspace
   owns include patterns, projects and overrides using native defineConfig/mergeConfig;
   do not introduce custom config factories or option schemas. Application Vite plugins
   must not enter the test runner.
@@ -94,6 +95,9 @@ The accepted foundation design and current architecture decisions define the imp
 ## Code and data
 
 - Preserve strict TypeScript, type-only imports and exactOptionalPropertyTypes.
+- Use `.js` specifiers for relative TypeScript imports and re-exports, including
+  dynamic imports. Keep source files, package export targets and filesystem paths
+  at their actual `.ts`/`.tsx` extensions.
 - Prefer named functions, lookup tables and early returns for conditional logic.
   Avoid nested ternary expressions; use simple ternaries only when they improve readability.
 - Do not log credentials, tokens, cookies, passwords or private file content.

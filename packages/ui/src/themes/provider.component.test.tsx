@@ -15,7 +15,7 @@ import {
   storeTheme,
   themeColors,
   useTheme,
-} from "./index.ts";
+} from "./index.js";
 
 afterEach(() => {
   cleanup();

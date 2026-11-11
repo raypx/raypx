@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   list: vi.fn(async () => ({ enabled: true, jobs: [] })),
   devices: vi.fn(async () => []),
 }));
-vi.mock("./features/auth/client", () => ({
+vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: {
     useSession: () => ({
@@ -24,11 +24,11 @@ vi.mock("./features/auth/client", () => ({
     }),
   },
 }));
-vi.mock("./features/automations/client", () => ({
+vi.mock("./features/automations/client.js", () => ({
   cloudJobs: { list: mocks.list },
   jobDevices: { list: mocks.devices },
 }));
-import { Route } from "./routes/(app)/automations.tsx";
+import { Route } from "./routes/(app)/automations.js";
 beforeEach(() => {
   mocks.account = null;
   mocks.list.mockClear();

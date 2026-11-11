@@ -1,1 +1,1 @@
-export type { IconComponent, IconProps } from "./icon.tsx";
+export type { IconComponent, IconProps } from "./icon.js";

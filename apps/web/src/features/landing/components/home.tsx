@@ -14,13 +14,13 @@ import { LaptopIcon } from "@raypx/icons/laptop";
 import { ScheduleIcon } from "@raypx/icons/schedule";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { TaskListIcon } from "@raypx/icons/task-list";
-import { DotGrid, SpotlightLayer, useSpotlight } from "../../../components/artwork.tsx";
-import { LandingAuthAction } from "./auth-action.tsx";
-import { ApprovalsArt, AutomationsArt, MemoryArt, ProjectsArt } from "./illustrations.tsx";
-import { WorkflowPreview } from "./workflow-preview.tsx";
-import { accentGradient } from "../../../components/brand-accent.ts";
-import { FlowPackets } from "./flow-packets.tsx";
-import { ParticleField } from "./particle-field.tsx";
+import { DotGrid, SpotlightLayer, useSpotlight } from "../../../components/artwork.js";
+import { LandingAuthAction } from "./auth-action.js";
+import { ApprovalsArt, AutomationsArt, MemoryArt, ProjectsArt } from "./illustrations.js";
+import { WorkflowPreview } from "./workflow-preview.js";
+import { accentGradient } from "../../../components/brand-accent.js";
+import { FlowPackets } from "./flow-packets.js";
+import { ParticleField } from "./particle-field.js";
 
 type WorkspacePath = "/projects" | "/approvals" | "/automations" | "/memory";
 

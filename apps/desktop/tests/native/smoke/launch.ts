@@ -3,8 +3,8 @@ import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install";
-import { signingEnvironment } from "../../../scripts/host/signing";
+import { installWindowsSmoke } from "../../../scripts/host/windows-smoke-install.js";
+import { signingEnvironment } from "../../../scripts/host/signing.js";
 
 const cwd = resolve(import.meta.dirname, "../../..");
 export function shouldInstallWindowsSmoke(

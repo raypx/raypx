@@ -11,8 +11,8 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import type { MemoryClientPort } from "./port.ts";
-import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
+import type { MemoryClientPort } from "./port.js";
+import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
 interface Props {
   client: MemoryClientPort;
   ownerKey: string;

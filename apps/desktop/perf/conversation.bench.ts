@@ -1,11 +1,11 @@
 import { bench, webview } from "@hona/strobe";
-import { recordOwnership, teardown } from "./fixture";
+import { recordOwnership, teardown } from "./fixture.js";
 import {
   prepareConversation,
   closeConversation,
   openConversation,
   resetConversation,
-} from "./conversation";
+} from "./conversation.js";
 const seed = process.env.RAYPX_STROBE_SEED_HOME;
 if (!seed) throw new Error("Run through the Desktop perf task to prepare synthetic enrollment");
 export default bench({

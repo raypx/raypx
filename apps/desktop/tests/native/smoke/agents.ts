@@ -4,8 +4,8 @@ import { join } from "node:path";
 import type { RelayRequest, SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentProvider, AgentTask, HumanRequest } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { nativeAgentProviders } from "../../../scripts/host/agent-options";
-import { restartSmokeOwner } from "./owner";
+import { nativeAgentProviders } from "../../../scripts/host/agent-options.js";
+import { restartSmokeOwner } from "./owner.js";
 
 // Explicit gate: existing provider credentials/configuration are used and inference is billed.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
@@ -13,7 +13,7 @@ if (process.env.RAYPX_LIVE_AGENTS !== "1")
 const smokeDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 if (!smokeDirectory) throw new Error("Live Agent smoke requires an isolated native data directory");
 const directory = smokeDirectory;
-const { engine, quitDesktop } = await import("./host");
+const { engine, quitDesktop } = await import("./host.js");
 const accountId = LOCAL_WORKSPACE_ID;
 const results: { provider: AgentProvider; version: string; checks: string[] }[] = [];
 const activeStatuses = ["pending", "running", "waiting", "cancelling"];

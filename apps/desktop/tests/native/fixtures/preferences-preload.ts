@@ -3,7 +3,7 @@ import {
   DEVICE_PREFERENCES_KEY,
   isDevicePreferences,
   type NativePreferenceSnapshot,
-} from "../../../preferences";
+} from "../../../preferences.js";
 
 /** Execute either host's actual preload and inspect JSON identity in its own JS realm. */
 function inspectPreferencePreload(script: string) {

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { WebShell } from "../../components/shell.tsx";
-import { accountQuery } from "../../features/auth/account-query.ts";
+import { WebShell } from "../../components/shell.js";
+import { accountQuery } from "../../features/auth/account-query.js";
 
 // Public application shell. Private features resolve their own session boundary.
 export const Route = createFileRoute("/(app)")({

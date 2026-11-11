@@ -5,9 +5,9 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { LocalEvent } from "@raypx/contracts/local";
-import { HerdrTerminalHost, terminalLaunch } from "../../src/runtime/process/herdr.ts";
-import { herdrRpc } from "../helpers/herdr-rpc.ts";
-import { removeTemporaryDirectory } from "../helpers/temporary.ts";
+import { HerdrTerminalHost, terminalLaunch } from "../../src/runtime/process/herdr.js";
+import { herdrRpc } from "../helpers/herdr-rpc.js";
+import { removeTemporaryDirectory } from "../helpers/temporary.js";
 
 // eslint-disable-next-line no-control-regex -- Inspect rendered ANSI fixture frames.
 const ansi = /\x1b\[[0-?]*[ -/]*[@-~]/g;

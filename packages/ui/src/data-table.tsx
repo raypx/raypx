@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./components/ui/table.tsx";
+} from "./components/ui/table.js";
 
 type ColumnPresentation = {
   header?: Pick<ComponentProps<typeof TableHead>, "className" | "aria-sort">;

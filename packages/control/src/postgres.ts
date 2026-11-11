@@ -3,7 +3,7 @@ export {
   controlListQuery,
   eventWindowPrune,
   contextCommandPrune,
-} from "./repository.ts";
+} from "./repository.js";
 export type {
   ControlRepository,
   ControlReader,
@@ -11,5 +11,5 @@ export type {
   ControlQuery,
   ControlRecord,
   RecordKind,
-} from "./ports.ts";
-export { CONTEXT_COMMAND_TTL_MS } from "./records.ts";
+} from "./ports.js";
+export { CONTEXT_COMMAND_TTL_MS } from "./records.js";

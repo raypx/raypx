@@ -7,16 +7,16 @@ import {
   type DesktopChannel,
 } from "@raypx/contracts/desktop";
 import { localParams, type LocalEvent } from "@raypx/contracts/local";
-import { errorPayload, LocalError } from "../../errors.ts";
-import type { ExecutionHost } from "../../owner.ts";
-import { AwakeClock } from "../awake-clock.ts";
-import { abortable } from "../cancellation.ts";
-import { serverOrigin } from "../remote/origin.ts";
-import { DesktopApi } from "./api.ts";
-import { SessionCookies } from "./cookies.ts";
-import { DesktopControl } from "./control.ts";
-import { encryptedSessionStore, sessionRecordStore } from "./sessions.ts";
-import { DesktopExecutions } from "./executions.ts";
+import { errorPayload, LocalError } from "../../errors.js";
+import type { ExecutionHost } from "../../owner.js";
+import { AwakeClock } from "../awake-clock.js";
+import { abortable } from "../cancellation.js";
+import { serverOrigin } from "../remote/origin.js";
+import { DesktopApi } from "./api.js";
+import { SessionCookies } from "./cookies.js";
+import { DesktopControl } from "./control.js";
+import { encryptedSessionStore, sessionRecordStore } from "./sessions.js";
+import { DesktopExecutions } from "./executions.js";
 
 const capability = () => crypto.randomUUID() + crypto.randomUUID();
 const frameLimit = 8 * 1024 * 1024;

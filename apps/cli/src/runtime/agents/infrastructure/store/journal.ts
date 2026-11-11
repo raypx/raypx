@@ -2,11 +2,11 @@ import { and, eq, gt, inArray, notInArray, or, sql } from "drizzle-orm";
 import type { SequencedEvent } from "@raypx/contracts/tasks";
 import { agentEventSchema, type AgentEvent } from "@raypx/core/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import type { LocalDatabase } from "../../../sqlite/index.ts";
-import { storedRecord } from "../../../sqlite/records.ts";
-import { agentMeta, journal, outbox } from "../../../sqlite/schema.ts";
-import { isDesktopBinding } from "../../model.ts";
-import { journalTaskId } from "./queries.ts";
+import type { LocalDatabase } from "../../../sqlite/index.js";
+import { storedRecord } from "../../../sqlite/records.js";
+import { agentMeta, journal, outbox } from "../../../sqlite/schema.js";
+import { isDesktopBinding } from "../../model.js";
+import { journalTaskId } from "./queries.js";
 
 /** Ordered task events per binding, the relay outbox and its rolling replay window. */
 export class EventJournal {

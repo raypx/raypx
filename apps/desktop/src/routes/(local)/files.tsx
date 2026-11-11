@@ -7,23 +7,23 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { useEffect, useRef } from "react";
 import { cn } from "@raypx/ui/lib/utils";
 
-import { localRequest } from "../../lib/desktop.ts";
-import { filesSearch } from "../../features/files/search.ts";
+import { localRequest } from "../../lib/desktop.js";
+import { filesSearch } from "../../features/files/search.js";
 import {
   FilesProvider,
   fileErrors,
   isDirty,
   useFilesStore,
   useFilesStoreApi,
-} from "../../features/files/store.tsx";
-import { useFileActions } from "../../features/files/use-actions.ts";
-import { FilesToolbar } from "../../features/files/components/toolbar.tsx";
-import { FileTable, type FileListingResult } from "../../features/files/components/table.tsx";
-import { FileOperationForm } from "../../features/files/components/operation-form.tsx";
-import { FileEditor } from "../../features/files/components/editor.tsx";
-import { LocalWelcome } from "../../features/onboarding/welcome.tsx";
-import { recentProjects, rememberProject } from "../../features/tasks/project-history.ts";
-import { ProjectTools } from "../../features/tasks/project-tools.tsx";
+} from "../../features/files/store.js";
+import { useFileActions } from "../../features/files/use-actions.js";
+import { FilesToolbar } from "../../features/files/components/toolbar.js";
+import { FileTable, type FileListingResult } from "../../features/files/components/table.js";
+import { FileOperationForm } from "../../features/files/components/operation-form.js";
+import { FileEditor } from "../../features/files/components/editor.js";
+import { LocalWelcome } from "../../features/onboarding/welcome.js";
+import { recentProjects, rememberProject } from "../../features/tasks/project-history.js";
+import { ProjectTools } from "../../features/tasks/project-tools.js";
 
 const localRoute = getRouteApi("/(local)");
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { LocalError } from "../../errors.ts";
-import { serverOrigin } from "../remote/origin.ts";
+import { LocalError } from "../../errors.js";
+import { serverOrigin } from "../remote/origin.js";
 
 export const sessionLimit = 256 * 1024;
 const authName = /^(?:__Secure-)?better-auth\.[a-zA-Z0-9_.-]+$/;

@@ -1,14 +1,14 @@
-import { runtimeLease } from "../process/lease.ts";
-import { cliLaunch, cliInstallation, installRuntimeCopy } from "../process/installation.ts";
+import { runtimeLease } from "../process/lease.js";
+import { cliLaunch, cliInstallation, installRuntimeCopy } from "../process/installation.js";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import manifest from "../../../package.json";
-import { cliBuild } from "./build.ts";
-import { profilePath, acquireLock } from "../state/index.ts";
-import { LocalError } from "../errors.ts";
-import { localAddressSchema, localFetch } from "../local-http.ts";
+import { cliBuild } from "./build.js";
+import { profilePath, acquireLock } from "../state/index.js";
+import { LocalError } from "../errors.js";
+import { localAddressSchema, localFetch } from "../local-http.js";
 
 export type ProfileOptions = { dataDir?: string; profile?: string };
 const daemonEndpointSchema = z

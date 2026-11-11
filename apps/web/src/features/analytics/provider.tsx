@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AnalyticsApplication } from "@raypx/analytics/client/application";
 import { browserPreferenceStore } from "@raypx/analytics/browser";
 import { useRouterState } from "@tanstack/react-router";
-import { analytics, analyticsConfigured } from "./client.ts";
+import { analytics, analyticsConfigured } from "./client.js";
 const store = browserPreferenceStore();
 
 export function AppAnalytics({ children }: { children: ReactNode }) {

@@ -3,11 +3,11 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import userEvent from "@testing-library/user-event";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { deferred } from "../../../tests/helpers/desktop.ts";
-import { CloudTerminalSettings } from "./cloud-terminal-settings.tsx";
+import { deferred } from "../../../tests/helpers/desktop.js";
+import { CloudTerminalSettings } from "./cloud-terminal-settings.js";
 
 const mocks = vi.hoisted(() => ({ settings: vi.fn(), configure: vi.fn(), local: vi.fn() }));
-vi.mock("../../lib/desktop", () => ({
+vi.mock("../../lib/desktop.js", () => ({
   getBridge: async () => ({
     request: { terminalSettings: mocks.settings, terminalConfigure: mocks.configure },
   }),

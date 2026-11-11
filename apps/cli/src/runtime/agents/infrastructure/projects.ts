@@ -1,11 +1,11 @@
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import { ContextError } from "@raypx/core/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { desktopBinding } from "../model";
+import { desktopBinding } from "../model.js";
 import type { TaskContextTarget, AgentProvider } from "@raypx/core/tasks";
 import { existsSync, realpathSync } from "node:fs";
-import { acquireLock, type StateStore } from "../../state";
-import type { ExecutionProjects } from "../application/coordinator";
+import { acquireLock, type StateStore } from "../../state/index.js";
+import type { ExecutionProjects } from "../application/coordinator.js";
 export class LocalExecutionProjects implements ExecutionProjects {
   constructor(
     private readonly state: StateStore,

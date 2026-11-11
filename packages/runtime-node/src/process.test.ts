@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "vite-plus/test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { spawnProcess, run, runProcessSync } from "./process.ts";
+import { spawnProcess, run, runProcessSync } from "./process.js";
 
 const roots: string[] = [];
 afterEach(() => {

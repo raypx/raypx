@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@raypx/ui/components/ui/select";
-import { selectOption } from "../../tests/helpers/select.ts";
+import { selectOption } from "../../tests/helpers/select.js";
 
 it("reacquires Select options after a rejected selection and compares full overlapping labels", async () => {
   function Fixture() {

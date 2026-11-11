@@ -1,12 +1,12 @@
-import { analytics } from "../../analytics/client.ts";
+import { analytics } from "../../analytics/client.js";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
   type AuthFormLinkProps,
   type AuthMode,
 } from "@raypx/auth/client";
-import { authClient, webUrl } from "../client.ts";
-import { desktopReturnTo } from "../return-to.ts";
+import { authClient, webUrl } from "../client.js";
+import { desktopReturnTo } from "../return-to.js";
 
 function authLinkLocation(to: AuthFormLinkProps["to"], returnTo: string) {
   if (to === "account") return { to: returnTo };

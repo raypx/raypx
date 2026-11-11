@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vite-plus/test";
 import { taskInputActivitySchema } from "@raypx/core/tasks";
-import { relayFixture } from "../../tests/helpers/relay.ts";
+import { relayFixture } from "../../tests/helpers/relay.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

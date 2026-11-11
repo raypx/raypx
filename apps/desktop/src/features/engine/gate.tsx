@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
-import { useDesktopPlatform } from "../../lib/platform-context.tsx";
-import { useDesktopEngine } from "./provider.tsx";
-import { EngineNotice } from "./notice.tsx";
-import { WindowDragRegion } from "../../components/window-drag-region.tsx";
+import { useDesktopPlatform } from "../../lib/platform-context.js";
+import { useDesktopEngine } from "./provider.js";
+import { EngineNotice } from "./notice.js";
+import { WindowDragRegion } from "../../components/window-drag-region.js";
 
 /** First connection blocks local queries; later outages keep the mounted workspace intact. */
 export function EngineGate({ children }: { children: ReactNode }) {

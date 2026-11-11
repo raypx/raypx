@@ -1,7 +1,7 @@
 import { expect } from "vite-plus/test";
 import type { DesktopChannel } from "@raypx/contracts/desktop";
-import { daemonFetch, type DaemonEndpoint } from "../../src/runtime/daemon/endpoint.ts";
-import { localFetch, type LocalAddress } from "../../src/runtime/local-http.ts";
+import { daemonFetch, type DaemonEndpoint } from "../../src/runtime/daemon/endpoint.js";
+import { localFetch, type LocalAddress } from "../../src/runtime/local-http.js";
 
 export const pageOrigin = `mygo://${"a".repeat(32)}`;
 type Packet = {

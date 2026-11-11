@@ -1,9 +1,9 @@
 import { chmod, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { deploymentServices } from "../build/deployment";
-import { releaseMetadataFile } from "../build/release";
-import { checkApi, checkWeb, checkDeploymentSession } from "../smoke/checks";
-import { Evidence } from "./evidence";
+import { deploymentServices } from "../build/deployment.js";
+import { releaseMetadataFile } from "../build/release.js";
+import { checkApi, checkWeb, checkDeploymentSession } from "../smoke/checks.js";
+import { Evidence } from "./evidence.js";
 
 export function deploymentSmokePlatform(args: string[]): string {
   if (!args.length) return "linux/amd64";

@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
-import { LocalError } from "../runtime/errors.ts";
+import { LocalError } from "../runtime/errors.js";
 
 export interface TuiTerminal {
   write(text: string): void;

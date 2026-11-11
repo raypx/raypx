@@ -1,6 +1,6 @@
 import { deferred, ManualScheduler, RelaySocket } from "@raypx/testing";
 import { expect, it, vi } from "vite-plus/test";
-import { RelayConnection } from "./relay.ts";
+import { RelayConnection } from "./relay.js";
 
 it.each([undefined, 1, 2, 3, "4", 5])(
   "rejects server protocol %s without retrying or accepting application frames",

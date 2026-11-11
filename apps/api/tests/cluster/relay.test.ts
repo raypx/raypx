@@ -16,7 +16,7 @@ import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 import { createApiRuntime } from "../../server/runtime/server.js";
-import { serveBackend } from "../fixtures/backend-server.ts";
+import { serveBackend } from "../fixtures/backend-server.js";
 import { getApiEnvironment } from "../../server/env.js";
 import { connected, controlAuth, observed } from "@raypx/control/testing";
 

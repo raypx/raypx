@@ -1,13 +1,13 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { StateStore } from "../../../../src/runtime/state";
-import { uuid, task, request, fixture } from "../../../helpers/agent-snapshot";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { StateStore } from "../../../../src/runtime/state/index.js";
+import { uuid, task, request, fixture } from "../../../helpers/agent-snapshot.js";
 
 afterEach(() => vi.restoreAllMocks());
 

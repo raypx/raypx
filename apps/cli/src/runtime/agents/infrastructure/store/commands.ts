@@ -2,10 +2,10 @@ import { z } from "zod";
 import { createHash } from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { relayRequestSchema, type RelayCommand } from "@raypx/contracts/tasks";
-import { LocalError } from "../../../errors.ts";
-import type { LocalDatabase } from "../../../sqlite/index.ts";
-import { storedRecord } from "../../../sqlite/records.ts";
-import { commands, receipts } from "../../../sqlite/schema.ts";
+import { LocalError } from "../../../errors.js";
+import type { LocalDatabase } from "../../../sqlite/index.js";
+import { storedRecord } from "../../../sqlite/records.js";
+import { commands, receipts } from "../../../sqlite/schema.js";
 
 type CommandResult = { ok: true; value: unknown } | { ok: false; code: string };
 

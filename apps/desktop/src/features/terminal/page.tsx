@@ -1,4 +1,4 @@
-import { formText } from "../../form-data.ts";
+import { formText } from "../../form-data.js";
 import type { DesktopExecution } from "@raypx/contracts/desktop";
 import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
 import { TerminalIcon } from "@raypx/icons/terminal";
@@ -27,10 +27,10 @@ import {
 } from "@raypx/ui/components/ui/select";
 import { useTranslations } from "@raypx/i18n/browser";
 import { themeTokens, useTheme } from "@raypx/ui/themes";
-import { getBridge, isDesktop, localRequest, onLocalEvent } from "../../lib/desktop.ts";
-import { terminalFrame } from "./frame.ts";
-import { terminalKey } from "./input.ts";
-import { ProjectTools } from "../tasks/project-tools.tsx";
+import { getBridge, isDesktop, localRequest, onLocalEvent } from "../../lib/desktop.js";
+import { terminalFrame } from "./frame.js";
+import { terminalKey } from "./input.js";
+import { ProjectTools } from "../tasks/project-tools.js";
 
 /** The project a terminal opens in; `cwd` is empty when its root is not granted on this device. */
 export interface TerminalProject {

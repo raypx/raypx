@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { cn } from "./lib/utils.ts";
+import { cn } from "./lib/utils.js";
 import {
   Select,
   SelectContent,
@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./components/ui/select.tsx";
+} from "./components/ui/select.js";
 
 interface SelectOption<Value extends string> {
   value: Value;

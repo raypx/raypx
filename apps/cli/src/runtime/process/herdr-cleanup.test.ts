@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { removeHerdrDirectory } from "./herdr-cleanup.ts";
+import { removeHerdrDirectory } from "./herdr-cleanup.js";
 describe("owned Herdr directory cleanup", () => {
   it("retries Windows handle release errors and eventually removes the directory", async () => {
     let attempts = 0;

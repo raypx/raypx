@@ -1,6 +1,6 @@
 import { ManualScheduler } from "@raypx/testing";
 import { expect, it } from "vite-plus/test";
-import { AcknowledgedStream } from "./acknowledged-stream";
+import { AcknowledgedStream } from "./acknowledged-stream.js";
 
 it("commits only the exact stream, sequence and snapshot acknowledgement", async () => {
   const scheduler = new ManualScheduler(),

@@ -10,9 +10,9 @@ import {
   connectorCommand,
   connectorStatus,
   preserveModifiedCli,
-} from "../../../../src/runtime/daemon/connectors.ts";
-import { planHookSettings } from "../../../../src/runtime/terminal/settings.ts";
-import { cliBuild } from "../../../../src/runtime/daemon/build.ts";
+} from "../../../../src/runtime/daemon/connectors.js";
+import { planHookSettings } from "../../../../src/runtime/terminal/settings.js";
+import { cliBuild } from "../../../../src/runtime/daemon/build.js";
 afterEach(() => vi.unstubAllEnvs());
 it.each([
   { digest: createHash("sha256").update("owned binary").digest("hex") },

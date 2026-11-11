@@ -1,4 +1,4 @@
-import { enrollTestProfile } from "./instance";
+import { enrollTestProfile } from "./instance.js";
 import assert from "node:assert/strict";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";

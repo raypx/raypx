@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it, vi } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { cacheSnapshot } from "./cache.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { cacheSnapshot } from "./cache.js";
 
 const { fixture } = workspaceFixtures();
 

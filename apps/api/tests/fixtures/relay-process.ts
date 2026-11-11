@@ -1,5 +1,5 @@
-import { createBackendRuntime } from "../../server/runtime/backend.ts";
-import { serveBackend } from "./backend-server.ts";
+import { createBackendRuntime } from "../../server/runtime/backend.js";
+import { serveBackend } from "./backend-server.js";
 
 const runtime = await createBackendRuntime(process.env);
 const server = serveBackend(runtime, Number(process.env.PORT));

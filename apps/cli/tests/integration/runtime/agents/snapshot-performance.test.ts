@@ -1,9 +1,16 @@
-import { profileStorage } from "../../../helpers/sqlite";
+import { profileStorage } from "../../../helpers/sqlite.js";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { Database } from "bun:sqlite";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { StateStore } from "../../../../src/runtime/state";
-import { uuid, now, normalizedSql, task, request, fixture } from "../../../helpers/agent-snapshot";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
+import { StateStore } from "../../../../src/runtime/state/index.js";
+import {
+  uuid,
+  now,
+  normalizedSql,
+  task,
+  request,
+  fixture,
+} from "../../../helpers/agent-snapshot.js";
 
 afterEach(() => vi.restoreAllMocks());
 

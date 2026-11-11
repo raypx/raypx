@@ -6,25 +6,25 @@ import {
   type HumanRequest,
   type TaskActivity,
 } from "@raypx/core/tasks";
-import type { LocalDatabase } from "../sqlite/index.ts";
-import type { ActivityDraft, LocalAgentTask } from "./model.ts";
-import type { ExecutionStore } from "./harness/ports.ts";
-import { OrchestrationSink } from "./infrastructure/store/sink.ts";
-import { EffectLog } from "./infrastructure/store/effects.ts";
-import { TaskEventLog } from "./infrastructure/store/events.ts";
-import { toWireEvents } from "./domain/wire.ts";
-import type { OrchestrationEvent } from "./domain/events.ts";
-import type { EffectCommand, LiveFacts } from "./domain/commands.ts";
-import { decide, type Decision } from "./domain/decider.ts";
-import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports.ts";
-import { ActivityLog } from "./infrastructure/store/activity.ts";
-import { clearTasks } from "./infrastructure/store/clear.ts";
-import { CommandReceipts } from "./infrastructure/store/commands.ts";
-import { EventJournal } from "./infrastructure/store/journal.ts";
-import { ProfileSettings } from "./infrastructure/store/profile.ts";
-import { RequestRecords } from "./infrastructure/store/requests.ts";
-import { taskSnapshot } from "./infrastructure/store/snapshot.ts";
-import { TaskRecords } from "./infrastructure/store/tasks.ts";
+import type { LocalDatabase } from "../sqlite/index.js";
+import type { ActivityDraft, LocalAgentTask } from "./model.js";
+import type { ExecutionStore } from "./harness/ports.js";
+import { OrchestrationSink } from "./infrastructure/store/sink.js";
+import { EffectLog } from "./infrastructure/store/effects.js";
+import { TaskEventLog } from "./infrastructure/store/events.js";
+import { toWireEvents } from "./domain/wire.js";
+import type { OrchestrationEvent } from "./domain/events.js";
+import type { EffectCommand, LiveFacts } from "./domain/commands.js";
+import { decide, type Decision } from "./domain/decider.js";
+import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports.js";
+import { ActivityLog } from "./infrastructure/store/activity.js";
+import { clearTasks } from "./infrastructure/store/clear.js";
+import { CommandReceipts } from "./infrastructure/store/commands.js";
+import { EventJournal } from "./infrastructure/store/journal.js";
+import { ProfileSettings } from "./infrastructure/store/profile.js";
+import { RequestRecords } from "./infrastructure/store/requests.js";
+import { taskSnapshot } from "./infrastructure/store/snapshot.js";
+import { TaskRecords } from "./infrastructure/store/tasks.js";
 
 /**
  * The agent persistence facade. Each record family lives in `infrastructure/store`;

@@ -1,5 +1,5 @@
 import { createElement, type ComponentProps, type ElementType } from "react";
-import { cn } from "./utils.ts";
+import { cn } from "./utils.js";
 
 /** A styled element that keeps its native props, ref and data-slot override behavior. */
 export function styledSlot<T extends ElementType>(element: T, slot: string, ...classes: string[]) {

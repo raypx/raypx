@@ -12,7 +12,7 @@ import {
 import { piDefinition } from "@raypx/providers/pi";
 import { ClaudeAdapter, claudeDefinition } from "@raypx/providers/claude";
 import { CodexAdapter, codexDefinition } from "@raypx/providers/codex";
-import { createTransport, type TransportFactory } from "../../harness/transport";
+import { createTransport, type TransportFactory } from "../../harness/transport.js";
 
 type Registration = {
   kind: "process";

@@ -2,8 +2,8 @@
 import { createMemoryHistory, createRouter, type AnyRoute } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vite-plus/test";
-import { routeTree } from "./routeTree.gen.ts";
-import { webPages } from "./features/auth/access.ts";
+import { routeTree } from "./routeTree.gen.js";
+import { webPages } from "./features/auth/access.js";
 
 function leaves(route: AnyRoute): AnyRoute[] {
   const children = Object.values((route.children ?? {}) as Record<string, AnyRoute>);

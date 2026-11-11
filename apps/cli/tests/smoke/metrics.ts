@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
-import { enrollTestProfile } from "../helpers/instance.ts";
+import { enrollTestProfile } from "../helpers/instance.js";
 
 // Linux measurements are evidence for the standalone CLI, not Desktop acceptance.
 assert.equal(process.platform, "linux", "This RSS probe requires Linux /proc");

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { normalizeTrustedOrigins, resumablePath } from "./auth.ts";
+import { normalizeTrustedOrigins, resumablePath } from "./auth.js";
 
 it("normalizes explicit origins and ignores invalid or opaque entries without widening trust", () => {
   expect(

@@ -1,6 +1,6 @@
 import type { CatalogShape, LocaleSource as IntlLocaleSource } from "@raypx-kit/intl/types";
-import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.ts";
-import type en from "./messages/en.ts";
+import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.js";
+import type en from "./messages/en.js";
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export type LocaleOption = (typeof LOCALE_OPTIONS)[number];

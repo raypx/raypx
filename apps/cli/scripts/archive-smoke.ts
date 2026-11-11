@@ -4,8 +4,8 @@ import { mkdtemp, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
-import { removeTemporaryDirectory } from "../tests/helpers/temporary";
-import { extractArchive } from "./archive.ts";
+import { removeTemporaryDirectory } from "../tests/helpers/temporary.js";
+import { extractArchive } from "./archive.js";
 const output = resolve(import.meta.dirname, "../../../.artifacts/distribution");
 const names = (await readdir(output)).filter((name) =>
   name.endsWith(process.platform === "win32" ? ".zip" : ".tar.gz"),

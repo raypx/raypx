@@ -19,9 +19,9 @@ import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local"
 import type { JobDefinition } from "@raypx/core/jobs";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
-import { routeTree } from "../../src/routeTree.gen.ts";
-import { DesktopRuntimeProvider } from "../../src/features/engine/provider.tsx";
-import { EngineRouteSync } from "../../src/features/engine/routes.tsx";
+import { routeTree } from "../../src/routeTree.gen.js";
+import { DesktopRuntimeProvider } from "../../src/features/engine/provider.js";
+import { EngineRouteSync } from "../../src/features/engine/routes.js";
 
 expect.extend(matchers);
 
@@ -33,7 +33,7 @@ const mocks = vi.hoisted(() => ({
   executionList: vi.fn<() => Promise<unknown>>(),
   terminalRestore: vi.fn<(input: { id: string }) => Promise<unknown>>(),
 }));
-vi.mock("../../src/lib/desktop", () => ({
+vi.mock("../../src/lib/desktop.js", () => ({
   getBridge: async () => ({
     request: { executionList: mocks.executionList, terminalRestore: mocks.terminalRestore },
   }),
@@ -49,7 +49,7 @@ vi.mock("../../src/lib/desktop", () => ({
   restartEngine: vi.fn(),
   saveDesktopPreferences: vi.fn(),
 }));
-vi.mock("../../src/features/auth/client", () => ({
+vi.mock("../../src/features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
@@ -62,7 +62,7 @@ vi.mock("../../src/features/auth/client", () => ({
     useSession: () => ({ data: null, error: null, isPending: false }),
   },
 }));
-vi.mock("../../src/features/tasks/client", () => ({
+vi.mock("../../src/features/tasks/client.js", () => ({
   taskClient: { account: { get: vi.fn() } },
 }));
 vi.mock("@xterm/xterm", () => ({ Terminal: mocks.terminal }));

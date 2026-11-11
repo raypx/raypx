@@ -1,5 +1,5 @@
 import { AutomationFilters } from "@raypx/jobs/client";
-import { formText } from "../../form-data.ts";
+import { formText } from "../../form-data.js";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ClockIcon } from "@raypx/icons/clock";
 import { PlusIcon } from "@raypx/icons/plus";
@@ -10,10 +10,10 @@ import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
 import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/core/jobs";
-import { LocalJobForm } from "./local-form.tsx";
-import { LocalJobHistory } from "./local-history.tsx";
-import { LocalJobList } from "./local-list.tsx";
-import { localRequest, onLocalEvent } from "../../lib/desktop.ts";
+import { LocalJobForm } from "./local-form.js";
+import { LocalJobHistory } from "./local-history.js";
+import { LocalJobList } from "./local-list.js";
+import { localRequest, onLocalEvent } from "../../lib/desktop.js";
 import { Link } from "@tanstack/react-router";
 
 export function LocalJobsPage({

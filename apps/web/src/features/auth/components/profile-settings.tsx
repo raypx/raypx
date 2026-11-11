@@ -12,7 +12,7 @@ import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { InfoIcon } from "@raypx/icons/info";
-import type { authClient } from "../client.ts";
+import type { authClient } from "../client.js";
 import { authPolicy } from "@raypx/auth/policy";
 
 export function ProfileSettings({

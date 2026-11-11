@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { AwakeClock } from "./awake-clock.ts";
+import { AwakeClock } from "./awake-clock.js";
 
 function fixture(maxStep = 10_000) {
   let wall = 1_000_000;

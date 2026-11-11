@@ -2,13 +2,13 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { project, platformProject } from "../../tests/helpers/verification";
-import { workspaceFixtures } from "../../tests/helpers/workspace";
-import { taskModel, taskPlan, taskRef } from "../tasks/model";
-import { changedFiles, verificationPlan } from "./plan";
-import { githubPlan, readGithubPlan } from "./ci";
+import { project, platformProject } from "../../tests/helpers/verification.js";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { taskModel, taskPlan, taskRef } from "../tasks/model.js";
+import { changedFiles, verificationPlan } from "./plan.js";
+import { githubPlan, readGithubPlan } from "./ci.js";
 import { verifyOptions } from ".";
-import { executionTasks } from "./execution";
+import { executionTasks } from "./execution.js";
 
 const { member } = workspaceFixtures();
 

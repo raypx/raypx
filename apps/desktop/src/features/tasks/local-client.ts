@@ -3,7 +3,7 @@ import { LOCAL_WORKSPACE_ID, type LocalEvent } from "@raypx/contracts/local";
 import { type RelayRequest, taskChangeSchema, type TaskChange } from "@raypx/contracts/tasks";
 import { taskSchema, humanRequestSchema, taskInputActivitySchema } from "@raypx/core/tasks";
 import type { TaskWorkspacePort } from "@raypx/tasks/model";
-import { localRequest, onLocalEvent, hasTerminalHooks } from "../../lib/desktop.ts";
+import { localRequest, onLocalEvent, hasTerminalHooks } from "../../lib/desktop.js";
 import { observedProjectionSchema, terminalRequestSchema } from "@raypx/contracts/terminal";
 
 function failure(code: string) {

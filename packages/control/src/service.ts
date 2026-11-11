@@ -1,13 +1,13 @@
-import type { ControlRepository } from "./ports.ts";
-import type { RelayActor, ResolveTaskContext } from "./records.ts";
-export { ControlError, type RelayActor, type ResolveTaskContext } from "./records.ts";
-export { ControlProjects } from "./application/projects.ts";
-import { ControlCredentials } from "./application/credentials.ts";
-import { ControlCommands } from "./application/commands.ts";
+import type { ControlRepository } from "./ports.js";
+import type { RelayActor, ResolveTaskContext } from "./records.js";
+export { ControlError, type RelayActor, type ResolveTaskContext } from "./records.js";
+export { ControlProjects } from "./application/projects.js";
+import { ControlCredentials } from "./application/credentials.js";
+import { ControlCommands } from "./application/commands.js";
 import { TaskProjection } from "@raypx/tasks/server";
-import { taskProjectionPorts } from "./task-ports.ts";
-import { ObservedProjectionStore } from "./application/observed-projection.ts";
-import { ControlProjects } from "./application/projects.ts";
+import { taskProjectionPorts } from "./task-ports.js";
+import { ObservedProjectionStore } from "./application/observed-projection.js";
+import { ControlProjects } from "./application/projects.js";
 
 export class ControlService {
   readonly credentials: ControlCredentials;

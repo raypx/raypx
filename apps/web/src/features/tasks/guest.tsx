@@ -5,8 +5,8 @@ import { HistoryIcon } from "@raypx/icons/history";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
 import type { TaskWorkspacePort } from "@raypx/tasks/model";
-import { SignInLink } from "../auth/components/session-boundary.tsx";
-import { saveGuestDraft, writeGuestDraft, useGuestDraft } from "./guest-draft.ts";
+import { SignInLink } from "../auth/components/session-boundary.js";
+import { saveGuestDraft, writeGuestDraft, useGuestDraft } from "./guest-draft.js";
 
 export function GuestTasks({
   client,

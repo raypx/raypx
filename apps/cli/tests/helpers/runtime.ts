@@ -1,11 +1,11 @@
-import { closeProfileStorage } from "./sqlite.ts";
+import { closeProfileStorage } from "./sqlite.js";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach } from "vite-plus/test";
-import { createRuntime } from "./enrolled.ts";
-import type { LocalRuntime } from "../../src/runtime/index.ts";
-import type { RecordDiagnostic } from "../../src/diagnostics.ts";
+import { createRuntime } from "./enrolled.js";
+import type { LocalRuntime } from "../../src/runtime/index.js";
+import type { RecordDiagnostic } from "../../src/diagnostics.js";
 
 export function runtimeFixtures() {
   const roots: string[] = [];

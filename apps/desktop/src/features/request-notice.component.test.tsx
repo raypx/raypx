@@ -9,11 +9,11 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   listener: undefined as ((event: LocalEvent) => void) | undefined,
 }));
-vi.mock("./tasks/local-client", () => ({
+vi.mock("./tasks/local-client.js", () => ({
   localTaskClient: { observed: { list: mocks.list } },
 }));
 vi.mock("@tanstack/react-router", () => ({ useRouter: () => ({ navigate: mocks.navigate }) }));
-vi.mock("../lib/desktop", () => ({
+vi.mock("../lib/desktop.js", () => ({
   onLocalEvent: (listener: (event: LocalEvent) => void) => {
     mocks.listener = listener;
     return () => {
@@ -21,7 +21,7 @@ vi.mock("../lib/desktop", () => ({
     };
   },
 }));
-import { TerminalRequestNotice } from "./tasks/request-notice.tsx";
+import { TerminalRequestNotice } from "./tasks/request-notice.js";
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

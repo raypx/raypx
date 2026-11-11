@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { packageTestArguments, planTests } from "./test-command.ts";
+import { packageTestArguments, planTests } from "./test-command.js";
 
 const root = "/repo";
 const members = [

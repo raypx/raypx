@@ -1,11 +1,11 @@
 import { expect } from "@playwright/test";
-import { test } from "../../helpers/browser-fixture.ts";
+import { test } from "../../helpers/browser-fixture.js";
 import {
   authResponse,
   connectedProject,
   signedInAccount,
   webShellFixture,
-} from "../../helpers/account-fixture.ts";
+} from "../../helpers/account-fixture.js";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 

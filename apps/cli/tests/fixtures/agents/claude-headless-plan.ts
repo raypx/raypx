@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync } from "node:fs";
-import { exitForVersion } from "./version.ts";
+import { exitForVersion } from "./version.js";
 
 exitForVersion("claude");
 let input = "";

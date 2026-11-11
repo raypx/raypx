@@ -9,11 +9,11 @@ import {
   createMemoryHistory,
   RouterProvider,
 } from "@tanstack/react-router";
-vi.mock("./features/auth/client", () => ({
+vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: () => ({ data: null, isPending: false, error: null }) },
 }));
-import { Route } from "./routes/(app)/settings.tsx";
+import { Route } from "./routes/(app)/settings.js";
 
 const SettingsPage = Route.options.component!;
 

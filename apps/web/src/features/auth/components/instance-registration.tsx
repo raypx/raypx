@@ -20,7 +20,7 @@ import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CloseIcon } from "@raypx/icons/close";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { useTranslations } from "@raypx/i18n/browser";
-import { apiUrl } from "../client.ts";
+import { apiUrl } from "../client.js";
 const client = createApiClient({ baseUrl: apiUrl });
 export function InstanceRegistration({ accountId }: { accountId: string }) {
   const t = useTranslations("instances"),

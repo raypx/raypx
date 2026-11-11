@@ -6,15 +6,15 @@ import {
   type TerminalRequest,
   type TerminalSession,
 } from "@raypx/contracts/terminal";
-import type { BrokerStore, DecisionReceipt } from "./broker.ts";
-import { LocalError } from "../errors.ts";
-import { type LocalDatabase } from "../sqlite/index.ts";
+import type { BrokerStore, DecisionReceipt } from "./broker.js";
+import { LocalError } from "../errors.js";
+import { type LocalDatabase } from "../sqlite/index.js";
 import {
   terminalProjects,
   terminalReceipts,
   terminalRequests,
   terminalSessions,
-} from "../sqlite/schema.ts";
+} from "../sqlite/schema.js";
 
 export class TerminalStore implements BrokerStore {
   constructor(private readonly db: LocalDatabase) {

@@ -1,5 +1,5 @@
 import type { AgentTask, HumanRequest, TaskInput } from "@raypx/core/tasks";
-import type { OrchestrationEvent } from "./events.ts";
+import type { OrchestrationEvent } from "./events.js";
 
 /** The records a task's committed history reconstructs. */
 export interface FoldedTask {

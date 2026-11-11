@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import type { RpcBoundary } from "./boundary.ts";
+import type { RpcBoundary } from "./boundary.js";
 export function createAccountHandlers({
   os,
   options,

@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import type { ReplayRecord } from "../../../tests/helpers/provider-replay.ts";
-import { bootstrap, late, fixture } from "../../../tests/helpers/provider-session.ts";
+import type { ReplayRecord } from "../../../tests/helpers/provider-replay.js";
+import { bootstrap, late, fixture } from "../../../tests/helpers/provider-session.js";
 
 it("queues input while Codex is acknowledging the initial turn", async () => {
   const initial = bootstrap("codex");

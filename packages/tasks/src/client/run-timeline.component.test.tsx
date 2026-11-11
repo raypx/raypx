@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { RunStep } from "../model/run-steps.ts";
-import { RunTimeline } from "./run-timeline.tsx";
+import type { RunStep } from "../model/run-steps.js";
+import { RunTimeline } from "./run-timeline.js";
 
 const steps: RunStep[] = [
   { kind: "status", key: "status:1", status: "running" },

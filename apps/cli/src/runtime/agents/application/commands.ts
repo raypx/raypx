@@ -13,11 +13,11 @@ import {
   type TaskInput,
 } from "@raypx/core/tasks";
 import { ContextError } from "@raypx/core/memory";
-import { LocalError } from "../../errors.ts";
-import { desktopBinding, type LocalAgentTask } from "../model.ts";
+import { LocalError } from "../../errors.js";
+import { desktopBinding, type LocalAgentTask } from "../model.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { systemClock, type Clock } from "../domain/ports.ts";
-import { DecisionRejected } from "../domain/decider.ts";
+import { systemClock, type Clock } from "../domain/ports.js";
+import { DecisionRejected } from "../domain/decider.js";
 
 export interface CommandEnvelope {
   id: string;

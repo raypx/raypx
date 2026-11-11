@@ -8,7 +8,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { SelectField } from "@raypx/ui/select-field";
 import { IconButton } from "@raypx/ui/icon-button";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useFilesStore } from "../store.tsx";
+import { useFilesStore } from "../store.js";
 
 export function FilesToolbar({
   roots,

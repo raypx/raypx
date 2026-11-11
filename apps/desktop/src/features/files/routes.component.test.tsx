@@ -34,8 +34,8 @@ import type {
 } from "@raypx/contracts/local";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
-import { routeTree } from "../../routeTree.gen.ts";
-import { rememberProject } from "../tasks/project-history.ts";
+import { routeTree } from "../../routeTree.gen.js";
+import { rememberProject } from "../tasks/project-history.js";
 
 expect.extend(matchers);
 
@@ -45,7 +45,7 @@ const mocks = vi.hoisted(() => ({
   localRequest: vi.fn<(method: LocalMethod, params: unknown) => Promise<unknown>>(),
   listeners: new Set<(event: LocalEvent) => void>(),
 }));
-vi.mock("../../lib/desktop", () => ({
+vi.mock("../../lib/desktop.js", () => ({
   isDesktop: mocks.isDesktop,
   hasTerminalHooks: () => false,
   localRequest: mocks.localRequest,
@@ -58,7 +58,7 @@ vi.mock("../../lib/desktop", () => ({
   restartEngine: vi.fn(),
   saveDesktopPreferences: vi.fn(),
 }));
-vi.mock("../auth/client", () => ({
+vi.mock("../auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
@@ -71,7 +71,7 @@ vi.mock("../auth/client", () => ({
     useSession: () => ({ data: null, error: null, isPending: false }),
   },
 }));
-vi.mock("../tasks/client", () => ({
+vi.mock("../tasks/client.js", () => ({
   taskClient: { account: { get: vi.fn() } },
 }));
 vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));

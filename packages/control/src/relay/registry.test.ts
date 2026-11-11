@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
-import { relayFixture } from "../../tests/helpers/relay.ts";
+import { relayFixture } from "../../tests/helpers/relay.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

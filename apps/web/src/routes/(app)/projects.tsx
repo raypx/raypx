@@ -1,10 +1,10 @@
-import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.tsx";
+import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.js";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ProjectList } from "@raypx/tasks/client";
 import { useTranslations } from "@raypx/i18n/browser";
-import { SignInGate, SessionBoundary } from "../../features/auth/components/session-boundary.tsx";
-import { apiUrl } from "../../features/auth/client.ts";
-import { taskClient } from "../../features/tasks/client.ts";
+import { SignInGate, SessionBoundary } from "../../features/auth/components/session-boundary.js";
+import { apiUrl } from "../../features/auth/client.js";
+import { taskClient } from "../../features/tasks/client.js";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { ShellActions } from "@raypx/blocks/shell";
 import { EmptyState } from "@raypx/ui/empty-state";

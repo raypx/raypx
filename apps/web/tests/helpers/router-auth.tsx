@@ -13,7 +13,7 @@ import { ThemeProvider } from "@raypx/ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { accessForRole, type AccountRole } from "@raypx/account/access";
-import { routeTree } from "../../src/routeTree.gen.ts";
+import { routeTree } from "../../src/routeTree.gen.js";
 
 const mocks = vi.hoisted(() => ({
   role: "member" as AccountRole,
@@ -42,7 +42,7 @@ const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
   loadAccount: vi.fn(),
 }));
-vi.mock("../../src/features/auth/client", () => ({
+vi.mock("../../src/features/auth/client.js", () => ({
   webUrl: "https://raypx.example",
   apiUrl: "https://api.raypx.example",
   loadAccount: async () => ({ status: "signed-out" }),
@@ -67,7 +67,7 @@ vi.mock("../../src/features/auth/client", () => ({
     signOut: mocks.signOut,
   },
 }));
-vi.mock("../../src/features/configuration/client", () => ({
+vi.mock("../../src/features/configuration/client.js", () => ({
   configurationClient: { get: mocks.configurationGet },
   publicConfigurationQuery: () => ({
     queryKey: ["configuration", "public"],
@@ -76,8 +76,8 @@ vi.mock("../../src/features/configuration/client", () => ({
     staleTime: Infinity,
   }),
 }));
-vi.mock("../../src/features/auth/access", async (original) => ({
-  ...(await original<typeof import("../../src/features/auth/access.ts")>()),
+vi.mock("../../src/features/auth/access.js", async (original) => ({
+  ...(await original<typeof import("../../src/features/auth/access.js")>()),
   accountAccessQuery: (accountId: string | null) => ({
     queryKey: ["account-access", accountId],
     queryFn: mocks.access,
@@ -85,7 +85,7 @@ vi.mock("../../src/features/auth/access", async (original) => ({
     retry: false,
   }),
 }));
-vi.mock("../../src/features/tasks/client", () => ({
+vi.mock("../../src/features/tasks/client.js", () => ({
   taskClient: {
     tasks: { list: mocks.tasks, create: mocks.create },
     devices: { list: mocks.devices },
@@ -93,10 +93,10 @@ vi.mock("../../src/features/tasks/client", () => ({
     subscribe: () => () => {},
   },
 }));
-vi.mock("../../src/features/auth/account", () => ({
+vi.mock("../../src/features/auth/account.js", () => ({
   loadAccount: mocks.loadAccount,
 }));
-vi.mock("../../src/preferences", () => ({
+vi.mock("../../src/preferences.js", () => ({
   loadPreferences: () => ({ theme: "light", locale: "en", systemLocales: ["en"] }),
 }));
 

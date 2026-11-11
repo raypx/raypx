@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vite-plus/test";
 import { CodexAdapter } from "@raypx/providers/codex";
 import { ClaudeAdapter } from "@raypx/providers/claude";
-import { initialExecutionPrompt } from "./harness/execution.ts";
-import type { AgentTransport, TransportFactory } from "./harness/transport.ts";
+import { initialExecutionPrompt } from "./harness/execution.js";
+import type { AgentTransport, TransportFactory } from "./harness/transport.js";
 
 it("keeps the 32k user-content budget independent of fixed host policy", () => {
   const id = crypto.randomUUID();

@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { collectBuildSizes, reportBuildSizes, sizeOptions } from "./build-size.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { collectBuildSizes, reportBuildSizes, sizeOptions } from "./build-size.js";
 
 const { fixture, member } = workspaceFixtures();
 afterEach(() => vi.restoreAllMocks());

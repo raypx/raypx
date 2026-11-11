@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { checkToolchain, readBunPin } from "./toolchain";
-import { workspaceFixtures } from "../../tests/helpers/workspace";
+import { checkToolchain, readBunPin } from "./toolchain.js";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 
 const { fixture } = workspaceFixtures();
 const engine = { name: "bun", version: "1.4.4", onFail: "error" };

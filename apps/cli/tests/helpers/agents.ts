@@ -1,11 +1,11 @@
-import { profileStorage, removeProfileDirectory } from "./sqlite.ts";
+import { profileStorage, removeProfileDirectory } from "./sqlite.js";
 import { afterEach } from "vite-plus/test";
 import { cpSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { StateStore } from "../../src/runtime/state/index.ts";
-import { AgentRuntime } from "../../src/runtime/agents/index.ts";
-import type { Clock, Ids } from "../../src/runtime/agents/domain/ports.ts";
+import { StateStore } from "../../src/runtime/state/index.js";
+import { AgentRuntime } from "../../src/runtime/agents/index.js";
+import type { Clock, Ids } from "../../src/runtime/agents/domain/ports.js";
 import type { TaskChange } from "@raypx/contracts/tasks";
 
 import type {
@@ -48,7 +48,7 @@ export function agentFixtures(runtimeOptions: AgentFixtureOptions = {}) {
     const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
     const file = join(directory, provider);
     cpSync(join(import.meta.dirname, "../fixtures/agents"), directory, { recursive: true });
-    const source = `import "./${fixture}.ts";`;
+    const source = `import "./${fixture}.js";`;
     writeFileSync(file, `#!${process.execPath}\n${source}`, { mode: 0o700 });
     const state = new StateStore(profileStorage(directory));
     const rootId = crypto.randomUUID();

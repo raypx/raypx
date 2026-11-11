@@ -15,8 +15,8 @@ their file layout, path aliases and runtime-specific types. The private
 | ---------------------------------- | ------- | ----------------------------------------------------------------- |
 | @raypx/tsconfig/base.json          | —       | strict compiler defaults, noEmit, ES2022 target, no ambient types |
 | @raypx/tsconfig/node.json          | base    | NodeNext modules and resolution, ES2022 libraries, @types/node    |
-| @raypx/tsconfig/browser.json       | base    | Bundler resolution, DOM libraries, react-jsx, .ts import paths    |
-| @raypx/tsconfig/library.json       | base    | Bundler resolution, ES2022 libraries, .ts import paths            |
+| @raypx/tsconfig/browser.json       | base    | Bundler resolution, DOM libraries, react-jsx                      |
+| @raypx/tsconfig/library.json       | base    | Bundler resolution, ES2022 libraries                              |
 | @raypx/tsconfig/react-library.json | library | DOM libraries and react-jsx                                       |
 
 ```json
@@ -58,10 +58,12 @@ With `exactOptionalPropertyTypes`, use conditional spread for optional values:
 const options = { limit, ...(query ? { query } : {}) };
 ```
 
-`browser.json` and `library.json` enable `allowImportingTsExtensions`, which
-TypeScript accepts only without JavaScript emit. A project that emits with `tsc`
-must override `noEmit` and remove `.ts` import extensions, or emit declarations
-only.
+Relative imports and re-exports use `.js` specifiers, including dynamic imports
+and type-only imports. TypeScript, Bun and the application bundlers resolve them
+to the `.ts`/`.tsx` source files; Mobile's Metro config applies the same convention.
+Source filenames, package export targets and filesystem paths keep their actual
+extensions. The presets leave `allowImportingTsExtensions` disabled so type checks
+reject `.ts`/`.tsx` module specifiers.
 
 ## Consumer-owned settings
 

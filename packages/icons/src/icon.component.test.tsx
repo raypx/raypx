@@ -1,8 +1,8 @@
 import { createRef } from "react";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { cleanup, render, screen } from "@testing-library/react";
-import { SearchIcon } from "./icons/search.ts";
-import { DeleteIcon } from "./icons/delete.ts";
+import { SearchIcon } from "./icons/search.js";
+import { DeleteIcon } from "./icons/delete.js";
 
 afterEach(cleanup);
 

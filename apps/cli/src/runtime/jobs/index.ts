@@ -2,11 +2,11 @@ import { Cron } from "croner";
 import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/core/jobs";
 import type { LocalEvent } from "@raypx/contracts/local";
 
-import { LocalError } from "../errors.ts";
-import type { FileRuntime } from "../files/index.ts";
-import type { ProcessRuntime } from "../process/index.ts";
-import { acquireLock, type StateStore } from "../state/index.ts";
-import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "../../diagnostics.ts";
+import { LocalError } from "../errors.js";
+import type { FileRuntime } from "../files/index.js";
+import type { ProcessRuntime } from "../process/index.js";
+import { acquireLock, type StateStore } from "../state/index.js";
+import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "../../diagnostics.js";
 
 export class JobRuntime {
   private schedules: Cron[] = [];

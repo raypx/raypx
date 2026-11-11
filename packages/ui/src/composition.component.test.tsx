@@ -3,9 +3,9 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef, useState } from "react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { Button } from "./components/ui/button.tsx";
-import { StatusBadge } from "./status-badge.tsx";
-import { Modal } from "./modal.tsx";
+import { Button } from "./components/ui/button.js";
+import { StatusBadge } from "./status-badge.js";
+import { Modal } from "./modal.js";
 
 afterEach(cleanup);
 

@@ -7,7 +7,7 @@ import {
   installWindowsSmoke,
   type SmokeRegistration,
   type WindowsSmokeCommands,
-} from "../../../scripts/host/windows-smoke-install";
+} from "../../../scripts/host/windows-smoke-install.js";
 const roots: string[] = [];
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));

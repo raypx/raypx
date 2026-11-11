@@ -5,13 +5,13 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 const mocks = vi.hoisted(() => ({ overview: vi.fn(), health: vi.fn(), audit: vi.fn() }));
-vi.mock("../client", () => ({ administrationClient: mocks }));
-vi.mock("../../auth/client", () => ({
+vi.mock("../client.js", () => ({ administrationClient: mocks }));
+vi.mock("../../auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: () => ({ data: { user: { id: "admin" } } }) },
 }));
-import { Overview } from "./overview.tsx";
-import { AuditLog } from "./audit-log.tsx";
+import { Overview } from "./overview.js";
+import { AuditLog } from "./audit-log.js";
 function page(view: ReactNode, locale: "en" | "zh" = "en") {
   return render(
     <QueryClientProvider

@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { checkWeb } from "./checks.ts";
+import { checkWeb } from "./checks.js";
 
 function fixture(home: string) {
   vi.stubGlobal(

@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import { hostState, initialHostState, type HostEvent, type HostState } from "./host-state.ts";
-import type { HostBinding } from "./vault.ts";
+import { hostState, initialHostState, type HostEvent, type HostState } from "./host-state.js";
+import type { HostBinding } from "./vault.js";
 
 const binding: HostBinding = {
   accountId: "account",

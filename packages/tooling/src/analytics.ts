@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { readBuiltRelease } from "./build/release.ts";
+import { readBuiltRelease } from "./build/release.js";
 import { run } from "@raypx/runtime-node/process";
 export async function uploadAnalyticsMaps(root: string, target: string | undefined) {
   const targets = {

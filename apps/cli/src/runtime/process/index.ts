@@ -2,11 +2,11 @@ import { isAbsolute, join } from "node:path";
 import { stat } from "node:fs/promises";
 import type { LocalEvent, ToolResult } from "@raypx/contracts/local";
 import type { CommandSpec } from "@raypx/core/jobs";
-import { LocalError } from "../errors";
-import type { Environment } from "./bun";
-import { HerdrTerminalHost } from "./herdr";
-import { resolveHerdrBinary } from "./herdr-release";
-import { terminalCommand } from "./shell";
+import { LocalError } from "../errors.js";
+import type { Environment } from "./bun.js";
+import { HerdrTerminalHost } from "./herdr.js";
+import { resolveHerdrBinary } from "./herdr-release.js";
+import { terminalCommand } from "./shell.js";
 
 const MAX_OUTPUT = 1024 * 1024;
 type Child = ReturnType<typeof Bun.spawn>;

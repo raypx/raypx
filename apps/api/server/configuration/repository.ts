@@ -1,5 +1,5 @@
-import type { AuditService } from "../administration/audit.ts";
-import { writeAuditSuccess } from "../administration/repository.ts";
+import type { AuditService } from "../administration/audit.js";
+import { writeAuditSuccess } from "../administration/repository.js";
 import type { Database } from "@raypx/database/connection";
 import { systemConfiguration } from "@raypx/database/schema";
 import { and, eq, sql } from "drizzle-orm";
@@ -8,7 +8,7 @@ import {
   configurationSnapshotSchema,
   type ConfigurationSnapshot,
 } from "@raypx/contracts/api";
-import type { ConfigurationRepository } from "./types.ts";
+import type { ConfigurationRepository } from "./types.js";
 
 export function createConfigurationRepository(
   db: Database,

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { accountAccessQuery } from "../access.ts";
+import { accountAccessQuery } from "../access.js";
 import { LockIcon } from "@raypx/icons/lock";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 

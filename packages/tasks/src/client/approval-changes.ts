@@ -3,8 +3,8 @@ import {
   replacementDiff as replacement,
   unifiedDiff,
   type DiffFile,
-} from "../model/diff.ts";
-export type { DiffFile } from "../model/diff.ts";
+} from "../model/diff.js";
+export type { DiffFile } from "../model/diff.js";
 
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)

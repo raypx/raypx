@@ -1,9 +1,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskRef, taskModel, taskPlan } from "../tasks/model";
-import { localPlan } from "./plan";
-import { executionTasks, sourceChecks } from "./execution";
-import { localTests } from "./tests";
+import { taskRef, taskModel, taskPlan } from "../tasks/model.js";
+import { localPlan } from "./plan.js";
+import { executionTasks, sourceChecks } from "./execution.js";
+import { localTests } from "./tests.js";
 
 export function verifyOptions(args: string[]) {
   const options: { full?: boolean; base?: string; dry?: boolean; noCache?: boolean } = {};

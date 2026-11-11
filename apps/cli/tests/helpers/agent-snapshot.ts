@@ -1,11 +1,11 @@
-import { profileStorage, removeProfileDirectory } from "./sqlite";
+import { profileStorage, removeProfileDirectory } from "./sqlite.js";
 import { Database } from "bun:sqlite";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { AgentStore } from "../../src/runtime/agents/store";
-import type { LocalAgentTask } from "../../src/runtime/agents/model";
+import { AgentStore } from "../../src/runtime/agents/store.js";
+import type { LocalAgentTask } from "../../src/runtime/agents/model.js";
 
 export const uuid = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 export const now = "2026-10-31T00:00:00.000Z";

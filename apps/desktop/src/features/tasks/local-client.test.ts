@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 
 import type { AgentTask } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
-import { createLocalTaskClient, createPendingClient } from "./local-client.ts";
+import { createLocalTaskClient, createPendingClient } from "./local-client.js";
 import { createLocalClient } from "@raypx/contracts/local-client";
 
 afterEach(() => vi.unstubAllGlobals());

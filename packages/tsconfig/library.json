@@ -4,7 +4,6 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022"],
-    "allowImportingTsExtensions": true
+    "lib": ["ES2022"]
   }
 }

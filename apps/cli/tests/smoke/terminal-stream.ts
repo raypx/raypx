@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { chmod, copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProcessTransport } from "../../src/runtime/agents/transport";
+import { ProcessTransport } from "../../src/runtime/agents/transport.js";
 
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to record the real Codex stream");

@@ -6,7 +6,7 @@ import { PendingCount } from "@raypx/tasks/client/pending-count";
 
 import { humanRequestSchema } from "@raypx/core/tasks";
 import { terminalRequestSummarySchema } from "@raypx/contracts/terminal";
-import { createTaskClient } from "../../../tests/helpers/client.ts";
+import { createTaskClient } from "../../../tests/helpers/client.js";
 afterEach(cleanup);
 it.each(["managed", "observed", "both"])("keeps known counts when %s fails", async (failure) => {
   const client = createTaskClient({

@@ -4,9 +4,9 @@ import {
   daemonFetch,
   readDaemon,
   type ProfileOptions,
-} from "../runtime/daemon/endpoint.ts";
-import { profilePath } from "../runtime/state/index.ts";
-import { LocalError } from "../runtime/errors.ts";
+} from "../runtime/daemon/endpoint.js";
+import { profilePath } from "../runtime/state/index.js";
+import { LocalError } from "../runtime/errors.js";
 
 /** Finite native bootstrap; sensitive input is stdin-only and administrative tokens stay here. */
 export async function bootstrapDesktop(options: ProfileOptions) {

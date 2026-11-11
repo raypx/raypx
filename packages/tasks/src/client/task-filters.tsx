@@ -14,7 +14,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/componen
 import { SearchIcon } from "@raypx/icons/search";
 import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { SelectField } from "@raypx/ui/select-field";
-import { isTaskActive } from "../model/task.ts";
+import { isTaskActive } from "../model/task.js";
 
 export interface TaskFilters {
   query: string;

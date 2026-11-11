@@ -1,6 +1,6 @@
-import type { AuthActionSuccess, useAuthActions } from "../hooks.ts";
-import type { AuthMode, readAuthLink } from "./auth-link.ts";
-import { formText } from "./form-text.ts";
+import type { AuthActionSuccess, useAuthActions } from "../hooks.js";
+import type { AuthMode, readAuthLink } from "./auth-link.js";
+import { formText } from "./form-text.js";
 
 export interface ModeConfig {
   title: "login" | "signup" | "reset" | "verify";

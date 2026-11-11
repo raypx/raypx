@@ -1,7 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { MYGO_VERSION, preparePackager } from "./packager";
-import { signingEnvironment } from "./signing";
+import { MYGO_VERSION, preparePackager } from "./packager.js";
+import { signingEnvironment } from "./signing.js";
 
 const desktop = resolve(import.meta.dirname, "../..");
 const root = resolve(desktop, "../..");
@@ -113,7 +113,7 @@ export async function prepare(
   if ((await probe.exited) || version !== manifest.version) throw new Error("CLI version mismatch");
   const generated = join(paths.desktop, "generated");
   await mkdir(generated, { recursive: true });
-  const { generateNativeAssets } = await import("./generate");
+  const { generateNativeAssets } = await import("./generate.js");
   await generateNativeAssets(paths.desktop);
   await writeFile(join(generated, "version.json"), JSON.stringify(manifest.version) + "\n");
   const frontend = join(generated, "frontend");

@@ -17,8 +17,8 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, join } from "node:path";
 import manifest from "../../../package.json";
-import { cliInstallation } from "./installation.ts";
-import { LocalError } from "../errors.ts";
+import { cliInstallation } from "./installation.js";
+import { LocalError } from "../errors.js";
 
 export const herdrVersion = manifest.herdr.version;
 function bundledHerdrDirectory() {

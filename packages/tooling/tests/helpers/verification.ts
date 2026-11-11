@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskModel } from "../../src/tasks/model";
-import { workspaceFixtures } from "./workspace";
+import { taskModel } from "../../src/tasks/model.js";
+import { workspaceFixtures } from "./workspace.js";
 
 const { fixture, member } = workspaceFixtures();
 export function project() {

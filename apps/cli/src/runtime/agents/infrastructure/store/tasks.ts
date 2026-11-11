@@ -1,11 +1,11 @@
 import { and, desc, eq, lt, sql } from "drizzle-orm";
 import type { AgentProvider, AgentTask } from "@raypx/core/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import type { LocalDatabase } from "../../../sqlite/index.ts";
-import { storedRecord } from "../../../sqlite/records.ts";
-import { agentMeta, tasks } from "../../../sqlite/schema.ts";
-import { localAgentTaskSchema, tokenUsageSchema, type LocalAgentTask } from "../../model.ts";
-import { activeTaskFilter, taskBinding, taskCreatedAt } from "./queries.ts";
+import type { LocalDatabase } from "../../../sqlite/index.js";
+import { storedRecord } from "../../../sqlite/records.js";
+import { agentMeta, tasks } from "../../../sqlite/schema.js";
+import { localAgentTaskSchema, tokenUsageSchema, type LocalAgentTask } from "../../model.js";
+import { activeTaskFilter, taskBinding, taskCreatedAt } from "./queries.js";
 
 const taskPageCursor = sql<string>`${taskCreatedAt} || ':' || ${tasks.id}`;
 

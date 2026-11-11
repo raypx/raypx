@@ -1,6 +1,6 @@
-import { createRuntime as runtime } from "../../src/runtime/index.ts";
-import { startDaemon as daemon } from "../../src/runtime/daemon/server.ts";
-import type { InstanceAccess } from "../../src/runtime/instances/index.ts";
+import { createRuntime as runtime } from "../../src/runtime/index.js";
+import { startDaemon as daemon } from "../../src/runtime/daemon/server.js";
+import type { InstanceAccess } from "../../src/runtime/instances/index.js";
 export const enrolledInstance: InstanceAccess = {
   assert: async () => {},
   status: async () => ({ state: "registered" }),

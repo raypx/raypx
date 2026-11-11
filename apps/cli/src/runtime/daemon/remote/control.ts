@@ -15,19 +15,19 @@ import {
   type RelayClientFrame,
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
-import type { HostAgentPort } from "./agent-port";
-import { AcknowledgedStream } from "../acknowledged-stream";
-import { abortable } from "../cancellation";
-import { failureCode } from "./failure";
-import { serverOrigin } from "./origin";
+import type { HostAgentPort } from "./agent-port.js";
+import { AcknowledgedStream } from "../acknowledged-stream.js";
+import { abortable } from "../cancellation.js";
+import { failureCode } from "./failure.js";
+import { serverOrigin } from "./origin.js";
 import {
   acceptsCommands,
   initialRelaySession,
   relaySession,
   type RelaySessionEvent,
-} from "./session";
+} from "./session.js";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-import { readRemoteControlSettings, type Settings, type Binding } from "./settings";
+import { readRemoteControlSettings, type Settings, type Binding } from "./settings.js";
 
 type ObservedFrame = Extract<RelayClientFrame, { type: "observed" }>;
 type FrameOf<Type extends RelayServerFrame["type"]> = Extract<RelayServerFrame, { type: Type }>;

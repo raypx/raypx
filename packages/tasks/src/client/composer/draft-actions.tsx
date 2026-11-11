@@ -4,7 +4,7 @@ import { IconButton } from "@raypx/ui/icon-button";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SaveIcon } from "@raypx/icons/save";
 import { SendIcon } from "@raypx/icons/send";
-import type { ComposerDraftStatus } from "../../model/composer.ts";
+import type { ComposerDraftStatus } from "../../model/composer.js";
 
 const draftFeedback = {
   draftSaved: "draft.saved",

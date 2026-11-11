@@ -10,9 +10,9 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "@raypx/ui/components/ui/empty";
-import { useLocalProjectContext } from "../tasks/project-context.ts";
-import { LocalWelcome } from "./welcome.tsx";
-import { useDesktopPlatform } from "../../lib/platform-context.tsx";
+import { useLocalProjectContext } from "../tasks/project-context.js";
+import { LocalWelcome } from "./welcome.js";
+import { useDesktopPlatform } from "../../lib/platform-context.js";
 
 export function LocalHome() {
   const context = useLocalProjectContext();

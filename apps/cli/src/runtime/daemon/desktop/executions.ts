@@ -1,7 +1,7 @@
 import type { DesktopExecution } from "@raypx/contracts/desktop";
 import { localParams, type LocalEvent, type ToolResult } from "@raypx/contracts/local";
-import type { ExecutionHost } from "../../owner.ts";
-import { LocalError } from "../../errors.ts";
+import type { ExecutionHost } from "../../owner.js";
+import { LocalError } from "../../errors.js";
 
 export interface ExecutionScope {
   owner: string;

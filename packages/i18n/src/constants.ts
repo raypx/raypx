@@ -1,4 +1,4 @@
-import config from "./config.ts";
+import config from "./config.js";
 
 const DEFAULT_LOCALE = config.defaultLocale;
 const LOCALE_COOKIE_NAME = "locale" as const;

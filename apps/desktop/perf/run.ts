@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { runPerformance } from "@raypx/tooling/performance";
 import { startBrowserPreview } from "@raypx/tooling/browser-server";
-import { createSeed } from "./fixture";
+import { createSeed } from "./fixture.js";
 const root = resolve(import.meta.dirname, "../../..");
 const binary = resolve(
   dirname(fileURLToPath(import.meta.resolve("@hona/strobe/package.json"))),

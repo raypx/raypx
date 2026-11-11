@@ -1,6 +1,6 @@
 import { PassThrough, Writable } from "node:stream";
 import { describe, expect, it } from "vite-plus/test";
-import { createTerminal, type TuiInput, type TuiOutput } from "./terminal.ts";
+import { createTerminal, type TuiInput, type TuiOutput } from "./terminal.js";
 
 function streams(
   options: {

@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import type { AgentTask } from "@raypx/core/tasks";
 import { SidebarMenu, SidebarProvider } from "@raypx/ui/components/ui/sidebar";
-import { createTaskClient } from "../../tests/helpers/client.ts";
-import { ProjectSessionGroup, type SessionLinkProps } from "./project-sessions.tsx";
+import { createTaskClient } from "../../tests/helpers/client.js";
+import { ProjectSessionGroup, type SessionLinkProps } from "./project-sessions.js";
 
 const deviceId = crypto.randomUUID();
 const projectId = crypto.randomUUID();

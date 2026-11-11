@@ -4,10 +4,10 @@ import { useRouter } from "@tanstack/react-router";
 import { useAuthActions, type AuthActionResult } from "@raypx/auth/hooks";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useDesktopPlatform } from "../../lib/platform-context.tsx";
-import { analytics } from "../analytics/client.ts";
-import { signOutDesktopHost } from "../tasks/host-session.ts";
-import { authClient, webUrl } from "./client.ts";
+import { useDesktopPlatform } from "../../lib/platform-context.js";
+import { analytics } from "../analytics/client.js";
+import { signOutDesktopHost } from "../tasks/host-session.js";
+import { authClient, webUrl } from "./client.js";
 
 interface SignOutState {
   busy: boolean;

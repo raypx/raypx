@@ -9,7 +9,7 @@ import { CloseIcon } from "@raypx/icons/close";
 import type { ReactNode } from "react";
 
 import { cn } from "#lib/utils";
-import { Button } from "./button.tsx";
+import { Button } from "./button.js";
 
 const toast = ToastPrimitive.createToastManager();
 const defaultToastAction = <Button size="sm" variant="outline" />;

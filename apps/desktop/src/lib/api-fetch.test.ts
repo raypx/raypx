@@ -1,12 +1,12 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { createDesktopFetch } from "./api-fetch.ts";
+import { createDesktopFetch } from "./api-fetch.js";
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   cancel: vi.fn(async () => true),
   native: true,
 }));
-vi.mock("./desktop", () => ({
+vi.mock("./desktop.js", () => ({
   isDesktop: () => mocks.native,
   getBridge: async () => ({ request: { apiFetch: mocks.request, apiCancel: mocks.cancel } }),
 }));

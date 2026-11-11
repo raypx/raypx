@@ -11,8 +11,8 @@ import {
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { SelectField } from "@raypx/ui/select-field";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import type { ComposerAction, ComposerState } from "../../model/composer.ts";
-import type { taskSelection } from "../../model/composition.ts";
+import type { ComposerAction, ComposerState } from "../../model/composer.js";
+import type { taskSelection } from "../../model/composition.js";
 
 /** Computer, project, agent and mode pickers; a controlled project hides its target. */
 export function ComposerTargetOptions({

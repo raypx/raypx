@@ -5,8 +5,8 @@ import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import type { IconComponent } from "@raypx/icons";
 import { useTranslations } from "@raypx/i18n/browser";
 import { cn } from "@raypx/ui/lib/utils";
-import { DotGrid } from "../../../components/artwork.tsx";
-import { accentGradient } from "../../../components/brand-accent.ts";
+import { DotGrid } from "../../../components/artwork.js";
+import { accentGradient } from "../../../components/brand-accent.js";
 
 /**
  * Product facts beside the authentication form. Decoration uses the logo palette and an

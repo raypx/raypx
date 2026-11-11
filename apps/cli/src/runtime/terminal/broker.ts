@@ -8,7 +8,7 @@ import {
 } from "@raypx/contracts/terminal";
 
 import { validDecision, type HumanDecision } from "@raypx/core/tasks";
-import { LocalError } from "../errors.ts";
+import { LocalError } from "../errors.js";
 
 export type FallbackReason = "away_off" | "unavailable" | "expired" | "disconnected" | "stopped";
 type HookOutcome =

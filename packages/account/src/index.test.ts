@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
-import { readAccount } from "./index.ts";
+import { readAccount } from "./index.js";
 
 const profile = { id: "u1", email: "a@example.test", name: "Ada" };
 afterEach(() => vi.useRealTimers());

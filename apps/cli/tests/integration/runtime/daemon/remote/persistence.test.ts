@@ -1,9 +1,9 @@
 import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "../../../../helpers/agents";
-import { hostFixtures } from "../../../../helpers/remote-control";
-import { TaskRecords } from "../../../../../src/runtime/agents/infrastructure/store/tasks";
+import { agentFixtures } from "../../../../helpers/agents.js";
+import { hostFixtures } from "../../../../helpers/remote-control.js";
+import { TaskRecords } from "../../../../../src/runtime/agents/infrastructure/store/tasks.js";
 
 const { host } = agentFixtures();
 const { control } = hostFixtures();

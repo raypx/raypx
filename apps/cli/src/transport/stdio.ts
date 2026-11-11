@@ -1,8 +1,8 @@
 import { localRequestSchema } from "@raypx/contracts/local";
-import { createExecutionOwner } from "../runtime/owner.ts";
-import { onShutdown } from "./shutdown.ts";
-import { errorPayload, LocalError } from "../runtime/errors.ts";
-import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics.ts";
+import { createExecutionOwner } from "../runtime/owner.js";
+import { onShutdown } from "./shutdown.js";
+import { errorPayload, LocalError } from "../runtime/errors.js";
+import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics.js";
 
 export async function serveStdio(options: {
   dataDir?: string;

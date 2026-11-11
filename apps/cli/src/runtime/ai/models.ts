@@ -8,10 +8,10 @@ import {
 } from "@raypx/ai";
 import { mergeAiSettings } from "@raypx/ai/config";
 import { modelSelectionSchema, type ModelSelection } from "@raypx/core/tasks";
-import type { LocalDatabase } from "../sqlite/index.ts";
-import { agentMeta } from "../sqlite/schema.ts";
-import { LocalError } from "../errors.ts";
-import { loadAiSettings } from "./settings.ts";
+import type { LocalDatabase } from "../sqlite/index.js";
+import { agentMeta } from "../sqlite/schema.js";
+import { LocalError } from "../errors.js";
+import { loadAiSettings } from "./settings.js";
 
 const defaultKey = "pi-model-default:v1";
 export class PiModels {

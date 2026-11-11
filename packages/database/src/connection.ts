@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { relations } from "./schema.ts";
+import { relations } from "./schema.js";
 
 export interface DatabaseOptions {
   max?: number;

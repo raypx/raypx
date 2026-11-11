@@ -12,7 +12,7 @@ import {
   type CloudJob,
   type CloudJobInput,
 } from "@raypx/core/jobs";
-import type { JobDevice } from "./ports.ts";
+import type { JobDevice } from "./ports.js";
 import {
   ContextPicker,
   ContextBudget,

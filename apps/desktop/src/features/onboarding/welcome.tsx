@@ -13,10 +13,10 @@ import { EditIcon } from "@raypx/icons/edit";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
-import { useDesktopPlatform } from "../../lib/platform-context.tsx";
-import { useProjectCatalog, projectCatalogKey } from "../tasks/project-catalog.ts";
-import { recentProjects, rememberProject } from "../tasks/project-history.ts";
-import { useSettingsNavigation } from "../settings/navigation.ts";
+import { useDesktopPlatform } from "../../lib/platform-context.js";
+import { useProjectCatalog, projectCatalogKey } from "../tasks/project-catalog.js";
+import { recentProjects, rememberProject } from "../tasks/project-history.js";
+import { useSettingsNavigation } from "../settings/navigation.js";
 
 export function LocalWelcome() {
   const { isDesktop, localRequest, pickDirectory } = useDesktopPlatform();

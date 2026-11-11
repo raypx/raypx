@@ -1,4 +1,4 @@
-import { enrolledInstance } from "../../helpers/enrolled.ts";
+import { enrolledInstance } from "../../helpers/enrolled.js";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vite-plus/test";
 import { access, mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -6,8 +6,8 @@ import { join } from "node:path";
 import type { FileEntry, RootGrant, ToolResult } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
 import manifest from "../../../package.json";
-import { parseCliArgs } from "../../../src/commands/args.ts";
-import { runCommand } from "../../../src/commands/index.ts";
+import { parseCliArgs } from "../../../src/commands/args.js";
+import { runCommand } from "../../../src/commands/index.js";
 
 let directory: string;
 let dataDir: string;

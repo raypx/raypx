@@ -2,7 +2,7 @@ import { readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { parseAiSettings, type AiSettings } from "@raypx/ai/config";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.js";
 
 /** Read-only user config shared by direct model calls and managed Pi sessions. */
 export function loadAiSettings(): AiSettings {

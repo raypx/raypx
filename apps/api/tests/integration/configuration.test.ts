@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/core/auth";
-import { createApiApp } from "../../server/api.ts";
-import { createAccessPolicy } from "../../server/access.ts";
+import { createApiApp } from "../../server/api.js";
+import { createAccessPolicy } from "../../server/access.js";
 import { hasPermission } from "@raypx/account/access";
-import { createConfigurationService } from "../../server/configuration/service.ts";
-import type { ConfigurationRepository } from "../../server/configuration/types.ts";
-import { getApiEnvironment } from "../../server/env.ts";
+import { createConfigurationService } from "../../server/configuration/service.js";
+import type { ConfigurationRepository } from "../../server/configuration/types.js";
+import { getApiEnvironment } from "../../server/env.js";
 
 function fixture() {
   let state: ConfigurationSnapshot = {

@@ -1,4 +1,4 @@
-import { createDesktopPlatform } from "./platform";
+import { createDesktopPlatform } from "./platform.js";
 
 const platform = createDesktopPlatform({
   available: () => typeof window !== "undefined" && window.__raypxDesktopHost === "mygo",
@@ -6,7 +6,7 @@ const platform = createDesktopPlatform({
     typeof window !== "undefined" &&
     "__raypxTerminalHooks" in window &&
     window.__raypxTerminalHooks === true,
-  connect: async (dispatch) => (await import("./mygo")).createMyGoBridge(dispatch),
+  connect: async (dispatch) => (await import("./mygo.js")).createMyGoBridge(dispatch),
 });
 export const {
   isDesktop,

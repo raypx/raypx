@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it } from "vite-plus/test";
-import { CONNECTION_KEY } from "../../config";
-import { readDesktopConnection } from "./connection";
+import { CONNECTION_KEY } from "../../config.js";
+import { readDesktopConnection } from "./connection.js";
 
 afterEach(() => {
   Reflect.deleteProperty(window, "__raypxDesktopHost");

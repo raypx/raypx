@@ -1,5 +1,5 @@
 import { test as base } from "@playwright/test";
-import { accountAccessFixture, authResponse } from "./account-fixture.ts";
+import { accountAccessFixture, authResponse } from "./account-fixture.js";
 
 /** Browser response fixtures; real authentication remains in the PostgreSQL gate. */
 export const test = base.extend<{

@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
-import { mocks, page, signIn } from "../tests/helpers/router-auth.tsx";
+import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 describe("authentication routes", () => {
   it.each([

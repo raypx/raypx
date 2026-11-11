@@ -208,6 +208,21 @@ or coverage settings directly in that workspace's `vitest.config.ts`; no shared
 factory or custom option interface needs to change. Native config merging also
 preserves shared React deduplication when a workspace adds aliases.
 
+Root `vite.config.ts` discovers these configs from `package.json` workspaces and
+loads them through native Vitest `projects`. Nested projects retain their workspace
+configuration and get names such as `desktop (unit)` and `web (component)`.
+IDE discovery and direct runs use this root entry:
+
+```sh
+bun --bun vp test --project '@raypx/core'
+bun --bun vp test --project 'desktop (unit)'
+bun --bun vp test list --filesOnly
+```
+
+`bun run test` uses the VP task graph and package-owned scripts, including their
+prerequisites. The root Vitest entry runs the configured source suites directly;
+database modes, Playwright and native artifact acceptance use their dedicated commands.
+
 API tests use source-adjacent `server/**/*.test.ts` and `tests/integration/` for the default gate.
 `test:unit` and `test:integration` select these layers. Database suites live
 under `tests/postgres/node/`, selected only by the `postgres` mode in

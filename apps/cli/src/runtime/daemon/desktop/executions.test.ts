@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { DesktopExecutions } from "./executions.ts";
-import type { ExecutionHost } from "../../owner.ts";
+import { DesktopExecutions } from "./executions.js";
+import type { ExecutionHost } from "../../owner.js";
 
 function fixture() {
   const processes = {

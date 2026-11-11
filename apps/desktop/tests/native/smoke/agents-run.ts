@@ -1,12 +1,12 @@
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { buildSmoke, runMyGoSmoke } from "./launch";
-import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
-import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts";
-import type { SmokeInstallation } from "./launch";
-import { stopSmokeOwner } from "./owner";
-import { nativeAgentProviders } from "../../../scripts/host/agent-options";
+import { buildSmoke, runMyGoSmoke } from "./launch.js";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "./session.js";
+import { cleanupSmokeBundles } from "../../../scripts/host/smoke-artifacts.js";
+import type { SmokeInstallation } from "./launch.js";
+import { stopSmokeOwner } from "./owner.js";
+import { nativeAgentProviders } from "../../../scripts/host/agent-options.js";
 
 // Building or importing the scenario must never start paid inference implicitly.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")

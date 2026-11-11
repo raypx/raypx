@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { discover } from "../../src/repository.ts";
-import { testLayer, testSources } from "../../src/validation/test-sources.ts";
+import { discover } from "../../src/repository.js";
+import { testLayer, testSources } from "../../src/validation/test-sources.js";
 
 const root = resolve(import.meta.dirname, "../../../..");
 

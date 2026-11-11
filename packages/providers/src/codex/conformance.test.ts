@@ -1,9 +1,9 @@
-import { CodexAdapter } from "./index.ts";
-import { createTestProviderHost, createTestTransport } from "../../tests/helpers/host.ts";
+import { CodexAdapter } from "./index.js";
+import { createTestProviderHost, createTestTransport } from "../../tests/helpers/host.js";
 import {
   defineProviderConformance,
   defineDrainConformance,
-} from "../../tests/helpers/conformance.ts";
+} from "../../tests/helpers/conformance.js";
 
 function fixture() {
   const host = createTestProviderHost(),

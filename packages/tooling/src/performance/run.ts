@@ -2,10 +2,10 @@ import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join, resolve, dirname } from "node:path";
 import { platform, arch, release, hostname } from "node:os";
 import { createHash } from "node:crypto";
-import { verifyCliPayload, payloadFiles } from "../build/cli";
-import { performanceEnvironment, commandQuote, comparisonEnvironment } from "./environment";
-import { processAccounting } from "./attribution";
-export { performanceEnvironment, commandQuote } from "./environment";
+import { verifyCliPayload, payloadFiles } from "../build/cli.js";
+import { performanceEnvironment, commandQuote, comparisonEnvironment } from "./environment.js";
+import { processAccounting } from "./attribution.js";
+export { performanceEnvironment, commandQuote } from "./environment.js";
 
 type Result = {
   stage: string;

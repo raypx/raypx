@@ -2,7 +2,7 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createRuntime } from "../../../helpers/enrolled.ts";
+import { createRuntime } from "../../../helpers/enrolled.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 it("rejects every daemon-only approval operation in stdio and preserves the local identity across accounts and restart", async () => {
   const dataDir = mkdtempSync(join(tmpdir(), "raypx-terminal-routing-"));

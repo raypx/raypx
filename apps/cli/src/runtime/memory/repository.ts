@@ -8,8 +8,8 @@ import {
   type ContextVersion,
 } from "@raypx/core/memory";
 import type { ContextLibraryRepository } from "@raypx/memory/server";
-import { type LocalDatabase } from "../sqlite/index.ts";
-import { deletedDocuments, documents, versions } from "../sqlite/schema.ts";
+import { type LocalDatabase } from "../sqlite/index.js";
+import { deletedDocuments, documents, versions } from "../sqlite/schema.js";
 
 const summary = ({ content: _content, ...document }: ContextDocument) => document;
 const inputOf = ({ kind, name, category, content, project }: ContextDocumentInput) => ({

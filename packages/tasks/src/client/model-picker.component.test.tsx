@@ -3,7 +3,7 @@ import { expect, it, vi, beforeEach } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
-import { ModelPicker } from "./model-picker.tsx";
+import { ModelPicker } from "./model-picker.js";
 import userEvent from "@testing-library/user-event";
 
 const first: ModelSelection = { provider: "local", model: "first", connectionId: "a".repeat(64) };

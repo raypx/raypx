@@ -5,7 +5,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Field, FieldLabel, type FieldOrientation } from "@raypx/ui/components/ui/field";
 import { PasswordInput, type PasswordInputProps } from "@raypx/ui/password-input";
 import { cn } from "@raypx/ui/lib/utils";
-import { authPolicy } from "../policy.ts";
+import { authPolicy } from "../policy.js";
 
 /** Own credential constraints and keep only validation feedback in state. */
 export function PasswordField({

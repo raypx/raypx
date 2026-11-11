@@ -5,7 +5,7 @@ import type { RelayServerFrame } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
 import { ControlService } from "@raypx/control";
 import { RelayHub, createRelayJobExecutor } from "@raypx/control/relay";
-import { connected, memoryControlRepository } from "../tests/helpers/control.ts";
+import { connected, memoryControlRepository } from "../tests/helpers/control.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

@@ -5,8 +5,8 @@ import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { cn } from "@raypx/ui/lib/utils";
 import { useTranslations } from "@raypx/i18n/browser";
-import type { AuthMode } from "./auth-link.ts";
-import type { ModeConfig } from "./auth-modes.ts";
+import type { AuthMode } from "./auth-link.js";
+import type { ModeConfig } from "./auth-modes.js";
 
 export const linkClassName =
   "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";

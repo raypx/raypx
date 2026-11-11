@@ -6,9 +6,9 @@ vi.mock("@tanstack/react-start", () => ({
 }));
 vi.mock("@tanstack/react-start/server", () => ({ getRequestHeaders: () => mocks.headers }));
 vi.mock("@raypx/client/api", () => ({ createApiClient: mocks.create }));
-vi.mock("./client", () => ({ apiUrl: "https://api.example.test", authClient: {} }));
+vi.mock("./client.js", () => ({ apiUrl: "https://api.example.test", authClient: {} }));
 mocks.create.mockImplementation(() => ({ account: { access: mocks.access } }));
-const { loadAccountAccess } = await import("./account-access.ts");
+const { loadAccountAccess } = await import("./account-access.js");
 beforeEach(() => {
   mocks.headers = new Headers();
   mocks.create.mockClear();

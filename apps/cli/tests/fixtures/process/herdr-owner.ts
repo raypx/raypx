@@ -1,4 +1,4 @@
-import { HerdrTerminalHost } from "../../../src/runtime/process/herdr";
+import { HerdrTerminalHost } from "../../../src/runtime/process/herdr.js";
 import { join } from "node:path";
 const [binary, cwd, report, ...compiled] = process.argv.slice(2);
 const commandReport = report + ".command";

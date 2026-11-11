@@ -2,8 +2,8 @@ import { constants } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import { posix, win32 } from "node:path";
 import type { CommandSpec } from "@raypx/core/jobs";
-import { LocalError } from "../errors";
-import type { Environment } from "./bun";
+import { LocalError } from "../errors.js";
+import type { Environment } from "./bun.js";
 
 async function executable(path: string, platform: NodeJS.Platform) {
   try {

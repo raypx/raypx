@@ -27,8 +27,8 @@ import type { AccountProfile } from "@raypx/contracts/api";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@raypx/ui/themes";
-import { routeTree } from "./routeTree.gen.ts";
-import { DesktopSignOutProvider } from "./features/auth/sign-out.tsx";
+import { routeTree } from "./routeTree.gen.js";
+import { DesktopSignOutProvider } from "./features/auth/sign-out.js";
 
 expect.extend(matchers);
 
@@ -46,7 +46,7 @@ const mocks = vi.hoisted(() => ({
   session: { data: null, isPending: false, error: null } as SessionSnapshot,
   listeners: new Set<() => void>(),
 }));
-vi.mock("./features/auth/client", () => ({
+vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
@@ -69,10 +69,10 @@ vi.mock("./features/auth/client", () => ({
     }),
   },
 }));
-vi.mock("./features/tasks/client", () => ({
+vi.mock("./features/tasks/client.js", () => ({
   taskClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
 }));
-vi.mock("./features/tasks/host-session", () => ({ signOutDesktopHost: mocks.hostSignOut }));
+vi.mock("./features/tasks/host-session.js", () => ({ signOutDesktopHost: mocks.hostSignOut }));
 // The generated tree imports terminal code, but account tests never mount xterm.
 vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));
 

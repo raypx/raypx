@@ -2,10 +2,10 @@ import { defineCommand, type CommandDef } from "citty";
 import { z } from "zod";
 import { LOCAL_WORKSPACE_ID, localParams } from "@raypx/contracts/local";
 import { relayRequestSchema } from "@raypx/contracts/tasks";
-import { globalArgs, type CliArgs } from "./args";
-import { LocalError } from "../runtime/errors";
-import { createDaemonClient } from "../transport/daemon-client";
-import type { ProfileOptions } from "../runtime/daemon/endpoint";
+import { globalArgs, type CliArgs } from "./args.js";
+import { LocalError } from "../runtime/errors.js";
+import { createDaemonClient } from "../transport/daemon-client.js";
+import type { ProfileOptions } from "../runtime/daemon/endpoint.js";
 
 function object(source?: string): Record<string, unknown> {
   try {

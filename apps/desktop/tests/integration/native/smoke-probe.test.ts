@@ -2,7 +2,7 @@ import { expect, it } from "vite-plus/test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertSmokeBinary } from "../../native/smoke/launch.ts";
+import { assertSmokeBinary } from "../../native/smoke/launch.js";
 
 it("rejects a zero exit without the native_smoke compiler tag", async () => {
   const directory = await mkdtemp(join(tmpdir(), "raypx-smoke-probe-test-"));

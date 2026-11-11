@@ -3,12 +3,15 @@ import { readFileSync } from "node:fs";
 import { afterEach, vi } from "vite-plus/test";
 
 import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { ManagedExecution } from "../../src/runtime/agents/harness/execution";
-import type { ExecutionConversation, ExecutionStore } from "../../src/runtime/agents/harness/ports";
-import { createAdapter } from "../../src/runtime/agents/infrastructure/providers/process";
-import { ConversationRecorder } from "../../src/runtime/agents/activity";
-import type { LocalAgentTask } from "../../src/runtime/agents/model";
-import { parseProviderReplay, ProviderReplay, type ReplayRecord } from "./provider-replay";
+import { ManagedExecution } from "../../src/runtime/agents/harness/execution.js";
+import type {
+  ExecutionConversation,
+  ExecutionStore,
+} from "../../src/runtime/agents/harness/ports.js";
+import { createAdapter } from "../../src/runtime/agents/infrastructure/providers/process.js";
+import { ConversationRecorder } from "../../src/runtime/agents/activity.js";
+import type { LocalAgentTask } from "../../src/runtime/agents/model.js";
+import { parseProviderReplay, ProviderReplay, type ReplayRecord } from "./provider-replay.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

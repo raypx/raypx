@@ -22,11 +22,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@raypx/ui/components/ui/sidebar";
-import type { TaskWorkspacePort } from "../model/port.ts";
-import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
-import { sessionThreads } from "../model/session-threads.ts";
-import { useRemoteQuery } from "./remote-query.ts";
-import { TaskStatusMark } from "./task-status.tsx";
+import type { TaskWorkspacePort } from "../model/port.js";
+import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
+import { sessionThreads } from "../model/session-threads.js";
+import { useRemoteQuery } from "./remote-query.js";
+import { TaskStatusMark } from "./task-status.js";
 
 const pageSize = 30;
 const collapsedCount = 5;

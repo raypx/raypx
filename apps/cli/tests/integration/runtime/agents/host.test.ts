@@ -1,12 +1,12 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
 import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "../../../helpers/agents";
+import { agentFixtures } from "../../../helpers/agents.js";
 import { tmpdir } from "node:os";
-import { StateStore } from "../../../../src/runtime/state";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore } from "../../../../src/runtime/agents/store";
+import { StateStore } from "../../../../src/runtime/state/index.js";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 
 import type { AgentTask } from "@raypx/core/tasks";

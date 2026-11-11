@@ -1,12 +1,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { project } from "../../tests/helpers/verification";
+import { project } from "../../tests/helpers/verification.js";
 import * as processes from "@raypx/runtime-node/process";
-import * as repository from "../repository";
-import * as artifacts from "../smoke";
-import { sourceChecks } from "./execution";
-import { verificationPlan } from "./plan";
+import * as repository from "../repository.js";
+import * as artifacts from "../smoke/index.js";
+import { sourceChecks } from "./execution.js";
+import { verificationPlan } from "./plan.js";
 
 afterEach(() => vi.restoreAllMocks());
 

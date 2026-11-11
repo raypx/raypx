@@ -1,10 +1,10 @@
-import type { ApiAppOptions } from "../../server/app/options.ts";
+import type { ApiAppOptions } from "../../server/app/options.js";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client/api";
 import type { AuthSession } from "@raypx/core/auth";
 import type { SafeEvent } from "@raypx/logger/safe";
-import { createApiApp } from "../../server/api.ts";
-import { createApiLogging, type ApiLogging } from "../../server/logging.ts";
+import { createApiApp } from "../../server/api.js";
+import { createApiLogging, type ApiLogging } from "../../server/logging.js";
 
 const secret = {
   cookie: "private-cookie-value-71",

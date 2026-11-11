@@ -2,8 +2,8 @@
 import { act, render, renderHook, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
-import { useConfirmation } from "./confirmation.tsx";
-import { Button } from "./components/ui/button.tsx";
+import { useConfirmation } from "./confirmation.js";
+import { Button } from "./components/ui/button.js";
 
 const options = {
   title: "Delete automation",

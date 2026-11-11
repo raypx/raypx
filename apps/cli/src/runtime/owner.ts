@@ -1,6 +1,6 @@
-import { createHost } from "./host.ts";
-import { createRuntime } from "./index.ts";
-import type { ExecutionMode } from "./options.ts";
+import { createHost } from "./host.js";
+import { createRuntime } from "./index.js";
+import type { ExecutionMode } from "./options.js";
 
 export type ExecutionHost = ReturnType<typeof createHost>;
 type Host = ExecutionHost;

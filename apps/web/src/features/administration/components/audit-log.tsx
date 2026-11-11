@@ -30,8 +30,8 @@ import { RefreshIcon } from "@raypx/icons/refresh";
 import { EyeIcon } from "@raypx/icons/eye";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { administrationClient } from "../client.ts";
-import { authClient, apiUrl } from "../../auth/client.ts";
+import { administrationClient } from "../client.js";
+import { authClient, apiUrl } from "../../auth/client.js";
 
 const outcomeTones: Record<AuditEntry["outcome"], StatusTone> = {
   success: "success",

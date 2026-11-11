@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { writeFileSync } from "node:fs";
 import { expect, it, vi } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
-import { startEnvironment } from "./start-env.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { startEnvironment } from "./start-env.js";
 const { fixture } = workspaceFixtures();
 it("retains inherited variables and dotenv keys without tracking the entire tool environment", () => {
   const root = fixture();

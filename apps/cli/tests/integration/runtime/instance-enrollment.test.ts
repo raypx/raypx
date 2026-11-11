@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { enrollTestProfile } from "../../helpers/instance.ts";
+import { enrollTestProfile } from "../../helpers/instance.js";
 
 it("reports the enrollment subprocess exit and safe code without its private error text", async () => {
   const dataDir = await mkdtemp(join(tmpdir(), "raypx-enrollment-failure-"));

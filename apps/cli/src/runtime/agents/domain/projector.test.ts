@@ -1,14 +1,14 @@
 import { expect, it } from "vite-plus/test";
-import { apply } from "./projector.ts";
-import { toWireEvents } from "./wire.ts";
-import { FakeIds } from "./ports.ts";
+import { apply } from "./projector.js";
+import { toWireEvents } from "./wire.js";
+import { FakeIds } from "./ports.js";
 import type {
   ActivityRecorded,
   OrchestrationEvent,
   RequestOpened,
   TaskAccepted,
   TaskStatusChanged,
-} from "./events.ts";
+} from "./events.js";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const taskId = "00000000-0000-4000-8000-000000000002";

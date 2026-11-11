@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { enrollTestProfile } from "../helpers/instance";
-import { aiFixture } from "../helpers/ai";
+import { enrollTestProfile } from "../helpers/instance.js";
+import { aiFixture } from "../helpers/ai.js";
 import type { AgentTask, TaskContinuation } from "@raypx/core/tasks";
 
 /** The production executable owns both IPC clients and a detached, enrolled Pi daemon. */

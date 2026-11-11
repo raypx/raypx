@@ -4,7 +4,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
-import { useAnalyticsPreferences } from "./provider.tsx";
+import { useAnalyticsPreferences } from "./provider.js";
 
 type PreferenceState = ReturnType<typeof useAnalyticsPreferences>;
 type ConsentKey = "usage" | "errors";

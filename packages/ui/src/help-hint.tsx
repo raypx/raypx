@@ -1,12 +1,12 @@
 import { InfoIcon } from "@raypx/icons/info";
-import { Button } from "./components/ui/button.tsx";
+import { Button } from "./components/ui/button.js";
 import {
   Popover,
   PopoverContent,
   PopoverDescription,
   PopoverTitle,
   PopoverTrigger,
-} from "./components/ui/popover.tsx";
+} from "./components/ui/popover.js";
 
 export function HelpHint({ label, description }: { label: string; description: string }) {
   return (

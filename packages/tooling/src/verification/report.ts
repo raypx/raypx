@@ -1,8 +1,8 @@
 import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import type { VerificationPlan } from "./plan.ts";
-import { taskRef } from "../tasks/model.ts";
-import type { SourcePhase } from "./gates.ts";
+import type { VerificationPlan } from "./plan.js";
+import { taskRef } from "../tasks/model.js";
+import type { SourcePhase } from "./gates.js";
 
 /** An empty or partial VP graph must never appear as successful verification. */
 export function completionReport(root: string, references: string[]) {

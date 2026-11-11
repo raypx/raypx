@@ -1,8 +1,8 @@
 import { Database } from "bun:sqlite";
 import { chmodSync } from "node:fs";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
-import { LocalError } from "../errors";
-import type { LocalDatabase } from "./index";
+import { LocalError } from "../errors.js";
+import type { LocalDatabase } from "./index.js";
 import migrations from "./migrations.generated.json";
 
 type AppliedMigration = { name: string; created_at: number; hash: string };

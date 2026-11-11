@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { FitAddon } from "@xterm/addon-fit";
-import { deferred, mocks, page } from "../../../tests/helpers/router-local.tsx";
+import { deferred, mocks, page } from "../../../tests/helpers/router-local.js";
 
 beforeEach(() => {
   mocks.terminal.mockImplementation(function () {
@@ -109,7 +109,7 @@ it("rejects malformed advanced arguments without opening a process", async () =>
 });
 
 it("keeps a terminal identity across an outage and restores it before enabling input", async () => {
-  const { emit } = await import("../../../tests/helpers/router-local.tsx");
+  const { emit } = await import("../../../tests/helpers/router-local.js");
   await page("/terminal?project=work");
   await userEvent.click(
     await screen.findByRole("button", { name: "Open terminal in this project" }),

@@ -8,8 +8,8 @@ import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { PageHeader } from "@raypx/ui/page-header";
-import { authClient } from "../../auth/client.ts";
-import { configurationClient, configurationError, type Configuration } from "../client.ts";
+import { authClient } from "../../auth/client.js";
+import { configurationClient, configurationError, type Configuration } from "../client.js";
 
 const row =
   "grid items-start gap-4 border-b border-border py-5 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] @xl/main:items-center @xl/main:gap-x-8";

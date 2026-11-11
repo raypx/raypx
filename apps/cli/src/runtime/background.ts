@@ -1,4 +1,4 @@
-import { errorPayload } from "./errors.ts";
+import { errorPayload } from "./errors.js";
 
 /** A stable identifier for the failure: its domain code, else the error class. Never its message. */
 function cause(error: unknown) {

@@ -3,14 +3,14 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { request as httpRequest } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../../helpers/enrolled.ts";
+import { startDaemon } from "../../../helpers/enrolled.js";
 import {
   connectDaemon,
   daemonFetch,
   readDaemon,
   stopDaemon,
-} from "../../../../src/runtime/daemon/endpoint.ts";
-import { profilePath } from "../../../../src/runtime/state/index.ts";
+} from "../../../../src/runtime/daemon/endpoint.js";
+import { profilePath } from "../../../../src/runtime/state/index.js";
 
 const previous = process.env.RAYPX_LOCAL_TRANSPORT;
 beforeEach(() => {

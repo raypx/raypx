@@ -51,7 +51,7 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   for (const file of ["run", "agents-run"])
     writeFileSync(
       join(root, `tests/native/smoke/${file}.ts`),
-      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.ts");`,
+      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.js");`,
     );
   return (
     task: string,

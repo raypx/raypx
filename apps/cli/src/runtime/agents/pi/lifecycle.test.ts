@@ -10,7 +10,7 @@ import {
   piToolCall as toolCall,
   piFinal as final,
   piAllow as allow,
-} from "../../../../tests/helpers/pi.ts";
+} from "../../../../tests/helpers/pi.js";
 
 it("rejects invalid deadlines and accepts a caller's already-aborted signal without inference", async () => {
   const memory = piStore(),

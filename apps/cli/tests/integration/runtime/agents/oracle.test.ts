@@ -1,9 +1,9 @@
 import { expect, it } from "vite-plus/test";
-import { EPOCH, orchestrationHost } from "../../../helpers/orchestration";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { fold } from "../../../../src/runtime/agents/domain/fold";
-import type { AgentRuntime } from "../../../../src/runtime/agents";
-import type { StateStore } from "../../../../src/runtime/state";
+import { EPOCH, orchestrationHost } from "../../../helpers/orchestration.js";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { fold } from "../../../../src/runtime/agents/domain/fold.js";
+import type { AgentRuntime } from "../../../../src/runtime/agents/index.js";
+import type { StateStore } from "../../../../src/runtime/state/index.js";
 import type { AgentTask } from "@raypx/core/tasks";
 
 /**

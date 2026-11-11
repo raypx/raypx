@@ -3,8 +3,8 @@ import type { Query } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
 export { drizzle };
-export { migrateLocalDatabase } from "./migrate";
-export { ProfileStorage } from "./profile";
+export { migrateLocalDatabase } from "./migrate.js";
+export { ProfileStorage } from "./profile.js";
 export type LocalDatabase = ReturnType<typeof drizzle>;
 
 /** Drizzle has no streaming SQLite iterator. A dedicated native cursor keeps

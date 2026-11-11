@@ -3,9 +3,9 @@ import type { AuthSession } from "@raypx/core/auth";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
-import { createApiRuntime } from "../../server/runtime/server.ts";
-import { getApiEnvironment } from "../../server/env.ts";
-import type { RuntimeProviders } from "../../server/runtime/shared.ts";
+import { createApiRuntime } from "../../server/runtime/server.js";
+import { getApiEnvironment } from "../../server/env.js";
+import type { RuntimeProviders } from "../../server/runtime/shared.js";
 
 const mocks = vi.hoisted(() => ({
   connect: vi.fn<() => DatabaseConnection>(),

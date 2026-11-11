@@ -14,10 +14,10 @@ import {
 } from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useDesktopPlatform } from "../../../lib/platform-context";
-import { apiUrl, authClient, desktopFetch } from "../client";
-import { useDesktopSignOut } from "../sign-out";
-import { WindowDragRegion } from "../../../components/window-drag-region";
+import { useDesktopPlatform } from "../../../lib/platform-context.js";
+import { apiUrl, authClient, desktopFetch } from "../client.js";
+import { useDesktopSignOut } from "../sign-out.js";
+import { WindowDragRegion } from "../../../components/window-drag-region.js";
 
 function gateMessage(
   mismatch: boolean,

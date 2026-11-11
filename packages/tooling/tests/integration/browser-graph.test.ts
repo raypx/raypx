@@ -1,9 +1,9 @@
 import { expect, it } from "vite-plus/test";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { taskModel, taskPlan, taskRef } from "../../src/tasks/model.ts";
-import { executionTasks } from "../../src/verification/execution.ts";
-import { verificationPlan } from "../../src/verification/plan.ts";
+import { taskModel, taskPlan, taskRef } from "../../src/tasks/model.js";
+import { executionTasks } from "../../src/verification/execution.js";
+import { verificationPlan } from "../../src/verification/plan.js";
 
 const root = resolve(import.meta.dirname, "../../../..");
 const model = taskModel(root);
@@ -36,8 +36,8 @@ it("loads Playwright settings from E2E and intersects smoke and user filters", (
       "--no-env-file",
       "-e",
       `
-    import config from "./playwright.config.ts";
-    import { browserTestSettings } from "./browser-settings.ts";
+    import config from "./playwright.config.js";
+    import { browserTestSettings } from "./browser-settings.js";
     const capacities = [[8, 16], [16, 32], [12, 24], [4, 16], [8, 8], [1, 16]];
     const localWorkers = capacities.map(([cpus, gib]) =>
       browserTestSettings({}, { cpus, memoryBytes: gib * 2 ** 30 }).workers);

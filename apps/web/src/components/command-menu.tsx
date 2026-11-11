@@ -8,10 +8,10 @@ import { FolderIcon } from "@raypx/icons/folder";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { sessionThreads } from "@raypx/tasks/model";
-import type { WebPath } from "../features/auth/access.ts";
-import { apiUrl } from "../features/auth/client.ts";
-import { taskClient } from "../features/tasks/client.ts";
-import { remoteProjectsQuery } from "../features/tasks/project-navigation.tsx";
+import type { WebPath } from "../features/auth/access.js";
+import { apiUrl } from "../features/auth/client.js";
+import { taskClient } from "../features/tasks/client.js";
+import { remoteProjectsQuery } from "../features/tasks/project-navigation.js";
 
 const recentLimit = 8;
 

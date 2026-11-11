@@ -1,7 +1,7 @@
 import { Container } from "@cloudflare/containers";
 import type { DurableObjectNamespace } from "@cloudflare/workers-types";
-import { containerEnvironment, type RelaySecrets } from "./environment.ts";
-import { proxyRelay } from "./proxy.ts";
+import { containerEnvironment, type RelaySecrets } from "./environment.js";
+import { proxyRelay } from "./proxy.js";
 
 interface Env extends RelaySecrets {
   RELAY: DurableObjectNamespace<RelayContainer>;

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { createLifecycle } from "./lifecycle.ts";
+import { createLifecycle } from "./lifecycle.js";
 
 it("closes in reverse order, attempts every resource and reports the first failure", async () => {
   const lifecycle = createLifecycle();

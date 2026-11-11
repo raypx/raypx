@@ -1,9 +1,9 @@
 import { vi } from "vite-plus/test";
 import type { RelayServerFrame } from "@raypx/contracts/tasks";
-import { ControlService } from "../../src/service.ts";
-import { RelayHub } from "../../src/relay/hub.ts";
-import type { RelayCluster } from "../../src/relay/cluster.ts";
-import { connected, memoryControlRepository, running } from "./control.ts";
+import { ControlService } from "../../src/service.js";
+import { RelayHub } from "../../src/relay/hub.js";
+import type { RelayCluster } from "../../src/relay/cluster.js";
+import { connected, memoryControlRepository, running } from "./control.js";
 
 function clusterPeers() {
   const nodes = new Map<string, Parameters<RelayCluster["start"]>>();

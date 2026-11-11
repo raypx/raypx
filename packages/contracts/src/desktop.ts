@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { localEventSchema } from "./local";
-import { localResults } from "./local-client";
+import { localEventSchema } from "./local.js";
+import { localResults } from "./local-client.js";
 
 export const desktopExecutionSchema = z.strictObject({
   id: z.uuid(),

@@ -2,13 +2,13 @@ import { expect, it, vi, afterEach } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { bindingKey } from "../../../../src/runtime/daemon/vault";
+import { bindingKey } from "../../../../src/runtime/daemon/vault.js";
 import {
   readTerminalConfiguration,
   writeTerminalConfiguration,
-} from "../../../../src/runtime/daemon/terminal-settings";
-import { startDaemon } from "../../../helpers/enrolled";
-import { profilePath } from "../../../../src/runtime/state";
+} from "../../../../src/runtime/daemon/terminal-settings.js";
+import { startDaemon } from "../../../helpers/enrolled.js";
+import { profilePath } from "../../../../src/runtime/state/index.js";
 
 afterEach(() => vi.unstubAllEnvs());
 

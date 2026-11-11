@@ -2,7 +2,7 @@
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
 import type { JobRun } from "@raypx/core/jobs";
-import { mocks, grants, job, deferred, emit, page } from "../tests/helpers/router-local.tsx";
+import { mocks, grants, job, deferred, emit, page } from "../tests/helpers/router-local.js";
 
 const first = job("First scan");
 const second = { ...job("Second scan"), id: "job-2" };

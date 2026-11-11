@@ -1,8 +1,8 @@
 import { Image, Text } from "react-native";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { apiOrigin, authClient } from "../../src/auth.ts";
-import { actionErrorKey, useCopy } from "../../src/locale.ts";
-import { Action, Screen } from "../../src/ui.tsx";
+import { apiOrigin, authClient } from "../../src/auth.js";
+import { actionErrorKey, useCopy } from "../../src/locale.js";
+import { Action, Screen } from "../../src/ui.js";
 
 /** Authenticated account shell; remote task screens will live in this protected group. */
 export default function AccountScreen() {

@@ -1,9 +1,9 @@
 import { expect, it, vi } from "vite-plus/test";
-import { ControlService } from "./service.ts";
-import { createRemoteRelay } from "./relay/client.ts";
-import type { RelayCluster, RelayOperation, RelayReply } from "./relay/cluster.ts";
+import { ControlService } from "./service.js";
+import { createRemoteRelay } from "./relay/client.js";
+import type { RelayCluster, RelayOperation, RelayReply } from "./relay/cluster.js";
 import type { CloudJobRun } from "@raypx/core/jobs";
-import { connected, memoryControlRepository } from "../tests/helpers/control.ts";
+import { connected, memoryControlRepository } from "../tests/helpers/control.js";
 
 async function fixture() {
   const repository = memoryControlRepository(),

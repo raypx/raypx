@@ -2,10 +2,10 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
-import { connectDaemon, type ProfileOptions } from "./endpoint";
-import { installStableCli, stableCliLaunch, raypxHome } from "./connectors";
-import { profilePath } from "../state";
-import { LocalError } from "../errors";
+import { connectDaemon, type ProfileOptions } from "./endpoint.js";
+import { installStableCli, stableCliLaunch, raypxHome } from "./connectors.js";
+import { profilePath } from "../state/index.js";
+import { LocalError } from "../errors.js";
 
 const xml = (value: string) =>
   value

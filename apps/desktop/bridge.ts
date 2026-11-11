@@ -2,8 +2,8 @@ import type { AnalyticsConsent } from "@raypx/analytics";
 import type { LocalMethod, RootGrant, ToolResult } from "@raypx/contracts/local";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-import type { DevicePreferences } from "./preferences";
-import type { DesktopApiRequest, DesktopApiResponse } from "./api";
+import type { DevicePreferences } from "./preferences.js";
+import type { DesktopApiRequest, DesktopApiResponse } from "./api.js";
 import type { DesktopExecution } from "@raypx/contracts/desktop";
 
 interface EngineStatus {

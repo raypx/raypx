@@ -11,8 +11,8 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
-import { DesktopTaskWorkspace } from "../../../src/features/tasks/workspace.tsx";
-import { localTaskClient } from "../../../src/features/tasks/local-client.ts";
+import { DesktopTaskWorkspace } from "../../../src/features/tasks/workspace.js";
+import { localTaskClient } from "../../../src/features/tasks/local-client.js";
 // Register matchers with the active Vite+ test runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
@@ -26,13 +26,13 @@ const mocks = vi.hoisted(() => ({
   listeners: new Set<() => void>(),
 }));
 export { mocks };
-vi.mock("../../../src/lib/desktop", () => ({
+vi.mock("../../../src/lib/desktop.js", () => ({
   isDesktop: () => true,
   hasTerminalHooks: () => false,
   localRequest: mocks.request,
   onLocalEvent: () => () => {},
 }));
-vi.mock("../../../src/features/auth/client", () => ({
+vi.mock("../../../src/features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: {
     useSession: () => {
@@ -49,7 +49,7 @@ vi.mock("../../../src/features/auth/client", () => ({
     },
   },
 }));
-vi.mock("../../../src/features/tasks/client", () => ({
+vi.mock("../../../src/features/tasks/client.js", () => ({
   taskClient: {
     tasks: { list: mocks.remote },
     devices: { list: async () => [remoteDevice] },

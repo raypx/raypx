@@ -1,5 +1,5 @@
-import { CONNECTION_KEY, DEFAULT_CONNECTION, parseConnection } from "../../config.ts";
-import { isDesktop } from "./desktop.ts";
+import { CONNECTION_KEY, DEFAULT_CONNECTION, parseConnection } from "../../config.js";
+import { isDesktop } from "./desktop.js";
 
 export function readDesktopConnection() {
   if (isDesktop()) return parseConnection(Reflect.get(window, CONNECTION_KEY));

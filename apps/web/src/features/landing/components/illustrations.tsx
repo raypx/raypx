@@ -6,8 +6,8 @@ import { FileTextIcon } from "@raypx/icons/file-text";
 import { FolderIcon } from "@raypx/icons/folder";
 import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import { cn } from "@raypx/ui/lib/utils";
-import { DotGrid } from "../../../components/artwork.tsx";
-import { accentGradient } from "../../../components/brand-accent.ts";
+import { DotGrid } from "../../../components/artwork.js";
+import { accentGradient } from "../../../components/brand-accent.js";
 
 /**
  * Example interfaces for the homepage workspace links. Each frame is labelled as an

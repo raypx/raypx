@@ -11,8 +11,8 @@ import {
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
-import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings.tsx";
-import { useSettingsNavigation } from "./navigation.ts";
+import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings.js";
+import { useSettingsNavigation } from "./navigation.js";
 
 afterEach(cleanup);
 beforeEach(() => {

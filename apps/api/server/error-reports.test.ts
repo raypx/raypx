@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import type { SafeEvent } from "@raypx/logger/safe";
-import { withErrorReports } from "./error-reports.ts";
-import { newRequestId } from "./api.ts";
+import { withErrorReports } from "./error-reports.js";
+import { newRequestId } from "./api.js";
 
 const base = { timestamp: "2026-10-22T00:00:00.000Z", service: "raypx-api", environment: "test" };
 const logEvent = (fields: Record<string, unknown>) =>

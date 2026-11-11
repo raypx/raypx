@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { type QueryKey, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TaskChange } from "@raypx/contracts/tasks";
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
-import { failureCode } from "../model/failure.ts";
-import type { TaskChangeSource } from "../model/port.ts";
-import { waitForRead } from "./read.ts";
+import { failureCode } from "../model/failure.js";
+import type { TaskChangeSource } from "../model/port.js";
+import { waitForRead } from "./read.js";
 
 const scopes = new WeakMap<object, number>();
 let nextScope = 0;

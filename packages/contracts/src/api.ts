@@ -1,30 +1,30 @@
-import { administrationContract } from "./administration.ts";
-export * from "./administration.ts";
-import { instancesContract } from "./instances.ts";
+import { administrationContract } from "./administration.js";
+export * from "./administration.js";
+import { instancesContract } from "./instances.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
-import { accountAccessSchema } from "./access.ts";
-export * from "./access.ts";
-import { deviceSchema, deviceGrantSchema } from "./tasks.ts";
+import { accountAccessSchema } from "./access.js";
+export * from "./access.js";
+import { deviceSchema, deviceGrantSchema } from "./tasks.js";
 import {
   taskSchema,
   humanRequestSchema,
   agentEventSchema,
   taskActivitySchema,
 } from "@raypx/core/tasks";
-export * from "./tasks.ts";
-export * from "./configuration.ts";
-import { configurationContract } from "./configuration.ts";
-import { jobsContract } from "./jobs.ts";
-export * from "./jobs.ts";
-import { memoryContract } from "./memory.ts";
-export * from "./memory.ts";
+export * from "./tasks.js";
+export * from "./configuration.js";
+import { configurationContract } from "./configuration.js";
+import { jobsContract } from "./jobs.js";
+export * from "./jobs.js";
+import { memoryContract } from "./memory.js";
+export * from "./memory.js";
 import {
   hostAuthorizationSchema,
   observedProjectionSchema,
   terminalRequestSchema,
-} from "./terminal.ts";
-export * from "./terminal.ts";
+} from "./terminal.js";
+export * from "./terminal.js";
 
 export const accountProfileSchema = z.object({
   id: z.string().min(1),

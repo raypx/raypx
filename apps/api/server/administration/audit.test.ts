@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vite-plus/test";
-import { AuditService, AuditUnavailable } from "./audit.ts";
+import { AuditService, AuditUnavailable } from "./audit.js";
 const intent = {
   action: "configuration.update" as const,
   actorId: "actor",

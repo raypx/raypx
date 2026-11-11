@@ -1,6 +1,6 @@
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import type { ConversationEvent, TokenTotals } from "@raypx/providers/core";
-import type { ActivityDraft, LocalAgentTask } from "../model.ts";
+import type { ActivityDraft, LocalAgentTask } from "../model.js";
 
 /**
  * Synchronous command submission for the turn and approval state machine. Each

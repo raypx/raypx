@@ -1,15 +1,15 @@
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace";
-import { taskModel } from "../tasks/model";
-import { platformProject } from "../../tests/helpers/verification";
-import { argumentKey } from "../tasks/arguments";
-import { testLayer, testSources } from "../validation/test-sources";
-import { executionTasks } from "./execution";
-import { verificationPlan } from "./plan";
-import type { VerificationPlan } from "./plan";
-import { localTests } from "./tests";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { taskModel } from "../tasks/model.js";
+import { platformProject } from "../../tests/helpers/verification.js";
+import { argumentKey } from "../tasks/arguments.js";
+import { testLayer, testSources } from "../validation/test-sources.js";
+import { executionTasks } from "./execution.js";
+import { verificationPlan } from "./plan.js";
+import type { VerificationPlan } from "./plan.js";
+import { localTests } from "./tests.js";
 
 const { fixture, member } = workspaceFixtures();
 function feature(root: string, plan: VerificationPlan) {

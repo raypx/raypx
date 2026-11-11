@@ -1,5 +1,5 @@
 import { bench, native, webview } from "@hona/strobe";
-import { beforeLaunch, teardown, recordOwnership } from "./fixture";
+import { beforeLaunch, teardown, recordOwnership } from "./fixture.js";
 
 const nativeReady = process.env.RAYPX_STROBE_READY_SELECTOR;
 const workbench = "@workbench";

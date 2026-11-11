@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { selectOption } from "./helpers/select.ts";
+import { selectOption } from "./helpers/select.js";
 import { createApiClient, type ApiClient } from "@raypx/client/api";
 import type { RelayClientFrame, RelayServerFrame } from "@raypx/contracts/tasks";
 const apiUrl = process.env.CONTROL_E2E_API_URL;

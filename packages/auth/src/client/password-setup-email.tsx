@@ -3,9 +3,9 @@ import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import { LockIcon } from "@raypx/icons/lock";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
-import { useAuthActions, type AuthActionClient } from "../hooks.ts";
-import { useAuthErrorMessage } from "./use-auth-error-message.ts";
-import { useMailCooldown } from "./use-mail-cooldown.ts";
+import { useAuthActions, type AuthActionClient } from "../hooks.js";
+import { useAuthErrorMessage } from "./use-auth-error-message.js";
+import { useMailCooldown } from "./use-mail-cooldown.js";
 
 export function PasswordSetupEmail({
   client,

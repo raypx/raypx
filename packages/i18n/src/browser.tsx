@@ -1,15 +1,15 @@
 import { useSyncExternalStore, type ReactNode } from "react";
 import { createBrowserLanguage, type BrowserLanguageProviderProps } from "@raypx-kit/intl/browser";
 import { catalogs } from "#catalogs";
-import { createCatalogLanguageProvider } from "./catalog-provider.tsx";
-import { createCatalogStore } from "./catalog-store.ts";
-import { DEFAULT_LOCALE } from "./constants.ts";
-import { normalizeLocale } from "./normalize.ts";
-import { LOCALE_PREFERENCE_KEY } from "./preferences.ts";
-import { IntlProvider, useLocale, useMessages } from "./react.ts";
-import { localeRuntime } from "./runtime.ts";
-import type en from "./messages/en.ts";
-import type { Locale, MessagesByLocale } from "./types.ts";
+import { createCatalogLanguageProvider } from "./catalog-provider.js";
+import { createCatalogStore } from "./catalog-store.js";
+import { DEFAULT_LOCALE } from "./constants.js";
+import { normalizeLocale } from "./normalize.js";
+import { LOCALE_PREFERENCE_KEY } from "./preferences.js";
+import { IntlProvider, useLocale, useMessages } from "./react.js";
+import { localeRuntime } from "./runtime.js";
+import type en from "./messages/en.js";
+import type { Locale, MessagesByLocale } from "./types.js";
 
 const store = createCatalogStore(catalogs);
 
@@ -63,7 +63,7 @@ export function BrowserLanguageProvider({
 
 /** Restore device storage only; native composition must not inherit browser cookies. */
 export const readBrowserPreference = browser.preferences.read;
-export { useLanguagePreference } from "./react.ts";
+export { useLanguagePreference } from "./react.js";
 export {
   useTranslations,
   useLocale,
@@ -71,4 +71,4 @@ export {
   useNow,
   useTimeZone,
   useMessages,
-} from "./react.ts";
+} from "./react.js";

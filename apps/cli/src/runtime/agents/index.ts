@@ -1,8 +1,8 @@
-import type { PiExecutionServices } from "./pi/ports.ts";
-import { createProviderRegistry } from "./infrastructure/providers/builtins.ts";
-import type { ProviderRegistry } from "./application/providers.ts";
-import { ClaudeApprovalServer } from "./infrastructure/claude-hook.ts";
-import type { RecordDiagnostic } from "../../diagnostics.ts";
+import type { PiExecutionServices } from "./pi/ports.js";
+import { createProviderRegistry } from "./infrastructure/providers/builtins.js";
+import type { ProviderRegistry } from "./application/providers.js";
+import { ClaudeApprovalServer } from "./infrastructure/claude-hook.js";
+import type { RecordDiagnostic } from "../../diagnostics.js";
 import { hostname } from "node:os";
 import {
   type DeviceCommand,
@@ -20,18 +20,18 @@ import {
   type TaskContextTarget,
   type TaskContextSnapshot,
 } from "@raypx/core/tasks";
-import { type StateStore } from "../state/index.ts";
-import { LocalError } from "../errors.ts";
-import { AgentStore } from "./store.ts";
-import { desktopBinding } from "./model.ts";
-import { ExecutionCoordinator } from "./application/coordinator.ts";
-import { LocalExecutionProjects } from "./infrastructure/projects.ts";
+import { type StateStore } from "../state/index.js";
+import { LocalError } from "../errors.js";
+import { AgentStore } from "./store.js";
+import { desktopBinding } from "./model.js";
+import { ExecutionCoordinator } from "./application/coordinator.js";
+import { LocalExecutionProjects } from "./infrastructure/projects.js";
 import manifest from "../../../package.json";
 
-import { AgentCommandService } from "./application/commands.ts";
-import { AgentQueries } from "./application/queries.ts";
-import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports.ts";
-import { DecisionRejected } from "./domain/decider.ts";
+import { AgentCommandService } from "./application/commands.js";
+import { AgentQueries } from "./application/queries.js";
+import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports.js";
+import { DecisionRejected } from "./domain/decider.js";
 export class AgentRuntime {
   readonly instanceId: string;
   private readonly clock: Clock;
@@ -61,7 +61,7 @@ export class AgentRuntime {
       environment?: () => Record<string, string | undefined>;
       /** Determinism ports for tests that compare replayed or projected output. */
       clock?: Clock;
-      transport?: import("./harness/transport.ts").TransportFactory;
+      transport?: import("./harness/transport.js").TransportFactory;
       /** Tests supply explicit executables and never discover a real installation. */
       explicitExecutables?: boolean;
       ids?: Ids;

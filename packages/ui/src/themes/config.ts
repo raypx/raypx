@@ -1,6 +1,6 @@
-import { themeTokens } from "./tokens.ts";
+import { themeTokens } from "./tokens.js";
 
-export { themeTokens, type ThemeToken } from "./tokens.ts";
+export { themeTokens, type ThemeToken } from "./tokens.js";
 
 export type UserTheme = "light" | "dark" | "system";
 export type AppTheme = "light" | "dark";

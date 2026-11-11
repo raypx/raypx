@@ -13,7 +13,7 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { sidebarPreference } from "./sidebar-preference";
+import { sidebarPreference } from "./sidebar-preference.js";
 import { SidebarCollapseIcon } from "@raypx/icons/sidebar-collapse";
 import { SidebarExpandIcon } from "@raypx/icons/sidebar-expand";
 import { useTranslations } from "@raypx/i18n/browser";

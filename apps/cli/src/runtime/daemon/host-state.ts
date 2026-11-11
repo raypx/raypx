@@ -1,4 +1,4 @@
-import type { HostBinding } from "./vault.ts";
+import type { HostBinding } from "./vault.js";
 
 /** What the daemon knows about its single cloud binding. Values are immutable; `hostState` derives the next. */
 export interface HostState {

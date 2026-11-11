@@ -16,8 +16,8 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { SettingsOverlay } from "./overlay.tsx";
-import { useSettingsNavigation } from "./navigation.ts";
+import { SettingsOverlay } from "./overlay.js";
+import { useSettingsNavigation } from "./navigation.js";
 
 const mocks = vi.hoisted(() => ({
   load: vi.fn(),
@@ -26,7 +26,7 @@ const mocks = vi.hoisted(() => ({
   backgroundMount: vi.fn(),
   backgroundUnmount: vi.fn(),
 }));
-vi.mock("./content.tsx", async () => {
+vi.mock("./content.js", async () => {
   const { useEffect: onMount } = await import("react");
   mocks.load();
   return {

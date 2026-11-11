@@ -17,15 +17,15 @@ import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
 import { cn } from "@raypx/ui/lib/utils";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
-import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks.ts";
+import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks.js";
 import type { SocialProvider } from "@raypx/core/auth";
-import { authPolicy } from "../policy.ts";
-import { readAuthLink, type AuthMode } from "./auth-link.ts";
-import { PasswordField } from "./password-field.tsx";
-import { useMailCooldown } from "./use-mail-cooldown.ts";
-import { useAuthErrorMessage } from "./use-auth-error-message.ts";
+import { authPolicy } from "../policy.js";
+import { readAuthLink, type AuthMode } from "./auth-link.js";
+import { PasswordField } from "./password-field.js";
+import { useMailCooldown } from "./use-mail-cooldown.js";
+import { useAuthErrorMessage } from "./use-auth-error-message.js";
 
-export type { AuthMode } from "./auth-link.ts";
+export type { AuthMode } from "./auth-link.js";
 
 import {
   AuthFormFooter,
@@ -33,10 +33,10 @@ import {
   AuthFormNotices,
   linkClassName,
   type AuthFormLinkProps,
-} from "./auth-form-parts.tsx";
-import { authFormTitle, authSuccessMessage, modes, requestMode } from "./auth-modes.ts";
+} from "./auth-form-parts.js";
+import { authFormTitle, authSuccessMessage, modes, requestMode } from "./auth-modes.js";
 
-export type { AuthFormLinkProps } from "./auth-form-parts.tsx";
+export type { AuthFormLinkProps } from "./auth-form-parts.js";
 
 const socialProviders = {
   google: { icon: GoogleIcon, label: "continueGoogle" },

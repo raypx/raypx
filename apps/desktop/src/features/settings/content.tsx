@@ -2,13 +2,13 @@ import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
 import { useTranslations } from "@raypx/i18n/browser";
-import { RemoteBoundary } from "../auth/components/remote-boundary.tsx";
-import { authClient } from "../auth/client.ts";
-import { getBridge, isDesktop } from "../../lib/desktop.ts";
+import { RemoteBoundary } from "../auth/components/remote-boundary.js";
+import { authClient } from "../auth/client.js";
+import { getBridge, isDesktop } from "../../lib/desktop.js";
 import { useState } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
-import { AgentSettings } from "../tasks/settings.tsx";
-import { taskClient } from "../tasks/client.ts";
+import { AgentSettings } from "../tasks/settings.js";
+import { taskClient } from "../tasks/client.js";
 
 export default function SettingsContent() {
   const t = useTranslations("settings");

@@ -1,5 +1,5 @@
 import { useTranslations } from "@raypx/i18n/browser";
-import type { AuthActionError } from "../hooks.ts";
+import type { AuthActionError } from "../hooks.js";
 
 export function useAuthErrorMessage(
   error: AuthActionError | null,

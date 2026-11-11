@@ -6,11 +6,11 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import type { TaskWorkspacePort } from "../model/port.ts";
-import { failureCode } from "../model/failure.ts";
-import type { WorkspaceScope } from "../model/scope.ts";
-import { useSessionDraft } from "./use-session-draft.ts";
-import { submitShortcut } from "./submit-shortcut.ts";
+import type { TaskWorkspacePort } from "../model/port.js";
+import { failureCode } from "../model/failure.js";
+import type { WorkspaceScope } from "../model/scope.js";
+import { useSessionDraft } from "./use-session-draft.js";
+import { submitShortcut } from "./submit-shortcut.js";
 
 export function TaskInputComposer({
   client,

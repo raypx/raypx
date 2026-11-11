@@ -7,9 +7,9 @@ import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
-import { TaskMarkdown } from "./markdown.tsx";
-import { ShimmerText } from "./shimmer-text.tsx";
-import { ToolActivityRow } from "./tool-activity.tsx";
+import { TaskMarkdown } from "./markdown.js";
+import { ShimmerText } from "./shimmer-text.js";
+import { ToolActivityRow } from "./tool-activity.js";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 
 type Gap = { id: number; before: number; after: number };

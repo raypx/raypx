@@ -1,4 +1,4 @@
-import { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
+import { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
 import {
   relayServerSchema,
   RELAY_VERSION,
@@ -7,7 +7,7 @@ import {
   type RelayServerFrame,
 } from "@raypx/contracts/api";
 
-export { systemRelayScheduler, type RelayScheduler } from "./scheduler.ts";
+export { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
 
 const closeReasons = new Map([
   [4006, "UPGRADE_REQUIRED"],

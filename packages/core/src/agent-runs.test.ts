@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { AgentRunProjectionError, projectTaskStatusToRunStatus } from "./agent-runs.ts";
+import { AgentRunProjectionError, projectTaskStatusToRunStatus } from "./agent-runs.js";
 
 describe("Agent Task status projection", () => {
   it.each([

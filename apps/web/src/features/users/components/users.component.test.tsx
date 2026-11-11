@@ -6,14 +6,14 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { accessForRole } from "@raypx/account/access";
 
 const mocks = vi.hoisted(() => ({ list: vi.fn(), setRole: vi.fn(), access: vi.fn() }));
-vi.mock("../../auth/client", () => ({
+vi.mock("../../auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: { admin: { listUsers: mocks.list, setRole: mocks.setRole } },
 }));
-vi.mock("../../auth/access", () => ({
+vi.mock("../../auth/access.js", () => ({
   accountAccessQuery: (id: string) => ({ queryKey: ["account-access", id], queryFn: mocks.access }),
 }));
-import { Users } from "./users.tsx";
+import { Users } from "./users.js";
 
 const actor = {
   id: "admin",

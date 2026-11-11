@@ -1,14 +1,14 @@
-import { CONTEXT_COMMAND_TTL_MS } from "../../src/records.ts";
+import { CONTEXT_COMMAND_TTL_MS } from "../../src/records.js";
 import { terminalRequestSchema, terminalSessionSchema } from "@raypx/contracts/terminal";
-import { decodeControlRecord, decodeObservedSummary } from "../../src/schemas.ts";
+import { decodeControlRecord, decodeObservedSummary } from "../../src/schemas.js";
 import type { AuthSession } from "@raypx/core/auth";
 import {
   type ControlRecord,
   type ControlRepository,
   type ControlTransaction,
   type RecordKind,
-} from "../../src/ports.ts";
-import type { ControlService } from "../../src/service.ts";
+} from "../../src/ports.js";
+import type { ControlService } from "../../src/service.js";
 
 import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 
@@ -61,7 +61,7 @@ export function memoryControlRepository(): ControlRepository & {
       async list<K extends RecordKind>(
         kind: K,
         deviceId?: string,
-        query: import("../../src/ports.ts").ControlQuery = {},
+        query: import("../../src/ports.js").ControlQuery = {},
       ) {
         const rows = [...draft.entries()]
           .filter(

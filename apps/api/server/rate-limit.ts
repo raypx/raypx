@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import { rateLimit } from "@raypx/database/schema";
 
-import type { RateLimiter } from "./rate-limit/types.ts";
+import type { RateLimiter } from "./rate-limit/types.js";
 
 /**
  * One atomic upsert per check, with Better Auth's semantics: a request outside the

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import type { TaskActivity } from "@raypx/core/tasks";
-import { ToolActivityRow } from "./tool-activity.tsx";
+import { ToolActivityRow } from "./tool-activity.js";
 
 type ToolActivity = Extract<TaskActivity, { kind: "tool" }>;
 

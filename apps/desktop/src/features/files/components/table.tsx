@@ -20,7 +20,7 @@ import { IconButton } from "@raypx/ui/icon-button";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
-import { useFilesStore } from "../store.tsx";
+import { useFilesStore } from "../store.js";
 
 export type FileListingResult = { status: "success"; listing: FileListing } | { status: "error" };
 interface FileTableProps {

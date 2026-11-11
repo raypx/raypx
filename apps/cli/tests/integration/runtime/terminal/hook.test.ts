@@ -1,10 +1,10 @@
-import { profileStorage } from "../../../helpers/sqlite";
+import { profileStorage } from "../../../helpers/sqlite.js";
 import { expect, it } from "vite-plus/test";
 import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { forwardTerminalHook } from "../../../../src/runtime/terminal/hook";
-import { startTerminalHost, terminalFetch } from "../../../../src/runtime/terminal/host";
+import { forwardTerminalHook } from "../../../../src/runtime/terminal/hook.js";
+import { startTerminalHost, terminalFetch } from "../../../../src/runtime/terminal/host.js";
 
 it("returns no vendor output when the host is missing instead of blocking or approving", async () => {
   const dir = await mkdtemp(join(tmpdir(), "raypx-hook-missing-"));

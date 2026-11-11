@@ -5,7 +5,7 @@ import { MonitorIcon } from "@raypx/icons/monitor";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
-import { authClient } from "../../auth/client.ts";
+import { authClient } from "../../auth/client.js";
 
 /** Share Better Auth's deduplicated session store with the header account menu. */
 export function LandingAuthAction({

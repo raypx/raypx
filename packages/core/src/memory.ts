@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { taskContextTargetSchema, taskContextIdSchema } from "./tasks.ts";
+import { taskContextTargetSchema, taskContextIdSchema } from "./tasks.js";
 
 export class ContextError extends Error {
   constructor(readonly code: string) {

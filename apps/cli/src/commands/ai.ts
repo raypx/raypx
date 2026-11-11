@@ -1,13 +1,13 @@
-import { loadAiSettings } from "../runtime/ai/settings.ts";
-import { InstanceRuntime, type InstanceAccess } from "../runtime/instances/index.ts";
-import { profilePath } from "../runtime/state/index.ts";
-import { ProfileStorage } from "../runtime/sqlite/index.ts";
-import { instanceKeys } from "../runtime/instances/keys.ts";
+import { loadAiSettings } from "../runtime/ai/settings.js";
+import { InstanceRuntime, type InstanceAccess } from "../runtime/instances/index.js";
+import { profilePath } from "../runtime/state/index.js";
+import { ProfileStorage } from "../runtime/sqlite/index.js";
+import { instanceKeys } from "../runtime/instances/keys.js";
 import { defineCommand, type CommandDef } from "citty";
 import { mergeAiSettings, parseAiSettings } from "@raypx/ai/config";
 import type { AiRequestOptions } from "@raypx/ai";
-import { LocalError } from "../runtime/errors.ts";
-import { globalArgs, type CliArgs } from "./args.ts";
+import { LocalError } from "../runtime/errors.js";
+import { globalArgs, type CliArgs } from "./args.js";
 
 function input(source: string | undefined): Record<string, unknown> {
   try {

@@ -40,9 +40,9 @@ import {
   type ContextDocumentSummary,
   type ContextVersion,
 } from "@raypx/core/memory";
-import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.ts";
-import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.ts";
-import { DocumentForm, documentDraft } from "./form.tsx";
+import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.js";
+import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
+import { DocumentForm, documentDraft } from "./form.js";
 type EditorDestination = "new" | "close" | ContextDocumentSummary;
 interface Props {
   client: MemoryClientPort;

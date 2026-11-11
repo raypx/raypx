@@ -22,10 +22,10 @@ import { LoadingState } from "@raypx/ui/loading-state";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { IconButton } from "@raypx/ui/icon-button";
 import type { CloudJob, CloudJobInput, CloudJobRun } from "@raypx/core/jobs";
-import type { CloudJobsPort, JobDevicesPort, JobDevice, JobReadOptions } from "./ports.ts";
-import { AutomationFilters } from "./automation-filters.tsx";
-import { JobForm } from "./job-form.tsx";
-import { jobFailure, jobReason } from "./errors.ts";
+import type { CloudJobsPort, JobDevicesPort, JobDevice, JobReadOptions } from "./ports.js";
+import { AutomationFilters } from "./automation-filters.js";
+import { JobForm } from "./job-form.js";
+import { jobFailure, jobReason } from "./errors.js";
 import type { MemoryClientPort } from "@raypx/memory/client";
 
 export interface CloudJobsPageProps {

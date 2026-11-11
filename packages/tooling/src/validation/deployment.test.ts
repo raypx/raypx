@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "vite-plus/test";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { checkDeployment } from "./deployment.ts";
+import { checkDeployment } from "./deployment.js";
 
 const repository = resolve(import.meta.dirname, "../../../..");
 const roots: string[] = [];

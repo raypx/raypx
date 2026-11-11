@@ -1,6 +1,6 @@
-import { getApiEnvironment, getRelayEnvironment, getServerRole } from "../env.ts";
-import { createApiRuntime } from "./server.ts";
-import { createRelayRuntime } from "./relay.ts";
+import { getApiEnvironment, getRelayEnvironment, getServerRole } from "../env.js";
+import { createApiRuntime } from "./server.js";
+import { createRelayRuntime } from "./relay.js";
 
 export async function createBackendRuntime(inputs: Record<string, string | undefined>) {
   if (getServerRole(inputs) === "relay")

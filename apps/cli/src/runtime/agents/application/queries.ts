@@ -6,10 +6,10 @@ import type {
   TaskContinuation,
 } from "@raypx/core/tasks";
 import { projectTaskStatusToRunStatus } from "@raypx/core/agent-runs";
-import type { LocalAgentTask } from "../model.ts";
-import { desktopBinding } from "../model.ts";
-import { LocalError } from "../../errors.ts";
-import { bounded } from "../projection.ts";
+import type { LocalAgentTask } from "../model.js";
+import { desktopBinding } from "../model.js";
+import { LocalError } from "../../errors.js";
+import { bounded } from "../projection.js";
 export interface AgentReadRepository {
   get(id: string): LocalAgentTask | undefined;
   requests(binding: string, id?: string): HumanRequest[];

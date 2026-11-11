@@ -2,7 +2,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
-import { SelectField } from "./select-field.tsx";
+import { SelectField } from "./select-field.js";
 
 const options = [
   { value: "work", label: "Work" },

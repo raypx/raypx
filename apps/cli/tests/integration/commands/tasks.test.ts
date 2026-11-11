@@ -2,9 +2,9 @@ import { expect, it, vi } from "vite-plus/test";
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startDaemon } from "../../helpers/enrolled";
-import { parseCliArgs } from "../../../src/commands/args";
-import { runCommand } from "../../../src/commands";
+import { startDaemon } from "../../helpers/enrolled.js";
+import { parseCliArgs } from "../../../src/commands/args.js";
+import { runCommand } from "../../../src/commands/index.js";
 
 it("renders nested task help without starting an owner", async () => {
   const output = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -26,7 +26,7 @@ it.skipIf(process.platform === "win32")(
     mkdirSync(bin);
     cpSync(join(import.meta.dirname, "../../fixtures/agents"), bin, { recursive: true });
     const executable = join(bin, "codex");
-    writeFileSync(executable, `#!${process.execPath}\nimport "./codex-interactive.ts";`, {
+    writeFileSync(executable, `#!${process.execPath}\nimport "./codex-interactive.js";`, {
       mode: 0o700,
     });
     const host = await startDaemon({ dataDir, agentExecutables: { codex: executable } });

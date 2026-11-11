@@ -11,10 +11,10 @@ import {
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import type { InstanceBinding, InstanceStatus } from "@raypx/instances";
-import { DesktopPlatformProvider } from "../../../lib/platform-context.tsx";
-import { desktopFixture } from "../../../../tests/helpers/desktop.ts";
-import { InstanceGate } from "./instance-gate.tsx";
-import { DesktopSignOutProvider } from "../sign-out.tsx";
+import { DesktopPlatformProvider } from "../../../lib/platform-context.js";
+import { desktopFixture } from "../../../../tests/helpers/desktop.js";
+import { InstanceGate } from "./instance-gate.js";
+import { DesktopSignOutProvider } from "../sign-out.js";
 
 const mocks = vi.hoisted(() => ({
   session: vi.fn(),
@@ -22,13 +22,13 @@ const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
   reset: vi.fn(),
 }));
-vi.mock("../client", () => ({
+vi.mock("../client.js", () => ({
   apiUrl: "https://api.example.test",
   desktopFetch: vi.fn(),
   webUrl: "https://app.example.test",
   authClient: { useSession: mocks.session, signOut: mocks.signOut },
 }));
-vi.mock("../../analytics/client", () => ({ analytics: { reset: mocks.reset } }));
+vi.mock("../../analytics/client.js", () => ({ analytics: { reset: mocks.reset } }));
 vi.mock("@raypx/client/api", () => ({
   createApiClient: () => ({ instances: { approve: mocks.approve } }),
 }));

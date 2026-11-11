@@ -11,8 +11,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@raypx/ui/components/ui/sidebar";
-import { taskClient } from "./client.ts";
-import { apiUrl } from "../auth/client.ts";
+import { taskClient } from "./client.js";
+import { apiUrl } from "../auth/client.js";
 
 function SessionLink({ projectId, deviceId, taskId, ...props }: SessionLinkProps) {
   return (

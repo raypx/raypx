@@ -1,6 +1,6 @@
 import { serve } from "bun";
 import { MAX_RELAY_BYTES } from "@raypx/contracts/tasks";
-import { admitRelay, relaySocketHooks, type RelaySocketRuntime } from "../../server/app/relay.ts";
+import { admitRelay, relaySocketHooks, type RelaySocketRuntime } from "../../server/app/relay.js";
 
 /** Loopback transport for source integration tests; production uses Nitro's adapter. */
 export function serveBackend(

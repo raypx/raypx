@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { herdrFrame } from "./herdr-frame.ts";
+import { herdrFrame } from "./herdr-frame.js";
 
 const frame = {
   type: "terminal.frame",

@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
-import { type LocalDatabase } from "../../../sqlite/index.ts";
-import { piContexts } from "../../../sqlite/schema.ts";
+import { type LocalDatabase } from "../../../sqlite/index.js";
+import { piContexts } from "../../../sqlite/schema.js";
 import type { PiContext, PiContextStore } from "@raypx/providers/pi";
 import { piStoredContextSchema } from "@raypx/providers/pi/context";
 

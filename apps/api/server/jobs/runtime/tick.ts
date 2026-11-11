@@ -1,5 +1,5 @@
 import type { Task } from "nitro/types";
-import { getBackendRuntime } from "../../runtime/backend.ts";
+import { getBackendRuntime } from "../../runtime/backend.js";
 
 export default {
   meta: { name: "schedules:tick", description: "Reconcile and dispatch due device schedules" },

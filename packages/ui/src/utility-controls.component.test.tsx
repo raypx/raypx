@@ -3,15 +3,15 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { IconButton } from "./icon-button.tsx";
-import { HelpHint } from "./help-hint.tsx";
+import { IconButton } from "./icon-button.js";
+import { HelpHint } from "./help-hint.js";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./components/ui/dropdown-menu.tsx";
+} from "./components/ui/dropdown-menu.js";
 
 afterEach(cleanup);
 

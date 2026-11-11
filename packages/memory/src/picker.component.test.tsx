@@ -5,7 +5,7 @@ import { expect, it, vi } from "vite-plus/test";
 import type { ContextDocument } from "@raypx/core/memory";
 import { useState } from "react";
 import type { TaskContextSelection } from "@raypx/core/tasks";
-import { ContextPicker, ContextSnapshot } from "./client.ts";
+import { ContextPicker, ContextSnapshot } from "./client.js";
 import {
   document,
   version,
@@ -16,7 +16,7 @@ import {
   deviceId,
   projectId,
   setupMemoryClientTests,
-} from "../tests/helpers/client.tsx";
+} from "../tests/helpers/client.js";
 setupMemoryClientTests();
 
 it("filters sources by project and preserves a chosen historical revision until an explicit update", async () => {

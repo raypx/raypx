@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { isDesktop, localRequest } from "../lib/desktop.ts";
-import { recentProjects } from "../features/tasks/project-history.ts";
-import { TerminalPage } from "../features/terminal/page.tsx";
+import { isDesktop, localRequest } from "../lib/desktop.js";
+import { recentProjects } from "../features/tasks/project-history.js";
+import { TerminalPage } from "../features/terminal/page.js";
 
 export const Route = createFileRoute("/terminal")({
   staticData: { page: { title: "common.terminal", layout: "tool" } },

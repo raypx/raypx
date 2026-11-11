@@ -4,20 +4,20 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
-import { ProfileStorage } from "../../../../../src/runtime/sqlite/index.ts";
+import { ProfileStorage } from "../../../../../src/runtime/sqlite/index.js";
 import {
   desktopSessions,
   hostAuthorizations,
   instanceCredentials,
-} from "../../../../../src/runtime/sqlite/schema/credentials.ts";
+} from "../../../../../src/runtime/sqlite/schema/credentials.js";
 import {
   encryptedSessionStore,
   sessionRecordStore,
-} from "../../../../../src/runtime/daemon/desktop/sessions.ts";
+} from "../../../../../src/runtime/daemon/desktop/sessions.js";
 import {
   SessionCookies,
   parseSessionCookie,
-} from "../../../../../src/runtime/daemon/desktop/cookies.ts";
+} from "../../../../../src/runtime/daemon/desktop/cookies.js";
 
 const profiles: { directory: string; storage: ProfileStorage }[] = [];
 afterEach(() => {

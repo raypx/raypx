@@ -1,8 +1,8 @@
 import type { TaskProjectionPorts } from "@raypx/tasks/server";
-import type { ControlRepository } from "./ports.ts";
-import type { ControlCredentials } from "./application/credentials.ts";
-import { ControlError, type RelayActor } from "./records.ts";
-import { releaseContextCommand } from "./context-receipts.ts";
+import type { ControlRepository } from "./ports.js";
+import type { ControlCredentials } from "./application/credentials.js";
+import { ControlError, type RelayActor } from "./records.js";
+import { releaseContextCommand } from "./context-receipts.js";
 
 /** Keep authorization and dispatch receipts in the projection writer's transaction. */
 export function taskProjectionPorts(

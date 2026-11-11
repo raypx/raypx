@@ -1,6 +1,6 @@
 import type { AgentCapability, AgentTask } from "@raypx/core/tasks";
 import type { DeviceProject } from "@raypx/contracts/tasks";
-import type { TaskProjectionRecords } from "./records.ts";
+import type { TaskProjectionRecords } from "./records.js";
 
 /** The mutable projection fields inside an authorized device transaction. */
 interface ProjectionDevice {

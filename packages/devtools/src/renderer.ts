@@ -1,5 +1,5 @@
 import type { DockClientScriptContext } from "@vitejs/devtools-kit/client";
-import { panelStore } from "./runtime.ts";
+import { panelStore } from "./runtime.js";
 
 export default function setupRenderer(context: DockClientScriptContext) {
   let mounted: HTMLElement | undefined;

@@ -4,13 +4,13 @@ import {
   type Model,
   type Api,
 } from "@raypx/ai";
-import { PiAdapter } from "./adapter.ts";
-import type { PiContext } from "./runner.ts";
-import { createTestProviderHost } from "../../tests/helpers/host.ts";
+import { PiAdapter } from "./adapter.js";
+import type { PiContext } from "./runner.js";
+import { createTestProviderHost } from "../../tests/helpers/host.js";
 import {
   defineProviderConformance,
   defineDrainConformance,
-} from "../../tests/helpers/conformance.ts";
+} from "../../tests/helpers/conformance.js";
 
 function fixture() {
   const host = createTestProviderHost();

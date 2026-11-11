@@ -1,16 +1,16 @@
 import { z } from "zod";
 import { rootGrantSchema } from "@raypx/contracts/local";
 import { jobInputSchema, jobRunSchema } from "@raypx/core/jobs";
-import { storedRecord } from "../sqlite/records";
+import { storedRecord } from "../sqlite/records.js";
 import { Database } from "bun:sqlite";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { and, asc, desc, eq, lt, notInArray, or, sql } from "drizzle-orm";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobInput, JobRun } from "@raypx/core/jobs";
-import { LocalError } from "../errors";
-import { type ProfileStorage, type LocalDatabase } from "../sqlite";
-import { jobs, meta, roots, runs } from "../sqlite/schema";
+import { LocalError } from "../errors.js";
+import { type ProfileStorage, type LocalDatabase } from "../sqlite/index.js";
+import { jobs, meta, roots, runs } from "../sqlite/schema.js";
 
 export function profilePath(options: { dataDir?: string; profile?: string } = {}) {
   const profile = options.profile ?? "default";

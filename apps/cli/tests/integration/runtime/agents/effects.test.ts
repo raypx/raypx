@@ -2,12 +2,12 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
-import { AgentStore } from "../../../../src/runtime/agents/store.ts";
-import { FakeClock } from "../../../../src/runtime/agents/domain/ports.ts";
-import { taskEffects } from "../../../../src/runtime/sqlite/schema.ts";
-import type { LiveFacts } from "../../../../src/runtime/agents/domain/commands.ts";
-import type { LocalAgentTask } from "../../../../src/runtime/agents/model.ts";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { FakeClock } from "../../../../src/runtime/agents/domain/ports.js";
+import { taskEffects } from "../../../../src/runtime/sqlite/schema.js";
+import type { LiveFacts } from "../../../../src/runtime/agents/domain/commands.js";
+import type { LocalAgentTask } from "../../../../src/runtime/agents/model.js";
 
 /**
  * Effects are durable intents that commit with the decision producing them. They

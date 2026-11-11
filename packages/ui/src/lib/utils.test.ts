@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { cn } from "./utils.ts";
+import { cn } from "./utils.js";
 
 describe("semantic control spacing", () => {
   it.each(["control-xs", "control-sm", "control", "control-lg", "control-xl"])(

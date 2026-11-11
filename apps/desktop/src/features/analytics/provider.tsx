@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { AnalyticsApplication } from "@raypx/analytics/client/application";
 import { useRouterState } from "@tanstack/react-router";
-import { analytics, analyticsConfigured } from "./client.ts";
-import { desktopAnalyticsStore } from "./store.ts";
+import { analytics, analyticsConfigured } from "./client.js";
+import { desktopAnalyticsStore } from "./store.js";
 const store = desktopAnalyticsStore();
 
 export function AppAnalytics({ children }: { children: ReactNode }) {

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { comparisonEnvironment, performanceEnvironment } from "./environment";
+import { comparisonEnvironment, performanceEnvironment } from "./environment.js";
 
 it("measures head on both A/A roles and retains distinct A/B artifacts", () => {
   const env = { RAYPX_STROBE_CLI_BASE: "/base/raypx", RAYPX_STROBE_CLI_HEAD: "/head/raypx" };

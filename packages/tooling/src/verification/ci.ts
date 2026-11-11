@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { runTasks } from "../repository";
-import { taskModel } from "../tasks/model";
-import { changedFiles, verificationPlan } from "./plan";
-import { distributionRequested } from "./events";
-import { ciOutputs, parseCiPlan, requiredGates, sourcePhases } from "./gates";
-import { sourceChecks } from "./execution";
+import { runTasks } from "../repository.js";
+import { taskModel } from "../tasks/model.js";
+import { changedFiles, verificationPlan } from "./plan.js";
+import { distributionRequested } from "./events.js";
+import { ciOutputs, parseCiPlan, requiredGates, sourcePhases } from "./gates.js";
+import { sourceChecks } from "./execution.js";
 
 const canaryRef = "refs/heads/canary";
 const canaryBaselinePolicy = "# raypx canary baseline policy v1";
@@ -118,13 +118,13 @@ export async function ciGate(root: string, args: string[]) {
       throw new Error(`Source CI phase ${phase} was not selected by change analysis`);
     await sourceChecks(root, plan, { phase });
   } else if (gate === "container-smoke") {
-    const { smokeDeployment } = await import("../validation/deployment-smoke");
+    const { smokeDeployment } = await import("../validation/deployment-smoke.js");
     await smokeDeployment(root, []);
   } else if (gate === "backend") {
     for (const task of ["test:postgres", "test:redis", "test:cluster"])
       await runTasks(root, `api#${task}`);
   } else if (gate === "browser") {
-    const { reportBuildSizes } = await import("../validation/build-size");
+    const { reportBuildSizes } = await import("../validation/build-size.js");
     await runTasks(root, `@raypx/e2e#${plan.browser === "all" ? "e2e" : `e2e:${plan.browser}`}`);
     reportBuildSizes(root, {
       packages: plan.browser === "all" ? ["web", "desktop"] : [plan.browser],

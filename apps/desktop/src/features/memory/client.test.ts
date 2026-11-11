@@ -1,11 +1,11 @@
 import { expect, it, vi } from "vite-plus/test";
 const mocks = vi.hoisted(() => ({ list: vi.fn() }));
 vi.mock("@raypx/client/api", () => ({ createApiClient: () => ({ jobs: { list: mocks.list } }) }));
-vi.mock("../auth/client", () => ({
+vi.mock("../auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   desktopFetch: vi.fn(),
 }));
-import { memoryUsage } from "./client.ts";
+import { memoryUsage } from "./client.js";
 it("adapts only referencing agent schedules while preserving paused-plan status", async () => {
   const id = "ABCDEFAB-1111-4111-8111-111111111111";
   mocks.list.mockResolvedValue({

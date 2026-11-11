@@ -1,9 +1,12 @@
-import { agentPort } from "./remote-agent-port";
+import { agentPort } from "./remote-agent-port.js";
 import { afterEach, expect, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RemoteControl, type RemoteControlOptions } from "../../src/runtime/daemon/remote/control";
+import {
+  RemoteControl,
+  type RemoteControlOptions,
+} from "../../src/runtime/daemon/remote/control.js";
 import {
   RELAY_VERSION,
   relayClientSchema,

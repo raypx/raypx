@@ -2,14 +2,14 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { profilePath, acquireLock } from "../../../../src/runtime/state";
+import { profilePath, acquireLock } from "../../../../src/runtime/state/index.js";
 import {
   connectDaemon,
   stopDaemon,
   readDaemon,
   daemonFetch,
-} from "../../../../src/runtime/daemon/endpoint";
-import { startDaemon } from "../../../helpers/enrolled";
+} from "../../../../src/runtime/daemon/endpoint.js";
+import { startDaemon } from "../../../helpers/enrolled.js";
 
 it.each([undefined, 1.5])("rejects daemon metadata with invalid build identity %s", (builtAt) => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-daemon-format-"));

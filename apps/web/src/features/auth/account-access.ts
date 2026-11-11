@@ -2,8 +2,8 @@ import { createApiClient } from "@raypx/client/api";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { accessForRole } from "@raypx/account/access";
-import { sessionCookie } from "./account.ts";
-import { apiUrl } from "./client.ts";
+import { sessionCookie } from "./account.js";
+import { apiUrl } from "./client.js";
 
 const browserClient = createApiClient({ baseUrl: apiUrl });
 

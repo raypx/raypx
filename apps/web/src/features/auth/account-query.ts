@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { loadAccount } from "./account.ts";
+import { loadAccount } from "./account.js";
 
 /** Account projection for route guards and identity-scoped settings reads. */
 export function accountQuery() {

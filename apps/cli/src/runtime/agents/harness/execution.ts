@@ -7,15 +7,15 @@ import {
   type HumanRequest,
   type TaskInput,
 } from "@raypx/core/tasks";
-import { LocalError } from "../../errors";
-import { isDesktopBinding, type LocalAgentTask } from "../model";
+import { LocalError } from "../../errors.js";
+import { isDesktopBinding, type LocalAgentTask } from "../model.js";
 import type {
   ExecutionConversation,
   ExecutionEffects,
   ExecutionIngest,
   ExecutionStore,
-} from "./ports";
-import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports";
+} from "./ports.js";
+import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports.js";
 import type {
   AdapterEvent,
   ProviderSession,

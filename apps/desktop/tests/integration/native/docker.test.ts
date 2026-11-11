@@ -17,7 +17,7 @@ it("loads the native check runner without JavaScript workspace dependencies", ()
     writeFileSync(join(desktop, "package.json"), '{"type":"module","version":"0.1.0"}');
     const result = spawnSync(
       process.execPath,
-      ["--eval", 'await import("./scripts/host/mygo.ts");'],
+      ["--eval", 'await import("./scripts/host/mygo.js");'],
       { cwd: desktop, encoding: "utf8", timeout: 10_000 },
     );
     expect(result.stderr).toBe("");

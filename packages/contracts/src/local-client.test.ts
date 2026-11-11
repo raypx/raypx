@@ -1,6 +1,6 @@
 import { expect, expectTypeOf, it, vi } from "vite-plus/test";
-import { createLocalClient, type LocalClient } from "./local-client.ts";
-import { LOCAL_WORKSPACE_ID, localParams } from "./local.ts";
+import { createLocalClient, type LocalClient } from "./local-client.js";
+import { LOCAL_WORKSPACE_ID, localParams } from "./local.js";
 
 // This function is checked by the workspace typecheck, never executed.
 function typeContract(client: LocalClient) {

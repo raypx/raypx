@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, it } from "vite-plus/test";
-import { mocks, page, signIn } from "../tests/helpers/router-auth.tsx";
+import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 function expectHomepageEntries() {
   const navigation = within(screen.getByRole("navigation", { name: "Workspace" }));

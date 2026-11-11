@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { desktopFixture, deferred } from "../../tests/helpers/desktop.ts";
-import { createDesktopPlatform } from "./platform.ts";
+import { desktopFixture, deferred } from "../../tests/helpers/desktop.js";
+import { createDesktopPlatform } from "./platform.js";
 
 it("keeps requests and events isolated across platform instances", async () => {
   const first = desktopFixture(),

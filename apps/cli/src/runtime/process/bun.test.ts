@@ -12,7 +12,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vite-plus/test";
-import { BundledBun, bunShims } from "./bun";
+import { BundledBun, bunShims } from "./bun.js";
 
 const roots: string[] = [];
 const temporary = () => {

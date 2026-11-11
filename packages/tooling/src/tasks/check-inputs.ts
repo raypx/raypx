@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join, posix } from "node:path";
 import { discover, exportPaths } from "@raypx-kit/devkit/workspaces";
-import { sourceExtensions, toolingSourceClosure } from "../tooling-entries.ts";
+import { sourceExtensions, toolingSourceClosure } from "../tooling-entries.js";
 
 const privateVerification = "src/verification";
 const sourceFiles = `*.{${[...sourceExtensions, "json", "jsonc"].join(",")}}`;

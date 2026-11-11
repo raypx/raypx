@@ -1,12 +1,12 @@
 import { useId, useRef, useState, type ReactNode } from "react";
-import type { TaskWorkspacePort } from "../model/port.ts";
+import type { TaskWorkspacePort } from "../model/port.js";
 
 import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
 import { Badge } from "@raypx/ui/components/ui/badge";
-import { TaskStatusBadge } from "./task-status.tsx";
+import { TaskStatusBadge } from "./task-status.js";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -14,9 +14,9 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 
-import { failureCode } from "../model/failure.ts";
+import { failureCode } from "../model/failure.js";
 
-import { ApprovalBody } from "./approval-body.tsx";
+import { ApprovalBody } from "./approval-body.js";
 
 function approvalAction(kind: HumanRequest["kind"], busy: boolean) {
   if (busy) return "sending";

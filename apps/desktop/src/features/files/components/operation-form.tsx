@@ -1,8 +1,8 @@
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { useTranslations } from "@raypx/i18n/browser";
-import { formText } from "../../../form-data.ts";
-import { useFilesStore } from "../store.tsx";
+import { formText } from "../../../form-data.js";
+import { useFilesStore } from "../store.js";
 
 export function FileOperationForm({ onSubmit }: { onSubmit: (value: string) => unknown }) {
   const t = useTranslations("files");

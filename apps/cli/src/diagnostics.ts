@@ -1,7 +1,7 @@
 import { InstanceError } from "@raypx/instances";
-import type { InstanceEnrollmentPhase } from "./runtime/instances/index.ts";
+import type { InstanceEnrollmentPhase } from "./runtime/instances/index.js";
 import type { JobRun } from "@raypx/core/jobs";
-import { LocalError } from "./runtime/errors.ts";
+import { LocalError } from "./runtime/errors.js";
 
 export type Diagnostic =
   | { operation: "instance.enrollment"; status: InstanceEnrollmentPhase; id: string }

@@ -1,5 +1,5 @@
-import { InstanceGate } from "./instance-gate";
-import { EngineGate } from "../../engine/gate";
+import { InstanceGate } from "./instance-gate.js";
+import { EngineGate } from "../../engine/gate.js";
 import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useRouterState } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
@@ -7,7 +7,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
-import { desktopReturnTo } from "../return-to.ts";
+import { desktopReturnTo } from "../return-to.js";
 
 const publicPaths = new Set([
   "/login",

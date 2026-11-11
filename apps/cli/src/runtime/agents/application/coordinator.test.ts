@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { AgentTask } from "@raypx/core/tasks";
-import type { LocalAgentTask } from "../model.ts";
-import { ExecutionCoordinator, type ExecutionRepository } from "./coordinator.ts";
-import { ProviderRegistry } from "./providers.ts";
+import type { LocalAgentTask } from "../model.js";
+import { ExecutionCoordinator, type ExecutionRepository } from "./coordinator.js";
+import { ProviderRegistry } from "./providers.js";
 
 function deferred() {
   let resolve!: () => void;

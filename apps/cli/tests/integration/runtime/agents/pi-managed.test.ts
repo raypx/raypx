@@ -1,12 +1,12 @@
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite";
-import { AgentRuntime } from "../../../../src/runtime/agents";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite.js";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
 import { expect, it, afterEach, vi } from "vite-plus/test";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { runtimeFixtures } from "../../../helpers/runtime";
-import { aiFixture } from "../../../helpers/ai";
+import { runtimeFixtures } from "../../../helpers/runtime.js";
+import { aiFixture } from "../../../helpers/ai.js";
 const { fixture } = runtimeFixtures();
 const servers: ReturnType<typeof aiFixture>[] = [];
 afterEach(async () => {

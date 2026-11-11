@@ -10,7 +10,7 @@ import {
   type RelayNotice,
   type RelayOperation,
   type RelayReply,
-} from "./cluster.ts";
+} from "./cluster.js";
 
 const address = { from: z.uuid(), to: z.uuid(), id: z.uuid() };
 const packetSchema = z.discriminatedUnion("kind", [

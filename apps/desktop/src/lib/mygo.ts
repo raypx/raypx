@@ -10,7 +10,7 @@ import {
   type DesktopBridge,
   type DesktopMethod,
   type DesktopRuntime,
-} from "../../bridge";
+} from "../../bridge.js";
 
 interface NativeRuntime {
   call<T = unknown>(method: string, ...args: unknown[]): Promise<T>;

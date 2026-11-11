@@ -2,8 +2,8 @@ import { mkdir } from "node:fs/promises";
 import { networkInterfaces, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { run } from "@raypx/runtime-node/process";
-import { probeApi, probeWeb } from "./artifacts";
-import { readBunPin } from "../validation/toolchain.ts";
+import { probeApi, probeWeb } from "./artifacts.js";
+import { readBunPin } from "../validation/toolchain.js";
 
 async function probeCli(root: string) {
   const payload = resolve(process.env.RAYPX_CLI_PAYLOAD ?? join(root, "apps/cli/dist"));

@@ -17,14 +17,14 @@ import { TerminalIcon } from "@raypx/icons/terminal";
 import { IconButton } from "@raypx/ui/icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
 import { cn } from "@raypx/ui/lib/utils";
-import { accentGradient, scrollSettle } from "../../../components/brand-accent.ts";
+import { accentGradient, scrollSettle } from "../../../components/brand-accent.js";
 import {
   demoStage,
   isPreviewStep,
   previewSteps,
   useDemoPlayback,
   type PreviewStep,
-} from "./demo-playback.ts";
+} from "./demo-playback.js";
 
 /** The product's own navigation icons; decorative, without names, counts or states. */
 const railIcons: readonly { icon: IconComponent; active?: true }[] = [

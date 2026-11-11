@@ -1,5 +1,5 @@
 import { definePlugin } from "nitro";
-import { closeBackendRuntime, getBackendRuntime } from "./backend.ts";
+import { closeBackendRuntime, getBackendRuntime } from "./backend.js";
 
 export default definePlugin(async (nitroApp) => {
   try {

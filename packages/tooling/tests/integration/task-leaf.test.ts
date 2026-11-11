@@ -2,8 +2,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { it, expect } from "vite-plus/test";
 import { runProcessSync } from "@raypx/runtime-node/process";
-import { argumentKey } from "../../src/tasks/arguments.ts";
-import { workspaceFixtures } from "../helpers/workspace.ts";
+import { argumentKey } from "../../src/tasks/arguments.js";
+import { workspaceFixtures } from "../helpers/workspace.js";
 
 const { fixture } = workspaceFixtures();
 const repository = resolve(import.meta.dirname, "../../../..");

@@ -1,13 +1,13 @@
-import { continueTaskFailure, followUpPlan, taskSelection } from "../model/composition.ts";
-import { ModelPicker } from "./model-picker.tsx";
+import { continueTaskFailure, followUpPlan, taskSelection } from "../model/composition.js";
+import { ModelPicker } from "./model-picker.js";
 import type { ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { agentProviderMetadata } from "@raypx/core/tasks";
-import { Approval } from "./approval.tsx";
+import { Approval } from "./approval.js";
 
 import { ContextSnapshot } from "@raypx/memory/client";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import type { TaskWorkspacePort } from "../model/port.ts";
+import type { TaskWorkspacePort } from "../model/port.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -17,24 +17,24 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
-import { TaskStatusBadge } from "./task-status.tsx";
-import { RunTimeline } from "./run-timeline.tsx";
-import { runSteps } from "../model/run-steps.ts";
+import { TaskStatusBadge } from "./task-status.js";
+import { RunTimeline } from "./run-timeline.js";
+import { runSteps } from "../model/run-steps.js";
 
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { isTaskActive } from "../model/task.ts";
+import { isTaskActive } from "../model/task.js";
 
-import { failureCode } from "../model/failure.ts";
-import { Conversation } from "./conversation.tsx";
-import { TaskInputComposer } from "./task-input.tsx";
+import { failureCode } from "../model/failure.js";
+import { Conversation } from "./conversation.js";
+import { TaskInputComposer } from "./task-input.js";
 
-import { TaskMarkdown } from "./markdown.tsx";
-import { useTaskConversation } from "./use-task-conversation.ts";
-import { isLocalWorkspace, workspaceScopeKey, type WorkspaceScope } from "../model/scope.ts";
-import { useSessionDraft } from "./use-session-draft.ts";
-import { submitShortcut } from "./submit-shortcut.ts";
+import { TaskMarkdown } from "./markdown.js";
+import { useTaskConversation } from "./use-task-conversation.js";
+import { isLocalWorkspace, workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
+import { useSessionDraft } from "./use-session-draft.js";
+import { submitShortcut } from "./submit-shortcut.js";
 
 interface TaskDetailProps {
   client: TaskWorkspacePort;

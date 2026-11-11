@@ -50,8 +50,8 @@ Prefer TypeScript for handwritten code and executable configuration. Keep static
 Expo metadata in `app.json`; CSS and generated declarations retain their native formats.
 `metro.config.cjs` is only a one-line loader: Expo 58's config evaluator cannot
 parse TS/ESM under Bun, so it delegates the typed config to Bun's native TS loader.
-`metro.config.ts` resolves shared packages' relative `.js` ESM imports to their
-TypeScript sources; keep this remapping out of dependencies in `node_modules`.
+`metro.config.ts` resolves this app's and shared packages' relative `.js` ESM imports
+to their TypeScript sources; keep this remapping out of dependencies in `node_modules`.
 Wrap the configured resolver with `withUniwindConfig` last. Its type generation
 stays under ignored `.expo/`; static `uniwind/types` also makes clean checks work.
 Run `bun run --cwd apps/mobile check`, `test`, and `build`; device acceptance is separate.

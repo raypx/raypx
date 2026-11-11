@@ -8,10 +8,10 @@ import { createTaskClient } from "@raypx/client/tasks";
 import type { DesktopChannel } from "@raypx/contracts/desktop";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { createLocalClient } from "@raypx/contracts/local-client";
-import { AgentStore } from "../../../../src/runtime/agents/store.ts";
-import { connectDesktop, desktopGateway } from "../../../helpers/desktop-channel.ts";
-import { startDaemon } from "../../../helpers/enrolled.ts";
-import { removeTemporaryDirectory } from "../../../helpers/temporary.ts";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { connectDesktop, desktopGateway } from "../../../helpers/desktop-channel.js";
+import { startDaemon } from "../../../helpers/enrolled.js";
+import { removeTemporaryDirectory } from "../../../helpers/temporary.js";
 
 const cleanups: (() => unknown)[] = [];
 afterEach(async () => {

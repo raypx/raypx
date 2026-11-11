@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { sealCliPayload } from "@raypx/tooling/build/cli";
-import config from "../../../mygo.config";
-import { assertNativeTarget, prepare } from "../../../scripts/host/mygo";
+import config from "../../../mygo.config.js";
+import { assertNativeTarget, prepare } from "../../../scripts/host/mygo.js";
 
 const roots: string[] = [];
 afterEach(async () => {

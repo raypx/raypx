@@ -3,7 +3,7 @@ import {
   cliInstallation,
   installRuntimeCopy,
   verifyInstallation,
-} from "../process/installation.ts";
+} from "../process/installation.js";
 import { parseTOML } from "confbox/toml";
 import {
   chmodSync,
@@ -30,10 +30,10 @@ import {
   planHookSettings,
   readHookSettings,
   type HookCommand,
-} from "../terminal/settings.ts";
-import { LocalError } from "../errors.ts";
-import { acquireLock } from "../state/index.ts";
-import { cliBuild } from "./build.ts";
+} from "../terminal/settings.js";
+import { LocalError } from "../errors.js";
+import { acquireLock } from "../state/index.js";
+import { cliBuild } from "./build.js";
 
 export function raypxHome() {
   const directory = process.env.RAYPX_HOME ?? join(homedir(), ".raypx");

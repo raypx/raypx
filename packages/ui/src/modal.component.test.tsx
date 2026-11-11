@@ -3,8 +3,8 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { Modal } from "./modal.tsx";
-import { Button } from "./components/ui/button.tsx";
+import { Modal } from "./modal.js";
+import { Button } from "./components/ui/button.js";
 
 afterEach(cleanup);
 

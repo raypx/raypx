@@ -1,5 +1,5 @@
-import { CLIENT_IP_HEADER } from "../runtime/server.ts";
-import { getBackendRuntime } from "../runtime/backend.ts";
+import { CLIENT_IP_HEADER } from "../runtime/server.js";
+import { getBackendRuntime } from "../runtime/backend.js";
 
 export default {
   async fetch(request: Request & { ip?: string }): Promise<Response> {

@@ -13,9 +13,9 @@ import { TerminalIcon } from "@raypx/icons/terminal";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { cn } from "@raypx/ui/lib/utils";
-import type { RunStep } from "../model/run-steps.ts";
-import { formatDuration } from "./format-duration.ts";
-import { ShimmerText } from "./shimmer-text.tsx";
+import type { RunStep } from "../model/run-steps.js";
+import { formatDuration } from "./format-duration.js";
+import { ShimmerText } from "./shimmer-text.js";
 
 type Tone = "current" | "done" | "attention" | "problem";
 type StatusStep = Extract<RunStep, { kind: "status" }>;

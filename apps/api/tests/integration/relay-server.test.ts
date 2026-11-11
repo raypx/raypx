@@ -3,9 +3,9 @@ import { ControlService } from "@raypx/control";
 import { RelayHub } from "@raypx/control/relay";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 import { relayServerSchema, type RelayServerFrame } from "@raypx/contracts/tasks";
-import { serveBackend } from "../fixtures/backend-server.ts";
+import { serveBackend } from "../fixtures/backend-server.js";
 import { Hono } from "hono";
-import { checkReadiness } from "../../server/app/readiness.ts";
+import { checkReadiness } from "../../server/app/readiness.js";
 
 const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {

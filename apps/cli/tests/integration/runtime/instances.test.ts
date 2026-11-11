@@ -4,16 +4,16 @@ import { expect, it, vi } from "vite-plus/test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { InstanceRuntime } from "../../../src/runtime/instances";
+import { InstanceRuntime } from "../../../src/runtime/instances/index.js";
 import {
   createInstanceKey,
   createInstanceSigner,
   instanceDigest,
   verifyProof,
 } from "@raypx/instances/crypto";
-import { createRuntime } from "../../../src/runtime";
-import { ProfileStorage } from "../../../src/runtime/sqlite";
-import { instanceKeys } from "../../../src/runtime/instances/keys";
+import { createRuntime } from "../../../src/runtime/index.js";
+import { ProfileStorage } from "../../../src/runtime/sqlite/index.js";
+import { instanceKeys } from "../../../src/runtime/instances/keys.js";
 it("keeps an enrolled profile usable offline and rejects revocation and corrupted or missing keys", async () => {
   const dir = await mkdtemp(join(tmpdir(), "raypx-instance-")),
     keys = createInstanceKey(),
@@ -181,7 +181,7 @@ it("enrolls with a private host token and retains the signed identity across res
 
 it("persists a signed revocation and drains a running command before releasing the profile", async () => {
   const { mkdir, readFile } = await import("node:fs/promises");
-  const { profilePath } = await import("../../../src/runtime/state");
+  const { profilePath } = await import("../../../src/runtime/state/index.js");
   const dataDir = await mkdtemp(join(tmpdir(), "raypx-revocation-"));
   const directory = profilePath({ dataDir });
   await mkdir(directory, { recursive: true });
@@ -279,7 +279,7 @@ it("persists a signed revocation and drains a running command before releasing t
 });
 
 it("revokes the original remote session before rejecting a different instance account", async () => {
-  const { createHost } = await import("../../../src/runtime/host");
+  const { createHost } = await import("../../../src/runtime/host.js");
   const directory = await mkdtemp(join(tmpdir(), "raypx-instance-account-"));
   const binding: InstanceBinding = {
     version: 1,

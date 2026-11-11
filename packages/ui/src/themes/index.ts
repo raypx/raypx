@@ -5,9 +5,9 @@ export {
   themeColors,
   themeMeta,
   themeTokens,
-} from "./config.ts";
-export type { AppTheme, ThemeToken, UserTheme } from "./config.ts";
-export { ThemePicker, type ThemePickerProps } from "./picker.tsx";
+} from "./config.js";
+export type { AppTheme, ThemeToken, UserTheme } from "./config.js";
+export { ThemePicker, type ThemePickerProps } from "./picker.js";
 export {
   ThemeProvider,
   ThemeScript,
@@ -15,5 +15,5 @@ export {
   storeTheme,
   useTheme,
   type ThemeProviderProps,
-} from "./provider.tsx";
-export type { ThemeScriptOptions } from "./script.ts";
+} from "./provider.js";
+export type { ThemeScriptOptions } from "./script.js";

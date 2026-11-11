@@ -1,5 +1,5 @@
-import * as desktop from "../../lib/desktop.ts";
-import type { DesktopPlatform } from "../../lib/platform.ts";
+import * as desktop from "../../lib/desktop.js";
+import type { DesktopPlatform } from "../../lib/platform.js";
 
 /** Explicit sign-out revokes host access; renderer teardown and cookie expiry do not. */
 export async function signOutDesktopHost(

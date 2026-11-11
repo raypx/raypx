@@ -6,9 +6,9 @@ import { createControlRepository } from "@raypx/control/postgres";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { createContextRepository } from "@raypx/memory/server/postgres";
-import type { RelayEnvironment } from "../env.ts";
-import { checkReadiness } from "../app/readiness.ts";
-import { createClientIpReader } from "../app/client-ip.ts";
+import type { RelayEnvironment } from "../env.js";
+import { checkReadiness } from "../app/readiness.js";
+import { createClientIpReader } from "../app/client-ip.js";
 
 /** The relay role owns no Auth, cookies, mail, signer, migrations or scheduled jobs. */
 export async function createRelayRuntime(environment: RelayEnvironment) {

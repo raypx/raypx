@@ -3,8 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import { onLocalEvent } from "../../lib/desktop.ts";
-import { localTaskClient } from "./local-client.ts";
+import { onLocalEvent } from "../../lib/desktop.js";
+import { localTaskClient } from "./local-client.js";
 
 export function TerminalRequestNotice({ accountId }: { accountId: string | null }) {
   const t = useTranslations("terminal.approval"),

@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkLocales, policy } from "../policy.ts";
+import { checkLocales, policy } from "../policy.js";
 
 /** VP restores this timing evidence with the cached result; it never decides task reuse. */
 export function runPrecheck(root: string, name: string) {

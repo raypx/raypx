@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import type { Database } from "@raypx/database/connection";
 import type { SafeEvent } from "@raypx/logger/safe";
-import { createCleanupJob, runCleanupJob } from "./cleanup.ts";
+import { createCleanupJob, runCleanupJob } from "./cleanup.js";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { createApiLogging, type ApiLogging } from "../logging.ts";
-import { getApiEnvironment } from "../env.ts";
+import { createApiLogging, type ApiLogging } from "../logging.js";
+import { getApiEnvironment } from "../env.js";
 
 let logger: ApiLogging | undefined;
 afterEach(async () => {

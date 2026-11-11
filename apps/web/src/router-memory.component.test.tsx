@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   projects: vi.fn(async () => []),
   usage: vi.fn<MemoryUsagePort["scheduledPlans"]>(async () => []),
 }));
-vi.mock("./features/auth/client", () => ({
+vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: {
     useSession: () => ({
@@ -27,12 +27,12 @@ vi.mock("./features/auth/client", () => ({
     }),
   },
 }));
-vi.mock("./features/memory/client", () => ({
+vi.mock("./features/memory/client.js", () => ({
   accountMemory: { list: mocks.list },
   memoryProjects: { list: mocks.projects },
   memoryUsage: { scheduledPlans: mocks.usage },
 }));
-import { Route } from "./routes/(app)/memory.tsx";
+import { Route } from "./routes/(app)/memory.js";
 beforeEach(() => {
   mocks.account = null;
   mocks.list.mockClear();

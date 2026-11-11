@@ -2,9 +2,9 @@ import { styledSlot } from "#lib/styled-slot";
 import type { ComponentProps, MouseEvent } from "react";
 
 import { cn } from "#lib/utils";
-import { Input } from "./input.tsx";
-import { Textarea } from "./textarea.tsx";
-import { controlSizeVariants, type ControlSize } from "../../control-size.ts";
+import { Input } from "./input.js";
+import { Textarea } from "./textarea.js";
+import { controlSizeVariants, type ControlSize } from "../../control-size.js";
 
 export type InputGroupAddonAlign = "inline-start" | "inline-end" | "block-start" | "block-end";
 

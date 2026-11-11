@@ -25,7 +25,7 @@ import {
   type ContextHistoryInput,
   type ContextRestoreInput,
 } from "@raypx/core/memory";
-import type { ContextLibraryServiceOptions } from "./types.ts";
+import type { ContextLibraryServiceOptions } from "./types.js";
 
 const getSchema = z.strictObject({ id: taskContextIdSchema });
 const parse = <T>(schema: z.ZodType<T>, input: unknown): T => {

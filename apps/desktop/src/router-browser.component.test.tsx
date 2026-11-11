@@ -1,8 +1,8 @@
 /** @vitest-environment happy-dom */
 import { act, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { mocks, mount } from "../tests/helpers/router-local.tsx";
-import { getRouter } from "./router.tsx";
+import { mocks, mount } from "../tests/helpers/router-local.js";
+import { getRouter } from "./router.js";
 
 const routers: ReturnType<typeof getRouter>[] = [];
 afterEach(() => {

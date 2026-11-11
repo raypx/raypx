@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { hasPermission } from "@raypx/account/access";
-import type { RpcBoundary } from "./boundary.ts";
+import type { RpcBoundary } from "./boundary.js";
 export function createConfigurationHandlers({
   os,
   configurationCall,

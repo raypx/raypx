@@ -31,7 +31,7 @@ import {
 } from "@raypx/ui/components/ui/select";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
-import type { SettingsSection } from "./navigation.ts";
+import type { SettingsSection } from "./navigation.js";
 
 const VisitedSections = createContext<ReadonlySet<string>>(new Set(["account"]));
 

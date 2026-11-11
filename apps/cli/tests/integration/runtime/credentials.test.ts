@@ -12,14 +12,14 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createInstanceKey, createInstanceSigner } from "@raypx/instances/crypto";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { ProfileStorage } from "../../../src/runtime/sqlite";
-import { instanceKeys } from "../../../src/runtime/instances/keys";
-import { InstanceRuntime } from "../../../src/runtime/instances";
-import { createHostVault, type HostBinding } from "../../../src/runtime/daemon/vault";
-import { hostAuthorizations } from "../../../src/runtime/sqlite/schema/credentials";
-import { createRuntime } from "../../../src/runtime";
-import { profilePath } from "../../../src/runtime/state";
-import { errorPayload } from "../../../src/runtime/errors";
+import { ProfileStorage } from "../../../src/runtime/sqlite/index.js";
+import { instanceKeys } from "../../../src/runtime/instances/keys.js";
+import { InstanceRuntime } from "../../../src/runtime/instances/index.js";
+import { createHostVault, type HostBinding } from "../../../src/runtime/daemon/vault.js";
+import { hostAuthorizations } from "../../../src/runtime/sqlite/schema/credentials.js";
+import { createRuntime } from "../../../src/runtime/index.js";
+import { profilePath } from "../../../src/runtime/state/index.js";
+import { errorPayload } from "../../../src/runtime/errors.js";
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {

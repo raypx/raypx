@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it, vi } from "vite-plus/test";
 import { sealCliPayload } from "@raypx/tooling/build/cli";
-import { installRuntimeCopy, verifyInstallation } from "./installation";
-vi.mock("../daemon/build.ts", () => ({ cliBuild: { version: "1.0.0", builtAt: 42 } }));
+import { installRuntimeCopy, verifyInstallation } from "./installation.js";
+vi.mock("../daemon/build.js", () => ({ cliBuild: { version: "1.0.0", builtAt: 42 } }));
 it("retains the complete verified runtime after its source is moved and refuses changed resources", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx 中文 # runtime-"));
   try {

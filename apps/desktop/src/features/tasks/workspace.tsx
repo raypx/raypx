@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
-import { analytics } from "../analytics/client.ts";
+import { analytics } from "../analytics/client.js";
 import { useRouter, useLocation } from "@tanstack/react-router";
 import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
 import { ShellActions } from "@raypx/blocks/shell";
@@ -8,18 +8,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/u
 import { useTranslations } from "@raypx/i18n/browser";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Button } from "@raypx/ui/components/ui/button";
-import { apiUrl } from "../auth/client.ts";
-import { taskClient } from "./client.ts";
-import { isDesktop } from "../../lib/desktop.ts";
-import { localTaskClient } from "./local-client.ts";
+import { apiUrl } from "../auth/client.js";
+import { taskClient } from "./client.js";
+import { isDesktop } from "../../lib/desktop.js";
+import { localTaskClient } from "./local-client.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { RemoteBoundary } from "../auth/components/remote-boundary.tsx";
-import { accountMemory, localMemory } from "../memory/client.ts";
-import { LocalWelcome } from "../onboarding/welcome.tsx";
-import { ProjectTools } from "./project-tools.tsx";
-import { useLocalProjectContext } from "./project-context.ts";
-import { rememberProject } from "./project-history.ts";
-import { useSettingsNavigation } from "../settings/navigation.ts";
+import { RemoteBoundary } from "../auth/components/remote-boundary.js";
+import { accountMemory, localMemory } from "../memory/client.js";
+import { LocalWelcome } from "../onboarding/welcome.js";
+import { ProjectTools } from "./project-tools.js";
+import { useLocalProjectContext } from "./project-context.js";
+import { rememberProject } from "./project-history.js";
+import { useSettingsNavigation } from "../settings/navigation.js";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
 const remote = instrumentTaskClient(taskClient, analytics, "remote");

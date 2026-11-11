@@ -3,8 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 const mocks = vi.hoisted(() => ({ request: vi.fn(), installed: false, conflict: false }));
-vi.mock("../lib/desktop", () => ({ localRequest: mocks.request }));
-import { TerminalSettings } from "./tasks/terminal-settings.tsx";
+vi.mock("../lib/desktop.js", () => ({ localRequest: mocks.request }));
+import { TerminalSettings } from "./tasks/terminal-settings.js";
 beforeEach(() => {
   localStorage.setItem("raypx_locale", "en");
   mocks.installed = false;

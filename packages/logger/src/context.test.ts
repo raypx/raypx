@@ -2,7 +2,7 @@ import { createLogger, initLogger, type AuditableLogger, type WideEvent } from "
 import { createLoggerStorage } from "evlog/toolkit/storage";
 import { beforeEach, describe, expect, expectTypeOf, it } from "vite-plus/test";
 
-import { getLogger, runWithLogger, useLogger } from "./context.ts";
+import { getLogger, runWithLogger, useLogger } from "./context.js";
 
 let events: WideEvent[];
 

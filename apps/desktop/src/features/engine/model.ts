@@ -1,5 +1,5 @@
-import type { DesktopRuntime } from "../../../bridge.ts";
-import type { DesktopPlatform } from "../../lib/platform.ts";
+import type { DesktopRuntime } from "../../../bridge.js";
+import type { DesktopPlatform } from "../../lib/platform.js";
 
 export interface EngineSnapshot {
   engine: DesktopRuntime["engine"];

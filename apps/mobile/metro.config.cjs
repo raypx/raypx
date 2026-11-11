@@ -1,1 +1,1 @@
-module.exports = require("./metro.config.ts").default;
+module.exports = require("./metro.config.js").default;

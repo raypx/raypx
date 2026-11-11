@@ -1,11 +1,11 @@
-import { ProfileStorage } from "../../src/runtime/sqlite";
+import { ProfileStorage } from "../../src/runtime/sqlite/index.js";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PiRunner, type PiRunnerOptions } from "@raypx/providers/pi";
-import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite";
-import { piMessage, piModel, piScript, piTool } from "../helpers/pi";
+import { SqlitePiContextStore } from "../../src/runtime/agents/harness/context/sqlite.js";
+import { piMessage, piModel, piScript, piTool } from "../helpers/pi.js";
 
 async function fixture() {
   // This is the real Agent loop with an offline stream; any accidental HTTP fails.

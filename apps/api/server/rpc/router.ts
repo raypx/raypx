@@ -1,17 +1,17 @@
-import { createAdministrationHandlers } from "./administration.ts";
-import { createRpcBoundary } from "./boundary.ts";
-import type { ApiAppOptions } from "../app/options.ts";
-import { createInstancesHandlers } from "./instances.ts";
-import { createMemoryHandlers } from "./memory.ts";
-import { createJobsHandlers } from "./jobs.ts";
-import { createHostsHandlers } from "./hosts.ts";
-import { createObservedHandlers } from "./observed.ts";
-import { createConfigurationHandlers } from "./configuration.ts";
-import { createDevicesHandlers } from "./devices.ts";
-import { createTasksHandlers } from "./tasks.ts";
-import { createApprovalsHandlers } from "./approvals.ts";
-import { createRelayHandlers } from "./relay.ts";
-import { createAccountHandlers } from "./account.ts";
+import { createAdministrationHandlers } from "./administration.js";
+import { createRpcBoundary } from "./boundary.js";
+import type { ApiAppOptions } from "../app/options.js";
+import { createInstancesHandlers } from "./instances.js";
+import { createMemoryHandlers } from "./memory.js";
+import { createJobsHandlers } from "./jobs.js";
+import { createHostsHandlers } from "./hosts.js";
+import { createObservedHandlers } from "./observed.js";
+import { createConfigurationHandlers } from "./configuration.js";
+import { createDevicesHandlers } from "./devices.js";
+import { createTasksHandlers } from "./tasks.js";
+import { createApprovalsHandlers } from "./approvals.js";
+import { createRelayHandlers } from "./relay.js";
+import { createAccountHandlers } from "./account.js";
 export function createRpcRouter(options: ApiAppOptions) {
   const boundary = createRpcBoundary(options);
   return boundary.os.router({

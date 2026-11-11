@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { AiError, type AiClient, type AiSelection, type Context, type ToolCall } from "@raypx/ai";
 import { z } from "zod";
-import { promptFor, type EvalCase } from "./cases.ts";
+import { promptFor, type EvalCase } from "./cases.js";
 
 const tools = [
   {

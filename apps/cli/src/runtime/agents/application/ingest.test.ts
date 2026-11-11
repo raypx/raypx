@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
-import { ProviderEventIngestor, type IngestStore } from "./ingest.ts";
-import { FakeIds } from "../domain/ports.ts";
-import type { LocalAgentTask } from "../model.ts";
+import { ProviderEventIngestor, type IngestStore } from "./ingest.js";
+import { FakeIds } from "../domain/ports.js";
+import type { LocalAgentTask } from "../model.js";
 import type { TaskActivity } from "@raypx/core/tasks";
 
 const at = "2026-01-01T00:00:00.000Z";

@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, expect, it } from "vite-plus/test";
-import { Sidebar, SidebarProvider } from "./components/ui/sidebar.tsx";
+import { Sidebar, SidebarProvider } from "./components/ui/sidebar.js";
 
 afterEach(cleanup);
 

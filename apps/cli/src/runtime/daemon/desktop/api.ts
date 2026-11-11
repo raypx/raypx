@@ -1,9 +1,9 @@
 import { apiExposure } from "@raypx/contracts/api";
 import { desktopApiRequestSchema, type DesktopApiResponse } from "@raypx/contracts/desktop";
 import { z } from "zod";
-import { LocalError } from "../../errors.ts";
-import { abortable } from "../cancellation.ts";
-import { parseSessionCookie, type SessionCookies } from "./cookies.ts";
+import { LocalError } from "../../errors.js";
+import { abortable } from "../cancellation.js";
+import { parseSessionCookie, type SessionCookies } from "./cookies.js";
 
 const authPaths = new Set([
   "/api/auth/get-session",

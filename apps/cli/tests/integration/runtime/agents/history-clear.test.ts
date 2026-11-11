@@ -1,4 +1,4 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { Database } from "bun:sqlite";
 import { mkdtempSync } from "node:fs";
@@ -7,10 +7,10 @@ import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { RelayCommand } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskContextSnapshot } from "@raypx/core/tasks";
-import { AgentRuntime } from "../../../../src/runtime/agents";
-import { AgentStore } from "../../../../src/runtime/agents/store";
-import { desktopBinding } from "../../../../src/runtime/agents/model";
-import { StateStore } from "../../../../src/runtime/state";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import { desktopBinding } from "../../../../src/runtime/agents/model.js";
+import { StateStore } from "../../../../src/runtime/state/index.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {

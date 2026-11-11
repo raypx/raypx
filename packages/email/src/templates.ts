@@ -1,9 +1,9 @@
 import { createElement } from "react";
 import { render } from "@react-email/render";
-import { type LinkEmailKind, linkEmailContent } from "./copy.ts";
-import PasswordResetEmail from "./emails/password-reset.tsx";
-import VerificationEmail from "./emails/verification.tsx";
-import type { MailLocale, SendLinkEmailInput } from "./types.ts";
+import { type LinkEmailKind, linkEmailContent } from "./copy.js";
+import PasswordResetEmail from "./emails/password-reset.js";
+import VerificationEmail from "./emails/verification.js";
+import type { MailLocale, SendLinkEmailInput } from "./types.js";
 
 const templates = { verification: VerificationEmail, reset: PasswordResetEmail };
 

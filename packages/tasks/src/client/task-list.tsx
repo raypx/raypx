@@ -14,7 +14,7 @@ import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { AgentIcon } from "@raypx/icons/agent";
-import { TaskStatusBadge } from "./task-status.tsx";
+import { TaskStatusBadge } from "./task-status.js";
 
 export function TaskList({
   tasks,

@@ -9,8 +9,8 @@ import {
 import { taskActivityPage, applyActivityEvent } from "@raypx/core/activity";
 import { activeTaskStatuses, type AgentTask, type AgentEvent } from "@raypx/core/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import type { TaskProjectionPorts, ProjectionActor, ProjectionTransaction } from "./ports.ts";
-import type { TaskProjectionRecords } from "./records.ts";
+import type { TaskProjectionPorts, ProjectionActor, ProjectionTransaction } from "./ports.js";
+import type { TaskProjectionRecords } from "./records.js";
 
 const canonical = (value: unknown) =>
   JSON.stringify(normalizeTaskJson(value), (_key, item: unknown) =>

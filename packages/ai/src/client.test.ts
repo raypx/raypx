@@ -6,7 +6,7 @@ import {
   type AiClient,
   type Context,
   type CredentialStore,
-} from "./index.ts";
+} from "./index.js";
 
 const clients: AiClient[] = [];
 afterEach(() => {

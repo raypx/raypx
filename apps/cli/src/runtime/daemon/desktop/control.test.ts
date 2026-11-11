@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { LocalMethod } from "@raypx/contracts/local";
-import { DesktopApi } from "./api.ts";
-import { DesktopControl } from "./control.ts";
-import { SessionCookies } from "./cookies.ts";
+import { DesktopApi } from "./api.js";
+import { DesktopControl } from "./control.js";
+import { SessionCookies } from "./cookies.js";
 
 const origin = "https://api.example.test";
 const profile = { id: "owner", name: "Owner", email: "owner@example.test" };

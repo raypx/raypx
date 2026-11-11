@@ -11,10 +11,10 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { Sidebar, SidebarProvider } from "@raypx/ui/components/ui/sidebar";
-import { ProjectNavigation } from "./project-navigation.tsx";
-import { desktopFixture } from "../../../tests/helpers/desktop.ts";
-import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.tsx";
-import { useProjectCatalog } from "./project-catalog.ts";
+import { ProjectNavigation } from "./project-navigation.js";
+import { desktopFixture } from "../../../tests/helpers/desktop.js";
+import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.js";
+import { useProjectCatalog } from "./project-catalog.js";
 
 let fixture: ReturnType<typeof desktopFixture>;
 const views: (() => void)[] = [];

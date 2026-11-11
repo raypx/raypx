@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
-import { test } from "./browser-fixture.ts";
-import { web, desktop } from "./surfaces.ts";
+import { test } from "./browser-fixture.js";
+import { web, desktop } from "./surfaces.js";
 
 export async function expectPrivatePages(page: Page, surface: "Web" | "Desktop", reads: string[]) {
   const base = surface === "Web" ? web : desktop;

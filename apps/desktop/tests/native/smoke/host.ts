@@ -1,9 +1,9 @@
-import type { DesktopApiRequest, DesktopApiResponse } from "../../../api";
-import type { DesktopRuntime } from "../../../bridge";
+import type { DesktopApiRequest, DesktopApiResponse } from "../../../api.js";
+import type { DesktopRuntime } from "../../../bridge.js";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
-import { smokeOwnerRequest, stopSmokeOwner } from "./owner";
-import { connectSmoke } from "./driver";
+import { smokeOwnerRequest, stopSmokeOwner } from "./owner.js";
+import { connectSmoke } from "./driver.js";
 
 const endpoint = process.env.RAYPX_NATIVE_SMOKE_SOCKET;
 const token = process.env.RAYPX_NATIVE_SMOKE_TOKEN;
@@ -156,5 +156,5 @@ export async function measureNativeStream() {
 }
 
 export async function measureNativeCors() {
-  return (await import("./cors")).measureNativeCors(driver);
+  return (await import("./cors.js")).measureNativeCors(driver);
 }

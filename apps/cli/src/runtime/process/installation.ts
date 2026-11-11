@@ -10,8 +10,8 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { cliBuild } from "../daemon/build.ts";
-import { LocalError } from "../errors.ts";
+import { cliBuild } from "../daemon/build.js";
+import { LocalError } from "../errors.js";
 
 export interface InstallationManifest {
   format: 1;

@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vite-plus/test";
 import type { ContextDocument } from "@raypx/core/memory";
-import { MemoryLibraryPage, type MemoryUsagePort } from "./client.ts";
+import { MemoryLibraryPage, type MemoryUsagePort } from "./client.js";
 import {
   document,
   version,
@@ -14,7 +14,7 @@ import {
   deviceId,
   projectId,
   setupMemoryClientTests,
-} from "../tests/helpers/client.tsx";
+} from "../tests/helpers/client.js";
 setupMemoryClientTests();
 
 it.each(["switch", "new", "close"] as const)(

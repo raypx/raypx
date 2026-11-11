@@ -1,19 +1,19 @@
-import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite.js";
 import { afterEach, expect, it } from "vite-plus/test";
 import { Database } from "bun:sqlite";
 import { copyFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { drizzle, migrateLocalDatabase } from "../../../src/runtime/sqlite";
+import { drizzle, migrateLocalDatabase } from "../../../src/runtime/sqlite/index.js";
 import migrations from "../../../src/runtime/sqlite/migrations.generated.json";
-import { InstanceRuntime } from "../../../src/runtime/instances";
-import { instanceKeys } from "../../../src/runtime/instances/keys";
-import { StateStore } from "../../../src/runtime/state";
-import { AgentStore } from "../../../src/runtime/agents/store";
-import { TerminalStore } from "../../../src/runtime/terminal/store";
-import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
-import { SqlitePiContextStore } from "../../../src/runtime/agents/harness/context/sqlite";
+import { InstanceRuntime } from "../../../src/runtime/instances/index.js";
+import { instanceKeys } from "../../../src/runtime/instances/keys.js";
+import { StateStore } from "../../../src/runtime/state/index.js";
+import { AgentStore } from "../../../src/runtime/agents/store.js";
+import { TerminalStore } from "../../../src/runtime/terminal/store.js";
+import { SqliteContextRepository } from "../../../src/runtime/memory/repository.js";
+import { SqlitePiContextStore } from "../../../src/runtime/agents/harness/context/sqlite.js";
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {

@@ -1,13 +1,13 @@
-import { enrolledInstance } from "../../helpers/enrolled";
+import { enrolledInstance } from "../../helpers/enrolled.js";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { createAiClient, createCompatibleProvider } from "@raypx/ai";
 import { z } from "zod";
-import { parseCliArgs } from "../../../src/commands/args";
-import { runCommand } from "../../../src/commands";
-import { aiFixture } from "../../helpers/ai";
+import { parseCliArgs } from "../../../src/commands/args.js";
+import { runCommand } from "../../../src/commands/index.js";
+import { aiFixture } from "../../helpers/ai.js";
 
 let directory: string;
 const servers: ReturnType<typeof aiFixture>[] = [];

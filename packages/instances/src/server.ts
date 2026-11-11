@@ -9,7 +9,7 @@ import {
   type EnrollmentBegin,
   type InstanceBinding,
   type InstanceReceipt,
-} from "./index.ts";
+} from "./index.js";
 export const enrollmentRecordSchema = z.object({
   id: z.uuid(),
   identity: instanceIdentitySchema,

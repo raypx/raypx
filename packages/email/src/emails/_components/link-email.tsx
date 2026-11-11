@@ -10,8 +10,8 @@ import {
   Preview,
   Text,
 } from "@react-email/components";
-import { type LinkEmailKind, linkEmailContent } from "../../copy.ts";
-import type { MailLocale, SendLinkEmailInput } from "../../types.ts";
+import { type LinkEmailKind, linkEmailContent } from "../../copy.js";
+import type { MailLocale, SendLinkEmailInput } from "../../types.js";
 
 export interface LinkEmailProps extends SendLinkEmailInput {
   defaultLocale?: MailLocale;

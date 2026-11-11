@@ -1,4 +1,4 @@
-import type { AuthActionError } from "../hooks.ts";
+import type { AuthActionError } from "../hooks.js";
 
 export type AuthMode = "login" | "signup" | "forgot-password" | "reset-password" | "verify-email";
 

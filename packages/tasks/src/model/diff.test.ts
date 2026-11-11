@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { MAX_DIFF_LINES, unifiedDiff } from "./diff.ts";
+import { MAX_DIFF_LINES, unifiedDiff } from "./diff.js";
 
 it("preserves header-looking edits, line numbers and missing-newline markers", () => {
   const [file] = unifiedDiff(

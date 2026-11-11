@@ -2,17 +2,17 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { MemoryLibraryPage } from "@raypx/memory/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
 import { useTranslations } from "@raypx/i18n/browser";
-import { RemoteBoundary } from "../features/auth/components/remote-boundary.tsx";
+import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
 import {
   accountMemory,
   memoryProjects,
   memoryUsage,
   localMemory,
   localMemoryProjects,
-} from "../features/memory/client.ts";
-import { isDesktop } from "../lib/desktop.ts";
-import { useLocalProjectContext } from "../features/tasks/project-context.ts";
-import { ProjectTools } from "../features/tasks/project-tools.tsx";
+} from "../features/memory/client.js";
+import { isDesktop } from "../lib/desktop.js";
+import { useLocalProjectContext } from "../features/tasks/project-context.js";
+import { ProjectTools } from "../features/tasks/project-tools.js";
 import { ShellActions } from "@raypx/blocks/shell";
 import { LoadingState } from "@raypx/ui/loading-state";
 export const Route = createFileRoute("/memory")({

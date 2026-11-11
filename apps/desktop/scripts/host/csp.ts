@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { parseServerOrigin } from "../../config";
+import { parseServerOrigin } from "../../config.js";
 
 /** Hash the exact prerendered startup scripts, without permitting arbitrary inline JS. */
 export function secureHtml(

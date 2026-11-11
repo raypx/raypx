@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DesktopTaskWorkspace } from "../features/tasks/workspace.tsx";
+import { DesktopTaskWorkspace } from "../features/tasks/workspace.js";
 export const Route = createFileRoute("/tasks")({
   staticData: { page: { title: "common.tasks", layout: "workbench" } },
   validateSearch: (

@@ -11,12 +11,12 @@ import { IconButton } from "@raypx/ui/icon-button";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { RefreshIcon } from "@raypx/icons/refresh";
-import { authClient, apiUrl, webUrl } from "../features/auth/client.ts";
-import { accountAccessQuery } from "../features/auth/access.ts";
-import { guestReturnTo } from "../features/tasks/guest-draft.ts";
-import { analytics } from "../features/analytics/client.ts";
-import { AccountSettingsOverlay } from "../features/settings/overlay.tsx";
-import { useSettingsNavigation } from "../features/settings/navigation.ts";
+import { authClient, apiUrl, webUrl } from "../features/auth/client.js";
+import { accountAccessQuery } from "../features/auth/access.js";
+import { guestReturnTo } from "../features/tasks/guest-draft.js";
+import { analytics } from "../features/analytics/client.js";
+import { AccountSettingsOverlay } from "../features/settings/overlay.js";
+import { useSettingsNavigation } from "../features/settings/navigation.js";
 
 const headerPlaceholderClass = "size-8 rounded-full";
 

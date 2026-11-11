@@ -1,8 +1,8 @@
 /** @vitest-environment happy-dom */
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { desktopAnalyticsStore } from "./store.ts";
+import { desktopAnalyticsStore } from "./store.js";
 const mocks = vi.hoisted(() => ({ save: vi.fn().mockResolvedValue(true), read: vi.fn() }));
-vi.mock("../../lib/desktop", () => ({
+vi.mock("../../lib/desktop.js", () => ({
   isDesktop: () => true,
   getBridge: async () => ({
     request: { saveAnalyticsPreferences: mocks.save, getAnalyticsPreferences: mocks.read },

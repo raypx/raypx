@@ -19,18 +19,18 @@ const mocks = vi.hoisted(() => ({
   request: vi.fn<(method: string, input: unknown) => Promise<unknown>>(),
   fetch: vi.fn(),
 }));
-vi.mock("./lib/desktop", () => ({
+vi.mock("./lib/desktop.js", () => ({
   isDesktop: () => true,
   localRequest: mocks.request,
   onLocalEvent: () => () => {},
   hasTerminalHooks: () => false,
 }));
-vi.mock("./features/auth/client", () => ({
+vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   desktopFetch: mocks.fetch,
   authClient: { useSession: () => ({ isPending: false, error: null, data: null }) },
 }));
-import { Route } from "./routes/memory.tsx";
+import { Route } from "./routes/memory.js";
 expect.extend(matchers);
 beforeEach(() => {
   mocks.fetch.mockClear();

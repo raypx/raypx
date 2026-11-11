@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { runCommand } from "./commands";
-import { parseCliArgs } from "./commands/args";
-import { errorPayload } from "./runtime/errors";
-import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagnostics";
-import { createCliLogging } from "./logging";
+import { runCommand } from "./commands/index.js";
+import { parseCliArgs } from "./commands/args.js";
+import { errorPayload } from "./runtime/errors.js";
+import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagnostics.js";
+import { createCliLogging } from "./logging.js";
 
 const args = process.argv.slice(2);
 if (args[0] === "--herdr-internal") {
-  const { herdrInternal } = await import("./runtime/process/herdr-internal");
+  const { herdrInternal } = await import("./runtime/process/herdr-internal.js");
   await herdrInternal(args.slice(1));
 } else {
   const logging = await createCliLogging();

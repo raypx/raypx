@@ -5,9 +5,9 @@ import type {
   TaskFollowUp,
 } from "@raypx/core/tasks";
 import type { SessionFactory } from "@raypx/providers/core";
-import type { LocalAgentTask } from "../model.ts";
-import { LocalError } from "../../errors.ts";
-import { desktopBinding } from "../model.ts";
+import type { LocalAgentTask } from "../model.js";
+import { LocalError } from "../../errors.js";
+import { desktopBinding } from "../model.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 
 interface PreparedSession {

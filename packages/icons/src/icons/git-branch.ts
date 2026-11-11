@@ -1,4 +1,4 @@
 import data from "@hugeicons/core-free-icons/GitBranchIcon";
-import { createIcon } from "../icon.tsx";
+import { createIcon } from "../icon.js";
 
 export const GitBranchIcon = /*#__PURE__*/ createIcon(data, "GitBranchIcon");

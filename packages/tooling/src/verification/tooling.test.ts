@@ -1,9 +1,9 @@
 import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace";
-import { taskModel } from "../tasks/model";
-import { verificationPlan } from "./plan";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { taskModel } from "../tasks/model.js";
+import { verificationPlan } from "./plan.js";
 
 const { fixture, member } = workspaceFixtures();
 function project() {

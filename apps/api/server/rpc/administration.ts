@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
-import type { RpcBoundary } from "./boundary.ts";
-import { checkReadiness } from "../app/readiness.ts";
+import type { RpcBoundary } from "./boundary.js";
+import { checkReadiness } from "../app/readiness.js";
 
 export function createAdministrationHandlers({
   os,

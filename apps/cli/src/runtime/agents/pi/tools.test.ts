@@ -9,7 +9,7 @@ import {
   piToolCall as toolCall,
   piFinal as final,
   piAllow as allow,
-} from "../../../../tests/helpers/pi.ts";
+} from "../../../../tests/helpers/pi.js";
 
 it("rejects a repeated tool call ID within one batch and across inference requests", async () => {
   for (const sameBatch of [true, false]) {

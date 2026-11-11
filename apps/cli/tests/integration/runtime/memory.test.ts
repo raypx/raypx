@@ -1,15 +1,15 @@
-import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite.js";
 import { afterEach, expect, it } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { Database } from "bun:sqlite";
-import { SqliteContextRepository } from "../../../src/runtime/memory/repository";
-import { createRuntime } from "../../helpers/enrolled";
+import { SqliteContextRepository } from "../../../src/runtime/memory/repository.js";
+import { createRuntime } from "../../helpers/enrolled.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { ContextDocument, ContextDocumentInput } from "@raypx/core/memory";
 import { ContextLibraryService } from "@raypx/memory/server";
-import { runtimeFixtures } from "../../helpers/runtime";
+import { runtimeFixtures } from "../../helpers/runtime.js";
 
 const roots: string[] = [];
 afterEach(() => {

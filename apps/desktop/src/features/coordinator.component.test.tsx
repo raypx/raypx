@@ -9,12 +9,12 @@ const mocks = vi.hoisted(() => ({
   local: vi.fn(async () => true),
   info: vi.fn(async () => ({ daemon: true, authorized: true, enabled: true })),
 }));
-vi.mock("./auth/client", () => ({
+vi.mock("./auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: () => mocks.session },
 }));
-vi.mock("./tasks/client", () => ({ taskClient: { setAccount: vi.fn() } }));
-vi.mock("../lib/desktop", () => ({
+vi.mock("./tasks/client.js", () => ({ taskClient: { setAccount: vi.fn() } }));
+vi.mock("../lib/desktop.js", () => ({
   isDesktop: () => true,
   hasTerminalHooks: () => true,
   localRequest: mocks.local,
@@ -27,8 +27,8 @@ vi.mock("../lib/desktop", () => ({
     },
   }),
 }));
-import { RemoteCoordinator } from "./tasks/coordinator.tsx";
-import { signOutDesktopHost } from "./tasks/host-session.ts";
+import { RemoteCoordinator } from "./tasks/coordinator.js";
+import { signOutDesktopHost } from "./tasks/host-session.js";
 
 afterEach(() => {
   cleanup();

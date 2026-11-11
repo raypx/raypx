@@ -1,4 +1,4 @@
-import type { Locale, Messages } from "./types.ts";
+import type { Locale, Messages } from "./types.js";
 
 /** A bundled catalog, or a loader for one that ships in its own chunk. */
 type CatalogSource = Messages | (() => Promise<Messages>);

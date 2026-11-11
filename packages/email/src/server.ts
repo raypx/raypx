@@ -1,12 +1,12 @@
 import { Resend } from "resend";
-import { renderLinkEmail } from "./templates.ts";
+import { renderLinkEmail } from "./templates.js";
 import type {
   Mailer,
   MailLocale,
   MailMessage,
   MailTransport,
   SendLinkEmailInput,
-} from "./types.ts";
+} from "./types.js";
 
 export type {
   Mailer,
@@ -14,7 +14,7 @@ export type {
   MailMessage,
   MailTransport,
   SendLinkEmailInput,
-} from "./types.ts";
+} from "./types.js";
 export interface CreateMailerOptions {
   apiKey?: string;
   from?: string;

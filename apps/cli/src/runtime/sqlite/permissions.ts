@@ -1,7 +1,7 @@
 import { runProcessSync } from "@raypx/runtime-node/process";
 import { chmodSync, lstatSync, mkdirSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import { LocalError } from "../errors.ts";
+import { LocalError } from "../errors.js";
 
 const files = ["profile.sqlite", "profile.sqlite.migration-lock.sqlite"].flatMap((file) => [
   file,

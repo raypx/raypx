@@ -22,8 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@raypx/ui/components/ui/table";
-import { administrationClient } from "../client.ts";
-import { authClient, apiUrl } from "../../auth/client.ts";
+import { administrationClient } from "../client.js";
+import { authClient, apiUrl } from "../../auth/client.js";
 import { LoadingState } from "@raypx/ui/loading-state";
 
 type Registration = { day: string; count: number };

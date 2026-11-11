@@ -10,11 +10,11 @@ import {
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { desktopFixture, deferred } from "../../../tests/helpers/desktop.ts";
-import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.tsx";
-import { EngineGate } from "../engine/gate.tsx";
-import { LocalWelcome } from "./welcome.tsx";
-import { LocalHome } from "./home.tsx";
+import { desktopFixture, deferred } from "../../../tests/helpers/desktop.js";
+import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.js";
+import { EngineGate } from "../engine/gate.js";
+import { LocalWelcome } from "./welcome.js";
+import { LocalHome } from "./home.js";
 import type { ReactNode } from "react";
 
 const views: (() => void)[] = [];

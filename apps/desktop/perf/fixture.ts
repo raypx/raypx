@@ -5,7 +5,7 @@ import { Database } from "bun:sqlite";
 import type { LaunchContext, Context } from "@hona/strobe";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { performanceEnvironment } from "@raypx/tooling/performance";
-import { enrollTestProfile } from "./enroll";
+import { enrollTestProfile } from "./enroll.js";
 
 type State = {
   binary: string;

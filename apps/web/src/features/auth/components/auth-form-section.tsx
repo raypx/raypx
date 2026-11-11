@@ -1,10 +1,10 @@
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { cn } from "@raypx/ui/lib/utils";
 import type { ReactNode } from "react";
-import { brandAccentVars } from "../../../components/brand-accent.ts";
-import { LegalFooter } from "../../../components/legal-footer.tsx";
-import { PublicBackdrop, PublicHeader } from "../../../components/public-chrome.tsx";
-import { AuthBrandSection } from "./auth-brand-section.tsx";
+import { brandAccentVars } from "../../../components/brand-accent.js";
+import { LegalFooter } from "../../../components/legal-footer.js";
+import { PublicBackdrop, PublicHeader } from "../../../components/public-chrome.js";
+import { AuthBrandSection } from "./auth-brand-section.js";
 
 interface AuthFormSectionProps {
   siteName: string;

@@ -1,5 +1,5 @@
 import { systemRelayScheduler, type RelayScheduler } from "@raypx/client/relay";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.js";
 
 export interface StreamCursor {
   readonly streamId: string;

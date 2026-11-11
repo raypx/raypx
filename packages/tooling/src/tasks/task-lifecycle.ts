@@ -1,4 +1,4 @@
-import type { TaskModel } from "./model.ts";
+import type { TaskModel } from "./model.js";
 
 export function taskLifecycleInputs(apiPath: string) {
   return [`${apiPath}/tests/fixtures/task-lifecycle-relay.ts`, `${apiPath}/tests/helpers/relay.ts`];

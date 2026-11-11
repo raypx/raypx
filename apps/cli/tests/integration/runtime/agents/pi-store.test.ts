@@ -1,4 +1,4 @@
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
 import { afterEach, expect, it } from "vite-plus/test";
 import { Database } from "bun:sqlite";
 import { mkdtempSync, statSync } from "node:fs";
@@ -8,9 +8,9 @@ import { fileURLToPath } from "node:url";
 import {
   SqlitePiContextStore,
   PI_CONTEXT_MAX_BYTES,
-} from "../../../../src/runtime/agents/harness/context/sqlite";
+} from "../../../../src/runtime/agents/harness/context/sqlite.js";
 import { PiRunner, type PiContext } from "@raypx/providers/pi";
-import { piMessage, piModel, piScript, piTool } from "../../../helpers/pi";
+import { piMessage, piModel, piScript, piTool } from "../../../helpers/pi.js";
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {

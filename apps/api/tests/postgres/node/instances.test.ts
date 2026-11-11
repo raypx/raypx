@@ -13,8 +13,8 @@ import {
   verifyProof,
   verifyInstanceReceipt,
 } from "@raypx/instances/crypto";
-import { createInstanceRepository } from "../../../server/instances/repository.ts";
-import { createApiApp } from "../../../server/api.ts";
+import { createInstanceRepository } from "../../../server/instances/repository.js";
+import { createApiApp } from "../../../server/api.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

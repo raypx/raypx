@@ -4,7 +4,7 @@ import {
   assertSmokeOwnerRunning,
   restartSmokeOwner,
   stopSmokeOwner,
-} from "../../tests/native/smoke/owner";
+} from "../../tests/native/smoke/owner.js";
 
 it.each(["darwin", "win32"] as const)(
   "checks the preserved %s daemon and explicitly stops only the smoke profile",

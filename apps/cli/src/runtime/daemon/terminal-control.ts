@@ -13,11 +13,11 @@ import type {
   TerminalRequest,
   TerminalSession,
 } from "@raypx/contracts/terminal";
-import type { LocalRuntime } from "../index";
-import { LocalError } from "../errors";
-import { startTerminalHost } from "../terminal/host";
-import { connectorAction, connectorStatus } from "./connectors";
-import { bindingKey } from "./vault";
+import type { LocalRuntime } from "../index.js";
+import { LocalError } from "../errors.js";
+import { startTerminalHost } from "../terminal/host.js";
+import { connectorAction, connectorStatus } from "./connectors.js";
+import { bindingKey } from "./vault.js";
 import {
   cloudTerminalSchema,
   emptyCloud,
@@ -25,7 +25,7 @@ import {
   terminalSettingsSchema,
   writeTerminalConfiguration,
   type TerminalConfiguration,
-} from "./terminal-settings";
+} from "./terminal-settings.js";
 
 const APPROVAL_LEASE_MS = 15_000;
 export type CloudTerminalChannel = {

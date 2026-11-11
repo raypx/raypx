@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { migrateDatabase } from "@raypx/database";
-import type { ApiEnvironment } from "../env.ts";
+import type { ApiEnvironment } from "../env.js";
 
 /** Stage Nitro's private bundled SQL for the official Drizzle filesystem migrator. */
 export async function migrateApiDatabase(

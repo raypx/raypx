@@ -2,8 +2,8 @@ import { expect, it, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readBuiltRelease, resolveRelease } from "./release.ts";
-import { analyticsBuild } from "./analytics.ts";
+import { readBuiltRelease, resolveRelease } from "./release.js";
+import { analyticsBuild } from "./analytics.js";
 
 it("resolves explicit, Railway and verification identities without inventing a production release", () => {
   const root = mkdtempSync(join(tmpdir(), "raypx-release-"));

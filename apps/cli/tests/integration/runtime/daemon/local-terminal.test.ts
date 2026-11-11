@@ -2,9 +2,9 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createRuntime } from "../../../helpers/enrolled.ts";
-import { LocalTerminalControl } from "../../../../src/runtime/daemon/terminal-control.ts";
-import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host.ts";
+import { createRuntime } from "../../../helpers/enrolled.js";
+import { LocalTerminalControl } from "../../../../src/runtime/daemon/terminal-control.js";
+import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host.js";
 import type { ObservedProjection, TerminalRequest } from "@raypx/contracts/terminal";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 

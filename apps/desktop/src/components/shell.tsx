@@ -1,17 +1,17 @@
-import { analytics } from "../features/analytics/client.ts";
+import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
-import { authClient } from "../features/auth/client.ts";
-import { useDesktopSignOut } from "../features/auth/sign-out.tsx";
-import { taskClient } from "../features/tasks/client.ts";
-import { TerminalRequestNotice } from "../features/tasks/request-notice.tsx";
-import { ProjectNavigation } from "../features/tasks/project-navigation.tsx";
-import { RemoteProjectNavigation } from "../features/tasks/remote-navigation.tsx";
+import { authClient } from "../features/auth/client.js";
+import { useDesktopSignOut } from "../features/auth/sign-out.js";
+import { taskClient } from "../features/tasks/client.js";
+import { TerminalRequestNotice } from "../features/tasks/request-notice.js";
+import { ProjectNavigation } from "../features/tasks/project-navigation.js";
+import { RemoteProjectNavigation } from "../features/tasks/remote-navigation.js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
-import { createPendingClient, localTaskClient } from "../features/tasks/local-client.ts";
+import { createPendingClient, localTaskClient } from "../features/tasks/local-client.js";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { desktopReturnTo } from "../features/auth/return-to.ts";
+import { desktopReturnTo } from "../features/auth/return-to.js";
 import { useEffect, useState } from "react";
 import {
   Link,
@@ -31,16 +31,16 @@ import { AppShell, type ShellAction, type ShellLinkProps } from "@raypx/blocks/s
 import { useCommandShortcut } from "@raypx/blocks/command-palette";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SearchIcon } from "@raypx/icons/search";
-import { DesktopCommandMenu } from "./command-menu.tsx";
-import { EngineNotice } from "../features/engine/notice.tsx";
-import { desktopStorageKey } from "../lib/storage.ts";
+import { DesktopCommandMenu } from "./command-menu.js";
+import { EngineNotice } from "../features/engine/notice.js";
+import { desktopStorageKey } from "../lib/storage.js";
 import { useTranslations } from "@raypx/i18n/browser";
-import { isDesktop, onLocalEvent } from "../lib/desktop.ts";
-import { useDesktopEngine } from "../features/engine/provider.tsx";
-import { WindowDragRegion } from "./window-drag-region.tsx";
+import { isDesktop, onLocalEvent } from "../lib/desktop.js";
+import { useDesktopEngine } from "../features/engine/provider.js";
+import { WindowDragRegion } from "./window-drag-region.js";
 import { Button } from "@raypx/ui/components/ui/button";
-import { SettingsOverlay } from "../features/settings/overlay.tsx";
-import { useSettingsNavigation } from "../features/settings/navigation.ts";
+import { SettingsOverlay } from "../features/settings/overlay.js";
+import { useSettingsNavigation } from "../features/settings/navigation.js";
 
 const pendingClient = createPendingClient(localTaskClient, taskClient);
 

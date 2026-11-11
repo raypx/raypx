@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { accessForRole } from "@raypx/account/access";
-import { mocks, page, signIn } from "../tests/helpers/router-auth.tsx";
+import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 describe("menu permissions", () => {
   it("keeps private menu links and their queries hidden for guests", async () => {

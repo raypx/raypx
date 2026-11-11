@@ -2,13 +2,13 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProfileStorage } from "../../../../../src/runtime/sqlite/index.ts";
-import { DesktopApi } from "../../../../../src/runtime/daemon/desktop/api.ts";
-import { SessionCookies } from "../../../../../src/runtime/daemon/desktop/cookies.ts";
+import { ProfileStorage } from "../../../../../src/runtime/sqlite/index.js";
+import { DesktopApi } from "../../../../../src/runtime/daemon/desktop/api.js";
+import { SessionCookies } from "../../../../../src/runtime/daemon/desktop/cookies.js";
 import {
   encryptedSessionStore,
   sessionRecordStore,
-} from "../../../../../src/runtime/daemon/desktop/sessions.ts";
+} from "../../../../../src/runtime/daemon/desktop/sessions.js";
 
 it("persists Secure/HttpOnly sessions over real HTTPS, restores them and deletes them on sign-out", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-desktop-https-"));

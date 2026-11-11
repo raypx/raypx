@@ -12,8 +12,8 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
-import { approvalChanges, type DiffFile } from "./approval-changes.ts";
-import { TaskMarkdown } from "./markdown.tsx";
+import { approvalChanges, type DiffFile } from "./approval-changes.js";
+import { TaskMarkdown } from "./markdown.js";
 
 const rawContentClassName =
   "max-h-112 overflow-auto rounded-lg bg-muted/50 p-3 font-mono text-xs leading-[1.7] whitespace-pre-wrap wrap-anywhere";

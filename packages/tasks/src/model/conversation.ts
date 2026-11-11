@@ -1,6 +1,6 @@
 import { applyActivityEvent } from "@raypx/core/activity";
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
-import type { TaskHistoryPage } from "./port.ts";
+import type { TaskHistoryPage } from "./port.js";
 
 export interface ConversationGap {
   id: number;

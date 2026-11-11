@@ -1,8 +1,8 @@
 import type { Database } from "@raypx/database/connection";
 import { rateLimit, session, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
-import type { ApiLogging } from "../logging.ts";
-import type { ConfigurationReader } from "../configuration/types.ts";
+import type { ApiLogging } from "../logging.js";
+import type { ConfigurationReader } from "../configuration/types.js";
 import { contextCommandPrune } from "@raypx/control/postgres";
 
 export function createCleanupJob({

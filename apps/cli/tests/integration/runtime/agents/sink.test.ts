@@ -2,9 +2,9 @@ import { expect, it, vi } from "vite-plus/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.ts";
-import { AgentStore } from "../../../../src/runtime/agents/store.ts";
-import type { LocalAgentTask } from "../../../../src/runtime/agents/model.ts";
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
+import { AgentStore } from "../../../../src/runtime/agents/store.js";
+import type { LocalAgentTask } from "../../../../src/runtime/agents/model.js";
 
 /**
  * The sink is the one commit boundary: a receipt, an event projection and the

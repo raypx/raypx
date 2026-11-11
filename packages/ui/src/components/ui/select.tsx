@@ -4,7 +4,7 @@ import { CheckIcon } from "@raypx/icons/check";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { ChevronUpIcon } from "@raypx/icons/chevron-up";
 import { cn } from "#lib/utils";
-import { controlSizeVariants, type ControlSize } from "../../control-size.ts";
+import { controlSizeVariants, type ControlSize } from "../../control-size.js";
 
 const Select = SelectPrimitive.Root;
 

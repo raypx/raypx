@@ -6,7 +6,7 @@ const run = vi.hoisted(() =>
   vi.fn<typeof import("@raypx/runtime-node/process").run>(async () => {}),
 );
 vi.mock("@raypx/runtime-node/process", () => ({ run }));
-const { uploadAnalyticsMaps } = await import("./analytics.ts");
+const { uploadAnalyticsMaps } = await import("./analytics.js");
 afterEach(() => run.mockClear());
 it("requires explicit upload credentials before touching release assets", async () => {
   for (const key of ["POSTHOG_CLI_HOST", "POSTHOG_CLI_PROJECT_ID", "POSTHOG_CLI_API_KEY"])

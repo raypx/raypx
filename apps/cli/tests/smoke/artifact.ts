@@ -6,17 +6,17 @@ import {
   globFiles,
 } from "@raypx/runtime-node/files";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
-import { smokeManagedPi } from "./managed-pi.ts";
+import { smokeManagedPi } from "./managed-pi.js";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
-import { providerProxy } from "../helpers/provider-proxy.ts";
-import { enrollTestProfile } from "../helpers/instance.ts";
+import { providerProxy } from "../helpers/provider-proxy.js";
+import { enrollTestProfile } from "../helpers/instance.js";
 import assert from "node:assert/strict";
 import { stripVTControlCharacters } from "node:util";
 import { chmod, cp, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import manifest from "../../package.json";
-import { aiFixture } from "../helpers/ai.ts";
+import { aiFixture } from "../helpers/ai.js";
 
 const dataDir = await mkdtemp(join(tmpdir(), "raypx #完整运行目录 smoke-"));
 const distribution = join(dataDir, "distribution");

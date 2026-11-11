@@ -14,16 +14,16 @@ import {
 } from "@raypx/ui/components/ui/sidebar";
 import { ProjectSessionGroup, type SessionLinkProps } from "@raypx/tasks/client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { apiUrl } from "../auth/client.ts";
-import { localTaskClient } from "./local-client.ts";
+import { apiUrl } from "../auth/client.js";
+import { localTaskClient } from "./local-client.js";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { useDesktopPlatform } from "../../lib/platform-context.tsx";
-import { useProjectCatalog } from "./project-catalog.ts";
-import { recentProjects, rememberProject } from "./project-history.ts";
+import { useDesktopPlatform } from "../../lib/platform-context.js";
+import { useProjectCatalog } from "./project-catalog.js";
+import { recentProjects, rememberProject } from "./project-history.js";
 
 const localScope = { kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID } as const;
 

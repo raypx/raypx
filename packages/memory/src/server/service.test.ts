@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
 import { ContextError, type ContextDocument, type ContextVersion } from "@raypx/core/memory";
-import { ContextLibraryService, type ContextLibraryRepository } from "../server.ts";
+import { ContextLibraryService, type ContextLibraryRepository } from "../server.js";
 
 const target = {
   deviceId: "11111111-1111-4111-8111-111111111111",

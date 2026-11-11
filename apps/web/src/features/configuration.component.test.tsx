@@ -3,11 +3,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { ConfigurationForm, ConfigurationSettings } from "./configuration/components/settings.tsx";
-import { configurationClient, type Configuration } from "./configuration/client.ts";
+import { ConfigurationForm, ConfigurationSettings } from "./configuration/components/settings.js";
+import { configurationClient, type Configuration } from "./configuration/client.js";
 
 const auth = vi.hoisted(() => ({ error: null as Error | null, refetch: vi.fn() }));
-vi.mock("./auth/client", () => ({
+vi.mock("./auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: {
     useSession: () => ({
@@ -18,8 +18,8 @@ vi.mock("./auth/client", () => ({
     }),
   },
 }));
-vi.mock("./configuration/client", async (original) => ({
-  ...(await original<typeof import("./configuration/client.ts")>()),
+vi.mock("./configuration/client.js", async (original) => ({
+  ...(await original<typeof import("./configuration/client.js")>()),
   configurationClient: { get: vi.fn(), update: vi.fn() },
 }));
 const config: Configuration = {

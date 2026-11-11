@@ -2,15 +2,15 @@ import { activeTaskStatuses } from "@raypx/core/tasks";
 import { prepareModelContext } from "@raypx/ai";
 import { PiAdapter, type PiSessionOptions } from "@raypx/providers/pi";
 import type { TaskFollowUp } from "@raypx/core/tasks";
-import type { StateStore } from "../../state/index.ts";
-import type { FileRuntime } from "../../files/index.ts";
-import type { ProcessRuntime } from "../../process/index.ts";
-import { LocalError } from "../../errors.ts";
-import { PiModels } from "../../ai/models.ts";
-import { SqlitePiContextStore } from "../harness/context/sqlite.ts";
-import type { LocalAgentTask } from "../model.ts";
-import type { PiExecutionServices, PreparedPiSession } from "./ports.ts";
-import { createPiTools } from "./tools.ts";
+import type { StateStore } from "../../state/index.js";
+import type { FileRuntime } from "../../files/index.js";
+import type { ProcessRuntime } from "../../process/index.js";
+import { LocalError } from "../../errors.js";
+import { PiModels } from "../../ai/models.js";
+import { SqlitePiContextStore } from "../harness/context/sqlite.js";
+import type { LocalAgentTask } from "../model.js";
+import type { PiExecutionServices, PreparedPiSession } from "./ports.js";
+import { createPiTools } from "./tools.js";
 
 type FollowUp = TaskFollowUp;
 export class PiHost implements PiExecutionServices {

@@ -1,6 +1,6 @@
-import { LOCALE_STORAGE_KEY } from "./constants.ts";
-import { localeRuntime } from "./runtime.ts";
-import type { Locale } from "./types.ts";
+import { LOCALE_STORAGE_KEY } from "./constants.js";
+import { localeRuntime } from "./runtime.js";
+import type { Locale } from "./types.js";
 
 export type LocalePreference = Locale | "system";
 export const LOCALE_PREFERENCE_KEY = LOCALE_STORAGE_KEY;

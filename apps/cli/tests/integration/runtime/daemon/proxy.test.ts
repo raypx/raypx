@@ -2,8 +2,8 @@ import { expect, it } from "vite-plus/test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { daemonEventLines } from "../../../../src/transport/daemon-stdio";
-import { profilePath } from "../../../../src/runtime/state";
+import { daemonEventLines } from "../../../../src/transport/daemon-stdio.js";
+import { profilePath } from "../../../../src/runtime/state/index.js";
 import manifest from "../../../../package.json";
 
 it("reassembles UTF-8 events across arbitrary byte boundaries and rejects truncated records", async () => {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
+import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 
 const { run, networkInterfaces } = vi.hoisted(() => ({
   run: vi.fn(async (..._args: unknown[]) => {}),
@@ -12,8 +12,8 @@ vi.mock("node:os", async (original) => ({
   ...(await original<typeof import("node:os")>()),
   networkInterfaces,
 }));
-vi.mock("./artifacts", () => ({ probeApi: vi.fn(), probeWeb: vi.fn() }));
-const { smoke } = await import("./index.ts");
+vi.mock("./artifacts.js", () => ({ probeApi: vi.fn(), probeWeb: vi.fn() }));
+const { smoke } = await import("./index.js");
 const { fixture } = workspaceFixtures();
 
 beforeEach(() => {

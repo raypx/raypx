@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { desktopReturnTo } from "./return-to.ts";
+import { desktopReturnTo } from "./return-to.js";
 
 it.each([
   "https://outside.test/tasks",

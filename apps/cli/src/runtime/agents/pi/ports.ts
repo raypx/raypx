@@ -1,6 +1,6 @@
 import type { TaskContinuation, TaskFollowUp } from "@raypx/core/tasks";
 import type { SessionFactory } from "@raypx/providers/core";
-import type { LocalAgentTask } from "../model.ts";
+import type { LocalAgentTask } from "../model.js";
 
 export interface PreparedPiSession {
   factory: SessionFactory;

@@ -144,8 +144,9 @@ Preserve the shared happy-dom setup and independent Vitest configs.
 Tooling uses `vp test` with four isolated file workers and a 30-second test timeout.
 Its scripts select layers through Vitest filters. The shared DOM setup lives in
 `tests/setup/dom.ts`.
-Root `test.config.ts` is a plain
-Vitest defaults object; workspace configs use native `defineConfig`/`mergeConfig`
+Root `vite.config.ts` discovers workspace configs as native Vitest projects from
+package.json workspaces. `test.config.ts` is a plain defaults object;
+workspace configs use native `defineConfig`/`mergeConfig`
 and own their include patterns, projects and overrides. Do not wrap Vitest options
 in another factory or restricted interface. Scaffolded test workspaces include
 source-adjacent tests and `tests/` fixtures in strict checking and merge these defaults in their own config.

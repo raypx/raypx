@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "../../../helpers/agents.ts";
+import { agentFixtures } from "../../../helpers/agents.js";
 
 import type { AgentProvider } from "@raypx/core/tasks";
 // Shortened from the production ten seconds; the races depend on ordering, not duration.

@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { LocalError } from "../errors";
+import { LocalError } from "../errors.js";
 
 export class ProcessTransport {
   readonly child: ReturnType<typeof Bun.spawn>;

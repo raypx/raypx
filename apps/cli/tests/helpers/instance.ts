@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { stripVTControlCharacters } from "node:util";
-import { profilePath } from "../../src/runtime/state";
+import { profilePath } from "../../src/runtime/state/index.js";
 import {
   enrollmentBeginSchema,
   enrollmentProof,

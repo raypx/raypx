@@ -1,14 +1,14 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
-import { runTasks } from "../repository";
-import { taskRef, taskModel, taskPlan } from "../tasks/model";
-import { argumentKey } from "../tasks/arguments";
-import type { VerificationPlan } from "./plan";
-import type { TestSelection } from "./tests";
-import { completionReport, precheckTimings, reportTiming } from "./report";
-import { reportBuildSizes } from "../validation/build-size";
-import { sourceTasks, type SourcePhase } from "./gates";
+import { runTasks } from "../repository.js";
+import { taskRef, taskModel, taskPlan } from "../tasks/model.js";
+import { argumentKey } from "../tasks/arguments.js";
+import type { VerificationPlan } from "./plan.js";
+import type { TestSelection } from "./tests.js";
+import { completionReport, precheckTimings, reportTiming } from "./report.js";
+import { reportBuildSizes } from "../validation/build-size.js";
+import { sourceTasks, type SourcePhase } from "./gates.js";
 
 export function executionTasks(
   plan: VerificationPlan,
@@ -86,7 +86,7 @@ export async function sourceChecks(
     .map((task) => task.taskId.slice(0, -"#build".length));
   if (builds.length) reportBuildSizes(root, { packages: builds, required: true });
   if (phase !== "tests" && plan.artifacts.length) {
-    const { smoke } = await import("../smoke");
+    const { smoke } = await import("../smoke/index.js");
     await smoke(root, plan.artifacts);
   }
   const metrics = {

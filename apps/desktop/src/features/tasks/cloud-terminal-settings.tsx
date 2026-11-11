@@ -5,7 +5,7 @@ import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/al
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Switch } from "@raypx/ui/components/ui/switch";
-import { getBridge, localRequest } from "../../lib/desktop.ts";
+import { getBridge, localRequest } from "../../lib/desktop.js";
 
 type Settings = { enabled: boolean; rootIds: string[] };
 type Props = { accountId: string; projects: DeviceProject[]; supported?: boolean };

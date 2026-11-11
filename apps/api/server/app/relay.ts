@@ -1,7 +1,7 @@
 import { defineHandler, defineWebSocketHandler, HTTPError } from "nitro";
 import { MAX_RELAY_BYTES } from "@raypx/contracts/tasks";
 import type { RelayHub } from "@raypx/control/relay";
-import { getBackendRuntime } from "../runtime/backend.ts";
+import { getBackendRuntime } from "../runtime/backend.js";
 
 interface SocketPeer {
   id: string;

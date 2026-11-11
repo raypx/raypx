@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { shouldInstallWindowsSmoke } from "../../tests/native/smoke/launch";
+import { shouldInstallWindowsSmoke } from "../../tests/native/smoke/launch.js";
 
 const hosted = {
   GITHUB_ACTIONS: "true",

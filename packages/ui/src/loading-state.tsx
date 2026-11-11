@@ -1,4 +1,4 @@
-import { Skeleton } from "./components/ui/skeleton.tsx";
+import { Skeleton } from "./components/ui/skeleton.js";
 
 export function LoadingState({ label }: { label: string }) {
   return (

@@ -1,4 +1,4 @@
-import { cliLaunch } from "./installation.ts";
+import { cliLaunch } from "./installation.js";
 import { serveHttp } from "@raypx/runtime-node/http";
 import { spawnProcess, sleep } from "@raypx/runtime-node/process";
 import { mkdtemp, mkdir, stat, writeFile } from "node:fs/promises";
@@ -6,13 +6,13 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import type { LocalEvent } from "@raypx/contracts/local";
 import type { CommandSpec } from "@raypx/core/jobs";
-import type { Environment } from "./bun.ts";
-import { LocalError } from "../errors.ts";
-import { herdrError, herdrRequest, record } from "./herdr-ipc.ts";
-import { herdrVersion } from "./herdr-release.ts";
-import { removeHerdrDirectory } from "./herdr-cleanup.ts";
-import { herdrFrame } from "./herdr-frame.ts";
-import { foreignLoopbackRequest } from "../local-http.ts";
+import type { Environment } from "./bun.js";
+import { LocalError } from "../errors.js";
+import { herdrError, herdrRequest, record } from "./herdr-ipc.js";
+import { herdrVersion } from "./herdr-release.js";
+import { removeHerdrDirectory } from "./herdr-cleanup.js";
+import { herdrFrame } from "./herdr-frame.js";
+import { foreignLoopbackRequest } from "../local-http.js";
 
 type Child = ReturnType<typeof spawnProcess<{ stderr: "ignore" }>>;
 type Session = {

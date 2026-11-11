@@ -5,7 +5,7 @@ import {
   relaySession,
   type RelaySession,
   type RelaySessionEvent,
-} from "./session";
+} from "./session.js";
 
 const run = (events: RelaySessionEvent[], state: RelaySession = initialRelaySession) =>
   events.reduce(relaySession, state);

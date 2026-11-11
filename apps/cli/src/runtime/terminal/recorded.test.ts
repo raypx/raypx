@@ -4,9 +4,9 @@ import { expect, it } from "vite-plus/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { hookDecision, parseHookInvocation } from "./protocol.ts";
-import { ConversationRecorder } from "../agents/activity.ts";
-import type { ActivityDraft } from "../agents/model.ts";
+import { hookDecision, parseHookInvocation } from "./protocol.js";
+import { ConversationRecorder } from "../agents/activity.js";
+import type { ActivityDraft } from "../agents/model.js";
 
 import type { TerminalProvider, HumanDecision, TaskActivity } from "@raypx/core/tasks";
 

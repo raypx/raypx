@@ -2,8 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { themeColors } from "./config.ts";
-import { createThemeScript } from "./script.ts";
+import { themeColors } from "./config.js";
+import { createThemeScript } from "./script.js";
 
 function run(script: string) {
   // oxlint-disable-next-line typescript/no-implied-eval -- Executes the generated pre-paint script under test.

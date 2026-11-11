@@ -15,9 +15,9 @@ import {
   withoutSentDraft,
   type ComposerAction,
   type ComposerState,
-} from "./composer.ts";
-import { prepareTaskSubmission } from "./composition.ts";
-import { MAX_TASK_DRAFTS, type TaskDraft } from "./drafts.ts";
+} from "./composer.js";
+import { prepareTaskSubmission } from "./composition.js";
+import { MAX_TASK_DRAFTS, type TaskDraft } from "./drafts.js";
 
 const model = { provider: "test", model: "a", connectionId: "a".repeat(64) };
 const selection = { sources: [{ id: "33333333-3333-4333-8333-333333333333", revision: 3 }] };

@@ -1,4 +1,4 @@
-import { runDaemon } from "../../../src/runtime/daemon/server.ts";
+import { runDaemon } from "../../../src/runtime/daemon/server.js";
 setTimeout(() => {
   void Promise.reject(new Error("private injected content"));
 }, 200);

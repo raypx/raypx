@@ -1,9 +1,9 @@
 import type { AuthSession } from "@raypx/core/auth";
 import type { HostAuthorization } from "@raypx/contracts/terminal";
 import { type DeviceGrant } from "@raypx/contracts/tasks";
-import type { ControlRepository, ControlTransaction, ControlReader } from "../ports.ts";
+import type { ControlRepository, ControlTransaction, ControlReader } from "../ports.js";
 
-import { ControlError, type Device, type RelayActor, required, hash } from "../records.ts";
+import { ControlError, type Device, type RelayActor, required, hash } from "../records.js";
 export class ControlCredentials {
   constructor(
     private readonly repository: ControlRepository,

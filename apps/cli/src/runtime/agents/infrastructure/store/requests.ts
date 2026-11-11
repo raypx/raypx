@@ -1,11 +1,11 @@
 import { and, eq, exists, sql } from "drizzle-orm";
 import { humanRequestSchema, type HumanRequest } from "@raypx/core/tasks";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import type { LocalDatabase } from "../../../sqlite/index.ts";
-import { storedRecord } from "../../../sqlite/records.ts";
-import { requests, tasks } from "../../../sqlite/schema.ts";
-import type { RequestOpened } from "../../domain/events.ts";
-import { activeTaskFilter, requestTaskId, taskBinding } from "./queries.ts";
+import type { LocalDatabase } from "../../../sqlite/index.js";
+import { storedRecord } from "../../../sqlite/records.js";
+import { requests, tasks } from "../../../sqlite/schema.js";
+import type { RequestOpened } from "../../domain/events.js";
+import { activeTaskFilter, requestTaskId, taskBinding } from "./queries.js";
 
 const pendingRequestFilter = sql`json_extract(${requests.value},'$.status') IN ('pending','decided')`;
 

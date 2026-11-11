@@ -11,7 +11,7 @@ import {
 } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { terminalSmokeHost } from "../helpers/terminal-smoke";
+import { terminalSmokeHost } from "../helpers/terminal-smoke.js";
 
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to record real hook contracts");

@@ -1,7 +1,7 @@
 import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
-import { herdrRequest, record } from "./herdr-ipc";
-import { removeHerdrDirectory } from "./herdr-cleanup";
+import { herdrRequest, record } from "./herdr-ipc.js";
+import { removeHerdrDirectory } from "./herdr-cleanup.js";
 
 /** Private subprocess entrypoints, never registered as public CLI commands. */
 export async function herdrInternal(args: string[]) {

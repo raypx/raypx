@@ -9,7 +9,7 @@ import {
 } from "react";
 import { AnalyticsProvider } from "@raypx-kit/analytics/react";
 import { type AnalyticsClient, type AnalyticsConsent } from "@raypx-kit/analytics";
-import { parseAnalyticsConsent, type AnalyticsPreferenceStore } from "../index.ts";
+import { parseAnalyticsConsent, type AnalyticsPreferenceStore } from "../index.js";
 const empty = parseAnalyticsConsent(null);
 const context = createContext({
   consent: empty,

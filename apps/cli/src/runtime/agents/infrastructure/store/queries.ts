@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { activeTaskStatuses } from "@raypx/core/tasks";
-import { journal, requests, tasks } from "../../../sqlite/schema.ts";
+import { journal, requests, tasks } from "../../../sqlite/schema.js";
 
 // JSON column projections shared by more than one agent record family.
 export const taskBinding = sql<string>`json_extract(${tasks.value},'$.binding')`;

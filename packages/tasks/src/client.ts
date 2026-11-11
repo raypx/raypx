@@ -1,6 +1,6 @@
-export { TaskWorkspace } from "./client/workspace.tsx";
-export { ProjectList, TaskProjectLink } from "./client/projects.tsx";
-export { DeviceSettings } from "./client/devices.tsx";
-export { PendingCount } from "./client/pending-count.tsx";
-export type { TaskWorkspacePort, WorkspaceScope } from "./model.ts";
-export { ProjectSessionGroup, type SessionLinkProps } from "./client/project-sessions.tsx";
+export { TaskWorkspace } from "./client/workspace.js";
+export { ProjectList, TaskProjectLink } from "./client/projects.js";
+export { DeviceSettings } from "./client/devices.js";
+export { PendingCount } from "./client/pending-count.js";
+export type { TaskWorkspacePort, WorkspaceScope } from "./model.js";
+export { ProjectSessionGroup, type SessionLinkProps } from "./client/project-sessions.js";

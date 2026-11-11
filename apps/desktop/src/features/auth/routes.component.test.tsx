@@ -25,8 +25,8 @@ import {
 } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DesktopSignOutProvider } from "./sign-out.tsx";
-import { routeTree } from "../../routeTree.gen.ts";
+import { DesktopSignOutProvider } from "./sign-out.js";
+import { routeTree } from "../../routeTree.gen.js";
 
 expect.extend(matchers);
 
@@ -40,7 +40,7 @@ const mocks = vi.hoisted(() => ({
   account: vi.fn(),
   session: vi.fn(),
 }));
-vi.mock("./client", () => ({
+vi.mock("./client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
@@ -54,7 +54,7 @@ vi.mock("./client", () => ({
     getSession: async () => mocks.session(),
   },
 }));
-vi.mock("../tasks/client", () => ({
+vi.mock("../tasks/client.js", () => ({
   taskClient: { account: { get: mocks.account } },
 }));
 // The complete route tree imports the terminal; auth tests do not mount xterm.

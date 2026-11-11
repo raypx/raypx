@@ -1,4 +1,4 @@
-import type { MailLocale, SendLinkEmailInput } from "./types.ts";
+import type { MailLocale, SendLinkEmailInput } from "./types.js";
 
 export type LinkEmailKind = "verification" | "reset";
 

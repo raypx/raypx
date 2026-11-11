@@ -2,8 +2,8 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import type { Database } from "@raypx/database/connection";
 import { schema, user } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
-import type { AuditService } from "./audit.ts";
-import { writeAuditSuccess } from "./repository.ts";
+import type { AuditService } from "./audit.js";
+import { writeAuditSuccess } from "./repository.js";
 
 /** Preserve Better Auth's validation and session refresh; audit its actual role write atomically. */
 export function createAuditedAuthAdapter(

@@ -1,4 +1,4 @@
-import type { LocalDatabase } from "../sqlite";
+import type { LocalDatabase } from "../sqlite/index.js";
 import {
   chmodSync,
   mkdirSync,
@@ -20,19 +20,19 @@ import {
   type TerminalRequest,
   type TerminalSession,
 } from "@raypx/contracts/terminal";
-import { RequestBroker } from "./broker";
-import { TerminalStore } from "./store";
-import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol";
-import { acquireLock } from "../state";
-import { LocalError } from "../errors";
-import { privateSocketDirectory } from "./socket";
+import { RequestBroker } from "./broker.js";
+import { TerminalStore } from "./store.js";
+import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol.js";
+import { acquireLock } from "../state/index.js";
+import { LocalError } from "../errors.js";
+import { privateSocketDirectory } from "./socket.js";
 import {
   foreignLoopbackRequest,
   localAddressSchema,
   localFetch,
   loopbackTransport,
   type LocalAddress,
-} from "../local-http";
+} from "../local-http.js";
 
 const terminalEndpointSchema = z
   .object({

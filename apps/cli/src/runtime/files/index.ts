@@ -2,8 +2,8 @@ import { constants } from "node:fs";
 import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { MAX_TEXT_BYTES, type FileEntry } from "@raypx/contracts/local";
-import { LocalError } from "../errors";
-import { acquireLock, type StateStore } from "../state";
+import { LocalError } from "../errors.js";
+import { acquireLock, type StateStore } from "../state/index.js";
 
 function version(stat: { mtimeMs: number; size: number; ino: number; ctimeMs: number }) {
   return `${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;

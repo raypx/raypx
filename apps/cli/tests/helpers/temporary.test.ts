@@ -2,7 +2,7 @@ import { chmod, mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "n
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { removeTemporaryDirectory } from "./temporary";
+import { removeTemporaryDirectory } from "./temporary.js";
 
 it("removes cyclic and dangling fixture links while preserving external targets", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx 中文 # cleanup "));

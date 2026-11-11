@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 import { chmod, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createRuntime } from "../../helpers/enrolled.ts";
-import { runtimeFixtures } from "../../helpers/runtime.ts";
+import { createRuntime } from "../../helpers/enrolled.js";
+import { runtimeFixtures } from "../../helpers/runtime.js";
 
 const { fixture, runtimes } = runtimeFixtures();
 

@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { FolderIcon } from "@raypx/icons/folder";
-import { apiUrl, authClient } from "../auth/client.ts";
-import { taskClient } from "./client.ts";
-import { useProjectCatalog } from "./project-catalog.ts";
+import { apiUrl, authClient } from "../auth/client.js";
+import { taskClient } from "./client.js";
+import { useProjectCatalog } from "./project-catalog.js";
 
 const tab =
   "relative flex h-full shrink-0 items-center px-2.5 text-sm whitespace-nowrap text-muted-foreground outline-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:after:bg-foreground";

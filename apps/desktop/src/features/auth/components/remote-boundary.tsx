@@ -5,8 +5,8 @@ import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/al
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "@raypx/i18n/browser";
-import { authClient } from "../client.ts";
-import { desktopReturnTo } from "../return-to.ts";
+import { authClient } from "../client.js";
+import { desktopReturnTo } from "../return-to.js";
 
 function DesktopSignIn({ returnTo }: { returnTo?: string }) {
   const location = useLocation();

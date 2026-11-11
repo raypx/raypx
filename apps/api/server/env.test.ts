@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { getApiEnvironment, getServerRole } from "./env.ts";
+import { getApiEnvironment, getServerRole } from "./env.js";
 afterEach(() => vi.unstubAllEnvs());
 it("defaults to a combined backend and requires a broker for split API", () => {
   expect(getApiEnvironment({}).SERVER_ROLE).toBe("both");

@@ -1,7 +1,7 @@
 import { createLogger, initLogger } from "@raypx/logger";
 import { createManagedDrain } from "@raypx/logger/managed";
 import { createStreamDrain } from "@raypx/logger/stream";
-import type { RecordDiagnostic } from "./diagnostics.ts";
+import type { RecordDiagnostic } from "./diagnostics.js";
 
 /** The only top-level fields a CLI diagnostic may carry; everything else is dropped. */
 const CLI_LOG_FIELDS = [

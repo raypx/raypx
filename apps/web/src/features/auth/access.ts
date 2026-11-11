@@ -1,6 +1,6 @@
-import { loadAccountAccess } from "./account-access.ts";
+import { loadAccountAccess } from "./account-access.js";
 import { hasPermission, type AccountAccess, type AccountPermission } from "@raypx/account/access";
-import { apiUrl } from "./client.ts";
+import { apiUrl } from "./client.js";
 
 /** One account-scoped read feeds menu visibility and direct page access. */
 export function accountAccessQuery(accountId: string | null) {

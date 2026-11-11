@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
-import * as desktop from "./desktop.ts";
-import type { DesktopPlatform } from "./platform.ts";
+import * as desktop from "./desktop.js";
+import type { DesktopPlatform } from "./platform.js";
 
 // Lazy delegates let application composition own native discovery and connection.
 const applicationPlatform: DesktopPlatform = {

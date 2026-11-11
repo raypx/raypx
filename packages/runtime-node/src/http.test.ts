@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from "vite-plus/test";
-import { serveHttp, directHttpClient } from "./http.ts";
+import { serveHttp, directHttpClient } from "./http.js";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

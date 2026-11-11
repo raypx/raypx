@@ -24,9 +24,9 @@ import { LoadingState } from "@raypx/ui/loading-state";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
-import { accountAccessQuery } from "../../auth/access.ts";
-import { authClient, apiUrl } from "../../auth/client.ts";
-import { UserTable, type UserRoleSelection, type UserSortDirection } from "./user-table.tsx";
+import { accountAccessQuery } from "../../auth/access.js";
+import { authClient, apiUrl } from "../../auth/client.js";
+import { UserTable, type UserRoleSelection, type UserSortDirection } from "./user-table.js";
 
 const pageSize = 20;
 type SearchField = "email" | "name";

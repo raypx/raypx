@@ -10,7 +10,7 @@ import {
   type CloudJobRunStatus,
   nextJobRuns,
 } from "@raypx/core/jobs";
-import type { CloudJobsServiceOptions, JobClaim, JobRunUpdate } from "./types.ts";
+import type { CloudJobsServiceOptions, JobClaim, JobRunUpdate } from "./types.js";
 
 const knownFailures = new Set([
   "DEVICE_OFFLINE",

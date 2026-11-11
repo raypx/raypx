@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Context } from "@hona/strobe";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { stateFor } from "./fixture";
+import { stateFor } from "./fixture.js";
 
 const fixtures = new Map<
   string,

@@ -1,7 +1,7 @@
 import { expect, it } from "vite-plus/test";
 import type { AssistantMessage } from "@raypx/ai";
-import { cases, promptFor, validateCases } from "./cases.ts";
-import { evaluate, grade, simulator } from "./harness.ts";
+import { cases, promptFor, validateCases } from "./cases.js";
+import { evaluate, grade, simulator } from "./harness.js";
 
 it("validates policy-derived cases and uses the host prompt with selected reference boundaries", () => {
   expect(() => validateCases(cases)).not.toThrow();

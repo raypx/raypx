@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, unlinkSync } from "node:fs";
 import { createInterface } from "node:readline";
-import { exitForVersion } from "./version.ts";
+import { exitForVersion } from "./version.js";
 exitForVersion("claude");
 const send = (value: Record<string, unknown>) => process.stdout.write(JSON.stringify(value) + "\n");
 let turn = 0,

@@ -6,7 +6,7 @@ import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { useTranslations } from "@raypx/i18n/browser";
-import { isDirty, useFilesStore } from "../store.tsx";
+import { isDirty, useFilesStore } from "../store.js";
 
 export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose: () => unknown }) {
   const t = useTranslations("files");

@@ -1,9 +1,9 @@
 import { decodeCodexActivity } from "@raypx/providers/codex";
 import { decodeClaudeActivity } from "@raypx/providers/claude";
-import { bounded } from "./projection.ts";
+import { bounded } from "./projection.js";
 import { expect, it, vi } from "vite-plus/test";
-import { ConversationRecorder } from "./activity.ts";
-import type { ActivityDraft } from "./model.ts";
+import { ConversationRecorder } from "./activity.js";
+import type { ActivityDraft } from "./model.js";
 
 import type { TaskActivity } from "@raypx/core/tasks";
 

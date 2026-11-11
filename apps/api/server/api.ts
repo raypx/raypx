@@ -1,15 +1,15 @@
-import { AuditUnavailable } from "./administration/audit.ts";
-import { checkReadiness } from "./app/readiness.ts";
-import type { ApiEventLogger } from "./logging.ts";
-import type { ApiAppOptions } from "./app/options.ts";
-import { createRpcRouter } from "./rpc/router.ts";
+import { AuditUnavailable } from "./administration/audit.js";
+import { checkReadiness } from "./app/readiness.js";
+import type { ApiEventLogger } from "./logging.js";
+import type { ApiAppOptions } from "./app/options.js";
+import { createRpcRouter } from "./rpc/router.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { RPCHandler } from "@orpc/server/fetch";
 import { TimeoutHandlerPlugin } from "@orpc/server/plugins";
 import { normalizeTrustedOrigins } from "@raypx/core/auth";
-import { createRpcLoggingPlugin, diagnosticRoute } from "./logging.ts";
+import { createRpcLoggingPlugin, diagnosticRoute } from "./logging.js";
 
 /**
  * Letters only, so log redaction never mistakes an ID for a card or phone number and

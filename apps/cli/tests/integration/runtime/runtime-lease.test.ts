@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { it, expect } from "vite-plus/test";
-import { runtimeLease } from "../../../src/runtime/process/lease";
+import { runtimeLease } from "../../../src/runtime/process/lease.js";
 it("protects an old complete runtime across processes until its owner releases the lease", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx-runtime-lease-"));
   const old = join(root, "1.0.0-1"),

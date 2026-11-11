@@ -1,6 +1,6 @@
 import { PassThrough, Writable } from "node:stream";
 import { describe, expect, it } from "vite-plus/test";
-import { createStreamDrain } from "./stream.ts";
+import { createStreamDrain } from "./stream.js";
 
 describe("stream drain", () => {
   it("writes ordered JSON lines and flushes without ending a caller-owned stream", async () => {

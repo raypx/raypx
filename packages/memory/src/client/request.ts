@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { MemoryReadOptions } from "./port.ts";
+import type { MemoryReadOptions } from "./port.js";
 const identities = new WeakMap<object, number>();
 let sequence = 0;
 export function memoryClientKey(client: object) {

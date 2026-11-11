@@ -1,6 +1,6 @@
 import { createApiClient } from "@raypx/client/api";
 import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "@raypx/memory/client";
-import { apiUrl } from "../auth/client.ts";
+import { apiUrl } from "../auth/client.js";
 let api: ReturnType<typeof createApiClient> | undefined;
 const client = () => (api ??= createApiClient({ baseUrl: apiUrl }));
 export const accountMemory: MemoryClientPort = {

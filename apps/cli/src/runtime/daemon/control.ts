@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createApiClient, isMissingProcedure } from "@raypx/client/api";
-import { RemoteControl } from "./remote/control.ts";
-import { AcknowledgedStream } from "./acknowledged-stream";
-import { abortable } from "./cancellation";
-import { failureCode } from "./remote/failure.ts";
-import { serverOrigin } from "./remote/origin.ts";
+import { RemoteControl } from "./remote/control.js";
+import { AcknowledgedStream } from "./acknowledged-stream.js";
+import { abortable } from "./cancellation.js";
+import { failureCode } from "./remote/failure.js";
+import { serverOrigin } from "./remote/origin.js";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import {
   hostAuthorizationSchema,
@@ -13,18 +13,18 @@ import {
   type HostAuthorization,
 } from "@raypx/contracts/terminal";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
-import type { LocalRuntime } from "../index.ts";
-import { backgroundFailure } from "../background.ts";
-import { LocalError } from "../errors.ts";
-import { hostState, initialHostState, type HostEvent } from "./host-state.ts";
-import type { LocalTerminalControl } from "./terminal-control.ts";
+import type { LocalRuntime } from "../index.js";
+import { backgroundFailure } from "../background.js";
+import { LocalError } from "../errors.js";
+import { hostState, initialHostState, type HostEvent } from "./host-state.js";
+import type { LocalTerminalControl } from "./terminal-control.js";
 import {
   bindingKey,
   createHostVault,
   hostBindingSchema,
   type HostBinding,
   type HostVault,
-} from "./vault.ts";
+} from "./vault.js";
 
 type Scope = { accountId: string; apiUrl: string };
 type Selection = { accountId: string | null; apiUrl: string };
@@ -54,7 +54,7 @@ const authorizationFailures = new Map([
 ]);
 const sameScope = (left: Selection, right: Selection) =>
   left.accountId === right.accountId && left.apiUrl === right.apiUrl;
-export { terminalProjectPaths } from "./terminal-control.ts";
+export { terminalProjectPaths } from "./terminal-control.js";
 const remoteBinding = (binding: HostBinding) =>
   `host:${bindingKey(binding.apiUrl, binding.accountId)}:${binding.deviceId}:${binding.epoch}`;
 const writeJson = (file: string, value: unknown) => {

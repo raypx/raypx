@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "@raypx/i18n/browser";
 import { IconButton } from "@raypx/ui/icon-button";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
-import { LegalFooter } from "../../components/legal-footer.tsx";
-import { PublicBackdrop, PublicHeader } from "../../components/public-chrome.tsx";
-import { publicConfigurationQuery } from "../../features/configuration/client.ts";
+import { LegalFooter } from "../../components/legal-footer.js";
+import { PublicBackdrop, PublicHeader } from "../../components/public-chrome.js";
+import { publicConfigurationQuery } from "../../features/configuration/client.js";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 export const Route = createFileRoute("/(legal)")({ component: LegalLayout });

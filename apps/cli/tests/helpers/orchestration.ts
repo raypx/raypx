@@ -1,11 +1,11 @@
 import { isDeepStrictEqual } from "node:util";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { agentFixtures } from "./agents";
-import { FakeClock } from "../../src/runtime/agents/domain/ports";
-import { AgentStore } from "../../src/runtime/agents/store";
-import type { AgentRuntime } from "../../src/runtime/agents";
-import type { StateStore } from "../../src/runtime/state";
+import { agentFixtures } from "./agents.js";
+import { FakeClock } from "../../src/runtime/agents/domain/ports.js";
+import { AgentStore } from "../../src/runtime/agents/store.js";
+import type { AgentRuntime } from "../../src/runtime/agents/index.js";
+import type { StateStore } from "../../src/runtime/state/index.js";
 import type { TaskChange } from "@raypx/contracts/tasks";
 import type { AgentProvider, AgentTask } from "@raypx/core/tasks";
 

@@ -3,9 +3,9 @@ import { expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import type { ModelCatalog, ModelSelection, AgentTask } from "@raypx/core/tasks";
-import type { TaskWorkspacePort } from "../model/port.ts";
-import { TaskDetail } from "./task-detail.tsx";
-import { createTaskClient } from "../../tests/helpers/client.ts";
+import type { TaskWorkspacePort } from "../model/port.js";
+import { TaskDetail } from "./task-detail.js";
+import { createTaskClient } from "../../tests/helpers/client.js";
 import userEvent from "@testing-library/user-event";
 
 it("asks before sending a Pi conversation to a different connection and binds the confirmed revision", async () => {

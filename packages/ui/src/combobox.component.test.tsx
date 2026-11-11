@@ -15,7 +15,7 @@ import {
   ComboboxList,
   ComboboxTrigger,
   ComboboxValue,
-} from "./components/ui/combobox.tsx";
+} from "./components/ui/combobox.js";
 
 type Choice = { value: string; label: string; disabled?: boolean };
 const choices = [

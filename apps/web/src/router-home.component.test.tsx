@@ -12,12 +12,12 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { expect, it, vi } from "vite-plus/test";
 
 const session = vi.hoisted(() => vi.fn(() => ({ isPending: true, data: null, error: null })));
-vi.mock("./features/auth/client", () => ({
+vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: { useSession: session },
 }));
-import { Route as LandingRoute } from "./routes/(landing)/index.tsx";
-import { Route as ProjectsRoute } from "./routes/(app)/projects.tsx";
+import { Route as LandingRoute } from "./routes/(landing)/index.js";
+import { Route as ProjectsRoute } from "./routes/(app)/projects.js";
 
 async function html(account: AccountState, path = "/") {
   const root = createRootRouteWithContext<{ account: AccountState }>()({ component: Outlet });

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import { createMyGoBridge } from "./mygo";
+import { createMyGoBridge } from "./mygo.js";
 
 const streamId = "123e4567-e89b-42d3-a456-426614174000";
 class Socket extends EventTarget {

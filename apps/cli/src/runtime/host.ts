@@ -1,15 +1,15 @@
-import type { InstanceAccess } from "./instances";
+import type { InstanceAccess } from "./instances/index.js";
 import { InstanceError, instanceOrigin } from "@raypx/instances";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 
 import type { AgentProvider } from "@raypx/core/tasks";
-import type { RecordDiagnostic } from "../diagnostics";
-import { createRuntime } from "./index";
-import { DaemonControl } from "./daemon/control";
-import { LocalTerminalControl } from "./daemon/terminal-control";
-import type { HostVault } from "./daemon/vault";
-import { backgroundFailure as reportBackgroundFailure } from "./background";
-import { LocalError } from "./errors";
+import type { RecordDiagnostic } from "../diagnostics.js";
+import { createRuntime } from "./index.js";
+import { DaemonControl } from "./daemon/control.js";
+import { LocalTerminalControl } from "./daemon/terminal-control.js";
+import type { HostVault } from "./daemon/vault.js";
+import { backgroundFailure as reportBackgroundFailure } from "./background.js";
+import { LocalError } from "./errors.js";
 
 /** Shared execution, terminal and cloud ownership behind each local transport. */
 export function createHost(options: {

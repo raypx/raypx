@@ -1,6 +1,6 @@
 import { CloseIcon } from "@raypx/icons/close";
 import type { ReactElement, ReactNode } from "react";
-import { Button } from "./components/ui/button.tsx";
+import { Button } from "./components/ui/button.js";
 import {
   Dialog,
   DialogClose,
@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./components/ui/dialog.tsx";
-import { SheetContent } from "./components/ui/sheet.tsx";
+} from "./components/ui/dialog.js";
+import { SheetContent } from "./components/ui/sheet.js";
 
 /** Application-facing dialog naming and busy-state dismissal policy. */
 export function Modal({

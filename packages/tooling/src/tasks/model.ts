@@ -13,10 +13,10 @@ import {
   type TaskContext,
   type TaskCache,
 } from "@raypx-kit/devkit/tasks";
-import { browserTestTasks, type BrowserSurface } from "../browser-tests.ts";
-import { toolingConsumerCheckInputs, workspaceCheckInput } from "./check-inputs.ts";
-import { taskScripts } from "./delegation.ts";
-import { taskLifecycleInputs } from "./task-lifecycle.ts";
+import { browserTestTasks, type BrowserSurface } from "../browser-tests.js";
+import { toolingConsumerCheckInputs, workspaceCheckInput } from "./check-inputs.js";
+import { taskScripts } from "./delegation.js";
+import { taskLifecycleInputs } from "./task-lifecycle.js";
 export { taskRef };
 interface TaskMember extends Member {
   native: boolean;

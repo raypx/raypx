@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { it, expect } from "vite-plus/test";
-import { sealCliPayload, verifyCliPayload } from "./cli";
+import { sealCliPayload, verifyCliPayload } from "./cli.js";
 it("seals signed bytes without changing identity and rejects altered, extra or linked resources", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx-payload-"));
   try {

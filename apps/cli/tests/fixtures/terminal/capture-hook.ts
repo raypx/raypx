@@ -1,6 +1,6 @@
 import { appendFileSync, realpathSync } from "node:fs";
-import { parseHookInvocation } from "../../../src/runtime/terminal/protocol";
-import { forwardTerminalHook } from "../../../src/runtime/terminal/hook";
+import { parseHookInvocation } from "../../../src/runtime/terminal/protocol.js";
+import { forwardTerminalHook } from "../../../src/runtime/terminal/hook.js";
 
 // Test-only recorder. The harness supplies an isolated project and private output.
 const provider = process.env.RAYPX_P0_PROVIDER;

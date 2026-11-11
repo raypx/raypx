@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@raypx/ui/lib/utils";
-import { accentGradient } from "../../../components/brand-accent.ts";
+import { accentGradient } from "../../../components/brand-accent.js";
 
 /** One packet heads to Web (a session), the other returns to Desktop (an answer). */
 const routes = [

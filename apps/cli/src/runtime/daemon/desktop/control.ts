@@ -4,8 +4,8 @@ import { localParams, type LocalMethod } from "@raypx/contracts/local";
 import { hostAuthorizationSchema, controlInfoSchema } from "@raypx/contracts/terminal";
 import { deviceGrantSchema } from "@raypx/contracts/tasks";
 import { z } from "zod";
-import { LocalError } from "../../errors.ts";
-import type { DesktopApi } from "./api.ts";
+import { LocalError } from "../../errors.js";
+import type { DesktopApi } from "./api.js";
 
 export interface DesktopHost {
   request(

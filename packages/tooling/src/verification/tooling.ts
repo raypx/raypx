@@ -2,7 +2,7 @@ import { existsSync, globSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { imports } from "@raypx-kit/devkit/architecture";
 import { discover, exportPaths } from "@raypx-kit/devkit/workspaces";
-import { opaqueImport, sourceExtensions, toolingSourceClosure } from "../tooling-entries.ts";
+import { opaqueImport, sourceExtensions, toolingSourceClosure } from "../tooling-entries.js";
 
 const testOnly = /(?:^|\/)tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$/;
 

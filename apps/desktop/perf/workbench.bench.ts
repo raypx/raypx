@@ -1,5 +1,5 @@
 import { bench, native, webview } from "@hona/strobe";
-import { teardown, recordOwnership } from "./fixture";
+import { teardown, recordOwnership } from "./fixture.js";
 const selector = process.env.RAYPX_STROBE_READY_SELECTOR;
 const seed = process.env.RAYPX_STROBE_SEED_HOME;
 if (!seed) throw new Error("Run through the Desktop perf task to prepare a synthetic enrollment");

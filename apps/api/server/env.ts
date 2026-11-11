@@ -1,6 +1,6 @@
 import { normalizeTrustedOrigins } from "@raypx/core/auth";
 import { defineEnv, type Preset, z } from "@raypx/env";
-import type apiEnvironmentSources from "./env.contract.ts";
+import type apiEnvironmentSources from "./env.contract.js";
 const server = {
   SERVER_ROLE: z.enum(["api", "both"]).default("both"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),

@@ -8,11 +8,11 @@ import { FolderIcon } from "@raypx/icons/folder";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { sessionThreads } from "@raypx/tasks/model";
-import { apiUrl } from "../features/auth/client.ts";
-import { localTaskClient } from "../features/tasks/local-client.ts";
-import { useProjectCatalog } from "../features/tasks/project-catalog.ts";
-import { rememberProject } from "../features/tasks/project-history.ts";
-import { isDesktop } from "../lib/desktop.ts";
+import { apiUrl } from "../features/auth/client.js";
+import { localTaskClient } from "../features/tasks/local-client.js";
+import { useProjectCatalog } from "../features/tasks/project-catalog.js";
+import { rememberProject } from "../features/tasks/project-history.js";
+import { isDesktop } from "../lib/desktop.js";
 
 type DesktopPage = "/" | "/approvals" | "/automations" | "/memory";
 const recentLimit = 8;

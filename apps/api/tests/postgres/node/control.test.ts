@@ -9,7 +9,7 @@ import {
 } from "@raypx/control/postgres";
 import { ControlService } from "@raypx/control";
 import { connected, controlAuth, humanRequest, running, observed } from "@raypx/control/testing";
-import { createApiApp } from "../../../server/api.ts";
+import { createApiApp } from "../../../server/api.js";
 import { createApiClient } from "@raypx/client/api";
 
 const url = process.env.TEST_DATABASE_URL;

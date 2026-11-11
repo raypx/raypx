@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vite-plus/test";
-import { renderLinkEmail } from "./templates.ts";
-import { createMailer, MailUnavailableError } from "./server.ts";
+import { renderLinkEmail } from "./templates.js";
+import { createMailer, MailUnavailableError } from "./server.js";
 
 it("renders one locale, safe HTML and a plain-text link", async () => {
   const result = await renderLinkEmail("verification", {

@@ -5,8 +5,8 @@ import {
   EPOCH,
   goldenDifference,
   orchestrationHost,
-} from "../../../helpers/orchestration";
-import { AgentRuntime } from "../../../../src/runtime/agents";
+} from "../../../helpers/orchestration.js";
+import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
 import type { AgentTask } from "@raypx/core/tasks";
 
 /**

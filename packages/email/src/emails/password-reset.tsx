@@ -1,4 +1,4 @@
-import { LinkEmail, type LinkEmailProps } from "./_components/link-email.tsx";
+import { LinkEmail, type LinkEmailProps } from "./_components/link-email.js";
 
 export default function PasswordResetEmail(props: LinkEmailProps) {
   return <LinkEmail kind="reset" {...props} />;

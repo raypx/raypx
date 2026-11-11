@@ -7,12 +7,13 @@ import { withUniwindConfig } from "uniwind/metro";
 const directory = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const defaults = getDefaultConfig(directory);
 const packagesRoot = resolve(directory, "../../packages") + sep;
+const appRoot = directory + sep;
 
 const config = {
   ...defaults,
   resolver: {
     ...defaults.resolver,
-    // Shared ESM packages spell emitted imports as .js. Resolve their relative
+    // Workspace ESM modules spell emitted imports as .js. Resolve their relative
     // imports to TypeScript source, as Bun and Vite already do.
     resolveRequest(context, moduleName, platform) {
       // Shared source packages have DOM test dependencies of their own. Every
@@ -24,7 +25,8 @@ const config = {
           platform,
         );
       const workspaceSource =
-        context.originModulePath.startsWith(packagesRoot) &&
+        (context.originModulePath.startsWith(packagesRoot) ||
+          context.originModulePath.startsWith(appRoot)) &&
         !context.originModulePath.includes(`${sep}node_modules${sep}`);
       const request =
         workspaceSource && moduleName.startsWith(".") && moduleName.endsWith(".js")

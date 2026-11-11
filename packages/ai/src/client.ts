@@ -8,8 +8,8 @@ import {
   type Provider,
   type SimpleStreamOptions,
 } from "@earendil-works/pi-ai";
-import { defaultProviders } from "./providers.ts";
-import { AiError } from "./errors.ts";
+import { defaultProviders } from "./providers.js";
+import { AiError } from "./errors.js";
 
 export interface AiSelection {
   provider: string;

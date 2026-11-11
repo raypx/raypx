@@ -1,12 +1,12 @@
 import { expect } from "@playwright/test";
-import { test } from "../helpers/browser-fixture.ts";
-import { capture } from "../helpers/capture.ts";
+import { test } from "../helpers/browser-fixture.js";
+import { capture } from "../helpers/capture.js";
 import {
   accountAccessFixture,
   authResponse,
   signedInAccount,
   webShellFixture,
-} from "../helpers/account-fixture.ts";
+} from "../helpers/account-fixture.js";
 
 import type { HumanRequest } from "@raypx/core/tasks";
 

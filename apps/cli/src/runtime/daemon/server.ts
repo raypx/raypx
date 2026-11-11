@@ -1,27 +1,27 @@
-import { cliInstallation } from "../process/installation.ts";
-import { runtimeLease } from "../process/lease.ts";
-import type { InstanceAccess } from "../instances";
+import { cliInstallation } from "../process/installation.js";
+import { runtimeLease } from "../process/lease.js";
+import type { InstanceAccess } from "../instances/index.js";
 import { chmodSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { localParams, localRequestSchema, type LocalEvent } from "@raypx/contracts/local";
-import { createExecutionOwner, type ExecutionHost } from "../owner";
-import { onShutdown } from "../../transport/shutdown";
-import type { LocalRuntime } from "../index";
-import { acquireLock, profilePath } from "../state";
-import { backgroundFailure as reportBackgroundFailure } from "../background";
-import { errorPayload, LocalError } from "../errors";
-import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint";
-import type { DaemonControl } from "./control";
-import type { LocalTerminalControl } from "./terminal-control";
-import type { HostVault } from "./vault";
+import { createExecutionOwner, type ExecutionHost } from "../owner.js";
+import { onShutdown } from "../../transport/shutdown.js";
+import type { LocalRuntime } from "../index.js";
+import { acquireLock, profilePath } from "../state/index.js";
+import { backgroundFailure as reportBackgroundFailure } from "../background.js";
+import { errorPayload, LocalError } from "../errors.js";
+import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint.js";
+import type { DaemonControl } from "./control.js";
+import type { LocalTerminalControl } from "./terminal-control.js";
+import type { HostVault } from "./vault.js";
 import manifest from "../../../package.json";
 
 import type { AgentProvider } from "@raypx/core/tasks";
-import { cliBuild } from "./build";
-import { refreshStableCli } from "./connectors";
-import { privateSocketDirectory } from "../terminal/socket";
-import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http";
-import { DesktopGateway } from "./desktop/gateway.ts";
+import { cliBuild } from "./build.js";
+import { refreshStableCli } from "./connectors.js";
+import { privateSocketDirectory } from "../terminal/socket.js";
+import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http.js";
+import { DesktopGateway } from "./desktop/gateway.js";
 
 type Client = {
   stream: ReadableStreamDefaultController<Uint8Array>;

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { ApprovalBody } from "./approval-body.tsx";
+import { ApprovalBody } from "./approval-body.js";
 
 it("counts one file for multiple edits and preserves the complete request after folding previews", async () => {
   localStorage.setItem("raypx_locale", "en");

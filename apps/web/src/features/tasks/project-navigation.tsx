@@ -10,8 +10,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@raypx/ui/components/ui/sidebar";
-import { taskClient } from "./client.ts";
-import { apiUrl } from "../auth/client.ts";
+import { taskClient } from "./client.js";
+import { apiUrl } from "../auth/client.js";
 
 /** Authorized computers and their projects; the sidebar and the command palette share it. */
 export function remoteProjectsQuery(accountId: string) {

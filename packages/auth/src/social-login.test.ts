@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { OAuthProvider } from "better-auth";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { createAuth, type AuthMailer } from "./server.ts";
+import { createAuth, type AuthMailer } from "./server.js";
 import type { SocialProvider } from "@raypx/core/auth";
 
 async function fixture(provider: SocialProvider, registrationAllowed = true, emailVerified = true) {

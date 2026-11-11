@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { exitForVersion } from "./version.ts";
+import { exitForVersion } from "./version.js";
 
 type RpcMessage = {
   id?: string | number;
