@@ -282,7 +282,6 @@ export async function smokeDeployment(root: string, args: string[]) {
           );
         const activeContainers = await evidence.measure(`${profile}-acceptance`, async () => {
           const api = `${project}-api`,
-            relay = `${project}-relay`,
             web = `${project}-web`,
             gateway = `${project}-gateway`;
           await start(
@@ -296,26 +295,11 @@ export async function smokeDeployment(root: string, args: string[]) {
               ALLOWED_ORIGINS: origin,
               JOBS_ENABLED: "false",
               HOST: profile === "railway" ? "::" : "0.0.0.0",
-              SERVER_ROLE: profile === "compose" ? "both" : "api",
+              SERVER_ROLE: "both",
               ...(profile === "railway" ? { REDIS_URL: `redis://${project}-redis:6379` } : {}),
             },
             ["--memory", "768m"],
           );
-          if (profile === "railway")
-            await start(
-              relay,
-              images.railwayApi,
-              {
-                NODE_ENV: "production",
-                DATABASE_URL: database,
-                REDIS_URL: `redis://${project}-redis:6379`,
-                ALLOWED_ORIGINS: origin,
-                SERVER_ROLE: "relay",
-                NITRO_PORT: String(deploymentServices.relay.port),
-                HOST: profile === "railway" ? "::" : "0.0.0.0",
-              },
-              ["--memory", "512m"],
-            );
           await start(
             web,
             profile === "compose" ? images.composeWeb : images.railwayWeb,
@@ -328,7 +312,6 @@ export async function smokeDeployment(root: string, args: string[]) {
             {
               PORT: String(deploymentServices.gateway.port),
               API_UPSTREAM: `${api}:${deploymentServices.api.port}`,
-              RELAY_UPSTREAM: `${profile === "compose" ? api : relay}:${deploymentServices.relay.port}`,
               WEB_UPSTREAM: `${web}:${deploymentServices.web.port}`,
             },
             ["-p", `127.0.0.1::${deploymentServices.gateway.port}`, "--memory", "128m"],
@@ -368,7 +351,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           console.log(
             `${profile}: migration, readiness, SSR, assets, login, cookie and Relay passed`,
           );
-          return [gateway, web, api, ...(profile === "railway" ? [relay] : [])];
+          return [gateway, web, api];
         });
         await evidence.measure(`${profile}-containers-stop`, async () => {
           for (const name of activeContainers) await stop(name);

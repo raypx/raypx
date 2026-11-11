@@ -7,7 +7,7 @@ of the Dokploy Beta and Production projects.
 ## Services and configuration
 
 The named IaC partial in [infra/railway/railway.ts](../../infra/railway/railway.ts) manages
-api, web, relay and gateway. Existing Postgres and Redis services and their volumes
+api, web and gateway. Existing Postgres and Redis services and their volumes
 remain outside this partial. Both were inspected and empty before the initial
 foundation migration. Keep their images and persistent storage intact.
 
@@ -18,15 +18,15 @@ through the root manifest's `infra/*` pattern.
 
 Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
 Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`,
-/health and /ready to API; `/relay` goes to Relay and other paths go to Web. Caddy proxies WebSocket
-upgrades; API and Web have no public domains, and database connections use private
+/health, /ready and /relay to API, and other paths to Web. Caddy proxies WebSocket
+upgrades and strips Cookie and Authorization headers on `/relay`. API and Web have
+no public domains, and database connections use private
 references. Access logging is
 disabled and the error log removes request details.
 
-API, Web and Relay bind to :: for Railway private networking. IaC defaults to one API
-replica. Relay replicas share PostgreSQL and Redis; API replicas also share
-AUTH_SECRET. Relay never receives that secret. Keep broker channels private to
-this deployment. All four application services
+API and Web bind to :: for Railway private networking. IaC defaults to one API
+replica. The API process runs HTTP and Relay together and uses the existing
+private PostgreSQL and Redis services. All three application services
 stay awake. Forwarded client IP headers remain untrusted until explicit, verified
 proxy CIDRs are configured; the API uses its socket peer by default.
 
@@ -34,14 +34,13 @@ Runtime variables are deliberately unmanaged by IaC. This preserves secrets and
 operator settings on Railway. Configure references in the dashboard or with
 railway variable set --skip-deploys; never commit decrypted variables.
 
-| Service  | Variables                                                                                                                                                                                                           |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000; RELAY_UPSTREAM=${{relay.RAILWAY_PRIVATE_DOMAIN}}:3002   |
-| api      | NODE_ENV=production; SERVER_ROLE=api; HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters |
-| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                          |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                   |
-| relay    | NODE_ENV=production; SERVER_ROLE=relay; HOST=::; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; ALLOWED_ORIGINS matches API                                              |
-| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                           |
+| Service  | Variables                                                                                                                                                                                                                          |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                         |
+| api      | NODE_ENV=production; SERVER_ROLE=both (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters |
+| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                                         |
+| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                  |
+| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                          |
 
 Optional mail, administrator, storage and analytics settings remain explicit
 per-environment settings. Without RESEND_API_KEY and a verified MAIL_FROM, mail
@@ -54,10 +53,10 @@ policy checks Caddy and Compose against the same ingress contract.
 
 ## Apply and deploy
 
-API, Web, Relay and Gateway use the raypx/raypx GitHub repository's canary branch.
+API, Web and Gateway use the raypx/raypx GitHub repository's canary branch.
 Matching pushes trigger automatic deployments using the shared
 `apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
-All four application sources enable Wait for CI (`checkSuites: true`), so GitHub
+All three application sources enable Wait for CI (`checkSuites: true`), so GitHub
 checks must finish successfully before automatic deployments proceed.
 Ordinary source and dependency changes use the selected source/backend/browser
 checks, then Railway builds the production images. The CI `container-smoke` job
@@ -66,10 +65,10 @@ acceptance changes, manual CI runs and release tags. Those images remain on the
 CI runner; Railway does not consume them.
 Shared package or manifest changes rebuild API and Web;
 both services also watch `deploy/*.ts` for shared build-context preparation changes.
-Relay uses the same `apps/api/Dockerfile` and watches `apps/api/**` plus shared
-inputs. Its unmanaged runtime variables must set `SERVER_ROLE=relay`; API sets
-`SERVER_ROLE=api`. Both use port 3002. Set `RELAY_UPSTREAM` before publishing the
-split gateway. The two services can consume the same prepared backend image.
+The API container serves Relay on the same listener as HTTP. During migration
+from a Gateway image that still reads `RELAY_UPSTREAM`, set that variable to the
+same API address as `API_UPSTREAM`. Remove it after the new Gateway image is active
+and the authenticated Relay flow has been verified.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
 
@@ -118,33 +117,33 @@ relative to the repository root, so narrowing the build context breaks `COPY`.
 
 Check whether Gateway has a service or shared `RAILWAY_DOCKERFILE_PATH` override.
 If present, align its effective value with `infra/railway/Dockerfile`; leave it
-unset if there is no override. Confirm `PORT=8080` and all three upstream
-references in the variables table above, including `RELAY_UPSTREAM`. Never copy
+unset if there is no override. Confirm `PORT=8080` and both upstream
+references in the variables table above. Never copy
 API authentication secrets into Gateway.
 
 For the normal IaC workflow, log in and link the project using the commands below,
 then run `plan`. Review changes for the entire `raypx-app` partial before running
-`deploy`: it manages API, Web, Relay and Gateway, not just Gateway. Stop if the plan
+`deploy`: it manages API, Web and Gateway. Stop if the plan
 would delete or take ownership of Postgres, Redis or their volumes. Runtime
 variables remain unmanaged and must be corrected separately. A manual dashboard
 repair should match this same definition so the next apply preserves it.
 
 Once settings are saved or applied, deploy the latest `canary` commit. Retrying
 the old failed deployment may still use a commit from before the move. Wait for
-API, Web and Relay to be healthy before verifying Gateway, then restore GitHub
+API and Web to be healthy before verifying Gateway and Relay, then restore GitHub
 autodeploys. Do not rotate secrets, reset databases or rerun migrations to repair
 a Gateway path error.
 
 ### Diagnose the failing stage
 
-| Symptom                                                   | Check                                                                                                                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Dockerfile not found / failed to read Dockerfile          | Effective Dockerfile path, overrides, selected commit and repository root                                                                  |
-| `COPY` cannot find Caddyfile / checksum calculation fails | Repository-root build context, current `infra/railway/Caddyfile` and `.dockerignore`                                                       |
-| Caddy configuration fails at startup                      | Runtime `API_UPSTREAM`, `WEB_UPSTREAM` and `RELAY_UPSTREAM`; build-time validation uses placeholders and does not verify Railway variables |
-| Healthcheck `/ready` fails                                | Gateway port and logs, then API private DNS, port `3002` and readiness; Gateway forwards `/ready` to API                                   |
-| Gateway is healthy but pages return 502                   | Web private DNS, port `3000`, and Web readiness; Gateway readiness only checks the API route                                               |
-| Pages work but remote connections fail                    | Relay service, private DNS, port `3002`, `RELAY_UPSTREAM`, and the authenticated `/relay` WebSocket flow                                   |
+| Symptom                                                   | Check                                                                                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Dockerfile not found / failed to read Dockerfile          | Effective Dockerfile path, overrides, selected commit and repository root                                                |
+| `COPY` cannot find Caddyfile / checksum calculation fails | Repository-root build context, current `infra/railway/Caddyfile` and `.dockerignore`                                     |
+| Caddy configuration fails at startup                      | Runtime `API_UPSTREAM` and `WEB_UPSTREAM`; build-time validation uses placeholders and does not verify Railway variables |
+| Healthcheck `/ready` fails                                | Gateway port and logs, then API private DNS, port `3002` and readiness; Gateway forwards `/ready` to API                 |
+| Gateway is healthy but pages return 502                   | Web private DNS, port `3000`, and Web readiness; Gateway readiness only checks the API route                             |
+| Pages work but remote connections fail                    | API runtime role, `API_UPSTREAM`, and the authenticated `/relay` WebSocket flow                                          |
 
 After deployment, check the public HTTPS origin, `/ready`, SSR assets, login and
 Relay connectivity separately. A green Gateway healthcheck does not prove Web or
@@ -170,8 +169,7 @@ mise exec -- bun run --cwd infra/railway deploy
 # Uploads use the repository root as their build context.
 mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service api --detach
 mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service web --detach
-mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service relay --detach
-# Wait for API, Web and Relay to become healthy before publishing Gateway.
+# Wait for API and Web to become healthy before publishing Gateway.
 mise exec -- bun ./infra/railway/node_modules/@railway/cli/bin/railway.js up --service gateway --detach
 ```
 
@@ -200,7 +198,7 @@ API startup also checks pending migrations by default from private bundled SQL a
 owns migration. Both paths share the same database advisory lock and migration ledger;
 the switch does not disable the explicit pre-deploy command.
 For future updates, back up the database first. If pending migrations require
-transactional indexes or otherwise block writers, stop the existing API and Relay for an
+transactional indexes or otherwise block writers, stop the existing API for an
 agreed maintenance window before migration; ordinary rolling pre-deploy execution
 does not stop the old API or Relay. Preserve migration history and storage on rollback.
 

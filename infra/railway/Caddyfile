@@ -15,7 +15,7 @@
 :{$PORT:8080} {
   @relay path /relay
   handle @relay {
-    reverse_proxy {$RELAY_UPSTREAM} {
+    reverse_proxy {$API_UPSTREAM} {
       header_up -Cookie
       header_up -Authorization
     }

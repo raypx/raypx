@@ -90,8 +90,8 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.s
 sh deploy/update.sh /absolute/path/to/protected.env --split
 ```
 
-Railway can keep its separate role services; Cloudflare uses this backend image
-with the relay role. See [Railway](railway.md) and [Cloudflare](../../infra/cloudflare/README.md).
+Railway uses the combined backend. Cloudflare uses this backend image with the
+relay role. See [Railway](railway.md) and [Cloudflare](../../infra/cloudflare/README.md).
 When changing an existing split deployment to combined mode, stop the old Relay
 using its existing configuration before replacing backend/routing. Keep its old
 image and protected configuration for rollback; do not delete its database or

@@ -57,6 +57,7 @@ it("rejects silent port, readiness and ingress route drift", () => {
     ".loadbalancer.server.port=9999",
   );
   replace(root, "infra/railway/Caddyfile", " /ready", "");
+  replace(root, "infra/railway/Caddyfile", "{$API_UPSTREAM}", "{$RELAY_UPSTREAM}");
   replace(root, "apps/web/Dockerfile", "EXPOSE 3000", "EXPOSE 9999");
   expect(checkDeployment(root)).toEqual(
     expect.arrayContaining([
@@ -64,6 +65,7 @@ it("rejects silent port, readiness and ingress route drift", () => {
       "deploy/compose.yaml: api proxy port must be 3002",
       "apps/web/Dockerfile: runtime port must be 3000",
       "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
+      "infra/railway/Caddyfile: Relay ingress must use API_UPSTREAM",
     ]),
   );
 });

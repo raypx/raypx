@@ -102,6 +102,9 @@ export function checkDeployment(root: string): string[] {
       findings.push(
         "infra/railway/Caddyfile: Relay ingress routes differ from the deployment contract",
       );
+    const relayProxy = caddySource.match(/handle\s+@relay\s*\{\s*reverse_proxy\s+(\S+)/)?.[1];
+    if (relayProxy !== "{$API_UPSTREAM}")
+      findings.push("infra/railway/Caddyfile: Relay ingress must use API_UPSTREAM");
     const relayRule = services.api?.labels?.find((line) => /-relay.rule=/.test(line)) ?? "";
     if (
       !same(

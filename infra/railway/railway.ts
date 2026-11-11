@@ -54,18 +54,6 @@ export default defineRailway((context) => {
     healthcheckTimeout: 180,
     deploy: deployment,
   });
-  const relay = service("relay", {
-    source,
-    replicas,
-    build: {
-      builder: "DOCKERFILE",
-      dockerfilePath: "apps/api/Dockerfile",
-      watchPatterns: ["apps/api/**", "infra/railway/railway.ts", ...sharedInputs],
-    },
-    healthcheck: deploymentServices.relay.ready,
-    healthcheckTimeout: 180,
-    deploy: deployment,
-  });
   const gateway = service("gateway", {
     source,
     replicas,
@@ -88,7 +76,7 @@ export default defineRailway((context) => {
   const configuration = {
     // Runtime secrets and origin references are managed through Railway variables.
     variables: { managed: false },
-    resources: [api, web, relay, gateway],
+    resources: [api, web, gateway],
   };
   return project("raypx", configuration);
 });
