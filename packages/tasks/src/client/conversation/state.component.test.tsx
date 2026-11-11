@@ -163,12 +163,17 @@ it("merges live activity without refreshing workspace queries and recovers a mis
     truncated: false,
     updatedAt: task.updatedAt,
   };
-  act(() => {
-    for (const listener of listeners)
-      listener({ type: "events", events: [{ sequence: 1, event: delta }] });
-  });
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    await act(async () => {
+      for (const listener of listeners)
+        listener({ type: "events", events: [{ sequence: 1, event: delta }] });
+      await vi.advanceTimersByTimeAsync(200);
+    });
+  } finally {
+    vi.useRealTimers();
+  }
   await screen.findByText("Hello world");
-  await new Promise((resolve) => setTimeout(resolve, 200));
   expect({
     list: list.mock.calls.length,
     get: get.mock.calls.length,

@@ -25,7 +25,11 @@ import { HerdrTerminalHost } from "../../../../../src/runtime/process/herdr.ts";
 const cleanups: (() => unknown)[] = [];
 afterEach(async () => {
   vi.restoreAllMocks();
-  for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
+  try {
+    for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 async function fixture(agent = false, enrolled = true, initial: Record<string, unknown> = {}) {
@@ -60,6 +64,15 @@ async function fixture(agent = false, enrolled = true, initial: Record<string, u
 }
 
 const connect = connectDesktop.bind(undefined, cleanups);
+
+async function withFakeTimeouts(run: () => Promise<void>) {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    await run();
+  } finally {
+    vi.useRealTimers();
+  }
+}
 
 it("exposes a separate authenticated listener and refuses admin/native authority to the renderer", async () => {
   const { host, descriptor, native } = await fixture();
@@ -301,15 +314,29 @@ it("reports a failed native operation as data and keeps the capability usable", 
 
 it("closes peers that never authenticate or acknowledge an event by the deadline", async () => {
   const { descriptor } = await fixture();
-  const anonymous = new WebSocket(descriptor.channel.url, { headers: { origin: pageOrigin } });
-  cleanups.push(() => anonymous.close());
-  const unauthenticatedClosed = new Promise<void>((resolve) =>
-    anonymous.addEventListener("close", () => resolve()),
-  );
-  const stalled = await connect(descriptor.channel, { ack: false });
-  await stalled.ready;
-  await Promise.all([unauthenticatedClosed, stalled.ended]);
-  expect(stalled.packets.filter((packet) => packet.type === "event")).toHaveLength(1);
+  await withFakeTimeouts(async () => {
+    const anonymous = new WebSocket(descriptor.channel.url, { headers: { origin: pageOrigin } });
+    cleanups.push(() => anonymous.close());
+    const anonymousOpened = new Promise<void>((resolve) =>
+      anonymous.addEventListener("open", () => resolve(), { once: true }),
+    );
+    const anonymousClosed = new Promise<void>((resolve) =>
+      anonymous.addEventListener("close", () => resolve(), { once: true }),
+    );
+    const stalled = await connect(descriptor.channel, { ack: false });
+    await Promise.all([anonymousOpened, stalled.ready]);
+
+    await vi.advanceTimersByTimeAsync(4_999);
+    expect(anonymous.readyState).toBe(WebSocket.OPEN);
+    await vi.advanceTimersByTimeAsync(1);
+    await anonymousClosed;
+
+    await vi.advanceTimersByTimeAsync(4_999);
+    expect(stalled.socket.readyState).toBe(WebSocket.OPEN);
+    await vi.advanceTimersByTimeAsync(1);
+    await stalled.ended;
+    expect(stalled.packets.filter((packet) => packet.type === "event")).toHaveLength(1);
+  });
 });
 
 it("bounds pending renderer HTTP requests and cancels them when the connection is closed", async () => {
@@ -585,6 +612,7 @@ for (const kind of ["tool", "terminal"] as const) {
     ] as const)(
     `retains accepted ${kind}s through %s, fences their scope and releases them explicitly`,
     async (failure) => {
+      if (failure === "expiry") vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
       const f = await fixture();
       if (kind === "terminal") {
         const terminalHost = new HerdrTerminalHost(
@@ -642,13 +670,31 @@ for (const kind of ["tool", "terminal"] as const) {
           f.host.emit({ version: 1, event: "agent.changed", data: {} });
       }
       if (failure === "ack_timeout") {
-        options.ack = false;
-        f.host.emit({ version: 1, event: "agent.changed", data: {} });
+        const event = { version: 1, event: "agent.changed", data: {} } as const;
+        const received = new Promise<void>((resolve) => {
+          function onMessage() {
+            if (peer.packets.at(-1)?.event?.event !== event.event) return;
+            peer.socket.removeEventListener("message", onMessage);
+            resolve();
+          }
+          peer.socket.addEventListener("message", onMessage);
+        });
+        f.host.emit(event);
+        await received;
+        // A request sent after the event arrives also waits for the preceding ACK.
+        await peer.local("roots.list");
+        await withFakeTimeouts(async () => {
+          options.ack = false;
+          f.host.emit(event);
+          await vi.advanceTimersByTimeAsync(10_000);
+          await peer.ended;
+        });
       }
       const clock =
         failure === "expiry"
           ? vi.spyOn(AwakeClock.prototype, "now").mockReturnValue(Number.MAX_SAFE_INTEGER)
           : undefined;
+      if (clock) await vi.advanceTimersByTimeAsync(5_000);
       if (failure === "bootstrap") await f.bootstrap();
       if (failure === "origin" || failure === "owner") {
         const foreign = await f.bootstrap(

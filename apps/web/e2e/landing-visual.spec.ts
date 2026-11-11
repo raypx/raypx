@@ -164,6 +164,7 @@ test("Web homepage ambient motion runs while visible and stops under reduced mot
 });
 
 test("Web homepage demo plays itself, holds on hover and stops on request", async ({ page }) => {
+  await page.clock.install();
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
   await page.route("**/rpc/configuration/public", (route) =>
@@ -174,11 +175,12 @@ test("Web homepage demo plays itself, holds on hover and stops on request", asyn
   const steps = page.getByRole("tablist", { name: "Example workflow" });
   const autoplay = page.getByRole("button", { name: "Autoplay demo", exact: true });
   await expect(autoplay).toHaveAttribute("aria-pressed", "true");
-  await expect(showcase).toHaveAttribute("data-autoplay", "playing", { timeout: 10_000 });
+  await page.clock.runFor(2_000);
+  await expect(showcase).toHaveAttribute("data-autoplay", "playing");
+  await page.clock.runFor(5_500);
   await expect(steps.getByRole("tab", { name: "Result", exact: true })).toHaveAttribute(
     "aria-selected",
     "true",
-    { timeout: 15_000 },
   );
 
   await page
@@ -194,11 +196,12 @@ test("Web homepage demo plays itself, holds on hover and stops on request", asyn
   await expect(autoplay).toHaveAttribute("aria-pressed", "false");
   await expect(showcase).toHaveAttribute("data-autoplay", "off");
   const selected = await steps.locator('[aria-selected="true"]').textContent();
-  await page.waitForTimeout(1500);
+  await page.clock.runFor(6_500);
   expect(await steps.locator('[aria-selected="true"]').textContent()).toBe(selected);
 });
 
 test("Web homepage demo stays still under reduced motion", async ({ page }) => {
+  await page.clock.install();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
@@ -211,7 +214,7 @@ test("Web homepage demo stays still under reduced motion", async ({ page }) => {
     "false",
   );
   await expect(page.locator("[data-autoplay]")).toHaveAttribute("data-autoplay", "off");
-  await page.waitForTimeout(2500);
+  await page.clock.runFor(6_500);
   await expect(
     page
       .getByRole("tablist", { name: "Example workflow" })

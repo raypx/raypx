@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it, vi } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { agentFixtures } from "../../../helpers/agents.ts";
@@ -45,13 +45,30 @@ async function inputRace(
     mode: "steer" as const,
     prompt: "Next",
   };
-  expect(
-    await f.runtime.localExecute(account, steer.id, { method: "tasks.input", input: steer }),
-  ).toMatchObject({ ok: true });
-  return { ...f, account, input, steer };
+  async function submit() {
+    expect(
+      await f.runtime.localExecute(account, steer.id, { method: "tasks.input", input: steer }),
+    ).toMatchObject({ ok: true });
+  }
+  return { ...f, account, input, steer, submit };
 }
 it("ends a Claude interrupt without result after the interrupt timeout and releases the project lock", async () => {
   const f = await inputRace("claude-timeout");
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  const timer = vi.spyOn(globalThis, "setTimeout");
+  try {
+    await f.submit();
+    // The child acknowledges the interrupt before the parent arms its deadline.
+    await expect
+      .poll(() => timer.mock.calls.some(([, delay]) => delay === interruptTimeoutMs))
+      .toBe(true);
+    await vi.advanceTimersByTimeAsync(interruptTimeoutMs - 1);
+    expect(f.runtime.localTask(f.account, f.input.id, 0).task.status).toBe("running");
+    await vi.advanceTimersByTimeAsync(1);
+  } finally {
+    timer.mockRestore();
+    vi.useRealTimers();
+  }
   await expect
     .poll(() => f.runtime.localTask(f.account, f.input.id, 0).task.status, { timeout: 15_000 })
     .toBe("interrupted");
@@ -66,6 +83,7 @@ it("ends a Claude interrupt without result after the interrupt timeout and relea
 }, 30_000);
 it("keeps a natural Claude result complete when it crosses an interrupt", async () => {
   const f = await inputRace("claude-natural");
+  await f.submit();
   await expect
     .poll(
       () =>
@@ -82,6 +100,7 @@ it("keeps a natural Claude result complete when it crosses an interrupt", async 
 });
 it("queues an explicitly rejected Codex steer after the completed turn", async () => {
   const f = await inputRace("codex-expired");
+  await f.submit();
   await expect
     .poll(
       () =>
@@ -103,17 +122,23 @@ it("keeps two rejected Codex steers queued when completion outlasts the interrup
     f.runtime
       .localTask(f.account, f.input.id, 0)
       .activity.filter((entry) => entry.kind === "input");
-  await expect
-    .poll(() => activity().find((entry) => entry.id === f.steer.id)?.status)
-    .toBe("queued");
   const second = { ...f.steer, id: crypto.randomUUID(), prompt: "Third" };
-  expect(
-    await f.runtime.localExecute(f.account, second.id, { method: "tasks.input", input: second }),
-  ).toMatchObject({ ok: true });
-  await expect
-    .poll(() => activity().find((entry) => entry.id === second.id)?.status)
-    .toBe("queued");
-  await new Promise((resolve) => setTimeout(resolve, interruptTimeoutMs + 200));
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    await f.submit();
+    await expect
+      .poll(() => activity().find((entry) => entry.id === f.steer.id)?.status)
+      .toBe("queued");
+    expect(
+      await f.runtime.localExecute(f.account, second.id, { method: "tasks.input", input: second }),
+    ).toMatchObject({ ok: true });
+    await expect
+      .poll(() => activity().find((entry) => entry.id === second.id)?.status)
+      .toBe("queued");
+    await vi.advanceTimersByTimeAsync(interruptTimeoutMs + 1);
+  } finally {
+    vi.useRealTimers();
+  }
   expect(f.runtime.localTask(f.account, f.input.id, 0).task.status).toBe("running");
   writeFileSync(join(f.directory, "complete"), "");
   const sent = () =>

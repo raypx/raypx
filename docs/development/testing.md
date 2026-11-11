@@ -177,8 +177,9 @@ Development and packaging scripts live under `apps/desktop/scripts/host/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
 CLI unit suites live beside source; `tests/integration/` stays grouped by capability.
 Agent lifecycle/approvals, input races and context/resume have separate suites sharing
-per-case host fixtures. Their real ten-second deadline tests remain in integration;
-injected Pi cases separate lifecycle, tool durability and completion in unit.
+per-case host fixtures. Input-race tests advance the host's interrupt timer while
+exercising real subprocesses. Injected Pi cases separate lifecycle, tool durability
+and completion in unit tests.
 Standalone artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
 live in their own `tests/helpers/` and own temporary resource cleanup.
 E2E server launch and response helpers live in `e2e/tests/helpers/`.
