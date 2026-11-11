@@ -60,8 +60,10 @@ than treating older migration outputs as a current baseline.
 Each selected native platform checks cross-platform process/task runners and the
 installed CLI before Herdr and MyGo host checks. The CLI consumes the verified
 immutable payload from the preparation job; acceptance never rebuilds it. The
-prepared payload's size table appears in the job summary. Native acceptance JSON
-and size reports upload on success or failure and remain available for seven days.
+prepared payload's size table appears in the job summary. CI attempts to upload
+native acceptance JSON and size reports on success or failure and retains uploaded
+reports for seven days. A report upload failure is logged and allowed on routine
+runs. Distribution runs require successful uploads.
 MyGo checks still run after an earlier acceptance failure when the shared payload
 was verified and the workflow has not been cancelled; the failed gate still fails
 the job. Routine runs select Windows; explicit macOS and distribution selections

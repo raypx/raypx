@@ -7,6 +7,7 @@ type Step = {
   name?: string;
   uses?: string;
   if?: string;
+  "continue-on-error"?: boolean | string;
   run?: string;
   env?: Record<string, string>;
   with?: Record<string, string | number | boolean>;
@@ -181,6 +182,19 @@ it("retains Go, production and interactive smoke acceptance", () => {
     expect(named(name).if).toBe("always() && matrix.phase != 'checks'");
     expect(named(name).with?.["retention-days"]).toBe(7);
   }
+});
+
+it("tolerates only report upload failures in routine native acceptance", () => {
+  const optional = checks.filter((step) => step["continue-on-error"] !== undefined);
+  expect(optional.map((step) => step.name)).toEqual([
+    "Upload native acceptance evidence",
+    "Upload build size reports",
+  ]);
+  for (const step of optional) {
+    expect(step.uses).toBe("actions/upload-artifact@v7");
+    expect(step["continue-on-error"]).toBe("${{ inputs.distribution == 'false' }}");
+  }
+  expect([...prepare, ...steps].filter((step) => step["continue-on-error"])).toEqual([]);
 });
 
 it("keeps explicit release acceptance independent from routine push cancellation", () => {
