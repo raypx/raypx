@@ -1,4 +1,4 @@
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 import { comparisonEnvironment, performanceEnvironment } from "./environment";
 
 it("measures head on both A/A roles and retains distinct A/B artifacts", () => {

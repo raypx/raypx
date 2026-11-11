@@ -135,16 +135,15 @@ explicit Knip entries. Vendored skills are excluded;
 the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
 evidence only. Inventory compares case multiplicity and checks exact file selection.
-It assigns each runner its own report flags and reads both Bun JUnit and Vitest JSON.
+It collects Vitest JSON reports from the selected workspaces.
 Backend validation provisions only owned temporary services, resolves binaries from
 PATH or explicit binary settings, and stops children before deleting their data.
 Read i18n's public static `./config` through workspace discovery for locale policy;
 do not add the i18n runtime to root tooling's dependency closure.
-Preserve the shared happy-dom setup and independent workspace test runners.
-Tooling's own suites use `bun:test` with four isolated file workers and a 30-second
-default timeout. The scripts load the repository's `bunfig.toml` explicitly and
-keep layer selection in their command-line filters. The shared setup for Vitest
-consumers lives in `tests/setup/dom.ts`.
+Preserve the shared happy-dom setup and independent Vitest configs.
+Tooling uses `vp test` with four isolated file workers and a 30-second test timeout.
+Its scripts select layers through Vitest filters. The shared DOM setup lives in
+`tests/setup/dom.ts`.
 Root `test.config.ts` is a plain
 Vitest defaults object; workspace configs use native `defineConfig`/`mergeConfig`
 and own their include patterns, projects and overrides. Do not wrap Vitest options

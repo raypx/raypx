@@ -1,9 +1,8 @@
-import { rejects } from "node:assert/strict";
-import { afterEach, expect, it, mock } from "bun:test";
+import { afterEach, expect, it, vi } from "vite-plus/test";
 
-const rm = mock<typeof import("node:fs/promises").rm>();
-await mock.module("node:fs/promises", () => ({ rm }));
-await mock.module("./repository.js", () => ({
+const rm = vi.hoisted(() => vi.fn<typeof import("node:fs/promises").rm>());
+vi.mock("node:fs/promises", () => ({ rm }));
+vi.mock("./repository.js", () => ({
   discover: () => ({ workspaces: [{ path: "packages/feature" }] }),
 }));
 const { clean } = await import("./clean.ts");
@@ -34,5 +33,5 @@ it("bounds parallel removals and waits for every batch", async () => {
 
 it("reports a failed removal to the caller", async () => {
   rm.mockResolvedValue(undefined).mockRejectedValueOnce(new Error("Permission denied"));
-  await rejects(clean("/fixture"), /Permission denied/);
+  await expect(clean("/fixture")).rejects.toThrow(/Permission denied/);
 });

@@ -1,4 +1,4 @@
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 import { testLayer } from "./test-sources.ts";
 import { baselineCases, compareCases, ownerMap } from "./inventory.ts";
 

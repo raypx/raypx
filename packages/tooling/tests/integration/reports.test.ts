@@ -1,7 +1,6 @@
-import { rejects } from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 import { collectInventory } from "../../src/validation/inventory.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
 
@@ -61,42 +60,49 @@ it("reconciles default and focused reports against actual files without includin
 
 it("rejects missing, stale, duplicate and failed reports rather than reporting incomplete coverage as passed", async () => {
   const { root, directory, files } = setup();
-  await rejects(collectInventory(root, ["all.json"]), /Missing report/);
+  await expect(collectInventory(root, ["all.json"])).rejects.toThrow(/Missing report/);
   report(root, directory, "all.json", [files[0]!]);
-  await rejects(collectInventory(root, ["all.json"]), /incomplete/);
+  await expect(collectInventory(root, ["all.json"])).rejects.toThrow(/incomplete/);
   report(root, directory, "all.json", ["tests/removed.test.ts"]);
-  await rejects(collectInventory(root, ["all.json"]), /Unexpected ordinary test file/);
+  await expect(collectInventory(root, ["all.json"])).rejects.toThrow(
+    /Unexpected ordinary test file/,
+  );
   report(root, directory, "all.json", [files[0]!, ...files]);
-  await rejects(collectInventory(root, ["all.json"]), /more than once/);
+  await expect(collectInventory(root, ["all.json"])).rejects.toThrow(/more than once/);
   write(root, `${directory}/node_modules/.cache/raypx-tests/all.json`, { success: false });
-  await rejects(collectInventory(root, ["all.json"]), /Incomplete or failed/);
+  await expect(collectInventory(root, ["all.json"])).rejects.toThrow(/Incomplete or failed/);
 });
 
-it("combines Bun JUnit and Vitest JSON without losing nested case names", async () => {
+it("combines workspace reports without losing nested case names", async () => {
   const { root, directory, files } = setup();
   report(root, directory, "all.json", files);
-  const bun = member(root, "bun-suite", { extra: { scripts: { test: "bun test" } } });
+  const second = member(root, "second-suite", { extra: { scripts: { test: "fixture" } } });
   const file = "src/state.test.ts";
-  write(root, `${bun}/${file}`, "fixture");
-  const xml = join(root, bun, "node_modules/.cache/raypx-tests/all.xml");
-  mkdirSync(dirname(xml), { recursive: true });
-  const contents = `<testsuites name="bun test" tests="1" failures="0" skipped="0">
-    <testsuite file="${file}">
-      <testsuite name="outer"><testsuite name="inner &amp; friends">
-        <testcase file="${file}" name="checks &lt;state&gt;" time="0.003"/>
-      </testsuite></testsuite>
-    </testsuite>
-  </testsuites>`;
-  writeFileSync(xml, contents);
+  write(root, `${second}/${file}`, "fixture");
+  const filename = `${second}/node_modules/.cache/raypx-tests/all.json`;
+  const fullName = "outer inner & friends checks <state>";
+  const contents = {
+    success: true,
+    numFailedTests: 0,
+    numPendingTests: 0,
+    numPassedTests: 1,
+    testResults: [
+      {
+        name: join(root, second, file),
+        assertionResults: [{ fullName, status: "passed", duration: 3 }],
+      },
+    ],
+  };
+  write(root, filename, contents);
   const inventory = await collectInventory(root, ["all.json"]);
   expect(inventory.files).toHaveLength(3);
-  expect(inventory.cases.find((test) => test.workspace === "@raypx/bun-suite")).toEqual({
-    workspace: "@raypx/bun-suite",
-    file: `${bun}/${file}`,
-    name: "outer inner & friends checks <state>",
+  expect(inventory.cases.find((test) => test.workspace === "@raypx/second-suite")).toEqual({
+    workspace: "@raypx/second-suite",
+    file: `${second}/${file}`,
+    name: fullName,
     status: "passed",
     durationMs: 3,
   });
-  writeFileSync(xml, contents.replace('skipped="0"', 'skipped="1"'));
-  await rejects(collectInventory(root, ["all.json"]), /Incomplete or failed/);
+  write(root, filename, { ...contents, numPendingTests: 1 });
+  await expect(collectInventory(root, ["all.json"])).rejects.toThrow(/Incomplete or failed/);
 });

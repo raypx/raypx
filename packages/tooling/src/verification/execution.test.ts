@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, expect, it, mock, spyOn } from "bun:test";
+import { afterEach, expect, it, vi } from "vite-plus/test";
 import { project } from "../../tests/helpers/verification";
 import * as processes from "@raypx/runtime-node/process";
 import * as repository from "../repository";
@@ -8,14 +8,16 @@ import * as artifacts from "../smoke";
 import { sourceChecks } from "./execution";
 import { verificationPlan } from "./plan";
 
-afterEach(() => mock.restore());
+afterEach(() => vi.restoreAllMocks());
 
 it("runs the test phase without style commands, precheck evidence or prepared artifacts", async () => {
   const { root, model } = project();
   const plan = verificationPlan(model, [], { full: true });
-  const style = spyOn(processes, "run").mockRejectedValue(new Error("Unexpected style command"));
-  const smoke = spyOn(artifacts, "smoke").mockRejectedValue(new Error("Unexpected artifact probe"));
-  const tasks = spyOn(repository, "runTasks").mockImplementation(async (_, task, args, env) => {
+  const style = vi.spyOn(processes, "run").mockRejectedValue(new Error("Unexpected style command"));
+  const smoke = vi
+    .spyOn(artifacts, "smoke")
+    .mockRejectedValue(new Error("Unexpected artifact probe"));
+  const tasks = vi.spyOn(repository, "runTasks").mockImplementation(async (_, task, args, env) => {
     expect(task).toBe("verify:run");
     expect(args).toEqual([]);
     const refs = JSON.parse(env!.RAYPX_VERIFY_TASKS!) as string[];

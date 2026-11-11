@@ -1,12 +1,10 @@
-import { rejects } from "node:assert/strict";
-import { stubGlobal } from "../../tests/helpers/stubs.ts";
-import { expect, it, mock } from "bun:test";
+import { expect, it, vi } from "vite-plus/test";
 import { checkWeb } from "./checks.ts";
 
 function fixture(home: string) {
-  stubGlobal(
+  vi.stubGlobal(
     "fetch",
-    mock(async (input: unknown) => {
+    vi.fn(async (input: unknown) => {
       const path = new URL(String(input)).pathname;
       if (path === "/") return new Response(home);
       if (path === "/admin/settings")
@@ -31,6 +29,8 @@ it.each(["<div>Remote sessions and approvals</div>", "<h1>Private account</h1>"]
   "rejects HTML without the public guest heading: %s",
   async (home) => {
     fixture(home);
-    await rejects(checkWeb("https://fixture.example"), /Web did not render its public guest page/);
+    await expect(checkWeb("https://fixture.example")).rejects.toThrow(
+      /Web did not render its public guest page/,
+    );
   },
 );

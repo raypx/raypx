@@ -1,4 +1,4 @@
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 import { packageTestArguments, planTests } from "./test-command.ts";
 
 const root = "/repo";

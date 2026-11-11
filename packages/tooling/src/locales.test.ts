@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vite-plus/test";
 import { checkLocales } from "./policy.ts";
 import { workspaceFixtures } from "../tests/helpers/workspace.ts";
 

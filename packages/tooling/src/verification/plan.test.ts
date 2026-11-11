@@ -1,8 +1,7 @@
-import { stubEnv, stubGlobal } from "../../tests/helpers/stubs.ts";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project, platformProject } from "../../tests/helpers/verification";
 import { workspaceFixtures } from "../../tests/helpers/workspace";
 import { taskModel, taskPlan, taskRef } from "../tasks/model";
@@ -13,14 +12,14 @@ import { executionTasks } from "./execution";
 
 const { member } = workspaceFixtures();
 
-afterEach(() => mock.restore());
+afterEach(() => vi.restoreAllMocks());
 
 describe("affected verification", () => {
   it("normalizes the selected repository root and isolates nested test repositories", () => {
     const { root } = project(),
       other = project();
-    stubEnv("RAYPX_VERIFY_ROOT", root + "/");
-    stubEnv("RAYPX_VERIFY_TASKS", JSON.stringify([taskRef("api", "build")]));
+    vi.stubEnv("RAYPX_VERIFY_ROOT", root + "/");
+    vi.stubEnv("RAYPX_VERIFY_TASKS", JSON.stringify([taskRef("api", "build")]));
     expect(taskModel(root).definitions.get(taskRef("fixture", "verify:run"))?.dependsOn).toEqual([
       taskRef("api", "build"),
     ]);
@@ -430,16 +429,16 @@ describe("affected verification", () => {
     const head = commit("docs-only follow-up");
     const event = join(root, ".git/event.json");
     writeFileSync(event, JSON.stringify({ ref: "refs/heads/canary", before: legacy }));
-    stubEnv("GITHUB_EVENT_PATH", event);
-    stubEnv("GITHUB_EVENT_NAME", "push");
-    stubEnv("GITHUB_API_URL", "https://api.github.example");
-    stubEnv("GITHUB_REPOSITORY", "fixture/project");
-    stubEnv("GITHUB_TOKEN", "fixture-token");
-    stubEnv("GITHUB_SHA", head);
+    vi.stubEnv("GITHUB_EVENT_PATH", event);
+    vi.stubEnv("GITHUB_EVENT_NAME", "push");
+    vi.stubEnv("GITHUB_API_URL", "https://api.github.example");
+    vi.stubEnv("GITHUB_REPOSITORY", "fixture/project");
+    vi.stubEnv("GITHUB_TOKEN", "fixture-token");
+    vi.stubEnv("GITHUB_SHA", head);
     function run(sha: string, conclusion = "success", title = `Canary CI v1 ${sha}`) {
       return { head_sha: sha, conclusion, display_title: title };
     }
-    const request = mock(async () =>
+    const request = vi.fn(async () =>
       Response.json({
         workflow_runs: [
           run(head),
@@ -450,7 +449,7 @@ describe("affected verification", () => {
         ],
       }),
     );
-    stubGlobal("fetch", request);
+    vi.stubGlobal("fetch", request);
     const retry = await readGithubPlan(root);
     expect(request).toHaveBeenCalledWith(
       new URL(
@@ -469,7 +468,7 @@ describe("affected verification", () => {
     );
     const renamed = commit("fix(ci): use commit subjects for run titles");
     writeFileSync(join(root, "docs/next.md"), "updated note");
-    stubEnv("GITHUB_SHA", commit("docs after green"));
+    vi.stubEnv("GITHUB_SHA", commit("docs after green"));
     writeFileSync(event, JSON.stringify({ ref: "refs/heads/canary", before: renamed }));
     request.mockResolvedValueOnce(
       Response.json({

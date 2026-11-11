@@ -1,6 +1,4 @@
-import { rejects } from "node:assert/strict";
-import { stubEnv } from "../helpers/stubs.ts";
-import { expect, it } from "bun:test";
+import { expect, it, vi } from "vite-plus/test";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -47,10 +45,10 @@ esac
 `,
       { mode: 0o700 },
     );
-    stubEnv("PATH", `${root}:${process.env.PATH}`);
-    stubEnv("RAYPX_SMOKE_COMMANDS", log);
-    stubEnv("AUTH_SECRET", "operator-secret-must-not-be-logged");
-    await rejects(smokeDeployment(root, []), /compose-build failed/);
+    vi.stubEnv("PATH", `${root}:${process.env.PATH}`);
+    vi.stubEnv("RAYPX_SMOKE_COMMANDS", log);
+    vi.stubEnv("AUTH_SECRET", "operator-secret-must-not-be-logged");
+    await expect(smokeDeployment(root, [])).rejects.toThrow(/compose-build failed/);
     const commands = readFileSync(log, "utf8");
     const created = /network create .* (raypx-deployment-[a-f0-9]+)/.exec(commands)?.[1];
     expect(created).toBeTruthy();
@@ -96,9 +94,9 @@ esac
 `,
       { mode: 0o700 },
     );
-    stubEnv("PATH", `${root}:${process.env.PATH}`);
-    stubEnv("RAYPX_SMOKE_COMMANDS", log);
-    await rejects(smokeDeployment(root, []), /account-fixture failed \(9\)/);
+    vi.stubEnv("PATH", `${root}:${process.env.PATH}`);
+    vi.stubEnv("RAYPX_SMOKE_COMMANDS", log);
+    await expect(smokeDeployment(root, [])).rejects.toThrow(/account-fixture failed \(9\)/);
     const commands = readFileSync(log, "utf8");
     expect(commands).not.toMatch(/fixture:smoke|--target build|prune|volume rm/);
     const seed = commands.split("\n").find((line) => line.includes("/deployment-fixture.mjs"));

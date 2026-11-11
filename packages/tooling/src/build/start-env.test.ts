@@ -1,7 +1,6 @@
-import { stubEnv } from "../../tests/helpers/stubs.ts";
 import { join } from "node:path";
 import { writeFileSync } from "node:fs";
-import { expect, it } from "bun:test";
+import { expect, it, vi } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
 import { startEnvironment } from "./start-env.ts";
 const { fixture } = workspaceFixtures();
@@ -9,7 +8,7 @@ it("retains inherited variables and dotenv keys without tracking the entire tool
   const root = fixture();
   writeFileSync(join(root, ".env"), "APP_SETTING=fixture\nVITE_TITLE=fixture\n");
   writeFileSync(join(root, ".env.production.local"), "MODE_SETTING=fixture\n");
-  stubEnv("CODEX_TOOL_CALL_ID", "fixture-inherited");
+  vi.stubEnv("CODEX_TOOL_CALL_ID", "fixture-inherited");
   const queries: string[][] = [];
   const plugin = {
     name: "tanstack-start-core:load-env",

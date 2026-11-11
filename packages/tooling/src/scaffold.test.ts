@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vite-plus/test";
 import { checkArchitecture } from "@raypx-kit/devkit/architecture";
 import { discover } from "./repository.js";
 import { scaffold } from "./scaffold.js";

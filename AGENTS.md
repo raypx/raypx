@@ -75,8 +75,7 @@ The accepted foundation design and current architecture decisions define the imp
   and Linux Desktop acceptance remains unverified. `internal/app` owns framework APIs and
   `internal/desktop` owns OS capabilities and finite CLI bootstrap. Bun/VP owns JS builds.
 - Type checks use tsc --noEmit with an explicit project; Bun runs scripts.
-- Vite+ owns leaf build/lint/format and schedules workspace tests. Tooling uses
-  Bun's test runner. Keep independent Vitest configurations for other workspaces.
+- Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
   `test --package` and package-local scripts must select the same suites and prerequisites.
 - Colocate unit tests with their source. Name DOM suites `*.component.test.ts(x)`;

@@ -1,7 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, it } from "bun:test";
-import { stubEnv } from "../../tests/helpers/stubs.ts";
+import { expect, it, vi } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
 import { cacheSnapshot } from "./cache.ts";
 
@@ -11,7 +10,7 @@ it("saves log-only VP results and skips an unchanged cache after a hit", async (
   const root = fixture();
   const cache = join(root, "node_modules/.vite/task-cache/v18");
   const output = join(root, "outputs");
-  stubEnv("GITHUB_OUTPUT", output);
+  vi.stubEnv("GITHUB_OUTPUT", output);
 
   await cacheSnapshot(root, "snapshot");
   mkdirSync(cache, { recursive: true });

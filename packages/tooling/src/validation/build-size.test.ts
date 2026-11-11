@@ -1,12 +1,11 @@
-import { stubEnv } from "../../tests/helpers/stubs.ts";
 import { mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, expect, it, mock, spyOn } from "bun:test";
+import { afterEach, expect, it, vi } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
 import { collectBuildSizes, reportBuildSizes, sizeOptions } from "./build-size.ts";
 
 const { fixture, member } = workspaceFixtures();
-afterEach(() => mock.restore());
+afterEach(() => vi.restoreAllMocks());
 
 function file(root: string, path: string, content: string | Buffer) {
   const parts = path.split("/");
@@ -102,8 +101,8 @@ it("writes machine-readable evidence and the CI summary, rejecting missing requi
   const root = fixture();
   buildMember(root, "absent");
   const summary = join(root, "summary.md");
-  stubEnv("GITHUB_STEP_SUMMARY", summary);
-  spyOn(console, "log").mockImplementation(() => {});
+  vi.stubEnv("GITHUB_STEP_SUMMARY", summary);
+  vi.spyOn(console, "log").mockImplementation(() => {});
   expect(() => reportBuildSizes(root, { packages: ["absent"], required: true })).toThrow(
     "unavailable",
   );

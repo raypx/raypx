@@ -1,4 +1,4 @@
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { taskModel, taskPlan, taskRef } from "../../src/tasks/model.ts";

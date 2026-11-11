@@ -1,5 +1,4 @@
-import { stubEnv } from "../../tests/helpers/stubs.ts";
-import { expect, it, mock } from "bun:test";
+import { expect, it, vi } from "vite-plus/test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -39,10 +38,10 @@ it("rejects invalid recorded releases rather than inferring them from the upload
 });
 
 it("emits only public client metadata matching the release embedded in JavaScript", () => {
-  stubEnv("VITE_APP_RELEASE", "built-commit");
-  stubEnv("POSTHOG_CLI_API_KEY", "private-value");
+  vi.stubEnv("VITE_APP_RELEASE", "built-commit");
+  vi.stubEnv("POSTHOG_CLI_API_KEY", "private-value");
   const config = analyticsBuild("web");
-  const emitFile = mock((_asset: { source: string; fileName: string }) => "asset");
+  const emitFile = vi.fn((_asset: { source: string; fileName: string }) => "asset");
   config.plugin.generateBundle.call({ environment: { name: "ssr" }, emitFile });
   expect(emitFile).not.toHaveBeenCalled();
   config.plugin.generateBundle.call({ environment: { name: "client" }, emitFile });

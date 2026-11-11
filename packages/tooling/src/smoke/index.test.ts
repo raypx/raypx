@@ -1,23 +1,29 @@
-import { rejects } from "node:assert/strict";
-import { stubEnv, stubGlobal } from "../../tests/helpers/stubs.ts";
-import { beforeEach, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { workspaceFixtures } from "../../tests/helpers/workspace.ts";
 
-const run = mock(async (..._args: unknown[]) => {});
-const networkInterfaces = mock((): Record<string, unknown[]> => ({ lo: [], eth0: [] }));
-await mock.module("@raypx/runtime-node/process", () => ({ run }));
-const os = await import("node:os");
-await mock.module("node:os", () => ({ ...os, networkInterfaces }));
-await mock.module("./artifacts", () => ({ probeApi: mock(), probeWeb: mock() }));
+const { run, networkInterfaces } = vi.hoisted(() => ({
+  run: vi.fn(async (..._args: unknown[]) => {}),
+  networkInterfaces: vi.fn((): Record<string, unknown[]> => ({ lo: [], eth0: [] })),
+}));
+vi.mock("@raypx/runtime-node/process", () => ({ run }));
+vi.mock("node:os", async (original) => ({
+  ...(await original<typeof import("node:os")>()),
+  networkInterfaces,
+}));
+vi.mock("./artifacts", () => ({ probeApi: vi.fn(), probeWeb: vi.fn() }));
 const { smoke } = await import("./index.ts");
 const { fixture } = workspaceFixtures();
 
 beforeEach(() => {
   run.mockReset();
   networkInterfaces.mockReturnValue({ lo: [], eth0: [] });
-  stubGlobal("process", { ...process, platform: "linux" });
+  vi.stubGlobal("process", { ...process, platform: "linux" });
+});
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 function repository() {
@@ -34,7 +40,7 @@ function repository() {
 it("runs Linux CLI acceptance with loopback-only Docker networking and the prepared payload", async () => {
   const root = repository();
   const payload = join(root, "prepared payload");
-  stubEnv("RAYPX_CLI_PAYLOAD", payload);
+  vi.stubEnv("RAYPX_CLI_PAYLOAD", payload);
   await smoke(root, ["cli"]);
   expect(run).toHaveBeenCalledWith(
     "docker",
@@ -70,7 +76,7 @@ it("keeps an already isolated Linux namespace independent of Docker", async () =
 
 it.each(["darwin", "win32"])("retains native CLI acceptance on %s", async (platform) => {
   const root = repository();
-  stubGlobal("process", { ...process, platform });
+  vi.stubGlobal("process", { ...process, platform });
   await smoke(root, ["cli"]);
   expect(run).toHaveBeenCalledWith(process.execPath, ["run", "smoke"], join(root, "apps/cli"));
   expect(run.mock.calls.some(([command]) => command === "docker")).toBe(false);
@@ -81,11 +87,8 @@ it("fails Linux acceptance without falling back to the host when Docker fails", 
   run.mockImplementation(async (command) => {
     if (command === "docker") throw new Error("Docker unavailable");
   });
-  await rejects(smoke(root, ["cli"]), (error: unknown) => {
-    expect(error).toMatchObject({
-      errors: [expect.objectContaining({ message: "Docker unavailable" })],
-    });
-    return true;
+  await expect(smoke(root, ["cli"])).rejects.toMatchObject({
+    errors: [expect.objectContaining({ message: "Docker unavailable" })],
   });
   expect(
     run.mock.calls.some(

@@ -102,7 +102,6 @@
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.3.0",
         "@vitest/coverage-v8": "5.1.0",
-        "@xmldom/xmldom": "0.9.12",
         "@raypx-kit/devkit": "0.0.0-alpha.6",
         "@raypx-kit/email-preview": "0.0.0-alpha.4",
         "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.4",

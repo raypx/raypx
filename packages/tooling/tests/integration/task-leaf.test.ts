@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
-import { it, expect } from "bun:test";
+import { it, expect } from "vite-plus/test";
 import { runProcessSync } from "@raypx/runtime-node/process";
 import { argumentKey } from "../../src/tasks/arguments.ts";
 import { workspaceFixtures } from "../helpers/workspace.ts";

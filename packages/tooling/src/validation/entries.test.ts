@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, expect, it } from "bun:test";
+import { afterEach, expect, it } from "vite-plus/test";
 import { checkEntryConsumers } from "./entries.ts";
 import { discover } from "../repository.ts";
 

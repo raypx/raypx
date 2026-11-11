@@ -1,4 +1,4 @@
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 import { imports } from "@raypx-kit/devkit/architecture";
 import { layerViolations, type SourceNode } from "./source-layers.js";
 

@@ -61,8 +61,7 @@ bun run test '--filter=...@raypx/ui'
 Use `--package` when forwarding runner arguments to one package. Existing VP
 filters remain available for graph selections; do not combine them with `--package`.
 VP options go before `--`; filenames, reporters and other runner arguments go after.
-Package-local scripts accept arguments for their runner. Tooling uses Bun's
-runner, so use `--test-name-pattern` when filtering it by case name.
+Package-local Vitest scripts accept `--testNamePattern` for filtering by case name.
 Use the root entry with `--package` for VP controls such as `--dry-run` and `--no-cache`.
 
 Each Vitest workspace's `vitest.config.ts` merges the plain defaults from `test.config.ts`
@@ -71,8 +70,7 @@ multi-environment packages declare native `projects` and select them with `--pro
 Focused scripts name their actual test directories or projects and fail when empty.
 Coverage scripts use `--coverage`; reporters default to text, JSON and LCOV and can
 be customized in the owning workspace without changing a shared option schema.
-Tooling accepts Bun coverage flags through its own `test` script. The inventory
-audit uses Bun JUnit reports for Tooling and Vitest JSON for other workspaces.
+The inventory audit uses Vitest JSON reports from the workspace scripts.
 
 ### Browser and repository workflows
 

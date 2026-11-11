@@ -1,9 +1,5 @@
 export type TestLayer = "unit" | "component" | "integration" | "external";
 
-export function usesBunTest(script: string | undefined) {
-  return /^bun(?: --no-env-file| --no-install)* test(?:\s|$)/.test(script ?? "");
-}
-
 /** Source-adjacent suites and the separately owned integration/acceptance directories. */
 export function testSources(directory: string): string[] {
   return [

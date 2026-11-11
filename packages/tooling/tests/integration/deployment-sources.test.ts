@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { expect, it } from "bun:test";
+import { expect, it } from "vite-plus/test";
 
 const script = resolve(import.meta.dirname, "../../../../deploy/sources.ts");
 

@@ -1,8 +1,7 @@
-import { rejects } from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { it, expect } from "bun:test";
+import { it, expect } from "vite-plus/test";
 import { sealCliPayload, verifyCliPayload } from "./cli";
 it("seals signed bytes without changing identity and rejects altered, extra or linked resources", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx-payload-"));
@@ -22,21 +21,23 @@ it("seals signed bytes without changing identity and rejects altered, extra or l
     };
     await sealCliPayload(root, identity);
     expect(await verifyCliPayload(root, identity)).toMatchObject(identity);
-    await rejects(verifyCliPayload(root, { commit: "b".repeat(40) }), /commit mismatch/);
+    await expect(verifyCliPayload(root, { commit: "b".repeat(40) })).rejects.toThrow(
+      /commit mismatch/,
+    );
     await writeFile(join(root, "raypx"), "signed bytes");
-    await rejects(verifyCliPayload(root), /integrity/);
+    await expect(verifyCliPayload(root)).rejects.toThrow(/integrity/);
     await sealCliPayload(root);
     expect(await verifyCliPayload(root, identity)).toMatchObject(identity);
     await writeFile(join(root, "untracked"), "unexpected");
-    await rejects(verifyCliPayload(root), /"unexpected":\["untracked"\]/);
+    await expect(verifyCliPayload(root)).rejects.toThrow(/"unexpected":\["untracked"\]/);
     await rm(join(root, "untracked"));
     await rm(join(root, "LICENSE"));
-    await rejects(verifyCliPayload(root), /"missing":\["LICENSE"\]/);
+    await expect(verifyCliPayload(root)).rejects.toThrow(/"missing":\["LICENSE"\]/);
     await writeFile(join(root, "LICENSE"), "unsigned");
 
     if (process.platform === "win32") return;
     await symlink(join(root, "LICENSE"), join(root, "escape"), "file");
-    await rejects(verifyCliPayload(root), /regular files/);
+    await expect(verifyCliPayload(root)).rejects.toThrow(/regular files/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

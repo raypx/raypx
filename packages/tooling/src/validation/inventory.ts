@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { discover } from "../repository.js";
-import { bunReportName, readBunReport } from "./bun-test-report.js";
-import { testLayer, testSources, usesBunTest, type TestLayer } from "./test-sources.js";
+import { testLayer, testSources, type TestLayer } from "./test-sources.js";
 
 export interface CaseIdentity {
   workspace: string;
@@ -91,9 +90,8 @@ export async function collectInventory(root: string, reportNames: string[]): Pro
     cases: TestCase[] = [];
   for (const workspace of index.workspaces) {
     const directory = join(root, workspace.path);
-    const bun = usesBunTest(workspace.manifest.scripts?.test);
     const external = Boolean(
-      workspace.manifest.scripts?.e2e && !bun && !existsSync(join(directory, "vitest.config.ts")),
+      workspace.manifest.scripts?.e2e && !existsSync(join(directory, "vitest.config.ts")),
     );
     for (const file of testSources(directory))
       sources.push({
@@ -103,16 +101,13 @@ export async function collectInventory(root: string, reportNames: string[]): Pro
       });
     if (!workspace.manifest.scripts?.test) continue;
     for (const name of reportNames) {
-      const filename = bun ? bunReportName(name) : name;
-      const report = Bun.file(join(directory, "node_modules/.cache/raypx-tests", filename));
+      const report = Bun.file(join(directory, "node_modules/.cache/raypx-tests", name));
       // A workspace need not implement every focused layer.
       const layer = name.match(/-(unit|component|integration)\.json$/)?.[1];
       if (layer && !workspace.manifest.scripts[`test:${layer}`]) continue;
       if (!(await report.exists()))
-        throw new Error(`Missing report for ${workspace.manifest.name}: ${filename}`);
-      const result = record(
-        bun ? readBunReport(directory, await report.text()) : await report.json(),
-      );
+        throw new Error(`Missing report for ${workspace.manifest.name}: ${name}`);
+      const result = record(await report.json());
       if (result.success !== true || result.numFailedTests !== 0 || result.numPendingTests !== 0)
         throw new Error(`Incomplete or failed test run: ${workspace.manifest.name}`);
       let passed = 0;
