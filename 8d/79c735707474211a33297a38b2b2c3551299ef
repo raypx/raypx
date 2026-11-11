@@ -1,0 +1,20 @@
+e2e/tests/journeys/tasks/conversation-performance.ts
+  s_264de935e5c852::t_254a076e114094 129-147
+  s_264de935e5c852::t_76832200e697ef 149,153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "8d79c735707474211a33297a38b2b2c3551299ef",
+  "prompts": {},
+  "sessions": {
+    "s_264de935e5c852": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a9ea-3c3e-7372-a0d1-bdf7fbb4f216",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
