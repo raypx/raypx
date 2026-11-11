@@ -282,8 +282,8 @@ function ShellContents<To extends string>({
       <a
         href="#main"
         className={cn(
-          "fixed left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0",
-          windowed ? "top-[max(0.5rem,var(--mygo-titlebar-height,0px))]" : "top-2",
+          "fixed top-0 left-2 z-30 -translate-y-full bg-foreground px-4 py-2 text-background focus:translate-y-0",
+          windowed ? "focus:top-[max(0.5rem,var(--mygo-titlebar-height,0px))]" : "focus:top-2",
         )}
       >
         {c("skipNavigation")}

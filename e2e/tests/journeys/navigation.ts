@@ -37,6 +37,21 @@ export function registerTests() {
       }),
     );
     await page.goto(`${base}${surface === "Web" ? "/projects" : "/"}`);
+    await test.step("shows the skip link only on keyboard focus", async () => {
+      if (surface === "Desktop")
+        await page.evaluate(() => {
+          document.documentElement.style.setProperty("--mygo-titlebar-height", "40px");
+        });
+      const skip = page.getByRole("link", { name: "Skip navigation", exact: true });
+      await expect(skip).toBeAttached();
+      await expect(skip).not.toBeInViewport();
+      await page.keyboard.press("Tab");
+      await expect(skip).toBeFocused();
+      await expect(skip).toBeInViewport({ ratio: 1 });
+      if (surface === "Desktop") expect((await skip.boundingBox())!.y).toBe(40);
+      await page.keyboard.press("Tab");
+      await expect(skip).not.toBeInViewport();
+    });
     const sidebar = page.getByRole("complementary");
     const navigation = sidebar.getByRole("navigation", { name: "Raypx", exact: true });
     const workspace = navigation.getByRole("group", { name: "Workspace", exact: true });
