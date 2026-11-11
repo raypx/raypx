@@ -126,14 +126,31 @@ export function registerTests() {
         element.scrollTop = element.scrollHeight / 2;
       });
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      // Keep the link's identity stable while the virtual range changes.
-      const href = await viewport.locator("a").first().getAttribute("href");
-      expect(href).toBeTruthy();
+      // Wait for the new virtual range, then choose and focus a link in one browser turn.
+      let href: string | null = null;
+      await expect
+        .poll(async () => {
+          href = await viewport.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            const visible = [...element.querySelectorAll<HTMLAnchorElement>("a[href]")].find(
+              (anchor) => {
+                const rect = anchor.getBoundingClientRect();
+                return rect.top >= bounds.top && rect.bottom <= bounds.bottom;
+              },
+            );
+            if (!visible) return null;
+            visible.focus({ preventScroll: true });
+            return document.activeElement === visible ? visible.getAttribute("href") : null;
+          });
+          return href;
+        })
+        .toBeTruthy();
       const link = viewport.locator(`a[href="${href}"]`);
-      await link.evaluate((element) => element.focus({ preventScroll: true }));
+      await expect(link).toBeFocused();
       await viewport.evaluate((element) => {
         element.scrollTop += element.clientHeight * 2;
       });
+      await expect(link).not.toBeInViewport();
       await expect(link).toBeFocused();
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
       await viewport.focus();
