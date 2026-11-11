@@ -243,8 +243,8 @@ export class DaemonControl {
     this.controls.set(key, control);
     return control;
   }
-  private async grant(binding: HostBinding, signal: AbortSignal) {
-    const authorization = await abortable(signal, () => this.vault.get(binding));
+  private async grant(binding: HostBinding, signal: AbortSignal, supplied?: HostAuthorization) {
+    const authorization = supplied ?? (await abortable(signal, () => this.vault.get(binding)));
     if (!authorization || Date.parse(authorization.expiresAt) <= Date.now())
       throw Object.assign(
         new LocalError("AUTH_REQUIRED", "Authorize this daemon again in Desktop"),
@@ -346,22 +346,47 @@ export class DaemonControl {
       epoch: authorization.epoch,
       expiresAt: authorization.expiresAt,
     };
-    const persistent = await abortable(signal, () => this.vault.set(binding, authorization));
-    const grant = await this.grant(binding, signal);
-    if (this.closing || signal.aborted)
-      throw new LocalError("AUTH_REQUIRED", "Account selection changed");
     const previous = this.current;
-    if (previous && remoteBinding(previous) !== remoteBinding(binding)) await this.detachCurrent();
+    const prior =
+      previous && remoteBinding(previous) === remoteBinding(binding) ? previous : binding;
+    const priorAuthorization = await this.vault.get(prior);
+    const grant = await this.grant(binding, signal, authorization);
     signal.throwIfAborted();
-    this.apply({ type: "bound", binding, persistent });
-    this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
-    writeJson(join(this.directory, "host-binding.json"), binding);
-    const control = this.control(scope);
-    await abortable(signal, () => control.enable(scope.accountId, true));
-    signal.throwIfAborted();
-    this.attachTerminal(binding);
-    await control.attach(scope.accountId, scope.apiUrl, grant, this.bindingScope.signal);
-    return this.info(scope);
+    let wrote = false;
+    try {
+      // Consume the write even after cancellation; a late adapter write must be rolled back.
+      wrote = true;
+      const persistent = await this.vault.set(binding, authorization);
+      signal.throwIfAborted();
+      if (this.closing) throw new LocalError("CLOSING", "Daemon is stopping");
+      if (previous && remoteBinding(previous) !== remoteBinding(binding))
+        await this.detachCurrent();
+      const control = this.control(scope);
+      await abortable(signal, () => control.enable(scope.accountId, true));
+      signal.throwIfAborted();
+      writeJson(join(this.directory, "host-binding.json"), binding);
+      this.apply({ type: "bound", binding, persistent });
+      this.attachTerminal(binding);
+      await control.attach(scope.accountId, scope.apiUrl, grant, this.bindingScope.signal);
+      signal.throwIfAborted();
+      this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
+      return this.info(scope);
+    } catch (error) {
+      try {
+        if (this.current === binding) {
+          this.apply({ type: "unbound" });
+          this.terminal.detachCloud();
+          rmSync(join(this.directory, "host-binding.json"), { force: true });
+          await this.control(scope).detach();
+        }
+      } finally {
+        if (wrote && (await this.vault.get(binding))?.credential === authorization.credential) {
+          if (priorAuthorization) await this.vault.set(prior, priorAuthorization);
+          else await this.vault.remove(binding);
+        }
+      }
+      throw error;
+    }
   }
   private async detachCurrent() {
     clearTimeout(this.retry);
@@ -438,7 +463,14 @@ export class DaemonControl {
   /** A new Desktop origin retires a previous cloud binding even after the GUI was closed. */
   async selectDesktopOrigin(apiUrl: string) {
     const origin = serverOrigin(apiUrl);
-    const selected = this.selection();
+    let selected: Selection | undefined;
+    try {
+      selected = this.selection();
+    } catch {
+      // Corrupt selection is never evidence for restoring cloud authority.
+      await this.request("host.session", { accountId: null, apiUrl: origin });
+      return;
+    }
     if (
       (this.current && this.current.apiUrl !== origin) ||
       (selected && selected.apiUrl !== origin)

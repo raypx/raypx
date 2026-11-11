@@ -136,9 +136,21 @@ both canonical native-data and CLI-profile directories. Native sends it only via
 finite stdin and private daemon IPC; credentials never enter TOML or renderer
 storage. Key creation is allowed only when the profile has no stored sessions.
 Missing keys or unreadable ciphertext preserve rows and permit memory-only sign-in.
-A failed write disables transport until an explicit `raypx daemon restart` for
-that profile. Session-only cookies remain in memory; persistent cookies honor
-expiry and sign-out. Unsupported formats fail without conversion.
+Each bootstrap retries an available native key. A temporary login or logout wins
+over old stored cookies once the key validates; an incorrect key cannot overwrite
+encrypted rows. A failed write disables that session transport until recovery.
+Session-only cookies remain in memory; persistent cookies honor expiry and
+sign-out. Unsupported formats fail without conversion.
+
+Settings → Recover saved sign-in opens the native Retry / Reset / Cancel dialog.
+Retry bootstraps again even when the engine is ready. Reset requires a second
+confirmation and clears saved sign-ins for every server origin in this profile:
+native saves a new key first, then the daemon transaction clears only its session
+table, invalidates cached APIs and reboots the channel. Failures report failure
+and can be retried. Projects, tasks, enrollment identity, preferences and the
+independent Host authorization vault are preserved. A corrupt `host-session.json`
+cannot restore cloud authority; normal account selection rewrites it while local
+Desktop recovery remains available.
 
 The previous Go session database, its key namespace and other historical credential
 stores are never read, imported or deleted. Signed offline enrollment, device-owned
@@ -147,7 +159,9 @@ the affected remote binding without transferring the profile.
 
 ## Desktop daemon channel
 
-[ADR 0052](../architecture/0052-daemon-desktop-channel.md) defines the boundary.
+[ADR 0052](../architecture/0052-daemon-desktop-channel.md) defines the boundary;
+[ADR 0054](../architecture/0054-desktop-execution-recovery.md) defines execution
+ownership and recovery.
 Go launches the absolute version-matched CLI with finite `daemon desktop` bootstrap.
 Administrative IPC stays private (Unix socket on POSIX; token-guarded loopback on
 Windows). It returns a distinct narrow native capability; the administrative token
@@ -158,15 +172,37 @@ The renderer receives a one-use capability and connects directly to a separate
 `127.0.0.1` WebSocket listener. Exact Host and the owned WebView/dev Origin are
 required; `Origin: null` is rejected. Authentication is the first frame, with no
 capability in the URL. Protocol, frames, pending work, event bytes and unacknowledged
-sequence deadlines are bounded. Events are sent within a one-MiB credit window; the
-renderer ACKs a stream/sequence after dispatch and each ACK covers every earlier
-event. Replacement or disconnect cancels HTTP, tools, PTYs and UI approval leases;
-accepted durable Agent tasks keep running. Native binding heartbeats expire after
-20 seconds if the GUI disappears. That lease counts only time the daemon was running,
-so a suspended computer does not retire the binding. A native operation the daemon
-rejects returns its error code as data; only a refused capability is a 403, and only a
-refusal or transport failure makes the host bootstrap again. Signing in or up through
-the API proxy clears the page's verified account without detaching the daemon; an
+sequence deadlines are bounded. Events use a one-MiB credit window; ACKs must
+identify a sent stream/sequence and cover all earlier events after dispatch.
+Disconnect, overflow, ACK timeout, binding expiry and rebootstrap release
+HTTP requests and UI approval leases while accepted tools and PTYs keep running.
+Native binding heartbeats expire after 20 seconds of awake time if the GUI
+disappears; suspension does not retire a binding. Explicit GUI Quit stops that
+native owner's tools and terminals across all origins, using
+management IPC if the binding has expired. Agent tasks keep their durable lifecycle;
+explicit execution cancellation, deadlines and daemon stop still terminate work.
+
+Execution ownership combines native owner, origin and enrolled identity. Renderer
+queries and process control cannot select or cross that scope. Switching origin
+preserves old processes; switching back restores their control. `execution_list`
+returns summaries, `execution_result` reads a retained tool result, and
+`terminal_restore` sends Herdr's current screen plus bounded history (1,000 lines,
+4 MiB). Completed results retain at most 64 entries / 8 MiB, with explicit errors
+after eviction. The terminal page disables input during disconnect, restores its
+ID on ready and offers existing terminals after reload. Input and execution
+commands are never automatically resent; daemon restart does not rerun them.
+
+Bootstrap is serialized and validates runtime/session preparation before retiring
+the old binding. Native also retains its previous descriptor on failure. Directory
+registration has a 30-second context, ordinary control four seconds and Quit
+release two seconds. Business errors, caller cancellation and deadlines preserve
+host availability; transport failures and refused capabilities change it. Idle
+persisted origin APIs are evicted; memory-only sign-ins are retained until
+recovery, logout or daemon exit.
+Event fan-out encodes once and queues the final frame with its UTF-8 byte size;
+the 8 MiB budget includes the complete envelope and keeps exact ACK semantics.
+
+Signing in or up clears the page's verified account without detaching the daemon;
 explicit sign-out or a different verified account revokes the Host binding.
 
 The daemon derives renderer method admission from `localResults` and RPC admission
@@ -183,6 +219,11 @@ SQLite/key isolation, account races and loopback lifetime. Go tests cover finite
 subprocess/IPC, OS locks and explicit compiled CLI integration. Packaged WKWebView
 and WebView2 Origin/mixed-content, OS vault, tray and GUI behavior remain separate
 platform acceptance gates; headless success does not establish those results.
+The gateway's real PTY lifetime matrix runs when `RAYPX_HERDR_BINARY` and
+`RAYPX_CLI_BINARY` point at an inventory-verified prepared payload; otherwise those
+seven cases are skipped. `RAYPX_HERDR_COMPILED=1 bun run --cwd apps/cli smoke:herdr-terminal`
+also checks bounded history, current-screen restoration, resumed input and
+descendant cleanup using the prepared CLI helpers.
 
 ## Build and release
 

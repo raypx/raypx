@@ -80,11 +80,18 @@ async function readBody(response: Response, signal: AbortSignal) {
 export class DesktopApi {
   private readonly requests = new Map<string, AbortController>();
   private active = 0;
+  private readonly lifetime = new AbortController();
   constructor(
     readonly cookies: SessionCookies,
     private readonly fetch: Fetch = (request) =>
       globalThis.fetch(request, { redirect: "manual", credentials: "omit" }),
   ) {}
+  get idle() {
+    return this.active === 0;
+  }
+  close() {
+    this.lifetime.abort();
+  }
   cancel(client: string, id: string) {
     this.requests.get(`${client}:${id}`)?.abort();
     return true;
@@ -126,7 +133,12 @@ export class DesktopApi {
     if (this.active >= 128 || (key && this.requests.has(key)))
       throw new LocalError("API_BUSY", "API transport busy or duplicate identity");
     const controller = new AbortController();
-    const signal = AbortSignal.any([controller.signal, parent, AbortSignal.timeout(30_000)]);
+    const signal = AbortSignal.any([
+      controller.signal,
+      parent,
+      this.lifetime.signal,
+      AbortSignal.timeout(30_000),
+    ]);
     signal.throwIfAborted();
     if (key) this.requests.set(key, controller);
     this.active++;

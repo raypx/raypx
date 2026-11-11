@@ -17,10 +17,17 @@ and canonical CLI profile directory. Create only when the daemon reports no
 stored sessions in the entire profile. An unavailable key permits memory-only
 sign-in; keys travel through stdin/private IPC only. Never read, import, modify
 or delete the old Go session database or its vault namespace.
+Retry bootstrap even while ready, retaining the old client until validation.
+Only native-confirmed recovery resets the key and all origins' Desktop sessions;
+verify key storage before the session-table transaction. Keep Host vault intact.
 
 Preserve native data paths, the exclusive `desktop-instance.sqlite` lock and
 atomic preference writes. Private paths use POSIX permissions or inheritable
 Windows DACLs. GUI Quit releases UI capabilities, preserving daemon Agent work.
+Its private owner ID also cleans all owned tools/terminals across origins, with
+administrative fallback after capability expiry. Rebootstrap/connection release
+preserves execution. Request contexts own deadlines; only transport failures
+change availability, never business errors, cancellation or timeout.
 Desktop injects NativeClient through Options; no Go event queue or business schema.
 
 Source-adjacent tests cover native admission; tests/native/host covers finite

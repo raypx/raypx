@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint.ts";
+import {
+  connectDaemon,
+  daemonFetch,
+  readDaemon,
+  type ProfileOptions,
+} from "../runtime/daemon/endpoint.ts";
+import { profilePath } from "../runtime/state/index.ts";
 import { LocalError } from "../runtime/errors.ts";
 
 /** Finite native bootstrap; sensitive input is stdin-only and administrative tokens stay here. */
@@ -18,7 +24,10 @@ export async function bootstrapDesktop(options: ProfileOptions) {
   } catch {
     throw new LocalError("INVALID_INPUT", "Invalid Desktop bootstrap");
   }
-  const endpoint = await connectDaemon(options);
+  const release = z.object({ action: z.literal("release") }).safeParse(input);
+  const endpoint = release.success
+    ? readDaemon(profilePath(options))
+    : await connectDaemon(options);
   const response = await daemonFetch(endpoint, "/desktop", input, AbortSignal.timeout(30_000));
   if (!response.ok) throw new LocalError("HOST_UNAVAILABLE", "Desktop bootstrap unavailable");
   const envelope = z

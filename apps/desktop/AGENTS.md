@@ -77,6 +77,9 @@ the underlying IPC is not cancelled. Native loaders never run during preloading 
 using the selected project's directory. Custom executable, arguments and directory
 stay in advanced options; an unavailable project never falls back to another directory.
 The daemon resolves and validates the shell, not the renderer's platform hints.
+Keep terminal IDs and disable input during outages; restore on ready and offer
+existing scoped terminals after reload. Leaving the page does not cancel accepted
+execution. Only explicit stop/GUI Quit ends it; never resend commands or input.
 
 ## Ownership
 
@@ -144,6 +147,9 @@ without repeating web sign-out or dropping the device identity.
   directories in the new `raypx-desktop-session-v1-` namespace. Never read/import/
   delete old Go session stores or keys. Missing keys preserve rows and allow memory
   sign-in. `local_profile` selects the CLI profile explicitly (default `default`).
+  Every rebootstrap retries the key. Settings recovery uses native Retry/Reset/Cancel;
+  only native-confirmed reset may replace the key and clear all origins' sessions.
+  Preserve independent Host credentials and all non-session profile data.
 - Renderer uses a separate bounded loopback WebSocket with one-use capability,
   exact owned Origin/Host and first-frame authentication. Go holds a distinct narrow
   native capability; no business/API proxy or event queue. Native bootstrap remains

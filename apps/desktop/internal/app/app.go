@@ -103,6 +103,7 @@ func Run(bundled fs.FS) error {
 				SessionKey: func(profile string, create bool) ([]byte, error) {
 					return loadSessionKey(directory, profile, create)
 				},
+				ResetSessionKey: func(profile string) ([]byte, error) { return resetSessionKey(directory, profile) },
 			})
 			if err != nil {
 				if interactive() {
@@ -145,6 +146,14 @@ func Run(bundled fs.FS) error {
 				return
 			}
 			desktop.UI = &nativeUI{window: window}
+			var recovery sync.Mutex
+			desktop.RecoverSession = func() bool {
+				if quitting.Load() || !recovery.TryLock() {
+					return false
+				}
+				defer recovery.Unlock()
+				return recoverDesktopSession(window, desktop)
+			}
 			show := func() {
 				if quitting.Load() {
 					return
@@ -269,7 +278,7 @@ func Run(bundled fs.FS) error {
 			}
 			go func() {
 				if desktop.Start() && desktop.Client.Status()["sessionRecovery"] == "temporary" && interactive() && !quitting.Load() {
-					_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: window, Title: "Raypx", Message: "Sign in again if your saved session is unavailable. / 登录存储不可用时，请重新登录。"})
+					desktop.RecoverSession()
 				}
 			}()
 			go func() {

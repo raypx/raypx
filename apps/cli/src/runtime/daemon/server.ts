@@ -93,13 +93,14 @@ export async function startDaemon(
     }
   };
   const emit = (event: LocalEvent) => {
-    desktop?.emit(event);
+    const encoded = JSON.stringify(event);
+    desktop?.emit(event, encoded);
     if (
       (event.event === "terminal.exit" || event.event === "tool.finished") &&
       typeof event.data.id === "string"
     )
       for (const client of clients.values()) client.children.delete(event.data.id);
-    const bytes = encoder.encode(JSON.stringify(event) + "\n");
+    const bytes = encoder.encode(encoded + "\n");
     for (const [id, client] of clients) {
       if ((client.stream.desiredSize ?? 0) < 0) {
         releaseClient(id);

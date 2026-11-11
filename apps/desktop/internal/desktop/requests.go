@@ -66,12 +66,17 @@ func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, 
 			return nil, errors.New("Invalid directory selection")
 		}
 		return d.Client.Native(ctx, JSON{"action": "pick", "path": path})
+	case "recover_session":
+		if d.RecoverSession == nil {
+			return nil, errors.New("Session recovery unavailable")
+		}
+		return d.RecoverSession(), nil
 	case "restart_engine":
 		var ok bool
 		if input["replaceOwner"] == true {
 			ok = d.Client.ReplaceOwner()
 		} else {
-			ok = d.Client.Start()
+			ok = d.Client.Refresh()
 		}
 		d.UpdateLease()
 		return ok, nil

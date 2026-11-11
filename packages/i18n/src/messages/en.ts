@@ -749,6 +749,7 @@ export default {
     },
   },
   settings: {
+    recoverSignIn: "Recover saved sign-in",
     accountScope: "Account-wide",
     unsavedChanges: "Unsaved changes",
     search: "Search settings",
@@ -1100,6 +1101,8 @@ export default {
     invalidArguments: "Enter a JSON array of strings.",
   },
   terminal: {
+    resume: "Resume terminal",
+    disconnected: "Connection lost",
     openDefault: "Open terminal in this project",
     advanced: "Advanced options",
     defaultShell: "Use system default shell",

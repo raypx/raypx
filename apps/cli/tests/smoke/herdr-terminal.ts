@@ -148,6 +148,35 @@ try {
     }
     await sleep(10);
   }
+  const restoreStart = events.length;
+  await host.restore(interactive.id);
+  const restored = events.slice(restoreStart).filter((event) => event.data.id === interactive.id);
+  assert(
+    restored.some(
+      (event) =>
+        event.event === "terminal.output" &&
+        event.data.frame === false &&
+        Buffer.from(String(event.data.data), "base64").toString().includes(expected),
+    ),
+    "Restoration must include bounded terminal history",
+  );
+  assert(
+    restored.some(
+      (event) =>
+        event.event === "terminal.output" &&
+        event.data.frame === true &&
+        event.data.full === true &&
+        event.data.preserveScrollback === true,
+    ),
+    "Restoration must include the current screen without clearing restored history",
+  );
+  await host.input(interactive.id, Buffer.from("after-recovery").toString("base64"));
+  const recoveryDeadline = Date.now() + 5000;
+  while (!output(interactive.id).includes("after-recovery")) {
+    if (Date.now() > recoveryDeadline) throw new Error("Restored terminal did not accept input");
+    await sleep(10);
+  }
+  console.log("Herdr bounded history, current screen and restored input passed");
   host.cancel(interactive.id);
   await settled(interactive.id);
   assert(

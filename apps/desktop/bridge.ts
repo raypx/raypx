@@ -1,14 +1,16 @@
 import type { AnalyticsConsent } from "@raypx/analytics";
-import type { LocalMethod, RootGrant } from "@raypx/contracts/local";
+import type { LocalMethod, RootGrant, ToolResult } from "@raypx/contracts/local";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DevicePreferences } from "./preferences";
 import type { DesktopApiRequest, DesktopApiResponse } from "./api";
+import type { DesktopExecution } from "@raypx/contracts/desktop";
 
 interface EngineStatus {
   status: "starting" | "ready" | "error";
   message?: string;
   code?: string;
+  sessionRecovery?: "temporary" | null;
 }
 export interface DesktopRuntime {
   appVersion: string;
@@ -39,9 +41,17 @@ export const DESKTOP_METHODS = {
   getAnalyticsPreferences: "get_analytics_preferences",
   saveAnalyticsPreferences: "save_analytics_preferences",
   savePreferences: "save_preferences",
+  executionList: "execution_list",
+  executionResult: "execution_result",
+  terminalRestore: "terminal_restore",
+  recoverSession: "recover_session",
 } as const;
 
 type DesktopRequests = {
+  executionList: { params: Record<string, never>; response: DesktopExecution[] };
+  executionResult: { params: { id: string }; response: ToolResult };
+  terminalRestore: { params: { id: string }; response: { accepted: true } };
+  recoverSession: { params: Record<string, never>; response: boolean };
   openExternal: { params: { url: string }; response: boolean };
   apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
   apiCancel: { params: { id: string }; response: boolean };

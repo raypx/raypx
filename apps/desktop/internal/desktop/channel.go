@@ -3,7 +3,9 @@ package desktop
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -21,10 +23,13 @@ const LineLimit = 8 * 1024 * 1024
 const bootstrapLimit = 64 * 1024
 
 type SessionKey func(profileDirectory string, create bool) ([]byte, error)
+type SessionReset func(profileDirectory string) ([]byte, error)
 type NativeClient interface {
 	Status() JSON
 	Features() JSON
 	Start() bool
+	Refresh() bool
+	ResetSessions() bool
 	ReplaceOwner() bool
 	Channel(context.Context) (any, error)
 	Native(context.Context, JSON) (any, error)
@@ -50,6 +55,8 @@ type DaemonClient struct {
 	config     Config
 	pageOrigin string
 	key        SessionKey
+	resetKey   SessionReset
+	ownerId    string
 	lifetime   context.Context
 	cancel     context.CancelFunc
 	start      sync.Mutex
@@ -62,7 +69,11 @@ type DaemonClient struct {
 
 func NewDaemonClient(cli CLIConfig, config Config, pageOrigin string, key SessionKey) *DaemonClient {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &DaemonClient{cli: cli, config: config, pageOrigin: pageOrigin, key: key, lifetime: ctx, cancel: cancel, status: JSON{"status": "starting"}, features: JSON{"localTerminalApprovals": false}}
+	owner := make([]byte, 32)
+	if _, err := rand.Read(owner); err != nil {
+		panic("native owner identity unavailable")
+	}
+	return &DaemonClient{ownerId: hex.EncodeToString(owner), cli: cli, config: config, pageOrigin: pageOrigin, key: key, lifetime: ctx, cancel: cancel, status: JSON{"status": "starting"}, features: JSON{"localTerminalApprovals": false}}
 }
 func (c *DaemonClient) Status() JSON   { c.mu.Lock(); defer c.mu.Unlock(); return clone(c.status) }
 func (c *DaemonClient) Features() JSON { c.mu.Lock(); defer c.mu.Unlock(); return clone(c.features) }
@@ -151,20 +162,54 @@ func (c *DaemonClient) Start() bool {
 	}
 	return c.startLocked()
 }
+func (c *DaemonClient) Refresh() bool {
+	c.start.Lock()
+	defer c.start.Unlock()
+	return c.startLocked()
+}
+func (c *DaemonClient) ResetSessions() bool {
+	c.start.Lock()
+	defer c.start.Unlock()
+	if c.resetKey == nil || c.lifetime.Err() != nil {
+		return false
+	}
+	var prepare struct {
+		Profile string `json:"profileDirectory"`
+	}
+	if c.bootstrap(JSON{"action": "prepare", "apiUrl": c.config.APIURL}, &prepare) != nil || !filepath.IsAbs(prepare.Profile) {
+		return false
+	}
+	key, err := c.resetKey(prepare.Profile)
+	if err != nil || len(key) != 32 {
+		return false
+	}
+	var result struct {
+		Reset bool `json:"reset"`
+	}
+	if c.bootstrap(JSON{"action": "reset_sessions", "key": base64.StdEncoding.EncodeToString(key)}, &result) != nil || !result.Reset {
+		c.fail("SESSION_STORAGE_UNAVAILABLE")
+		return false
+	}
+	return c.startLocked()
+}
 func (c *DaemonClient) startLocked() bool {
 	if c.lifetime.Err() != nil {
 		return false
 	}
-	c.release()
 	c.mu.Lock()
-	c.status = JSON{"status": "starting"}
+	previous, previousClient := c.binding, c.client
+	if previous == nil {
+		c.status = JSON{"status": "starting"}
+	}
 	c.mu.Unlock()
 	fail := func(err error) bool {
 		code := err.Error()
 		if !machineCode.MatchString(code) {
 			code = "HOST_UNAVAILABLE"
 		}
-		c.fail(code)
+		if previous == nil {
+			c.fail(code)
+		}
 		return false
 	}
 	var prepare struct {
@@ -177,7 +222,7 @@ func (c *DaemonClient) startLocked() bool {
 	if !filepath.IsAbs(prepare.Profile) {
 		return fail(errors.New("INVALID_BOOTSTRAP"))
 	}
-	input := JSON{"action": "bootstrap", "protocol": 1, "apiUrl": c.config.APIURL, "pageOrigin": c.pageOrigin, "configDirs": c.config.Directories}
+	input := JSON{"action": "bootstrap", "protocol": 1, "ownerId": c.ownerId, "apiUrl": c.config.APIURL, "pageOrigin": c.pageOrigin, "configDirs": c.config.Directories}
 	if c.config.Directories == nil {
 		delete(input, "configDirs")
 	}
@@ -197,19 +242,26 @@ func (c *DaemonClient) startLocked() bool {
 	if (address.Socket == "") == (address.Port == 0) || address.Port < 0 || address.Port > 65535 || (address.Socket != "" && (!filepath.IsAbs(address.Socket) || len(address.Socket) > 104)) {
 		return fail(errors.New("INVALID_BOOTSTRAP"))
 	}
-	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, ResponseHeaderTimeout: 3 * time.Second}
+	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, DialContext: (&net.Dialer{Timeout: 3 * time.Second}).DialContext}
 	if address.Socket != "" {
 		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, "unix", address.Socket)
+			return (&net.Dialer{Timeout: 3 * time.Second}).DialContext(ctx, "unix", address.Socket)
 		}
 	}
-	client := &http.Client{Transport: transport, Timeout: 4 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	client := &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	if c.lifetime.Err() != nil {
+		client.CloseIdleConnections()
+		return false
+	}
 	c.mu.Lock()
 	c.binding = &next
 	c.client = client
 	c.features = next.Features
 	c.status = JSON{"status": "ready", "sessionRecovery": next.Recovery}
 	c.mu.Unlock()
+	if previousClient != nil {
+		previousClient.CloseIdleConnections()
+	}
 	if c.lifetime.Err() != nil {
 		c.release()
 		return false
@@ -217,7 +269,11 @@ func (c *DaemonClient) startLocked() bool {
 	return true
 }
 func (c *DaemonClient) Native(parent context.Context, input JSON) (any, error) {
-	ctx, cancel := context.WithTimeout(parent, 4*time.Second)
+	timeout := 4 * time.Second
+	if input["action"] == "pick" {
+		timeout = 30 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
 	stop := context.AfterFunc(c.lifetime, cancel)
 	defer stop()
@@ -228,8 +284,9 @@ func (c *DaemonClient) Native(parent context.Context, input JSON) (any, error) {
 		return nil, errors.New("HOST_UNAVAILABLE")
 	}
 	result, err := nativeRequest(ctx, client, current, input)
-	var operation *NativeError
-	if err != nil && !errors.As(err, &operation) && parent.Err() == nil && c.lifetime.Err() == nil {
+	var transportFailure *nativeTransportError
+	var refused *nativeCapabilityError
+	if (errors.As(err, &transportFailure) || errors.As(err, &refused)) && parent.Err() == nil && c.lifetime.Err() == nil {
 		c.mu.Lock()
 		if c.binding == current {
 			c.status = JSON{"status": "error", "code": "HOST_UNAVAILABLE"}
@@ -238,6 +295,12 @@ func (c *DaemonClient) Native(parent context.Context, input JSON) (any, error) {
 	}
 	return result, err
 }
+
+type nativeTransportError struct{}
+type nativeCapabilityError struct{}
+
+func (*nativeTransportError) Error() string  { return "HOST_UNAVAILABLE" }
+func (*nativeCapabilityError) Error() string { return "HOST_UNAVAILABLE" }
 func nativeRequest(ctx context.Context, client *http.Client, current *binding, input JSON) (any, error) {
 	data, err := json.Marshal(input)
 	if err != nil || len(data) > bootstrapLimit {
@@ -255,14 +318,20 @@ func nativeRequest(ctx context.Context, client *http.Client, current *binding, i
 	req.Header.Set("Content-Type", "application/json")
 	response, err := client.Do(req)
 	if err != nil {
-		return nil, errors.New("HOST_UNAVAILABLE")
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, &nativeTransportError{}
 	}
 	defer response.Body.Close()
-	if response.StatusCode != 200 {
-		return nil, errors.New("HOST_UNAVAILABLE")
-	}
 	raw, err := io.ReadAll(io.LimitReader(response.Body, bootstrapLimit+1))
-	if err != nil || len(raw) > bootstrapLimit {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	if err != nil {
+		return nil, &nativeTransportError{}
+	}
+	if len(raw) > bootstrapLimit {
 		return nil, errors.New("INVALID_NATIVE_RESPONSE")
 	}
 	var envelope struct {
@@ -272,11 +341,20 @@ func nativeRequest(ctx context.Context, client *http.Client, current *binding, i
 		} `json:"error"`
 	}
 	if json.Unmarshal(raw, &envelope) != nil {
+		if response.StatusCode == http.StatusForbidden {
+			return nil, &nativeCapabilityError{}
+		}
 		return nil, errors.New("INVALID_NATIVE_RESPONSE")
 	}
 	if envelope.Error != nil {
 		if machineCode.MatchString(envelope.Error.Code) {
 			return nil, &NativeError{Code: envelope.Error.Code}
+		}
+		return nil, errors.New("INVALID_NATIVE_RESPONSE")
+	}
+	if response.StatusCode != http.StatusOK {
+		if response.StatusCode == http.StatusForbidden {
+			return nil, &nativeCapabilityError{}
 		}
 		return nil, errors.New("INVALID_NATIVE_RESPONSE")
 	}
@@ -301,9 +379,20 @@ func (c *DaemonClient) release() {
 	c.binding = nil
 	c.client = nil
 	c.mu.Unlock()
+	if current == nil || client == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_, _ = finiteCLI(ctx, c.cli, []string{"daemon", "desktop", "--json"}, JSON{"action": "release", "ownerId": c.ownerId})
+		return
+	}
 	if current != nil && client != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		_, _ = nativeRequest(ctx, client, current, JSON{"action": "release"})
+		nativeContext, cancelNative := context.WithTimeout(ctx, time.Second)
+		_, err := nativeRequest(nativeContext, client, current, JSON{"action": "quit"})
+		cancelNative()
+		if err != nil {
+			_, _ = finiteCLI(ctx, c.cli, []string{"daemon", "desktop", "--json"}, JSON{"action": "release", "ownerId": c.ownerId})
+		}
 		cancel()
 		client.CloseIdleConnections()
 	}

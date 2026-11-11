@@ -129,7 +129,13 @@ export class ProcessRuntime {
       this.completions.delete(completion);
     }
   }
-  async terminal(input: Parameters<typeof terminalCommand>[0], cols: number, rows: number) {
+  async terminal(
+    input: Parameters<typeof terminalCommand>[0],
+    cols: number,
+    rows: number,
+    id?: string,
+    signal?: AbortSignal,
+  ) {
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
     const command = await terminalCommand(input, this.environment());
     await this.validate(command);
@@ -139,7 +145,14 @@ export class ProcessRuntime {
       this.terminalHost,
     ).then((binary) => (this.herdr = new HerdrTerminalHost(binary, this.emit, this.environment))));
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
-    return host.open(command, cols, rows);
+    signal?.throwIfAborted();
+    const result = await host.open(command, cols, rows, id);
+    if (signal?.aborted) host.cancel(result.id);
+    return result;
+  }
+  restore(id: string) {
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.restore(id);
   }
   input(id: string, data: string) {
     if (Buffer.byteLength(data, "base64") > 64 * 1024)

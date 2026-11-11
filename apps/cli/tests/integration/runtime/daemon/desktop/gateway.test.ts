@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vite-plus/test";
 import {
   mkdtempSync,
   mkdirSync,
@@ -18,6 +18,9 @@ import { localFetch, type LocalAddress } from "../../../../../src/runtime/local-
 import { readTerminalEndpoint, terminalFetch } from "../../../../../src/runtime/terminal/host.ts";
 import type { ObservedProjection } from "@raypx/contracts/terminal";
 
+import { AwakeClock } from "../../../../../src/runtime/daemon/awake-clock.ts";
+import { HerdrTerminalHost } from "../../../../../src/runtime/process/herdr.ts";
+
 const pageOrigin = `mygo://${"a".repeat(32)}`;
 type Packet = {
   type: string;
@@ -30,10 +33,11 @@ type Packet = {
 };
 const cleanups: (() => unknown)[] = [];
 afterEach(async () => {
+  vi.restoreAllMocks();
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
 
-async function fixture(agent = false, enrolled = true) {
+async function fixture(agent = false, enrolled = true, initial: Record<string, unknown> = {}) {
   const dataDir = mkdtempSync(join(tmpdir(), "raypx-desktop-gateway-"));
   cleanups.push(() => rmSync(dataDir, { recursive: true, force: true }));
   const project = join(dataDir, "project"),
@@ -56,6 +60,7 @@ async function fixture(agent = false, enrolled = true) {
   async function bootstrap(extra: Record<string, unknown> = {}) {
     const response = await daemonFetch(host.endpoint, "/desktop", {
       action: "bootstrap",
+      ownerId: "d".repeat(64),
       protocol: 1,
       apiUrl,
       pageOrigin,
@@ -69,7 +74,7 @@ async function fixture(agent = false, enrolled = true) {
     expect(envelope.error).toBeUndefined();
     return envelope.result;
   }
-  const descriptor = await bootstrap();
+  const descriptor = await bootstrap(initial);
   async function native(action: Record<string, unknown>) {
     const response = await localFetch(descriptor.nativeAddress, "/desktop/native", {
       method: "POST",
@@ -454,6 +459,7 @@ it("uses a finite stdin bootstrap without returning the daemon administrative cr
   await child.stdin.write(
     JSON.stringify({
       action: "bootstrap",
+      ownerId: "d".repeat(64),
       protocol: 1,
       apiUrl: "https://api.example.test",
       pageOrigin,
@@ -495,7 +501,7 @@ it("revokes a different persisted origin even if the previous native binding was
   });
 });
 
-it("cancels page-owned tools on disconnect and reconnects to the same daemon", async () => {
+it("preserves accepted tools on disconnect and reconnects to the same daemon", async () => {
   const { descriptor, project, native } = await fixture();
   const peer = await connect(descriptor.channel);
   await peer.ready;
@@ -527,10 +533,10 @@ it("cancels page-owned tools on disconnect and reconnects to the same daemon", a
         return false;
       }
     })
-    .toBe(false);
+    .toBe(true);
   const next = await connect((await native({ action: "channel" })) as DesktopChannel);
   await next.ready;
-  expect(await next.local("tools.cancel", { id })).toEqual({ cancelled: false });
+  expect(await next.local("tools.cancel", { id })).toEqual({ cancelled: true });
 });
 
 it.skipIf(process.platform === "win32")(
@@ -589,4 +595,297 @@ it("does not create a replacement vault key when another origin still has encryp
     result: { createKey: false, profileDirectory: host.runtime.state.directory },
   });
   expect(records.read()?.encrypted).toEqual(Buffer.alloc(40, 3));
+});
+
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+it("keeps the active channel on a failed session reset and reboots cleanly after a successful reset", async () => {
+  const f = await fixture();
+  const { sql } = await import("drizzle-orm");
+  const { sessionRecordStore } =
+    await import("../../../../../src/runtime/daemon/desktop/sessions.ts");
+  const records = sessionRecordStore(f.host.runtime.state.db, "https://saved.example.test");
+  records.write(Buffer.alloc(28, 3));
+  await f.native({ action: "pick", path: f.project });
+  const peer = await connect(f.descriptor.channel);
+  await peer.ready;
+  const roots = await peer.local("roots.list");
+  f.host.runtime.state.db.run(
+    sql`CREATE TRIGGER reject_reset BEFORE DELETE ON desktop_sessions BEGIN SELECT RAISE(ABORT, 'synthetic failure'); END`,
+  );
+  const reset = () =>
+    daemonFetch(f.host.endpoint, "/desktop", {
+      action: "reset_sessions",
+      key: Buffer.alloc(32, 8).toString("base64"),
+    });
+  expect(await (await reset()).json()).toHaveProperty("error");
+  expect(records.read()).toBeDefined();
+  expect(await peer.local("roots.list")).toEqual(roots);
+  f.host.runtime.state.db.run(sql`DROP TRIGGER reject_reset`);
+  expect(await (await reset()).json()).toMatchObject({ result: { reset: true } });
+  await peer.ended;
+  expect(records.hasRows()).toBe(false);
+  const next = await f.bootstrap({ key: Buffer.alloc(32, 8).toString("base64") });
+  const recovered = await connect(next.channel);
+  await recovered.ready;
+  expect(await recovered.local("roots.list")).toEqual(roots);
+});
+
+async function verifyForeignExecutionIsolation(
+  channel: DesktopChannel,
+  host: Awaited<ReturnType<typeof fixture>>["host"],
+  id: string,
+) {
+  const other = await connect(channel);
+  await other.ready;
+  expect(await other.request("execution_list", {})).toEqual([]);
+  await expect(other.local("tools.cancel", { id })).rejects.toThrow("EXECUTION_NOT_FOUND");
+  await expect(other.request("execution_result", { id })).rejects.toThrow("EXECUTION_NOT_FOUND");
+  host.emit({ version: 1, event: "terminal.output", data: { id, data: "eA==" } });
+  await other.local("roots.list");
+  expect(other.packets.some((packet) => packet.event?.data.id === id)).toBe(false);
+}
+
+async function verifyRestoredTerminal(
+  peer: Awaited<ReturnType<typeof connect>>,
+  id: string,
+  controlled: string,
+) {
+  expect(await peer.request("terminal_restore", { id })).toEqual({ accepted: true });
+  await peer.local("terminal.input", {
+    id,
+    data: Buffer.from("after-reconnect\n").toString("base64"),
+  });
+  await expect.poll(() => existsSync(controlled)).toBe(true);
+}
+
+for (const kind of ["tool", "terminal"] as const) {
+  it
+    .skipIf(
+      kind === "terminal" && (!process.env.RAYPX_HERDR_BINARY || !process.env.RAYPX_CLI_BINARY),
+    )
+    .each([
+      "disconnect",
+      "overflow",
+      "ack_timeout",
+      "expiry",
+      "bootstrap",
+      "origin",
+      "owner",
+    ] as const)(
+    `retains accepted ${kind}s through %s, fences their scope and releases them explicitly`,
+    async (failure) => {
+      const f = await fixture();
+      if (kind === "terminal") {
+        const terminalHost = new HerdrTerminalHost(
+          process.env.RAYPX_HERDR_BINARY!,
+          f.host.emit,
+          () => process.env,
+          [process.env.RAYPX_CLI_BINARY!],
+        );
+        cleanups.push(() => terminalHost.close());
+        const cancel = f.host.runtime.processes.cancel.bind(f.host.runtime.processes);
+        vi.spyOn(f.host.runtime.processes, "terminal").mockImplementation((input, cols, rows, id) =>
+          terminalHost.open(input as Parameters<HerdrTerminalHost["open"]>[0], cols, rows, id),
+        );
+        vi.spyOn(f.host.runtime.processes, "restore").mockImplementation((id) =>
+          terminalHost.restore(id),
+        );
+        vi.spyOn(f.host.runtime.processes, "input").mockImplementation((id, data) =>
+          terminalHost.input(id, data),
+        );
+        vi.spyOn(f.host.runtime.processes, "cancel").mockImplementation((id) =>
+          terminalHost.has(id) ? terminalHost.cancel(id) : cancel(id),
+        );
+      }
+      const options = { ack: true };
+      const peer = await connect(f.descriptor.channel, options);
+      await peer.ready;
+      let id = crypto.randomUUID() as string;
+      const started = join(f.project, "scope-started"),
+        controlled = join(f.project, "scope-controlled");
+      const command = {
+        cwd: f.project,
+        executable: process.execPath,
+        args: [
+          "-e",
+          `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(started)},String(process.pid));process.stdin.on('data',()=>fs.writeFileSync(${JSON.stringify(controlled)},'controlled'));setInterval(()=>{},1000)`,
+        ],
+        timeoutMs: 60_000,
+      };
+      let waiting: Promise<unknown>;
+      if (kind === "terminal") {
+        const result = (await peer.local("terminal.open", { ...command, cols: 80, rows: 24 })) as {
+          id: string;
+        };
+        id = result.id;
+        waiting = Promise.resolve();
+      } else {
+        waiting = peer.local("tools.run", { ...command, id }).catch(() => {});
+      }
+      await expect.poll(() => existsSync(started)).toBe(true);
+      const pid = Number(readFileSync(started, "utf8"));
+      if (failure === "disconnect") peer.socket.close();
+      if (failure === "overflow") {
+        options.ack = false;
+        for (let index = 0; index < 1025; index++)
+          f.host.emit({ version: 1, event: "agent.changed", data: {} });
+      }
+      if (failure === "ack_timeout") {
+        options.ack = false;
+        f.host.emit({ version: 1, event: "agent.changed", data: {} });
+      }
+      const clock =
+        failure === "expiry"
+          ? vi.spyOn(AwakeClock.prototype, "now").mockReturnValue(Number.MAX_SAFE_INTEGER)
+          : undefined;
+      if (failure === "bootstrap") await f.bootstrap();
+      if (failure === "origin" || failure === "owner") {
+        const foreign = await f.bootstrap(
+          failure === "origin"
+            ? { apiUrl: "https://other.example.test" }
+            : { ownerId: "e".repeat(64) },
+        );
+        await verifyForeignExecutionIsolation(foreign.channel, f.host, id);
+      }
+      await peer.ended;
+      await waiting;
+      clock?.mockRestore();
+      expect(alive(pid)).toBe(true);
+      const replacement = await f.bootstrap();
+      const next = await connect(replacement.channel);
+      await next.ready;
+      expect(await next.request("execution_list", {})).toContainEqual({
+        id,
+        kind,
+        cwd: f.project,
+        status: "running",
+      });
+      if (kind === "terminal") await verifyRestoredTerminal(next, id, controlled);
+      const response = await daemonFetch(f.host.endpoint, "/desktop", {
+        action: "release",
+        ownerId: "d".repeat(64),
+      });
+      expect(await response.json()).toMatchObject({ result: { released: true } });
+      await expect.poll(() => alive(pid)).toBe(false);
+    },
+  );
+}
+
+it("keeps the working binding after runtime preparation fails and serializes replacements", async () => {
+  const f = await fixture();
+  const peer = await connect(f.descriptor.channel);
+  await peer.ready;
+  const request = f.host.runtime.request.bind(f.host.runtime);
+  const spy = vi
+    .spyOn(f.host.runtime, "request")
+    .mockImplementation(async (method, params, signal) => {
+      if (method === "runtime.info") throw new Error("synthetic runtime preparation failure");
+      return request(method, params, signal);
+    });
+  const failed = await daemonFetch(f.host.endpoint, "/desktop", {
+    action: "bootstrap",
+    protocol: 1,
+    ownerId: "d".repeat(64),
+    apiUrl: "https://api.example.test",
+    pageOrigin,
+  });
+  expect(await failed.json()).toHaveProperty("error");
+  expect(await peer.local("roots.list")).toEqual([]);
+  expect(await f.native({ action: "notifications" })).toHaveProperty("bindingId");
+  spy.mockRestore();
+  const [first, last] = await Promise.all([f.bootstrap(), f.bootstrap()]);
+  const stale = await localFetch(first.nativeAddress, "/desktop/native", {
+    method: "POST",
+    headers: { authorization: `Bearer ${first.nativeCapability}` },
+    body: JSON.stringify({ action: "notifications" }),
+  });
+  expect(stale.status).toBe(403);
+  const current = await connect(last.channel);
+  await current.ready;
+  expect(await current.local("roots.list")).toEqual([]);
+});
+
+it("repairs a corrupt selection without blocking local work or restoring cloud authority", async () => {
+  const f = await fixture();
+  writeFileSync(join(f.host.runtime.state.directory, "host-session.json"), "{corrupt");
+  const next = await f.bootstrap();
+  const peer = await connect(next.channel);
+  await peer.ready;
+  expect(await peer.local("roots.list")).toEqual([]);
+  expect(
+    JSON.parse(readFileSync(join(f.host.runtime.state.directory, "host-session.json"), "utf8")),
+  ).toEqual({ accountId: null, apiUrl: "https://api.example.test" });
+});
+
+it("selects more than eight historical servers without restarting the daemon", async () => {
+  const f = await fixture();
+  for (let index = 0; index < 12; index++) {
+    const descriptor = await f.bootstrap({ apiUrl: `https://server-${index}.example.test` });
+    const peer = await connect(descriptor.channel);
+    await peer.ready;
+    expect(await peer.local("roots.list")).toEqual([]);
+  }
+});
+
+it("recovers a cached memory session when a later bootstrap supplies the key", async () => {
+  const api = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch: () =>
+      new Response("null", {
+        headers: {
+          "set-cookie": "better-auth.session_token=memory-login; HttpOnly; Path=/; Max-Age=3600",
+        },
+      }),
+  });
+  cleanups.push(() => api.stop(true));
+  const apiUrl = `http://127.0.0.1:${api.port}`;
+  const f = await fixture(false, true, { apiUrl, key: undefined });
+  const peer = await connect(f.descriptor.channel);
+  await peer.ready;
+  await peer.request("api_fetch", { path: "/api/auth/get-session", method: "GET", headers: {} });
+  const { sessionRecordStore, encryptedSessionStore } =
+    await import("../../../../../src/runtime/daemon/desktop/sessions.ts");
+  const records = sessionRecordStore(f.host.runtime.state.db, apiUrl);
+  expect(records.read()).toBeUndefined();
+  await f.bootstrap({ apiUrl });
+  const store = encryptedSessionStore(
+    records,
+    f.host.runtime.state.directory,
+    apiUrl,
+    Buffer.alloc(32, 4),
+  );
+  expect(new TextDecoder().decode(store.load())).toContain("memory-login");
+});
+
+it("encodes event content once and accounts for UTF-8 and envelope bytes", async () => {
+  const f = await fixture();
+  const peer = await connect(f.descriptor.channel);
+  await peer.ready;
+  let calls = 0;
+  const value = {
+    toJSON() {
+      calls++;
+      return '中文"\\';
+    },
+  };
+  f.host.emit({ version: 1, event: "agent.changed", data: { value } });
+  await expect
+    .poll(() => peer.packets.some((packet) => packet.event?.data.value === '中文"\\'))
+    .toBe(true);
+  expect(calls).toBe(1);
+  f.host.emit({
+    version: 1,
+    event: "agent.changed",
+    data: { text: "中".repeat(Math.ceil((8 * 1024 * 1024) / 3)) },
+  });
+  await peer.ended;
 });

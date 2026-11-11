@@ -14,7 +14,7 @@ const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
 });
-async function fixture(options: Pick<RemoteControlOptions, "syncObserved"> = {}) {
+async function fixture(options: Pick<RemoteControlOptions, "syncObserved" | "observedReset"> = {}) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-control-clock-"));
   const scheduler = new ManualScheduler(),
     sockets: RelaySocket[] = [];
@@ -297,4 +297,15 @@ it("keeps a replacement usable when an old detach completes late", async () => {
   expect(f.value.info("account").connected).toBe(true);
   expect(replacement.readyState).toBe(1);
   expect(f.scheduler.pending).toBe(2);
+});
+
+it("resets observed state once when abort and status both report the same socket close", async () => {
+  const reset = vi.fn();
+  const f = await fixture({ observedReset: reset });
+  const socket = await f.ready();
+  reset.mockClear();
+  socket.close(1012);
+  expect(reset).toHaveBeenCalledOnce();
+  socket.close(1012);
+  expect(reset).toHaveBeenCalledOnce();
 });

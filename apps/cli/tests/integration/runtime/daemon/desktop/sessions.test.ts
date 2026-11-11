@@ -5,7 +5,11 @@ import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { ProfileStorage } from "../../../../../src/runtime/sqlite/index.ts";
-import { desktopSessions } from "../../../../../src/runtime/sqlite/schema/credentials.ts";
+import {
+  desktopSessions,
+  hostAuthorizations,
+  instanceCredentials,
+} from "../../../../../src/runtime/sqlite/schema/credentials.ts";
 import {
   encryptedSessionStore,
   sessionRecordStore,
@@ -108,4 +112,63 @@ it("poisons the cookie transport when SQLite rejects a durable update, preservin
   ).toThrow("restart required");
   expect(() => jar.header(new URL(origin))).toThrow("restart required");
   expect(records.read()!.encrypted).toEqual(previous);
+});
+
+it.each(["unchanged", "login", "logout"] as const)(
+  "recovers a later key without resurrecting stale cookies after %s",
+  (mode) => {
+    const f = fixture();
+    new SessionCookies(f.origin, f.store).apply([f.change]);
+    const original = Buffer.from(f.records.read()!.encrypted);
+    const jar = new SessionCookies(
+      f.origin,
+      encryptedSessionStore(f.records, f.directory, f.origin),
+    );
+    if (mode === "login")
+      jar.apply([{ ...f.change, cookie: { ...f.change.cookie, value: "new-memory-login" } }]);
+    if (mode === "logout") jar.apply([{ ...f.change, remove: true }]);
+    jar.recover(encryptedSessionStore(f.records, f.directory, f.origin, randomBytes(32)));
+    expect(jar.recovery).toBe("temporary");
+    expect(f.records.read()!.encrypted).toEqual(original);
+    jar.recover(f.store);
+    expect(jar.recovery).toBeUndefined();
+    const restored = new SessionCookies(f.origin, f.store).header(new URL(f.origin));
+    const expected = {
+      unchanged: "__Secure-better-auth.session_token=private-cookie",
+      login: "__Secure-better-auth.session_token=new-memory-login",
+      logout: "",
+    };
+    expect(restored).toBe(expected[mode]);
+  },
+);
+
+it("resets sessions for all origins transactionally while preserving independent host and instance credentials", () => {
+  const f = fixture(),
+    db = f.storage.database;
+  f.records.write(Buffer.alloc(28, 1));
+  const other = sessionRecordStore(db, "https://second.example.test");
+  other.write(Buffer.alloc(28, 2));
+  db.insert(hostAuthorizations)
+    .values({
+      apiUrl: f.origin,
+      accountId: "account",
+      deviceId: crypto.randomUUID(),
+      epoch: 1,
+      authorization: "host-credential",
+    })
+    .run();
+  db.insert(instanceCredentials)
+    .values({ instanceId: crypto.randomUUID(), privateKey: Buffer.from("instance-credential") })
+    .run();
+  db.run(
+    sql`CREATE TRIGGER reject_reset BEFORE DELETE ON desktop_sessions WHEN OLD.origin = 'https://second.example.test' BEGIN SELECT RAISE(ABORT, 'synthetic deletion failure'); END`,
+  );
+  expect(() => f.records.clear()).toThrow('Failed query: delete from "desktop_sessions"');
+  expect(f.records.read()).toBeDefined();
+  expect(other.read()).toBeDefined();
+  db.run(sql`DROP TRIGGER reject_reset`);
+  f.records.clear();
+  expect(f.records.hasRows()).toBe(false);
+  expect(db.select().from(hostAuthorizations).all()).toHaveLength(1);
+  expect(db.select().from(instanceCredentials).all()).toHaveLength(1);
 });

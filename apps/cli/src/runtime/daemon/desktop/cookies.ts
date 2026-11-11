@@ -101,18 +101,25 @@ export function parseSessionCookie(
 /** Synchronous changes serialize cookie persistence with the profile's single writer. */
 export class SessionCookies {
   readonly origin: URL;
-  readonly recovery: "temporary" | undefined;
+  recovery: "temporary" | undefined;
   private values: Cookie[] = [];
   private store: SessionStore | undefined;
   private poisoned = false;
+  private changed = false;
   constructor(
     origin: string,
     store?: SessionStore,
     private readonly now = Date.now,
   ) {
     this.origin = new URL(serverOrigin(origin));
+    this.recover(store);
+  }
+  /** Validate the old row before allowing memory state to replace it. */
+  recover(store?: SessionStore) {
+    if (this.store && !this.poisoned) return;
     try {
       const data = store?.load();
+      let values: Cookie[] = [];
       if (data) {
         if (data.byteLength > sessionLimit) throw invalidCookie();
         const input: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data));
@@ -121,14 +128,33 @@ export class SessionCookies {
         const stored = storedSchema.parse(input);
         if (stored.cookies.some((cookie) => !validForOrigin(cookie, this.origin)))
           throw invalidCookie();
-        this.values = stored.cookies;
+        values = stored.cookies;
       }
+      if (this.changed && !this.poisoned) this.persist(store, this.values);
+      else this.values = values;
       this.store = store;
+      this.poisoned = false;
+      this.recovery = undefined;
     } catch (error) {
       if (error instanceof LocalError && error.code === "SESSION_VERSION_UNSUPPORTED") throw error;
       // Unreadable rows are preserved. This owner may sign in using memory only.
       this.recovery = "temporary";
     }
+  }
+  get retainInMemory() {
+    return (
+      this.recovery !== undefined ||
+      this.poisoned ||
+      this.values.some((cookie) => cookie.expires === undefined)
+    );
+  }
+  private persist(store: SessionStore | undefined, values: Cookie[]) {
+    const persistent = values.filter(
+      (cookie) => cookie.expires !== undefined && cookie.expires > this.now() / 1000,
+    );
+    const bytes = new TextEncoder().encode(JSON.stringify({ version: 1, cookies: persistent }));
+    if (bytes.byteLength > sessionLimit) throw invalidCookie();
+    store?.save(persistent.length ? bytes : undefined);
   }
   assertAvailable() {
     if (this.poisoned) throw storageFailure();
@@ -163,18 +189,14 @@ export class SessionCookies {
       if (!remove) next.push(cookie);
     }
     if (next.length > 32) throw invalidCookie();
-    const persistent = next.filter(
-      (cookie) => cookie.expires !== undefined && cookie.expires > this.now() / 1000,
-    );
-    const bytes = new TextEncoder().encode(JSON.stringify({ version: 1, cookies: persistent }));
-    if (bytes.byteLength > sessionLimit) throw invalidCookie();
     try {
-      this.store?.save(persistent.length ? bytes : undefined);
+      this.persist(this.store, next);
     } catch {
       this.poisoned = true;
       this.values = [];
       throw storageFailure();
     }
     this.values = next;
+    this.changed = true;
   }
 }

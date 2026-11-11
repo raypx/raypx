@@ -4,6 +4,8 @@ Date: 2026-11-10
 
 Status: Accepted
 
+Execution lifetime and session recovery clauses are superseded by [ADR 0054](0054-desktop-execution-recovery.md).
+
 ## Context
 
 Desktop currently duplicates session storage, HTTP admission and event delivery in

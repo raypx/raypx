@@ -1,7 +1,11 @@
 import type { ServerWebSocket } from "bun";
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { desktopClientFrameSchema, type DesktopChannel } from "@raypx/contracts/desktop";
+import {
+  desktopClientFrameSchema,
+  desktopExecutionRequests,
+  type DesktopChannel,
+} from "@raypx/contracts/desktop";
 import { localParams, type LocalEvent } from "@raypx/contracts/local";
 import { errorPayload, LocalError } from "../../errors.ts";
 import type { ExecutionHost } from "../../owner.ts";
@@ -12,6 +16,7 @@ import { DesktopApi } from "./api.ts";
 import { SessionCookies } from "./cookies.ts";
 import { DesktopControl } from "./control.ts";
 import { encryptedSessionStore, sessionRecordStore } from "./sessions.ts";
+import { DesktopExecutions } from "./executions.ts";
 
 const capability = () => crypto.randomUUID() + crypto.randomUUID();
 const frameLimit = 8 * 1024 * 1024;
@@ -35,6 +40,7 @@ const originSchema = z
 const bootstrapSchema = z.strictObject({
   action: z.literal("bootstrap"),
   protocol: z.literal(1),
+  ownerId: z.string().regex(/^[a-f0-9]{64}$/),
   apiUrl: originSchema,
   pageOrigin: z
     .string()
@@ -58,11 +64,14 @@ const nativeInputSchema = z.discriminatedUnion("action", [
   z.strictObject({ action: z.literal("open_approvals"), scope: z.enum(["local", "remote"]) }),
   z.strictObject({ action: z.literal("notifications") }),
   z.strictObject({ action: z.literal("release") }),
+  z.strictObject({ action: z.literal("quit") }),
 ]);
 type Binding = {
   id: string;
   capability: string;
   origin: string;
+  owner: string;
+  api: DesktopApi;
   pageOrigin: string;
   control: DesktopControl;
   abort: AbortController;
@@ -79,9 +88,8 @@ type Peer = {
   authentication: ReturnType<typeof setTimeout>;
   authenticated: boolean;
   id: string;
-  children: Set<string>;
   pending: Map<string, AbortController>;
-  events: { sequence: number; event: unknown; size: number }[];
+  events: { sequence: number; encoded: string; size: number }[];
   bytes: number;
   sequence: number;
   streamId: string;
@@ -97,16 +105,20 @@ export class DesktopGateway {
   private readonly peers = new Set<Peer>();
   private readonly sessions = new Map<string, DesktopApi>();
   private readonly operations = new Set<Promise<unknown>>();
+  private readonly apiOperations = new Map<DesktopApi, number>();
+  private readonly executions: DesktopExecutions;
+  private administrativeQueue = Promise.resolve();
   private readonly server: ReturnType<typeof Bun.serve<Peer>>;
   private readonly maintenance: ReturnType<typeof setInterval>;
   // The native host renews its lease every few seconds. Measuring that lease in awake
-  // time keeps a suspended machine from retiring the binding and cancelling its work.
+  // time keeps a suspended machine from retiring the UI binding.
   private readonly clock = new AwakeClock(maintenanceInterval);
   private closed = false;
   constructor(
     private readonly host: ExecutionHost,
     private readonly directory: string,
   ) {
+    this.executions = new DesktopExecutions(host);
     this.server = Bun.serve<Peer>({
       hostname: "127.0.0.1",
       port: 0,
@@ -133,7 +145,6 @@ export class DesktopGateway {
           id: crypto.randomUUID(),
           authenticated: false,
           authentication: setTimeout(() => this.release(peer), 5000),
-          children: new Set(),
           pending: new Map(),
           events: [],
           bytes: 0,
@@ -209,7 +220,7 @@ export class DesktopGateway {
             const controller = new AbortController();
             peer.pending.set(frame.id, controller);
             const signal = AbortSignal.any([peer.abort.signal, controller.signal]);
-            void this.request(peer, frame.method, frame.params, signal)
+            void this.request(peer, frame.method, frame.params, signal, controller.signal)
               .then(
                 (result) => {
                   if (!signal.aborted) this.send(peer, { type: "response", id: frame.id, result });
@@ -242,7 +253,36 @@ export class DesktopGateway {
     this.maintenance.unref();
   }
   async administrative(raw: unknown) {
+    const operation = this.administrativeQueue.then(() => this.prepare(raw));
+    this.administrativeQueue = operation.then(
+      () => {},
+      () => {},
+    );
+    return operation;
+  }
+  private async prepare(raw: unknown) {
     if (this.closed) throw new LocalError("CLOSING", "Desktop channel is stopping");
+    const release = z
+      .strictObject({ action: z.literal("release"), ownerId: bootstrapSchema.shape.ownerId })
+      .safeParse(raw);
+    if (release.success) {
+      if (this.binding?.owner === release.data.ownerId) this.retire(this.binding);
+      this.executions.release(release.data.ownerId);
+      return { released: true };
+    }
+    const reset = z
+      .strictObject({
+        action: z.literal("reset_sessions"),
+        key: bootstrapSchema.shape.key.unwrap(),
+      })
+      .safeParse(raw);
+    if (reset.success) {
+      sessionRecordStore(this.host.runtime.state.db, "https://reset.invalid").clear();
+      if (this.binding) this.retire(this.binding);
+      for (const api of this.sessions.values()) api.close();
+      this.sessions.clear();
+      return { reset: true };
+    }
     const prepare = z
       .strictObject({ action: z.literal("prepare"), apiUrl: originSchema })
       .safeParse(raw);
@@ -254,29 +294,38 @@ export class DesktopGateway {
       return { createKey: !records.hasRows(), profileDirectory: this.directory };
     }
     const input = bootstrapSchema.parse(raw);
+    // Nothing retires the working native/renderer binding until preparation succeeds.
+    const runtime = (await this.host.request("runtime.info", {}, input.ownerId)) as {
+      version: string;
+      protocolVersion: number;
+      features?: { localTerminalApprovals?: boolean };
+    };
+    if (this.closed) throw new LocalError("CLOSING", "Desktop channel is stopping");
+    const store = encryptedSessionStore(
+      sessionRecordStore(this.host.runtime.state.db, input.apiUrl),
+      this.directory,
+      input.apiUrl,
+      input.key === undefined ? undefined : Buffer.from(input.key, "base64"),
+    );
     let api = this.sessions.get(input.apiUrl);
+    const candidate = api === undefined;
     if (!api) {
-      if (this.sessions.size >= 8)
-        throw new LocalError("DESKTOP_BUSY", "Restart daemon before selecting more servers");
-      const store = encryptedSessionStore(
-        sessionRecordStore(this.host.runtime.state.db, input.apiUrl),
-        this.directory,
-        input.apiUrl,
-        input.key === undefined ? undefined : Buffer.from(input.key, "base64"),
-      );
       api = new DesktopApi(new SessionCookies(input.apiUrl, store));
-      this.sessions.set(input.apiUrl, api);
-    }
-    api.cookies.assertAvailable();
-    await this.host.control.selectDesktopOrigin(input.apiUrl);
-    if (this.binding) {
-      const previous = this.binding;
-      this.retire(previous);
+    } else if (input.key !== undefined) api.cookies.recover(store);
+    try {
+      api.cookies.assertAvailable();
+      await this.host.control.selectDesktopOrigin(input.apiUrl);
+      if (this.closed) throw new LocalError("CLOSING", "Desktop channel is stopping");
+    } catch (error) {
+      if (candidate) api.close();
+      throw error;
     }
     const binding: Binding = {
       id: crypto.randomUUID(),
       capability: capability(),
       origin: input.apiUrl,
+      owner: input.ownerId,
+      api,
       pageOrigin: input.pageOrigin,
       abort: new AbortController(),
       lease: new AbortController(),
@@ -285,17 +334,10 @@ export class DesktopGateway {
       control: new DesktopControl(api, this.host, input.configDirs),
       notifications: { revision: 0, scope: "local" },
     };
+    if (this.binding) this.retire(this.binding);
     this.binding = binding;
-    const runtime = (await this.host.request(
-      "runtime.info",
-      {},
-      binding.id,
-      binding.abort.signal,
-    )) as {
-      version: string;
-      protocolVersion: number;
-      features?: { localTerminalApprovals?: boolean };
-    };
+    this.sessions.set(input.apiUrl, api);
+    this.pruneSessions();
     return {
       version: runtime.version,
       protocolVersion: runtime.protocolVersion,
@@ -340,6 +382,10 @@ export class DesktopGateway {
       case "release":
         this.retire(binding);
         return true;
+      case "quit":
+        this.retire(binding);
+        this.executions.release(binding.owner);
+        return true;
     }
   }
   permitsNative(token: string) {
@@ -364,51 +410,75 @@ export class DesktopGateway {
       expiresAt: new Date(ticket.expires).toISOString(),
     };
   }
-  private async request(peer: Peer, method: string, raw: unknown, signal: AbortSignal) {
-    let tool: string | undefined;
+  private async request(
+    peer: Peer,
+    method: string,
+    raw: unknown,
+    signal: AbortSignal,
+    cancellation: AbortSignal,
+  ) {
     const host = {
       request: async (...args: Parameters<ExecutionHost["request"]>) => {
         const [name, params] = args;
-        if (name === "tools.run") {
-          const input = localParams["tools.run"].parse(params);
-          tool = input.id ?? crypto.randomUUID();
-          peer.children.add(tool);
-          args[1] = { ...input, id: tool };
+        if (name === "tools.run" || name.startsWith("terminal.") || name === "tools.cancel") {
+          const scope = await this.executions.scope(peer.binding.owner, peer.binding.origin);
+          signal.throwIfAborted();
+          if (name === "tools.run" || name === "terminal.open")
+            return this.executions.start(scope, name, params, signal, cancellation);
+          const { id } = z.object({ id: z.string() }).parse(params);
+          this.executions.control(scope, id);
         }
-        const result = await this.host.request(...args);
-        if (
-          name === "terminal.open" &&
-          result &&
-          typeof result === "object" &&
-          "id" in result &&
-          typeof result.id === "string"
-        ) {
-          if (peer.abort.signal.aborted || args[3]?.aborted)
-            this.host.runtime.processes.cancel(result.id);
-          else peer.children.add(result.id);
-        }
-        return result;
+        return this.host.request(...args);
       },
     };
-    // Track child execution at the transport boundary while reusing the binding's account policy.
-    const operation =
-      method === "local_request"
+    const run = async () => {
+      if (Object.hasOwn(desktopExecutionRequests, method)) {
+        const input =
+          desktopExecutionRequests[method as keyof typeof desktopExecutionRequests].parse(raw);
+        const scope = await this.executions.scope(peer.binding.owner, peer.binding.origin);
+        signal.throwIfAborted();
+        if (method === "execution_list") return this.executions.list(scope);
+        const { id } = z.object({ id: z.uuid() }).parse(input);
+        if (method === "execution_result") return this.executions.result(scope, id);
+        return this.executions.restore(scope, id);
+      }
+      return method === "local_request"
         ? peer.binding.control.localRequest(raw, peer.id, signal, host)
         : peer.binding.control.request(method, raw, peer.id, signal);
+    };
+    const api = peer.binding.api;
+    this.apiOperations.set(api, (this.apiOperations.get(api) ?? 0) + 1);
+    const operation = run();
     this.operations.add(operation);
-    void operation.finally(() => this.operations.delete(operation)).catch(() => {});
-    try {
-      return await abortable(signal, () => operation);
-    } finally {
-      if (tool) peer.children.delete(tool);
+    void operation
+      .finally(() => {
+        this.operations.delete(operation);
+        const pending = this.apiOperations.get(api) ?? 1;
+        if (pending <= 1) this.apiOperations.delete(api);
+        else this.apiOperations.set(api, pending - 1);
+        this.pruneSessions();
+      })
+      .catch(() => {});
+    return abortable(signal, () => operation);
+  }
+  private pruneSessions() {
+    for (const [origin, api] of this.sessions) {
+      if (
+        this.binding?.api !== api &&
+        api.idle &&
+        !this.apiOperations.get(api) &&
+        !api.cookies.retainInMemory
+      ) {
+        this.sessions.delete(origin);
+        this.apiOperations.delete(api);
+      }
     }
   }
-  emit(event: LocalEvent) {
-    if (
-      (event.event === "terminal.exit" || event.event === "tool.finished") &&
-      typeof event.data.id === "string"
-    )
-      for (const peer of this.peers) peer.children.delete(event.data.id);
+  emit(event: LocalEvent, encoded = JSON.stringify(event)) {
+    const scope = this.executions.event(event, Buffer.byteLength(encoded));
+    const processEvent = ["terminal.output", "terminal.exit", "tool.finished"].includes(
+      event.event,
+    );
     if (
       this.binding &&
       (event.event === "agent.changed" || event.event === "observed.changed") &&
@@ -419,17 +489,28 @@ export class DesktopGateway {
         scope: event.event === "observed.changed" || event.data.local === true ? "local" : "remote",
       };
     }
-    for (const peer of this.peers) if (peer.authenticated) this.enqueue(peer, event);
+    for (const peer of this.peers) {
+      if (!peer.authenticated) continue;
+      if (
+        processEvent &&
+        (!scope || scope.owner !== peer.binding.owner || scope.origin !== peer.binding.origin)
+      )
+        continue;
+      this.enqueue(peer, event, encoded);
+    }
   }
-  private enqueue(peer: Peer, event: unknown) {
-    const size = Buffer.byteLength(JSON.stringify(event));
+  private enqueue(peer: Peer, event: unknown, payload = JSON.stringify(event)) {
+    const sequence = peer.sequence + 1;
+    const encoded = `{"type":"event","streamId":"${peer.streamId}","sequence":${sequence},"event":${payload}}`;
+    const size = Buffer.byteLength(encoded);
     if (
       size > frameLimit ||
       peer.bytes + size > frameLimit ||
       peer.events.length + peer.unacked.length >= eventLimit
     )
       return this.release(peer);
-    peer.events.push({ sequence: ++peer.sequence, event, size });
+    peer.sequence = sequence;
+    peer.events.push({ sequence, encoded, size });
     peer.bytes += size;
     this.pump(peer);
   }
@@ -442,12 +523,7 @@ export class DesktopGateway {
       peer.unacked.push({ sequence: event.sequence, size: event.size });
       peer.inflight += event.size;
       peer.stall ??= setTimeout(() => this.release(peer), stallLimit);
-      this.send(peer, {
-        type: "event",
-        streamId: peer.streamId,
-        sequence: event.sequence,
-        event: event.event,
-      });
+      this.sendEncoded(peer, event.encoded, event.size);
     }
   }
   /** An acknowledgement covers every event up to its sequence; it must name a sent one. */
@@ -473,12 +549,15 @@ export class DesktopGateway {
   }
   private send(peer: Peer, packet: unknown) {
     const encoded = JSON.stringify(packet);
+    this.sendEncoded(peer, encoded, Buffer.byteLength(encoded));
+  }
+  private sendEncoded(peer: Peer, encoded: string, size: number) {
     // Bun returns -1 for a queued frame; 0 means the frame was dropped.
     if (
       !peer.socket ||
       peer.abort.signal.aborted ||
-      Buffer.byteLength(encoded) > frameLimit ||
-      peer.socket.getBufferedAmount() + Buffer.byteLength(encoded) > frameLimit ||
+      size > frameLimit ||
+      peer.socket.getBufferedAmount() + size > frameLimit ||
       peer.socket.send(encoded) === 0
     )
       this.release(peer);
@@ -515,7 +594,6 @@ export class DesktopGateway {
     peer.unacked.length = 0;
     peer.inflight = 0;
     this.peers.delete(peer);
-    for (const child of peer.children) this.host.runtime.processes.cancel(child);
     this.host.terminal.releaseClient(peer.id);
     peer.socket?.close(1008, "Desktop channel closed");
     peer.events.length = 0;
@@ -529,11 +607,14 @@ export class DesktopGateway {
     binding.control.close();
     for (const peer of this.peers) if (peer.binding === binding) this.release(peer);
     this.host.terminal.releaseClient(binding.id);
+    this.pruneSessions();
   }
   async close() {
     this.closed = true;
     clearInterval(this.maintenance);
+    await this.administrativeQueue;
     if (this.binding) this.retire(this.binding);
+    this.executions.release();
     await this.server.stop(true);
     await Promise.allSettled(this.operations);
   }

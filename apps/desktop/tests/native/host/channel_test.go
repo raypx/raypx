@@ -58,6 +58,21 @@ func TestMain(m *testing.M) {
 			raw, _ := json.Marshal(host.JSON{"input": input, "args": os.Args})
 			_ = os.WriteFile(log, raw, 0600)
 		}
+		if input["action"] == "release" {
+			json.NewEncoder(os.Stdout).Encode(host.JSON{"released": true})
+			os.Exit(0)
+		}
+		if input["action"] == "reset_sessions" {
+			if marker := os.Getenv("RAYPX_TEST_RESET"); marker != "" {
+				_ = os.WriteFile(marker, []byte("reset"), 0600)
+			}
+			if os.Getenv("RAYPX_TEST_RESET_FAILURE") == "1" {
+				os.Stderr.Write([]byte(`{"code":"SESSION_STORAGE_UNAVAILABLE"}`))
+				os.Exit(1)
+			}
+			json.NewEncoder(os.Stdout).Encode(host.JSON{"reset": true})
+			os.Exit(0)
+		}
 		var address host.JSON
 		json.Unmarshal([]byte(os.Getenv("RAYPX_TEST_NATIVE_ADDRESS")), &address)
 		version := "test"
@@ -84,11 +99,24 @@ func nativeFixture(t *testing.T, unix bool) (*host.DaemonClient, <-chan host.JSO
 			return
 		}
 		requests <- input
+		if input["action"] == "quit" && os.Getenv("RAYPX_TEST_EXPIRED_QUIT") == "1" {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(host.JSON{"error": host.JSON{"code": "FORBIDDEN"}})
+			return
+		}
+		if input["action"] == "pick" && os.Getenv("RAYPX_TEST_SLOW_PICK") == "1" {
+			time.Sleep(3200 * time.Millisecond)
+		}
+		if input["action"] == "notifications" && os.Getenv("RAYPX_TEST_NATIVE_ERROR") != "" {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(host.JSON{"error": host.JSON{"code": os.Getenv("RAYPX_TEST_NATIVE_ERROR")}})
+			return
+		}
 		if input["action"] == "visible" && os.Getenv("RAYPX_TEST_BLOCK_VISIBLE") == "1" {
 			<-r.Context().Done()
 			return
 		}
-		if input["action"] == "pick" {
+		if input["action"] == "pick" && os.Getenv("RAYPX_TEST_PICK") != "" {
 			if os.Getenv("RAYPX_TEST_PICK") == "refused" {
 				w.WriteHeader(403)
 				return
@@ -155,7 +183,7 @@ func TestFiniteBootstrapAndNativeCapability(t *testing.T) {
 		t.Fatal("channel request missing")
 	}
 	client.Close()
-	if (<-requests)["action"] != "release" {
+	if (<-requests)["action"] != "quit" {
 		t.Fatal("native binding not released")
 	}
 	if client.Start() {
@@ -342,7 +370,147 @@ func TestNativeIPCShutdownCancelsInFlightRequests(t *testing.T) {
 	}
 }
 
+func TestNativeDeadlinesAndBusinessErrorsPreserveReadiness(t *testing.T) {
+	client, _ := nativeFixture(t, false)
+	if !client.Start() {
+		t.Fatal(client.Status())
+	}
+	t.Setenv("RAYPX_TEST_SLOW_PICK", "1")
+	if _, err := client.Native(context.Background(), host.JSON{"action": "pick", "path": t.TempDir()}); err != nil {
+		t.Fatal("directory registration retained the old response header deadline", err)
+	}
+	t.Setenv("RAYPX_TEST_NATIVE_ERROR", "FORBIDDEN")
+	if _, err := client.Native(context.Background(), host.JSON{"action": "notifications"}); err == nil || err.Error() != "FORBIDDEN" {
+		t.Fatal("bounded business code was lost", err)
+	}
+	t.Setenv("RAYPX_TEST_BLOCK_VISIBLE", "1")
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+	if _, err := client.Native(ctx, host.JSON{"action": "visible", "active": true}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal("caller deadline was lost", err)
+	}
+	if _, err := client.Native(context.Background(), host.JSON{"action": "visible", "active": true}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal("control request deadline was lost", err)
+	}
+	if client.Status()["status"] != "ready" {
+		t.Fatal("business/timeout error poisoned host", client.Status())
+	}
+}
+
+func TestFailedRefreshKeepsPreviousDescriptor(t *testing.T) {
+	client, _ := nativeFixture(t, false)
+	if !client.Start() {
+		t.Fatal(client.Status())
+	}
+	t.Setenv("RAYPX_TEST_BOOTSTRAP_MODE", "wrong-version")
+	if client.Refresh() {
+		t.Fatal("invalid replacement accepted")
+	}
+	if client.Status()["status"] != "ready" {
+		t.Fatal("working binding was discarded")
+	}
+	if _, err := client.Channel(context.Background()); err != nil {
+		t.Fatal("working capability lost", err)
+	}
+	t.Setenv("RAYPX_TEST_BOOTSTRAP_MODE", "")
+	if !client.Refresh() {
+		t.Fatal("ready binding could not refresh")
+	}
+}
+
+func TestTransportFailureAndAdministrativeOwnerRelease(t *testing.T) {
+	client, _ := nativeFixture(t, false)
+	if !client.Start() {
+		t.Fatal(client.Status())
+	}
+	input := filepath.Join(t.TempDir(), "release")
+	t.Setenv("RAYPX_TEST_BOOTSTRAP_INPUT", input)
+	// Refresh with an unused local port so the existing native capability cannot be used.
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	listener.Close()
+	t.Setenv("RAYPX_TEST_NATIVE_ADDRESS", `{"port":`+strconv.Itoa(port)+`}`)
+	if !client.Refresh() {
+		t.Fatal("synthetic bootstrap failed")
+	}
+	if _, err := client.Native(context.Background(), host.JSON{"action": "notifications"}); err == nil || client.Status()["status"] != "error" {
+		t.Fatal("transport failure did not change availability", err)
+	}
+	client.Close()
+	raw, err := os.ReadFile(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var capture struct{ Input host.JSON }
+	if json.Unmarshal(raw, &capture) != nil || capture.Input["action"] != "release" || len(capture.Input["ownerId"].(string)) != 64 {
+		t.Fatal("owner cleanup missing")
+	}
+}
+
+func TestExpiredQuitCapabilityStillReleasesNativeOwner(t *testing.T) {
+	client, _ := nativeFixture(t, false)
+	if !client.Start() {
+		t.Fatal(client.Status())
+	}
+	input := filepath.Join(t.TempDir(), "release")
+	t.Setenv("RAYPX_TEST_BOOTSTRAP_INPUT", input)
+	t.Setenv("RAYPX_TEST_EXPIRED_QUIT", "1")
+	client.Close()
+	raw, err := os.ReadFile(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var capture struct{ Input host.JSON }
+	if json.Unmarshal(raw, &capture) != nil || capture.Input["action"] != "release" {
+		t.Fatal("expired capability blocked owner cleanup")
+	}
+}
+
+func TestSessionResetRequiresWritableKeyAndSuccessfulDatabaseClear(t *testing.T) {
+	for _, mode := range []string{"key-failure", "database-failure", "success"} {
+		t.Run(mode, func(t *testing.T) {
+			_, _ = nativeFixture(t, false)
+			marker := filepath.Join(t.TempDir(), "reset")
+			t.Setenv("RAYPX_TEST_RESET", marker)
+			if mode == "database-failure" {
+				t.Setenv("RAYPX_TEST_RESET_FAILURE", "1")
+			}
+			binary, _ := os.Executable()
+			config, _ := host.ParseConfig(nil)
+			key := []byte(strings.Repeat("k", 32))
+			desktop, err := host.New(config, t.TempDir(), host.Options{
+				CLI:        host.CLIConfig{Binary: binary, Version: "test"},
+				SessionKey: func(string, bool) ([]byte, error) { return key, nil },
+				ResetSessionKey: func(string) ([]byte, error) {
+					if mode == "key-failure" {
+						return nil, errors.New("vault unavailable")
+					}
+					return key, nil
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer desktop.Close()
+			if !desktop.Client.Start() {
+				t.Fatal(desktop.Client.Status())
+			}
+			if desktop.Client.ResetSessions() != (mode == "success") {
+				t.Fatal("reset result misreported")
+			}
+			_, err = os.Stat(marker)
+			if (err == nil) != (mode != "key-failure") {
+				t.Fatal("database reset preceded writable key")
+			}
+		})
+	}
+}
+
 func TestNativeOperationFailureKeepsTheChannel(t *testing.T) {
+	t.Setenv("RAYPX_TEST_PICK", "operation")
 	client, _ := nativeFixture(t, false)
 	if !client.Start() {
 		t.Fatal(client.Status())

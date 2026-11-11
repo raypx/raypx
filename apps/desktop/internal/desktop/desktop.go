@@ -23,10 +23,11 @@ type CLIConfig struct {
 	Args    []string
 }
 type Options struct {
-	CLI        CLIConfig
-	Client     NativeClient
-	SessionKey SessionKey
-	PageOrigin string
+	CLI             CLIConfig
+	Client          NativeClient
+	SessionKey      SessionKey
+	ResetSessionKey SessionReset
+	PageOrigin      string
 }
 type Desktop struct {
 	closeOnce            sync.Once
@@ -47,6 +48,7 @@ type Desktop struct {
 	visible              bool
 	stopped              atomic.Bool
 	Notify               func(scope string)
+	RecoverSession       func() bool
 	notificationRevision float64
 	notificationBinding  string
 }
@@ -74,7 +76,9 @@ func New(config Config, directory string, options Options) (*Desktop, error) {
 		if pageOrigin == "" {
 			pageOrigin = "mygo://" + config.Scope
 		}
-		client = NewDaemonClient(cli, config, pageOrigin, options.SessionKey)
+		daemon := NewDaemonClient(cli, config, pageOrigin, options.SessionKey)
+		daemon.resetKey = options.ResetSessionKey
+		client = daemon
 	}
 	lifetime, cancel := context.WithCancel(context.Background())
 	return &Desktop{Config: config, Client: client, cli: cli, Preferences: OpenPreferences(directory), database: db, instance: instance, lifetime: lifetime, cancel: cancel}, nil

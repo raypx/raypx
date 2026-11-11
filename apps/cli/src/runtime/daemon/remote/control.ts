@@ -243,7 +243,8 @@ export class RemoteControl {
     return this.info(accountId);
   }
   /** Drops everything that was only valid while the relay socket was up. */
-  private disconnected(event: RelaySessionEvent) {
+  private disconnected(event: RelaySessionEvent, signal?: AbortSignal) {
+    if (signal && this.streamSignal !== signal) return;
     this.transition(event);
     this.snapshotRequests.clear();
     this.stream.reset();
@@ -278,14 +279,14 @@ export class RemoteControl {
           signal.addEventListener(
             "abort",
             () => {
-              if (this.streamSignal === signal) this.disconnected({ type: "dropped" });
+              this.disconnected({ type: "dropped" }, signal);
             },
             { once: true },
           );
         }
         if (!connected) {
           this.error = code ?? "NETWORK_UNAVAILABLE";
-          this.disconnected({ type: "dropped" });
+          this.disconnected({ type: "dropped" }, signal);
           if (code === "DEVICE_REVOKED" && this.accountId)
             void this.loseAuthorization(this.accountId, code).catch(() => {
               if (!bindingSignal.aborted) this.error = code;

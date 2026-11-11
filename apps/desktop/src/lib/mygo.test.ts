@@ -258,3 +258,28 @@ describe("daemon Desktop adapter", () => {
     await expect(createMyGoBridge(() => {})).rejects.toThrow("DESKTOP_REQUIRED");
   });
 });
+
+it("keeps cancellation of native session recovery from replacing a healthy channel", async () => {
+  const call = runtime();
+  const bridge = await createMyGoBridge(() => {});
+  const original = nextSocket();
+  call.mockResolvedValueOnce(false);
+  expect(await bridge.request.recoverSession({})).toBe(false);
+  expect(nextSocket()).toBe(original);
+  expect(original.readyState).toBe(Socket.OPEN);
+  expect(call).toHaveBeenLastCalledWith("Desktop.Request", "recover_session", {});
+});
+
+it("keeps a healthy renderer channel usable when rebootstrap fails", async () => {
+  const call = runtime();
+  const bridge = await createMyGoBridge(() => {});
+  const previous = nextSocket();
+  call.mockResolvedValueOnce(false);
+  expect(await bridge.request.restartEngine({})).toBe(false);
+  expect(nextSocket()).toBe(previous);
+  expect(previous.readyState).toBe(Socket.OPEN);
+  const waiting = bridge.request.localRequest({ method: "roots.list", params: {} });
+  await vi.waitFor(() => expect(previous.frames.at(-1)).toMatchObject({ type: "request" }));
+  previous.deliver({ type: "response", id: previous.frames.at(-1)!.id, result: [] });
+  await expect(waiting).resolves.toEqual([]);
+});

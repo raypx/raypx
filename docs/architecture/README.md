@@ -30,7 +30,8 @@ PostgreSQL stores account data and remote read projections. The device profile
 owns local work, enrollment identity, execution receipts and its replay journal.
 Remote authorization enables an outbound channel; it does not transfer ownership
 of local work or upload unrelated history. Closing Desktop disconnects its UI
-without stopping daemon tasks.
+without stopping daemon Agent tasks. Explicit GUI Quit stops its terminals and
+tools across origins; transport loss preserves them for scoped recovery.
 
 ## User interfaces
 
@@ -40,7 +41,13 @@ Web is a TanStack Start SSR application on Nitro's Bun server preset. Desktop us
 a MyGo WKWebView/WebView2 shell. Go owns OS capabilities and finite bootstrap of
 its version-matched bundled CLI; the renderer uses a separate authenticated daemon
 WebSocket. The daemon owns sessions, API/account policy and acknowledged events
-([ADR 0052](0052-daemon-desktop-channel.md)).
+([ADR 0052](0052-daemon-desktop-channel.md), with execution and session recovery in
+[ADR 0054](0054-desktop-execution-recovery.md)). Native owners, server origins and
+enrollment identities isolate accepted tools and terminals from connection loss.
+The renderer can list executions, query retained tool results and restore Herdr
+screens/history without replaying commands or input. Later bootstrap can attach
+an unlocked session key; Settings provides retry or native-confirmed reset of
+all origins' saved sign-ins in the current profile.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
 Desktop mounts its device-local workspace independently of account resolution.
@@ -250,8 +257,10 @@ normal OS permissions. PTY output is bytes encoded as base64; dates are ISO stri
 SQLite stores profiles, roots, schedules and bounded run history. A profile has
 one scheduling owner and per-job execution locks. Cron uses five fields and an
 IANA zone, skips missed triggers, and never retries interrupted commands on restart.
-On macOS and Windows, the independent CLI daemon owns scheduling; GUI Quit only
-disconnects Desktop. Stopping that daemon cancels its managed work. Foreground
+On macOS and Windows, the independent CLI daemon owns scheduling; GUI Quit cleans
+its Desktop owner's tools and terminals while preserving Agent work. Connection
+loss or rebootstrap preserves accepted tools and terminals. Stopping the daemon
+cancels its managed work. Foreground
 commands/TUI close only their own runtime and never start a scheduler. Local state
 and theme/locale preferences survive account logout.
 Files uses route search for directory/pagination, a scoped Zustand store for
@@ -334,8 +343,9 @@ current implementation.
 - [0050: Independent Mobile React](0050-mobile-react-boundary.md) — accepted; Expo pins do not constrain DOM releases
 
 - [0051 — Backend runtime roles](0051-backend-runtime-roles.md)
-- [0052: Daemon-owned Desktop channel](0052-daemon-desktop-channel.md) — current
+- [0052: Daemon-owned Desktop channel](0052-daemon-desktop-channel.md) — boundary; lifetime and recovery superseded by 0054
 - [0053: Relay streams and cancellation](0053-relay-stream-cancellation.md) — shared ACK mechanics and connection scopes
+- [0054: Desktop execution ownership and session recovery](0054-desktop-execution-recovery.md) — current lifecycle and recovery
 
 ## Distribution and performance
 

@@ -26,7 +26,13 @@ Administrative IPC issues a separate native capability and a one-use renderer
 WebSocket capability; neither grants the other's methods. `daemon/desktop` owns
 the selected-origin API policy, account verification, encrypted session table and
 bounded acknowledged events. Native visibility/pickers use private IPC. Renderer
-disconnect cancels HTTP/tools/PTYs and its approval lease, preserving durable tasks.
+disconnect cancels HTTP and its approval lease, preserving accepted tools/PTYs and
+durable tasks. Desktop execution ownership is native owner + origin + enrolled
+identity, registered before startup; only explicit GUI Quit, cancellation, deadline
+or daemon stop ends it. Scoped list/result/terminal restore never replay input.
+Bootstrap replacement is serialized and preserves the old binding on preparation
+failure. Later keys recover temporary sessions; native-confirmed reset clears only
+Desktop sessions across origins, preserving Host vault and local data (ADR 0054).
 Go holds only the separate native capability; it owns no business HTTP/session/event transport.
 
 Public commands use an explicit citty tree; `roots` and the existing JSON params remain supported.

@@ -246,7 +246,7 @@ export class HerdrTerminalHost {
     }
     if (buffer.trim() || decoder.decode() || firstOnly) throw herdrError();
   }
-  async open(command: CommandSpec, cols: number, rows: number) {
+  async open(command: CommandSpec, cols: number, rows: number, id: string = crypto.randomUUID()) {
     try {
       await this.start();
     } catch (error) {
@@ -255,7 +255,6 @@ export class HerdrTerminalHost {
     }
     if (this.closing) throw fail("CLOSING", "Terminal host is shutting down");
     if (this.sessions.size >= 8) throw fail("TERMINAL_BACKPRESSURE", "Too many terminal sessions");
-    const id = crypto.randomUUID();
     let wake!: () => void;
     const session: Session = {
       id,
@@ -338,6 +337,41 @@ export class HerdrTerminalHost {
       stdin.write(line);
       await stdin.flush();
     });
+  }
+  async restore(id: string) {
+    const session = this.sessions.get(id);
+    if (!session || session.finishing) throw fail("TERMINAL_NOT_FOUND", "Terminal is closed");
+    const snapshot = await this.request("pane.read", {
+      pane_id: session.pane,
+      source: "recent",
+      format: "ansi",
+      lines: 1000,
+    });
+    if (
+      !record(snapshot.read) ||
+      typeof snapshot.read.text !== "string" ||
+      Buffer.byteLength(snapshot.read.text) > 4 * 1024 * 1024
+    )
+      throw herdrError();
+    this.emit({
+      version: 1,
+      event: "terminal.output",
+      data: {
+        id,
+        data: Buffer.from(snapshot.read.text.replace(/\r?\n/g, "\r\n")).toString("base64"),
+        full: true,
+        frame: false,
+      },
+    });
+    const observer = this.control(session, true);
+    const deadline = setTimeout(() => observer.kill(), 3000);
+    try {
+      await this.frames(session, observer, true);
+    } finally {
+      clearTimeout(deadline);
+      observer.kill();
+      await observer.exited;
+    }
   }
   private async queue(session: Session, size: number, write: () => Promise<void>) {
     if (session.pendingBytes + size > 128 * 1024 || session.pendingWrites >= 64)

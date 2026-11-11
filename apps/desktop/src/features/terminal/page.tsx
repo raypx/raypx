@@ -1,5 +1,6 @@
 import { formText } from "../../form-data.ts";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { DesktopExecution } from "@raypx/contracts/desktop";
+import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
 import { TerminalIcon } from "@raypx/icons/terminal";
 import { StopIcon } from "@raypx/icons/stop";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
@@ -16,9 +17,17 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Separator } from "@raypx/ui/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@raypx/ui/components/ui/select";
 import { useTranslations } from "@raypx/i18n/browser";
 import { themeTokens, useTheme } from "@raypx/ui/themes";
-import { isDesktop, localRequest, onLocalEvent } from "../../lib/desktop.ts";
+import { getBridge, isDesktop, localRequest, onLocalEvent } from "../../lib/desktop.ts";
 import { terminalFrame } from "./frame.ts";
 import { terminalKey } from "./input.ts";
 import { ProjectTools } from "../tasks/project-tools.tsx";
@@ -54,7 +63,67 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
   const [exitCode, setExitCode] = useState<number | null>(null);
   const earlyExits = useRef(new Map<string, number>());
   const [started, setStarted] = useState(false);
+  const [disconnected, setDisconnected] = useState(false);
+  const [available, setAvailable] = useState<DesktopExecution[]>([]);
+  const recovery = useRef<AbortController | null>(null);
   const earlyOutput = useRef<{ id: string; data: string; full: boolean }[]>([]);
+  async function resume(terminalId: string) {
+    if (!terminal.current || !mounted.current) return;
+    const attempt = new AbortController();
+    recovery.current?.abort();
+    recovery.current = attempt;
+    id.current = terminalId;
+    terminal.current.options.disableStdin = true;
+    try {
+      await (await getBridge()).request.terminalRestore({ id: terminalId });
+      if (
+        attempt.signal.aborted ||
+        !terminal.current ||
+        !mounted.current ||
+        id.current !== terminalId
+      )
+        return;
+      terminal.current.options.disableStdin = false;
+      setRunning(true);
+      setStarted(true);
+      setDisconnected(false);
+      setExitCode(null);
+    } catch {
+      if (!attempt.signal.aborted && mounted.current) setError(c("error"));
+    }
+  }
+  const refresh = useEffectEvent(async () => {
+    const view = terminal.current;
+    if (!view || !isDesktop()) return;
+    const attempt = new AbortController();
+    recovery.current?.abort();
+    recovery.current = attempt;
+    try {
+      const entries = await (await getBridge()).request.executionList({});
+      if (attempt.signal.aborted || !mounted.current) return;
+      setDisconnected(false);
+      setAvailable(
+        entries.filter(
+          (entry) =>
+            entry.kind === "terminal" &&
+            entry.status === "running" &&
+            !unavailable &&
+            (!project.cwd || entry.cwd === project.cwd),
+        ),
+      );
+      if (id.current) {
+        const current = entries.find((entry) => entry.id === id.current);
+        if (current?.status === "running") await resume(current.id);
+        else {
+          id.current = null;
+          setRunning(false);
+          view.options.disableStdin = true;
+        }
+      }
+    } catch {
+      // Engine recovery remains available; never infer process exit from transport loss.
+    }
+  });
   useEffect(() => {
     if (!container.current) return;
     mounted.current = true;
@@ -73,12 +142,12 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
     fit.current = addon;
     view.attachCustomKeyEventHandler((event) => {
       const key = terminalKey(event);
-      if (!id.current || !key) return true;
+      if (!id.current || view.options.disableStdin || !key) return true;
       void localRequest("terminal.key", { id: id.current, key }).catch(() => {});
       return false;
     });
     const paste = (event: ClipboardEvent) => {
-      if (!id.current || !event.clipboardData) return;
+      if (!id.current || view.options.disableStdin || !event.clipboardData) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       void localRequest("terminal.paste", {
@@ -87,7 +156,7 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
       }).catch(() => {});
     };
     const wheel = (event: WheelEvent) => {
-      if (!id.current || event.deltaY === 0) return;
+      if (!id.current || view.options.disableStdin || event.deltaY === 0) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       void localRequest("terminal.scroll", {
@@ -104,7 +173,7 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
     const surface = container.current;
     let lastMouseMove = 0;
     const mouse = (event: MouseEvent) => {
-      if (!id.current || event.shiftKey) return;
+      if (!id.current || view.options.disableStdin || event.shiftKey) return;
       if (event.type === "mousemove") {
         if (Date.now() - lastMouseMove < 32) return;
         lastMouseMove = Date.now();
@@ -148,11 +217,11 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
     surface.addEventListener("mouseup", mouse);
     surface.addEventListener("mousemove", mouse);
     const input = view.onData((data) => {
-      if (id.current)
+      if (id.current && !view.options.disableStdin)
         void localRequest("terminal.input", { id: id.current, data: encode(data) }).catch(() => {});
     });
     const resize = view.onResize(({ cols, rows }) => {
-      if (id.current)
+      if (id.current && !view.options.disableStdin)
         void localRequest("terminal.resize", { id: id.current, cols, rows }).catch(() => {});
     });
     const observer = new ResizeObserver(() => {
@@ -176,10 +245,11 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
       if (event.event === "terminal.exit" && !id.current && typeof data.id === "string")
         earlyExits.current.set(data.id, typeof data.exitCode === "number" ? data.exitCode : 0);
       if (event.event === "engine.status" && data.status === "error") {
-        id.current = null;
-        setRunning(false);
+        recovery.current?.abort();
+        setDisconnected(true);
         view.options.disableStdin = true;
       }
+      if (event.event === "engine.status" && data.status === "ready") void refresh();
       if (event.event === "terminal.exit" && data.id === id.current) {
         setRunning(false);
         setExitCode(typeof data.exitCode === "number" ? data.exitCode : 0);
@@ -187,8 +257,10 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
         id.current = null;
       }
     });
+    void refresh();
     return () => {
       mounted.current = false;
+      recovery.current?.abort();
       unsubscribe();
       observer.disconnect();
       input.dispose();
@@ -198,7 +270,6 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
       surface.removeEventListener("mousedown", mouse);
       surface.removeEventListener("mouseup", mouse);
       surface.removeEventListener("mousemove", mouse);
-      if (id.current) void localRequest("terminal.close", { id: id.current }).catch(() => {});
       id.current = null;
       view.dispose();
       terminal.current = null;
@@ -218,7 +289,8 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
   }, [resolvedTheme]);
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (opening || running || !terminal.current || unavailable || !isDesktop()) return;
+    if (opening || running || disconnected || !terminal.current || unavailable || !isDesktop())
+      return;
     const data = new FormData(event.currentTarget);
     let args: string[];
     try {
@@ -248,7 +320,6 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
         rows: terminal.current.rows,
       });
       if (!mounted.current || !terminal.current) {
-        await localRequest("terminal.close", { id: result.id }).catch(() => {});
         return;
       }
       id.current = result.id;
@@ -275,7 +346,7 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
     }
   }
   async function close() {
-    if (!id.current) return;
+    if (!id.current || disconnected) return;
     setError("");
     try {
       await localRequest("terminal.close", { id: id.current });
@@ -286,6 +357,10 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
       setError(c("error"));
     }
   }
+  let sessionStatus = t("empty");
+  if (disconnected) sessionStatus = t("disconnected");
+  else if (running) sessionStatus = t("running");
+  else if (exitCode !== null) sessionStatus = `${t("finished")} (${exitCode})`;
   return (
     <section>
       {project.project && <ProjectTools projectId={project.project} />}
@@ -306,6 +381,31 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
         <Alert variant="destructive" className="mb-5">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+      {!running && available.length > 0 && (
+        <Field className="mb-5">
+          <FieldLabel htmlFor="terminal-resume">{t("resume")}</FieldLabel>
+          <Select
+            value={null}
+            onValueChange={(value) => {
+              if (typeof value === "string") void resume(value);
+            }}
+            disabled={disconnected || opening}
+          >
+            <SelectTrigger id="terminal-resume">
+              <SelectValue placeholder={t("resume")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {available.map((entry) => (
+                  <SelectItem key={entry.id} value={entry.id}>
+                    {entry.cwd} · {entry.id.slice(0, 8)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
       )}
       <form
         onSubmit={open}
@@ -383,12 +483,17 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
         </Collapsible>
         <div className="flex flex-wrap items-center gap-3">
           {running ? (
-            <Button variant="outline" onClick={() => void close()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={disconnected}
+              onClick={() => void close()}
+            >
               <StopIcon data-icon="inline-start" />
               {t("stop")}
             </Button>
           ) : (
-            <Button type="submit" disabled={opening || !isDesktop() || unavailable}>
+            <Button type="submit" disabled={opening || disconnected || !isDesktop() || unavailable}>
               <TerminalIcon data-icon="inline-start" />
               {opening ? c("working") : t(!advanced && project.cwd ? "openDefault" : "start")}
             </Button>
@@ -404,16 +509,8 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
           className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground tabular-nums"
           role="status"
         >
-          {running ? (
-            <>
-              <span className="size-1.5 rounded-full bg-foreground" />
-              {t("running")}
-            </>
-          ) : exitCode !== null ? (
-            `${t("finished")} (${exitCode})`
-          ) : (
-            t("empty")
-          )}
+          {running && !disconnected && <span className="size-1.5 rounded-full bg-foreground" />}
+          {sessionStatus}
         </div>
         <div
           className="h-[42dvh] min-h-95 overflow-hidden p-4 [&_.xterm]:h-full [&_.xterm-viewport]:rounded-sm"

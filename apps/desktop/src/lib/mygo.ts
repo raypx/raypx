@@ -2,6 +2,8 @@ import {
   desktopChannelSchema,
   desktopServerFrameSchema,
   type DesktopClientFrame,
+  desktopExecutionRequests,
+  desktopExecutionResults,
 } from "@raypx/contracts/desktop";
 import {
   DESKTOP_METHODS,
@@ -236,9 +238,18 @@ export async function createMyGoBridge(dispatch: (event: unknown) => void): Prom
       return async (input: unknown, options?: { maxRequestTime?: number }) => {
         if (closed) throw new Error("Desktop page closed");
         if (key === "restartEngine") {
-          retire();
           const result = await runtime.call("Desktop.Request", "restart_engine", input);
           if (result) {
+            retire();
+            await open();
+            status({ status: "ready" });
+          }
+          return result;
+        }
+        if (key === "recoverSession") {
+          const result = await runtime.call("Desktop.Request", "recover_session", input);
+          if (result) {
+            retire();
             await open();
             status({ status: "ready" });
           }
@@ -267,7 +278,18 @@ export async function createMyGoBridge(dispatch: (event: unknown) => void): Prom
           const provider = "provider" in input.params ? input.params.provider : undefined;
           return runtime.call("Desktop.Request", "repair_connector", { provider });
         }
-        return requestDaemon(DESKTOP_METHODS[key], input, options?.maxRequestTime);
+        const method = DESKTOP_METHODS[key];
+        if (Object.hasOwn(desktopExecutionRequests, method)) {
+          const query = method as keyof typeof desktopExecutionRequests;
+          return desktopExecutionResults[query].parse(
+            await requestDaemon(
+              query,
+              desktopExecutionRequests[query].parse(input),
+              options?.maxRequestTime,
+            ),
+          );
+        }
+        return requestDaemon(method, input, options?.maxRequestTime);
       };
     },
   });

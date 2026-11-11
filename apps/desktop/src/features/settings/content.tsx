@@ -4,7 +4,9 @@ import { DeviceSettings } from "@raypx/tasks/client";
 import { useTranslations } from "@raypx/i18n/browser";
 import { RemoteBoundary } from "../auth/components/remote-boundary.tsx";
 import { authClient } from "../auth/client.ts";
-import { isDesktop } from "../../lib/desktop.ts";
+import { getBridge, isDesktop } from "../../lib/desktop.ts";
+import { useState } from "react";
+import { Button } from "@raypx/ui/components/ui/button";
 import { AgentSettings } from "../tasks/settings.tsx";
 import { taskClient } from "../tasks/client.ts";
 
@@ -17,11 +19,33 @@ export default function SettingsContent() {
         <LanguageSettings />
       </section>
       <AgentSettings />
+      <SessionRecovery />
       <div className="border-b border-border">
         <AnalyticsSettings />
       </div>
       <ConnectedDevicesSettings />
     </>
+  );
+}
+
+function SessionRecovery() {
+  const t = useTranslations("settings");
+  const [busy, setBusy] = useState(false);
+  if (!isDesktop()) return null;
+  async function recover() {
+    setBusy(true);
+    try {
+      await (await getBridge()).request.recoverSession({});
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="border-b border-border p-6">
+      <Button variant="outline" disabled={busy} onClick={() => void recover().catch(() => {})}>
+        {t("recoverSignIn")}
+      </Button>
+    </section>
   );
 }
 

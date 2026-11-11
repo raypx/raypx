@@ -84,7 +84,7 @@ it("never substitutes or starts an unavailable project", async () => {
   await userEvent.click(open);
   expect(mocks.localRequest.mock.calls.some(([method]) => method === "terminal.open")).toBe(false);
 });
-it("closes a terminal that finishes opening after the user leaves", async () => {
+it("preserves an accepted terminal that finishes opening after the user leaves", async () => {
   const opening = deferred<{ id: string }>();
   const request = mocks.localRequest.getMockImplementation()!;
   mocks.localRequest.mockImplementation(async (method, params) =>
@@ -96,9 +96,7 @@ it("closes a terminal that finishes opening after the user leaves", async () => 
   );
   await act(async () => router.navigate({ to: "/login" }));
   await act(async () => opening.resolve({ id: "late-terminal" }));
-  await waitFor(() =>
-    expect(mocks.localRequest).toHaveBeenCalledWith("terminal.close", { id: "late-terminal" }),
-  );
+  expect(mocks.localRequest.mock.calls.some(([method]) => method === "terminal.close")).toBe(false);
 });
 
 it("rejects malformed advanced arguments without opening a process", async () => {
@@ -107,5 +105,49 @@ it("rejects malformed advanced arguments without opening a process", async () =>
   fireEvent.change(screen.getByLabelText("Arguments (JSON array)"), { target: { value: "[123]" } });
   await userEvent.click(screen.getByRole("button", { name: "Open terminal" }));
   expect((await screen.findByRole("alert")).textContent).toBe("Enter a JSON array of strings.");
+  expect(mocks.localRequest.mock.calls.some(([method]) => method === "terminal.open")).toBe(false);
+});
+
+it("keeps a terminal identity across an outage and restores it before enabling input", async () => {
+  const { emit } = await import("../../../tests/helpers/router-local.tsx");
+  await page("/terminal?project=work");
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Open terminal in this project" }),
+  );
+  mocks.executionList.mockResolvedValue([
+    { id: "terminal-1", kind: "terminal", status: "running", cwd: "/work" },
+  ]);
+  await act(async () => emit("engine.status", { status: "error" }));
+  expect(screen.getByRole("button", { name: "Close terminal" })).toBeDisabled();
+  expect(
+    mocks.localRequest.mock.calls.filter(([method]) => method === "terminal.open"),
+  ).toHaveLength(1);
+  await act(async () => emit("engine.status", { status: "ready" }));
+  await waitFor(() => expect(mocks.terminalRestore).toHaveBeenCalledWith({ id: "terminal-1" }));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Close terminal" })).not.toBeDisabled(),
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Close terminal" }));
+  expect(mocks.localRequest).toHaveBeenCalledWith("terminal.close", { id: "terminal-1" });
+});
+
+it("offers existing terminals after reload without starting another process", async () => {
+  mocks.executionList.mockResolvedValue([
+    {
+      id: "123e4567-e89b-42d3-a456-426614174000",
+      kind: "terminal",
+      status: "running",
+      cwd: "/work",
+    },
+  ]);
+  await page("/terminal?project=work");
+  const select = await screen.findByRole("combobox", { name: "Resume terminal" });
+  await userEvent.click(select);
+  await userEvent.click(await screen.findByRole("option", { name: "/work · 123e4567" }));
+  await waitFor(() =>
+    expect(mocks.terminalRestore).toHaveBeenCalledWith({
+      id: "123e4567-e89b-42d3-a456-426614174000",
+    }),
+  );
   expect(mocks.localRequest.mock.calls.some(([method]) => method === "terminal.open")).toBe(false);
 });

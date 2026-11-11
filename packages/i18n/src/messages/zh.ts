@@ -709,6 +709,7 @@ export default {
     },
   },
   settings: {
+    recoverSignIn: "恢复登录存储",
     accountScope: "账号范围",
     unsavedChanges: "未保存的更改",
     search: "搜索设置",
@@ -1029,6 +1030,8 @@ export default {
     invalidArguments: "请输入由字符串组成的 JSON 数组。",
   },
   terminal: {
+    resume: "恢复终端",
+    disconnected: "连接已断开",
     openDefault: "在当前项目打开终端",
     advanced: "高级选项",
     defaultShell: "使用系统默认 Shell",

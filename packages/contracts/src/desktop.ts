@@ -1,5 +1,25 @@
 import { z } from "zod";
 import { localEventSchema } from "./local";
+import { localResults } from "./local-client";
+
+export const desktopExecutionSchema = z.strictObject({
+  id: z.uuid(),
+  kind: z.enum(["terminal", "tool"]),
+  status: z.enum(["running", "finished"]),
+  cwd: z.string(),
+});
+/** Queries are implicitly scoped to the authenticated native owner and origin. */
+export const desktopExecutionRequests = {
+  execution_list: z.strictObject({}),
+  execution_result: z.strictObject({ id: z.uuid() }),
+  terminal_restore: z.strictObject({ id: z.uuid() }),
+};
+export const desktopExecutionResults = {
+  execution_list: z.array(desktopExecutionSchema),
+  execution_result: localResults["tools.run"],
+  terminal_restore: z.object({ accepted: z.literal(true) }),
+};
+export type DesktopExecution = z.infer<typeof desktopExecutionSchema>;
 
 /** Selected-origin HTTP transport. Cookie and administrative headers are never caller inputs. */
 export const desktopApiRequestSchema = z.strictObject({

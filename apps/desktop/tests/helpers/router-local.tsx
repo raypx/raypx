@@ -30,8 +30,13 @@ const mocks = vi.hoisted(() => ({
   localRequest: vi.fn<(method: LocalMethod, params: unknown) => Promise<unknown>>(),
   listeners: new Set<(event: LocalEvent) => void>(),
   terminal: vi.fn(),
+  executionList: vi.fn<() => Promise<unknown>>(),
+  terminalRestore: vi.fn<(input: { id: string }) => Promise<unknown>>(),
 }));
 vi.mock("../../src/lib/desktop", () => ({
+  getBridge: async () => ({
+    request: { executionList: mocks.executionList, terminalRestore: mocks.terminalRestore },
+  }),
   isDesktop: mocks.isDesktop,
   hasTerminalHooks: () => false,
   localRequest: mocks.localRequest,
@@ -123,6 +128,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.listeners.clear();
   mocks.isDesktop.mockReturnValue(true);
+  mocks.executionList.mockResolvedValue([]);
+  mocks.terminalRestore.mockResolvedValue({ accepted: true });
   mocks.localRequest.mockImplementation(async (method) => {
     if (method.startsWith("instance.")) return { state: "registered" };
     if (method === "jobs.list" || method === "jobs.history") return [];

@@ -433,3 +433,70 @@ it.skipIf(process.platform === "win32")(
     }
   },
 );
+
+it("consumes a late credential write and removes it when authorization is abandoned before a binding exists", async () => {
+  const f = await fixture();
+  try {
+    const binding = f.host.control.info(f.scope).binding!;
+    await f.request("host.detach", f.scope);
+    await f.request("host.session", f.scope);
+    let finish!: () => void,
+      writing = false;
+    const set = f.vault.set.bind(f.vault);
+    vi.spyOn(f.vault, "set").mockImplementationOnce(async (...args) => {
+      writing = true;
+      await new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      return set(...args);
+    });
+    const authorization = f
+      .request("host.authorize", {
+        ...f.scope,
+        authorization: {
+          ...binding,
+          accountId: f.scope.accountId,
+          credential: "n".repeat(64),
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        },
+      })
+      .catch((error: unknown) => error);
+    await expect.poll(() => writing).toBe(true);
+    const logout = f.request("host.session", { ...f.scope, accountId: null });
+    finish();
+    await expect(authorization).resolves.toMatchObject({ name: "AbortError" });
+    await logout;
+    expect(f.hasKey()).toBe(false);
+    expect(f.host.control.info(f.scope).authorized).toBe(false);
+    expect(existsSync(join(profilePath({ dataDir: f.dataDir }), "host-binding.json"))).toBe(false);
+  } finally {
+    await f.close();
+  }
+});
+
+it("restores an overwritten credential when its vault adapter writes and then rejects", async () => {
+  const f = await fixture();
+  try {
+    const binding = {
+      ...f.scope,
+      ...f.host.control.info(f.scope).binding!,
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    };
+    const previous = await f.vault.get(binding);
+    const set = f.vault.set.bind(f.vault);
+    vi.spyOn(f.vault, "set").mockImplementationOnce(async (...args) => {
+      await set(...args);
+      throw new Error("synthetic late write failure");
+    });
+    await expect(
+      f.request("host.authorize", {
+        ...f.scope,
+        authorization: { ...previous!, credential: "n".repeat(64) },
+      }),
+    ).rejects.toThrow("synthetic late write failure");
+    expect(await f.vault.get(binding)).toEqual(previous);
+    expect(f.host.control.info(f.scope).authorized).toBe(true);
+  } finally {
+    await f.close();
+  }
+});
