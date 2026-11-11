@@ -81,6 +81,21 @@ export async function quitDesktop() {
   driver.close();
 }
 
+type Throughput = { count: number; bytes: number; intact: boolean; ordered: boolean };
+
+async function evaluateThroughput(step: string, script: string): Promise<Throughput> {
+  const result = (await evaluate(`
+    try {
+      return {value: await (async () => { ${script} })()};
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      return {code: /^[A-Z][A-Z0-9_]{1,63}$/.test(message) ? message : "UNKNOWN_ERROR"};
+    }
+  `)) as { value: Throughput } | { code: string };
+  if ("code" in result) throw new Error(`Daemon throughput ${step} failed: ${result.code}`);
+  return result.value;
+}
+
 export async function measureNativeStream() {
   const project = join(directory, "channel-throughput");
   await mkdir(project, { recursive: true });
@@ -90,12 +105,16 @@ export async function measureNativeStream() {
     id: string;
   };
   const started = performance.now();
-  const renderer = (await evaluate(
+  const renderer = await evaluateThroughput(
+    "file reads",
     `let count=0,bytes=0,intact=true;for(let index=0;index<20;index++){const result=await window.__raypxSmokeRequest('local_request',{method:'files.read',params:{rootId:${JSON.stringify(root.id)},path:'payload.txt'}});count++;bytes+=result.text.length;intact&&=result.text==='x'.repeat(1024*1024);}return {count,bytes,intact,ordered:count===20}`,
-  )) as { count: number; bytes: number; intact: boolean; ordered: boolean };
+  );
   const elapsedMs = performance.now() - started;
-  const info = (await smokeOwnerRequest(directory, "runtime.info", {})) as { bun: string };
-  const events = (await evaluate(`
+  // The smoke runner is a real Bun executable on both platforms. The Windows
+  // runtime.info Bun shim is a batch file intended for invocation by a shell.
+  const events = await evaluateThroughput(
+    "tool events",
+    `
     const ids = Array.from({length: 8}, () => crypto.randomUUID());
     let count = 0, bytes = 0, intact = true, ordered = true, previous;
     const observe = ({detail}) => {
@@ -113,7 +132,7 @@ export async function measureNativeStream() {
     try {
       for (let index = 0; index < ids.length; index++) {
         await window.__raypxSmokeRequest('local_request', {method: 'tools.run', params: {
-          id: ids[index], executable: ${JSON.stringify(info.bun)}, cwd: ${JSON.stringify(project)},
+          id: ids[index], executable: ${JSON.stringify(process.execPath)}, cwd: ${JSON.stringify(project)},
           args: ['-e', "process.stdout.write(" + JSON.stringify(String(index) + ':') + "+'x'.repeat(256*1024-2))"], timeoutMs: 10000,
         }});
       }
@@ -123,7 +142,8 @@ export async function measureNativeStream() {
     } finally {
       window.removeEventListener('raypx-smoke-local-event', observe);
     }
-  `)) as { count: number; bytes: number; intact: boolean; ordered: boolean };
+  `,
+  );
   await smokeOwnerRequest(directory, "roots.remove", { id: root.id });
   return {
     renderer,
