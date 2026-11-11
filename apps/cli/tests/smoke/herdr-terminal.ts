@@ -110,8 +110,8 @@ try {
   const interactive = await host.open(
     shell(
       process.platform === "win32"
-        ? "set /p answer=ready & set answer & ping -n 60 127.0.0.1 >nul"
-        : "printf ready; read value; stty size; printf 'answer:%s' \"$value\"; read done",
+        ? "set /p answer=ready & set answer & set /p recovered=recovery-ready & set recovered & ping -n 60 127.0.0.1 >nul"
+        : "printf ready; read value; stty size; printf 'answer:%s' \"$value\"; read recovered; printf 'recovered:%s' \"$recovered\"; read done",
     ),
     80,
     24,
@@ -170,9 +170,16 @@ try {
     ),
     "Restoration must include the current screen without clearing restored history",
   );
-  await host.input(interactive.id, Buffer.from("after-recovery").toString("base64"));
+  await host.input(
+    interactive.id,
+    Buffer.from(process.platform === "win32" ? "after-recovery\r" : "after-recovery\n").toString(
+      "base64",
+    ),
+  );
+  const recovered =
+    process.platform === "win32" ? "recovered=after-recovery" : "recovered:after-recovery";
   const recoveryDeadline = Date.now() + 5000;
-  while (!output(interactive.id).includes("after-recovery")) {
+  while (!output(interactive.id).includes(recovered)) {
     if (Date.now() > recoveryDeadline) throw new Error("Restored terminal did not accept input");
     await sleep(10);
   }
