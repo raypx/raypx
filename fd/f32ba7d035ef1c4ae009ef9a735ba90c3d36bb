@@ -1,0 +1,39 @@
+apps/cli/src/runtime/daemon/desktop/control.ts
+  s_ddf44ba41dbc53::t_44122a6a2b677a 37-42,65-70,116,119-123
+docs/development/desktop.md
+  s_ddf44ba41dbc53::t_1db70990d6ed68 161-163,165-170
+apps/cli/src/runtime/daemon/desktop/gateway.ts
+  s_ddf44ba41dbc53::t_dc54df883182a5 21-23,426-430,471
+  s_ddf44ba41dbc53::t_e5866f1c04ca01 8,18-20,24-25,88-91,102-104,121,142-144,167,201,238-241,284,314,318,350,354-356,434,436-468,470,472,513-516
+apps/cli/src/runtime/daemon/server.ts
+  s_ddf44ba41dbc53::t_55201780459588 166-169
+apps/desktop/internal/desktop/channel.go
+  s_ddf44ba41dbc53::t_55201780459588 90-95,231-232,279,281
+apps/cli/src/runtime/daemon/awake-clock.ts
+  s_ddf44ba41dbc53::t_b757d4c0f6c581 1-23
+apps/cli/src/runtime/daemon/desktop/control.test.ts
+  s_ddf44ba41dbc53::t_76c098f8605749 215-264
+apps/cli/tests/integration/runtime/daemon/desktop/gateway.test.ts
+  s_ddf44ba41dbc53::t_dc54df883182a5 354-393
+apps/cli/src/runtime/daemon/awake-clock.test.ts
+  s_ddf44ba41dbc53::t_3ee02f5504f9cd 1-8,10-53
+  s_ddf44ba41dbc53::t_ddb23f41ad5eba 9
+apps/desktop/tests/native/host/channel_test.go
+  s_ddf44ba41dbc53::t_55201780459588 91-98,344-381
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fdf32ba7d035ef1c4ae009ef9a735ba90c3d36bb",
+  "prompts": {},
+  "sessions": {
+    "s_ddf44ba41dbc53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "726aff97-c83d-4352-a79b-bc6cb0adaba5",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
