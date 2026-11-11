@@ -231,7 +231,18 @@ export async function smokeDeployment(root: string, args: string[]) {
         ["--tmpfs", "/var/lib/postgresql/data", "--memory", "512m"],
       );
       await untilReady(evidence, async () => {
-        await docker(["exec", `${project}-db`, "pg_isready", "-U", "deployment", "-d", dbName]);
+        // The entrypoint's temporary init server only listens on a Unix socket.
+        await docker([
+          "exec",
+          `${project}-db`,
+          "pg_isready",
+          "-h",
+          "127.0.0.1",
+          "-U",
+          "deployment",
+          "-d",
+          dbName,
+        ]);
         return true;
       });
       for (const profile of ["compose", "railway"] as const) {

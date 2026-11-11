@@ -96,7 +96,17 @@ func nativeFixture(t *testing.T, unix bool) (*host.DaemonClient, <-chan host.JSO
 	}))
 	address := host.JSON{}
 	if unix {
-		socket := filepath.Join(t.TempDir(), "native.sock")
+		// Use a short path even when macOS gives TMPDIR a long per-user path.
+		directory, err := os.MkdirTemp("/tmp", "raypx-ipc-")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			if err := os.RemoveAll(directory); err != nil {
+				t.Error(err)
+			}
+		})
+		socket := filepath.Join(directory, "native.sock")
 		listener, err := net.Listen("unix", socket)
 		if err != nil {
 			t.Fatal(err)
