@@ -85,9 +85,11 @@ UI's `/styles/app.css` imports the shared theme and layered app base defaults.
 Layout and control utilities live in their owning components. Applications also
 register i18n's browser controls as a Tailwind source.
 
-Extract @raypx/testing when generic fixtures repeat across consumers; it must not
-import packages under test. Extract runtime only when another execution host
-directly consumes CLI internals. Do not create packages before those consumers exist.
+`@raypx/testing` owns the manual scheduler, deferred promises and in-memory relay
+socket shared by Client and CLI tests. Consumers declare a direct development
+dependency. Shared fixtures are independent of the workspaces under test, and suites
+stay with their owners. Extract runtime only when another execution host directly
+consumes CLI internals.
 
 `@raypx/logger` is a private source workspace consumed by API and CLI. It owns
 evlog adapters, safe projection and managed delivery; applications own event

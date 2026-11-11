@@ -35,6 +35,8 @@ automatically retry a sent execution command. Fetch credentials and headers for 
 
 ## Verification
 
+Relay scheduler tests use the shared fixtures from `@raypx/testing`.
+
 ```sh
 bun run --cwd packages/client check
 bun run --cwd packages/client test

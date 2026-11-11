@@ -22,6 +22,7 @@
     "@raypx/core": "workspace:*"
   },
   "devDependencies": {
+    "@raypx/testing": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev"

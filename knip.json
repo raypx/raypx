@@ -21,7 +21,7 @@
   "workspaces": {
     ".": {
       "entry": ["deploy/manifests.ts", "deploy/sources.ts"],
-      "ignoreDependencies": ["skills"]
+      "ignoreDependencies": ["@raypx/testing", "skills"]
     },
     "apps/api": {
       "entry": [

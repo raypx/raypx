@@ -1,5 +1,3 @@
-import type { RelayScheduler } from "../../src/scheduler.ts";
-
 export function deferred<T = void>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
   const promise = new Promise<T>((done) => {
@@ -9,7 +7,7 @@ export function deferred<T = void>() {
 }
 
 /** Tests drive one scheduled callback at a time and await the operation's own milestone. */
-export class ManualScheduler implements RelayScheduler {
+export class ManualScheduler {
   private time = Date.parse("2026-01-01T00:00:00Z");
   private sequence = 0;
   private jobs = new Map<number, { at: number; callback: () => void; interval?: number }>();

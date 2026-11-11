@@ -171,7 +171,7 @@ and Host binding have separate scopes. Pass signals through admission, but never
 cancel accepted persistent Agent execution because a transport closed. No lifecycle
 generation counters or parallel ACK implementations belong in these channels.
 
-`remote/scheduler.test.ts` uses injected sockets and the client's manual scheduler for
+`remote/scheduler.test.ts` uses the socket and manual scheduler from `@raypx/testing` for
 exact retry, renewal-drain and acknowledgement deadlines; RemoteControl forwards one
 scheduler to RelayConnection so clocks, jitter and timers share one source. Loopback suites
 in `tests/integration/runtime/daemon/remote/` cover real authentication, command delivery,

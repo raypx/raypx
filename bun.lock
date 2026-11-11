@@ -5,6 +5,7 @@
     "": {
       "name": "raypx",
       "devDependencies": {
+        "@raypx/testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -77,6 +78,7 @@
         "@earendil-works/pi-agent-core": "catalog:",
         "@hona/strobe": "catalog:dev",
         "@orpc/server": "catalog:",
+        "@raypx/testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -420,6 +422,7 @@
         "@raypx/core": "workspace:*",
       },
       "devDependencies": {
+        "@raypx/testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
@@ -757,6 +760,14 @@
       "peerDependencies": {
         "@tanstack/react-query": "^5.105.3",
         "react": "^19.3.0",
+      },
+    },
+    "packages/testing": {
+      "name": "@raypx/testing",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@raypx/tooling": "workspace:*",
+        "@raypx/tsconfig": "workspace:*",
       },
     },
     "packages/tooling": {
@@ -1816,6 +1827,8 @@
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
 
     "@raypx/tasks": ["@raypx/tasks@workspace:packages/tasks"],
+
+    "@raypx/testing": ["@raypx/testing@workspace:packages/testing"],
 
     "@raypx/tooling": ["@raypx/tooling@workspace:packages/tooling"],
 

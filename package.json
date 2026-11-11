@@ -171,6 +171,7 @@
     "dev:mobile": "raypx-dev tasks dev --filter mobile"
   },
   "devDependencies": {
+    "@raypx/testing": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",

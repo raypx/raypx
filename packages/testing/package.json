@@ -1,0 +1,21 @@
+{
+  "name": "@raypx/testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@raypx/tooling": "workspace:*",
+    "@raypx/tsconfig": "workspace:*"
+  },
+  "raypx": {
+    "kind": "tooling",
+    "target": "universal"
+  }
+}
