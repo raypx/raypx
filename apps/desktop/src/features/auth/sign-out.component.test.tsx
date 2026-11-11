@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
+import { Profiler } from "react";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -47,7 +48,7 @@ function SignOutPage() {
     </button>
   );
 }
-async function page() {
+async function page(onCommit?: (fixture: ReturnType<typeof desktopFixture>) => void) {
   const fixture = desktopFixture();
   const session = vi.fn(async () => true);
   const detach = vi.fn(async () => true);
@@ -85,7 +86,9 @@ async function page() {
     <QueryClientProvider client={queries}>
       <BrowserLanguageProvider>
         <DesktopPlatformProvider platform={fixture.platform}>
-          <RouterProvider router={router} />
+          <Profiler id="sign-out" onRender={() => onCommit?.(fixture)}>
+            <RouterProvider router={router} />
+          </Profiler>
         </DesktopPlatformProvider>
       </BrowserLanguageProvider>
     </QueryClientProvider>,
@@ -123,21 +126,23 @@ it.each(["manual", "online", "engine"] as const)(
 );
 
 it("retains the retry after detaching fails and deduplicates concurrent recovery signals", async () => {
-  const fixture = await page();
-  fixture.detach.mockRejectedValueOnce(new Error("offline"));
-  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
-  await screen.findByRole("alert");
-  const pending = deferred<boolean>();
-  fixture.detach.mockReturnValueOnce(pending.promise);
-  await act(async () => {
+  let recovered = false;
+  const fixture = await page((desktop) => {
+    // Recovery can arrive when the alert appears, before passive effects run.
+    if (recovered || !screen.queryByRole("alert")) return;
+    recovered = true;
     window.dispatchEvent(new Event("online"));
     window.dispatchEvent(new Event("online"));
-    fixture.emit({ version: 1, event: "engine.status", data: { status: "ready" } });
+    desktop.emit({ version: 1, event: "engine.status", data: { status: "ready" } });
   });
+  const pending = deferred<boolean>();
+  fixture.detach.mockRejectedValueOnce(new Error("offline")).mockReturnValueOnce(pending.promise);
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
   await waitFor(() => expect(fixture.detach).toHaveBeenCalledTimes(2));
   expect(screen.getByRole("button", { name: "Sign out" })).toBeDisabled();
   await act(async () => pending.resolve(true));
-  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  await waitFor(() => expect(fixture.router.state.location.pathname).toBe("/login"));
+  expect(screen.queryByRole("alert")).toBeNull();
   expect(mocks.signOut).toHaveBeenCalledTimes(1);
   expect(fixture.session).toHaveBeenCalledTimes(2);
   expect(fixture.detach).toHaveBeenCalledTimes(2);

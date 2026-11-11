@@ -26,7 +26,8 @@ export function DesktopSignOutProvider({ children }: { children: ReactNode }) {
   const c = useTranslations("common");
   const { error, retryCompletion } = auth;
   useEffect(() => {
-    if (error?.kind !== "completion") return;
+    // Recovery can arrive before React renders the failure. The auth action
+    // retries only when it has retained an unfinished cleanup callback.
     const retry = () => void retryCompletion();
     const stop = platform.onLocalEvent((event) => {
       if (event.event === "engine.status" && event.data.status === "ready") retry();
@@ -36,7 +37,7 @@ export function DesktopSignOutProvider({ children }: { children: ReactNode }) {
       stop();
       window.removeEventListener("online", retry);
     };
-  }, [error, platform, retryCompletion]);
+  }, [platform, retryCompletion]);
   const state: SignOutState = {
     busy: auth.busy,
     error,
