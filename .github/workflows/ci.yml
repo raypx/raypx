@@ -48,7 +48,11 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-bun
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Install planner dependencies
+        run: bun install --frozen-lockfile --production --filter '@raypx/tooling' --ignore-scripts
       - name: Select affected verification gates
         id: plan
         env:

@@ -1,5 +1,5 @@
-name: Save new successful VP artifacts
-description: Avoid uploading unchanged cache archives
+name: Save changed VP task cache
+description: Upload new output archives or changes to the task result database
 inputs:
   key:
     description: Restored partition's primary key

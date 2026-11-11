@@ -183,7 +183,7 @@ display names in `ci.yml` does not by itself request container builds.
 
 ## Verification planning and cache
 
-Task discovery, dependency closure, argument keys, VP configuration and cache snapshots
+Task discovery, dependency closure, argument keys, VP configuration and cache archive identities
 come from `@raypx-kit/devkit/tasks`. Git change reading and reverse propagation use
 `@raypx-kit/devkit/verification`; Raypx supplies browser/native scope policies.
 The Start environment adapter uses `@raypx-kit/devkit/vite` with injected Vite `loadEnv`.
@@ -268,7 +268,8 @@ omits the test runner when no suites are selected. Both phases execute the origi
 plan; their task selections together cover the combined local verification command.
 VP still owns each task graph and its prerequisites. Checks retains the existing
 `javascript` cache partition; tests uses `source-tests`, avoiding concurrent cache writes
-and separating runner workloads. The first test-phase run starts with an empty cache.
+and separating runner workloads. The save gate checks the VP result database as well
+as output archives so test results without archived files can be reused across runs.
 Both matrix results must succeed for the `source` gate to pass, with fail-fast disabled.
 Missing plans, unsupported versions, mismatched commits and an invocation of an
 unselected gate fail. Native workers use the same plan's runner matrix and
@@ -331,8 +332,9 @@ The CLI build ignores `.cache/herdr` downloads as task inputs: manifest pins sti
 invalidate the build, and restored `dist` already contains the verified binaries.
 The manual `CLI size experiment` workflow compares isolated executable variants and
 warm command startup on Windows; it does not run automatically or request macOS.
-Windows jobs install Bun packages from the registry instead of restoring the download cache;
-extracting its many small files took longer than a fresh frozen install.
+The planning job installs only Tooling's production dependencies without lifecycle scripts
+or a download cache restore. Windows jobs install Bun packages from the registry because
+extracting the download cache took longer than a fresh frozen install.
 The browser job caches Playwright's Chromium headless shell by Playwright version and runs
 `playwright install-deps` only when `ldd` reports a missing system library.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
