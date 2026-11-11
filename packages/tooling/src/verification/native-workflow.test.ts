@@ -12,6 +12,7 @@ type Step = {
   with?: Record<string, string | number | boolean>;
 };
 type Job = {
+  name?: string;
   if?: string;
   needs?: string | string[];
   uses?: string;
@@ -43,6 +44,11 @@ const named = (name: string, entries = steps) => {
   if (!step) throw new Error(`Missing native acceptance step: ${name}`);
   return step;
 };
+
+it("names native matrix jobs even when their conditions skip matrix expansion", () => {
+  expect(workflow("ci").jobs.desktop?.name).toBe("Native acceptance");
+  expect(native.verify?.name).toBe("Distribution acceptance");
+});
 
 it("checks selected platforms and adds parallel distribution phases only when requested", () => {
   const ci = workflow("ci").jobs;

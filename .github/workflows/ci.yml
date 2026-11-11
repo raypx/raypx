@@ -172,7 +172,7 @@ jobs:
     with:
       plan: ${{ needs.changes.outputs.plan }}
   desktop:
-    name: Native acceptance (${{ matrix.os }})
+    name: Native acceptance
     needs: changes
     if: needs.changes.outputs.native == 'true'
     strategy:

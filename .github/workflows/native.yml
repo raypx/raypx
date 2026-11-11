@@ -162,7 +162,7 @@ jobs:
         with:
           key: ${{ steps.vp-cache.outputs.key }}
   verify:
-    name: ${{ matrix.label || 'Distribution acceptance' }}
+    name: Distribution acceptance
     needs: prepare
     if: ${{ !cancelled() && inputs.distribution && needs.prepare.result == 'success' }}
     runs-on: ${{ inputs.runner }}
@@ -171,13 +171,6 @@ jobs:
       fail-fast: false
       matrix:
         phase: [checks, package, smoke]
-        include:
-          - phase: checks
-            label: Checks
-          - phase: package
-            label: Packaging
-          - phase: smoke
-            label: Smoke
     env:
       RAYPX_CLI_PAYLOAD: ${{ github.workspace }}/apps/cli/dist
       APPLE_CERTIFICATE: ${{ matrix.phase == 'package' && secrets.APPLE_CERTIFICATE || '' }}
