@@ -20,6 +20,9 @@ const binary =
     process.platform === "win32" ? "herdr.exe" : "herdr",
   );
 const root = await mkdtemp(join(tmpdir(), "raypx-herdr-smoke-"));
+// Windows ConPTY can retain the command's working directory during teardown.
+// Keep that handle outside the disposable profile and reports directory.
+const cwd = process.platform === "win32" ? tmpdir() : root;
 const events: LocalEvent[] = [];
 const host = new HerdrTerminalHost(
   binary,
@@ -44,10 +47,10 @@ const shell = (source: string) =>
           process.env.COMSPEC ??
           join(process.env.SystemRoot ?? "C:\\Windows", "System32", "cmd.exe"),
         args: ["/D", "/Q", "/C", source],
-        cwd: root,
+        cwd,
         timeoutMs: 10000,
       }
-    : { executable: "/bin/sh", args: ["-c", source], cwd: root, timeoutMs: 10000 };
+    : { executable: "/bin/sh", args: ["-c", source], cwd, timeoutMs: 10000 };
 async function settled(id: string) {
   const until = Date.now() + 12000;
   while (!events.some((event) => event.event === "terminal.exit" && event.data.id === id)) {
@@ -181,7 +184,7 @@ try {
     }, 8000);
   `,
       ],
-      cwd: root,
+      cwd,
       timeoutMs: 10000,
     },
     80,
@@ -213,7 +216,7 @@ try {
       process.execPath,
       resolve(import.meta.dirname, "../fixtures/process/herdr-owner.ts"),
       binary,
-      root,
+      cwd,
       report,
       ...(process.env.RAYPX_HERDR_COMPILED === "1"
         ? [

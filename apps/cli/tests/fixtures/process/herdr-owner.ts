@@ -1,6 +1,6 @@
 import { HerdrTerminalHost } from "../../../src/runtime/process/herdr";
 import { join } from "node:path";
-const [binary, root, report, ...compiled] = process.argv.slice(2);
+const [binary, cwd, report, ...compiled] = process.argv.slice(2);
 const commandReport = report + ".command";
 const host = new HerdrTerminalHost(
   binary!,
@@ -19,7 +19,7 @@ await host.open(
   setInterval(() => {}, 1000);
 `,
     ],
-    cwd: root!,
+    cwd: cwd!,
     timeoutMs: 20000,
   },
   80,
