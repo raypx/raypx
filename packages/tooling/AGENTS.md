@@ -182,7 +182,8 @@ Bun image, read-only sources/payload and a writable report directory; already is
 Linux namespaces run directly. Docker failure never falls back to the host.
 `src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
-`./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
+`src/browser-tests.ts` prepares browser selectors and Playwright arguments.
+E2E owns the Playwright configuration and worker defaults. Browser launchers
 select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
 never dependency passthrough: test flags must not invalidate build/check dependencies.
@@ -191,8 +192,6 @@ The root runs one shared Playwright process; local/package entries run one appli
 Native `--project=web|desktop` selectors resolve before graph construction. `--list`
 bypasses builds and servers. Web `build:e2e` compiles the production SSR artifact
 without the normal build's type-check prerequisite; daily verification keeps checks.
-The config uses eight local workers at 12+ CPUs/32+ GiB, four at 8+ CPUs/16+ GiB,
-one or two on smaller hosts, and two on CI. Explicit Playwright flags win.
 `./browser-server` serves only compiled Desktop client assets on loopback with
 HTML deep-link fallback; never run Vite configuration or simulate backend/Native IPC there.
 Smoke orchestration and artifact probes live in

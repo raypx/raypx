@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
-import { browserTestSettings } from "@raypx/tooling/browser-tests";
 import { availableParallelism, totalmem } from "node:os";
+import { browserTestSettings } from "./browser-settings.ts";
 import { web, desktop } from "./tests/helpers/surfaces.js";
 
 const settings = browserTestSettings(process.env, {

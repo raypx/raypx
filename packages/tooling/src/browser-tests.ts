@@ -126,32 +126,3 @@ export function browserTestArguments(args: string[], environment: Environment): 
     throw new Error("Browser test arguments must be a string array");
   return [...scoped, ...args];
 }
-
-/** Shared by the launcher and Playwright config, with no product/runtime imports. */
-export function browserTestSettings(
-  environment: Environment,
-  capacity?: { cpus: number; memoryBytes: number },
-) {
-  const surface = environment.RAYPX_E2E_SURFACE ?? "all";
-  if (!["all", "web", "desktop"].includes(surface)) throw new Error("Invalid E2E surface");
-  const clauses = [
-    ...(environment.RAYPX_E2E_SMOKE === "1" ? ["@smoke\\b"] : []),
-    ...(environment.RAYPX_E2E_GREP ? [environment.RAYPX_E2E_GREP] : []),
-  ];
-  return {
-    surface,
-    grep: clauses.length
-      ? new RegExp(clauses.map((pattern) => `(?=.*(?:${pattern}))`).join("") + ".*")
-      : undefined,
-    trace: environment.CI ? ("on-first-retry" as const) : ("off" as const),
-    screenshots: environment.RAYPX_E2E_SCREENSHOTS === "1",
-    workers:
-      environment.CI || !capacity
-        ? 2
-        : capacity.cpus >= 12 && capacity.memoryBytes >= 32 * 2 ** 30
-          ? 8
-          : capacity.cpus >= 8 && capacity.memoryBytes >= 16 * 2 ** 30
-            ? 4
-            : Math.max(1, Math.min(2, capacity.cpus)),
-  };
-}

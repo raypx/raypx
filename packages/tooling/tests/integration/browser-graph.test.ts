@@ -70,6 +70,57 @@ it("uses Playwright project selection before planning builds", () => {
 it("lists browser cases without building or checking an application", () => {
   expect(graph(["test", "e2e", "--", "--list"]).tasks).toEqual([]);
 });
+it("loads Playwright settings from E2E and intersects smoke and user filters", () => {
+  const child = spawnSync(
+    process.execPath,
+    [
+      "--no-env-file",
+      "-e",
+      `
+    import config from "./playwright.config.ts";
+    import { browserTestSettings } from "./browser-settings.ts";
+    const capacities = [[8, 16], [16, 32], [12, 24], [4, 16], [8, 8], [1, 16]];
+    const localWorkers = capacities.map(([cpus, gib]) =>
+      browserTestSettings({}, { cpus, memoryBytes: gib * 2 ** 30 }).workers);
+    const local = browserTestSettings({}, { cpus: 16, memoryBytes: 64 * 2 ** 30 });
+    console.log(JSON.stringify({
+      projects: config.projects.map(({ name }) => name),
+      trace: config.use.trace,
+      screenshot: config.use.screenshot,
+      workers: config.workers,
+      grep: ["versions a template @smoke", "versions a template", "opens memory @smoke"]
+        .map(title => config.grep.test(title)),
+      localWorkers,
+      localTrace: local.trace,
+      localHasGrep: Boolean(local.grep),
+    }));
+  `,
+    ],
+    {
+      cwd: resolve(root, "e2e"),
+      env: {
+        ...process.env,
+        CI: "true",
+        RAYPX_E2E_SURFACE: "desktop",
+        RAYPX_E2E_SMOKE: "1",
+        RAYPX_E2E_GREP: "template",
+      },
+      encoding: "utf8",
+      timeout: 30_000,
+    },
+  );
+  if (child.status !== 0) throw new Error(child.stderr || child.stdout);
+  expect(JSON.parse(child.stdout)).toEqual({
+    projects: ["desktop"],
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    workers: 2,
+    grep: [true, false, false],
+    localWorkers: [4, 8, 4, 2, 2, 1],
+    localTrace: "off",
+    localHasGrep: false,
+  });
+});
 it("browser-only acceptance excludes CLI builds and full Desktop checks", () => {
   const tasks = graph(["tasks", "e2e"]).tasks.map((task) => task.taskId);
   expect(tasks).toContain("web#build:e2e");

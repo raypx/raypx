@@ -1,6 +1,5 @@
 import { expect, it } from "vite-plus/test";
 import {
-  browserTestSettings,
   browserTestArguments,
   isBrowserTestTask,
   planBrowserTests,
@@ -10,7 +9,11 @@ import {
 it("keeps complete browser acceptance as the default and leaves devtools acceptance separate", () => {
   const plan = planBrowserTests([]);
   expect(plan.task).toBe("e2e");
-  expect(browserTestSettings(plan.env).grep).toBeUndefined();
+  expect(plan.env).toEqual({
+    RAYPX_E2E_SURFACE: "all",
+    RAYPX_E2E_SMOKE: "0",
+    RAYPX_E2E_SCREENSHOTS: "0",
+  });
   expect(isBrowserTestTask("e2e:devtools")).toBe(false);
 });
 it("combines surface, smoke and visual intent while forwarding normal Playwright arguments", () => {
@@ -25,36 +28,29 @@ it("combines surface, smoke and visual intent while forwarding normal Playwright
     "2",
   ]);
   const task = prepareBrowserTask(plan.task, plan.args, plan.env);
-  const settings = browserTestSettings(task.env);
   expect(plan.task).toBe("e2e:web");
   expect(task.args).toEqual([]);
   expect(browserTestArguments([], task.env)).toEqual(["--workers", "2"]);
-  expect(settings.screenshots).toBe(true);
-  expect(settings.grep?.test("chromium memory.spec.ts Web versions a template @web @smoke")).toBe(
-    true,
-  );
-
-  expect(settings.grep?.test("chromium memory.spec.ts Web versions a template @web")).toBe(false);
-  expect(settings.grep?.test("chromium memory.spec.ts Web visits memory @web @smoke")).toBe(false);
+  expect(task.env).toMatchObject({
+    RAYPX_E2E_SURFACE: "web",
+    RAYPX_E2E_SMOKE: "1",
+    RAYPX_E2E_SCREENSHOTS: "1",
+    RAYPX_E2E_GREP: "template",
+  });
 });
 it.each(["--grep=template", "-g"])(
   "selects the project while preserving grep through %s",
   (flag) => {
     const args = flag === "-g" ? [flag, "template"] : [flag];
     const task = prepareBrowserTask("e2e:desktop", ["--", ...args], {});
-    const settings = browserTestSettings(task.env);
-    expect(settings.surface).toBe("desktop");
-    expect(settings.grep?.test("Desktop template @desktop")).toBe(true);
+    expect(task.env).toMatchObject({ RAYPX_E2E_SURFACE: "desktop", RAYPX_E2E_GREP: "template" });
   },
 );
-it("makes trace recording explicit locally and uses the first retry on CI", () => {
-  expect(browserTestSettings({}).trace).toBe("off");
-  expect(browserTestSettings({ CI: "true" }).trace).toBe("on-first-retry");
-  expect(browserTestSettings({}).screenshots).toBe(false);
+it("forwards explicit trace flags for visual runs", () => {
   const task = prepareBrowserTask("e2e:visual", ["--", "--trace", "on"], {});
   expect(task.args).toEqual([]);
   expect(browserTestArguments([], task.env)).toEqual(["--trace", "on"]);
-  expect(browserTestSettings(task.env).screenshots).toBe(true);
+  expect(task.env.RAYPX_E2E_SCREENSHOTS).toBe("1");
 });
 it("rejects conflicting surfaces, malformed patterns and alternate configs", () => {
   expect(() => planBrowserTests(["--web", "--desktop"])).toThrow("either");
@@ -63,7 +59,7 @@ it("rejects conflicting surfaces, malformed patterns and alternate configs", () 
   expect(() => prepareBrowserTask("e2e", ["--", "--config", "custom.ts"], {})).toThrow(
     "compiled-artifact config",
   );
-  expect(() => browserTestSettings({ RAYPX_E2E_SURFACE: "unknown" })).toThrow("surface");
+  expect(() => prepareBrowserTask("e2e", [], { RAYPX_E2E_SURFACE: "unknown" })).toThrow("surface");
   expect(() => browserTestArguments([], { RAYPX_E2E_ARGS: "[" })).toThrow(SyntaxError);
   expect(() => browserTestArguments([], { RAYPX_E2E_ARGS: '["valid",2]' })).toThrow("string array");
 });
@@ -95,16 +91,4 @@ it("uses native projects to select builds and rejects conflicting application sc
     "--",
     "settings.spec.ts",
   ]);
-});
-
-it.each([
-  [{}, 8, 16, 4],
-  [{}, 16, 32, 8],
-  [{}, 12, 24, 4],
-  [{}, 4, 16, 2],
-  [{}, 8, 8, 2],
-  [{}, 1, 16, 1],
-  [{ CI: "true" }, 16, 64, 2],
-] as const)("bounds local worker capacity (%j, %i CPUs, %i GiB)", (env, cpus, gib, expected) => {
-  expect(browserTestSettings(env, { cpus, memoryBytes: gib * 2 ** 30 }).workers).toBe(expected);
 });

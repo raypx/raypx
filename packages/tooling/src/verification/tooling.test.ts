@@ -20,7 +20,7 @@ function project() {
       exports: {
         "./tasks": "./src/tasks/config",
         "./build/nitro": { import: "./src/build/nitro", types: "./src/build/types" },
-        "./browser-tests": "./src/browser-tests",
+        "./browser-server": "./src/browser-server",
       },
     },
   });
@@ -37,12 +37,12 @@ function project() {
   write("packages/tooling/src/build/nitro.ts", 'export { value } from "./shared";');
   write("packages/tooling/src/build/shared.ts", "export const value = 1;");
   write("packages/tooling/src/build/types.ts");
-  write("packages/tooling/src/browser-tests.ts");
+  write("packages/tooling/src/browser-server.ts");
   write(
     "packages/service/vite.app.config.ts",
     'import { value } from "@raypx/tooling/build/nitro";',
   );
-  write("packages/browser/config.ts", 'import "@raypx/tooling/browser-tests";');
+  write("packages/browser/config.ts", 'import "@raypx/tooling/browser-server";');
   write("packages/independent/vite.config.ts", 'import "@raypx/tooling/tasks";');
   const plan = (files: string[]) => verificationPlan(taskModel(root), files);
   return { root, write, plan };

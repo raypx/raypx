@@ -37,6 +37,7 @@ to the uncached `browser:run` leaf, preserving dependency fingerprints.
 serves the compiled client with deep-link fallback and original HTML/CSP. Playwright
 owns and stops both loopback servers; occupied ports fail instead of reusing stale
 artifacts. Reports live in ignored `test-results/<all|web|desktop>/` directories.
+`browser-settings.ts` owns filter composition and Playwright defaults.
 CI defaults to two workers; local 12+ CPU/32+ GiB hosts use eight, 8+ CPU/16+ GiB
 hosts four, and smaller hosts one or two. Explicit `--workers` overrides this.
 

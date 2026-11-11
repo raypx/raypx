@@ -11,7 +11,6 @@
     "./build/deployment": "./src/build/deployment.ts",
     "./build/analytics": "./src/build/analytics.ts",
     "./build/start-env": "./src/build/start-env.ts",
-    "./browser-tests": "./src/browser-tests.ts",
     "./browser-server": "./src/browser-server.ts",
     "./tasks": "./src/tasks/config.ts",
     "./build/cli": "./src/build/cli.ts",
@@ -49,7 +48,6 @@
       "./build/analytics": "node",
       "./build/start-env": "node",
       "./tasks": "node",
-      "./browser-tests": "node",
       "./build/cli": "node"
     },
     "sourceTargets": {
