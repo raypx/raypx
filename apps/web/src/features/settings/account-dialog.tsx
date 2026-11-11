@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { AccountDetails } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { PasswordChangeDialog } from "@raypx/auth/client";
+import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -43,7 +43,7 @@ export default function AccountSettingsDialog({
   onClose: () => void;
 }) {
   const session = authClient.useSession();
-  const accountId = session.isPending || session.error ? null : session.data?.user.id;
+  const user = session.isPending || session.error ? null : session.data?.user;
   const queries = useQueryClient();
   const router = useRouter();
   const c = useTranslations("common");
@@ -53,7 +53,7 @@ export default function AccountSettingsDialog({
   }
   return (
     <AccountSettingsPanel
-      key={accountId ?? "guest"}
+      key={user?.id ?? "guest"}
       section={section}
       onSectionChange={onSectionChange}
       onClose={onClose}
@@ -70,19 +70,11 @@ export default function AccountSettingsDialog({
       </AccountSettingsContent>
       <AccountSettingsContent value="password" className="min-w-0">
         <PrivateSettings>
-          {(id) => (
-            <PasswordChangeDialog
-              key={id}
-              client={authClient}
-              onChanged={async () => {
-                const result = await authClient.getSession({
-                  fetchOptions: { signal: AbortSignal.timeout(10_000) },
-                });
-                if (result.error || !result.data) throw new Error("Session refresh failed");
-                await reload();
-              }}
-            />
-          )}
+          {(id) =>
+            user?.id === id && (
+              <PasswordSettings key={id} accountId={id} email={user.email} reload={reload} />
+            )
+          }
         </PrivateSettings>
       </AccountSettingsContent>
       <AccountSettingsContent value="sessions" className="min-w-0">
@@ -106,6 +98,63 @@ export default function AccountSettingsDialog({
         </PrivateSettings>
       </AccountSettingsContent>
     </AccountSettingsPanel>
+  );
+}
+
+function PasswordSettings({
+  accountId,
+  email,
+  reload,
+}: {
+  accountId: string;
+  email: string;
+  reload: () => Promise<void>;
+}) {
+  const c = useTranslations("common");
+  const t = useTranslations("auth");
+  const query = useQuery({
+    queryKey: ["linked-accounts", apiUrl, accountId],
+    queryFn: async ({ signal }) => {
+      const { data, error } = await authClient.listAccounts({
+        fetchOptions: { signal, cache: "no-store" },
+      });
+      if (error || !Array.isArray(data) || data.some((account) => account.userId !== accountId))
+        throw new Error("Linked accounts unavailable");
+      return data.some((account) => account.providerId === "credential");
+    },
+  });
+  const recoveryLink = (
+    <Link
+      to="/forgot-password"
+      className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+    >
+      {t("forgot")}
+    </Link>
+  );
+  if (query.isPending) return <LoadingState label={c("loading")} />;
+  if (query.isError)
+    return (
+      <div className="flex flex-wrap items-center gap-4">
+        <p role="alert">{c("networkError")}</p>
+        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
+          {c("retry")}
+        </Button>
+      </div>
+    );
+  if (!query.data) return <PasswordSetupEmail client={authClient} email={email} webUrl={webUrl} />;
+  return (
+    <PasswordChangeDialog
+      client={authClient}
+      recoveryLink={recoveryLink}
+      onChanged={async () => {
+        const result = await authClient.getSession({
+          fetchOptions: { signal: AbortSignal.timeout(10_000) },
+        });
+        if (result.error || result.data?.user.id !== accountId)
+          throw new Error("Session refresh failed");
+        await reload();
+      }}
+    />
   );
 }
 

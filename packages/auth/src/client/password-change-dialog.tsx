@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { LockIcon } from "@raypx/icons/lock";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { CloseIcon } from "@raypx/icons/close";
@@ -34,9 +34,11 @@ const fields = [
 export function PasswordChangeDialog({
   client,
   onChanged,
+  recoveryLink,
 }: {
   client: PasswordChangeClient;
   onChanged?: AuthActionSuccess;
+  recoveryLink?: ReactNode;
 }) {
   const id = useId();
   const t = useTranslations("auth");
@@ -155,6 +157,7 @@ export function PasswordChangeDialog({
                     <PasswordField
                       key={name}
                       label={t(name)}
+                      labelAction={purpose === "current" && !auth.busy ? recoveryLink : undefined}
                       id={`${id}-${name}`}
                       name={name}
                       purpose={purpose}

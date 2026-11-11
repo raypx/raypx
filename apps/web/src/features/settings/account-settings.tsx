@@ -79,7 +79,7 @@ export function AccountSettingsPanel({
   const sections = (
     [
       { value: "account", label: t("accountTitle"), icon: UserCircleIcon },
-      { value: "password", label: t("changePassword"), icon: LockIcon },
+      { value: "password", label: t("password"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
       { value: "instances", label: i("instances"), icon: MonitorIcon },
       { value: "preferences", label: s("device"), icon: SettingsIcon },

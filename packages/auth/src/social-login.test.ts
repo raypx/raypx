@@ -1,11 +1,14 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { OAuthProvider } from "better-auth";
 import { memoryAdapter } from "better-auth/adapters/memory";
-import { createAuth } from "./server.ts";
+import { createAuth, type AuthMailer } from "./server.ts";
 import type { SocialProvider } from "@raypx/core/auth";
 
 async function fixture(provider: SocialProvider, registrationAllowed = true, emailVerified = true) {
-  const records: Record<string, Record<string, unknown>[]> = {
+  const records: Record<
+    "user" | "account" | "session" | "verification",
+    Record<string, unknown>[]
+  > = {
     user: [],
     account: [],
     session: [],
@@ -13,7 +16,7 @@ async function fixture(provider: SocialProvider, registrationAllowed = true, ema
   };
   const mailer = {
     sendVerification: vi.fn(async () => {}),
-    sendPasswordReset: vi.fn(async () => {}),
+    sendPasswordReset: vi.fn<AuthMailer["sendPasswordReset"]>(async () => {}),
   };
   const auth = createAuth({
     database: memoryAdapter(records),
@@ -98,6 +101,52 @@ it.each(["google", "github"] as const)(
   },
 );
 
+it("lets a GitHub account set its first password with a one-time email link", async () => {
+  const { auth, records, mailer, start, finish } = await fixture("github");
+  const signedIn = await finish(await start());
+  const cookie = signedIn.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+  const listAccounts = () =>
+    auth.handler(
+      new Request("http://localhost:3002/api/auth/list-accounts", { headers: { cookie } }),
+    );
+  const email = "social@example.test";
+  const password = "first-password-123";
+  const post = (path: string, body: object) =>
+    auth.handler(
+      new Request(`http://localhost:3002/api/auth/${path}`, {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+        body: JSON.stringify(body),
+      }),
+    );
+  expect(await (await listAccounts()).json()).toMatchObject([{ providerId: "github" }]);
+  const redirectTo = "http://localhost:3000/reset-password";
+  expect((await post("request-password-reset", { email, redirectTo })).status).toBe(200);
+  expect(mailer.sendPasswordReset).toHaveBeenCalledTimes(1);
+  const [message] = mailer.sendPasswordReset.mock.calls[0]!;
+  expect(message.email).toBe(email);
+  expect((await post("reset-password", { newPassword: password })).status).toBe(400);
+
+  const link = await auth.handler(new Request(message.url));
+  expect(link.status).toBe(302);
+  const landing = new URL(link.headers.get("location")!);
+  expect(`${landing.origin}${landing.pathname}`).toBe(redirectTo);
+  const token = landing.searchParams.get("token");
+  expect(token).toBeTruthy();
+  expect((await post("reset-password", { token, newPassword: password })).status).toBe(200);
+  expect(
+    (await post("reset-password", { token, newPassword: "replacement-password" })).status,
+  ).toBe(400);
+  expect(records.account.map((account) => account.providerId)).toEqual(["github", "credential"]);
+  const login = await post("sign-in/email", { email, password });
+  expect(login.status).toBe(200);
+  expect(records.user).toHaveLength(1);
+  expect(await login.json()).toMatchObject({ user: { id: records.user[0]!.id } });
+});
+
 it("rejects callback origins outside the configured application", async () => {
   const { start, records } = await fixture("google");
   expect((await start("https://attacker.invalid/login")).status).toBe(403);
@@ -136,7 +185,7 @@ it.each([true, false])(
   "links an existing email only when the local account is verified (%s)",
   async (verified) => {
     const { start, finish, records } = await fixture("google", false);
-    records.user!.push({
+    records.user.push({
       id: "existing-user",
       email: "social@example.test",
       name: "Existing",

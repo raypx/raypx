@@ -101,3 +101,58 @@ it("keeps failed account reads retryable without showing another identity", asyn
   fireEvent.click(within(dialog).getByRole("button", { name: "Try again" }));
   expect(await screen.findByLabelText("Display name")).toHaveValue("Ada");
 });
+
+it("sends the first password setup link to the signed-in account email", async () => {
+  signIn();
+  mocks.listAccounts.mockResolvedValue({
+    data: [{ userId: "user-1", providerId: "github" }],
+    error: null,
+  });
+  mocks.requestPasswordReset
+    .mockResolvedValueOnce({ error: { code: "MAIL_NOT_CONFIGURED", status: 503 } })
+    .mockResolvedValueOnce({ data: {}, error: null });
+  await page("/#settings/password");
+
+  const send = await screen.findByRole("button", { name: "Send setup link" });
+  expect(screen.queryByLabelText("Current password")).toBeNull();
+  expect(mocks.requestPasswordReset).not.toHaveBeenCalled();
+  fireEvent.click(send);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Email delivery is unavailable");
+  expect(send).toBeEnabled();
+
+  fireEvent.click(send);
+  expect(
+    await screen.findByText("Check your inbox and open the link to set your password."),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: /^Resend in / })).toBeDisabled();
+  expect(mocks.requestPasswordReset).toHaveBeenCalledTimes(2);
+  expect(mocks.requestPasswordReset).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      email: "ada@example.test",
+      redirectTo: "https://raypx.example/reset-password",
+    }),
+  );
+});
+
+it("keeps password setup hidden on failed account reads and requires the current password for a linked credential", async () => {
+  signIn();
+  mocks.listAccounts.mockResolvedValueOnce({ error: { code: "OFFLINE" } }).mockResolvedValueOnce({
+    data: [
+      { userId: "user-1", providerId: "github" },
+      { userId: "user-1", providerId: "credential" },
+    ],
+    error: null,
+  });
+  await page("/#settings/password");
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Unable to connect");
+  expect(screen.queryByRole("button", { name: "Send setup link" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Change password" }));
+  expect(await screen.findByLabelText("Current password")).toBeRequired();
+  expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveAttribute(
+    "href",
+    "/forgot-password",
+  );
+  expect(mocks.requestPasswordReset).not.toHaveBeenCalled();
+});

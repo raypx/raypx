@@ -95,7 +95,7 @@ it("opens a direct link, preserves drafts and closes to projects", async () => {
   fireEvent.change(screen.getByRole("textbox", { name: "Draft name" }), {
     target: { value: "Ada edited" },
   });
-  await act(async () => fireEvent.click(screen.getByRole("tab", { name: "Change password" })));
+  await act(async () => fireEvent.click(screen.getByRole("tab", { name: "Password" })));
   expect(screen.getByRole("tabpanel").textContent).toBe("Password controls");
   await act(async () => fireEvent.click(screen.getByRole("tab", { name: "Account" })));
   expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Draft name" }).value).toBe(

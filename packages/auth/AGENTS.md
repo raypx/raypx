@@ -22,10 +22,13 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   Provider buttons use Google's and GitHub's Hugeicons through `@raypx/icons`.
   `completeOnMount` completes an application-confirmed session handoff, with the same
   retry lifecycle and no credential submission.
-  `PasswordChangeDialog` takes a credential client and optional refresh callback.
+  `PasswordChangeDialog` takes a credential client, optional refresh callback and
+  application-supplied password recovery link. `PasswordSetupEmail` sends the
+  existing password reset link to the signed-in account's email address supplied
+  by the application. Web chooses the action using Better Auth's linked accounts.
   Its compact settings action opens a modal; closing clears drafts and feedback,
   while in-flight password changes or refreshes prevent dismissal.
-  applications own where account settings are available.
+  Applications own where account settings are available.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.
@@ -72,7 +75,8 @@ shared policy for new-password length feedback without retaining credentials.
 The shared password field owns current/new/confirmation constraints. Forms derive
 success copy from their mode and action outcome, translating notices during render.
 `usePasswordChange` verifies the current password through the injected client and
-keeps the password-change interface separate from sign-in clients.
+keeps the password-change interface separate from sign-in clients. First password
+setup uses the same expiring, single-use email link as password recovery.
 
 Only the browser `/client` entry may reach DOM form components and browser i18n.
 Keep `/hooks` platform-neutral and `/server` and `/types` free of DOM

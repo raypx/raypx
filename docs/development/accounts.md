@@ -25,12 +25,17 @@ retains the draft. Explicitly saved drafts retain their existing local storage b
   account projection after success.
 - Password changes require the current password and default to signing out other
   sessions. Better Auth rotates the current session when this option is selected.
-  The settings action opens a compact dialog. Cancel, Escape and backdrop dismissal
+  The settings action opens a compact dialog with a link for a forgotten password.
+  Cancel, Escape and backdrop dismissal
   discard its drafts and return focus to the action without closing settings.
   Dismissal is disabled while the change or account refresh is pending.
   Password changes invalidate remote device credentials through Control's security
   version; local work is unaffected. Password fields clear after success. A failed
   account refresh retries only that refresh, never the password mutation.
+- The Web password category checks whether the account has a password login method.
+  Accounts without one can request a setup link sent to their account email.
+  Better Auth's existing reset flow validates the single-use link and adds a
+  password to the same account. This requires working account email delivery.
 - Shared auth forms recover missing/expired reset links with a new-link action and
   replace completed resets with sign-in. Failed post-login navigation retries only
   the application follow-up. Shared hooks and form tests live in Auth.

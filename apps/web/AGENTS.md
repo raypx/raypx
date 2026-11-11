@@ -109,9 +109,10 @@ application is an independent composition root and is never imported by another 
   dialog keeps the category icon and account/device scope visible above its scrolling
   content. Profile edits, sessions, registration states and diagnostics use shared
   icon and badge primitives; registration never implies a computer is online.
-  The password category exposes a compact action that opens Auth's small nested dialog.
-  Dismissal clears credential drafts and preserves the parent settings dialog;
-  password changes and their account refresh prevent dismissal while pending.
+  The password category loads the signed-in account's linked login methods.
+  Accounts with a password open Auth's change dialog; others request an email
+  setup link. Dismissal clears credential drafts and preserves the parent settings
+  dialog; password changes and their account refresh prevent dismissal while pending.
   The `/projects` page lists authorized remote projects grouped by computer.
   Project/session selection lives in validated URL search. The composer consumes
   that target and never executes on navigation or guest draft restoration. The
