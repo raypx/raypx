@@ -1,0 +1,16 @@
+export default {
+  enabled: "On",
+  disabled: "Off",
+  unconfigured: "Not configured",
+  retrySave: "Retry saving",
+  title: "Diagnostics",
+  hint: "Off by default. Never includes session content, files, terminal output or credentials. No session replay.",
+  usage: "Usage statistics",
+  usageHint: "Feature usage and results, linked across Web and Desktop by internal account ID.",
+  errors: "Error reports",
+  errorsHint:
+    "Error codes, app version and code locations, without messages or local paths. Anonymous when statistics are off.",
+  unavailable: "Not configured in this build; nothing is collected.",
+  saveError: "Unable to save this choice. Newly enabled collection remains off. Try again.",
+  viewError: "Unable to open this view. Reload the app and try again.",
+} as const;

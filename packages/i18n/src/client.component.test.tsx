@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import { useState } from "react";
 import { IntlProvider, useFormatter, useLocale, useTranslations } from "./react.js";
 import { LanguageProvider, useLanguagePreference } from "./language-provider.js";
-import { messages } from "./messages/index.js";
+import { messages } from "../locales/index.js";
 import type { LocalePreference } from "./preferences.js";
 
 afterEach(cleanup);

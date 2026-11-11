@@ -21,6 +21,13 @@ The configured macOS package minimum is 13.5.
 Direct Bun installs also work. `bun run doctor` confirms the active runtime. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
+Repository automation is installed by `@raypx/scripts`, which registers `raypx-dev`
+and calls Tooling's public CLI entry. Package scripts receive it from their direct
+workspace dependency. For direct terminal use, run `bun link` once in
+`packages/scripts` with Bun's global bin directory on `PATH`, then use
+`raypx-dev doctor` or `raypx-dev verify`. The root `bun run raypx-dev <command>`
+entry uses the same executable without requiring a global link.
+
 Desktop's Go module lives in apps/desktop. Daily `bun run verify` selects affected
 JavaScript and Go checks; `bun run verify --full` checks all current-platform sources
 and artifacts for release preparation or an explicit full-validation request.

@@ -19,12 +19,38 @@ absolute times instead of `toLocaleString()` or ad hoc `Intl` formatters.
 language list. Selecting a fixed language records that choice even if it is already
 the currently resolved language.
 
+## Catalog authoring
+
+Edit TypeScript under `locales/en/` and `locales/zh/`, with one file per namespace:
+
+```text
+locales/
+  en/{index,common,auth,tasks,settings,...}.ts
+  zh/{index,common,auth,tasks,settings,...}.ts
+  index.ts  # Static catalogs and the public /messages entry
+  lazy.ts   # Browser catalog loaders
+```
+
+Each message filename becomes its namespace, so `auth.ts` exports the keys inside `auth`,
+without another `auth` wrapper. Language `index.ts` files only assemble those modules.
+Use `export default { ... } as const` to preserve
+literal strings for exact key, ICU argument and rich-text tag inference. Chinese
+modules use `satisfies CatalogShape<typeof en>` against their matching English module.
+
+Keep the same namespace files and keys in both languages. Register a new namespace
+in both `locales/en/index.ts` and `locales/zh/index.ts` using static `.js` imports. Imports include
+namespace files directly, so editing translations participates in normal builds and
+hot updates without a generation command or synchronized copies.
+
+`bun run i18n:check` validates static catalog structure, namespace/key parity,
+ICU syntax and arguments, and rich tags without executing translation modules.
+
 ## Catalog delivery
 
-`/browser` imports catalogs through `#catalogs`, which bundles every language by
-default, so switches never load. The `i18nCatalogs({ catalogs: "lazy" })` Vite plugin
-from `/vite` switches only the client environment to the default catalog plus one
-chunk per other language; server environments stay static. While a newly selected
+`/browser` imports catalogs through `#messages`, which resolves to `locales/index.ts`
+and bundles every language by default, so switches never load. The `i18nCatalogs({ catalogs: "lazy" })` Vite plugin
+from `/vite` selects `locales/lazy.ts` for the client environment: the default catalog
+plus one chunk per other language; server environments stay static. While a newly selected
 language loads, the provider keeps rendering the previous catalog, and only a first
 render with no ready catalog suspends. Lazy web hydration first awaits
 `preloadCatalog(document.documentElement.lang)` so the client matches the HTML.

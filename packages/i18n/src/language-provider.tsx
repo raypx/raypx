@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { messages } from "./messages/index.js";
+import { messages } from "../locales/index.js";
 import { intlClient } from "./react.js";
 
 type BoundProps = ComponentProps<typeof intlClient.LanguageProvider>;

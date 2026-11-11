@@ -65,7 +65,7 @@
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
     },
     "packages/tooling": {
-      "entry": ["src/cli.ts", "src/tasks/leaf.ts", "src/validation/commit-message.ts"]
+      "entry": ["src/tasks/leaf.ts", "src/validation/commit-message.ts"]
     },
     "packages/tsconfig": {
       "entry": ["scripts/task.ts"]
@@ -95,6 +95,9 @@
     "packages/runtime-node": {
       "entry": ["scripts/task.ts", "src/*.ts"],
       "ignoreDependencies": ["ws", "undici", "@types/ws"]
+    },
+    "packages/i18n": {
+      "entry": ["tests/types/*.ts"]
     }
   }
 }

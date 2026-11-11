@@ -20,18 +20,16 @@ import { runPrecheck } from "./verification/prechecks.js";
 import { reportBuildSizes, sizeOptions } from "./validation/build-size.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const [command, ...args] = process.argv.slice(2);
 function findings(items: string[], label: string) {
   if (items.length)
     throw new Error(`${label} failed:\n${items.map((item) => `  ${item}`).join("\n")}`);
   console.log(`${label} passed`);
 }
-function option(name: string, fallback: string) {
-  const offset = args.indexOf(name);
-  return offset < 0 ? fallback : (args[offset + 1] ?? fallback);
-}
-
-async function main() {
+async function main([command, ...args]: string[]) {
+  function option(name: string, fallback: string) {
+    const offset = args.indexOf(name);
+    return offset < 0 ? fallback : (args[offset + 1] ?? fallback);
+  }
   switch (command) {
     case "size":
       reportBuildSizes(root, sizeOptions(args));
@@ -112,6 +110,7 @@ async function main() {
       findings(policy(root), "Repository policy");
       break;
     case "i18n":
+      if (args.length) throw new Error("Usage: raypx-dev i18n");
       findings(checkLocales(root), "Locale catalogs");
       break;
     case "verify":
@@ -188,7 +187,11 @@ async function main() {
       throw new Error(`Unknown command: ${command}`);
   }
 }
-await main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+export async function runCli(args: string[]) {
+  await main(args).catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
+
+if (import.meta.main) await runCli(process.argv.slice(2));

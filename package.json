@@ -131,7 +131,7 @@
   "type": "module",
   "scripts": {
     "prepare": "vp config --hooks --no-agent",
-    "raypx-dev": "bun packages/tooling/src/cli.ts",
+    "raypx-dev": "bun packages/scripts/bin/raypx-dev.mjs",
     "doctor": "raypx-dev doctor",
     "workspace:list": "raypx-dev workspace list",
     "workspace:new": "raypx-dev workspace new",
@@ -170,11 +170,13 @@
     "dev:mobile": "raypx-dev tasks dev --filter mobile"
   },
   "devDependencies": {
+    "@raypx/scripts": "workspace:*",
     "@raypx/testing": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
     "knip": "catalog:dev",
     "skills": "catalog:dev",
     "typescript": "catalog:dev",

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Private repository automation exposed as raypx-dev. VP owns task orchestration;
+Private repository automation invoked by `@raypx/scripts` as `raypx-dev`. VP owns task orchestration;
 `@raypx-kit/devkit` owns workspace discovery, boundary and toolchain checks, the static
 catalog reader, task graphs/arguments/cache snapshots, affected workspace propagation,
 scoped Start environment inputs, process helpers and artifact staging. This package supplies Raypx
@@ -10,7 +10,10 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 
 ## Interface
 
-`bin/raypx-dev.mjs` is the executable entry. Bun loads `src/cli.ts` directly; no global Node or tsx is required.
+`./cli` exports `runCli(args)`, consumed by `@raypx/scripts`' executable.
+Scripts alone registers `raypx-dev`; this workspace keeps command implementation.
+Direct `bun src/cli.ts <command>` remains available to this workspace's own scripts.
+CLI imports do not start a command until the caller invokes `runCli`.
 
 - raypx-dev tasks <task> [VP options]
 - raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
@@ -18,10 +21,15 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
+- raypx-dev i18n
+  Discover `locales/<language>/<namespace>.ts` from workspace manifests; compare
+  namespace/key, ICU syntax, argument and rich-tag parity without executing modules.
+  Language `index.ts` files compose catalogs and are excluded from namespace discovery.
+  Catalogs are authored literal objects; the command validates them without writing files.
 - raypx-dev policy | knip | verify | doctor | clean | clean:artifacts
   `policy` also checks public entries (`src/validation/entries.ts`): every exports key
   of a library or tooling workspace needs an importer in another workspace, found in
-  TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig `extends` (root config
+  JS/TS module imports, CSS `@import`/`@source` and tsconfig `extends` (root config
   included). Suites, `tests/` files and `e2e` are test importers: they keep `./testing*`
   entries and tooling surfaces alive; other entries need production use. `raypx.entryConsumers` is the declared-exception escape hatch and is
   validated against the exported keys.
@@ -49,8 +57,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   use the existing per-task argument keys, never aggregate dependency arguments.
   API relay fixture edits also select the CLI task lifecycle suite. Both fixture
   files are explicit inputs to the CLI test cache.
-  Private Tooling gates/tests select Tooling only; exported helpers follow their static
-  entry dependencies and actual import consumers. Task machinery, unknown/deleted inputs
+  Private Tooling tests select Tooling only; exported implementation follows static
+  entry dependencies and actual import consumers, including Scripts for CLI commands.
+  Task machinery, unknown/deleted inputs
   and unresolved export graphs retain all source checks.
 - Local verification lives in `verification/index.ts`; `plan.ts` selects tasks and
   `execution.ts` runs the VP graph. `verification/ci.ts` adapts GitHub events and dispatches

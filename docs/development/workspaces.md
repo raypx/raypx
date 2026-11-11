@@ -52,6 +52,11 @@ so a pure export cannot conceal DOM/host imports behind private files.
 
 ## Tasks and extraction
 
+`@raypx/scripts` owns the `raypx-dev` executable. Workspaces invoking it declare
+Scripts as a direct development dependency; reusable build/task imports still
+come from `@raypx/tooling`. Scripts depends on Tooling, so Tooling's own scripts
+invoke their implementation directly and never depend back on Scripts.
+
 VP discovers lightweight `vite.config.ts` files. `@raypx/tooling/tasks` derives
 private `task:*` definitions from the package scripts and declares build dependencies.
 VP runs those Bun scripts directly; aggregate tasks only declare dependencies.

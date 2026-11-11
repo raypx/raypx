@@ -67,6 +67,7 @@
     "@raypx/devtools": "workspace:*",
     "@raypx/e2e": "workspace:*",
     "@raypx/instances": "workspace:*",
+    "@raypx/scripts": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",

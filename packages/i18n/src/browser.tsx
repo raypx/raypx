@@ -1,6 +1,6 @@
 import { useSyncExternalStore, type ReactNode } from "react";
 import { createBrowserLanguage, type BrowserLanguageProviderProps } from "@raypx-kit/intl/browser";
-import { catalogs } from "#catalogs";
+import { messages } from "#messages";
 import { createCatalogLanguageProvider } from "./catalog-provider.js";
 import { createCatalogStore } from "./catalog-store.js";
 import { DEFAULT_LOCALE } from "./constants.js";
@@ -8,10 +8,10 @@ import { normalizeLocale } from "./normalize.js";
 import { LOCALE_PREFERENCE_KEY } from "./preferences.js";
 import { IntlProvider, useLocale, useMessages } from "./react.js";
 import { localeRuntime } from "./runtime.js";
-import type en from "./messages/en.js";
+import type en from "../locales/en/index.js";
 import type { Locale, MessagesByLocale } from "./types.js";
 
-const store = createCatalogStore(catalogs);
+const store = createCatalogStore(messages);
 
 const browser = createBrowserLanguage<Locale, typeof en>(
   { LanguageProvider: createCatalogLanguageProvider(store), useLocale },

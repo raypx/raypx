@@ -10,7 +10,7 @@ export interface I18nCatalogOptions {
 }
 
 const source = fileURLToPath(new URL(".", import.meta.url));
-const lazyCatalogs = fileURLToPath(new URL("./catalogs/lazy.ts", import.meta.url));
+const lazyCatalogs = fileURLToPath(new URL("../locales/lazy.ts", import.meta.url));
 
 /** Selects how `@raypx/i18n/browser` ships catalogs to the browser. */
 export function i18nCatalogs({ catalogs = "static" }: I18nCatalogOptions = {}): Plugin {
@@ -18,7 +18,7 @@ export function i18nCatalogs({ catalogs = "static" }: I18nCatalogOptions = {}): 
     name: "raypx:i18n-catalogs",
     enforce: "pre",
     resolveId(id, importer) {
-      if (catalogs !== "lazy" || id !== "#catalogs" || !importer?.startsWith(source)) return;
+      if (catalogs !== "lazy" || id !== "#messages" || !importer?.startsWith(source)) return;
       if (this.environment.config.consumer !== "client") return;
       return lazyCatalogs;
     },

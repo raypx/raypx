@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { Suspense, use } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { IntlProvider, useLocale, useTranslations } from "./react.js";
-import { messages } from "./messages/index.js";
+import { messages } from "../locales/index.js";
 
 describe("request-scoped internationalization", () => {
   it("isolates simultaneous streamed SSR requests across suspension", async () => {

@@ -232,7 +232,7 @@ function validationCache(context: TaskContext<TaskMember>, locales: boolean): Ta
         const config = manifest.exports?.["./config"];
         return [
           `${member.path}/package.json`,
-          `${member.path}/src/messages/*.{ts,json}`,
+          `${member.path}/locales/**/*.ts`,
           ...(typeof config === "string" && config.startsWith("./")
             ? [`${member.path}/${config.slice(2)}`]
             : []),

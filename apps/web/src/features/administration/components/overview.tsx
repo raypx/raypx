@@ -145,8 +145,8 @@ export function Overview() {
               value={days}
               onValueChange={setDays}
               options={[
-                { value: "7", label: t("sevenDays") },
-                { value: "30", label: t("thirtyDays") },
+                { value: "7", label: t("lastDays", { days: 7 }) },
+                { value: "30", label: t("lastDays", { days: 30 }) },
               ]}
             />
             <IconButton

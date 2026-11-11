@@ -76,7 +76,7 @@ devkit 不能并入 tooling：tooling 依赖 `@raypx/runtime-node` 和 `@raypx/t
 
 - `bun run verify` 通过，并记录墙钟时间。
 - `bun run --cwd packages/tooling test` 的墙钟时间，以及其中 `tests/integration` 的占比。
-- `bun packages/tooling/src/cli.ts doctor` 的启动时间。
+- `bun packages/scripts/bin/raypx-dev.mjs doctor` 的启动时间。
 - 改动 `packages/tooling/src/validation/knip.ts` 一行注释后，`bun run verify --dry-run`
   选中的任务数量。这是阶段 2 的对照指标，记录后还原改动。
 

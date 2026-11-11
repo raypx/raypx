@@ -2,11 +2,9 @@
   "name": "@raypx/tooling",
   "version": "0.0.0",
   "private": true,
-  "bin": {
-    "raypx-dev": "./bin/raypx-dev.mjs"
-  },
   "type": "module",
   "exports": {
+    "./cli": "./src/cli.ts",
     "./build/nitro": "./src/build/nitro.ts",
     "./build/deployment": "./src/build/deployment.ts",
     "./build/analytics": "./src/build/analytics.ts",

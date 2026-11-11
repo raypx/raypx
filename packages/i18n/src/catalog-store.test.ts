@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { createCatalogStore } from "./catalog-store.js";
-import { catalogs as lazyCatalogs } from "./catalogs/lazy.js";
-import { catalogs as staticCatalogs } from "./catalogs/static.js";
-import en from "./messages/en.js";
-import zh from "./messages/zh.js";
+import { messages as lazyCatalogs } from "../locales/lazy.js";
+import { messages as staticCatalogs } from "../locales/index.js";
+import en from "../locales/en/index.js";
+import zh from "../locales/zh/index.js";
 
 describe("catalog store", () => {
   it("serves bundled catalogs immediately and loads split catalogs once", async () => {

@@ -11,9 +11,18 @@ There is no remote translation service or localized routing.
 ## Types and configuration
 
 The locale runtime is the source of supported locale types and preference parsing.
-The English catalog preserves literal strings for namespace, key, ICU argument
-and rich tag inference. Chinese satisfies the recursive `CatalogShape` of English;
-the catalog gate also checks ICU syntax, argument names and rich tag names.
+Product translations are authored in `packages/i18n/locales/<language>/<namespace>.ts`.
+Each file exports a static object with `as const`; English and Chinese share namespace
+files and keys. Each language directory has an authored `index.ts` that composes
+its namespace modules through static `.js` imports. Register new namespaces in both
+language entries. `locales/index.ts` supplies the static public catalogs;
+`locales/lazy.ts` supplies browser loaders. Catalog data and delivery live together.
+There is no generation step or duplicate catalog source.
+The English catalog preserves literal strings for namespace, key, ICU argument and
+rich tag inference. Each Chinese namespace satisfies the recursive `CatalogShape`
+of its English counterpart. The catalog gate also checks static object shape,
+namespace/key parity, ICU syntax, argument names and rich tag names without executing
+catalog modules. Runtime loading remains per language.
 Language controls are generated from the locale configuration and a complete
 native-name map. Application code imports hooks through `@raypx/i18n` platform
 entries. Dynamic keys are narrowed with domain types or explicit mappings.

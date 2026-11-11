@@ -52,7 +52,7 @@ jobs:
         with:
           bun-version-file: package.json
       - name: Install planner dependencies
-        run: bun install --frozen-lockfile --production --filter '@raypx/tooling' --ignore-scripts
+        run: bun install --frozen-lockfile --production --filter '@raypx/scripts' --ignore-scripts
       - name: Select affected verification gates
         id: plan
         env:

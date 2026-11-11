@@ -5,13 +5,13 @@
   "type": "module",
   "sideEffects": false,
   "imports": {
-    "#catalogs": "./src/catalogs/static.ts"
+    "#messages": "./locales/index.ts"
   },
   "exports": {
     ".": "./src/index.ts",
     "./config": "./src/config.ts",
     "./types": "./src/types-entry.ts",
-    "./messages": "./src/messages/index.ts",
+    "./messages": "./locales/index.ts",
     "./preferences": "./src/preferences.ts",
     "./browser": "./src/browser.tsx",
     "./vite": "./src/vite.ts"
@@ -51,9 +51,9 @@
     },
     "sourceTargets": {
       "src/browser.tsx": "browser",
-      "src/catalogs/lazy.ts": "browser",
       "src/vite.ts": "node",
-      "src/testing.ts": "universal"
+      "src/testing.ts": "universal",
+      "locales/lazy.ts": "browser"
     },
     "entryConsumers": {
       "./config": "Tooling reads the static language policy by package path (locales/policy defaults); it is data, not an import."
