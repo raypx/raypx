@@ -29,6 +29,7 @@ boundaries behind the implementation.
 - [Workspace boundaries and package creation](development/workspaces.md)
 - [Tests, ownership and release gates](development/testing.md)
 - [Validation automation, CI, caches and evidence](development/validation-artifacts.md)
+- [Dev CLI commands and checks](development/dev-cli.md)
 - [Agent quality Evals and performance checks](development/agent-quality.md)
 - [Development DevTools and diagnostic snapshots](development/devtools.md)
 - [Frontend components and source adaptation](development/ui.md)
