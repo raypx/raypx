@@ -79,8 +79,5 @@ e2e/playwright-report/
 # Retain ignored build caches from older branches until explicitly cleaned.
 /target/
 
-# Retired host generated output from existing checkouts
-apps/desktop/src-tauri/
-
 # Turbo task cache and run summaries
 .turbo/
