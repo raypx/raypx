@@ -19,6 +19,7 @@ import { SidebarCollapseIcon } from "@raypx/icons/sidebar-collapse";
 import { SidebarExpandIcon } from "@raypx/icons/sidebar-expand";
 
 import { cn } from "@raypx/ui/lib/utils";
+import { IconButton } from "@raypx/ui/icon-button";
 import { Logo } from "@raypx/ui/logo";
 import {
   Sidebar,
@@ -63,7 +64,7 @@ export interface ShellNavItem<To extends string> {
   badge?: ReactNode;
 }
 
-/** A command at the top of the sidebar, such as starting a session or opening search. */
+/** An application command, such as starting a session or opening search. */
 export interface ShellAction {
   label: string;
   icon: ReactNode;
@@ -106,7 +107,7 @@ export interface AppShellProps<To extends string> {
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
   brand: { to: To; label: string; description?: string };
-  /** Commands under the brand that stay put while navigation scrolls. */
+  /** Commands in the window title bar or under the brand in a document. */
   actions?: readonly ShellAction[];
   /** Main navigation groups, with optional captions supplied by navigationLabels. */
   navigation: readonly (readonly ShellNavItem<To>[])[];
@@ -172,15 +173,12 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
         style={
           {
             "--sidebar-width": "var(--app-sidebar-width, 15rem)",
-            "--sidebar-width-icon":
-              props.frame === "window"
-                ? "max(var(--app-rail-width, 4rem), var(--mygo-titlebar-inset-left, 0px))"
-                : "var(--app-rail-width, 4rem)",
+            "--sidebar-width-icon": "var(--app-rail-width, 4rem)",
           } as CSSProperties
         }
         className={cn(
           "h-dvh min-h-0 overflow-hidden max-[420px]:[--app-rail-width:3.625rem]",
-          props.frame === "window" && "max-[1100px]:[--app-sidebar-width:11.875rem]",
+          props.frame === "window" && "flex-col max-[1100px]:[--app-sidebar-width:11.875rem]",
         )}
       >
         <ShellContents {...props} />
@@ -278,6 +276,82 @@ function ShellContents<To extends string>({
       </SidebarMenuItem>
     );
   }
+  const sidebarToggle = (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <SidebarTrigger
+            size={windowed ? "icon-sm" : "icon"}
+            aria-label={toggleLabel}
+            aria-controls={sidebarId}
+            aria-expanded={!collapsed}
+            className={cn("max-[760px]:hidden", !windowed && "mr-1")}
+          />
+        }
+      >
+        {collapsed ? <SidebarExpandIcon /> : <SidebarCollapseIcon />}
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
+    </Tooltip>
+  );
+  const header = (
+    <header
+      className={cn(
+        "flex shrink-0 items-center gap-2 border-b border-border bg-background text-sm text-muted-foreground",
+        windowed
+          ? "h-[max(3rem,var(--mygo-titlebar-height,0px))] pr-[max(0.75rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] pl-[max(0.75rem,calc(var(--mygo-titlebar-inset-left,0px)+0.5rem))] [--app-region:drag]"
+          : "h-12 px-4 max-[760px]:px-3",
+      )}
+    >
+      {windowed ? (
+        <div className="flex shrink-0 items-center gap-1 [--app-region:no-drag]">
+          {sidebarToggle}
+          {actions?.map((action) => (
+            <IconButton
+              key={action.label}
+              size="icon-sm"
+              label={action.label}
+              hint={action.shortcut ? `${action.label} (${action.shortcut.label})` : action.label}
+              {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
+              {...(action.render
+                ? { render: action.render, nativeButton: false, role: "link" }
+                : { onClick: action.onSelect })}
+            >
+              {action.icon}
+            </IconButton>
+          ))}
+        </div>
+      ) : (
+        sidebarToggle
+      )}
+      {claims === 0 &&
+        breadcrumbs.map((crumb, index) => (
+          <Fragment key={index}>
+            {index > 0 && (
+              <span aria-hidden="true" className="opacity-45">
+                /
+              </span>
+            )}
+            <span
+              className={cn(
+                "min-w-0 max-w-48 truncate",
+                index === breadcrumbs.length - 1 && "font-medium text-foreground",
+              )}
+            >
+              {crumb}
+            </span>
+          </Fragment>
+        ))}
+      <div
+        ref={setToolbarStart}
+        className="flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag]"
+      />
+      <div
+        ref={setToolbarEnd}
+        className="ml-auto flex shrink-0 items-center gap-2 empty:hidden [--app-region:no-drag]"
+      />
+    </header>
+  );
   return (
     <ToolbarContext.Provider value={toolbar}>
       <a
@@ -289,134 +363,83 @@ function ShellContents<To extends string>({
       >
         {c("skipNavigation")}
       </a>
-      <Sidebar
-        id={sidebarId}
-        role="complementary"
-        collapsible="icon"
-        className={cn(
-          "min-h-0 overflow-hidden border-border bg-sidebar px-2 pb-2 sidebar-icon:px-1.5 max-[420px]:sidebar-icon:px-1",
-          !windowed && "pt-2",
-        )}
-      >
-        {windowed && (
-          <div
-            aria-hidden="true"
-            className="h-[max(2.5rem,var(--mygo-titlebar-height,0px))] shrink-0 [--app-region:drag]"
-          />
-        )}
-        <SidebarHeader className="mb-5 shrink-0 gap-0 p-0">
-          <LinkComponent
-            to={brand.to}
-            markActive={false}
-            aria-label={brand.label}
-            className="mx-2.5 flex min-h-9 w-fit max-w-full min-w-0 items-center rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
-          >
-            <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
-          </LinkComponent>
-          {brand.description && (
-            <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground sidebar-icon:hidden">
-              {brand.description}
-            </p>
+      {windowed && header}
+      <div className="relative flex min-h-0 min-w-0 flex-1">
+        <Sidebar
+          id={sidebarId}
+          role="complementary"
+          collapsible="icon"
+          className={cn(
+            "min-h-0 overflow-hidden border-border bg-sidebar px-2 pb-2 sidebar-icon:px-1.5 max-[420px]:sidebar-icon:px-1",
+            "pt-2",
+            windowed && "absolute h-full",
           )}
-          {actions && actions.length > 0 && (
-            <SidebarMenu className="mt-4 gap-1">{actions.map(renderAction)}</SidebarMenu>
-          )}
-        </SidebarHeader>
-        <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
-          <SidebarContent className="gap-5">
-            {navigation.map((group, index) => (
-              <Fragment key={index}>
-                <SidebarGroup role="group" aria-label={navigationLabels?.[index]} className="p-0">
-                  {navigation.length > 1 && navigationLabels?.[index] && (
-                    <SidebarGroupLabel
-                      aria-hidden="true"
-                      className="mb-1.5 h-auto px-2.5 text-xs font-medium text-muted-foreground"
-                    >
-                      {navigationLabels[index]}
-                    </SidebarGroupLabel>
-                  )}
-                  <SidebarGroupContent>
-                    <SidebarMenu className="gap-1">{group.map(renderItem)}</SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-                {index === 0 && contextNavigation}
-              </Fragment>
-            ))}
-          </SidebarContent>
-          {secondaryNavigation && secondaryNavigation.length > 0 && (
-            <SidebarFooter className="mt-auto shrink-0 border-t border-border px-0 pt-2 pb-0">
-              <SidebarMenu className="gap-1">{secondaryNavigation.map(renderItem)}</SidebarMenu>
+        >
+          <SidebarHeader className="mb-5 shrink-0 gap-0 p-0">
+            <LinkComponent
+              to={brand.to}
+              markActive={false}
+              aria-label={brand.label}
+              className="mx-2.5 flex min-h-9 w-fit max-w-full min-w-0 items-center rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
+            >
+              <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
+            </LinkComponent>
+            {brand.description && (
+              <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground sidebar-icon:hidden">
+                {brand.description}
+              </p>
+            )}
+            {!windowed && actions && actions.length > 0 && (
+              <SidebarMenu className="mt-4 gap-1">{actions.map(renderAction)}</SidebarMenu>
+            )}
+          </SidebarHeader>
+          <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
+            <SidebarContent className="gap-5">
+              {navigation.map((group, index) => (
+                <Fragment key={index}>
+                  <SidebarGroup role="group" aria-label={navigationLabels?.[index]} className="p-0">
+                    {navigation.length > 1 && navigationLabels?.[index] && (
+                      <SidebarGroupLabel
+                        aria-hidden="true"
+                        className="mb-1.5 h-auto px-2.5 text-xs font-medium text-muted-foreground"
+                      >
+                        {navigationLabels[index]}
+                      </SidebarGroupLabel>
+                    )}
+                    <SidebarGroupContent>
+                      <SidebarMenu className="gap-1">{group.map(renderItem)}</SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                  {index === 0 && contextNavigation}
+                </Fragment>
+              ))}
+            </SidebarContent>
+            {secondaryNavigation && secondaryNavigation.length > 0 && (
+              <SidebarFooter className="mt-auto shrink-0 border-t border-border px-0 pt-2 pb-0">
+                <SidebarMenu className="gap-1">{secondaryNavigation.map(renderItem)}</SidebarMenu>
+              </SidebarFooter>
+            )}
+          </nav>
+          {account !== undefined && (
+            <SidebarFooter className="mt-1 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 sidebar-icon:flex-col">
+              <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
+              {accountAction}
             </SidebarFooter>
           )}
-        </nav>
-        {account !== undefined && (
-          <SidebarFooter className="mt-1 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 sidebar-icon:flex-col">
-            <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
-            {accountAction}
-          </SidebarFooter>
-        )}
-      </Sidebar>
-      <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header
-          className={cn(
-            "flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-4 text-sm text-muted-foreground max-[760px]:px-3",
-            windowed &&
-              "pr-[max(1rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] [--app-region:drag]",
-          )}
-        >
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <SidebarTrigger
-                  size="icon"
-                  aria-label={toggleLabel}
-                  aria-controls={sidebarId}
-                  aria-expanded={!collapsed}
-                  className="mr-1 text-muted-foreground max-[760px]:hidden"
-                />
-              }
-            >
-              {collapsed ? <SidebarExpandIcon /> : <SidebarCollapseIcon />}
-            </TooltipTrigger>
-            <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
-          </Tooltip>
-          {claims === 0 &&
-            breadcrumbs.map((crumb, index) => (
-              <Fragment key={index}>
-                {index > 0 && (
-                  <span aria-hidden="true" className="opacity-45">
-                    /
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "max-w-48 truncate",
-                    index === breadcrumbs.length - 1 && "font-medium text-foreground",
-                  )}
-                >
-                  {crumb}
-                </span>
-              </Fragment>
-            ))}
-          <div
-            ref={setToolbarStart}
-            className="flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag]"
-          />
-          <div
-            ref={setToolbarEnd}
-            className="ml-auto flex shrink-0 items-center gap-2 empty:hidden [--app-region:no-drag]"
-          />
-        </header>
-        {notice}
-        <main
-          id="main"
-          tabIndex={-1}
-          className="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
-        >
-          <div data-layout={layout} className={cn("mx-auto w-full min-w-0", pageLayouts[layout])}>
-            {children}
-          </div>
-        </main>
+        </Sidebar>
+        <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          {!windowed && header}
+          {notice}
+          <main
+            id="main"
+            tabIndex={-1}
+            className="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
+          >
+            <div data-layout={layout} className={cn("mx-auto w-full min-w-0", pageLayouts[layout])}>
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
     </ToolbarContext.Provider>
   );

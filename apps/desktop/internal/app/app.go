@@ -145,6 +145,8 @@ func Run(bundled fs.FS) error {
 			}
 			window := mygo.NewWindow(mygo.WindowOptions{
 				Title: "Raypx", URL: "about:blank", TitleBarStyle: mygo.TitleBarHidden,
+				// Center the native window buttons in the renderer's 48px title bar.
+				TrafficLightPosition: &mygo.Point{X: 12, Y: 17}, TitleBarHeight: 48,
 				Width: 1120, Height: 720, UseContentSize: true, MinWidth: 800, MinHeight: 620, Hidden: true,
 				Page: mygo.PageOptions{PreloadScript: desktop.Preload()},
 			})

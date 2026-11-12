@@ -1,8 +1,8 @@
 import { BrowserLanguageProvider } from "../../tests/i18n.js";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { AppShell, type ShellLinkProps } from "./shell.js";
+import { AppShell, type ShellAction, type ShellLinkProps } from "./shell.js";
 
 type Path = "/" | "/tasks" | "/settings";
 
@@ -14,11 +14,12 @@ function TestLink({ to, markActive, exact: _exact, children, ...props }: ShellLi
   );
 }
 
-function renderShell(frame?: "document" | "window") {
+function renderShell(frame?: "document" | "window", actions?: ShellAction[]) {
   return render(
     <BrowserLanguageProvider>
       <AppShell<Path>
         {...(frame ? { frame } : {})}
+        {...(actions ? { actions } : {})}
         brand={{ to: "/", label: "Acme" }}
         navigation={[
           [{ to: "/", label: "Account", icon: <svg />, exact: true }],
@@ -75,6 +76,44 @@ describe("AppShell", () => {
     renderShell("window");
     expect(screen.getByRole("main").className).toContain("overflow-auto");
     expect(screen.getByRole("banner").className).toContain("[--app-region:drag]");
+  });
+
+  it("keeps native window commands in the title bar when toggling the sidebar", () => {
+    const onSearch = vi.fn();
+    renderShell("window", [
+      {
+        label: "Search",
+        icon: <svg />,
+        shortcut: { label: "⌘K", keys: "Meta+K" },
+        onSelect: onSearch,
+      },
+      {
+        label: "New session",
+        icon: <svg />,
+        render: <a href="/tasks?compose=true" aria-label="New session" />,
+      },
+    ]);
+    const header = within(screen.getByRole("banner"));
+    fireEvent.click(header.getByRole("button", { name: "Collapse sidebar" }));
+    expect(header.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
+    const search = header.getByRole("button", { name: "Search" });
+    expect(search.getAttribute("aria-keyshortcuts")).toBe("Meta+K");
+    fireEvent.click(search);
+    expect(onSearch).toHaveBeenCalledOnce();
+    expect(header.getByRole("link", { name: "New session" }).getAttribute("href")).toBe(
+      "/tasks?compose=true",
+    );
+    expect(
+      within(screen.getByRole("complementary")).queryByRole("button", { name: "Search" }),
+    ).toBe(null);
+  });
+
+  it("keeps document commands under the sidebar brand", () => {
+    renderShell("document", [{ label: "Search", icon: <svg />, onSelect: vi.fn() }]);
+    expect(
+      within(screen.getByRole("complementary")).getByRole("button", { name: "Search" }),
+    ).toBeTruthy();
+    expect(within(screen.getByRole("banner")).queryByRole("button", { name: "Search" })).toBe(null);
   });
 
   it("toggles the sidebar without removing navigation names, selection or badges", () => {

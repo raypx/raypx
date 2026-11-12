@@ -127,6 +127,7 @@ export function DesktopShell() {
   ] as const;
   const [targetScope, targetDevice, targetProject] = target?.split(":") ?? [];
   const actions: ShellAction[] = [
+    { label: c("search"), icon: <SearchIcon />, shortcut, onSelect: () => setSearchOpen(true) },
     {
       label: c("newSession"),
       icon: <PlusIcon />,
@@ -144,7 +145,6 @@ export function DesktopShell() {
         />
       ),
     },
-    { label: c("search"), icon: <SearchIcon />, shortcut, onSelect: () => setSearchOpen(true) },
   ];
   return (
     <>

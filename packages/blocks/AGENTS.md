@@ -15,8 +15,8 @@ Code outside `src/components/` stays private.
 - `shell`: `AppShell` with skip link, brand, grouped navigation, account slot,
   breadcrumbs, notice slot and `#main`. Both frames fill the viewport and scroll
   main independently of navigation and the top bar. `frame="document"` uses browser
-  spacing; `frame="window"` uses MyGo's title-bar insets to keep the sidebar and
-  toolbar clear of native window buttons and expose drag regions. Applications register
+  spacing; `frame="window"` uses a full-width draggable title bar with MyGo's insets
+  for the native window buttons. The sidebar and main content start below it. Applications register
   `#main` with their router's scroll restoration/reset behavior.
   Applications pass a `LinkComponent` adapting their router to `ShellLinkProps`;
   it sets `aria-current="page"` on active entries when `markActive` is true.
@@ -47,8 +47,8 @@ Code outside `src/components/` stays private.
   width or gutters. `ShellPage<Title>` is the route metadata shape: applications
   declare `staticData.page` with a value-free message key, an optional `guestTitle`
   and the layout, and derive breadcrumbs and `layout` from the deepest match.
-  `actions` adds commands under the brand (`ShellAction`: a link element or button, with
-  an optional shortcut hint).
+  `actions` adds commands under the brand in documents and beside the sidebar toggle
+  in windows (`ShellAction`: a link element or button, with an optional shortcut hint).
 - `command-palette`: `CommandPalette`, a ⌘K / Ctrl+K dialog over host-supplied groups,
   and `useCommandShortcut` for the platform's key hint. The host owns the open state.
 - `settings`: `SettingsPage` (header and sections inside a `document` template),

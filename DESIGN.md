@@ -65,9 +65,11 @@ without changing opacity. Other artwork moves only on hover. Authentication and 
 pages render without entrances or loops, and no public content waits for scrolling to
 appear.
 
-Desktop and Web share one sidebar order: New session and Search (⌘K / Ctrl K) under the
-brand, then Projects, the pending inbox, Automations and Memory, then projects with their
-recent sessions, above one fixed footer row for the account and the settings shortcut.
+Web puts New session and Search (⌘K / Ctrl K) under the sidebar brand. Desktop puts the
+sidebar toggle, Search and New session in the window title bar, clear of the native
+window buttons. Both sidebars list Projects, the pending inbox, Automations and Memory,
+then projects with their recent sessions, above one fixed footer row for the account
+and the settings shortcut.
 Each project entry opens its page; a chevron folds its newest conversations (follow-ups
 fold into the session they continue), and only running, waiting or failed sessions show
 a status mark. The command palette searches actions, pages, projects and recent sessions. Use consistent 20px icons with 1.75 strokes, visible keyboard focus and
