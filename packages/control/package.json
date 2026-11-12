@@ -32,7 +32,6 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "library",
     "target": "node"
   }
 }

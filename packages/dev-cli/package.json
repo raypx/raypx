@@ -29,7 +29,6 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "tooling",
     "target": "bun"
   }
 }

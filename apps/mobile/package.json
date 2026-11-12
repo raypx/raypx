@@ -50,15 +50,7 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "app",
     "target": "native",
-    "sourceTargets": {
-      "vite.config.ts": "node",
-      "vitest.config.ts": "node",
-      "metro.config.ts": "node",
-      "metro.config.cjs": "node",
-      "src/**/*.test.ts": "node"
-    },
     "uncachedTasks": [
       "build"
     ]

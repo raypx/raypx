@@ -106,7 +106,6 @@
     "react": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "browser"
   }
 }

@@ -33,7 +33,6 @@
     "@types/bun": "catalog:dev"
   },
   "raypx": {
-    "kind": "tooling",
     "target": "bun",
     "taskScripts": {
       "e2e": "_e2e",

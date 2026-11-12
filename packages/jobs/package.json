@@ -42,19 +42,12 @@
     "react": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "universal",
     "entryTargets": {
       "./client": "browser",
       "./client/styles.css": "browser",
       "./server": "node",
       "./server/postgres": "node"
-    },
-    "sourceTargets": {
-      "src/client.ts": "browser",
-      "src/client/**": "browser",
-      "src/server.ts": "node",
-      "src/server/**": "node"
     }
   }
 }

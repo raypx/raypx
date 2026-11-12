@@ -18,6 +18,9 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     throw new Error("Workspace name is reserved on Windows");
   if (!["library", "app", "tooling"].includes(options.kind) || !targets.includes(options.target))
     throw new Error("Invalid workspace kind or target");
+  // Kind is derived: tooling is a Bun package with exports, an app has no exports.
+  if (options.kind === "tooling" && options.target !== "bun")
+    throw new Error("Tooling workspaces target bun");
   const folder = options.kind === "app" ? "apps" : "packages";
   const directory = `${folder}/${name}`;
   const packageName = options.kind === "app" ? name : `@raypx/${name}`;
@@ -35,7 +38,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     version: "0.0.0",
     private: true,
     type: "module",
-    raypx: { kind: options.kind, target: options.target },
+    raypx: { target: options.target },
     ...(options.kind !== "app" ? { exports: { ".": "./src/index.ts" } } : {}),
     scripts,
     devDependencies: {

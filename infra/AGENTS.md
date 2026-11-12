@@ -1,8 +1,9 @@
 # Infrastructure
 
 Infrastructure packages are private Bun workspaces discovered through `infra/*`
-in the root manifest. Service composition roots declare `raypx.kind: app` and
-provider configuration declares `tooling`. Each owns its dependencies, deployment
+in the root manifest. Service composition roots have no exports, so they are
+applications; provider configuration targets Bun with exports, so it is tooling.
+Each owns its dependencies, deployment
 entry, lightweight VP task config and focused tests. Applications never import
 another application, and product runtime never imports provider tooling.
 

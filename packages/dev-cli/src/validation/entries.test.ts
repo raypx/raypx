@@ -32,8 +32,9 @@ function check(workspaces: Record<string, Manifest>, files: Record<string, strin
         name: `@raypx/${path.split("/").at(-1)}`,
         private: true,
         exports: manifest.exports,
+        // Kind is derived from the manifest: tooling has a bin.
+        ...(manifest.kind === "tooling" ? { bin: { tool: "./bin.ts" } } : {}),
         raypx: {
-          kind: manifest.kind ?? "library",
           target: "universal",
           ...(manifest.entryConsumers ? { entryConsumers: manifest.entryConsumers } : {}),
         },

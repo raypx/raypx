@@ -28,10 +28,6 @@
     "vite": "catalog:dev"
   },
   "raypx": {
-    "kind": "app",
-    "target": "browser",
-    "sourceTargets": {
-      ".storybook/main.ts": "node"
-    }
+    "target": "browser"
   }
 }

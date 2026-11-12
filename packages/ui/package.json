@@ -76,19 +76,11 @@
     "react": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "browser",
     "entryTargets": {
       "./logo-mark.webp": "universal",
       "./themes/config": "universal",
       "./themes/native.css": "universal"
-    },
-    "sourceTargets": {
-      "src/themes/config.ts": "universal",
-      "src/themes/tokens.ts": "universal",
-      "src/themes/script.ts": "universal",
-      "scripts/**": "node",
-      "src/styles/native.css": "universal"
     }
   }
 }

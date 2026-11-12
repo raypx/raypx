@@ -6,12 +6,25 @@ export type Target = (typeof targets)[number];
 export const kinds = ["app", "library", "tooling"] as const;
 export type Kind = (typeof kinds)[number];
 
+/**
+ * Kind follows from standard manifest fields: a `bin` or a Bun-target package with
+ * exports is tooling, a package without exports is an application, the rest are
+ * libraries. Manifests declare only the target and its overrides.
+ */
+export function workspaceKind(
+  manifest: Pick<Manifest, "exports"> & { bin?: unknown },
+  target: Target | undefined,
+): Kind {
+  if (manifest.bin) return "tooling";
+  if (!manifest.exports) return "app";
+  return target === "bun" ? "tooling" : "library";
+}
+
 /** Per-workspace boundary metadata, supplied explicitly or read from package.json. */
 export interface Metadata {
   kind: Kind;
   target: Target;
   entryTargets?: Record<string, Target>;
-  sourceTargets?: Record<string, Target>;
   /** Maintained source behind an export whose published target is generated. */
   sourceEntries?: Record<string, string>;
   /** Development dependencies explicitly bundled into runtime; internal workspaces require app/tooling. */
@@ -98,9 +111,14 @@ export function discover(
   ).sort()) {
     const path = file.replaceAll("\\", "/").slice(0, -13);
     const entry = JSON.parse(readFileSync(join(root, file), "utf8")) as Manifest;
+    const declared = entry[metadataKey] as Omit<Metadata, "kind"> | undefined;
+    if (metadata === undefined && declared && "kind" in declared)
+      findings.push(
+        `${path}/package.json: ${metadataKey}.kind is derived from exports, bin and target; remove it`,
+      );
     const workspaceMetadata =
       metadata === undefined
-        ? (entry[metadataKey] as Metadata | undefined)
+        ? declared && { ...declared, kind: workspaceKind(entry, declared.target) }
         : Object.hasOwn(metadata, path)
           ? metadata[path]
           : undefined;
@@ -155,14 +173,6 @@ export function discover(
 
 export function workspaceFor(index: WorkspaceIndex, file: string) {
   return index.workspaces.find((w) => file.startsWith(`${w.path}/`));
-}
-
-export function sourceTarget(workspace: Workspace, file: string): Target {
-  const relative = file.slice(workspace.path.length + 1);
-  const scopes = Object.entries(workspace.metadata?.sourceTargets ?? {})
-    .filter(([pattern]) => matches(pattern, relative))
-    .sort(([a], [b]) => b.replaceAll("*", "").length - a.replaceAll("*", "").length);
-  return scopes[0]?.[1] ?? workspace.metadata?.target ?? "universal";
 }
 
 export function compatible(from: Target, to: Target): boolean {
@@ -225,6 +235,6 @@ export function resolveImport(
     subpath: ".",
     internalPath: !!owner && owner !== from,
     paths: path ? [path] : [],
-    targetPlatform: owner ? sourceTarget(owner, path!) : ("universal" as Target),
+    targetPlatform: owner?.metadata?.target ?? "universal",
   };
 }

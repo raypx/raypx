@@ -12,15 +12,18 @@ The accepted foundation design and current architecture decisions define the imp
 ## Workspaces and boundaries
 
 - Discover workspaces from package.json workspaces; never maintain a package-name allowlist.
-- Infrastructure services and provider tooling live under `infra/*`; declare each
-  workspace's actual app/tooling kind and keep composition roots out of cross-workspace imports.
+- Infrastructure services and provider tooling live under `infra/*`; keep composition
+  roots out of cross-workspace imports.
 - Applications are composition roots and cannot be imported by another workspace.
 - Libraries expose explicit package.json exports; do not import private source paths.
 - Every public entry has an established consumer in another workspace. An entry nobody
   imports is removed rather than kept for a possible future use; a deliberate exception
   records `raypx.entryConsumers` with its reason and is validated by `policy`.
-- Every workspace declares raypx.kind and raypx.target. Mixed workspaces declare
-  entryTargets and sourceTargets. Keep platform constraints transitive.
+- Every workspace declares raypx.target. Kind is derived, never declared: a `bin` or a
+  Bun-target package with exports is tooling, a package without exports is an
+  application, the rest are libraries. Mixed workspaces declare
+  entryTargets. Source platforms are derived from the entries that reach a file,
+  never declared. Keep platform constraints transitive.
 - Runtime code cannot import tooling or test-only modules. Declare direct dependencies.
 - Keep the complete workspace dependency graph acyclic, including devDependencies.
 - Auth receives its database adapter, configuration and mail interface from API.

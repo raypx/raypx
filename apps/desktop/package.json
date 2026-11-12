@@ -91,26 +91,10 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "app",
     "target": "browser",
     "bundledDependencies": [
       "@raypx/devtools"
     ],
-    "sourceTargets": {
-      "tests/native/**": "bun",
-      "tests/integration/**": "bun",
-      "preferences.ts": "universal",
-      "api.ts": "universal",
-      "config.ts": "universal",
-      "scripts/**": "bun",
-      "vite.app.config.ts": "bun",
-      "mygo.config.ts": "bun",
-      "bridge.ts": "universal",
-      "e2e/**": "bun",
-      "perf/**": "bun",
-      "perf/browser/main.tsx": "browser",
-      "perf/browser/styles.css": "browser"
-    },
     "taskScripts": {
       "e2e": "_e2e",
       "mygo:check:docker": "_mygo:check:docker"

@@ -56,10 +56,6 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "app",
-    "target": "node",
-    "sourceTargets": {
-      "vite.app.config.ts": "node"
-    }
+    "target": "node"
   }
 }

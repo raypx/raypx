@@ -26,15 +26,10 @@
     "@vitest/coverage-v8": "catalog:dev"
   },
   "raypx": {
-    "kind": "library",
     "target": "node",
     "entryTargets": {
       "./safe": "universal",
       "./managed": "universal"
-    },
-    "sourceTargets": {
-      "src/safe.ts": "universal",
-      "src/managed.ts": "universal"
     }
   }
 }

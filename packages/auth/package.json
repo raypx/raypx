@@ -46,19 +46,12 @@
     }
   },
   "raypx": {
-    "kind": "library",
     "target": "universal",
     "entryTargets": {
       "./server": "node",
       "./client": "browser",
       "./hooks": "universal",
       "./client/styles.css": "browser"
-    },
-    "sourceTargets": {
-      "src/server.ts": "node",
-      "src/client.ts": "browser",
-      "src/client/**": "browser",
-      "src/hooks.ts": "universal"
     }
   }
 }

@@ -27,17 +27,10 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "library",
     "target": "universal",
     "entryTargets": {
       "./crypto": "node",
       "./server": "node"
-    },
-    "sourceTargets": {
-      "src/crypto.ts": "node",
-      "src/*.test.ts": "node",
-      "src/server.ts": "node",
-      "src/server/**": "node"
     }
   }
 }

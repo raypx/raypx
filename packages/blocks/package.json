@@ -39,14 +39,10 @@
     "react-dom": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "browser",
     "entryTargets": {
       "./messages/en": "universal",
       "./messages/zh": "universal"
-    },
-    "sourceTargets": {
-      "locales/**": "universal"
     }
   }
 }

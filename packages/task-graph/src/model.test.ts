@@ -16,7 +16,7 @@ function workspace(root: string, name: string, manifest: Record<string, unknown>
     JSON.stringify({
       name: `@raypx/${name}`,
       private: true,
-      raypx: { kind: "library", target: "universal" },
+      raypx: { target: "universal" },
       scripts: { check: "bun check.ts" },
       ...manifest,
     }),

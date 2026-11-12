@@ -22,14 +22,9 @@
     "@vitest/coverage-v8": "catalog:dev"
   },
   "raypx": {
-    "kind": "library",
     "target": "node",
     "entryTargets": {
       "./config": "universal"
-    },
-    "sourceTargets": {
-      "src/config.ts": "universal",
-      "src/errors.ts": "universal"
     }
   }
 }

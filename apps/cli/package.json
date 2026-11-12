@@ -82,7 +82,6 @@
     }
   },
   "raypx": {
-    "kind": "app",
     "target": "bun",
     "uncachedTasks": [
       "perf"

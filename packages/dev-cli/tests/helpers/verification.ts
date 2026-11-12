@@ -41,7 +41,6 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
       kind: "library",
       target: "universal",
       entryTargets: { "./client": "browser" },
-      sourceTargets: { "src/client.ts": "browser" },
     },
     deps: { "@raypx/ui": "workspace:*" },
     ...(options.leak
@@ -75,11 +74,7 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
   });
   for (const name of ["web", "desktop"])
     member(root, name, {
-      metadata: {
-        kind: "app",
-        target: "browser",
-        ...(name === "desktop" ? { sourceTargets: { "bridge.ts": "universal" } } : {}),
-      },
+      metadata: { kind: "app", target: "browser" },
       deps: { "@raypx/ui": "workspace:*", "@raypx/feature": "workspace:*" },
       extra: {
         name,

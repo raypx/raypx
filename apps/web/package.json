@@ -70,7 +70,6 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "app",
     "target": "browser",
     "bundledDependencies": [
       "@raypx/devtools"
@@ -79,10 +78,6 @@
       "build": "_build",
       "e2e": "_e2e",
       "build:e2e": "_build"
-    },
-    "sourceTargets": {
-      "vite.app.config.ts": "node",
-      "e2e/**": "bun"
     },
     "browserTestProject": "web"
   }

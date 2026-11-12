@@ -30,12 +30,7 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "kind": "library",
     "target": "node",
-    "entryTargets": {},
-    "sourceTargets": {
-      "src/types.ts": "universal",
-      "vite.app.config.ts": "node"
-    }
+    "entryTargets": {}
   }
 }

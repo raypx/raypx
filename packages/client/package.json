@@ -28,7 +28,6 @@
     "@vitest/coverage-v8": "catalog:dev"
   },
   "raypx": {
-    "kind": "library",
     "target": "universal"
   }
 }

@@ -38,13 +38,9 @@
     "react-dom": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "browser",
     "entryTargets": {
       "./vite": "node"
-    },
-    "sourceTargets": {
-      "src/vite.ts": "node"
     },
     "entryConsumers": {
       "./renderer": "The Vite plugin injects this module path as a string into the generated overlay, so no file imports it statically."

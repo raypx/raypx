@@ -26,11 +26,7 @@
     "wrangler": "catalog:dev"
   },
   "raypx": {
-    "kind": "app",
     "target": "node",
-    "sourceTargets": {
-      "scripts/**": "bun"
-    },
     "uncachedTasks": [
       "dev",
       "plan",

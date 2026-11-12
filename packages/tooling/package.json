@@ -27,7 +27,6 @@
     "nitro": "catalog:"
   },
   "raypx": {
-    "kind": "tooling",
     "target": "bun",
     "entryTargets": {
       "./build/nitro": "node",
@@ -36,9 +35,6 @@
       "./build/start-env": "node",
       "./build/cli": "node",
       "./build/release": "node"
-    },
-    "sourceTargets": {
-      "src/build/**": "node"
     }
   }
 }

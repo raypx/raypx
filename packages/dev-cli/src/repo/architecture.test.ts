@@ -21,7 +21,7 @@ function member(
   root: string,
   name: string,
   options: {
-    metadata?: Metadata;
+    metadata?: Omit<Metadata, "kind"> & { kind?: Metadata["kind"] };
     source?: string;
     deps?: Record<string, string>;
     extra?: Record<string, unknown>;
@@ -29,14 +29,17 @@ function member(
 ) {
   const path = `packages/${name}`;
   mkdirSync(join(root, path, "src"), { recursive: true });
+  // Kind is derived from the manifest: applications have no exports, tooling has a bin.
+  const { kind = "library", ...metadata } = options.metadata ?? { target: "universal" };
   writeFileSync(
     join(root, path, "package.json"),
     JSON.stringify({
       name: `@raypx/${name}`,
       private: true,
       type: "module",
-      exports: { ".": "./src/index.ts" },
-      devkit: options.metadata ?? { kind: "library", target: "universal" },
+      ...(kind === "app" ? {} : { exports: { ".": "./src/index.ts" } }),
+      ...(kind === "tooling" ? { bin: { [name]: "./src/index.ts" } } : {}),
+      devkit: metadata,
       dependencies: options.deps ?? {},
       ...options.extra,
     }),
@@ -69,11 +72,7 @@ describe("workspace architecture", () => {
   it("uses complete supplied metadata instead of merging manifest metadata", () => {
     const root = fixture();
     member(root, "one", {
-      metadata: {
-        kind: "app",
-        target: "browser",
-        sourceTargets: { "src/index.ts": "browser" },
-      },
+      metadata: { target: "browser" },
       source: 'import "node:fs";',
     });
     member(root, "two");
@@ -131,7 +130,7 @@ describe("workspace architecture", () => {
     const root = fixture();
     member(root, "one", {
       source: 'import "node:fs";',
-      extra: { product: { kind: "tooling", target: "node" } },
+      extra: { bin: { one: "./src/index.ts" }, product: { target: "node" } },
     });
     const index = discover(root, { metadataKey: "product" });
     expect(index.byName.get("@raypx/one")?.metadata).toEqual({
@@ -190,7 +189,6 @@ describe("workspace architecture", () => {
         kind: "library",
         target: "browser",
         entryTargets: { "./theme": "universal" },
-        sourceTargets: { "src/theme.ts": "universal" },
       },
       extra: { exports: { ".": "./src/index.ts", "./theme": "./src/theme.ts" } },
     });
@@ -204,6 +202,33 @@ describe("workspace architecture", () => {
     writeFileSync(join(root, "packages/native/src/index.ts"), 'import "@raypx/ui";');
     expect(checkArchitecture(discover(root)).join("\n")).toContain(
       "native entry cannot import browser entry",
+    );
+  });
+  it("derives source platforms from the entries that reach them", () => {
+    const root = fixture();
+    const feature = member(root, "feature", {
+      metadata: { target: "universal", entryTargets: { "./server": "node" } },
+      source: "export const answer = 42;",
+      extra: { exports: { ".": "./src/index.ts", "./server": "./src/server.ts" } },
+    });
+    writeFileSync(join(root, feature, "src/server.ts"), 'export * from "./store.js";');
+    writeFileSync(join(root, feature, "src/store.ts"), 'import "node:fs";');
+    expect(checkArchitecture(discover(root))).toEqual([]);
+    // The universal root now reaches the same file, so it must satisfy both entries.
+    writeFileSync(join(root, feature, "src/index.ts"), 'export * from "./store.js";');
+    expect(checkArchitecture(discover(root)).join("\n")).toContain(
+      "packages/feature/src/store.ts: universal code cannot import node:fs",
+    );
+  });
+  it("rejects a declared sourceTargets override", () => {
+    const root = fixture();
+    // The retired field is no longer part of the metadata type.
+    const retired = { target: "universal" as const, sourceTargets: { "src/index.ts": "node" } };
+    member(root, "one", {
+      metadata: retired,
+    });
+    expect(checkArchitecture(discover(root))).toContain(
+      "packages/one: sourceTargets is derived from exports and path conventions; remove it",
     );
   });
   it("rejects importing applications and tooling from production libraries", () => {

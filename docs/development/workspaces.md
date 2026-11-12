@@ -6,7 +6,7 @@ For native build and release commands,
 see the [Desktop guide](desktop.md#build-and-release).
 
 Infrastructure provider tooling lives under `infra/*`; API/Relay runtime roles share `apps/api`
-and provider deployment tooling. Each manifest declares its actual kind/target,
+and provider deployment tooling. Each manifest declares its actual target,
 dependencies, deployment commands and checks. These are
 discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).
 
@@ -16,6 +16,9 @@ bun run workspace:new feature-kit --kind library --target universal
 bun run workspace:new feature-kit --kind library --target universal --tests --write
 ```
 
+`--kind` selects the generated layout: `app` omits exports under `apps/`, and
+`tooling` requires `--target bun`.
+
 Preview is the default. Creation refuses existing paths and names. The generated
 private ESM package has an explicit source export, strict tsconfig and AGENTS.md;
 --tests adds an independent runner config and includes `tests/` in strict checking,
@@ -24,14 +27,19 @@ Bun, then import the public entry from a consumer using workspace:*.
 
 ## Manifest metadata
 
-raypx.kind is app, library or tooling. raypx.target is universal, browser, native,
-node or bun. entryTargets overrides the default by exports key. sourceTargets
-maps package-relative globs to targets; the most-specific matching pattern wins.
+Kind is derived from standard fields: a package with `bin`, or a Bun-target package
+with exports, is tooling; a package without exports is an application; the rest are
+libraries. Policy rejects a declared `raypx.kind`. raypx.target is universal, browser, native,
+node or bun. entryTargets overrides the default by exports key. A source file's
+platform is derived ([ADR 0058](../architecture/0058-derived-source-platforms.md)):
+a file reached from exports takes those entries' targets, configuration, scripts and
+acceptance suites run under Bun, and every other file takes the workspace target.
+Policy rejects a declared `raypx.sourceTargets`.
 Universal code has no platform host dependencies. Bun can consume node code;
 other platform crossings require a compatible explicit public entry. A server use
 case behind a universal entry is not safe merely because Bun can execute
 Node-compatible APIs: `memory`, `jobs`, `account` and `instances` mark their server
-entries and sources as `node` explicitly. Browser imports of those server use cases therefore fail
+entries as `node` explicitly. Browser imports of those server use cases therefore fail
 policy instead of reaching a bundled dependency by accident. The `node` target
 describes compatible host APIs; Bun remains the JavaScript runtime.
 

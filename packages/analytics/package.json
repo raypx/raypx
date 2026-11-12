@@ -39,7 +39,6 @@
     "react": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "universal",
     "entryTargets": {
       "./browser": "browser",
@@ -47,10 +46,6 @@
       "./client/application": "browser",
       "./client/settings": "browser",
       "./client/styles.css": "browser"
-    },
-    "sourceTargets": {
-      "src/browser.ts": "browser",
-      "src/client/**": "browser"
     }
   }
 }

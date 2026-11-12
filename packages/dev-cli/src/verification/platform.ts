@@ -1,10 +1,10 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { imports } from "../repo/architecture.js";
+import { sourcePlatforms } from "../repo/platforms.js";
 import {
   discover,
   resolveImport,
-  sourceTarget,
   workspaceFor,
   type Target,
   type Workspace,
@@ -30,6 +30,9 @@ const ignored = [
 export function browserReach(root: string) {
   const index = discover(root, { metadataKey: "raypx" });
   const scans = new Map<string, { consumes: boolean; leaks: boolean }>();
+  const platform = sourcePlatforms(index, (file) =>
+    imports(file, readFileSync(join(root, file), "utf8")),
+  );
   function located(workspace: Workspace, path: string): Target {
     const base = path.replace(/\.[cm]?js$/, "");
     const file = [path, ...code.map((ext) => `${base}.${ext}`)]
@@ -37,17 +40,13 @@ export function browserReach(root: string) {
       .find((candidate) => existsSync(join(root, candidate)));
     // JSON and other data imports carry no platform code.
     if (file && !code.some((ext) => file.endsWith(`.${ext}`))) return "universal";
-    return sourceTarget(workspace, file ?? path);
+    return platform(workspace, file ?? path);
   }
   function scan(workspace: Workspace) {
     const known = scans.get(workspace.manifest.name);
     if (known) return known;
     const metadata = workspace.metadata;
-    const declared = [
-      metadata?.target,
-      ...Object.values(metadata?.entryTargets ?? {}),
-      ...Object.values(metadata?.sourceTargets ?? {}),
-    ];
+    const declared = [metadata?.target, ...Object.values(metadata?.entryTargets ?? {})];
     const result = { consumes: declared.includes("browser"), leaks: false };
     const files = globSync(`${workspace.path}/**/*.{${code.join(",")}}`, {
       cwd: root,
@@ -55,7 +54,7 @@ export function browserReach(root: string) {
     });
     for (const found of files) {
       const file = found.replaceAll("\\", "/");
-      const browser = sourceTarget(workspace, file) === "browser";
+      const browser = platform(workspace, file) === "browser";
       // A declared browser consumer only needs its non-browser sources checked for leaks.
       if (browser && result.consumes) continue;
       const leaking = !browser && !testOnly.test(file.slice(workspace.path.length + 1));
@@ -90,9 +89,7 @@ export function browserReach(root: string) {
     /** Frontend sources and assets whose declared platform is the browser. */
     browserOnly(file: string) {
       const workspace = workspaceFor(index, file);
-      return Boolean(
-        workspace && frontend.test(file) && sourceTarget(workspace, file) === "browser",
-      );
+      return Boolean(workspace && frontend.test(file) && platform(workspace, file) === "browser");
     },
     /** The workspace contains browser code or imports a browser entry, including types and tests. */
     consumes: (name: string) => member(name).consumes,

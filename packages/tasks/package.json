@@ -53,7 +53,6 @@
     "react": "^19.3.0"
   },
   "raypx": {
-    "kind": "library",
     "target": "universal",
     "entryTargets": {
       "./client": "browser",
@@ -62,12 +61,6 @@
       "./client/styles.css": "browser",
       "./client/task-composer": "browser",
       "./server": "node"
-    },
-    "sourceTargets": {
-      "src/client.ts": "browser",
-      "src/client/**": "browser",
-      "src/server.ts": "node",
-      "src/server/**": "node"
     }
   }
 }

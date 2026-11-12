@@ -353,6 +353,7 @@ current implementation.
 - [0055: In-repository internationalization runtime](0055-in-repo-intl-runtime.md)
 - [0056: In-repository devkit](0056-in-repo-devkit.md) — superseded by 0057
 - [0057: Repository automation workspaces](0057-repository-automation-workspaces.md)
+- [0058: Derived source platforms](0058-derived-source-platforms.md) — supersedes `raypx.sourceTargets` in 0043
 
 ## Distribution and performance
 

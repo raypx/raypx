@@ -7,13 +7,13 @@ import {
   exportPaths,
   kinds,
   resolveImport,
-  sourceTarget,
   targets,
   workspaceFor,
   type Target,
   type Workspace,
   type WorkspaceIndex,
 } from "@raypx/task-graph/workspaces";
+import { sourcePlatforms } from "./platforms.js";
 
 export interface ImportEdge {
   request: string;
@@ -243,10 +243,10 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
       if (!manifest.exports?.[entry] || !targets.includes(target))
         findings.push(`${path}: invalid entryTargets override ${entry}`);
     }
-    for (const [scope, target] of Object.entries(metadata.sourceTargets ?? {})) {
-      if (!scope || !targets.includes(target))
-        findings.push(`${path}: invalid sourceTargets override ${scope}`);
-    }
+    if ("sourceTargets" in metadata)
+      findings.push(
+        `${path}: sourceTargets is derived from exports and path conventions; remove it`,
+      );
     for (const [entry, source] of Object.entries(metadata.sourceEntries ?? {})) {
       if (
         !manifest.exports?.[entry] ||
@@ -328,6 +328,8 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
     visited.add(name);
   }
   for (const name of graph.keys()) visit(name);
+
+  const sourcePlatform = sourcePlatforms(index, getImports);
 
   function checkEdge(
     workspace: Workspace,
@@ -421,7 +423,7 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
       if (!runtimeFile.test(normalized) || testFile.test(normalized)) continue;
       try {
         for (const edge of getImports(normalized))
-          checkEdge(workspace, normalized, edge, sourceTarget(workspace, normalized), false);
+          checkEdge(workspace, normalized, edge, sourcePlatform(workspace, normalized), false);
       } catch (error) {
         findings.push(String(error));
       }

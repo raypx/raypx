@@ -21,7 +21,7 @@ export function workspaceFixtures() {
     root: string,
     name: string,
     options: {
-      metadata?: Metadata;
+      metadata?: Omit<Metadata, "kind"> & { kind?: Metadata["kind"] };
       source?: string;
       deps?: Record<string, string>;
       extra?: Record<string, unknown>;
@@ -29,14 +29,17 @@ export function workspaceFixtures() {
   ) {
     const path = `packages/${name}`;
     mkdirSync(join(root, path, "src"), { recursive: true });
+    // Kind is derived from the manifest: applications have no exports, tooling has a bin.
+    const { kind = "library", ...metadata } = options.metadata ?? { target: "universal" };
     writeFileSync(
       join(root, path, "package.json"),
       JSON.stringify({
         name: `@raypx/${name}`,
         private: true,
         type: "module",
-        exports: { ".": "./src/index.ts" },
-        raypx: options.metadata ?? { kind: "library", target: "universal" },
+        ...(kind === "app" ? {} : { exports: { ".": "./src/index.ts" } }),
+        ...(kind === "tooling" ? { bin: { [name]: "./src/index.ts" } } : {}),
+        raypx: metadata,
         dependencies: options.deps ?? {},
         ...options.extra,
       }),

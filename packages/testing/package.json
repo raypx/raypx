@@ -15,7 +15,9 @@
     "@raypx/tsconfig": "workspace:*"
   },
   "raypx": {
-    "kind": "tooling",
-    "target": "universal"
+    "target": "universal",
+    "entryConsumers": {
+      ".": "Shared test fixtures: only Client and CLI test suites import them."
+    }
   }
 }
