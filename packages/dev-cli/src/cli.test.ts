@@ -16,8 +16,7 @@ it("lists public commands only", () => {
   const help = helpText();
   for (const name of ["tasks", "test", "verify", "policy", "doctor", "workspace list"])
     expect(help).toContain(name);
-  for (const name of ["verify:check", "browser:run", "ci:plan", "ci:gate", "cli:experiment"])
-    expect(help).not.toContain(name);
+  for (const name of ["ci:plan", "ci:gate", "cli:experiment"]) expect(help).not.toContain(name);
 });
 
 it("prints help without a command and per-command usage for owned commands", async () => {

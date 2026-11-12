@@ -1,0 +1,22 @@
+name: Save changed Turbo task cache
+description: Upload the task cache only when this job added entries
+inputs:
+  key:
+    description: Restored partition's primary key
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      id: changes
+      run: |
+        if ls -1 .turbo/cache | sort | cmp -s - .artifacts/ci/turbo-cache-before.txt; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi
+    - uses: actions/cache/save@v6
+      if: steps.changes.outputs.changed == 'true'
+      with:
+        path: .turbo/cache
+        key: ${{ inputs.key }}

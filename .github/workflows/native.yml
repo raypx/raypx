@@ -44,8 +44,8 @@ jobs:
           cache: ${{ !inputs.cold_native }}
           cache-dependency-path: apps/desktop/go.sum
       - uses: ./.github/actions/setup-bun
-      - uses: ./.github/actions/vp-restore
-        id: vp-cache
+      - uses: ./.github/actions/turbo-restore
+        id: turbo-cache
         with:
           partition: desktop
       - name: Prepare distribution renderer
@@ -157,10 +157,10 @@ jobs:
           if [ -n "$RAYPX_DESKTOP_BUNDLE_CONFIG" ]; then
             rm -f "$RAYPX_DESKTOP_BUNDLE_CONFIG"
           fi
-      # One VP cache writer per platform. Consumers only restore prepared JS outputs.
-      - uses: ./.github/actions/vp-save
+      # One Turbo cache writer per platform. Consumers only restore prepared JS outputs.
+      - uses: ./.github/actions/turbo-save
         with:
-          key: ${{ steps.vp-cache.outputs.key }}
+          key: ${{ steps.turbo-cache.outputs.key }}
   verify:
     name: Distribution acceptance
     needs: prepare
@@ -192,8 +192,8 @@ jobs:
           cache: ${{ !inputs.cold_native }}
           cache-dependency-path: apps/desktop/go.sum
       - uses: ./.github/actions/setup-bun
-      - uses: ./.github/actions/vp-restore
-        id: vp-cache
+      - uses: ./.github/actions/turbo-restore
+        id: turbo-cache
         with:
           partition: desktop
       - uses: actions/download-artifact@v8
@@ -361,7 +361,7 @@ jobs:
           fi
       - name: Packaged native smoke
         if: matrix.phase == 'smoke'
-        run: bun run --cwd apps/desktop native:smoke:interactive
+        run: bun run raypx-dev tasks desktop#native:smoke:interactive
       - name: Upload native acceptance evidence
         if: always() && matrix.phase != 'checks'
         uses: actions/upload-artifact@v7

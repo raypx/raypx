@@ -77,8 +77,8 @@ jobs:
         with:
           go-version-file: apps/desktop/go.mod
           cache-dependency-path: apps/desktop/go.sum
-      - uses: ./.github/actions/vp-restore
-        id: vp-cache
+      - uses: ./.github/actions/turbo-restore
+        id: turbo-cache
         with:
           # Keep existing check artifacts; test runners publish a separate cache.
           partition: ${{ matrix.phase == 'checks' && 'javascript' || 'source-tests' }}
@@ -86,9 +86,9 @@ jobs:
         run: bun run raypx-dev ci:gate source ${{ matrix.phase }}
       - name: Generated sources remain reproducible
         run: git diff --exit-code
-      - uses: ./.github/actions/vp-save
+      - uses: ./.github/actions/turbo-save
         with:
-          key: ${{ steps.vp-cache.outputs.key }}
+          key: ${{ steps.turbo-cache.outputs.key }}
   backend:
     name: Backend integration
     needs: changes
@@ -132,8 +132,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
-      - uses: ./.github/actions/vp-restore
-        id: vp-cache
+      - uses: ./.github/actions/turbo-restore
+        id: turbo-cache
         with:
           partition: browser
       - name: Resolve Playwright version
@@ -159,9 +159,9 @@ jobs:
             bun --bun playwright install-deps chromium
           fi
       - run: bun run raypx-dev ci:gate browser
-      - uses: ./.github/actions/vp-save
+      - uses: ./.github/actions/turbo-save
         with:
-          key: ${{ steps.vp-cache.outputs.key }}
+          key: ${{ steps.turbo-cache.outputs.key }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

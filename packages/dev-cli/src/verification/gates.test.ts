@@ -291,7 +291,7 @@ it("registers every CI dependency and passes the authoritative plan to each sour
     ),
   ).toBe(true);
   expect(
-    source.steps?.find((step) => step.uses === "./.github/actions/vp-restore")?.with?.partition,
+    source.steps?.find((step) => step.uses === "./.github/actions/turbo-restore")?.with?.partition,
   ).toBe("${{ matrix.phase == 'checks' && 'javascript' || 'source-tests' }}");
   const containerSmoke = workflow.jobs["container-smoke"]!;
   expect(containerSmoke.if).toBe("needs.changes.outputs.container_smoke == 'true'");

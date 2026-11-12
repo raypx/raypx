@@ -43,7 +43,7 @@ function fixture() {
     join(root, "record.ts"),
     `import { appendFileSync } from "node:fs";
 const [name, ...args] = process.argv.slice(2);
-const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^RAYPX_DESKTOP_.*_ARGS$/.test(key)));
+const forwarded = {};
 appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
 if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   );
@@ -57,18 +57,6 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
     const env: NodeJS.ProcessEnv = { ...process.env, TASK_TEST_FAIL: options.fail };
 
     delete env.RAYPX_DESKTOP_BROWSER_BUILD;
-    for (const key of [
-      "RAYPX_DESKTOP_CHECK_ARGS",
-      "RAYPX_DESKTOP_BUILD_ARGS",
-      "RAYPX_DESKTOP_DEV_ARGS",
-      "RAYPX_DESKTOP_RENDERER_ARGS",
-      "RAYPX_DESKTOP_NATIVE_SMOKE_ARGS",
-      "RAYPX_DESKTOP_NATIVE_BUILD_ARGS",
-      "RAYPX_DESKTOP_NATIVE_SMOKE_INTERACTIVE_ARGS",
-      "RAYPX_DESKTOP_NATIVE_BETA_ARGS",
-      "RAYPX_DESKTOP_NATIVE_AGENTS_ARGS",
-    ])
-      delete env[key];
     const result = spawnSync(
       process.execPath,
       [

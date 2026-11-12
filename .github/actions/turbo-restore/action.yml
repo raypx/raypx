@@ -1,0 +1,26 @@
+name: Restore Turbo task cache
+description: Restore compatible task results and record the existing cache entries
+inputs:
+  partition:
+    description: Job partition
+    required: true
+outputs:
+  key:
+    description: Cache save key
+    value: ${{ steps.cache.outputs.cache-primary-key }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache/restore@v6
+      id: cache
+      with:
+        path: .turbo/cache
+        key: turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'bun.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'bun.lock') }}-
+          turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-
+    # Entries are content-addressed, so the listing identifies the restored contents.
+    - shell: bash
+      run: |
+        mkdir -p .turbo/cache .artifacts/ci
+        ls -1 .turbo/cache | sort > .artifacts/ci/turbo-cache-before.txt

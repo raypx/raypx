@@ -245,7 +245,7 @@ describe("affected verification", () => {
     }
     for (const file of [
       ".github/actions/setup-bun/action.yml",
-      ".github/actions/vp-restore/action.yml",
+      ".github/actions/turbo-restore/action.yml",
     ])
       expect(verificationPlan(model, [file]).workspaces).toHaveLength(model.members.length);
     const mixed = verificationPlan(model, [".github/workflows/ci.yml", "packages/ui/src/index.ts"]);

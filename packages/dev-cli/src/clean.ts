@@ -33,6 +33,7 @@ export async function clean(root: string): Promise<void> {
         "node_modules/.vitest-cache",
       ].map((output) => join(workspace.path, output)),
     ),
+    ".turbo",
     "node_modules/.vite",
     "node_modules/.vite-temp",
     "node_modules/.vitest-cache",
