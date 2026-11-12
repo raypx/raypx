@@ -1,8 +1,8 @@
-# ADR 0056: Repository automation workspaces
+# ADR 0057: Repository automation workspaces
 
 Date: 2026-11-12
 
-Status: Accepted.
+Status: Accepted. Supersedes [ADR 0056](0056-in-repo-devkit.md).
 
 ## Context
 
@@ -32,13 +32,15 @@ Automation is split by how it is consumed:
   planning, CI gates and smoke probes. Devkit's generic checks live privately in its
   `src/repo/`. It has no exports.
 
-Devkit's sources start from `@raypx-kit/devkit@0.0.0-alpha.6` at Raypx Kit commit
-`b173f9d9f3e494bb51feb39ebcb9a4ef9a19976d`; the unused `toolchain`, `lint`, `testing`
-and Turbo runner were not carried over, and the package no longer exists.
+The split removes `@raypx/devkit`, the local workspace introduced in ADR 0056.
+`@raypx/tsconfig` continues to own the shared TypeScript presets. Task Graph inlines
+its own strict compiler options to keep its workspace dependencies empty.
 
 Type checks fingerprint the member and every dependency with package exports. The
 verification planner selects only Dev CLI for its policy, validation, verification and
-test edits, and only actual importers for Tooling entries.
+test edits, and only actual importers for Tooling entries. Daily `verify` keeps affected
+workspace and related test selection. The warm-cache run of all checks and tests took
+about seven seconds, while running the full test suite on a cache miss took about 63 seconds.
 
 `developmentEnvironment` reads `.env.local` and `.env` with `node:util` `parseEnv`
 instead of dotenvx. Precedence is unchanged (process, then `.env.local`, then `.env`);
@@ -50,8 +52,8 @@ values, none of which the repository uses.
 Editing Dev CLI's private checks no longer invalidates other workspaces' caches;
 editing a Tooling build helper affects only its importers; editing Task Graph affects
 every workspace, as task definitions do. `raypx-dev doctor` startup fell from about
-140 ms to 60 ms on macOS arm64. The Raypx Kit devkit package is no longer a Raypx
-dependency.
+140 ms before vendoring to about 30 ms after the split and command table changes on
+macOS arm64. The Raypx Kit devkit package is no longer a Raypx dependency.
 
 ## Verification
 
