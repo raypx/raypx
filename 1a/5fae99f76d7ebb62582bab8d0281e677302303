@@ -1,0 +1,137 @@
+.gitignore
+  s_652cc4f0b5d7e1::t_a2f547dc36d0d5 84-86
+apps/cli/scripts/build.ts
+  s_516579f4a71ecc::t_0a9bd880155d4a 10-14
+apps/cli/turbo.json
+  s_652cc4f0b5d7e1::t_2e53c3e133c4e3 1-12,14-23
+apps/desktop/package.json
+  s_652cc4f0b5d7e1::t_5621ad45312e3e 31
+apps/desktop/scripts/host/task.ts
+  s_516579f4a71ecc::t_8c5f10fabbb4c9 3,31-32
+apps/desktop/turbo.json
+  s_652cc4f0b5d7e1::t_52c5bfbd5d4354 1-35
+apps/web/package.json
+  s_652cc4f0b5d7e1::t_ebb2754b3e30a0 11,20
+bun.lock
+  s_652cc4f0b5d7e1::t_532451d7bd8ca1 16,923,2011-2022,3423-3424
+e2e/package.json
+  s_652cc4f0b5d7e1::t_fa66cc357aea2b 18
+e2e/turbo.json
+  s_652cc4f0b5d7e1::t_62365f3839faa6 1-9
+package.json
+  s_652cc4f0b5d7e1::t_2d73c64b6ab161 129-130,143,173-175,186
+packages/control/turbo.json
+  s_652cc4f0b5d7e1::t_912245a20f0754 1-9
+packages/dev-cli/src/browser-run.ts
+  s_652cc4f0b5d7e1::t_ce0c16e8ec4c20 3-4
+packages/dev-cli/src/cli.ts
+  s_652cc4f0b5d7e1::t_a4f54e6248d52c 78-79,82
+packages/dev-cli/src/repo/architecture.test.ts
+  s_652cc4f0b5d7e1::t_c0abbb1869d7df 6
+packages/dev-cli/src/repo/architecture.ts
+  s_652cc4f0b5d7e1::t_74b098e07adb84 12
+packages/dev-cli/src/repository.ts
+  s_652cc4f0b5d7e1::t_09e9dd676a8966 4-7,12-40,42-110,119-122,124-132,134
+packages/dev-cli/src/scaffold.test.ts
+  s_652cc4f0b5d7e1::t_b772187bf3d8aa 17,32
+packages/dev-cli/src/templates/workspace/agents.ts
+  s_652cc4f0b5d7e1::t_20569405a5d0fb 22-23
+packages/dev-cli/src/test-command.ts
+  s_652cc4f0b5d7e1::t_9079956ae8c6f8 2
+packages/dev-cli/src/tooling-entries.ts
+  s_652cc4f0b5d7e1::t_c4b0f320a76780 4
+packages/dev-cli/src/turbo.ts
+  s_652cc4f0b5d7e1::t_578c0757f1e818 1,3,5-8,10-14,16-21,24-36,38-46,48-51,53-116
+packages/dev-cli/src/validation/build-size.ts
+  s_652cc4f0b5d7e1::t_e439bdc8c7eb5e 1
+packages/dev-cli/src/validation/cli-size.ts
+  s_652cc4f0b5d7e1::t_12ef2aae4ad0be 3,25
+packages/dev-cli/src/validation/entries.ts
+  s_652cc4f0b5d7e1::t_196c4476e38be7 4
+packages/dev-cli/src/validation/intl-engine.ts
+  s_652cc4f0b5d7e1::t_c79923e024cc5d 1
+packages/dev-cli/src/validation/locales.ts
+  s_652cc4f0b5d7e1::t_e9555aec3042c7 4
+packages/dev-cli/src/validation/source-layers.ts
+  s_652cc4f0b5d7e1::t_4a8ab6b8b3ce65 4
+packages/dev-cli/src/validation/tests.ts
+  s_652cc4f0b5d7e1::t_8f47e384a44526 4,37,51-58,60
+packages/dev-cli/src/validation/toolchain.ts
+  s_652cc4f0b5d7e1::t_6771308e4e9448 3
+packages/dev-cli/src/verification/ci.ts
+  s_652cc4f0b5d7e1::t_bb3d768895ddbd 4,41
+packages/dev-cli/src/verification/execution.test.ts
+  s_652cc4f0b5d7e1::t_e98bd850ebdbe0 5,19-23
+packages/dev-cli/src/verification/execution.ts
+  s_652cc4f0b5d7e1::t_bc8edc262dca45 4-6,62,68,73-84,86,90,92,95
+packages/dev-cli/src/verification/gates.test.ts
+  s_652cc4f0b5d7e1::t_59391b09d91197 207,212-217
+packages/dev-cli/src/verification/gates.ts
+  s_652cc4f0b5d7e1::t_b2ac01ed3d490b 9
+packages/dev-cli/src/verification/index.ts
+  s_652cc4f0b5d7e1::t_c008be519b9d33 3-4,31,35
+packages/dev-cli/src/verification/native-workflow.test.ts
+  s_652cc4f0b5d7e1::t_203e78d9f326b6 123
+packages/dev-cli/src/verification/plan.test.ts
+  s_652cc4f0b5d7e1::t_ceab4a70ea5bb7 7,30,33,51-52,94,102,129,148,206,216-218,221,229,233,243-244,273,307,324,340,345,355,365-366,393,456,492,569,616-619
+packages/dev-cli/src/verification/plan.ts
+  s_652cc4f0b5d7e1::t_6c295fac19eebd 4-12,60,103,177,189,235,350
+packages/dev-cli/src/verification/report.test.ts
+  s_652cc4f0b5d7e1::t_cf257246718bd5 64-66,68-76,80-84,89-91
+packages/dev-cli/src/verification/report.ts
+  s_652cc4f0b5d7e1::t_3df13f0964c0f4 1,3-4,39-41,43-44,48-49,53-56,83
+packages/dev-cli/src/verification/tests.test.ts
+  s_652cc4f0b5d7e1::t_9c99a03439e0ce 5,38-39,49-53,70-71,117-118,130,183,185
+packages/dev-cli/src/verification/tests.ts
+  s_652cc4f0b5d7e1::t_56e5795629d6c3 4,6-11,32,34
+packages/dev-cli/src/verification/tooling.test.ts
+  s_652cc4f0b5d7e1::t_65310896a69bb0 5,52
+packages/dev-cli/src/verification/tooling.ts
+  s_652cc4f0b5d7e1::t_0666b325d5ba8f 4
+packages/dev-cli/src/workspace-graph.ts
+  s_652cc4f0b5d7e1::t_cdef46b56ffe10 1-67,74-76
+packages/dev-cli/tests/helpers/verification.ts
+  s_652cc4f0b5d7e1::t_a56dc68744cca1 3,28,81
+packages/dev-cli/tests/helpers/workspace.ts
+  s_652cc4f0b5d7e1::t_0f03140fcb364f 5
+packages/dev-cli/tests/integration/browser-graph.test.ts
+  s_652cc4f0b5d7e1::t_43987a2b23677b 4-5,10-12,22-24,27-29,88-99,120,126
+packages/dev-cli/tsconfig.json
+  s_652cc4f0b5d7e1::t_e22b1a31f3c7bf 9
+packages/devtools/tsconfig.json
+  s_652cc4f0b5d7e1::t_2f8f51ea250d61 6
+packages/email/tsconfig.json
+  s_652cc4f0b5d7e1::t_7889eb8eb8a42c 6
+packages/env/tsconfig.json
+  s_652cc4f0b5d7e1::t_a8569e5911ff6f 3
+packages/runtime-node/tsconfig.json
+  s_652cc4f0b5d7e1::t_5fe6463e770c02 6
+packages/tsconfig/tsconfig.json
+  s_652cc4f0b5d7e1::t_90329a9e39cfeb 3
+turbo.json
+  s_652cc4f0b5d7e1::t_955880dec57709 1-250,256-283,291-300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1a5fae99f76d7ebb62582bab8d0281e677302303",
+  "prompts": {},
+  "sessions": {
+    "s_516579f4a71ecc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cfc4-eba6-79b2-b378-d0561ffce483",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
