@@ -53,10 +53,7 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       join(root, `tests/native/smoke/${file}.ts`),
       `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.js");`,
     );
-  return (
-    task: string,
-    options: { leaf?: boolean; args?: string[]; forwarded?: string[]; fail?: string } = {},
-  ) => {
+  return (task: string, options: { args?: string[]; forwarded?: string[]; fail?: string } = {}) => {
     const env: NodeJS.ProcessEnv = { ...process.env, TASK_TEST_FAIL: options.fail };
 
     delete env.RAYPX_DESKTOP_BROWSER_BUILD;
@@ -72,18 +69,15 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       "RAYPX_DESKTOP_NATIVE_AGENTS_ARGS",
     ])
       delete env[key];
-    if (options.forwarded)
-      env[
-        `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`
-      ] = JSON.stringify(options.forwarded);
     const result = spawnSync(
       process.execPath,
       [
         "run",
         join(root, "scripts/host/task.ts"),
-        ...(options.leaf ? ["--leaf"] : []),
         task,
+        // Turbo appends a task's own arguments to its script.
         ...(options.args ?? []),
+        ...(options.forwarded ?? []),
       ],
       {
         cwd: root,
@@ -106,41 +100,9 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
-describe("Desktop task graph entry", () => {
-  it("leaves default argument fields unset so direct and root commands share cache keys", () => {
-    const result = fixture()("build");
-    expect(result.status).toBe(0);
-    expect(result.events).toEqual([
-      { name: "raypx-dev", args: ["tasks", "desktop#build"], forwarded: {} },
-    ]);
-  });
-
-  it.each([
-    "check",
-    "build",
-    "dev",
-    "native:build",
-    "build:renderer",
-    "native:smoke",
-    "native:smoke:interactive",
-    "native:agents",
-  ])("routes direct %s through the repository graph", (task) => {
-    const result = fixture()(task, { args: ["--example", "value with spaces"] });
-    expect(result.status).toBe(0);
-    expect(result.events).toEqual([
-      {
-        name: "raypx-dev",
-        args: ["tasks", `desktop#${task}`],
-        forwarded: {
-          [`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`]:
-            '["--example","value with spaces"]',
-        },
-      },
-    ]);
-  });
-
-  it("checks renderer and scripts inside VP without a native compiler", () => {
-    const result = fixture()("check", { leaf: true });
+describe("Desktop task entry", () => {
+  it("checks renderer and scripts under Turbo without a native compiler", () => {
+    const result = fixture()("check");
     expect(result.status).toBe(0);
     expect(result.events.map(({ name }) => name)).toEqual([
       "typecheck",
@@ -150,31 +112,31 @@ describe("Desktop task graph entry", () => {
   });
 
   it("uses the MyGo development leaf and preserves its arguments", () => {
-    const result = fixture()("dev", { leaf: true, args: ["--verbose"] });
+    const result = fixture()("dev", { args: ["--verbose"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([{ name: "mygo:dev", args: ["--verbose"], forwarded: {} }]);
   });
 
   it("packages MyGo through the qualified native build leaf", () => {
-    const result = fixture()("native:build", { leaf: true, forwarded: ["-skip-dmg"] });
+    const result = fixture()("native:build", { forwarded: ["-skip-dmg"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
         name: "mygo:build",
         args: ["-skip-dmg"],
-        forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["-skip-dmg"]' },
+        forwarded: {},
       },
     ]);
   });
 
   it("preserves a failed check's exit status and skips remaining checks", () => {
-    const result = fixture()("check", { leaf: true, fail: "typecheck:node" });
+    const result = fixture()("check", { fail: "typecheck:node" });
     expect(result.status).toBe(7);
     expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
   });
 
-  it("runs only the renderer build inside VP and forwards arguments", () => {
-    const result = fixture()("build", { leaf: true, args: ["--mode", "staging"] });
+  it("runs only the renderer build under Turbo and forwards arguments", () => {
+    const result = fixture()("build", { args: ["--mode", "staging"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
@@ -190,14 +152,14 @@ describe("Desktop task graph entry", () => {
     ["native:smoke", "smoke-run", []],
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
     ["native:agents", "smoke-agents-run", []],
-  ] as const)("runs the MyGo %s gate inside VP", (task, name, args) => {
-    const result = fixture()(task, { leaf: true });
+  ] as const)("runs the MyGo %s gate under Turbo", (task, name, args) => {
+    const result = fixture()(task, {});
     expect(result.status).toBe(0);
     expect(result.events).toEqual([{ name, args, forwarded: {} }]);
   });
 
   it("restores direct build arguments only inside the selected Desktop task", () => {
-    const result = fixture()("build", { leaf: true, forwarded: ["--mode", "value with spaces"] });
+    const result = fixture()("build", { forwarded: ["--mode", "value with spaces"] });
     expect(result.status).toBe(0);
     expect(result.events[0]?.args).toEqual([
       "build",
@@ -208,7 +170,7 @@ describe("Desktop task graph entry", () => {
     ]);
   });
   it("builds the separate browser renderer with CSP, without staging the CLI", () => {
-    const result = fixture()("build:renderer", { leaf: true });
+    const result = fixture()("build:renderer");
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
@@ -221,7 +183,7 @@ describe("Desktop task graph entry", () => {
     ]);
   });
   it("refuses to turn the browser-only build into a native artifact", () => {
-    const result = fixture()("build:renderer", { leaf: true, args: ["--mode", "production"] });
+    const result = fixture()("build:renderer", { args: ["--mode", "production"] });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("owns its mode");
     expect(result.events).toEqual([]);
