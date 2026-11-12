@@ -1,0 +1,1062 @@
+apps/cli/tests/helpers/runtime.ts
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/contracts/src/jobs-composition.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/daemon/host-state.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/process/herdr-cleanup.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/router-automation-history.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/web/src/features/settings/account-settings.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ai/src/context.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/jobs/tick.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/src/catalog-store.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/agents/inputs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/scripts/host/csp.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/composer.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/ui/src/lib/utils.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/bootstrap-admins.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/conversation/interactions.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/web/src/router-access.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/auth/src/hooks.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/helpers/desktop-channel.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/validation/toolchain.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/runtime/agents/application/coordinator.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/commands/tasks.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/verification/plan.ts
+  s_28758cb14041db::t_fed59c221d9595 54
+apps/cli/tests/integration/runtime/terminal/hook.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/tests/integration/native/smoke-artifacts.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/web/src/features/select-helper.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/router-pages.component.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/icons/src/icon.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/jobs/package.json
+  s_28758cb14041db::t_37ae2550f065c7 16-18
+  s_28758cb14041db::t_cf4bb04c822394 38-39
+packages/runtime-node/src/http.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/integration/relay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/validation/entries.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/src/runtime/agents/pi/completion.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/account/src/server.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/approval-body.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/agents/context.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/runtime/daemon/proxy.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/hosts.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/contracts/src/local-client.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/redis/redis.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/fixtures/agents/orchestration.ts
+  s_28758cb14041db::t_37ae2550f065c7 188
+apps/desktop/src/features/auth/return-to.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+infra/railway/package.json
+  s_28758cb14041db::t_37ae2550f065c7 13-14,25
+infra/cloudflare/package.json
+  s_28758cb14041db::t_cf4bb04c822394 25
+  s_28758cb14041db::t_37ae2550f065c7 13-14
+packages/dev-cli/src/repo/verification.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/mobile/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/tasks/cloud-terminal-settings.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/api/server/configuration/service.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/tests/integration/reports.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/features/tasks/history.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/dev-cli/src/validation/inventory.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/features/guest-draft.component.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/runtime/daemon/terminal-settings.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/router-pages.component.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/api/tests/integration/access.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/remote/renewal.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/jobs/src/cloud-jobs.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 8
+apps/cli/src/runtime/agents/domain/decider.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/ui/src/confirmation.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/credentials.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/features/instance-registration.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/storage/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/remote/persistence.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/core/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/tests/types/intl.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/runtime-node/src/process.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/control/src/relay-jobs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/scripts/host/smoke-options.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/logging.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/lib/api-fetch.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/tasks/src/model/state.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/error-reports.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/tests/helpers/router-auth.tsx
+  s_28758cb14041db::t_37ae2550f065c7 11
+packages/devtools/src/snapshot.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 8
+apps/cli/tests/integration/runtime/daemon/control.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/core/package.json
+  s_28758cb14041db::t_cf4bb04c822394 29-30
+  s_28758cb14041db::t_37ae2550f065c7 19-21
+packages/devtools/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/model-picker.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ui/src/modal.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+vitest.config.ts
+  s_28758cb14041db::t_d44b1ab8c18165 1-19
+packages/dev-cli/tests/integration/validation-process.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/logger/src/core.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/smoke/checks.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/ui/src/toast-bridge.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/env/src/index.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/database/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/pi-transfer.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/agents/snapshot-query-performance.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/src/translator.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/runtime-node/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/smoke/artifacts.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/mobile/package.json
+  s_28758cb14041db::t_37ae2550f065c7 11-12,49
+packages/auth/package.json
+  s_28758cb14041db::t_37ae2550f065c7 18-21
+  s_28758cb14041db::t_cf4bb04c822394 37-38
+apps/desktop/src/features/terminal/terminal.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/src/runtime/process/shell.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/email/package.json
+  s_28758cb14041db::t_37ae2550f065c7 12-14
+  s_28758cb14041db::t_cf4bb04c822394 29-30
+packages/i18n/src/catalog-provider.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/api/tests/integration/configuration.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/src/performance/environment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/src/index.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/repo/environment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/analytics/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/commands/ai.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/contracts/package.json
+  s_28758cb14041db::t_37ae2550f065c7 17-19
+  s_28758cb14041db::t_cf4bb04c822394 29-30
+apps/cli/tests/integration/runtime/memory.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/core/src/jobs/schedule.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/storage/src/s3.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/desktop/src/features/request-notice.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 6
+packages/control/tests/helpers/relay.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/jobs/cleanup.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/session-threads.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/scripts/host/signing.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/verification/report.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/daemon/host.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/ui/src/themes/script.component.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/runtime/daemon/desktop/api.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/connectors.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/clean-async.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/daemon/remote/session.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/instances.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/tooling/src/build/cli.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/terminal/settings.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/administration/audit.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/rate-limit.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/agents/oracle.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/logger/src/safe.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/workspace/approvals.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/features/reauthorize.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/agents/snapshot-performance.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/dev-cli/src/templates/workspace/vitest.config.ts.template
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/spec-placement.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/dev-cli/tests/integration/deployment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/daemon/desktop/executions.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/lib/connection.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/tooling/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/blocks/src/components/command-palette.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/src/features/auth/components/instance-gate.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/api/tests/integration/runtime-providers.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/client/src/relay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/administration.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/web/src/features/account-security.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/i18n/src/provider.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/cli/tests/integration/runtime/agents/pi-store.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/jobs/src/server/service.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/package.json
+  s_28758cb14041db::t_37ae2550f065c7 19-22
+  s_28758cb14041db::t_cf4bb04c822394 48-49
+packages/tasks/src/client/composer/submission.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/tasks/src/client/project-sessions.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ui/src/sidebar.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/dev-cli/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+docs/development/testing.md
+  s_28758cb14041db::t_fed59c221d9595 21-23,218,224-226,242-243
+apps/web/src/router-auth.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/package.json
+  s_28758cb14041db::t_37ae2550f065c7 9-11,21,56
+packages/dev-cli/src/repo/docs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/dev-cli/tests/integration/deployment-sources.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/logger/package.json
+  s_28758cb14041db::t_cf4bb04c822394 25-26
+  s_28758cb14041db::t_37ae2550f065c7 15-17
+apps/desktop/preferences.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/terminal/frame.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/analytics/package.json
+  s_28758cb14041db::t_37ae2550f065c7 19-21
+  s_28758cb14041db::t_cf4bb04c822394 35-36
+apps/api/tests/integration/api.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/api/tests/integration/jobs-relay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/settings/overlay.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 18
+apps/web/src/features/auth/account-access.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+AGENTS.md
+  s_28758cb14041db::t_fed59c221d9595 68,81,89
+packages/dev-cli/src/verification/tests.ts
+  s_28758cb14041db::t_d44b1ab8c18165 133
+packages/ai/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/package.json
+  s_28758cb14041db::t_cf4bb04c822394 26-27
+  s_28758cb14041db::t_37ae2550f065c7 18-20
+apps/desktop/src/router-memory.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 16
+apps/cli/src/commands/args.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/control/src/observed.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/contracts/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/validation/backend-environment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/core/src/auth.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/devtools/src/bridge.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/tooling/src/performance/attribution.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/runtime-node/package.json
+  s_28758cb14041db::t_37ae2550f065c7 13-14,28
+packages/account/src/access.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/router-session.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/i18n/src/preferences.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/engine-notice.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/daemon/desktop/policy.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/env/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/agents/sink.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/verification/tests.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3,23,105,175
+apps/cli/tests/integration/runtime/herdr.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/router-memory.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 11
+packages/tsconfig/package.json
+  s_28758cb14041db::t_37ae2550f065c7 33-35,40
+packages/core/src/task-context.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/local-routing.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/core/src/agent-runs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/devtools/package.json
+  s_28758cb14041db::t_37ae2550f065c7 15-17
+  s_28758cb14041db::t_cf4bb04c822394 31-32
+packages/memory/src/budget.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/src/router-local.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/jobs/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/diagnostics.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/commands/index.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/web/src/features/landing/components/demo-playback.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/agents/host.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/tasks/src/model/run-steps.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/tui/terminal.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+test.config.ts
+  s_28758cb14041db::t_d44b1ab8c18165 2,12
+apps/api/tests/integration/deployment-fixture.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/core/src/activity.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/task-drafts.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/daemon/desktop/cookies.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/tests/integration/native/smoke-probe.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/tests/integration/test-inventory.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/tui/session.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/distribution/archive.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/contracts/src/local-approvals.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/control/src/relay-client.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/features/users/components/users.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/auth/src/client/password-change-dialog.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ui/src/select-field.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/i18n/src/formatter.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/router-local-events.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/external-links.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/src/runtime/daemon/desktop/control.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/src/roles.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/src/ssr.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/runtime/lifecycle.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/integration/relay-server.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/src/errors.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/memory/tests/helpers/client.tsx
+  s_28758cb14041db::t_37ae2550f065c7 6
+packages/storage/src/storage.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/env.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/repo/architecture.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/agents/pi-managed.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/dev-cli/src/verification/native-workflow.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/helpers/provider-session.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/contracts/src/task-context.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/tests/integration/native/docker.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/web/src/router-recovery.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+vite.config.ts
+  s_28758cb14041db::t_d44b1ab8c18165 1,3,93
+  s_28758cb14041db::t_63ee6a59b6d74a 4-43,45-62,64-90,92
+packages/auth/src/server.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/workspace/devices.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/web/src/features/auth/auth-guard.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/validation/source-layers.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/package.json
+  s_28758cb14041db::t_37ae2550f065c7 11-13,28
+apps/api/tests/integration/jobs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/terminal/broker.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/api/server/jobs/tick-runtime.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/validation/catalog-parity.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/relay-env.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/coordinator.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/runtime/process/bun.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 14
+apps/cli/tests/integration/runtime/agents/effects.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/desktop/sessions.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/account/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/cache/cache.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/tests/setup.ts
+  s_28758cb14041db::t_37ae2550f065c7 6
+apps/desktop/tests/integration/native/task.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 13
+apps/cli/tests/integration/runtime/agents/registry.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 6
+packages/control/src/relay/frames.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/terminal-settings.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/src/features/memory/client.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/conversation/session.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/daemon/remote/snapshot.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/package.json
+  s_28758cb14041db::t_cf4bb04c822394 67-68
+  s_28758cb14041db::t_37ae2550f065c7 15-18
+apps/cli/tests/integration/runtime/agents/orchestration.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/integration/logging.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/scripts/host/check-release.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/agents/provider-replay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/context-commands.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/jobs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/src/session-security.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/workspace/panels.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/ui/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/env/package.json
+  s_28758cb14041db::t_37ae2550f065c7 24-26
+  s_28758cb14041db::t_cf4bb04c822394 34-35
+packages/memory/src/picker.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/control/src/control.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/configuration.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/auth.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/scaffold.ts
+  s_28758cb14041db::t_d44b1ab8c18165 47
+  s_28758cb14041db::t_37ae2550f065c7 35
+apps/desktop/src/preferences.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/web/src/features/auth/components/session-boundary.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/runtime/runtime-lease.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+docs/architecture/0061-standalone-vitest.md
+  s_28758cb14041db::t_fed59c221d9595 1-20
+tsconfig.json
+  s_28758cb14041db::t_d44b1ab8c18165 8
+apps/api/server/jobs/runtime.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+docs/architecture/0060-turbo-task-graph.md
+  s_28758cb14041db::t_fed59c221d9595 8-9
+packages/tasks/src/model/diff.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/src/build/bun-deployment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/logger/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/tests/helpers/router-local.tsx
+  s_28758cb14041db::t_37ae2550f065c7 18
+packages/dev-cli/src/locales.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/runtime/daemon/acknowledged-stream.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/src/features/tasks/project-navigation.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/daemon/tools.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/client/src/scheduler.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/dev-cli/src/cli.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/request.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/tasks/drafts.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/database/package.json
+  s_28758cb14041db::t_37ae2550f065c7 13-15
+  s_28758cb14041db::t_cf4bb04c822394 28-29
+apps/cli/tests/integration/runtime/daemon/local-terminal.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/workspace/pending-count.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/dev-cli/src/test-command.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/ui/src/themes/provider.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 7
+packages/dev-cli/src/markdown-length.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/tests/integration/native/smoke-session.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/account/package.json
+  s_28758cb14041db::t_cf4bb04c822394 32-33
+  s_28758cb14041db::t_37ae2550f065c7 17-18
+apps/desktop/scripts/host/agent-options.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/conversation/virtual.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/dev-cli/src/validation/evidence.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/instances/package.json
+  s_28758cb14041db::t_37ae2550f065c7 15-16,26
+apps/cli/src/runtime/terminal/protocol.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/helpers/temporary.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/control/src/relay/registry.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/tests/integration/browser-server.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/router-home.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 13
+apps/desktop/src/lib/storage.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/tasks/src/model/conversation-performance.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/src/build/start-env.dotenv.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/tasks/tests/helpers/layout.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/terminal/host.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/tests/integration/native/windows-smoke-install.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/core/src/memory.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/verification/tooling.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3,15
+packages/ui/src/utility-controls.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+.github/actions/native-checks/action.yml
+  s_28758cb14041db::t_d44b1ab8c18165 22
+apps/cli/src/runtime/process/installation-runtime.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/tasks/project-selection.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/instances.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/contracts/src/core-composition.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/configuration.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/icons/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/loopback.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/helpers/remote-control.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+infra/cloudflare/src/ingress.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/sqlite.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/analytics/src/client/application.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/tasks/src/client/conversation/state.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/dev-cli/src/verification/gates.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/analytics/src/policy.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/mobile/src/session-policy.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/router-landing.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/tasks/src/client/composer/context.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/cli/src/runtime/process/herdr-frame.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/email/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/src/build/release.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+package.json
+  s_28758cb14041db::t_d44b1ab8c18165 116,189-190
+apps/cli/tests/helpers/sqlite.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ai/package.json
+  s_28758cb14041db::t_37ae2550f065c7 12-13
+  s_28758cb14041db::t_cf4bb04c822394 21-22
+apps/web/src/router-legal.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/features/engine/routes.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/process.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/instances/src/server.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/engine/model.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/agents/pi/lifecycle.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/tasks/local-client.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/contracts/src/api.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/workspace-scope.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/agents/activity.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/providers/package.json
+  s_28758cb14041db::t_37ae2550f065c7 15-16,27
+apps/desktop/src/features/analytics/store.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/i18n/src/composition.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/icons/package.json
+  s_28758cb14041db::t_37ae2550f065c7 86-87,102
+packages/tasks/src/client/run-timeline.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/runtime/process/installation.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/src/runtime/agents/provider-sdk.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/dev-cli/src/test-command.ts
+  s_28758cb14041db::t_d44b1ab8c18165 133
+packages/i18n/src/client.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/src/lib/platform.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/blocks/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/verification/execution.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/src/account-security.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+docs/development/validation-artifacts.md
+  s_28758cb14041db::t_fed59c221d9595 209,440
+apps/api/tests/integration/memory.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/src/client/auth-form.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/features/tasks/conversation.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/src/runtime/agents/infrastructure/providers/builtins.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/daemon/remote/scheduler.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/agents/history-clear.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/runtime/daemon/desktop/https.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/conversation/history.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/tests/integration/native/mygo.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/web/src/router-account-settings.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/dev-cli/src/smoke/index.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/clean.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+docs/architecture/README.md
+  s_28758cb14041db::t_fed59c221d9595 362
+apps/api/tests/postgres/node/memory.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/control/src/relay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/src/client/auth-link.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+turbo.json
+  s_28758cb14041db::t_d44b1ab8c18165 287
+apps/desktop/tests/helpers/tasks/workspace.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/dev-cli/src/validation/intl-engine.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/verification/plan.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4,227,322,343
+apps/cli/tests/integration/runtime/foreground.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/helpers/agents.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/database/src/schema.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/validation/deployment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/jobs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/terminal/input.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/providers/tests/helpers/conformance.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+docs/development/dev-cli.md
+  s_28758cb14041db::t_fed59c221d9595 155,157
+apps/cli/tests/integration/runtime/agents/run-projection.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/workspace/filters.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/ui/package.json
+  s_28758cb14041db::t_cf4bb04c822394 72-73
+  s_28758cb14041db::t_37ae2550f065c7 45-48
+packages/i18n/package.json
+  s_28758cb14041db::t_37ae2550f065c7 19-22
+  s_28758cb14041db::t_cf4bb04c822394 37-38
+packages/ui/tests/setup.ts
+  s_28758cb14041db::t_37ae2550f065c7 6
+packages/ui/src/combobox.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/cli/tests/integration/runtime/daemon/task-lifecycle.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/runtime/migrations.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/api/tests/cluster/relay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/repo/workspaces.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/src/runtime/agents/application/ingest.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/tests/setup.ts
+  s_28758cb14041db::t_37ae2550f065c7 6
+apps/desktop/src/features/auth/sign-out.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/tests/integration/native/prepare-cli.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/logger/src/stream.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/dev-cli/tests/integration/browser-graph.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/features/onboarding/onboarding.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/web/src/features/configuration.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 6
+packages/logger/src/context.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/features/files/routes.component.test.tsx
+  s_28758cb14041db::t_cf4bb04c822394 19
+packages/memory/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/memory-client.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/blocks/package.json
+  s_28758cb14041db::t_cf4bb04c822394 34-35
+  s_28758cb14041db::t_37ae2550f065c7 17-18
+apps/cli/src/runtime/agents/pi/tools.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/scripts/host/smoke-launch.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/contracts/src/terminal.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/tests/helpers/workspace.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/scripts/host/smoke-owner.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/lib/native-transport.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/control/package.json
+  s_28758cb14041db::t_37ae2550f065c7 14-15,31
+apps/cli/tests/integration/runtime/daemon/lifecycle.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/tool-activity.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/tsconfig/presets.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/src/runtime/daemon/awake-clock.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/features/administration/components/administration.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/tests/integration/runtime/files.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/tui/text.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/auth/src/social-login.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/storage/package.json
+  s_28758cb14041db::t_37ae2550f065c7 13-15
+  s_28758cb14041db::t_cf4bb04c822394 23-24
+packages/tsconfig/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/repo/catalogs.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+infra/cloudflare/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/logger/src/managed.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tooling/src/build/start-env.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/desktop/src/router-local-scope.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ui/src/patterns.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/src/lib/mygo.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/instances/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/agents/provider-protocol.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/package.json
+  s_28758cb14041db::t_37ae2550f065c7 11-14,16-18
+  s_28758cb14041db::t_cf4bb04c822394 55-56
+packages/dev-cli/src/repo/artifact.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/providers/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/instance-enrollment.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/daemon/desktop/gateway.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/control/src/context-routing.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/evals/harness.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+infra/railway/stack.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/ui/src/password-input.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/blocks/src/components/shell.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/dev-cli/src/scaffold.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+  s_28758cb14041db::t_f4e37080c26bb8 32,36
+infra/railway/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/core/src/task-text.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/src/runtime/terminal/recorded.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/api/tests/integration/configuration-runtime.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/env/src/public-entries.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/client/package.json
+  s_28758cb14041db::t_cf4bb04c822394 27-28
+  s_28758cb14041db::t_37ae2550f065c7 14-16
+packages/ai/src/client.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/analytics/src/client/preferences.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/web/src/router-automations.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 11
+packages/client/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/src/router-account.component.test.tsx
+  s_28758cb14041db::t_cf4bb04c822394 17
+apps/desktop/src/router-automations.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/desktop/src/router-browser.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/client/src/api.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/conversation-state.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/web/src/router-settings.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/web/src/return-to.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/i18n/src/diagnostics.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/runtime/agents/snapshot-activity-performance.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/email/src/templates.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/browser-tests.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/tests/postgres/node/cleanup.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/daemon/remote/replay.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/desktop/src/features/auth/routes.component.test.tsx
+  s_28758cb14041db::t_cf4bb04c822394 17
+packages/account/src/index.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/control/vitest.config.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/src/analytics.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/dev-cli/tests/integration/deployment-smoke.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/approval-changes.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/blocks/src/components/settings.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/ui/src/composition.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+packages/ui/src/primitives.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 5
+apps/cli/src/runtime/agents/adapters.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/desktop/package.json
+  s_28758cb14041db::t_37ae2550f065c7 16-20
+  s_28758cb14041db::t_cf4bb04c822394 88-89
+packages/ai/src/config.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/model/composition.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/cli/tests/integration/runtime/state.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+apps/cli/tests/integration/runtime/agents/snapshot-consistency.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 4
+packages/dev-cli/src/validation/build-size.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 3
+apps/cli/src/runtime/agents/domain/projector.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+apps/api/server/client-ip.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/memory/src/library.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 4
+apps/cli/tests/integration/runtime/agents/store.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 2
+packages/memory/src/server/service.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+packages/tasks/src/client/observed/decisions.component.test.tsx
+  s_28758cb14041db::t_37ae2550f065c7 3
+packages/memory/package.json
+  s_28758cb14041db::t_cf4bb04c822394 37-38
+  s_28758cb14041db::t_37ae2550f065c7 16-18
+apps/api/tests/postgres/node/control.test.ts
+  s_28758cb14041db::t_37ae2550f065c7 1
+bun.lock
+  s_28758cb14041db::t_946a1c10f8b139 19,60,95,149,190,264,296,312,331,347,366,390,417,437,452,472,485,500,520,539,565,578,598,620,637,662,678,702,720,738,751,782,804,813,841,952,2647,3839-3840
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f1eace671672528a83ec09459baa29429299be61",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
