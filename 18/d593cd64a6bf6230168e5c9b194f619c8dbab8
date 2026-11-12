@@ -1,0 +1,34 @@
+apps/web/locales/zh/guest.ts
+  s_af4bf7abf9b42a::t_0e3c34dbba4bf4 9-10,24-28,30-32,41-46
+apps/web/src/router-landing.component.test.tsx
+  s_af4bf7abf9b42a::t_b1701b97a52b44 28,94,149
+apps/web/src/features/landing/components/home.tsx
+  s_af4bf7abf9b42a::t_0e3c34dbba4bf4 71,76,115-117
+apps/web/e2e/access.spec.ts
+  s_af4bf7abf9b42a::t_b1701b97a52b44 31,121
+apps/web/src/features/landing/components/illustrations.tsx
+  s_af4bf7abf9b42a::t_0e3c34dbba4bf4 55,60
+apps/web/src/router-home.component.test.tsx
+  s_af4bf7abf9b42a::t_b1701b97a52b44 53,70,75
+apps/web/e2e/landing-visual.spec.ts
+  s_af4bf7abf9b42a::t_b1701b97a52b44 33,43,53-55
+apps/web/locales/en/guest.ts
+  s_af4bf7abf9b42a::t_0e3c34dbba4bf4 6-8,24-27,29-31,40-45
+  s_af4bf7abf9b42a::t_b1701b97a52b44 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "18d593cd64a6bf6230168e5c9b194f619c8dbab8",
+  "prompts": {},
+  "sessions": {
+    "s_af4bf7abf9b42a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf50-ddb2-79e1-806c-dafd31aa2199",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
