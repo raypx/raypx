@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DesktopTaskWorkspace } from "../features/tasks/workspace.js";
 export const Route = createFileRoute("/approvals")({
   staticData: { page: { title: "common.approvals", layout: "workbench" } },
-  validateSearch: ({ scope }: Record<string, unknown>): { scope?: "local" | "remote" } =>
-    scope === "remote" || scope === "local" ? { scope } : {},
+  validateSearch({ scope }: Record<string, unknown>): { scope?: "local" | "remote" } {
+    if (scope === "remote" || scope === "local") return { scope };
+    return {};
+  },
   component: Approvals,
 });
 function Approvals() {
