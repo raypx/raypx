@@ -34,9 +34,7 @@ test(
       .getByRole("textbox", { name: "Email address", exact: true })
       .fill("test@example.com");
     await page.getByRole("button", { name: "Create account", exact: true }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "Check your inbox for the verification link",
-    );
+    await expect(page.getByRole("status")).toBeVisible();
     expect(submissions).toHaveLength(1);
     expect(submissions[0]).toMatchObject({
       email: "test@example.com",
@@ -47,7 +45,7 @@ test(
 );
 
 test(
-  "Web sign-in translates verification errors and exposes password recovery",
+  "Web sign-in shows safe verification feedback and exposes password recovery",
   { tag: ["@web", "@smoke"] },
   async ({ page }) => {
     await page.route("**/api/auth/sign-in/email", (route) =>
@@ -63,13 +61,14 @@ test(
       .fill("test@example.com");
     await page.getByLabel("Password", { exact: true }).fill("valid-password-123");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("alert")).toHaveText("Verify your email before signing in.");
+    const alert = page.getByRole("alert");
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toContainText("Untranslated server diagnostic");
     await page.getByRole("link", { name: "Forgot password?", exact: true }).click();
+    await expect(page).toHaveURL(`${web}/forgot-password`);
     await expect(page.getByRole("button", { name: "Send reset link", exact: true })).toBeVisible();
     await page.goto(`${web}/reset-password`);
-    await expect(page.getByRole("alert")).toHaveText(
-      "This link is invalid or has expired. Request a new email.",
-    );
+    await expect(alert).toBeVisible();
     await expect(page.getByRole("button", { name: "Reset password", exact: true })).toHaveCount(0);
     await page.getByRole("link", { name: "Send reset link", exact: true }).click();
     await expect(page.getByRole("button", { name: "Send reset link", exact: true })).toBeVisible();

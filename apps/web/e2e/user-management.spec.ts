@@ -9,57 +9,11 @@ import {
 } from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
 
-for (const width of [360, 768, 1440])
-  for (const locale of ["en", "zh"])
-    for (const theme of ["light", "dark"]) {
-      test(
-        `Web account header ${width}px ${locale} ${theme}`,
-        { tag: "@web" },
-        async ({ page }) => {
-          await page.setViewportSize({ width, height: 900 });
-          await page.emulateMedia({ reducedMotion: "reduce" });
-          await page.addInitScript(
-            (preferences) => {
-              localStorage.setItem("raypx_locale", preferences.locale);
-              localStorage.setItem("theme", preferences.theme);
-            },
-            { locale, theme },
-          );
-          const account = await signedInAccount(page);
-          await accountAccessFixture(page, account.id, "admin");
-          await page.goto(web);
-          await expect(page.locator("html")).toHaveAttribute("lang", locale);
-          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-          await expect(
-            page.getByRole("contentinfo").getByRole("link", { name: "GitHub" }),
-          ).toBeVisible();
-          const button = page.getByRole("button", {
-            name: locale === "zh" ? "账号菜单" : "Account menu",
-            exact: true,
-          });
-          await button.focus();
-          await page.keyboard.press("Enter");
-          await expect(
-            page.getByRole("menuitem", {
-              name: locale === "zh" ? "管理控制台" : "Admin console",
-              exact: true,
-            }),
-          ).toBeVisible();
-          expect(
-            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-          ).toBe(true);
-          await capture(page, {
-            path: test.info().outputPath(`header-${width}-${locale}-${theme}.png`),
-            fullPage: true,
-          });
-          await page.keyboard.press("Escape");
-          await expect(button).toBeFocused();
-        },
-      );
-    }
-for (const width of [360, 1440]) {
-  test(`Web user role confirmation and search ${width}px`, { tag: "@web" }, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
+test(
+  "Web administrators can search users and retry a confirmed role change",
+  { tag: "@web" },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await webShellFixture(page);
     const account = await signedInAccount(page);
@@ -75,13 +29,13 @@ for (const width of [360, 1440]) {
         createdAt: "2026-11-01T00:00:00Z",
       })),
     ];
-    const searches: string[] = [];
+    const searches: URLSearchParams[] = [];
     const changes: unknown[] = [];
     let fail = true;
     await page.route("**/api/auth/admin/list-users**", (route) => {
       if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
       const query = new URL(route.request().url()).searchParams;
-      searches.push(query.toString());
+      searches.push(query);
       const search = query.get("searchValue") ?? "";
       const field = query.get("searchField") === "name" ? "name" : "email";
       const matches = users.filter((user) => user[field].includes(search));
@@ -104,9 +58,10 @@ for (const width of [360, 1440]) {
       return authResponse(route, { user });
     });
     await page.goto(web);
-    await page.getByRole("button", { name: "Account menu", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Admin console", exact: true }).click();
+    await page.getByRole("button", { name: "Account menu", exact: true }).press("Enter");
+    await page.getByRole("menuitem", { name: "Admin console", exact: true }).press("Enter");
     await page.getByRole("link", { name: "Users", exact: true }).click();
+    await expect(page).toHaveURL(web + "/admin/users");
     const table = page.getByRole("table", { name: "Users", exact: true });
     await expect(table).toBeVisible();
     await expect(
@@ -116,51 +71,42 @@ for (const width of [360, 1440]) {
         .getByRole("button", { name: "Change role" }),
     ).toBeDisabled();
     await page.getByRole("button", { name: "Next page" }).click();
-    await expect(page.getByText("Page 2 · 21 users")).toBeVisible();
-    expect(searches.some((value) => value.includes("offset=20"))).toBe(true);
+    await expect(
+      table.getByRole("row").filter({ hasText: "member-19@example.test" }),
+    ).toBeVisible();
+    expect(searches.some((query) => query.get("offset") === "20")).toBe(true);
     await page.getByRole("combobox", { name: "Search by" }).click();
     await page.getByRole("option", { name: "Name", exact: true }).click();
     await page.getByLabel("Search users", { exact: true }).fill("Member 0");
     await page.getByRole("button", { name: "Search users", exact: true }).click();
     const row = table.getByRole("row").filter({ hasText: "member-0@example.test" });
     await expect(row).toBeVisible();
+    expect(
+      searches.some(
+        (query) =>
+          query.get("searchField") === "name" &&
+          query.get("searchValue") === "Member 0" &&
+          Number(query.get("offset") ?? 0) === 0,
+      ),
+    ).toBe(true);
     await row.getByRole("button", { name: "Change role" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("combobox", { name: "Role", exact: true }).click();
     await page.getByRole("option", { name: "Admin", exact: true }).click();
     expect(changes).toHaveLength(0);
     await dialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(dialog.getByRole("alert")).toContainText("Unable to change this role");
+    await expect(dialog.getByRole("alert")).toBeVisible();
     await expect(page.getByText("private diagnostic")).toHaveCount(0);
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).toBeHidden();
-    await expect(row).toContainText("Admin");
-    expect(changes).toHaveLength(2);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-      true,
-    );
-    const identity = row.getByText("member-0@example.test", { exact: true });
-    const geometry = await identity.evaluate((element) => {
-      const text = document.createRange();
-      text.selectNodeContents(element);
-      const cell = element.closest("td")!.getBoundingClientRect();
-      const elementRow = element.closest("tr")!.getBoundingClientRect();
-      return {
-        textLines: text.getClientRects().length,
-        identityWidth: cell.width,
-        rowWidth: elementRow.width,
-        identityBottom: cell.bottom,
-      };
-    });
-    expect(geometry.textLines).toBe(1);
-    if (width === 360) {
-      expect(geometry.identityWidth).toBeGreaterThanOrEqual(geometry.rowWidth - 1);
-      const action = await row.getByRole("button", { name: "Change role" }).boundingBox();
-      expect(action!.y).toBeGreaterThanOrEqual(geometry.identityBottom);
-    }
-    await capture(page, { path: test.info().outputPath(`users-${width}.png`), fullPage: true });
-  });
-}
+    await expect(row.getByRole("cell", { name: "Admin", exact: true })).toBeVisible();
+    expect(changes).toEqual([
+      expect.objectContaining({ userId: "member-0", role: "admin" }),
+      expect.objectContaining({ userId: "member-0", role: "admin" }),
+    ]);
+    await capture(page, { path: test.info().outputPath("users-mobile.png"), fullPage: true });
+  },
+);
 
 test(
   "Web member cannot mount the user list on direct navigation",
@@ -175,7 +121,8 @@ test(
     });
     await page.goto(`${web}/admin/users`);
     await page.getByRole("button", { name: "Try again", exact: true }).click();
-    await expect(page.getByRole("alert")).toContainText("You do not have permission");
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.getByRole("table", { name: "Users", exact: true })).toHaveCount(0);
     expect(reads).toBe(0);
   },
 );

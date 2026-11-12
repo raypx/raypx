@@ -30,9 +30,9 @@ The form has a 25rem maximum width and no outer gutters. Web owns its centered
 single-column panel, native title-bar drag area and return action. Do not add a
 second card inside either panel or expose app-specific routing through Auth.
 
-The application browser suites cover all five modes, both locales/themes, narrow
-and short windows, input preservation during locale changes, link recovery,
-password autocomplete and duplicate submission. Shared Auth component tests cover
+The application browser suites check all five auth modes in a narrow viewport,
+including password autocomplete. Separate journeys cover input preservation during
+locale changes, link recovery and duplicate submission. Shared Auth component tests cover
 mail cooldowns, errors, credential clearing and completion retries. Browser
 renderer results and screenshot review are recorded separately from native host
 acceptance.

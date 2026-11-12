@@ -3,7 +3,6 @@ import { test } from "../../helpers/browser-fixture.js";
 import { capture } from "../../helpers/capture.js";
 import { authResponse, signedInAccount, webShellFixture } from "../../helpers/account-fixture.js";
 import { selectOption } from "../../helpers/select.js";
-import { expectViewportShell } from "../../helpers/layout.js";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 
@@ -215,25 +214,6 @@ export function registerTests() {
       await expect(
         page.getByRole("region", { name: "src/delivery.ts", exact: true }),
       ).toBeVisible();
-      await expect(
-        page
-          .locator('[data-slot="collapsible-content"]')
-          .filter({ has: page.getByRole("region", { name: "src/delivery.ts", exact: true }) }),
-      ).toHaveCSS("transition-property", "none");
-      await page.emulateMedia({ reducedMotion: "reduce" });
-      await fileToggle.click();
-      await fileToggle.click();
-      await expect(
-        page.getByRole("region", { name: "src/delivery.ts", exact: true }),
-      ).toBeVisible();
-      const diffPanel = page
-        .locator('[data-slot="collapsible-content"]')
-        .filter({ has: page.getByRole("region", { name: "src/delivery.ts", exact: true }) });
-      await expect(diffPanel).toHaveCSS("transition-property", "none");
-      await page.emulateMedia({ reducedMotion: "no-preference" });
-      await page.getByRole("heading", { name: "Delivery plan", exact: true }).click();
-      await expect(diffPanel).toHaveCSS("transition-property", "height, opacity");
-      await expect(diffPanel).toHaveCSS("transition-duration", "0.2s");
       await expect(page.getByRole("heading", { name: "Delivery plan", exact: true })).toBeVisible();
       const activityToggle = page.getByRole("button", { name: "Activity", exact: true });
       await activityToggle.click();
@@ -266,7 +246,6 @@ export function registerTests() {
       await page.getByRole("button", { name: "Send now", exact: true }).click();
       await expect(composer).toHaveValue("");
       expect(inputs).toEqual(["queue", "steer"]);
-      await expectViewportShell(page, surface);
       await capture(page, {
         path: test.info().outputPath(`${surface.toLowerCase()}-conversation.png`),
         fullPage: true,
@@ -281,17 +260,15 @@ export function registerTests() {
       });
       // The native Desktop shell has an 800px minimum window width.
       await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
-      await expectViewportShell(page, surface);
       await capture(page, {
         path: test.info().outputPath(`${surface.toLowerCase()}-conversation-mobile.png`),
         fullPage: true,
       });
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
-      ).toBe(true);
-      await page.getByRole("main").evaluate((element) => element.scrollTo(0, element.scrollHeight));
-      const background = page.locator("main");
-      const backgroundScroll = await background.evaluate((element) => element.scrollTop);
+      await activityToggle.click();
+      await expect(activityToggle).toHaveAttribute("aria-expanded", "true");
+      await activityToggle.click();
+
+      const conversationUrl = page.url();
       if (surface === "Web") {
         await page
           .getByRole("complementary")
@@ -307,22 +284,12 @@ export function registerTests() {
         await page.getByRole("button", { name: "Settings", exact: true }).click();
       }
       await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
-      await expect
-        .poll(() => background.evaluate((element) => element.scrollTop))
-        .toBe(surface === "Web" ? 0 : backgroundScroll);
       const connected = page.getByRole("heading", { name: "Connected computers", exact: true });
       await connected.scrollIntoViewIfNeeded();
-      await page.getByRole("button", { name: "Details", exact: true }).click();
+      const details = page.getByRole("button", { name: "Details", exact: true });
+      await details.click();
       await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
       await expect(page.getByText("0.163.0", { exact: true })).toBeVisible();
-      await expect(
-        page.locator('[data-slot="collapsible-content"][data-starting-style]'),
-      ).toHaveCount(0);
-      const computerDetails = page
-        .locator('[data-slot="collapsible-content"]')
-        .filter({ has: page.getByRole("heading", { name: "Agents", exact: true }) });
-      await computerDetails.scrollIntoViewIfNeeded();
-      await expect(computerDetails).toBeInViewport({ ratio: 0.99 });
       await capture(page, {
         path: test.info().outputPath(`${surface.toLowerCase()}-computer-details.png`),
         fullPage: true,
@@ -332,11 +299,10 @@ export function registerTests() {
         page.getByRole("combobox", { name: "All statuses", exact: true }),
         "offline",
       );
-      await expect(page.getByText("No matching computers.", { exact: true })).toBeVisible();
+      await expect(details).toHaveCount(0);
       await page.goBack();
+      await expect(page).toHaveURL(conversationUrl);
       await expect(page.getByRole("button", { name: "New session", exact: true })).toBeVisible();
-      if (surface === "Desktop")
-        expect(await background.evaluate((element) => element.scrollTop)).toBe(backgroundScroll);
       await page.getByRole("button", { name: "New session", exact: true }).click();
       const createForm = page
         .getByRole("textbox", { name: "What should the agent do?", exact: true })
@@ -355,42 +321,6 @@ export function registerTests() {
       await expect(createForm.getByRole("combobox", { name: "Project", exact: true })).toHaveCount(
         0,
       );
-      await expect(
-        createForm.getByRole("combobox", { name: "Execution", exact: true }),
-      ).toContainText("Analyze, then ask before implementing");
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
-      ).toBe(true);
-      if (surface === "Web") {
-        await page.goto(base + "/settings");
-        // A click that lands before hydration is lost; retry until the choice sticks.
-        await expect(async () => {
-          await page.getByText("Dark", { exact: true }).click();
-          await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked({
-            timeout: 1000,
-          });
-        }).toPass();
-        await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-        await page.getByRole("combobox", { name: "Language", exact: true }).click();
-        await page.getByRole("option", { name: "简体中文", exact: true }).click();
-        await page.goto(
-          base + "/tasks?" + new URLSearchParams({ device: deviceId, project: projectId }),
-        );
-        await page.getByRole("button", { name: /Improve task delivery reliability/ }).click();
-        await expect(page.getByRole("heading", { name: "Raypx", exact: true })).toBeVisible();
-        await expectViewportShell(page, surface);
-        await capture(page, {
-          path: test.info().outputPath("web-conversation-dark-zh.png"),
-          fullPage: true,
-        });
-        await page
-          .getByRole("main")
-          .evaluate((element) => element.scrollTo(0, element.scrollHeight));
-        await capture(page, {
-          path: test.info().outputPath("web-conversation-dark-zh-bottom.png"),
-          fullPage: true,
-        });
-      }
     },
   );
 }

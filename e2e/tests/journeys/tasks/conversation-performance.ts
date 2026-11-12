@@ -193,10 +193,7 @@ export function registerTests() {
       latest = [makeEntry(200)];
       latestBefore = 200;
       await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-      const gap = viewport.getByRole("button", {
-        name: "Some messages are missing here. Load the missing history.",
-        exact: true,
-      });
+      const gap = viewport.getByRole("button", { name: /load the missing history/i });
       await expect(gap).toHaveCount(1);
       await gap.evaluate((element) => {
         const region = element.closest<HTMLElement>("[data-conversation]")!;

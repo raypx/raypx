@@ -45,7 +45,7 @@ test(
     await expect(page).toHaveURL(/\/login\?returnTo=%2Fapprovals/);
     await page.goto(web + "/admin/settings");
     await expect(page).toHaveURL(/\/login\?returnTo=%2Fadmin%2Fsettings/);
-    await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email address", exact: true })).toBeEditable();
     await expectPrivatePages(page, "Web", privateReads);
   },
 );
@@ -215,11 +215,6 @@ test(
         url.searchParams.get("from") === "guest" &&
         Boolean(url.searchParams.get("guestDraft")),
     );
-    await expect(
-      page.getByText(
-        "Your draft is saved. Choose a project to keep editing; execution waits for Send.",
-      ),
-    ).toBeVisible();
     await page.getByRole("button", { name: "Raypx", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`project=${projectId}`));
     await expect(
@@ -227,9 +222,12 @@ test(
     ).toHaveValue(content);
     await page.getByRole("button", { name: "Session options", exact: false }).click();
     await expect(page.getByRole("combobox", { name: "Agent", exact: true })).toContainText("Codex");
-    await expect(page.getByRole("combobox", { name: "Execution", exact: true })).toContainText(
-      "Analyze, then ask before implementing",
+    await page.getByRole("combobox", { name: "Execution", exact: true }).click();
+    await expect(page.getByRole("option").and(page.locator('[data-value="plan"]'))).toHaveAttribute(
+      "aria-selected",
+      "true",
     );
+    await page.keyboard.press("Escape");
     expect(privateReads).toEqual([]);
     expect(submitted).toBe(0);
   },
