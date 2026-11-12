@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskModel } from "@raypx/tooling/tasks/model";
+import { taskModel } from "@raypx/task-graph/model";
 import { workspaceFixtures } from "./workspace.js";
 
 const { fixture, member } = workspaceFixtures();

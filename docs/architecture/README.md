@@ -351,7 +351,7 @@ current implementation.
 - [0053: Relay streams and cancellation](0053-relay-stream-cancellation.md) — shared ACK mechanics and connection scopes
 - [0054: Desktop execution ownership and session recovery](0054-desktop-execution-recovery.md) — current lifecycle and recovery
 - [0055: In-repository internationalization runtime](0055-in-repo-intl-runtime.md)
-- [0056: In-repository devkit](0056-in-repo-devkit.md)
+- [0056: Repository automation workspaces](0056-repository-automation-workspaces.md)
 
 ## Distribution and performance
 

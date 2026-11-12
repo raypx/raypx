@@ -29,7 +29,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@raypx/tooling": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev"

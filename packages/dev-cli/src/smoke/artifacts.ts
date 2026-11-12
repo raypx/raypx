@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { probeArtifact } from "@raypx/devkit/artifact";
+import { probeArtifact } from "../repo/artifact.js";
 import { checkApi, checkWeb } from "./checks.js";
 
 function probeApp(

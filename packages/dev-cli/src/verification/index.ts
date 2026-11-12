@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskRef, taskModel, taskPlan } from "@raypx/tooling/tasks/model";
+import { taskRef, taskModel, taskPlan } from "@raypx/task-graph/model";
 import { localPlan } from "./plan.js";
 import { executionTasks, sourceChecks } from "./execution.js";
 import { localTests } from "./tests.js";

@@ -28,7 +28,7 @@
     "better-auth": "catalog:"
   },
   "devDependencies": {
-    "@raypx/tooling": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@testing-library/react": "catalog:dev",
     "@types/react": "catalog:dev",

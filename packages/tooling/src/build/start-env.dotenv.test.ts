@@ -2,10 +2,10 @@ import { join } from "node:path";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { tmpdir } from "node:os";
-import { startEnvironment } from "./vite.js";
+import { startEnvironment } from "./start-env.js";
 const roots: string[] = [];
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), "devkit-vite-"));
+  const root = mkdtempSync(join(tmpdir(), "raypx-start-env-"));
   roots.push(root);
   return root;
 }

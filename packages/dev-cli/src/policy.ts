@@ -1,7 +1,7 @@
 import { existsSync, globSync, readFileSync, realpathSync } from "node:fs";
 import { join, relative } from "node:path";
-import { checkArchitecture } from "@raypx/devkit/architecture";
-import { checkDocumentLinks } from "@raypx/devkit/docs";
+import { checkArchitecture } from "./repo/architecture.js";
+import { checkDocumentLinks } from "./repo/docs.js";
 import { discover } from "./repository.js";
 import { checkToolchain } from "./validation/toolchain.js";
 import { checkSourceLayers } from "./validation/source-layers.js";

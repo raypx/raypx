@@ -23,7 +23,7 @@
     "postgres": "catalog:"
   },
   "devDependencies": {
-    "@raypx/tooling": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
     "drizzle-kit": "catalog:dev"

@@ -51,9 +51,9 @@ The accepted foundation design and current architecture decisions define the imp
   the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
   Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
-  `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
-  `vite.app.config.ts`. The TypeScript presets register uncached bootstrap tasks
-  directly to avoid a dependency cycle with Tooling. Cache actual file inputs,
+  `task:*` definitions through `@raypx/task-graph`; application plugins live in
+  `vite.app.config.ts`. Task graph has no internal dependencies, so every workspace,
+  including the TypeScript presets, registers tasks the same way. Cache actual file inputs,
   explicit build outputs and outcome-affecting environment variables. Preserve
   inherited environment for leaf commands.
   mise is the recommended runtime manager; mise.toml
@@ -67,7 +67,7 @@ The accepted foundation design and current architecture decisions define the imp
 - DOM React and React DOM share one exact version. Mobile owns its Expo-supported
   React version in catalog:mobile; shared React peers must support both. Metro
   resolves React and JSX subpaths through Mobile so shared sources use one native instance.
-- Other @raypx-kit packages remain independently released external dependencies; devkit, environment and TypeScript presets are local @raypx workspaces.
+- Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Desktop's Go module lives in `apps/desktop`, with MyGo v0.8.3 and Go 1.27.3.

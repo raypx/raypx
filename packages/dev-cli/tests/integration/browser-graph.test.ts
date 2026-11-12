@@ -1,7 +1,7 @@
 import { expect, it } from "vite-plus/test";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { taskModel, taskPlan, taskRef } from "@raypx/tooling/tasks/model";
+import { taskModel, taskPlan, taskRef } from "@raypx/task-graph/model";
 import { executionTasks } from "../../src/verification/execution.js";
 import { verificationPlan } from "../../src/verification/plan.js";
 

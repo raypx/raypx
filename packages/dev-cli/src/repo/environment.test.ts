@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { developmentEnvironment, run } from "./process.js";
+import { developmentEnvironment } from "./environment.js";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 it("layers local dotenv files beneath the process environment", () => {
-  const root = mkdtempSync(join(tmpdir(), "devkit-process-test-"));
+  const root = mkdtempSync(join(tmpdir(), "raypx-process-test-"));
   roots.push(root);
   writeFileSync(join(root, ".env.local"), "LOCAL_ONLY=local\nSHARED=local\n");
   writeFileSync(join(root, ".env"), "SHARED=default\nFILE_ONLY=file\n");
@@ -30,7 +30,7 @@ it("layers local dotenv files beneath the process environment", () => {
 });
 
 it("reads dotenv syntax literally without expanding references", () => {
-  const root = mkdtempSync(join(tmpdir(), "devkit-process-test-"));
+  const root = mkdtempSync(join(tmpdir(), "raypx-process-test-"));
   roots.push(root);
   writeFileSync(
     join(root, ".env"),
@@ -42,11 +42,4 @@ it("reads dotenv syntax literally without expanding references", () => {
     MULTI: "one\ntwo",
     REF: "${EXPORTED}x",
   });
-});
-
-it("resolves successful commands and rejects failures", async () => {
-  await expect(run(process.execPath, ["-e", ""], tmpdir())).resolves.toBeUndefined();
-  await expect(run(process.execPath, ["-e", "process.exit(3)"], tmpdir())).rejects.toThrow(
-    "exited 3",
-  );
 });

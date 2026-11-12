@@ -9,7 +9,7 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 it("copies a self-contained output and rejects links into a checkout or package cache", async () => {
-  const root = await mkdtemp(join(tmpdir(), "devkit-artifact-test-"));
+  const root = await mkdtemp(join(tmpdir(), "raypx-artifact-test-"));
   roots.push(root);
   const output = join(root, "output");
   await mkdir(output);
@@ -27,11 +27,11 @@ it("copies a self-contained output and rejects links into a checkout or package 
 });
 
 it("starts a relocated server output, waits for health and runs the check", async () => {
-  const root = await mkdtemp(join(tmpdir(), "devkit-probe-test-"));
+  const root = await mkdtemp(join(tmpdir(), "raypx-probe-test-"));
   roots.push(root);
   await mkdir(join(root, "output/server"), { recursive: true });
   await copyFile(
-    new URL("../tests/fixtures/artifact/server.mjs", import.meta.url),
+    new URL("../../tests/fixtures/artifact/server.mjs", import.meta.url),
     join(root, "output/server/index.mjs"),
   );
   const seen: string[] = [];
@@ -48,7 +48,7 @@ it("starts a relocated server output, waits for health and runs the check", asyn
 });
 
 it("reports a server that exits during startup", async () => {
-  const root = await mkdtemp(join(tmpdir(), "devkit-probe-test-"));
+  const root = await mkdtemp(join(tmpdir(), "raypx-probe-test-"));
   roots.push(root);
   await mkdir(join(root, "output/server"), { recursive: true });
   await writeFile(join(root, "output/server/index.mjs"), 'console.error("boom"); process.exit(1);');

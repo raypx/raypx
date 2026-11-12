@@ -1,5 +1,5 @@
 import { basename, isAbsolute, relative, resolve, sep } from "node:path";
-import { planBrowserTests, type BrowserSurface } from "@raypx/tooling/browser-tests";
+import { planBrowserTests, type BrowserSurface } from "@raypx/task-graph/browser-tests";
 import { discover, runTasks } from "./repository.js";
 
 interface TestWorkspace {

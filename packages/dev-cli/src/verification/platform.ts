@@ -1,6 +1,6 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { imports } from "@raypx/devkit/architecture";
+import { imports } from "../repo/architecture.js";
 import {
   discover,
   resolveImport,
@@ -8,7 +8,7 @@ import {
   workspaceFor,
   type Target,
   type Workspace,
-} from "@raypx/devkit/workspaces";
+} from "@raypx/task-graph/workspaces";
 
 const code = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 const frontend = /\.(?:[cm]?[jt]sx?|css|svg|png|jpe?g|webp|gif|ico|woff2?)$/;

@@ -64,17 +64,11 @@
     "apps/storybook": {
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
     },
-    "packages/tooling": {
-      "entry": ["src/tasks/leaf.ts"]
-    },
     "packages/dev-cli": {
       "entry": ["src/validation/commit-message.ts"]
     },
-    "packages/tsconfig": {
-      "entry": ["scripts/task.ts"]
-    },
-    "packages/devkit": {
-      "entry": ["scripts/task.ts"]
+    "packages/task-graph": {
+      "entry": ["src/leaf.ts"]
     },
     "packages/email": {
       "entry": ["vite.app.config.ts"]
@@ -99,7 +93,7 @@
       "entry": ["tests/helpers/control.ts"]
     },
     "packages/runtime-node": {
-      "entry": ["scripts/task.ts", "src/*.ts"],
+      "entry": ["src/*.ts"],
       "ignoreDependencies": ["ws", "undici", "@types/ws"]
     },
     "packages/i18n": {

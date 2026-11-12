@@ -1,8 +1,8 @@
-import { changedFiles as readChanges, affectedWorkspaces } from "@raypx/devkit/verification";
-import { taskModel, taskRef, type TaskModel } from "@raypx/tooling/tasks/model";
+import { changedFiles as readChanges, affectedWorkspaces } from "../repo/verification.js";
+import { taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
 import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";
-import { relatedTaskLifecycle } from "@raypx/tooling/tasks/lifecycle";
+import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
 type Artifact = "api" | "web" | "cli";
 export interface VerificationPlan {
@@ -80,6 +80,14 @@ function devCliImpact(model: TaskModel, file: string): "isolated" | "global" | u
     : "global";
 }
 
+/** Task graph tests reach no consumer; its source shapes every task. */
+function taskGraphTest(model: TaskModel, file: string) {
+  const graph = model.members.find((member) => member.name === "@raypx/task-graph");
+  if (!graph || !file.startsWith(graph.path + "/")) return false;
+  const relative = file.slice(graph.path.length + 1);
+  return /^tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(relative);
+}
+
 /** Select native work from its actual inputs, independently of JavaScript dependency reach. */
 function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: boolean) {
   const runners = ["macos-latest", "windows-latest"];
@@ -95,10 +103,10 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
     const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
     if (!member) return false;
     const relative = file.slice(member.path.length + 1);
-    if (member.name === "@raypx/tooling")
+    if (member.name === "@raypx/tooling") return /^src\/build\/cli(?:\.test)?\.ts$/.test(relative);
+    if (member.name === "@raypx/task-graph")
       return (
-        /^src\/build\/cli(?:\.test)?\.ts$/.test(relative) ||
-        /^src\/tasks\/(?:leaf|arguments|delegation)\.ts$/.test(relative) ||
+        /^src\/(?:leaf|delegation|process|core\/(?:run|arguments))\.ts$/.test(relative) ||
         relative === "tests/integration/task-leaf.test.ts"
       );
     if (member.name === "@raypx/dev-cli")
@@ -106,9 +114,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
         /^src\/verification\/(?:plan|ci|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
         /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative)
       );
-    if (member.name === "@raypx/runtime-node")
-      return relative.startsWith("src/") || relative === "scripts/task.ts";
-    if (member.name === "@raypx/tsconfig") return relative === "scripts/task.ts";
+    if (member.name === "@raypx/runtime-node") return relative.startsWith("src/");
     if (member.native)
       return /^(?:[^/]+\.go$|go\.(?:mod|sum)$|(?:bridge|preferences|mygo\.config)\.ts$|package\.json$|internal\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
         relative,
@@ -165,6 +171,10 @@ export function verificationPlan(
       model.members.some((member) => member.name === "@raypx/dev-cli")
     ) {
       isolated.add("@raypx/dev-cli");
+      continue;
+    }
+    if (taskGraphTest(model, file)) {
+      isolated.add("@raypx/task-graph");
       continue;
     }
     const devCliScope = devCliImpact(model, file);

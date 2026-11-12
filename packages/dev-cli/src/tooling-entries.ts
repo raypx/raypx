@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { imports } from "@raypx/devkit/architecture";
-import { resolveImport, type Workspace, type WorkspaceIndex } from "@raypx/devkit/workspaces";
+import { imports } from "./repo/architecture.js";
+import { resolveImport, type Workspace, type WorkspaceIndex } from "@raypx/task-graph/workspaces";
 
 export const sourceExtensions = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 export const opaqueImport = /\bimport\s*\(\s*(?!\s*["'])|\brequire\s*\(|^\s*\/\/\/\s*<reference\b/m;

@@ -16,11 +16,11 @@ import {
   taskSelection,
   type TaskPolicy,
   type TaskMember,
-} from "./tasks.js";
+} from "./core.js";
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), "devkit-tasks-"));
+  const root = mkdtempSync(join(tmpdir(), "raypx-tasks-"));
   roots.push(root);
   writeFileSync(
     join(root, "package.json"),

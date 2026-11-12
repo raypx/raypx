@@ -186,9 +186,10 @@ display names in `ci.yml` does not by itself request container builds.
 ## Verification planning and cache
 
 Task discovery, dependency closure, argument keys, VP configuration and cache archive identities
-come from `@raypx/devkit/tasks`. Git change reading and reverse propagation use
-`@raypx/devkit/verification`; Raypx supplies browser/native scope policies.
-The Start environment adapter uses `@raypx/devkit/vite` with injected Vite `loadEnv`.
+come from `@raypx/task-graph`. Git change reading and reverse propagation live in
+Dev CLI's private `src/repo/verification.ts`; Raypx supplies browser/native scope
+policies. The Start environment adapter is Tooling's `./build/start-env`, with
+injected Vite `loadEnv`.
 Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture repositories
 cannot inherit another checkout's task list.
 
@@ -398,7 +399,7 @@ and compilation dependencies complete before the long-running dev commands start
 
 Run `bun run knip` for the full report. `knip.json` declares Vite app configs,
 spawned fixtures, native smoke entries, type assertions and command-loaded tools
-as entries, including the TypeScript presets' VP-invoked `scripts/task.ts`.
+as entries, including Task Graph's VP-invoked `src/leaf.ts`.
 Drizzle config is analyzed statically, without loading database
 credentials. The Vitest scaffold is a static `.template` file copied into each new
 workspace, so its workspace-relative imports need no Knip resolution exception.

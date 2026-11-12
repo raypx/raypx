@@ -173,8 +173,8 @@
   },
   "devDependencies": {
     "@raypx/dev-cli": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/testing": "workspace:*",
-    "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",

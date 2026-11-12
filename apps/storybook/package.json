@@ -15,7 +15,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@raypx/tooling": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@storybook/addon-a11y": "catalog:dev",
     "@storybook/addon-docs": "catalog:dev",

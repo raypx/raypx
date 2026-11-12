@@ -70,7 +70,7 @@ export async function probeArtifact({
   check,
   failOnOutput = [],
 }: ArtifactProbe): Promise<void> {
-  const stage = await mkdtemp(join(tmpdir(), `devkit-${name}-`));
+  const stage = await mkdtemp(join(tmpdir(), `raypx-${name}-`));
   const port = await freePort();
   const base = `http://127.0.0.1:${port}`;
   let child: ReturnType<typeof spawn> | undefined;

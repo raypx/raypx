@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { join, relative } from "node:path";
 import { readFileSync } from "node:fs";
-import { workspacePatterns } from "@raypx/devkit/workspaces";
+import { workspacePatterns } from "./workspaces.js";
 import {
   createTaskModel,
   argumentKey,
@@ -12,10 +12,10 @@ import {
   type TaskModel as Model,
   type TaskContext,
   type TaskCache,
-} from "@raypx/devkit/tasks";
-import { browserTestTasks, type BrowserSurface } from "../browser-tests.js";
+} from "./core.js";
+import { browserTestTasks, type BrowserSurface } from "./browser-tests.js";
 import { taskScripts } from "./delegation.js";
-import { taskLifecycleInputs } from "./task-lifecycle.js";
+import { taskLifecycleInputs } from "./lifecycle.js";
 export { taskRef };
 interface TaskMember extends Member {
   native: boolean;
@@ -80,7 +80,7 @@ function scriptCommand(context: TaskContext<TaskMember>, member: TaskMember, nam
   if (!args || args === "[]") return `${bun} run ${runner}`;
   const adapter = relative(
     join(root, member.path),
-    join(root, "packages/tooling/src/tasks/leaf.ts"),
+    join(root, "packages/task-graph/src/leaf.ts"),
   ).replaceAll("\\", "/");
   return `${bun} ${JSON.stringify(adapter)} ${JSON.stringify(name)} ${runner}`;
 }

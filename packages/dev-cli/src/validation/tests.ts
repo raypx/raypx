@@ -1,8 +1,8 @@
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { discover } from "../repository.js";
-import { argumentKey } from "@raypx/devkit/tasks";
-import { taskRef } from "@raypx/tooling/tasks/model";
+import { argumentKey } from "@raypx/task-graph/core";
+import { taskRef } from "@raypx/task-graph/model";
 import { Evidence } from "./evidence.js";
 import { baselineCases, collectInventory, compareCases, ownerMap } from "./inventory.js";
 

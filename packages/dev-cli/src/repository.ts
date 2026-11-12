@@ -1,20 +1,20 @@
 import { resolveRelease } from "@raypx/tooling/build/release";
-import { developmentEnvironment } from "@raypx/devkit/process";
+import { developmentEnvironment } from "./repo/environment.js";
 import { run } from "@raypx/runtime-node/process";
-import { discover as discoverWorkspaces } from "@raypx/devkit/workspaces";
+import { discover as discoverWorkspaces } from "@raypx/task-graph/workspaces";
 import {
   browserTestArguments,
   isBrowserTestTask,
   prepareBrowserTask,
-} from "@raypx/tooling/browser-tests";
+} from "@raypx/task-graph/browser-tests";
 import { join } from "node:path";
 import {
   runTasks as executeTasks,
   prepareTaskDirectories as prepareDirectories,
-} from "@raypx/devkit/tasks";
-import { taskModel, taskPlan, taskRef, type TaskModel } from "@raypx/tooling/tasks/model";
+} from "@raypx/task-graph/core";
+import { taskModel, taskPlan, taskRef, type TaskModel } from "@raypx/task-graph/model";
 
-/** Raypx conventions for the shared @raypx/devkit checks. */
+/** Raypx conventions for workspace discovery. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
 
 function taskDirectories(member: TaskModel["members"][number]) {

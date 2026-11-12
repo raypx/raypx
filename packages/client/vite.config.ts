@@ -1,3 +1,3 @@
-import { workspaceTaskConfig } from "@raypx/tooling/tasks";
+import { workspaceTaskConfig } from "@raypx/task-graph";
 
 export default workspaceTaskConfig(import.meta.url);

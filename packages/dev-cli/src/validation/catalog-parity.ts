@@ -1,5 +1,5 @@
 import { parse, TYPE, type MessageFormatElement } from "@formatjs/icu-messageformat-parser";
-import type { CatalogTree as MessageTree } from "@raypx/devkit/catalogs";
+import type { CatalogTree as MessageTree } from "../repo/catalogs.js";
 
 export interface IcuSignature {
   arguments: string[];

@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { imports } from "@raypx/devkit/architecture";
+import { imports } from "../repo/architecture.js";
 import { layerViolations, type SourceNode } from "./source-layers.js";
 
 it("blocks infrastructure hidden behind a barrel or dynamic import while allowing injected ports", () => {

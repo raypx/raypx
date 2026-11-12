@@ -6,8 +6,8 @@
       "name": "raypx",
       "devDependencies": {
         "@raypx/dev-cli": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/testing": "workspace:*",
-        "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@types/node": "catalog:dev",
@@ -48,6 +48,7 @@
       },
       "devDependencies": {
         "@raypx/client": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -82,6 +83,7 @@
         "@earendil-works/pi-agent-core": "catalog:",
         "@hona/strobe": "catalog:dev",
         "@orpc/server": "catalog:",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
@@ -127,6 +129,7 @@
         "@raypx/dev-cli": "workspace:*",
         "@raypx/devtools": "workspace:*",
         "@raypx/e2e": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",
@@ -179,7 +182,7 @@
         "uniwind": "catalog:mobile",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@types/react": "catalog:mobile",
@@ -198,7 +201,7 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@storybook/addon-a11y": "catalog:dev",
         "@storybook/addon-docs": "catalog:dev",
@@ -244,6 +247,7 @@
         "@raypx/dev-cli": "workspace:*",
         "@raypx/devtools": "workspace:*",
         "@raypx/e2e": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",
@@ -274,6 +278,7 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/dev-cli": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -287,7 +292,7 @@
       },
       "devDependencies": {
         "@cloudflare/workers-types": "catalog:dev",
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -299,6 +304,7 @@
       "name": "@raypx/infra-railway",
       "version": "0.0.0",
       "dependencies": {
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "railway": "catalog:dev",
       },
@@ -322,7 +328,7 @@
         "@raypx/ui": "workspace:*",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/react": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -339,7 +345,7 @@
         "@earendil-works/pi-ai": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -355,7 +361,7 @@
         "@raypx/ui": "workspace:*",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/react": "catalog:dev",
         "@types/react": "catalog:dev",
@@ -378,7 +384,7 @@
         "better-auth": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/react": "catalog:dev",
         "@types/react": "catalog:dev",
@@ -403,7 +409,7 @@
         "@raypx/ui": "workspace:*",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/react": "catalog:dev",
         "@types/react": "catalog:dev",
@@ -429,8 +435,8 @@
         "@raypx/core": "workspace:*",
       },
       "devDependencies": {
+        "@raypx/task-graph": "workspace:*",
         "@raypx/testing": "workspace:*",
-        "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
       },
@@ -445,7 +451,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
       },
@@ -464,7 +470,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -479,7 +485,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
       },
@@ -493,7 +499,7 @@
         "postgres": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
         "drizzle-kit": "catalog:dev",
@@ -508,8 +514,8 @@
       "dependencies": {
         "@formatjs/icu-messageformat-parser": "catalog:dev",
         "@posthog/cli": "catalog:dev",
-        "@raypx/devkit": "workspace:*",
         "@raypx/runtime-node": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "oxc-parser": "catalog:dev",
       },
@@ -517,19 +523,6 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
-      },
-    },
-    "packages/devkit": {
-      "name": "@raypx/devkit",
-      "version": "0.0.0",
-      "dependencies": {
-        "oxc-parser": "catalog:dev",
-      },
-      "devDependencies": {
-        "@types/node": "catalog:dev",
-        "@vitest/coverage-v8": "catalog:dev",
-        "typescript": "catalog:dev",
         "vite-plus": "catalog:dev",
       },
     },
@@ -541,7 +534,7 @@
         "@raypx/ui": "workspace:*",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/react": "catalog:dev",
         "@types/react": "catalog:dev",
@@ -569,7 +562,7 @@
       },
       "devDependencies": {
         "@raypx-kit/email-preview": "catalog:dev",
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@types/react": "catalog:dev",
@@ -585,7 +578,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -598,7 +591,7 @@
         "use-intl": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/react": "catalog:dev",
         "@types/node": "catalog:dev",
@@ -622,7 +615,7 @@
         "@hugeicons/react": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/react": "catalog:dev",
         "@types/react": "catalog:dev",
@@ -645,7 +638,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -666,7 +659,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/jest-dom": "catalog:dev",
         "@testing-library/react": "catalog:dev",
@@ -687,7 +680,7 @@
         "evlog": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -706,7 +699,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/jest-dom": "catalog:dev",
         "@testing-library/react": "catalog:dev",
@@ -730,7 +723,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
         "vite-plus": "catalog:dev",
@@ -745,7 +738,7 @@
         "ws": "catalog:",
       },
       "devDependencies": {
-        "@raypx/devkit": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/cross-spawn": "catalog:dev",
         "@types/node": "catalog:dev",
@@ -763,9 +756,20 @@
         "unstorage": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+      },
+    },
+    "packages/task-graph": {
+      "name": "@raypx/task-graph",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@types/bun": "catalog:dev",
+        "@types/node": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "typescript": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/tasks": {
@@ -785,7 +789,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tanstack/react-query": "catalog:",
         "@testing-library/jest-dom": "catalog:dev",
@@ -807,18 +811,15 @@
       "name": "@raypx/testing",
       "version": "0.0.0",
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
       },
     },
     "packages/tooling": {
       "name": "@raypx/tooling",
       "version": "0.0.0",
-      "dependencies": {
-        "@raypx/devkit": "workspace:*",
-        "@raypx/runtime-node": "workspace:*",
-      },
       "devDependencies": {
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
@@ -829,7 +830,7 @@
       "name": "@raypx/tsconfig",
       "version": "0.0.0",
       "devDependencies": {
-        "@raypx/devkit": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "vite-plus": "catalog:dev",
@@ -848,7 +849,7 @@
         "tw-animate-css": "catalog:",
       },
       "devDependencies": {
-        "@raypx/tooling": "workspace:*",
+        "@raypx/task-graph": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@testing-library/jest-dom": "catalog:dev",
         "@testing-library/react": "catalog:dev",
@@ -1830,8 +1831,6 @@
 
     "@raypx/dev-cli": ["@raypx/dev-cli@workspace:packages/dev-cli"],
 
-    "@raypx/devkit": ["@raypx/devkit@workspace:packages/devkit"],
-
     "@raypx/devtools": ["@raypx/devtools@workspace:packages/devtools"],
 
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
@@ -1861,6 +1860,8 @@
     "@raypx/runtime-node": ["@raypx/runtime-node@workspace:packages/runtime-node"],
 
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
+
+    "@raypx/task-graph": ["@raypx/task-graph@workspace:packages/task-graph"],
 
     "@raypx/tasks": ["@raypx/tasks@workspace:packages/tasks"],
 

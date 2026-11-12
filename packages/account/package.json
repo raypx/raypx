@@ -26,7 +26,7 @@
     "@raypx/ui": "workspace:*"
   },
   "devDependencies": {
-    "@raypx/tooling": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",

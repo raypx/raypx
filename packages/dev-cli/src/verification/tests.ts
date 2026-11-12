@@ -1,12 +1,12 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { imports } from "@raypx/devkit/architecture";
-import { resolveImport, workspaceFor } from "@raypx/devkit/workspaces";
+import { imports } from "../repo/architecture.js";
+import { resolveImport, workspaceFor } from "@raypx/task-graph/workspaces";
 import { discover } from "../repository.js";
-import { taskModel, taskRef } from "@raypx/tooling/tasks/model";
+import { taskModel, taskRef } from "@raypx/task-graph/model";
 import { testLayer, testSources } from "../validation/test-sources.js";
 import type { VerificationPlan } from "./plan.js";
-import { relatedTaskLifecycle } from "@raypx/tooling/tasks/lifecycle";
+import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
 export interface TestSelection {
   workspace: string;

@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { runTasks } from "../repository.js";
-import { taskModel } from "@raypx/tooling/tasks/model";
+import { taskModel } from "@raypx/task-graph/model";
 import { changedFiles, verificationPlan } from "./plan.js";
 import { distributionRequested } from "./events.js";
 import { ciOutputs, parseCiPlan, requiredGates, sourcePhases } from "./gates.js";

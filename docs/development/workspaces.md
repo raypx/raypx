@@ -57,7 +57,7 @@ invoking it declare a direct development dependency; reusable build/task imports
 come from `@raypx/tooling`. Dev CLI depends on Tooling and has no exports, so its
 private code never reaches another workspace's type check.
 
-VP discovers lightweight `vite.config.ts` files. `@raypx/tooling/tasks` derives
+VP discovers lightweight `vite.config.ts` files. `@raypx/task-graph` derives
 private `task:*` definitions from the package scripts and declares build dependencies.
 VP runs those Bun scripts directly; aggregate tasks only declare dependencies.
 Root `test [suite]` aggregates declared package commands; `test --package` selects
@@ -96,10 +96,12 @@ dependency. Shared fixtures are independent of the workspaces under test, and su
 stay with their owners. Extract runtime only when another execution host directly
 consumes CLI internals.
 
-`@raypx/devkit` is the bottom of the workspace graph: generic discovery, boundary,
-catalog, document, artifact, change-scope and VP task mechanics consumed by Tooling,
-the TypeScript presets and runtime-node. It has no internal dependencies, so it
-inlines its strict tsconfig and registers tasks through its own `scripts/task.ts`.
+Repository automation is split by how it is consumed. `@raypx/task-graph` is the
+bottom of the workspace graph: discovery and VP task registration imported by every
+`vite.config.ts`, with no internal dependencies and an inline strict tsconfig.
+`@raypx/tooling` holds build and acceptance helpers imported only by the
+applications that use them. `@raypx/dev-cli` implements `raypx-dev` and has no
+exports, so its private checks never reach another workspace's type check.
 
 `@raypx/logger` is a private source workspace consumed by API and CLI. It owns
 evlog adapters, safe projection and managed delivery; applications own event

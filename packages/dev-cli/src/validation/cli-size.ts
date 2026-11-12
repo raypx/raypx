@@ -1,6 +1,6 @@
 import { cp, mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { taskModel } from "@raypx/tooling/tasks/model";
+import { taskModel } from "@raypx/task-graph/model";
 import { sealCliPayload, verifyCliPayload } from "@raypx/tooling/build/cli";
 import { readBunPin } from "./toolchain.js";
 

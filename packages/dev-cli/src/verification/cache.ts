@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskCacheSnapshot } from "@raypx/devkit/tasks";
+import { taskCacheSnapshot } from "@raypx/task-graph/core";
 
 interface CacheSnapshot {
   artifacts: string[];

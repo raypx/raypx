@@ -1,7 +1,7 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
-import { imports } from "@raypx/devkit/architecture";
-import { discover, exportPaths } from "@raypx/devkit/workspaces";
+import { imports } from "../repo/architecture.js";
+import { discover, exportPaths } from "@raypx/task-graph/workspaces";
 import { opaqueImport, sourceExtensions, toolingSourceClosure } from "../tooling-entries.js";
 
 const testOnly = /(?:^|\/)tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$/;
@@ -61,7 +61,6 @@ export function toolingImpact(root: string) {
     if (!existsSync(join(root, file))) return global;
     const relative = posix.relative(tooling.path, file);
     if (testOnly.test(relative)) return { global: false, consumers: [] };
-    if (relative.startsWith("src/tasks/")) return global;
     try {
       const entries = Object.entries(tooling.manifest.exports ?? {});
       const affected = entries.filter(([, value]) =>
@@ -70,7 +69,6 @@ export function toolingImpact(root: string) {
           return closure(posix.join(tooling.path, entry)).has(file);
         }),
       );
-      if (affected.some(([entry]) => entry === "./tasks")) return global;
       if (affected.length)
         return {
           global: false,

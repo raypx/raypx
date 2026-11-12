@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@raypx/client": "workspace:*",
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",

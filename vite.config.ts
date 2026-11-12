@@ -1,6 +1,6 @@
 import { globSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { workspaceTaskConfig } from "@raypx/tooling/tasks";
+import { workspaceTaskConfig } from "@raypx/task-graph";
 import { defineConfig, mergeConfig } from "vite-plus";
 import repository from "./package.json" with { type: "json" };
 import defaults from "./test.config.js";

@@ -22,8 +22,8 @@
     "@raypx/core": "workspace:*"
   },
   "devDependencies": {
+    "@raypx/task-graph": "workspace:*",
     "@raypx/testing": "workspace:*",
-    "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev"
   },

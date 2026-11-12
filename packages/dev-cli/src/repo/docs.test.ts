@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 it("reports only missing relative link targets", () => {
-  const root = mkdtempSync(join(tmpdir(), "devkit-docs-test-"));
+  const root = mkdtempSync(join(tmpdir(), "raypx-docs-test-"));
   roots.push(root);
   mkdirSync(join(root, "docs"));
   writeFileSync(join(root, "docs/guide one.md"), "# Guide\n");

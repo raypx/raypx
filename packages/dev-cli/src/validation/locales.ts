@@ -1,7 +1,7 @@
 import { existsSync, globSync, readFileSync, readdirSync } from "node:fs";
 import { join, posix } from "node:path";
-import { readStaticCatalog, type CatalogTree } from "@raypx/devkit/catalogs";
-import type { WorkspaceIndex } from "@raypx/devkit/workspaces";
+import { readStaticCatalog, type CatalogTree } from "../repo/catalogs.js";
+import type { WorkspaceIndex } from "@raypx/task-graph/workspaces";
 import { discover } from "../repository.js";
 import { checkCatalogEntry } from "./catalog-entry.js";
 import { compareMessageCatalogs } from "./catalog-parity.js";

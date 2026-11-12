@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { VerificationPlan } from "./plan.js";
-import { taskRef } from "@raypx/tooling/tasks/model";
+import { taskRef } from "@raypx/task-graph/model";
 import type { SourcePhase } from "./gates.js";
 
 /** An empty or partial VP graph must never appear as successful verification. */

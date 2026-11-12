@@ -2,7 +2,7 @@ import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel } from "@raypx/tooling/tasks/model";
+import { taskModel } from "@raypx/task-graph/model";
 import { verificationPlan } from "./plan.js";
 
 const { fixture, member } = workspaceFixtures();
@@ -18,7 +18,7 @@ function project() {
     extra: {
       scripts,
       exports: {
-        "./tasks": "./src/tasks/config",
+        "./config": "./src/config/index",
         "./build/nitro": { import: "./src/build/nitro", types: "./src/build/types" },
         "./browser-server": "./src/browser-server",
       },
@@ -37,8 +37,8 @@ function project() {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     writeFileSync(join(root, file), source);
   }
-  write("packages/tooling/src/tasks/config.ts", 'export { value } from "./model";');
-  write("packages/tooling/src/tasks/model.ts", "export const value = 1;");
+  write("packages/tooling/src/config/index.ts", 'export { value } from "./model";');
+  write("packages/tooling/src/config/model.ts", "export const value = 1;");
   write("packages/tooling/src/build/nitro.ts", 'export { value } from "./shared";');
   write("packages/tooling/src/build/shared.ts", "export const value = 1;");
   write("packages/tooling/src/build/types.ts");
@@ -48,7 +48,7 @@ function project() {
     'import { value } from "@raypx/tooling/build/nitro";',
   );
   write("packages/browser/config.ts", 'import "@raypx/tooling/browser-server";');
-  write("packages/independent/vite.config.ts", 'import "@raypx/tooling/tasks";');
+  write("packages/independent/vite.config.ts", 'import "@raypx/tooling/config";');
   const plan = (files: string[]) => verificationPlan(taskModel(root), files);
   return { root, write, plan };
 }
@@ -108,8 +108,15 @@ describe("Tooling impact", () => {
         .workspaces,
     ).toEqual(["@raypx/browser", "@raypx/dev-cli"]);
   });
-  it.each(["src/tasks/model.ts", "package.json", "unknown.ts"])(
-    "retains all source checks for task and unclassified inputs: %s",
+  it("follows a configuration entry to its importer only", () => {
+    const { plan } = project();
+    expect(plan(["packages/tooling/src/config/model.ts"]).workspaces).toEqual([
+      "@raypx/independent",
+      "@raypx/tooling",
+    ]);
+  });
+  it.each(["package.json", "unknown.ts"])(
+    "retains all source checks for unclassified inputs: %s",
     (relative) => {
       const { write, plan } = project();
       const file = `packages/tooling/${relative}`;

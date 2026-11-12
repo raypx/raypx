@@ -1,6 +1,6 @@
 import { constants, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { targets, type Kind, type Target } from "@raypx/devkit/workspaces";
+import { targets, type Kind, type Target } from "@raypx/task-graph/workspaces";
 import { discover } from "./repository.js";
 import { workspaceInstructions } from "./templates/workspace/agents.js";
 
@@ -40,7 +40,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     scripts,
     devDependencies: {
       "@raypx/tsconfig": "workspace:*",
-      "@raypx/tooling": "workspace:*",
+      "@raypx/task-graph": "workspace:*",
       ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
     },
   };
@@ -74,7 +74,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
       tests: Boolean(options.tests),
     }),
     "vite.config.ts":
-      'import { workspaceTaskConfig } from "@raypx/tooling/tasks";\n\nexport default workspaceTaskConfig(import.meta.url);\n',
+      'import { workspaceTaskConfig } from "@raypx/task-graph";\n\nexport default workspaceTaskConfig(import.meta.url);\n',
     ...(options.tests
       ? {
           "vitest.config.ts": new URL(

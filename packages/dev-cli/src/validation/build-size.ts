@@ -1,4 +1,4 @@
-import { discover } from "@raypx/devkit/workspaces";
+import { discover } from "@raypx/task-graph/workspaces";
 import {
   appendFileSync,
   existsSync,

@@ -9,13 +9,9 @@
     "./build/analytics": "./src/build/analytics.ts",
     "./build/start-env": "./src/build/start-env.ts",
     "./browser-server": "./src/browser-server.ts",
-    "./tasks": "./src/tasks/config.ts",
     "./build/cli": "./src/build/cli.ts",
     "./performance": "./src/performance/run.ts",
-    "./tasks/model": "./src/tasks/model.ts",
-    "./tasks/lifecycle": "./src/tasks/task-lifecycle.ts",
-    "./build/release": "./src/build/release.ts",
-    "./browser-tests": "./src/browser-tests.ts"
+    "./build/release": "./src/build/release.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -23,11 +19,8 @@
     "test:unit": "bun --bun vp test --run --exclude \"**/tests/integration/**\"",
     "test:integration": "bun --bun vp test --run tests/integration"
   },
-  "dependencies": {
-    "@raypx/devkit": "workspace:*",
-    "@raypx/runtime-node": "workspace:*"
-  },
   "devDependencies": {
+    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
@@ -41,21 +34,11 @@
       "./build/deployment": "node",
       "./build/analytics": "node",
       "./build/start-env": "node",
-      "./tasks": "node",
       "./build/cli": "node",
-      "./tasks/model": "node",
-      "./tasks/lifecycle": "node",
-      "./build/release": "node",
-      "./browser-tests": "node"
+      "./build/release": "node"
     },
     "sourceTargets": {
-      "src/build/**": "node",
-      "src/tasks/config.ts": "node",
-      "src/tasks/model.ts": "node",
-      "src/tasks/arguments.ts": "node",
-      "src/tasks/delegation.ts": "node",
-      "src/browser-tests.ts": "node",
-      "src/tasks/task-lifecycle.ts": "node"
+      "src/build/**": "node"
     }
   }
 }

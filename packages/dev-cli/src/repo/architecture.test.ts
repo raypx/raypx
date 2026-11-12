@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { checkArchitecture } from "./architecture.js";
-import { discover, type Metadata } from "./workspaces.js";
+import { discover, type Metadata } from "@raypx/task-graph/workspaces";
 
 const roots: string[] = [];
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), "devkit-architecture-test-"));
+  const root = mkdtempSync(join(tmpdir(), "raypx-architecture-test-"));
   roots.push(root);
   mkdirSync(join(root, "packages"));
   mkdirSync(join(root, "apps"));

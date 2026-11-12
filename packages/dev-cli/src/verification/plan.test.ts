@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project, platformProject } from "../../tests/helpers/verification.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel, taskPlan, taskRef } from "@raypx/tooling/tasks/model";
+import { taskModel, taskPlan, taskRef } from "@raypx/task-graph/model";
 import { changedFiles, verificationPlan } from "./plan.js";
 import { githubPlan, readGithubPlan } from "./ci.js";
 import { verifyOptions } from ".";
@@ -223,17 +223,19 @@ describe("affected verification", () => {
   });
   it("selects Windows acceptance for cross-platform runners and native gate inputs", () => {
     const { root } = platformProject();
-    for (const name of ["tooling", "dev-cli", "runtime-node", "tsconfig"])
+    for (const name of ["tooling", "task-graph", "dev-cli", "runtime-node"])
       member(root, name, {
         metadata: { kind: name === "runtime-node" ? "library" : "tooling", target: "node" },
         extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
       });
     const model = taskModel(root);
     for (const file of [
-      "packages/tooling/tests/integration/task-leaf.test.ts",
-      "packages/tooling/src/tasks/leaf.ts",
-      "packages/tooling/src/tasks/arguments.ts",
-      "packages/tooling/src/tasks/delegation.ts",
+      "packages/tooling/src/build/cli.ts",
+      "packages/task-graph/tests/integration/task-leaf.test.ts",
+      "packages/task-graph/src/leaf.ts",
+      "packages/task-graph/src/core/run.ts",
+      "packages/task-graph/src/core/arguments.ts",
+      "packages/task-graph/src/delegation.ts",
       "packages/dev-cli/src/verification/plan.ts",
       "packages/dev-cli/src/verification/ci.ts",
       "packages/dev-cli/src/verification/ci.test.ts",
@@ -242,15 +244,13 @@ describe("affected verification", () => {
       "packages/runtime-node/src/process.ts",
       "packages/runtime-node/src/process.test.ts",
       "packages/runtime-node/src/http.test.ts",
-      "packages/runtime-node/scripts/task.ts",
-      "packages/tsconfig/scripts/task.ts",
     ]) {
       const plan = verificationPlan(model, [file], { macos: false });
       expect(plan.nativeRunners).toEqual(["windows-latest"]);
       expect(plan.tasks).toContain("desktop#task:mygo:test");
     }
     expect(
-      verificationPlan(model, ["packages/tooling/src/browser-tests.ts"], { macos: false })
+      verificationPlan(model, ["packages/task-graph/src/browser-tests.ts"], { macos: false })
         .nativeRunners,
     ).toEqual([]);
   });

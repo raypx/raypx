@@ -5,7 +5,8 @@
 The complete `raypx-dev` implementation: commands, repository policy, validation,
 verification planning, CI gates, smoke probes and scaffolding. VP owns task
 orchestration; `@raypx/tooling` owns the importable task, build and browser surface;
-`@raypx/devkit` owns generic discovery, boundary, catalog and artifact mechanics.
+`@raypx/task-graph` owns discovery and the task graph; generic boundary, catalog,
+document, artifact and change-scope mechanics live privately in `src/repo/`.
 
 ## Interface
 
@@ -133,12 +134,11 @@ bin directory on `PATH`.
 
 ## Constraints
 
-Nothing imports this package. Keep the dependency direction Dev CLI → Tooling →
-Devkit; use only Tooling's public entries. Do not import database, auth or
+Nothing imports this package. Keep the dependency direction Dev CLI → Tooling and Task Graph; use only Tooling's public entries. Do not import database, auth or
 client implementations; delegate database commands to database's scripts. Derive all
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
-Generic mechanics belong in @raypx/devkit; keep only Raypx-specific rules here.
+Keep reusable mechanics in `src/repo/` free of Raypx package names and paths.
 Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
 Knip runs under Bun, which classifies ws/undici as runtime modules; the Node-compatible
 HTTP adapter retains their explicit dependencies and types for its Node consumers,
