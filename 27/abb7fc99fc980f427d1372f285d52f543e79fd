@@ -1,0 +1,16 @@
+apps/desktop/src/routes/approvals.tsx
+  h_f0766e80fd3864 5-8
+docs/development/validation-artifacts.md
+  h_f0766e80fd3864 288-290
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "27abb7fc99fc980f427d1372f285d52f543e79fd",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
