@@ -1,14 +1,8 @@
 import { expectTypeOf } from "vite-plus/test";
-import { createTranslator } from "../../src/intl/translator.js";
-import { createFormatter } from "../../src/intl/formatter.js";
-import { createIntlClient } from "../../src/intl/client.js";
-import { createLocaleRuntime } from "../../src/intl/locale.js";
-import type {
-  CatalogShape,
-  DynamicMessages,
-  MessageKey,
-  NamespaceOf,
-} from "../../src/intl/types.js";
+import { createTranslator } from "../../src/translator.js";
+import { createFormatter } from "../../src/formatter.js";
+import { createTranslations, type IntlProvider } from "../../src/react.js";
+import type { CatalogShape, DynamicMessages, MessageKey, NamespaceOf } from "../../src/types.js";
 
 const messages = {
   auth: {
@@ -19,15 +13,21 @@ const messages = {
   },
   common: { save: "Save" },
 } as const;
+const useTranslations = createTranslations<typeof messages>();
+const useDynamicTranslations = createTranslations<DynamicMessages>();
+const date = new Date("2026-10-16T00:00:00Z");
+
+function checkProviderProps(props: Parameters<typeof IntlProvider<typeof messages>>[0]) {
+  void props;
+}
+
 // Compiled with the package, never run. Runtime fallback tests use intentionally dynamic catalogs.
-export function publicTypeAssertions() {
+export function usePublicTypeAssertions() {
   expectTypeOf<NamespaceOf<typeof messages>>().toEqualTypeOf<"auth" | "common">();
   expectTypeOf<MessageKey<typeof messages, "auth">>().toEqualTypeOf<
     "greeting" | "total" | "day" | "rich"
   >();
 
-  const runtime = createLocaleRuntime({ locales: ["en", "zh"] as const, defaultLocale: "en" });
-  const client = createIntlClient<typeof messages>()(runtime);
   const chinese: CatalogShape<typeof messages> = {
     auth: {
       greeting: "你好{name}",
@@ -37,21 +37,25 @@ export function publicTypeAssertions() {
     },
     common: { save: "保存" },
   };
-  client.IntlProvider({ locale: "zh", messages: chinese, children: null });
-  client.IntlProvider({ locale: "en", messages: null, children: null });
+  checkProviderProps({ locale: "zh", messages: chinese, children: null });
+  checkProviderProps({ locale: "en", messages: null, children: null });
   // @ts-expect-error current catalog is required
-  client.IntlProvider({ locale: "en", children: null });
+  checkProviderProps({ locale: "en", children: null });
   // @ts-expect-error locale is bound to runtime
-  client.IntlProvider({ locale: "fr", messages, children: null });
-  // @ts-expect-error catalog must have the same key shape
-  client.IntlProvider({ locale: "zh", messages: { common: { save: "保存" } }, children: null });
-  const translate = client.useTranslations("auth");
+  checkProviderProps({ locale: "fr", messages, children: null });
+  checkProviderProps({
+    locale: "zh",
+    // @ts-expect-error catalog must have the same key shape
+    messages: { common: { save: "保存" } },
+    children: null,
+  });
+  const translate = useTranslations("auth");
   translate("greeting", { name: "Ada" });
   translate("total", { count: 3n });
-  translate("day", { date: new Date() });
+  translate("day", { date });
   void translate.rich("rich", { name: "Ada", strong: (chunks) => chunks });
   // @ts-expect-error invalid namespace
-  client.useTranslations("autth");
+  useTranslations("autth");
   // @ts-expect-error key is outside selected namespace
   translate("save");
   // @ts-expect-error missing required interpolation
@@ -72,7 +76,7 @@ export function publicTypeAssertions() {
   createTranslator({ locale: "en", messages: dynamic, namespace: "runtime.namespace" })(
     "runtime.key",
   );
-  createIntlClient()(runtime).useTranslations("runtime.namespace")("runtime.key");
+  useDynamicTranslations("runtime.namespace")("runtime.key");
   // @ts-expect-error object formatter configuration is required
   createFormatter("en");
   // @ts-expect-error legacy numeric relativeTime signature has been removed

@@ -7,11 +7,16 @@ export {
   SUPPORTED_LOCALES,
 } from "./constants.js";
 export { parseAcceptLanguage } from "./accept-language.js";
-export { getLocaleCookie, serializeLocaleCookie } from "./cookie.js";
 export { createFormatter, type Formatter, type FormatterOptions } from "./formatter.js";
 export { formats } from "./formats.js";
-export { isLocale, normalizeLocale, matchLocale } from "./normalize.js";
-export { resolveLocale } from "./resolve.js";
+export {
+  getLocaleCookie,
+  isLocale,
+  matchLocale,
+  normalizeLocale,
+  resolveLocale,
+  serializeLocaleCookie,
+} from "./locale.js";
 export { createTranslator, type CreateTranslatorOptions, type Translator } from "./translator.js";
 export {
   readErrorCode,

@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { createFormatter } from "./formatter.js";
-import type { DateTimeFormatOptions } from "./types.js";
+import type { DateTimeFormatOptions } from "use-intl/core";
 
 describe("upstream formatter with normalized defaults", () => {
   it("uses an object configuration, preserves presets and replaces individual definitions", () => {

@@ -7,11 +7,11 @@ import {
   type ComponentProps,
 } from "react";
 import type { createCatalogStore } from "./catalog-store.js";
-import { intlClient } from "./react.js";
-import { localeRuntime } from "./runtime.js";
+import { LanguageProvider } from "./react.js";
+import { resolveLocalePreference } from "./preferences.js";
 import type { DynamicMessages, MessagesByLocale } from "./types.js";
 
-type LanguageProviderProps = ComponentProps<typeof intlClient.LanguageProvider>;
+type CatalogLanguageProviderProps = Omit<ComponentProps<typeof LanguageProvider>, "messages">;
 
 /**
  * Binds LanguageProvider to a catalog store. A switch keeps showing the last ready
@@ -21,8 +21,8 @@ type LanguageProviderProps = ComponentProps<typeof intlClient.LanguageProvider>;
 export function createCatalogLanguageProvider<M extends DynamicMessages>(
   store: ReturnType<typeof createCatalogStore<M>>,
 ) {
-  return function CatalogLanguageProvider(props: LanguageProviderProps) {
-    const locale = localeRuntime.resolvePreference(props.preference, props.systemLocales);
+  return function CatalogLanguageProvider(props: CatalogLanguageProviderProps) {
+    const locale = resolveLocalePreference(props.preference, props.systemLocales);
     const loaded = useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
     const ready = loaded[locale] !== undefined;
     const [lastReady, setLastReady] = useState(locale);
@@ -39,6 +39,6 @@ export function createCatalogLanguageProvider<M extends DynamicMessages>(
       () => ({ ...loaded, [locale]: current }) as MessagesByLocale,
       [loaded, locale, current],
     );
-    return <intlClient.LanguageProvider {...props} messages={messages} />;
+    return <LanguageProvider {...props} messages={messages} />;
   };
 }

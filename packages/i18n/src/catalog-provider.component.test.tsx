@@ -48,7 +48,6 @@ function host(
           preference={preference}
           onPreferenceChange={setPreference}
           systemLocales={["en-US"]}
-          messages={{} as never}
         >
           <Probe />
         </Provider>
@@ -91,12 +90,7 @@ describe("lazy catalog provider", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     const app = (Provider: ReturnType<typeof createCatalogLanguageProvider>) => (
       <StrictMode>
-        <Provider
-          preference="zh"
-          onPreferenceChange={() => {}}
-          systemLocales={["en-US"]}
-          messages={{} as never}
-        >
+        <Provider preference="zh" onPreferenceChange={() => {}} systemLocales={["en-US"]}>
           <Probe />
         </Provider>
       </StrictMode>

@@ -1,9 +1,80 @@
-import type { IntlRuntimeOptions } from "./intl/types.js";
+import type { Formats as UseIntlFormats } from "use-intl/core";
 
-/** Product presets, merged over the Kit defaults. `timestamp` formats absolute times. */
+import type { IntlRuntimeOptions } from "./types.js";
+
+type ResolvedIntlFormats = { [K in keyof UseIntlFormats]-?: NonNullable<UseIntlFormats[K]> };
+
+const presets = {
+  dateTime: {
+    short: { dateStyle: "medium" },
+    timestamp: { dateStyle: "medium", timeStyle: "short" },
+  },
+  list: { conjunction: { type: "conjunction" } },
+  number: { compact: { notation: "compact" } },
+  displayName: {},
+} as const satisfies ResolvedIntlFormats;
+
+// The standalone translator uses the base presets. Formatters and providers add timestamp.
+const defaultFormats = { ...presets, dateTime: { short: presets.dateTime.short } };
+
+/** Product preset for formatting absolute times. */
 export const formats = {
-  dateTime: { timestamp: { dateStyle: "medium", timeStyle: "short" } },
-} satisfies NonNullable<IntlRuntimeOptions["formats"]>;
+  dateTime: { timestamp: { ...presets.dateTime.timestamp } },
+} satisfies UseIntlFormats;
 
-/** Shared by the React providers and synchronous formatters. */
-export const intlDefaults = { timeZone: "UTC", formats } satisfies IntlRuntimeOptions;
+/** Override individual presets while preserving the other default definitions. */
+function mergeFormats(custom?: UseIntlFormats | null): ResolvedIntlFormats {
+  if (!custom) return defaultFormats;
+  return {
+    dateTime: { ...defaultFormats.dateTime, ...custom.dateTime },
+    list: { ...defaultFormats.list, ...custom.list },
+    number: { ...defaultFormats.number, ...custom.number },
+    displayName: { ...defaultFormats.displayName, ...custom.displayName },
+  };
+}
+/** Keep preset replacement semantics when FormatJS merges its built-in styles. */
+function toUseIntlFormats(custom: UseIntlFormats): UseIntlFormats {
+  return {
+    ...custom,
+    ...(custom.dateTime && {
+      dateTime: Object.fromEntries(
+        Object.entries(custom.dateTime).map(([name, options]) => [
+          name,
+          {
+            year: undefined,
+            month: undefined,
+            day: undefined,
+            weekday: undefined,
+            hour: undefined,
+            minute: undefined,
+            second: undefined,
+            timeZoneName: undefined,
+            ...options,
+          },
+        ]),
+      ),
+    }),
+    ...(custom.number && {
+      number: Object.fromEntries(
+        Object.entries(custom.number).map(([name, options]) => [
+          name,
+          { style: undefined, maximumFractionDigits: undefined, ...options },
+        ]),
+      ),
+    }),
+  } as UseIntlFormats;
+}
+
+const ignoreIntlError: NonNullable<IntlRuntimeOptions["onError"]> = () => {};
+/** Shared pure configuration boundary for core factories and controlled React providers. */
+export function resolveIntlOptions(options: IntlRuntimeOptions = {}) {
+  return {
+    timeZone: options.timeZone ?? "UTC",
+    formats: toUseIntlFormats(mergeFormats(options.formats)),
+    onError: options.onError ?? ignoreIntlError,
+    ...(options.now !== undefined ? { now: options.now } : {}),
+    ...(options.getMessageFallback !== undefined
+      ? { getMessageFallback: options.getMessageFallback }
+      : {}),
+  };
+}

@@ -1,11 +1,14 @@
-import { createFormatter as createIntlFormatter } from "./intl/formatter.js";
-import type { Formatter, FormatterOptions as IntlFormatterOptions } from "./intl/formatter.js";
-import { intlDefaults } from "./formats.js";
+import { createFormatter as createUseIntlFormatter } from "use-intl/core";
+
+import { formats, resolveIntlOptions } from "./formats.js";
 import type { Locale } from "./types.js";
 
-export type { Formatter } from "./intl/formatter.js";
-export type FormatterOptions = Omit<IntlFormatterOptions, "locale"> & { locale: Locale };
+export type Formatter = ReturnType<typeof createUseIntlFormatter>;
+export type FormatterOptions = Omit<
+  Parameters<typeof createUseIntlFormatter>[0],
+  "_cache" | "_formatters" | "locale"
+> & { locale: Locale };
 
-export function createFormatter(options: FormatterOptions): Formatter {
-  return createIntlFormatter({ ...intlDefaults, ...options });
+export function createFormatter({ locale, ...options }: FormatterOptions): Formatter {
+  return createUseIntlFormatter({ locale, ...resolveIntlOptions({ formats, ...options }) });
 }

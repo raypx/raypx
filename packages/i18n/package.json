@@ -49,7 +49,6 @@
     },
     "sourceTargets": {
       "src/browser.tsx": "browser",
-      "src/intl/browser.ts": "browser",
       "src/vite.ts": "node"
     },
     "entryConsumers": {
