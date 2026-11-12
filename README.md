@@ -54,7 +54,7 @@ External tools run with the user's OS permissions.
 | Apply formatting  | `bun format --write`           |
 | Build             | `bun run build`                |
 
-VP discovers tasks from workspace manifests. Engineering commands are exposed
+Turbo schedules and caches the scripts declared in workspace manifests. Engineering commands are exposed
 as `raypx-dev`; the product executable is `raypx`. Workspace discovery reads the
 root `package.json` patterns, including applications, libraries, infrastructure and E2E.
 `verify` checks affected sources/tests; `verify --full` adds repository-wide audits,

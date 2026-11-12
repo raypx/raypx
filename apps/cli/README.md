@@ -32,7 +32,7 @@ Use the current file `version` when editing, moving or deleting. Deletion prompt
 
 `--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically. Scheduler startup and history reads mark abandoned runs as interrupted only after acquiring their job lease, preserving runs still owned by another process.
 
-Build through VP with root `bun run build:cli`, or run the workspace build with
+Build through Turbo with root `bun run build:cli`, or run the workspace build with
 `bun run --cwd apps/cli build`. The build checks the SQLite journal and pinned Bun
 version, then compiles `src/main.ts` with ESM, minification and depth-0 bytecode.
 `apps/cli/dist/` contains the executable, `herdr/`, `LICENSE`, `README.txt` and the

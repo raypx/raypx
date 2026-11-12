@@ -37,7 +37,7 @@ platform-neutral hooks and i18n catalogs. System language and appearance are def
 
 ## Verification
 
-Use Bun 1.4.4 for scripts. VP registers check/test/build; Expo owns Metro bundling.
+Use Bun 1.4.4 for scripts. Turbo schedules check/test/build; Expo owns Metro bundling.
 React and its types use catalog:mobile at Expo's supported version independently
 of DOM applications. Metro resolves React/JSX imports from shared source through
 Mobile's own dependency, preserving one native React instance.

@@ -3,10 +3,12 @@
 ## Purpose
 
 The complete `raypx-dev` implementation: commands, repository policy, validation,
-verification planning, CI gates, smoke probes and scaffolding. VP owns task
-orchestration; `@raypx/tooling` owns the importable task, build and browser surface;
-`@raypx/task-graph` owns discovery and the task graph; generic boundary, catalog,
-document, artifact and change-scope mechanics live privately in `src/repo/`.
+verification planning, CI gates, smoke probes and scaffolding. Turbo owns task
+orchestration and caching through the root `turbo.json`; `src/turbo.ts` is the only
+launcher. `@raypx/tooling` owns the importable build and browser surface. Workspace
+discovery, generic boundary, catalog, document, artifact and change-scope mechanics
+live privately in `src/repo/`; `src/workspace-graph.ts` describes members and their
+dependency edges for verification planning.
 
 ## Interface
 
@@ -18,7 +20,7 @@ dependencies only. For direct terminal use, run `bun link` here with Bun's globa
 bin directory on `PATH`.
 
 `src/cli.ts` dispatches one command table: each entry declares its usage, summary,
-whether it is internal (VP leaves and CI entries, omitted from help) and whether its
+whether it is internal (CI entries, omitted from help) and whether its
 arguments pass through to another tool. Help and per-command `--help` come from the
 table; each command lazily imports its own modules. Owned options parse with
 `node:util` `parseArgs` in strict mode. Errors print their message; `RAYPX_DEBUG=1`
@@ -29,7 +31,7 @@ Command behavior and the rules each check enforces are documented in
 
 ## Constraints
 
-- Nothing imports this package. It depends on Task Graph and Tooling public entries only.
+- Nothing imports this package. It depends on Tooling and runtime-node public entries only.
 - Do not import database, auth or client implementations; delegate database commands
   to Database scripts. Derive all workspace lists from manifests.
 - Scaffolding previews by default and never overwrites.

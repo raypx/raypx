@@ -41,7 +41,7 @@ oxfmt and oxlint fixes on staged files only. The `commit-msg` hook checks the
 with `bun --bun vp hooks status`.
 `VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun verify`.
 Use `bun lint` for a standalone lint pass and `bun format` to check formatting.
-`bun format --write` applies formatting with the same VP rules and ignore files.
+`bun format --write` applies formatting with the same Vite+ rules and ignore files.
 
 Remote tasks require Redis. `docker compose up -d valkey` starts Valkey on 6380; set
 `REDIS_URL=redis://localhost:6380` to cache sessions and keep rate limits in Redis
@@ -147,33 +147,33 @@ and browser reports while preserving builds and staged native resources. See
 [validation scripts and cleanup](validation-artifacts.md) for the maintained checks
 and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
-`bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
+`bun run clean` removes workspace build outputs, coverage, Turbo/Vitest and TanStack caches,
 Desktop's renderer artifacts and MyGo generated/resource directories, root
 `.artifacts`, and browser test results/reports. Removals run in batches of up to eight directories.
 It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. Native development,
 Go host checks and packaging prepare generated inputs and the matching CLI again.
 
-VP owns the task graph and its local cache at `node_modules/.vite/task-cache`.
-Use root build/check/test commands for dependency ordering, or `vp run` to invoke
-a private qualified task such as `vp run --filter @raypx/core task:test`.
-Public workspace scripts remain direct leaf/debug commands. `vite.config.ts`
-contains lightweight task metadata; application plugins live in `vite.app.config.ts`.
+Turbo owns the task graph and its local cache at `.turbo/cache`; git worktrees share
+the main checkout's cache. Use root build/check/test commands, or `raypx-dev tasks`,
+so the launcher supplies the platform identity and development environment; for
+example `bun run raypx-dev tasks @raypx/core#test`. Workspace scripts are direct
+leaf commands: `bun run --cwd apps/web build` compiles without running prerequisites.
+Root `turbo.json` declares dependencies, inputs, outputs and environment keys;
+application plugins live in `vite.app.config.ts`.
 Language policy lives in i18n's public static `./config` export; repository checks
 read it without importing the i18n runtime.
 
-GitHub CI restores Bun downloads before frozen installs outside Windows, then restores VP's
-task-cache directory. Only successful tasks become reusable entries, even if a
+GitHub CI restores Bun downloads before frozen installs outside Windows, then restores
+Turbo's `.turbo/cache`. Only successful tasks become reusable entries, even if a
 later check fails. Cache archives use a fresh key per workflow attempt with a
 compatible fallback; OS, architecture, Bun versions and job partition them.
-Only jobs with new successful VP artifacts upload a cache snapshot.
-Task fingerprints choose reusable results.
-CI caches this task-cache subdirectory,
-not dependencies or the rest of `node_modules`.
+Only jobs that added cache entries upload a snapshot. Task hashes choose reusable
+results. CI caches this directory, not dependencies or `node_modules`.
 
 Required release artifacts move between jobs through artifacts rather than an
 optional cache. No external remote-cache service or Turbo credentials are used.
-Inspect reuse with `bun run test --verbose`, or `vp run --last-details` from root.
+Inspect reuse in the summary each run writes under `.turbo/runs/`.
 Include transfer time when measuring CI gains. See the [testing guide](testing.md).
 
 ## Agent skills

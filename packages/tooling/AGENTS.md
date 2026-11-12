@@ -3,7 +3,7 @@
 ## Purpose
 
 Application build and acceptance helpers imported by API, Web, Desktop, CLI, E2E,
-Railway and Dev CLI. Task registration belongs to `@raypx/task-graph`; every
+Railway and Dev CLI. Turbo owns task scheduling through the root `turbo.json`; every
 `raypx-dev` command belongs to `@raypx/dev-cli`.
 
 ## Interface
@@ -28,7 +28,7 @@ Railway and Dev CLI. Task registration belongs to `@raypx/task-graph`; every
 
 ## Constraints
 
-No product runtime imports this package. Do not import Dev CLI or Task Graph source.
+No product runtime imports this package. Do not import Dev CLI source.
 Every entry keeps a consumer in another workspace.
 
 ## Verification

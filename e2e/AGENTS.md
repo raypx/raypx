@@ -13,7 +13,7 @@ Use `bun e2e --web` or `bun e2e --desktop` to select one application.
 Package scripts and Playwright `--project=web|desktop` select the same scope.
 Pass filenames and Playwright flags directly. Use `--` for arguments that would
 otherwise be interpreted as repository options. `--list` collects cases without
-building applications or starting servers. `--dry-run` shows the VP plan.
+building applications or starting servers. `--dry-run` lists the application builds Turbo would run.
 
 Each application owns `apps/<app>/e2e/*.spec.ts` (including task subdirectories).
 Web owns auth, administration and account settings; Desktop owns local access,
@@ -23,15 +23,16 @@ flow once; project fixtures inject the surface and base URL. Shared response,
 layout and interaction helpers stay in `tests/helpers/`, with application consumers
 using `@raypx/e2e/testing`. Never import private helper paths across workspaces.
 
-VP builds only selected applications: Web `build:e2e` produces the real Nitro Bun
+Turbo builds only selected applications: Web `build:e2e` produces the real Nitro Bun
 artifact; Desktop `build:renderer` produces `artifacts/browser/client` without Go
 or CLI preparation. Normal Web builds and daily verification retain type checks;
 E2E does not repeat them. Both browser build tasks are cached, and tests always run.
 Application CSS excludes `e2e/**` from Tailwind class scanning; fixture changes
 must not alter styles or invalidate product builds. Compiled-style acceptance
 checks a test-only utility never enters the generated CSS.
-Test filenames, grep, worker/report/trace flags travel only through `RAYPX_E2E_ARGS`
-to the uncached `browser:run` leaf, preserving dependency fingerprints.
+`raypx-dev e2e` runs those builds through Turbo and then starts one Playwright
+process itself. Test filenames, grep, worker/report/trace flags reach only that
+process, so they never enter a build's cache key.
 
 `serve-web.ts` runs the compiled SSR server with `process.execPath`; `serve-desktop.ts`
 serves the compiled client with deep-link fallback and original HTML/CSP. Playwright

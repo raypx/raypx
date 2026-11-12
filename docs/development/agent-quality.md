@@ -1,7 +1,7 @@
 # Agent quality and performance checks
 
 `bun run perf:tasks` runs the CLI snapshot/local-read and Tasks conversation performance
-regressions through the existing VP task graph. The gates assert bounded work,
+regressions through the existing Turbo task graph. The gates assert bounded work,
 snapshot budgets, stable references and rendered row counts. Timings and memory
 measurements are evidence, not hardware-dependent pass thresholds. Browser
 acceptance remains a separate Playwright gate.

@@ -40,8 +40,6 @@ README documents every preset and compiler guarantee.
 - Treat any option that can add consumer type errors as a breaking change.
 - Tests beside the preset JSON files read those files directly. The independent
   Vitest config merges root test defaults for coverage without depending on Tooling.
-- Register tasks through `@raypx/task-graph` like every workspace. Task graph has no
-  internal dependencies, so it inlines its own strict compiler options.
 
 ## Verification
 

@@ -4,7 +4,7 @@
   "workspaces": {
     ".": {
       "entry": ["deploy/manifests.ts", "deploy/sources.ts"],
-      "ignoreDependencies": ["@raypx/testing"]
+      "ignoreDependencies": ["@raypx/testing", "turbo"]
     },
     "apps/api": {
       "entry": [

@@ -199,8 +199,7 @@ bounded builder and reuses the same image layers. Its `deploy/build.sh` adds Bun
 cache mounts to temporary copies of these Dockerfiles and explicitly selects
 `migrate`/`runtime`; it does not build the API's final `deploy` stage. The temporary
 copies are removed on exit.
-Image build commands disable VP caching with `--no-cache` to avoid nesting its
-Linux seccomp filesystem tracking inside Railway's build sandbox. Full type checks
+Image build commands pass `--no-cache`, so Turbo re-executes instead of restoring a task cache. Full type checks
 and builds still run; Docker layers provide image build caching.
 `bun run smoke:deployment` exercises both image profiles with an isolated temporary
 database and Redis. This local gate does not apply IaC or contact Railway services.

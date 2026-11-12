@@ -4,6 +4,8 @@ Date: 2026-11-12
 
 Status: Accepted. Supersedes [ADR 0056](0056-in-repo-devkit.md).
 
+The VP task graph and `@raypx/task-graph` are superseded by [ADR 0060](0060-turbo-task-graph.md).
+
 ## Context
 
 Repository automation lived in three places. The independently released

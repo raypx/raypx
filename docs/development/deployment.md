@@ -54,8 +54,7 @@ the bun user.
 CPUs, 3 GiB memory and 4 GiB including swap; BUILD_MEMORY, BUILD_MEMORY_SWAP and
 BUILD_CPU_QUOTA override creation. Reuse a bounded builder for the shared
 manifest/dependency layers. `build.sh` adds install cache mounts only to temporary
-Dockerfiles and removes them on exit. VP gets --no-cache inside Docker to avoid
-nested seccomp tracing; Docker owns image caching.
+Dockerfiles and removes them on exit. Turbo gets --no-cache inside Docker, so it neither reads nor writes a task cache there. Docker owns image caching.
 
 The backend Dockerfile offers `runtime` (Nitro output), `migrate` (isolated DB
 job) and default `deploy` (runtime plus pre-deploy migration payload). The payload

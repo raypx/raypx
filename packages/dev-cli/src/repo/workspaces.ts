@@ -61,7 +61,7 @@ export interface DiscoverOptions {
 }
 
 /** Matches package export, import-map and tsconfig path patterns, including `**`. */
-export function matches(pattern: string, value: string): boolean {
+function matches(pattern: string, value: string): boolean {
   let regex = "^";
   for (let i = 0; i < pattern.length; i++) {
     const char = pattern[i]!;

@@ -358,6 +358,7 @@ current implementation.
 - [0057: Repository automation workspaces](0057-repository-automation-workspaces.md)
 - [0058: Derived source platforms](0058-derived-source-platforms.md) — superseded by 0059
 - [0059: Manifest workspace boundaries](0059-manifest-workspace-boundaries.md)
+- [0060: Turbo task graph](0060-turbo-task-graph.md) — supersedes the VP task graph in 0057
 
 ## Distribution and performance
 

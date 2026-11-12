@@ -58,7 +58,7 @@ bun run test --package relay-cloudflare
 bun run --cwd infra/cloudflare plan:worker
 ```
 
-`plan:worker` builds through VP and runs Wrangler's Worker dry-run with container
+`plan:worker` builds with Vite+ and runs Wrangler's Worker dry-run with container
 rollout disabled. It validates the Worker/config without Docker or publishing.
 It does **not** validate the image, database connectivity or live WebSockets.
 `plan` performs the complete dry-run, including the Docker build. It is a build
@@ -79,7 +79,7 @@ configuration are ignored and excluded from the image context.
 
 The Bun launcher generates a temporary config beside `wrangler.json`, adds only
 the public Git SHA (or `VITE_APP_RELEASE`) as the image build argument, and removes
-it after Wrangler exits. VP owns Worker builds/checks and caching. The container
+it after Wrangler exits. Vite+ builds and checks the Worker; Turbo schedules and caches those tasks. The container
 build continues to use the same Nitro backend build. CI outside a Git checkout
 must supply a public `VITE_APP_RELEASE` identifier.
 

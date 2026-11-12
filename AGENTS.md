@@ -52,14 +52,15 @@ The accepted foundation design and current architecture decisions define the imp
 - Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
   the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
   Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.
-- VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
-  `task:*` definitions through `@raypx/task-graph`; application plugins live in
-  `vite.app.config.ts`. Task graph has no internal dependencies, so every workspace,
-  including the TypeScript presets, registers tasks the same way. Cache actual file inputs,
-  explicit build outputs and outcome-affecting environment variables. Preserve
-  inherited environment for leaf commands.
-  mise is the recommended runtime manager; mise.toml
-  only enables reading package.json and never pins `[tools]`. There is no Nix shell.
+- Turbo owns the sole task graph/cache; `raypx-dev` launches it. Root `turbo.json`
+  declares task dependencies, inputs, outputs and outcome-affecting environment
+  variables; a workspace adds its own `turbo.json` only for inputs or prerequisites
+  outside the defaults. Package scripts are leaf commands and never re-enter the graph;
+  application plugins live in `vite.app.config.ts`. Dependents hash a dependency's
+  sources through the `transit` task, excluding its tests and documentation. Tasks
+  inherit the environment (`envMode: loose`); platform identity joins every cache key.
+- mise is the recommended runtime manager; mise.toml only enables reading package.json
+  and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for shared runtime libraries, catalog:mobile for
   Mobile dependencies (including its Expo-supported React/types) and catalog:dev for
   build/test tools. DOM React and React DOM use the shared default catalog. Keep external versions in these catalogs

@@ -6,7 +6,7 @@ add current-platform Go checks. `bun verify --full` adds repository audits,
 builds and relocated artifact probes for release preparation. Neither command
 replaces separate database, browser, installed native or live-provider acceptance.
 
-`bun run verify --no-cache` forwards VP's cache control for container filesystems.
+`bun run verify --no-cache` makes Turbo ignore its cache and re-execute every selected task.
 Linux CLI artifact probes automatically run the prepared payload in Docker with
 `--network none`, using the Bun image pinned by `packageManager`. The repository and
 payload are read-only; only `.artifacts/cli` reports are written back. Host environment
@@ -59,11 +59,11 @@ bun run test --filter=@raypx/ui
 bun run test '--filter=...@raypx/ui'
 ```
 
-Use `--package` when forwarding runner arguments to one package. Existing VP
+Use `--package` when forwarding runner arguments to one package. Existing Turbo
 filters remain available for graph selections; do not combine them with `--package`.
-VP options go before `--`; filenames, reporters and other runner arguments go after.
+Turbo options go before `--`; filenames, reporters and other runner arguments go after.
 Package-local Vitest scripts accept `--testNamePattern` for filtering by case name.
-Use the root entry with `--package` for VP controls such as `--dry-run` and `--no-cache`.
+Use the root entry with `--package` for Turbo controls such as `--dry-run` and `--no-cache`.
 
 Each Vitest workspace's `vitest.config.ts` merges the plain defaults from `test.config.ts`
 with native `defineConfig`/`mergeConfig`. Test selection and customization stay local;
@@ -91,9 +91,8 @@ bun run test backends --with-e2e -- --workers=1
 Browser commands use the same scoped arguments and build plan from root, `e2e/` or
 the selected application. The root `bun e2e` command accepts Playwright flags
 directly. Root `--package` resolves workspace names and paths.
-Private `_e2e` scripts are terminal runners for VP, not public entry points.
-`raypx.taskScripts` connects each public command to a real private script, rejecting
-chains or missing targets so a direct command cannot recursively enter its own graph.
+`raypx-dev e2e` builds the selected applications through Turbo and then starts the
+shared Playwright process itself; no private runner scripts exist.
 
 Inventory and isolated-backend orchestration belong to Tooling and stay repository-wide,
 even when launched from that package. Baseline/mapping filenames resolve against
@@ -226,7 +225,7 @@ bun --bun vp test --project 'desktop (unit)'
 bun --bun vp test list --filesOnly
 ```
 
-`bun run test` uses the VP task graph and package-owned scripts, including their
+`bun run test` uses the Turbo task graph and package-owned scripts, including their
 prerequisites. The root Vitest entry runs the configured source suites directly;
 database modes, Playwright and native artifact acceptance use their dedicated commands.
 
@@ -278,7 +277,7 @@ Playwright `--project=web|desktop` select the same build and server scope. Confl
 selectors fail before running. Projects select application cases; smoke and user
 grep intersect within that project. Use `--` when a Playwright argument would
 otherwise be interpreted as a repository option.
-Listing cases bypasses VP builds and Playwright does not start servers. Focused
+Listing cases bypasses Turbo builds and Playwright does not start servers. Focused
 runs are feedback tools; run complete acceptance before release.
 
 CI defaults to two workers. Local hosts with at least twelve available CPUs and
@@ -296,8 +295,8 @@ Web's cached `build:e2e` uses the production Nitro Bun build command. It omits t
 normal build's type-check prerequisite; `apps/web check` and `bun run verify` still
 check both application and E2E sources. Desktop uses its cached `build:renderer`
 task. Test-only edits and Playwright selections must not rebuild unchanged product
-artifacts. The uncached browser leaf receives test filenames, grep, worker, trace
-and reporter arguments through scoped JSON, outside dependency fingerprints.
+artifacts. The Playwright process receives test filenames, grep, worker, trace
+and reporter arguments directly, outside every build's cache key.
 Application source, build variables and runtime pins remain build inputs.
 Application CSS explicitly excludes `e2e/**` from Tailwind class scanning. The
 compiled-style check seeds a test-only utility and rejects it in generated CSS,

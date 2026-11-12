@@ -1,10 +1,4 @@
-export const browserTestTasks = [
-  "e2e",
-  "e2e:web",
-  "e2e:desktop",
-  "e2e:smoke",
-  "e2e:visual",
-] as const;
+const browserTestTasks = ["e2e", "e2e:web", "e2e:desktop", "e2e:smoke", "e2e:visual"] as const;
 export const isBrowserTestTask = (task: string) => browserTestTasks.some((value) => value === task);
 type Environment = Record<string, string | undefined>;
 

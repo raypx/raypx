@@ -20,7 +20,7 @@ export interface WorkspaceGraph {
 }
 
 /** Turbo task identity; the repository root is `//`. */
-export const rootName = "//";
+const rootName = "//";
 export const taskRef = (owner: string, name: string) => `${owner}#${name}`;
 
 function member(workspace: Workspace): Member {
@@ -66,7 +66,7 @@ export function privateTestFile(owner: Pick<Member, "path" | "testExports">, fil
   );
 }
 
-export function taskLifecycleInputs(apiPath: string) {
+function taskLifecycleInputs(apiPath: string) {
   return [`${apiPath}/tests/fixtures/task-lifecycle-relay.ts`, `${apiPath}/tests/helpers/relay.ts`];
 }
 

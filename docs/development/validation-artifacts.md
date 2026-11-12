@@ -21,7 +21,7 @@ bun run size --package desktop --native --require
 bun run size --package desktop --browser --require
 ```
 
-Build the selected packages first with the existing VP commands. `size` never builds
+Build the selected packages first with the existing build commands. `size` never builds
 or starts an application. It discovers buildable workspaces from manifests, omits
 source-only libraries, and accepts repeated `--package` selectors by manifest name,
 `@raypx/` shorthand or workspace path. Without selectors it snapshots all existing
@@ -186,31 +186,28 @@ display names in `ci.yml` does not by itself request container builds.
 
 ## Verification planning and cache
 
-Task discovery, dependency closure, argument keys, VP configuration and cache archive identities
-come from `@raypx/task-graph`. Git change reading and reverse propagation live in
-Dev CLI's private `src/repo/verification.ts`; Raypx supplies browser/native scope
-policies. The Start environment adapter is Tooling's `./build/start-env`, with
-injected Vite `loadEnv`.
-Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture repositories
-cannot inherit another checkout's task list.
+Root `turbo.json` declares task dependencies, inputs, outputs and environment keys;
+Dev CLI's `src/turbo.ts` launches Turbo and reads each run's summary. Workspace
+discovery, Git change reading and reverse propagation live in Dev CLI's private
+`src/repo/`; Raypx supplies native scope policies. The Start environment adapter is
+Tooling's `./build/start-env`, with injected Vite `loadEnv`.
 
-Use `bun run verify` for daily feedback: policy and locales are always selected as VP
-tasks; unchanged inputs can reuse successful results. Explicit source, manifest,
-document and catalog patterns cover newly added/deleted files alongside automatic
-tracing. Policy/locales share the source task graph, avoiding extra runner launches.
-Verification prints and records their execution times (zero when cached), format/lint
-wall times and VP graph wall time including runner overhead. VP restores timing
-evidence with cached outputs; this evidence does not decide cache reuse.
+Use `bun run verify` for daily feedback: policy and locales are always selected as
+Turbo root tasks; unchanged inputs reuse successful results. Their explicit source,
+manifest, document and catalog patterns cover added and deleted files. Policy/locales
+share the source task run, avoiding extra launches. Verification prints and records
+their execution times from Turbo's run summary (zero when cached), format/lint wall
+times and the Turbo wall time including launcher overhead.
 
 Lint runs type-aware rules without its own type check; TypeScript diagnostics come
 from the cached workspace checks and the root `types` task, which checks every
-workspace's VP/Vitest configuration under Node.
+workspace's Vitest configuration under Node.
 Changed files select formatting/lint and affected workspace types through reverse
 dependency graphs. Local test selection follows transitive source imports and changed
 test files, retaining affected integration suites and filesystem/subprocess assertions.
 Indirect consumers run complete suites. Configuration, fixtures, deletions, unresolved
 imports or sources without a test dependency fall back to complete suites. Test arguments
-are scoped to each existing package test task and participate in its VP cache key.
+go to that package's own Turbo invocation and participate in its cache key.
 CI and `--full` run complete suites for selected workspaces. Native inputs independently select Go host tasks.
 The default base is the merge-base with `origin/canary`; staged, unstaged,
 untracked, renamed and deleted files count.
@@ -228,7 +225,7 @@ and the `native-checks` action select Tooling's type checks/tests plus any relev
 native/container acceptance. Shared dependency-install/cache actions still broaden
 all source checks. Mixed changes combine these scopes, and full verification selects
 every workspace as before.
-A workspace's tests, `*.test.*`/`*.spec.*` files and VP/Vitest configs select only
+A workspace's tests, `*.test.*`/`*.spec.*` files and Vitest configs select only
 that workspace, unless its package exports point into `tests/`.
 Dev CLI policy, validation, verification and test edits select only Dev CLI; its
 command, repository and test-runner modules retain all source checks. Tooling tests
@@ -261,7 +258,7 @@ are the verification entry points.
 GitHub uses the same change planner:
 
 `verification/index.ts` owns the local command, `plan.ts` owns task selection and
-`execution.ts` runs the shared VP graph. `verification/ci.ts` adapts GitHub events
+`execution.ts` runs the selected tasks through Turbo. `verification/ci.ts` adapts GitHub events
 and dispatches workers. Deployment acceptance and artifact probes load only when
 their command or stage is selected.
 
@@ -289,10 +286,10 @@ Tests owns complete selected workspace suites. The planner emits `source_phases`
 omits the test runner when no suites are selected. Both phases execute the original
 plan; their task selections together cover the combined local verification command.
 
-VP still owns each task graph and its prerequisites. Checks retains the existing
+Turbo still owns each task graph and its prerequisites. Checks retains the existing
 `javascript` cache partition; tests uses `source-tests`, avoiding concurrent cache writes
-and separating runner workloads. The save gate checks the VP result database as well
-as output archives so test results without archived files can be reused across runs.
+and separating runner workloads. The save gate compares the cache entry listing before and after the job, so test
+results without output files are saved as well.
 Both matrix results must succeed for the `source` gate to pass, with fail-fast disabled.
 
 Missing plans, unsupported versions, mismatched commits and an invocation of an
@@ -318,12 +315,12 @@ is reported as unavailable, never as a passing native check.
 
 Routine native acceptance prepares and seals the matching CLI, accepts its archive,
 then runs process/task runners, installed CLI, Herdr and Go checks on the same runner.
-It reuses one dependency install and VP cache restoration, and needs no renderer build
+It reuses one dependency install and Turbo cache restoration, and needs no renderer build
 or CLI artifact upload/download. Go checks target the internal and native test packages;
 they do not embed the production renderer. Source verification still checks renderer code.
 The shared `.github/actions/native-checks` action owns these checks and their evidence
 for both routine and distribution runs; changes to it also select native acceptance.
-Go caches are separate from VP's JS task cache; smoke and production use separate outputs.
+Go caches are separate from Turbo's JS task cache; smoke and production use separate outputs.
 Routine checks run Herdr once; distribution runs repeat it three times on Windows
 without blocking the parallel package/smoke phases.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
@@ -334,7 +331,7 @@ cancel a release acceptance run. The `macos` and `cold_native` selections also h
 separate cancellation groups. For a Windows-only native comparison, use
 `gh workflow run ci.yml --ref <branch> -f distribution=true -f cold_native=true`.
 This disables Go compiler cache restoration and saving on fresh hosted native
-runners; Bun installation and the shared VP JavaScript cache keep their usual policy.
+runners; Bun installation and the shared Turbo JavaScript cache keep their usual policy.
 Compare the same runner image/architecture and signing configuration. Record preparation,
 package-step duration (native compilation plus installer creation), each job duration
 and queue delay separately; whole-workflow elapsed time includes unrelated parallel gates.
@@ -343,8 +340,8 @@ bytes; GitHub artifact ZIP sizes measure transport compression. One run is a sam
 not a stable benchmark or evidence for macOS performance. Add `-f macos=true` for
 explicit macOS acceptance.
 Distribution prepares the immutable CLI and shared renderer once per selected platform;
-that job alone saves VP artifacts and consumer phases only restore them. Routine
-acceptance saves successful VP artifacts after its checks. Go setup precedes the Bun
+that job alone saves Turbo cache entries and consumer phases only restore them. Routine
+acceptance saves successful Turbo cache entries after its checks. Go setup precedes the Bun
 install in both paths, keeping native cache restoration ahead of dependency extraction.
 Verification, test and E2E tasks receive the fixed
 `VITE_APP_RELEASE=verification`, so a new commit does not invalidate unchanged tasks. Native Go
@@ -396,16 +393,16 @@ bun run test --verbose
 
 Qualified `package#task` references accept scoped arguments after `--`. When forwarding
 arguments with a filter, use a qualified reference to avoid changing dependency tasks.
-`--dry-run` prints a dependency plan without executing tasks. VP uses private `task:*`
-names so package scripts remain independently runnable without task/script conflicts.
-VP runs package scripts directly. Use `bun --bun vp run --filter @raypx/ui task:test`
-to enter the native task, or `bun run test` to use the root launcher. Verification
-uses an argument adapter only for tasks that receive their own file filters in a
-shared graph.
+`--dry-run` prints Turbo's plan without executing tasks. Task names are the package
+script names; scripts stay independently runnable because they never re-enter the
+graph. Use `bun run raypx-dev tasks @raypx/ui#test`, or `bun run test` for the suite
+launcher. Verification gives a package its own Turbo invocation when its test task
+receives a file selection.
 
-VP records local results in `node_modules/.vite/task-cache`. Use `--verbose` or
-`vp run --last-details` for cache misses and task timings. Cached logs describe an
-earlier execution; their test durations are not the current command's elapsed time.
+Turbo records local results in `.turbo/cache` and a summary of each run in
+`.turbo/runs/`. Cached logs describe an earlier execution; their test durations are
+not the current command's elapsed time. A task hashes its workspace's tracked files, so
+ignored outputs and tool caches never enter it.
 Task inputs ignore `node_modules` listings and tool caches such as `.nitro`, `.vite` and
 `.cache`, so a fresh CI runner can replay builds; `bun.lock` still invalidates dependency
 changes. Keep the cache between runs. `bun run clean` removes task/transform caches while
@@ -418,7 +415,7 @@ and compilation dependencies complete before the long-running dev commands start
 
 Run `bun run knip` for the full report. `knip.json` declares Vite app configs,
 spawned fixtures, native smoke entries, type assertions and command-loaded tools
-as entries, including Task Graph's VP-invoked `src/leaf.ts`.
+as entries.
 Drizzle config is analyzed statically, without loading database
 credentials. The Vitest scaffold is a static `.template` file copied into each new
 workspace, so its workspace-relative imports need no Knip resolution exception.

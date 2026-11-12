@@ -6,12 +6,12 @@ boundaries; this page keeps the behavior.
 
 ## Commands
 
-- raypx-dev tasks <task> [VP options]
-- raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
+- raypx-dev tasks <task> [Turbo options]
+- raypx-dev test [suite] [--package name|path] [Turbo options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
   capabilities. Dev CLI owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
-- raypx-dev format [--write] [files] defaults to VP's format check and forwards native VP formatter flags.
+- raypx-dev format [--write] [files] defaults to Vite+'s format check and forwards native formatter flags.
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev i18n
   Discover `locales/<language>/<namespace>.ts` or `.json` from workspace manifests;
@@ -41,15 +41,15 @@ boundaries; this page keeps the behavior.
   CI appends tables to its summary after selected builds/cache restoration and uploads
   reports. Sizes count regular files, excluding symlinks; components/bundles overlap
   and must not be added together. Measurement never launches a build or smoke task.
-- `raypx.taskScripts` selects a private package script for the VP task. Validate
-  both names, refuse chains/cycles and retain public task argv.
+- Package scripts are the leaf commands Turbo runs; `src/turbo.ts` launches every
+  graph invocation with the platform identity and a default concurrency of three.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
 - `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
   all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
   base. `--dry-run` prints the comparison baseline SHA, local test selection and
-  expanded VP graph without running tasks. Regular verification also prints the SHA.
-  `--no-cache` forwards to VP for container runs where filesystem tracing is unavailable.
+  expanded Turbo plan without running tasks. Regular verification also prints the SHA.
+  `--no-cache` becomes Turbo `--force`: every selected task re-executes.
   Local tests follow source imports, retaining integration and filesystem/process
   assertions; indirect consumers and unknown/configuration/deleted inputs use complete
   suites. CI and `--full` always run complete selected workspace suites. File arguments
@@ -62,7 +62,7 @@ boundaries; this page keeps the behavior.
   consumers. Task machinery, unknown/deleted inputs and unresolved export graphs
   retain all source checks.
 - Local verification lives in `verification/index.ts`; `plan.ts` selects tasks and
-  `execution.ts` runs the VP graph. `verification/ci.ts` adapts GitHub events and dispatches
+  `execution.ts` runs the selected tasks through Turbo, one extra invocation per related-test selection. `verification/ci.ts` adapts GitHub events and dispatches
   workers. CI, deployment and artifact probes load at their command or selected stage.
   Go-only inputs select Go checks without renderer suites. Workflow orchestration and
   `native-checks` action edits select Dev CLI plus relevant acceptance; shared install/cache
@@ -73,7 +73,7 @@ boundaries; this page keeps the behavior.
   selection. The `source` matrix runs `ci:gate source checks|tests` on parallel runners.
   Checks owns style, policy/locales, types, selected current-platform Go checks and
   full-mode builds/probes; tests owns complete selected workspace suites. The planner
-  omits the test runner when no suites are selected. Each phase has a separate VP cache;
+  omits the test runner when no suites are selected. Each phase has a separate Turbo cache;
   checks retains the `javascript` partition. The final gate rejects unregistered jobs, inconsistent plan outputs,
   failed/cancelled jobs and unexplained skips. Local evidence records running,
   passed or failed status so a failed run cannot retain a previous success.
@@ -97,7 +97,7 @@ boundaries; this page keeps the behavior.
   packaging helpers and their regressions, and select
   macOS/Windows by platform-specific filenames; shared native CI inputs default to Windows.
   Manual `macos` includes macOS; release tags require both platforms. `cold_native` disables
-  native compiler caches for comparisons while retaining VP caches for shared JavaScript inputs.
+  native compiler caches for comparisons while retaining Turbo caches for shared JavaScript inputs.
   JavaScript dependency reach alone does not select native runners. Installers, signing and installed
   GUI acceptance require a tag push or manual `distribution` request; release gates
   run in parallel and the final result validates their selection against the event.
@@ -121,7 +121,7 @@ boundaries; this page keeps the behavior.
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
-  before starting Vite and MyGo. Direct Desktop scripts enter the same VP graph.
+  before starting Vite and MyGo. Direct Desktop scripts are leaf commands without prerequisites; use the root commands or `raypx-dev tasks desktop#<task>` for the graph.
   Native CI checks Go on each platform.
 - `raypx-dev deployment:smoke [--platform linux/amd64|linux/arm64]` builds both image
   profiles with an owned bounded builder, isolated temporary services and a synthetic
@@ -133,15 +133,15 @@ boundaries; this page keeps the behavior.
 
 ## Checks, tests and probes
 
-Nothing imports this package. Keep the dependency direction Dev CLI → Tooling and Task Graph; use only Tooling's public entries. Do not import database, auth or
+Nothing imports this package. Keep the dependency direction Dev CLI → Tooling; use only Tooling's public entries. Do not import database, auth or
 client implementations; delegate database commands to database's scripts. Derive all
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Keep reusable mechanics in `src/repo/` free of Raypx package names and paths.
 Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
 Knip configuration lists only what its own analysis cannot find: dynamically
-invoked entries (Native Go-launched TS fixtures, Task Graph's task leaf, route and
-VP app configs) and the vendored skills it must skip. Remove any entry or ignore Knip
+invoked entries (Native Go-launched TS fixtures, route and
+Vite+ app configs) and the vendored skills it must skip. Remove any entry or ignore Knip
 reports as redundant. Root transitive dependency overrides use Bun's `resolutions`
 field so Knip can track their catalog references directly.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated

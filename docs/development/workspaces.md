@@ -8,7 +8,7 @@ see the [Desktop guide](desktop.md#build-and-release).
 Infrastructure provider tooling lives under `infra/*`; API/Relay runtime roles share `apps/api`
 and provider deployment tooling. Each manifest declares its actual
 dependencies, deployment commands and checks. These are
-discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).
+discovered by the same Bun/Turbo graph; see [infrastructure](../../infra/README.md).
 
 ```sh
 bun run workspace:list
@@ -31,7 +31,7 @@ Kind is derived from standard fields: a package with `bin` is tooling; a package
 without exports is an application; the rest are libraries. Policy rejects the retired
 `raypx.kind`, `raypx.target`, `raypx.entryTargets` and `raypx.sourceTargets` fields.
 Manifests declare no platform target and policy does not check platform boundaries;
-a workspace needs a `raypx` block only for `entryConsumers`, `taskScripts`,
+a workspace needs a `raypx` block only for `entryConsumers`,
 `bundledDependencies`, `sourceEntries` or `browserTestProject`.
 
 Every public entry has an established consumer in another workspace. `policy`
@@ -57,20 +57,22 @@ invoking it declare a direct development dependency; reusable build/task imports
 come from `@raypx/tooling`. Dev CLI depends on Tooling and has no exports, so its
 private code never reaches another workspace's type check.
 
-VP discovers lightweight `vite.config.ts` files. `@raypx/task-graph` derives
-private `task:*` definitions from the package scripts and declares build dependencies.
-VP runs those Bun scripts directly; aggregate tasks only declare dependencies.
+Turbo schedules the scripts each manifest declares; root `turbo.json` names the
+graph tasks and their dependencies. Package scripts are leaf commands and never
+re-enter the graph, so no private runner scripts exist.
 Root `test [suite]` aggregates declared package commands; `test --package` selects
-one owner. Public commands with build prerequisites can use `raypx.taskScripts`
-to select a private runner; see [test commands](testing.md#test-commands).
-Actual file reads determine incremental invalidation; source-only libraries need no
+one owner; see [test commands](testing.md#test-commands).
+A task's hash covers its workspace's tracked files, its declared environment keys,
+the external dependencies its package resolves from `bun.lock`, and the sources of
+its workspace dependencies through the `transit` task, which excludes their tests,
+suites and documentation. Root files every suite loads (`test.config.ts`,
+`test.dom.ts`, `bunfig.toml`) are global dependencies. Source-only libraries need no
 build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
 in `vite.app.config.ts`, while independent Vitest configs keep test initialization
-separate. Scaffolding creates the task config and declares its Task Graph dev
-dependency. The TypeScript presets register tasks through Task Graph as well.
-Workspace `check`, build and default/unit/component test tasks are cacheable.
+separate. Workspace `check`, build and default/unit/component test tasks are cacheable.
 Dedicated deployment, performance and database/browser integration tasks always
-execute. Task Graph sets the cache rules for these scripts.
+execute. A workspace adds its own `turbo.json` only for inputs or prerequisites
+outside these defaults (CLI, Desktop, Control and E2E do).
 
 Auth's `@raypx/auth/client` entry exports both `createAuthClient` and the shared DOM
 `AuthForm` used by Web and Desktop. Applications keep their file routes and inject
@@ -94,10 +96,8 @@ dependency. Shared fixtures are independent of the workspaces under test, and su
 stay with their owners. Extract runtime only when another execution host directly
 consumes CLI internals.
 
-Repository automation is split by how it is consumed. `@raypx/task-graph` is the
-bottom of the workspace graph: discovery and VP task registration imported by every
-`vite.config.ts`, with no internal dependencies and an inline strict tsconfig.
-`@raypx/tooling` holds build and acceptance helpers imported only by the
+Repository automation is split by how it is consumed. Root `turbo.json` is the task
+graph. `@raypx/tooling` holds build and acceptance helpers imported only by the
 applications that use them. `@raypx/dev-cli` implements `raypx-dev` and has no
 exports, so its private checks never reach another workspace's type check.
 

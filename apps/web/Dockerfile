@@ -23,7 +23,7 @@ ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
 ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
-# Docker layers own caching; nested VP syscall tracking conflicts with build sandboxes.
+# Docker layers own caching; --no-cache makes Turbo ignore and skip its own cache.
 RUN bun run build:web --no-cache
 
 FROM oven/bun:1.4.4-slim AS runtime

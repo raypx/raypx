@@ -21,7 +21,7 @@ bun run --cwd infra/railway deploy
 
 `plan` and `deploy` use the catalog-pinned Railway CLI under Bun, select
 `railway.ts` explicitly with `--file`, and load the scoped IaC preload. They are
-uncached VP tasks. `deploy` applies infrastructure configuration; Railway builds
+uncached Turbo tasks. `deploy` applies infrastructure configuration; Railway builds
 the application images from GitHub. Neither command runs during `check` or `test`.
 The scripts select the installed `@railway/cli` package explicitly because the
 `railway` command name also resolves to the installed SDK package.

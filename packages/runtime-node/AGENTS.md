@@ -2,8 +2,8 @@
 
 Small Node-compatible filesystem, process and HTTP services run under Bun for CLI, Relay and
 repository tooling. Keep application execution, authorization and scheduling in
-their owners. Public entries require real consumers. Tasks register through
-`@raypx/task-graph`; never depend on Tooling or Dev CLI.
+their owners. Public entries require real consumers. Never depend on
+Tooling or Dev CLI.
 
 Process streams use Web Streams at this boundary; native process lifetime and
 backpressure remain explicit. Inherited-stream runners forward interrupts and

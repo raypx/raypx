@@ -50,12 +50,12 @@ compile the `native_smoke` build and run its protocol tests. Go tests generate n
 copy and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
 compiled CLI for the daemon integration test; only its isolated daemon is stopped.
 
-`mygo:check:docker` enters the same VP graph and runs the existing Go checks in
+`mygo:check:docker` runs the existing Go checks in
 Docker BuildKit with pinned Go/Bun, without installing JavaScript dependencies.
 Its scoped context contains only the native check inputs. BuildKit caches the
 `go.mod`/`go.sum` download layer and retains both `GOMODCACHE` and `GOCACHE` across
 source edits. Reuse the same builder; `BUILDX_BUILDER` or `--builder <name>` selects
-one. Source edits rerun checks while reusing the Go caches. VP leaves this task
+one. Source edits rerun checks while reusing the Go caches. Turbo leaves this task
 uncached so Docker owns its layers and Go owns incremental compilation.
 Ephemeral CI builders need separate persistence for cache-mount contents; exporting
 image-layer caches alone does not retain them. This command performs headless Go
