@@ -1,0 +1,43 @@
+docs/development/deployment.md
+  s_28758cb14041db::t_0bdede1c412f59 57-58,143
+  s_28758cb14041db::t_623027a65f82c6 144-146
+deploy/AGENTS.md
+  s_28758cb14041db::t_0bdede1c412f59 16-17
+packages/dev-cli/tests/integration/deployment.test.ts
+  s_28758cb14041db::t_22794debf5abba 144,147
+  s_28758cb14041db::t_f0df09dc6d831f 151-153
+packages/dev-cli/tests/integration/deployment-smoke.test.ts
+  s_28758cb14041db::t_0bdede1c412f59 49
+  s_28758cb14041db::t_623027a65f82c6 66-68,104,119-121
+  s_28758cb14041db::t_7264d6911c8ed4 52-54
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_28758cb14041db::t_7264d6911c8ed4 197-222
+  s_28758cb14041db::t_0bdede1c412f59 62,178-191
+docs/development/railway.md
+  s_28758cb14041db::t_0bdede1c412f59 202-203
+packages/dev-cli/src/validation/evidence.ts
+  s_28758cb14041db::t_0bdede1c412f59 12-13,35-41,53,56,111,113,118-121
+  s_28758cb14041db::t_7264d6911c8ed4 44-45
+apps/api/Dockerfile
+  s_28758cb14041db::t_0bdede1c412f59 41-42
+apps/web/Dockerfile
+  s_28758cb14041db::t_0bdede1c412f59 26-27
+docs/development/validation-artifacts.md
+  s_28758cb14041db::t_0bdede1c412f59 174-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1a1179a3e75998664cc44c5111b41c58306f4c4f",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
