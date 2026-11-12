@@ -24,13 +24,14 @@ export function readAuthLink(
   const params = new URLSearchParams(search);
   const token = params.get("token") ?? "";
   const failed = params.has("error");
+  const invalidReset =
+    mode === "reset-password" &&
+    (!token.trim() || failed || (error?.kind === "auth" && error.key === "invalidLink"));
   return {
     email: params.get("email") ?? "",
     token,
     failed,
-    invalidReset:
-      mode === "reset-password" &&
-      (!token.trim() || failed || (error?.kind === "auth" && error.key === "invalidLink")),
+    invalidReset,
     verified: mode === "verify-email" && params.get("verified") === "1" && !failed,
   };
 }
