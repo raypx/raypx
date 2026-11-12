@@ -1,6 +1,6 @@
 import { constants, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { targets, type Kind, type Target } from "@raypx-kit/devkit/workspaces";
+import { targets, type Kind, type Target } from "@raypx/devkit/workspaces";
 import { discover } from "./repository.js";
 import { workspaceInstructions } from "./templates/workspace/agents.js";
 

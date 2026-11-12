@@ -1,1 +1,1 @@
-export { argumentKey } from "@raypx-kit/devkit/tasks";
+export { argumentKey } from "@raypx/devkit/tasks";

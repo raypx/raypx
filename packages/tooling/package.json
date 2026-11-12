@@ -25,7 +25,7 @@
   "dependencies": {
     "@formatjs/icu-messageformat-parser": "catalog:dev",
     "@posthog/cli": "catalog:dev",
-    "@raypx-kit/devkit": "catalog:dev",
+    "@raypx/devkit": "workspace:*",
     "@raypx/runtime-node": "workspace:*",
     "oxc-parser": "catalog:dev"
   },

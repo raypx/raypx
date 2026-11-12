@@ -2,7 +2,7 @@
 
 Merged Raypx changes consume `@raypx-kit/*` from npm at exact versions. Raypx Kit is
 maintained in its own repository. This workflow applies only to remaining external
-`@raypx-kit/*` dependencies: `@raypx/env`, `@raypx/tsconfig` and `@raypx/logger`
+`@raypx-kit/*` dependencies: `@raypx/devkit`, `@raypx/env`, `@raypx/tsconfig` and `@raypx/logger`
 are private workspaces changed and checked here. A change needing a new Kit API follows
 the same three steps. Review branches may use a published snapshot or a tracked
 local archive while publication is pending; neither is a merge-ready dependency.

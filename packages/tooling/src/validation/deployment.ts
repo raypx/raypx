@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readStaticCatalog } from "@raypx-kit/devkit/catalogs";
+import { readStaticCatalog } from "@raypx/devkit/catalogs";
 import { apiIngress, relayIngress, deploymentServices } from "../build/deployment.js";
 
 interface ComposeService {

@@ -117,7 +117,7 @@ it.each(["left", "right", "both"] as const)(
 );
 
 it("reports malformed catalog nodes rather than throwing", () => {
-  const invalid = { nested: null } as unknown as import("@raypx-kit/devkit/catalogs").CatalogTree;
+  const invalid = { nested: null } as unknown as import("@raypx/devkit/catalogs").CatalogTree;
   expect(compareMessageCatalogs(invalid, { nested: { value: "x" } }, "en", "de")).toEqual([
     expect.objectContaining({ kind: "parity", side: "left", locale: "en", path: "nested" }),
   ]);

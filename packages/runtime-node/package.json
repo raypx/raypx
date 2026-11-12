@@ -19,7 +19,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@raypx-kit/devkit": "catalog:dev",
+    "@raypx/devkit": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/cross-spawn": "catalog:dev",
     "@types/node": "catalog:dev",

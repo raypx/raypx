@@ -1,7 +1,7 @@
 import { globSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import { imports } from "@raypx-kit/devkit/architecture";
-import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
+import { imports } from "@raypx/devkit/architecture";
+import type { WorkspaceIndex } from "@raypx/devkit/workspaces";
 
 export interface SourceNode {
   path: string;

@@ -1,4 +1,4 @@
-import { taskScripts as validate } from "@raypx-kit/devkit/tasks";
+import { taskScripts as validate } from "@raypx/devkit/tasks";
 interface Manifest {
   scripts?: Record<string, string>;
   raypx?: { taskScripts?: Record<string, string> };

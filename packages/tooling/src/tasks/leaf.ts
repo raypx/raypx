@@ -1,4 +1,4 @@
-import { runTaskLeaf } from "@raypx-kit/devkit/tasks";
+import { runTaskLeaf } from "@raypx/devkit/tasks";
 
 const command = process.argv.slice(3);
 if (!command.length) throw new Error("A workspace task runner is required");

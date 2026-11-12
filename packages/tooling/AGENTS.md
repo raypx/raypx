@@ -3,7 +3,7 @@
 ## Purpose
 
 Private repository automation invoked by `@raypx/scripts` as `raypx-dev`. VP owns task orchestration;
-`@raypx-kit/devkit` owns workspace discovery, boundary and toolchain checks, the static
+`@raypx/devkit` (local workspace) owns workspace discovery, boundary checks, the static
 catalog reader, task graphs/arguments/cache snapshots, affected workspace propagation,
 scoped Start environment inputs, process helpers and artifact staging. This package supplies Raypx
 conventions (`src/repository.ts`), policy, locale parity, scaffolding and product probes.
@@ -139,7 +139,7 @@ No product workspace imports this package at runtime. Do not import database, au
 client implementations; delegate database commands to database's scripts. Derive all
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
-Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
+Generic checks belong in @raypx/devkit; keep only Raypx-specific rules here.
 Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
 Knip runs under Bun, which classifies ws/undici as runtime modules; the Node-compatible
 HTTP adapter retains their explicit dependencies and types for its Node consumers,

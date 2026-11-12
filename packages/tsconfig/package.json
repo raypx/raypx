@@ -33,7 +33,7 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "devDependencies": {
-    "@raypx-kit/devkit": "catalog:dev",
+    "@raypx/devkit": "workspace:*",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"

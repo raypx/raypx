@@ -1,4 +1,4 @@
-import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
+import type { Kind, Target } from "@raypx/devkit/workspaces";
 
 export function workspaceInstructions({
   packageName,

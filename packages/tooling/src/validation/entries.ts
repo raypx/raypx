@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { imports } from "@raypx-kit/devkit/architecture";
-import type { Workspace, WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
+import { imports } from "@raypx/devkit/architecture";
+import type { Workspace, WorkspaceIndex } from "@raypx/devkit/workspaces";
 
 /** A public entry nobody imports is dead weight: it still has to compile, test and age. */
 interface EntryImporter {
@@ -15,7 +15,8 @@ const SOURCE = /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs|css)$/;
 const TSCONFIG = /(?:^|\/)tsconfig[^/]*\.json$/;
 const TEST_FILE = /\.(?:test|spec)\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
 const TEST_DIRECTORY = /(?:^|\/)(?:tests?|__tests__)\//;
-const SKIPPED = new Set(["node_modules", "dist", ".output", "generated", "build", "artifacts"]);
+/** Output directories sit at a workspace root; nested names such as `src/build/` are source. */
+const OUTPUTS = new Set(["dist", ".output", "generated", "build", "artifacts"]);
 
 /**
  * Walk a directory without descending into dependencies or build output; a glob
@@ -25,7 +26,13 @@ function walk(directory: string, prefix: string, files: string[], nested: Readon
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (entry.isDirectory()) {
-      if (SKIPPED.has(entry.name) || entry.name.startsWith(".") || nested.has(relative)) continue;
+      if (
+        entry.name === "node_modules" ||
+        (!prefix && OUTPUTS.has(entry.name)) ||
+        entry.name.startsWith(".") ||
+        nested.has(relative)
+      )
+        continue;
       walk(join(directory, entry.name), relative, files, nested);
     } else if (SOURCE.test(entry.name) || TSCONFIG.test(entry.name)) files.push(relative);
   }

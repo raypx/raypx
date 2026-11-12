@@ -48,6 +48,7 @@ Remote tasks require Redis. `docker compose up -d valkey` starts Valkey on 6380;
 instead of PostgreSQL. API sessions remain persisted in PostgreSQL.
 
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
+Values are literal: `${VAR}` references are not expanded.
 Only development/build/env commands load files; tests provide explicit environment.
 Start `docker compose up -d postgres` (PostgreSQL on 5433, Valkey on 6380),
 then run `bun dev`. API startup applies pending foundation migrations before

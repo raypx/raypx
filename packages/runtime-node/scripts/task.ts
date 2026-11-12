@@ -1,4 +1,4 @@
-import { taskArguments } from "@raypx-kit/devkit/tasks";
+import { taskArguments } from "@raypx/devkit/tasks";
 import { readFileSync } from "node:fs";
 import { runProcess } from "../src/process.js";
 

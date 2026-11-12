@@ -1,4 +1,4 @@
-import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devkit/verification";
+import { changedFiles as readChanges, affectedWorkspaces } from "@raypx/devkit/verification";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";

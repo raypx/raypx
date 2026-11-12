@@ -96,6 +96,11 @@ dependency. Shared fixtures are independent of the workspaces under test, and su
 stay with their owners. Extract runtime only when another execution host directly
 consumes CLI internals.
 
+`@raypx/devkit` is the bottom of the workspace graph: generic discovery, boundary,
+catalog, document, artifact, change-scope and VP task mechanics consumed by Tooling,
+the TypeScript presets and runtime-node. It has no internal dependencies, so it
+inlines its strict tsconfig and registers tasks through its own `scripts/task.ts`.
+
 `@raypx/logger` is a private source workspace consumed by API and CLI. It owns
 evlog adapters, safe projection and managed delivery; applications own event
 schemas, privacy policies and destinations. Its safe/managed entries are universal,

@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 
 const probeArtifact = vi.hoisted(() => vi.fn(async (_options: unknown) => {}));
-vi.mock("@raypx-kit/devkit/artifact", () => ({ probeArtifact }));
+vi.mock("@raypx/devkit/artifact", () => ({ probeArtifact }));
 const { probeApi, probeWeb } = await import("./artifacts.js");
 afterEach(() => vi.restoreAllMocks());
 beforeEach(() => {

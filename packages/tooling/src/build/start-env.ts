@@ -1,1 +1,1 @@
-export { startEnvironment } from "@raypx-kit/devkit/vite";
+export { startEnvironment } from "@raypx/devkit/vite";

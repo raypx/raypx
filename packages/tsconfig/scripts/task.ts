@@ -1,3 +1,3 @@
-import { runTaskLeaf } from "@raypx-kit/devkit/tasks";
+import { runTaskLeaf } from "@raypx/devkit/tasks";
 
 process.exitCode = await runTaskLeaf({ runtime: process.execPath });

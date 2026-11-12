@@ -186,9 +186,9 @@ display names in `ci.yml` does not by itself request container builds.
 ## Verification planning and cache
 
 Task discovery, dependency closure, argument keys, VP configuration and cache archive identities
-come from `@raypx-kit/devkit/tasks`. Git change reading and reverse propagation use
-`@raypx-kit/devkit/verification`; Raypx supplies browser/native scope policies.
-The Start environment adapter uses `@raypx-kit/devkit/vite` with injected Vite `loadEnv`.
+come from `@raypx/devkit/tasks`. Git change reading and reverse propagation use
+`@raypx/devkit/verification`; Raypx supplies browser/native scope policies.
+The Start environment adapter uses `@raypx/devkit/vite` with injected Vite `loadEnv`.
 Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture repositories
 cannot inherit another checkout's task list.
 

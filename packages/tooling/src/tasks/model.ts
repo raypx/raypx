@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { join, relative } from "node:path";
 import { readFileSync } from "node:fs";
-import { workspacePatterns } from "@raypx-kit/devkit/workspaces";
+import { workspacePatterns } from "@raypx/devkit/workspaces";
 import {
   createTaskModel,
   argumentKey,
@@ -12,7 +12,7 @@ import {
   type TaskModel as Model,
   type TaskContext,
   type TaskCache,
-} from "@raypx-kit/devkit/tasks";
+} from "@raypx/devkit/tasks";
 import { browserTestTasks, type BrowserSurface } from "../browser-tests.js";
 import { toolingConsumerCheckInputs, workspaceCheckInput } from "./check-inputs.js";
 import { taskScripts } from "./delegation.js";

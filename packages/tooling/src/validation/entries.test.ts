@@ -49,6 +49,19 @@ const testsOnly = (workspace: string, entry: string) =>
   `${workspace}: entry "${entry}" is imported only by tests; remove it or declare raypx.entryConsumers`;
 const app: Manifest = { kind: "app" };
 
+it("skips root build output but reads nested source directories with output names", () => {
+  const lib = { exports: { "./nested": "./src/a.ts", "./output": "./src/b.ts" } };
+  expect(
+    check(
+      { "packages/lib": lib, "apps/web": app },
+      {
+        "apps/web/src/build/env.ts": 'export * from "@raypx/lib/nested";',
+        "apps/web/build/bundle.js": 'import "@raypx/lib/output";',
+      },
+    ),
+  ).toEqual([none("packages/lib", "./output")]);
+});
+
 it("reports an entry nothing imports and ignores a workspace importing itself", () => {
   const lib = { exports: { ".": "./src/a.ts", "./unused": "./src/b.ts" } };
   expect(

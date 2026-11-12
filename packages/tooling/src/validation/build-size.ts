@@ -1,4 +1,4 @@
-import { discover } from "@raypx-kit/devkit/workspaces";
+import { discover } from "@raypx/devkit/workspaces";
 import {
   appendFileSync,
   existsSync,

@@ -70,6 +70,9 @@
     "packages/tsconfig": {
       "entry": ["scripts/task.ts"]
     },
+    "packages/devkit": {
+      "entry": ["scripts/task.ts"]
+    },
     "packages/email": {
       "entry": ["vite.app.config.ts"]
     },
