@@ -53,7 +53,11 @@ native typechecker reads are not fully covered by automatic tracing on Linux.
 The closure counts only dependencies with package exports: a bin-only workspace
 cannot reach another workspace's type check. VP still tracks actual reads.
 Workspace coverage and validation/browser reports are excluded across that closure;
-authored source folders with the same names remain inputs. Root policy/locale tasks use
+authored source folders with the same names remain inputs. The root `types` task
+checks every workspace's `vite.config.ts` and `vitest.config.ts`, the root config and
+`deploy/*.ts` through the root Node tsconfig, because a universal or browser preset
+lacks Node types. Lint keeps type-aware rules but no compiler pass of its own: these
+workspace and root type checks are the only TypeScript diagnostics. Root policy/locale tasks use
 VP caching with explicit discovery/source/catalog/config inputs plus automatic tracing.
 Policy/locales run in the same VP graph as source tasks and restore timing evidence
 with their cached outputs. Verification records per-check execution times (zero on a

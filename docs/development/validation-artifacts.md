@@ -201,6 +201,9 @@ Verification prints and records their execution times (zero when cached), format
 wall times and VP graph wall time including runner overhead. VP restores timing
 evidence with cached outputs; this evidence does not decide cache reuse.
 
+Lint runs type-aware rules without its own type check; TypeScript diagnostics come
+from the cached workspace checks and the root `types` task, which checks every
+workspace's VP/Vitest configuration under Node.
 Changed files select formatting/lint and affected workspace types through reverse
 dependency graphs. Local test selection follows transitive source imports and changed
 test files, retaining affected integration suites and filesystem/subprocess assertions.

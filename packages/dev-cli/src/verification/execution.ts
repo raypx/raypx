@@ -18,7 +18,9 @@ export function executionTasks(
 ) {
   const tasks = phase ? sourceTasks(plan, phase) : plan.tasks;
   return [
-    ...(phase === "tests" ? [] : [taskRef(rootName, "policy"), taskRef(rootName, "locales")]),
+    ...(phase === "tests"
+      ? []
+      : [taskRef(rootName, "policy"), taskRef(rootName, "locales"), taskRef(rootName, "types")]),
     ...tasks.filter((task) => !tests.some((test) => test.task === task && test.mode === "none")),
     ...(plan.full && phase !== "tests" ? [taskRef(rootName, "knip")] : []),
   ];

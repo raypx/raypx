@@ -84,6 +84,8 @@ export function layerViolations(nodes: ReadonlyMap<string, SourceNode>) {
 }
 export function checkSourceLayers(root: string, index: WorkspaceIndex) {
   const nodes = new Map<string, SourceNode>();
+  // Files in one directory share most requests; resolution dominates this check.
+  const resolved = new Map<string, string>();
   for (const workspace of index.workspaces) {
     for (const file of globSync("**/*.{ts,tsx}", {
       cwd: resolve(root, workspace.path),
@@ -100,14 +102,20 @@ export function checkSourceLayers(root: string, index: WorkspaceIndex) {
       const path = relative(root, full).replaceAll("\\", "/");
       const edges = imports(path, readFileSync(full, "utf8"));
       const dependencies = edges.map(({ request }) => {
+        const key = `${dirname(full)}\0${request}`;
+        const known = resolved.get(key);
+        if (known !== undefined) return known;
+        let target = "";
         try {
-          return relative(root, realpathSync(Bun.resolveSync(request, dirname(full)))).replaceAll(
+          target = relative(root, realpathSync(Bun.resolveSync(request, dirname(full)))).replaceAll(
             "\\",
             "/",
           );
         } catch {
-          return "";
-        } // Existing workspace policy reports unresolved/private imports.
+          // Existing workspace policy reports unresolved/private imports.
+        }
+        resolved.set(key, target);
+        return target;
       });
       nodes.set(path, { path, dependencies, requests: edges.map((edge) => edge.request) });
     }

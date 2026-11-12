@@ -1,6 +1,6 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { builtinModules } from "node:module";
-import { join, posix } from "node:path";
+import { extname, join, posix } from "node:path";
 import { parseSync, visitorKeys, type Node } from "oxc-parser";
 import {
   compatible,
@@ -19,8 +19,23 @@ export interface ImportEdge {
   request: string;
   typesOnly: boolean;
 }
+/**
+ * Parsed edges keyed by extension and source text: policy's boundary, layer and entry
+ * checks read the same files, and parsing dominates their cost.
+ */
+const parsedImports = new Map<string, readonly ImportEdge[]>();
+
 /** Static import, re-export, dynamic import and `import()` type edges, without executing code. */
 export function imports(file: string, source: string): ImportEdge[] {
+  const key = `${extname(file)}\0${source}`;
+  const known = parsedImports.get(key);
+  if (known) return [...known];
+  const found = parseImports(file, source);
+  parsedImports.set(key, found);
+  return [...found];
+}
+
+function parseImports(file: string, source: string): ImportEdge[] {
   const parsed = parseSync(file, source);
   if (parsed.errors.length) throw new Error(`${file}: ${parsed.errors[0]!.message}`);
   const found: ImportEdge[] = [];

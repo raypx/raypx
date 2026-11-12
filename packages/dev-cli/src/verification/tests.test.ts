@@ -48,6 +48,7 @@ describe("local related test selection", () => {
     expect(executionTasks(plan, "fixture")).toEqual([
       "fixture#task:policy",
       "fixture#task:locales",
+      "fixture#task:types",
       "desktop#task:mygo:check",
       "desktop#task:mygo:test",
     ]);

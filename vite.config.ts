@@ -55,7 +55,7 @@ export default mergeConfig(
       jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
       options: {
         typeAware: true,
-        typeCheck: true,
+        typeCheck: false,
         reportUnusedDisableDirectives: "error",
       },
       rules: {

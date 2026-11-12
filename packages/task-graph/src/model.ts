@@ -259,6 +259,38 @@ function validationCache(context: TaskContext<TaskMember>, locales: boolean): Ta
   };
 }
 
+/** The root project checks every workspace's VP and Vitest configuration under Node. */
+function rootTypesCache(context: TaskContext<TaskMember>): TaskCache {
+  return {
+    input: [
+      { auto: true },
+      ...[
+        "package.json",
+        "bun.lock",
+        "tsconfig.json",
+        "vite.config.ts",
+        "test.config.ts",
+        "deploy/*.ts",
+        ...context.members.flatMap((member) => [
+          `${member.path}/package.json`,
+          `${member.path}/vite.config.ts`,
+          `${member.path}/vitest.config.ts`,
+        ]),
+        ...context.members
+          .filter((member) => member.importable)
+          .map((member) => `${member.path}/**/${checkSources}`),
+      ].map((pattern) => ({ pattern, base: "workspace" as const })),
+      ...["**/node_modules/**", ".artifacts/**"].map((pattern) => ({
+        pattern: `!${pattern}`,
+        base: "workspace" as const,
+      })),
+    ],
+    output: [],
+    env: ["RAYPX_CACHE_PLATFORM"],
+    untrackedEnv: ["*"],
+  };
+}
+
 function dependencyBuilds(member: TaskMember, members: TaskMember[]) {
   return members
     .filter((candidate) => member.dependencies.includes(candidate.name) && candidate.scripts.build)
@@ -378,6 +410,12 @@ export function taskModel(
           command: `bun packages/dev-cli/src/cli.ts verify:check locales ${JSON.stringify(platform(context))}`,
           dependsOn: [],
           cache: validationCache(context, true),
+        },
+        // Workspace configs run under Node; their own presets may lack Node types.
+        types: {
+          command: `RAYPX_CACHE_PLATFORM=${JSON.stringify(platform(context))} tsc --noEmit --project tsconfig.json`,
+          dependsOn: [],
+          cache: rootTypesCache(context),
         },
         lint: { command: "bun --bun vp lint", dependsOn: [], cache: false },
         knip: { command: "bun run knip", dependsOn: [], cache: false },
