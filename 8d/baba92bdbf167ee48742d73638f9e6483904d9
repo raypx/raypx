@@ -1,0 +1,32 @@
+docs/development/dev-cli.md
+  h_f0766e80fd3864 50-51
+docs/development/validation-artifacts.md
+  h_f0766e80fd3864 217-219,248-250
+packages/dev-cli/src/repo/verification.ts
+  h_f0766e80fd3864 20
+packages/dev-cli/src/verification/ci.ts
+  h_f0766e80fd3864 35-39,41-42,44
+packages/dev-cli/src/verification/gates.ts
+  h_f0766e80fd3864 4
+packages/dev-cli/src/verification/index.ts
+  h_f0766e80fd3864 42
+packages/dev-cli/src/verification/plan.test.ts
+  h_f0766e80fd3864 8,81-93,97-99,237,244,456-458,475
+packages/dev-cli/src/verification/plan.ts
+  h_f0766e80fd3864 14,43-45,237,333,352-353
+packages/dev-cli/src/verification/report.test.ts
+  h_f0766e80fd3864 25-42
+packages/dev-cli/src/verification/report.ts
+  h_f0766e80fd3864 5,22,30-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "8dbaba92bdbf167ee48742d73638f9e6483904d9",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
