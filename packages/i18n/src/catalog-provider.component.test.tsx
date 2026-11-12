@@ -8,7 +8,7 @@ import { createCatalogStore } from "./catalog-store.js";
 import en from "../locales/en/index.js";
 import zh from "../locales/zh/index.js";
 import type { LocalePreference } from "./preferences.js";
-import { useLanguagePreference, useLocale } from "./react.js";
+import { useFormatter, useLanguagePreference, useLocale } from "./react.js";
 import { useTranslations } from "../tests/i18n.js";
 import type { Messages } from "./types.js";
 
@@ -24,14 +24,23 @@ function deferred() {
 }
 
 function Probe() {
-  const { preference, setPreference } = useLanguagePreference();
+  const { preference, setPreference, loadStatus, retry } = useLanguagePreference();
   const locale = useLocale();
   const t = useTranslations("common");
+  const formatter = useFormatter();
+  const [draft, setDraft] = useState("");
   return (
     <>
       <output data-testid="state">{`${preference}:${locale}`}</output>
       <output data-testid="message">{t("settings")}</output>
+      <output data-testid="date">
+        {formatter.dateTime(new Date("2026-01-01T00:00:00Z"), "timestamp")}
+      </output>
+      <output data-testid="load-status">{loadStatus}</output>
+      <input aria-label="Draft" value={draft} onChange={(event) => setDraft(event.target.value)} />
+      <button onClick={() => setPreference("en")}>en</button>
       <button onClick={() => setPreference("zh")}>zh</button>
+      {loadStatus === "failed" && <button onClick={retry}>Retry</button>}
     </>
   );
 }
@@ -57,7 +66,45 @@ function host(
 }
 
 describe("lazy catalog provider", () => {
-  it("keeps the previous catalog while a selected language loads", async () => {
+  it("keeps the active locale, catalog, formats and draft together during a switch", async () => {
+    const chunk = deferred();
+    const Host = host(
+      createCatalogLanguageProvider(createCatalogStore({ en, zh: () => chunk.promise })),
+      "en",
+    );
+    render(<Host />);
+    const date = screen.getByTestId("date").textContent;
+    const draft = screen.getByRole("textbox", { name: "Draft" });
+    fireEvent.change(draft, { target: { value: "in progress" } });
+    fireEvent.click(screen.getByRole("button", { name: "zh" }));
+    expect(screen.getByTestId("state").textContent).toBe("zh:en");
+    expect(screen.getByTestId("load-status").textContent).toBe("loading");
+    expect(screen.getByTestId("message").textContent).toBe("Settings");
+    expect(screen.getByTestId("date").textContent).toBe(date);
+    await act(async () => chunk.resolve(zh));
+    expect(screen.getByTestId("state").textContent).toBe("zh:zh");
+    expect(screen.getByTestId("load-status").textContent).toBe("ready");
+    expect(screen.getByTestId("message").textContent).toBe("设置");
+    expect(screen.getByTestId("date").textContent).not.toBe(date);
+    expect(screen.getByRole("textbox", { name: "Draft" })).toBe(draft);
+    expect((draft as HTMLInputElement).value).toBe("in progress");
+  });
+
+  it("retries a failed selection without changing preferences again", async () => {
+    const chunk = deferred();
+    const load = vi.fn(() => chunk.promise).mockRejectedValueOnce(new Error("offline"));
+    const Host = host(createCatalogLanguageProvider(createCatalogStore({ en, zh: load })), "en");
+    render(<Host />);
+    fireEvent.click(screen.getByRole("button", { name: "zh" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
+    expect(screen.getByTestId("state").textContent).toBe("zh:en");
+    expect(screen.getByTestId("load-status").textContent).toBe("loading");
+    await act(async () => chunk.resolve(zh));
+    expect(screen.getByTestId("message").textContent).toBe("设置");
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a late catalog from overriding a newer choice", async () => {
     const chunk = deferred();
     const Host = host(
       createCatalogLanguageProvider(createCatalogStore({ en, zh: () => chunk.promise })),
@@ -65,10 +112,10 @@ describe("lazy catalog provider", () => {
     );
     render(<Host />);
     fireEvent.click(screen.getByRole("button", { name: "zh" }));
-    expect(screen.getByTestId("state").textContent).toBe("zh:zh");
-    expect(screen.getByTestId("message").textContent).toBe("Settings");
+    fireEvent.click(screen.getByRole("button", { name: "en" }));
     await act(async () => chunk.resolve(zh));
-    expect(screen.getByTestId("message").textContent).toBe("设置");
+    expect(screen.getByTestId("state").textContent).toBe("en:en");
+    expect(screen.getByTestId("message").textContent).toBe("Settings");
   });
 
   it("suspends only when no catalog is ready yet", async () => {

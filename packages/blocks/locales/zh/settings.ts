@@ -29,6 +29,9 @@ export default {
   dark: "深色",
   system: "跟随系统",
   language: "语言",
+  languageLoading: "正在加载语言…",
+  languageLoadFailed: "未能加载所选语言。",
+  retryLanguage: "重试加载语言",
   device: "设备偏好",
   localHint: "设置保存在本机，退出登录后仍保留。",
 } as const satisfies CatalogShape<typeof en>;

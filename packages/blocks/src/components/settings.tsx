@@ -1,11 +1,12 @@
 import { useTranslations } from "../i18n.js";
-import { useId, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { GlobalIcon } from "@raypx/icons/global";
 import { PaletteIcon } from "@raypx/icons/palette";
 import type { IconComponent } from "@raypx/icons";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { useLanguagePreference } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
+import { Button } from "@raypx/ui/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -95,7 +96,8 @@ export function AppearanceSettings() {
 /** Device language preference; requires the i18n browser language provider. */
 export function LanguageSettings() {
   const t = useTranslations("settings");
-  const { preference, setPreference } = useLanguagePreference();
+  const { preference, setPreference, loadStatus, retry } = useLanguagePreference();
+  const trigger = useRef<HTMLButtonElement>(null);
   const items = [
     { value: "system", label: t("system") },
     ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({ value, label: nativeName })),
@@ -107,7 +109,7 @@ export function LanguageSettings() {
         value={preference}
         onValueChange={(value) => setPreference(parseLocalePreference(value))}
       >
-        <SelectTrigger aria-label={t("language")} className="w-52 max-w-full">
+        <SelectTrigger ref={trigger} aria-label={t("language")} className="w-52 max-w-full">
           <GlobalIcon aria-hidden="true" className="text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
@@ -121,6 +123,27 @@ export function LanguageSettings() {
           </SelectGroup>
         </SelectContent>
       </Select>
+      <span
+        aria-live="polite"
+        aria-atomic="true"
+        className="text-xs text-muted-foreground empty:sr-only"
+      >
+        {loadStatus === "loading" && t("languageLoading")}
+        {loadStatus === "failed" && t("languageLoadFailed")}
+      </span>
+      {loadStatus === "failed" && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            trigger.current?.focus();
+            retry();
+          }}
+        >
+          {t("retryLanguage")}
+        </Button>
+      )}
     </SettingsSection>
   );
 }

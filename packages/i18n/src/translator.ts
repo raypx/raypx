@@ -20,5 +20,9 @@ export function createTranslator<
   const M extends DynamicMessages,
   const N extends NamespaceKeys<M, NestedKeyOf<M>> = never,
 >({ messages, ...options }: CreateTranslatorOptions<M, N>): Translator<M, N> {
-  return createUseIntlTranslator<M, N>({ ...options, ...resolveIntlOptions(options), messages });
+  return createUseIntlTranslator<M, N>({
+    ...options,
+    ...resolveIntlOptions(options.locale, options, [messages]),
+    messages,
+  });
 }

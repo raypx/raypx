@@ -21,7 +21,9 @@ Raypx's components wrap Base UI and use the shared control sizes and theme.
   labels and owns asynchronous loading, errors and retries.
 - The task model picker uses provider, model ID and connection ID for identity.
   It groups by provider and includes the connection origin in each option's
-  accessible name. Selecting a model changes the current task choice. Saving the
+  accessible name. Search matches the provider, model name and displayed origin.
+  The picker and command palette accept full-width and half-width input.
+  Selecting a model changes the current task choice. Saving the
   device default requires a separate action. The picker is available for local
   Pi sessions on Desktop. [Model picker](../../../packages/tasks/src/client/model-picker.tsx)
 

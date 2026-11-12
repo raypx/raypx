@@ -1,5 +1,7 @@
 import { useTranslations } from "../i18n.js";
 import { useEffect, useEffectEvent, useSyncExternalStore, type ReactNode } from "react";
+import { normalizeSearchText } from "@raypx/i18n";
+import { useLocale } from "@raypx/i18n/browser";
 
 import { SearchIcon } from "@raypx/icons/search";
 import {
@@ -44,12 +46,6 @@ export function useCommandShortcut() {
   return apple ? { label: "⌘K", keys: "Meta+K" } : { label: "Ctrl K", keys: "Control+K" };
 }
 
-function matches(item: CommandItem, query: string) {
-  const needle = query.trim().toLocaleLowerCase();
-  if (!needle) return true;
-  return `${item.label} ${item.detail ?? ""}`.toLocaleLowerCase().includes(needle);
-}
-
 /**
  * A ⌘K / Ctrl+K search over application commands: the host supplies grouped items
  * (pages, actions, projects, sessions) and owns the open state so other controls can
@@ -65,6 +61,7 @@ export function CommandPalette({
   groups: readonly CommandGroup[];
 }) {
   const c = useTranslations("common");
+  const locale = useLocale();
   const toggle = useEffectEvent((event: KeyboardEvent) => {
     if (event.key.toLowerCase() !== "k" || event.altKey || event.shiftKey) return;
     if (!(event.metaKey || event.ctrlKey) || event.isComposing) return;
@@ -93,7 +90,11 @@ export function CommandPalette({
           value={null}
           autoHighlight
           itemToStringLabel={(item) => item.label}
-          filter={matches}
+          filter={(item, query) =>
+            normalizeSearchText(`${item.label} ${item.detail ?? ""}`, locale).includes(
+              normalizeSearchText(query, locale),
+            )
+          }
           onValueChange={(item) => {
             if (!item) return;
             onOpenChange(false);

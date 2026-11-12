@@ -98,17 +98,8 @@ describe("typed upstream translator", () => {
     expect(translate.has("plain")).toBe(true);
   });
 
-  it("keeps quiet fallback and delegates explicit error policies", () => {
+  it("delegates explicit error policies", () => {
     const catalog: DynamicMessages = messages;
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    try {
-      expect(
-        createTranslator({ locale: "en", messages: catalog, namespace: "home" })("missing"),
-      ).toBe("home.missing");
-      expect(consoleError).not.toHaveBeenCalled();
-    } finally {
-      consoleError.mockRestore();
-    }
     const onError = vi.fn();
     const translate = createTranslator({
       locale: "en",

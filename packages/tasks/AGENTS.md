@@ -154,8 +154,10 @@ confirmation and creation; `src/client/composer/` holds its focused subviews.
 
 ModelPicker composes UI's searchable Base UI Combobox with provider groups and
 connection-aware identity. Its compact variant is used by the composer; catalog,
-default-model and readiness behavior stay in the picker. Search and popup state
-are ephemeral. Computer settings filter the loaded list locally without new reads.
+default-model and readiness behavior stay in the picker. Search matches the
+displayed provider, model name and connection origin across full-width and
+half-width inputs. Search and popup state are ephemeral. Computer settings filter
+the loaded list locally without new reads.
 Task views follow the compact list, transcript, result and request patterns using
 the same UI primitives; conversation virtualization and domain state stay unchanged.
 

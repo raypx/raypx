@@ -14,6 +14,19 @@ async function expectLanguage(page: Page, locale: keyof typeof languages) {
   ).toBeVisible();
 }
 
+async function failFirstChineseCatalog(page: Page, responseReady?: Promise<void>) {
+  let requests = 0;
+  await page.route(/\/assets\/zh-[^/]+\.js$/, async (route) => {
+    if (++requests === 1) {
+      await responseReady;
+      await route.fulfill({ status: 503, body: "Temporarily unavailable" });
+      return;
+    }
+    await route.continue();
+  });
+  return () => requests;
+}
+
 test(
   "Web restores language after SSR hydration and synchronizes preferences across tabs",
   { tag: "@web" },
@@ -87,3 +100,56 @@ test(
     expect(errors).toEqual([]);
   },
 );
+
+test("Web retries a failed language download without resetting the sign-in draft", async ({
+  page,
+}) => {
+  let releaseFirstResponse!: () => void;
+  const firstResponse = new Promise<void>((resolve) => {
+    releaseFirstResponse = resolve;
+  });
+  const requests = await failFirstChineseCatalog(page, firstResponse);
+  try {
+    await page.goto("/login");
+    const language = page.getByRole("button", { name: "Language", exact: true });
+    const email = page.getByRole("textbox", { name: "Email address", exact: true });
+    await email.fill("language-draft@example.test");
+    await language.click();
+    await page.getByRole("menuitemradio", { name: "简体中文", exact: true }).click();
+    await expect(page.getByText("Loading language…", { exact: true })).toBeAttached();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(email).toHaveValue("language-draft@example.test");
+
+    releaseFirstResponse();
+    const retry = page.getByRole("button", { name: "Retry language download", exact: true });
+    await expect(retry).toBeVisible();
+    await expect(email).toHaveValue("language-draft@example.test");
+    await retry.press("Enter");
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh");
+    await expect(page.getByRole("button", { name: "语言", exact: true })).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "邮箱地址", exact: true })).toHaveValue(
+      "language-draft@example.test",
+    );
+    expect(requests()).toBe(2);
+  } finally {
+    releaseFirstResponse();
+  }
+});
+
+test("Web retries the server language preload before hydrating", async ({ page, base }) => {
+  const requests = await failFirstChineseCatalog(page);
+  await page.context().addCookies([{ name: "locale", value: "zh", url: base }]);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  const response = await page.goto("/privacy");
+  if (!response) throw new Error("Missing privacy document response");
+  expect(await response.text()).toMatch(/<html\b[^>]*\blang="zh"/);
+  await expectLanguage(page, "zh");
+  await page.getByRole("button", { name: "语言", exact: true }).click();
+  await expect(page.getByRole("menuitemradio", { name: "简体中文", exact: true })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  expect(requests()).toBe(2);
+  expect(errors).toEqual([]);
+});

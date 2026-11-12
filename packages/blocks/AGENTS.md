@@ -58,7 +58,8 @@ Code outside `src/components/` stays private.
   composes UI's shadcn Select with i18n's preference hook and locale options.
 - `preference-controls`: `ThemeToggle` and `LanguageMenu` for public headers.
   Use the surrounding theme and language providers. Applications place the
-  controls and own preference persistence.
+  controls and own preference persistence. Both language controls show catalog
+  loading feedback and retry the selected language through the shared preference hook.
 - `styles.css`: registers Blocks as a Tailwind source; applications import it.
 
 ## Constraints

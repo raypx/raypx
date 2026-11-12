@@ -10,5 +10,5 @@ export type FormatterOptions = Omit<
 > & { locale: Locale };
 
 export function createFormatter({ locale, ...options }: FormatterOptions): Formatter {
-  return createUseIntlFormatter({ locale, ...resolveIntlOptions({ formats, ...options }) });
+  return createUseIntlFormatter({ locale, ...resolveIntlOptions(locale, { formats, ...options }) });
 }

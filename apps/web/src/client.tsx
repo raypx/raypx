@@ -3,9 +3,11 @@ import { StrictMode, startTransition } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { StartClient } from "@tanstack/react-start/client";
 
-// Lazy catalogs: hydrate once the server-rendered language is ready, so the first
-// client render matches the HTML. A failed chunk falls back to suspending in the provider.
-void preloadCatalog(document.documentElement.lang)
+// Hydrate with the server-rendered language. Retry a transient chunk failure
+// once before the provider handles a failed initial catalog.
+const initialLocale = document.documentElement.lang;
+void preloadCatalog(initialLocale)
+  .catch(() => preloadCatalog(initialLocale))
   .catch(() => {})
   .then(() => {
     startTransition(() => {

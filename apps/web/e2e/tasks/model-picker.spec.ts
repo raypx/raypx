@@ -32,7 +32,7 @@ test("finds a remote task project with Combobox and keeps model selection device
   await expect(page).toHaveURL(base + "/projects");
 
   await trigger.press("Enter");
-  await search.fill("Development Mac");
+  await search.fill("Ｄｅｖｅｌｏｐｍｅｎｔ Ｍａｃ");
   const project = palette.getByRole("option", { name: /Raypx.*Development Mac/ });
   await expect(project).toBeVisible();
   await search.press("ArrowDown");

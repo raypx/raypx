@@ -2,11 +2,12 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { StrictMode, useState, type ReactNode } from "react";
 import { useTranslations as useNativeTranslations } from "use-intl/react";
+import { createCatalogLanguageProvider } from "./catalog-provider.js";
+import { createCatalogStore } from "./catalog-store.js";
 
 import {
   createTranslations,
   IntlProvider,
-  LanguageProvider,
   useFormatter,
   useLanguagePreference,
   useLocale,
@@ -34,6 +35,7 @@ const zh = {
 const useTranslations = createTranslations<typeof en>();
 const useOtherTranslations = createTranslations<typeof en>();
 const useDynamicTranslations = createTranslations<DynamicMessages>();
+const LanguageProvider = createCatalogLanguageProvider(createCatalogStore({ en, zh }));
 const formats = { number: { money: { style: "currency", currency: "EUR" } } } as const;
 afterEach(cleanup);
 
@@ -170,7 +172,6 @@ describe("controlled native IntlProvider", () => {
           preference={preference}
           onPreferenceChange={setPreference}
           systemLocales={["fr", "zh-TW", "en-US"]}
-          messages={{ en, zh }}
           formats={formats}
           hydrated={false}
         >
@@ -208,7 +209,6 @@ describe("controlled native IntlProvider", () => {
       const [preference, setPreference] = useState<LocalePreference>("system");
       return (
         <LanguageProvider
-          messages={{ en, zh }}
           formats={formats}
           preference={preference}
           onPreferenceChange={setPreference}

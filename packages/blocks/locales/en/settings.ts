@@ -26,6 +26,9 @@ export default {
   dark: "Dark",
   system: "Follow system",
   language: "Language",
+  languageLoading: "Loading language…",
+  languageLoadFailed: "The selected language could not be loaded.",
+  retryLanguage: "Retry language download",
   device: "Device preferences",
   localHint: "Stored on this device and kept after sign-out.",
 } as const;

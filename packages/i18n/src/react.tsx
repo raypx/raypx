@@ -8,20 +8,21 @@ import {
 } from "use-intl/react";
 import { formats, resolveIntlOptions } from "./formats.js";
 import { isLocale } from "./locale.js";
-import { resolveLocalePreference, type LocalePreference } from "./preferences.js";
+import type { LocalePreference } from "./preferences.js";
 import type { Translator } from "./translator.js";
 import type {
   CatalogShape,
   DynamicMessages,
   IntlRuntimeOptions,
   Locale,
-  MessagesByLocale,
+  MessageCatalog,
 } from "./types.js";
 
-/** Exactly the options forwarded to use-intl; anything else must be added here first. */
+/** Forward the runtime options and use reference messages only for diagnostics. */
 type IntlProviderProps<M extends DynamicMessages> = IntlRuntimeOptions & {
   locale: Locale;
   messages: CatalogShape<M> | null;
+  referenceMessages?: MessageCatalog;
   children?: ReactNode;
 };
 
@@ -30,6 +31,7 @@ const providerDateTimeFormats = { ...formats.dateTime };
 export function IntlProvider<M extends DynamicMessages = DynamicMessages>({
   locale,
   messages,
+  referenceMessages,
   children,
   formats: customFormats,
   timeZone,
@@ -40,20 +42,33 @@ export function IntlProvider<M extends DynamicMessages = DynamicMessages>({
   if (!isLocale(locale)) throw new TypeError("Unsupported provider locale");
   const options = useMemo(
     () =>
-      resolveIntlOptions({
-        formats:
-          customFormats === null
-            ? null
-            : {
-                ...customFormats,
-                dateTime: { ...providerDateTimeFormats, ...customFormats?.dateTime },
-              },
-        ...(timeZone === undefined ? {} : { timeZone }),
-        ...(onError === undefined ? {} : { onError }),
-        ...(getMessageFallback === undefined ? {} : { getMessageFallback }),
-        ...(now === undefined ? {} : { now }),
-      }),
-    [customFormats, timeZone, onError, getMessageFallback, now],
+      resolveIntlOptions(
+        locale,
+        {
+          formats:
+            customFormats === null
+              ? null
+              : {
+                  ...customFormats,
+                  dateTime: { ...providerDateTimeFormats, ...customFormats?.dateTime },
+                },
+          ...(timeZone === undefined ? {} : { timeZone }),
+          ...(onError === undefined ? {} : { onError }),
+          ...(getMessageFallback === undefined ? {} : { getMessageFallback }),
+          ...(now === undefined ? {} : { now }),
+        },
+        [messages, referenceMessages],
+      ),
+    [
+      locale,
+      messages,
+      referenceMessages,
+      customFormats,
+      timeZone,
+      onError,
+      getMessageFallback,
+      now,
+    ],
   );
   return (
     <NativeIntlProvider {...options} locale={locale} messages={messages}>
@@ -85,41 +100,35 @@ interface LanguagePreferenceState {
   preference: LocalePreference;
   setPreference: (preference: LocalePreference) => void;
   hydrated: boolean;
+  loadStatus: "ready" | "loading" | "failed";
+  retry: () => void;
 }
 
 const LanguageContext = createContext<LanguagePreferenceState | null>(null);
 
-type LanguageProviderProps = Omit<
-  IntlProviderProps<DynamicMessages>,
-  "locale" | "messages" | "children"
-> & {
+type LanguageProviderProps = IntlProviderProps<DynamicMessages> & {
   preference: LocalePreference;
-  systemLocales: readonly string[];
-  messages: MessagesByLocale;
   onPreferenceChange: (preference: LocalePreference) => void;
   hydrated?: boolean;
-  children?: ReactNode;
+  loadStatus: LanguagePreferenceState["loadStatus"];
+  retry: () => void;
 };
 
 export function LanguageProvider({
   preference,
-  systemLocales,
-  messages,
   onPreferenceChange,
   hydrated = true,
-  children,
+  loadStatus,
+  retry,
   ...options
 }: LanguageProviderProps) {
-  const locale = resolveLocalePreference(preference, systemLocales);
   const value = useMemo(
-    () => ({ preference, setPreference: onPreferenceChange, hydrated }),
-    [preference, onPreferenceChange, hydrated],
+    () => ({ preference, setPreference: onPreferenceChange, hydrated, loadStatus, retry }),
+    [preference, onPreferenceChange, hydrated, loadStatus, retry],
   );
   return (
     <LanguageContext.Provider value={value}>
-      <IntlProvider {...options} locale={locale} messages={messages[locale]}>
-        {children}
-      </IntlProvider>
+      <IntlProvider {...options} />
     </LanguageContext.Provider>
   );
 }

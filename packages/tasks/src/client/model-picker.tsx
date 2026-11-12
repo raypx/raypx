@@ -1,6 +1,7 @@
 import { useTranslations } from "./i18n.js";
 import { useEffect, useEffectEvent, useId, useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
+import { normalizeSearchText } from "@raypx/i18n";
 import type { TaskWorkspacePort } from "../model/port.js";
 
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -123,9 +124,9 @@ export function ModelPicker({
           itemToStringValue={(model) => key(model.selection)}
           isItemEqualToValue={(a, b) => key(a.selection) === key(b.selection)}
           filter={(model, search) =>
-            `${model.provider} ${model.name}`
-              .toLocaleLowerCase()
-              .includes(search.toLocaleLowerCase())
+            normalizeSearchText(`${model.provider} ${model.name} ${model.origin}`).includes(
+              normalizeSearchText(search),
+            )
           }
           onValueChange={(model) => {
             if (model?.configured) onChange(model.selection);

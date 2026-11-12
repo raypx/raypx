@@ -168,9 +168,9 @@ test("selects and saves the correct local model when two connections share a mod
   await expect(page.getByRole("dialog", { name: "Model", exact: true })).toBeVisible();
   await expect(search).toBeFocused();
   await expect(original).toHaveAttribute("aria-selected", "true");
-  await search.fill("LOCAL");
+  await search.fill("ＳＥＣＯＮＤＡＲＹ");
   await expect(target).toBeVisible();
-  await search.press("ArrowDown");
+  await expect(original).toHaveCount(0);
   await search.press("ArrowDown");
   await expect(search).toHaveAttribute(
     "aria-activedescendant",

@@ -1,6 +1,7 @@
 import type { Formats as UseIntlFormats } from "use-intl/core";
 
 import type { IntlRuntimeOptions } from "./types.js";
+import { intlErrorHandlers } from "./diagnostics.js";
 
 type ResolvedIntlFormats = { [K in keyof UseIntlFormats]-?: NonNullable<UseIntlFormats[K]> };
 
@@ -65,16 +66,16 @@ function toUseIntlFormats(custom: UseIntlFormats): UseIntlFormats {
   } as UseIntlFormats;
 }
 
-const ignoreIntlError: NonNullable<IntlRuntimeOptions["onError"]> = () => {};
 /** Shared pure configuration boundary for core factories and controlled React providers. */
-export function resolveIntlOptions(options: IntlRuntimeOptions = {}) {
+export function resolveIntlOptions(
+  locale: string,
+  options: IntlRuntimeOptions = {},
+  catalogs: readonly unknown[] = [],
+) {
   return {
     timeZone: options.timeZone ?? "UTC",
     formats: toUseIntlFormats(mergeFormats(options.formats)),
-    onError: options.onError ?? ignoreIntlError,
+    ...intlErrorHandlers(locale, options, catalogs),
     ...(options.now !== undefined ? { now: options.now } : {}),
-    ...(options.getMessageFallback !== undefined
-      ? { getMessageFallback: options.getMessageFallback }
-      : {}),
   };
 }

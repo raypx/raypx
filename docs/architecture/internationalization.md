@@ -72,11 +72,18 @@ as a fixed preference. Selecting the currently resolved language still records t
 explicit choice.
 
 Loading remains per language. Static sources are ready immediately. A language
-switch keeps the previous ready catalog visible during loading, preserving mounted
-views and form drafts; failed chunks can retry on a later switch. Only a first render
-without a ready catalog suspends. Error translation uses known key mappings and
-an explicit typed fallback; diagnostic server prose is never product copy. Catalogs
-are not automatically filled from another language.
+switch keeps the previous ready catalog and active locale together, including
+document language and formatting. The preference records the user's selection
+immediately. Its load status and retry action let language controls recover a
+failed download while preserving mounted views and form drafts. Only an initial
+render awaiting its first catalog suspends.
+
+Error translation uses known key mappings and an explicit typed fallback.
+Default runtime diagnostics emit deduplicated warnings with locale, error code
+and any key confirmed by the active or reference catalog. The reference catalog
+identifies message keys for diagnostics. Missing messages retain the engine's
+qualified-key fallback. Diagnostic exception text and interpolation values stay
+out of the diagnostic records.
 
 ## Platforms
 
@@ -85,8 +92,9 @@ languages. `i18nCatalogs({ staticEntry, lazyEntry })` receives that app's URLs a
 substitutes only its client resolution. English stays static; Chinese becomes a
 language chunk. SSR uses static catalogs. The root loader negotiates cookies and the
 full weighted Accept-Language list per request. The client awaits
-`preloadCatalog(document.documentElement.lang)` before hydration, retaining the
-same initial catalog and UTC formatting. Concurrent SSR requests share no locale state.
+`preloadCatalog(document.documentElement.lang)` before hydration and retries a
+failed preload once. This retains the same initial catalog and UTC formatting.
+Concurrent SSR requests resolve preferences and the active locale independently.
 
 After hydration, Web restores only `raypx_locale` and reads the complete browser
 language list. Missing/invalid preferences mean system, denied reads retain the

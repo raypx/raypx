@@ -9,6 +9,7 @@ export {
 export { parseAcceptLanguage } from "./accept-language.js";
 export { createFormatter, type Formatter, type FormatterOptions } from "./formatter.js";
 export { formats } from "./formats.js";
+export { normalizeSearchText } from "./search.js";
 export {
   getLocaleCookie,
   isLocale,

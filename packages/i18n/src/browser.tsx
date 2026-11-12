@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -15,7 +16,7 @@ import {
   parseLocalePreference,
   type LocalePreference,
 } from "./preferences.js";
-import { createTranslations, IntlProvider, useLocale, useMessages } from "./react.js";
+import { createTranslations, useLocale } from "./react.js";
 import type { DynamicMessages, Locale } from "./types.js";
 
 export type { CatalogSources };
@@ -67,7 +68,7 @@ function storeCookie(preference: LocalePreference): void {
 
 function DocumentLanguage() {
   const locale = useLocale();
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
   return null;
@@ -88,6 +89,7 @@ export function createBrowserI18n<M extends DynamicMessages>(sources: CatalogSou
     const [preference, setPreference] = useState(initialPreference);
     const [systemLocales, setSystemLocales] = useState(initialSystemLocales);
     const [hydrated, setHydrated] = useState(false);
+    const timeZone = useSyncExternalStore(noSubscription, deviceTimeZone, serverTimeZone);
 
     useEffect(() => {
       if (restorePreference) {
@@ -132,9 +134,10 @@ export function createBrowserI18n<M extends DynamicMessages>(sources: CatalogSou
         systemLocales={systemLocales}
         onPreferenceChange={change}
         hydrated={hydrated}
+        timeZone={timeZone}
       >
         <DocumentLanguage />
-        <DeviceTimeZone>{children}</DeviceTimeZone>
+        {children}
       </CatalogLanguageProvider>
     );
   }
@@ -151,18 +154,6 @@ export function createBrowserI18n<M extends DynamicMessages>(sources: CatalogSou
 const noSubscription = () => () => {};
 const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const serverTimeZone = () => "UTC";
-
-/** UTC for SSR/hydration, then device time without remounting the provider. */
-function DeviceTimeZone({ children }: { children?: ReactNode }) {
-  const locale = useLocale();
-  const catalog = useMessages();
-  const timeZone = useSyncExternalStore(noSubscription, deviceTimeZone, serverTimeZone);
-  return (
-    <IntlProvider locale={locale} messages={catalog} timeZone={timeZone}>
-      {children}
-    </IntlProvider>
-  );
-}
 
 export {
   createTranslations,

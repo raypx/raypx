@@ -15,13 +15,13 @@ describe("catalog store", () => {
     const store = createCatalogStore({ en, zh: load });
     const listener = vi.fn();
     store.subscribe(listener);
-    expect(store.snapshot()).toEqual({ en });
+    expect(store.snapshot().loaded).toEqual({ en });
     const [first, second] = await Promise.all([store.load("zh"), store.load("zh")]);
     expect(first).toBe(zh);
     expect(second).toBe(zh);
     expect(load).toHaveBeenCalledTimes(1);
     expect(listener).toHaveBeenCalledTimes(1);
-    expect(store.snapshot()).toEqual({ en, zh });
+    expect(store.snapshot().loaded).toEqual({ en, zh });
   });
 
   it("returns one settled promise per catalog so use() reads it synchronously", async () => {
@@ -39,8 +39,13 @@ describe("catalog store", () => {
   it("retries a catalog after its chunk fails", async () => {
     const load = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(zh);
     const store = createCatalogStore({ en, zh: load });
-    await expect(store.load("zh")).rejects.toThrow("offline");
-    await expect(store.load("zh")).resolves.toBe(zh);
+    const first = store.load("zh");
+    await expect(first).rejects.toThrow("offline");
+    expect(store.read("zh")).toBe(first);
+    expect(store.snapshot().failed.has("zh")).toBe(true);
+    const retry = store.load("zh");
+    expect(store.snapshot().failed.has("zh")).toBe(false);
+    await expect(retry).resolves.toBe(zh);
     expect(load).toHaveBeenCalledTimes(2);
   });
 
