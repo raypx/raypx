@@ -7,9 +7,12 @@
     "./model": "./src/model.ts",
     "./client": "./src/client.ts",
     "./client/pending-count": "./src/client/pending-count.tsx",
+    "./client/status": "./src/client/task-status.tsx",
     "./client/styles.css": "./src/client/styles.css",
     "./client/task-composer": "./src/client/task-composer.tsx",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./messages/en": "./locales/en/index.ts",
+    "./messages/zh": "./locales/zh/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -55,6 +58,7 @@
     "entryTargets": {
       "./client": "browser",
       "./client/pending-count": "browser",
+      "./client/status": "browser",
       "./client/styles.css": "browser",
       "./client/task-composer": "browser",
       "./server": "node"

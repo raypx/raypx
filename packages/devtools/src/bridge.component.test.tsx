@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "../tests/i18n.js";
 import { StrictMode } from "react";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
@@ -9,7 +10,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { ThemeProvider } from "@raypx/ui/themes";
 import { DevtoolsBridge } from "./client.js";
 import { panelStore } from "./runtime.js";

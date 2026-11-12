@@ -1,7 +1,8 @@
+import { useTranslations } from "../../../i18n.js";
 import { UserButton } from "../../../components/user-button.js";
 import { Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { publicConfigurationQuery } from "../../configuration/client.js";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { LegalFooter } from "../../../components/legal-footer.js";

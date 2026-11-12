@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import {
   useCallback,
@@ -11,7 +12,7 @@ import {
 import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/react-virtual";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { AgentIcon } from "@raypx/icons/agent";
 import { TaskStatusBadge } from "./task-status.js";
@@ -192,7 +193,7 @@ export function TaskList({
                         devices.find((device) => device.id === task.deviceId)?.name}
                     </span>
                   </span>
-                  <TaskStatusBadge status={task.status} label={t(task.status)} />
+                  <TaskStatusBadge status={task.status} />
                 </span>
               </Button>
             </li>

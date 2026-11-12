@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import { terminalPermissionSupported } from "@raypx/contracts/terminal";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -6,7 +7,7 @@ import type {
   TerminalRequestSummary,
   TerminalSession,
 } from "@raypx/contracts/terminal";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { HelpHint } from "@raypx/ui/help-hint";
@@ -29,13 +30,14 @@ type RequestStatus = TerminalRequestSummary["status"];
 function summaryLabel(status: RequestStatus, expired: boolean) {
   switch (status) {
     case "pending":
-      return expired ? "tasks.expired" : "terminal.approval.pending";
+      return expired ? "tasks.expired" : "tasks.terminalApproval.pending";
     case "delivered":
-      return "terminal.approval.delivered";
+      return "tasks.terminalApproval.delivered";
     case "outcome_unknown":
-      return "terminal.approval.unknown";
-    case "applied":
+      return "tasks.terminalApproval.unknown";
     case "cancelled":
+      return "common.cancelled";
+    case "applied":
     case "decided":
     case "expired":
       return `tasks.${status}` as const;
@@ -45,17 +47,18 @@ function summaryLabel(status: RequestStatus, expired: boolean) {
 function closedLabel(status: RequestStatus, current: boolean, supported: boolean) {
   switch (status) {
     case "pending":
-      if (!current) return "terminal.approval.changed";
-      if (!supported) return "terminal.approval.unsupported";
+      if (!current) return "tasks.terminalApproval.changed";
+      if (!supported) return "tasks.terminalApproval.unsupported";
       return "tasks.expired";
     case "decided":
       return "tasks.awaitingDevice";
     case "delivered":
-      return "terminal.approval.delivered";
+      return "tasks.terminalApproval.delivered";
     case "outcome_unknown":
-      return "terminal.approval.unknown";
-    case "applied":
+      return "tasks.terminalApproval.unknown";
     case "cancelled":
+      return "common.cancelled";
+    case "applied":
     case "expired":
       return `tasks.${status}` as const;
   }
@@ -107,20 +110,23 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
         <div className="flex items-center gap-1">
           <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
             <TerminalIcon className="size-4" aria-hidden="true" />
-            {t("terminal.approval.title")}
+            {t("tasks.terminalApproval.title")}
             {pending.length > 0 && <Badge variant="secondary">{pending.length}</Badge>}
           </h2>
-          <HelpHint label={t("terminal.approval.help")} description={t("terminal.approval.hint")} />
+          <HelpHint
+            label={t("tasks.terminalApproval.help")}
+            description={t("tasks.terminalApproval.hint")}
+          />
         </div>
         {requests.length > pending.length && (
           <Button variant="ghost" size="sm" onClick={() => setHistory(!history)}>
-            {t(history ? "terminal.approval.pendingOnly" : "terminal.approval.history")}
+            {t(history ? "tasks.terminalApproval.pendingOnly" : "tasks.terminalApproval.history")}
           </Button>
         )}
       </div>
       {error && (
         <p role="alert" className="mb-3 text-sm text-destructive-text">
-          {t("terminal.approval.unavailable")}{" "}
+          {t("tasks.terminalApproval.unavailable")}{" "}
           <Button variant="link" size="sm" onClick={refresh}>
             {c("refresh")}
           </Button>
@@ -128,7 +134,7 @@ function ObservedList({ client, accountId }: { client: Client; accountId: string
       )}
       {!data && !error && <Skeleton className="h-12" aria-label={c("loading")} />}
       {data && !shown.length && (
-        <p className="text-sm text-muted-foreground">{t("terminal.approval.empty")}</p>
+        <p className="text-sm text-muted-foreground">{t("tasks.terminalApproval.empty")}</p>
       )}
       <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
         {shown.map((request) => {
@@ -260,7 +266,7 @@ function ObservedRequest({
   if (error)
     return (
       <p role="alert" className="text-sm text-destructive-text">
-        {t("terminal.approval.unavailable")}{" "}
+        {t("tasks.terminalApproval.unavailable")}{" "}
         <Button variant="link" size="sm" onClick={refresh}>
           {c("refresh")}
         </Button>
@@ -273,13 +279,13 @@ function ObservedRequest({
       {actionable && supported ? (
         <>
           <p className="text-xs text-muted-foreground">
-            {t("terminal.approval.waitingHint")} ·{" "}
-            {t("terminal.approval.expires", {
+            {t("tasks.terminalApproval.waitingHint")} ·{" "}
+            {t("tasks.terminalApproval.expires", {
               time: format.dateTime(new Date(request.expiresAt), { timeStyle: "medium" }),
             })}
           </p>
           <Field className="max-w-2xl">
-            <FieldLabel htmlFor={id}>{t("terminal.approval.denyNote")}</FieldLabel>
+            <FieldLabel htmlFor={id}>{t("tasks.terminalApproval.denyNote")}</FieldLabel>
             <Textarea
               id={id}
               value={note}
@@ -292,7 +298,7 @@ function ObservedRequest({
           {uncertain ? (
             <div role="alert" className="flex flex-col gap-3">
               <p className="max-w-[65ch] text-sm text-muted-foreground">
-                {t("terminal.approval.unconfirmed")}
+                {t("tasks.terminalApproval.unconfirmed")}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -301,7 +307,7 @@ function ObservedRequest({
                     void decide(receipt.current?.decision.type === "allow" ? "allow" : "deny")
                   }
                 >
-                  {t("terminal.approval.retry")}
+                  {t("tasks.terminalApproval.retry")}
                 </Button>
                 <Button
                   variant="outline"
@@ -320,7 +326,7 @@ function ObservedRequest({
                 {t("tasks.allowOnce")}
               </Button>
               <Button variant="outline" disabled={busy} onClick={() => void decide("deny")}>
-                {t("tasks.deny")}
+                {t("common.deny")}
               </Button>
             </div>
           )}

@@ -1,44 +1,50 @@
 import { useSyncExternalStore, type ReactNode } from "react";
 import { createBrowserLanguage, type BrowserLanguageProviderProps } from "@raypx-kit/intl/browser";
-import { messages } from "#messages";
 import { createCatalogLanguageProvider } from "./catalog-provider.js";
-import { createCatalogStore } from "./catalog-store.js";
+import { createCatalogStore, type CatalogSources } from "./catalog-store.js";
 import { DEFAULT_LOCALE } from "./constants.js";
 import { normalizeLocale } from "./normalize.js";
 import { LOCALE_PREFERENCE_KEY } from "./preferences.js";
-import { IntlProvider, useLocale, useMessages } from "./react.js";
+import { createTranslations, IntlProvider, useLocale, useMessages } from "./react.js";
 import { localeRuntime } from "./runtime.js";
-import type en from "../locales/en/index.js";
-import type { Locale, MessagesByLocale } from "./types.js";
+import type { DynamicMessages, Locale, MessagesByLocale } from "./types.js";
 
-const store = createCatalogStore(messages);
+export { getBrowserSystemLocales } from "@raypx-kit/intl/browser";
+export type { BrowserLanguageProviderProps, CatalogSources };
 
-const browser = createBrowserLanguage<Locale, typeof en>(
-  { LanguageProvider: createCatalogLanguageProvider(store), useLocale },
-  localeRuntime,
-  {
-    // The catalog provider reads the store; this snapshot only satisfies the adapter.
-    messages: store.snapshot() as MessagesByLocale,
-    storageKey: LOCALE_PREFERENCE_KEY,
-  },
-);
-
-export const { getBrowserSystemLocales } = browser;
-export type { BrowserLanguageProviderProps };
-
-/** Resolves once a language's catalog is ready, such as the server language before hydration. */
-export function preloadCatalog(locale: string | null | undefined) {
-  return store.load(normalizeLocale(locale) ?? DEFAULT_LOCALE);
+/** Bind one application's catalogs once at module scope, outside React renders. */
+export function createBrowserI18n<M extends DynamicMessages>(sources: CatalogSources<M>) {
+  const store = createCatalogStore(sources);
+  const browser = createBrowserLanguage<Locale, DynamicMessages>(
+    { LanguageProvider: createCatalogLanguageProvider(store), useLocale },
+    localeRuntime,
+    {
+      // The catalog provider loads its own snapshot before mounting LanguageProvider.
+      messages: store.snapshot() as MessagesByLocale,
+      storageKey: LOCALE_PREFERENCE_KEY,
+    },
+  );
+  function BrowserLanguageProvider({ children, ...props }: BrowserLanguageProviderProps<Locale>) {
+    return (
+      <browser.BrowserLanguageProvider {...props}>
+        <DeviceTimeZone>{children}</DeviceTimeZone>
+      </browser.BrowserLanguageProvider>
+    );
+  }
+  return {
+    BrowserLanguageProvider,
+    useTranslations: createTranslations<M>(),
+    /** Match the server language before hydration; subsequent loads share this cache. */
+    preloadCatalog: (locale: string | null | undefined) =>
+      store.load(normalizeLocale(locale) ?? DEFAULT_LOCALE),
+  };
 }
 
-/**
- * Server and hydration renders format in UTC; after mount, absolute times follow
- * the device time zone. The provider stays mounted so children never remount.
- */
 const noSubscription = () => () => {};
 const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const serverTimeZone = () => "UTC";
 
+/** UTC for SSR/hydration, then device time without remounting the provider. */
 function DeviceTimeZone({ children }: { children?: ReactNode }) {
   const locale = useLocale();
   const catalog = useMessages();
@@ -50,25 +56,11 @@ function DeviceTimeZone({ children }: { children?: ReactNode }) {
   );
 }
 
-export function BrowserLanguageProvider({
-  children,
-  ...props
-}: BrowserLanguageProviderProps<Locale>) {
-  return (
-    <browser.BrowserLanguageProvider {...props}>
-      <DeviceTimeZone>{children}</DeviceTimeZone>
-    </browser.BrowserLanguageProvider>
-  );
-}
-
-/** Restore device storage only; native composition must not inherit browser cookies. */
-export const readBrowserPreference = browser.preferences.read;
-export { useLanguagePreference } from "./react.js";
 export {
-  useTranslations,
+  createTranslations,
+  useLanguagePreference,
   useLocale,
   useFormatter,
   useNow,
   useTimeZone,
-  useMessages,
 } from "./react.js";

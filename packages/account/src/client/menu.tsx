@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { type ReactNode, useState } from "react";
 import { ChevronsUpDownIcon } from "@raypx/icons/chevrons-up-down";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
@@ -15,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { cn } from "@raypx/ui/lib/utils";
 import type { AccountProfile } from "../index.js";
 

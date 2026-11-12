@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
@@ -246,7 +247,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                   : characters.join("");
               return t("plans.preview", {
                 name,
-                status: t(plan.enabled ? "plans.enabled" : "plans.paused"),
+                status: c(plan.enabled ? "enabled" : "paused"),
               });
             });
             description += ` ${t("plans.count", { count: String(plans.length) })}`;
@@ -365,7 +366,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
         (project) =>
           project.deviceId === document.project?.deviceId &&
           project.projectId === document.project?.projectId,
-      )?.name ?? t("projectUnavailable")
+      )?.name ?? c("projectUnavailable")
     );
   }
   function emptyTitle() {
@@ -453,8 +454,8 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
       {documents && (
         <p className="mb-3 text-xs text-muted-foreground tabular-nums">
           {t("matchingReferences", {
-            shown: String(shown?.length ?? 0),
-            total: String(eligible?.length ?? 0),
+            shown: shown?.length ?? 0,
+            total: eligible?.length ?? 0,
           })}
         </p>
       )}
@@ -635,7 +636,7 @@ function Library({ client, projects: projectPort, usage, scope, target }: Props)
                 void moveEditor(destination);
               }}
             >
-              {t("discardChanges")}
+              {c("discard")}
             </Button>
             <Button disabled={busy} onClick={() => void save()}>
               {t("saveContinue")}

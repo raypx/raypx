@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { createFileRoute, getRouteApi, Link, useRouter } from "@tanstack/react-router";
 
 import { CloudJobsPage } from "@raypx/jobs/client";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { localRequest } from "../../lib/desktop.js";
 import { LocalJobsPage } from "../../features/automations/local.js";

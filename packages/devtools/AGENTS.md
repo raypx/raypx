@@ -13,3 +13,6 @@ Use existing UI primitives and bilingual development-only copy. Dispose subscrip
 and portal targets on unmount and HMR. Tests live beside source; DOM suites use `*.component.test.tsx`.
 
 Run this workspace's check/test, the explicit `e2e:devtools` browser gate and root verify.
+
+The bilingual `devtools` dictionary lives in private `locales/<language>/` entries,
+loaded only with Devtools. Do not export it or add it to application catalogs.

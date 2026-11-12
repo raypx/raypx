@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { useState } from "react";
@@ -19,7 +20,7 @@ import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CloseIcon } from "@raypx/icons/close";
 import { SpinnerIcon } from "@raypx/icons/spinner";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { apiUrl } from "../client.js";
 const client = createApiClient({ baseUrl: apiUrl });
 export function InstanceRegistration({ accountId }: { accountId: string }) {
@@ -57,7 +58,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
             {list.data && <Badge variant="outline">{list.data.length}</Badge>}
           </div>
           <IconButton
-            label={t("refresh")}
+            label={c("refreshStatus")}
             variant="outline"
             className="ml-auto"
             disabled={busy || list.isFetching}
@@ -93,7 +94,7 @@ export function InstanceRegistration({ accountId }: { accountId: string }) {
                       {instance.name}
                     </h3>
                     <StatusBadge
-                      label={t(instance.status === "revoked" ? "revokedLabel" : "registeredLabel")}
+                      label={instance.status === "revoked" ? c("revoked") : t("registeredLabel")}
                       tone={instance.status === "revoked" ? "neutral" : "success"}
                     />
                   </div>

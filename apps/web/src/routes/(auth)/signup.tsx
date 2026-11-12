@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { IconComponent } from "@raypx/icons";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
@@ -22,6 +23,7 @@ const footerLinkClass =
   "self-center rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function SignupPage() {
+  const common = useTranslations("common");
   const search = Route.useSearch();
   const query = useQuery(publicConfigurationQuery());
   const t = useTranslations("site");
@@ -54,10 +56,10 @@ function SignupPage() {
               className="motion-safe:animate-spin"
             />
           )}
-          {t("retry")}
+          {common("retry")}
         </Button>
         <Link to="/login" search={search} className={footerLinkClass}>
-          {t("signIn")}
+          {common("signIn")}
         </Link>
       </RegistrationStatus>
     );
@@ -65,7 +67,7 @@ function SignupPage() {
   return (
     <RegistrationStatus icon={UserCircleIcon} title={t("closed")} description={t("closedHint")}>
       <Link to="/login" search={search} className={cn(buttonVariants({ size: "xl" }), "w-full")}>
-        {t("signIn")}
+        {common("signIn")}
         <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
       </Link>
     </RegistrationStatus>

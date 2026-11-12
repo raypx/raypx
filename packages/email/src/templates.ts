@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { render } from "@react-email/render";
+import { render } from "react-email";
 import { type LinkEmailKind, linkEmailContent } from "./copy.js";
 import PasswordResetEmail from "./emails/password-reset.js";
 import VerificationEmail from "./emails/verification.js";

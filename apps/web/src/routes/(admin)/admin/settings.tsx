@@ -1,7 +1,8 @@
+import { useTranslations } from "../../../i18n.js";
 import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-guard.js";
 import { createFileRoute } from "@tanstack/react-router";
 import { SessionBoundary, SignInGate } from "../../../features/auth/components/session-boundary.js";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { ConfigurationSettings } from "../../../features/configuration/components/settings.js";
 
 export const Route = createFileRoute("/(admin)/admin/settings")({

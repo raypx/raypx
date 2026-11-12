@@ -5,5 +5,5 @@
     "types": ["bun", "react", "uniwind/types"],
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "*.config.ts"]
+  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "*.config.ts", "locales/**/*.ts"]
 }

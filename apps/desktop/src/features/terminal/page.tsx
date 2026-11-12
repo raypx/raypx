@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import { formText } from "../../form-data.js";
 import type { DesktopExecution } from "@raypx/contracts/desktop";
 import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
@@ -25,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@raypx/ui/components/ui/select";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { themeTokens, useTheme } from "@raypx/ui/themes";
 import { getBridge, isDesktop, localRequest, onLocalEvent } from "../../lib/desktop.js";
 import { terminalFrame } from "./frame.js";
@@ -370,7 +371,7 @@ export function TerminalPage({ project }: { project: TerminalProject }) {
         </Alert>
       )}
       <header className="mb-5">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{c("terminal")}</h1>
       </header>
       {!isDesktop() && (
         <Alert role="status" className="mb-5">

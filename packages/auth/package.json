@@ -9,7 +9,9 @@
     "./hooks": "./src/hooks.ts",
     "./policy": "./src/policy.ts",
     "./access": "./src/access.ts",
-    "./client/styles.css": "./src/client/styles.css"
+    "./client/styles.css": "./src/client/styles.css",
+    "./messages/en": "./locales/en/index.ts",
+    "./messages/zh": "./locales/zh/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

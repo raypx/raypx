@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import { TextSizeIcon } from "@raypx/icons/text-size";
 import { GlobalIcon } from "@raypx/icons/global";
 import { LanguagesIcon } from "@raypx/icons/languages";
@@ -5,7 +6,7 @@ import { MonitorIcon } from "@raypx/icons/monitor";
 import { MoonIcon } from "@raypx/icons/moon";
 import { SunIcon } from "@raypx/icons/sun";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
-import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
+import { useLanguagePreference } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
 import { IconButton } from "@raypx/ui/icon-button";
 import { useTheme } from "@raypx/ui/themes";

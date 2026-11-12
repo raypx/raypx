@@ -1,13 +1,15 @@
+import { useTranslations } from "../i18n.js";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { CommandPalette, type CommandGroup } from "@raypx/blocks/command-palette";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { AgentIcon } from "@raypx/icons/agent";
 import { FolderIcon } from "@raypx/icons/folder";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { sessionThreads } from "@raypx/tasks/model";
+import { useTaskStatusLabel } from "@raypx/tasks/client/status";
 import { apiUrl } from "../features/auth/client.js";
 import { localTaskClient } from "../features/tasks/local-client.js";
 import { useProjectCatalog } from "../features/tasks/project-catalog.js";
@@ -31,7 +33,7 @@ export function DesktopCommandMenu({
 }) {
   const router = useRouter();
   const c = useTranslations("common");
-  const t = useTranslations("tasks");
+  const taskStatus = useTaskStatusLabel();
   const local = open && isDesktop();
   const catalog = useProjectCatalog(local);
   const sessions = useQuery({
@@ -96,7 +98,8 @@ export function DesktopCommandMenu({
           id: `session:${root.id}`,
           label: root.prompt,
           detail:
-            projects.find((project) => project.id === latest.projectId)?.name ?? t(latest.status),
+            projects.find((project) => project.id === latest.projectId)?.name ??
+            taskStatus(latest.status),
           icon: <AgentIcon />,
           onSelect: () => openProject(latest.projectId, latest.id),
         })),

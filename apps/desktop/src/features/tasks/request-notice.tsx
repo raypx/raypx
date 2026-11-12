@@ -1,13 +1,14 @@
+import { useTranslations } from "../../i18n.js";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { onLocalEvent } from "../../lib/desktop.js";
 import { localTaskClient } from "./local-client.js";
 
 export function TerminalRequestNotice({ accountId }: { accountId: string | null }) {
-  const t = useTranslations("terminal.approval"),
+  const t = useTranslations("tasks.terminalApproval"),
     router = useRouter(),
     queries = useQueryClient();
   const { data } = useQuery({

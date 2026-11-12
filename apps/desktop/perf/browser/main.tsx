@@ -1,7 +1,8 @@
+import { BrowserLanguageProvider } from "../../src/i18n.js";
 import { createRoot } from "react-dom/client";
 import { Suspense, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { TaskWorkspace, type TaskWorkspacePort } from "@raypx/tasks/client";
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { Button } from "@raypx/ui/components/ui/button";

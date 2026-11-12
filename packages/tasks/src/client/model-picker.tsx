@@ -1,7 +1,8 @@
+import { useTranslations } from "./i18n.js";
 import { useEffect, useEffectEvent, useId, useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
 import type { TaskWorkspacePort } from "../model/port.js";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import {
   Combobox,
@@ -41,6 +42,7 @@ export function ModelPicker({
   disabled?: boolean;
   compact?: boolean;
 }) {
+  const common = useTranslations("common");
   const t = useTranslations("tasks"),
     id = useId();
   const [reload, setReload] = useState(0);
@@ -166,7 +168,9 @@ export function ModelPicker({
                             {model.origin}
                           </span>
                         </span>
-                        {!model.configured && <Badge variant="outline">{t("unconfigured")}</Badge>}
+                        {!model.configured && (
+                          <Badge variant="outline">{common("unconfigured")}</Badge>
+                        )}
                       </ComboboxItem>
                     )}
                   </ComboboxCollection>

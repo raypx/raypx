@@ -1,7 +1,8 @@
+import { BrowserLanguageProvider } from "../../../tests/i18n.js";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 
 import { humanRequestSchema } from "@raypx/core/tasks";

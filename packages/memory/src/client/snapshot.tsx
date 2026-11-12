@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import type { TaskContextSnapshot } from "@raypx/core/tasks";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -9,6 +10,7 @@ import {
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 export function ContextSnapshot({ snapshot }: { snapshot: TaskContextSnapshot }) {
   const t = useTranslations("memory");
+  const common = useTranslations("common");
   const format = useFormatter();
   if (!snapshot.sources.length) return null;
   return (
@@ -34,7 +36,7 @@ export function ContextSnapshot({ snapshot }: { snapshot: TaskContextSnapshot })
               <span className="wrap-anywhere">{source.name}</span>
               <span className="text-xs font-normal text-muted-foreground tabular-nums">
                 {t(source.kind)} · {t("revision", { revision: String(source.revision) })} ·{" "}
-                {t(source.scope)}
+                {source.scope === "account" ? common("account") : t("localScope")}
               </span>
             </span>
           </CollapsibleTrigger>

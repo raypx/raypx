@@ -62,6 +62,10 @@ Search and status/agent/computer filters apply only to the loaded page; show the
 matching/loaded count and retain cursor navigation even when no rows match.
 Lists, details and approvals render session states through `TaskStatusBadge`
 (`client/task-status.tsx`), so every state keeps the same label, variant and shape.
+Status components own their translated labels; timelines and tool activity reuse
+`useTaskStatusLabel` to select shared status copy and task-specific states.
+`/client/status` exposes this vocabulary to Web and Desktop command menus without
+loading the task workspace.
 Conversation tool calls render through `ToolActivityRow` (`client/tool-activity.tsx`):
 an intent icon from the tool name, a live or final duration, the status label and
 the update time. `ShimmerText` animates running names with the Web Animations API
@@ -154,3 +158,10 @@ default-model and readiness behavior stay in the picker. Search and popup state
 are ephemeral. Computer settings filter the loaded list locally without new reads.
 Task views follow the compact list, transcript, result and request patterns using
 the same UI primitives; conversation virtualization and domain state stay unchanged.
+
+## Catalog ownership
+
+Own `tasks (including terminalApproval)` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

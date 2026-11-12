@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import {
   useCallback,
   useEffect,
@@ -10,7 +11,7 @@ import {
 import type { AgentTask } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { contextBudgetKey, type MemoryClientPort } from "@raypx/memory/client";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { prepareTaskSubmission, type TaskSubmission } from "../model/composition.js";
 import {
@@ -147,7 +148,7 @@ export function useTaskComposer({
     confirm({
       title: t("draft.discard"),
       description: t("draft.discardHint"),
-      confirmLabel: t("discardChanges"),
+      confirmLabel: c("discard"),
       cancelLabel: c("cancel"),
     });
   function accepted(task: AgentTask) {

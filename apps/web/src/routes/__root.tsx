@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "../i18n.js";
 import { lazy, Suspense, type ReactNode } from "react";
 import {
   ClientOnly,
@@ -7,7 +8,7 @@ import {
 } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, ThemeScript, themeMeta } from "@raypx/ui/themes";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences.js";
 import { AppAnalytics } from "../features/analytics/provider.js";

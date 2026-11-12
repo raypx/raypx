@@ -1,7 +1,8 @@
+import { BrowserLanguageProvider } from "../../../tests/i18n.js";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DeviceSettings } from "@raypx/tasks/client";
 import type { SyncDevice } from "@raypx/contracts/tasks";

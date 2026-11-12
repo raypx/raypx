@@ -1,10 +1,6 @@
+import { BrowserLanguageProvider, useTranslations } from "./i18n.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  BrowserLanguageProvider,
-  getBrowserSystemLocales,
-  useLanguagePreference,
-  useTranslations,
-} from "@raypx/i18n/browser";
+import { getBrowserSystemLocales, useLanguagePreference } from "@raypx/i18n/browser";
 import { LOCALE_PREFERENCE_KEY } from "@raypx/i18n/preferences";
 import { storeTheme, ThemeProvider, useTheme } from "@raypx/ui/themes";
 import {

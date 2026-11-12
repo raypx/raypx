@@ -1,8 +1,9 @@
+import { useTranslations } from "./i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import type { AgentTask, TaskActivity, TaskInput } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";

@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../i18n.js";
 import type { ReactNode } from "react";
 import {
   createBrowserHistory,
@@ -23,7 +24,7 @@ import {
   it,
   vi,
 } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DesktopSignOutProvider } from "./sign-out.js";
 import { routeTree } from "../../routeTree.gen.js";

@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "../../src/i18n.js";
 /** @vitest-environment happy-dom */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -17,7 +18,7 @@ import type {} from "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll, beforeEach, expect, vi } from "vite-plus/test";
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../src/routeTree.gen.js";
 import { DesktopRuntimeProvider } from "../../src/features/engine/provider.js";

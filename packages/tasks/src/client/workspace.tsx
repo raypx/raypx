@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { Gate } from "./workspace-gate.js";
 import { TaskDetail } from "./task-detail.js";
 import { Approval } from "./approval.js";
@@ -15,7 +16,7 @@ import { useRemoteQuery } from "./remote-query.js";
 import type { TaskWorkspacePort } from "../model/port.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
@@ -520,6 +521,7 @@ function PendingSessionRequest({
   onChanged: () => void;
   onOpenTask?: ((task: AgentTask) => void) | undefined;
 }) {
+  const common = useTranslations("common");
   const t = useTranslations("tasks");
   const load = useCallback(
     (signal: AbortSignal) => client.tasks.get({ id: request.taskId }, { signal }),
@@ -541,7 +543,7 @@ function PendingSessionRequest({
       context={
         data && (
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            <span className="truncate">{device?.name ?? t("device")}</span>
+            <span className="truncate">{device?.name ?? common("computer")}</span>
             <span aria-hidden="true">·</span>
             <span className="truncate">
               {device?.projects.find((project) => project.id === data.task.projectId)?.name ??

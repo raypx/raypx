@@ -64,3 +64,10 @@ once per selection and kept only in component memory. Typing recomputes locally;
 drafts still store only reference IDs/revisions. Pending/unknown and over-limit
 budgets disable both button and form submission, with an explicit retry for read
 failures. The runtime keeps its authoritative preflight check.
+
+## Catalog ownership
+
+Own `memory` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

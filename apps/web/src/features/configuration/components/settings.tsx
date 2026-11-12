@@ -1,6 +1,7 @@
+import { useTranslations } from "../../../i18n.js";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Switch } from "@raypx/ui/components/ui/switch";
@@ -15,6 +16,7 @@ const row =
   "grid items-start gap-4 border-b border-border py-5 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] @xl/main:items-center @xl/main:gap-x-8";
 
 export function ConfigurationSettings() {
+  const common = useTranslations("common");
   const t = useTranslations("site");
   const session = authClient.useSession();
   const accountId = session.data?.user.id ?? null;
@@ -38,7 +40,7 @@ export function ConfigurationSettings() {
             disabled={session.isPending}
             onClick={() => void session.refetch()}
           >
-            {t("retry")}
+            {common("retry")}
           </Button>
         </div>
       );
@@ -61,7 +63,7 @@ export function ConfigurationSettings() {
               onClick={() => void query.refetch()}
               disabled={query.isFetching}
             >
-              {t("retry")}
+              {common("retry")}
             </Button>
           )}
         </div>
@@ -98,6 +100,7 @@ export function ConfigurationForm({
   configuration: Configuration;
   accountId: string;
 }) {
+  const common = useTranslations("common");
   const t = useTranslations("site");
   const client = useQueryClient();
   const [saved, setSaved] = useState(configuration);
@@ -237,7 +240,7 @@ export function ConfigurationForm({
             if (!conflict) save.reset();
           }}
         >
-          {t("discard")}
+          {common("discard")}
         </Button>
         {dirty && !notice && <span className="text-sm text-muted-foreground">{t("unsaved")}</span>}
         {notice && (

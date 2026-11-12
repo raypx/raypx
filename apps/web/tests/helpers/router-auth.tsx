@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "../../src/i18n.js";
 /** @vitest-environment happy-dom */
 import type { ReactNode } from "react";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { cleanup, render } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { ThemeProvider } from "@raypx/ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/contracts/tasks";

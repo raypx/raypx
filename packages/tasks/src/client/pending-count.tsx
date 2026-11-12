@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { useCallback } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useRemoteQuery } from "./remote-query.js";
 import type { TaskWorkspacePort } from "../model/port.js";
 
@@ -37,7 +38,7 @@ export function PendingCount({
   const { data, error } = useRemoteQuery(["pending", accountId], load, Boolean(accountId), client);
   const count = data?.count ?? 0,
     incomplete = error || data?.incomplete;
-  const label = t(incomplete ? "pendingCountPartial" : "pendingCount", { count: String(count) });
+  const label = t(incomplete ? "pendingCountPartial" : "pendingCount", { count });
   return count || incomplete ? (
     <span
       aria-label={label}

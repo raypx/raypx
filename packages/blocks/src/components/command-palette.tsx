@@ -1,5 +1,6 @@
+import { useTranslations } from "../i18n.js";
 import { useEffect, useEffectEvent, useSyncExternalStore, type ReactNode } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { SearchIcon } from "@raypx/icons/search";
 import {
   Combobox,

@@ -203,3 +203,10 @@ codex, claude or both. Successful native Agent results, including provider versi
 are recorded under the repository's .artifacts/native-agents directory after cleanup.
 HTTPS session persistence must use a real or synthetic HTTPS API; loopback HTTP is not proof of
 production cookie persistence. Never count an unrun native platform as passed.
+
+## Catalog composition
+
+Own files, terminal, engine, command and localWorkspace in private `locales/<language>/` files.
+Explicitly compose the nine shared package language entries with these namespaces.
+Infer app translation types from the English entry; shared views read the same
+messages context through their private typed hooks.

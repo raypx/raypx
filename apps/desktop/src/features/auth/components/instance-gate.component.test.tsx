@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../../i18n.js";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,7 +10,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import type { InstanceBinding, InstanceStatus } from "@raypx/instances";
 import { DesktopPlatformProvider } from "../../../lib/platform-context.js";
 import { desktopFixture } from "../../../../tests/helpers/desktop.js";

@@ -1,6 +1,7 @@
+import { useTranslations } from "../../i18n.js";
 import { useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { HistoryIcon } from "@raypx/icons/history";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";

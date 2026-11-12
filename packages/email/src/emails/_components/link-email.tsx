@@ -1,15 +1,4 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Text,
-} from "@react-email/components";
+import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Text } from "react-email";
 import { type LinkEmailKind, linkEmailContent } from "../../copy.js";
 import type { MailLocale, SendLinkEmailInput } from "../../types.js";
 

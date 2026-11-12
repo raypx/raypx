@@ -1,8 +1,9 @@
+import { useTranslations } from "../../i18n.js";
 import type { AccountState } from "@raypx/account";
 import { hasPermission } from "@raypx/account/access";
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect, useRouter } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { accountAccessQuery, webPages, type WebPath } from "./access.js";
 import { safeReturnTo } from "./return-to.js";

@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "../../../src/i18n.js";
 import { useSyncExternalStore } from "react";
 import { afterEach, beforeEach, expect, vi } from "vite-plus/test";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -7,7 +8,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";

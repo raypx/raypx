@@ -1,5 +1,6 @@
+import { useTranslations } from "../../i18n.js";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { ClockIcon } from "@raypx/icons/clock";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { cn } from "@raypx/ui/lib/utils";

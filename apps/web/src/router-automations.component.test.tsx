@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "./i18n.js";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -8,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 const mocks = vi.hoisted(() => ({
   account: null as string | null,
   list: vi.fn(async () => ({ enabled: true, jobs: [] })),

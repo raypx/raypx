@@ -1,5 +1,6 @@
+import { useTranslations } from "../../i18n.js";
 import type { ReactNode } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { useDesktopPlatform } from "../../lib/platform-context.js";
 import { useDesktopEngine } from "./provider.js";

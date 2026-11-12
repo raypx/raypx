@@ -8,7 +8,9 @@
     "./preference-controls": "./src/components/preference-controls.tsx",
     "./settings": "./src/components/settings.tsx",
     "./shell": "./src/components/shell.tsx",
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./src/styles.css",
+    "./messages/en": "./locales/en/index.ts",
+    "./messages/zh": "./locales/zh/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -38,6 +40,13 @@
   },
   "raypx": {
     "kind": "library",
-    "target": "browser"
+    "target": "browser",
+    "entryTargets": {
+      "./messages/en": "universal",
+      "./messages/zh": "universal"
+    },
+    "sourceTargets": {
+      "locales/**": "universal"
+    }
   }
 }

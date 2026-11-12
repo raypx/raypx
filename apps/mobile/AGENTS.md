@@ -55,3 +55,8 @@ to their TypeScript sources; keep this remapping out of dependencies in `node_mo
 Wrap the configured resolver with `withUniwindConfig` last. Its type generation
 stays under ignored `.expo/`; static `uniwind/types` also makes clean checks work.
 Run `bun run --cwd apps/mobile check`, `test`, and `build`; device acceptance is separate.
+
+## Catalog composition
+
+Statically compose common and auth in private language entries; never import DOM
+i18n adapters or other product catalogs.

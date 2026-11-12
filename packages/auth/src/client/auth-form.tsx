@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import {
   useEffect,
   useRef,
@@ -16,7 +17,7 @@ import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Separator } from "@raypx/ui/components/ui/separator";
 import { Input } from "@raypx/ui/components/ui/input";
 import { cn } from "@raypx/ui/lib/utils";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useLocale } from "@raypx/i18n/browser";
 import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from "../hooks.js";
 import type { SocialProvider } from "@raypx/core/auth";
 import { authPolicy } from "../policy.js";

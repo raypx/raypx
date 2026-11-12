@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import type { RootGrant } from "@raypx/contracts/local";
 import { ArrowUpIcon } from "@raypx/icons/arrow-up";
 import { FolderIcon } from "@raypx/icons/folder";
@@ -7,7 +8,7 @@ import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { Button } from "@raypx/ui/components/ui/button";
 import { SelectField } from "@raypx/ui/select-field";
 import { IconButton } from "@raypx/ui/icon-button";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useFilesStore } from "../store.js";
 
 export function FilesToolbar({

@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "./i18n.js";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -13,7 +14,7 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({
   request: vi.fn<(method: string, input: unknown) => Promise<unknown>>(),

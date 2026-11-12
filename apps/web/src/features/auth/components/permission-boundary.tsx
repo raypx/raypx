@@ -1,8 +1,9 @@
+import { useTranslations } from "../../../i18n.js";
 import { useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { hasPermission, type AccountPermission } from "@raypx/account/access";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { accountAccessQuery } from "../access.js";

@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../i18n.js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
@@ -32,7 +33,7 @@ import type {
   LocalMethod,
   RootGrant,
 } from "@raypx/contracts/local";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../routeTree.gen.js";
 import { rememberProject } from "../tasks/project-history.js";

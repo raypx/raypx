@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.js";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CloudJobsPage } from "@raypx/jobs/client";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary.js";
 import { cloudJobs, jobDevices } from "../../features/automations/client.js";
 import { accountMemory } from "../../features/memory/client.js";

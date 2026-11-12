@@ -1,9 +1,10 @@
+import { useTranslations } from "../../i18n.js";
 import { createFileRoute, getRouteApi, useBlocker, useRouter } from "@tanstack/react-router";
 import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useEffect, useRef } from "react";
 import { cn } from "@raypx/ui/lib/utils";
 
@@ -167,7 +168,7 @@ function FilesPage() {
         </Alert>
       )}
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1>{t("title")}</h1>
+        <h1>{c("files")}</h1>
         <Button onClick={() => void chooseFolder()} disabled={busy || !desktopAvailable}>
           <FolderOpenIcon data-icon="inline-start" />
           {t("addRoot")}

@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { useState } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Alert, AlertTitle, AlertDescription } from "@raypx/ui/components/ui/alert";
 
 export function EngineNotice({

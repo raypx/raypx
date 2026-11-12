@@ -1,7 +1,7 @@
+import { BrowserLanguageProvider, messages } from "../../tests/i18n.js";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider, useLanguagePreference } from "@raypx/i18n/browser";
-import { messages } from "@raypx/i18n/messages";
+import { useLanguagePreference } from "@raypx/i18n/browser";
 import {
   AuthForm,
   type AuthFormProps,

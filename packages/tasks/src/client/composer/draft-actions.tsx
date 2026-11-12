@@ -1,4 +1,5 @@
-import { useTranslations } from "@raypx/i18n/browser";
+import { useTranslations } from "../i18n.js";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import { PlusIcon } from "@raypx/icons/plus";

@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import { useEffect, useRef, useState } from "react";
 import { MonitorIcon } from "@raypx/icons/monitor";
 import { RefreshIcon } from "@raypx/icons/refresh";
@@ -6,7 +7,7 @@ import { GlobalIcon } from "@raypx/icons/global";
 import { LogoutIcon } from "@raypx/icons/logout";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";

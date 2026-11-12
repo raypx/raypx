@@ -1,0 +1,31 @@
+export default {
+  sessionCheckFailed: "Couldn’t check your sign-in status. Connect to the internet and try again.",
+  signInOriginal: "Sign in with the original account",
+  originMismatch:
+    "To use this instance online, select its original server ({origin}) in Desktop connection settings.",
+  title: "Set up this computer",
+  registrationStatus: "Computer registration",
+  intro: "Sign in to register this computer once. After setup, you can use local tools offline.",
+  bindIntro: "Register this computer to use local tools offline.",
+  privacy: "Project files stay on this computer. Remote access is enabled separately.",
+  signInToContinue: "Sign in to continue",
+  bind: "Register this computer",
+  registering: "Registering this computer…",
+  unavailable:
+    "The local instance identity is unavailable. If you archived this profile, restore the full profile from the archive.",
+  statusCheckFailed: "Couldn't check whether this computer is registered.",
+  mismatch:
+    "This instance belongs to another account or server. Sign in with its owner or use another local profile.",
+  revoked: "This instance was revoked. Existing local records are preserved.",
+  code: "Instance code",
+  inspect: "Review instance",
+  approve: "Approve registration",
+  approved: "Instance registered",
+  instances: "Registered instances",
+  revoke: "Revoke instance",
+  registeredLabel: "Registered",
+  empty: "No registered instances",
+  revokeConfirm: "Revoke this instance when it next connects? Local records will be preserved.",
+  error: "Unable to complete instance registration. Check the code and connection, then retry.",
+  pending: "Waiting for registration",
+} as const;

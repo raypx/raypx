@@ -1,7 +1,8 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "./i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { ThemeProvider } from "@raypx/ui/themes";
 import {
   createRootRoute,

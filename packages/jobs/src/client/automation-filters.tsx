@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { SearchIcon } from "@raypx/icons/search";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import { SelectField } from "@raypx/ui/select-field";
 
@@ -19,6 +20,7 @@ export function AutomationFilters({
   shown: number;
   total: number;
 }) {
+  const common = useTranslations("common");
   const t = useTranslations("automations");
   return (
     <div className="mb-4 space-y-3">
@@ -41,14 +43,14 @@ export function AutomationFilters({
           value={status}
           onValueChange={onStatusChange}
           options={[
-            { value: "all", label: t("allStatuses") },
-            { value: "enabled", label: t("enabled") },
-            { value: "paused", label: t("disabled") },
+            { value: "all", label: common("allStatuses") },
+            { value: "enabled", label: common("enabled") },
+            { value: "paused", label: common("paused") },
           ]}
         />
       </div>
       <p className="text-xs text-muted-foreground tabular-nums">
-        {t("matchingSchedules", { shown: String(shown), total: String(total) })}
+        {t("matchingSchedules", { shown, total })}
       </p>
     </div>
   );

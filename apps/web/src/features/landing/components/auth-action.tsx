@@ -1,5 +1,6 @@
+import { useTranslations } from "../../../i18n.js";
 import { Link } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { LoginIcon } from "@raypx/icons/login";
 import { MonitorIcon } from "@raypx/icons/monitor";
 import { SpinnerIcon } from "@raypx/icons/spinner";

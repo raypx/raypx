@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import {
   createContext,
   useContext,
@@ -6,7 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { LockIcon } from "@raypx/icons/lock";
 import { MonitorIcon } from "@raypx/icons/monitor";
@@ -78,7 +79,7 @@ export function AccountSettingsPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const sections = (
     [
-      { value: "account", label: t("accountTitle"), icon: UserCircleIcon },
+      { value: "account", label: c("account"), icon: UserCircleIcon },
       { value: "password", label: t("password"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
       { value: "instances", label: i("instances"), icon: MonitorIcon },
@@ -203,7 +204,7 @@ export function AccountSettingsPanel({
               </InputGroupAddon>
               {query && (
                 <InputGroupAddon align="inline-end">
-                  <IconButton label={s("clearSearch")} size="icon-xs" onClick={clearSearch}>
+                  <IconButton label={c("clearSearch")} size="icon-xs" onClick={clearSearch}>
                     <CloseIcon aria-hidden="true" />
                   </IconButton>
                 </InputGroupAddon>

@@ -69,5 +69,8 @@ export function memoryFailure(error: unknown) {
     data?.data?.error?.code ??
     data?.code ??
     (typeof data?.message === "string" ? data.message.split(":", 1)[0] : undefined);
-  return codes.find((item) => item === code) ?? "NETWORK_UNAVAILABLE";
+  const known = codes.find((item) => item === code);
+  if (known === "CONFLICT") return "CONTEXT_CONFLICT";
+  if (known === "NOT_FOUND") return "CONTEXT_NOT_FOUND";
+  return known ?? "NETWORK_UNAVAILABLE";
 }

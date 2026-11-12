@@ -1,7 +1,8 @@
+import { useTranslations } from "./i18n.js";
 import { useId, useState, type ReactNode } from "react";
 import { CheckIcon } from "@raypx/icons/check";
 import { CircleIcon } from "@raypx/icons/circle";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Field, FieldLabel, type FieldOrientation } from "@raypx/ui/components/ui/field";
 import { PasswordInput, type PasswordInputProps } from "@raypx/ui/password-input";
 import { cn } from "@raypx/ui/lib/utils";

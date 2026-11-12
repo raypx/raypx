@@ -1,68 +1,49 @@
 # @raypx/i18n
 
-## Purpose
-
-Raypx's English/Chinese catalogs, locale preferences and platform entry points.
-Translation and formatting use the independently released `@raypx-kit/intl` facade.
+Own common English/Chinese copy, locale policy, preferences and runtime adapters.
+Translation, formatting and React context come from the external `@raypx-kit/intl`.
+Never import business catalogs, UI or icons into this package.
 
 ## Interface
 
-- Root/types: pure locale negotiation, formatting and translation helpers.
-- `config`: static default locale and language names, shared with repository checks.
-- `messages`: `locales/index.ts` assembles both language catalogs; each language
-  directory owns its namespace modules and `index.ts` entry.
-- `preferences`: pure system/en/zh preference parsing and resolution.
-- `browser`: browser language provider, read-only Intl hooks and device persistence.
-  Language controls belong to Blocks, composed from UI primitives and these hooks.
-  This package does not depend on UI or an icon library.
-- `vite`: build plugin choosing static or lazy browser catalog delivery.
+- Root/types: pure locale negotiation, generic translation, formatting and types.
+- `config`: static locale policy, read directly by repository tooling.
+- `messages/en`, `messages/zh`: pure data containing only `common`.
+- `preferences`: pure system/en/zh parsing and full-list resolution.
+- `browser`: `createTranslations<M>()`, `createBrowserI18n<M>(sources)` and shared
+  locale/formatting/preference hooks. Apps own catalog composition and providers.
+- `vite`: receives application `staticEntry`/`lazyEntry` URLs; substitutes only
+  that application's client `#messages` resolution. SSR stays static.
 
-## Ownership
+## Catalogs and state
 
-Author translations in `locales/<language>/<namespace>.ts` as static default
-objects with `as const`. Chinese namespace modules also satisfy the English
-module's recursive `CatalogShape`. Keep namespace files and keys aligned, and
-register new namespaces in both `locales/en/index.ts` and `zh/index.ts` using static
-`.js` imports. These are authored source files with no generation step.
-`raypx-dev i18n` checks namespace/key and ICU argument/rich-tag parity without
-executing catalogs.
+Author static `locales/<language>/<namespace>.ts` or `.json`, one format per
+namespace/language, with handwritten language `index.ts` assembly. TS uses
+`as const`, relative `.js` imports and optional translated `CatalogShape`
+checks; JSON uses `.json` imports with `with { type: "json" }`. No generation.
+English TS preserves key/ICU/tag call-site types; English JSON preserves keys only.
+The static validator checks both formats' shape, parity, ICU syntax, arguments,
+tags, unique namespace ownership and entry registration without executing modules.
 
-Own product language choices, translations, namespace parity and the persisted
-`raypx_locale` preference. Applications provide device storage and system locale.
-The controlled LanguageProvider, browser storage/cookie adapters and error-code
-translation come from `@raypx-kit/intl`; this package only wires product keys and
-catalogs into them. Change that behavior in Raypx Kit, not here.
+Typed hooks may have different message types but share one SDK messages context.
+Only the singleton runtime owns preference context. Never create per-feature
+language state or provider contexts. Business hooks use type-only catalog imports;
+applications explicitly assemble their own data. Keep loading per language.
 
-## Constraints
-
-- The root entry must never transitively import browser APIs, filesystems
-  or catalog tooling. Use static imports, with no Vite-specific catalog discovery.
-- `#messages` resolves to `locales/index.ts` unless the `/vite` plugin selects lazy
-  delivery through `locales/lazy.ts` for a client environment. Without the plugin every consumer stays static.
-- Device preference supports system/en/zh; absent or invalid values follow system.
-- Browser follows `languagechange` and cross-window storage events.
-- `useLanguagePreference` is the only language mutation entry. Effective locale is
-  derived from this preference and the full ordered system-language list; IntlProvider
-  receives that locale and one current catalog without another locale state.
-- Web first renders the server snapshot, then restores only `raypx_locale`. Missing
-  or invalid values mean system. Retired product keys are ignored without migration.
-  Denied reads preserve the initial snapshot; denied writes never roll back the UI.
-- Native bootstrap passes `restorePreference={false}` to BrowserLanguageProvider.
-  It must wait for `hydrated` before writing device preferences back to the host.
-- Preserve safe error-code translation; diagnostic prose is never product copy.
-- Raypx Kit is an external dependency, not a workspace.
-
-See [foundation architecture](../../docs/architecture/0034-extensible-foundation.md).
+`useLanguagePreference` is the only mutation API. Resolve the full system locale
+list; do not store a system-derived locale as a fixed preference. Browser restores
+only `raypx_locale` after hydration, follows language/storage events and preserves
+the initial snapshot on denied reads. Ignore retired keys without migration. Native
+snapshots disable browser restoration and wait for `hydrated` before writeback.
+Keep UTC SSR/hydration and device time after mount, drafts across switches and retry
+of failed language chunks. Diagnostic exception prose is never translated copy.
 
 ## Verification
 
-Compile-only assertions in `tests/types/` protect exact keys and ICU arguments.
-Pure helpers and streamed SSR have source-adjacent tests in the `server` project.
-Browser/provider hydration uses adjacent `*.component.test.tsx` in the separate
-happy-dom project, so React renderers do not share module context.
+Compile-only assertions in `tests/types/` cover TS ICU/tag types and JSON key types.
+Source-adjacent server suites cover pure helpers/concurrent streamed SSR; isolated
+`*.component.test.tsx` suites cover shared context, hydration, storage and time zones.
+Fixtures stay package-local and never import application catalogs.
 
-```sh
-bun run --cwd packages/i18n check
-bun run --cwd packages/i18n test
-bun run i18n:check
-```
+Run this package's `check`/`test`, root `i18n:check` and `verify`.
+See [internationalization](../../docs/architecture/internationalization.md).

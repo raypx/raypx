@@ -1,9 +1,10 @@
+import { BrowserLanguageProvider } from "../../../i18n.js";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 const mocks = vi.hoisted(() => ({ overview: vi.fn(), health: vi.fn(), audit: vi.fn() }));
 vi.mock("../client.js", () => ({ administrationClient: mocks }));
 vi.mock("../../auth/client.js", () => ({

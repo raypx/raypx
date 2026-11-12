@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { ProjectSessionGroup, type SessionLinkProps } from "@raypx/tasks/client";
 import { cn } from "@raypx/ui/lib/utils";
 import {

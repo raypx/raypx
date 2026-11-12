@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import { AutomationFilters } from "@raypx/jobs/client";
 import { formText } from "../../form-data.js";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
@@ -7,7 +8,7 @@ import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/al
 import { Button } from "@raypx/ui/components/ui/button";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
 import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/core/jobs";
 import { LocalJobForm } from "./local-form.js";
@@ -214,7 +215,7 @@ export function LocalJobsPage({
   }
   return (
     <section>
-      <h1 className="sr-only">{t("local.title")}</h1>
+      <h1 className="sr-only">{c("jobs")}</h1>
       <header className="mb-6 flex flex-wrap items-center justify-end gap-3">
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
           <PlusIcon data-icon="inline-start" />

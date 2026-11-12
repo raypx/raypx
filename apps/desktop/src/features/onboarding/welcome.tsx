@@ -1,9 +1,9 @@
+import { useTranslations } from "../../i18n.js";
 import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { useTranslations } from "@raypx/i18n/browser";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { cn } from "@raypx/ui/lib/utils";
@@ -97,7 +97,9 @@ export function LocalWelcome() {
                 )}
               />
               <span>{agentProviderMetadata[agent.provider].label}</span>
-              <span className="text-muted-foreground">{tasks(agent.reason)}</span>
+              <span className="text-muted-foreground">
+                {agent.reason === "unconfigured" ? c("unconfigured") : tasks(agent.reason)}
+              </span>
             </li>
           ))}
         </ul>

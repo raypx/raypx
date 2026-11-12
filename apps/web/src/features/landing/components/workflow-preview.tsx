@@ -1,5 +1,6 @@
+import { useTranslations } from "../../../i18n.js";
 import { useEffect, useId, useRef } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { IconComponent } from "@raypx/icons";
 import { BookOpenIcon } from "@raypx/icons/book-open";
 import { CheckIcon } from "@raypx/icons/check";
@@ -44,6 +45,7 @@ const reveal = "motion-safe:transition-[opacity,translate] motion-safe:duration-
  * playback only fades content, so the frame keeps its height.
  */
 export function WorkflowPreview() {
+  const common = useTranslations("common");
   const t = useTranslations("guest");
   const { rootRef, step, select, enabled, toggle, state, progress, changeSource, hold } =
     useDemoPlayback("review");
@@ -89,7 +91,7 @@ export function WorkflowPreview() {
     {
       value: "result",
       icon: CheckCircleIcon,
-      title: t("previewResult"),
+      title: common("result"),
       hint: t("previewResultHint"),
     },
   ] as const;
@@ -283,7 +285,7 @@ export function WorkflowPreview() {
                       >
                         <CheckIcon className="size-4" />
                       </span>
-                      <h3 className="text-lg font-medium">{t("previewResultTitle")}</h3>
+                      <h3 className="text-lg font-medium">{common("completed")}</h3>
                     </div>
                     <ul className="divide-y divide-border rounded-xl border border-border text-sm">
                       <li
@@ -409,6 +411,7 @@ function StepCard({
 }
 
 function ApprovalRow({ stage }: { stage: "waiting" | "pressing" | "approved" }) {
+  const common = useTranslations("common");
   const t = useTranslations("guest");
   if (stage === "approved") {
     return (
@@ -422,7 +425,7 @@ function ApprovalRow({ stage }: { stage: "waiting" | "pressing" | "approved" }) 
   }
   return (
     <div aria-hidden="true" className="flex justify-end gap-2 text-xs">
-      <span className="rounded-md border border-border px-2.5 py-1">{t("exampleDeny")}</span>
+      <span className="rounded-md border border-border px-2.5 py-1">{common("deny")}</span>
       <span
         className={cn(
           "rounded-md bg-foreground px-2.5 py-1 text-background motion-safe:transition-[scale,box-shadow] motion-safe:duration-150",

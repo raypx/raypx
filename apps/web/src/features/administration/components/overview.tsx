@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import {
   Collapsible,
   CollapsibleContent,
@@ -5,7 +6,7 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { SelectField } from "@raypx/ui/select-field";
 import { Button } from "@raypx/ui/components/ui/button";
 import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
@@ -250,7 +251,11 @@ export function Overview() {
                 >
                   <span>{t(name)}</span>
                   <StatusBadge
-                    label={t(health.data.checks[name])}
+                    label={
+                      health.data.checks[name] === "not-configured"
+                        ? c("unconfigured")
+                        : t(health.data.checks[name])
+                    }
                     tone={healthTone(health.data.checks[name])}
                   />
                 </li>

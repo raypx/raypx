@@ -1,6 +1,7 @@
+import { useTranslations } from "../i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -28,6 +29,7 @@ export function ComposerDraftList({
   onOpen: (draft: TaskDraft) => void;
   onDelete: (id: string) => void;
 }) {
+  const common = useTranslations("common");
   const t = useTranslations("tasks");
   if (!drafts.length) return null;
   return (
@@ -67,7 +69,7 @@ export function ComposerDraftList({
                     {devices
                       .find((item) => item.id === draft.deviceId)
                       ?.projects.find((item) => item.id === draft.projectId)?.name ??
-                      t("chooseProject")}{" "}
+                      common("chooseAuthorizedProject")}{" "}
                     · {agentProviderMetadata[draft.provider].label}
                   </span>
                 </span>

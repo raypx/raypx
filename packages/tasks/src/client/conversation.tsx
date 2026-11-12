@@ -1,10 +1,11 @@
+import { useTranslations } from "./i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Bounded read-only scroll regions need keyboard focus for scrolling. */
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/react-virtual";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { TaskMarkdown } from "./markdown.js";
@@ -44,12 +45,6 @@ function showsWorking(task: AgentTask, entries: TaskActivity[]) {
   );
 }
 
-function inputStatusLabel(status: Extract<TaskActivity, { kind: "input" }>["status"]) {
-  if (status === "queued") return "inputQueued";
-  if (status === "sent") return "inputSent";
-  return status;
-}
-
 export function Conversation(props: Props) {
   return <ConversationViewport key={props.task.id} {...props} />;
 }
@@ -66,6 +61,13 @@ function ConversationViewport({
 }: Props) {
   "use no memo"; // TanStack Virtual's mutable instance is consumed locally on each render.
   const t = useTranslations("tasks");
+  const common = useTranslations("common");
+  function inputStatusLabel(status: Extract<TaskActivity, { kind: "input" }>["status"]) {
+    if (status === "queued") return t("inputQueued");
+    if (status === "sent") return t("inputSent");
+    if (status === "sending") return t("sending");
+    return common(status);
+  }
   const format = useFormatter();
   const viewport = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
@@ -245,7 +247,7 @@ function ConversationViewport({
           <p className="text-xs font-medium text-muted-foreground">
             {agentProviderMetadata[task.provider].shortLabel}{" "}
             {entry.status !== "complete" && (
-              <span>· {t(entry.status === "streaming" ? "streaming" : "interrupted")}</span>
+              <span>· {entry.status === "streaming" ? t("streaming") : common("interrupted")}</span>
             )}
           </p>
           <TaskMarkdown>{entry.text}</TaskMarkdown>
@@ -258,7 +260,7 @@ function ConversationViewport({
       return (
         <article className="rounded-xl bg-muted/60 px-4 py-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
-            {t("you")} · {t(entry.mode)} · {t(inputStatusLabel(entry.status))}
+            {t("you")} · {t(entry.mode)} · {inputStatusLabel(entry.status)}
           </p>
           <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{entry.text}</p>
           {entry.code && <p className="mt-2 text-xs text-muted-foreground">{t(entry.code)}</p>}

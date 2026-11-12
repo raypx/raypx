@@ -1,6 +1,7 @@
+import { useTranslations } from "../../../i18n.js";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { LoadingState } from "@raypx/ui/loading-state";

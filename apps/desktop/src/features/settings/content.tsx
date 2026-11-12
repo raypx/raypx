@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { RemoteBoundary } from "../auth/components/remote-boundary.js";
 import { authClient } from "../auth/client.js";
 import { getBridge, isDesktop } from "../../lib/desktop.js";

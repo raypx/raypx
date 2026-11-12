@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import type { TaskContextSelection, TaskContextTarget } from "@raypx/core/tasks";
 import {
   ContextBudget,
@@ -5,7 +6,6 @@ import {
   type ContextBudgetState,
   type MemoryClientPort,
 } from "@raypx/memory/client";
-import { useTranslations } from "@raypx/i18n/browser";
 
 /** Injected references for the selected target, with the budget that gates sending. */
 export function ComposerContextFields({

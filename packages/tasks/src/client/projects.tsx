@@ -1,10 +1,11 @@
+import { useTranslations } from "./i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import type { ReactNode } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
 import { useRemoteQuery } from "./remote-query.js";
 import { useCallback, useEffect, useId, useRef } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { EmptyState } from "@raypx/ui/empty-state";
@@ -46,7 +47,7 @@ export function ProjectList({
     >
       {!compact && (
         <header>
-          <h1>{t("projectsTitle")}</h1>
+          <h1>{c("projects")}</h1>
           <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">{t("projectEntryHint")}</p>
         </header>
       )}

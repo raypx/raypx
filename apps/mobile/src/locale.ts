@@ -1,6 +1,6 @@
 import { useLocales } from "expo-localization";
 import { createTranslator, matchLocale } from "@raypx/i18n";
-import { messages } from "@raypx/i18n/messages";
+import { messages } from "../locales/index.js";
 import type { AuthActionError } from "@raypx/auth/hooks";
 
 export function useCopy() {

@@ -2,25 +2,21 @@ import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite-plus";
 
 export interface I18nCatalogOptions {
-  /**
-   * `static` bundles every catalog. `lazy` keeps the default catalog in the client
-   * entry and splits the others into chunks. Server environments always stay static.
-   */
-  catalogs?: "static" | "lazy";
+  staticEntry: URL;
+  lazyEntry: URL;
 }
 
-const source = fileURLToPath(new URL(".", import.meta.url));
-const lazyCatalogs = fileURLToPath(new URL("../locales/lazy.ts", import.meta.url));
-
-/** Selects how `@raypx/i18n/browser` ships catalogs to the browser. */
-export function i18nCatalogs({ catalogs = "static" }: I18nCatalogOptions = {}): Plugin {
+/** Replace only this application's catalog alias, and only in client environments. */
+export function i18nCatalogs({ staticEntry, lazyEntry }: I18nCatalogOptions): Plugin {
+  const bundled = fileURLToPath(staticEntry);
+  const lazy = fileURLToPath(lazyEntry);
   return {
     name: "raypx:i18n-catalogs",
     enforce: "pre",
-    resolveId(id, importer) {
-      if (catalogs !== "lazy" || id !== "#messages" || !importer?.startsWith(source)) return;
-      if (this.environment.config.consumer !== "client") return;
-      return lazyCatalogs;
+    async resolveId(id, importer) {
+      if (id !== "#messages" || this.environment.config.consumer !== "client") return;
+      const resolved = await this.resolve(id, importer, { skipSelf: true });
+      if (resolved?.id === bundled) return lazy;
     },
   };
 }

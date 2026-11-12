@@ -1,8 +1,9 @@
+import { useTranslations } from "./i18n.js";
 import { useId, useRef, useState, type ReactNode } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
 
 import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 
 import { Badge } from "@raypx/ui/components/ui/badge";
@@ -40,6 +41,7 @@ export function Approval({
   onChanged: () => void;
 }) {
   const t = useTranslations("tasks");
+  const common = useTranslations("common");
   const id = useId();
   const [note, setNote] = useState("");
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
@@ -79,15 +81,17 @@ export function Approval({
           />
           <div className="flex min-w-0 flex-col gap-1">
             <h3 className="text-sm font-semibold wrap-anywhere">
-              {request.title || t(request.kind)}
+              {request.title || (request.kind === "plan" ? common("plan") : t(request.kind))}
             </h3>
             {context}
           </div>
         </div>
         {request.status === "pending" ? (
-          <TaskStatusBadge status="waiting" label={t("waiting")} />
+          <TaskStatusBadge status="waiting" />
         ) : (
-          <Badge variant="secondary">{t(request.status)}</Badge>
+          <Badge variant="secondary">
+            {request.status === "cancelled" ? common("cancelled") : t(request.status)}
+          </Badge>
         )}
       </div>
       {task && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{task.prompt}</p>}
@@ -184,7 +188,7 @@ export function Approval({
               disabled={busy}
               onClick={() => void decide({ type: "deny", note })}
             >
-              {t(request.kind === "plan" ? "revisePlan" : "deny")}
+              {request.kind === "plan" ? t("revisePlan") : common("deny")}
             </Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { useId, type FormEvent } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
@@ -53,7 +54,7 @@ export function DocumentForm({
     })),
   ];
   if (!options.some((item) => item.value === project))
-    options.push({ value: project, label: t("projectUnavailable") });
+    options.push({ value: project, label: c("projectUnavailable") });
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;

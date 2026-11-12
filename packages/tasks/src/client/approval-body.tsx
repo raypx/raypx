@@ -1,7 +1,8 @@
+import { useTranslations } from "./i18n.js";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Bounded Diff tables need keyboard focus for horizontal and vertical scrolling. */
 import { useMemo } from "react";
 import type { HumanRequest } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { FileTextIcon } from "@raypx/icons/file-text";
 import { Button } from "@raypx/ui/components/ui/button";

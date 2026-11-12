@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -6,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { JobDefinition, JobRun } from "@raypx/core/jobs";
 
 /** Past runs of one job and the upcoming times its schedule resolves to. */

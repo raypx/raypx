@@ -1,7 +1,8 @@
+import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { useState } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { CommandPalette, type CommandGroup } from "./command-palette.js";
 
 function Palette({ groups }: { groups: CommandGroup[] }) {

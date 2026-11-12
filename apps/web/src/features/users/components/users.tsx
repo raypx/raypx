@@ -1,6 +1,7 @@
+import { useTranslations } from "../../../i18n.js";
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { AuthRole } from "@raypx/auth/access";
 import { hasPermission } from "@raypx/account/access";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -209,7 +210,7 @@ export function Users({ accountId }: { accountId: string }) {
                 setSearch({ field, value: "" });
               }}
             >
-              {t("clearSearch")}
+              {c("clearSearch")}
             </Button>
           </div>
         )}
@@ -247,20 +248,20 @@ export function Users({ accountId }: { accountId: string }) {
         <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">
           {users.data &&
             t("page", {
-              page: String(Math.floor(offset / pageSize) + 1),
-              total: String(users.data?.total ?? 0),
+              page: Math.floor(offset / pageSize) + 1,
+              total: users.data?.total ?? 0,
             })}
         </p>
         <div className="flex gap-2">
           <IconButton
-            label={t("previous")}
+            label={c("previousPage")}
             disabled={offset === 0 || users.isFetching}
             onClick={() => setOffset(Math.max(0, offset - pageSize))}
           >
             <ArrowLeftIcon aria-hidden="true" />
           </IconButton>
           <IconButton
-            label={t("next")}
+            label={c("nextPage")}
             disabled={users.isFetching || offset + pageSize >= (users.data?.total ?? 0)}
             onClick={() => setOffset(offset + pageSize)}
           >

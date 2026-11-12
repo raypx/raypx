@@ -1,6 +1,7 @@
+import { useTranslations } from "../../i18n.js";
 import { agentProviderMetadata, agentProviders } from "@raypx/core/tasks";
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { HelpHint } from "@raypx/ui/help-hint";
@@ -25,6 +26,7 @@ import { Link } from "@tanstack/react-router";
 import { CompassIcon } from "@raypx/icons/compass";
 
 export function AgentSettings() {
+  const common = useTranslations("common");
   const t = useTranslations("tasks");
   const session = authClient.useSession();
   const accountId = session.isPending || session.error ? undefined : session.data?.user.id;
@@ -108,10 +110,10 @@ export function AgentSettings() {
         <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">{t("daemonHint")}</p>
       )}
       <div className="mt-5 flex items-center gap-1">
-        <h3 className="text-sm font-medium">{t("agent")}</h3>
+        <h3 className="text-sm font-medium">{common("agent")}</h3>
         <HelpHint label={t("agentHelp")} description={t("cliHint")} />
       </div>
-      <ul aria-label={t("agent")} className="mt-2 grid gap-2 sm:grid-cols-2">
+      <ul aria-label={common("agent")} className="mt-2 grid gap-2 sm:grid-cols-2">
         {capabilities.map((capability) => (
           <li
             key={capability.provider}
@@ -125,7 +127,9 @@ export function AgentSettings() {
                 </p>
               )}
             </div>
-            <Badge variant="outline">{t(capability.reason)}</Badge>
+            <Badge variant="outline">
+              {capability.reason === "unconfigured" ? common("unconfigured") : t(capability.reason)}
+            </Badge>
           </li>
         ))}
       </ul>
@@ -145,7 +149,7 @@ export function AgentSettings() {
             })
           }
         >
-          {t("authorize")}
+          {common("chooseProject")}
         </Button>
       </div>
       {!roots.length && <p className="mt-3 text-sm text-muted-foreground">{t("noProjects")}</p>}

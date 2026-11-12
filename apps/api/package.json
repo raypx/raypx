@@ -39,6 +39,7 @@
     "evlog": "catalog:",
     "hono": "catalog:",
     "ioredis": "catalog:",
+    "lodash-es": "catalog:",
     "nitro": "catalog:",
     "zod": "catalog:"
   },
@@ -47,6 +48,7 @@
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
+    "@types/lodash-es": "catalog:dev",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite": "catalog:dev",

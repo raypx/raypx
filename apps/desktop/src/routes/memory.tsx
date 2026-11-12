@@ -1,7 +1,8 @@
+import { useTranslations } from "../i18n.js";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { MemoryLibraryPage } from "@raypx/memory/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
 import {
   accountMemory,
@@ -101,7 +102,7 @@ function Page() {
       <ShellActions>
         <TabsList aria-label={t("scope")}>
           <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
-          <TabsTrigger value="account">{t("accountScope")}</TabsTrigger>
+          <TabsTrigger value="account">{c("account")}</TabsTrigger>
         </TabsList>
       </ShellActions>
       <TabsContent value="local" keepMounted>

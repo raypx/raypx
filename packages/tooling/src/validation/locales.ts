@@ -4,6 +4,7 @@ import { readStaticCatalog, type CatalogTree } from "@raypx-kit/devkit/catalogs"
 import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
 import { compareMessageCatalogs } from "@raypx-kit/intl/testing";
 import { discover } from "../repository.js";
+import { checkCatalogEntry } from "./catalog-entry.js";
 
 export interface LocaleCatalogOptions {
   locales?: readonly string[];
@@ -31,7 +32,31 @@ function localeDefaults(root: string, index: WorkspaceIndex): Required<LocaleCat
   return { locales: Object.keys(labels), base };
 }
 
-/** Compare static TypeScript namespace catalogs without executing them. */
+function catalogPaths(root: string, folder: string): string[] {
+  return globSync(`${folder}/*.{ts,json}`, { cwd: root })
+    .map((path) => path.replaceAll("\\", "/"))
+    .filter((path) => posix.basename(path) !== "index.ts")
+    .sort();
+}
+
+/** Public language entries expose their owner's namespace files; apps alone compose them. */
+function sharedCatalogs(root: string, index: WorkspaceIndex, locale: string) {
+  const sources = new Map<string, readonly string[]>();
+  for (const workspace of index.workspaces) {
+    if (workspace.metadata?.kind === "app") continue;
+    const entry = workspace.manifest.exports?.[`./messages/${locale}`];
+    const folder = `${workspace.path}/locales/${locale}`;
+    if (typeof entry !== "string" || posix.join(workspace.path, entry) !== `${folder}/index.ts`)
+      continue;
+    const names = catalogPaths(root, folder).map((path) =>
+      posix.basename(path, posix.extname(path)),
+    );
+    sources.set(`${workspace.manifest.name}/messages/${locale}`, [...new Set(names)]);
+  }
+  return sources;
+}
+
+/** Compare authored TS/JSON namespace catalogs without executing them. */
 export function checkLocales(root: string, options: LocaleCatalogOptions = {}): string[] {
   const index = discover(root);
   const findings: string[] = [];
@@ -50,10 +75,16 @@ export function checkLocales(root: string, options: LocaleCatalogOptions = {}): 
     findings.push("Locale catalog policy must include its base in the supported locales");
     return findings;
   }
+  const owners = new Map<string, string>();
+  const shared = new Map(locales.map((locale) => [locale, sharedCatalogs(root, index, locale)]));
   for (const workspace of index.workspaces) {
     const directory = `${workspace.path}/locales`;
     if (!existsSync(join(root, directory))) {
-      if (workspace.manifest.exports?.["./messages"])
+      if (
+        Object.keys(workspace.manifest.exports ?? {}).some((entry) =>
+          entry.startsWith("./messages/"),
+        )
+      )
         findings.push(`${directory}: missing locale catalogs`);
       continue;
     }
@@ -69,17 +100,41 @@ export function checkLocales(root: string, options: LocaleCatalogOptions = {}): 
     let invalidCatalog = false;
     for (const locale of locales) {
       const folder = `${directory}/${locale}`;
-      const paths = globSync(`${folder}/*.ts`, { cwd: root })
-        .map((path) => path.replaceAll("\\", "/"))
-        .filter((path) => posix.basename(path) !== "index.ts")
-        .sort();
-      if (!paths.length)
-        findings.push(`${folder}: missing TypeScript catalogs for supported locale`);
-      const catalog: Record<string, string | CatalogTree> = {};
+      const paths = catalogPaths(root, folder);
+      const entry = `${folder}/index.ts`;
+      const hasEntry = existsSync(join(root, entry));
+      if (!paths.length && !hasEntry)
+        findings.push(`${folder}: missing catalogs for supported locale`);
+      if (hasEntry) {
+        try {
+          findings.push(
+            ...checkCatalogEntry(
+              entry,
+              readFileSync(join(root, entry), "utf8"),
+              paths,
+              workspace.metadata?.kind === "app" ? shared.get(locale) : undefined,
+            ),
+          );
+        } catch {
+          findings.push(`${entry}: invalid catalog entry`);
+        }
+      } else if (paths.length) findings.push(`${entry}: missing catalog entry`);
+      const catalog: Record<string, string | CatalogTree> = Object.create(null);
       const names: string[] = [];
       for (const path of paths) {
-        const namespace = posix.basename(path, ".ts");
+        const extension = posix.extname(path);
+        const namespace = posix.basename(path, extension);
+        if (names.includes(namespace)) {
+          invalidCatalog = true;
+          findings.push(`${folder}/${namespace}: choose one catalog format (TS or JSON)`);
+          continue;
+        }
         names.push(namespace);
+        if (locale === base) {
+          const owner = owners.get(namespace);
+          if (owner) findings.push(`${path}: namespace ${namespace} is already owned by ${owner}`);
+          else owners.set(namespace, path);
+        }
         try {
           catalog[namespace] = readStaticCatalog(path, readFileSync(join(root, path), "utf8"));
         } catch (error) {

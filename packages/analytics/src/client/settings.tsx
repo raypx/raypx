@@ -1,6 +1,7 @@
+import { useTranslations } from "./i18n.js";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useId } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
@@ -64,7 +65,7 @@ export function AnalyticsSettings() {
                 </div>
                 <div className="flex shrink-0 items-center justify-end gap-3">
                   <StatusBadge
-                    label={status === "loading" || status === "working" ? c(status) : t(status)}
+                    label={status === "enabled" || status === "disabled" ? t(status) : c(status)}
                     tone={statusTones[status]}
                   />
                   <Switch

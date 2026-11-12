@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { useId } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,

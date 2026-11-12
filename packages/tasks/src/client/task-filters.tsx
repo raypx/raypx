@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import {
   Collapsible,
@@ -7,7 +8,7 @@ import {
 import { useId } from "react";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { AgentTask } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
@@ -125,7 +126,7 @@ export function TaskFilterBar({
               value={filters.status}
               onValueChange={(status) => onChange({ ...filters, status })}
               options={[
-                { value: "all", label: t("allStatuses") },
+                { value: "all", label: c("allStatuses") },
                 { value: "active", label: t("activeTasks") },
                 { value: "working", label: t("workingTasks") },
                 { value: "attention", label: t("waiting") },
@@ -135,7 +136,7 @@ export function TaskFilterBar({
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
+            <FieldLabel htmlFor={`${id}-agent`}>{c("agent")}</FieldLabel>
             <SelectField
               id={`${id}-agent`}
               size="sm"
@@ -153,7 +154,7 @@ export function TaskFilterBar({
           </Field>
           {!fixedTarget && (
             <Field className="col-span-2 @min-[48rem]:col-span-1">
-              <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
+              <FieldLabel htmlFor={`${id}-device`}>{c("computer")}</FieldLabel>
               <SelectField
                 id={`${id}-device`}
                 size="sm"
@@ -169,7 +170,7 @@ export function TaskFilterBar({
           )}
           {!fixedTarget && (
             <Field>
-              <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
+              <FieldLabel htmlFor={`${id}-project`}>{c("project")}</FieldLabel>
               <SelectField
                 id={`${id}-project`}
                 size="sm"
@@ -192,7 +193,7 @@ export function TaskFilterBar({
       </Collapsible>
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
         <p role="status" className="text-xs text-muted-foreground tabular-nums">
-          {t("filteredCount", { count: String(count), total: String(total) })}
+          {t("filteredCount", { count, total })}
         </p>
         {active && (
           <Button size="sm" variant="ghost" onClick={() => onChange(emptyTaskFilters)}>

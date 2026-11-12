@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import { useEffect } from "react";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../analytics/client.js";
@@ -5,7 +6,7 @@ import { useRouter, useLocation } from "@tanstack/react-router";
 import { ProjectList, TaskProjectLink, TaskWorkspace } from "@raypx/tasks/client";
 import { ShellActions } from "@raypx/blocks/shell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Button } from "@raypx/ui/components/ui/button";
 import { apiUrl } from "../auth/client.js";

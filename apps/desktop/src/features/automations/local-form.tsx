@@ -1,9 +1,10 @@
+import { useTranslations } from "../../i18n.js";
 import type { FormEvent } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import { SelectField } from "@raypx/ui/select-field";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
 import { ScheduleFields } from "./schedule-fields.js";
@@ -56,7 +57,7 @@ export function LocalJobForm({
                 { value: "", label: t("local.globalAutomation") },
                 ...roots.map((root) => ({ value: root.id, label: root.name })),
                 ...(association && !roots.some((root) => root.id === association)
-                  ? [{ value: association, label: t("local.projectUnavailable") }]
+                  ? [{ value: association, label: c("projectUnavailable") }]
                   : []),
               ]}
             />
@@ -77,7 +78,7 @@ export function LocalJobForm({
             disabled={busy}
           />
           <Field>
-            <FieldLabel htmlFor="job-action">{t("action")}</FieldLabel>
+            <FieldLabel htmlFor="job-action">{c("action")}</FieldLabel>
             <SelectField
               id="job-action"
               value={action}
@@ -103,7 +104,7 @@ export function LocalJobForm({
                 />
               </Field>
               <Field className="min-w-0 flex-1">
-                <FieldLabel htmlFor="job-path">{t("local.relativePath")}</FieldLabel>
+                <FieldLabel htmlFor="job-path">{c("relativePath")}</FieldLabel>
                 <Input
                   id="job-path"
                   name="path"

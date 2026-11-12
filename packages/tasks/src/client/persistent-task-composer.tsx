@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import type { ComponentProps } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "./task-composer.js";
 import { useTaskDrafts } from "./use-task-drafts.js";

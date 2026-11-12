@@ -1,5 +1,6 @@
+import { useTranslations } from "../../i18n.js";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";

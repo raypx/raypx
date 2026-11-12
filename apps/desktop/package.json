@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#messages": "./locales/index.ts"
+  },
   "scripts": {
     "dev": "bun run scripts/host/task.ts dev",
     "build": "bun run scripts/host/task.ts build",
@@ -47,6 +50,7 @@
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
+    "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/runtime-node": "workspace:*",
@@ -66,7 +70,6 @@
     "@playwright/test": "catalog:dev",
     "@raypx/devtools": "workspace:*",
     "@raypx/e2e": "workspace:*",
-    "@raypx/instances": "workspace:*",
     "@raypx/scripts": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",

@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../i18n.js";
 import { afterEach, expect, it } from "vite-plus/test";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,7 +11,7 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { desktopFixture } from "../../../tests/helpers/desktop.js";
 import { DesktopFixtureProvider } from "../../../tests/helpers/desktop-view.js";
 import { EngineGate } from "./gate.js";

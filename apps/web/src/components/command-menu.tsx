@@ -1,13 +1,15 @@
+import { useTranslations } from "../i18n.js";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { CommandPalette, type CommandGroup } from "@raypx/blocks/command-palette";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { AgentIcon } from "@raypx/icons/agent";
 import { FolderIcon } from "@raypx/icons/folder";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { sessionThreads } from "@raypx/tasks/model";
+import { useTaskStatusLabel } from "@raypx/tasks/client/status";
 import type { WebPath } from "../features/auth/access.js";
 import { apiUrl } from "../features/auth/client.js";
 import { taskClient } from "../features/tasks/client.js";
@@ -32,7 +34,7 @@ export function WebCommandMenu({
 }) {
   const router = useRouter();
   const c = useTranslations("common");
-  const t = useTranslations("tasks");
+  const taskStatus = useTaskStatusLabel();
   const projects = useQuery({
     ...remoteProjectsQuery(accountId ?? ""),
     enabled: open && Boolean(accountId),
@@ -95,7 +97,7 @@ export function WebCommandMenu({
             .map(({ root, latest }) => ({
               id: `session:${root.id}`,
               label: root.prompt,
-              detail: projectName(latest.deviceId, latest.projectId) ?? t(latest.status),
+              detail: projectName(latest.deviceId, latest.projectId) ?? taskStatus(latest.status),
               icon: <AgentIcon />,
               onSelect: () =>
                 void router.navigate({

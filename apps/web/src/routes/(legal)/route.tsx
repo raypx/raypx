@@ -1,6 +1,7 @@
+import { useTranslations } from "../../i18n.js";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { IconButton } from "@raypx/ui/icon-button";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { LegalFooter } from "../../components/legal-footer.js";

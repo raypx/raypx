@@ -1,7 +1,8 @@
+import { useTranslations } from "../../../i18n.js";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Read-only audit snapshots need keyboard scrolling. */
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { AuditEntry, AuditFilter } from "@raypx/contracts/api";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -121,8 +122,8 @@ export function AuditLog() {
           <TableRow>
             <TableHead>{t("time")}</TableHead>
             <TableHead>{t("actor")}</TableHead>
-            <TableHead>{t("action")}</TableHead>
-            <TableHead>{t("outcome")}</TableHead>
+            <TableHead>{c("action")}</TableHead>
+            <TableHead>{c("result")}</TableHead>
             <TableHead>
               <span className="sr-only">{c("actions")}</span>
             </TableHead>
@@ -233,26 +234,26 @@ export function AuditLog() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="audit-action">{t("action")}</FieldLabel>
+            <FieldLabel htmlFor="audit-action">{c("action")}</FieldLabel>
             <SelectField
               id="audit-action"
               value={action}
               onValueChange={setAction}
               options={[
-                { value: "", label: t("all") },
+                { value: "", label: c("all") },
                 { value: "user.role.update", label: t("roleUpdate") },
                 { value: "configuration.update", label: t("configurationUpdate") },
               ]}
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="audit-outcome">{t("outcome")}</FieldLabel>
+            <FieldLabel htmlFor="audit-outcome">{c("result")}</FieldLabel>
             <SelectField
               id="audit-outcome"
               value={outcome}
               onValueChange={setOutcome}
               options={[
-                { value: "", label: t("all") },
+                { value: "", label: c("all") },
                 ...(["success", "rejected", "failed", "pending", "unknown"] as const).map(
                   (value) => ({ value, label: t(value) }),
                 ),
@@ -285,7 +286,7 @@ export function AuditLog() {
             disabled={cursors.length < 2 || query.isFetching}
             onClick={() => setCursors((current) => current.slice(0, -1))}
           >
-            {t("previous")}
+            {c("previousPage")}
           </Button>
           <Button
             variant="outline"
@@ -294,7 +295,7 @@ export function AuditLog() {
               if (query.data?.next) setCursors((current) => [...current, query.data.next]);
             }}
           >
-            {t("next")}
+            {c("nextPage")}
           </Button>
         </div>
       </nav>

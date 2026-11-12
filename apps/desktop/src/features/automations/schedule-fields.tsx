@@ -1,6 +1,7 @@
+import { useTranslations } from "../../i18n.js";
 import { useId, useMemo, useState } from "react";
 import { nextJobRuns } from "@raypx/core/jobs";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import { SelectField } from "@raypx/ui/select-field";

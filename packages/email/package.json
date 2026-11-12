@@ -14,10 +14,9 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
-    "@react-email/components": "catalog:",
-    "@react-email/render": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-email": "catalog:",
     "resend": "catalog:"
   },
   "devDependencies": {

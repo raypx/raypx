@@ -1,6 +1,7 @@
+import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { expect, it, vi, beforeEach } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";
 import { ModelPicker } from "./model-picker.js";

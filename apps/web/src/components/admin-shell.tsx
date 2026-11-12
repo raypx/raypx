@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import { SessionBoundary, SignInGate } from "../features/auth/components/session-boundary.js";
 import { useEffect, useRef } from "react";
 import {
@@ -8,7 +9,7 @@ import {
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
@@ -81,7 +82,7 @@ export function AdminShell() {
       secondaryNavigation={[
         {
           to: "/projects",
-          label: t("dash.nav.workspace"),
+          label: t("common.backToWorkspace"),
           icon: <ArrowLeftIcon />,
         },
       ]}

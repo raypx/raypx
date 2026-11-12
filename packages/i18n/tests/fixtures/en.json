@@ -1,0 +1,6 @@
+{
+  "probe": {
+    "greeting": "Hello {name}",
+    "count": "{count, plural, one {# item} other {# items}}"
+  }
+}

@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { checkLocales } from "./policy.js";
@@ -12,7 +12,12 @@ function localeFixture(messages = false) {
     extra: {
       exports: {
         "./config": "./src/config.ts",
-        ...(messages ? { "./messages": "./locales/index.ts" } : {}),
+        ...(messages
+          ? {
+              "./messages/en": "./locales/en/index.ts",
+              "./messages/zh": "./locales/zh/index.ts",
+            }
+          : {}),
       },
     },
   });
@@ -23,10 +28,33 @@ function localeFixture(messages = false) {
   return root;
 }
 
-function catalog(root: string, locale: string, namespace: string, value: unknown) {
-  const path = join(root, `packages/messages/locales/${locale}/${namespace}.ts`);
+function entry(folder: string) {
+  const names: string[] = [];
+  const imports = readdirSync(folder)
+    .filter((name) => name !== "index.ts" && /\.(ts|json)$/.test(name))
+    .map((name) => {
+      const key = name.replace(/\.(ts|json)$/, "");
+      names.push(key);
+      const specifier = name.replace(/\.ts$/, ".js");
+      return `import ${key} from "./${specifier}"${name.endsWith(".json") ? ' with { type: "json" }' : ""};`;
+    });
+  writeFileSync(
+    join(folder, "index.ts"),
+    imports.join("\n") + `\nexport default { ${names.join(", ")} } as const;\n`,
+  );
+}
+
+function catalog(
+  root: string,
+  locale: string,
+  namespace: string,
+  value: unknown,
+  workspace = "messages",
+) {
+  const path = join(root, `packages/${workspace}/locales/${locale}/${namespace}.ts`);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `export default ${JSON.stringify(value)} as const;`);
+  entry(dirname(path));
   return path;
 }
 
@@ -75,7 +103,7 @@ describe("locale conventions", () => {
     const root = localeFixture();
     member(root, "messages");
     catalog(root, "en", "auth", { hello: "Hi" });
-    expect(checkLocales(root).join("\n")).toContain("locales/zh: missing TypeScript catalogs");
+    expect(checkLocales(root).join("\n")).toContain("locales/zh: missing catalogs");
     catalog(root, "zh", "common", { hello: "你好" });
     expect(checkLocales(root)).toEqual(
       expect.arrayContaining([
@@ -158,4 +186,173 @@ describe("locale conventions", () => {
     const root = localeFixture(true);
     expect(checkLocales(root)).toEqual(["packages/i18n/locales: missing locale catalogs"]);
   });
+});
+
+function jsonCatalog(root: string, locale: string, namespace: string, value: unknown) {
+  const path = join(root, `packages/messages/locales/${locale}/${namespace}.json`);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(value));
+  entry(dirname(path));
+  return path;
+}
+
+describe("modular TS/JSON catalogs", () => {
+  it("accepts JSON namespaces in every language without generating declarations", () => {
+    const root = localeFixture();
+    member(root, "messages");
+    jsonCatalog(root, "en", "auth", { hello: "Hi {name}" });
+    jsonCatalog(root, "zh", "auth", { hello: "你好 {name}" });
+    expect(checkLocales(root)).toEqual([]);
+  });
+
+  it.each(["en", "zh"])("allows %s to use JSON while the other language uses TS", (jsonLocale) => {
+    const root = localeFixture();
+    member(root, "messages");
+    for (const locale of ["en", "zh"]) {
+      const write = locale === jsonLocale ? jsonCatalog : catalog;
+      write(root, locale, "auth", { hello: "Hello {name}" });
+    }
+    expect(checkLocales(root)).toEqual([]);
+  });
+
+  it("rejects duplicate formats without choosing an override", () => {
+    const root = localeFixture();
+    member(root, "messages");
+    const path = catalog(root, "en", "auth", { hello: "Hi" });
+    catalog(root, "zh", "auth", { hello: "你好" });
+    writeFileSync(path.replace(/\.ts$/, ".json"), '{"hello":"override"}');
+    expect(checkLocales(root)).toContain(
+      "packages/messages/locales/en/auth: choose one catalog format (TS or JSON)",
+    );
+  });
+
+  it.each([42, null, []])("rejects non-string JSON leaves: %j", (invalid) => {
+    const root = localeFixture();
+    member(root, "messages");
+    jsonCatalog(root, "en", "auth", { hello: "Hi" });
+    jsonCatalog(root, "zh", "auth", { hello: invalid });
+    expect(checkLocales(root).join("\n")).toContain("zh/auth.json:");
+  });
+
+  it("reports invalid JSON and ICU differences in mixed catalogs", () => {
+    const root = localeFixture();
+    member(root, "messages");
+    catalog(root, "en", "auth", { hello: "Hi {name}" });
+    const path = jsonCatalog(root, "zh", "auth", { hello: "你好 {other}" });
+    expect(checkLocales(root).join("\n")).toContain("auth.hello changes ICU arguments");
+    writeFileSync(path, '{"hello":');
+    expect(checkLocales(root).join("\n")).toContain("zh/auth.json:");
+  });
+
+  it("rejects namespaces owned by more than one workspace", () => {
+    const root = localeFixture();
+    member(root, "messages");
+    member(root, "another");
+    for (const locale of ["en", "zh"]) {
+      catalog(root, locale, "auth", { hello: "Hello" });
+      catalog(root, locale, "auth", { hello: "Hello" }, "another");
+    }
+    expect(checkLocales(root).join("\n")).toContain("namespace auth is already owned by");
+  });
+
+  it("rejects namespace imports omitted from the exported entry", () => {
+    const root = localeFixture();
+    member(root, "messages");
+    for (const locale of ["en", "zh"]) catalog(root, locale, "auth", { hello: "Hello" });
+    const path = join(root, "packages/messages/locales/en/index.ts");
+    writeFileSync(path, 'import auth from "./auth.js"; export default {} as const;');
+    expect(checkLocales(root)).toContain(
+      "packages/messages/locales/en/index.ts: missing namespace auth from ./auth.js",
+    );
+    rmSync(path);
+    expect(checkLocales(root)).toContain(
+      "packages/messages/locales/en/index.ts: missing catalog entry",
+    );
+  });
+
+  it("accepts applications composing shared catalogs without local namespaces", () => {
+    const root = localeFixture(true);
+    member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+    for (const locale of ["en", "zh"]) {
+      catalog(root, locale, "common", { hello: "Hello" }, "i18n");
+      const path = join(root, `packages/messages/locales/${locale}/index.ts`);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(
+        path,
+        `import common from "@raypx/i18n/messages/${locale}"; export default { ...common } as const;`,
+      );
+    }
+    expect(checkLocales(root)).toEqual([]);
+  });
+
+  it.each(["@raypx/i18n/messages/zh", "../zh/index.js", "./auth.js"])(
+    "rejects a spread from outside the same-language shared entries: %s",
+    (specifier) => {
+      const root = localeFixture(true);
+      member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+      for (const locale of ["en", "zh"]) {
+        catalog(root, locale, "common", { hello: "Hello" }, "i18n");
+        catalog(root, locale, "auth", { hello: "Hello" });
+      }
+      writeFileSync(
+        join(root, "packages/messages/locales/en/index.ts"),
+        `import auth from "./auth.js"; import shared from "${specifier}";
+        export default { auth, ...shared } as const;`,
+      );
+      expect(checkLocales(root)).toContain(
+        "packages/messages/locales/en/index.ts: spreads must use same-language public catalog entries",
+      );
+    },
+  );
+
+  it("rejects duplicate namespace contributions from shared spreads", () => {
+    const root = localeFixture(true);
+    member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+    for (const locale of ["en", "zh"]) {
+      catalog(root, locale, "common", { hello: "Hello" }, "i18n");
+      const path = join(root, `packages/messages/locales/${locale}/index.ts`);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(
+        path,
+        `import common from "@raypx/i18n/messages/${locale}";
+        export default { ...common, ...common } as const;`,
+      );
+    }
+    expect(checkLocales(root)).toContain(
+      "packages/messages/locales/en/index.ts: namespace common is assembled more than once",
+    );
+  });
+
+  it("rejects unowned namespace aliases in language entries", () => {
+    const root = localeFixture();
+    member(root, "messages");
+    for (const locale of ["en", "zh"]) catalog(root, locale, "auth", { hello: "Hello" });
+    writeFileSync(
+      join(root, "packages/messages/locales/en/index.ts"),
+      'import auth from "./auth.js"; export default { auth, extra: auth } as const;',
+    );
+    expect(checkLocales(root)).toContain(
+      "packages/messages/locales/en/index.ts: namespace extra has no owned catalog",
+    );
+  });
+
+  it.each(["auth, common: auth, ...shared", "auth, ...shared, common: auth"])(
+    "rejects namespace collisions between local properties and shared spreads: %s",
+    (properties) => {
+      const root = localeFixture(true);
+      member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+      for (const locale of ["en", "zh"]) {
+        catalog(root, locale, "common", { hello: "Hello" }, "i18n");
+        catalog(root, locale, "auth", { hello: "Hello" });
+      }
+      writeFileSync(
+        join(root, "packages/messages/locales/en/index.ts"),
+        `import auth from "./auth.js"; import shared from "@raypx/i18n/messages/en";
+        export default { ${properties} } as const;`,
+      );
+      expect(checkLocales(root)).toContain(
+        "packages/messages/locales/en/index.ts: namespace common is assembled more than once",
+      );
+    },
+  );
 });

@@ -1,5 +1,6 @@
+import { useTranslations } from "../../../i18n.js";
 import { createFileRoute } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-guard.js";
 import { SessionBoundary, SignInGate } from "../../../features/auth/components/session-boundary.js";
 import { Users } from "../../../features/users/components/users.js";

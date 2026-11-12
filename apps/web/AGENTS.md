@@ -272,3 +272,12 @@ queries. Statistics distinguish failed reads from zeroes and use explicit UTC da
 Audit searches are bounded by date range and use server cursor pagination; there are
 no edit/delete/export actions. Unknown outcomes remain unknown until the server
 confirms them. Clear private administration state across identity changes.
+
+## Catalog composition
+
+Own dash, users, site, guest and legal in private `locales/<language>/` files.
+Explicitly compose the nine shared package language entries with these namespaces.
+Infer app translation types from the English entry; shared views read the same
+messages context through their private typed hooks.
+The app-owned static/lazy entries are selected by the i18n Vite plugin for this
+client only: English static, Chinese lazy, SSR static. Preload before hydration.

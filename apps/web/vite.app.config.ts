@@ -38,7 +38,10 @@ export default defineConfig(() => {
       }),
       tailwindcss(),
       // Visitors download the default catalog plus their own language only.
-      i18nCatalogs({ catalogs: "lazy" }),
+      i18nCatalogs({
+        staticEntry: new URL("./locales/index.ts", import.meta.url),
+        lazyEntry: new URL("./locales/lazy.ts", import.meta.url),
+      }),
       startEnvironment(tanstackStart(), loadEnv),
       react(),
     ],

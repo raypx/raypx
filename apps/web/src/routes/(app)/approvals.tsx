@@ -1,10 +1,11 @@
+import { useTranslations } from "../../i18n.js";
 import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.js";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../../features/analytics/client.js";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary.js";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { taskClient } from "../../features/tasks/client.js";
 import { apiUrl } from "../../features/auth/client.js";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");

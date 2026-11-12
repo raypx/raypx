@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.js";
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../../features/analytics/client.js";
@@ -7,7 +8,7 @@ import { SessionBoundary } from "../../features/auth/components/session-boundary
 import { GuestTasks } from "../../features/tasks/guest.js";
 import { useGuestDraft } from "../../features/tasks/guest-draft.js";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { apiUrl } from "../../features/auth/client.js";
 import { taskClient } from "../../features/tasks/client.js";
 import { accountMemory } from "../../features/memory/client.js";

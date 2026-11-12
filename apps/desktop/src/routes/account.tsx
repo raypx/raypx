@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import { readAccount } from "@raypx/account";
 import {
   AccountDetails,
@@ -9,7 +10,7 @@ import { useEffect, useRef } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { taskClient } from "../features/tasks/client.js";
@@ -38,11 +39,11 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPending() {
-  const t = useTranslations("auth");
+  const common = useTranslations("common");
   return (
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1>{t("accountTitle")}</h1>
+        <h1>{common("account")}</h1>
       </header>
       <AccountSkeleton />
     </section>
@@ -50,7 +51,6 @@ function AccountPending() {
 }
 
 function AccountPage() {
-  const t = useTranslations("auth");
   const c = useTranslations("common");
   const state = Route.useLoaderData();
   const refreshing = Route.useMatch({ select: (match) => !!match.isFetching });
@@ -84,7 +84,7 @@ function AccountPage() {
   return (
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1>{t("accountTitle")}</h1>
+        <h1>{c("account")}</h1>
       </header>
       {identityChanged ? (
         <AccountSkeleton />

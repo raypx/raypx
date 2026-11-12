@@ -1,11 +1,12 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../tests/i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as matchers from "@testing-library/jest-dom/matchers";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import type { CloudJob, CloudJobRun } from "@raypx/core/jobs";
 import type { CloudJobsPort, JobDevicesPort } from "./client.js";
 import { CloudJobsPage, type CloudJobsPageProps } from "./client.js";
@@ -255,20 +256,23 @@ it("requires an explicit current connection when an edited device epoch is stale
   });
 });
 
-it("preserves edits after a CAS conflict and does not retry a write automatically", async () => {
-  const { client, devices } = fixture();
-  client.update.mockRejectedValue({ data: { error: { code: "JOB_CONFLICT" } } });
-  render(page({ accountId: "one", client, devices }));
-  await screen.findByRole("heading", { name: "Cloud sync" });
-  fireEvent.click(screen.getByRole("button", { name: "Edit: Cloud sync" }));
-  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "My unsaved name" } });
-  fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    "This schedule was changed by another request.",
-  );
-  expect(screen.getByLabelText("Name")).toHaveValue("My unsaved name");
-  expect(client.update).toHaveBeenCalledTimes(1);
-});
+it.each(["JOB_CONFLICT", "CONFLICT"])(
+  "preserves edits after %s and does not retry a write automatically",
+  async (code) => {
+    const { client, devices } = fixture();
+    client.update.mockRejectedValue({ data: { error: { code } } });
+    render(page({ accountId: "one", client, devices }));
+    await screen.findByRole("heading", { name: "Cloud sync" });
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Cloud sync" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "My unsaved name" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Save changes" }).closest("form")!);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This schedule was changed by another request.",
+    );
+    expect(screen.getByLabelText("Name")).toHaveValue("My unsaved name");
+    expect(client.update).toHaveBeenCalledTimes(1);
+  },
+);
 
 it("retains one creation intent after a lost response even if its fields change", async () => {
   const { client, devices } = fixture();

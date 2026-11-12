@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import type { ComponentType, ReactNode } from "react";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { MailIcon } from "@raypx/icons/mail";
@@ -7,7 +8,7 @@ import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { Avatar } from "@raypx/ui/avatar";
 import { StatusBadge } from "@raypx/ui/status-badge";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { AccountProfile } from "../index.js";
 
 export interface AccountLinkProps {
@@ -62,7 +63,7 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
             <h2 className="min-w-0 text-lg font-semibold tracking-tight [overflow-wrap:anywhere]">
               {account.name}
             </h2>
-            <StatusBadge label={t("verifiedLabel")} tone="success" />
+            <StatusBadge label={t("verifiedTitle")} tone="success" />
           </div>
           <p className="flex min-w-0 items-start gap-2 text-sm text-muted-foreground">
             <MailIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />

@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
@@ -34,7 +35,7 @@ import { SearchIcon } from "@raypx/icons/search";
 import { DesktopCommandMenu } from "./command-menu.js";
 import { EngineNotice } from "../features/engine/notice.js";
 import { desktopStorageKey } from "../lib/storage.js";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { isDesktop, onLocalEvent } from "../lib/desktop.js";
 import { useDesktopEngine } from "../features/engine/provider.js";
 import { WindowDragRegion } from "./window-drag-region.js";

@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import {
   Fragment,
   createContext,
@@ -16,7 +17,7 @@ import { createPortal } from "react-dom";
 import { sidebarPreference } from "./sidebar-preference.js";
 import { SidebarCollapseIcon } from "@raypx/icons/sidebar-collapse";
 import { SidebarExpandIcon } from "@raypx/icons/sidebar-expand";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { cn } from "@raypx/ui/lib/utils";
 import { Logo } from "@raypx/ui/logo";
 import {

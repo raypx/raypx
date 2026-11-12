@@ -1,1 +1,4 @@
-{ "extends": "@raypx/tsconfig/node.json", "include": ["src/**/*.ts"] }
+{
+  "extends": "@raypx/tsconfig/node.json",
+  "include": ["src/**/*.ts", "locales"]
+}

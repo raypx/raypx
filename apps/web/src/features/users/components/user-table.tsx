@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import { createContext, useContext, useMemo } from "react";
 import {
   createColumnHelper,
@@ -6,7 +7,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { assignedRoles, type AuthRole } from "@raypx/auth/access";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useLocale } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Avatar } from "@raypx/ui/avatar";
 import { DataTable } from "@raypx/ui/data-table";

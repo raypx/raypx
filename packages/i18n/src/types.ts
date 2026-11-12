@@ -1,11 +1,16 @@
-import type { CatalogShape, LocaleSource as IntlLocaleSource } from "@raypx-kit/intl/types";
+import type {
+  CatalogShape,
+  DynamicMessages,
+  LocaleSource as IntlLocaleSource,
+} from "@raypx-kit/intl/types";
 import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.js";
-import type en from "../locales/en/index.js";
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export type LocaleOption = (typeof LOCALE_OPTIONS)[number];
-export type Messages = CatalogShape<typeof en>;
-export type MessagesByLocale = Readonly<Record<Locale, Messages>>;
+export type Messages<M extends DynamicMessages = DynamicMessages> = CatalogShape<M>;
+export type MessagesByLocale<M extends DynamicMessages = DynamicMessages> = Readonly<
+  Record<Locale, Messages<M>>
+>;
 export type LocaleSource = IntlLocaleSource<Locale>;
 export type {
   MessageTree,

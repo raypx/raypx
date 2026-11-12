@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { useId, useState } from "react";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useLocale } from "@raypx/i18n/browser";
 import { LockIcon } from "@raypx/icons/lock";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";

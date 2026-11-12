@@ -1,7 +1,8 @@
+import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import type { AgentTask } from "@raypx/core/tasks";
 import { SidebarMenu, SidebarProvider } from "@raypx/ui/components/ui/sidebar";
 import { createTaskClient } from "../../tests/helpers/client.js";

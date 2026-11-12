@@ -22,10 +22,13 @@ CLI imports do not start a command until the caller invokes `runCli`.
 - raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev i18n
-  Discover `locales/<language>/<namespace>.ts` from workspace manifests; compare
-  namespace/key, ICU syntax, argument and rich-tag parity without executing modules.
-  Language `index.ts` files compose catalogs and are excluded from namespace discovery.
-  Catalogs are authored literal objects; the command validates them without writing files.
+  Discover `locales/<language>/<namespace>.ts` or `.json` from workspace manifests;
+  compare namespace/key, ICU syntax, argument and rich-tag parity without executing
+  modules. Reject duplicate formats/ownership and missing supported languages.
+  Language `index.ts` files explicitly assemble owned namespaces; AST checks verify registration.
+  Only apps spread shared public entries from the same language, with no namespace overwrites.
+  TS uses literal objects, JSON nested strings. Include both formats in cache inputs;
+  validate without generating or executing catalogs.
 - raypx-dev policy | knip | verify | doctor | clean | clean:artifacts
   `policy` also checks public entries (`src/validation/entries.ts`): every exports key
   of a library or tooling workspace needs an importer in another workspace, found in

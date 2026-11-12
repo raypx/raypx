@@ -197,7 +197,7 @@ describe("HTTP foundation", () => {
     expect(body).not.toContain("ECONNREFUSED");
   });
 
-  it("answers slow procedures with a timeout and rejects prototype-polluting input", async () => {
+  it("answers slow procedures with a timeout", async () => {
     const control = new ControlService(memoryControlRepository());
     vi.spyOn(control.credentials, "listDevices").mockImplementation(() => new Promise(() => {}));
     const slow = createApiApp({
@@ -215,13 +215,30 @@ describe("HTTP foundation", () => {
       code: "SERVICE_UNAVAILABLE",
       data: { error: { code: "REQUEST_TIMEOUT" } },
     });
-    const polluted = JSON.parse(
-      '{"installationId":"00000000-0000-4000-8000-000000000000","name":"a","platform":"b","appVersion":"c","__proto__":{"admin":true}}',
-    );
-    expect(await api.devices.register(polluted).catch((value: unknown) => value)).toMatchObject({
+  });
+
+  it.each([
+    '{"__proto__":{"admin":true}}',
+    '{"metadata":[{"__proto__":{"admin":true}}]}',
+    '{"constructor":{"prototype":{"admin":true}}}',
+    '{"metadata":[{"constructor":{"prototype":{"admin":true}}}]}',
+  ])("rejects prototype-polluting RPC input: %s", async (json) => {
+    const polluted = JSON.parse(json);
+    expect(
+      await client("signed-in")
+        .account.get(polluted)
+        .catch((value: unknown) => value),
+    ).toMatchObject({
       code: "BAD_REQUEST",
       data: { error: { code: "INVALID_INPUT" } },
     });
+  });
+
+  it.each([
+    '{"constructor":{"name":"ordinary data"}}',
+    '{"constructor.prototype":{"admin":true},"metadata":[{"prototype":true}]}',
+  ])("accepts harmless RPC property names: %s", async (json) => {
+    expect(await client("signed-in").account.get(JSON.parse(json))).toMatchObject({ id: "u1" });
   });
 
   it("rejects rate-limited grant procedures per account before running them", async () => {

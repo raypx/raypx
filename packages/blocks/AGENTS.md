@@ -73,3 +73,10 @@ Code outside `src/components/` stays private.
 
 Run `bun run --cwd packages/blocks check` and `bun run --cwd packages/blocks test`.
 Web and Desktop route tests cover integration.
+
+## Catalog ownership
+
+Own `settings` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

@@ -7,11 +7,12 @@ import { FileTextIcon } from "@raypx/icons/file-text";
 import { GlobalIcon } from "@raypx/icons/global";
 import { SearchIcon } from "@raypx/icons/search";
 import { TerminalIcon } from "@raypx/icons/terminal";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { cn } from "@raypx/ui/lib/utils";
 import { formatDuration } from "./format-duration.js";
 import { ShimmerText } from "./shimmer-text.js";
+import { useTaskStatusLabel } from "./task-status.js";
 
 type ToolActivity = Extract<TaskActivity, { kind: "tool" }>;
 
@@ -79,7 +80,7 @@ export function ToolActivityRow({
   first: boolean;
   last: boolean;
 }) {
-  const t = useTranslations("tasks");
+  const taskStatus = useTaskStatusLabel();
   const format = useFormatter();
   const running = entry.status === "running";
   const now = useNow(running);
@@ -110,7 +111,7 @@ export function ToolActivityRow({
           {formatDuration(format, seconds)}
         </span>
       )}
-      <StatusBadge tone={toolTones[entry.status]} label={t(entry.status)} />
+      <StatusBadge tone={toolTones[entry.status]} label={taskStatus(entry.status)} />
       <time dateTime={entry.updatedAt} className="text-muted-foreground tabular-nums">
         {format.dateTime(new Date(entry.updatedAt), { hour: "2-digit", minute: "2-digit" })}
       </time>

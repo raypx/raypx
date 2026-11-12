@@ -1,6 +1,7 @@
+import { useTranslations } from "../../../i18n.js";
 import { claimGuestDraft } from "../../tasks/guest-draft.js";
 import { safeReturnTo } from "../return-to.js";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { analytics } from "../../analytics/client.js";
 import { Link, useLocation, useNavigate, useRouter, useRouteContext } from "@tanstack/react-router";
 import {

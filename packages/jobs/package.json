@@ -7,7 +7,9 @@
     "./server": "./src/server.ts",
     "./client": "./src/client.ts",
     "./client/styles.css": "./src/client/styles.css",
-    "./server/postgres": "./src/server/postgres.ts"
+    "./server/postgres": "./src/server/postgres.ts",
+    "./messages/en": "./locales/en/index.ts",
+    "./messages/zh": "./locales/zh/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

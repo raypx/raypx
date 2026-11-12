@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { continueTaskFailure, followUpPlan, taskSelection } from "../model/composition.js";
 import { ModelPicker } from "./model-picker.js";
 import type { ModelSelection } from "@raypx/core/tasks";
@@ -9,7 +10,7 @@ import { ContextSnapshot } from "@raypx/memory/client";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskWorkspacePort } from "../model/port.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -189,11 +190,7 @@ function TaskDetailView({
       {dialog}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-2">
-          <TaskStatusBadge
-            status={data.task.status}
-            label={t(data.task.status)}
-            className="self-start"
-          />
+          <TaskStatusBadge status={data.task.status} className="self-start" />
           <h2 className="line-clamp-3 text-lg leading-snug font-semibold [overflow-wrap:anywhere]">
             {data.task.prompt}
           </h2>

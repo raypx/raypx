@@ -1,91 +1,100 @@
 # @raypx/i18n
 
-Raypx's product configuration around `@raypx-kit/intl`, which bundles `use-intl`. The package owns
-English/Chinese catalogs, native language names and the product storage key. The
-controlled language provider, browser preference adapters and safe error-code
-translation are `@raypx-kit/intl` features configured here.
+Raypx's common English/Chinese copy, locale policy and runtime adapters around
+`@raypx-kit/intl`, which bundles `use-intl`. Business packages own their catalogs;
+applications compose only the namespaces they use. There is no generated catalog,
+global message declaration or runtime namespace registration.
 
-## Controlled rendering
+## Authoring catalogs
 
-`IntlProvider` receives a supported `locale` and one current `messages` catalog.
-`useTranslations(namespace)` preserves catalog key and ICU argument types;
-`useLocale`, `useFormatter`, `useNow`, `useTimeZone` and `useMessages` read the mounted
-provider. Server and hydration renders use UTC; after mount `BrowserLanguageProvider`
-switches formatting to the device time zone. Use the `timestamp` dateTime preset for
-absolute times instead of `toLocaleString()` or ad hoc `Intl` formatters.
+Use `locales/<language>/<namespace>.ts` or `.json` in the owning workspace.
+Each file contains that namespace's nested string object, without a namespace wrapper.
+A namespace may use different formats across languages, but each language must have
+exactly one format. Keep a handwritten `index.ts` in each language directory:
 
-`useLanguagePreference()` is the only language mutation API. Its `preference` is
-`system`, `en` or `zh`; the active locale is derived from the full ordered system
-language list. Selecting a fixed language records that choice even if it is already
-the currently resolved language.
+```ts
+import common from "./common.js";
+import example from "./example.json" with { type: "json" };
 
-## Catalog authoring
-
-Edit TypeScript under `locales/en/` and `locales/zh/`, with one file per namespace:
-
-```text
-locales/
-  en/{index,common,auth,tasks,settings,...}.ts
-  zh/{index,common,auth,tasks,settings,...}.ts
-  index.ts  # Static catalogs and the public /messages entry
-  lazy.ts   # Browser catalog loaders
+export default { common, example } as const;
 ```
 
-Each message filename becomes its namespace, so `auth.ts` exports the keys inside `auth`,
-without another `auth` wrapper. Language `index.ts` files only assemble those modules.
-Use `export default { ... } as const` to preserve
-literal strings for exact key, ICU argument and rich-text tag inference. Chinese
-modules use `satisfies CatalogShape<typeof en>` against their matching English module.
+TS namespace modules use `export default { ... } as const`. A translated TS module
+can use `satisfies CatalogShape<typeof en>` from `@raypx/i18n/types`.
+JSON contains only standard nested string objects. Shared TypeScript presets enable
+`resolveJsonModule`; JSON imports retain `.json` and the standard import attribute.
 
-Keep the same namespace files and keys in both languages. Register a new namespace
-in both `locales/en/index.ts` and `locales/zh/index.ts` using static `.js` imports. Imports include
-namespace files directly, so editing translations participates in normal builds and
-hot updates without a generation command or synchronized copies.
+An English TS baseline preserves exact keys, ICU argument types and rich-text
+callbacks. An English JSON baseline preserves keys, but its widened strings do
+not guarantee call-site ICU argument checking. `bun run i18n:check` checks both
+formats for static shape, language/key parity, ICU syntax and matching argument/tag
+names. It also rejects conflicting formats, duplicate namespace ownership and
+missing language entries or namespace registrations. This catalog validation does
+not type-check translation calls or replace TypeScript's TS-literal checks.
 
-`bun run i18n:check` validates static catalog structure, namespace/key parity,
-ICU syntax and arguments, and rich tags without executing translation modules.
+Reuse `common` for shared controls and status words; keep feature-specific guidance
+in its owning namespace. Use ICU plural parameters for numeric variants and pass
+numbers directly. Use `useFormatter().number(value, { style: "unit", unit: "minute",
+unitDisplay: "long" })` for standalone units. UI primitives receive caller labels.
 
-## Catalog delivery
+## Composing an application
 
-`/browser` imports catalogs through `#messages`, which resolves to `locales/index.ts`
-and bundles every language by default, so switches never load. The `i18nCatalogs({ catalogs: "lazy" })` Vite plugin
-from `/vite` selects `locales/lazy.ts` for the client environment: the default catalog
-plus one chunk per other language; server environments stay static. While a newly selected
-language loads, the provider keeps rendering the previous catalog, and only a first
-render with no ready catalog suspends. Lazy web hydration first awaits
-`preloadCatalog(document.documentElement.lang)` so the client matches the HTML.
-Web uses lazy delivery; Desktop reads local files and stays static.
+Shared packages expose pure `/messages/en` and `/messages/zh` data entries.
+Applications explicitly spread those entries and add their own private namespaces
+in `locales/en/index.ts` and `zh/index.ts`. Namespace ownership is unique; use no
+recursive merge. Infer the application type from its English entry:
 
-## Browser and desktop
+```ts
+import { createBrowserI18n } from "@raypx/i18n/browser";
+import { messages } from "#messages";
+import type en from "../locales/en/index.js";
 
-`BrowserLanguageProvider` from `/browser` accepts `initialPreference` and
-`initialSystemLocales`. Server rendering and the first client render use only this
-snapshot. After hydration the adapter restores only `raypx_locale`; missing or
-invalid values select system. Storage denial retains the loader snapshot. Retired
-product keys are ignored and left intact. Explicit choices persist to the current
-key; if writes are blocked, the active session still reflects the selected preference.
+export const { BrowserLanguageProvider, preloadCatalog, useTranslations } =
+  createBrowserI18n<typeof en>(messages);
+```
 
-Desktop passes its validated native snapshot with `restorePreference={false}`.
-This disables browser restoration and storage-event overrides while retaining system
-language changes and user choices. `useLanguagePreference().hydrated` becomes true
-after browser environment reconciliation, so the host can gate writeback.
-`readBrowserPreference()` reads the current browser key without inheriting cookies.
-Missing native preference files start from defaults.
+Create this binding once at module scope. A business package instead binds its
+private hook with `createTranslations<M>()`, composing its required catalog types
+through type-only imports. All bindings read the same underlying messages context;
+`useLocale`, `useFormatter`, `useNow`, `useTimeZone` and
+`useLanguagePreference` remain shared hooks from `/browser`. I18n never imports
+business catalogs. Tests assemble their owning package's fixtures directly.
+
+Web and Desktop each compose nine shared and five application-owned namespaces.
+Mobile statically combines only `common` and `auth`, using the pure translator
+without importing DOM adapters. Devtools keeps its own private bilingual dictionary.
+See the [ownership table](../../docs/architecture/internationalization.md).
+
+## Delivery and persistence
+
+`createBrowserI18n<M>(sources)` accepts one static catalog or async loader per
+language and returns the application provider, preload function and typed hook.
+Desktop uses static sources. Web's private `#messages` alias points to its static
+entry; `i18nCatalogs({ staticEntry, lazyEntry })` from `/vite` substitutes only
+that application's client entry. SSR stays static. English is bundled and Chinese
+loads as one language resource; no namespace-level loading is introduced.
+Web awaits `preloadCatalog(document.documentElement.lang)` before hydration.
+During a switch, the previous ready catalog stays visible while the next loads;
+failed requests can retry on a later switch. Only an initial unavailable catalog
+suspends, preserving mounted views and form drafts.
+
+`useLanguagePreference().setPreference()` is the only language mutation API.
+The preference is `system`, `en` or `zh`; resolution uses the full ordered
+system language list. Browser restoration reads only `raypx_locale` after the
+initial server snapshot. Missing or invalid values select system; denied reads
+retain the snapshot and denied writes do not roll back the active selection.
+Retired keys are ignored and left intact. Desktop passes its native snapshot with
+`restorePreference={false}` and waits for `hydrated` before host writeback.
+Server and hydration formatting use UTC; after mount the provider adopts the device
+time zone. Use the `timestamp` dateTime preset for absolute times.
 
 ## Pure helpers
 
-The root entry exports locale matching, request negotiation, synchronous generic
-translation and `createFormatter({locale, ...options})`. Product locale metadata is
-derived from `SUPPORTED_LOCALES` and its checked native-name map. `/preferences` exports the pure preference parser
-and full-list resolver; it imports no browser or native storage APIs.
+Root and `/types` expose locale negotiation, synchronous generic translation and
+formatting without catalogs, React or platform dependencies. `/preferences` owns
+pure preference parsing. `/messages/en` and `/messages/zh` contain only `common`.
+Error translation uses typed key maps and an explicit fallback; diagnostic prose is
+never product copy. Type a deliberately dynamic translator with `DynamicMessages`;
+`MessageCatalog` describes recursive structure rather than opting out of key checks.
 
-Error translation helpers bind map/fallback keys to the supplied typed translator.
-`translateErrorCode` requires an explicit fallback key. A single bridge connects
-sanitized transport interpolation values to the translator; diagnostic prose is
-never translated as product copy.
-
-Keep static message literals for key and ICU argument inference. When a synchronous
-translator consumes a dynamic catalog, explicitly type it as
-`DynamicMessages` from the root or `/types` entry. `MessageCatalog` describes
-recursive catalog structure for validation; it is not the opt-in dynamic translator
-type.
+Run this package's `check` and `test`, `bun run i18n:check` and root `verify`.

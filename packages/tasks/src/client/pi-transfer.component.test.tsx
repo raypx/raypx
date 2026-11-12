@@ -1,7 +1,8 @@
+import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import type { ModelCatalog, ModelSelection, AgentTask } from "@raypx/core/tasks";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { TaskDetail } from "./task-detail.js";

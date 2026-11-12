@@ -1,0 +1,31 @@
+import type { CatalogShape } from "@raypx/i18n/types";
+import type en from "../en/instances.js";
+
+export default {
+  sessionCheckFailed: "暂时无法确认登录状态，请联网后重试。",
+  signInOriginal: "登录原账号",
+  originMismatch: "如需在线使用此实例，请在 Desktop 连接配置中选择原服务器（{origin}）。",
+  title: "设置这台电脑",
+  registrationStatus: "电脑登记状态",
+  intro: "首次使用需登录并登记这台电脑。完成后可离线使用本地工具。",
+  bindIntro: "登记这台电脑后，即可离线使用本地工具。",
+  privacy: "项目文件保留在本机，远程访问需单独开启。",
+  signInToContinue: "登录并继续",
+  bind: "登记这台电脑",
+  registering: "正在登记这台电脑…",
+  unavailable: "本地实例身份不可用。如果归档过此配置，请从归档恢复完整配置。",
+  statusCheckFailed: "无法查询此电脑的登记状态。",
+  mismatch: "此实例属于其他账号或服务器，请使用原账号登录或使用另一个本地配置。",
+  revoked: "此实例已撤销，本地记录仍保留。",
+  code: "实例登记码",
+  inspect: "查看实例",
+  approve: "确认登记",
+  approved: "实例已登记",
+  instances: "已登记的实例",
+  revoke: "撤销实例",
+  registeredLabel: "已注册",
+  empty: "暂无注册实例",
+  revokeConfirm: "在此实例下次连接时撤销授权？本地记录仍会保留。",
+  error: "未能完成实例登记，请检查登记码与网络后重试。",
+  pending: "等待登记",
+} as const satisfies CatalogShape<typeof en>;

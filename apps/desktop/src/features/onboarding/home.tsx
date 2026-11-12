@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Empty,
@@ -42,7 +43,7 @@ export function LocalHome() {
         </EmptyHeader>
         <EmptyContent>
           <Button nativeButton={false} render={<Link to="/" />}>
-            {local("selectProject")}
+            {c("chooseProject")}
           </Button>
         </EmptyContent>
       </Empty>

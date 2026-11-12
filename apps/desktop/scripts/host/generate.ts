@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
-import { messages } from "@raypx/i18n/messages";
+import { messages } from "../../locales/index.js";
 
 export async function generateNativeAssets(desktop: string) {
   const directory = resolve(desktop, "generated");

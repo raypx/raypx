@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ScheduleIcon } from "@raypx/icons/schedule";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
@@ -7,7 +8,7 @@ import { PlayIcon } from "@raypx/icons/play";
 import { PlusIcon } from "@raypx/icons/plus";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { DeleteIcon } from "@raypx/icons/delete";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
@@ -70,6 +71,24 @@ function CloudJobs({
   const t = useTranslations("automations"),
     c = useTranslations("common");
   const format = useFormatter();
+  function failureMessage(code: ReturnType<typeof jobFailure>) {
+    if (code === "JOB_CONFLICT") return t("cloud.CONFLICT");
+    if (code === "JOB_NOT_FOUND") return t("cloud.NOT_FOUND");
+    if (code === "UNKNOWN_DELIVERY" || code === "DELIVERY_UNKNOWN")
+      return t("cloud.DELIVERY_UNCERTAIN");
+    return t(`cloud.${code}`);
+  }
+  function runStatus(status: CloudJobRun["status"]) {
+    if (
+      status === "running" ||
+      status === "failed" ||
+      status === "cancelled" ||
+      status === "interrupted" ||
+      status === "skipped"
+    )
+      return c(status);
+    return t(`cloud.status_${status}`);
+  }
   const { confirm, dialog } = useConfirmation();
   const alive = useRef(true),
     requests = useRef(new Set<AbortController>()),
@@ -337,7 +356,7 @@ function CloudJobs({
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>
-            <p>{t(`cloud.${error}`)}</p>
+            <p>{failureMessage(error)}</p>
             {(error === "CONFLICT" || error === "JOB_CONFLICT") && (
               <p className="text-xs">{t("cloud.conflictHint")}</p>
             )}
@@ -389,7 +408,7 @@ function CloudJobs({
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-sm font-medium wrap-anywhere">{job.name}</h2>
                 <Badge variant={job.enabled ? "secondary" : "outline"}>
-                  {t(job.enabled ? "enabled" : "disabled")}
+                  {c(job.enabled ? "enabled" : "paused")}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground wrap-anywhere">
@@ -488,7 +507,7 @@ function CloudJobs({
                     {date(run.startedAt)}
                   </time>
                   <Badge variant={run.status === "failed" ? "destructive" : "secondary"}>
-                    {t(`cloud.status_${run.status}`)}
+                    {runStatus(run.status)}
                   </Badge>
                   <span>{t(run.trigger === "manual" ? "cloud.manual" : "cloud.scheduled")}</span>
                 </span>
@@ -503,7 +522,7 @@ function CloudJobs({
                   )}
                   {run.code && (
                     <Alert variant={run.status === "failed" ? "destructive" : "default"}>
-                      <AlertDescription>{t(`cloud.${jobReason(run.code)}`)}</AlertDescription>
+                      <AlertDescription>{failureMessage(jobReason(run.code))}</AlertDescription>
                     </Alert>
                   )}
                   {run.status === "unknown" && (

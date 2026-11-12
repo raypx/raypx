@@ -1,4 +1,5 @@
-import { useTranslations } from "@raypx/i18n/browser";
+import { useTranslations } from "./i18n.js";
+
 export function Gate({ pending }: { pending?: boolean }) {
   const t = useTranslations("tasks");
   return (

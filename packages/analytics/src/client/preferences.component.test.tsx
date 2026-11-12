@@ -1,8 +1,9 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { createNoopAnalytics } from "@raypx-kit/analytics";
 import { AnalyticsPreferencesProvider, AnalyticsIdentity } from "./provider.js";
 import { browserPreferenceStore } from "../browser.js";

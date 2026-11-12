@@ -1,93 +1,112 @@
 # Internationalization
 
-`@raypx/i18n` owns static English/Chinese catalogs, device language preferences and
-platform adapters. `@raypx-kit/intl` is an independently published SDK that bundles
-`use-intl` for translation, formatting, React context and caches; Raypx does not
-declare `use-intl` itself. Application
-builds choose catalog delivery through `@raypx/i18n/vite`. Web splits non-default
-catalogs into local client chunks; Desktop and server rendering use static imports.
-There is no remote translation service or localized routing.
+Business packages own their catalogs; applications compose messages. `@raypx/i18n`
+owns only common copy, locale configuration, preference state and runtime adapters.
+`@raypx-kit/intl` is an independently published SDK bundling `use-intl`; Raypx
+has no direct dependency on use-intl, remote translation service or localized routing.
 
-## Types and configuration
+## Namespace ownership
 
-The locale runtime is the source of supported locale types and preference parsing.
-Product translations are authored in `packages/i18n/locales/<language>/<namespace>.ts`.
-Each file exports a static object with `as const`; English and Chinese share namespace
-files and keys. Each language directory has an authored `index.ts` that composes
-its namespace modules through static `.js` imports. Register new namespaces in both
-language entries. `locales/index.ts` supplies the static public catalogs;
-`locales/lazy.ts` supplies browser loaders. Catalog data and delivery live together.
-There is no generation step or duplicate catalog source.
-The English catalog preserves literal strings for namespace, key, ICU argument and
-rich tag inference. Each Chinese namespace satisfies the recursive `CatalogShape`
-of its English counterpart. The catalog gate also checks static object shape,
-namespace/key parity, ICU syntax, argument names and rich tag names without executing
-catalog modules. Runtime loading remains per language.
-Language controls are generated from the locale configuration and a complete
-native-name map. Application code imports hooks through `@raypx/i18n` platform
-entries. Dynamic keys are narrowed with domain types or explicit mappings.
-Blocks owns the shared language setting, using UI's shadcn Select; i18n
-provides the locale options and preference state without visual dependencies.
+| Owner     | Namespaces                                       |
+| --------- | ------------------------------------------------ |
+| I18n      | common                                           |
+| Auth      | auth                                             |
+| Account   | access                                           |
+| Tasks     | tasks, including terminalApproval                |
+| Memory    | memory                                           |
+| Jobs      | automations, local and cloud                     |
+| Analytics | analytics                                        |
+| Blocks    | settings                                         |
+| Instances | instances                                        |
+| Web       | dash, users, site, guest, legal                  |
+| Desktop   | files, terminal, engine, command, localWorkspace |
 
-Errors are translated through known key mappings and an explicit, typed fallback.
-External interpolation values are cleaned before a single dynamic type bridge.
-Diagnostic server text is never displayed as product copy. UTC, silent runtime
-errors and namespace-qualified missing-key fallback remain SDK defaults; catalogs
-are not automatically filled from a different language.
+Shared owners expose pure `/messages/en` and `/messages/zh` entries without React,
+UI or execution code. App catalogs remain private. Web and Desktop compose the nine
+shared entries and their own five namespaces through explicit object assembly.
+Mobile uses only common and auth, with a platform-neutral translator. Devtools'
+private `locales` dictionary loads only with Devtools and never enters app messages.
+UI primitives continue to receive caller-provided labels.
 
-## State and persistence
+Terminal approval copy lives at `tasks.terminalApproval.*`; the workspace return
+label is `common.backToWorkspace`. Neither has a compatibility alias.
 
-`useLanguagePreference().setPreference()` is the only product locale setter.
-The stored preference is `system` or an exact supported locale. Resolution uses
-explicit preference first, then all ordered system locales, then the default.
-Selecting English while system already resolves to English still changes and
-persists the mode. A system-derived locale is never stored as an explicit choice.
+## Formats and types
 
-The shared `LanguageProvider` is controlled by the platform owner. The browser
-adapter binds it to a catalog store, keeping the previous ready catalog visible
-while another language chunk loads. Only a first render without a ready catalog
-suspends. Translation hooks use the nearest upstream provider.
+Every language and namespace supports `locales/<language>/<namespace>.ts` or
+`.json`, with one format per namespace/language. Formats may differ across languages.
+Handwritten language `index.ts` files explicitly import and assemble their entries;
+there is no generated source or runtime registration. TS objects use `as const`
+and relative `.js` imports. JSON contains nested string objects and uses actual
+`.json` specifiers with `with { type: "json" }`. Shared TS presets enable
+`resolveJsonModule`; Bun, Vite and Mobile's Metro consume those imports.
 
-### Web
+An English TS baseline preserves key, ICU argument and rich-text tag call-site
+checks. Translated TS can satisfy `CatalogShape<typeof en>`. An English JSON
+baseline retains key types, but widened string values do not guarantee ICU argument
+checking at calls. The repository validator reads TS and JSON statically without
+executing modules. It checks supported languages, formats, nested string leaves,
+namespace/key parity, ICU syntax, matching argument/tag names, unique ownership and
+language entry registration. Shared entries expose only their owner's namespaces;
+application spreads must reference same-language public entries and cannot overwrite
+namespaces. These checks do not validate call-site arguments.
+JSON files are explicit validation and source/build cache inputs.
 
-The root loader resolves cookies and the complete weighted Accept-Language list.
-HTML and the first hydration render consume the same snapshot. Only after
-hydration does the browser read localStorage and `navigator.languages` (falling
-back to `navigator.language` when the list is empty).
+## Runtime composition
 
-Web enables `i18nCatalogs({ catalogs: "lazy" })` in its application Vite config.
-English remains in the client entry; Chinese loads on demand. Its client entry
-awaits `preloadCatalog(document.documentElement.lang)` before hydration so the
-initial client catalog matches the HTML. Server environments stay static.
+Applications infer their complete message type from their own English language
+entry. `createBrowserI18n<M>(sources)` returns their provider, preload function and
+typed translation hook. Business packages bind private `createTranslations<M>()`
+hooks using type-only imports of the catalog types they need. There are no global
+message declarations or imports from applications into shared packages.
 
-Browser restoration reads only `raypx_locale`; a missing or invalid value selects
-system. Retired product keys are ignored without deletion or migration. Storage denial
-retains the loader snapshot. Native snapshots remain authoritative and do not restore
-WebView preferences. `languagechange` refreshes the full candidate list.
+All typed bindings read the same underlying SDK messages context. Shared locale,
+formatting and preference hooks read that provider, and exactly one runtime binding
+owns preference context. `useLanguagePreference().setPreference()` is the only
+product language setter. Resolution uses explicit preference, the complete ordered
+system locale list and finally the default. A system-derived language is not stored
+as a fixed preference. Selecting the currently resolved language still records the
+explicit choice.
 
-### Desktop
+Loading remains per language. Static sources are ready immediately. A language
+switch keeps the previous ready catalog visible during loading, preserving mounted
+views and form drafts; failed chunks can retry on a later switch. Only a first render
+without a ready catalog suspends. Error translation uses known key mappings and
+an explicit typed fallback; diagnostic server prose is never product copy. Catalogs
+are not automatically filled from another language.
 
-The native preferences file keeps its existing schema and atomic writes. Preload
-passes a snapshot directly to the renderer, distinguishing valid, missing and
-failed reads. A valid file is authoritative. A missing file permits renderer
-default initialization. An invalid or unreadable file starts from safe defaults.
-LocalStorage synchronization is best effort and cannot replace the native snapshot.
+## Platforms
 
-The renderer enables native writeback only after initialization. It cannot write
-the temporary default `system` over preferences that have not yet been restored.
-The native file, CLI profiles and account sessions remain independent; logout
-does not clear device preferences.
+Web's private `#messages` alias normally resolves to `locales/index.ts` with both
+languages. `i18nCatalogs({ staticEntry, lazyEntry })` receives that app's URLs and
+substitutes only its client resolution. English stays static; Chinese becomes a
+language chunk. SSR uses static catalogs. The root loader negotiates cookies and the
+full weighted Accept-Language list per request. The client awaits
+`preloadCatalog(document.documentElement.lang)` before hydration, retaining the
+same initial catalog and UTC formatting. Concurrent SSR requests share no locale state.
 
-## Verification and release
+After hydration, Web restores only `raypx_locale` and reads the complete browser
+language list. Missing/invalid preferences mean system, denied reads retain the
+loader snapshot and denied writes do not roll back the active session. Retired keys
+are ignored without deletion or migration. Language events refresh system candidates.
 
-Use type rejection tests, controlled provider tests, browser hydration and storage
-tests and native bootstrap tests. Test both locale
-requests concurrently and keep SSR hydration configuration identical. Package
-archive checks verify Bun/Node imports and public declarations without DOM types.
-Packaged Desktop checks remain explicit gates; unit tests do
-not claim physical-device or GUI acceptance.
+Desktop and Mobile use static application catalogs. Desktop keeps the existing native
+preference schema and atomic writes, passing a validated snapshot with
+`restorePreference={false}`. Browser storage cannot override that snapshot. Host
+writeback waits for `hydrated`, avoiding temporary defaults overwriting a native
+preference. Logout preserves preferences and CLI profiles. Browser/renderer formatting
+adopts device time after mount; server and hydration stay UTC. Mobile uses native
+locale/appearance adapters without importing DOM entry points.
 
-SDK changes are developed through an uncommitted `bun link`, pinned to a verified
-`next` snapshot on the branch and replaced by the released exact alpha before
-merge. Do not commit a `file:`/`link:` dependency or import another repository's
-source. See [Raypx Kit library changes](../development/intl-release.md).
+## Verification
+
+Package-local tests cover typed TS and JSON bindings, shared context, form drafts,
+retry, persistence, time zones, concurrent SSR and hydration. Tooling fixtures cover
+all-TS, all-JSON and mixed formats plus rejected malformed/conflicting/missing
+catalogs. Build acceptance checks Web's lazy Chinese resource, Desktop's exclusion
+of Web-only copy and Mobile's DOM-free composition; JSON fixtures exercise each
+bundler. Run focused tests, `bun run i18n:check`, `bun run verify` and Web,
+Desktop-renderer and Mobile export builds. Native device/GUI acceptance is separate.
+
+SDK changes follow [Raypx Kit library changes](../development/intl-release.md).
+Do not commit linked dependencies or import another repository's source.

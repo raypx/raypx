@@ -1,8 +1,9 @@
+import { useTranslations } from "../../i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import type { LocalResult } from "@raypx/contracts/local-client";
 import { useEffect, useId, useState, useRef } from "react";
 import type { DeviceProject } from "@raypx/contracts/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
@@ -35,16 +36,18 @@ function failureKey(error: unknown) {
     : "settings.failed";
 }
 export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
+  const format = useFormatter();
   const t = useTranslations("terminal"),
+    approval = useTranslations("tasks.terminalApproval"),
     c = useTranslations("common"),
     id = useId();
   const [settings, setSettings] = useState<Settings>(),
     [connectors, setConnectors] = useState<Connector[]>([]);
   const [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState<ReturnType<typeof failureKey> | "approval.unavailable" | null>(
-      null,
-    ),
+    [error, setError] = useState<
+      ReturnType<typeof failureKey> | "tasks.terminalApproval.unavailable" | null
+    >(null),
     [saved, setSaved] = useState(false);
   const { confirm, dialog } = useConfirmation();
   const operation = useRef(false),
@@ -63,7 +66,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
         }
       },
       () => {
-        if (active) setError("approval.unavailable");
+        if (active) setError("tasks.terminalApproval.unavailable");
       },
     );
     return () => {
@@ -242,7 +245,11 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
               value={String(settings.waitSeconds)}
               options={durations.map((seconds) => ({
                 value: String(seconds),
-                label: t("settings.minutes", { minutes: seconds / 60 }),
+                label: format.number(seconds / 60, {
+                  style: "unit",
+                  unit: "minute",
+                  unitDisplay: "long",
+                }),
               }))}
               disabled={busy || unavailable}
               onValueChange={(value) => update({ waitSeconds: Number(value) })}
@@ -299,7 +306,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
       {error && (
         <div className="mt-3 space-y-2">
           <p role="alert" className="text-sm text-destructive-text">
-            {t(error)}
+            {error === "tasks.terminalApproval.unavailable" ? approval("unavailable") : t(error)}
           </p>
           <Button
             variant="outline"
@@ -311,7 +318,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
               })
             }
           >
-            {t("hook.refresh")}
+            {c("refreshStatus")}
           </Button>
         </div>
       )}

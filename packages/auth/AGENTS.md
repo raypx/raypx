@@ -93,3 +93,10 @@ happy-dom project; endpoint integration tests use the memory adapter under Bun.
 bun run --cwd packages/auth check
 bun run --cwd packages/auth test
 ```
+
+## Catalog ownership
+
+Own `auth` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

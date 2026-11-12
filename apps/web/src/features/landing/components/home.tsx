@@ -1,6 +1,7 @@
+import { useTranslations } from "../../../i18n.js";
 import { useId, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { IconComponent } from "@raypx/icons";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
@@ -268,6 +269,7 @@ function WorkspaceEntry({
 }
 
 function ComputersBand() {
+  const common = useTranslations("common");
   const t = useTranslations("guest");
   const spotlight = useSpotlight<HTMLElement>();
   return (
@@ -290,7 +292,7 @@ function ComputersBand() {
         <div className="flex min-w-0 flex-col items-start gap-6">
           <div className="flex flex-col gap-3">
             <h2 id="landing-computers-title" className={sectionTitle}>
-              {t("computers")}
+              {common("connectedComputers")}
             </h2>
             <p className="max-w-md text-sm leading-6 text-pretty text-muted-foreground @xl/main:text-base @xl/main:leading-7">
               {t("computersSummary")}

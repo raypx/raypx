@@ -1,7 +1,8 @@
+import { useTranslations } from "../i18n.js";
 import { Link } from "@tanstack/react-router";
 import { GithubIcon } from "@raypx/icons/github";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { cn } from "@raypx/ui/lib/utils";
 import markUrl from "@raypx/ui/logo-mark.webp";
 

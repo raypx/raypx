@@ -1,8 +1,9 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../i18n.js";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import userEvent from "@testing-library/user-event";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { deferred } from "../../../tests/helpers/desktop.js";
 import { CloudTerminalSettings } from "./cloud-terminal-settings.js";
 

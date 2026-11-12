@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,7 @@ import {
 } from "@raypx/ui/components/ui/dialog";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { Link } from "@tanstack/react-router";
@@ -30,7 +31,7 @@ export function QuickSettingsModal() {
         className="max-h-[85dvh] w-[calc(100%-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-2xl"
       >
         <DialogHeader className="border-b border-border p-5 pr-14">
-          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogTitle>{c("settings")}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {t("localHint")}
           </DialogDescription>

@@ -1,10 +1,11 @@
+import { useTranslations } from "../../i18n.js";
 import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { AccountDetails } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { apiUrl, authClient, webUrl } from "../auth/client.js";

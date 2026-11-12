@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -13,7 +14,7 @@ import {
   EmptyMedia,
 } from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useDesktopPlatform } from "../../../lib/platform-context.js";
 import { apiUrl, authClient, desktopFetch } from "../client.js";
 import { useDesktopSignOut } from "../sign-out.js";

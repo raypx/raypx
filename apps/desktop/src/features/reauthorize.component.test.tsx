@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../i18n.js";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 
 const mocks = vi.hoisted(() => ({
   recent: false,

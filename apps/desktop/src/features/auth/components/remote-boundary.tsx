@@ -1,10 +1,11 @@
+import { useTranslations } from "../../../i18n.js";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { authClient } from "../client.js";
 import { desktopReturnTo } from "../return-to.js";
 

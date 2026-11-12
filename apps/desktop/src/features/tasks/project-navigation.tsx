@@ -1,9 +1,10 @@
+import { useTranslations } from "../../i18n.js";
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { PlusIcon } from "@raypx/icons/plus";
 import { SearchIcon } from "@raypx/icons/search";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import {
@@ -49,6 +50,7 @@ function SessionLink({ projectId, deviceId, taskId, onClick, ...props }: Session
 
 /** Local projects with their recent sessions; never depends on a browser account. */
 export function ProjectNavigation() {
+  const common = useTranslations("common");
   const t = useTranslations("tasks");
   const platform = useDesktopPlatform();
   const location = useLocation();
@@ -103,7 +105,7 @@ export function ProjectNavigation() {
           size="icon-sm"
           variant="ghost"
           nativeButton={false}
-          aria-label={t("authorize")}
+          aria-label={common("chooseProject")}
           render={<Link to="/welcome" />}
         >
           <PlusIcon aria-hidden="true" />

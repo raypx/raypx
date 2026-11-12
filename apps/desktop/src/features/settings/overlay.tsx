@@ -1,5 +1,6 @@
+import { useTranslations } from "../../i18n.js";
 import { lazy, Suspense } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,7 @@ export function SettingsOverlay() {
         className="flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(56rem,calc(100%-2rem))]"
       >
         <DialogHeader className="shrink-0 border-b border-border px-6 py-5 pr-14">
-          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogTitle>{c("settings")}</DialogTitle>
           <DialogDescription>{t("localHint")}</DialogDescription>
         </DialogHeader>
         <div className="@container/settings min-h-0 overflow-y-auto overscroll-contain px-6 pb-6">

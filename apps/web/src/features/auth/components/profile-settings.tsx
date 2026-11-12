@@ -1,5 +1,6 @@
+import { useTranslations } from "../../../i18n.js";
 import { useId, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -26,7 +27,6 @@ export function ProfileSettings({
 }) {
   const t = useTranslations("auth");
   const c = useTranslations("common");
-  const s = useTranslations("settings");
   const id = useId();
   const [draft, setDraft] = useState(name);
   const [savedName, setSavedName] = useState(name);
@@ -109,7 +109,7 @@ export function ProfileSettings({
           {dirty && (
             <Badge variant="outline">
               <EditIcon aria-hidden="true" data-icon="inline-start" />
-              {s("unsavedChanges")}
+              {c("unsavedChanges")}
             </Badge>
           )}
           {feedback === "saved" && (

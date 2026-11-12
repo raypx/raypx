@@ -1,9 +1,10 @@
+import { useTranslations } from "../../i18n.js";
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useAuthActions, type AuthActionResult } from "@raypx/auth/hooks";
 import { Button } from "@raypx/ui/components/ui/button";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useDesktopPlatform } from "../../lib/platform-context.js";
 import { analytics } from "../analytics/client.js";
 import { signOutDesktopHost } from "../tasks/host-session.js";

@@ -1,6 +1,7 @@
+import { useTranslations } from "../../i18n.js";
 import { useId, useState } from "react";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useLocale } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { PasswordInput } from "@raypx/ui/password-input";

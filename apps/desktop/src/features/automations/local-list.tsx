@@ -1,3 +1,4 @@
+import { useTranslations } from "../../i18n.js";
 import { ClockIcon } from "@raypx/icons/clock";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { EditIcon } from "@raypx/icons/edit";
@@ -6,7 +7,7 @@ import { PlayIcon } from "@raypx/icons/play";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
 
@@ -35,7 +36,7 @@ export function LocalJobList({
   const c = useTranslations("common");
   function association(job: JobDefinition) {
     if (!job.projectId) return t("local.globalAutomation");
-    return roots.find((root) => root.id === job.projectId)?.name ?? t("local.projectUnavailable");
+    return roots.find((root) => root.id === job.projectId)?.name ?? c("projectUnavailable");
   }
   return (
     <div>
@@ -54,7 +55,7 @@ export function LocalJobList({
                 {association(job)}
               </span>
               <Badge variant={job.enabled ? "secondary" : "outline"}>
-                {t(job.enabled ? "enabled" : "disabled")}
+                {c(job.enabled ? "enabled" : "paused")}
               </Badge>
             </div>
             <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

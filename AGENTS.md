@@ -95,6 +95,10 @@ The accepted foundation design and current architecture decisions define the imp
 ## Code and data
 
 - Preserve strict TypeScript, type-only imports and exactOptionalPropertyTypes.
+- Business packages own `locales/<language>/<namespace>.ts` or `.json` catalogs and
+  pure `messages/en`/`messages/zh` exports; apps compose private catalogs. I18n owns
+  common copy and shared runtime state. Keep handwritten language entries, unique
+  namespace ownership, one format per namespace/language and no generation.
 - Use `.js` specifiers for relative TypeScript imports and re-exports, including
   dynamic imports. Keep source files, package export targets and filesystem paths
   at their actual `.ts`/`.tsx` extensions.

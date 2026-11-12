@@ -1,6 +1,7 @@
+import { useTranslations } from "../../../i18n.js";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { formText } from "../../../form-data.js";
 import { useFilesStore } from "../store.js";
 
@@ -21,7 +22,7 @@ export function FileOperationForm({ onSubmit }: { onSubmit: (value: string) => u
       }}
     >
       <label htmlFor="file-path" className="text-xs whitespace-nowrap">
-        {operation.type === "move" ? t("destination") : t("path")}
+        {operation.type === "move" ? t("destination") : c("relativePath")}
       </label>
       <Input
         id="file-path"

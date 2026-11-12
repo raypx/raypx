@@ -5,7 +5,7 @@ import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition, JobRun } from "@raypx/core/jobs";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/core/memory";
 import type { ControlInfo, ObservedProjection } from "@raypx/contracts/terminal";
-import { messages } from "@raypx/i18n/messages";
+import { messages } from "../../../locales/index.js";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences.js";
 import { CONNECTION_KEY } from "../../../config.js";
 import { nativePresentation } from "../../../scripts/host/presentation.js";
@@ -204,7 +204,7 @@ async function localSessionFixture() {
   await navigate("/");
   const homeTitles = [messages.en, messages.zh].flatMap((locale) => [
     locale.localWorkspace.welcome,
-    locale.files.title,
+    locale.common.files,
   ]);
   await waitFor(
     async () =>

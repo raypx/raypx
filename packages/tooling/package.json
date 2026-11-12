@@ -26,7 +26,8 @@
     "@posthog/cli": "catalog:dev",
     "@raypx-kit/devkit": "catalog:dev",
     "@raypx-kit/intl": "catalog:",
-    "@raypx/runtime-node": "workspace:*"
+    "@raypx/runtime-node": "workspace:*",
+    "oxc-parser": "catalog:dev"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

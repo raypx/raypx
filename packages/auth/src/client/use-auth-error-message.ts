@@ -1,4 +1,5 @@
-import { useTranslations } from "@raypx/i18n/browser";
+import { useTranslations } from "./i18n.js";
+
 import type { AuthActionError } from "../hooks.js";
 
 export function useAuthErrorMessage(

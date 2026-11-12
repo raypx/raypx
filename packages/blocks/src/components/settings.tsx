@@ -1,9 +1,10 @@
+import { useTranslations } from "../i18n.js";
 import { useId, type ReactNode } from "react";
 import { GlobalIcon } from "@raypx/icons/global";
 import { PaletteIcon } from "@raypx/icons/palette";
 import type { IconComponent } from "@raypx/icons";
 import { LOCALE_OPTIONS } from "@raypx/i18n";
-import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
+import { useLanguagePreference } from "@raypx/i18n/browser";
 import { parseLocalePreference } from "@raypx/i18n/preferences";
 import {
   Select,

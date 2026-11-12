@@ -1,6 +1,7 @@
+import { useTranslations } from "./i18n.js";
 import { useEffect, useRef, type ReactNode } from "react";
 import type { AnalyticsClient } from "@raypx-kit/analytics";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { analyticsPage, type AnalyticsPreferenceStore } from "../index.js";
 import {
   AnalyticsPreferencesProvider,

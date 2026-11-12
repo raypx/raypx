@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#messages": "./locales/index.ts"
+  },
   "scripts": {
     "dev": "raypx-dev env -- bun --bun vp dev --config vite.app.config.ts",
     "build": "raypx-dev env -- bun --bun vp build --config vite.app.config.ts",

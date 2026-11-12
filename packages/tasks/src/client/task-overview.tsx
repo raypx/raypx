@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import type { AgentTask } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { isTaskActive } from "../model/task.js";
@@ -16,21 +17,22 @@ export function TaskOverview({
   onChange: (value: TaskFilters) => void;
 }) {
   const t = useTranslations("tasks");
+  const common = useTranslations("common");
   const groups = [
-    { status: "all", label: "allTasks", count: tasks.length },
+    { status: "all", label: common("all"), count: tasks.length },
     {
       status: "attention",
-      label: "needsYou",
+      label: t("needsYou"),
       count: tasks.filter((task) => task.status === "waiting").length,
     },
     {
       status: "working",
-      label: "activeTasks",
+      label: t("activeTasks"),
       count: tasks.filter((task) => isTaskActive(task) && task.status !== "waiting").length,
     },
     {
       status: "finished",
-      label: "finishedTasks",
+      label: t("finishedTasks"),
       count: tasks.filter((task) => !isTaskActive(task)).length,
     },
   ] as const;
@@ -56,10 +58,10 @@ export function TaskOverview({
                 selected && "bg-background text-foreground shadow-sm hover:bg-background",
               )}
             >
-              {group.label === "needsYou" && group.count > 0 && (
+              {group.status === "attention" && group.count > 0 && (
                 <span aria-hidden="true" className="size-1.5 rounded-full bg-foreground" />
               )}
-              {t(group.label)}
+              {group.label}
               <span className="text-xs text-muted-foreground tabular-nums">{group.count}</span>
             </Button>
           );

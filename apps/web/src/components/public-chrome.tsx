@@ -1,6 +1,7 @@
+import { useTranslations } from "../i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Logo } from "@raypx/ui/logo";
 import { cn } from "@raypx/ui/lib/utils";
 

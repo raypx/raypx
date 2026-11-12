@@ -1,9 +1,10 @@
+import { useTranslations } from "../../../i18n.js";
 import { CodeFolderIcon } from "@raypx/icons/code-folder";
 import { MonitorIcon } from "@raypx/icons/monitor";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import type { IconComponent } from "@raypx/icons";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { cn } from "@raypx/ui/lib/utils";
 import { DotGrid } from "../../../components/artwork.js";
 import { accentGradient } from "../../../components/brand-accent.js";
@@ -82,6 +83,7 @@ function FeatureItem({
 }
 
 function ExampleApproval() {
+  const common = useTranslations("common");
   const t = useTranslations("guest");
   return (
     <div
@@ -105,7 +107,7 @@ function ExampleApproval() {
       </div>
       <code className="truncate rounded-md bg-muted px-2.5 py-1.5 text-xs">bun run db:migrate</code>
       <div className="flex justify-end gap-2 text-xs">
-        <span className="rounded-md border border-border px-2.5 py-1">{t("exampleDeny")}</span>
+        <span className="rounded-md border border-border px-2.5 py-1">{common("deny")}</span>
         <span className="rounded-md bg-foreground px-2.5 py-1 text-background">
           {t("exampleApprove")}
         </span>

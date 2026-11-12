@@ -149,8 +149,11 @@ from UI's shadcn Select and i18n's browser preference hook.
 Contracts/api contains oRPC definitions; contracts/local contains Zod device
 messages. Client is the remote SDK. Local interfaces are never registered on
 public RPC. UI contains DOM components, a `themes` entry and a pure `themes/config` entry.
-I18n contains static English/Chinese catalogs and platform adapters. Its controlled
-Raypx Kit provider delegates translation, formatting and React context to its bundled use-intl.
+I18n owns common copy, locale policy and platform adapters. Business packages expose
+pure language data entries; Web, Desktop and Mobile privately compose their own
+TS/JSON catalogs. Typed feature hooks share the application messages context without
+global declarations. The controlled Raypx Kit provider delegates translation,
+formatting and React context to its bundled use-intl.
 Only `useLanguagePreference().setPreference()` changes the product language
 preference; the active locale is derived from that preference and the full ordered
 system locale list. See [internationalization](internationalization.md).

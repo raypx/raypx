@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import {
   useCallback,
   useState,
@@ -5,7 +6,7 @@ import {
   type MouseEventHandler,
   type ReactNode,
 } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { FolderIcon } from "@raypx/icons/folder";
 import {
@@ -165,7 +166,7 @@ function ProjectSessions({
               }
             >
               <span className="min-w-0 flex-1 truncate">{thread.root.prompt}</span>
-              <TaskStatusMark status={thread.latest.status} label={t(thread.latest.status)} />
+              <TaskStatusMark status={thread.latest.status} />
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
         );

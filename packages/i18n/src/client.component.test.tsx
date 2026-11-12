@@ -1,8 +1,15 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { useState } from "react";
-import { IntlProvider, useFormatter, useLocale, useTranslations } from "./react.js";
-import { LanguageProvider, useLanguagePreference } from "./language-provider.js";
+import {
+  IntlProvider,
+  useFormatter,
+  useLocale,
+  intlClient,
+  useLanguagePreference,
+} from "./react.js";
+import { useTranslations } from "../tests/i18n.js";
+const LanguageProvider = intlClient.LanguageProvider;
 import { messages } from "../locales/index.js";
 import type { LocalePreference } from "./preferences.js";
 
@@ -70,6 +77,7 @@ describe("controlled internationalization", () => {
       const [preference, setPreference] = useState<LocalePreference>("system");
       return (
         <LanguageProvider
+          messages={messages}
           preference={preference}
           onPreferenceChange={setPreference}
           systemLocales={["fr", "en-US"]}

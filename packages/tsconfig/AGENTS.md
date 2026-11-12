@@ -29,6 +29,8 @@ README documents every preset and compiler guarantee.
 - `verbatimModuleSyntax` and `exactOptionalPropertyTypes` are inherited from
   `base.json`. Never disable either, or any other option in its strict set.
 - Presets extend siblings with relative `./<preset>.json` paths only.
+- `resolveJsonModule` is enabled in the base. JSON imports use `.json` with standard
+  `with { type: "json" }` attributes; TypeScript imports continue to use `.js`.
 - Relative TypeScript module specifiers use `.js`; leave
   `allowImportingTsExtensions` disabled. Filesystem paths and package export targets
   retain their actual source extensions.

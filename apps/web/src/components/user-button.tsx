@@ -1,8 +1,9 @@
+import { useTranslations } from "../i18n.js";
 import { useEffect, useRef } from "react";
 import { AccountMenu } from "@raypx/account/client";
 import { hasPermission } from "@raypx/account/access";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClientOnly, useRouter, useRouterState } from "@tanstack/react-router";
 import { DropdownMenuItem } from "@raypx/ui/components/ui/dropdown-menu";

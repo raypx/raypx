@@ -1,4 +1,5 @@
 import { implement, ORPCError } from "@orpc/server";
+import has from "lodash-es/has.js";
 import { apiContract } from "@raypx/contracts/api";
 import type { ApiAppOptions } from "../app/options.js";
 import { ControlError, type ControlService } from "@raypx/control";
@@ -49,12 +50,7 @@ function hasPollutingKey(value: unknown): boolean {
     const item = pending.pop();
     if (!item || typeof item !== "object" || seen.has(item)) continue;
     seen.add(item);
-    if (Object.hasOwn(item, "__proto__")) return true;
-    const constructor = Object.hasOwn(item, "constructor")
-      ? (item as { constructor?: unknown }).constructor
-      : undefined;
-    if (constructor && typeof constructor === "object" && Object.hasOwn(constructor, "prototype"))
-      return true;
+    if (has(item, ["__proto__"]) || has(item, ["constructor", "prototype"])) return true;
     pending.push(...Object.values(item));
   }
   return false;

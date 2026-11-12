@@ -1,12 +1,25 @@
+import { useTranslations } from "./i18n.js";
 import type { AgentTask } from "@raypx/core/tasks";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CheckIcon } from "@raypx/icons/check";
+
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { cn } from "@raypx/ui/lib/utils";
 
 type TaskStatus = AgentTask["status"];
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 type Indicator = "live" | "attention" | "done" | "problem" | "idle" | "none";
+
+export function useTaskStatusLabel() {
+  const t = useTranslations("tasks");
+  const common = useTranslations("common");
+  return function label(status: TaskStatus) {
+    if (status === "succeeded") return common("completed");
+    if (status === "failed" || status === "cancelled" || status === "interrupted")
+      return common(status);
+    return t(status);
+  };
+}
 
 const failedStatuses: ReadonlySet<TaskStatus> = new Set([
   "failed",
@@ -51,19 +64,12 @@ function StatusIndicator({ kind }: { kind: Indicator }) {
  * label with a shape (live dot, attention dot, check, alert) so it never relies on color;
  * live states pulse only while they are actually running.
  */
-export function TaskStatusBadge({
-  status,
-  label,
-  className,
-}: {
-  status: TaskStatus;
-  label: string;
-  className?: string;
-}) {
+export function TaskStatusBadge({ status, className }: { status: TaskStatus; className?: string }) {
+  const label = useTaskStatusLabel();
   return (
     <Badge variant={statusVariant(status)} className={cn("shrink-0 gap-1.5", className)}>
       <StatusIndicator kind={statusIndicator(status)} />
-      {label}
+      {label(status)}
     </Badge>
   );
 }
@@ -72,7 +78,8 @@ export function TaskStatusBadge({
  * The compact form for dense navigation: only states that ask for a look (running,
  * waiting, failed) show a mark, and each carries its label for assistive technology.
  */
-export function TaskStatusMark({ status, label }: { status: TaskStatus; label: string }) {
+export function TaskStatusMark({ status }: { status: TaskStatus }) {
+  const label = useTaskStatusLabel();
   const kind = statusIndicator(status);
   if (kind !== "live" && kind !== "attention" && kind !== "problem") return null;
   return (
@@ -83,7 +90,7 @@ export function TaskStatusMark({ status, label }: { status: TaskStatus; label: s
       )}
     >
       <StatusIndicator kind={kind} />
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{label(status)}</span>
     </span>
   );
 }

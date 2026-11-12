@@ -1,10 +1,11 @@
+import { useTranslations } from "./i18n.js";
 import { agentProviderMetadata } from "@raypx/core/tasks";
 import { Gate } from "./workspace-gate.js";
 
 import { useCallback, useId, useRef, useState } from "react";
 import { useRemoteQuery } from "./remote-query.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { SelectField } from "@raypx/ui/select-field";
 import {
   Collapsible,
@@ -67,7 +68,7 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
   return (
     <section className="flex flex-col gap-4 pt-4" data-tasks>
       <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold">{t("devices")}</h2>
+        <h2 className="text-base font-semibold">{c("connectedComputers")}</h2>
         <p className="text-sm text-muted-foreground">{t("devicesHint")}</p>
       </div>
       {Boolean(data?.length) && (
@@ -91,11 +92,11 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
           </Field>
           <SelectField
             className="w-40 max-w-full"
-            aria-label={t("allStatuses")}
+            aria-label={c("allStatuses")}
             value={status}
             onValueChange={setStatus}
             options={[
-              { value: "all", label: t("allStatuses") },
+              { value: "all", label: c("allStatuses") },
               ...(["online", "offline", "revoked"] as const).map((value) => ({
                 value,
                 label: t(value),
@@ -182,7 +183,11 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
                         {agentProviderMetadata[capability.provider].shortLabel}{" "}
                         <span className="text-xs text-muted-foreground">{capability.version}</span>
                       </span>
-                      <Badge variant="outline">{t(capability.reason)}</Badge>
+                      <Badge variant="outline">
+                        {capability.reason === "unconfigured"
+                          ? c("unconfigured")
+                          : t(capability.reason)}
+                      </Badge>
                     </li>
                   ))}
                 </ul>

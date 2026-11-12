@@ -1,7 +1,8 @@
+import { useTranslations } from "../../i18n.js";
 import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.js";
 import { createFileRoute } from "@tanstack/react-router";
 import { MemoryLibraryPage } from "@raypx/memory/client";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary.js";
 import { accountMemory, memoryProjects, memoryUsage } from "../../features/memory/client.js";
 import { ProjectTools } from "../../features/tasks/project-tools.js";

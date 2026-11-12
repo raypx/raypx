@@ -1,3 +1,4 @@
+import { useTranslations } from "./i18n.js";
 import type { ReactNode } from "react";
 import type { IconComponent } from "@raypx/icons";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
@@ -10,12 +11,13 @@ import { SpinnerIcon } from "@raypx/icons/spinner";
 import { StopIcon } from "@raypx/icons/stop";
 import { TaskListIcon } from "@raypx/icons/task-list";
 import { TerminalIcon } from "@raypx/icons/terminal";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { cn } from "@raypx/ui/lib/utils";
 import type { RunStep } from "../model/run-steps.js";
 import { formatDuration } from "./format-duration.js";
 import { ShimmerText } from "./shimmer-text.js";
+import { useTaskStatusLabel } from "./task-status.js";
 
 type Tone = "current" | "done" | "attention" | "problem";
 type StatusStep = Extract<RunStep, { kind: "status" }>;
@@ -88,11 +90,16 @@ function requestBadge(status: RequestStep["status"]) {
  */
 export function RunTimeline({ steps, live }: { steps: readonly RunStep[]; live: boolean }) {
   const t = useTranslations("tasks");
+  const common = useTranslations("common");
+  const taskStatus = useTaskStatusLabel();
   const format = useFormatter();
 
   function label(step: RunStep, current: boolean): ReactNode {
-    if (step.kind === "status") return t(step.status);
-    if (step.kind === "request") return step.title || t(step.requestKind);
+    if (step.kind === "status") return taskStatus(step.status);
+    if (step.kind === "request") {
+      if (step.title) return step.title;
+      return step.requestKind === "plan" ? common("plan") : t(step.requestKind);
+    }
     const text = t("toolCalls", { count: step.count });
     return <ShimmerText active={current && step.running > 0}>{text}</ShimmerText>;
   }
@@ -100,7 +107,11 @@ export function RunTimeline({ steps, live }: { steps: readonly RunStep[]; live: 
   function aside(step: RunStep) {
     if (step.kind === "request") {
       const badge = requestBadge(step.status);
-      return <Badge variant={badge.variant}>{t(badge.label)}</Badge>;
+      return (
+        <Badge variant={badge.variant}>
+          {badge.label === "cancelled" ? common("cancelled") : t(badge.label)}
+        </Badge>
+      );
     }
     if (step.kind !== "tools") return null;
     return (

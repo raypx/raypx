@@ -1,5 +1,6 @@
+import { useTranslations } from "../../../i18n.js";
 import type { ReactNode } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { CheckIcon } from "@raypx/icons/check";
 import { ClockIcon } from "@raypx/icons/clock";
 import { FileTextIcon } from "@raypx/icons/file-text";
@@ -86,6 +87,7 @@ export function ProjectsArt() {
 }
 
 export function ApprovalsArt() {
+  const common = useTranslations("common");
   const t = useTranslations("guest");
   return (
     <ArtFrame>
@@ -113,7 +115,7 @@ export function ApprovalsArt() {
           bun run db:migrate
         </code>
         <div className="flex justify-end gap-2 text-xs">
-          <span className="rounded-md border border-border px-2.5 py-1">{t("exampleDeny")}</span>
+          <span className="rounded-md border border-border px-2.5 py-1">{common("deny")}</span>
           <span className="rounded-md bg-foreground px-2.5 py-1 text-background">
             {t("exampleApprove")}
           </span>

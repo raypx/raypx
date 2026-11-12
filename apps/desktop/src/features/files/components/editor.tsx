@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import { useEffect, useMemo, useRef } from "react";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { SaveIcon } from "@raypx/icons/save";
@@ -5,7 +6,7 @@ import { SpinnerIcon } from "@raypx/icons/spinner";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { isDirty, useFilesStore } from "../store.js";
 
 export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose: () => unknown }) {
@@ -73,7 +74,7 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
             </p>
           )}
         </div>
-        {dirty && <Badge variant="secondary">{t("unsavedChanges")}</Badge>}
+        {dirty && <Badge variant="secondary">{c("unsavedChanges")}</Badge>}
         <div className="ml-auto flex items-center gap-2">
           <Button
             variant="ghost"
@@ -127,7 +128,7 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
         disabled={busy}
       />
       <footer className="flex items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2 text-xs text-muted-foreground tabular-nums">
-        <span>{t("lineCount", { count: String(lineCount) })}</span>
+        <span>{t("lineCount", { count: lineCount })}</span>
         <span>UTF-8</span>
       </footer>
     </section>

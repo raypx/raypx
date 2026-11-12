@@ -15,3 +15,10 @@ this entry must not import routers, environment readers or native adapters.
 
 Tests live beside source; consent UI/browser storage suites use the
 `*.component.test.ts(x)` suffix and happy-dom, while pure policy tests use `*.test.ts`.
+
+## Catalog ownership
+
+Own `analytics` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

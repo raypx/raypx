@@ -8,7 +8,8 @@ import { createCatalogStore } from "./catalog-store.js";
 import en from "../locales/en/index.js";
 import zh from "../locales/zh/index.js";
 import type { LocalePreference } from "./preferences.js";
-import { useLanguagePreference, useLocale, useTranslations } from "./react.js";
+import { useLanguagePreference, useLocale } from "./react.js";
+import { useTranslations } from "../tests/i18n.js";
 import type { Messages } from "./types.js";
 
 afterEach(() => {

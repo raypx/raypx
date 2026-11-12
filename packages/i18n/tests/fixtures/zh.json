@@ -1,0 +1,6 @@
+{
+  "probe": {
+    "greeting": "你好 {name}",
+    "count": "{count, number} 项"
+  }
+}

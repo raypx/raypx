@@ -17,7 +17,7 @@ export default function AccountScreen() {
         className="size-12"
       />
       <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
-        {t("auth.accountTitle")}
+        {t("common.account")}
       </Text>
       <Text className="text-base leading-6 text-foreground">{data?.user.name}</Text>
       <Text className="text-base leading-6 text-muted-foreground">{data?.user.email}</Text>

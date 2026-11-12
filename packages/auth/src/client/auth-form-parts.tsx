@@ -1,10 +1,11 @@
+import { useTranslations } from "./i18n.js";
 import type { ComponentType, ReactNode } from "react";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CheckCircleIcon } from "@raypx/icons/check-circle";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { cn } from "@raypx/ui/lib/utils";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import type { AuthMode } from "./auth-link.js";
 import type { ModeConfig } from "./auth-modes.js";
 

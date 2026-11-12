@@ -1,7 +1,6 @@
 {
   "extends": "@raypx/tsconfig/react-library.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
     "types": ["node"]
   },
   "include": ["src", "locales", "tests"]

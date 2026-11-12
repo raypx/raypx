@@ -1,10 +1,11 @@
+import { useTranslations } from "./i18n.js";
 import { useEffect, useState } from "react";
 import {
   taskExecutionBudget,
   type TaskContextSelection,
   type TaskContextTarget,
 } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { ContextError, type ContextDocument } from "@raypx/core/memory";
 import type { MemoryClientPort } from "./port.js";

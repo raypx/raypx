@@ -9,9 +9,8 @@ import {
 import type { createCatalogStore } from "./catalog-store.js";
 import { intlClient } from "./react.js";
 import { localeRuntime } from "./runtime.js";
-import type { MessagesByLocale } from "./types.js";
+import type { DynamicMessages, MessagesByLocale } from "./types.js";
 
-type CatalogStore = ReturnType<typeof createCatalogStore>;
 type LanguageProviderProps = ComponentProps<typeof intlClient.LanguageProvider>;
 
 /**
@@ -19,7 +18,9 @@ type LanguageProviderProps = ComponentProps<typeof intlClient.LanguageProvider>;
  * catalog while the selected one loads, so it never suspends the tree; only a first
  * render without any ready catalog suspends.
  */
-export function createCatalogLanguageProvider(store: CatalogStore) {
+export function createCatalogLanguageProvider<M extends DynamicMessages>(
+  store: ReturnType<typeof createCatalogStore<M>>,
+) {
   return function CatalogLanguageProvider(props: LanguageProviderProps) {
     const locale = localeRuntime.resolvePreference(props.preference, props.systemLocales);
     const loaded = useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);

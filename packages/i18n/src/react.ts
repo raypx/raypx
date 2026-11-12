@@ -1,13 +1,18 @@
 import { createIntlClient } from "@raypx-kit/intl/client";
 import { intlDefaults } from "./formats.js";
 import { localeRuntime } from "./runtime.js";
-import type en from "../locales/en/index.js";
+import type { DynamicMessages } from "./types.js";
 
-export const intlClient = createIntlClient<typeof en>()(localeRuntime, intlDefaults);
+// This instance alone owns language preference context. Typed translation bindings
+// read the same SDK messages context without mounting another language provider.
+export const intlClient = createIntlClient()(localeRuntime, intlDefaults);
+
+export function createTranslations<M extends DynamicMessages>() {
+  return createIntlClient<M>()(localeRuntime, intlDefaults).useTranslations;
+}
 export const {
   IntlProvider,
   useLocale,
-  useTranslations,
   useFormatter,
   useNow,
   useTimeZone,

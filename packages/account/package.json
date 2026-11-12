@@ -8,7 +8,9 @@
     "./access": "./src/access.ts",
     "./client": "./src/client.ts",
     "./client/styles.css": "./src/client/styles.css",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./messages/en": "./locales/en/index.ts",
+    "./messages/zh": "./locales/zh/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

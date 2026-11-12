@@ -49,6 +49,7 @@ Every preset inherits these options from `base.json`:
 | noUnusedParameters               | true  | unused parameters are errors unless prefixed with \_            |
 | noUncheckedSideEffectImports     | true  | side-effect imports must resolve                                |
 | forceConsistentCasingInFileNames | true  | import casing matches the file system                           |
+| resolveJsonModule                | true  | infer keys for imported JSON objects                            |
 | noEmit                           | true  | type-checking only; bundlers and declaration builders emit code |
 | skipLibCheck                     | true  | third-party declarations are not re-checked                     |
 
@@ -63,7 +64,9 @@ and type-only imports. TypeScript, Bun and the application bundlers resolve them
 to the `.ts`/`.tsx` source files; Mobile's Metro config applies the same convention.
 Source filenames, package export targets and filesystem paths keep their actual
 extensions. The presets leave `allowImportingTsExtensions` disabled so type checks
-reject `.ts`/`.tsx` module specifiers.
+reject `.ts`/`.tsx` module specifiers. JSON imports keep `.json` and use standard
+`with { type: "json" }` attributes. JSON object keys remain typed, but string values
+widen rather than preserving TS `as const` literal types.
 
 ## Consumer-owned settings
 

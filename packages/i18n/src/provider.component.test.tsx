@@ -1,14 +1,9 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider, useTranslations } from "../tests/i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import {
-  BrowserLanguageProvider,
-  readBrowserPreference,
-  useLanguagePreference,
-  useLocale,
-  useTranslations,
-} from "./browser.js";
+import { useLanguagePreference, useLocale } from "./browser.js";
 
 function system(languages: string[]) {
   vi.spyOn(navigator, "languages", "get").mockReturnValue(languages);
@@ -79,8 +74,13 @@ describe("Raypx browser language wiring", () => {
 
   it("ignores preferences stored under retired product keys", () => {
     localStorage.setItem("voidmix_locale", "zh-CN");
-    expect(readBrowserPreference()).toBe("system");
-    expect(localStorage.getItem("raypx_locale")).toBeNull();
+    render(
+      <BrowserLanguageProvider>
+        <Probe />
+      </BrowserLanguageProvider>,
+    );
+    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
+    expect(localStorage.getItem("raypx_locale")).toBe("system");
     expect(localStorage.getItem("voidmix_locale")).toBe("zh-CN");
   });
 

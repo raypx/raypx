@@ -1,7 +1,8 @@
+import { useTranslations } from "./i18n.js";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { TaskContextSelection, TaskContextTarget } from "@raypx/core/tasks";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/core/memory";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Badge } from "@raypx/ui/components/ui/badge";
@@ -121,7 +122,7 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
         render={<Button type="button" variant="ghost" size="sm" className="group gap-2 px-0" />}
       >
         <ChevronDownIcon aria-hidden="true" className="group-data-panel-open:rotate-180" />
-        {t("chooseContext")}
+        {t("title")}
         <Badge variant="secondary" className="tabular-nums">
           ({value.sources.length}/8)
         </Badge>

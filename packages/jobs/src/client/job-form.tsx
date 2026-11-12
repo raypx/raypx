@@ -1,5 +1,6 @@
+import { useTranslations } from "./i18n.js";
 import { useId, useMemo, useState, type FormEvent } from "react";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
@@ -209,7 +210,7 @@ export function JobForm({
             </Field>
           </div>
           <fieldset className="space-y-2">
-            <legend className="mb-2 text-sm font-medium">{t("action")}</legend>
+            <legend className="mb-2 text-sm font-medium">{c("action")}</legend>
             <RadioGroup
               value={action}
               onValueChange={(value) =>
@@ -233,7 +234,7 @@ export function JobForm({
             </p>
           </fieldset>
           <Field>
-            <FieldLabel htmlFor={`${prefix}-device`}>{t("cloud.computer")}</FieldLabel>
+            <FieldLabel htmlFor={`${prefix}-device`}>{c("computer")}</FieldLabel>
             <SelectField
               id={`${prefix}-device`}
               value={selected || null}
@@ -252,7 +253,7 @@ export function JobForm({
           {action === "agent.run" && (
             <>
               <Field>
-                <FieldLabel htmlFor={`${prefix}-project`}>{t("cloud.project")}</FieldLabel>
+                <FieldLabel htmlFor={`${prefix}-project`}>{c("project")}</FieldLabel>
                 <SelectField
                   id={`${prefix}-project`}
                   value={project || null}
@@ -261,14 +262,14 @@ export function JobForm({
                     value: item.id,
                     label: item.name,
                   }))}
-                  placeholder={t("cloud.chooseProject")}
+                  placeholder={c("chooseAuthorizedProject")}
                   disabled={busy || Boolean(target)}
                   required
                 />
               </Field>
               <div className="grid gap-4 @xl/main:grid-cols-2">
                 <Field>
-                  <FieldLabel htmlFor={`${prefix}-provider`}>{t("cloud.provider")}</FieldLabel>
+                  <FieldLabel htmlFor={`${prefix}-provider`}>{c("agent")}</FieldLabel>
                   <SelectField
                     id={`${prefix}-provider`}
                     value={provider}
@@ -290,7 +291,7 @@ export function JobForm({
                     onValueChange={setMode}
                     options={[
                       { value: "run", label: t("cloud.runMode") },
-                      { value: "plan", label: t("cloud.planMode") },
+                      { value: "plan", label: c("plan") },
                     ]}
                     disabled={busy}
                   />

@@ -38,3 +38,10 @@ navigation and session invalidation. Never expose credentials or extra user fiel
 
 Run `bun run --cwd packages/account check` and `bun run --cwd packages/account test`.
 Web/Desktop route tests cover view integration; API tests cover RPC projection.
+
+## Catalog ownership
+
+Own `access` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

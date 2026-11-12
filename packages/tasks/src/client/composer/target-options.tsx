@@ -1,7 +1,8 @@
+import { useTranslations } from "../i18n.js";
 import { useId } from "react";
 import { agentProviderMetadata, agentProviders, type AgentProvider } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -38,6 +39,7 @@ export function ComposerTargetOptions({
   targetFixed: boolean;
   onChange: (action: ComposerAction) => void;
 }) {
+  const common = useTranslations("common");
   const t = useTranslations("tasks");
   const fieldId = useId();
   return (
@@ -62,7 +64,7 @@ export function ComposerTargetOptions({
         {!targetFixed && (
           <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor={`${fieldId}-device`}>{t("device")}</FieldLabel>
+              <FieldLabel htmlFor={`${fieldId}-device`}>{common("computer")}</FieldLabel>
               <SelectField
                 id={`${fieldId}-device`}
                 className="w-full"
@@ -81,14 +83,14 @@ export function ComposerTargetOptions({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor={`${fieldId}-project`}>{t("project")}</FieldLabel>
+              <FieldLabel htmlFor={`${fieldId}-project`}>{common("project")}</FieldLabel>
               <SelectField
                 id={`${fieldId}-project`}
                 className="w-full"
                 disabled={busy || guest}
                 required={!guest}
                 value={value.projectId || null}
-                placeholder={t("chooseProject")}
+                placeholder={common("chooseAuthorizedProject")}
                 onValueChange={(projectId) => onChange({ type: "project", projectId })}
                 options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
               />
@@ -98,7 +100,7 @@ export function ComposerTargetOptions({
         {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
         <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor={`${fieldId}-agent`}>{t("agent")}</FieldLabel>
+            <FieldLabel htmlFor={`${fieldId}-agent`}>{common("agent")}</FieldLabel>
             <SelectField<AgentProvider>
               id={`${fieldId}-agent`}
               className="w-full"

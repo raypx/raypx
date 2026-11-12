@@ -29,3 +29,10 @@ Local automations remain in the Desktop device profile across account changes.
 
 Run package checks/tests and both application consumers. SQL persistence, actual
 relay round trips and Bun/Nitro scheduled events have separate integration gates.
+
+## Catalog ownership
+
+Own `automations (local and cloud)` in `locales/<language>/`, with handwritten language entries
+and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
+JSON nested strings, one format per namespace/language. Bind private translation
+hooks through type-only catalog imports; applications supply the shared provider.

@@ -1,10 +1,11 @@
+import { useTranslations } from "./i18n.js";
 import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { LockIcon } from "@raypx/icons/lock";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { CloseIcon } from "@raypx/icons/close";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { CheckCircleIcon } from "@raypx/icons/check-circle";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";

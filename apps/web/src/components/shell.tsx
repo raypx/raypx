@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n.js";
 import { publicConfigurationQuery } from "../features/configuration/client.js";
 import {
   accountAccessQuery,
@@ -41,7 +42,7 @@ import {
   type ShellNavItem,
 } from "@raypx/blocks/shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { QuickSettingsModal } from "../features/settings/quick-settings-modal.js";
 import { useQuickSettingsStore } from "../features/settings/quick-settings-store.js";
 

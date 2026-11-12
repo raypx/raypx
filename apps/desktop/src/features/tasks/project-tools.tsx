@@ -1,6 +1,7 @@
+import { useTranslations } from "../../i18n.js";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { FolderIcon } from "@raypx/icons/folder";
 import { apiUrl, authClient } from "../auth/client.js";

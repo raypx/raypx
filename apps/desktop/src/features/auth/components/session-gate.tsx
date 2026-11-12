@@ -1,9 +1,10 @@
+import { useTranslations } from "../../../i18n.js";
 import { InstanceGate } from "./instance-gate.js";
 import { EngineGate } from "../../engine/gate.js";
 import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useRouterState } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
-import { useTranslations } from "@raypx/i18n/browser";
+
 import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { Logo } from "@raypx/ui/logo";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
@@ -18,7 +19,7 @@ const publicPaths = new Set([
 ]);
 
 function AuthLayout({ children }: { children: ReactNode }) {
-  const t = useTranslations("dash.nav");
+  const t = useTranslations("common");
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
@@ -34,7 +35,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
         <div className="ml-auto flex items-center gap-1 [--app-region:no-drag]">
           <Link to={returnTo} className={buttonVariants({ variant: "ghost", size: "sm" })}>
             <ArrowLeftIcon data-icon="inline-start" />
-            {t("workspace")}
+            {t("backToWorkspace")}
           </Link>
           <ThemeToggle />
           <LanguageMenu />

@@ -1,3 +1,4 @@
+import { useTranslations } from "../../../i18n.js";
 import type { FileEntry, FileListing } from "@raypx/contracts/local";
 import { Await } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
@@ -19,7 +20,7 @@ import {
 import { IconButton } from "@raypx/ui/icon-button";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
-import { useFormatter, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store.js";
 
 export type FileListingResult = { status: "success"; listing: FileListing } | { status: "error" };

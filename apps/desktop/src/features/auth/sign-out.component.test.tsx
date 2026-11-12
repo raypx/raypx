@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { BrowserLanguageProvider } from "../../i18n.js";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
@@ -14,7 +15,7 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { DesktopPlatformProvider } from "../../lib/platform-context.js";
 import { desktopFixture, deferred } from "../../../tests/helpers/desktop.js";
 import { DesktopSignOutProvider, useDesktopSignOut } from "./sign-out.js";

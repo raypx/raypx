@@ -1,3 +1,4 @@
+import { BrowserLanguageProvider } from "./i18n.js";
 import {
   createMemoryHistory,
   createRootRouteWithContext,
@@ -8,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { renderToString } from "react-dom/server";
 import type { AccountState } from "@raypx/account";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+
 import { expect, it, vi } from "vite-plus/test";
 
 const session = vi.hoisted(() => vi.fn(() => ({ isPending: true, data: null, error: null })));
