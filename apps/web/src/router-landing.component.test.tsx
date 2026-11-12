@@ -25,7 +25,7 @@ it("renders the landing page without account or private workspace reads", async 
   mocks.sessionPending = true;
   const router = await page("/");
   expect(router.state.location.pathname).toBe("/");
-  expect(screen.getByRole("heading", { name: "Remote sessions and approvals" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Run locally. Review remotely." })).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
   expect(screen.getAllByRole("button", { name: "Loading…" })).toHaveLength(1);
   expect(screen.getByRole("button", { name: "Loading…" })).toBeDisabled();
@@ -91,7 +91,7 @@ it.each([false, true])(
     mocks.sessionError = true;
     await page("/");
     expectHomepageEntries();
-    expect(screen.getByRole("heading", { name: "Remote sessions and approvals" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Run locally. Review remotely." })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Retry account" })).toBeNull();
     expect(screen.getByRole("button", { name: stale ? "Account menu" : "Sign in" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: stale ? "Sign in" : "Account menu" })).toBeNull();
@@ -146,7 +146,7 @@ it("changes theme and language on the landing page without account reads", async
 it("keeps homepage session errors on the connect action without private features", async () => {
   mocks.sessionError = true;
   await page("/");
-  expect(screen.getByRole("heading", { name: "Remote sessions and approvals" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Run locally. Review remotely." })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
   expect(screen.getByRole("link", { name: "Sign in to connect a computer" })).toHaveAttribute(
     "href",

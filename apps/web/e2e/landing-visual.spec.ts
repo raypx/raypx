@@ -30,6 +30,7 @@ for (const view of views) {
     await page.goto(web + "/");
     const labels = {
       en: {
+        title: "Run locally. Review remotely.",
         preview: "Interactive example",
         steps: "Example workflow",
         session: "Session",
@@ -39,6 +40,7 @@ for (const view of views) {
         autoplay: "Autoplay demo",
       },
       zh: {
+        title: "本机执行，远程审阅",
         preview: "交互演示",
         steps: "示例工作流",
         session: "会话",
@@ -48,6 +50,9 @@ for (const view of views) {
         autoplay: "自动播放演示",
       },
     }[view.locale];
+    await expect(
+      page.getByRole("heading", { level: 1, name: labels.title, exact: true }),
+    ).toBeVisible();
     const preview = page.getByRole("figure", { name: labels.preview });
     const stepTab = (name: string) =>
       page.getByRole("tablist", { name: labels.steps }).getByRole("tab", { name, exact: true });

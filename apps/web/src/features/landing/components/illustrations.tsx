@@ -52,12 +52,12 @@ export function ProjectsArt() {
           lift,
         )}
       >
-        <div className="flex w-40 shrink-0 flex-col gap-0.5 border-r border-border bg-sidebar p-2 text-xs">
+        <div className="flex w-[42%] max-w-40 shrink-0 flex-col gap-0.5 border-r border-border bg-sidebar p-2 text-xs">
           {projects.map((project) => (
             <div
               key={project.name}
               className={cn(
-                "flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5",
+                "flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1.5",
                 "active" in project && "bg-sidebar-accent",
               )}
             >

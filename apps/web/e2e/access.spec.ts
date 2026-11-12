@@ -28,7 +28,7 @@ test(
     });
     await page.goto(web + "/");
     await expect(
-      page.getByRole("heading", { name: "Remote sessions and approvals", exact: true }),
+      page.getByRole("heading", { name: "Run locally. Review remotely.", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("complementary")).toHaveCount(0);
     await expect(
@@ -118,7 +118,7 @@ test(
     });
     await page.goto(web + "/");
     await expect(
-      page.getByRole("heading", { name: "Remote sessions and approvals", exact: true }),
+      page.getByRole("heading", { name: "Run locally. Review remotely.", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
     const loading = page.getByRole("button", { name: "Loading…", exact: true });

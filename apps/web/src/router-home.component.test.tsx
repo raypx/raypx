@@ -50,7 +50,7 @@ async function html(account: AccountState, path = "/") {
 
 it("server-renders the landing page before the browser session resolves", async () => {
   const page = await html({ status: "signed-out" });
-  expect(page).toMatch(/<h1[^>]*>Remote sessions and approvals<\/h1>/);
+  expect(page).toMatch(/<h1[^>]*>Run locally\. Review remotely\.<\/h1>/);
   expect(page).toContain("Open projects");
   expect(page).toContain("Draft privacy");
   expect(page).toContain("Sessions");
@@ -67,11 +67,11 @@ it("server-renders the landing page before the browser session resolves", async 
 it("keeps an unavailable account distinct from a confirmed guest during SSR", async () => {
   const page = await html({ status: "unavailable" }, "/projects");
   expect(page).toContain("Unable to connect. Check your connection and try again.");
-  expect(page).not.toContain("Remote sessions and approvals");
+  expect(page).not.toContain("Run locally. Review remotely.");
 });
 
 it("server-renders the landing page even when account access is unavailable", async () => {
   const page = await html({ status: "unavailable" });
-  expect(page).toContain("Remote sessions and approvals");
+  expect(page).toContain("Run locally. Review remotely.");
   expect(page).not.toContain("Unable to connect.");
 });

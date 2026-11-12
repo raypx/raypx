@@ -68,12 +68,12 @@ function Hero() {
         </Badge>
         <h1
           id="landing-home-title"
-          className="max-w-[16ch] text-[2.75rem] leading-[1.06] font-semibold tracking-tighter text-balance @xl/main:text-6xl @4xl/main:text-7xl"
+          className="max-w-[16ch] text-[clamp(2.25rem,8.5cqw,2.75rem)] leading-[1.06] font-semibold tracking-tighter text-balance @xl/main:text-6xl @4xl/main:text-7xl"
         >
           {t("title")}
         </h1>
         <p className="max-w-xl text-base leading-7 text-pretty text-muted-foreground @xl/main:text-lg @xl/main:leading-8">
-          {auth("brandIntro")}
+          {t("heroSummary")}
         </p>
         <div className="flex w-full flex-wrap items-center justify-center gap-2.5">
           <Link
@@ -111,11 +111,10 @@ function Hero() {
 
 function HowItWorks() {
   const t = useTranslations("guest");
-  const auth = useTranslations("auth");
   const steps = [
-    { icon: LaptopIcon, title: auth("featureLocal"), hint: t("stepLocalHint") },
-    { icon: ShieldCheckIcon, title: auth("featureApprovals"), hint: t("stepReviewHint") },
-    { icon: GlobalIcon, title: auth("featureRemote"), hint: t("stepRemoteHint") },
+    { icon: LaptopIcon, title: t("stepLocalTitle"), hint: t("stepLocalHint") },
+    { icon: ShieldCheckIcon, title: t("stepReviewTitle"), hint: t("stepReviewHint") },
+    { icon: GlobalIcon, title: t("stepRemoteTitle"), hint: t("stepRemoteHint") },
   ];
   return (
     <section
