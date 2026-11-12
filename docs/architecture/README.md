@@ -152,7 +152,8 @@ public RPC. UI contains DOM components, a `themes` entry and a pure `themes/conf
 I18n owns common copy, locale policy and platform adapters. Business packages expose
 pure language data entries; Web, Desktop and Mobile privately compose their own
 TS/JSON catalogs. Typed feature hooks share the application messages context without
-global declarations. The controlled i18n provider delegates translation, formatting and React context to `use-intl`.
+global declarations. The in-repository i18n runtime owns the controlled provider and delegates translation,
+formatting and the shared messages context to one pinned copy of `use-intl`.
 Only `useLanguagePreference().setPreference()` changes the product language
 preference; the active locale is derived from that preference and the full ordered
 system locale list. See [internationalization](internationalization.md).
@@ -222,7 +223,7 @@ review branch, with source provenance, an archive checksum and the lockfile.
 Provenance records either a clean source commit or the base commit, explicit
 uncommitted state and per-file source checksums. The archive must be replaced by
 an exact published alpha before merging. See
-[Raypx Kit library changes](../development/intl-release.md) for archive checks and
+[Raypx Kit library changes](../development/kit-library-release.md) for archive checks and
 the publication gate.
 
 ## Device runtime
@@ -349,6 +350,7 @@ current implementation.
 - [0052: Daemon-owned Desktop channel](0052-daemon-desktop-channel.md) — boundary; lifetime and recovery superseded by 0054
 - [0053: Relay streams and cancellation](0053-relay-stream-cancellation.md) — shared ACK mechanics and connection scopes
 - [0054: Desktop execution ownership and session recovery](0054-desktop-execution-recovery.md) — current lifecycle and recovery
+- [0055: In-repository internationalization runtime](0055-in-repo-intl-runtime.md)
 
 ## Distribution and performance
 

@@ -150,8 +150,10 @@ evidence only. Inventory compares case multiplicity and checks exact file select
 It collects Vitest JSON reports from the selected workspaces.
 Backend validation provisions only owned temporary services, resolves binaries from
 PATH or explicit binary settings, and stops children before deleting their data.
-Read i18n's public static `./config` through workspace discovery for locale policy;
-do not add the i18n runtime to root tooling's dependency closure.
+Read i18n's public static `./config` through workspace discovery for locale policy.
+Tooling owns ICU message comparison in `src/validation/catalog-parity.ts` and
+uses the dev catalog's ICU parser. Keep the i18n runtime out of Tooling's
+dependency closure.
 Preserve the shared happy-dom setup and independent Vitest configs.
 Tooling uses `vp test` with four isolated file workers and a 30-second test timeout.
 Its scripts select layers through Vitest filters. The shared DOM setup lives in

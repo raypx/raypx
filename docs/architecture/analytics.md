@@ -80,7 +80,7 @@ root `package:desktop` rebuilds the renderer. Do not publish outputs
 from a failed upload or serve hidden maps accidentally.
 
 `@raypx-kit/analytics` is pinned to an exact published alpha; update it through the
-[library workflow](../development/intl-release.md).
+[library workflow](../development/kit-library-release.md).
 
 ## Verification
 

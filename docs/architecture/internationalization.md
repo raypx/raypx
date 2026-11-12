@@ -2,7 +2,11 @@
 
 Business packages own their catalogs; applications compose messages. `@raypx/i18n`
 owns only common copy, locale configuration, preference state and runtime adapters.
-`@raypx/i18n` maintains its runtime adapters in this repository and uses `use-intl` directly.
+`@raypx/i18n` is the only workspace that declares or imports `use-intl`. Its public
+`core` and `react` entries provide translation, formatting and the shared messages
+context. The default catalog pins one engine version and the lockfile resolves it
+once. Other workspaces depend on i18n's public entries. Tooling owns ICU catalog
+comparison and reads i18n's static locale policy through workspace discovery.
 
 ## Namespace ownership
 
@@ -107,5 +111,5 @@ of Web-only copy and Mobile's DOM-free composition; JSON fixtures exercise each
 bundler. Run focused tests, `bun run i18n:check`, `bun run verify` and Web,
 Desktop-renderer and Mobile export builds. Native device/GUI acceptance is separate.
 
-SDK changes follow [Raypx Kit library changes](../development/intl-release.md).
-Do not commit linked dependencies or import another repository's source.
+The runtime is maintained here under [ADR 0055](0055-in-repo-intl-runtime.md).
+See the [migration record](../development/i18n-intl-vendoring.md) for build and test results.

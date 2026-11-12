@@ -78,9 +78,6 @@ Never merge with a snapshot version, a range, a `link:` or a tarball path.
 Breaking Raypx Kit changes are acceptable during this stage; Raypx adopts them in
 the same branch rather than through compatibility layers.
 
-The former `@raypx-kit/intl` dependency has moved into `@raypx/i18n`, which now owns
-the adapters and declares `use-intl` directly.
-
 Logging currently lives in Raypx's private `@raypx/logger` source workspace. API
 and CLI use `workspace:*` and keep evlog in the external runtime catalog. Logger
 needs no Kit release or preview archive while its product workflow settles.

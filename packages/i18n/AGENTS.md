@@ -1,7 +1,11 @@
 # @raypx/i18n
 
 Own common English/Chinese copy, locale policy, preferences and runtime adapters.
-This workspace owns the translation and formatting adapters and uses `use-intl` directly.
+This workspace owns the translation and formatting adapters and the single
+`use-intl` dependency. Import only `use-intl/core` and `use-intl/react` from `src/`.
+Keep the default catalog pin exact and one resolution in the lockfile.
+Other workspaces use `@raypx/i18n` entries and must not declare use-intl, next-intl
+or FormatJS runtime dependencies. Tooling owns the static ICU validator.
 Never import business catalogs, UI or icons into this package.
 
 ## Interface

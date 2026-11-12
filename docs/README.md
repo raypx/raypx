@@ -54,7 +54,8 @@ boundaries behind the implementation.
 - [Shared Hugeicons package](development/icons.md)
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Shared logger](../packages/logger/README.md)
-- [Raypx Kit library changes](development/intl-release.md)
+- [Raypx Kit library changes](development/kit-library-release.md)
+- [In-repository i18n migration record](development/i18n-intl-vendoring.md)
 
 ## Deployment
 

@@ -1,8 +1,12 @@
 # @raypx/i18n
 
-Raypx's common English/Chinese copy, locale policy and runtime adapters around
-`use-intl`. Business packages own their catalogs;
-applications compose only the namespaces they use. There is no generated catalog,
+Raypx's common English/Chinese copy, locale policy and runtime adapters live here.
+Business packages own their catalogs and applications compose the namespaces they use.
+This workspace alone declares and imports `use-intl`. The default catalog pins it
+exactly and the lockfile resolves one version. Imports use the public
+`use-intl/core` and `use-intl/react` entries. Other workspaces use the i18n package
+entries and must not install use-intl, next-intl or FormatJS runtime packages.
+Tooling uses a dedicated parser for static ICU checks. There is no generated catalog,
 global message declaration or runtime namespace registration.
 
 ## Authoring catalogs
