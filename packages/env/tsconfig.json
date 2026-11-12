@@ -1,4 +1,4 @@
 {
   "extends": "@raypx/tsconfig/library.json",
-  "include": ["src/**/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "vitest.config.ts"]
 }

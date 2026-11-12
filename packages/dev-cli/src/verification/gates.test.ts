@@ -204,17 +204,17 @@ it.each([false, true])(
   (full) => {
     const { model } = project();
     const plan = verificationPlan(model, ["packages/tokens/src/index.ts"], { full });
-    plan.tasks.push("desktop#task:mygo:check", "desktop#task:mygo:test");
+    plan.tasks.push("desktop#mygo:check", "desktop#mygo:test");
     const checks = executionTasks(plan, "fixture", [], "checks");
     const tests = executionTasks(plan, "fixture", [], "tests");
     expect([...checks, ...tests].sort()).toEqual(executionTasks(plan, "fixture").sort());
     expect(checks.filter((task) => tests.includes(task))).toEqual([]);
-    expect(checks).toContain("desktop#task:mygo:test");
-    expect(checks).toContain("fixture#task:policy");
-    expect(tests).toContain("api#task:test");
-    expect(tests.every((task) => task.endsWith("#task:test"))).toBe(true);
-    expect(checks.includes("api#task:build")).toBe(full);
-    expect(checks.includes("fixture#task:knip")).toBe(full);
+    expect(checks).toContain("desktop#mygo:test");
+    expect(checks).toContain("fixture#policy");
+    expect(tests).toContain("api#test");
+    expect(tests.every((task) => task.endsWith("#test"))).toBe(true);
+    expect(checks.includes("api#build")).toBe(full);
+    expect(checks.includes("fixture#knip")).toBe(full);
     expect(sourcePhases(plan)).toEqual(["checks", "tests"]);
     expect(sourcePhases(verificationPlan(model, ["README.md"]))).toEqual(["checks"]);
   },

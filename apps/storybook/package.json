@@ -16,7 +16,6 @@
     "storybook": "catalog:dev"
   },
   "devDependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@storybook/addon-a11y": "catalog:dev",
     "@storybook/addon-docs": "catalog:dev",

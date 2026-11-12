@@ -7,10 +7,11 @@ import repository from "../../../package.json";
 
 if (`bun@${Bun.version}` !== repository.packageManager)
   throw new Error(`Compile CLI with ${repository.packageManager}`);
-if (process.env.RAYPX_CLI_PAYLOAD)
-  throw new Error(
-    "Artifact consumers cannot compile CLI; remove RAYPX_CLI_PAYLOAD only in the prepare job",
-  );
+// Artifact consumers reach this task as a graph prerequisite and never compile.
+if (process.env.RAYPX_CLI_PAYLOAD) {
+  console.log("Using the prepared CLI payload; compilation skipped");
+  process.exit(0);
+}
 const root = resolve(import.meta.dirname, "../../..");
 const output = resolve(import.meta.dirname, "../dist");
 const git = Bun.spawn(["git", "rev-parse", "HEAD"], {

@@ -15,8 +15,7 @@
     "e2e:web": "raypx-dev e2e --web",
     "e2e:desktop": "raypx-dev e2e --desktop",
     "e2e:smoke": "raypx-dev e2e --smoke",
-    "e2e:visual": "raypx-dev e2e --visual",
-    "_e2e": "raypx-dev browser:run"
+    "e2e:visual": "raypx-dev e2e --visual"
   },
   "dependencies": {
     "@playwright/test": "catalog:dev",
@@ -27,18 +26,8 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/dev-cli": "workspace:*",
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev"
-  },
-  "raypx": {
-    "taskScripts": {
-      "e2e": "_e2e",
-      "e2e:web": "_e2e",
-      "e2e:desktop": "_e2e",
-      "e2e:smoke": "_e2e",
-      "e2e:visual": "_e2e"
-    }
   }
 }

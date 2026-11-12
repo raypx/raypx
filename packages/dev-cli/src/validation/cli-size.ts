@@ -1,6 +1,6 @@
 import { cp, mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { taskModel } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../workspace-graph.js";
 import { sealCliPayload, verifyCliPayload } from "@raypx/tooling/build/cli";
 import { readBunPin } from "./toolchain.js";
 
@@ -22,7 +22,7 @@ export async function experimentCliSize(root: string, supplied: string[]) {
   });
   if (Bun.version !== readBunPin(root))
     throw new Error("Use the repository's pinned Bun for size experiments");
-  const member = taskModel(root).members.find((candidate) => candidate.name === "cli");
+  const member = workspaceGraph(root).members.find((candidate) => candidate.name === "cli");
   if (!member) throw new Error("CLI workspace is unavailable");
   const output = join(root, ".artifacts/cli-size");
   await mkdir(output, { recursive: true });

@@ -61,40 +61,32 @@ it("replaces stale success evidence before starting checks and records a failed 
   expect(JSON.parse(readFileSync(file, "utf8")).status).toBe("failed");
 });
 
-it("rejects missing or incomplete VP completion reports", () => {
-  const { root } = project();
-  expect(() => completionReport(root, ["api#task:check"])).toThrow(
-    "VP completion report is unavailable",
+it("rejects an incomplete Turbo run", () => {
+  expect(() => completionReport([], ["api#check"])).toThrow(
+    "Turbo did not execute every selected verification task",
   );
-  const directory = join(root, "node_modules/.vite/task-cache/test");
-  mkdirSync(directory, { recursive: true });
-  writeFileSync(join(directory, "last-summary.json"), JSON.stringify({ tasks: [] }));
-  expect(() => completionReport(root, ["api#task:check"])).toThrow(
-    "VP did not execute every selected verification task",
-  );
-  writeFileSync(
-    join(directory, "last-summary.json"),
-    JSON.stringify({
-      tasks: [{ package_name: "api", task_name: "task:check", result: { CacheHit: {} } }],
-    }),
-  );
-  expect(completionReport(root, ["api#task:check"])).toEqual({
-    cacheHits: 1,
-    cachedTasks: ["api#task:check"],
-  });
+  expect(
+    completionReport(
+      [
+        { taskId: "api#check", cached: true, durationMs: 0 },
+        { taskId: "api#test", cached: false, durationMs: 900 },
+      ],
+      ["api#check", "api#test"],
+    ),
+  ).toEqual({ cacheHits: 1, cachedTasks: ["api#check"] });
 });
 
 it("records cached checks without replaying their previous execution times", () => {
-  const { root } = project();
-  const directory = join(root, ".artifacts/verification/prechecks");
-  mkdirSync(directory, { recursive: true });
-  writeFileSync(join(directory, "policy.json"), JSON.stringify({ durationMs: 120 }));
-  writeFileSync(join(directory, "locales.json"), JSON.stringify({ durationMs: 35 }));
-  expect(precheckTimings(root, "fixture", ["fixture#task:policy"])).toEqual({
+  const results = [
+    { taskId: "//#policy", cached: true, durationMs: 120 },
+    { taskId: "//#locales", cached: false, durationMs: 35 },
+  ];
+  expect(precheckTimings(results, "//")).toEqual({
     policyMs: 0,
     localesMs: 35,
     cachedChecks: ["policy"],
   });
-  writeFileSync(join(directory, "locales.json"), JSON.stringify({ durationMs: -1 }));
-  expect(() => precheckTimings(root, "fixture", [])).toThrow("Invalid locales timing evidence");
+  expect(() => precheckTimings(results.slice(0, 1), "//")).toThrow(
+    "Missing locales verification result",
+  );
 });

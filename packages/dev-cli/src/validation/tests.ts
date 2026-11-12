@@ -1,8 +1,7 @@
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { discover } from "../repository.js";
-import { argumentKey } from "@raypx/task-graph/core";
-import { taskRef } from "@raypx/task-graph/model";
+import { taskRef } from "../workspace-graph.js";
 import { Evidence } from "./evidence.js";
 import { baselineCases, collectInventory, compareCases, ownerMap } from "./inventory.js";
 
@@ -35,7 +34,7 @@ export async function auditTests(root: string, args: string[], cwd = root) {
       const task = layer === "all" ? "test" : `test:${layer}`;
       const report = `audit-${evidence.id}-${layer}.json`;
       const output = `node_modules/.cache/raypx-tests/${report}`;
-      const reportArgs = JSON.stringify(["--reporter=json", `--outputFile=${output}`]);
+      const reportArgs = ["--reporter=json", `--outputFile=${output}`];
       reports.push(report);
       const selected = workspaces
         .filter((workspace) => workspace.manifest.scripts?.[task])
@@ -49,18 +48,16 @@ export async function auditTests(root: string, args: string[], cwd = root) {
         layer,
         [
           process.execPath,
-          "--no-env-file",
-          join(root, "packages/dev-cli/src/cli.ts"),
-          "tasks",
-          "verify:run",
-          "--no-cache",
+          "--bun",
+          "turbo",
+          "run",
+          ...selected.map(({ ref }) => ref),
+          "--force",
+          "--concurrency=4",
+          "--",
+          ...reportArgs,
         ],
-        {
-          ...process.env,
-          RAYPX_VERIFY_ROOT: root,
-          RAYPX_VERIFY_TASKS: JSON.stringify(selected.map(({ ref }) => ref)),
-          ...Object.fromEntries(selected.map(({ ref }) => [argumentKey(ref), reportArgs])),
-        },
+        { ...process.env, TURBO_TELEMETRY_DISABLED: "1" },
       );
       for (const { workspace } of selected) {
         const source = join(root, workspace.path, output);

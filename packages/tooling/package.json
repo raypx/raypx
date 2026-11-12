@@ -20,7 +20,6 @@
     "test:integration": "bun --bun vp test --run tests/integration"
   },
   "devDependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",

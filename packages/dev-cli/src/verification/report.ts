@@ -1,7 +1,7 @@
-import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { appendFileSync } from "node:fs";
 import type { VerificationPlan } from "./plan.js";
-import { taskRef } from "@raypx/task-graph/model";
+import { taskRef } from "../workspace-graph.js";
+import type { TurboTask } from "../turbo.js";
 import { sourcePhases, type CiPlan, type SourcePhase } from "./gates.js";
 
 export function reportCiPlan(plan: CiPlan) {
@@ -36,41 +36,24 @@ export function reportCiPlan(plan: CiPlan) {
   appendFileSync(summary, `${lines.join("\n")}\n`);
 }
 
-/** An empty or partial VP graph must never appear as successful verification. */
-export function completionReport(root: string, references: string[]) {
-  const cacheRoot = join(root, "node_modules/.vite/task-cache");
-  const reports = existsSync(cacheRoot)
-    ? readdirSync(cacheRoot)
-        .map((name) => join(cacheRoot, name, "last-summary.json"))
-        .filter((file) => existsSync(file))
-        .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)
-    : [];
-  if (!reports[0]) throw new Error("VP completion report is unavailable");
-  const summary = JSON.parse(readFileSync(reports[0], "utf8")) as {
-    tasks: { package_name: string; task_name: string; result: Record<string, unknown> }[];
-  };
-  const completed = new Set(
-    summary.tasks.map((entry) => `${entry.package_name}#${entry.task_name}`),
-  );
+/** An empty or partial Turbo run must never appear as successful verification. */
+export function completionReport(results: TurboTask[], references: string[]) {
+  const completed = new Set(results.map((task) => task.taskId));
   if (references.some((ref) => !completed.has(ref)))
-    throw new Error("VP did not execute every selected verification task");
-  const cachedTasks = summary.tasks
-    .filter((entry) => "CacheHit" in entry.result)
-    .map((entry) => `${entry.package_name}#${entry.task_name}`);
+    throw new Error("Turbo did not execute every selected verification task");
+  const cachedTasks = results.filter((task) => task.cached).map((task) => task.taskId);
   return { cacheHits: cachedTasks.length, cachedTasks };
 }
 
-export function precheckTimings(root: string, rootName: string, cachedTasks: string[]) {
+/** A restored check reports no time; an executed one reports Turbo's measured duration. */
+export function precheckTimings(results: TurboTask[], rootName: string) {
   const timings = { policyMs: 0, localesMs: 0 };
   const cachedChecks: string[] = [];
   for (const name of ["policy", "locales"] as const) {
-    const evidence = JSON.parse(
-      readFileSync(join(root, `.artifacts/verification/prechecks/${name}.json`), "utf8"),
-    ) as { durationMs: number };
-    if (!Number.isFinite(evidence.durationMs) || evidence.durationMs < 0)
-      throw new Error(`Invalid ${name} timing evidence`);
-    if (cachedTasks.includes(taskRef(rootName, name))) cachedChecks.push(name);
-    else timings[`${name}Ms`] = evidence.durationMs;
+    const task = results.find((result) => result.taskId === taskRef(rootName, name));
+    if (!task) throw new Error(`Missing ${name} verification result`);
+    if (task.cached) cachedChecks.push(name);
+    else timings[`${name}Ms`] = task.durationMs;
   }
   return { ...timings, cachedChecks };
 }
@@ -97,6 +80,6 @@ export function reportTiming(
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,
-      `Verification scope: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces; phase: ${phase ?? "all"}. ${checks} VP graph ${metrics.tasksMs}ms; cache hits ${metrics.cacheHits}.\n`,
+      `Verification scope: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces; phase: ${phase ?? "all"}. ${checks} Turbo ${metrics.tasksMs}ms; cache hits ${metrics.cacheHits}.\n`,
     );
 }

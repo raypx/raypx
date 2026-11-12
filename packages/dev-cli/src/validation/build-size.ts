@@ -1,4 +1,4 @@
-import { discover } from "@raypx/task-graph/workspaces";
+import { discover } from "../repo/workspaces.js";
 import {
   appendFileSync,
   existsSync,

@@ -28,7 +28,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",

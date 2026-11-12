@@ -19,8 +19,8 @@ ${target} ${kind}; describe its responsibility before adding behavior.
 
 ## Interface
 
-Public exports are declared in package.json. vite.config.ts registers lightweight
-VP task metadata; package scripts remain direct leaf commands.
+Public exports are declared in package.json. Package scripts are the leaf commands
+Turbo schedules; the root turbo.json owns their dependencies and cache keys.
 
 ## Constraints
 

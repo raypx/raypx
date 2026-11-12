@@ -11,7 +11,6 @@
     "check": "tsc --noEmit --project tsconfig.json"
   },
   "devDependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*"
   },
   "raypx": {

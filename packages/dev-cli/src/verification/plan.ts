@@ -1,11 +1,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { changedFiles as readChanges, affectedWorkspaces } from "../repo/verification.js";
-import { privateTestFile, taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
-import type { Manifest } from "@raypx/task-graph/workspaces";
-import type { BrowserSurface } from "@raypx/task-graph/browser-tests";
+import {
+  privateTestFile,
+  workspaceGraph,
+  taskRef,
+  type WorkspaceGraph,
+  relatedTaskLifecycle,
+} from "../workspace-graph.js";
+import type { Manifest } from "../repo/workspaces.js";
+import type { BrowserSurface } from "../browser-tests.js";
 import { toolingImpact } from "./tooling.js";
-import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
 type Artifact = "api" | "web" | "cli";
 type BrowserMode = "none" | "smoke" | "full";
@@ -52,7 +57,7 @@ function globalInput(file: string) {
 }
 
 /** Backend integration owns API inputs and direct runtime dependencies. */
-function backendChanges(model: TaskModel, files: string[], changed: ReadonlySet<string>) {
+function backendChanges(model: WorkspaceGraph, files: string[], changed: ReadonlySet<string>) {
   const api = model.members.find((member) => member.name === "api");
   if (!api) return false;
   if (
@@ -95,7 +100,7 @@ const sharedSmokeInputs = [
   /^apps\/api\/server\/(?:rpc\/(?:approvals|relay)|(?:app|runtime)\/relay)\.ts$/,
 ];
 
-function browserChanges(model: TaskModel, files: string[], full: boolean): BrowserPlan {
+function browserChanges(model: WorkspaceGraph, files: string[], full: boolean): BrowserPlan {
   const browser: BrowserPlan = {
     web: { mode: "none", reasons: [] },
     desktop: { mode: "none", reasons: [] },
@@ -169,7 +174,7 @@ function containerSmokeInput(file: string) {
  * other workspace's types. The command entry, task runner and remaining commands shape
  * every verification, so they retain all source checks.
  */
-function devCliImpact(model: TaskModel, file: string): "isolated" | "global" | undefined {
+function devCliImpact(model: WorkspaceGraph, file: string): "isolated" | "global" | undefined {
   const devCli = model.members.find((member) => member.name === "@raypx/dev-cli");
   if (!devCli || !file.startsWith(devCli.path + "/")) return undefined;
   const relative = file.slice(devCli.path.length + 1);
@@ -181,7 +186,7 @@ function devCliImpact(model: TaskModel, file: string): "isolated" | "global" | u
 }
 
 /** Select native work from its actual inputs, independently of JavaScript dependency reach. */
-function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: boolean) {
+function nativeChanges(model: WorkspaceGraph, files: string[], full: boolean, macos: boolean) {
   const runners = ["macos-latest", "windows-latest"];
   const defaults = macos ? runners : ["windows-latest"];
   const paths = files.filter((file) => {
@@ -196,11 +201,6 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
     if (!member) return false;
     const relative = file.slice(member.path.length + 1);
     if (member.name === "@raypx/tooling") return /^src\/build\/cli(?:\.test)?\.ts$/.test(relative);
-    if (member.name === "@raypx/task-graph")
-      return (
-        /^src\/(?:leaf|delegation|process|core\/(?:run|arguments))\.ts$/.test(relative) ||
-        relative === "tests/integration/task-leaf.test.ts"
-      );
     if (member.name === "@raypx/dev-cli")
       return /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative);
     if (member.name === "@raypx/runtime-node") return relative.startsWith("src/");
@@ -232,7 +232,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
 }
 
 export function verificationPlan(
-  model: TaskModel,
+  model: WorkspaceGraph,
   files: string[],
   options: { full?: boolean; reasons?: string[]; macos?: boolean; baseline?: string } = {},
 ): VerificationPlan {
@@ -347,7 +347,7 @@ export function verificationPlan(
 export function localPlan(
   root: string,
   options: { full?: boolean; base?: string } = {},
-  model: TaskModel = taskModel(root),
+  model: WorkspaceGraph = workspaceGraph(root),
 ) {
   const { files, ...comparison } = changedFiles(root, options.base);
   return verificationPlan(model, files, { ...options, ...comparison });

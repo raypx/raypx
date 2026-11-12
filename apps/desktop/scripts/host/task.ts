@@ -1,8 +1,6 @@
 import { resolve } from "node:path";
 
-const supplied = process.argv.slice(2);
-const leaf = supplied[0] === "--leaf";
-const [task, ...directArgs] = leaf ? supplied.slice(1) : supplied;
+const [task, ...args] = process.argv.slice(2);
 const bun = process.execPath;
 const cwd = resolve(import.meta.dirname, "../..");
 let commands: string[][];
@@ -21,29 +19,17 @@ if (
     "Usage: scripts/host/task.ts <check|build|build:renderer|dev|native:build|native:smoke|native:smoke:interactive|native:agents>",
   );
 
-const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`;
-const forwarded = leaf ? process.env[argumentKey] : undefined;
-const args: unknown = forwarded && directArgs.length === 0 ? JSON.parse(forwarded) : directArgs;
-if (!Array.isArray(args) || args.some((value) => typeof value !== "string"))
-  throw new Error("Desktop task arguments must be a string array");
 if (
   task === "build:renderer" &&
   args.some((value) => /^(?:--(?:mode|outDir|config)(?:=|$)|-c$)/.test(value))
 )
   throw new Error("The selected renderer task owns its mode and output directory");
-// Scope Desktop arguments to its selected VP task, including dependency builds.
 // Explicitly forward changes: Bun's default spawn environment is its startup snapshot.
 const env = { ...process.env };
 if (task !== "build:renderer") delete env.RAYPX_DESKTOP_BROWSER_BUILD;
-if (!leaf) {
-  if (args.length) env[argumentKey] = JSON.stringify(args);
-  else delete env[argumentKey];
-}
 
-// Direct scripts enter VP; the private leaf invocation executes only this task.
-if (!leaf) {
-  commands = [[bun, "run", "raypx-dev", "tasks", `desktop#${task}`]];
-} else if (task === "native:build") {
+// Turbo runs prerequisites first and passes this task's own arguments directly.
+if (task === "native:build") {
   commands = [[bun, "run", "mygo:build", ...args]];
 } else if (task === "check") {
   commands = [

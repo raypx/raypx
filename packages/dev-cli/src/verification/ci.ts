@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { runTasks } from "../repository.js";
-import { taskModel } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../workspace-graph.js";
 import { changedFiles, verificationPlan } from "./plan.js";
 import { distributionRequested } from "./events.js";
 import { ciOutputs, parseCiPlan, requiredGates, sourcePhases, type CiPlan } from "./gates.js";
@@ -38,7 +38,7 @@ export function githubPlan(
     ...comparison
   } = before ? changedFiles(root, "HEAD", { before, head: "HEAD" }) : { files: [], reasons: [] };
   return {
-    ...verificationPlan(taskModel(root), files, {
+    ...verificationPlan(workspaceGraph(root), files, {
       ...comparison,
       full,
       reasons: [...reasons, ...changeReasons],

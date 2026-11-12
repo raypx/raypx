@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskModel } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../../src/workspace-graph.js";
 import { workspaceFixtures } from "./workspace.js";
 
 const { fixture, member } = workspaceFixtures();
@@ -25,7 +25,7 @@ export function project() {
   member(root, "independent", {
     extra: { scripts: { check: "bun check.ts", test: "bun test.ts" } },
   });
-  return { root, model: taskModel(root) };
+  return { root, model: workspaceGraph(root) };
 }
 /** UI reaches the feature's client entry; contracts and API use its model entry. */
 export function platformProject() {
@@ -78,5 +78,5 @@ export function platformProject() {
     metadata: { kind: "app" },
     extra: { name: "cli", scripts: { ...scripts, build: "bun build.ts" } },
   });
-  return taskModel(root);
+  return workspaceGraph(root);
 }

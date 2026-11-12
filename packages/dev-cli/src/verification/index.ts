@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { taskRef, taskModel, taskPlan } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../workspace-graph.js";
+import { turboPlan } from "../turbo.js";
 import { localPlan } from "./plan.js";
 import { executionTasks, sourceChecks } from "./execution.js";
 import { localTests } from "./tests.js";
@@ -27,12 +28,11 @@ export async function verify(root: string, args: string[]) {
   }
   const started = performance.now(),
     options = verifyOptions(args);
-  const model = taskModel(root);
+  const model = workspaceGraph(root);
   const plan = localPlan(root, options, model);
   const tests = localTests(root, plan, model);
   if (options.dry) {
-    const selected = taskModel(root, JSON.stringify(executionTasks(plan, model.rootName, tests)));
-    const graph = taskPlan(selected, [taskRef(selected.rootName, "verify:run")]);
+    const graph = turboPlan(root, executionTasks(plan, model.rootName, tests));
     console.log(JSON.stringify({ ...plan, tests, graph }, null, 2));
     return;
   }

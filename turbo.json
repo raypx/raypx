@@ -1,0 +1,303 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "envMode": "loose",
+  "globalDependencies": ["test.config.ts", "test.dom.ts", "bunfig.toml"],
+  "globalEnv": ["NODE_ENV", "CI", "LANG", "TZ", "RAYPX_CACHE_PLATFORM"],
+  "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md",
+        "!**/*.test.*",
+        "!**/*.spec.*",
+        "!tests/**",
+        "!e2e/**",
+        "!vitest.config.ts"
+      ]
+    },
+    "check": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "outputs": []
+    },
+    "test:unit": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "outputs": []
+    },
+    "test:component": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["^build", "check"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md",
+        "!**/*.test.*",
+        "!**/*.spec.*",
+        "!tests/**",
+        "!e2e/**",
+        "!vitest.config.ts"
+      ],
+      "outputs": ["dist/**", ".output/**"],
+      "env": ["VITE_*", "EXPO_PUBLIC_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS"]
+    },
+    "build:e2e": {
+      "dependsOn": ["^build", "transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md",
+        "!**/*.test.*",
+        "!**/*.spec.*",
+        "!tests/**",
+        "!e2e/**",
+        "!vitest.config.ts"
+      ],
+      "outputs": ["dist/**", ".output/**"],
+      "env": ["VITE_*", "EXPO_PUBLIC_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS"]
+    },
+    "build:renderer": {
+      "dependsOn": ["^build", "transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md",
+        "!**/*.test.*",
+        "!**/*.spec.*",
+        "!tests/**",
+        "!e2e/**",
+        "!vitest.config.ts"
+      ],
+      "outputs": ["artifacts/browser/**"],
+      "env": [
+        "VITE_*",
+        "EXPO_PUBLIC_*",
+        "NITRO_PRESET",
+        "RAYPX_SOURCEMAPS",
+        "RAYPX_DESKTOP_BROWSER_BUILD"
+      ]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "test:integration": {
+      "cache": false
+    },
+    "test:coverage": {
+      "cache": false
+    },
+    "test:postgres": {
+      "cache": false
+    },
+    "test:redis": {
+      "cache": false
+    },
+    "test:cluster": {
+      "cache": false
+    },
+    "test:inventory": {
+      "cache": false
+    },
+    "test:backends": {
+      "cache": false
+    },
+    "perf": {
+      "cache": false
+    },
+    "perf:tasks": {
+      "cache": false
+    },
+    "perf:check": {
+      "cache": false
+    },
+    "build:perf": {
+      "cache": false
+    },
+    "plan": {
+      "cache": false
+    },
+    "plan:worker": {
+      "cache": false
+    },
+    "deploy": {
+      "cache": false
+    },
+    "eval:agents": {
+      "cache": false
+    },
+    "smoke": {
+      "cache": false
+    },
+    "smoke:tui": {
+      "cache": false
+    },
+    "smoke:terminal": {
+      "cache": false
+    },
+    "smoke:terminal-stream": {
+      "cache": false
+    },
+    "smoke:herdr-terminal": {
+      "cache": false
+    },
+    "smoke:daemon-agents": {
+      "cache": false
+    },
+    "smoke:pi": {
+      "cache": false
+    },
+    "prepare:herdr": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "generate": {
+      "cache": false
+    },
+    "generate:theme": {
+      "cache": false
+    },
+    "migrate": {
+      "cache": false
+    },
+    "studio": {
+      "cache": false
+    },
+    "preview": {
+      "cache": false
+    },
+    "start": {
+      "cache": false
+    },
+    "email:dev": {
+      "cache": false
+    },
+    "deployment:fixture:build": {
+      "cache": false
+    },
+    "auth:bootstrap-admins": {
+      "cache": false
+    },
+    "typecheck": {
+      "cache": false
+    },
+    "typecheck:node": {
+      "cache": false
+    },
+    "e2e:live": {
+      "cache": false
+    },
+    "e2e:devtools": {
+      "cache": false
+    },
+    "mygo:build": {
+      "cache": false
+    },
+    "mygo:check": {
+      "cache": false
+    },
+    "mygo:check:docker": {
+      "cache": false
+    },
+    "mygo:test": {
+      "cache": false
+    },
+    "mygo:smoke": {
+      "cache": false
+    },
+    "mygo:dev": {
+      "cache": false
+    },
+    "native:generate": {
+      "cache": false
+    },
+    "native:csp": {
+      "cache": false
+    },
+    "native:prepare": {
+      "cache": false
+    },
+    "native:build": {
+      "cache": false
+    },
+    "native:dev": {
+      "cache": false
+    },
+    "native:smoke": {
+      "cache": false
+    },
+    "native:smoke:interactive": {
+      "cache": false
+    },
+    "native:agents": {
+      "cache": false
+    },
+    "//#policy": {
+      "inputs": [
+        "package.json",
+        "bun.lock",
+        "bunfig.toml",
+        "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc,md,toml,yml,yaml}",
+        "**/Dockerfile",
+        "**/Caddyfile",
+        "**/.env.example",
+        "**/go.{mod,sum}",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/.output/**",
+        "!**/coverage/**",
+        "!**/test-results/**",
+        "!**/playwright-report/**",
+        "!**/build/**",
+        "!**/artifacts/**",
+        "!.artifacts/**",
+        "!.turbo/**",
+        "!.agents/**",
+        "!.claude/**"
+      ],
+      "outputs": []
+    },
+    "//#locales": {
+      "inputs": [
+        "package.json",
+        "{apps,packages,infra}/*/package.json",
+        "e2e/package.json",
+        "{apps,packages,infra}/*/locales/**/*.{ts,json}",
+        "packages/i18n/src/**"
+      ],
+      "outputs": []
+    },
+    "//#types": {
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "package.json",
+        "bun.lock",
+        "tsconfig.json",
+        "vite.config.ts",
+        "test.config.ts",
+        "test.dom.ts",
+        "deploy/*.ts",
+        "{apps,packages,infra}/*/vitest.config.ts",
+        "e2e/vitest.config.ts"
+      ],
+      "outputs": []
+    },
+    "//#lint": {
+      "cache": false
+    },
+    "//#knip": {
+      "cache": false
+    }
+  }
+}

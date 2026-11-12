@@ -6,7 +6,7 @@ const ciPlanVersion = 3;
 
 /** Keep native checks together; workspace suites run on their own runner. */
 export function sourceTasks(plan: VerificationPlan, phase: SourcePhase) {
-  return plan.tasks.filter((task) => task.endsWith("#task:test") === (phase === "tests"));
+  return plan.tasks.filter((task) => task.endsWith("#test") === (phase === "tests"));
 }
 
 export function sourcePhases(plan: VerificationPlan): SourcePhase[] {

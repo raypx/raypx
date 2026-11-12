@@ -8,8 +8,7 @@
   },
   "scripts": {
     "dev": "raypx-dev env -- bun --bun vp dev --config vite.app.config.ts",
-    "build": "raypx-dev env -- bun --bun vp build --config vite.app.config.ts",
-    "_build": "bun --bun vp build --config vite.app.config.ts",
+    "build": "bun --bun vp build --config vite.app.config.ts",
     "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project e2e/tsconfig.json",
@@ -18,8 +17,7 @@
     "test:component": "bun --bun vp test --run --project component",
     "test:coverage": "bun --bun vp test --run --coverage",
     "e2e": "raypx-dev e2e",
-    "_e2e": "raypx-dev browser:run",
-    "build:e2e": "raypx-dev tasks web#build:e2e"
+    "build:e2e": "bun --bun vp build --config vite.app.config.ts"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -51,7 +49,6 @@
     "@raypx/dev-cli": "workspace:*",
     "@raypx/devtools": "workspace:*",
     "@raypx/e2e": "workspace:*",
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
@@ -73,11 +70,6 @@
     "bundledDependencies": [
       "@raypx/devtools"
     ],
-    "taskScripts": {
-      "build": "_build",
-      "e2e": "_e2e",
-      "build:e2e": "_build"
-    },
     "browserTestProject": "web"
   }
 }

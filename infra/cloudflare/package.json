@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:dev",
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",

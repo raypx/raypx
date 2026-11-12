@@ -1,6 +1,5 @@
 import { globSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { workspaceTaskConfig } from "@raypx/task-graph";
 import { defineConfig, mergeConfig } from "vite-plus";
 import repository from "./package.json" with { type: "json" };
 import defaults from "./test.config.js";
@@ -10,7 +9,6 @@ const root = fileURLToPath(new URL(".", import.meta.url));
 export default mergeConfig(
   defaults,
   defineConfig({
-    ...workspaceTaskConfig(import.meta.url),
     test: {
       projects: globSync(
         repository.workspaces.packages.map((workspace) => `${workspace}/vitest.config.ts`),

@@ -126,7 +126,8 @@
         "@types/ws": "8.18.2",
         "@types/cross-spawn": "6.0.6",
         "@types/semver": "7.8.0",
-        "oxc-parser": "0.157.0"
+        "oxc-parser": "0.157.0",
+        "turbo": "2.11.11"
       }
     }
   },
@@ -139,7 +140,7 @@
     "workspace:new": "raypx-dev workspace new",
     "policy": "raypx-dev policy",
     "i18n:check": "raypx-dev i18n",
-    "dev": "raypx-dev tasks dev --filter web --filter api --concurrency-limit=2",
+    "dev": "raypx-dev tasks dev --filter web --filter api",
     "dev:desktop": "raypx-dev tasks dev --filter desktop",
     "dev:storybook": "raypx-dev tasks dev --filter ui-storybook",
     "build": "raypx-dev tasks build",
@@ -169,11 +170,12 @@
     "knip": "knip-bun",
     "perf:tasks": "raypx-dev tasks perf:tasks",
     "eval:agents": "raypx-dev tasks cli#eval:agents --",
-    "dev:mobile": "raypx-dev tasks dev --filter mobile"
+    "dev:mobile": "raypx-dev tasks dev --filter mobile",
+    "locales": "raypx-dev i18n",
+    "types": "tsc --noEmit --project tsconfig.json"
   },
   "devDependencies": {
     "@raypx/dev-cli": "workspace:*",
-    "@raypx/task-graph": "workspace:*",
     "@raypx/testing": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
@@ -181,6 +183,7 @@
     "@vitest/coverage-v8": "catalog:dev",
     "knip": "catalog:dev",
     "skills": "catalog:dev",
+    "turbo": "catalog:dev",
     "typescript": "catalog:dev",
     "vite-plus": "catalog:dev"
   },

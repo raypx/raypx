@@ -120,9 +120,7 @@ it("verifies the shared payload before running native acceptance", () => {
   const go = named("Desktop MyGo checks", checks);
   for (const step of [herdr, go, runners, named("Installed CLI package", checks)])
     expect(checks.indexOf(step)).toBeGreaterThan(checks.indexOf(payload));
-  expect(runners.run).toContain(
-    "bun run --cwd packages/task-graph test ./tests/integration/task-leaf.test.ts",
-  );
+  expect(runners.run).toContain("bun run --cwd packages/runtime-node test");
   expect(herdr.env?.RAYPX_HERDR_COMPILED).toBe("1");
   expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe(
     "${{ inputs.distribution == 'true' && '3' || '1' }}",

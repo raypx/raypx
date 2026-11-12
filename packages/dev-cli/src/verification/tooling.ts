@@ -1,7 +1,7 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { imports } from "../repo/architecture.js";
-import { discover, exportPaths } from "@raypx/task-graph/workspaces";
+import { discover, exportPaths } from "../repo/workspaces.js";
 import { opaqueImport, sourceExtensions, toolingSourceClosure } from "../tooling-entries.js";
 
 const testOnly = /(?:^|\/)tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$/;

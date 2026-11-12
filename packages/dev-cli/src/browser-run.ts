@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
-import { browserTestArguments } from "@raypx/task-graph/browser-tests";
-import { discover } from "@raypx/task-graph/workspaces";
+import { browserTestArguments } from "./browser-tests.js";
+import { discover } from "./repo/workspaces.js";
 
 /** Runs the shared Playwright process from the E2E workspace. */
 export async function runBrowserTests(

@@ -19,7 +19,6 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/cross-spawn": "catalog:dev",
     "@types/node": "catalog:dev",

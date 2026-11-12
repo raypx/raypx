@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { imports } from "../repo/architecture.js";
-import type { Workspace, WorkspaceIndex } from "@raypx/task-graph/workspaces";
+import type { Workspace, WorkspaceIndex } from "../repo/workspaces.js";
 
 /** A public entry nobody imports is dead weight: it still has to compile, test and age. */
 interface EntryImporter {

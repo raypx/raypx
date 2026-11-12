@@ -1,4 +1,4 @@
-import type { WorkspaceIndex } from "@raypx/task-graph/workspaces";
+import type { WorkspaceIndex } from "../repo/workspaces.js";
 
 const engine = "use-intl";
 const forbidden = ["next-intl"];

@@ -1,6 +1,6 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { workspacePatterns } from "@raypx/task-graph/workspaces";
+import { workspacePatterns } from "../repo/workspaces.js";
 
 type Manifest = Record<string, any>;
 

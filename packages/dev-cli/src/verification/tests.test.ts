@@ -2,9 +2,8 @@ import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../workspace-graph.js";
 import { platformProject } from "../../tests/helpers/verification.js";
-import { argumentKey } from "@raypx/task-graph/core";
 import { testLayer, testSources } from "../validation/test-sources.js";
 import { executionTasks } from "./execution.js";
 import { verificationPlan } from "./plan.js";
@@ -36,7 +35,8 @@ function project() {
   write("packages/feature/src/view.component.test.tsx", 'import { value } from "./value";');
   write("packages/feature/tests/integration/process.test.ts");
   write("packages/feature/tests/postgres/data.test.ts");
-  const plan = (files: string[], options = {}) => verificationPlan(taskModel(root), files, options);
+  const plan = (files: string[], options = {}) =>
+    verificationPlan(workspaceGraph(root), files, options);
   return { root, write, plan };
 }
 
@@ -46,11 +46,11 @@ describe("local related test selection", () => {
     const plan = verificationPlan(model, ["packages/desktop/go.mod"]);
     expect(localTests(model.root, plan)).toEqual([]);
     expect(executionTasks(plan, "fixture")).toEqual([
-      "fixture#task:policy",
-      "fixture#task:locales",
-      "fixture#task:types",
-      "desktop#task:mygo:check",
-      "desktop#task:mygo:test",
+      "fixture#policy",
+      "fixture#locales",
+      "fixture#types",
+      "desktop#mygo:check",
+      "desktop#mygo:test",
     ]);
   });
   it("follows emitted JS imports transitively, retains integration checks and runs complete consumer suites", () => {
@@ -67,8 +67,8 @@ describe("local related test selection", () => {
     });
     expect(selected.find((test) => test.workspace === "@raypx/consumer")?.mode).toBe("all");
     expect(selected.some((test) => test.workspace === "@raypx/unrelated")).toBe(false);
-    expect(canonical.tasks).toContain("@raypx/feature#task:test");
-    expect(executionTasks(canonical, "fixture")).toContain("@raypx/feature#task:test");
+    expect(canonical.tasks).toContain("@raypx/feature#test");
+    expect(executionTasks(canonical, "fixture")).toContain("@raypx/feature#test");
   });
   it("runs a changed component test without its unrelated suites", () => {
     const { root, plan } = project();
@@ -114,13 +114,9 @@ describe("local related test selection", () => {
       write(changed);
       const canonical = plan([changed]);
       expect(canonical.workspaces).toEqual(["api", "cli"]);
-      expect(canonical.tasks).toContain("cli#task:test");
-      expect(canonical.tasks).not.toContain("cli#task:check");
+      expect(canonical.tasks).toContain("cli#test");
+      expect(canonical.tasks).not.toContain("cli#check");
       expect(canonical.native).toBe(false);
-      const task = taskModel(root).definitions.get("cli#task:test");
-      expect(task?.cache).toMatchObject({
-        input: expect.arrayContaining([{ pattern: changed, base: "workspace" }]),
-      });
       expect(localTests(root, canonical).find((test) => test.workspace === "cli")).toMatchObject({
         mode: "related",
         files: [lifecycle],
@@ -131,7 +127,7 @@ describe("local related test selection", () => {
         )?.files,
       ).toEqual([other, lifecycle]);
     }
-    expect(plan([`${api}/tests/helpers/unrelated.ts`]).tasks).not.toContain("cli#task:test");
+    expect(plan([`${api}/tests/helpers/unrelated.ts`]).tasks).not.toContain("cli#test");
   });
   it("keeps filesystem and subprocess assertions that do not import their subject", () => {
     const { root, plan, write } = project();
@@ -184,10 +180,9 @@ describe("local related test selection", () => {
     const selected = localTests(root, canonical);
     const refs = executionTasks(canonical, "fixture", selected);
     expect(selected.find((test) => test.workspace === "@raypx/dev-cli")?.mode).toBe("related");
-    expect(refs).toContain("@raypx/dev-cli#task:check");
+    expect(refs).toContain("@raypx/dev-cli#check");
     expect(canonical.workspaces).toEqual(["@raypx/dev-cli"]);
-    expect(canonical.tasks).not.toContain("@raypx/feature#task:check");
-    expect(argumentKey("@raypx/dev-cli#test")).toBe(argumentKey("@raypx/dev-cli#task:test"));
+    expect(canonical.tasks).not.toContain("@raypx/feature#check");
   });
 });
 

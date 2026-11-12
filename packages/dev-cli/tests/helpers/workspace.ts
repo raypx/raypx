@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach } from "vite-plus/test";
-import type { Metadata } from "@raypx/task-graph/workspaces";
+import type { Metadata } from "../../src/repo/workspaces.js";
 
 export function workspaceFixtures() {
   const roots: string[] = [];

@@ -7,7 +7,6 @@
     "src/**/*.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
-    "vite.config.ts",
     "vitest.config.ts",
     "drizzle.config.ts"
   ]

@@ -14,7 +14,6 @@
     "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
   },
   "dependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "railway": "catalog:dev"
   },

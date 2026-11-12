@@ -35,7 +35,6 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "devDependencies": {
-    "@raypx/task-graph": "workspace:*",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"

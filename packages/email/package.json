@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@raypx-kit/email-preview": "catalog:dev",
-    "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",

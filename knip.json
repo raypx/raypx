@@ -49,9 +49,6 @@
     "packages/dev-cli": {
       "entry": ["src/validation/commit-message.ts"]
     },
-    "packages/task-graph": {
-      "entry": ["src/leaf.ts"]
-    },
     "packages/email": {
       "entry": ["vite.app.config.ts"]
     },

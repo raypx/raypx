@@ -11,11 +11,10 @@ const { fixture, member } = workspaceFixtures();
 describe("workspace scaffolding", () => {
   it("discovers a scaffolded package without editing any central list and refuses overwrite", () => {
     const root = fixture();
-    member(root, "task-graph", { metadata: { kind: "tooling" } });
     member(root, "tsconfig");
     const preview = scaffold(root, "feature-kit", { kind: "library", target: "universal" });
     expect(preview).toContain("packages/feature-kit/src/index.ts");
-    expect(discover(root).workspaces).toHaveLength(2);
+    expect(discover(root).workspaces).toHaveLength(1);
     scaffold(root, "feature-kit", {
       kind: "library",
       target: "universal",
@@ -30,7 +29,7 @@ describe("workspace scaffolding", () => {
     expect(
       JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
         .devDependencies,
-    ).toEqual({ "@raypx/tsconfig": "workspace:*", "@raypx/task-graph": "workspace:*" });
+    ).toEqual({ "@raypx/tsconfig": "workspace:*" });
     const scripts = JSON.parse(
       readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"),
     ).scripts;

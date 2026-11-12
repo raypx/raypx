@@ -6,5 +6,5 @@
     "types": ["bun"],
     "allowImportingTsExtensions": true
   },
-  "include": ["bin/**/*.mjs", "src/**/*.ts", "tests/**/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": ["bin/**/*.mjs", "src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
 }

@@ -9,7 +9,7 @@ import {
   workspaceFor,
   type Workspace,
   type WorkspaceIndex,
-} from "@raypx/task-graph/workspaces";
+} from "./workspaces.js";
 
 export interface ImportEdge {
   request: string;

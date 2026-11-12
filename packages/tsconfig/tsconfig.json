@@ -1,4 +1,4 @@
 {
   "extends": "./node.json",
-  "include": ["vite.config.ts", "vitest.config.ts", "scripts/**/*.ts", "tests/**/*.ts", "*.test.ts"]
+  "include": ["vitest.config.ts", "scripts/**/*.ts", "tests/**/*.ts", "*.test.ts"]
 }

@@ -1,12 +1,16 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { imports } from "../repo/architecture.js";
-import { resolveImport, workspaceFor } from "@raypx/task-graph/workspaces";
+import { resolveImport, workspaceFor } from "../repo/workspaces.js";
 import { discover } from "../repository.js";
-import { taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
+import {
+  relatedTaskLifecycle,
+  workspaceGraph,
+  taskRef,
+  type WorkspaceGraph,
+} from "../workspace-graph.js";
 import { testLayer, testSources } from "../validation/test-sources.js";
 import type { VerificationPlan } from "./plan.js";
-import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
 export interface TestSelection {
   workspace: string;
@@ -25,9 +29,9 @@ const extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"
 export function localTests(
   root: string,
   plan: VerificationPlan,
-  model: TaskModel = taskModel(root),
+  model: WorkspaceGraph = workspaceGraph(root),
 ): TestSelection[] {
-  if (!plan.tasks.some((task) => task.endsWith("#task:test"))) return [];
+  if (!plan.tasks.some((task) => task.endsWith("#test"))) return [];
   const index = discover(root);
   const changed = plan.files.filter((file) => !documentation.test(file));
   const lifecycle = relatedTaskLifecycle(model, changed);

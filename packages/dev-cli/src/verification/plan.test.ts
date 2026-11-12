@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project, platformProject } from "../../tests/helpers/verification.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel, taskPlan, taskRef } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../workspace-graph.js";
 import { changedFiles, localPlan, verificationPlan } from "./plan.js";
 import { githubPlan, readGithubPlan } from "./ci.js";
 import { verifyOptions } from ".";
@@ -19,18 +19,6 @@ const browserModes = ({ browser }: ReturnType<typeof verificationPlan>) => [
 afterEach(() => vi.restoreAllMocks());
 
 describe("affected verification", () => {
-  it("normalizes the selected repository root and isolates nested test repositories", () => {
-    const { root } = project(),
-      other = project();
-    vi.stubEnv("RAYPX_VERIFY_ROOT", root + "/");
-    vi.stubEnv("RAYPX_VERIFY_TASKS", JSON.stringify([taskRef("api", "build")]));
-    expect(taskModel(root).definitions.get(taskRef("fixture", "verify:run"))?.dependsOn).toEqual([
-      taskRef("api", "build"),
-    ]);
-    expect(
-      taskModel(other.root).definitions.get(taskRef("fixture", "verify:run"))?.dependsOn,
-    ).toEqual([]);
-  });
   it("selects reverse transitive consumers and reserves artifacts for full verification", () => {
     const { model } = project();
     const plan = verificationPlan(model, ["packages/tokens/src/index.ts"]);
@@ -39,16 +27,15 @@ describe("affected verification", () => {
     expect(plan.backend).toBe(false);
     expect(plan.native).toBe(false);
     expect(browserModes(plan)).toEqual(["none", "none"]);
-    expect(plan.tasks).not.toContain("api#task:build");
+    expect(plan.tasks).not.toContain("api#build");
     const full = verificationPlan(model, [], { full: true });
     expect(full.artifacts).toEqual(["api"]);
-    expect(full.tasks).toContain("api#task:build");
+    expect(full.tasks).toContain("api#build");
   });
   it.each([
     "packages/tokens/tests/value.test.ts",
     "packages/tokens/src/value.test.ts",
     "packages/tokens/src/view.spec.tsx",
-    "packages/tokens/vite.config.ts",
     "packages/tokens/vitest.config.ts",
   ])("reruns only the owner for a test or config edit: %s", (file) => {
     const { model } = project();
@@ -61,20 +48,9 @@ describe("affected verification", () => {
     tokens.exports = { ...tokens.exports, "./testing": "./tests/helpers/testing.ts" };
     writeFileSync(manifest, JSON.stringify(tokens));
     expect(
-      verificationPlan(taskModel(root), ["packages/tokens/tests/helpers/testing.ts"]).workspaces,
+      verificationPlan(workspaceGraph(root), ["packages/tokens/tests/helpers/testing.ts"])
+        .workspaces,
     ).toEqual(["@raypx/bridge", "@raypx/tokens", "api"]);
-  });
-  it("omits dependency tests and configs from type-check inputs", () => {
-    const { model } = project();
-    const input = model.definitions.get("@raypx/bridge#task:check")?.cache;
-    const patterns = input
-      ? input.input.flatMap((entry) =>
-          typeof entry === "object" && "pattern" in entry ? [entry.pattern] : [],
-        )
-      : [];
-    expect(patterns).toContain("!packages/tokens/tests/**");
-    expect(patterns).toContain("!packages/tokens/vitest.config.ts");
-    expect(patterns.some((pattern) => pattern.startsWith("!packages/bridge/"))).toBe(false);
   });
   it("keeps documentation-only feedback independent of JavaScript and native runners", () => {
     const { model } = project();
@@ -115,7 +91,7 @@ describe("affected verification", () => {
     expect(universal.workspaces).toContain("api");
     expect(universal.backend).toBe(false);
     expect(universal.native).toBe(false);
-    expect(universal.tasks).not.toContain("desktop#task:mygo:test");
+    expect(universal.tasks).not.toContain("desktop#mygo:test");
   });
   it("selects backend integration for API inputs and direct runtime dependencies", () => {
     const { root } = platformProject();
@@ -123,7 +99,7 @@ describe("affected verification", () => {
     const manifest = JSON.parse(readFileSync(api, "utf8"));
     manifest.devDependencies = { "@raypx/feature": "workspace:*" };
     writeFileSync(api, JSON.stringify(manifest));
-    const model = taskModel(root);
+    const model = workspaceGraph(root);
     for (const file of [
       "packages/api/server/api.ts",
       "packages/api/vitest.config.ts",
@@ -150,7 +126,7 @@ describe("affected verification", () => {
   it("runs the browser project that owns the changed suite and both for shared inputs", () => {
     const { root } = platformProject();
     member(root, "e2e");
-    const model = taskModel(root);
+    const model = workspaceGraph(root);
     const web = "packages/web/e2e/settings.spec.ts";
     const desktop = "packages/desktop/e2e/projects.spec.ts";
     expect(browserModes(verificationPlan(model, [web]))).toEqual(["full", "none"]);
@@ -169,7 +145,7 @@ describe("affected verification", () => {
   it("selects smoke for the surfaces that use login, password and remote approval inputs", () => {
     const { root } = platformProject();
     member(root, "e2e");
-    const model = taskModel(root);
+    const model = workspaceGraph(root);
     const webLogin = "packages/web/src/routes/(auth)/login.tsx";
     const desktopApproval = "packages/desktop/src/routes/approvals.tsx";
     for (const file of [
@@ -227,7 +203,7 @@ describe("affected verification", () => {
   ])("keeps Go-only changes independent of renderer checks and suites: %s", (file) => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.workspaces).toEqual(["desktop"]);
-    expect(plan.tasks).toEqual(["desktop#task:mygo:check", "desktop#task:mygo:test"]);
+    expect(plan.tasks).toEqual(["desktop#mygo:check", "desktop#mygo:test"]);
     expect(plan.native).toBe(true);
     expect(plan.artifacts).toEqual([]);
   });
@@ -237,12 +213,12 @@ describe("affected verification", () => {
     const mixed = verificationPlan(model, [go, "packages/desktop/src/index.ts", "DESIGN.md"]);
     const full = verificationPlan(model, [go], { full: true });
     for (const plan of [mixed, full]) {
-      expect(plan.tasks).toContain("desktop#task:check");
-      expect(plan.tasks).toContain("desktop#task:test");
-      expect(plan.tasks).toContain("desktop#task:mygo:test");
+      expect(plan.tasks).toContain("desktop#check");
+      expect(plan.tasks).toContain("desktop#test");
+      expect(plan.tasks).toContain("desktop#mygo:test");
     }
     expect(mixed.workspaces).toEqual(["desktop"]);
-    expect(full.tasks).toContain("api#task:check");
+    expect(full.tasks).toContain("api#check");
   });
   it("limits workflow orchestration to Dev CLI while retaining shared-action and native acceptance", () => {
     const { root } = platformProject();
@@ -250,11 +226,11 @@ describe("affected verification", () => {
       metadata: { kind: "tooling" },
       extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
     });
-    const model = taskModel(root);
+    const model = workspaceGraph(root);
     for (const file of ["ci.yml", "container-smoke.yml", "artifact-performance.yml"]) {
       const plan = verificationPlan(model, [`.github/workflows/${file}`]);
       expect(plan.workspaces).toEqual(["@raypx/dev-cli"]);
-      expect(plan.tasks).toEqual(["@raypx/dev-cli#task:check", "@raypx/dev-cli#task:test"]);
+      expect(plan.tasks).toEqual(["@raypx/dev-cli#check", "@raypx/dev-cli#test"]);
       expect(plan.backend).toBe(false);
     }
     for (const file of [
@@ -264,8 +240,8 @@ describe("affected verification", () => {
       const plan = verificationPlan(model, [file], { macos: false });
       expect(plan.workspaces).toEqual(["@raypx/dev-cli", "desktop"]);
       expect(plan.nativeRunners).toEqual(["windows-latest"]);
-      expect(plan.tasks).toContain("desktop#task:mygo:test");
-      expect(plan.tasks).not.toContain("desktop#task:test");
+      expect(plan.tasks).toContain("desktop#mygo:test");
+      expect(plan.tasks).not.toContain("desktop#test");
     }
     for (const file of [
       ".github/actions/setup-bun/action.yml",
@@ -294,7 +270,7 @@ describe("affected verification", () => {
     expect(plan.artifacts).toEqual([]);
     expect(plan.backend).toBe(false);
     expect(browserModes(plan)).toEqual(["none", "none"]);
-    expect(plan.tasks.every((task) => /#task:(?:check|test)$/.test(task))).toBe(true);
+    expect(plan.tasks.every((task) => /#(?:check|test)$/.test(task))).toBe(true);
   });
   it.each([
     ["packages/desktop/internal/desktop/process_windows.go", ["windows-latest"]],
@@ -328,7 +304,7 @@ describe("affected verification", () => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.native).toBe(true);
     expect(plan.nativeRunners).toEqual(runners);
-    expect(plan.tasks).toContain("desktop#task:mygo:test");
+    expect(plan.tasks).toContain("desktop#mygo:test");
   });
   it("keeps CLI business logic independent of native platform runners", () => {
     const plan = verificationPlan(platformProject(), [
@@ -345,7 +321,7 @@ describe("affected verification", () => {
       metadata: { kind: "tooling" },
       extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
     });
-    const model = taskModel(root);
+    const model = workspaceGraph(root);
     for (const file of [
       "packages/tooling/src/build/cli.ts",
       "packages/cli/scripts/archive.ts",
@@ -361,19 +337,14 @@ describe("affected verification", () => {
   });
   it("selects Windows acceptance for code and tests executed on the native runner", () => {
     const { root } = platformProject();
-    for (const name of ["tooling", "task-graph", "dev-cli", "runtime-node"])
+    for (const name of ["tooling", "dev-cli", "runtime-node"])
       member(root, name, {
         metadata: { kind: name === "runtime-node" ? "library" : "tooling" },
         extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
       });
-    const model = taskModel(root);
+    const model = workspaceGraph(root);
     for (const file of [
       "packages/tooling/src/build/cli.ts",
-      "packages/task-graph/tests/integration/task-leaf.test.ts",
-      "packages/task-graph/src/leaf.ts",
-      "packages/task-graph/src/core/run.ts",
-      "packages/task-graph/src/core/arguments.ts",
-      "packages/task-graph/src/delegation.ts",
       "packages/dev-cli/src/validation/build-size.test.ts",
       "packages/runtime-node/src/process.ts",
       "packages/runtime-node/src/process.test.ts",
@@ -381,12 +352,8 @@ describe("affected verification", () => {
     ]) {
       const plan = verificationPlan(model, [file], { macos: false });
       expect(plan.nativeRunners).toEqual(["windows-latest"]);
-      expect(plan.tasks).toContain("desktop#task:mygo:test");
+      expect(plan.tasks).toContain("desktop#mygo:test");
     }
-    expect(
-      verificationPlan(model, ["packages/task-graph/src/browser-tests.ts"], { macos: false })
-        .nativeRunners,
-    ).toEqual([]);
     for (const file of [
       "packages/dev-cli/src/verification/plan.ts",
       "packages/dev-cli/src/verification/plan.test.ts",
@@ -395,8 +362,8 @@ describe("affected verification", () => {
     ]) {
       const plan = verificationPlan(model, [file], { macos: false });
       expect(plan.nativeRunners).toEqual([]);
-      expect(plan.tasks).not.toContain("desktop#task:mygo:test");
-      expect(plan.tasks).toContain("@raypx/dev-cli#task:test");
+      expect(plan.tasks).not.toContain("desktop#mygo:test");
+      expect(plan.tasks).toContain("@raypx/dev-cli#test");
     }
   });
   it("unions platform-specific changes and keeps release acceptance complete", () => {
@@ -423,18 +390,7 @@ describe("affected verification", () => {
     expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
     expect(browserModes(release)).toEqual(["full", "full"]);
     expect(release.backend).toBe(true);
-    expect(release.tasks).toContain("desktop#task:mygo:test");
-  });
-  it("preserves private VP prerequisites and rejects injected/cyclic task references", () => {
-    const { root } = project();
-    const ref = taskRef("api", "build");
-    const model = taskModel(root, JSON.stringify([ref]));
-    const plan = taskPlan(model, [taskRef("fixture", "verify:run")]);
-    expect(plan.map((task) => task.taskId)).toContain("api#check");
-    expect(() => taskModel(root, '["not-a-task"]')).toThrow("Invalid verification task selection");
-    expect(() => taskModel(root, '["fixture#task:verify:run"]')).toThrow(
-      "Invalid verification task selection",
-    );
+    expect(release.tasks).toContain("desktop#mygo:test");
   });
   it("collects committed, staged, unstaged and untracked paths including both sides of a rename", () => {
     const { root } = project();
@@ -497,7 +453,7 @@ describe("affected verification", () => {
     expect(githubPlan(root, "push", { ref: "refs/tags/v1.0.0" }).distribution).toBe(true);
     const unknown = githubPlan(root, "push", { before: "0".repeat(40) });
     expect(unknown.full).toBe(false);
-    expect(unknown.workspaces).toHaveLength(taskModel(root).members.length);
+    expect(unknown.workspaces).toHaveLength(workspaceGraph(root).members.length);
     expect(unknown.nativeRunners).toEqual(["windows-latest"]);
     expect(unknown.artifacts).toEqual([]);
     expect(unknown.distribution).toBe(false);
@@ -533,7 +489,7 @@ describe("affected verification", () => {
       "dependency",
     );
     const daily = githubPlan(root, "push", { ref: "refs/heads/canary", before }, before);
-    expect(daily.workspaces).toHaveLength(taskModel(root).members.length);
+    expect(daily.workspaces).toHaveLength(workspaceGraph(root).members.length);
     expect(daily.nativeRunners).toEqual([]);
     expect(daily.artifacts).toEqual([]);
     expect(browserModes(daily)).toEqual(["none", "none"]);
@@ -610,7 +566,7 @@ describe("affected verification", () => {
     expect(retry.full).toBe(false);
     expect(retry.baseline).toBe(baseline);
     expect(retry.files).toContain(webFile);
-    expect(retry.tasks).toContain("web#task:test");
+    expect(retry.tasks).toContain("web#test");
     expect(browserModes(retry)).toEqual(["smoke", "none"]);
 
     mkdirSync(join(root, ".github/workflows"), { recursive: true });
@@ -657,10 +613,10 @@ describe("affected verification", () => {
 it("always selects repository policy/locales and reserves Knip for full verification", () => {
   const { root } = project();
   for (const full of [false, true]) {
-    const plan = verificationPlan(taskModel(root), ["packages/tokens/src/index.ts"], { full });
-    expect(executionTasks(plan, "fixture").includes("fixture#task:knip")).toBe(full);
-    expect(executionTasks(plan, "fixture")).toContain("fixture#task:policy");
-    expect(executionTasks(plan, "fixture")).toContain("fixture#task:locales");
+    const plan = verificationPlan(workspaceGraph(root), ["packages/tokens/src/index.ts"], { full });
+    expect(executionTasks(plan, "fixture").includes("fixture#knip")).toBe(full);
+    expect(executionTasks(plan, "fixture")).toContain("fixture#policy");
+    expect(executionTasks(plan, "fixture")).toContain("fixture#locales");
   }
 });
 

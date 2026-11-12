@@ -75,11 +75,11 @@ async function workspace(args: string[]) {
 
 const commands: Record<string, Command> = {
   tasks: {
-    usage: "tasks <task> [VP options]",
-    summary: "Run a VP task across the workspace graph",
+    usage: "tasks <task> [Turbo options]",
+    summary: "Run a Turbo task across the workspace graph",
     passthrough: true,
     async run([task, ...args]) {
-      if (!task) throw new Error("Usage: raypx-dev tasks <task> [VP options]");
+      if (!task) throw new Error("Usage: raypx-dev tasks <task> [Turbo options]");
       const { runTasks } = await import("./repository.js");
       await runTasks(root, task, args);
     },
@@ -236,25 +236,6 @@ const commands: Record<string, Command> = {
       );
     },
   },
-  "verify:check": {
-    usage: "verify:check <policy|locales> <platform>",
-    summary: "VP leaf for cached policy and locale checks",
-    internal: true,
-    async run(args) {
-      const { runPrecheck } = await import("./verification/prechecks.js");
-      runPrecheck(root, args[0] ?? "");
-    },
-  },
-  "browser:run": {
-    usage: "browser:run",
-    summary: "VP leaf that runs the shared Playwright process",
-    internal: true,
-    passthrough: true,
-    async run(args) {
-      const { runBrowserTests } = await import("./browser-run.js");
-      await runBrowserTests(root, args);
-    },
-  },
   "ci:plan": {
     usage: "ci:plan",
     summary: "Emit the CI plan for the current event",
@@ -281,15 +262,6 @@ const commands: Record<string, Command> = {
     async run(args) {
       const { ciGate } = await import("./verification/ci.js");
       await ciGate(root, args);
-    },
-  },
-  "ci:cache": {
-    usage: "ci:cache [snapshot|...]",
-    summary: "Snapshot VP cache archives",
-    internal: true,
-    async run(args) {
-      const { cacheSnapshot } = await import("./verification/cache.js");
-      await cacheSnapshot(root, args[0] ?? "snapshot");
     },
   },
   "cli:experiment": {

@@ -2,7 +2,7 @@ import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
-import { taskModel } from "@raypx/task-graph/model";
+import { workspaceGraph } from "../workspace-graph.js";
 import { verificationPlan } from "./plan.js";
 
 const { fixture, member } = workspaceFixtures();
@@ -49,7 +49,7 @@ function project() {
   );
   write("packages/browser/config.ts", 'import "@raypx/tooling/browser-server";');
   write("packages/independent/vite.config.ts", 'import "@raypx/tooling/config";');
-  const plan = (files: string[]) => verificationPlan(taskModel(root), files);
+  const plan = (files: string[]) => verificationPlan(workspaceGraph(root), files);
   return { root, write, plan };
 }
 

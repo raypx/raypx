@@ -1,0 +1,35 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "dev": {
+      "dependsOn": ["^build", "cli#build"],
+      "cache": false,
+      "persistent": true
+    },
+    "native:build": {
+      "dependsOn": ["build", "cli#build"],
+      "cache": false
+    },
+    "native:smoke": {
+      "dependsOn": ["build", "cli#build"],
+      "cache": false
+    },
+    "native:smoke:interactive": {
+      "dependsOn": ["build", "cli#build"],
+      "cache": false
+    },
+    "native:agents": {
+      "dependsOn": ["build", "cli#build"],
+      "cache": false
+    },
+    "native:prepare": {
+      "dependsOn": ["cli#build"],
+      "cache": false
+    },
+    "mygo:smoke": {
+      "dependsOn": ["cli#build"],
+      "cache": false
+    }
+  }
+}

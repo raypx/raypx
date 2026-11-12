@@ -1,7 +1,7 @@
 import { globSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { imports } from "../repo/architecture.js";
-import type { WorkspaceIndex } from "@raypx/task-graph/workspaces";
+import type { WorkspaceIndex } from "../repo/workspaces.js";
 
 export interface SourceNode {
   path: string;
