@@ -1,0 +1,22 @@
+packages/dev-cli/src/smoke/checks.ts
+  s_28758cb14041db::t_a1b217f80086d6 60-61
+packages/dev-cli/src/smoke/checks.test.ts
+  s_28758cb14041db::t_a1b217f80086d6 25,28-31
+  s_28758cb14041db::t_727ccd4e184835 32-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2798e8bb5cfc20b914cb647b71e61f123d7f0e33",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
