@@ -271,10 +271,11 @@ The `changes` job emits one versioned plan bound to the workflow's commit SHA.
 Canary pushes use the latest successful push run of the current baseline policy
 whose commit is an ancestor of the checked-out revision. CI records the policy
 version in `ci.yml` so GitHub Actions can display the commit message. Existing
-runs with the original v1 title still qualify. This carries changes
-from failed or cancelled pushes into the next run. If no verified ancestor is
-available, the planner runs full verification to establish one. Pull requests and
-other branches continue to use their GitHub event base.
+runs with the original v1 title still qualify. This carries changes from failed or
+cancelled pushes into the next run. When the diff from the verified baseline
+contains only documentation, the plan skips both browser suites. If no verified
+ancestor is available, the planner runs full verification to establish one. Pull
+requests and other branches continue to use their GitHub event base.
 Source, database, browser and container smoke workers execute that plan through
 `RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
 The `source` matrix runs **Source checks** and **Source tests** concurrently through
