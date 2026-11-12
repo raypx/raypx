@@ -1,0 +1,14 @@
+packages/dev-cli/src/verification/gates.test.ts
+  h_f0766e80fd3864 257,268-275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "51a8243bd765a9a14e7085c3da25d42f88edd562",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
