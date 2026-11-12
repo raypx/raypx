@@ -14,12 +14,13 @@ import {
   type TaskCache,
 } from "@raypx/devkit/tasks";
 import { browserTestTasks, type BrowserSurface } from "../browser-tests.js";
-import { toolingConsumerCheckInputs, workspaceCheckInput } from "./check-inputs.js";
 import { taskScripts } from "./delegation.js";
 import { taskLifecycleInputs } from "./task-lifecycle.js";
 export { taskRef };
 interface TaskMember extends Member {
   native: boolean;
+  /** Only workspaces with package exports can reach another workspace's type check. */
+  importable: boolean;
   browserProject?: BrowserSurface;
   uncachedTasks: string[];
   delegates: Record<string, string>;
@@ -84,38 +85,24 @@ function scriptCommand(context: TaskContext<TaskMember>, member: TaskMember, nam
   return `${bun} ${JSON.stringify(adapter)} ${JSON.stringify(name)} ${runner}`;
 }
 
-function checkInputs(
-  member: TaskMember,
-  context: TaskContext<TaskMember>,
-  consumerInputs?: (path: string) => string[],
-): TaskCache["input"] {
-  const usesVerification = [
-    member.scripts.check,
-    member.scripts.precheck,
-    member.scripts.postcheck,
-  ].some(
-    (script) => script && /\braypx-dev\b|tooling[\\/]src[\\/](?:verification|cli\.)/.test(script),
-  );
+const checkSources = "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc}";
+
+function checkInputs(member: TaskMember, context: TaskContext<TaskMember>): TaskCache["input"] {
   return [
     { pattern: "tsconfig*.json", base: "workspace" },
     ...context
       .dependencyClosure(member)
-      .flatMap((candidate) =>
-        (consumerInputs &&
-        !usesVerification &&
-        candidate !== member &&
-        candidate.name === "@raypx/tooling"
-          ? consumerInputs(candidate.path)
-          : [workspaceCheckInput(candidate.path)]
-        ).map((pattern) => ({ pattern, base: "workspace" as const })),
-      ),
+      .filter((candidate) => candidate === member || candidate.importable)
+      .map((candidate) => ({
+        pattern: `${candidate.path}/**/${checkSources}`,
+        base: "workspace" as const,
+      })),
   ];
 }
 function cachedTask(
   member: TaskMember,
   name: string,
   context: TaskContext<TaskMember>,
-  consumerInputs?: (path: string) => string[],
 ): TaskCache | false {
   if (member.uncachedTasks.includes(name)) return false;
   const build = name === "build" || name === "build:renderer" || name === "build:e2e";
@@ -163,9 +150,7 @@ function cachedTask(
           base: "workspace" as const,
         }))
       : []),
-    ...(name === "check" || (member.name === "cli" && build)
-      ? checkInputs(member, context, consumerInputs)
-      : []),
+    ...(name === "check" || (member.name === "cli" && build) ? checkInputs(member, context) : []),
     ...(member.name === "cli" && build
       ? [
           { pattern: "packages/tooling/src/build/*.ts", base: "workspace" as const },
@@ -330,9 +315,6 @@ export function taskModel(
   root: string,
   selection = taskSelection(root, "RAYPX_VERIFY_TASKS", "RAYPX_VERIFY_ROOT"),
 ): TaskModel {
-  let toolingInputs: string[] | undefined;
-  const consumerInputs = (path: string) =>
-    (toolingInputs ??= toolingConsumerCheckInputs(root, path));
   return createTaskModel<TaskMember>(
     root,
     {
@@ -355,6 +337,7 @@ export function taskModel(
           ...member,
           ...(browserProject ? { browserProject } : {}),
           native: Boolean(member.scripts["native:build"] && member.scripts["native:prepare"]),
+          importable: Boolean(workspace.manifest.exports),
           uncachedTasks,
           delegates,
         };
@@ -366,12 +349,7 @@ export function taskModel(
           dependsOn: prerequisites(member, name, context.members),
           // Config loading emits one owner's tasks. Build input lists only when read.
           get cache() {
-            return (cache ??= cachedTask(
-              member,
-              name,
-              context,
-              name === "check" ? consumerInputs : undefined,
-            ));
+            return (cache ??= cachedTask(member, name, context));
           },
         };
       },
