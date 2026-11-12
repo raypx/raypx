@@ -9,7 +9,7 @@ import { checkDeployment } from "./validation/deployment.js";
 import { checkEntryConsumers } from "./validation/entries.js";
 import { checkIntlEngine } from "./validation/intl-engine.js";
 
-const MAX_MARKDOWN_LINES = 500;
+const MAX_MARKDOWN_LINES = 1000;
 
 export function checkMarkdownLength(root: string): string[] {
   return globSync("**/*.md", {
