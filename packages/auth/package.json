@@ -44,14 +44,5 @@
     "react": {
       "optional": true
     }
-  },
-  "raypx": {
-    "target": "universal",
-    "entryTargets": {
-      "./server": "node",
-      "./client": "browser",
-      "./hooks": "universal",
-      "./client/styles.css": "browser"
-    }
   }
 }

@@ -1,12 +1,16 @@
 import { constants, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { targets, type Kind, type Target } from "@raypx/task-graph/workspaces";
 import { discover } from "./repository.js";
 import { workspaceInstructions } from "./templates/workspace/agents.js";
 
+/** Layouts the generator creates; a tooling workspace is a package that adds a `bin`. */
+export const scaffoldKinds = ["library", "app"] as const;
+/** Runtime the generated TypeScript preset and types describe; never written to the manifest. */
+export const scaffoldTargets = ["universal", "browser", "native", "node", "bun"] as const;
+
 export interface ScaffoldOptions {
-  kind: Kind;
-  target: Target;
+  kind: (typeof scaffoldKinds)[number];
+  target: (typeof scaffoldTargets)[number];
   write?: boolean;
   tests?: boolean;
 }
@@ -16,11 +20,8 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     throw new Error("Use a lowercase hyphenated workspace name");
   if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name))
     throw new Error("Workspace name is reserved on Windows");
-  if (!["library", "app", "tooling"].includes(options.kind) || !targets.includes(options.target))
+  if (!scaffoldKinds.includes(options.kind) || !scaffoldTargets.includes(options.target))
     throw new Error("Invalid workspace kind or target");
-  // Kind is derived: tooling is a Bun package with exports, an app has no exports.
-  if (options.kind === "tooling" && options.target !== "bun")
-    throw new Error("Tooling workspaces target bun");
   const folder = options.kind === "app" ? "apps" : "packages";
   const directory = `${folder}/${name}`;
   const packageName = options.kind === "app" ? name : `@raypx/${name}`;
@@ -38,7 +39,6 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     version: "0.0.0",
     private: true,
     type: "module",
-    raypx: { target: options.target },
     ...(options.kind !== "app" ? { exports: { ".": "./src/index.ts" } } : {}),
     scripts,
     devDependencies: {

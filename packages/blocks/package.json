@@ -37,12 +37,5 @@
   "peerDependencies": {
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
-  },
-  "raypx": {
-    "target": "browser",
-    "entryTargets": {
-      "./messages/en": "universal",
-      "./messages/zh": "universal"
-    }
   }
 }

@@ -24,8 +24,5 @@
     "@vitest/coverage-v8": "catalog:dev",
     "typescript": "catalog:dev",
     "vite-plus": "catalog:dev"
-  },
-  "raypx": {
-    "target": "node"
   }
 }

@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { taskModel } from "@raypx/task-graph/model";
 import { workspaceFixtures } from "./workspace.js";
@@ -27,54 +27,36 @@ export function project() {
   });
   return { root, model: taskModel(root) };
 }
-/** Browser UI reaches a mixed feature's client entry; contracts and API use its universal entry. */
-export function platformProject(options: { leak?: boolean; typedTest?: boolean } = {}) {
+/** UI reaches the feature's client entry; contracts and API use its model entry. */
+export function platformProject() {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
     JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
   );
   const scripts = { check: "bun check.ts", test: "bun test.ts" };
-  member(root, "ui", { metadata: { kind: "library", target: "browser" }, extra: { scripts } });
+  member(root, "ui", { extra: { scripts } });
   const feature = member(root, "feature", {
-    metadata: {
-      kind: "library",
-      target: "universal",
-      entryTargets: { "./client": "browser" },
-    },
     deps: { "@raypx/ui": "workspace:*" },
-    ...(options.leak
-      ? {
-          source:
-            'import type { view } from "./client";\nexport type View = typeof view;\nexport const answer = 42;',
-        }
-      : {}),
     extra: { scripts, exports: { ".": "./src", "./client": "./src/client" } },
   });
   writeFileSync(
     join(root, feature, "src/client.ts"),
     'import { answer } from "@raypx/ui";\nexport const view = answer;',
   );
-  const contracts = member(root, "contracts", {
+  member(root, "contracts", {
     deps: { "@raypx/feature": "workspace:*" },
     source: 'export { answer } from "@raypx/feature";',
     extra: { scripts },
   });
-  if (options.typedTest) {
-    mkdirSync(join(root, contracts, "tests"));
-    writeFileSync(
-      join(root, contracts, "tests/view.test.ts"),
-      'import type { view } from "@raypx/feature/client";\nexport type View = typeof view;',
-    );
-  }
   member(root, "api", {
-    metadata: { kind: "app", target: "node" },
+    metadata: { kind: "app" },
     deps: { "@raypx/contracts": "workspace:*" },
     extra: { name: "api", scripts },
   });
   for (const name of ["web", "desktop"])
     member(root, name, {
-      metadata: { kind: "app", target: "browser" },
+      metadata: { kind: "app" },
       deps: { "@raypx/ui": "workspace:*", "@raypx/feature": "workspace:*" },
       extra: {
         name,
@@ -91,7 +73,7 @@ export function platformProject(options: { leak?: boolean; typedTest?: boolean }
       },
     });
   member(root, "cli", {
-    metadata: { kind: "app", target: "bun" },
+    metadata: { kind: "app" },
     extra: { name: "cli", scripts: { ...scripts, build: "bun build.ts" } },
   });
   return taskModel(root);

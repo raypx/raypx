@@ -48,11 +48,5 @@
     "@vitest/coverage-v8": "catalog:dev",
     "tailwindcss": "catalog:",
     "vite-plus": "catalog:dev"
-  },
-  "raypx": {
-    "target": "native",
-    "uncachedTasks": [
-      "build"
-    ]
   }
 }

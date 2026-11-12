@@ -79,10 +79,17 @@ describe("affected verification", () => {
     expect(plan.tasks).toEqual([]);
     expect(plan.native).toBe(false);
   });
-  it("keeps browser-only changes within browser consumers", () => {
+  it("propagates a change to every dependent workspace", () => {
     const plan = verificationPlan(platformProject(), ["packages/ui/src/index.ts"]);
-    expect(plan.workspaces).toEqual(["@raypx/feature", "@raypx/ui", "desktop", "web"]);
-    expect(plan.backend).toBe(false);
+    expect(plan.workspaces).toEqual([
+      "@raypx/contracts",
+      "@raypx/feature",
+      "@raypx/ui",
+      "api",
+      "desktop",
+      "web",
+    ]);
+    expect(plan.backend).toBe(true);
     expect(plan.native).toBe(false);
     expect(plan.browser).toBe("none");
     const universal = verificationPlan(platformProject(), ["packages/feature/src/index.ts"]);
@@ -131,7 +138,7 @@ describe("affected verification", () => {
   it("limits workflow orchestration to Dev CLI while retaining shared-action and native acceptance", () => {
     const { root } = platformProject();
     member(root, "dev-cli", {
-      metadata: { kind: "tooling", target: "bun" },
+      metadata: { kind: "tooling" },
       extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
     });
     const model = taskModel(root);
@@ -160,17 +167,7 @@ describe("affected verification", () => {
     expect(mixed.workspaces).toContain("@raypx/dev-cli");
     expect(mixed.workspaces).toContain("@raypx/ui");
     expect(mixed.workspaces).toContain("web");
-    expect(mixed.workspaces).not.toContain("api");
-  });
-  it("follows type-only and test imports of browser entries", () => {
-    const tested = verificationPlan(platformProject({ typedTest: true }), [
-      "packages/ui/src/index.ts",
-    ]);
-    expect(tested.workspaces).toContain("@raypx/contracts");
-    expect(tested.workspaces).not.toContain("api");
-    const leaked = verificationPlan(platformProject({ leak: true }), ["packages/ui/src/index.ts"]);
-    expect(leaked.workspaces).toContain("api");
-    expect(leaked.backend).toBe(true);
+    expect(mixed.workspaces).toContain("api");
   });
   it.each([
     "bun.lock",
@@ -236,7 +233,7 @@ describe("affected verification", () => {
   it("validates CLI distribution preparation on native platforms without expanding unrelated tooling", () => {
     const { root } = platformProject();
     member(root, "tooling", {
-      metadata: { kind: "tooling", target: "node" },
+      metadata: { kind: "tooling" },
       extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
     });
     const model = taskModel(root);
@@ -257,7 +254,7 @@ describe("affected verification", () => {
     const { root } = platformProject();
     for (const name of ["tooling", "task-graph", "dev-cli", "runtime-node"])
       member(root, name, {
-        metadata: { kind: name === "runtime-node" ? "library" : "tooling", target: "node" },
+        metadata: { kind: name === "runtime-node" ? "library" : "tooling" },
         extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
       });
     const model = taskModel(root);

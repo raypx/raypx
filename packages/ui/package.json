@@ -74,13 +74,5 @@
   },
   "peerDependencies": {
     "react": "^19.3.0"
-  },
-  "raypx": {
-    "target": "browser",
-    "entryTargets": {
-      "./logo-mark.webp": "universal",
-      "./themes/config": "universal",
-      "./themes/native.css": "universal"
-    }
   }
 }

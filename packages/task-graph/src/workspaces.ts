@@ -1,30 +1,24 @@
 import { existsSync, globSync, readFileSync, readdirSync } from "node:fs";
 import { join, posix } from "node:path";
 
-export const targets = ["universal", "browser", "native", "node", "bun"] as const;
-export type Target = (typeof targets)[number];
 export const kinds = ["app", "library", "tooling"] as const;
 export type Kind = (typeof kinds)[number];
 
+/** Manifest fields that no longer exist; discovery reports them instead of reading them. */
+const retired = ["kind", "target", "entryTargets", "sourceTargets"];
+
 /**
- * Kind follows from standard manifest fields: a `bin` or a Bun-target package with
- * exports is tooling, a package without exports is an application, the rest are
- * libraries. Manifests declare only the target and its overrides.
+ * Kind follows from standard manifest fields: a package with a `bin` is tooling, a
+ * package without exports is an application, the rest are libraries.
  */
-export function workspaceKind(
-  manifest: Pick<Manifest, "exports"> & { bin?: unknown },
-  target: Target | undefined,
-): Kind {
+export function workspaceKind(manifest: Pick<Manifest, "exports"> & { bin?: unknown }): Kind {
   if (manifest.bin) return "tooling";
-  if (!manifest.exports) return "app";
-  return target === "bun" ? "tooling" : "library";
+  return manifest.exports ? "library" : "app";
 }
 
 /** Per-workspace boundary metadata, supplied explicitly or read from package.json. */
 export interface Metadata {
   kind: Kind;
-  target: Target;
-  entryTargets?: Record<string, Target>;
   /** Maintained source behind an export whose published target is generated. */
   sourceEntries?: Record<string, string>;
   /** Development dependencies explicitly bundled into runtime; internal workspaces require app/tooling. */
@@ -112,13 +106,13 @@ export function discover(
     const path = file.replaceAll("\\", "/").slice(0, -13);
     const entry = JSON.parse(readFileSync(join(root, file), "utf8")) as Manifest;
     const declared = entry[metadataKey] as Omit<Metadata, "kind"> | undefined;
-    if (metadata === undefined && declared && "kind" in declared)
-      findings.push(
-        `${path}/package.json: ${metadataKey}.kind is derived from exports, bin and target; remove it`,
-      );
+    if (metadata === undefined && declared)
+      for (const field of retired)
+        if (field in declared)
+          findings.push(`${path}/package.json: ${metadataKey}.${field} is retired; remove it`);
     const workspaceMetadata =
       metadata === undefined
-        ? declared && { ...declared, kind: workspaceKind(entry, declared.target) }
+        ? { ...declared, kind: workspaceKind(entry) }
         : Object.hasOwn(metadata, path)
           ? metadata[path]
           : undefined;
@@ -175,10 +169,6 @@ export function workspaceFor(index: WorkspaceIndex, file: string) {
   return index.workspaces.find((w) => file.startsWith(`${w.path}/`));
 }
 
-export function compatible(from: Target, to: Target): boolean {
-  return to === "universal" || from === to || (from === "bun" && to === "node");
-}
-
 export function exportPaths(value: unknown): string[] {
   if (typeof value === "string") return [value];
   if (value && typeof value === "object") return Object.values(value).flatMap(exportPaths);
@@ -211,10 +201,6 @@ export function resolveImport(
             posix.join(target.path, p.replace("*", suffix)),
           )
         : [],
-      targetPlatform:
-        target.metadata?.entryTargets?.[entry?.[0] ?? subpath] ??
-        target.metadata?.target ??
-        "universal",
     };
   }
   const alias = Object.entries(from.aliases).find(([pattern]) => matches(pattern, request));
@@ -235,6 +221,5 @@ export function resolveImport(
     subpath: ".",
     internalPath: !!owner && owner !== from,
     paths: path ? [path] : [],
-    targetPlatform: owner?.metadata?.target ?? "universal",
   };
 }

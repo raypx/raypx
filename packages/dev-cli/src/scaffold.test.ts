@@ -11,7 +11,7 @@ const { fixture, member } = workspaceFixtures();
 describe("workspace scaffolding", () => {
   it("discovers a scaffolded package without editing any central list and refuses overwrite", () => {
     const root = fixture();
-    member(root, "task-graph", { metadata: { kind: "tooling", target: "node" } });
+    member(root, "task-graph", { metadata: { kind: "tooling" } });
     member(root, "tsconfig");
     const preview = scaffold(root, "feature-kit", { kind: "library", target: "universal" });
     expect(preview).toContain("packages/feature-kit/src/index.ts");

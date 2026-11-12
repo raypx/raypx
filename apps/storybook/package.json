@@ -26,8 +26,5 @@
     "@types/react-dom": "catalog:dev",
     "storybook": "catalog:dev",
     "vite": "catalog:dev"
-  },
-  "raypx": {
-    "target": "browser"
   }
 }

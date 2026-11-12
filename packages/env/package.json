@@ -33,8 +33,5 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev"
-  },
-  "raypx": {
-    "target": "universal"
   }
 }

@@ -272,7 +272,7 @@ describe("modular TS/JSON catalogs", () => {
 
   it("accepts applications composing shared catalogs without local namespaces", () => {
     const root = localeFixture(true);
-    member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+    member(root, "messages", { metadata: { kind: "app" } });
     for (const locale of ["en", "zh"]) {
       catalog(root, locale, "common", { hello: "Hello" }, "i18n");
       const path = join(root, `packages/messages/locales/${locale}/index.ts`);
@@ -289,7 +289,7 @@ describe("modular TS/JSON catalogs", () => {
     "rejects a spread from outside the same-language shared entries: %s",
     (specifier) => {
       const root = localeFixture(true);
-      member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+      member(root, "messages", { metadata: { kind: "app" } });
       for (const locale of ["en", "zh"]) {
         catalog(root, locale, "common", { hello: "Hello" }, "i18n");
         catalog(root, locale, "auth", { hello: "Hello" });
@@ -307,7 +307,7 @@ describe("modular TS/JSON catalogs", () => {
 
   it("rejects duplicate namespace contributions from shared spreads", () => {
     const root = localeFixture(true);
-    member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+    member(root, "messages", { metadata: { kind: "app" } });
     for (const locale of ["en", "zh"]) {
       catalog(root, locale, "common", { hello: "Hello" }, "i18n");
       const path = join(root, `packages/messages/locales/${locale}/index.ts`);
@@ -340,7 +340,7 @@ describe("modular TS/JSON catalogs", () => {
     "rejects namespace collisions between local properties and shared spreads: %s",
     (properties) => {
       const root = localeFixture(true);
-      member(root, "messages", { metadata: { kind: "app", target: "universal" } });
+      member(root, "messages", { metadata: { kind: "app" } });
       for (const locale of ["en", "zh"]) {
         catalog(root, locale, "common", { hello: "Hello" }, "i18n");
         catalog(root, locale, "auth", { hello: "Hello" });

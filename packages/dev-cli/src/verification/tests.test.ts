@@ -175,7 +175,7 @@ describe("local related test selection", () => {
   it("limits private verification edits to Dev CLI in local and canonical CI tasks", () => {
     const { root, write, plan } = project();
     member(root, "dev-cli", {
-      metadata: { kind: "tooling", target: "bun" },
+      metadata: { kind: "tooling" },
       extra: { scripts: { check: "bun check.ts", test: "bun --bun vp test --run" } },
     });
     write("packages/dev-cli/src/verification/plan.ts", "export const value = 1;");

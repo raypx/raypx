@@ -1,8 +1,11 @@
 # Architecture
 
 Workspaces are discovered from the root Bun workspace patterns. Applications are
-composition roots; libraries expose explicit source entries; tooling remains out
-of runtime dependency graphs. Manifests are the only workspace inventory.
+composition roots, libraries expose explicit source entries, and executable tooling
+stays outside runtime dependency graphs. Policy derives these roles from manifest
+`bin` and `exports` fields and checks dependency boundaries. TypeScript presets,
+builds and acceptance suites check their own hosts. See
+[ADR 0059](0059-manifest-workspace-boundaries.md).
 
 ## Process topology
 
@@ -353,7 +356,8 @@ current implementation.
 - [0055: In-repository internationalization runtime](0055-in-repo-intl-runtime.md)
 - [0056: In-repository devkit](0056-in-repo-devkit.md) — superseded by 0057
 - [0057: Repository automation workspaces](0057-repository-automation-workspaces.md)
-- [0058: Derived source platforms](0058-derived-source-platforms.md) — supersedes `raypx.sourceTargets` in 0043
+- [0058: Derived source platforms](0058-derived-source-platforms.md) — superseded by 0059
+- [0059: Manifest workspace boundaries](0059-manifest-workspace-boundaries.md)
 
 ## Distribution and performance
 

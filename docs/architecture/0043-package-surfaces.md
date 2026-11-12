@@ -4,6 +4,7 @@ Memory/job model ownership and the corresponding dependency consequences are sup
 Server persistence placement is superseded by [ADR 0049](0049-feature-server-ownership.md).
 The former external Intl SDK dependency is superseded by [ADR 0055](0055-in-repo-intl-runtime.md).
 The `raypx.sourceTargets` declaration is superseded by [ADR 0058](0058-derived-source-platforms.md).
+Platform metadata and policy checks are superseded by [ADR 0059](0059-manifest-workspace-boundaries.md).
 
 Status: Accepted, 2026-11-03. Extends ADR 0042. Revised 2026-11-10: memory and
 scheduled jobs are one workspace each instead of separate `-model` and `-server`

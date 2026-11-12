@@ -5,6 +5,8 @@ Date: 2026-11-12
 Status: Accepted. Supersedes the `raypx.sourceTargets` declaration in
 [ADR 0043](0043-package-surfaces.md).
 
+Superseded by [ADR 0059](0059-manifest-workspace-boundaries.md).
+
 ## Context
 
 Mixed workspaces declared each platform boundary twice: `raypx.entryTargets` named

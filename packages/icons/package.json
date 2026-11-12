@@ -104,8 +104,5 @@
   },
   "peerDependencies": {
     "react": "^19.3.0"
-  },
-  "raypx": {
-    "target": "browser"
   }
 }

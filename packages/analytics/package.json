@@ -37,15 +37,5 @@
   },
   "peerDependencies": {
     "react": "^19.3.0"
-  },
-  "raypx": {
-    "target": "universal",
-    "entryTargets": {
-      "./browser": "browser",
-      "./client": "browser",
-      "./client/application": "browser",
-      "./client/settings": "browser",
-      "./client/styles.css": "browser"
-    }
   }
 }

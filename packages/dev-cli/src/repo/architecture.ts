@@ -3,17 +3,13 @@ import { builtinModules } from "node:module";
 import { extname, join, posix } from "node:path";
 import { parseSync, visitorKeys, type Node } from "oxc-parser";
 import {
-  compatible,
   exportPaths,
   kinds,
   resolveImport,
-  targets,
   workspaceFor,
-  type Target,
   type Workspace,
   type WorkspaceIndex,
 } from "@raypx/task-graph/workspaces";
-import { sourcePlatforms } from "./platforms.js";
 
 export interface ImportEdge {
   request: string;
@@ -90,113 +86,6 @@ function bundledWorkspace(workspace: Workspace, name: string): boolean {
   );
 }
 
-function children(node: Node): Node[] {
-  const record = node as unknown as Record<string, unknown>;
-  return (visitorKeys[node.type] ?? []).flatMap((key) =>
-    (Array.isArray(record[key]) ? record[key] : [record[key]]).filter(
-      (child): child is Node => !!child && typeof child === "object" && "type" in child,
-    ),
-  );
-}
-
-/** Resolve local bindings so data named `document` is not mistaken for the DOM. */
-function reachesDomGlobal(file: string, source: string): boolean {
-  const { program, errors } = parseSync(file, source);
-  if (errors.length) throw new Error(`${file}: ${errors[0]!.message}`);
-  interface Scope {
-    names: Set<string>;
-    parent: Scope | undefined;
-  }
-  const lexicalScopes = new Set([
-    "BlockStatement",
-    "ForStatement",
-    "ForInStatement",
-    "ForOfStatement",
-    "SwitchStatement",
-  ]);
-  function bind(node: Node | null | undefined, names: Set<string>) {
-    if (!node) return;
-    if (node.type === "Identifier") names.add(node.name);
-    else if (node.type === "RestElement") bind(node.argument, names);
-    else if (node.type === "AssignmentPattern") bind(node.left, names);
-    else if (node.type === "ArrayPattern") for (const child of node.elements) bind(child, names);
-    else if (node.type === "ObjectPattern")
-      for (const property of node.properties)
-        bind(property.type === "RestElement" ? property.argument : property.value, names);
-  }
-  function declarations(node: Node, names: Set<string>, nested = false) {
-    if (
-      node.type === "FunctionDeclaration" ||
-      node.type === "FunctionExpression" ||
-      node.type === "ArrowFunctionExpression" ||
-      node.type === "ClassDeclaration" ||
-      node.type === "ClassExpression"
-    ) {
-      if (!nested && "id" in node) bind(node.id, names);
-      return;
-    }
-    if (node.type === "VariableDeclaration") {
-      if (!nested || node.kind === "var")
-        for (const declaration of node.declarations) bind(declaration.id, names);
-      return;
-    }
-    if (!nested && node.type === "ImportDeclaration") {
-      for (const specifier of node.specifiers) bind(specifier.local, names);
-      return;
-    }
-    for (const child of children(node))
-      declarations(child, names, nested || lexicalScopes.has(child.type));
-  }
-  function bound(name: string, scope: Scope | undefined): boolean {
-    return !!scope && (scope.names.has(name) || bound(name, scope.parent));
-  }
-  const dom = new Set(["window", "document", "localStorage", "sessionStorage"]);
-  function walk(node: Node, parent: Scope | undefined): boolean {
-    let scope = parent;
-    if (
-      node.type === "Program" ||
-      lexicalScopes.has(node.type) ||
-      node.type === "FunctionDeclaration" ||
-      node.type === "FunctionExpression" ||
-      node.type === "ArrowFunctionExpression" ||
-      node.type === "CatchClause"
-    ) {
-      scope = { names: new Set(), parent };
-      if (
-        node.type === "FunctionDeclaration" ||
-        node.type === "FunctionExpression" ||
-        node.type === "ArrowFunctionExpression"
-      ) {
-        for (const parameter of node.params) bind(parameter, scope.names);
-        if ("id" in node) bind(node.id, scope.names);
-        if (node.body) declarations(node.body, scope.names);
-      } else if (node.type === "CatchClause") bind(node.param, scope.names);
-      else
-        for (const child of children(node))
-          declarations(child, scope.names, lexicalScopes.has(child.type));
-    }
-    if (
-      node.type === "MemberExpression" &&
-      node.object.type === "Identifier" &&
-      dom.has(node.object.name) &&
-      !bound(node.object.name, scope)
-    )
-      return true;
-    return children(node).some((child) => walk(child, scope));
-  }
-  return walk(program, undefined);
-}
-
-function hostViolation(request: string, target: Target): boolean {
-  if (request.startsWith("bun:")) return target !== "bun";
-  if (request.startsWith("node:") || builtins.has(request))
-    return target !== "node" && target !== "bun";
-  if (/^(react-dom|@base-ui\/react)(\/|$)/.test(request)) return target !== "browser";
-  if (/^(react-native|expo(?:-[^/]+)?)(\/|$)/.test(request)) return target !== "native";
-  if (/^electrobun\/(bun|main)(\/|$)/.test(request)) return target !== "bun";
-  return false;
-}
-
 function resolveCode(index: WorkspaceIndex, path: string): string | undefined {
   const withoutJs = path.replace(/\.[cm]?js$/, "");
   return [
@@ -212,7 +101,7 @@ function resolveCode(index: WorkspaceIndex, path: string): string | undefined {
 
 /**
  * Checks workspace metadata, exports, the dependency graph and every runtime import:
- * declarations, internal paths, platform targets, tooling and test-only boundaries.
+ * declarations, internal paths, tooling and test-only boundaries.
  */
 export function checkArchitecture(index: WorkspaceIndex): string[] {
   const findings = [...index.findings];
@@ -228,7 +117,7 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
   };
   for (const workspace of index.workspaces) {
     const { manifest, path, metadata } = workspace;
-    if (!metadata || !kinds.includes(metadata.kind) || !targets.includes(metadata.target)) {
+    if (!metadata || !kinds.includes(metadata.kind)) {
       const finding =
         index.metadataSource === "options"
           ? `${path}: ${metadata === undefined ? "missing" : "invalid"} supplied workspace metadata`
@@ -239,14 +128,6 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
     if (manifest.type !== "module") findings.push(`${path}: workspaces must be ESM`);
     if (metadata.kind === "app" && !manifest.private)
       findings.push(`${path}: applications must be private`);
-    for (const [entry, target] of Object.entries(metadata.entryTargets ?? {})) {
-      if (!manifest.exports?.[entry] || !targets.includes(target))
-        findings.push(`${path}: invalid entryTargets override ${entry}`);
-    }
-    if ("sourceTargets" in metadata)
-      findings.push(
-        `${path}: sourceTargets is derived from exports and path conventions; remove it`,
-      );
     for (const [entry, source] of Object.entries(metadata.sourceEntries ?? {})) {
       if (
         !manifest.exports?.[entry] ||
@@ -329,15 +210,7 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
   }
   for (const name of graph.keys()) visit(name);
 
-  const sourcePlatform = sourcePlatforms(index, getImports);
-
-  function checkEdge(
-    workspace: Workspace,
-    file: string,
-    edge: ImportEdge,
-    platform: Target,
-    transitive: boolean,
-  ): string[] {
+  function checkEdge(workspace: Workspace, file: string, edge: ImportEdge): string[] {
     const { request, typesOnly } = edge;
     if (
       /\/(?:testing|test-utils)(?:\/|$)/.test(request) &&
@@ -345,8 +218,6 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
       workspace.metadata?.kind !== "tooling"
     )
       findings.push(`${file}: runtime cannot import test-only entry ${request}`);
-    if (!typesOnly && hostViolation(request, platform))
-      findings.push(`${file}: ${platform} code cannot import ${request}`);
     const resolved = resolveImport(index, workspace, file, request);
     const to = resolved.target;
     if (!to) {
@@ -393,10 +264,6 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
         );
       if (!typesOnly && workspace.metadata?.kind !== "tooling" && to.metadata?.kind === "tooling")
         findings.push(`${file}: runtime cannot import tooling ${request}`);
-      if (!typesOnly && !compatible(platform, resolved.targetPlatform))
-        findings.push(
-          `${file}: ${platform} entry cannot import ${resolved.targetPlatform} entry ${request}${transitive ? " (transitive)" : ""}`,
-        );
     }
     for (const path of resolved.paths)
       if (!testFile.test(file) && testFile.test(path))
@@ -422,15 +289,12 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
       const normalized = file.replaceAll("\\", "/");
       if (!runtimeFile.test(normalized) || testFile.test(normalized)) continue;
       try {
-        for (const edge of getImports(normalized))
-          checkEdge(workspace, normalized, edge, sourcePlatform(workspace, normalized), false);
+        for (const edge of getImports(normalized)) checkEdge(workspace, normalized, edge);
       } catch (error) {
         findings.push(String(error));
       }
     }
     for (const [entry, value] of Object.entries(workspace.manifest.exports ?? {})) {
-      const target =
-        workspace.metadata?.entryTargets?.[entry] ?? workspace.metadata?.target ?? "universal";
       const seen = new Set<string>();
       function walk(path: string) {
         const file = resolveCode(index, path);
@@ -439,13 +303,8 @@ export function checkArchitecture(index: WorkspaceIndex): string[] {
         const owner = workspaceFor(index, file);
         if (!owner) return;
         try {
-          if (
-            (target === "universal" || target === "native") &&
-            reachesDomGlobal(file, readFileSync(join(index.root, file), "utf8"))
-          )
-            findings.push(`${workspace.path}: ${entry} reaches DOM global in ${file}`);
           for (const edge of getImports(file))
-            for (const next of checkEdge(owner, file, edge, target, true)) walk(next);
+            for (const next of checkEdge(owner, file, edge)) walk(next);
         } catch (error) {
           findings.push(String(error));
         }

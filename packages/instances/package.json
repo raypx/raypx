@@ -25,12 +25,5 @@
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"
-  },
-  "raypx": {
-    "target": "universal",
-    "entryTargets": {
-      "./crypto": "node",
-      "./server": "node"
-    }
   }
 }

@@ -32,38 +32,20 @@ export interface AffectedMember {
   name: string;
   dependencies: string[];
 }
-export interface AffectedPolicy<M, S> {
-  merge(previous: S | undefined, next: S): S;
-  propagate(scope: S, source: M, consumer: M): S | undefined;
-}
-/** A monotonic scope policy reaches a fixed point, including development dependencies. */
-export function affectedWorkspaces<M extends AffectedMember, S>(
-  members: M[],
-  seeds: ReadonlyMap<string, S>,
-  policy: AffectedPolicy<M, S>,
-): Map<string, S> {
-  const byName = new Map(members.map((member) => [member.name, member]));
-  const affected = new Map<string, S>();
-  for (const [name, scope] of seeds) {
-    if (!byName.has(name)) throw new Error(`Unknown affected workspace: ${name}`);
-    affected.set(name, scope);
-  }
+/** Follows workspace dependents transitively, including development dependencies. */
+export function affectedWorkspaces(members: AffectedMember[], seeds: ReadonlySet<string>) {
+  const names = new Set(members.map((member) => member.name));
+  for (const name of seeds)
+    if (!names.has(name)) throw new Error(`Unknown affected workspace: ${name}`);
+  const affected = new Set(seeds);
   for (let changed = true; changed;) {
     changed = false;
-    for (const consumer of members)
-      for (const name of consumer.dependencies) {
-        const source = byName.get(name),
-          scope = affected.get(name);
-        if (!source || scope === undefined) continue;
-        const next = policy.propagate(scope, source, consumer);
-        if (next === undefined) continue;
-        const previous = affected.get(consumer.name),
-          merged = policy.merge(previous, next);
-        if (merged !== previous) {
-          affected.set(consumer.name, merged);
-          changed = true;
-        }
-      }
+    for (const consumer of members) {
+      if (affected.has(consumer.name) || !consumer.dependencies.some((name) => affected.has(name)))
+        continue;
+      affected.add(consumer.name);
+      changed = true;
+    }
   }
   return affected;
 }

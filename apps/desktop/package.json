@@ -91,7 +91,6 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "target": "browser",
     "bundledDependencies": [
       "@raypx/devtools"
     ],
@@ -99,9 +98,6 @@
       "e2e": "_e2e",
       "mygo:check:docker": "_mygo:check:docker"
     },
-    "browserTestProject": "desktop",
-    "uncachedTasks": [
-      "perf"
-    ]
+    "browserTestProject": "desktop"
   }
 }

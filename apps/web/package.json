@@ -70,7 +70,6 @@
     "vite-plus": "catalog:dev"
   },
   "raypx": {
-    "target": "browser",
     "bundledDependencies": [
       "@raypx/devtools"
     ],

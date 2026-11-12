@@ -111,8 +111,8 @@ function entryImporters(root: string, index: WorkspaceIndex) {
 
 /**
  * Every exports key of a library or tooling workspace needs an importer in another
- * workspace. A test-only consumer keeps `./testing*` entries and tooling workspaces
- * alive; any other library entry needs a production importer.
+ * workspace. A test-only consumer keeps `./testing*` entries, tooling workspaces and
+ * acceptance workspaces alive; any other library entry needs a production importer.
  */
 export function checkEntryConsumers(
   root: string,
@@ -125,6 +125,8 @@ export function checkEntryConsumers(
     if (kind !== "library" && kind !== "tooling") continue;
     const declared = workspace.manifest.exports ?? {};
     const exempt = exemptions(workspace);
+    // An acceptance workspace exists for the suites that import it.
+    const acceptanceSuite = /(?:^|\/)e2e$/.test(workspace.path);
 
     for (const key of Object.keys(exempt))
       if (!(key in declared))
@@ -145,7 +147,12 @@ export function checkEntryConsumers(
         findings.push(
           `${workspace.path}: entry "${entryKey}" has no importer in another workspace; remove it or declare raypx.entryConsumers`,
         );
-      else if (kind !== "tooling" && !testingEntry && consumers.every((importer) => importer.test))
+      else if (
+        kind !== "tooling" &&
+        !testingEntry &&
+        !acceptanceSuite &&
+        consumers.every((importer) => importer.test)
+      )
         findings.push(
           `${workspace.path}: entry "${entryKey}" is imported only by tests; remove it or declare raypx.entryConsumers`,
         );

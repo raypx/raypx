@@ -34,10 +34,7 @@ function check(workspaces: Record<string, Manifest>, files: Record<string, strin
         exports: manifest.exports,
         // Kind is derived from the manifest: tooling has a bin.
         ...(manifest.kind === "tooling" ? { bin: { tool: "./bin.ts" } } : {}),
-        raypx: {
-          target: "universal",
-          ...(manifest.entryConsumers ? { entryConsumers: manifest.entryConsumers } : {}),
-        },
+        raypx: manifest.entryConsumers ? { entryConsumers: manifest.entryConsumers } : undefined,
       }),
     );
   for (const [path, text] of Object.entries(files)) write(path, text);
@@ -107,6 +104,20 @@ it("lets tests alone keep a tooling workspace's entries alive", () => {
       { "apps/web/src/kit.test.ts": 'import "@raypx/kit/tasks";' },
     ),
   ).toEqual([]);
+});
+
+it("requires a consumer for each E2E entry and accepts suites as consumers", () => {
+  expect(
+    check(
+      {
+        "packages/e2e": {
+          exports: { "./journeys/*": "./journeys/*.ts", "./unused": "./unused.ts" },
+        },
+        "apps/web": app,
+      },
+      { "apps/web/e2e/settings.spec.ts": 'import "@raypx/e2e/journeys/settings";' },
+    ),
+  ).toEqual([none("packages/e2e", "./unused")]);
 });
 
 it("finds CSS @import and @source, JSONC tsconfig extends, wildcard entries and root config", () => {

@@ -25,16 +25,5 @@
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "nitro": "catalog:"
-  },
-  "raypx": {
-    "target": "bun",
-    "entryTargets": {
-      "./build/nitro": "node",
-      "./build/deployment": "node",
-      "./build/analytics": "node",
-      "./build/start-env": "node",
-      "./build/cli": "node",
-      "./build/release": "node"
-    }
   }
 }

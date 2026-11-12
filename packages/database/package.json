@@ -27,8 +27,5 @@
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
     "drizzle-kit": "catalog:dev"
-  },
-  "raypx": {
-    "target": "node"
   }
 }

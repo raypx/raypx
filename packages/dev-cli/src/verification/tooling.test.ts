@@ -14,7 +14,7 @@ function project() {
   );
   const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
   member(root, "tooling", {
-    metadata: { kind: "tooling", target: "bun" },
+    metadata: { kind: "tooling" },
     extra: {
       scripts,
       exports: {
@@ -29,7 +29,7 @@ function project() {
   member(root, "browser", { deps: { "@raypx/tooling": "workspace:*" }, extra: { scripts } });
   member(root, "independent", { deps: { "@raypx/tooling": "workspace:*" }, extra: { scripts } });
   member(root, "dev-cli", {
-    metadata: { kind: "tooling", target: "bun" },
+    metadata: { kind: "tooling" },
     deps: { "@raypx/tooling": "workspace:*" },
     extra: { scripts, exports: undefined, bin: { "raypx-dev": "./bin/raypx-dev.mjs" } },
   });

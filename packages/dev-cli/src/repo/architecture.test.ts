@@ -30,7 +30,7 @@ function member(
   const path = `packages/${name}`;
   mkdirSync(join(root, path, "src"), { recursive: true });
   // Kind is derived from the manifest: applications have no exports, tooling has a bin.
-  const { kind = "library", ...metadata } = options.metadata ?? { target: "universal" };
+  const { kind = "library", ...metadata } = options.metadata ?? {};
   writeFileSync(
     join(root, path, "package.json"),
     JSON.stringify({
@@ -59,26 +59,24 @@ describe("workspace architecture", () => {
     const index = discover(root);
     expect(index.byName.get("@raypx/one")?.metadata).toEqual({
       kind: "library",
-      target: "universal",
     });
     expect(index.findings).toEqual(["packages/orphan: missing workspace manifest"]);
     expect(checkArchitecture(index)).toContain("packages/orphan: missing workspace manifest");
     const custom = discover(root, { metadataKey: "product", containers: [] });
     expect(custom.findings).toEqual([]);
-    expect(checkArchitecture(custom)).toContain(
-      "packages/one/package.json: invalid or missing product metadata",
-    );
+    // Kind is derived from the manifest, so a workspace needs no metadata block.
+    expect(custom.byName.get("@raypx/one")?.metadata).toEqual({ kind: "library" });
   });
   it("uses complete supplied metadata instead of merging manifest metadata", () => {
     const root = fixture();
     member(root, "one", {
-      metadata: { target: "browser" },
+      metadata: {},
       source: 'import "node:fs";',
     });
     member(root, "two");
     const metadata = {
-      "packages/one": { kind: "library", target: "node" },
-      "packages/two": { kind: "library", target: "universal" },
+      "packages/one": { kind: "library" },
+      "packages/two": { kind: "library" },
     } satisfies Readonly<Record<string, Metadata>>;
     const index = discover(root, { metadata });
     expect(index.byName.get("@raypx/one")?.metadata).toEqual(metadata["packages/one"]);
@@ -90,7 +88,7 @@ describe("workspace architecture", () => {
     member(root, "one");
     member(root, "two");
     const index = discover(root, {
-      metadata: { "packages/one": { kind: "library", target: "universal" } },
+      metadata: { "packages/one": { kind: "library" } },
     });
     expect(index.byName.get("@raypx/two")?.metadata).toBeUndefined();
     expect(index.findings).toEqual(["packages/two: missing supplied workspace metadata"]);
@@ -105,9 +103,9 @@ describe("workspace architecture", () => {
     member(root, "one");
     const index = discover(root, {
       metadata: {
-        "packages/one": { kind: "library", target: "universal" },
-        "packages/removed": { kind: "library", target: "universal" },
-        "packages/one/": { kind: "library", target: "universal" },
+        "packages/one": { kind: "library" },
+        "packages/removed": { kind: "library" },
+        "packages/one/": { kind: "library" },
       },
     });
     expect(index.findings).toEqual([
@@ -121,7 +119,7 @@ describe("workspace architecture", () => {
     member(root, "one");
     const index = discover(root, {
       metadata: {
-        "packages/one": { kind: "library", target: "unsupported" } as unknown as Metadata,
+        "packages/one": { kind: "unsupported" } as unknown as Metadata,
       },
     });
     expect(checkArchitecture(index)).toEqual(["packages/one: invalid supplied workspace metadata"]);
@@ -130,12 +128,11 @@ describe("workspace architecture", () => {
     const root = fixture();
     member(root, "one", {
       source: 'import "node:fs";',
-      extra: { bin: { one: "./src/index.ts" }, product: { target: "node" } },
+      extra: { bin: { one: "./src/index.ts" }, product: {} },
     });
     const index = discover(root, { metadataKey: "product" });
     expect(index.byName.get("@raypx/one")?.metadata).toEqual({
       kind: "tooling",
-      target: "node",
     });
     expect(checkArchitecture(index)).toEqual([]);
   });
@@ -148,14 +145,12 @@ describe("workspace architecture", () => {
       `${sideEffect} throw new Error("config executed");`,
     );
     member(root, "one", {
-      metadata: { kind: "library", target: "node" },
+      metadata: { kind: "library" },
       source: `${sideEffect} export const value = 42;`,
     });
     expect(checkArchitecture(discover(root))).toEqual([]);
     expect(
-      checkArchitecture(
-        discover(root, { metadata: { "packages/one": { kind: "library", target: "node" } } }),
-      ),
+      checkArchitecture(discover(root, { metadata: { "packages/one": { kind: "library" } } })),
     ).toEqual([]);
     expect(existsSync(marker)).toBe(false);
   });
@@ -171,70 +166,10 @@ describe("workspace architecture", () => {
     expect(findings).toContain("internal cross-workspace");
     expect(findings).toContain("dependency cycle");
   });
-  it("follows internal modules behind a pure public export and detects DOM and host leaks", () => {
-    const root = fixture();
-    const path = member(root, "tokens", { source: 'export { read } from "./internal.js";' });
-    writeFileSync(
-      join(root, path, "src/internal.ts"),
-      'import { readFile } from "node:fs"; export const read = () => document.body;',
-    );
-    const findings = checkArchitecture(discover(root)).join("\n");
-    expect(findings).toContain("universal code cannot import node:fs");
-    expect(findings).toContain("reaches DOM global");
-  });
-  it("allows public pure subpaths while rejecting browser entry in native consumer", () => {
-    const root = fixture();
-    const ui = member(root, "ui", {
-      metadata: {
-        kind: "library",
-        target: "browser",
-        entryTargets: { "./theme": "universal" },
-      },
-      extra: { exports: { ".": "./src/index.ts", "./theme": "./src/theme.ts" } },
-    });
-    writeFileSync(join(root, ui, "src/theme.ts"), "export const theme = 'dark';");
-    member(root, "native", {
-      metadata: { kind: "library", target: "native" },
-      deps: { "@raypx/ui": "workspace:*" },
-      source: 'import "@raypx/ui/theme";',
-    });
-    expect(checkArchitecture(discover(root))).toEqual([]);
-    writeFileSync(join(root, "packages/native/src/index.ts"), 'import "@raypx/ui";');
-    expect(checkArchitecture(discover(root)).join("\n")).toContain(
-      "native entry cannot import browser entry",
-    );
-  });
-  it("derives source platforms from the entries that reach them", () => {
-    const root = fixture();
-    const feature = member(root, "feature", {
-      metadata: { target: "universal", entryTargets: { "./server": "node" } },
-      source: "export const answer = 42;",
-      extra: { exports: { ".": "./src/index.ts", "./server": "./src/server.ts" } },
-    });
-    writeFileSync(join(root, feature, "src/server.ts"), 'export * from "./store.js";');
-    writeFileSync(join(root, feature, "src/store.ts"), 'import "node:fs";');
-    expect(checkArchitecture(discover(root))).toEqual([]);
-    // The universal root now reaches the same file, so it must satisfy both entries.
-    writeFileSync(join(root, feature, "src/index.ts"), 'export * from "./store.js";');
-    expect(checkArchitecture(discover(root)).join("\n")).toContain(
-      "packages/feature/src/store.ts: universal code cannot import node:fs",
-    );
-  });
-  it("rejects a declared sourceTargets override", () => {
-    const root = fixture();
-    // The retired field is no longer part of the metadata type.
-    const retired = { target: "universal" as const, sourceTargets: { "src/index.ts": "node" } };
-    member(root, "one", {
-      metadata: retired,
-    });
-    expect(checkArchitecture(discover(root))).toContain(
-      "packages/one: sourceTargets is derived from exports and path conventions; remove it",
-    );
-  });
   it("rejects importing applications and tooling from production libraries", () => {
     const root = fixture();
-    member(root, "app", { metadata: { kind: "app", target: "browser" } });
-    member(root, "tool", { metadata: { kind: "tooling", target: "bun" } });
+    member(root, "app", { metadata: { kind: "app" } });
+    member(root, "tool", { metadata: { kind: "tooling" } });
     member(root, "consumer", {
       deps: { "@raypx/app": "workspace:*", "@raypx/tool": "workspace:*" },
       source: 'import "@raypx/app"; import "@raypx/tool";',
@@ -262,12 +197,12 @@ describe("workspace architecture", () => {
     const root = fixture();
     member(root, "public", { extra: { private: false } });
     member(root, "tool", {
-      metadata: { kind: "tooling", target: "node" },
+      metadata: { kind: "tooling" },
       extra: { private: false },
     });
     expect(checkArchitecture(discover(root))).toEqual([]);
     member(root, "app", {
-      metadata: { kind: "app", target: "browser" },
+      metadata: { kind: "app" },
       extra: { private: false, type: "commonjs" },
     });
     expect(checkArchitecture(discover(root))).toEqual([
@@ -281,7 +216,6 @@ describe("workspace architecture", () => {
     const path = member(root, "generated", {
       metadata: {
         kind: "library",
-        target: "universal",
         sourceEntries: { ".": "./src/index.ts" },
       },
       extra: {
@@ -290,34 +224,11 @@ describe("workspace architecture", () => {
       },
       source: 'export { value } from "./internal.js";',
     });
-    writeFileSync(join(root, path, "src/internal.ts"), "export const value = document.body;");
+    writeFileSync(join(root, path, "src/internal.ts"), 'export { value } from "left-pad";');
     const findings = checkArchitecture(discover(root));
     expect(findings).toEqual([
-      "packages/generated: . reaches DOM global in packages/generated/src/internal.ts",
+      "packages/generated/src/internal.ts: undeclared runtime dependency left-pad",
     ]);
-  });
-
-  it("resolves another workspace's source entry transitively instead of a stale bundle", () => {
-    const root = fixture();
-    const path = member(root, "node", {
-      metadata: {
-        kind: "library",
-        target: "node",
-        sourceEntries: { ".": "./src/index.ts" },
-      },
-      extra: { exports: { ".": "./dist/index.mjs" } },
-      source: 'import "node:fs";',
-    });
-    mkdirSync(join(root, path, "dist"));
-    writeFileSync(join(root, path, "dist/index.mjs"), "export const stale = true;");
-    member(root, "browser", {
-      metadata: { kind: "library", target: "browser" },
-      deps: { "@raypx/node": "workspace:*" },
-      source: 'import "@raypx/node";',
-    });
-    const findings = checkArchitecture(discover(root)).join("\n");
-    expect(findings).toContain("browser entry cannot import node entry @raypx/node");
-    expect(findings).toContain("packages/node/src/index.ts: browser code cannot import node:fs");
   });
 
   it("rejects missing, escaping and unknown source entry mappings", () => {
@@ -325,7 +236,6 @@ describe("workspace architecture", () => {
     member(root, "invalid", {
       metadata: {
         kind: "library",
-        target: "universal",
         sourceEntries: {
           ".": "./src/missing.ts",
           "./escape": "../other.ts",
@@ -344,7 +254,7 @@ describe("workspace architecture", () => {
   it("allows only explicitly bundled external development dependencies at runtime", () => {
     const root = fixture();
     member(root, "bundled", {
-      metadata: { kind: "library", target: "universal", bundledDependencies: ["inlined"] },
+      metadata: { kind: "library", bundledDependencies: ["inlined"] },
       extra: { devDependencies: { inlined: "^1.0.0", unbundled: "^1.0.0" } },
       source: 'import "inlined/subpath"; import "unbundled";',
     });
@@ -359,7 +269,6 @@ describe("workspace architecture", () => {
     member(root, "bundled", {
       metadata: {
         kind: "library",
-        target: "universal",
         bundledDependencies: ["undeclared", "@raypx/internal"],
       },
       extra: { devDependencies: { "@raypx/internal": "workspace:*" } },
@@ -380,10 +289,10 @@ describe("workspace architecture", () => {
     "allows explicit internal development bundles only for %s runtime",
     (kind) => {
       const root = fixture();
-      member(root, "ui", { metadata: { kind: "library", target: "browser" } });
+      member(root, "ui", { metadata: { kind: "library" } });
       member(root, "unlisted");
       member(root, "bundled", {
-        metadata: { kind, target: "browser", bundledDependencies: ["@raypx/ui"] },
+        metadata: { kind, bundledDependencies: ["@raypx/ui"] },
         extra: {
           devDependencies: { "@raypx/ui": "workspace:*", "@raypx/unlisted": "workspace:*" },
         },
@@ -395,17 +304,16 @@ describe("workspace architecture", () => {
     },
   );
 
-  it("keeps platforms, public exports, applications and cycles enforced for internal bundles", () => {
+  it("keeps public exports, applications and cycles enforced for internal bundles", () => {
     const root = fixture();
     member(root, "ui", {
-      metadata: { kind: "library", target: "browser" },
+      metadata: { kind: "library" },
       extra: { devDependencies: { "@raypx/bundled": "workspace:*" } },
     });
-    member(root, "app", { metadata: { kind: "app", target: "node" } });
+    member(root, "app", { metadata: { kind: "app" } });
     member(root, "bundled", {
       metadata: {
         kind: "tooling",
-        target: "node",
         bundledDependencies: ["@raypx/ui", "@raypx/app", "@raypx/missing"],
       },
       extra: { devDependencies: { "@raypx/ui": "workspace:*", "@raypx/app": "workspace:*" } },
@@ -413,7 +321,6 @@ describe("workspace architecture", () => {
         'import "@raypx/ui"; import "@raypx/ui/src/index"; import "@raypx/app"; import "@raypx/missing";',
     });
     const findings = checkArchitecture(discover(root)).join("\n");
-    expect(findings).toContain("node entry cannot import browser entry @raypx/ui");
     expect(findings).toContain("internal cross-workspace import @raypx/ui/src/index");
     expect(findings).toContain("application source cannot be imported: @raypx/app");
     expect(findings).toContain("workspace dependency cycle:");
@@ -432,50 +339,6 @@ describe("workspace architecture", () => {
     });
     expect(checkArchitecture(discover(root))).toEqual([
       "packages/typed/src/index.ts: undeclared runtime dependency mdx",
-    ]);
-  });
-
-  it("distinguishes DOM globals from local variables, parameters, comments and strings", () => {
-    const root = fixture();
-    member(root, "pure", {
-      source: `
-        // document.body and window.location are examples, not executed code.
-        export const example = "localStorage.getItem('key')";
-        export function read(document: { value: number }) { return document.value; }
-        export function local() { const window = { value: 1 }; return window.value; }
-        export const value = (sessionStorage: { length: number }) => sessionStorage.length;
-      `,
-    });
-    expect(checkArchitecture(discover(root))).toEqual([]);
-  });
-
-  it("does not hide a DOM global because a sibling function binds the same name", () => {
-    const root = fixture();
-    member(root, "leak", {
-      source: `
-        export function local(document: { value: number }) { return document.value; }
-        export function leak() { return document.body; }
-      `,
-    });
-    expect(checkArchitecture(discover(root))).toEqual([
-      "packages/leak: . reaches DOM global in packages/leak/src/index.ts",
-    ]);
-  });
-
-  it("keeps loop bindings local while resolving hoisted var bindings", () => {
-    const root = fixture();
-    member(root, "scope", {
-      source: `
-        export function local() {
-          if (true) { var document = { value: 1 }; }
-          return document.value;
-        }
-        for (const window of [{ value: 1 }]) { console.log(window.value); }
-        export const leak = () => window.location;
-      `,
-    });
-    expect(checkArchitecture(discover(root))).toEqual([
-      "packages/scope: . reaches DOM global in packages/scope/src/index.ts",
     ]);
   });
 });

@@ -6,7 +6,7 @@ For native build and release commands,
 see the [Desktop guide](desktop.md#build-and-release).
 
 Infrastructure provider tooling lives under `infra/*`; API/Relay runtime roles share `apps/api`
-and provider deployment tooling. Each manifest declares its actual target,
+and provider deployment tooling. Each manifest declares its actual
 dependencies, deployment commands and checks. These are
 discovered by the same Bun/VP graph; see [infrastructure](../../infra/README.md).
 
@@ -16,8 +16,8 @@ bun run workspace:new feature-kit --kind library --target universal
 bun run workspace:new feature-kit --kind library --target universal --tests --write
 ```
 
-`--kind` selects the generated layout: `app` omits exports under `apps/`, and
-`tooling` requires `--target bun`.
+`--kind` selects the generated layout: `app` omits exports under `apps/`. `--target`
+only selects the TypeScript preset and types; it is not written to the manifest.
 
 Preview is the default. Creation refuses existing paths and names. The generated
 private ESM package has an explicit source export, strict tsconfig and AGENTS.md;
@@ -27,36 +27,28 @@ Bun, then import the public entry from a consumer using workspace:*.
 
 ## Manifest metadata
 
-Kind is derived from standard fields: a package with `bin`, or a Bun-target package
-with exports, is tooling; a package without exports is an application; the rest are
-libraries. Policy rejects a declared `raypx.kind`. raypx.target is universal, browser, native,
-node or bun. entryTargets overrides the default by exports key. A source file's
-platform is derived ([ADR 0058](../architecture/0058-derived-source-platforms.md)):
-a file reached from exports takes those entries' targets, configuration, scripts and
-acceptance suites run under Bun, and every other file takes the workspace target.
-Policy rejects a declared `raypx.sourceTargets`.
-Universal code has no platform host dependencies. Bun can consume node code;
-other platform crossings require a compatible explicit public entry. A server use
-case behind a universal entry is not safe merely because Bun can execute
-Node-compatible APIs: `memory`, `jobs`, `account` and `instances` mark their server
-entries as `node` explicitly. Browser imports of those server use cases therefore fail
-policy instead of reaching a bundled dependency by accident. The `node` target
-describes compatible host APIs; Bun remains the JavaScript runtime.
+Kind is derived from standard fields: a package with `bin` is tooling; a package
+without exports is an application; the rest are libraries. Policy rejects the retired
+`raypx.kind`, `raypx.target`, `raypx.entryTargets` and `raypx.sourceTargets` fields.
+Manifests declare no platform target and policy does not check platform boundaries;
+a workspace needs a `raypx` block only for `entryConsumers`, `taskScripts`,
+`bundledDependencies`, `sourceEntries` or `browserTestProject`.
 
 Every public entry has an established consumer in another workspace. `policy`
 finds importers across TS/TSX/MTS imports, CSS `@import`/`@source` and tsconfig
 `extends`, including repository-root configuration. Suites, files under `tests/` and
-the `e2e` workspace are test importers: they keep `./testing*` entries and tooling
-surfaces alive, but a library's production entry needs a production importer.
+the `e2e` workspace are test importers. They satisfy the consumer requirement for
+`./testing*` entries, executable tooling and E2E workspaces. Other library entries
+need a production importer.
 Remove an entry nobody imports, or record a reason in `raypx.entryConsumers` — the
 exception list is validated against the exported keys, so a pruned entry cannot leave
 a stale reason behind.
 
-Applications cannot be imported. Runtime code cannot import tooling or /testing
-entries. Production imports need dependencies/peerDependencies, type imports may
-use devDependencies. Cycles include all workspace dependencies. Private relative
-paths and aliases cannot bypass exports. Policy also traverses each public entry
-so a pure export cannot conceal DOM/host imports behind private files.
+Applications cannot be imported. Runtime code cannot import executable tooling or
+test-only entries. Production imports need dependencies or peerDependencies, and
+type imports may use devDependencies. Cycles include all workspace dependencies.
+Private relative paths and aliases cannot bypass exports. Policy traverses public
+entries and checks those dependency boundaries in the files they reach.
 
 ## Tasks and extraction
 
@@ -74,13 +66,11 @@ to select a private runner; see [test commands](testing.md#test-commands).
 Actual file reads determine incremental invalidation; source-only libraries need no
 build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
 in `vite.app.config.ts`, while independent Vitest configs keep test initialization
-separate. Scaffolding creates the task config and declares its Tooling dev dependency.
-The TypeScript presets are Tooling's own dependency, so their bootstrap config
-registers uncached `task:*` entries directly from package scripts and uses Devkit's
-leaf runner for argument forwarding. It must not depend on Tooling.
-Use `raypx.uncachedTasks` for scripts whose process side effects must always execute;
-entries must name existing scripts. Database/browser integration tasks are uncached
-by default.
+separate. Scaffolding creates the task config and declares its Task Graph dev
+dependency. The TypeScript presets register tasks through Task Graph as well.
+Workspace `check`, build and default/unit/component test tasks are cacheable.
+Dedicated deployment, performance and database/browser integration tasks always
+execute. Task Graph sets the cache rules for these scripts.
 
 Auth's `@raypx/auth/client` entry exports both `createAuthClient` and the shared DOM
 `AuthForm` used by Web and Desktop. Applications keep their file routes and inject

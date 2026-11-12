@@ -44,8 +44,8 @@ Mobile's own dependency, preserving one native React instance.
 Mobile dependencies use catalog:mobile; shared runtime libraries use catalog:
 and build/test tools use catalog:dev. Keep native versions aligned with Expo's SDK.
 Check dependency alignment with `bun --bun expo install --check` in this workspace.
-Build exports both native JS bundles and is uncached because Expo consumes public
-environment variables. Generated native projects, Expo caches and bundles are not source.
+Build exports both native JS bundles; its cache key tracks the `EXPO_PUBLIC_*`
+variables Expo inlines. Generated native projects, Expo caches and bundles are not source.
 Prefer TypeScript for handwritten code and executable configuration. Keep static
 Expo metadata in `app.json`; CSS and generated declarations retain their native formats.
 `metro.config.cjs` is only a one-line loader: Expo 58's config evaluator cannot

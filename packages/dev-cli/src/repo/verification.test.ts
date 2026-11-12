@@ -1,27 +1,16 @@
 import { expect, it } from "vite-plus/test";
 import { affectedWorkspaces, changedFiles } from "./verification.js";
 const members = [
-  { name: "ui", dependencies: [] },
-  { name: "desktop", dependencies: ["ui"] },
   { name: "cli", dependencies: ["desktop"] },
+  { name: "desktop", dependencies: ["ui"] },
+  { name: "ui", dependencies: [] },
+  { name: "independent", dependencies: [] },
 ];
-it("propagates scopes to a fixed point without promoting browser changes into native consumers", () => {
-  type Scope = "browser" | "all";
-  const result = affectedWorkspaces(members, new Map<string, Scope>([["ui", "browser"]]), {
-    merge: (before, next) => (before === "all" ? before : next),
-    propagate: (scope, _, consumer) =>
-      scope === "browser" && consumer.name === "cli" ? undefined : scope,
-  });
-  expect([...result]).toEqual([
-    ["ui", "browser"],
-    ["desktop", "browser"],
-  ]);
-  expect(() =>
-    affectedWorkspaces(members, new Map([["missing", true]]), {
-      merge: () => true,
-      propagate: () => true,
-    }),
-  ).toThrow("Unknown affected workspace");
+it("follows every transitive dependent independent of manifest order", () => {
+  expect(affectedWorkspaces(members, new Set(["ui"]))).toEqual(new Set(["ui", "desktop", "cli"]));
+  expect(() => affectedWorkspaces(members, new Set(["missing"]))).toThrow(
+    "Unknown affected workspace",
+  );
 });
 it("falls back to full verification when a Git base cannot be read", () => {
   expect(changedFiles(process.cwd(), "missing-verification-base").reasons.length).toBeGreaterThan(

@@ -33,7 +33,6 @@
     "@types/bun": "catalog:dev"
   },
   "raypx": {
-    "target": "bun",
     "taskScripts": {
       "e2e": "_e2e",
       "e2e:web": "_e2e",

@@ -22,8 +22,5 @@
     "@raypx/task-graph": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev"
-  },
-  "raypx": {
-    "target": "universal"
   }
 }

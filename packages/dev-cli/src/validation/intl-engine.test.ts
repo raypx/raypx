@@ -9,7 +9,7 @@ it("accepts one engine owner and a tooling ICU validator", () => {
   const root = fixture();
   member(root, "i18n", { deps: { "use-intl": "catalog:", "intl-messageformat": "catalog:" } });
   member(root, "tooling", {
-    metadata: { kind: "tooling", target: "bun" },
+    metadata: { kind: "tooling" },
     deps: { "@formatjs/icu-messageformat-parser": "catalog:dev" },
   });
   member(root, "tasks", { deps: { "@raypx/i18n": "workspace:*" } });

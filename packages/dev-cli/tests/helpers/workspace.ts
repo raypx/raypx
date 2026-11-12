@@ -30,7 +30,7 @@ export function workspaceFixtures() {
     const path = `packages/${name}`;
     mkdirSync(join(root, path, "src"), { recursive: true });
     // Kind is derived from the manifest: applications have no exports, tooling has a bin.
-    const { kind = "library", ...metadata } = options.metadata ?? { target: "universal" };
+    const { kind = "library", ...metadata } = options.metadata ?? {};
     writeFileSync(
       join(root, path, "package.json"),
       JSON.stringify({

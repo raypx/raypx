@@ -44,8 +44,10 @@ directly. Aggregates declare dependencies with an empty command. The scoped
 argument adapter is used when the launcher sends different arguments to individual
 tasks in the same graph. Task definitions inherit the environment with `untrackedEnv`;
 outcome-affecting fields and per-task argument keys participate in fingerprints.
-`raypx.uncachedTasks` opts specific scripts out. Platform/toolchain identity is also part of each command. Native packaging stays
-outside VP's filesystem tracer; Go owns its native compilation cache.
+Workspace `check`, build and default/unit/component test tasks are cacheable.
+Dedicated integration and browser tasks always execute. Platform/toolchain identity
+is part of each command. Native packaging stays outside VP's filesystem tracer;
+Go owns its native compilation cache.
 CLI builds exclude the verified Herdr download cache from task inputs; manifest
 pins and the complete sealed `dist` determine reuse on fresh runners.
 The launcher creates ignored artifact/native directories before tracing:

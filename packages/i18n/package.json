@@ -41,11 +41,6 @@
     "react": "^19.3.0"
   },
   "raypx": {
-    "target": "universal",
-    "entryTargets": {
-      "./browser": "browser",
-      "./vite": "node"
-    },
     "entryConsumers": {
       "./config": "Tooling reads the static language policy by package path (locales/policy defaults); it is data, not an import."
     }

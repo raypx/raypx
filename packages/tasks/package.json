@@ -51,16 +51,5 @@
   "peerDependencies": {
     "@tanstack/react-query": "^5.105.3",
     "react": "^19.3.0"
-  },
-  "raypx": {
-    "target": "universal",
-    "entryTargets": {
-      "./client": "browser",
-      "./client/pending-count": "browser",
-      "./client/status": "browser",
-      "./client/styles.css": "browser",
-      "./client/task-composer": "browser",
-      "./server": "node"
-    }
   }
 }

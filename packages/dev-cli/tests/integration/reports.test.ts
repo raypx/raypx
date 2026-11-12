@@ -35,7 +35,7 @@ function setup() {
   ])
     write(root, `${directory}/${file}`, "fixture");
   const browser = member(root, "browser", {
-    metadata: { kind: "tooling", target: "bun" },
+    metadata: { kind: "tooling" },
     extra: { scripts: { e2e: "fixture" } },
   });
   write(root, `${browser}/tests/access.spec.ts`, "fixture");

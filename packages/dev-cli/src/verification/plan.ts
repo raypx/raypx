@@ -1,6 +1,5 @@
 import { changedFiles as readChanges, affectedWorkspaces } from "../repo/verification.js";
 import { privateTestFile, taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
-import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";
 import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
@@ -143,18 +142,9 @@ export function verificationPlan(
   const full = Boolean(options.full);
   let allSources = full || reasons.length > 0;
   const native = nativeChanges(model, files, full || reasons.length > 0, options.macos ?? true);
-  // "browser" workspaces are reached only through browser code; "all" may affect any platform.
-  const affected = new Map<string, "browser" | "all">();
-  const mark = (name: string, scope: "browser" | "all") => {
-    const current = affected.get(name);
-    if (current === "all" || current === scope) return false;
-    affected.set(name, scope);
-    return true;
-  };
-  let reach: ReturnType<typeof browserReach> | undefined;
+  const changed = new Set<string>();
   let tooling: ReturnType<typeof toolingImpact> | undefined;
   const isolated = new Set<string>();
-  const platforms = () => (reach ??= browserReach(model.root));
   for (const file of files) {
     if (documentation(file)) continue;
     if (
@@ -180,7 +170,7 @@ export function verificationPlan(
         reasons.push(`Shared verification input: ${file}`);
       } else {
         isolated.add("@raypx/tooling");
-        for (const consumer of impact.consumers) mark(consumer, "all");
+        for (const consumer of impact.consumers) changed.add(consumer);
       }
       continue;
     }
@@ -199,11 +189,7 @@ export function verificationPlan(
       isolated.add(owner.name);
       continue;
     }
-    if (owner)
-      mark(
-        owner.name,
-        platforms().browserOnly(file) && !platforms().leaks(owner.name) ? "browser" : "all",
-      );
+    if (owner) changed.add(owner.name);
     else if (!/^(?:\.gitignore|\.oxfmtrc[^/]*|\.oxlintrc[^/]*)$/.test(file)) {
       allSources = true;
       reasons.push(`Unclassified input: ${file}`);
@@ -212,27 +198,14 @@ export function verificationPlan(
       reasons.push(`Shared formatter/linter input: ${file}`);
     }
   }
-  if (allSources) for (const member of model.members) mark(member.name, "all");
-  const reached = affectedWorkspaces(model.members, affected, {
-    merge: (before, next) =>
-      before === "all" || next === "all" ? ("all" as const) : ("browser" as const),
-    propagate: (scope, _, consumer) =>
-      scope === "all"
-        ? ("all" as const)
-        : platforms().consumes(consumer.name)
-          ? platforms().leaks(consumer.name)
-            ? ("all" as const)
-            : ("browser" as const)
-          : undefined,
-  });
-  affected.clear();
-  for (const [name, scope] of reached) affected.set(name, scope);
-  for (const name of isolated) affected.set(name, "all");
+  if (allSources) for (const member of model.members) changed.add(member.name);
+  const affected = affectedWorkspaces(model.members, changed);
+  for (const name of isolated) affected.add(name);
   const lifecycle = relatedTaskLifecycle(model, files);
   const nativeMembers = model.members.filter((member) => member.native && native.native);
   const workspaces = [
     ...new Set([
-      ...affected.keys(),
+      ...affected,
       ...nativeMembers.map((member) => member.name),
       ...(lifecycle ? [lifecycle.workspace] : []),
     ]),

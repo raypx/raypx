@@ -1,5 +1,3 @@
-import type { Kind, Target } from "@raypx/task-graph/workspaces";
-
 export function workspaceInstructions({
   packageName,
   directory,
@@ -9,8 +7,8 @@ export function workspaceInstructions({
 }: {
   packageName: string;
   directory: string;
-  kind: Kind;
-  target: Target;
+  kind: string;
+  target: string;
   tests: boolean;
 }): string {
   return `# ${packageName}

@@ -24,7 +24,6 @@ interface TaskMember extends Member {
   /** Package exports point into `tests/`, so its tests can reach other workspaces. */
   testExports: boolean;
   browserProject?: BrowserSurface;
-  uncachedTasks: string[];
   delegates: Record<string, string>;
 }
 export type TaskModel = Model<TaskMember>;
@@ -132,7 +131,6 @@ function cachedTask(
   name: string,
   context: TaskContext<TaskMember>,
 ): TaskCache | false {
-  if (member.uncachedTasks.includes(name)) return false;
   const build = name === "build" || name === "build:renderer" || name === "build:e2e";
   if (!build && !["check", "test", "test:unit", "test:component"].includes(name)) return false;
   const lifecycleApi =
@@ -219,7 +217,8 @@ function cachedTask(
     argumentKey(`${member.name}#${name}`),
   ];
   if (build && member.name === "cli") env.push("SOURCE_DATE_EPOCH", "BUN_*", "RAYPX_HERDR_*");
-  if (build && member.name !== "cli") env.push("VITE_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS");
+  if (build && member.name !== "cli")
+    env.push("VITE_*", "EXPO_PUBLIC_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS");
   if (member.native && ["check", "build", "build:renderer"].includes(name)) {
     const category =
       name === "build:renderer" ? "RENDERER" : name.toUpperCase().replaceAll(":", "_");
@@ -382,11 +381,6 @@ export function taskModel(
       discovery: { metadataKey: "raypx" },
       member(workspace, member) {
         const delegates = taskScripts(workspace.manifest);
-        const uncachedTasks =
-          (workspace.manifest.raypx as { uncachedTasks?: string[] } | undefined)?.uncachedTasks ??
-          [];
-        if (uncachedTasks.some((name) => !member.scripts[name]))
-          throw new Error(`${member.name}: uncachedTasks must name existing scripts`);
         const browserProject = (
           workspace.manifest.raypx as { browserTestProject?: BrowserSurface } | undefined
         )?.browserTestProject;
@@ -400,7 +394,6 @@ export function taskModel(
           native: Boolean(member.scripts["native:build"] && member.scripts["native:prepare"]),
           importable: Boolean(workspace.manifest.exports),
           testExports: JSON.stringify(workspace.manifest.exports ?? {}).includes("./tests/"),
-          uncachedTasks,
           delegates,
         };
       },

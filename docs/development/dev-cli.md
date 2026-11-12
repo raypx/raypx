@@ -25,9 +25,10 @@ boundaries; this page keeps the behavior.
   `policy` also checks public entries (`src/validation/entries.ts`): every exports key
   of a library or tooling workspace needs an importer in another workspace, found in
   JS/TS module imports, CSS `@import`/`@source` and tsconfig `extends` (root config
-  included). Suites, `tests/` files and `e2e` are test importers: they keep `./testing*`
-  entries and tooling surfaces alive; other entries need production use. `raypx.entryConsumers` is the declared-exception escape hatch and is
-  validated against the exported keys.
+  included). Suites, `tests/` files and `e2e` are test importers. They can satisfy
+  the consumer requirement for `./testing*` entries, executable tooling and E2E
+  workspaces. Other library entries need production use or a reason in
+  `raypx.entryConsumers`, which policy validates against the exported keys.
   `policy` also requires one workspace to declare `use-intl`, rejects `next-intl` and keeps
   FormatJS runtimes out of other product workspaces (`src/validation/intl-engine.ts`).
 - raypx-dev test inventory [--layers] [--baseline file] [--owners file]
@@ -76,8 +77,9 @@ boundaries; this page keeps the behavior.
   failed/cancelled jobs and unexplained skips. Local evidence records running,
   passed or failed status so a failed run cannot retain a previous success.
   Shared or unknown inputs broaden source checks without requesting release builds/audits. Missing Git
-  bases also select native checks conservatively. Browser-target frontend
-  changes reach only browser consumers (`src/verification/platform.ts`). Required results
+  bases also select native checks conservatively. Affected workspaces propagate
+  through manifest dependencies, including dev dependencies. A frontend change can
+  select backend integration if the API is a transitive dependent. Required results
   distinguish intentional skips from missing/cancelled/failed gates. The `container-smoke`
   job runs isolated Compose/Railway acceptance for Dockerfiles, deployment adapters and
   image acceptance inputs and its reusable workflow, plus manual/tag CI runs. Main

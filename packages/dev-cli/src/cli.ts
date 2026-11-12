@@ -31,20 +31,16 @@ async function appendGithubOutput(lines: string) {
   appendFileSync(process.env.GITHUB_OUTPUT, lines);
 }
 
-const kinds = ["library", "app", "tooling"] as const;
-
 async function workspace(args: string[]) {
   const usage =
-    "Usage: raypx-dev workspace list | new <name> [--kind library|app|tooling] [--target <target>] [--tests] [--write]";
+    "Usage: raypx-dev workspace list | new <name> [--kind library|app] [--target <target>] [--tests] [--write]";
   const [action, ...rest] = args;
   if (action === "list" && !rest.length) {
     const { discover } = await import("./repository.js");
     const index = discover(root);
     findings(index.findings, "Workspace discovery");
     for (const w of index.workspaces)
-      console.log(
-        `${w.path.padEnd(25)} ${w.manifest.name.padEnd(22)} ${w.metadata?.kind}/${w.metadata?.target}`,
-      );
+      console.log(`${w.path.padEnd(25)} ${w.manifest.name.padEnd(22)} ${w.metadata?.kind}`);
     return;
   }
   if (action !== "new") throw new Error(usage);
@@ -61,12 +57,12 @@ async function workspace(args: string[]) {
   });
   const [name] = positionals;
   if (!name || positionals.length > 1) throw new Error(usage);
-  const { targets } = await import("@raypx/task-graph/workspaces");
-  const kind = kinds.find((candidate) => candidate === values.kind);
-  const target = targets.find((candidate) => candidate === values.target);
-  if (!kind) throw new Error(`Unknown kind ${values.kind}; expected ${kinds.join(", ")}`);
-  if (!target) throw new Error(`Unknown target ${values.target}; expected ${targets.join(", ")}`);
-  const { scaffold } = await import("./scaffold.js");
+  const { scaffold, scaffoldKinds, scaffoldTargets } = await import("./scaffold.js");
+  const kind = scaffoldKinds.find((candidate) => candidate === values.kind);
+  const target = scaffoldTargets.find((candidate) => candidate === values.target);
+  if (!kind) throw new Error(`Unknown kind ${values.kind}; expected ${scaffoldKinds.join(", ")}`);
+  if (!target)
+    throw new Error(`Unknown target ${values.target}; expected ${scaffoldTargets.join(", ")}`);
   const paths = scaffold(root, name, { kind, target, write: values.write, tests: values.tests });
   if (values.write) {
     const { run } = await import("@raypx/runtime-node/process");

@@ -26,12 +26,5 @@
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"
-  },
-  "raypx": {
-    "target": "universal",
-    "entryTargets": {
-      "./pi": "node",
-      "./pi/context": "node"
-    }
   }
 }
