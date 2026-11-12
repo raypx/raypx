@@ -83,8 +83,8 @@ bun e2e --desktop --grep template
 bun e2e --web --dry-run
 
 bun run test inventory --layers
-bun run --cwd packages/tooling test:inventory
-bun run --cwd packages/tooling test:backends
+bun run --cwd packages/dev-cli test:inventory
+bun run --cwd packages/dev-cli test:backends
 bun run test backends --with-e2e -- --workers=1
 ```
 
@@ -144,7 +144,7 @@ acceptance and PostgreSQL persistence have separate gates.
 
 Reusable validation and evidence cleanup are documented in
 [validation artifacts](validation-artifacts.md): `test inventory`, `test backends`
-and `clean:artifacts`. Scripts belong in Tooling; `.artifacts/` holds generated output only.
+and `clean:artifacts`. Scripts belong in Dev CLI; `.artifacts/` holds generated output only.
 
 Unit suites live beside source as `*.test.ts(x)`. DOM suites use
 `*.component.test.ts(x)`; the suffix selects their layer independently of syntax.

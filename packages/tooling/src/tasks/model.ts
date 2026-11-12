@@ -370,12 +370,12 @@ export function taskModel(
           ]),
         ),
         policy: {
-          command: `bun packages/tooling/src/cli.ts verify:check policy ${JSON.stringify(platform(context))}`,
+          command: `bun packages/dev-cli/src/cli.ts verify:check policy ${JSON.stringify(platform(context))}`,
           dependsOn: [],
           cache: validationCache(context, false),
         },
         locales: {
-          command: `bun packages/tooling/src/cli.ts verify:check locales ${JSON.stringify(platform(context))}`,
+          command: `bun packages/dev-cli/src/cli.ts verify:check locales ${JSON.stringify(platform(context))}`,
           dependsOn: [],
           cache: validationCache(context, true),
         },

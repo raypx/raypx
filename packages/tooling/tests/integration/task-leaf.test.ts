@@ -1,11 +1,19 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
-import { it, expect } from "vite-plus/test";
+import { afterEach, it, expect } from "vite-plus/test";
 import { runProcessSync } from "@raypx/runtime-node/process";
 import { argumentKey } from "../../src/tasks/arguments.js";
-import { workspaceFixtures } from "../helpers/workspace.js";
 
-const { fixture } = workspaceFixtures();
+const roots: string[] = [];
+afterEach(() => {
+  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+});
+function fixture() {
+  const root = mkdtempSync(join(tmpdir(), "raypx-tooling-test-"));
+  roots.push(root);
+  return root;
+}
 const repository = resolve(import.meta.dirname, "../../../..");
 // VP's Windows worker can use Bun's node.exe mode, which treats `run` as a file.
 const runtime = Bun.which("bun");

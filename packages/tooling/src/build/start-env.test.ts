@@ -1,9 +1,17 @@
 import { join } from "node:path";
-import { writeFileSync } from "node:fs";
-import { expect, it, vi } from "vite-plus/test";
-import { workspaceFixtures } from "../../tests/helpers/workspace.js";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { afterEach, expect, it, vi } from "vite-plus/test";
 import { startEnvironment } from "./start-env.js";
-const { fixture } = workspaceFixtures();
+const roots: string[] = [];
+afterEach(() => {
+  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+});
+function fixture() {
+  const root = mkdtempSync(join(tmpdir(), "raypx-tooling-test-"));
+  roots.push(root);
+  return root;
+}
 it("retains inherited variables and dotenv keys without tracking the entire tool environment", () => {
   const root = fixture();
   writeFileSync(join(root, ".env"), "APP_SETTING=fixture\nVITE_TITLE=fixture\n");

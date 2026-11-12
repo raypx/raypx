@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./cli": "./src/cli.ts",
     "./build/nitro": "./src/build/nitro.ts",
     "./build/deployment": "./src/build/deployment.ts",
     "./build/analytics": "./src/build/analytics.ts",
@@ -12,22 +11,21 @@
     "./browser-server": "./src/browser-server.ts",
     "./tasks": "./src/tasks/config.ts",
     "./build/cli": "./src/build/cli.ts",
-    "./performance": "./src/performance/run.ts"
+    "./performance": "./src/performance/run.ts",
+    "./tasks/model": "./src/tasks/model.ts",
+    "./tasks/lifecycle": "./src/tasks/task-lifecycle.ts",
+    "./build/release": "./src/build/release.ts",
+    "./browser-tests": "./src/browser-tests.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --exclude \"**/tests/integration/**\"",
-    "test:integration": "bun --bun vp test --run tests/integration",
-    "test:inventory": "bun src/cli.ts test inventory",
-    "test:backends": "bun src/cli.ts test backends"
+    "test:integration": "bun --bun vp test --run tests/integration"
   },
   "dependencies": {
-    "@formatjs/icu-messageformat-parser": "catalog:dev",
-    "@posthog/cli": "catalog:dev",
     "@raypx/devkit": "workspace:*",
-    "@raypx/runtime-node": "workspace:*",
-    "oxc-parser": "catalog:dev"
+    "@raypx/runtime-node": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
@@ -44,7 +42,11 @@
       "./build/analytics": "node",
       "./build/start-env": "node",
       "./tasks": "node",
-      "./build/cli": "node"
+      "./build/cli": "node",
+      "./tasks/model": "node",
+      "./tasks/lifecycle": "node",
+      "./build/release": "node",
+      "./browser-tests": "node"
     },
     "sourceTargets": {
       "src/build/**": "node",
@@ -52,7 +54,8 @@
       "src/tasks/model.ts": "node",
       "src/tasks/arguments.ts": "node",
       "src/tasks/delegation.ts": "node",
-      "src/browser-tests.ts": "node"
+      "src/browser-tests.ts": "node",
+      "src/tasks/task-lifecycle.ts": "node"
     }
   }
 }

@@ -74,7 +74,7 @@ e2e/playwright-report/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
-# Generated validation evidence only; reusable scripts belong in packages/tooling.
+# Generated validation evidence only; reusable scripts belong in packages/dev-cli.
 .artifacts/
 
 # Retain ignored build caches from older branches until explicitly cleaned.

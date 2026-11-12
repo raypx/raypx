@@ -5,7 +5,7 @@
     "": {
       "name": "raypx",
       "devDependencies": {
-        "@raypx/scripts": "workspace:*",
+        "@raypx/dev-cli": "workspace:*",
         "@raypx/testing": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
@@ -124,9 +124,9 @@
       "devDependencies": {
         "@hona/strobe": "catalog:dev",
         "@playwright/test": "catalog:dev",
+        "@raypx/dev-cli": "workspace:*",
         "@raypx/devtools": "workspace:*",
         "@raypx/e2e": "workspace:*",
-        "@raypx/scripts": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",
@@ -241,9 +241,9 @@
       },
       "devDependencies": {
         "@playwright/test": "catalog:dev",
+        "@raypx/dev-cli": "workspace:*",
         "@raypx/devtools": "workspace:*",
         "@raypx/e2e": "workspace:*",
-        "@raypx/scripts": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",
@@ -273,7 +273,7 @@
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
-        "@raypx/scripts": "workspace:*",
+        "@raypx/dev-cli": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
@@ -497,6 +497,27 @@
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
         "drizzle-kit": "catalog:dev",
+      },
+    },
+    "packages/dev-cli": {
+      "name": "@raypx/dev-cli",
+      "version": "0.0.0",
+      "bin": {
+        "raypx-dev": "./bin/raypx-dev.mjs",
+      },
+      "dependencies": {
+        "@formatjs/icu-messageformat-parser": "catalog:dev",
+        "@posthog/cli": "catalog:dev",
+        "@raypx/devkit": "workspace:*",
+        "@raypx/runtime-node": "workspace:*",
+        "@raypx/tooling": "workspace:*",
+        "oxc-parser": "catalog:dev",
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "vite-plus": "catalog:dev",
       },
     },
     "packages/devkit": {
@@ -734,20 +755,6 @@
         "vite-plus": "catalog:dev",
       },
     },
-    "packages/scripts": {
-      "name": "@raypx/scripts",
-      "version": "0.0.0",
-      "bin": {
-        "raypx-dev": "./bin/raypx-dev.mjs",
-      },
-      "dependencies": {
-        "@raypx/tooling": "workspace:*",
-      },
-      "devDependencies": {
-        "@raypx/tsconfig": "workspace:*",
-        "@types/bun": "catalog:dev",
-      },
-    },
     "packages/storage": {
       "name": "@raypx/storage",
       "version": "0.0.0",
@@ -808,11 +815,8 @@
       "name": "@raypx/tooling",
       "version": "0.0.0",
       "dependencies": {
-        "@formatjs/icu-messageformat-parser": "catalog:dev",
-        "@posthog/cli": "catalog:dev",
         "@raypx/devkit": "workspace:*",
         "@raypx/runtime-node": "workspace:*",
-        "oxc-parser": "catalog:dev",
       },
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
@@ -1824,6 +1828,8 @@
 
     "@raypx/database": ["@raypx/database@workspace:packages/database"],
 
+    "@raypx/dev-cli": ["@raypx/dev-cli@workspace:packages/dev-cli"],
+
     "@raypx/devkit": ["@raypx/devkit@workspace:packages/devkit"],
 
     "@raypx/devtools": ["@raypx/devtools@workspace:packages/devtools"],
@@ -1853,8 +1859,6 @@
     "@raypx/providers": ["@raypx/providers@workspace:packages/providers"],
 
     "@raypx/runtime-node": ["@raypx/runtime-node@workspace:packages/runtime-node"],
-
-    "@raypx/scripts": ["@raypx/scripts@workspace:packages/scripts"],
 
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
 

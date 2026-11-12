@@ -1,8 +1,8 @@
 # Validation scripts and generated evidence
 
-Reusable repository checks live in `packages/tooling/src/validation/` and are
-exposed through `raypx-dev`, registered by `@raypx/scripts`. Scripts calls
-Tooling's public `./cli` entry; reusable build/task exports remain in Tooling.
+Reusable repository checks live in `packages/dev-cli/src/validation/` and are
+exposed through `raypx-dev`, which `@raypx/dev-cli` registers and implements.
+Reusable build/task exports remain in Tooling.
 Feature fixtures stay with their owning workspace's `tests/`; product code never
 imports these tools. `.artifacts/` is ignored,
 disposable output: logs, reports, screenshots, traces and generated comparisons.
@@ -221,10 +221,12 @@ and the `native-checks` action select Tooling's type checks/tests plus any relev
 native/container acceptance. Shared dependency-install/cache actions still broaden
 all source checks. Mixed changes combine these scopes, and full verification selects
 every workspace as before.
-Private Tooling tests select only Tooling. Exported implementation follows its entry's
-transitive source dependencies and actual workspace imports, including Scripts for
-CLI commands, then propagates to downstream consumers. Changes to task machinery,
-unknown/deleted Tooling inputs or unresolved public graphs retain all source checks.
+Dev CLI policy, validation, verification and test edits select only Dev CLI; its
+command, repository and test-runner modules retain all source checks. Tooling tests
+select only Tooling. Exported Tooling implementation follows its entry's transitive
+source dependencies and actual workspace imports, then propagates to downstream
+consumers. Changes to task machinery, unknown/deleted Tooling inputs or unresolved
+public graphs retain all source checks.
 Changes to the API relay fixture or its helper select the CLI task lifecycle test
 locally and the CLI suite in CI. The CLI test cache fingerprints both fixture files.
 Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain

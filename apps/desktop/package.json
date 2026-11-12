@@ -68,9 +68,9 @@
   "devDependencies": {
     "@hona/strobe": "catalog:dev",
     "@playwright/test": "catalog:dev",
+    "@raypx/dev-cli": "workspace:*",
     "@raypx/devtools": "workspace:*",
     "@raypx/e2e": "workspace:*",
-    "@raypx/scripts": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",

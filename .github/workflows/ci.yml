@@ -52,7 +52,7 @@ jobs:
         with:
           bun-version-file: package.json
       - name: Install planner dependencies
-        run: bun install --frozen-lockfile --production --filter '@raypx/scripts' --ignore-scripts
+        run: bun install --frozen-lockfile --production --filter '@raypx/dev-cli' --ignore-scripts
       - name: Select affected verification gates
         id: plan
         env:
@@ -210,4 +210,4 @@ jobs:
         env:
           GITHUB_NEEDS: ${{ toJSON(needs) }}
           RAYPX_DISTRIBUTION_REQUEST: ${{ inputs.distribution || false }}
-        run: bun packages/tooling/src/verification/result.ts
+        run: bun packages/dev-cli/src/verification/result.ts

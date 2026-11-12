@@ -88,7 +88,7 @@ The accepted foundation design and current architecture decisions define the imp
   do not introduce custom config factories or option schemas. Application Vite plugins
   must not enter the test runner.
 - Each release candidate/platform compiles one production CLI payload. Consumers set `RAYPX_CLI_PAYLOAD`, verify its immutable inventory and never implicitly build. Sign CLI/Herdr before sharing the payload; outer Desktop signing cannot rewrite it. Strobe consumes prepared artifacts only, retains ownership markers and runs uncached in private homes.
-- Reusable repository validation belongs in Tooling's `src/validation/`. `.artifacts/`
+- Reusable repository validation belongs in Dev CLI's `src/validation/`. `.artifacts/`
   holds generated evidence only; never store authored scripts there. `clean:artifacts`
   removes that evidence and test reports without removing builds or user data.
 

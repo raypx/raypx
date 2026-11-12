@@ -65,7 +65,10 @@
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
     },
     "packages/tooling": {
-      "entry": ["src/tasks/leaf.ts", "src/validation/commit-message.ts"]
+      "entry": ["src/tasks/leaf.ts"]
+    },
+    "packages/dev-cli": {
+      "entry": ["src/validation/commit-message.ts"]
     },
     "packages/tsconfig": {
       "entry": ["scripts/task.ts"]
