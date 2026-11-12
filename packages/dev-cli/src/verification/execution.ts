@@ -10,6 +10,12 @@ import { completionReport, precheckTimings, reportTiming } from "./report.js";
 import { reportBuildSizes } from "../validation/build-size.js";
 import { sourceTasks, type SourcePhase } from "./gates.js";
 
+/**
+ * A broad change lints the whole repository as a cached Turbo task; a narrow one
+ * lints only its own files, which is faster than restoring nothing.
+ */
+const lintsRepository = (plan: VerificationPlan) => plan.full || plan.reasons.length > 0;
+
 export function executionTasks(
   plan: VerificationPlan,
   rootName: string,
@@ -20,7 +26,12 @@ export function executionTasks(
   return [
     ...(phase === "tests"
       ? []
-      : [taskRef(rootName, "policy"), taskRef(rootName, "locales"), taskRef(rootName, "types")]),
+      : [
+          taskRef(rootName, "policy"),
+          taskRef(rootName, "locales"),
+          taskRef(rootName, "types"),
+          ...(lintsRepository(plan) ? [taskRef(rootName, "lint")] : []),
+        ]),
     ...tasks.filter((task) => !tests.some((test) => test.task === task && test.mode === "none")),
     ...(plan.full && phase !== "tests" ? [taskRef(rootName, "knip")] : []),
   ];
@@ -46,8 +57,8 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
   timings.formatMs = Math.round(performance.now() - formatStarted);
   const lintStarted = performance.now();
   const lintable = files.filter((file) => /\.(?:[cm]?[jt]sx?|vue|svelte)$/.test(file));
-  if (plan.full || lintable.length)
-    await run(process.execPath, ["--bun", "vp", "lint", ...(plan.full ? [] : lintable)], root);
+  if (!lintsRepository(plan) && lintable.length)
+    await run(process.execPath, ["--bun", "vp", "lint", ...lintable], root);
   timings.lintMs = Math.round(performance.now() - lintStarted);
   return timings;
 }
@@ -88,6 +99,9 @@ export async function sourceChecks(
     phase === "tests"
       ? { policyMs: 0, localesMs: 0, cachedChecks: [] }
       : precheckTimings(results, rootName);
+  const lint = results.find((task) => task.taskId === taskRef(rootName, "lint"));
+  if (lint?.cached) prechecks.cachedChecks.push("lint");
+  else if (lint) style.lintMs = lint.durationMs;
   const probeStarted = performance.now();
   const built = results
     .filter((task) => task.taskId.endsWith("#build"))

@@ -4,7 +4,7 @@ import * as processes from "@raypx/runtime-node/process";
 import * as repository from "../repository.js";
 import * as runner from "../turbo.js";
 import * as artifacts from "../smoke/index.js";
-import { sourceChecks } from "./execution.js";
+import { executionTasks, sourceChecks } from "./execution.js";
 import { verificationPlan } from "./plan.js";
 
 afterEach(() => vi.restoreAllMocks());
@@ -27,4 +27,15 @@ it("runs the test phase without style commands, precheck evidence or prepared ar
   expect(style).not.toHaveBeenCalled();
   expect(smoke).not.toHaveBeenCalled();
   expect(metrics.cachedChecks).toEqual([]);
+});
+
+it("lints the whole repository through Turbo only for broad changes", () => {
+  const { model } = project();
+  const narrow = verificationPlan(model, ["packages/tokens/src/index.ts"]);
+  const broad = verificationPlan(model, ["package.json"]);
+  expect(narrow.reasons).toEqual([]);
+  expect(executionTasks(narrow, "//")).not.toContain("//#lint");
+  expect(executionTasks(broad, "//")).toContain("//#lint");
+  expect(executionTasks(verificationPlan(model, [], { full: true }), "//")).toContain("//#lint");
+  expect(executionTasks(broad, "//", [], "tests")).not.toContain("//#lint");
 });

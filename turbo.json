@@ -293,7 +293,26 @@
       "outputs": []
     },
     "//#lint": {
-      "cache": false
+      "inputs": [
+        "package.json",
+        "bun.lock",
+        "vite.config.ts",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/.output/**",
+        "!**/coverage/**",
+        "!**/artifacts/**",
+        "!apps/desktop/build/**",
+        "!.artifacts/**",
+        "!.turbo/**",
+        "!.agents/**",
+        "!.claude/**",
+        "!skills/**"
+      ],
+      "outputs": []
     },
     "//#knip": {
       "cache": false

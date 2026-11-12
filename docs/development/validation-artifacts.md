@@ -199,7 +199,9 @@ share the source task run, avoiding extra launches. Verification prints and reco
 their execution times from Turbo's run summary (zero when cached), format/lint wall
 times and the Turbo wall time including launcher overhead.
 
-Lint runs type-aware rules without its own type check; TypeScript diagnostics come
+A broad change (shared inputs or `--full`) lints the whole repository as the cached
+`//#lint` Turbo task, so an unchanged tree restores it; a narrow change lints only its
+own files directly. Lint runs type-aware rules without its own type check; TypeScript diagnostics come
 from the cached workspace checks and the root `types` task, which checks every
 workspace's Vitest configuration under Node.
 Changed files select formatting/lint and affected workspace types through reverse
