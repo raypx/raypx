@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { imports } from "../repo/architecture.js";
 import { resolveImport, workspaceFor } from "@raypx/task-graph/workspaces";
 import { discover } from "../repository.js";
-import { taskModel, taskRef } from "@raypx/task-graph/model";
+import { taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
 import { testLayer, testSources } from "../validation/test-sources.js";
 import type { VerificationPlan } from "./plan.js";
 import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
@@ -22,10 +22,13 @@ const testOnly = /(?:^|\/)tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$|\/test-utils(?:
 const extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 
 /** CI/full mode retains complete suites. Local selection never changes the canonical CI plan. */
-export function localTests(root: string, plan: VerificationPlan): TestSelection[] {
+export function localTests(
+  root: string,
+  plan: VerificationPlan,
+  model: TaskModel = taskModel(root),
+): TestSelection[] {
   if (!plan.tasks.some((task) => task.endsWith("#task:test"))) return [];
-  const model = taskModel(root),
-    index = discover(root);
+  const index = discover(root);
   const changed = plan.files.filter((file) => !documentation.test(file));
   const lifecycle = relatedTaskLifecycle(model, changed);
   const broad = plan.full || plan.reasons.length > 0;

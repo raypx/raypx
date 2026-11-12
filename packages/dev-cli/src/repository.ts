@@ -1,13 +1,12 @@
 import { resolveRelease } from "@raypx/tooling/build/release";
 import { developmentEnvironment } from "./repo/environment.js";
-import { run } from "@raypx/runtime-node/process";
+import { runBrowserTests } from "./browser-run.js";
 import { discover as discoverWorkspaces } from "@raypx/task-graph/workspaces";
 import {
   browserTestArguments,
   isBrowserTestTask,
   prepareBrowserTask,
 } from "@raypx/task-graph/browser-tests";
-import { join } from "node:path";
 import {
   runTasks as executeTasks,
   prepareTaskDirectories as prepareDirectories,
@@ -53,13 +52,7 @@ export async function runTasks(
     if (browserTestArguments([], browser.env).includes("--list")) {
       if (browser.args.includes("--dry-run"))
         console.log(JSON.stringify({ runner: "playwright", tasks: [] }));
-      else
-        await run(
-          process.execPath,
-          [join(root, "packages/dev-cli/src/cli.ts"), "browser:run"],
-          root,
-          { ...process.env, ...browser.env },
-        );
+      else await runBrowserTests(root, [], { ...process.env, ...browser.env });
       return;
     }
   }

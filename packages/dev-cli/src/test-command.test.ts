@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { packageTestArguments, planTests } from "./test-command.js";
+import { planTests } from "./test-command.js";
 
 const root = "/repo";
 const members = [
@@ -20,21 +20,6 @@ const members = [
     scripts: { test: "runner", "test:inventory": "public" },
   },
 ];
-it("preserves direct package runner flags and literal arguments while separating graph controls", () => {
-  expect(packageTestArguments(["postgres", "--dry-run", "--reporter=json", "two words"])).toEqual([
-    "postgres",
-    "--dry-run",
-    "--",
-    "--reporter=json",
-    "two words",
-  ]);
-  expect(packageTestArguments(["postgres", "--", "--dry-run"])).toEqual([
-    "postgres",
-    "--",
-    "--dry-run",
-  ]);
-});
-
 it("preserves default aggregation and scopes packages by name, path, short name or current directory", () => {
   expect(planTests(root, root, members, [])).toMatchObject({ task: "test", args: [] });
   for (const name of ["tasks", "@raypx/tasks", "packages/tasks"])

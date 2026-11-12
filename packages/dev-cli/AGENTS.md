@@ -17,6 +17,13 @@ direct dependency. CI's minimal planner installs this package with production
 dependencies only. For direct terminal use, run `bun link` here with Bun's global
 bin directory on `PATH`.
 
+`src/cli.ts` dispatches one command table: each entry declares its usage, summary,
+whether it is internal (VP leaves and CI entries, omitted from help) and whether its
+arguments pass through to another tool. Help and per-command `--help` come from the
+table; each command lazily imports its own modules. Owned options parse with
+`node:util` `parseArgs` in strict mode. Errors print their message; `RAYPX_DEBUG=1`
+prints the stack.
+
 - raypx-dev tasks <task> [VP options]
 - raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
@@ -32,7 +39,7 @@ bin directory on `PATH`.
   Only apps spread shared public entries from the same language, with no namespace overwrites.
   TS uses literal objects, JSON nested strings. Include both formats in cache inputs;
   validate without generating or executing catalogs.
-- raypx-dev policy | knip | verify | doctor | clean | clean:artifacts
+- raypx-dev policy | verify | doctor | clean | clean:artifacts
   `policy` also checks public entries (`src/validation/entries.ts`): every exports key
   of a library or tooling workspace needs an importer in another workspace, found in
   JS/TS module imports, CSS `@import`/`@source` and tsconfig `extends` (root config
@@ -41,8 +48,8 @@ bin directory on `PATH`.
   validated against the exported keys.
   `policy` also requires one workspace to declare `use-intl`, rejects `next-intl` and keeps
   FormatJS runtimes out of other product workspaces (`src/validation/intl-engine.ts`).
-- raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
-- raypx-dev test:backends [--with-e2e [-- Playwright flags]]
+- raypx-dev test inventory [--layers] [--baseline file] [--owners file]
+- raypx-dev test backends [--with-e2e [-- Playwright flags]]
 - raypx-dev size [--package name|path] [--native] [--browser] [--require]
   Discovers buildable workspaces, measures existing deployable directories and CLI
   runtime components, and writes JSON/Markdown under `.artifacts/sizes/`. Native

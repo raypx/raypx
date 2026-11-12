@@ -22,19 +22,6 @@ const suites = [
   "backends",
 ];
 /** Package scripts accept runner flags directly; only explicit graph controls stay outside --. */
-export function packageTestArguments(argv: string[]): string[] {
-  const [suite, ...args] = argv;
-  if (!suite) throw new Error("A package test suite is required");
-  const split = args.indexOf("--");
-  const before = split < 0 ? args : args.slice(0, split);
-  const controls = new Set(["--dry-run", "--no-cache"]);
-  const graph = before.filter((arg) => controls.has(arg));
-  const runner = [
-    ...before.filter((arg) => !controls.has(arg)),
-    ...(split < 0 ? [] : args.slice(split + 1)),
-  ];
-  return [suite, ...graph, ...(runner.length ? ["--", ...runner] : [])];
-}
 type TestPlan =
   | { kind: "help"; members: TestWorkspace[] }
   | { kind: "list"; members: TestWorkspace[] }

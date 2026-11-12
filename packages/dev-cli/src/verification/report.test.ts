@@ -22,6 +22,7 @@ it("replaces stale success evidence before starting checks and records a failed 
   expect(checks).toHaveBeenCalledWith(root, expect.any(Object), {
     tests: expect.any(Array),
     noCache: true,
+    model: expect.objectContaining({ root }),
   });
   expect(JSON.parse(readFileSync(file, "utf8")).status).toBe("failed");
 });

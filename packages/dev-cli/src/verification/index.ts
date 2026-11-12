@@ -27,14 +27,12 @@ export async function verify(root: string, args: string[]) {
   }
   const started = performance.now(),
     options = verifyOptions(args);
-  const plan = localPlan(root, options);
-  const tests = localTests(root, plan);
+  const model = taskModel(root);
+  const plan = localPlan(root, options, model);
+  const tests = localTests(root, plan, model);
   if (options.dry) {
-    const model = taskModel(
-      root,
-      JSON.stringify(executionTasks(plan, taskModel(root).rootName, tests)),
-    );
-    const graph = taskPlan(model, [taskRef(model.rootName, "verify:run")]);
+    const selected = taskModel(root, JSON.stringify(executionTasks(plan, model.rootName, tests)));
+    const graph = taskPlan(selected, [taskRef(selected.rootName, "verify:run")]);
     console.log(JSON.stringify({ ...plan, tests, graph }, null, 2));
     return;
   }
@@ -65,7 +63,11 @@ export async function verify(root: string, args: string[]) {
     );
   report("running");
   try {
-    const metrics = await sourceChecks(root, plan, { tests, noCache: options.noCache ?? false });
+    const metrics = await sourceChecks(root, plan, {
+      tests,
+      noCache: options.noCache ?? false,
+      model,
+    });
     report("passed", metrics);
   } catch (error) {
     report("failed");

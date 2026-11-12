@@ -284,7 +284,11 @@ export function verificationPlan(
   };
 }
 
-export function localPlan(root: string, options: { full?: boolean; base?: string } = {}) {
+export function localPlan(
+  root: string,
+  options: { full?: boolean; base?: string } = {},
+  model: TaskModel = taskModel(root),
+) {
   const changed = changedFiles(root, options.base);
-  return verificationPlan(taskModel(root), changed.files, { ...options, reasons: changed.reasons });
+  return verificationPlan(model, changed.files, { ...options, reasons: changed.reasons });
 }

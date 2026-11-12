@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "@raypx/runtime-node/process";
 import { runTasks } from "../repository.js";
-import { taskRef, taskModel, taskPlan } from "@raypx/task-graph/model";
+import { taskRef, taskModel, taskPlan, type TaskModel } from "@raypx/task-graph/model";
 import { argumentKey } from "@raypx/task-graph/core";
 import type { VerificationPlan } from "./plan.js";
 import type { TestSelection } from "./tests.js";
@@ -53,12 +53,17 @@ async function sourceStyle(root: string, plan: VerificationPlan) {
 export async function sourceChecks(
   root: string,
   plan: VerificationPlan,
-  options: { tests?: TestSelection[]; noCache?: boolean; phase?: SourcePhase } = {},
+  options: {
+    tests?: TestSelection[];
+    noCache?: boolean;
+    phase?: SourcePhase;
+    model?: TaskModel;
+  } = {},
 ) {
   const { tests = [], noCache = false, phase } = options;
   const started = performance.now();
   const style = phase === "tests" ? { formatMs: 0, lintMs: 0 } : await sourceStyle(root, plan);
-  const model = taskModel(root);
+  const model = options.model ?? taskModel(root);
   const rootName = model.rootName;
   const refs = executionTasks(plan, rootName, tests, phase);
   const styleMs = Math.round(performance.now() - started),
