@@ -141,14 +141,16 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
       for (const [image, , file] of commands) {
         expect(existsSync(file!)).toBe(false);
         const cached = readFileSync(join(directory, `${image}.Dockerfile`), "utf8");
-        const filePath = `apps/${image === "web" ? "web" : "api"}/Dockerfile`;
+        const workspace = image === "web" ? "apps/web" : "apps/api";
         // Only mounts differ; commands, sources and runtime targets remain canonical.
         expect(cached.replace(/--mount=type=cache,\S+ /g, "")).toBe(
-          readFileSync(join(root, filePath), "utf8"),
+          readFileSync(join(root, workspace, "Dockerfile"), "utf8"),
         );
         expect(cached).toContain("id=raypx-bun-install,target=/root/.bun/install/cache");
         expect(cached).not.toContain("id=raypx-vp");
-        expect(cached).toMatch(/RUN bun run build:\w+ --no-cache/);
+        expect(cached).toContain(
+          `RUN bun run --cwd ${workspace} check && bun run --cwd ${workspace} build`,
+        );
       }
     } finally {
       rmSync(directory, { recursive: true, force: true });

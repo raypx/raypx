@@ -59,6 +59,7 @@ export async function smokeDeployment(root: string, args: string[]) {
   const project = `raypx-deployment-${id}`,
     release = `${project}-smoke`;
   const evidence = new Evidence(root, "deployment");
+  const buildOutput = process.env.GITHUB_ACTIONS === "true" ? "inherit" : "log";
   const fixtureBundle = join(evidence.directory, "deployment-fixture.mjs");
   const images = {
     composeMigrate: `raypx/api-migrate:${release}`,
@@ -174,40 +175,51 @@ export async function smokeDeployment(root: string, args: string[]) {
         ]);
         ownedBuilder = true;
       });
-      await evidence.command("compose-build", ["sh", "deploy/build.sh"], {
-        ...process.env,
-        COMPOSE_PROJECT_NAME: project,
-        APP_HOST: new URL(origin).hostname,
-        RAYPX_RELEASE: "smoke",
-        RAYPX_BUILD_BUILDER: builder,
-        DOCKER_DEFAULT_PLATFORM: platform,
-      });
+      await evidence.command(
+        "compose-build",
+        ["sh", "deploy/build.sh"],
+        {
+          ...process.env,
+          COMPOSE_PROJECT_NAME: project,
+          APP_HOST: new URL(origin).hostname,
+          RAYPX_RELEASE: "smoke",
+          RAYPX_BUILD_BUILDER: builder,
+          DOCKER_DEFAULT_PLATFORM: platform,
+          BUILDKIT_PROGRESS: "plain",
+        },
+        buildOutput,
+      );
       for (const [label, file, image] of [
         ["railway-api", "apps/api/Dockerfile", images.railwayApi],
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb],
         ["gateway", "infra/railway/Dockerfile", images.gateway],
       ]) {
-        await evidence.command(`${label}-build`, [
-          "docker",
-          "buildx",
-          "build",
-          "--builder",
-          builder,
-          "--platform",
-          platform,
-          "--load",
-          "--progress",
-          "plain",
-          "--file",
-          file!,
-          "--build-arg",
-          `VITE_APP_RELEASE=${release}`,
-          "--build-arg",
-          `VITE_API_URL=${origin}`,
-          "--tag",
-          image!,
-          ".",
-        ]);
+        await evidence.command(
+          `${label}-build`,
+          [
+            "docker",
+            "buildx",
+            "build",
+            "--builder",
+            builder,
+            "--platform",
+            platform,
+            "--load",
+            "--progress",
+            "plain",
+            "--file",
+            file!,
+            "--build-arg",
+            `VITE_APP_RELEASE=${release}`,
+            "--build-arg",
+            `VITE_API_URL=${origin}`,
+            "--tag",
+            image!,
+            ".",
+          ],
+          process.env,
+          buildOutput,
+        );
       }
       // Resolve mutable test tags once; all test containers run their immutable image digest.
       const pinned = async (tag: string) => {

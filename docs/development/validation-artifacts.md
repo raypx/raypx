@@ -171,7 +171,8 @@ Railway infrastructure and packaged Native acceptance remain separate gates.
 No operator env file, existing database or volume is selected. Containers, networks,
 builder and tagged test images are removed on success, failure or handled interruption;
 base images may remain cached. `.artifacts/deployment/<run>/` retains protected
-command logs plus `commands.json` and `results.json`. Manifests contain labels,
+command logs plus `commands.json` and `results.json`. In GitHub Actions the image
+builds stream plain BuildKit progress to the job log. Manifests contain labels,
 exit codes and timings, never command arguments or environment values.
 
 CI calls this command through `container-smoke` only for Dockerfiles, `.dockerignore`,

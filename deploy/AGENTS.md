@@ -13,8 +13,8 @@ with canonical SQL for `migrate` and `deploy`. Deployment acceptance separately
 bundles its synthetic account fixture and mounts it read-only into the migration
 image; production images do not build or ship that fixture.
 `build.sh` adds Compose-only Bun cache mounts to temporary copies and removes them on exit.
-Image builds pass `--no-cache`, so Turbo neither reads nor trusts a task cache inside
-the build sandbox; Docker layers own image build caching.
+Image builds run the API and Web `check` and `build` scripts directly in the
+Git-free build context. Docker layers own image build caching.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`
 checks static adapters and API environment forwarding. Run `smoke:deployment`
 for isolated image acceptance; its fixture account and database must remain owned

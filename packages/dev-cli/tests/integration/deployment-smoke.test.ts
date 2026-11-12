@@ -46,9 +46,12 @@ esac
       { mode: 0o700 },
     );
     vi.stubEnv("PATH", `${root}:${process.env.PATH}`);
+    vi.stubEnv("GITHUB_ACTIONS", "true");
     vi.stubEnv("RAYPX_SMOKE_COMMANDS", log);
     vi.stubEnv("AUTH_SECRET", "operator-secret-must-not-be-logged");
-    await expect(smokeDeployment(root, [])).rejects.toThrow(/compose-build failed/);
+    await expect(smokeDeployment(root, [])).rejects.toThrow(
+      "compose-build failed (7); see CI job log",
+    );
     const commands = readFileSync(log, "utf8");
     const created = /network create .* (raypx-deployment-[a-f0-9]+)/.exec(commands)?.[1];
     expect(created).toBeTruthy();
@@ -60,6 +63,9 @@ esac
       ...new Bun.Glob(".artifacts/deployment/*/commands.json").scanSync({ cwd: root }),
     ];
     expect(evidence).toHaveLength(1);
+    expect([
+      ...new Bun.Glob(".artifacts/deployment/*/compose-build.log").scanSync({ cwd: root }),
+    ]).toHaveLength(0);
     expect(readFileSync(join(root, evidence[0]!), "utf8")).not.toContain("operator-secret");
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -95,6 +101,7 @@ esac
       { mode: 0o700 },
     );
     vi.stubEnv("PATH", `${root}:${process.env.PATH}`);
+    vi.stubEnv("GITHUB_ACTIONS", undefined);
     vi.stubEnv("RAYPX_SMOKE_COMMANDS", log);
     await expect(smokeDeployment(root, [])).rejects.toThrow(/account-fixture failed \(9\)/);
     const commands = readFileSync(log, "utf8");
@@ -109,6 +116,9 @@ esac
     const evidence = [
       ...new Bun.Glob(".artifacts/deployment/*/commands.json").scanSync({ cwd: root }),
     ];
+    expect([
+      ...new Bun.Glob(".artifacts/deployment/*/compose-build.log").scanSync({ cwd: root }),
+    ]).toHaveLength(1);
     const results = JSON.parse(readFileSync(join(root, evidence[0]!), "utf8"));
     expect(results).toContainEqual(expect.objectContaining({ label: "fixture-bundle", code: 0 }));
     expect(results).toContainEqual(expect.objectContaining({ label: "account-fixture", code: 9 }));

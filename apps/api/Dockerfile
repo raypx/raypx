@@ -38,8 +38,8 @@ ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
 ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
-# Docker layers own caching; --no-cache makes Turbo ignore and skip its own cache.
-RUN bun run build:api --no-cache
+# Build this workspace directly in the Git-free context. Docker owns caching.
+RUN bun run --cwd apps/api check && bun run --cwd apps/api build
 
 FROM oven/bun:1.4.4-slim AS runtime
 ENV NODE_ENV=production NITRO_PORT=3002 HOST=0.0.0.0

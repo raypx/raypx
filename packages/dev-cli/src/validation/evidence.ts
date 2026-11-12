@@ -9,6 +9,8 @@ export interface ValidationProcess {
   stop: () => Promise<void>;
 }
 
+type CommandOutput = "log" | "inherit";
+
 function validLabel(label: string) {
   return label.length > 0 && label.length <= 128 && !/[^\w-]/.test(label);
 }
@@ -30,10 +32,17 @@ export class Evidence {
   check() {
     if (this.interrupted) throw new Error("Validation interrupted");
   }
-  start(label: string, args: string[], env = process.env, cwd = this.root): ValidationProcess {
+  start(
+    label: string,
+    args: string[],
+    env = process.env,
+    cwd = this.root,
+    output: CommandOutput = "log",
+  ): ValidationProcess {
     this.check();
     if (!validLabel(label) || !args[0]) throw new Error("Invalid validation command");
-    const fd = openSync(join(this.directory, `${label}.log`), "w", 0o600);
+    const fd =
+      output === "log" ? openSync(join(this.directory, `${label}.log`), "w", 0o600) : undefined;
     const started = performance.now();
     const child = (() => {
       try {
@@ -41,10 +50,10 @@ export class Evidence {
           cwd,
           env,
           detached: process.platform !== "win32",
-          stdio: ["ignore", fd, fd],
+          stdio: ["ignore", fd ?? "inherit", fd ?? "inherit"],
         });
       } finally {
-        closeSync(fd);
+        if (fd !== undefined) closeSync(fd);
       }
     })();
     let active = true;
@@ -99,15 +108,17 @@ export class Evidence {
       console.log(`${label}: ${code === 0 ? "passed" : "failed"} (${Math.round(durationMs)} ms)`);
     }
   }
-  async command(label: string, args: string[], env = process.env) {
+  async command(label: string, args: string[], env = process.env, output: CommandOutput = "log") {
     const started = performance.now();
-    const code = await this.start(label, args, env).exited;
+    const code = await this.start(label, args, env, this.root, output).exited;
     this.check();
     console.log(
       `${label}: ${code === 0 ? "passed" : "failed"} (${Math.round(performance.now() - started)} ms)`,
     );
-    if (code)
-      throw new Error(`${label} failed (${code}); see ${join(this.directory, `${label}.log`)}`);
+    if (code) {
+      const log = output === "log" ? join(this.directory, `${label}.log`) : "CI job log";
+      throw new Error(`${label} failed (${code}); see ${log}`);
+    }
   }
   async stopAll() {
     const results = await Promise.allSettled(this.children.map((child) => child.stop()));
