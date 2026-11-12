@@ -254,7 +254,7 @@ it("registers every CI dependency and passes the authoritative plan to each sour
     env?: Record<string, string>;
     outputs?: Record<string, string>;
     strategy?: { "fail-fast": boolean; matrix: { phase: string } };
-    steps?: { run?: string; uses?: string; with?: Record<string, string> }[];
+    steps?: { run?: string; uses?: string; with?: Record<string, string | number> }[];
   };
   const workflow = Bun.YAML.parse(
     readFileSync(resolve(import.meta.dirname, "../../../../.github/workflows/ci.yml"), "utf8"),
@@ -265,6 +265,14 @@ it("registers every CI dependency and passes the authoritative plan to each sour
   expect(Object.keys(workflow.jobs).sort()).toEqual(
     ["changes", "foundation", ...gateDefinitions.map(({ name }) => name)].sort(),
   );
+  const checkout = (job: string) =>
+    workflow.jobs[job]!.steps?.find((step) => step.uses?.startsWith("actions/checkout@"));
+  expect(checkout("changes")).toMatchObject({ with: { "fetch-depth": 0 } });
+  for (const name of ["source", "backend", "browser"]) {
+    const step = checkout(name);
+    expect(step).toBeDefined();
+    expect(step?.with?.["fetch-depth"]).toBeUndefined();
+  }
   for (const name of ["backend", "browser"]) {
     expect(workflow.jobs[name]!.env?.RAYPX_CI_PLAN).toBe("${{ needs.changes.outputs.plan }}");
     expect(

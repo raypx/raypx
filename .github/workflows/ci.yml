@@ -71,8 +71,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/setup-bun
       - uses: actions/setup-go@v6
         if: matrix.phase == 'checks' && needs.changes.outputs.go == 'true'
@@ -121,8 +119,6 @@ jobs:
       TEST_REDIS_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/setup-bun
       - run: bun run raypx-dev ci:gate backend
   browser:
@@ -135,8 +131,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
         id: vp-cache
