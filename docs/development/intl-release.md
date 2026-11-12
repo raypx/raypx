@@ -13,11 +13,11 @@ Link the Raypx Kit package being changed. This replaces only `node_modules`; the
 manifest and lockfile stay untouched.
 
 ```sh
-cd ../raypx-kit/packages/intl
+cd ../raypx-kit/packages/email-preview
 bun run build        # or keep `bun run dev` running
 bun link
 cd ../../../raypx
-bun link @raypx-kit/intl
+bun link @raypx-kit/email-preview
 ```
 
 The link points at the Raypx Kit checkout, which has its own React. Every Vite and
@@ -78,9 +78,8 @@ Never merge with a snapshot version, a range, a `link:` or a tarball path.
 Breaking Raypx Kit changes are acceptable during this stage; Raypx adopts them in
 the same branch rather than through compatibility layers.
 
-`@raypx-kit/intl` bundles `use-intl`, so Raypx never declares or imports it
-directly. A separate `use-intl` or `next-intl` install would create a second,
-unconnected IntlProvider context.
+The former `@raypx-kit/intl` dependency has moved into `@raypx/i18n`, which now owns
+the adapters and declares `use-intl` directly.
 
 Logging currently lives in Raypx's private `@raypx/logger` source workspace. API
 and CLI use `workspace:*` and keep evlog in the external runtime catalog. Logger

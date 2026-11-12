@@ -1,7 +1,7 @@
 # @raypx/i18n
 
 Raypx's common English/Chinese copy, locale policy and runtime adapters around
-`@raypx-kit/intl`, which bundles `use-intl`. Business packages own their catalogs;
+`use-intl`. Business packages own their catalogs;
 applications compose only the namespaces they use. There is no generated catalog,
 global message declaration or runtime namespace registration.
 

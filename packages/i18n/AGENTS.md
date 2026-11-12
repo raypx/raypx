@@ -1,7 +1,7 @@
 # @raypx/i18n
 
 Own common English/Chinese copy, locale policy, preferences and runtime adapters.
-Translation, formatting and React context come from the external `@raypx-kit/intl`.
+This workspace owns the translation and formatting adapters and uses `use-intl` directly.
 Never import business catalogs, UI or icons into this package.
 
 ## Interface

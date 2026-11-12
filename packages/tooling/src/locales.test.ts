@@ -161,7 +161,7 @@ describe("locale conventions", () => {
     writeFileSync(
       path,
       `import type en from "../en/auth.js";
-      import type { CatalogShape } from "@raypx-kit/intl/types";
+      import type { CatalogShape } from "@raypx/i18n/types";
       throw new Error("must not execute");
       export default { hello: "你好 {name}" } as const satisfies CatalogShape<typeof en>;`,
     );

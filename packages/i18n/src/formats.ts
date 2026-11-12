@@ -1,4 +1,4 @@
-import type { IntlRuntimeOptions } from "@raypx-kit/intl/types";
+import type { IntlRuntimeOptions } from "./intl/types.js";
 
 /** Product presets, merged over the Kit defaults. `timestamp` formats absolute times. */
 export const formats = {

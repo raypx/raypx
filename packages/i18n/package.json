@@ -22,7 +22,7 @@
     "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
-    "@raypx-kit/intl": "catalog:"
+    "use-intl": "catalog:"
   },
   "devDependencies": {
     "@raypx/tooling": "workspace:*",
@@ -49,6 +49,7 @@
     },
     "sourceTargets": {
       "src/browser.tsx": "browser",
+      "src/intl/browser.ts": "browser",
       "src/vite.ts": "node"
     },
     "entryConsumers": {

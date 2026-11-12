@@ -1,5 +1,5 @@
 import { useSyncExternalStore, type ReactNode } from "react";
-import { createBrowserLanguage, type BrowserLanguageProviderProps } from "@raypx-kit/intl/browser";
+import { createBrowserLanguage, type BrowserLanguageProviderProps } from "./intl/browser.js";
 import { createCatalogLanguageProvider } from "./catalog-provider.js";
 import { createCatalogStore, type CatalogSources } from "./catalog-store.js";
 import { DEFAULT_LOCALE } from "./constants.js";
@@ -9,7 +9,7 @@ import { createTranslations, IntlProvider, useLocale, useMessages } from "./reac
 import { localeRuntime } from "./runtime.js";
 import type { DynamicMessages, Locale, MessagesByLocale } from "./types.js";
 
-export { getBrowserSystemLocales } from "@raypx-kit/intl/browser";
+export { getBrowserSystemLocales } from "./intl/browser.js";
 export type { BrowserLanguageProviderProps, CatalogSources };
 
 /** Bind one application's catalogs once at module scope, outside React renders. */

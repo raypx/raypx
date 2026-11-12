@@ -5,4 +5,4 @@ export {
   translateKnownErrorCode,
   type ErrorCodeMap,
   type LocalizedErrorDetails,
-} from "@raypx-kit/intl";
+} from "./intl/errors.js";

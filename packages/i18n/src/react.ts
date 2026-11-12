@@ -1,4 +1,4 @@
-import { createIntlClient } from "@raypx-kit/intl/client";
+import { createIntlClient } from "./intl/client.js";
 import { intlDefaults } from "./formats.js";
 import { localeRuntime } from "./runtime.js";
 import type { DynamicMessages } from "./types.js";

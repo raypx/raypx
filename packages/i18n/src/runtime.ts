@@ -1,4 +1,4 @@
-import { createLocaleRuntime } from "@raypx-kit/intl";
+import { createLocaleRuntime } from "./intl/locale.js";
 
 import {
   DEFAULT_LOCALE,

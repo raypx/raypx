@@ -1,1 +1,1 @@
-export { parseAcceptLanguage } from "@raypx-kit/intl";
+export { parseAcceptLanguage } from "./intl/accept-language.js";

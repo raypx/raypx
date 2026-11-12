@@ -1,1 +1,5 @@
-export { createTranslator, type CreateTranslatorOptions, type Translator } from "@raypx-kit/intl";
+export {
+  createTranslator,
+  type CreateTranslatorOptions,
+  type Translator,
+} from "./intl/translator.js";

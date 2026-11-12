@@ -2,7 +2,7 @@ import type {
   CatalogShape,
   DynamicMessages,
   LocaleSource as IntlLocaleSource,
-} from "@raypx-kit/intl/types";
+} from "./intl/types.js";
 import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.js";
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -23,4 +23,4 @@ export type {
   CatalogShape,
   MessageKey,
   NamespaceOf,
-} from "@raypx-kit/intl/types";
+} from "./intl/types.js";

@@ -1,4 +1,4 @@
-import type { CatalogShape } from "@raypx-kit/intl/types";
+import type { CatalogShape } from "../../src/types.js";
 import type en from "../en/common.js";
 
 export default {

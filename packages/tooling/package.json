@@ -23,9 +23,9 @@
     "test:backends": "bun src/cli.ts test backends"
   },
   "dependencies": {
+    "@formatjs/icu-messageformat-parser": "catalog:dev",
     "@posthog/cli": "catalog:dev",
     "@raypx-kit/devkit": "catalog:dev",
-    "@raypx-kit/intl": "catalog:",
     "@raypx/runtime-node": "workspace:*",
     "oxc-parser": "catalog:dev"
   },

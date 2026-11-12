@@ -2,8 +2,7 @@
 
 Business packages own their catalogs; applications compose messages. `@raypx/i18n`
 owns only common copy, locale configuration, preference state and runtime adapters.
-`@raypx-kit/intl` is an independently published SDK bundling `use-intl`; Raypx
-has no direct dependency on use-intl, remote translation service or localized routing.
+`@raypx/i18n` maintains its runtime adapters in this repository and uses `use-intl` directly.
 
 ## Namespace ownership
 
