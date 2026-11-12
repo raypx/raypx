@@ -4,14 +4,28 @@ import type { RpcBoundary } from "./boundary.js";
 export function createConfigurationHandlers({
   os,
   configurationCall,
+  configurationFailure,
   requirePermission,
   options,
   allowedOrigins,
   access,
 }: Pick<
   RpcBoundary,
-  "os" | "configurationCall" | "requirePermission" | "options" | "allowedOrigins" | "access"
+  | "os"
+  | "configurationCall"
+  | "configurationFailure"
+  | "requirePermission"
+  | "options"
+  | "allowedOrigins"
+  | "access"
 >) {
+  function requireOrigin({ headers, requestId }: { headers: Headers; requestId: string }) {
+    const origin = headers.get("origin");
+    if (!origin || !allowedOrigins.includes(origin))
+      throw new ORPCError("FORBIDDEN", {
+        data: { error: { code: "ORIGIN_REJECTED" }, requestId },
+      });
+  }
   return {
     public: os.configuration.public.handler(({ context }) =>
       configurationCall(context, async (service) => {
@@ -37,13 +51,27 @@ export function createConfigurationHandlers({
     }),
     update: os.configuration.update.handler(async ({ context, input }) => {
       const auth = await requirePermission(context, "configuration.update", "configuration.update");
-      // Cookie-authenticated writes require an explicit trusted browser origin.
-      const origin = context.headers.get("origin");
-      if (!origin || !allowedOrigins.includes(origin))
-        throw new ORPCError("FORBIDDEN", {
-          data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
-        });
+      requireOrigin(context);
       return configurationCall(context, (service) => service.update(input, auth));
+    }),
+    storage: os.configuration.storage.handler(async ({ context }) => {
+      await requirePermission(context, "configuration.read");
+      if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
+      try {
+        return await options.storageSettings.read();
+      } catch (error) {
+        return configurationFailure(error, context);
+      }
+    }),
+    updateStorage: os.configuration.updateStorage.handler(async ({ context, input }) => {
+      await requirePermission(context, "configuration.update", "configuration.updateStorage");
+      requireOrigin(context);
+      if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
+      try {
+        return await options.storageSettings.update(input);
+      } catch (error) {
+        return configurationFailure(error, context);
+      }
     }),
   };
 }

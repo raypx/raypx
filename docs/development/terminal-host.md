@@ -126,9 +126,10 @@ remote waiting followed by terminal fallback.
 Clients and hosts require the current host authorization API. Protocol downgrade,
 browser-grant fallback and automatic data import are unsupported.
 
-Relay v4 adds observed session/request batches and ACKs after database commit;
-only protocol 4 is supported. Other versions fail with UPGRADE_REQUIRED. Observed requests are separate from
-ManagedTask and keep invocation ID, request ID, revision, host epoch, expiry and
+The relay synchronizes observed session and request batches and acknowledges them
+after database commit. It requires protocol version 5 and rejects other versions
+with `UPGRADE_REQUIRED`. Observed requests are separate from ManagedTask and
+keep invocation ID, request ID, revision, host epoch, expiry and
 immutable decision receipt. The host is the approval authority. Duplicate answers
 with the same receipt return its original result; changing the answer, revision,
 epoch or receipt cannot apply a second decision.

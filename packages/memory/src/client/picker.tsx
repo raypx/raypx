@@ -21,6 +21,7 @@ interface Props {
   value: TaskContextSelection;
   onChange: (selection: TaskContextSelection) => void;
   disabled?: boolean;
+  maxSources?: number;
 }
 export function ContextPicker(props: Props) {
   return (
@@ -30,7 +31,7 @@ export function ContextPicker(props: Props) {
     />
   );
 }
-function Picker({ client, target, value, onChange, disabled }: Props) {
+function Picker({ client, target, value, onChange, disabled, maxSources = 8 }: Props) {
   const id = useId();
   const t = useTranslations("memory"),
     c = useTranslations("common");
@@ -124,7 +125,7 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
         <ChevronDownIcon aria-hidden="true" className="group-data-panel-open:rotate-180" />
         {t("title")}
         <Badge variant="secondary" className="tabular-nums">
-          ({value.sources.length}/8)
+          ({value.sources.length}/{maxSources})
         </Badge>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-3">
@@ -172,7 +173,7 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
                   <Checkbox
                     id={`${id}-${document.id}`}
                     checked={selected}
-                    disabled={disabled || (!selected && value.sources.length >= 8)}
+                    disabled={disabled || (!selected && value.sources.length >= maxSources)}
                     onCheckedChange={(checked) =>
                       onChange({
                         sources: checked

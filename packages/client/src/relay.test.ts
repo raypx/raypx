@@ -40,7 +40,7 @@ it("rejects an older server without downgrading and reconnects after an explicit
         );
       if (frame.type === "auth") {
         versions.push(frame.protocolVersion);
-        if (olderServer && frame.protocolVersion === 4) this.close(4006);
+        if (olderServer && frame.protocolVersion === 5) this.close(4006);
         else reply({ type: "ready", role: "viewer", protocolVersion: frame.protocolVersion });
       }
       if (frame.type === "request")
@@ -69,18 +69,18 @@ it("rejects an older server without downgrading and reconnects after an explicit
     release = client.subscribe(() => {});
     // Drive the complete retry windows without racing the polling deadline.
     await vi.advanceTimersByTimeAsync(500);
-    expect(versions).toEqual([4]);
+    expect(versions).toEqual([5]);
     await expect(client.tasks.cancel({ id: task.id })).rejects.toMatchObject({
       data: { error: { code: "UPGRADE_REQUIRED" } },
     });
     await vi.advanceTimersByTimeAsync(30_000);
-    expect(versions).toEqual([4]);
+    expect(versions).toEqual([5]);
     expect(observedReads).toBe(0);
     olderServer = false;
     client.setAccount(null);
     client.setAccount("account");
     await vi.advanceTimersByTimeAsync(0);
-    expect(versions).toEqual([4, 4]);
+    expect(versions).toEqual([5, 5]);
     expect(await client.tasks.cancel({ id: task.id })).toMatchObject({
       id: task.id,
       status: "cancelled",
@@ -132,7 +132,7 @@ it("supports context on every current-protocol connection without capability neg
         reply({
           type: "ready",
           role: "viewer",
-          protocolVersion: 4,
+          protocolVersion: 5,
         });
       if (frame.type === "request") {
         sent.push(frame);

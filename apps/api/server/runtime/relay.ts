@@ -9,6 +9,7 @@ import { createContextRepository } from "@raypx/memory/server/postgres";
 import type { RelayEnvironment } from "../env.js";
 import { checkReadiness } from "../app/readiness.js";
 import { createClientIpReader } from "../app/client-ip.js";
+import { withSessionAttachments } from "../storage/attachments.js";
 
 /** The relay role owns no Auth, cookies, mail, signer, migrations or scheduled jobs. */
 export async function createRelayRuntime(environment: RelayEnvironment) {
@@ -23,7 +24,9 @@ export async function createRelayRuntime(environment: RelayEnvironment) {
   const control = new ControlService(
     repository,
     Date.now,
-    (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
+    withSessionAttachments(connection.db, (owner, selection, target, prompt) =>
+      memory.resolve(owner, selection, target, prompt),
+    ),
     projects,
   );
   const hub = new RelayHub(async (use) => use(control));

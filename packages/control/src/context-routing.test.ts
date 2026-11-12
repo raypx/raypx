@@ -139,14 +139,14 @@ it("reclaims an accepted command snapshot and recovers the task without another 
   try {
     await hub.receive(
       host,
-      JSON.stringify({ type: "auth", protocolVersion: 4, role: "device", token: f.grant.token }),
+      JSON.stringify({ type: "auth", protocolVersion: 5, role: "device", token: f.grant.token }),
     );
     await hub.receive(host, JSON.stringify(f.announce));
     await hub.receive(host, JSON.stringify({ type: "available" }));
     const ticket = await control.credentials.ticket(f.auth);
     await hub.receive(
       viewer,
-      JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: ticket.token }),
+      JSON.stringify({ type: "auth", protocolVersion: 5, role: "viewer", token: ticket.token }),
     );
     const input = {
       ...f.input,
@@ -261,14 +261,14 @@ it("forwards context to every current-protocol host", async () => {
   try {
     await hub.receive(
       deviceId,
-      JSON.stringify({ type: "auth", protocolVersion: 4, role: "device", token: f.grant.token }),
+      JSON.stringify({ type: "auth", protocolVersion: 5, role: "device", token: f.grant.token }),
     );
     await hub.receive(deviceId, JSON.stringify(f.announce));
     await hub.receive(deviceId, JSON.stringify({ type: "available" }));
     const ticket = await control.credentials.ticket(f.auth);
     await hub.receive(
       viewerId,
-      JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: ticket.token }),
+      JSON.stringify({ type: "auth", protocolVersion: 5, role: "viewer", token: ticket.token }),
     );
     const input = {
       ...f.input,

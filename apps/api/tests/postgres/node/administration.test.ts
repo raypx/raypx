@@ -2,7 +2,7 @@ import { cleanupExpired } from "../../../server/jobs/cleanup.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { adminAudit, user, systemConfiguration } from "@raypx/database/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults } from "@raypx/contracts/api";
@@ -25,7 +25,7 @@ const configuration = createConfigurationService({
   audit,
   access: createAccessPolicy(),
 });
-const auth = createAuth({
+const authOptions = {
   database: createAuditedAuthAdapter(db, audit),
   config: {
     baseURL: "http://localhost:3002",
@@ -34,7 +34,8 @@ const auth = createAuth({
     production: false,
   },
   mailer: { sendVerification: async () => {}, sendPasswordReset: async () => {} },
-});
+};
+const auth = createAuth(authOptions);
 const options = {
   readiness: {
     database: () => db.execute(sql`select 1`),
@@ -105,6 +106,7 @@ afterAll(async () => {
   await connection.close();
 });
 it("commits role and configuration changes with safe durable audit and records refusals", async () => {
+  expect((await post("admin/set-role", { userId: member, role: "admin" }, "")).status).toBe(403);
   expect(
     (await post("admin/set-role", { userId: administrator, role: "member" }, adminCookie)).status,
   ).toBe(403);
@@ -232,6 +234,69 @@ it("rolls back actual role writes if the success audit cannot commit", async () 
   } finally {
     await db.execute(sql`drop trigger audit_test_reject on raypx_foundation.admin_audit`);
     await db.execute(sql`drop function raypx_foundation.audit_test_reject()`);
+  }
+});
+it("rechecks administrator permission when concurrent role updates reach the database", async () => {
+  const initial = await db
+    .select({ id: user.id, role: user.role })
+    .from(user)
+    .where(inArray(user.id, accounts));
+  await db.update(user).set({ role: "admin" }).where(inArray(user.id, accounts));
+  const ready = Promise.withResolvers<void>();
+  let arrived = 0;
+  const concurrentAuth = createAuth({
+    ...authOptions,
+    database: (adapterOptions) => {
+      const adapter = authOptions.database(adapterOptions);
+      return {
+        ...adapter,
+        async update<T>(input: Parameters<typeof adapter.update>[0]) {
+          if (input.model === "user" && "role" in input.update) {
+            // Admit both requests before either one starts the audited role transaction.
+            if (++arrived === 2) ready.resolve();
+            await ready.promise;
+          }
+          return adapter.update<T>(input);
+        },
+      };
+    },
+  });
+  const concurrentApp = createApiApp({
+    ...options,
+    authHandler: (request) => concurrentAuth.handler(request),
+  });
+  const timeout = setTimeout(
+    () => ready.reject(new Error("Role updates did not both reach storage")),
+    5000,
+  );
+  try {
+    const responses = await Promise.all([
+      post("admin/set-role", { userId: member, role: "member" }, adminCookie, concurrentApp),
+      post(
+        "admin/set-role",
+        { userId: administrator, role: "member" },
+        memberCookie,
+        concurrentApp,
+      ),
+    ]);
+    expect(responses.map((response) => response.status).sort((a, b) => a - b)).toEqual([200, 403]);
+    const denied = responses.find((response) => response.status === 403)!;
+    expect(await denied.json()).toMatchObject({ code: "FORBIDDEN" });
+    const users = await db.select({ role: user.role }).from(user).where(inArray(user.id, accounts));
+    expect(users.map(({ role }) => role).sort()).toEqual(["admin", "member"]);
+    const entries = await db
+      .select({ outcome: adminAudit.outcome })
+      .from(adminAudit)
+      .where(
+        inArray(
+          adminAudit.requestId,
+          responses.map((response) => response.headers.get("x-request-id")!),
+        ),
+      );
+    expect(entries.map(({ outcome }) => outcome).sort()).toEqual(["rejected", "success"]);
+  } finally {
+    clearTimeout(timeout);
+    for (const { id, role } of initial) await db.update(user).set({ role }).where(eq(user.id, id));
   }
 });
 it("keeps history after account deletion and uses stable pagination without exposing secrets", async () => {

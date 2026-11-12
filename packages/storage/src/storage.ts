@@ -21,7 +21,7 @@ async function guarded<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-function headers(options: PutObjectOptions = {}) {
+export function objectHeaders(options: PutObjectOptions = {}) {
   const result: Record<string, string> = {};
   if (options.contentType) result["Content-Type"] = options.contentType;
   if (options.cacheControl) result["Cache-Control"] = options.cacheControl;
@@ -49,7 +49,9 @@ export function createObjectStorage({ driver, signer }: ObjectStorageOptions): O
   return {
     available: true,
     put: (key, body, options) =>
-      guarded(() => storage.setItemRaw(assertObjectKey(key), body, { headers: headers(options) })),
+      guarded(() =>
+        storage.setItemRaw(assertObjectKey(key), body, { headers: objectHeaders(options) }),
+      ),
     get: (key) => guarded(() => storage.getItem(assertObjectKey(key), { type: "bytes" })),
     getStream: (key) => guarded(() => storage.getItem(assertObjectKey(key), { type: "stream" })),
     has: (key) => guarded(() => storage.hasItem(assertObjectKey(key))),

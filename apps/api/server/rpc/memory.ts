@@ -1,5 +1,9 @@
 import type { RpcBoundary } from "./boundary.js";
-export function createMemoryHandlers({ os, memoryCall }: Pick<RpcBoundary, "os" | "memoryCall">) {
+export function createMemoryHandlers({
+  os,
+  memoryCall,
+  options,
+}: Pick<RpcBoundary, "os" | "memoryCall" | "options">) {
   return {
     list: os.memory.list.handler(({ context }) =>
       memoryCall(context, "memory.list", false, (service, owner) => service.list(owner)),
@@ -33,7 +37,9 @@ export function createMemoryHandlers({ os, memoryCall }: Pick<RpcBoundary, "os" 
     ),
     resolve: os.memory.resolve.handler(({ context, input }) =>
       memoryCall(context, "memory.resolve", false, (service, owner) =>
-        service.resolve(owner, input.selection, input.target, input.prompt ?? " "),
+        options.resolveContext
+          ? options.resolveContext(owner, input.selection, input.target, input.prompt ?? " ")
+          : service.resolve(owner, input.selection, input.target, input.prompt ?? " "),
       ),
     ),
   };

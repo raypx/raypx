@@ -1,5 +1,5 @@
 import { BrowserLanguageProvider } from "../i18n.js";
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import {
   ClientOnly,
   HeadContent,
@@ -31,6 +31,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "icon", href: "/favicon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/pwa/apple-touch-icon.png" },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -39,6 +41,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootDocument({ children }: { children: ReactNode }) {
   const preferences = Route.useLoaderData();
+  useEffect(() => {
+    if (import.meta.env.PROD && "serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => {});
+    }
+  }, []);
   return (
     <html
       lang={resolveLocalePreference(preferences.locale, preferences.systemLocales)}

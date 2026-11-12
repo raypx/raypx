@@ -59,7 +59,7 @@ export async function relayFixture(clustered = false) {
     await viewerHub.attachCluster(cluster("viewer"));
   }
   const device = peer(deviceHub);
-  await device.receive({ type: "auth", protocolVersion: 4, role: "device", token: grant.token });
+  await device.receive({ type: "auth", protocolVersion: 5, role: "device", token: grant.token });
   await device.receive(f.announce);
   await device.receive({ type: "available" });
   return {
@@ -76,7 +76,7 @@ export async function relayFixture(clustered = false) {
         viewer = peer(viewerHub);
       await viewer.receive({
         type: "auth",
-        protocolVersion: 4,
+        protocolVersion: 5,
         role: "viewer",
         token: ticket.token,
       });

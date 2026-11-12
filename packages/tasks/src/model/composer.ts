@@ -14,6 +14,7 @@ import {
 } from "./composition.js";
 import {
   createTaskDraft,
+  hasSessionDraftContent,
   MAX_TASK_DRAFTS,
   sameDraft,
   type DraftInput,
@@ -273,6 +274,7 @@ export function composerView(
     drafts.find((entry) => entry.id === state.draftId) ??
     drafts.find((entry) => sameDraft(entry, draft));
   const prompted = Boolean(state.prompt.trim());
+  const draftable = hasSessionDraftContent(draft);
   const occupied = projectOccupied(tasks, state.deviceId, state.projectId);
   const available = canCreateTask(selection, state.mode, state.model, state.modelReady);
   const budgetReady =
@@ -284,7 +286,8 @@ export function composerView(
     /** Saving or sending updates this stored draft instead of adding another. */
     draftId: state.draftId ?? saved?.id ?? null,
     prompted,
-    dirty: prompted && (!saved || !sameDraft(saved, draft)),
+    draftable,
+    dirty: draftable && (!saved || !sameDraft(saved, draft)),
     occupied,
     available,
     budgetReady,

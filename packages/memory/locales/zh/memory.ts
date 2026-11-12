@@ -28,6 +28,7 @@ export default {
   edit: "编辑参考资料",
   memory: "项目记忆",
   template: "会话模板",
+  attachment: "附件",
   kind: "资料类型",
   all: "全部类型",
   category: "分类",

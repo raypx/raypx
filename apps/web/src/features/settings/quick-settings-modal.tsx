@@ -1,4 +1,5 @@
 import { useTranslations } from "../../i18n.js";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,13 +7,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@raypx/ui/components/ui/dialog";
-import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
+import { AppearanceSettings, LanguageSettings, SettingsSection } from "@raypx/blocks/settings";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 
 import { Button } from "@raypx/ui/components/ui/button";
+import { DevicesIcon } from "@raypx/icons/devices";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { Link } from "@tanstack/react-router";
 import { useQuickSettingsStore } from "./quick-settings-store.js";
+
+type InstallPromptEvent = Event & { prompt(): Promise<unknown> };
 
 /**
  * Quick settings modal for common preferences (appearance, language, analytics).
@@ -22,7 +26,41 @@ import { useQuickSettingsStore } from "./quick-settings-store.js";
 export function QuickSettingsModal() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
+  const pwa = useTranslations("guest");
   const { open, closeModal } = useQuickSettingsStore();
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [installing, setInstalling] = useState(false);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    function onInstallPrompt(event: Event) {
+      setInstallPrompt(event as InstallPromptEvent);
+    }
+    function onInstalled() {
+      setInstalled(true);
+      setInstallPrompt(null);
+    }
+    if (window.matchMedia("(display-mode: standalone)").matches) onInstalled();
+    window.addEventListener("beforeinstallprompt", onInstallPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onInstallPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  async function install() {
+    if (!installPrompt || installing) return;
+    setInstalling(true);
+    try {
+      await installPrompt.prompt();
+    } catch {
+      // The browser menu remains available if this prompt expires or fails.
+    } finally {
+      setInstallPrompt((current) => (current === installPrompt ? null : current));
+      setInstalling(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
@@ -40,6 +78,19 @@ export function QuickSettingsModal() {
         <div className="@container/settings flex min-w-0 flex-col px-5 pb-5">
           <AppearanceSettings />
           <LanguageSettings />
+          <SettingsSection title={pwa("webApp")} icon={DevicesIcon}>
+            <div aria-live="polite">
+              {installPrompt && !installed ? (
+                <Button variant="outline" disabled={installing} onClick={() => void install()}>
+                  {installing ? pwa("installInProgress") : pwa("installApp")}
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground @min-xl/settings:text-end">
+                  {installed ? pwa("appInstalled") : pwa("installFromMenu")}
+                </p>
+              )}
+            </div>
+          </SettingsSection>
           <AnalyticsSettings />
 
           <Button

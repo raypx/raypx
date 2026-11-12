@@ -6,17 +6,21 @@
 
 web
 
+The Desktop renderer uses the web UI stack. Desktop and CLI are the primary surfaces for local Pi sessions. Browser Web provides optional remote access for supported workflows, including from phones.
+
 ## Users
 
-Individual developers who work across authorized local projects, Agent sessions, project references, automations and terminals. Desktop is their complete workspace; Web provides optional remote access, including from phone browsers. Each local profile has one Owner and one execution Host. A first sign-in binds the local instance to one account and server origin. Registered instances continue offline without an active account session.
+Individual developers who use an agent to inspect and change projects on their own computer. Each local profile has one Owner and one execution Host. A first sign-in binds the local instance to one account and server origin. Registered instances continue offline without an active account session.
 
 ## Product Purpose
 
-Raypx is a project-centered personal development workbench. The primary flow is open a project, start or continue a session, answer requests, and inspect the result. A project represents one authorized directory on one computer. Desktop restores the most recent valid local project or guides the person through directory authorization, Agent detection and their first message. Opening a page or restoring a draft never starts execution. Web opens authorized remote projects after login; account details have their own page.
+Raypx is a personal workbench for running Pi in local projects. The primary flow is to open an authorized project, choose a model, start or continue a Pi session, respond to approval requests, and inspect the result. A project represents one authorized directory on one computer. Desktop restores the most recent valid local project or guides the person through directory authorization, Agent detection and their first message. Opening a page or restoring a draft never starts execution. Web opens authorized remote projects after login; account details have their own page.
 
 ## Positioning
 
-Local work stays on the device unless that person explicitly opts a host in. Device-owned tasks and drafts are never uploaded automatically, including when remote access is enabled. The account registers the instance and separately connects computers and remote approvals. Registration uploads only device identity metadata and never transfers local work.
+Pi is the primary agent for new capabilities. Prioritize model setup, controlled project tools, review of project changes and durable session continuation on Desktop and CLI. Claude and Codex support local and opted-in remote workflows. See the [product roadmap](docs/roadmap.md) for delivery order.
+
+The device owns Pi execution and local history. Model requests go to the endpoint selected for the Run. Device-owned tasks and drafts are never uploaded to Raypx automatically, including when remote access is enabled. The account registers the instance and separately connects computers and remote approvals. Registration uploads only device identity metadata.
 
 ## Operating Context
 

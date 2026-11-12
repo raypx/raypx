@@ -17,6 +17,35 @@ export function registerTests() {
     await signedInAccount(page);
     const deviceId = crypto.randomUUID(),
       projectId = crypto.randomUUID();
+    const attachmentText = "Reconnect notes\n测试";
+    const attachment = { id: crypto.randomUUID(), revision: 1, attachment: "reconnect.md" };
+    const uploads: unknown[] = [];
+    await page.route("**/rpc/attachments/status", (route) =>
+      authResponse(route, { json: { enabled: true } }),
+    );
+    await page.route("**/rpc/attachments/upload", (route) => {
+      if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+      uploads.push(route.request().postDataJSON()?.json);
+      return authResponse(route, { json: attachment });
+    });
+    await page.route("**/rpc/memory/resolve", (route) =>
+      authResponse(route, {
+        json: {
+          capturedAt: new Date().toISOString(),
+          sources: [
+            {
+              id: attachment.id,
+              revision: attachment.revision,
+              name: attachment.attachment,
+              kind: "attachment",
+              scope: "account",
+              project: { deviceId, projectId },
+              content: attachmentText,
+            },
+          ],
+        },
+      }),
+    );
     const tasks: AgentTask[] = (["waiting", "running", "succeeded"] as const).map(
       (status, index) => ({
         id: crypto.randomUUID(),
@@ -111,6 +140,25 @@ export function registerTests() {
     const form = page.getByRole("form", { name: "New session", exact: true });
     const editor = form.getByRole("textbox", { name: "What should the agent do?", exact: true });
     await editor.fill("Investigate wake and reconnect behavior");
+    const chooser = page.waitForEvent("filechooser");
+    await form.getByRole("button", { name: "Attach text file", exact: true }).click();
+    await (
+      await chooser
+    ).setFiles({
+      name: attachment.attachment,
+      mimeType: "text/markdown",
+      buffer: Buffer.from(attachmentText),
+    });
+    const attachments = form.getByRole("list", { name: "Attachments", exact: true });
+    await expect(attachments.getByText(attachment.attachment, { exact: true })).toBeVisible();
+    expect(uploads).toEqual([
+      {
+        deviceId,
+        projectId,
+        name: attachment.attachment,
+        data: Buffer.from(attachmentText).toString("base64"),
+      },
+    ]);
     await selectOption(page, form.getByRole("combobox", { name: "Agent", exact: true }), "codex");
     await form.getByRole("button", { name: "Save draft", exact: true }).click();
     await page.reload();
@@ -118,10 +166,13 @@ export function registerTests() {
     await drafts.getByRole("button", { name: "Drafts", exact: true }).click();
     await drafts.getByRole("button", { name: /^Investigate wake and reconnect behavior/ }).click();
     await expect(editor).toHaveValue("Investigate wake and reconnect behavior");
+    await expect(attachments.getByText(attachment.attachment, { exact: true })).toBeVisible();
+    expect(uploads).toHaveLength(1);
     await expect(page.getByRole("heading", { name: "Raypx", exact: true })).toBeVisible();
     await expect(form.getByRole("combobox", { name: "Project", exact: true })).toHaveCount(0);
     await form.getByRole("button", { name: "New draft", exact: true }).click();
     await expect(editor).toHaveValue("");
+    await expect(attachments).toHaveCount(0);
     await form.getByRole("button", { name: /^Session options/ }).click();
     await page.getByRole("main").evaluate((element) => element.scrollTo(0, 0));
     await capture(page, {

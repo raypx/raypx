@@ -13,6 +13,7 @@ import { cn } from "@raypx/ui/lib/utils";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { EditIcon } from "@raypx/icons/edit";
 import { ComposerContextFields } from "./composer/context-fields.js";
+import { ComposerAttachments } from "./composer/attachments.js";
 import { ComposerDraftActions } from "./composer/draft-actions.js";
 import { ComposerDraftList } from "./composer/draft-list.js";
 import { ComposerTargetOptions } from "./composer/target-options.js";
@@ -37,6 +38,7 @@ function TaskComposerView(props: TaskComposerProps) {
   const fieldId = useId();
   const composer = useTaskComposer(props);
   const { state, view, edit, expanded } = composer;
+  const busy = state.busy || composer.uploading;
   return (
     <div data-task-composer className="flex flex-col gap-3">
       <Collapsible
@@ -45,7 +47,7 @@ function TaskComposerView(props: TaskComposerProps) {
         className={cn(
           "overflow-hidden rounded-xl border border-border bg-background",
           // The page's New session action opens an empty editor; a collapsed draft stays visible.
-          !expanded && !view.prompted && props.onEditorOpenChange && "hidden",
+          !expanded && !view.draftable && props.onEditorOpenChange && "hidden",
         )}
       >
         <CollapsibleTrigger
@@ -88,12 +90,33 @@ function TaskComposerView(props: TaskComposerProps) {
                     maxLength={32000}
                     value={state.prompt}
                     placeholder={t("promptPlaceholder")}
-                    disabled={state.busy}
+                    disabled={busy}
                     onChange={(event) => edit({ type: "prompt", prompt: event.target.value })}
                     onKeyDown={submitShortcut}
                   />
                 </InputGroup>
               </Field>
+              {client.attachments && composer.contextTarget && (
+                <ComposerAttachments
+                  client={client.attachments}
+                  scope={props.draftKey}
+                  selection={state.contextSelection}
+                  busy={busy}
+                  uploading={composer.uploading}
+                  error={composer.uploadError}
+                  onAdd={(file) => void composer.addAttachment(file)}
+                  onRemove={(id) =>
+                    edit({
+                      type: "context",
+                      selection: {
+                        sources:
+                          state.contextSelection?.sources.filter((source) => source.id !== id) ??
+                          [],
+                      },
+                    })
+                  }
+                />
+              )}
               <ComposerTargetOptions
                 open={props.optionsOpen}
                 onOpenChange={props.onOptionsOpenChange}
@@ -102,7 +125,7 @@ function TaskComposerView(props: TaskComposerProps) {
                 value={state}
                 local={local}
                 guest={Boolean(guest)}
-                busy={state.busy}
+                busy={busy}
                 targetFixed={Boolean(fixedProjectId)}
                 onChange={edit}
               />
@@ -111,7 +134,7 @@ function TaskComposerView(props: TaskComposerProps) {
                   compact
                   client={client.models}
                   value={state.model}
-                  disabled={state.busy}
+                  disabled={busy}
                   onReady={composer.modelReady}
                   onChange={(model) => edit({ type: "model", model })}
                 />
@@ -119,7 +142,7 @@ function TaskComposerView(props: TaskComposerProps) {
               {composer.context && (
                 <ComposerContextFields
                   context={composer.context}
-                  busy={state.busy}
+                  busy={busy}
                   targetFixed={Boolean(fixedProjectId)}
                   onSelect={(selection) => edit({ type: "context", selection })}
                   onBudget={composer.budget}
@@ -140,10 +163,10 @@ function TaskComposerView(props: TaskComposerProps) {
                 </p>
               )}
               <ComposerDraftActions
-                busy={state.busy}
-                empty={!state.prompt && !state.draftId}
-                prompted={view.prompted}
-                sendable={view.sendable}
+                busy={busy}
+                empty={!view.draftable && !state.draftId}
+                prompted={view.draftable}
+                sendable={view.sendable && !composer.uploading}
                 guest={Boolean(guest)}
                 draftsReady={composer.draftsReady}
                 status={state.draftStatus}
@@ -159,7 +182,7 @@ function TaskComposerView(props: TaskComposerProps) {
         drafts={composer.drafts}
         devices={devices}
         activeId={state.draftId}
-        busy={state.busy}
+        busy={busy}
         onOpen={(draft) => void composer.openDraft(draft)}
         onDelete={composer.deleteDraft}
       />

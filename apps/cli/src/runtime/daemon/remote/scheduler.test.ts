@@ -65,7 +65,7 @@ async function fixture(options: Pick<RemoteControlOptions, "syncObserved" | "obs
   }
   async function ready(snapshot = false, socket = sockets.at(-1)!) {
     await authenticate(socket);
-    socket.receive({ type: "ready", role: "device", protocolVersion: 4 });
+    socket.receive({ type: "ready", role: "device", protocolVersion: 5 });
     await socket.sent((frame) => frame.type === "announce");
     socket.receive({ type: "resume", streamId, sequence: 0, snapshot });
     if (!snapshot) await socket.sent((frame) => frame.type === "available");

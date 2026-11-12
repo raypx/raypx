@@ -8,9 +8,11 @@ import { Switch } from "@raypx/ui/components/ui/switch";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
 import { PageHeader } from "@raypx/ui/page-header";
 import { authClient } from "../../auth/client.js";
 import { configurationClient, configurationError, type Configuration } from "../client.js";
+import { StorageSettings } from "./storage.js";
 
 const row =
   "grid items-start gap-4 border-b border-border py-5 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] @xl/main:items-center @xl/main:gap-x-8";
@@ -20,6 +22,7 @@ export function ConfigurationSettings() {
   const t = useTranslations("site");
   const session = authClient.useSession();
   const accountId = session.data?.user.id ?? null;
+  const [tab, setTab] = useState("site");
   const query = useQuery({
     queryKey: ["configuration", "admin", accountId],
     queryFn: ({ signal }) => configurationClient.get({}, { signal }),
@@ -88,7 +91,22 @@ export function ConfigurationSettings() {
   return (
     <section className="flex min-w-0 flex-col gap-6">
       <PageHeader title={t("title")} description={t("intro")} />
-      {content()}
+      {accountId && !session.error ? (
+        <Tabs value={tab} onValueChange={(value) => setTab(String(value))} className="gap-5">
+          <TabsList aria-label={t("title")}>
+            <TabsTrigger value="site">{t("siteTab")}</TabsTrigger>
+            <TabsTrigger value="storage">{t("storage.title")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="site" keepMounted>
+            {content()}
+          </TabsContent>
+          <TabsContent value="storage" keepMounted>
+            <StorageSettings key={accountId} accountId={accountId} active={tab === "storage"} />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        content()
+      )}
     </section>
   );
 }

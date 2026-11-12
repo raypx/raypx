@@ -21,7 +21,7 @@ vi.mock("./auth/client.js", () => ({
 }));
 vi.mock("./configuration/client.js", async (original) => ({
   ...(await original<typeof import("./configuration/client.js")>()),
-  configurationClient: { get: vi.fn(), update: vi.fn() },
+  configurationClient: { get: vi.fn(), update: vi.fn(), storage: vi.fn(), updateStorage: vi.fn() },
 }));
 const config: Configuration = {
   values: { siteName: "Raypx", registrationEnabled: true, cleanupEnabled: true },
@@ -127,4 +127,43 @@ it("reports session lookup failure as unavailability rather than a permission de
   expect(screen.queryByLabelText("Site name")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   expect(auth.refetch).toHaveBeenCalledOnce();
+});
+
+it("keeps site edits while rotating write-only storage credentials", async () => {
+  vi.spyOn(configurationClient, "get").mockResolvedValue(config);
+  const storage = {
+    values: {
+      endpoint: "https://s3.us-east-1.amazonaws.com",
+      bucket: "raypx-private",
+      region: "us-east-1",
+      enabled: true,
+    },
+    revision: 2,
+    updatedAt: null,
+  };
+  const read = vi.spyOn(configurationClient, "storage").mockResolvedValue(storage);
+  const save = vi.spyOn(configurationClient, "updateStorage").mockResolvedValue({
+    ...storage,
+    revision: 3,
+  });
+  page(<ConfigurationSettings />);
+  fireEvent.change(await screen.findByLabelText("Site name"), { target: { value: "My draft" } });
+  expect(read).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("tab", { name: "Object storage" }));
+  const accessKey = await screen.findByLabelText("Access key ID");
+  const secret = screen.getByLabelText("Secret access key");
+  expect(accessKey).toHaveValue("");
+  expect(secret).toHaveAttribute("type", "password");
+  fireEvent.change(accessKey, { target: { value: "rotated-id" } });
+  expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+  fireEvent.change(secret, { target: { value: "rotated-secret" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(secret).toHaveValue(""));
+  expect(save).toHaveBeenCalledExactlyOnceWith({
+    revision: 2,
+    values: storage.values,
+    credentials: { accessKeyId: "rotated-id", secretAccessKey: "rotated-secret" },
+  });
+  fireEvent.click(screen.getByRole("tab", { name: "Site" }));
+  expect(screen.getByLabelText("Site name")).toHaveValue("My draft");
 });

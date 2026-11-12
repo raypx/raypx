@@ -8,6 +8,7 @@ const values = z.strictObject({
   siteName: z.string().max(60).optional(),
   registrationEnabled: z.boolean().optional(),
   cleanupEnabled: z.boolean().optional(),
+  storageEnabled: z.boolean().optional(),
 });
 export const auditEntrySchema = z.strictObject({
   id: z.uuid(),

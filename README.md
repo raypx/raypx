@@ -1,9 +1,10 @@
 # Raypx
 
-A project-centered personal development workbench. MyGo Desktop and the standalone
-CLI execute on your computer; Web provides optional remote access. Projects, Agent
-sessions, approvals, files, automations and terminals share explicit device ownership.
-The [current architecture](docs/architecture/README.md) defines the implementation.
+A personal workbench for running Pi in local projects. Use Desktop or the standalone
+CLI to choose a model, work in an authorized directory, approve tools and continue
+sessions on your computer. Web provides optional remote access for supported
+workflows. See [Pi setup](docs/development/ai.md#managed-pi-tasks) and the
+[product roadmap](docs/roadmap.md).
 
 ## Requirements
 

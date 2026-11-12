@@ -1,11 +1,10 @@
-# Remaining Agent platform work
+# Pi product roadmap
 
-This is the remaining product direction, not a shipped-feature list or a dated
-acceptance report. [Product scope](../PRODUCT.md) and the
-[current architecture](architecture/README.md) describe the implementation;
-[ADR 0039](architecture/0039-local-server-agent-platform.md) records the longer-term
-ownership model. Release evidence belongs to the exact candidate and platform,
-using the [testing gates](development/testing.md).
+Pi is the priority for new Agent capabilities. Build the daily local workflow on
+Desktop and CLI first. [Product scope](../PRODUCT.md) and the
+[current architecture](architecture/README.md) describe the available features.
+Release evidence follows the [testing gates](development/testing.md) for each
+candidate and platform.
 
 ## Current foundation
 
@@ -16,14 +15,41 @@ and device-local Pi use the private CLI harness; `AgentTask` remains the persist
 Run record. Remote opt-in exposes scoped device work through Relay and API read
 projections; it does not transfer Agent ownership to the server.
 
-The following work extends these boundaries. It does not require rewriting the
-CLI/daemon, adding a second execution engine or introducing a separate Run store.
+Pi already supports model selection, Plan and Run modes, approved project tools
+and continuation from saved context. See [managed Pi tasks](development/ai.md#managed-pi-tasks).
 
-## Next increment: local Agent automations
+## Next increment: review changes from a local Pi Run
+
+Deliver a complete project session on Desktop and CLI. A developer configures a
+model, inspects an authorized project in Plan, approves a change in Run, reviews
+the resulting project diff and continues from saved context. Start with a read-only
+diff. Distinguish changes already present before the Run from changes observed
+during it. Report unavailable diffs explicitly. Preserve the project's existing
+grants and keep model credentials on the execution device.
+
+Exercise the workflow with a synthetic project and a deterministic model fixture.
+Collect separate, opt-in live Pi acceptance for packaged Desktop and CLI on
+macOS and Windows. Verify model setup, a rejected action, an approved change and
+continuation after reconnecting to the daemon.
+
+## After review: Pi recovery and acceptance
+
+Extend failure injection around receipts, approvals, effect intents and
+projections. Test duplicate delivery, process loss during a pending decision,
+interrupted writes and reconnecting event cursors. Recover committed history.
+Keep uncertain external effects inspectable and block their automatic replay.
+
+Exercise long-running Pi work while Desktop is closed, reconnect to the same
+daemon, and verify explicit daemon stop drains owned work. Test history and memory
+backup and restore separately from process recovery. Follow the
+[Agent acceptance guide](development/agent-quality.md) and
+[Desktop release guide](development/desktop.md#build-and-release).
+
+## Then: local Pi automations
 
 Local Cron jobs currently run directory scans or process commands. Connect a
-scheduled Agent trigger to the same `AgentRuntime` used by interactive sessions.
-Reuse project grants, provider approvals, frozen context and the existing journal.
+scheduled Pi trigger to the same `AgentRuntime` used by interactive sessions.
+Reuse project grants, tool approvals, frozen context and the existing journal.
 
 Acceptance requires:
 
@@ -32,26 +58,9 @@ Acceptance requires:
 - Bounded catch-up, traceable attempts and safe cancellation.
 - Deterministic offline tests before separate live-provider acceptance.
 
-## Recovery and local acceptance
-
-Extend failure injection around the existing receipt, approval, effect-intent and
-projection transactions. Uncertain external effects must remain inspectable and
-must never replay automatically after restart. Test duplicate delivery, process
-loss during a pending decision, interrupted writes and reconnecting event cursors.
-
-Exercise long-running work while Desktop is closed, reconnect to the same daemon,
-and verify explicit daemon stop drains owned processes. Test history and memory
-backup/restore separately from process recovery. A granted project is a directory
-on the user's computer with normal OS permissions; it is not a container sandbox.
-
-Expand the same acceptance scenarios on macOS and Windows. Source checks and
-synthetic providers do not establish live-provider, installed GUI, signing,
-notarization, upgrade or updater acceptance. Follow the
-[Agent acceptance guide](development/agent-quality.md) and
-[Desktop release guide](development/desktop.md#build-and-release).
-
 ## Later: explicit server ownership
 
+The longer-term ownership model is in [ADR 0039](architecture/0039-local-server-agent-platform.md).
 After the local workflow is proven, support reviewed export/import into one
 headless instance of the same CLI runtime with a persistent SQLite profile.
 Preview portable configuration, memory and history; exclude secrets and project
@@ -67,12 +76,15 @@ execution. These are future capabilities, separate from current remote access.
 
 ## Later: clients and extensibility
 
-- Extend Web/Desktop parity to supported local and server instances; Mobile is
-  currently an account/login baseline, not a complete task workbench.
+- Consider remote Pi access after the local workflow is proven. Require scoped
+  Host grants and explicit authorization for remote execution and approvals.
+- Extend client parity as supported workflows need it. Mobile currently provides
+  the account and login baseline.
 - Add MCP/connectors when actual consumers establish a shared tool boundary.
 - Import Agent configuration only with preview, explicit selection and executable
   content disabled by default.
-- Add providers through adapter conformance tests without broadening grants.
+- Maintain the existing Claude and Codex integrations. Revisit additional providers
+  when a concrete workflow needs one.
 
 Defer Agent teams, a public plugin marketplace, horizontal workers, multi-tenant
 Agent storage, object-storage snapshots and container/VM execution until concrete

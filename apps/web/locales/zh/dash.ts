@@ -28,7 +28,7 @@ export default {
   actor: "操作人 ID",
   target: "操作对象 ID",
   roleUpdate: "修改用户角色",
-  configurationUpdate: "修改站点设置",
+  configurationUpdate: "修改配置",
   success: "已生效",
   rejected: "已拒绝",
   failed: "执行失败",

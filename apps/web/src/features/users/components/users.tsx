@@ -2,7 +2,7 @@ import { useTranslations } from "../../../i18n.js";
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { AuthRole } from "@raypx/auth/access";
+import { assignedRoles, type AuthRole } from "@raypx/auth/access";
 import { hasPermission } from "@raypx/account/access";
 import { Button } from "@raypx/ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
@@ -28,6 +28,7 @@ import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { accountAccessQuery } from "../../auth/access.js";
 import { authClient, apiUrl } from "../../auth/client.js";
 import { UserTable, type UserRoleSelection, type UserSortDirection } from "./user-table.js";
+import { RolePermissions } from "./role-permissions.js";
 
 const pageSize = 20;
 type SearchField = "email" | "name";
@@ -41,23 +42,34 @@ export function Users({ accountId }: { accountId: string }) {
   const [search, setSearch] = useState({ field: "email" as SearchField, value: "" });
   const [offset, setOffset] = useState(0);
   const [sortDirection, setSortDirection] = useState<UserSortDirection>("desc");
-  const [selection, setSelection] = useState<UserRoleSelection | null>(null);
-  const [role, setRole] = useState<AuthRole>("member");
+  const [selection, setSelection] = useState<
+    (UserRoleSelection & { mode: "view" | "edit" }) | null
+  >(null);
+  const [role, setRole] = useState<AuthRole | null>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
   const [busy, setBusy] = useState(false);
   const fence = useRef(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<"forbidden" | "failed" | "refreshFailed" | null>(null);
-  const editRole = useCallback((selected: UserRoleSelection) => {
-    setSelection(selected);
-    setRole(selected.role);
-    setSaved(false);
-    setError(null);
-  }, []);
+  const openRole = useCallback(
+    (selected: UserRoleSelection, mode: "view" | "edit", trigger: HTMLElement) => {
+      returnFocus.current = trigger;
+      setSelection({ ...selected, mode });
+      setRole(null);
+      setSaved(false);
+      setError(null);
+    },
+    [],
+  );
+  const currentRoles = assignedRoles(selection?.role);
+  const currentRole = currentRoles.includes("admin") ? "admin" : (currentRoles[0] ?? null);
+  const nextRole = role ?? currentRole;
+  const editing = selection?.mode === "edit";
   const access = useQuery(accountAccessQuery(accountId));
-  const canChange =
-    !access.isError &&
-    access.data?.accountId === accountId &&
-    hasPermission(access.data, "users.roles.update");
+  const permissions =
+    !access.isError && access.data?.accountId === accountId ? access.data : undefined;
+  const canView = hasPermission(permissions, "users.read");
+  const canChange = canView && hasPermission(permissions, "users.roles.update");
   const listKey = ["admin-users", apiUrl, accountId] as const;
   const users = useQuery({
     queryKey: [...listKey, search, offset, sortDirection],
@@ -97,7 +109,16 @@ export function Users({ accountId }: { accountId: string }) {
     ]);
   };
   async function saveRole() {
-    if (!selection || selection.id === accountId || !canChange || fence.current) return;
+    if (
+      !selection ||
+      !editing ||
+      selection.id === accountId ||
+      !canChange ||
+      !nextRole ||
+      (!saved && nextRole === currentRole) ||
+      fence.current
+    )
+      return;
     fence.current = true;
     setBusy(true);
     setError(null);
@@ -106,7 +127,7 @@ export function Users({ accountId }: { accountId: string }) {
       if (!changed) {
         const result = await authClient.admin.setRole({
           userId: selection.id,
-          role,
+          role: nextRole,
           fetchOptions: { signal: AbortSignal.timeout(10_000) },
         });
         if (result.error) {
@@ -235,9 +256,10 @@ export function Users({ accountId }: { accountId: string }) {
           <UserTable
             rows={users.data.users}
             accountId={accountId}
+            canView={canView}
             canChange={canChange}
             sortDirection={sortDirection}
-            onEdit={editRole}
+            onOpenRole={openRole}
           />
         )}
       </div>
@@ -270,31 +292,38 @@ export function Users({ accountId }: { accountId: string }) {
         </div>
       </nav>
       <Dialog
-        open={selection !== null}
+        open={selection !== null && canView}
         onOpenChange={(open) => {
           if (!open && !busy) setSelection(null);
         }}
       >
-        <DialogContent showCloseButton={false}>
+        <DialogContent
+          showCloseButton={false}
+          finalFocus={() => (returnFocus.current?.isConnected ? returnFocus.current : false)}
+        >
           <DialogHeader>
-            <DialogTitle>{t("editRole")}</DialogTitle>
+            <DialogTitle>{t(editing ? "editRole" : "viewPermissions")}</DialogTitle>
             <DialogDescription className="wrap-anywhere">
-              {t("confirm", { email: selection?.email ?? "" })}
+              {t(editing ? "confirm" : "permissionsFor", { email: selection?.email ?? "" })}
             </DialogDescription>
           </DialogHeader>
-          <Field>
-            <FieldLabel htmlFor="user-role">{t("role")}</FieldLabel>
-            <SelectField
-              id="user-role"
-              value={role}
-              disabled={busy || saved}
-              onValueChange={setRole}
-              options={[
-                { value: "member", label: t("member") },
-                { value: "admin", label: t("admin") },
-              ]}
-            />
-          </Field>
+          {editing && (
+            <Field>
+              <FieldLabel htmlFor="user-role">{t("role")}</FieldLabel>
+              <SelectField
+                id="user-role"
+                value={nextRole}
+                placeholder={t("chooseRole")}
+                disabled={busy || saved || !canChange}
+                onValueChange={setRole}
+                options={[
+                  { value: "member", label: t("member") },
+                  { value: "admin", label: t("admin") },
+                ]}
+              />
+            </Field>
+          )}
+          <RolePermissions roles={currentRoles} proposedRole={editing ? nextRole : undefined} />
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{t(error)}</AlertDescription>
@@ -302,14 +331,16 @@ export function Users({ accountId }: { accountId: string }) {
           )}
           <DialogFooter>
             <Button variant="outline" disabled={busy} onClick={() => setSelection(null)}>
-              {c("cancel")}
+              {c(editing ? "cancel" : "close")}
             </Button>
-            <Button
-              disabled={busy || !canChange || (!saved && role === selection?.role)}
-              onClick={() => void saveRole()}
-            >
-              {c(busy ? "working" : saved ? "retry" : "save")}
-            </Button>
+            {editing && (
+              <Button
+                disabled={busy || !canChange || (!saved && nextRole === currentRole)}
+                onClick={() => void saveRole()}
+              >
+                {c(busy ? "working" : saved ? "retry" : "save")}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

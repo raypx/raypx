@@ -57,7 +57,7 @@ never resent. A process restart first checks the persisted task ID; a dispatch s
 unconfirmed after two minutes becomes unknown. A completed projection can resolve
 the run later, but does not automatically re-enable the paused plan.
 
-Relay v4 requires authoritative projection sync with a matching `syncId`. New sync requests are
+Relay v5 requires authoritative projection sync with a matching `syncId`. New sync requests are
 queued during an in-progress flush without disconnecting active commands.
 
 Cloud mutations require a trusted Origin, a current account session and rate limits;

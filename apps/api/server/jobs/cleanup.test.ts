@@ -34,6 +34,7 @@ it("does not query the database while disabled", async () => {
     verifications: 0,
     rateLimits: 0,
     contextCommands: 0,
+    attachments: 0,
   });
   expect(transaction).not.toHaveBeenCalled();
   await logger.flush();

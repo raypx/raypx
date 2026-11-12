@@ -16,8 +16,13 @@ application is an independent composition root and is never imported by another 
   Route composition tests live beside `src/router.tsx`, outside route discovery.
   Shared setup/fixtures stay in `tests/`. Independent unit/component projects use
   `node` for pure cases and happy-dom, DOM matchers and motion setup for components.
-- `src/router.tsx` exports `getRouter`. `src/routes/__root.tsx` renders only the document,
-  theme script and preference providers; keep layout and feature dependencies out of it.
+- `src/router.tsx` exports `getRouter`. `src/routes/__root.tsx` owns the document,
+  theme script, preference providers and production service-worker registration.
+  Keep layout and feature dependencies out of it.
+- `public/manifest.webmanifest` launches the installed Web app at `/projects`.
+  `public/sw.js` passes through GET document navigations and supplies an embedded
+  bilingual fallback on network failure. Keep API requests and assets outside the
+  worker and leave Cache Storage empty.
 - Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate
   first-load JavaScript: `src/routes/(app)/` renders
   `src/components/shell.tsx` (`@raypx/blocks/shell` with the account menu and pending count) for
@@ -236,15 +241,16 @@ Source-map upload is an explicit release step; ship those same injected assets.
 
 ## Administrator configuration
 
-`/admin/settings` and `features/configuration/` provide the Web-only administrator
-page through the public API SDK. `features/auth/access.ts` declares each Web page's
+`/admin/settings` and `features/configuration/` provide the Web-only configuration
+center with separate Site and Object storage tabs. `features/auth/access.ts` declares each Web page's
 permission. Account-scoped `account.access` reads filter sidebar entries and gate
 private page mounts through `PermissionBoundary`, including direct navigation.
 Loading, failed reads and identity changes never reuse another account's grants.
 Guests retain public pages and contextual sign-in gates; Desktop local tools require first-time instance enrollment and then stay available offline. API permissions remain authoritative on every request and save.
 Keep editable drafts through network failures and revision conflicts, with explicit
-reload/discard actions. No configuration secrets or deployment credentials enter
-the browser. Public settings supply the shell label and signup availability.
+reload/discard actions. Object storage credentials are write-only, stay in the
+form until save or discard, and are absent from responses. Public settings supply
+the shell label and signup availability.
 
 ## Account access and administration
 
@@ -259,6 +265,7 @@ clear, without invalidating the auth route mid-completion.
 Admin client. Its shared DataTable renders server searches, registration-date sorting,
 and 20-row pagination. Changing sort returns to page one. Role changes require
 confirmation, prevent self-editing, and retry a completed mutation's refresh separately.
+The role preview and change dialog derive their permission lists from Auth's shared ACL.
 
 ## Administration console
 

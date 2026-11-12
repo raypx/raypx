@@ -37,6 +37,25 @@ mail cooldowns, errors, credential clearing and completion retries. Browser
 renderer results and screenshot review are recorded separately from native host
 acceptance.
 
+## Installable Web app
+
+On HTTPS, browsers that support PWA installation can add Raypx from the browser
+menu or install control. The installed window opens `/projects` and uses the
+existing Web sign-in and preference flows. Apple devices use the same Raypx mark
+through the touch icon.
+
+The Web quick settings dialog has an install row. It opens the browser's native
+installer when offered and gives browser-menu instructions otherwise. The
+offline page uses a centered status and one retry action. Its press feedback
+respects reduced motion. [ReUI Empty](https://reui.io/docs/empty) ·
+[beUI Button](https://beui.dev/r/button-base.json)
+
+The production service worker returns the current document from the network.
+If a navigation cannot reach the network, it displays a standalone retry page
+in the browser's language. The worker keeps Cache Storage empty and leaves API
+requests, assets and draft storage to their existing owners. Web project access
+requires a connection.
+
 ## Adapting external source
 
 The 2026-11-09 CollectUI archive review selected ReUI's Echo Chat, Flux AgentOps,

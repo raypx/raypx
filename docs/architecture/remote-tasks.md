@@ -12,8 +12,8 @@ Web / Desktop UI ↔ Relay service ↔ CLI daemon ↔ Claude Code / Codex (macOS
 Desktop renderer ↔ separate authenticated loopback daemon WebSocket for local views;
 native bootstrap/OS capabilities use private IPC (ADR 0052).
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
-Relay v4 is the only supported version. Context and authoritative snapshot sync
-are required parts of the protocol. Deploy the API, Web, Desktop and bundled CLI
+Relay v5 is the only supported version. Context and authoritative snapshot sync
+are required parts of the protocol. Deploy the API, Relay, Web, Desktop and bundled CLI
 with matching contracts; mixed protocol versions stop with `UPGRADE_REQUIRED`.
 Desktop bootstraps the version-matched CLI with finite stdin/JSON. Codex uses its local
 stdio app-server; Claude uses persistent stream-JSON input/output and authenticated session hooks on
@@ -201,7 +201,7 @@ explicit platform acceptance; browser tests do not imply those checks passed.
 
 ## Managed activity and read isolation
 
-Auth and ready require protocol version 4 for managed tasks and observed requests.
+Auth and ready require protocol version 5 for managed tasks and observed requests.
 Other versions fail with UPGRADE_REQUIRED and are never retried as an older protocol. Messages begin with a full
 activity checkpoint, then carry append-only deltas with base/new revisions;
 replacements and terminal updates are full checkpoints. A missing base requires
@@ -223,7 +223,7 @@ after suspension are labelled; contiguous history can be loaded deliberately.
 
 ## Observed terminal sessions
 
-Relay v4 also synchronizes explicitly opted-in Claude/Codex Bash permission
+Relay v5 also synchronizes explicitly opted-in Claude/Codex Bash permission
 hooks through a separate RequestBroker and observed projection. Away waiting is
 bounded and fails back to the terminal. Tool outputs and full terminal streams
 remain local. Content is plaintext private testing data, pending E2EE. See the

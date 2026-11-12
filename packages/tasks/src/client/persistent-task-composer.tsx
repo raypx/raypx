@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "./task-composer.js";
 import { useTaskDrafts } from "./use-task-drafts.js";
-import { createTaskDraft } from "../model/drafts.js";
+import { createTaskDraft, hasSessionDraftContent } from "../model/drafts.js";
 
 /** Applications opt into an editor slot distinct from explicitly saved drafts. */
 export function PersistentTaskComposer(props: ComponentProps<typeof TaskComposer>) {
@@ -23,7 +23,7 @@ export function PersistentTaskComposer(props: ComponentProps<typeof TaskComposer
         {...props}
         initialDraft={props.initialDraft ?? editor.drafts[0]}
         onEditorChange={(input) =>
-          editor.write(input.prompt.trim() ? [createTaskDraft(input, "editor")] : [])
+          editor.write(hasSessionDraftContent(input) ? [createTaskDraft(input, "editor")] : [])
         }
       />
     </>

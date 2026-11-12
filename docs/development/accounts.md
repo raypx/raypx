@@ -156,7 +156,11 @@ The page uses Better Auth's existing list-users and set-role methods, with 20-ro
 server pagination and explicit name/email searches. `users.read` and
 `users.roles.update` are Core permission names granted only to administrators by
 Auth's ACL. The UI offers the fixed `member` and `admin` roles and confirms every
-change. Neither the UI nor the HTTP handler allows a user to change their own role.
+change. Users with `users.read` can inspect the permissions granted by each account's
+assigned roles. The edit dialog previews the permissions added or removed by the
+selected role using the same ACL. Unknown assignments display an empty grant list
+and require an explicit role selection before saving.
+Neither the UI nor the HTTP handler allows a user to change their own role.
 A failed list refresh after a successful write retries only that refresh. There are
 no custom roles, team memberships or additional user administration operations.
 
@@ -205,7 +209,10 @@ tokens, IP addresses or diagnostic prose enter history. Only supported role valu
 and non-secret site settings appear in change snapshots.
 
 The API-owned Better Auth database adapter wraps actual role writes and their
-success audit in one PostgreSQL transaction. Better Auth retains validation,
+success audit in one PostgreSQL transaction. HTTP role changes lock the actor and
+target rows in account ID order and recheck the actor's grant before writing. If
+two administrators try to demote each other concurrently, only one write commits
+and the other request is recorded as rejected. Better Auth retains validation,
 self-change protection and session-cache updates. Explicit bootstrap uses the same
 adapter with an operator identity. Configuration CAS updates write their success
 history in their transaction as well; direct service writes create their own intent.

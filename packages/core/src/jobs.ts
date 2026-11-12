@@ -54,7 +54,9 @@ export const cloudJobActionSchema = z.discriminatedUnion("type", [
     provider: terminalProviderSchema,
     mode: taskModeSchema,
     prompt: z.string().trim().min(1).max(32_000),
-    contextSelection: taskContextSelectionSchema.optional(),
+    contextSelection: taskContextSelectionSchema
+      .refine(({ sources }) => sources.every((source) => source.attachment === undefined))
+      .optional(),
   }),
 ]);
 export const cloudJobInputSchema = z.strictObject({

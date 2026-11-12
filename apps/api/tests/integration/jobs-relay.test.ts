@@ -32,7 +32,7 @@ it("dispatches a scheduled task and commits a correlated sync over an actual rel
   f.repository.validSession = false;
   const host = await relaySocket(f.base, f.auth.user.id, {
     type: "auth",
-    protocolVersion: 4,
+    protocolVersion: 5,
     role: "device",
     token: grant.grant.token,
   });

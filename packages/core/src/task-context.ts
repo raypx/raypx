@@ -16,7 +16,10 @@ export const taskContextTargetSchema = z.strictObject({
 });
 export type TaskContextTarget = z.infer<typeof taskContextTargetSchema>;
 export const taskContextSelectionSchema = z.strictObject({
-  sources: z.array(selectedSource).max(8).refine(uniqueSources, "Duplicate context source"),
+  sources: z
+    .array(selectedSource.extend({ attachment: z.string().min(1).max(120).optional() }))
+    .max(8)
+    .refine(uniqueSources, "Duplicate context source"),
 });
 export const taskContextSnapshotSchema = z.strictObject({
   capturedAt: z.iso.datetime(),
@@ -24,7 +27,7 @@ export const taskContextSnapshotSchema = z.strictObject({
     .array(
       z.strictObject({
         ...selectedSource.shape,
-        kind: z.enum(["memory", "template"]),
+        kind: z.enum(["memory", "template", "attachment"]),
         name: z.string().min(1).max(120),
         content: z.string().max(8_000),
         scope: z.enum(["device", "account"]),

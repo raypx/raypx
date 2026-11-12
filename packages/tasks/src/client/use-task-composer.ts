@@ -5,11 +5,13 @@ import {
   useEffectEvent,
   useReducer,
   useRef,
+  useState,
   type FormEvent,
   type RefObject,
 } from "react";
 import type { AgentTask } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
+import { MAX_SESSION_ATTACHMENT_BYTES } from "@raypx/contracts/api";
 import { contextBudgetKey, type MemoryClientPort } from "@raypx/memory/client";
 
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -29,8 +31,8 @@ import {
   type ComposerBudget,
   type ComposerDraft,
 } from "../model/composer.js";
-import type { DraftInput, TaskDraft } from "../model/drafts.js";
-import { failureCode } from "../model/failure.js";
+import { hasSessionDraftContent, type DraftInput, type TaskDraft } from "../model/drafts.js";
+import { failureCode, type TaskFailureCode } from "../model/failure.js";
 import type { TaskWorkspacePort } from "../model/port.js";
 import { useTaskDrafts } from "./use-task-drafts.js";
 
@@ -108,8 +110,16 @@ export function useTaskComposer({
   });
   const submission = useRef<TaskSubmission | null>(null);
   const submitting = useRef(false);
+  const upload = useRef<AbortController | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<TaskFailureCode>();
+  useEffect(() => () => upload.current?.abort(), []);
   const { confirm, dialog } = useConfirmation();
-  const expanded = composerExpanded(state, editorOpen, Boolean(initialDraft?.prompt));
+  const expanded = composerExpanded(
+    state,
+    editorOpen,
+    Boolean(initialDraft && hasSessionDraftContent(initialDraft)),
+  );
   const wasExpanded = useRef(expanded);
   useEffect(() => {
     const revealed = expanded && !wasExpanded.current;
@@ -186,6 +196,39 @@ export function useTaskComposer({
     dispatch({ type: "expand", open });
     onEditorOpenChange?.(open);
   }
+  async function addAttachment(file: File) {
+    if (!client.attachments || !contextTarget || submitting.current || upload.current) return;
+    const sources = state.contextSelection?.sources ?? [];
+    setUploadError(undefined);
+    if (sources.length >= 8) {
+      setUploadError("ATTACHMENT_LIMIT");
+      return;
+    }
+    const name = file.name.trim();
+    if (!name || name.length > 120 || file.size === 0 || file.size > MAX_SESSION_ATTACHMENT_BYTES) {
+      setUploadError("ATTACHMENT_INVALID");
+      return;
+    }
+    const controller = new AbortController();
+    upload.current = controller;
+    setUploading(true);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]);
+      signal.throwIfAborted();
+      const source = await client.attachments.upload(
+        { ...contextTarget, name, data: btoa(String.fromCharCode(...bytes)) },
+        { signal },
+      );
+      signal.throwIfAborted();
+      edit({ type: "context", selection: { sources: [...sources, source] } });
+    } catch (error) {
+      if (!controller.signal.aborted) setUploadError(failureCode(error));
+    } finally {
+      upload.current = null;
+      if (!controller.signal.aborted) setUploading(false);
+    }
+  }
   function saveDraft() {
     try {
       const id = view.draftId ?? crypto.randomUUID();
@@ -219,7 +262,7 @@ export function useTaskComposer({
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (submitting.current || !view.sendable) return;
+    if (submitting.current || upload.current || !view.sendable) return;
     submitting.current = true;
     dispatch({ type: "submit" });
     try {
@@ -255,6 +298,10 @@ export function useTaskComposer({
     view,
     expanded,
     context,
+    contextTarget,
+    addAttachment,
+    uploading,
+    uploadError,
     dialog,
     drafts: stored.drafts,
     draftsReady: stored.ready,

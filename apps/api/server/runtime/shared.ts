@@ -35,6 +35,8 @@ import { JobError } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
 import { createScheduleTick } from "../jobs/tick.js";
 import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
+import { createStorageSettings, databaseStorage } from "../storage/configuration.js";
+import { createSessionAttachments, withSessionAttachments } from "../storage/attachments.js";
 
 export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
@@ -47,7 +49,7 @@ export interface RuntimeProviders {
    * configured, otherwise to memory owned by this runtime.
    */
   cache?: Cache;
-  /** Object storage; defaults to S3 when configured, otherwise STORAGE_NOT_CONFIGURED. */
+  /** Override the database-configured S3 provider for attachments. */
   storage?: ObjectStorage;
 }
 
@@ -74,7 +76,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const connection = resources.connect();
     lifecycle.own(() => connection.close());
     const { db } = connection;
-    const { mailer, cache, storage, secondaryStorage, rateLimit, readiness } = createAdapters(
+    const { mailer, cache, secondaryStorage, rateLimit, readiness } = createAdapters(
       environment,
       resources,
       db,
@@ -109,12 +111,16 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       scope: "account",
       validateProject: (owner, target) => projects.validateContextProject(owner, target),
     });
-    const control = new ControlService(
-      repository,
-      Date.now,
-      (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
+    const storage = resources.storage;
+    const attachments = createSessionAttachments(
+      db,
+      storage ? async () => storage : databaseStorage(db, environment.AUTH_SECRET),
       projects,
     );
+    const resolveContext = withSessionAttachments(db, (owner, selection, target, prompt) =>
+      memory.resolve(owner, selection, target, prompt),
+    );
+    const control = new ControlService(repository, Date.now, resolveContext, projects);
     const unavailable = async (): Promise<never> => {
       throw new JobError("CONTROL_UNAVAILABLE");
     };
@@ -149,7 +155,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       audit,
       administration,
       cache,
-      storage,
+      attachments,
       control,
       configuration,
       cloudJobs,
@@ -166,10 +172,13 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,
+        storageSettings: createStorageSettings(db, environment.AUTH_SECRET, audit),
         jobsEnabled: environment.JOBS_ENABLED,
         control,
         cloudJobs,
         memory,
+        attachments,
+        resolveContext,
         ...(resources.onRevoke ? { onRevoke: resources.onRevoke } : {}),
         authHandler: (request) => auth.handler(request),
         readSession,

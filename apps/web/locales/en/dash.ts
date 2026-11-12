@@ -25,7 +25,7 @@ export default {
   actor: "Actor ID",
   target: "Target ID",
   roleUpdate: "Change user role",
-  configurationUpdate: "Change site settings",
+  configurationUpdate: "Change configuration",
   success: "Applied",
   rejected: "Rejected",
   failed: "Failed",

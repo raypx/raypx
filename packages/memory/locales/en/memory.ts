@@ -28,6 +28,7 @@ export default {
   edit: "Edit reference",
   memory: "Project memory",
   template: "Session template",
+  attachment: "Attachment",
   kind: "Reference type",
   all: "All types",
   category: "Category",

@@ -93,7 +93,9 @@ authoritative task is available. These receipts preserve the no-replay guarantee
 They are deliberately not deleted by a simple TTL. Apply the generated partial
 indexes before deploying the new cleanup and admission queries.
 
-Relay v4 requires context and snapshot synchronization on every connection.
+Relay v5 requires context and snapshot synchronization on every connection.
+Remote session attachments use the same frozen snapshot and source budget as
+references. See [Session attachment storage](object-storage.md).
 Clients and servers reject other protocol versions with `UPGRADE_REQUIRED`;
 there is no separate capability negotiation. Context is reference data and does
 not change project authorization, approval, cancellation or command policy.
@@ -113,7 +115,7 @@ current device behavior.
 
 The default gate covers schemas, budget boundaries, versions, CAS conflicts,
 ownership, account changes, draft restoration, native IPC restrictions, provider
-prompt injection and relay v4 context requirements. Real PostgreSQL tests cover
+prompt injection and relay v5 context requirements. Real PostgreSQL tests cover
 concurrent writes, immutable versions, retry IDs, quotas and reads without the
 account write lock. Bun integration exercises RPC and contextual task delivery.
 

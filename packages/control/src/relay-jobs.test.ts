@@ -45,7 +45,7 @@ async function fixture() {
     id,
     JSON.stringify({
       type: "auth",
-      protocolVersion: 4,
+      protocolVersion: 5,
       role: "device",
       token: hostGrant.grant.token,
     }),

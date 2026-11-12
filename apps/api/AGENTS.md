@@ -34,8 +34,8 @@ mode of `vitest.config.ts` for real-database tests. Shared fixtures stay in `tes
 Nitro owns the platform entry. Hono owns the shared Fetch application.
 Platform entry modules live in `app/`; runtime composition and adapters live in `runtime/`.
 `runtime/shared.ts` composes services from the injected database, logger and providers.
-`runtime/adapters.ts` picks each adapter (override, then Redis/S3 when configured, then
-PostgreSQL/memory/unavailable) and builds the auth config; `runtime/lifecycle.ts` closes
+`runtime/adapters.ts` picks cache and rate-limit adapters and builds the auth config.
+`runtime/lifecycle.ts` closes
 owned resources in reverse order, every one even after a failure, and only once.
 `runtime/server.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
 Before allocating runtime resources it applies pending foundation migrations by default.
@@ -150,7 +150,7 @@ read projections. `/postgres` provides the control/context adapters. Account
 mutations take an exclusive owner lock; device projection transactions take a
 shared security fence and device advisory lock. Read-only reads take neither lock.
 HTTP RPC exposes reads, device management and one-time viewer tickets. Nitro hosts
-Relay v4 WebSockets in the `both` (default) and `relay` roles. One build supports
+Relay v5 WebSockets in the `both` (default) and `relay` roles. One build supports
 all roles. Combined scheduling/revocation calls RelayHub directly; configured Redis
 attaches cluster routing and shared caches. Split api/relay roles require Redis.
 The relay role parses only DB, broker and origins, never constructs Auth, cookies,
@@ -159,7 +159,7 @@ process selection/lifecycle; `runtime/server.ts` composes API-enabled roles.
 PostgreSQL owns connection identity. Never retry uncertain delivery
 or put credentials on the bus. `test:cluster` uses owned PostgreSQL/Redis and
 includes cross-process Relay dispatch, revocation and independent lifecycle checks.
-Relay v4 requires an explicit protocol version. Preserve full activity checkpoints
+Relay v5 requires an explicit protocol version. Preserve full activity checkpoints
 and bounded incremental replay; a missing revision requests a snapshot. Keep the latest
 activity projection until explicit history removal. Missing entries in partial snapshots
 never authorize deleting conversation history. Read projections through the repository's
@@ -195,11 +195,13 @@ availability. Save with an expected revision; never overwrite concurrent edits.
 Registration is enforced by the Better Auth user-create hook with a fresh read, so
 it covers every sign-in method; the email signup route only pre-checks the 5-second
 `readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
-Optional `S3_*` variables (all of endpoint, bucket and keys, or none) give `runtime.storage`
-an S3-compatible `@raypx/storage` store on Bun; otherwise it is the
-unavailable storage whose operations fail with `STORAGE_NOT_CONFIGURED`. `RuntimeProviders.storage`
-overrides it. No route exposes storage yet; consumers must validate ownership before
-issuing keys or pre-signed URLs. See `docs/development/object-storage.md`.
+`configuration.storage/updateStorage` manage revisioned S3 settings with the same
+permission and audit gates. Reads exclude credentials. The `storage:configure`
+operator command also supports custom S3 endpoints. PostgreSQL stores credentials
+encrypted with the API's deployment secret. `attachments.upload` verifies the account, origin
+and project before storing an original in the private bucket. The split relay
+reads bounded text projections from PostgreSQL. `RuntimeProviders.storage`
+overrides the provider for tests. See `docs/development/object-storage.md`.
 `server/cache/` owns the runtime cache (`runtime.cache`, `RuntimeProviders.cache`):
 Redis behind a one-second process-local copy when configured, else memory per process
 with values JSON
@@ -207,7 +209,7 @@ parsed by the caller's schema; store failures become misses. Cache only data tha
 has a loader, and keep authoritative checks on the source. See `docs/development/caching.md`.
 Run the migration before deploying: signup fails closed without the table. Jobs combine the
 stored cleanup switch with deployment `JOBS_ENABLED`; disabled deployments do not
-query configuration on schedule. No secrets or arbitrary env keys enter the API.
+query configuration on schedule. API responses exclude secrets and arbitrary env keys.
 See `docs/development/configuration.md`.
 
 ## Independent host and terminal projections
@@ -215,7 +217,7 @@ See `docs/development/configuration.md`.
 Host bootstrap requires the current account session and a device/epoch binding.
 Only hashed, expiring, device-scoped credentials are stored. They renew device grants
 without retaining browser sessions; revoke invalidates all credentials for that device.
-Never accept a host credential as a viewer ticket. Relay v4 stores observed requests
+Never accept a host credential as a viewer ticket. Relay v5 stores observed requests
 separately from managed tasks, validates connection/epoch/revision and ACKs only after
 commit. Summary reads omit bodies/questions/answers; fetch one body only on expansion.
 Private local host/router methods are never public HTTP methods. Terminal content is

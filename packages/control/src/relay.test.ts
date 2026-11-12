@@ -2,7 +2,9 @@ import { expect, it, vi } from "vitest";
 import { RelayHub } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";
 import { connected, memoryControlRepository } from "../tests/helpers/control.js";
-it.each([undefined, 1, 2, 3, "4", 5])(
+import { RELAY_VERSION } from "@raypx/contracts/tasks";
+
+it.each([undefined, 1, 2, 3, RELAY_VERSION - 1, String(RELAY_VERSION), RELAY_VERSION + 1])(
   "rejects unsupported relay version %s with a terminal upgrade code",
   async (protocolVersion) => {
     const service = new ControlService(memoryControlRepository()),
@@ -41,7 +43,7 @@ it("drains in-flight device frames before disconnecting on shutdown", async () =
   hub.open({ id, send() {}, close() {} });
   await hub.receive(
     id,
-    JSON.stringify({ type: "auth", protocolVersion: 4, role: "device", token: f.grant.token }),
+    JSON.stringify({ type: "auth", protocolVersion: 5, role: "device", token: f.grant.token }),
   );
   blocked = true;
   const announce = hub.receive(id, JSON.stringify(f.announce));
@@ -64,7 +66,7 @@ it("classifies repository failures as retryable server errors, never invalid cli
   hub.open({ id, send, close });
   await hub.receive(
     id,
-    JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: "x".repeat(72) }),
+    JSON.stringify({ type: "auth", protocolVersion: 5, role: "viewer", token: "x".repeat(72) }),
   );
   expect(send).toHaveBeenCalledWith({ type: "error", code: "SERVER_UNAVAILABLE" });
   expect(close).toHaveBeenCalledWith(1011, "SERVER_UNAVAILABLE");

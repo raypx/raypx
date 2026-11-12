@@ -2,6 +2,11 @@ export default {
   connectionRoute: "Desktop to Web connection",
   draftPrivacy: "Draft privacy",
   openProjects: "Open projects",
+  webApp: "Web app",
+  installApp: "Install Raypx",
+  installFromMenu: "Choose Install in your browser menu or Add to Home Screen from Share.",
+  installInProgress: "Opening installer…",
+  appInstalled: "Installed",
   visitor: "Guest",
   title: "Run locally. Review remotely.",
   heroSummary:

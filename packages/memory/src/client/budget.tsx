@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   taskExecutionBudget,
   type TaskContextSelection,
+  type TaskContextSnapshot,
   type TaskContextTarget,
 } from "@raypx/core/tasks";
 
@@ -45,9 +46,9 @@ function Budget(props: Props) {
     target: props.target,
     value: props.value,
   }));
-  const [sources, setSources] = useState<ContextDocument[] | undefined>(
-    input.value.sources.length ? undefined : [],
-  );
+  const [sources, setSources] = useState<
+    TaskContextSnapshot["sources"] | ContextDocument[] | undefined
+  >(input.value.sources.length ? undefined : []);
   const [error, setError] = useState<ReturnType<typeof memoryFailure>>();
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -57,29 +58,36 @@ function Budget(props: Props) {
       !document.project ||
       (document.project.deviceId === input.target.deviceId &&
         document.project.projectId === input.target.projectId);
-    void Promise.all(
-      input.value.sources.map(async (source) => {
-        const document = await request((options) => input.client.get({ id: source.id }, options));
-        if (document.archived) throw new ContextError("CONTEXT_ARCHIVED");
-        if (document.id !== source.id || !matches(document))
-          throw new ContextError("CONTEXT_PROJECT_MISMATCH");
-        const version =
-          document.revision === source.revision
-            ? document
-            : (
-                await request((options) =>
-                  input.client.history(
-                    { id: source.id, before: source.revision + 1, limit: 1 },
-                    options,
-                  ),
-                )
-              )[0];
-        if (!version || version.id !== source.id || version.revision !== source.revision)
-          throw new ContextError("CONTEXT_REVISION_CONFLICT");
-        if (!matches(version)) throw new ContextError("CONTEXT_PROJECT_MISMATCH");
-        return version;
-      }),
-    )
+    const selected = input.value.sources.some((source) => source.attachment !== undefined)
+      ? request((options) =>
+          input.client.resolve({ selection: input.value, target: input.target }, options),
+        ).then((snapshot) => snapshot.sources)
+      : Promise.all(
+          input.value.sources.map(async (source) => {
+            const document = await request((options) =>
+              input.client.get({ id: source.id }, options),
+            );
+            if (document.archived) throw new ContextError("CONTEXT_ARCHIVED");
+            if (document.id !== source.id || !matches(document))
+              throw new ContextError("CONTEXT_PROJECT_MISMATCH");
+            const version =
+              document.revision === source.revision
+                ? document
+                : (
+                    await request((options) =>
+                      input.client.history(
+                        { id: source.id, before: source.revision + 1, limit: 1 },
+                        options,
+                      ),
+                    )
+                  )[0];
+            if (!version || version.id !== source.id || version.revision !== source.revision)
+              throw new ContextError("CONTEXT_REVISION_CONFLICT");
+            if (!matches(version)) throw new ContextError("CONTEXT_PROJECT_MISMATCH");
+            return version;
+          }),
+        );
+    void selected
       .then((result) => {
         if (current && isActive()) {
           setSources(result);

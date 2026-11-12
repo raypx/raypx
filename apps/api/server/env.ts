@@ -39,11 +39,6 @@ const server = {
   AUTH_IP_HEADERS: z.string().optional(),
   AUTH_TRUSTED_PROXIES: z.string().optional(),
   REDIS_URL: z.url().optional(),
-  S3_ENDPOINT: z.url().optional(),
-  S3_REGION: z.string().min(1).default("auto"),
-  S3_BUCKET: z.string().min(1).optional(),
-  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
-  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
   POSTHOG_HOST: z.url().optional(),
 } satisfies Record<keyof typeof apiEnvironmentSources, z.ZodType>;
@@ -79,23 +74,8 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
         `${provider} login requires both ${provider}_CLIENT_ID and ${provider}_CLIENT_SECRET`,
       );
   }
-  const s3 = [env.S3_ENDPOINT, env.S3_BUCKET, env.S3_ACCESS_KEY_ID, env.S3_SECRET_ACCESS_KEY];
-  if (s3.some(Boolean) && !s3.every(Boolean))
-    throw new Error(
-      "Object storage requires S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY",
-    );
   return {
     ...env,
-    s3:
-      env.S3_ENDPOINT && env.S3_BUCKET && env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY
-        ? {
-            endpoint: env.S3_ENDPOINT,
-            region: env.S3_REGION,
-            bucket: env.S3_BUCKET,
-            accessKeyId: env.S3_ACCESS_KEY_ID,
-            secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-          }
-        : undefined,
     allowedOrigins: normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(",")),
     ipAddressHeaders: list(env.AUTH_IP_HEADERS).map((v) => v.toLowerCase()),
     trustedProxies: list(env.AUTH_TRUSTED_PROXIES),

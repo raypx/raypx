@@ -26,6 +26,8 @@ const rpcLimits = {
   "hosts.authorize": { window: 60, max: 5 },
   "relay.ticket": { window: 60, max: 60 },
   "configuration.update": { window: 60, max: 10 },
+  "configuration.updateStorage": { window: 60, max: 10 },
+  "attachments.upload": { window: 60, max: 10 },
   "jobs.list": { window: 60, max: 60 },
   "jobs.history": { window: 60, max: 60 },
   "jobs.create": { window: 60, max: 10 },
@@ -144,20 +146,22 @@ export function createRpcBoundary(options: ApiAppOptions) {
     try {
       return await run(options.configuration);
     } catch (error) {
-      if (!(error instanceof ConfigurationError)) throw error;
-      throw new ORPCError(
-        error.code === "CONFIGURATION_CONFLICT"
-          ? "CONFLICT"
-          : error.code === "INVALID_INPUT"
-            ? "BAD_REQUEST"
-            : error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN"
-              ? error.code
-              : "SERVICE_UNAVAILABLE",
-        {
-          data: { error: { code: error.code }, requestId: context.requestId },
-        },
-      );
+      return configurationFailure(error, context);
     }
+  }
+  function configurationFailure(error: unknown, context: Context): never {
+    if (!(error instanceof ConfigurationError)) throw error;
+    const status =
+      error.code === "CONFIGURATION_CONFLICT"
+        ? "CONFLICT"
+        : error.code === "INVALID_INPUT" || error.code === "STORAGE_ENDPOINT_REQUIRES_OPERATOR"
+          ? "BAD_REQUEST"
+          : error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN"
+            ? error.code
+            : "SERVICE_UNAVAILABLE";
+    throw new ORPCError(status, {
+      data: { error: { code: error.code }, requestId: context.requestId },
+    });
   }
   async function requirePermission(
     context: Context,
@@ -287,6 +291,7 @@ export function createRpcBoundary(options: ApiAppOptions) {
     os,
     controlCall,
     configurationCall,
+    configurationFailure,
     requirePermission,
     jobsCall,
     memoryCall,

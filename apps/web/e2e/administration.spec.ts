@@ -66,6 +66,28 @@ test(
             },
           }),
     );
+    const storage = {
+      values: {
+        endpoint: "https://s3.us-east-1.amazonaws.com",
+        bucket: "raypx-private",
+        region: "us-east-1",
+        enabled: true,
+      },
+      revision: 2,
+      updatedAt: null,
+    };
+    const storageWrites: unknown[] = [];
+    await page.route("**/rpc/configuration/storage", (route) =>
+      route.request().method() === "OPTIONS"
+        ? authResponse(route, null, 204)
+        : authResponse(route, { json: storage }),
+    );
+    await page.route("**/rpc/configuration/updateStorage", (route) => {
+      if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+      const input = route.request().postDataJSON()?.json;
+      storageWrites.push(input);
+      return authResponse(route, { json: { ...storage, values: input.values, revision: 3 } });
+    });
     const entry = {
       id: "00000000-0000-4000-8000-000000000001",
       requestId: "server-request",
@@ -129,7 +151,7 @@ test(
     });
 
     await test.step("discard an unsaved site setting", async () => {
-      await page.getByRole("link", { name: "站点设置", exact: true }).click();
+      await page.getByRole("link", { name: "配置中心", exact: true }).click();
       await expect(page).toHaveURL(web + "/admin/settings");
       const siteName = page.getByRole("textbox", { name: "站点名称", exact: true });
       const save = page.getByRole("button", { name: "保存修改", exact: true });
@@ -139,6 +161,18 @@ test(
       await page.getByRole("button", { name: "放弃修改", exact: true }).click();
       await expect(siteName).toHaveValue("Raypx");
       await expect(save).toBeDisabled();
+    });
+    await test.step("pause attachment uploads with the existing credentials", async () => {
+      await page.getByRole("tab", { name: "对象存储", exact: true }).click();
+      const panel = page.getByRole("tabpanel", { name: "对象存储", exact: true });
+      await expect(panel.getByLabel("访问密钥", { exact: true })).toHaveValue("");
+      await panel.getByRole("switch", { name: "允许上传附件", exact: true }).click();
+      await panel.getByRole("button", { name: "保存修改", exact: true }).click();
+      await expect(panel.getByText("已暂停上传", { exact: true })).toBeVisible();
+      expect(storageWrites).toEqual([
+        { revision: 2, values: { ...storage.values, enabled: false } },
+      ]);
+      await capture(page, { path: test.info().outputPath("admin-storage.png"), fullPage: true });
     });
     expect(privateReads).toBe(0);
   },

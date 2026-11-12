@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "auth:bootstrap-admins": "bun server/administration/bootstrap.ts",
+    "storage:configure": "bun server/storage/configure.ts",
     "dev": "bun --bun vp dev --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "tsc --noEmit --project tsconfig.json",
@@ -35,6 +36,7 @@
     "@raypx/logger": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/storage": "workspace:*",
+    "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "evlog": "catalog:",
     "hono": "catalog:",

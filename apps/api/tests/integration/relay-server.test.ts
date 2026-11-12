@@ -49,7 +49,7 @@ async function socket(base: URL, role: "viewer" | "device", token: string) {
     client.close();
   });
   await expect.poll(() => client.readyState).toBe(WebSocket.OPEN);
-  client.send(JSON.stringify({ type: "auth", protocolVersion: 4, role, token }));
+  client.send(JSON.stringify({ type: "auth", protocolVersion: 5, role, token }));
   return { client, frames, closed };
 }
 it("serves liveness and dependency readiness and exposes no login or local execution route", async () => {

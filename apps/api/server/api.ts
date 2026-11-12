@@ -4,6 +4,7 @@ import type { ApiEventLogger } from "./logging.js";
 import type { ApiAppOptions } from "./app/options.js";
 import { createRpcRouter } from "./rpc/router.js";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { RPCHandler } from "@orpc/server/fetch";
@@ -80,13 +81,17 @@ export function createApiApp(options: ApiAppOptions) {
         ? null
         : path === "/api/auth/admin/set-role"
           ? "user.role.update"
-          : path === "/rpc/configuration/update"
+          : path === "/rpc/configuration/update" || path === "/rpc/configuration/updateStorage"
             ? "configuration.update"
             : null;
     if (!action || !options.audit) return next();
     try {
       const session = await options.readSession(c.req.raw.headers);
-      if (!session) return next();
+      if (!session) {
+        if (action === "user.role.update")
+          return c.json({ code: "FORBIDDEN", message: "Access denied" }, 403);
+        return next();
+      }
       if (
         options.rateLimit &&
         !(await options.rateLimit(`admin.audit:${session.user.id}`, { window: 60, max: 60 }))
@@ -158,6 +163,24 @@ export function createApiApp(options: ApiAppOptions) {
     }
     return options.authHandler(c.req.raw);
   });
+  app.use(
+    "/rpc/attachments/*",
+    bodyLimit({
+      maxSize: 48_000,
+      onError: (c) =>
+        c.json(
+          {
+            json: {
+              defined: false,
+              code: "PAYLOAD_TOO_LARGE",
+              message: "Attachment exceeds the upload limit",
+              data: { error: { code: "ATTACHMENT_INVALID" }, requestId: c.get("requestId") },
+            },
+          },
+          413,
+        ),
+    }),
+  );
   const router = createRpcRouter(options);
   const rpc = new RPCHandler(router, {
     plugins: [

@@ -1,6 +1,8 @@
 import * as aws4fetch from "aws4fetch";
 import s3Driver from "unstorage/drivers/s3";
-import { createObjectStorage } from "./storage.js";
+import { createObjectStorage, objectHeaders } from "./storage.js";
+import { assertObjectKey } from "./keys.js";
+import { StorageError } from "./errors.js";
 import type { ObjectStorage } from "./types.js";
 
 export interface S3StorageConfig {
@@ -25,11 +27,13 @@ export function createS3Storage(config: S3StorageConfig): ObjectStorage {
     accessKeyId: config.accessKeyId,
     secretAccessKey: config.secretAccessKey,
   });
-  return createObjectStorage({
+  const objectUrl = (key: string) =>
+    new URL(`${base}/${key.split("/").map(encodeURIComponent).join("/")}`);
+  const storage = createObjectStorage({
     // Passing the library avoids unstorage's runtime import, instead of relying on its dynamic import.
     driver: s3Driver({ ...config, lib: aws4fetch }),
     async signer(key, { method, expiresIn, contentType }) {
-      const url = new URL(`${base}/${key.split("/").map(encodeURIComponent).join("/")}`);
+      const url = objectUrl(key);
       url.searchParams.set("X-Amz-Expires", String(expiresIn));
       const signed = await client.sign(url.href, {
         method,
@@ -40,4 +44,27 @@ export function createS3Storage(config: S3StorageConfig): ObjectStorage {
       return signed.url;
     },
   });
+  return {
+    ...storage,
+    async put(key, body, options) {
+      const url = objectUrl(assertObjectKey(key));
+      const headers = objectHeaders(options);
+      try {
+        const request = await client.sign(url.href, {
+          method: "PUT",
+          headers,
+          body: body instanceof Uint8Array ? Uint8Array.from(body) : body,
+        });
+        // A missing bucket is an upload failure, even though GET treats 404 as a miss.
+        const response = await fetch(request, {
+          redirect: "error",
+          signal: AbortSignal.timeout(10_000),
+        });
+        void response.body?.cancel().catch(() => {});
+        if (!response.ok) throw new StorageError("STORAGE_UNAVAILABLE");
+      } catch {
+        throw new StorageError("STORAGE_UNAVAILABLE");
+      }
+    },
+  };
 }

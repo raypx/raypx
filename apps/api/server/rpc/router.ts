@@ -12,10 +12,12 @@ import { createTasksHandlers } from "./tasks.js";
 import { createApprovalsHandlers } from "./approvals.js";
 import { createRelayHandlers } from "./relay.js";
 import { createAccountHandlers } from "./account.js";
+import { createAttachmentHandlers } from "./attachments.js";
 export function createRpcRouter(options: ApiAppOptions) {
   const boundary = createRpcBoundary(options);
   return boundary.os.router({
     admin: createAdministrationHandlers(boundary),
+    attachments: createAttachmentHandlers(boundary),
     instances: createInstancesHandlers(boundary),
     memory: createMemoryHandlers(boundary),
     jobs: createJobsHandlers(boundary),

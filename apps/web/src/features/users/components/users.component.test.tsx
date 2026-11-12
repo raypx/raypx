@@ -42,12 +42,15 @@ function page(accountId = actor.id) {
   );
   return { cache, ...view };
 }
+async function chooseRole(dialog: HTMLElement, label: string) {
+  await userEvent.click(within(dialog).getByRole("combobox", { name: "Role" }));
+  await userEvent.click(await screen.findByRole("option", { name: label }));
+}
 async function editMember() {
   const row = (await screen.findByText(member.email)).closest("tr")!;
   fireEvent.click(within(row).getByRole("button", { name: "Change role" }));
   const dialog = screen.getByRole("dialog");
-  await userEvent.click(within(dialog).getByRole("combobox", { name: "Role" }));
-  await userEvent.click(await screen.findByRole("option", { name: "Admin" }));
+  await chooseRole(dialog, "Admin");
   return dialog;
 }
 it("searches and pages on the server and disables editing the current account", async () => {
@@ -97,6 +100,82 @@ it("sorts registrations on the server and returns to the first page", async () =
   const [, firstUser] = within(screen.getByRole("table", { name: "Users" })).getAllByRole("row");
   expect(firstUser).toHaveTextContent(member.email);
 });
+it("lets an account with users.read view permissions and restores focus on close", async () => {
+  mocks.access.mockResolvedValue({
+    ...accessForRole("admin", actor.id),
+    permissions: ["users.read"],
+  });
+  page();
+  const row = (await screen.findByText(member.email)).closest("tr")!;
+  expect(within(row).getByRole("button", { name: "Change role" })).toBeDisabled();
+  const view = within(row).getByRole("button", { name: "View permissions" });
+  view.focus();
+  await userEvent.keyboard("{Enter}");
+  const dialog = screen.getByRole("dialog", { name: "View permissions" });
+  expect(within(dialog).getByText("Member")).toBeVisible();
+  expect(within(dialog).getByText("View projects")).toBeVisible();
+  expect(within(dialog).queryByText("View the audit log")).toBeNull();
+  expect(within(dialog).queryByRole("combobox")).toBeNull();
+  expect(within(dialog).queryByRole("button", { name: "Save changes" })).toBeNull();
+  await userEvent.keyboard("{Escape}");
+  await waitFor(() => expect(dialog).not.toBeInTheDocument());
+  expect(view).toHaveFocus();
+  expect(mocks.setRole).not.toHaveBeenCalled();
+});
+it("combines assigned role permissions and previews a downgrade before saving", async () => {
+  mocks.list.mockResolvedValue({
+    data: { users: [{ ...member, role: "member,admin" }], total: 1 },
+  });
+  page();
+  const row = (await screen.findByText(member.email)).closest("tr")!;
+  await userEvent.click(within(row).getByRole("button", { name: "View permissions" }));
+  const view = screen.getByRole("dialog", { name: "View permissions" });
+  expect(within(view).getByText("Member")).toBeVisible();
+  expect(within(view).getByText("Admin")).toBeVisible();
+  expect(within(view).getByText("View projects")).toBeVisible();
+  expect(within(view).getByText("View the audit log")).toBeVisible();
+  await userEvent.click(within(view).getByRole("button", { name: "Close" }));
+  await waitFor(() => expect(view).not.toBeInTheDocument());
+  await userEvent.click(within(row).getByRole("button", { name: "Change role" }));
+  const edit = screen.getByRole("dialog", { name: "Change role" });
+  expect(within(edit).getByText("No permission changes.")).toBeVisible();
+  expect(within(edit).getByRole("button", { name: "Save changes" })).toBeDisabled();
+  await chooseRole(edit, "Member");
+  expect(within(edit).getByText("Permissions to remove")).toBeVisible();
+  expect(within(edit).getByText("View the audit log")).toBeVisible();
+  expect(within(edit).queryByText("Permissions to add")).toBeNull();
+  expect(within(edit).queryByText("View projects")).toBeNull();
+  await userEvent.click(within(edit).getByRole("button", { name: "Cancel" }));
+  expect(mocks.setRole).not.toHaveBeenCalled();
+});
+it("requires a deliberate choice before replacing an unsupported role assignment", async () => {
+  mocks.list.mockResolvedValue({
+    data: { users: [{ ...member, role: "admin,unknown" }], total: 1 },
+  });
+  page();
+  const row = (await screen.findByText(member.email)).closest("tr")!;
+  await userEvent.click(within(row).getByRole("button", { name: "View permissions" }));
+  const view = screen.getByRole("dialog", { name: "View permissions" });
+  expect(within(view).getByText("Unsupported role")).toBeVisible();
+  expect(within(view).getByText("No permissions granted.")).toBeVisible();
+  expect(within(view).queryByText("View the audit log")).toBeNull();
+  await userEvent.click(within(view).getByRole("button", { name: "Close" }));
+  await waitFor(() => expect(view).not.toBeInTheDocument());
+  await userEvent.click(within(row).getByRole("button", { name: "Change role" }));
+  const edit = screen.getByRole("dialog", { name: "Change role" });
+  expect(within(edit).getByRole("combobox", { name: "Role" })).toHaveTextContent("Choose a role");
+  const save = within(edit).getByRole("button", { name: "Save changes" });
+  expect(save).toBeDisabled();
+  await chooseRole(edit, "Member");
+  expect(within(edit).getByText("Permissions to add")).toBeVisible();
+  expect(within(edit).getByText("View projects")).toBeVisible();
+  expect(mocks.setRole).not.toHaveBeenCalled();
+  await userEvent.click(save);
+  await waitFor(() => expect(edit).not.toBeInTheDocument());
+  expect(mocks.setRole).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ userId: member.id, role: "member" }),
+  );
+});
 it("waits for confirmation, fences duplicate saves and refreshes after success", async () => {
   page();
   let finish!: (value: unknown) => void;
@@ -107,6 +186,9 @@ it("waits for confirmation, fences duplicate saves and refreshes after success",
       }),
   );
   const dialog = await editMember();
+  expect(within(dialog).getByText("Permissions to add")).toBeVisible();
+  expect(within(dialog).getByText("View the audit log")).toBeVisible();
+  expect(within(dialog).queryByText("View projects")).toBeNull();
   expect(mocks.setRole).not.toHaveBeenCalled();
   const save = within(dialog).getByRole("button", { name: "Save changes" });
   fireEvent.click(save);
@@ -129,6 +211,22 @@ it("retains a failed confirmation for retry and hides server diagnostics", async
   fireEvent.click(within(dialog).getByRole("button", { name: "Save changes" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   expect(mocks.setRole).toHaveBeenCalledTimes(2);
+});
+it("refreshes permissions when the server denies a role change", async () => {
+  page();
+  const dialog = await editMember();
+  mocks.setRole.mockResolvedValueOnce({ error: { status: 403, message: "private diagnostic" } });
+  mocks.access.mockResolvedValue({
+    ...accessForRole("admin", actor.id),
+    permissions: ["users.read"],
+  });
+  const save = within(dialog).getByRole("button", { name: "Save changes" });
+  await userEvent.click(save);
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+    "You do not have permission to manage users.",
+  );
+  await waitFor(() => expect(save).toBeDisabled());
+  expect(mocks.setRole).toHaveBeenCalledTimes(1);
 });
 it("retries a successful mutation's refresh without changing the role twice", async () => {
   page();

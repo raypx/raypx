@@ -17,7 +17,11 @@ export async function releaseContextCommand(tx: ControlTransaction, task: AgentT
       mode: task.mode,
       prompt: task.prompt,
       contextSelection: {
-        sources: task.context.sources.map(({ id, revision }) => ({ id, revision })),
+        sources: task.context.sources.map(({ id, revision, kind, name }) => ({
+          id,
+          revision,
+          ...(kind === "attachment" ? { attachment: name } : {}),
+        })),
       },
     },
   };

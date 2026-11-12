@@ -94,6 +94,16 @@ it("maps S3 errors to a code without URLs or response bodies", async () => {
   expect(failure).toMatchObject({ code: "STORAGE_UNAVAILABLE", message: "STORAGE_UNAVAILABLE" });
 });
 
+it("rejects a PUT to a missing bucket", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(null, { status: 404 })),
+  );
+  await expect(createS3Storage(config).put("missing", "draft")).rejects.toMatchObject({
+    code: "STORAGE_UNAVAILABLE",
+  });
+});
+
 it("pre-signs downloads and content-type-bound uploads without network calls", async () => {
   const storage = createS3Storage(config);
   const download = new URL(

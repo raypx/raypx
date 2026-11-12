@@ -89,10 +89,20 @@ test(
           Number(query.get("offset") ?? 0) === 0,
       ),
     ).toBe(true);
+    const previewButton = row.getByRole("button", { name: "View permissions" });
+    await previewButton.press("Enter");
+    const preview = page.getByRole("dialog", { name: "View permissions" });
+    await expect(preview.getByText("View projects", { exact: true })).toBeVisible();
+    await expect(preview.getByText("View the audit log", { exact: true })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(preview).toBeHidden();
+    await expect(previewButton).toBeFocused();
     await row.getByRole("button", { name: "Change role" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("combobox", { name: "Role", exact: true }).click();
     await page.getByRole("option", { name: "Admin", exact: true }).click();
+    await expect(dialog.getByRole("heading", { name: "Permissions to add" })).toBeVisible();
+    await expect(dialog.getByText("View the audit log", { exact: true })).toBeVisible();
     expect(changes).toHaveLength(0);
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog.getByRole("alert")).toBeVisible();

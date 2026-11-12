@@ -11,6 +11,7 @@ import type {
 } from "@raypx/core/tasks";
 import type { RelayRequest, SyncDevice, TaskChange } from "@raypx/contracts/tasks";
 import type { ObservedProjection, TerminalRequest } from "@raypx/contracts/terminal";
+import type { SessionAttachmentInput } from "@raypx/contracts/api";
 
 export interface TaskReadOptions {
   signal?: AbortSignal | undefined;
@@ -31,6 +32,13 @@ export interface TaskChangeSource {
 
 /** The view needs task use cases, not an HTTP client or a native transport. */
 export interface TaskWorkspacePort extends TaskChangeSource {
+  attachments?: {
+    status(input: Record<string, never>, options?: TaskReadOptions): Promise<{ enabled: boolean }>;
+    upload(
+      input: SessionAttachmentInput,
+      options?: TaskReadOptions,
+    ): Promise<{ id: string; revision: 1; attachment: string }>;
+  };
   models?: {
     list(input?: {}, options?: TaskReadOptions): Promise<ModelCatalog>;
     setDefault(

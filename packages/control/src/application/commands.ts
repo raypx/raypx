@@ -119,7 +119,9 @@ export class ControlCommands {
       expected.some(
         (source, index) =>
           source.id.toLowerCase() !== actual[index]?.id.toLowerCase() ||
-          source.revision !== actual[index]?.revision,
+          source.revision !== actual[index]?.revision ||
+          source.attachment !==
+            (actual[index]?.kind === "attachment" ? actual[index].name : undefined),
       )
     )
       throw new ControlError("IDEMPOTENCY_CONFLICT");

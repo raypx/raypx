@@ -171,7 +171,7 @@ Upload from a clean checkout plus the reviewed deployment configuration.
 CLI uploads remain available for explicit manual releases. Use GitHub-triggered
 deployments for normal canary updates after connecting the repository.
 Detached upload completion is not a health result: inspect deployment status and
-logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v4.
+logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v5.
 
 Railway and Compose share apps/api/Dockerfile and apps/web/Dockerfile. The default
 API `deploy` stage extends the runtime stage with database production dependencies

@@ -124,7 +124,7 @@ runtime dependency or part of the cross-platform default verify gate.
 
 `runtime/terminal` supplies the observed-session RequestBroker, private authenticated
 hook endpoint (Unix socket, or loopback on Windows), bounded plain-content envelopes and safe hook settings plans.
-`runtime/daemon` owns relay v4, project-specific Away opt-in, host authorization
+`runtime/daemon` owns relay v5, project-specific Away opt-in, host authorization
 in the borrowed profile SQLite writer and connector/service installation.
 `runtime/host.ts` owns host services, request routing, cloud wakeups and shutdown for daemon and Windows foreground transports. The execution-owner factory selects it for direct Windows stdio,
 with lifecycle shutdown owned by that foreground process. Host credentials never enter JSON
@@ -153,7 +153,7 @@ capability as unsupported; local discovery stays independent. `readRemoteControl
 is pure: it never creates directories, IDs, files, controllers or network activity.
 Validate origins with `serverOrigin`; keep secrets out of disk settings and diagnostics.
 
-Always authenticate with relay protocol 4, including after grant renewal or explicit
+Always authenticate with relay protocol 5, including after grant renewal or explicit
 restart; unsupported handshakes stop with UPGRADE_REQUIRED. Keep replay, command receipts,
 connection fencing and bounded renewal/backoff. Terminal renewal failures call the owner's
 authorization-loss handler, which owns binding cleanup. Consume background promise failures

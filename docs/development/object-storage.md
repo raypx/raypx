@@ -1,50 +1,70 @@
-# Object storage
+# Session attachment storage
 
-`@raypx/storage` stores files for server code. It wraps [unstorage](https://unstorage.unjs.io)
-drivers behind a small `ObjectStorage` interface and adds S3 pre-signed URLs with
-aws4fetch. The S3 adapter uses fetch only, so AWS S3 and compatible providers work through the Bun API.
+Web and Desktop remote session editors can attach UTF-8 text files when object
+storage is configured. Selecting a file uploads it immediately. The editor waits
+for the upload before it can send the session. It can remove a selection or save
+it in a device-local draft. Desktop's offline session path remains device-local.
 
-## Configuration
+## Configure S3
 
-The API reads five optional variables. Set endpoint, bucket and both keys together, or
-none of them; a partial set stops startup.
+Apply the foundation migrations with `bun run db:migrate` on the deployment's
+active database. Create a private AWS S3 or compatible bucket, using a credential
+scoped to PUT on `session-attachments/*`. Raypx uses path-style requests, so the
+endpoint is the service origin without the bucket. Block public access and
+configure expiration after 30 days on that prefix, including noncurrent
+versions if versioning is enabled. The policy also collects objects from
+interrupted uploads. [S3 Lifecycle expiration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-expire-general-considerations.html)
 
-| Variable               | Example                                                      |
-| ---------------------- | ------------------------------------------------------------ |
-| `S3_ENDPOINT`          | `https://s3.example.com`                                     |
-| `S3_REGION`            | `auto` (default) or a provider region such as `eu-central-1` |
-| `S3_BUCKET`            | `raypx`                                                      |
-| `S3_ACCESS_KEY_ID`     | access key with access to that bucket only                   |
-| `S3_SECRET_ACCESS_KEY` | its runtime secret                                           |
+In Web, open **Configuration center** → **Object storage**. Administrators can
+set AWS S3 or Cloudflare R2 endpoints, enter both credentials and pause or
+resume uploads. Replacing the endpoint, bucket or region requires a new pair of
+keys. Leaving both fields empty preserves the stored credentials for the current
+location. The page reports the saved configuration state. Actual upload attempts
+verify bucket access.
 
-Requests are path-style (`<endpoint>/<bucket>/<key>`). Without configuration
-`runtime.storage.available` is false and every call fails with `STORAGE_NOT_CONFIGURED`;
-startup, liveness and other features are unaffected.
+For a custom S3-compatible endpoint, the deployment operator first runs this
+command with the API's `DATABASE_URL` and `AUTH_SECRET` available in the
+environment. Pass JSON on standard input from the deployment secret manager
+or a protected file. Web can manage credentials and settings for that endpoint
+after it is configured.
 
-## Using it in the API
-
-```ts
-const { storage } = runtime;
-const key = `avatars/${session.user.id}/${crypto.randomUUID()}.png`;
-await storage.put(key, bytes, { contentType: "image/png" });
-const bytes = await storage.get(key); // null when missing
-
-// Direct browser upload, bound to the Content-Type the client must send:
-const uploadUrl = await storage.signedUrl(key, {
-  method: "PUT",
-  expiresIn: 300,
-  contentType: "image/png",
-});
+```sh
+bun run --cwd apps/api storage:configure < /path/to/protected-storage-config.json
 ```
 
-- Keys are `/`-separated segments of letters, digits and `! - _ . * ' ( )`. Build them
-  on the server from trusted IDs; never accept a client key without checking ownership.
-- `list(prefix)` returns every key under that directory prefix.
-- Pre-signed URLs last 1 second to 7 days. Bucket CORS must allow the Web and Desktop
-  origins for browser uploads. Memory storage has no signer
-  (`STORAGE_SIGNING_UNSUPPORTED`).
-- Errors are `StorageError` codes without driver messages, URLs or object content.
-- Tests use `createMemoryStorage()` or pass `storage` in `RuntimeProviders`.
+```json
+{
+  "endpoint": "https://s3.eu-central-1.amazonaws.com",
+  "region": "eu-central-1",
+  "bucket": "raypx-private",
+  "accessKeyId": "<access-key-id>",
+  "secretAccessKey": "<secret-access-key>"
+}
+```
 
-No HTTP route exposes storage yet. A feature that adds one owns its authorization,
-size and type limits, and any database record of the object.
+`storage_configuration` stores the endpoint, region and bucket along with both
+keys sealed together using AES-256-GCM. A domain-separated HKDF key is derived
+from the API's `AUTH_SECRET`. Enter both keys in Web or run the command again to
+re-seal them after changing `AUTH_SECRET`. Each upload reads the committed
+configuration. This command replaces the former `S3_*` API environment settings.
+The browser and Desktop daemon use authenticated RPC, so S3 CORS rules and
+public URLs are unnecessary.
+
+## Ownership and retention
+
+The API validates the current session, trusted origin and account-owned remote
+project. It accepts at most 24,000 bytes and 8,000 UTF-16 code units per file,
+and rejects invalid UTF-8, empty text and binary control characters. It stores
+the original bytes under a server-generated S3 key. A PostgreSQL projection
+holds the validated text for up to 30 days and becomes eligible for session
+creation only after the object upload succeeds. An account can have 64 active
+uploads. The scheduled cleanup removes expired projections in bounded batches.
+
+A draft stores the attachment ID and name. It resolves only for the same
+account, computer and project. Removing the selection leaves the uploaded
+object and projection to their expiry policies. The same eight-source and
+32,000-character execution budget covers references and attachments together.
+On send, Raypx freezes the text in the session's existing context snapshot.
+That snapshot is part of session history and follows its retention. The
+Relay v5 path delivers this snapshot without giving the relay S3 credentials.
+Deploy matching Web, API, Relay and Desktop/CLI versions for remote sessions.

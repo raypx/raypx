@@ -42,6 +42,12 @@ function readDelivery(value: unknown): TaskDraftDelivery {
 export function createTaskDraft(input: DraftInput, id: string): TaskDraft {
   return { ...input, id, updatedAt: new Date().toISOString() };
 }
+export function hasSessionDraftContent(input: Pick<DraftInput, "prompt" | "contextSelection">) {
+  return Boolean(
+    input.prompt.trim() ||
+    input.contextSelection?.sources.some((source) => source.attachment !== undefined),
+  );
+}
 /** Bound untrusted device storage before it becomes editable form state. */
 export function readTaskDrafts(raw: string | null): TaskDraft[] {
   if (!raw) return [];
@@ -59,7 +65,6 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
     if (
       !draft.id ||
       ids.has(draft.id as string) ||
-      !(draft.prompt as string).trim() ||
       !Number.isFinite(Date.parse(draft.updatedAt as string)) ||
       !agentProviderSchema.safeParse(draft.provider).success ||
       (draft.mode !== "run" && draft.mode !== "plan")
@@ -70,6 +75,8 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
       draft.contextSelection === undefined
         ? undefined
         : taskContextSelectionSchema.parse(draft.contextSelection);
+    if (!hasSessionDraftContent({ prompt: draft.prompt as string, contextSelection }))
+      throw new Error("Invalid draft value");
     // Drop unknown fields, including any externally inserted executable content.
     return {
       id: draft.id,

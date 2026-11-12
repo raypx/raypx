@@ -45,6 +45,10 @@ explicit domain projections. Changes require generated foundation migrations.
 `system_configuration` stores the singleton non-secret site settings with revision
 and last-editor metadata. API owns validation, permissions and compare-and-swap.
 
+`storage_configuration` stores the S3 endpoint, bucket and encrypted credentials.
+`session_attachment` stores account- and project-scoped text projections with
+publication and expiry metadata. API owns encryption, object writes and admission.
+
 `control_credential` stores only restricted host credential hashes/expiry; API owns
 issuance and revocation. `control_observed_session` and `control_observed_request`
 store bounded observed projections separately from managed tasks. Their migrations

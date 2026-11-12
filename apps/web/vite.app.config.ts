@@ -32,7 +32,11 @@ export default defineConfig(() => {
       raypxDevtools(),
       nitro({
         ...nitroTarget(),
-        routeRules: { "/**": { headers: securityHeaders } },
+        routeRules: {
+          "/**": { headers: securityHeaders },
+          "/manifest.webmanifest": { headers: { "Cache-Control": "no-cache" } },
+          "/sw.js": { headers: { "Cache-Control": "no-cache" } },
+        },
         // Trace React and React DOM together so both load the same NODE_ENV build.
         traceDeps: ["react", "react-dom"],
       }),

@@ -1,5 +1,15 @@
 import type { AuthSession } from "@raypx/core/auth";
-import type { ConfigurationSnapshot, ConfigurationValues } from "@raypx/contracts/api";
+import type {
+  ConfigurationSnapshot,
+  ConfigurationValues,
+  StorageSettingsSnapshot,
+  StorageSettingsUpdate,
+} from "@raypx/contracts/api";
+
+export interface StorageSettingsService {
+  read(): Promise<StorageSettingsSnapshot>;
+  update(input: StorageSettingsUpdate): Promise<StorageSettingsSnapshot>;
+}
 
 /** Inject this capability into consumers that only need to read settings. */
 export interface ConfigurationReader {

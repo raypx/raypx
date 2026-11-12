@@ -21,7 +21,7 @@ boundaries behind the implementation.
 - [MyGo / Bun and immutable CLI artifacts](architecture/0046-mygo-bun-artifacts.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)
-- [Persistent Agent Platform roadmap](roadmap.md) — future scope and dated acceptance
+- [Pi product roadmap](roadmap.md)
 
 ## Development and verification
 

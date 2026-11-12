@@ -180,7 +180,7 @@ test(
       socket.onMessage((raw) => {
         const frame = JSON.parse(String(raw));
         if (frame.type === "auth")
-          socket.send(JSON.stringify({ type: "ready", role: "viewer", protocolVersion: 4 }));
+          socket.send(JSON.stringify({ type: "ready", role: "viewer", protocolVersion: 5 }));
         if (frame.type === "request") submitted++;
       }),
     );

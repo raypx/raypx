@@ -6,13 +6,14 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
-import { assignedRoles, type AuthRole } from "@raypx/auth/access";
+import { assignedRoles } from "@raypx/auth/access";
 import { useLocale } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Avatar } from "@raypx/ui/avatar";
 import { DataTable } from "@raypx/ui/data-table";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { IconButton } from "@raypx/ui/icon-button";
+import { EyeIcon } from "@raypx/icons/eye";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import type { authClient } from "../../auth/client.js";
 
@@ -20,7 +21,8 @@ type UserRow = NonNullable<
   Awaited<ReturnType<typeof authClient.admin.listUsers>>["data"]
 >["users"][number];
 export type UserSortDirection = "asc" | "desc";
-export type UserRoleSelection = { id: string; email: string; role: AuthRole };
+export type UserRoleSelection = Pick<UserRow, "id" | "email" | "role">;
+type OpenRole = (selection: UserRoleSelection, mode: "view" | "edit", trigger: HTMLElement) => void;
 
 const features = tableFeatures({ rowSortingFeature });
 const column = createColumnHelper<typeof features, UserRow>();
@@ -32,8 +34,9 @@ const sortingByDirection = {
 
 type UserTableContextValue = {
   accountId: string;
+  canView: boolean;
   canChange: boolean;
-  onEdit: (selection: UserRoleSelection) => void;
+  onOpenRole: OpenRole;
   date: Intl.DateTimeFormat;
   common: ReturnType<typeof useTranslations<"common">>;
   users: ReturnType<typeof useTranslations<"users">>;
@@ -90,7 +93,7 @@ const columns = column.columns([
     },
     cell: function RoleCell({ row }) {
       const { users: t } = useUserTableContext();
-      const roles = assignedRoles(row.original.role);
+      const roles = [...new Set(assignedRoles(row.original.role))];
       return (
         <span className="flex flex-wrap gap-1">
           {roles.length
@@ -124,19 +127,21 @@ const columns = column.columns([
       return <span className="sr-only">{common("actions")}</span>;
     },
     cell: function UserActionsCell({ row: { original: user } }) {
-      const { accountId, canChange, onEdit, users: t } = useUserTableContext();
+      const { accountId, canView, canChange, onOpenRole, users: t } = useUserTableContext();
+      const selection = { id: user.id, email: user.email, role: user.role };
       return (
         <div className="flex items-center justify-end gap-2">
           <IconButton
+            label={t("viewPermissions")}
+            disabled={!canView}
+            onClick={(event) => onOpenRole(selection, "view", event.currentTarget)}
+          >
+            <EyeIcon aria-hidden="true" />
+          </IconButton>
+          <IconButton
             label={t("editRole")}
             disabled={!canChange || user.id === accountId}
-            onClick={() =>
-              onEdit({
-                id: user.id,
-                email: user.email,
-                role: assignedRoles(user.role).includes("admin") ? "admin" : "member",
-              })
-            }
+            onClick={(event) => onOpenRole(selection, "edit", event.currentTarget)}
           >
             <ShieldCheckIcon aria-hidden="true" />
           </IconButton>
@@ -152,15 +157,17 @@ const columns = column.columns([
 export function UserTable({
   rows,
   accountId,
+  canView,
   canChange,
   sortDirection,
-  onEdit,
+  onOpenRole,
 }: {
   rows: UserRow[];
   accountId: string;
+  canView: boolean;
   canChange: boolean;
   sortDirection: UserSortDirection;
-  onEdit: (selection: UserRoleSelection) => void;
+  onOpenRole: OpenRole;
 }) {
   const c = useTranslations("common");
   const t = useTranslations("users");
@@ -170,8 +177,8 @@ export function UserTable({
     [locale],
   );
   const context = useMemo(
-    () => ({ accountId, canChange, onEdit, date, common: c, users: t }),
-    [accountId, canChange, onEdit, date, c, t],
+    () => ({ accountId, canView, canChange, onOpenRole, date, common: c, users: t }),
+    [accountId, canView, canChange, onOpenRole, date, c, t],
   );
   const table = useTable({
     features,
@@ -201,7 +208,7 @@ export function UserTable({
               },
               cellClassName: wideColumn,
             },
-            actions: { header: { className: "w-12" } },
+            actions: { header: { className: "w-24" } },
           }}
         />
       </div>

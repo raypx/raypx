@@ -64,7 +64,7 @@ export function ComposerDraftList({
               >
                 <FileEditIcon aria-hidden="true" className="shrink-0 text-muted-foreground" />
                 <span className="min-w-0">
-                  <span className="line-clamp-1 text-sm">{draft.prompt}</span>
+                  <span className="line-clamp-1 text-sm">{draft.prompt || t("attachments")}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {devices
                       .find((item) => item.id === draft.deviceId)
@@ -78,7 +78,9 @@ export function ComposerDraftList({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={t("draft.delete", { name: draft.prompt.slice(0, 80) })}
+                aria-label={t("draft.delete", {
+                  name: draft.prompt.slice(0, 80) || t("attachments"),
+                })}
                 disabled={busy}
                 onClick={() => onDelete(draft.id)}
               >

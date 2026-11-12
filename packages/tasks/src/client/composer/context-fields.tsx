@@ -28,15 +28,18 @@ export function ComposerContextFields({
   onBudget: (budget: ContextBudgetState) => void;
 }) {
   const memoryText = useTranslations("memory");
+  const references = context.value.sources.filter((source) => source.attachment === undefined);
+  const attachments = context.value.sources.filter((source) => source.attachment !== undefined);
   return (
     <>
       <ContextPicker
         client={context.client}
         ownerKey={context.ownerKey}
         target={context.target}
-        value={context.value}
+        value={{ sources: references }}
+        maxSources={8 - attachments.length}
         disabled={busy}
-        onChange={onSelect}
+        onChange={({ sources }) => onSelect({ sources: [...sources, ...attachments] })}
       />
       {!targetFixed && (
         <p className="text-xs text-muted-foreground">{memoryText("selectionReset")}</p>

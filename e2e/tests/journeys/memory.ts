@@ -154,7 +154,7 @@ export function registerTests() {
               JSON.stringify({
                 type: "ready",
                 role: "viewer",
-                protocolVersion: 4,
+                protocolVersion: 5,
               }),
             );
           if (frame.type !== "request" || frame.request.method !== "tasks.create") return;

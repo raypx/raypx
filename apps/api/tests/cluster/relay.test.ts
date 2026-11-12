@@ -99,7 +99,7 @@ async function wire(target: { url: string }, role: "viewer" | "device", token: s
     socket.close();
   });
   await expect.poll(() => socket.readyState).toBe(WebSocket.OPEN);
-  send({ type: "auth", protocolVersion: 4, role, token });
+  send({ type: "auth", protocolVersion: 5, role, token });
   await take("ready");
   return { socket, send, take, history, closed };
 }

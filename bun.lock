@@ -39,6 +39,7 @@
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/storage": "workspace:*",
+        "better-auth": "catalog:",
         "drizzle-orm": "catalog:",
         "evlog": "catalog:",
         "hono": "catalog:",

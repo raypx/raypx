@@ -3,7 +3,7 @@ export default {
   privacy: "Privacy",
   backHome: "Back to home",
   intro: "How Raypx handles data on your computer, in your account and during remote access.",
-  updated: "Last updated: November 2, 2026",
+  updated: "Last updated: November 13, 2026",
   contents: "On this page",
   openSettings: "Manage preferences",
   openAccount: "Manage account sessions",
@@ -23,7 +23,7 @@ export default {
     title: "Remote access",
     body: "Remote access requires sign-in and explicit authorization of a computer and its projects. Remote session instructions, selected references, results, status and approval records pass through the remote services so they can be shown to your account.",
     detail:
-      "The server stores account-scoped views of remote work. Remote services process this content; it is not restricted to device-local storage. Sharing terminal approval requests is a separate opt-in and does not synchronize the full terminal output or session stream.",
+      "Choosing a text attachment uploads the file to the deployment's private object store. Sending the session saves its selected text with that session. Sharing terminal approval requests is a separate opt-in and does not synchronize the full terminal output or session stream.",
   },
   storage: {
     title: "Cookies and device storage",
@@ -39,7 +39,7 @@ export default {
   },
   providers: {
     title: "Service providers",
-    body: "The operator of your Raypx deployment configures its hosting, database, email and optional analytics services. The Agent or model provider you run or configure processes the inputs you send to it under its own data terms.",
+    body: "The operator of your Raypx deployment configures its hosting, database, email, optional object storage and analytics services. The Agent or model provider you run or configure processes the inputs you send to it under its own data terms.",
     detail:
       "Which providers receive data depends on the deployment and your choices. Review their privacy information before sending project context or other sensitive content to them.",
   },

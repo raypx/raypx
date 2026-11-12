@@ -42,11 +42,13 @@ Core owns code-point-safe `taskText` clipping within UTF-16 schema budgets and
 replaces lone surrogates and NUL with the replacement character, preserving valid
 Unicode pairs; use it on transport JSON, not non-JSON objects such as Date.
 Relay schemas compose core models into commands, sequenced events, snapshots and cursor recovery.
-Relay requires explicit protocolVersion 4 for managed tasks and observed requests.
+Relay requires explicit protocolVersion 5 for managed tasks and observed requests.
 Unsupported versions receive UPGRADE_REQUIRED without fallback. Full activity events are
 authoritative checkpoints; activity_delta appends require an entry ID and adjacent
 base/new revisions. Core's applyActivityEvent returns undefined when checkpoint recovery
 is required. TaskChange scopes subscriptions to events, devices or resets.
+Session attachment RPCs accept bounded UTF-8 file bytes and return an opaque
+selection. Relay v5 carries the attachment source in the frozen context snapshot.
 HTTP exposes projections and tickets; provider wire messages remain private to CLI.
 `/terminal` defines observed-session, request, decision, capability and restricted
 host-authorization schemas. `/api` exposes account-scoped observed summaries/details
@@ -66,7 +68,7 @@ including an explicit guest projection. Core's pure `/permissions` vocabulary
 defines wire role/permission values; Auth's `/access` Better Auth ACL owns the role policy.
 RPC inputs never accept roles or grants.
 
-Relay v4 includes authoritative snapshot sync and frozen task contexts for every
+Relay v5 includes authoritative snapshot sync and frozen task contexts for every
 host. `resume.syncId` and `snapshot.syncId` correlate backend-requested snapshots;
 background recovery does not require a correlation ID. No capability negotiation
 or partial-protocol mode is supported. Provider capabilities require `reason` and

@@ -1,8 +1,9 @@
 import type { AuditService } from "../administration/audit.js";
 import type { AdministrationQueries } from "../administration/types.js";
 import type { InstanceService } from "@raypx/instances/server";
-import type { ConfigurationService } from "../configuration/types.js";
-import type { ControlService } from "@raypx/control";
+import type { ConfigurationService, StorageSettingsService } from "../configuration/types.js";
+import type { ControlService, ResolveTaskContext } from "@raypx/control";
+import type { SessionAttachments } from "../storage/types.js";
 import type { AuthSession } from "@raypx/core/auth";
 import type { AccessPolicy } from "../access.js";
 import type { ApiLogging } from "../logging.js";
@@ -15,10 +16,13 @@ export interface ApiAppOptions {
   administration?: AdministrationQueries;
   access?: AccessPolicy;
   configuration?: ConfigurationService;
+  storageSettings?: StorageSettingsService;
   jobsEnabled?: boolean;
   control?: ControlService;
   cloudJobs?: CloudJobsService;
   memory?: ContextLibraryService;
+  attachments?: SessionAttachments;
+  resolveContext?: ResolveTaskContext;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;

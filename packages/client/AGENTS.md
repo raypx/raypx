@@ -49,4 +49,4 @@ carries relay scheduling.
 selects only the account/coordination contracts, excluding administrator settings.
 
 `TaskClient.observed` reads bounded summaries and individual request bodies, and sends
-receipt-bound decisions over relay v4. Never automatically retry a changed decision.
+receipt-bound decisions over relay v5. Never automatically retry a changed decision.

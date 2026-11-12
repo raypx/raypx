@@ -1,5 +1,5 @@
 import type { Database } from "@raypx/database/connection";
-import { rateLimit, session, verification } from "@raypx/database/schema";
+import { rateLimit, session, sessionAttachment, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
 import type { ConfigurationReader } from "../configuration/types.js";
@@ -27,6 +27,7 @@ export interface CleanupResult {
   verifications: number;
   rateLimits: number;
   contextCommands: number;
+  attachments: number;
 }
 
 /** Repeated runs are safe; every transaction removes at most 1,000 rows per table. */
@@ -43,6 +44,7 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       verifications: 0,
       rateLimits: 0,
       contextCommands: 0,
+      attachments: 0,
     };
     if (!lock?.acquired) return result;
 
@@ -66,6 +68,12 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
         table: rateLimit,
         order: rateLimit.lastRequest,
         expired: sql`${rateLimit.lastRequest} < extract(epoch from transaction_timestamp()) * 1000 - 3600000`,
+      },
+      {
+        key: "attachments",
+        table: sessionAttachment,
+        order: sessionAttachment.expiresAt,
+        expired: sql`${sessionAttachment.expiresAt} <= transaction_timestamp()`,
       },
     ] as const;
     for (const { key, table, order, expired } of policies) {
@@ -108,6 +116,7 @@ export async function runCleanupJob(
           verifications: 0,
           rateLimits: 0,
           contextCommands: 0,
+          attachments: 0,
         };
     event.emit({
       status: 200,

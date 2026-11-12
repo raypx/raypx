@@ -1,5 +1,7 @@
 import { administrationContract } from "./administration.js";
+import { sessionAttachmentContract } from "./attachments.js";
 export * from "./administration.js";
+export * from "./attachments.js";
 import { instancesContract } from "./instances.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
@@ -47,6 +49,7 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
   admin: administrationContract,
+  attachments: sessionAttachmentContract,
   instances: instancesContract,
   memory: memoryContract,
   jobs: jobsContract,
@@ -133,6 +136,7 @@ type NativeExposure<C> = {
 };
 export const apiExposure = {
   admin: { overview: "web", health: "web", audit: "web" },
+  attachments: { status: "renderer", upload: "renderer" },
   instances: {
     begin: "host",
     inspect: "renderer",
@@ -149,7 +153,14 @@ export const apiExposure = {
   relay: { ticket: "renderer" },
   observed: { list: "renderer", get: "renderer" },
   hosts: { authorize: "native", revoke: "native", grant: "host" },
-  configuration: { public: "renderer", access: "renderer", get: "renderer", update: "renderer" },
+  configuration: {
+    public: "renderer",
+    access: "renderer",
+    get: "renderer",
+    update: "renderer",
+    storage: "web",
+    updateStorage: "web",
+  },
   jobs: {
     list: "renderer",
     create: "renderer",

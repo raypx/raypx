@@ -114,6 +114,37 @@ export const systemConfiguration = foundation.table("system_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
+export const storageConfiguration = foundation.table("storage_configuration", {
+  id: text("id").primaryKey(),
+  endpoint: text("endpoint").notNull(),
+  region: text("region").notNull(),
+  bucket: text("bucket").notNull(),
+  credentials: text("credentials").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  revision: integer("revision").notNull().default(1),
+  updatedAt: date("updated_at").notNull().defaultNow(),
+});
+
+export const sessionAttachment = foundation.table(
+  "session_attachment",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    deviceId: text("device_id").notNull(),
+    projectId: text("project_id").notNull(),
+    name: text("name").notNull(),
+    content: text("content").notNull(),
+    ready: boolean("ready").notNull().default(false),
+    expiresAt: date("expires_at").notNull(),
+  },
+  (table) => [
+    index("session_attachment_owner_idx").on(table.userId, table.expiresAt),
+    index("session_attachment_expiry_idx").on(table.expiresAt),
+  ],
+);
+
 // Control records are separate from authentication and never contain CLI credentials.
 export const controlOwner = foundation.table("control_owner", {
   securityEpoch: integer("security_epoch").notNull().default(0),
@@ -363,6 +394,8 @@ export const schema = {
   cloudJob,
   cloudJobRun,
   systemConfiguration,
+  storageConfiguration,
+  sessionAttachment,
   user,
   session,
   account,

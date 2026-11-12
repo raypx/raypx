@@ -1,4 +1,4 @@
-# Administrator configuration
+# Configuration center
 
 Web exposes `/admin/settings` to verified administrators. It uses the existing API
 and PostgreSQL foundation on Bun; there is no second admin
@@ -15,7 +15,7 @@ server or configuration package.
    for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
    This is an operator command, never a startup action. Database roles remain
    authoritative after it finishes; removing a role is not undone by the email list.
-5. Sign in to Web and open **Site settings**. Membership is checked from the current
+5. Sign in to Web and open **Configuration center**. Membership is checked from the current
    stored role on every admin request, including writes. There is no first-user takeover.
 
 Upgrading an existing deployment: run the migration before deploying this API.
@@ -28,6 +28,11 @@ Without the database, the page reports unavailability; it does not pretend a sav
 succeeded or fall back to browser-only persistence.
 
 ## Settings and precedence
+
+The **Site** tab manages the settings below. The **Object storage** tab manages
+attachment upload availability, the S3 location and write-only credentials.
+Each tab has its own revision and saves independently. Storage changes reuse
+the administration audit and record only the enabled state. See [S3 configuration](object-storage.md).
 
 | Setting            | Initial value | Effect                                                                  |
 | ------------------ | ------------- | ----------------------------------------------------------------------- |
@@ -65,9 +70,9 @@ in `ALLOWED_ORIGINS`, and are limited to 10 per administrator per minute. DTOs
 reject extra configuration keys.
 
 The public projection contains only site name and registration availability.
-Database URLs, secrets, administrator email lists and provider credentials never
-enter these responses. The admin page only displays non-secret deployment flags
-for cleanup and mail availability. To recover from a closed registration policy,
+Database URLs, encryption secrets, administrator email lists and stored provider
+credentials never enter API responses. The Site tab displays non-secret deployment
+flags for cleanup and mail availability. To recover from a closed registration policy,
 an existing verified administrator can sign in and re-enable it.
 
 ## Server-side injection (IoC)

@@ -20,7 +20,7 @@ import {
   terminalRequestSchema,
   terminalSessionSchema,
 } from "./terminal.js";
-export const RELAY_VERSION = 4;
+export const RELAY_VERSION = 5;
 
 export const deviceProjectSchema = z.object({
   id: z.string().uuid(),

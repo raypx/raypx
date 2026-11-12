@@ -36,6 +36,9 @@ clear the selection; guest handoff and account/scope changes never migrate it.
 Creation sends `contextSelection`; only the runtime supplies the immutable
 `task.context` snapshot rendered in task details. Templates remain reference text
 and do not grant tools or execute on selection.
+Remote composers use an injected attachment port. Drafts retain only the attachment
+ID and display name. Uploaded text uses the same source limit and execution budget
+as references.
 WorkspaceScope distinguishes device and remote ownership, derives
 cache identities and preserves the existing draft storage keys. Applications provide
 the confirmed scope; a guest editor never creates a private workspace or executes
