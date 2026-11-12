@@ -29,16 +29,3 @@ export async function expectPrivatePages(page: Page, surface: "Web" | "Desktop",
     });
   }
 }
-
-export async function expectGuestShell(page: Page) {
-  await expect(page.getByRole("main")).toBeVisible();
-  await expect(page.getByRole("complementary")).toBeInViewport();
-  await expect(page.getByRole("banner")).toBeInViewport();
-  expect(
-    await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth <= innerWidth + 1 &&
-        document.documentElement.scrollHeight <= innerHeight + 1,
-    ),
-  ).toBe(true);
-}

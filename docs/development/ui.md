@@ -102,7 +102,7 @@ Animations API. Both pause offscreen and in hidden tabs, and reduced motion draw
 the static trails and hides the lights.
 `useDemoPlayback` in `demo-playback.ts` plays the example's steps after it has been
 visible for a moment; `demoStage` derives each frame from progress, so playback only
-fades content and the frame keeps its height. Hover, step-card focus, offscreen and
+fades content and the frame keeps its height. Hover, step-tab focus, offscreen and
 hidden tabs hold it; choosing a step or the autoplay toggle stops it. Pointer-follow
 spotlights and artwork shifts respond to hover only. Reduced motion removes all of it.
 
@@ -119,8 +119,9 @@ session/pending/error behavior. Workspace links show labelled example interfaces
 fixed sample data. Examples use code, file changes and receipt markers instead of
 explanatory paragraphs, `HelpHint` exposes draft privacy, the example notice remains
 visible and diagrams never imply an observed connection or live account state. The
-landing E2E spec turns autoplay off before its manual checks and separately covers
-autoplay, hover hold, the toggle, ambient motion and reduced motion.
+landing E2E spec exercises the autoplay control with reduced motion enabled, manual
+step selection with pointer and keyboard, and draft privacy help. The access journey
+follows the project link and verifies session changes without private reads.
 
 `bun run dev:storybook` previews UI-only specimens, including foundation state
 matrices. Storybook consumes UI public entries and static data; product flows

@@ -197,6 +197,9 @@ or servers; fixed counts are not an ownership contract.
 Combine cases only within one coherent journey. Keep independent failures, account
 boundaries and platform checks identifiable. Browser response fixtures do not prove
 real authentication or native IPC, and each case gets fresh context and resources.
+Use accessible controls, destinations and visible outcomes to verify product journeys.
+Assert exact copy only for copy or localization behavior. Use opt-in screenshots
+for visual review.
 
 i18n separates pure/SSR tests from `*.component.test.tsx` through Vitest projects
 to preserve independent React renderer environments.

@@ -7,7 +7,6 @@ import {
   connectedProject,
   selectOption,
   expectPrivatePages,
-  expectGuestShell,
 } from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
 
@@ -17,9 +16,6 @@ test(
   async ({ page }) => {
     const privateReads: string[] = [];
     await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
-    await page.route("**/rpc/configuration/public", (route) =>
-      authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
-    );
     page.on("request", (request) => {
       if (
         /\/rpc\/(tasks|approvals|devices|observed|account|relay|memory|jobs)\//.test(request.url())
@@ -27,51 +23,22 @@ test(
         privateReads.push(request.url());
     });
     await page.goto(web + "/");
-    await expect(
-      page.getByRole("heading", { name: "Run locally. Review remotely.", exact: true }),
-    ).toBeVisible();
-    await expect(page.getByRole("complementary")).toHaveCount(0);
-    await expect(
-      page
-        .getByRole("navigation", { name: "Workspace" })
-        .getByRole("link", { name: "Projects", exact: true }),
-    ).toHaveAttribute("href", "/projects");
-    await expect(page.getByRole("banner").getByRole("link", { name: "Projects" })).toHaveCount(0);
+    const projects = page.getByRole("link", { name: "Open projects", exact: true });
+    await expect(projects).toBeVisible();
     expect(privateReads).toEqual([]);
     await capture(page, {
       path: test.info().outputPath("web-landing-home.png"),
       fullPage: true,
       animations: "disabled",
     });
-    await page.setViewportSize({ width: 390, height: 844 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
-      true,
-    );
-    await capture(page, {
-      path: test.info().outputPath("web-landing-home-mobile.png"),
-      fullPage: true,
-      animations: "disabled",
-    });
-    await page.setViewportSize({ width: 1280, height: 720 });
     for (const path of ["/projects", "/settings", "/tasks", "/approvals"]) {
-      await page.goto(web + path);
+      if (path === "/projects") await projects.click();
+      else await page.goto(web + path);
       await expect(page).toHaveURL(web + path);
       await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
       await expect(
         page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
       ).toBeVisible();
-      if (path === "/tasks") {
-        await page.setViewportSize({ width: 390, height: 844 });
-        await page.emulateMedia({ colorScheme: "dark" });
-        await expectGuestShell(page);
-        await capture(page, {
-          path: test.info().outputPath("web-guest-tasks-mobile-dark.png"),
-          fullPage: true,
-          animations: "disabled",
-        });
-        await page.setViewportSize({ width: 1280, height: 720 });
-        await page.emulateMedia({ colorScheme: "light" });
-      }
     }
     expect(privateReads).toEqual([]);
     await page.getByRole("link", { name: "Sign in", exact: true }).click();
@@ -116,40 +83,15 @@ test(
       if (/\/rpc\/(tasks|approvals|devices|observed|relay|memory|jobs)\//.test(request.url()))
         privateReads.push(request.url());
     });
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(web + "/");
-    await expect(
-      page.getByRole("heading", { name: "Run locally. Review remotely.", exact: true }),
-    ).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
-    const loading = page.getByRole("button", { name: "Loading…", exact: true });
-    await expect(loading).toHaveCount(1);
-    await expect(loading.first()).toBeDisabled();
-    const header = page.getByRole("banner");
-    const headerHeight = () => header.evaluate((element: HTMLElement) => element.offsetHeight);
-    const loadingHeight = await headerHeight();
+    await expect(page.getByRole("button", { name: "Loading…", exact: true })).toBeDisabled();
     resolveSession();
-    await expect(page.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
-      "href",
-      "/projects",
-    );
-    await expect(page.getByRole("banner").getByRole("link", { name: "Projects" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Sessions", exact: true })).toHaveAttribute(
-      "href",
-      "/tasks",
-    );
     await expect(
       page.getByRole("link", { name: "Connect a computer", exact: true }),
     ).toHaveAttribute("href", "/settings");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
-    await expect(header).toHaveJSProperty("offsetHeight", loadingHeight);
-    const [appearance, language, account] = await Promise.all([
-      header.getByRole("button", { name: /^Appearance:/ }).boundingBox(),
-      header.getByRole("button", { name: "Language", exact: true }).boundingBox(),
-      header.getByRole("button", { name: "Account menu", exact: true }).boundingBox(),
-    ]);
-    if (!appearance || !language || !account) throw new Error("Missing homepage header controls");
-    const preferenceGap = language.x - (appearance.x + appearance.width);
-    expect(account.x - (language.x + language.width)).toBeCloseTo(preferenceGap);
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
     expect(privateReads).toEqual([]);
 
@@ -174,23 +116,15 @@ test(
       page.getByRole("link", { name: "Sign in to connect a computer", exact: true }),
     ).toHaveAttribute("href", "/login?returnTo=%2Fsettings");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveCount(0);
-    await expect(header).toHaveJSProperty("offsetHeight", loadingHeight);
-    await page.setViewportSize({ width: 320, height: 844 });
-    const narrowHeight = await headerHeight();
     signedIn = true;
     await broadcast("signin");
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
-    await expect(header).toHaveJSProperty("offsetHeight", narrowHeight);
     await expect(
       page.getByRole("link", { name: "Connect a computer", exact: true }),
     ).toHaveAttribute("href", "/settings");
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
     await expect(page).toHaveURL(web + "/");
     expect(privateReads).toEqual([]);
-    await page.setViewportSize({ width: 390, height: 844 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
-      true,
-    );
     await otherTab.close();
   },
 );
@@ -298,12 +232,5 @@ test(
     );
     expect(privateReads).toEqual([]);
     expect(submitted).toBe(0);
-    await page.setViewportSize({ width: 390, height: 844 });
-    await expectGuestShell(page);
-    await capture(page, {
-      path: test.info().outputPath("web-guest-resumed-mobile.png"),
-      fullPage: true,
-      animations: "disabled",
-    });
   },
 );

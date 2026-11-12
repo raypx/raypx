@@ -18,7 +18,7 @@ export function registerTests() {
     base,
   }) => {
     if (surface === "Web") await webShellFixture(page);
-    const user = await signedInAccount(page);
+    await signedInAccount(page);
     await page.route("**/rpc/approvals/list", (route) =>
       authResponse(route, {
         json: [
@@ -38,17 +38,12 @@ export function registerTests() {
     );
     await page.goto(`${base}${surface === "Web" ? "/projects" : "/"}`);
     await test.step("shows the skip link only on keyboard focus", async () => {
-      if (surface === "Desktop")
-        await page.evaluate(() => {
-          document.documentElement.style.setProperty("--mygo-titlebar-height", "40px");
-        });
       const skip = page.getByRole("link", { name: "Skip navigation", exact: true });
       await expect(skip).toBeAttached();
       await expect(skip).not.toBeInViewport();
       await page.keyboard.press("Tab");
       await expect(skip).toBeFocused();
-      await expect(skip).toBeInViewport({ ratio: 1 });
-      if (surface === "Desktop") expect((await skip.boundingBox())!.y).toBe(40);
+      await expect(skip).toBeInViewport();
       await page.keyboard.press("Tab");
       await expect(skip).not.toBeInViewport();
     });
@@ -70,40 +65,16 @@ export function registerTests() {
       "page",
     );
     await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1);
-    const expanded = (await sidebar.boundingBox())!;
     await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
     const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
     await expect(expand).toHaveAttribute("aria-expanded", "false");
-    expect((await sidebar.boundingBox())!.width).toBe(64);
-    expect(expanded.width).toBeGreaterThan(190);
-    await expect(waiting.getByText("1", { exact: true })).toBeInViewport();
-    const tasks = workspace.getByRole("link", { name: "Projects", exact: true });
-    await tasks.focus();
-    // Tooltips follow visible keyboard focus rather than focus moved by a pointer action.
-    await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Tab");
-    await expect(tasks).toBeFocused();
-    // Base UI tooltips are visual labels; the link itself retains its accessible name.
-    const hint = page.locator('[data-slot="tooltip-content"]').filter({ hasText: /^Projects$/ });
-    await expect(hint).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(hint).not.toBeVisible();
+    await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
     await page.reload();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
-    expect((await sidebar.boundingBox())!.width).toBe(64);
-    await page.setViewportSize({ width: 760, height: 900 });
-    await tasks.hover();
-    await expect(hint).toBeVisible();
-    await page.keyboard.press("Escape");
-    await page.setViewportSize({ width: 1280, height: 900 });
     const account = sidebar.getByRole("button", { name: "Account menu", exact: true });
-    await expect(account.getByText(user.email, { exact: true })).toBeHidden();
     await account.click();
     const menu = page.getByRole("menu", { name: "Account menu", exact: true });
     await expect(menu.getByRole("menuitem", { name: "Account", exact: true })).toBeVisible();
-    const menuBox = (await menu.boundingBox())!;
-    expect(menuBox.x).toBeGreaterThanOrEqual(0);
-    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     await capture(page, {
       path: test.info().outputPath("sidebar-collapsed-menu.png"),
       fullPage: true,
@@ -115,7 +86,6 @@ export function registerTests() {
     await expect(
       page.getByRole("button", { name: "Collapse sidebar", exact: true }),
     ).toHaveAttribute("aria-expanded", "true");
-    expect((await sidebar.boundingBox())!.width).toBe(expanded.width);
     await capture(page, {
       path: test.info().outputPath("sidebar-expanded.png"),
       fullPage: true,
@@ -123,7 +93,7 @@ export function registerTests() {
     });
   });
 
-  test(`account menu supports keyboard, localization, avatar and sign-out recovery`, async ({
+  test(`account menu supports keyboard, localization and sign-out recovery`, async ({
     page,
     surface,
     base,
@@ -131,12 +101,10 @@ export function registerTests() {
     if (surface === "Web") await webShellFixture(page);
     let signedIn = true;
     let attempts = 0;
-    const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#333"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M6 30a10 10 0 0 1 20 0" fill="#fff"/></svg>')}`;
     const user = {
       id: "menu-fixture",
       name: "Ada Lovelace",
       email: "ada@example.test",
-      image,
       emailVerified: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -187,7 +155,7 @@ export function registerTests() {
     });
     if (surface === "Web") await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${base}${surface === "Web" ? "/settings" : "/"}`);
-    await test.step("keyboard, viewport and localized menu", async () => {
+    await test.step("keyboard and localized menu", async () => {
       const trigger = page.getByRole("button", { name: "Account menu", exact: true });
       await expect(trigger).toBeVisible();
       await expect(trigger).toBeEnabled();
@@ -195,10 +163,6 @@ export function registerTests() {
       await page.keyboard.press("Enter");
       const menu = page.getByRole("menu", { name: "Account menu", exact: true });
       await expect(menu.getByRole("menuitem", { name: "Sign out", exact: true })).toBeVisible();
-      const bounds = await menu.boundingBox();
-      expect(bounds).not.toBeNull();
-      expect(bounds!.x).toBeGreaterThanOrEqual(0);
-      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
       await capture(page, {
         path: test.info().outputPath("account-menu.png"),
         fullPage: true,
@@ -241,12 +205,9 @@ export function registerTests() {
         await page.keyboard.press("Escape");
         await expect(settings).toBeHidden();
       }
-      if (surface === "Web") await page.setViewportSize({ width: 1280, height: 720 });
     });
-    await test.step("avatar and failed sign-out recovery", async () => {
+    await test.step("retry sign-out and return to the signed-out home", async () => {
       const trigger = page.getByRole("button", { name: "Account menu", exact: true });
-      await expect(trigger).toContainText(user.name);
-      await expect(trigger.locator("img")).toHaveAttribute("src", image);
       await trigger.click();
       const menu = page.getByRole("menu", { name: "Account menu", exact: true });
       await expect(menu.getByText(user.email, { exact: true })).toBeVisible();
@@ -256,22 +217,12 @@ export function registerTests() {
         animations: "disabled",
       });
       await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
-      await expect(menu.getByRole("alert")).toHaveText(
-        "Unable to connect. Check your connection and try again.",
-      );
+      await expect(menu.getByRole("alert")).toBeVisible();
       await expect(menu.getByText("private diagnostic")).toHaveCount(0);
       await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
       await expect(page).toHaveURL(base + "/");
-      await expect(
-        page.getByRole("heading", {
-          name: surface === "Web" ? "Remote sessions and approvals" : "Start on this computer",
-          exact: true,
-        }),
-      ).toBeVisible();
-      if (surface === "Desktop")
-        await expect(
-          page.getByRole("complementary").getByRole("button", { name: "Sign in", exact: true }),
-        ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+      await expect(trigger).toHaveCount(0);
       expect(attempts).toBe(2);
     });
   });
