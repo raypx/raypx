@@ -90,9 +90,13 @@ it("rejects invalid release tags before invoking Docker", () => {
     expect(result.stderr).not.toContain("not found");
   }
 });
-it.each([false, true])(
-  "builds shared Compose targets with local caches and cleans temporary Dockerfiles (failure=%j)",
-  (fail) => {
+it.each([
+  { mounts: true, fail: false },
+  { mounts: true, fail: true },
+  { mounts: false, fail: false },
+])(
+  "builds Compose targets with install cache mounts=$mounts and failure=$fail",
+  ({ mounts, fail }) => {
     const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-build-"));
     try {
       writeFileSync(
@@ -123,6 +127,7 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
           COMPOSE_PROJECT_NAME: "isolated-test",
           APP_HOST: "app.example.test",
           RAYPX_RELEASE: "build-test",
+          RAYPX_BUILD_INSTALL_CACHE_MOUNTS: mounts ? undefined : "0",
           RAYPX_DEPLOY_TEST_CAPTURE: directory,
           RAYPX_DEPLOY_TEST_FAIL: String(fail),
         },
@@ -139,16 +144,17 @@ if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
         ...(fail ? [] : [["web", "runtime"]]),
       ]);
       for (const [image, , file] of commands) {
-        expect(existsSync(file!)).toBe(false);
-        const cached = readFileSync(join(directory, `${image}.Dockerfile`), "utf8");
         const workspace = image === "web" ? "apps/web" : "apps/api";
-        // Only mounts differ; commands, sources and runtime targets remain canonical.
-        expect(cached.replace(/--mount=type=cache,\S+ /g, "")).toBe(
-          readFileSync(join(root, workspace, "Dockerfile"), "utf8"),
+        const canonical = `${workspace}/Dockerfile`;
+        const original = readFileSync(join(root, canonical), "utf8");
+        const captured = readFileSync(join(directory, `${image}.Dockerfile`), "utf8");
+        expect(file === canonical).toBe(!mounts);
+        expect(existsSync(resolve(root, file!))).toBe(!mounts);
+        expect(captured.includes("id=raypx-bun-install,target=/root/.bun/install/cache")).toBe(
+          mounts,
         );
-        expect(cached).toContain("id=raypx-bun-install,target=/root/.bun/install/cache");
-        expect(cached).not.toContain("id=raypx-vp");
-        expect(cached).toContain(
+        expect(captured.replace(/--mount=type=cache,\S+ /g, "")).toBe(original);
+        expect(captured).toContain(
           `RUN bun run --cwd ${workspace} check && bun run --cwd ${workspace} build`,
         );
       }

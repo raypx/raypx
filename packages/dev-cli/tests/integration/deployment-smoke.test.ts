@@ -55,6 +55,7 @@ esac
     const commands = readFileSync(log, "utf8");
     const created = /network create .* (raypx-deployment-[a-f0-9]+)/.exec(commands)?.[1];
     expect(created).toBeTruthy();
+    expect(commands).toContain("--file apps/api/Dockerfile --target migrate");
     expect(commands).toContain(`network rm ${created}`);
     expect(commands).toContain(`network rm ${created}-ingress`);
     expect(commands).toContain(`buildx rm --force ${created}`);

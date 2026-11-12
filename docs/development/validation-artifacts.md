@@ -153,7 +153,9 @@ bun run smoke:deployment --platform linux/arm64
 Docker with Buildx must be available. The default target is `linux/amd64`; foreign
 architectures require Docker's emulation support. Builds run sequentially in an
 owned builder capped at two CPUs and 3 GiB RAM. The command builds the Compose
-migration/API/Web images, Railway API/Web images and the Caddy gateway.
+migration/API/Web images, Railway API/Web images and the Caddy gateway. The smoke
+builds use the original Dockerfiles and matching application build arguments so
+Railway reuses the Compose dependency and compilation layers.
 API's `deployment:fixture:build` bundles the synthetic account provisioner once into
 the evidence directory. The gate mounts it read-only into the prepared Bun migration
 image on the internal network; it neither exports an API development image nor

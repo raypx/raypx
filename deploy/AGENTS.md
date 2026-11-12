@@ -13,6 +13,8 @@ with canonical SQL for `migrate` and `deploy`. Deployment acceptance separately
 bundles its synthetic account fixture and mounts it read-only into the migration
 image; production images do not build or ship that fixture.
 `build.sh` adds Compose-only Bun cache mounts to temporary copies and removes them on exit.
+Deployment smoke sets `RAYPX_BUILD_INSTALL_CACHE_MOUNTS=0` so both profiles build the
+original Dockerfiles in the same builder.
 Image builds run the API and Web `check` and `build` scripts directly in the
 Git-free build context. Docker layers own image build caching.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`

@@ -184,16 +184,23 @@ export async function smokeDeployment(root: string, args: string[]) {
           APP_HOST: new URL(origin).hostname,
           RAYPX_RELEASE: "smoke",
           RAYPX_BUILD_BUILDER: builder,
+          RAYPX_BUILD_INSTALL_CACHE_MOUNTS: "0",
           DOCKER_DEFAULT_PLATFORM: platform,
           BUILDKIT_PROGRESS: "plain",
         },
         buildOutput,
       );
-      for (const [label, file, image] of [
-        ["railway-api", "apps/api/Dockerfile", images.railwayApi],
-        ["railway-web", "apps/web/Dockerfile", images.railwayWeb],
-        ["gateway", "infra/railway/Dockerfile", images.gateway],
-      ]) {
+      const releaseArg = `VITE_APP_RELEASE=${release}`;
+      for (const [label, file, image, buildArgs] of [
+        ["railway-api", "apps/api/Dockerfile", images.railwayApi, ["--build-arg", releaseArg]],
+        [
+          "railway-web",
+          "apps/web/Dockerfile",
+          images.railwayWeb,
+          ["--build-arg", `VITE_API_URL=${origin}`, "--build-arg", releaseArg],
+        ],
+        ["gateway", "infra/railway/Dockerfile", images.gateway, []],
+      ] as const) {
         await evidence.command(
           `${label}-build`,
           [
@@ -208,13 +215,10 @@ export async function smokeDeployment(root: string, args: string[]) {
             "--progress",
             "plain",
             "--file",
-            file!,
-            "--build-arg",
-            `VITE_APP_RELEASE=${release}`,
-            "--build-arg",
-            `VITE_API_URL=${origin}`,
+            file,
+            ...buildArgs,
             "--tag",
-            image!,
+            image,
             ".",
           ],
           process.env,

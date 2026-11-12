@@ -29,34 +29,42 @@ if ! docker buildx inspect "$builder" >/dev/null 2>&1; then
     --driver-opt "cpu-quota=${BUILD_CPU_QUOTA:-200000}" --driver-opt cpu-period=100000
 fi
 
-# Railway reads the same Dockerfiles but requires service-specific cache mount IDs.
-# Add local install cache mounts only for Compose; keep build commands in service Dockerfiles.
-dockerfile=$(mktemp "${TMPDIR:-/tmp}/raypx-dockerfile.XXXXXX")
-trap 'rm -f "$dockerfile"' EXIT
-cached_dockerfile() {
+# Deployment smoke shares the original Dockerfiles with Railway in one builder.
+# Compose hosts add a local Bun download cache to a temporary copy.
+dockerfile=
+if [ "${RAYPX_BUILD_INSTALL_CACHE_MOUNTS:-1}" != 0 ]; then
+  dockerfile=$(mktemp "${TMPDIR:-/tmp}/raypx-dockerfile.XXXXXX")
+  trap 'rm -f "$dockerfile"' EXIT
+fi
+build_dockerfile() {
+  if [ -z "$dockerfile" ]; then
+    printf '%s\n' "$1"
+    return
+  fi
   awk '
     /^RUN (VP_GIT_HOOKS=0 )?bun install / {
       sub(/^RUN /, "RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked ")
     }
     { print }
   ' "$1" > "$dockerfile"
+  printf '%s\n' "$dockerfile"
 }
 
 # Run image builds sequentially; the container builder owns the CPU/memory budget.
 # Compose and Railway share the application Dockerfiles. Identical dependency stages mean
 # the later builds reuse the first install unless package manifests or bun.lock change.
-cached_dockerfile apps/api/Dockerfile
+api_dockerfile=$(build_dockerfile apps/api/Dockerfile)
 docker buildx build --builder "$builder" --load \
-  --file "$dockerfile" --target migrate \
+  --file "$api_dockerfile" --target migrate \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/api-migrate:$release" .
 docker buildx build --builder "$builder" --load \
-  --file "$dockerfile" --target runtime \
+  --file "$api_dockerfile" --target runtime \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/api:$release" .
-cached_dockerfile apps/web/Dockerfile
+web_dockerfile=$(build_dockerfile apps/web/Dockerfile)
 docker buildx build --builder "$builder" --load \
-  --file "$dockerfile" --target runtime \
+  --file "$web_dockerfile" --target runtime \
   --build-arg "VITE_API_URL=https://$APP_HOST" \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/web:$release" .
