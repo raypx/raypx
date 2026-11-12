@@ -12,11 +12,7 @@ export default mergeConfig(
           extends: true,
           test: {
             name: "unit",
-            include: [
-              "src/**/*.{test,spec}.{ts,tsx}",
-              "scripts/**/*.{test,spec}.{ts,tsx}",
-              "*.test.ts",
-            ],
+            include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.{ts,tsx}", "*.test.ts"],
             exclude: ["**/*.component.test.*"],
           },
         },
@@ -32,7 +28,7 @@ export default mergeConfig(
           extends: true,
           test: {
             name: "integration",
-            include: ["tests/integration/**/*.{test,spec}.{ts,tsx}"],
+            include: ["tests/integration/**/*.test.{ts,tsx}"],
             testTimeout: 30_000,
           },
         },

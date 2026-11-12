@@ -33,6 +33,18 @@ export function checkMarkdownLength(root: string): string[] {
   });
 }
 
+/** `*.test.*` is Vitest; `*.spec.*` is Playwright and lives only under an `e2e/` directory. */
+export function checkSpecPlacement(root: string): string[] {
+  return globSync("**/*.spec.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", {
+    cwd: root,
+    exclude: ["**/node_modules/**", ".agents/**", ".claude/**", "skills/**", "**/dist/**"],
+  })
+    .map((file) => file.replaceAll("\\", "/"))
+    .filter((file) => !/(?:^|\/)e2e\//.test(file))
+    .sort()
+    .map((file) => `${file}: *.spec.* is reserved for Playwright under e2e/; use *.test.*`);
+}
+
 export function policy(root: string): string[] {
   const index = discover(root);
   const findings = checkArchitecture(index);
@@ -59,6 +71,7 @@ export function policy(root: string): string[] {
     { cwd: root },
   );
   findings.push(...checkMarkdownLength(root));
+  findings.push(...checkSpecPlacement(root));
   findings.push(...checkDocumentLinks(root, documents));
   findings.push(...checkToolchain(root, documents));
   return [...new Set(findings)];

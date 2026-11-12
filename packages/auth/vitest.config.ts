@@ -10,7 +10,7 @@ export default mergeConfig(
           extends: true,
           test: {
             name: "server",
-            include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],
+            include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
             exclude: ["**/*.component.test.*"],
           },
         },

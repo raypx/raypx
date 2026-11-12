@@ -5,7 +5,7 @@ export default mergeConfig(
   defaults,
   defineConfig({
     test: {
-      include: ["*.{test,spec}.{ts,tsx}"],
+      include: ["*.test.{ts,tsx}"],
     },
   }),
 );

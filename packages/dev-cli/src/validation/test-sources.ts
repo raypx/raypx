@@ -15,7 +15,7 @@ export function testSources(directory: string): string[] {
 export function testLayer(file: string, external = false): TestLayer {
   if (external || file.startsWith("e2e/") || /^tests\/(?:postgres|redis|cluster)\//.test(file))
     return "external";
-  if (/\.component\.(?:test|spec)\.[jt]sx?$/.test(file)) return "component";
+  if (/\.component\.test\.[jt]sx?$/.test(file)) return "component";
   if (file.startsWith("tests/integration/")) return "integration";
   return "unit";
 }

@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
         defaults,
         defineConfig({
           test: {
-            include: ["tests/postgres/node/**/*.{test,spec}.{ts,tsx}"],
+            include: ["tests/postgres/node/**/*.test.{ts,tsx}"],
             fileParallelism: false,
           },
         }),
@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
         defaults,
         defineConfig({
           test: {
-            include: ["tests/redis/**/*.{test,spec}.{ts,tsx}"],
+            include: ["tests/redis/**/*.test.{ts,tsx}"],
             fileParallelism: false,
           },
         }),
@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
         defaults,
         defineConfig({
           test: {
-            include: ["tests/cluster/**/*.{test,spec}.{ts,tsx}"],
+            include: ["tests/cluster/**/*.test.{ts,tsx}"],
             fileParallelism: false,
           },
         }),
@@ -38,10 +38,7 @@ export default defineConfig(({ mode }) => {
         defaults,
         defineConfig({
           test: {
-            include: [
-              "server/**/*.{test,spec}.{ts,tsx}",
-              "tests/integration/**/*.{test,spec}.{ts,tsx}",
-            ],
+            include: ["server/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
           },
         }),
       );

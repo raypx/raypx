@@ -4,7 +4,7 @@
 @import "./theme.css";
 
 @source "../**/*.{ts,tsx}";
-@source not "../**/*.{test,spec}.{ts,tsx}";
+@source not "../**/*.test.{ts,tsx}";
 @source not "../**/__tests__/**";
 
 @custom-variant dark (&:is(.dark *));

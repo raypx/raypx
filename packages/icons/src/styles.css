@@ -1,2 +1,2 @@
 @source "./**/*.{ts,tsx}";
-@source not "./**/*.{test,spec}.{ts,tsx}";
+@source not "./**/*.test.{ts,tsx}";

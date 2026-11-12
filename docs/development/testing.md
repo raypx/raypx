@@ -148,6 +148,8 @@ and `clean:artifacts`. Scripts belong in Dev CLI; `.artifacts/` holds generated 
 
 Unit suites live beside source as `*.test.ts(x)`. DOM suites use
 `*.component.test.ts(x)`; the suffix selects their layer independently of syntax.
+Vitest includes only `*.test.*`. `*.spec.*` names Playwright suites and is allowed
+only under an `e2e/` directory.
 Tests focused on one source module stay beside it, including tests that use small
 temporary filesystem fixtures. Multi-component runtime and service scenarios belong in integration.
 Integration suites, shared setup and fixtures stay in `tests/`; application browser

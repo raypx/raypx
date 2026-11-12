@@ -11,7 +11,7 @@ export default mergeConfig(
           extends: true,
           test: {
             name: "unit",
-            include: ["src/**/*.{test,spec}.{ts,tsx}"],
+            include: ["src/**/*.test.{ts,tsx}"],
             exclude: ["**/*.component.test.*"],
           },
         },

@@ -81,7 +81,8 @@ The accepted foundation design and current architecture decisions define the imp
 - Colocate unit tests with their source. Name DOM suites `*.component.test.ts(x)`;
   keep integration suites and shared test-only setup/fixtures in `tests/`.
   Application-owned browser acceptance may use `e2e/`; the root E2E workspace
-  discovers Web and Desktop cases there.
+  discovers Web and Desktop cases there. `*.test.*` is Vitest; `*.spec.*` is
+  reserved for Playwright under `e2e/`, and policy rejects it elsewhere.
   Root vite.config.ts discovers native test projects from package.json workspaces;
   test.config.ts exports runner defaults as a plain Vitest config. Each workspace
   owns include patterns, projects and overrides using native defineConfig/mergeConfig;
