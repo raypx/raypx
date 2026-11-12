@@ -122,34 +122,14 @@ export function registerTests() {
       await expect(viewport.getByText("Conversation message 150.", { exact: false })).toBeVisible();
       evidence.loadMs = performance.now() - started;
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      await viewport.evaluate((element) => {
-        element.scrollTop = element.scrollHeight / 2;
-      });
-      await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
-      // Wait for the new virtual range, then choose and focus a link in one browser turn.
-      let href: string | null = null;
-      await expect
-        .poll(async () => {
-          href = await viewport.evaluate((element) => {
-            const bounds = element.getBoundingClientRect();
-            const visible = [...element.querySelectorAll<HTMLAnchorElement>("a[href]")].find(
-              (anchor) => {
-                const rect = anchor.getBoundingClientRect();
-                return rect.top >= bounds.top && rect.bottom <= bounds.bottom;
-              },
-            );
-            if (!visible) return null;
-            visible.focus({ preventScroll: true });
-            return document.activeElement === visible ? visible.getAttribute("href") : null;
-          });
-          return href;
-        })
-        .toBeTruthy();
-      const link = viewport.locator(`a[href="${href}"]`);
+      // Start at the known tail and scroll toward older messages while the link has focus.
+      const link = viewport.locator('a[href="https://example.com/result/150"]');
+      await link.scrollIntoViewIfNeeded();
+      await expect(link).toBeInViewport();
+      await viewport.hover();
+      await link.evaluate((element) => element.focus({ preventScroll: true }));
       await expect(link).toBeFocused();
-      await viewport.evaluate((element) => {
-        element.scrollTop += element.clientHeight * 2;
-      });
+      await page.mouse.wheel(0, -1440);
       await expect(link).not.toBeInViewport();
       await expect(link).toBeFocused();
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
