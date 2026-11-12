@@ -22,15 +22,16 @@ function fixture(home: string) {
   );
 }
 it("accepts the real guest heading with accessibility and presentation attributes", async () => {
-  fixture('<h1 id="landing-home-title" class="text-4xl">Remote sessions and approvals</h1>');
+  fixture('<h1 id="landing-home-title" class="text-4xl">Run locally. Review remotely.</h1>');
   expect(await checkWeb("https://fixture.example")).toBeUndefined();
 });
-it.each(["<div>Remote sessions and approvals</div>", "<h1>Private account</h1>"])(
-  "rejects HTML without the public guest heading: %s",
-  async (home) => {
-    fixture(home);
-    await expect(checkWeb("https://fixture.example")).rejects.toThrow(
-      /Web did not render its public guest page/,
-    );
-  },
-);
+it.each([
+  '<div id="landing-home-title">Run locally. Review remotely.</div>',
+  "<h1>Private account</h1>",
+  '<h1 id="landing-home-title"> </h1>',
+])("rejects HTML without the public guest heading: %s", async (home) => {
+  fixture(home);
+  await expect(checkWeb("https://fixture.example")).rejects.toThrow(
+    /Web did not render its public guest page/,
+  );
+});

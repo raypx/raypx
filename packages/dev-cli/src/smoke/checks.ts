@@ -57,7 +57,8 @@ export async function checkWeb(base: string) {
     headers: { accept: "text/html", "accept-language": "en" },
     redirect: "manual",
   });
-  if (!home.ok || !/<h1\b[^>]*>\s*Remote sessions and approvals\s*<\/h1>/.test(await home.text()))
+  const guestHeading = /<h1\b[^>]*\sid="landing-home-title"[^>]*>\s*[^\s<][^<]*<\/h1>/;
+  if (!home.ok || !guestHeading.test(await home.text()))
     throw new Error("Web did not render its public guest page");
   const admin = await fetch(`${base}/admin/settings`, { redirect: "manual" });
   if (!isSignInRedirect(admin)) throw new Error("Administrator pages must require sign-in");
