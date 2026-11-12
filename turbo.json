@@ -38,7 +38,7 @@
       "outputs": []
     },
     "build": {
-      "dependsOn": ["^build", "check"],
+      "dependsOn": ["check"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!**/*.md",
@@ -52,7 +52,7 @@
       "env": ["VITE_*", "EXPO_PUBLIC_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS"]
     },
     "build:e2e": {
-      "dependsOn": ["^build", "transit"],
+      "dependsOn": ["transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!**/*.md",
@@ -66,7 +66,7 @@
       "env": ["VITE_*", "EXPO_PUBLIC_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS"]
     },
     "build:renderer": {
-      "dependsOn": ["^build", "transit"],
+      "dependsOn": ["transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!**/*.md",
@@ -86,7 +86,6 @@
       ]
     },
     "dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },

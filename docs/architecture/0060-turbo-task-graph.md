@@ -46,6 +46,9 @@ tool that leaf scripts call.
   environment and a default concurrency of three, and reads Turbo's run summary for
   verification reports. Browser acceptance builds through Turbo and then starts
   Playwright itself.
+- No library has a build script, so builds depend only on their own check and `dev`
+  on nothing; a task reached through a missing script would otherwise pull every
+  dependency's check into the run. Desktop names the CLI build explicitly.
 - Tasks inherit the environment (`envMode: loose`), as before.
 - `@raypx/task-graph` is deleted. Workspace discovery and browser test planning move
   into Dev CLI.
