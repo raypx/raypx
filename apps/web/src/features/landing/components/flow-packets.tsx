@@ -24,6 +24,13 @@ export function FlowPackets() {
     let animations: Animation[] = [];
     let visible = true;
 
+    const sync = () => {
+      for (const animation of animations) {
+        if (visible && !document.hidden) animation.play();
+        else animation.pause();
+      }
+    };
+
     const cancel = () => {
       for (const animation of animations) animation.cancel();
       animations = [];
@@ -51,25 +58,24 @@ export function FlowPackets() {
         animation.finished.catch(() => {});
         return animation;
       });
-      if (!visible) for (const animation of animations) animation.pause();
+      sync();
     };
 
     play();
     reducedMotion.addEventListener("change", play);
+    document.addEventListener("visibilitychange", sync);
     const intersection =
       typeof IntersectionObserver === "undefined"
         ? undefined
         : new IntersectionObserver(([entry]) => {
             visible = entry?.isIntersecting ?? true;
-            for (const animation of animations) {
-              if (visible) animation.play();
-              else animation.pause();
-            }
+            sync();
           });
     intersection?.observe(root);
 
     return () => {
       reducedMotion.removeEventListener("change", play);
+      document.removeEventListener("visibilitychange", sync);
       intersection?.disconnect();
       cancel();
     };

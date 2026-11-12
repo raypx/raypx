@@ -52,18 +52,17 @@ for glows, gradient marks and selection accents, never for controls or text that
 be read, and may show example interfaces with fixed sample data when each frame is
 labelled as an example. The workbench never uses the logo palette.
 
-The homepage shows its content on first paint: a centered hero, the labelled example in
-an application frame chosen by step cards, a three-step overview, workspace links with
-example interfaces and the Desktop-to-Web connection band. It alone may run ambient
-loops: a particle constellation behind the hero that reacts to a mouse pointer, a light
-travelling around the example frame, packets along the connection line and the example
-playing its steps. They pause offscreen and in hidden tabs; reduced motion leaves one
-still frame or hides them. The playing example holds while its content is hovered or a
-step card has focus, stops when a visitor chooses a step and always offers a labelled
-autoplay toggle. The frame may also settle with scroll where view timelines exist,
-without changing opacity. Other artwork moves only on hover. Authentication and privacy
-pages render without entrances or loops, and no public content waits for scrolling to
-appear.
+The homepage shows a centered hero, a labelled application example with its step tabs
+inside the frame, a three-step overview, workspace links with example interfaces and
+the Desktop-to-Web connection band on first paint. The header links to the lower
+sections on wider screens. Two particle trails behind the hero respond to a mouse
+pointer and feed light along the top of the frame on the same eight-second timeline.
+The connection line carries decorative packets and the example can play its steps.
+These loops pause offscreen and in hidden tabs. Reduced motion leaves static trails
+and hides the travelling lights. The example holds while its content is hovered or a
+step tab has focus, stops when a visitor chooses a step and offers a labelled autoplay
+toggle. Other artwork moves only on hover. Authentication and privacy pages render
+without entrances or loops.
 
 Web puts New session and Search (⌘K / Ctrl K) under the sidebar brand. Desktop puts the
 sidebar toggle, Search and New session in the window title bar, clear of the native

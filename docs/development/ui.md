@@ -95,11 +95,11 @@ tabs only transition their colors/shadow for pointer use. Streaming messages,
 virtual row placement, search results and workbench page sections do not animate in.
 Public pages render their content without entrances. `src/components/brand-accent.ts`
 defines the logo palette as `--brand-*` properties for the landing and authentication
-layouts, plus `accentGradient` and `scrollSettle`, a scroll-linked scale and offset for
-the homepage frame that never changes opacity. Homepage ambient loops are the only
-autoplaying motion: `ParticleField` draws a canvas constellation and `FlowPackets`
-animates the connection line with the Web Animations API; both stop offscreen and in
-hidden tabs, and the frame light is a CSS rotation hidden under reduced motion.
+layouts. `HeroArtwork` adapts the editable MotionHarness scene to the Web layout. It
+caches the static canvas trails and draws the travelling highlights and frame light on
+the same eight-second clock. `FlowPackets` animates the connection line with the Web
+Animations API. Both pause offscreen and in hidden tabs, and reduced motion draws
+the static trails and hides the lights.
 `useDemoPlayback` in `demo-playback.ts` plays the example's steps after it has been
 visible for a moment; `demoStage` derives each frame from progress, so playback only
 fades content and the frame keeps its height. Hover, step-card focus, offscreen and
@@ -112,8 +112,8 @@ The [Combobox guide](components/combobox.md) links the public API, interactive
 Storybook examples and the Web and Desktop task-page browser cases.
 
 The public homepage pairs its main actions with a labelled workflow example (session,
-diff review and result) in an application frame. This is illustrative data, not an
-account projection or an executable session. Step cards select the example and show
+diff review and result) in an application frame with integrated step tabs. The frame
+uses fixed sample data. Step tabs select the example and show
 playback progress; keep the connected-computer action separate and retain its existing
 session/pending/error behavior. Workspace links show labelled example interfaces with
 fixed sample data. Examples use code, file changes and receipt markers instead of

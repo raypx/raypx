@@ -131,9 +131,7 @@ for (const view of views) {
   });
 }
 
-test("Web homepage ambient motion runs while visible and stops under reduced motion", async ({
-  page,
-}) => {
+test("Web homepage trails pause offscreen and under reduced motion", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
   await page.route("**/rpc/configuration/public", (route) =>
@@ -143,19 +141,32 @@ test("Web homepage ambient motion runs while visible and stops under reduced mot
   const canvas = page.locator("canvas");
   await expect(canvas).toHaveAttribute("aria-hidden", "true");
   const frame = () => canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL());
+  const settledFrame = async () => {
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
+    return frame();
+  };
   const first = await frame();
   await expect.poll(frame).not.toBe(first);
 
+  await page.getByRole("link", { name: "Workspace", exact: true }).click();
+  await expect(page).toHaveURL(/#workspace$/);
+  await expect(canvas).not.toBeInViewport();
+  const offscreen = await settledFrame();
+  await page.waitForTimeout(400);
+  expect(await frame()).toBe(offscreen);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(canvas).toBeInViewport();
+  await expect.poll(frame).not.toBe(offscreen);
+
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("[data-packet]").first()).toHaveCSS("opacity", "0");
-  // Media-query listeners redraw the canvas during the next rendering cycle.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      }),
-  );
-  const still = await frame();
+  await expect(page.locator("[data-hero-frame-light]")).toBeHidden();
+  const still = await settledFrame();
   await page.waitForTimeout(500);
   expect(await frame()).toBe(still);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(

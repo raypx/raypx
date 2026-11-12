@@ -51,18 +51,19 @@ application is an independent composition root and is never imported by another 
   projects, approvals, automations and memory and never mounts private project, device,
   task, job or memory reads; the account menu reads permissions only for confirmed
   sessions.
-  Home stacks a centered hero with contextual draft help, the workflow preview in an
-  application frame chosen by step-card tabs, a three-step overview, workspace links with
-  labelled example interfaces and a Desktop-to-Web connection band. The preview is an
-  explicitly labelled static-data example whose Base UI tabs never mount execution
-  clients or private reads. `useDemoPlayback` plays its steps until a visitor chooses one
-  or turns the labelled autoplay toggle off; hover and step-card focus hold it, and
+  Home stacks a centered hero with contextual draft help, a workflow preview with
+  integrated step tabs, a three-step overview, workspace links with labelled example
+  interfaces and a Desktop-to-Web connection band. The wider header links to the lower
+  sections. The Base UI tabs select a labelled static-data example without mounting
+  execution clients or private reads. `useDemoPlayback` plays its steps until a visitor
+  chooses one or turns the labelled autoplay toggle off. Hover and step-tab focus hold it, and
   reduced motion starts it off. Pointer and autoplay changes use a short directional
   transition; keyboard and reduced-motion changes are immediate. Step tabs and workspace
   links use their titles as accessible names and their hints as descriptions; the
-  diagram never implies a live connection or reads device state. Hero particles, the
-  frame light and connection packets are decorative, pause offscreen or in hidden tabs
-  and stay still under reduced motion. The landing layout applies the `--brand-*`
+  diagram never implies a live connection or reads device state. The hero's particle
+  trails and frame light share one eight-second loop. They and the decorative connection
+  packets pause offscreen and in hidden tabs. Reduced motion leaves a static trail.
+  The landing layout applies the `--brand-*`
   palette and clips horizontal overflow (`overflow-x-clip`, which keeps the sticky
   header).
   The `(app)/projects` route owns `/projects`, including its guest sign-in gate and

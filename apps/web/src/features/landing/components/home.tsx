@@ -1,9 +1,10 @@
 import { useTranslations } from "../../../i18n.js";
-import { useId, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
 import type { IconComponent } from "@raypx/icons";
 import { HelpHint } from "@raypx/ui/help-hint";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
@@ -21,19 +22,18 @@ import { ApprovalsArt, AutomationsArt, MemoryArt, ProjectsArt } from "./illustra
 import { WorkflowPreview } from "./workflow-preview.js";
 import { accentGradient } from "../../../components/brand-accent.js";
 import { FlowPackets } from "./flow-packets.js";
-import { ParticleField } from "./particle-field.js";
+import { HeroArtwork } from "./hero-artwork.js";
 
 type WorkspacePath = "/projects" | "/approvals" | "/automations" | "/memory";
 
-const sectionTitle = "text-2xl font-semibold tracking-tight text-balance @xl/main:text-3xl";
+const sectionTitle = "text-3xl font-semibold tracking-tight text-balance @3xl/main:text-4xl";
 
 /**
- * Public homepage. Content is visible on first paint; only artwork reacts to hover and
- * the example's tabs animate their own state. Nothing here reads account or device data.
+ * Public homepage. The hero and workspace examples use the public copy and sample data.
  */
 export function LandingHome() {
   return (
-    <div className="flex min-w-0 flex-col gap-24 @3xl/main:gap-32">
+    <div className="flex min-w-0 flex-col gap-20 @3xl/main:gap-28">
       <Hero />
       <HowItWorks />
       <WorkspaceLinks />
@@ -46,50 +46,41 @@ function Hero() {
   const t = useTranslations("guest");
   const c = useTranslations("common");
   const auth = useTranslations("auth");
+  const frameRef = useRef<HTMLDivElement>(null);
   return (
     <section
       aria-labelledby="landing-home-title"
-      className="relative isolate flex min-w-0 flex-col items-center gap-14 @3xl/main:gap-16"
+      className="relative isolate flex min-w-0 flex-col items-center"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[34rem]"
-      >
-        <div className="absolute top-0 left-[8%] h-72 w-[42%] rounded-full bg-[var(--brand-sky)] opacity-[0.16] blur-[90px] dark:opacity-[0.22]" />
-        <div className="absolute top-10 right-[10%] h-72 w-[38%] rounded-full bg-[var(--brand-violet)] opacity-[0.14] blur-[90px] dark:opacity-[0.24]" />
-        <div className="absolute top-40 left-[34%] h-56 w-[32%] rounded-full bg-[var(--brand-pink)] opacity-[0.1] blur-[90px] dark:opacity-[0.16]" />
-      </div>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[40rem] mask-[radial-gradient(ellipse_75%_70%_at_50%_30%,#000_25%,transparent_100%)]"
-      >
-        <ParticleField />
-      </div>
-      <header className="flex max-w-3xl min-w-0 flex-col items-center gap-6 text-center">
-        <p className="relative inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-background/70 py-1 pr-3 pl-1.5 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-sm">
+      <header className="relative flex w-full min-w-0 flex-col items-center gap-5 pb-12 text-center @xl/main:gap-6 @xl/main:pb-16">
+        <HeroArtwork frameRef={frameRef} />
+        <Badge
+          variant="outline"
+          className="h-auto max-w-full gap-2 bg-background/80 py-1 pr-3 pl-1 shadow-soft"
+        >
           <span
             aria-hidden="true"
-            className={cn("grid size-4.5 shrink-0 place-items-center rounded-full", accentGradient)}
+            className={cn("grid size-4 shrink-0 place-items-center rounded-full", accentGradient)}
           >
             <span className="size-1.5 rounded-full bg-background" />
           </span>
           <span className="truncate">{auth("brandTitle")}</span>
-        </p>
+        </Badge>
         <h1
           id="landing-home-title"
-          className="max-w-[16ch] bg-linear-to-br from-foreground from-45% via-foreground/85 to-[var(--brand-violet)] bg-clip-text pb-1 text-[2.75rem] leading-[1.06] font-semibold tracking-tighter text-balance text-transparent forced-colors:bg-none forced-colors:text-[CanvasText] @xl/main:text-6xl @4xl/main:text-7xl"
+          className="max-w-[16ch] text-[2.75rem] leading-[1.06] font-semibold tracking-tighter text-balance @xl/main:text-6xl @4xl/main:text-7xl"
         >
           {t("title")}
         </h1>
         <p className="max-w-xl text-base leading-7 text-pretty text-muted-foreground @xl/main:text-lg @xl/main:leading-8">
           {auth("brandIntro")}
         </p>
-        <div className="mt-2 flex w-full flex-wrap items-center justify-center gap-3">
+        <div className="flex w-full flex-wrap items-center justify-center gap-2.5">
           <Link
             to="/projects"
             className={cn(
               buttonVariants({ size: "lg" }),
-              "group max-w-full whitespace-normal shadow-soft motion-safe:transition-[background-color,box-shadow,scale] motion-safe:duration-150 motion-safe:hover:shadow-popover motion-safe:active:scale-[0.97] focus-visible:transition-none",
+              "group max-w-full whitespace-normal shadow-soft",
             )}
           >
             <FolderOpenIcon data-icon="inline-start" aria-hidden="true" />
@@ -97,14 +88,14 @@ function Hero() {
             <ArrowRightIcon
               data-icon="inline-end"
               aria-hidden="true"
-              className="motion-safe:transition-transform motion-safe:duration-150 motion-safe:group-hover:translate-x-0.5 group-focus-visible:transition-none"
+              className="motion-safe:transition-transform motion-safe:duration-150 motion-safe:group-hover:translate-x-0.5"
             />
           </Link>
           <Link
             to="/tasks"
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
-              "max-w-full whitespace-normal motion-safe:transition-[background-color,scale] motion-safe:duration-150 motion-safe:active:scale-[0.97] focus-visible:transition-none",
+              "max-w-full whitespace-normal bg-background",
             )}
           >
             <TaskListIcon data-icon="inline-start" aria-hidden="true" />
@@ -113,7 +104,7 @@ function Hero() {
           <HelpHint label={t("draftPrivacy")} description={t("tasksHint")} />
         </div>
       </header>
-      <WorkflowPreview />
+      <WorkflowPreview frameRef={frameRef} />
     </section>
   );
 }
@@ -127,33 +118,22 @@ function HowItWorks() {
     { icon: GlobalIcon, title: auth("featureRemote"), hint: t("stepRemoteHint") },
   ];
   return (
-    <section aria-labelledby="landing-how-title" className="flex min-w-0 flex-col gap-10">
+    <section
+      id="workflow"
+      aria-labelledby="landing-how-title"
+      className="flex min-w-0 scroll-mt-24 flex-col gap-6 @3xl/main:gap-8"
+    >
       <h2 id="landing-how-title" className={sectionTitle}>
         {t("howTitle")}
       </h2>
-      <ol className="grid min-w-0 gap-x-10 gap-y-6 @3xl/main:grid-cols-3 @3xl/main:gap-y-10">
-        {steps.map(({ icon: Icon, title, hint }, index) => (
+      <ol className="grid min-w-0 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-muted/25 @3xl/main:grid-cols-3 @3xl/main:divide-x @3xl/main:divide-y-0">
+        {steps.map(({ icon: Icon, title, hint }) => (
           <li
             key={title}
-            className="relative flex min-w-0 gap-4 border-t border-border pt-6 @3xl/main:flex-col @3xl/main:gap-5"
+            className="flex min-w-0 gap-4 p-5 @3xl/main:flex-col @3xl/main:gap-5 @3xl/main:p-7"
           >
-            <span
-              aria-hidden="true"
-              className={cn("absolute -top-px left-0 h-0.5 w-12", accentGradient)}
-            />
-            <span className="flex shrink-0 items-center justify-between gap-3 self-start @3xl/main:self-stretch">
-              <span className="grid size-11 place-items-center rounded-xl border border-border bg-card shadow-soft">
-                <Icon aria-hidden="true" className="size-5" />
-              </span>
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "hidden bg-clip-text font-mono text-sm font-medium text-transparent tabular-nums forced-colors:bg-none forced-colors:text-[CanvasText] @3xl/main:inline",
-                  accentGradient,
-                )}
-              >
-                {String(index + 1).padStart(2, "0")}
-              </span>
+            <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-background shadow-soft">
+              <Icon aria-hidden="true" className="size-5" />
             </span>
             <span className="flex min-w-0 flex-col gap-1.5 @3xl/main:gap-2">
               <h3 className="text-base font-medium tracking-tight text-balance @3xl/main:text-lg">
@@ -179,7 +159,6 @@ function WorkspaceLinks() {
       title: c("projects"),
       hint: t("entryProjects"),
       art: <ProjectsArt />,
-      wide: true,
     },
     {
       to: "/approvals",
@@ -187,7 +166,6 @@ function WorkspaceLinks() {
       title: c("approvals"),
       hint: t("entryApprovals"),
       art: <ApprovalsArt />,
-      wide: false,
     },
     {
       to: "/automations",
@@ -195,7 +173,6 @@ function WorkspaceLinks() {
       title: c("jobs"),
       hint: t("entryAutomations"),
       art: <AutomationsArt />,
-      wide: false,
     },
     {
       to: "/memory",
@@ -203,17 +180,20 @@ function WorkspaceLinks() {
       title: memory("title"),
       hint: t("entryMemory"),
       art: <MemoryArt />,
-      wide: true,
     },
   ] as const;
   return (
-    <nav aria-labelledby="landing-workspace-title" className="flex min-w-0 flex-col gap-10">
+    <nav
+      id="workspace"
+      aria-labelledby="landing-workspace-title"
+      className="flex min-w-0 scroll-mt-24 flex-col gap-6 @3xl/main:gap-8"
+    >
       <h2 id="landing-workspace-title" className={sectionTitle}>
         {c("workspace")}
       </h2>
-      <ul className="grid min-w-0 gap-4 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
-        {entries.map(({ wide, ...entry }) => (
-          <li key={entry.to} className={cn("flex min-w-0", wide && "@4xl/main:col-span-2")}>
+      <ul className="grid min-w-0 gap-4 @xl/main:grid-cols-2">
+        {entries.map((entry) => (
+          <li key={entry.to} className="flex min-w-0">
             <WorkspaceEntry {...entry} />
           </li>
         ))}
@@ -243,15 +223,14 @@ function WorkspaceEntry({
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-hint`}
       onPointerMove={spotlight}
-      className="group relative isolate flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground outline-none hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-colors motion-safe:duration-150"
+      className="group relative isolate flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground outline-none hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-colors motion-safe:duration-150"
     >
-      {art}
-      <span className="flex items-center gap-4 p-5">
+      <span className="flex flex-1 items-center gap-4 p-5 @3xl/main:p-6">
         <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-muted/60 motion-safe:transition-[scale] motion-safe:duration-300 motion-safe:group-hover:scale-105">
           <Icon aria-hidden="true" className="size-5" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span id={`${id}-title`} className="text-sm font-medium">
+          <span id={`${id}-title`} className="text-base font-semibold tracking-tight">
             {title}
           </span>
           <span id={`${id}-hint`} className="text-sm leading-6 text-pretty text-muted-foreground">
@@ -263,6 +242,7 @@ function WorkspaceEntry({
           className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground motion-safe:transition-[color,translate] motion-safe:duration-150 motion-safe:group-hover:translate-x-0.5"
         />
       </span>
+      {art}
       <SpotlightLayer />
     </Link>
   );
@@ -274,9 +254,10 @@ function ComputersBand() {
   const spotlight = useSpotlight<HTMLElement>();
   return (
     <section
+      id="computers"
       aria-labelledby="landing-computers-title"
       onPointerMove={spotlight}
-      className="group relative isolate overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-soft"
+      className="group relative isolate scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-muted/25 text-card-foreground"
     >
       <DotGrid className="mask-[radial-gradient(ellipse_60%_90%_at_75%_50%,#000_10%,transparent_80%)]" />
       <div
@@ -288,7 +269,7 @@ function ComputersBand() {
         className="pointer-events-none absolute -top-24 right-1/4 -z-10 h-56 w-1/2 rounded-full bg-[var(--brand-sky)] opacity-[0.1] blur-[80px] dark:opacity-[0.18]"
       />
       <SpotlightLayer />
-      <div className="relative grid items-center gap-10 p-6 @xl/main:p-8 @4xl/main:grid-cols-2 @4xl/main:gap-16 @4xl/main:p-12">
+      <div className="relative grid items-center gap-8 p-6 @xl/main:p-8 @3xl/main:grid-cols-2 @3xl/main:gap-12 @4xl/main:p-12">
         <div className="flex min-w-0 flex-col items-start gap-6">
           <div className="flex flex-col gap-3">
             <h2 id="landing-computers-title" className={sectionTitle}>
@@ -315,7 +296,7 @@ function ConnectionDiagram({ label }: { label: string }) {
     <div
       role="img"
       aria-label={label}
-      className="flex w-full max-w-md min-w-0 items-center gap-3 justify-self-center"
+      className="flex w-full max-w-md min-w-0 items-center gap-3 justify-self-center rounded-xl border border-border bg-background/65 p-4 shadow-soft @xl/main:gap-4 @xl/main:p-6"
     >
       <DiagramNode icon={LaptopIcon} label="Desktop" />
       <span aria-hidden="true" className="relative flex min-w-10 flex-1 items-center">
@@ -345,7 +326,7 @@ function ConnectionDiagram({ label }: { label: string }) {
 function DiagramNode({ icon: Icon, label }: { icon: IconComponent; label: string }) {
   return (
     <span aria-hidden="true" className="flex shrink-0 flex-col items-center gap-2">
-      <span className="grid size-14 place-items-center rounded-2xl border border-border bg-background shadow-soft motion-safe:transition-[translate] motion-safe:duration-300 motion-safe:group-hover:-translate-y-0.5">
+      <span className="grid size-12 place-items-center rounded-xl border border-border bg-card shadow-soft motion-safe:transition-[translate] motion-safe:duration-300 motion-safe:group-hover:-translate-y-0.5 @xl/main:size-14">
         <Icon className="size-6" />
       </span>
       <span className="text-xs font-medium text-muted-foreground">{label}</span>

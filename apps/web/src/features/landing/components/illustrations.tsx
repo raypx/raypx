@@ -25,7 +25,7 @@ function ArtFrame({ children }: { children: ReactNode }) {
   return (
     <div
       aria-hidden="true"
-      className="relative isolate h-48 overflow-hidden border-b border-border bg-muted/40"
+      className="relative isolate h-44 overflow-hidden border-t border-border bg-muted/35"
     >
       <DotGrid className="mask-[radial-gradient(ellipse_at_center,#000_20%,transparent_75%)]" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_70%_at_50%_100%,color-mix(in_oklch,var(--brand-violet)_18%,transparent),transparent)] opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-300" />
@@ -91,11 +91,11 @@ export function ApprovalsArt() {
   const t = useTranslations("guest");
   return (
     <ArtFrame>
-      <div className="absolute inset-x-11 top-10 h-20 rounded-xl border border-border bg-background/50" />
-      <div className="absolute inset-x-8 top-13 h-20 rounded-xl border border-border bg-background/80" />
+      <div className="absolute inset-x-11 top-7 h-20 rounded-xl border border-border bg-background/50" />
+      <div className="absolute inset-x-8 top-10 h-20 rounded-xl border border-border bg-background/80" />
       <div
         className={cn(
-          "absolute inset-x-5 top-16 flex flex-col gap-3 rounded-xl border border-border bg-background p-3.5 shadow-soft",
+          "absolute inset-x-5 top-13 flex flex-col gap-2 rounded-xl border border-border bg-background p-3 shadow-soft",
           lift,
         )}
       >
