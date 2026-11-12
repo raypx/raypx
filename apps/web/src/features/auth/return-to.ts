@@ -1,6 +1,6 @@
 import { resumablePath } from "@raypx/core/auth";
 
-const destinations = new Set([
+const allowedReturnPaths = new Set([
   "/",
   "/projects",
   "/tasks",
@@ -16,5 +16,5 @@ const destinations = new Set([
 
 /** Only application pages may be resumed after authentication. Never execute an intent here. */
 export function safeReturnTo(value: unknown): string {
-  return resumablePath(value, destinations);
+  return resumablePath(value, allowedReturnPaths);
 }

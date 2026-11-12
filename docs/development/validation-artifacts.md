@@ -276,6 +276,9 @@ cancelled pushes into the next run. When the diff from the verified baseline
 contains only documentation, the plan skips both browser suites. If no verified
 ancestor is available, the planner runs full verification to establish one. Pull
 requests and other branches continue to use their GitHub event base.
+
+
+
 Source, database, browser and container smoke workers execute that plan through
 `RAYPX_CI_PLAN`; they do not calculate a new scope from their own checkout state.
 The `source` matrix runs **Source checks** and **Source tests** concurrently through
