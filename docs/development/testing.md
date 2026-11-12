@@ -110,9 +110,9 @@ explicit `bun run --cwd apps/desktop native:agents` gate with its existing prere
 | Workflow orchestration                                                            | Tooling checks/tests and the workflow's relevant acceptance                         |
 | JS/React business code                                                            | Affected workspace types and unit/component/integration tests                       |
 | Shared JS dependency/configuration                                                | All workspace source checks/tests; no release builds or native runners              |
-| API or its affected libraries                                                     | Source checks/tests plus PostgreSQL/Redis integration                               |
+| API inputs, backend suites/fixtures or direct API runtime dependencies            | Source checks/tests plus PostgreSQL/Redis integration                               |
 | Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Go checks and relevant macOS/Windows native checks                                  |
-| Browser acceptance tests themselves                                               | Browser acceptance, to validate the changed suite                                   |
+| App-owned or shared `e2e/` inputs                                                 | The owning browser project, or both projects for shared inputs                      |
 | Release preparation                                                               | Full source/build/audit checks plus separate database/browser/native platform gates |
 
 Source-only daily checks and CI gates have different prerequisites. The

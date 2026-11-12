@@ -32,7 +32,7 @@ describe("affected verification", () => {
     const plan = verificationPlan(model, ["packages/tokens/src/index.ts"]);
     expect(plan.workspaces).toEqual(["@raypx/bridge", "@raypx/tokens", "api"]);
     expect(plan.artifacts).toEqual([]);
-    expect(plan.backend).toBe(true);
+    expect(plan.backend).toBe(false);
     expect(plan.native).toBe(false);
     expect(plan.browser).toBe("none");
     expect(plan.tasks).not.toContain("api#task:build");
@@ -89,14 +89,68 @@ describe("affected verification", () => {
       "desktop",
       "web",
     ]);
-    expect(plan.backend).toBe(true);
+    expect(plan.backend).toBe(false);
     expect(plan.native).toBe(false);
     expect(plan.browser).toBe("none");
     const universal = verificationPlan(platformProject(), ["packages/feature/src/index.ts"]);
     expect(universal.workspaces).toContain("api");
-    expect(universal.backend).toBe(true);
+    expect(universal.backend).toBe(false);
     expect(universal.native).toBe(false);
     expect(universal.tasks).not.toContain("desktop#task:mygo:test");
+  });
+  it("selects backend integration for API inputs and direct runtime dependencies", () => {
+    const { root } = platformProject();
+    const api = join(root, "packages/api/package.json");
+    const manifest = JSON.parse(readFileSync(api, "utf8"));
+    manifest.devDependencies = { "@raypx/feature": "workspace:*" };
+    writeFileSync(api, JSON.stringify(manifest));
+    const model = taskModel(root);
+    for (const file of [
+      "packages/api/server/api.ts",
+      "packages/api/vitest.config.ts",
+      "packages/api/tests/postgres/node/auth.test.ts",
+      "packages/api/tests/redis/redis.test.ts",
+      "packages/api/tests/cluster/relay.test.ts",
+      "packages/api/tests/fixtures/backend-server.ts",
+      "packages/contracts/src/index.ts",
+    ]) {
+      expect(verificationPlan(model, [file]).backend).toBe(true);
+      expect(verificationPlan(model, ["bun.lock", file]).backend).toBe(true);
+    }
+    for (const file of [
+      "packages/api/server/api.test.ts",
+      "packages/api/tests/integration/http.test.ts",
+      "packages/contracts/src/index.test.ts",
+      "packages/feature/src/index.ts",
+      "packages/ui/src/index.ts",
+      "bun.lock",
+    ])
+      expect(verificationPlan(model, [file]).backend).toBe(false);
+    expect(verificationPlan(model, [], { full: true }).backend).toBe(true);
+  });
+  it("runs the browser project that owns the changed suite and both for shared inputs", () => {
+    const { root } = project();
+    member(root, "e2e");
+    for (const surface of ["web", "desktop"])
+      member(root, surface, {
+        extra: {
+          raypx: { browserTestProject: surface },
+          scripts: { e2e: "raypx-dev e2e" },
+        },
+      });
+    const model = taskModel(root);
+    const web = "packages/web/e2e/settings.spec.ts";
+    const desktop = "packages/desktop/e2e/projects.spec.ts";
+    expect(verificationPlan(model, [web]).browser).toBe("web");
+    expect(verificationPlan(model, [desktop]).browser).toBe("desktop");
+    expect(verificationPlan(model, [web, desktop]).browser).toBe("all");
+    expect(verificationPlan(model, ["packages/e2e/tests/journeys/settings.ts"]).browser).toBe(
+      "all",
+    );
+    expect(
+      verificationPlan(model, ["packages/e2e/README.md", "packages/web/src/index.ts"]).browser,
+    ).toBe("none");
+    expect(verificationPlan(model, [], { full: true }).browser).toBe("all");
   });
   it.each([
     ["packages/desktop/src/index.ts", false],
@@ -250,7 +304,7 @@ describe("affected verification", () => {
       verificationPlan(model, ["packages/tooling/src/build/node-deployment.test.ts"]).nativeRunners,
     ).toEqual([]);
   });
-  it("selects Windows acceptance for cross-platform runners and native gate inputs", () => {
+  it("selects Windows acceptance for code and tests executed on the native runner", () => {
     const { root } = platformProject();
     for (const name of ["tooling", "task-graph", "dev-cli", "runtime-node"])
       member(root, name, {
@@ -265,10 +319,6 @@ describe("affected verification", () => {
       "packages/task-graph/src/core/run.ts",
       "packages/task-graph/src/core/arguments.ts",
       "packages/task-graph/src/delegation.ts",
-      "packages/dev-cli/src/verification/plan.ts",
-      "packages/dev-cli/src/verification/ci.ts",
-      "packages/dev-cli/src/verification/ci.test.ts",
-      "packages/dev-cli/src/verification/native-workflow.test.ts",
       "packages/dev-cli/src/validation/build-size.test.ts",
       "packages/runtime-node/src/process.ts",
       "packages/runtime-node/src/process.test.ts",
@@ -282,6 +332,17 @@ describe("affected verification", () => {
       verificationPlan(model, ["packages/task-graph/src/browser-tests.ts"], { macos: false })
         .nativeRunners,
     ).toEqual([]);
+    for (const file of [
+      "packages/dev-cli/src/verification/plan.ts",
+      "packages/dev-cli/src/verification/plan.test.ts",
+      "packages/dev-cli/src/verification/ci.ts",
+      "packages/dev-cli/src/verification/native-workflow.test.ts",
+    ]) {
+      const plan = verificationPlan(model, [file], { macos: false });
+      expect(plan.nativeRunners).toEqual([]);
+      expect(plan.tasks).not.toContain("desktop#task:mygo:test");
+      expect(plan.tasks).toContain("@raypx/dev-cli#task:test");
+    }
   });
   it("unions platform-specific changes and keeps release acceptance complete", () => {
     const model = platformProject();

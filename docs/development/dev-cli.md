@@ -77,9 +77,12 @@ boundaries; this page keeps the behavior.
   failed/cancelled jobs and unexplained skips. Local evidence records running,
   passed or failed status so a failed run cannot retain a previous success.
   Shared or unknown inputs broaden source checks without requesting release builds/audits. Missing Git
-  bases also select native checks conservatively. Affected workspaces propagate
-  through manifest dependencies, including dev dependencies. A frontend change can
-  select backend integration if the API is a transitive dependent. Required results
+  bases also select native checks conservatively. Source checks follow transitive
+  manifest dependents, including dev dependencies. Backend integration selects API
+  inputs, its PostgreSQL/Redis/cluster suites and shared fixtures, or source changes
+  in a direct API runtime dependency. A root lockfile change retains any backend
+  gate selected by a mixed change. Application-owned `e2e/` edits select their own
+  browser project. Shared E2E edits select both. Required results
   distinguish intentional skips from missing/cancelled/failed gates. The `container-smoke`
   job runs isolated Compose/Railway acceptance for Dockerfiles, deployment adapters and
   image acceptance inputs and its reusable workflow, plus manual/tag CI runs. Main
@@ -102,8 +105,9 @@ boundaries; this page keeps the behavior.
   Herdr runs before Go checks, leaving distribution package/smoke independent of terminal-test duration.
   Native checks also accept process/task runners and the installed CLI against the
   verified prepared payload, with size and acceptance reports retained for seven days.
-  Changes to those runners, their acceptance tests and native gate selection trigger
-  the default Windows gate even when no Desktop source changes.
+  Changes to those runners, their acceptance tests, or native workflow steps trigger
+  the default Windows gate even when no Desktop source changes. The planner and its
+  tests are covered by Dev CLI source verification.
 - `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.

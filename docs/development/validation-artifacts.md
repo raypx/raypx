@@ -70,8 +70,9 @@ MyGo checks still run after an earlier acceptance failure when the shared payloa
 was verified and the workflow has not been cancelled; the failed gate still fails
 the job. Routine runs select Windows; explicit macOS and distribution selections
 retain their existing matrix.
-Changes to the process/task runners, their acceptance tests and native gate selection
-also select Windows checks without requiring a Desktop source change.
+Changes to the process/task runners, their acceptance tests, or the native workflow
+also select Windows checks without requiring a Desktop source change. Planner-only
+changes select Dev CLI source verification.
 
 ## Test inventory and preservation
 
@@ -235,9 +236,11 @@ consumers. Changes to task machinery, unknown/deleted Tooling inputs or unresolv
 public graphs retain all source checks.
 Changes to the API relay fixture or its helper select the CLI task lifecycle test
 locally and the CLI suite in CI. The CLI test cache fingerprints both fixture files.
-Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
-browser code or import a browser entry, including type-only and test imports. If a workspace's
-non-browser, non-test sources import browser code, its consumers are selected as before.
+Source checks follow transitive workspace dependents. The CI backend gate follows API
+inputs and its direct manifest runtime dependencies. API PostgreSQL, Redis and cluster
+suite edits and shared backend fixture changes also select that gate, including in a
+push with shared configuration changes. App-owned `e2e/` changes run that app's browser
+project; changes in the shared E2E workspace run both projects.
 
 Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
 Go host targets, builds outputs and runs independent artifact probes concurrently.

@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { changedFiles as readChanges, affectedWorkspaces } from "../repo/verification.js";
 import { privateTestFile, taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
+import type { Manifest } from "@raypx/task-graph/workspaces";
 import { toolingImpact } from "./tooling.js";
 import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
@@ -40,6 +43,47 @@ function globalInput(file: string) {
   return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
     file,
   );
+}
+
+/** Backend integration owns API inputs and direct runtime dependencies. */
+function backendChanges(model: TaskModel, files: string[], changed: ReadonlySet<string>) {
+  const api = model.members.find((member) => member.name === "api");
+  if (!api) return false;
+  if (
+    files.some((file) => {
+      if (!file.startsWith(`${api.path}/`) || documentation(file)) return false;
+      const relative = file.slice(api.path.length + 1);
+      return (
+        !privateTestFile(api, file) ||
+        /^(?:vitest\.config\.ts$|tests\/(?:postgres|redis|cluster|helpers|fixtures)\/)/.test(
+          relative,
+        )
+      );
+    })
+  )
+    return true;
+  if (!api.dependencies.some((name) => changed.has(name))) return false;
+  const manifest = JSON.parse(
+    readFileSync(join(model.root, api.path, "package.json"), "utf8"),
+  ) as Manifest;
+  return Object.keys({ ...manifest.dependencies, ...manifest.peerDependencies }).some((name) =>
+    changed.has(name),
+  );
+}
+
+function browserChanges(model: TaskModel, files: string[]): VerificationPlan["browser"] {
+  const shared = model.members.find((member) => member.name === "@raypx/e2e");
+  if (!shared) return "none";
+  const touches = (path: string) =>
+    files.some((file) => file.startsWith(`${path}/`) && !documentation(file));
+  if (touches(shared.path)) return "all";
+  const projects = new Set(
+    model.members.flatMap((member) =>
+      member.browserProject && touches(`${member.path}/e2e`) ? [member.browserProject] : [],
+    ),
+  );
+  if (projects.size > 1) return "all";
+  return projects.values().next().value ?? "none";
 }
 
 /** Railway builds ordinary source changes; CI images exercise changes to the container path. */
@@ -101,10 +145,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
         relative === "tests/integration/task-leaf.test.ts"
       );
     if (member.name === "@raypx/dev-cli")
-      return (
-        /^src\/verification\/(?:plan|ci|native-workflow)(?:\.test)?\.ts$/.test(relative) ||
-        /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative)
-      );
+      return /^src\/validation\/build-size(?:\.test)?\.ts$/.test(relative);
     if (member.name === "@raypx/runtime-node") return relative.startsWith("src/");
     if (member.native)
       return /^(?:[^/]+\.go$|go\.(?:mod|sum)$|(?:bridge|preferences|mygo\.config)\.ts$|package\.json$|internal\/|resources\/|scripts\/host\/|tests\/native\/)/.test(
@@ -198,6 +239,7 @@ export function verificationPlan(
       reasons.push(`Shared formatter/linter input: ${file}`);
     }
   }
+  const backend = full || backendChanges(model, files, changed);
   if (allSources) for (const member of model.members) changed.add(member.name);
   const affected = affectedWorkspaces(model.members, changed);
   for (const name of isolated) affected.add(name);
@@ -230,7 +272,6 @@ export function verificationPlan(
     );
   if (lifecycle && !affected.has(lifecycle.workspace))
     tasks.push(taskRef(lifecycle.workspace, "test"));
-  const browserTests = model.members.find((member) => member.name === "@raypx/e2e");
   return {
     full,
     reasons: [...new Set(reasons)],
@@ -239,14 +280,9 @@ export function verificationPlan(
     tasks,
     artifacts,
     ...native,
-    backend: full || (!allSources && affected.has("api")),
+    backend,
     containerSmoke: full || files.some(containerSmokeInput),
-    browser:
-      full ||
-      (browserTests &&
-        files.some((file) => file.startsWith(browserTests.path + "/") && !documentation(file)))
-        ? "all"
-        : "none",
+    browser: full ? "all" : browserChanges(model, files),
   };
 }
 
