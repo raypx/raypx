@@ -51,6 +51,7 @@ export default {
   projectUnavailable: "项目不可用",
   openComposer: "编写新会话",
   collapseComposer: "收起会话编辑器",
+  composerTitle: "会话编辑器",
   composerPreview: "描述一个新会话…",
   taskResult: "执行结果",
   failureDetails: "执行情况",

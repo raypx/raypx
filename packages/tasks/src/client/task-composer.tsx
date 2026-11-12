@@ -11,7 +11,7 @@ import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { InputGroup, InputGroupTextarea } from "@raypx/ui/components/ui/input-group";
 import { cn } from "@raypx/ui/lib/utils";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import { SendIcon } from "@raypx/icons/send";
+import { EditIcon } from "@raypx/icons/edit";
 import { ComposerContextFields } from "./composer/context-fields.js";
 import { ComposerDraftActions } from "./composer/draft-actions.js";
 import { ComposerDraftList } from "./composer/draft-list.js";
@@ -54,24 +54,25 @@ function TaskComposerView(props: TaskComposerProps) {
             <Button
               type="button"
               variant="ghost"
-              className="group h-auto min-h-10 w-full justify-start gap-2 rounded-none px-3 py-2 text-left"
+              size="lg"
+              className="group h-auto min-h-control-lg w-full justify-start gap-2 rounded-none bg-sidebar py-2 text-left focus-visible:ring-inset"
             />
           }
         >
-          <SendIcon aria-hidden="true" className="shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate text-sm">
-            {expanded ? t("create") : state.prompt.trim() || t("composerPreview")}
+          <EditIcon aria-hidden="true" className="text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate">
+            {expanded ? t("composerTitle") : state.prompt.trim() || t("composerPreview")}
           </span>
           <ChevronDownIcon
             aria-hidden="true"
-            className="shrink-0 text-muted-foreground group-data-panel-open:rotate-180"
+            className="text-muted-foreground transition-transform group-data-panel-open:rotate-180 motion-reduce:transition-none"
           />
         </CollapsibleTrigger>
         <CollapsibleContent keepMounted>
           <form
             aria-label={t("create")}
             onSubmit={(event) => void composer.submit(event)}
-            className="@container border-t border-border p-3"
+            className="@container border-t border-border p-3 @md/main:p-4"
           >
             <FieldGroup className="gap-3">
               <Field>

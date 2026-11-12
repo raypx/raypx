@@ -66,7 +66,8 @@ without entrances or loops.
 
 Web puts New session and Search (⌘K / Ctrl K) under the sidebar brand. Desktop puts the
 sidebar toggle, Search and New session in the window title bar, clear of the native
-window buttons. Both sidebars list Projects, the pending inbox, Automations and Memory,
+window buttons. New session uses the primary button treatment in both frames.
+Both sidebars list Projects, the pending inbox, Automations and Memory,
 then projects with their recent sessions, above one fixed footer row for the account
 and the settings shortcut.
 Each project entry opens its page; a chevron folds its newest conversations (follow-ups
@@ -79,9 +80,12 @@ account menu manages an existing account only.
 
 The top bar carries page context through the shell toolbar slots. Project pages show
 the project name and its Sessions, Files, References, Automations and Terminal tabs there;
-remote projects expose only supported tools. Page actions and scope switches sit at the
-end of the top bar instead of above page titles. The session editor consumes the chosen
-computer/project without repeating selectors.
+the shared segmented navigation shows the active tool. On narrow Web pages it wraps
+onto a separate row and scrolls horizontally if needed. Remote projects expose only
+supported tools. Page actions and scope
+switches sit at the end of the top bar. The session editor consumes the chosen
+computer/project without repeating selectors. A muted editor header and a separate
+Session history heading distinguish composition from the loaded history.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.

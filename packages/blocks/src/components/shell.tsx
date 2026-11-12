@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { sidebarPreference } from "./sidebar-preference.js";
 import { SidebarCollapseIcon } from "@raypx/icons/sidebar-collapse";
 import { SidebarExpandIcon } from "@raypx/icons/sidebar-expand";
+import { FolderIcon } from "@raypx/icons/folder";
 
 import { cn } from "@raypx/ui/lib/utils";
 import { IconButton } from "@raypx/ui/icon-button";
@@ -68,6 +69,8 @@ export interface ShellNavItem<To extends string> {
 export interface ShellAction {
   label: string;
   icon: ReactNode;
+  /** The primary command is visually distinct in either frame. */
+  emphasis?: "primary";
   /** A key hint beside the label; the application binds the keys themselves. */
   shortcut?: { label: string; keys: string };
   /** An application link element for navigation; without it the action is a button. */
@@ -91,7 +94,7 @@ export interface ShellPage<Title extends string = string> {
 }
 
 const itemClass =
-  "relative min-h-control-lg gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground motion-reduce:transition-none max-[760px]:min-h-control-xl [&_svg]:size-5 [&_svg]:stroke-[1.75]";
+  "relative min-h-control-lg gap-2.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:inset-ring-1 aria-[current=page]:inset-ring-sidebar-border motion-reduce:transition-none max-[760px]:min-h-control-xl [&_svg]:size-5 [&_svg]:stroke-[1.75]";
 
 const pageLayouts: Record<PageLayout, string> = {
   // Settings and account stay in a reading column so labels sit with their controls.
@@ -161,6 +164,51 @@ export function ShellActions({ children }: { children: ReactNode }) {
   return <ShellToolbar side="end">{children}</ShellToolbar>;
 }
 
+/** Shared project context with navigation supplied by the application. */
+export function ShellProjectToolbar({
+  name,
+  computer,
+  back,
+  children,
+}: {
+  name: string;
+  computer?: string | undefined;
+  back?: ReactNode;
+  children?: ReactNode;
+}) {
+  const c = useTranslations("common");
+  return (
+    <ShellToolbar>
+      <div className="flex h-full min-w-0 items-center gap-2 in-data-[frame=document]:max-[540px]:has-[[data-project-links]]:contents">
+        {back}
+        <div className="flex min-w-0 max-w-[35%] shrink-0 items-center gap-2 @min-xl/project-tools:max-w-40 in-data-[frame=document]:max-[540px]:col-start-1 in-data-[frame=document]:max-[540px]:row-start-1 in-data-[frame=document]:max-[540px]:max-w-full">
+          <FolderIcon
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground @max-sm/project-tools:hidden"
+          />
+          <div className="min-w-0">
+            <span className="block truncate text-sm font-medium text-foreground">{name}</span>
+            {computer && (
+              <span className="hidden truncate text-xs @min-xl/project-tools:block">
+                {computer}
+              </span>
+            )}
+          </div>
+        </div>
+        {children && (
+          <nav
+            data-project-links=""
+            aria-label={c("projectTools")}
+            className="flex min-w-0 items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg bg-muted p-0.5 [scrollbar-width:thin] *:flex *:h-control-sm *:shrink-0 *:items-center *:rounded-md *:px-2 *:text-xs *:font-medium *:whitespace-nowrap *:outline-none *:transition-colors *:hover:text-foreground *:focus-visible:ring-2 *:focus-visible:ring-ring *:focus-visible:ring-inset *:aria-[current=page]:bg-background *:aria-[current=page]:text-foreground *:motion-reduce:transition-none pointer-coarse:p-0 pointer-coarse:[scrollbar-width:none] pointer-coarse:*:min-h-control-xl in-data-[frame=document]:max-[540px]:col-span-full in-data-[frame=document]:max-[540px]:row-start-2 in-data-[frame=document]:max-[540px]:justify-self-start"
+          >
+            {children}
+          </nav>
+        )}
+      </div>
+    </ShellToolbar>
+  );
+}
+
 export function AppShell<To extends string>(props: AppShellProps<To>) {
   const preference = useMemo(() => sidebarPreference(props.storageKey), [props.storageKey]);
   const open = useSyncExternalStore(preference.subscribe, preference.snapshot, () => true);
@@ -228,7 +276,11 @@ function ShellContents<To extends string>({
       <SidebarMenuItem key={action.label}>
         <SidebarMenuButton
           tooltip={action.label}
-          className={itemClass}
+          className={cn(
+            itemClass,
+            action.emphasis === "primary" &&
+              "bg-primary font-medium text-primary-foreground hover:bg-primary/85 hover:text-primary-foreground active:bg-primary/85 active:text-primary-foreground",
+          )}
           {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
           {...(action.render ? { render: action.render } : { onClick: action.onSelect })}
         >
@@ -296,11 +348,12 @@ function ShellContents<To extends string>({
   );
   const header = (
     <header
+      data-frame={frame}
       className={cn(
-        "flex shrink-0 items-center gap-2 border-b border-border bg-background text-sm text-muted-foreground",
+        "@container/project-tools flex shrink-0 items-center gap-2 border-b border-border bg-background text-sm text-muted-foreground",
         windowed
           ? "h-[max(3rem,var(--mygo-titlebar-height,0px))] pr-[max(0.75rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] pl-[max(0.75rem,calc(var(--mygo-titlebar-inset-left,0px)+0.5rem))] [--app-region:drag]"
-          : "h-12 px-4 max-[760px]:px-3",
+          : "h-12 px-4 max-[760px]:px-3 max-[540px]:has-[[data-project-links]]:grid max-[540px]:has-[[data-project-links]]:h-auto max-[540px]:has-[[data-project-links]]:grid-cols-[minmax(0,1fr)_auto] max-[540px]:has-[[data-project-links]]:gap-y-1 max-[540px]:has-[[data-project-links]]:py-1.5",
       )}
     >
       {windowed ? (
@@ -310,6 +363,7 @@ function ShellContents<To extends string>({
             <IconButton
               key={action.label}
               size="icon-sm"
+              variant={action.emphasis === "primary" ? "default" : "ghost"}
               label={action.label}
               hint={action.shortcut ? `${action.label} (${action.shortcut.label})` : action.label}
               {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
@@ -344,11 +398,11 @@ function ShellContents<To extends string>({
         ))}
       <div
         ref={setToolbarStart}
-        className="flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag]"
+        className="flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag] in-data-[frame=document]:max-[540px]:has-[[data-project-links]]:contents"
       />
       <div
         ref={setToolbarEnd}
-        className="ml-auto flex shrink-0 items-center gap-2 empty:hidden [--app-region:no-drag]"
+        className="col-start-2 row-start-1 ml-auto flex shrink-0 items-center gap-2 empty:hidden [--app-region:no-drag]"
       />
     </header>
   );
@@ -375,7 +429,7 @@ function ShellContents<To extends string>({
             windowed && "absolute h-full",
           )}
         >
-          <SidebarHeader className="mb-5 shrink-0 gap-0 p-0">
+          <SidebarHeader className="mb-4 shrink-0 gap-0 p-0">
             <LinkComponent
               to={brand.to}
               markActive={false}
@@ -390,15 +444,15 @@ function ShellContents<To extends string>({
               </p>
             )}
             {!windowed && actions && actions.length > 0 && (
-              <SidebarMenu className="mt-4 gap-1">{actions.map(renderAction)}</SidebarMenu>
+              <SidebarMenu className="mt-3 gap-1">{actions.map(renderAction)}</SidebarMenu>
             )}
           </SidebarHeader>
           <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
-            <SidebarContent className="gap-5">
+            <SidebarContent className="gap-4">
               {navigation.map((group, index) => (
                 <Fragment key={index}>
                   <SidebarGroup role="group" aria-label={navigationLabels?.[index]} className="p-0">
-                    {navigation.length > 1 && navigationLabels?.[index] && (
+                    {navigationLabels?.[index] && (
                       <SidebarGroupLabel
                         aria-hidden="true"
                         className="mb-1.5 h-auto px-2.5 text-xs font-medium text-muted-foreground"

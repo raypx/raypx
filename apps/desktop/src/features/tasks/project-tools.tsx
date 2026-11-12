@@ -2,14 +2,10 @@ import { useTranslations } from "../../i18n.js";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
-import { ShellToolbar } from "@raypx/blocks/shell";
-import { FolderIcon } from "@raypx/icons/folder";
+import { ShellProjectToolbar } from "@raypx/blocks/shell";
 import { apiUrl, authClient } from "../auth/client.js";
 import { taskClient } from "./client.js";
 import { useProjectCatalog } from "./project-catalog.js";
-
-const tab =
-  "relative flex h-full shrink-0 items-center px-2.5 text-sm whitespace-nowrap text-muted-foreground outline-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:after:bg-foreground";
 
 /** The project name and its tools live in the shell top bar on every project page. */
 export function ProjectTools({
@@ -45,53 +41,29 @@ export function ProjectTools({
     ...(deviceId ? { device: deviceId } : {}),
   } as const;
   return (
-    <ShellToolbar>
-      <span className="flex min-w-0 shrink-0 items-center gap-2 text-sm font-medium text-foreground">
-        <FolderIcon
-          aria-hidden="true"
-          className="size-4 shrink-0 text-muted-foreground max-[760px]:hidden"
-        />
-        <span className="max-w-40 truncate max-[760px]:max-w-24">
-          {name ?? (devices ? t("projectUnavailable") : c("loading"))}
-        </span>
-        {remote && computer && (
-          <span className="hidden max-w-40 truncate font-normal text-muted-foreground min-[900px]:inline">
-            {computer}
-          </span>
-        )}
-      </span>
-      <nav
-        aria-label={c("projectTools")}
-        className="flex h-full min-w-0 items-stretch overflow-x-auto [scrollbar-width:none]"
-      >
-        <Link className={tab} to="/tasks" search={search}>
-          {c("tasks")}
+    <ShellProjectToolbar
+      name={name ?? (devices ? t("projectUnavailable") : c("loading"))}
+      computer={remote ? computer : undefined}
+    >
+      <Link to="/tasks" search={search}>
+        {c("tasks")}
+      </Link>
+      {!remote && (
+        <Link to="/files" search={{ rootId: projectId }}>
+          {c("files")}
         </Link>
-        {!remote && (
-          <Link className={tab} to="/files" search={{ rootId: projectId }}>
-            {c("files")}
-          </Link>
-        )}
-        <Link
-          className={tab}
-          to="/memory"
-          search={{ ...search, scope: remote ? "account" : "local" }}
-        >
-          {t("projectReferences")}
+      )}
+      <Link to="/memory" search={{ ...search, scope: remote ? "account" : "local" }}>
+        {t("projectReferences")}
+      </Link>
+      <Link to="/automations" search={{ ...search, scope: remote ? "cloud" : "local" }}>
+        {t("projectAutomations")}
+      </Link>
+      {!remote && (
+        <Link to="/terminal" search={{ project: projectId }}>
+          {c("terminal")}
         </Link>
-        <Link
-          className={tab}
-          to="/automations"
-          search={{ ...search, scope: remote ? "cloud" : "local" }}
-        >
-          {t("projectAutomations")}
-        </Link>
-        {!remote && (
-          <Link className={tab} to="/terminal" search={{ project: projectId }}>
-            {c("terminal")}
-          </Link>
-        )}
-      </nav>
-    </ShellToolbar>
+      )}
+    </ShellProjectToolbar>
   );
 }

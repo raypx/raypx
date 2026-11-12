@@ -131,6 +131,7 @@ export function DesktopShell() {
     {
       label: c("newSession"),
       icon: <PlusIcon />,
+      emphasis: "primary",
       render: (
         <Link
           to="/tasks"

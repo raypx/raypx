@@ -95,6 +95,11 @@ export function registerTests() {
           project: projectId,
         }),
     );
+    const tools = page.getByRole("navigation", { name: "Project tools", exact: true });
+    await expect(tools.getByRole("link", { name: "Sessions", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     const overview = page.getByRole("group", { name: "Sessions on this page", exact: true });
     await expect(overview.getByRole("button", { name: /^Needs you/ })).toContainText("1");
     await overview.getByRole("button", { name: /^In progress/ }).click();
@@ -118,6 +123,11 @@ export function registerTests() {
     await form.getByRole("button", { name: "New draft", exact: true }).click();
     await expect(editor).toHaveValue("");
     await form.getByRole("button", { name: /^Session options/ }).click();
+    await page.getByRole("main").evaluate((element) => element.scrollTo(0, 0));
+    await capture(page, {
+      path: test.info().outputPath(`${surface.toLowerCase()}-session-editor.png`),
+      fullPage: true,
+    });
     await list.getByRole("button", { name: /Approve the migration/ }).click();
     await page.getByRole("main").evaluate((element) => element.scrollTo(0, 0));
     await capture(page, {
@@ -137,5 +147,9 @@ export function registerTests() {
     });
     await page.getByRole("button", { name: "Back to sessions", exact: true }).click();
     await expect(list.getByRole("button", { name: /Validate reconnect behavior/ })).toBeFocused();
+    await tools.getByRole("link", { name: "References", exact: true }).press("Enter");
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/memory" && url.searchParams.get("project") === projectId,
+    );
   });
 }

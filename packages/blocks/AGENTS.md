@@ -37,6 +37,8 @@ Code outside `src/components/` stays private.
   `ShellToolbar` (start) and `ShellActions` (end) portal page context, tabs, actions and
   scope switches into the top bar; a start toolbar replaces the page title. Outside an
   AppShell they render inline, so isolated views and tests keep their controls.
+  `ShellProjectToolbar` groups a project and optional computer label with the
+  application's tool links and back action. The application owns link selection.
   `layout` selects the page template that owns content width, gutters and vertical
   rhythm: `document` (reading width for settings, account and onboarding),
   `workbench` (wide list/detail workspaces) or `tool` (the whole main region).
@@ -48,7 +50,8 @@ Code outside `src/components/` stays private.
   declare `staticData.page` with a value-free message key, an optional `guestTitle`
   and the layout, and derive breadcrumbs and `layout` from the deepest match.
   `actions` adds commands under the brand in documents and beside the sidebar toggle
-  in windows (`ShellAction`: a link element or button, with an optional shortcut hint).
+  in windows (`ShellAction`: a link element or button, with optional primary emphasis
+  and a shortcut hint).
 - `command-palette`: `CommandPalette`, a ⌘K / Ctrl+K dialog over host-supplied groups,
   and `useCommandShortcut` for the platform's key hint. The host owns the open state.
 - `settings`: `SettingsPage` (header and sections inside a `document` template),

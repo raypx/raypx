@@ -16,7 +16,7 @@ export function TaskPanels({
 }) {
   return (
     <div data-task-panels className="mx-auto flex w-full max-w-4xl min-w-0 flex-col">
-      <div data-task-pane="list" hidden={detailVisible} className="min-w-0 space-y-5">
+      <div data-task-pane="list" hidden={detailVisible} className="min-w-0 space-y-6">
         {list}
       </div>
       <div data-task-pane="detail" hidden={!detailVisible} className="min-w-0">

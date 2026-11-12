@@ -52,6 +52,7 @@ export default {
   projectUnavailable: "Unavailable project",
   openComposer: "Write a session",
   collapseComposer: "Collapse session editor",
+  composerTitle: "Session editor",
   composerPreview: "Describe a session…",
   taskResult: "Result",
   failureDetails: "Execution outcome",

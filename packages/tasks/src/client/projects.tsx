@@ -7,6 +7,7 @@ import { useRemoteQuery } from "./remote-query.js";
 import { useCallback, useEffect, useId, useRef } from "react";
 
 import { Button } from "@raypx/ui/components/ui/button";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { cn } from "@raypx/ui/lib/utils";
@@ -81,14 +82,28 @@ export function ProjectList({
         .map((device) => (
           <section
             key={device.id}
-            className={compact ? "flex flex-col gap-2" : "flex flex-col gap-2"}
+            aria-labelledby={`${id}-${device.id}`}
+            className={cn(
+              "flex min-w-0 flex-col",
+              compact ? "gap-2" : "overflow-hidden rounded-xl border border-border",
+            )}
           >
-            <h2 className="flex items-center gap-2 text-sm font-medium">
-              {!compact && (
-                <LaptopIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+            <header
+              className={cn(
+                "flex min-w-0 items-center gap-2",
+                !compact && "bg-sidebar px-3 py-2.5",
               )}
-              <span className="min-w-0 truncate">{device.name}</span>
-              <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+            >
+              {!compact && (
+                <LaptopIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+              )}
+              <h2
+                id={`${id}-${device.id}`}
+                className="min-w-0 flex-1 text-sm font-medium wrap-anywhere"
+              >
+                {device.name}
+              </h2>
+              <Badge variant={device.online ? "secondary" : "outline"} className="font-normal">
                 <span
                   aria-hidden="true"
                   className={cn(
@@ -97,69 +112,70 @@ export function ProjectList({
                   )}
                 />
                 {t(device.online ? "online" : "offline")}
-              </span>
-            </h2>
-            {compact ? (
-              <div className="flex flex-col gap-1">
-                {device.projects.map((project) => (
-                  <Button
-                    key={project.id}
-                    variant="ghost"
-                    className="h-auto min-h-10 justify-start gap-3 whitespace-normal text-left"
-                    onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
-                  >
-                    <FolderIcon aria-hidden="true" className="shrink-0" />
-                    <span className="min-w-0 break-words">{project.name}</span>
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
-                {device.projects.map((project) => {
-                  const key = `${id}-${device.id}-${project.id}`;
-                  return (
-                    <li key={project.id}>
-                      <Button
-                        variant="ghost"
-                        aria-labelledby={`${key}-name`}
-                        aria-describedby={`${key}-meta`}
-                        className="h-auto w-full items-center justify-start gap-3 rounded-none p-3 text-left whitespace-normal"
-                        onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
-                      >
-                        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                          <FolderIcon aria-hidden="true" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span id={`${key}-name`} className="block font-medium break-words">
-                            {project.name}
+              </Badge>
+            </header>
+            {device.projects.length > 0 &&
+              (compact ? (
+                <div className="flex flex-col gap-1">
+                  {device.projects.map((project) => (
+                    <Button
+                      key={project.id}
+                      variant="ghost"
+                      className="h-auto min-h-10 justify-start gap-3 whitespace-normal text-left"
+                      onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
+                    >
+                      <FolderIcon aria-hidden="true" className="shrink-0" />
+                      <span className="min-w-0 break-words">{project.name}</span>
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <ul className="flex flex-col divide-y divide-border border-t border-border">
+                  {device.projects.map((project) => {
+                    const key = `${id}-${device.id}-${project.id}`;
+                    return (
+                      <li key={project.id}>
+                        <Button
+                          variant="ghost"
+                          aria-labelledby={`${key}-name`}
+                          aria-describedby={`${key}-meta`}
+                          className="h-auto w-full items-center justify-start gap-3 rounded-none p-3 text-left whitespace-normal focus-visible:ring-inset"
+                          onClick={() => onSelect({ deviceId: device.id, projectId: project.id })}
+                        >
+                          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+                            <FolderIcon aria-hidden="true" />
                           </span>
-                          <span
-                            id={`${key}-meta`}
-                            className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs font-normal text-muted-foreground"
-                          >
-                            <span>
-                              {project.providers
-                                .map((provider) => agentProviderMetadata[provider].label)
-                                .join(" · ")}
+                          <span className="min-w-0 flex-1">
+                            <span id={`${key}-name`} className="block font-medium break-words">
+                              {project.name}
                             </span>
-                            {project.dirty && (
-                              <span className="flex items-center gap-1">
-                                <GitBranchIcon aria-hidden="true" className="size-3" />
-                                {t("uncommitted")}
+                            <span
+                              id={`${key}-meta`}
+                              className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs font-normal text-muted-foreground"
+                            >
+                              <span>
+                                {project.providers
+                                  .map((provider) => agentProviderMetadata[provider].label)
+                                  .join(" · ")}
                               </span>
-                            )}
+                              {project.dirty && (
+                                <span className="flex items-center gap-1">
+                                  <GitBranchIcon aria-hidden="true" className="size-3" />
+                                  {t("uncommitted")}
+                                </span>
+                              )}
+                            </span>
                           </span>
-                        </span>
-                        <ChevronRightIcon
-                          aria-hidden="true"
-                          className="shrink-0 text-muted-foreground"
-                        />
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                          <ChevronRightIcon
+                            aria-hidden="true"
+                            className="shrink-0 text-muted-foreground"
+                          />
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ))}
           </section>
         ))}
     </section>

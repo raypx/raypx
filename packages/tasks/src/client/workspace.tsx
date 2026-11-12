@@ -7,6 +7,7 @@ import { type MemoryClientPort } from "@raypx/memory/client";
 import {
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
   type ComponentType,
@@ -167,6 +168,7 @@ function Workspace({
   const composer = useRef<HTMLTextAreaElement>(null);
   const detail = useRef<HTMLDivElement>(null);
   const taskHistory = useRef<HTMLElement>(null);
+  const historyTitle = useId();
   const revealPage = useRef(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState<boolean>();
@@ -261,7 +263,10 @@ function Workspace({
         />
       </IconButton>
       {view === "tasks" && data && (
-        <Button onClick={startNewSession}>
+        <Button
+          variant={ActionsSlot && projectId ? "outline" : "default"}
+          onClick={startNewSession}
+        >
           <PlusIcon aria-hidden="true" />
           <span className="max-[760px]:sr-only">{t("create")}</span>
         </Button>
@@ -368,7 +373,10 @@ function Workspace({
                   refresh();
                 }}
               />
-              <section ref={taskHistory} aria-label={t("taskHistory")}>
+              <section ref={taskHistory} aria-labelledby={historyTitle}>
+                <h2 id={historyTitle} className="mb-3 text-lg font-semibold">
+                  {t("taskHistory")}
+                </h2>
                 {data.tasks.length > 0 && (
                   <TaskOverview
                     tasks={data.tasks}

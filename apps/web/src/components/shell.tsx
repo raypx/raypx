@@ -134,6 +134,7 @@ export function WebShell() {
           {
             label: c("newSession"),
             icon: <PlusIcon />,
+            emphasis: "primary" as const,
             render: (
               <Link
                 to="/tasks"
