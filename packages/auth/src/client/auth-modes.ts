@@ -1,5 +1,5 @@
 import type { AuthActionSuccess, useAuthActions } from "../hooks.js";
-import type { AuthMode, readAuthLink } from "./auth-link.js";
+import type { AuthLink, AuthMode } from "./auth-link.js";
 import { formText } from "./form-text.js";
 
 export interface ModeConfig {
@@ -64,7 +64,7 @@ export const modes: Record<AuthMode, ModeConfig> = {
 
 export function authFormTitle(
   config: ModeConfig,
-  link: ReturnType<typeof readAuthLink>,
+  link: AuthLink,
   signedIn: boolean,
   complete: boolean,
 ) {

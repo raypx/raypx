@@ -291,6 +291,9 @@ VP still owns each task graph and its prerequisites. Checks retains the existing
 and separating runner workloads. The save gate checks the VP result database as well
 as output archives so test results without archived files can be reused across runs.
 Both matrix results must succeed for the `source` gate to pass, with fail-fast disabled.
+
+
+
 Missing plans, unsupported versions, mismatched commits and an invocation of an
 unselected gate fail. Native workers use the same plan's runner matrix and
 distribution selection. `verification/gates.ts` registers the required CI jobs;
