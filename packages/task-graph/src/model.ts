@@ -21,6 +21,8 @@ interface TaskMember extends Member {
   native: boolean;
   /** Only workspaces with package exports can reach another workspace's type check. */
   importable: boolean;
+  /** Package exports point into `tests/`, so its tests can reach other workspaces. */
+  testExports: boolean;
   browserProject?: BrowserSurface;
   uncachedTasks: string[];
   delegates: Record<string, string>;
@@ -87,16 +89,42 @@ function scriptCommand(context: TaskContext<TaskMember>, member: TaskMember, nam
 
 const checkSources = "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc}";
 
+/** Workspace files no other workspace's type check can import. */
+export function privateTestInputs(member: Pick<TaskMember, "path" | "testExports">) {
+  return [
+    ...(member.testExports ? [] : [`${member.path}/tests/**`]),
+    `${member.path}/**/*.{test,spec}.${checkSources.slice(2)}`,
+    `${member.path}/vite.config.ts`,
+    `${member.path}/vitest.config.ts`,
+  ];
+}
+
+/** True when a changed file can affect only its own workspace's checks and tests. */
+export function privateTestFile(member: Pick<TaskMember, "path" | "testExports">, file: string) {
+  if (!file.startsWith(`${member.path}/`)) return false;
+  const path = file.slice(member.path.length + 1);
+  return (
+    /^(?:vite|vitest)\.config\.ts$/.test(path) ||
+    /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(path) ||
+    (!member.testExports && path.startsWith("tests/"))
+  );
+}
+
 function checkInputs(member: TaskMember, context: TaskContext<TaskMember>): TaskCache["input"] {
+  const dependencies = context
+    .dependencyClosure(member)
+    .filter((candidate) => candidate === member || candidate.importable);
   return [
     { pattern: "tsconfig*.json", base: "workspace" },
-    ...context
-      .dependencyClosure(member)
-      .filter((candidate) => candidate === member || candidate.importable)
-      .map((candidate) => ({
-        pattern: `${candidate.path}/**/${checkSources}`,
-        base: "workspace" as const,
-      })),
+    ...dependencies.map((candidate) => ({
+      pattern: `${candidate.path}/**/${checkSources}`,
+      base: "workspace" as const,
+    })),
+    // A dependency's tests and VP/Vitest configs never reach this type check.
+    ...dependencies
+      .filter((candidate) => candidate !== member)
+      .flatMap(privateTestInputs)
+      .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
   ];
 }
 function cachedTask(
@@ -270,6 +298,7 @@ function rootTypesCache(context: TaskContext<TaskMember>): TaskCache {
         "tsconfig.json",
         "vite.config.ts",
         "test.config.ts",
+        "test.dom.ts",
         "deploy/*.ts",
         ...context.members.flatMap((member) => [
           `${member.path}/package.json`,
@@ -370,6 +399,7 @@ export function taskModel(
           ...(browserProject ? { browserProject } : {}),
           native: Boolean(member.scripts["native:build"] && member.scripts["native:prepare"]),
           importable: Boolean(workspace.manifest.exports),
+          testExports: JSON.stringify(workspace.manifest.exports ?? {}).includes("./tests/"),
           uncachedTasks,
           delegates,
         };

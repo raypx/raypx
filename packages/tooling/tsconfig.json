@@ -1,10 +1,8 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@raypx/tsconfig/node-bundler.json",
   "compilerOptions": {
     "types": ["bun"],
-    "allowImportingTsExtensions": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "allowImportingTsExtensions": true
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

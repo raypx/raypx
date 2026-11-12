@@ -6,6 +6,7 @@
   "include": [
     "vite.config.ts",
     "test.config.ts",
+    "test.dom.ts",
     "deploy/*.ts",
     "apps/*/vite.config.ts",
     "apps/*/vitest.config.ts",

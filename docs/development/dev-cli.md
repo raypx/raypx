@@ -129,13 +129,11 @@ workspace lists from manifests. Scaffolding previews by default and never overwr
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Keep reusable mechanics in `src/repo/` free of Raypx package names and paths.
 Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
-Knip runs under Bun, which classifies ws/undici as runtime modules; the Node-compatible
-HTTP adapter retains their explicit dependencies and types for its Node consumers,
-with a scoped Knip exception in that workspace. Root transitive dependency overrides
-use Bun's `resolutions` field so Knip can track their catalog references directly.
-Native Go-launched TS fixtures and Task Graph's dynamically invoked task leaf are
-explicit Knip entries. Vendored skills are excluded;
-the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
+Knip configuration lists only what its own analysis cannot find: dynamically
+invoked entries (Native Go-launched TS fixtures, Task Graph's task leaf, route and
+VP app configs) and the vendored skills it must skip. Remove any entry or ignore Knip
+reports as redundant. Root transitive dependency overrides use Bun's `resolutions`
+field so Knip can track their catalog references directly.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
 evidence only. Inventory compares case multiplicity and checks exact file selection.
 It collects Vitest JSON reports from the selected workspaces.

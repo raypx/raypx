@@ -32,7 +32,14 @@ async function resolvePreset(name: string, seen: string[] = []): Promise<Record<
 
 describe("TypeScript presets", () => {
   it("publishes every exported preset and nothing that is not exported", () => {
-    expect(presetNames).toEqual(["base", "browser", "node", "library", "react-library"]);
+    expect(presetNames).toEqual([
+      "base",
+      "browser",
+      "node",
+      "node-bundler",
+      "library",
+      "react-library",
+    ]);
     for (const [key, target] of Object.entries(manifest.exports)) expect(target).toBe(key);
     expect(manifest.files.filter((file) => file.endsWith(".json")).sort()).toEqual(
       presetNames.map((name) => `${name}.json`).sort(),
@@ -87,6 +94,12 @@ describe("TypeScript presets", () => {
     expect(await resolvePreset("node")).toMatchObject({
       module: "NodeNext",
       moduleResolution: "NodeNext",
+      lib: ["ES2022"],
+      types: ["node"],
+    });
+    expect(await resolvePreset("node-bundler")).toMatchObject({
+      module: "ESNext",
+      moduleResolution: "Bundler",
       lib: ["ES2022"],
       types: ["node"],
     });

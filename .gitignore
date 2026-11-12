@@ -28,7 +28,6 @@ node_modules/
 .vite/
 dist/
 .vite-plus/
-.turbo/
 out/
 .vite-hooks/_/
 

@@ -1,7 +1,6 @@
 {
   "extends": "@raypx/tsconfig/react-library.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
     "types": ["node"]
   },
   "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "vite.app.config.ts"]

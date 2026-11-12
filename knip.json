@@ -1,27 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "project": [
-    "apps/**/*.{js,mjs,ts,tsx}",
-    "packages/**/*.{js,mjs,ts,tsx}",
-    "e2e/**/*.ts",
-    "infra/**/*.ts"
-  ],
-  "ignoreFiles": [
-    "**/*.d.ts",
-    "**/*.gen.ts",
-    "**/.output/**",
-    "**/dist/**",
-    "**/artifacts/**",
-    ".agents/skills/**",
-    "apps/desktop/build/**",
-    ".claude/**",
-    "apps/desktop/.mygo/**",
-    "apps/desktop/generated/**"
-  ],
+  "ignoreFiles": [".agents/skills/**"],
   "workspaces": {
     ".": {
       "entry": ["deploy/manifests.ts", "deploy/sources.ts"],
-      "ignoreDependencies": ["@raypx/testing", "skills"]
+      "ignoreDependencies": ["@raypx/testing"]
     },
     "apps/api": {
       "entry": [
@@ -54,7 +37,6 @@
     },
     "apps/cli": {
       "entry": [
-        "src/main.ts",
         "tests/smoke/*.ts",
         "tests/fixtures/**/*.{ts,mjs}",
         "perf/*.bench.ts",
@@ -77,24 +59,20 @@
       "entry": ["tests/types/*.ts"]
     },
     "packages/database": {
-      "entry": ["src/index.ts", "src/commands.ts", "drizzle.config.ts"],
+      "entry": ["drizzle.config.ts"],
       "drizzle": false
     },
     "e2e": {
-      "entry": ["tests/**/*.ts", "playwright.config.ts", "playwright.devtools.config.ts"]
+      "entry": ["tests/**/*.ts"]
     },
     "infra/railway": {
-      "entry": ["railway.ts", "scripts/iac-preload.ts"]
+      "entry": ["scripts/iac-preload.ts"]
     },
     "infra/cloudflare": {
-      "entry": ["src/index.ts", "vite.app.config.ts", "scripts/wrangler.ts"]
-    },
-    "packages/control": {
-      "entry": ["tests/helpers/control.ts"]
+      "entry": ["src/index.ts", "vite.app.config.ts"]
     },
     "packages/runtime-node": {
-      "entry": ["src/*.ts"],
-      "ignoreDependencies": ["ws", "undici", "@types/ws"]
+      "entry": ["src/*.ts"]
     },
     "packages/i18n": {
       "entry": ["tests/types/*.ts"]

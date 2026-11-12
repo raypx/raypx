@@ -1,10 +1,7 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@raypx/tsconfig/node-bundler.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "types": ["bun", "node", "vite/client"],
-    "resolveJsonModule": true,
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },

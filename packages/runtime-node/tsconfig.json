@@ -1,9 +1,7 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@raypx/tsconfig/node-bundler.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

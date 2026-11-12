@@ -13,6 +13,7 @@
     "browser.json",
     "library.json",
     "node.json",
+    "node-bundler.json",
     "react-library.json",
     "LICENSE",
     "README.md",
@@ -23,6 +24,7 @@
     "./base.json": "./base.json",
     "./browser.json": "./browser.json",
     "./node.json": "./node.json",
+    "./node-bundler.json": "./node-bundler.json",
     "./library.json": "./library.json",
     "./react-library.json": "./react-library.json"
   },

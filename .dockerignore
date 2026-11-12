@@ -2,7 +2,6 @@
 .github
 .DS_Store
 .cache
-.turbo
 out
 **/.env
 **/.env.*
@@ -17,7 +16,6 @@ out
 **/.output-cloudflare
 **/.wrangler
 **/.artifacts
-**/.turbo
 **/.tanstack
 apps/desktop/artifacts
 apps/desktop/build

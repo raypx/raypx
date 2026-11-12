@@ -15,6 +15,7 @@ their file layout, path aliases and runtime-specific types. The private
 | ---------------------------------- | ------- | ----------------------------------------------------------------- |
 | @raypx/tsconfig/base.json          | —       | strict compiler defaults, noEmit, ES2022 target, no ambient types |
 | @raypx/tsconfig/node.json          | base    | NodeNext modules and resolution, ES2022 libraries, @types/node    |
+| @raypx/tsconfig/node-bundler.json  | node    | Node types with ESNext modules and bundler resolution             |
 | @raypx/tsconfig/browser.json       | base    | Bundler resolution, DOM libraries, react-jsx                      |
 | @raypx/tsconfig/library.json       | base    | Bundler resolution, ES2022 libraries                              |
 | @raypx/tsconfig/react-library.json | library | DOM libraries and react-jsx                                       |

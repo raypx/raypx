@@ -29,8 +29,7 @@ Railway and Dev CLI. Task registration belongs to `@raypx/task-graph`; every
 ## Constraints
 
 No product runtime imports this package. Do not import Dev CLI or Task Graph source.
-Every entry keeps a consumer in another workspace. The shared happy-dom setup lives in
-`tests/setup/dom.ts`; root `test.config.ts` references it by path.
+Every entry keeps a consumer in another workspace.
 
 ## Verification
 

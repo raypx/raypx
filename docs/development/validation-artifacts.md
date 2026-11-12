@@ -225,6 +225,8 @@ and the `native-checks` action select Tooling's type checks/tests plus any relev
 native/container acceptance. Shared dependency-install/cache actions still broaden
 all source checks. Mixed changes combine these scopes, and full verification selects
 every workspace as before.
+A workspace's tests, `*.test.*`/`*.spec.*` files and VP/Vitest configs select only
+that workspace, unless its package exports point into `tests/`.
 Dev CLI policy, validation, verification and test edits select only Dev CLI; its
 command, repository and test-runner modules retain all source checks. Tooling tests
 select only Tooling. Exported Tooling implementation follows its entry's transitive

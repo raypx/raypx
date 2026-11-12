@@ -40,6 +40,38 @@ describe("affected verification", () => {
     expect(full.artifacts).toEqual(["api"]);
     expect(full.tasks).toContain("api#task:build");
   });
+  it.each([
+    "packages/tokens/tests/value.test.ts",
+    "packages/tokens/src/value.test.ts",
+    "packages/tokens/src/view.spec.tsx",
+    "packages/tokens/vite.config.ts",
+    "packages/tokens/vitest.config.ts",
+  ])("reruns only the owner for a test or config edit: %s", (file) => {
+    const { model } = project();
+    expect(verificationPlan(model, [file]).workspaces).toEqual(["@raypx/tokens"]);
+  });
+  it("propagates test helpers a workspace exports", () => {
+    const { root } = project();
+    const manifest = join(root, "packages/tokens/package.json");
+    const tokens = JSON.parse(readFileSync(manifest, "utf8"));
+    tokens.exports = { ...tokens.exports, "./testing": "./tests/helpers/testing.ts" };
+    writeFileSync(manifest, JSON.stringify(tokens));
+    expect(
+      verificationPlan(taskModel(root), ["packages/tokens/tests/helpers/testing.ts"]).workspaces,
+    ).toEqual(["@raypx/bridge", "@raypx/tokens", "api"]);
+  });
+  it("omits dependency tests and configs from type-check inputs", () => {
+    const { model } = project();
+    const input = model.definitions.get("@raypx/bridge#task:check")?.cache;
+    const patterns = input
+      ? input.input.flatMap((entry) =>
+          typeof entry === "object" && "pattern" in entry ? [entry.pattern] : [],
+        )
+      : [];
+    expect(patterns).toContain("!packages/tokens/tests/**");
+    expect(patterns).toContain("!packages/tokens/vitest.config.ts");
+    expect(patterns.some((pattern) => pattern.startsWith("!packages/bridge/"))).toBe(false);
+  });
   it("keeps documentation-only feedback independent of JavaScript and native runners", () => {
     const { model } = project();
     const plan = verificationPlan(model, ["docs/development/testing.md", "AGENTS.md"]);

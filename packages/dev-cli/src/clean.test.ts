@@ -11,8 +11,6 @@ it("cleans generated files while preserving source, dependencies and local data 
   const outputs = [
     `${library}/dist/index.js`,
     `${library}/coverage/lcov.info`,
-    `${library}/.turbo/check.log`,
-    ".turbo/cache/task.tar.zst",
     "node_modules/.vite/task-cache/task.json",
     "node_modules/.vitest-cache/module.bin",
     `${library}/node_modules/.vite/vitest/results.json`,

@@ -1,5 +1,5 @@
 import { changedFiles as readChanges, affectedWorkspaces } from "../repo/verification.js";
-import { taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
+import { privateTestFile, taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
 import { browserReach } from "./platform.js";
 import { toolingImpact } from "./tooling.js";
 import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
@@ -78,14 +78,6 @@ function devCliImpact(model: TaskModel, file: string): "isolated" | "global" | u
   )
     ? "isolated"
     : "global";
-}
-
-/** Task graph tests reach no consumer; its source shapes every task. */
-function taskGraphTest(model: TaskModel, file: string) {
-  const graph = model.members.find((member) => member.name === "@raypx/task-graph");
-  if (!graph || !file.startsWith(graph.path + "/")) return false;
-  const relative = file.slice(graph.path.length + 1);
-  return /^tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(relative);
 }
 
 /** Select native work from its actual inputs, independently of JavaScript dependency reach. */
@@ -173,10 +165,6 @@ export function verificationPlan(
       isolated.add("@raypx/dev-cli");
       continue;
     }
-    if (taskGraphTest(model, file)) {
-      isolated.add("@raypx/task-graph");
-      continue;
-    }
     const devCliScope = devCliImpact(model, file);
     if (devCliScope) {
       if (devCliScope === "global") {
@@ -206,6 +194,11 @@ export function verificationPlan(
       .sort((a, b) => b.path.length - a.path.length)[0];
     // Go host inputs are verified by Go; they do not import renderer TypeScript.
     if (owner?.native && native.native && /(?:\.go$|\/go\.(?:mod|sum)$)/.test(file)) continue;
+    // Tests and VP/Vitest configs reach no consumer; only their own workspace reruns.
+    if (owner && privateTestFile(owner, file)) {
+      isolated.add(owner.name);
+      continue;
+    }
     if (owner)
       mark(
         owner.name,

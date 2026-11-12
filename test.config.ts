@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus/test/config";
 
-const domSetup = fileURLToPath(new URL("./packages/tooling/tests/setup/dom.ts", import.meta.url));
+const domSetup = fileURLToPath(new URL("./test.dom.ts", import.meta.url));
 
 /** Runner defaults only. Each workspace owns test selection and customization. */
 export default defineConfig({

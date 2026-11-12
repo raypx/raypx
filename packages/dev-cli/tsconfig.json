@@ -1,12 +1,10 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@raypx/tsconfig/node-bundler.json",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
     "types": ["bun"],
-    "allowImportingTsExtensions": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "allowImportingTsExtensions": true
   },
   "include": ["bin/**/*.mjs", "src/**/*.ts", "tests/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

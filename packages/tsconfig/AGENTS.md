@@ -11,6 +11,7 @@ project layout; this package owns shared compiler behavior.
 | ---------------------- | ----------------------------------------------- |
 | `./base.json`          | strict compiler defaults shared by every preset |
 | `./node.json`          | base plus Node-compatible modules and types     |
+| `./node-bundler.json`  | Node types with bundler module resolution       |
 | `./browser.json`       | base plus browser libraries and React JSX       |
 | `./library.json`       | base preset for non-React ESM libraries         |
 | `./react-library.json` | library plus DOM libraries and React JSX        |

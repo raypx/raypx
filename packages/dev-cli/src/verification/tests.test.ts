@@ -77,9 +77,11 @@ describe("local related test selection", () => {
       mode: "related",
       files: ["src/view.component.test.tsx"],
     });
-    expect(
-      localTests(root, canonical).find((test) => test.workspace === "@raypx/consumer")?.mode,
-    ).toBe("none");
+    // A test-only edit reaches no consumer, so consumers are not selected at all.
+    expect(canonical.workspaces).toEqual(["@raypx/feature"]);
+    expect(localTests(root, canonical).some((test) => test.workspace === "@raypx/consumer")).toBe(
+      false,
+    );
   });
   it("runs the complete suite when its runner has no known file filter", () => {
     const { root, plan, write } = project();

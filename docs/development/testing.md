@@ -197,7 +197,7 @@ real authentication or native IPC, and each case gets fresh context and resource
 
 i18n separates pure/SSR tests from `*.component.test.tsx` through Vitest projects
 to preserve independent React renderer environments.
-DOM tests run in happy-dom. The shared setup in `packages/tooling/tests/setup/dom.ts`
+DOM tests run in happy-dom. The shared setup in the root `test.dom.ts`
 disables Base UI animation waits and keeps Web Storage methods on `Storage.prototype`
 so existing spies behave as in a browser. Web, Tasks and i18n declare native Vitest
 `projects` with `extends: true`, keeping their pure and DOM environments separate.

@@ -28,7 +28,10 @@ different arguments. `src/process.ts` is the internal inherited-output runner.
   its own tasks from source.
 - Only `vite.config.ts` files and Dev CLI import it; product runtime code never does.
 - Derive members and scripts from manifests; never execute repository configuration.
-- Type checks fingerprint the member and every dependency with package exports.
+- Type checks fingerprint the member and every dependency with package exports,
+  excluding dependencies' tests, `*.test.*`/`*.spec.*` files and VP/Vitest configs
+  unless package exports point into `tests/`. `privateTestFile` applies the same rule
+  to the verification planner.
 - Platform/toolchain identity is part of each command; per-task argument keys
   participate in fingerprints.
 
