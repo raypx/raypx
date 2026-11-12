@@ -1,0 +1,37 @@
+.github/actions/turbo-restore/action.yml
+  s_652cc4f0b5d7e1::t_830f7a197b0cd7 1-2,17-18,20-22,25-26
+.github/actions/turbo-save/action.yml
+  s_652cc4f0b5d7e1::t_85be26b2a84139 1-2,12-17,21
+.github/workflows/ci.yml
+  s_652cc4f0b5d7e1::t_16079495d1c1e4 80-81,89,91,135-136,162,164
+.github/workflows/native.yml
+  s_652cc4f0b5d7e1::t_e07013f7c4f28c 47-48,160-161,163,195-196,364
+apps/desktop/tests/integration/native/task.test.ts
+  s_652cc4f0b5d7e1::t_52bfe1a52c4f59 46
+packages/dev-cli/src/clean.test.ts
+  s_652cc4f0b5d7e1::t_21f19bc1081c10 14
+packages/dev-cli/src/clean.ts
+  s_652cc4f0b5d7e1::t_f0e163b45dbec3 36
+packages/dev-cli/src/cli.test.ts
+  s_652cc4f0b5d7e1::t_879ca73c5b9998 19
+packages/dev-cli/src/verification/gates.test.ts
+  s_652cc4f0b5d7e1::t_e9c992a097dcab 294
+packages/dev-cli/src/verification/plan.test.ts
+  s_652cc4f0b5d7e1::t_1bab59d8da4243 248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "aac63c62b36018748c93a73e452db25f7d4a3670",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
