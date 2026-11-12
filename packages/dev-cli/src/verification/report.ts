@@ -2,7 +2,32 @@ import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from 
 import { join } from "node:path";
 import type { VerificationPlan } from "./plan.js";
 import { taskRef } from "@raypx/task-graph/model";
-import type { SourcePhase } from "./gates.js";
+import type { CiPlan, SourcePhase } from "./gates.js";
+
+export function reportCiPlan(plan: CiPlan) {
+  const summary = process.env.GITHUB_STEP_SUMMARY;
+  if (!summary) return;
+  const safe = (text: string) =>
+    text
+      .replace(/[\r\n]+/g, " ")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  const lines = [
+    "## Verification plan",
+    "",
+    `- Baseline SHA ${plan.baseline ? `\`${plan.baseline}\`` : "unavailable"}`,
+    `- ${plan.full ? "Full" : "Affected"} source verification · ${plan.workspaces.length} workspaces`,
+    ...plan.reasons.slice(0, 10).map((reason) => `  - <code>${safe(reason)}</code>`),
+  ];
+  for (const [surface, selection] of Object.entries(plan.browser)) {
+    lines.push(
+      `- ${surface === "web" ? "Web" : "Desktop"} browser · ${selection.mode === "none" ? "skipped" : selection.mode}`,
+    );
+    for (const reason of selection.reasons) lines.push(`  - <code>${safe(reason)}</code>`);
+  }
+  appendFileSync(summary, `${lines.join("\n")}\n`);
+}
 
 /** An empty or partial VP graph must never appear as successful verification. */
 export function completionReport(root: string, references: string[]) {

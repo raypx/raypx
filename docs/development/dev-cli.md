@@ -81,8 +81,11 @@ boundaries; this page keeps the behavior.
   manifest dependents, including dev dependencies. Backend integration selects API
   inputs, its PostgreSQL/Redis/cluster suites and shared fixtures, or source changes
   in a direct API runtime dependency. A root lockfile change retains any backend
-  gate selected by a mixed change. Application-owned `e2e/` edits select their own
-  browser project. Shared E2E edits select both. Required results
+  gate selected by a mixed change. Login, account password and remote approval
+  source inputs select smoke for the Web or Desktop browser projects that use them.
+  Application-owned `e2e/` edits select the complete suite for their own browser
+  project, while shared E2E edits select both complete suites. The CI plan summary
+  shows the comparison SHA and browser trigger paths. Required results
   distinguish intentional skips from missing/cancelled/failed gates. The `container-smoke`
   job runs isolated Compose/Railway acceptance for Dockerfiles, deployment adapters and
   image acceptance inputs and its reusable workflow, plus manual/tag CI runs. Main

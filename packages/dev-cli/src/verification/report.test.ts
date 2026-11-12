@@ -3,10 +3,26 @@ import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { project } from "../../tests/helpers/verification.js";
 import { verify } from "./index.js";
-import { completionReport, precheckTimings } from "./report.js";
+import { completionReport, precheckTimings, reportCiPlan } from "./report.js";
+import { verificationPlan } from "./plan.js";
 import * as execution from "./execution.js";
 
 afterEach(() => vi.restoreAllMocks());
+
+it("reports the comparison SHA and escaped browser selection reasons", () => {
+  const { root, model } = project();
+  const summary = join(root, "summary.md");
+  vi.stubEnv("GITHUB_STEP_SUMMARY", summary);
+  const baseline = "a".repeat(40);
+  const plan = verificationPlan(model, []);
+  plan.browser.web = { mode: "smoke", reasons: ["Changed login <view>.tsx"] };
+  reportCiPlan({ ...plan, baseline, distribution: false });
+  const content = readFileSync(summary, "utf8");
+  expect(content).toContain(`Baseline SHA \`${baseline}\``);
+  expect(content).toContain("Web browser · smoke");
+  expect(content).toContain("Changed login &lt;view&gt;.tsx");
+  expect(content).toContain("Desktop browser · skipped");
+});
 
 it("replaces stale success evidence before starting checks and records a failed run", async () => {
   const { root } = project();

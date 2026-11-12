@@ -1,6 +1,8 @@
 import type { VerificationPlan } from "./plan.js";
 
 export type SourcePhase = "checks" | "tests";
+export type CiPlan = VerificationPlan & { distribution: boolean; baseline?: string };
+const ciPlanVersion = 3;
 
 /** Keep native checks together; workspace suites run on their own runner. */
 export function sourceTasks(plan: VerificationPlan, phase: SourcePhase) {
@@ -26,7 +28,7 @@ export function requiredGates(flags: Record<string, string>) {
   }));
 }
 
-export function ciOutputs(plan: VerificationPlan & { distribution: boolean }, revision: string) {
+export function ciOutputs(plan: CiPlan, revision: string) {
   if (!revision) throw new Error("CI plan requires a commit revision");
   return {
     source_phases: JSON.stringify(sourcePhases(plan)),
@@ -35,23 +37,23 @@ export function ciOutputs(plan: VerificationPlan & { distribution: boolean }, re
     native_runners: JSON.stringify(plan.nativeRunners),
     container_smoke: String(plan.containerSmoke),
     backend: String(plan.backend),
-    browser: String(plan.browser !== "none"),
+    browser: String(Object.values(plan.browser).some(({ mode }) => mode !== "none")),
     distribution: String(plan.distribution),
-    plan: JSON.stringify({ version: 2, revision, plan }),
+    plan: JSON.stringify({ version: ciPlanVersion, revision, plan }),
   };
 }
 
 /** Workers execute the analyzed commit's plan rather than rediscovering scope in each job. */
-export function parseCiPlan(
-  raw: string,
-  revision: string,
-): VerificationPlan & { distribution: boolean } {
+export function parseCiPlan(raw: string, revision: string): CiPlan {
   const envelope = JSON.parse(raw) as Record<string, unknown>;
-  if (envelope?.version !== 2 || !revision || envelope.revision !== revision)
+  if (envelope?.version !== ciPlanVersion || !revision || envelope.revision !== revision)
     throw new Error("Unsupported CI plan or commit revision mismatch");
   const plan = envelope.plan as Record<string, unknown> | undefined;
   const strings = (value: unknown): value is string[] =>
     Array.isArray(value) && value.every((item) => typeof item === "string");
+  const browser = plan?.browser as
+    | Record<string, { mode?: unknown; reasons?: unknown }>
+    | undefined;
   if (
     !plan ||
     !["full", "native", "backend", "containerSmoke", "distribution"].every(
@@ -60,11 +62,22 @@ export function parseCiPlan(
     !["reasons", "files", "workspaces", "tasks", "artifacts", "nativeRunners"].every((key) =>
       strings(plan[key]),
     ) ||
-    typeof plan.browser !== "string" ||
-    !["none", "web", "desktop", "all"].includes(plan.browser)
+    (plan.baseline !== undefined &&
+      (typeof plan.baseline !== "string" || !/^[0-9a-f]{40}$/.test(plan.baseline))) ||
+    !browser ||
+    Object.keys(browser).length !== 2 ||
+    !["web", "desktop"].every((surface) => {
+      const entry = browser[surface];
+      return (
+        entry &&
+        (entry.mode === "none" || entry.mode === "smoke" || entry.mode === "full") &&
+        strings(entry.reasons) &&
+        (entry.mode === "none") === (entry.reasons.length === 0)
+      );
+    })
   )
     throw new Error("CI plan is incomplete");
-  const decoded = plan as unknown as VerificationPlan & { distribution: boolean };
+  const decoded = plan as unknown as CiPlan;
   if (
     decoded.artifacts.some((name) => !["api", "web", "cli"].includes(name)) ||
     decoded.nativeRunners.some((name) => !["macos-latest", "windows-latest"].includes(name)) ||

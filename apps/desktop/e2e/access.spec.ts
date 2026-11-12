@@ -123,7 +123,7 @@ test(
 
 test(
   "Desktop returns to the requested remote page after login and keeps local tools after logout",
-  { tag: "@desktop" },
+  { tag: ["@desktop", "@smoke"] },
   async ({ page }) => {
     await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
     await page.goto(desktop + "/tasks?scope=remote");

@@ -262,9 +262,11 @@ const commands: Record<string, Command> = {
     async run() {
       const { readGithubPlan } = await import("./verification/ci.js");
       const { ciOutputs } = await import("./verification/gates.js");
+      const { reportCiPlan } = await import("./verification/report.js");
       const plan = await readGithubPlan(root);
       console.log(JSON.stringify(plan, null, 2));
       const outputs = ciOutputs(plan, process.env.GITHUB_SHA ?? "");
+      reportCiPlan(plan);
       await appendGithubOutput(
         Object.entries(outputs)
           .map(([key, value]) => `${key}=${value}\n`)

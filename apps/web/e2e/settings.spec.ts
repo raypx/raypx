@@ -200,6 +200,34 @@ test(
   },
 );
 
+test(
+  "Web accounts without a password can request a setup link",
+  { tag: ["@web", "@smoke"] },
+  async ({ page }) => {
+    await webShellFixture(page);
+    const user = await signedInAccount(page);
+    await page.route("**/api/auth/list-accounts", (route) =>
+      authResponse(route, [{ providerId: "github", userId: user.id }]),
+    );
+    const requests: unknown[] = [];
+    await page.route("**/api/auth/request-password-reset", (route) => {
+      requests.push(route.request().postDataJSON());
+      return authResponse(route, { status: true });
+    });
+    await page.goto(`${web}/settings#settings/password`);
+    const settings = page.getByRole("dialog", { name: "Settings", exact: true });
+    await expect(
+      settings.getByRole("heading", { name: "Set password", exact: true }),
+    ).toBeVisible();
+    await expect(settings.getByLabel("Current password", { exact: true })).toHaveCount(0);
+    await settings.getByRole("button", { name: "Send setup link", exact: true }).click();
+    await expect(settings.getByRole("status")).toHaveText(
+      "Check your inbox and open the link to set your password.",
+    );
+    expect(requests).toEqual([{ email: user.email, redirectTo: `${web}/reset-password` }]);
+  },
+);
+
 for (const layout of [
   {
     locale: "en",
@@ -232,7 +260,7 @@ for (const layout of [
 ] as const) {
   test(
     `Web password dialog preserves settings on dismissal (${layout.locale}, ${layout.width}px)`,
-    { tag: "@web" },
+    { tag: layout.locale === "en" ? ["@web", "@smoke"] : "@web" },
     async ({ page }) => {
       await page.setViewportSize({ width: layout.width, height: layout.height });
       await page.addInitScript(

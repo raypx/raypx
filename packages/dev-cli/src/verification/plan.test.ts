@@ -11,6 +11,10 @@ import { verifyOptions } from ".";
 import { executionTasks } from "./execution.js";
 
 const { member } = workspaceFixtures();
+const browserModes = ({ browser }: ReturnType<typeof verificationPlan>) => [
+  browser.web.mode,
+  browser.desktop.mode,
+];
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -34,7 +38,7 @@ describe("affected verification", () => {
     expect(plan.artifacts).toEqual([]);
     expect(plan.backend).toBe(false);
     expect(plan.native).toBe(false);
-    expect(plan.browser).toBe("none");
+    expect(browserModes(plan)).toEqual(["none", "none"]);
     expect(plan.tasks).not.toContain("api#task:build");
     const full = verificationPlan(model, [], { full: true });
     expect(full.artifacts).toEqual(["api"]);
@@ -91,7 +95,7 @@ describe("affected verification", () => {
     ]);
     expect(plan.backend).toBe(false);
     expect(plan.native).toBe(false);
-    expect(plan.browser).toBe("none");
+    expect(browserModes(plan)).toEqual(["none", "none"]);
     const universal = verificationPlan(platformProject(), ["packages/feature/src/index.ts"]);
     expect(universal.workspaces).toContain("api");
     expect(universal.backend).toBe(false);
@@ -129,28 +133,63 @@ describe("affected verification", () => {
     expect(verificationPlan(model, [], { full: true }).backend).toBe(true);
   });
   it("runs the browser project that owns the changed suite and both for shared inputs", () => {
-    const { root } = project();
+    const { root } = platformProject();
     member(root, "e2e");
-    for (const surface of ["web", "desktop"])
-      member(root, surface, {
-        extra: {
-          raypx: { browserTestProject: surface },
-          scripts: { e2e: "raypx-dev e2e" },
-        },
-      });
     const model = taskModel(root);
     const web = "packages/web/e2e/settings.spec.ts";
     const desktop = "packages/desktop/e2e/projects.spec.ts";
-    expect(verificationPlan(model, [web]).browser).toBe("web");
-    expect(verificationPlan(model, [desktop]).browser).toBe("desktop");
-    expect(verificationPlan(model, [web, desktop]).browser).toBe("all");
-    expect(verificationPlan(model, ["packages/e2e/tests/journeys/settings.ts"]).browser).toBe(
-      "all",
-    );
+    expect(browserModes(verificationPlan(model, [web]))).toEqual(["full", "none"]);
+    expect(browserModes(verificationPlan(model, [desktop]))).toEqual(["none", "full"]);
+    expect(browserModes(verificationPlan(model, [web, desktop]))).toEqual(["full", "full"]);
     expect(
-      verificationPlan(model, ["packages/e2e/README.md", "packages/web/src/index.ts"]).browser,
-    ).toBe("none");
-    expect(verificationPlan(model, [], { full: true }).browser).toBe("all");
+      browserModes(verificationPlan(model, ["packages/e2e/tests/journeys/settings.ts"])),
+    ).toEqual(["full", "full"]);
+    expect(
+      browserModes(
+        verificationPlan(model, ["packages/e2e/README.md", "packages/web/src/index.ts"]),
+      ),
+    ).toEqual(["none", "none"]);
+    expect(browserModes(verificationPlan(model, [], { full: true }))).toEqual(["full", "full"]);
+  });
+  it("selects smoke for the surfaces that use login, password and remote approval inputs", () => {
+    const { root } = platformProject();
+    member(root, "e2e");
+    const model = taskModel(root);
+    const webLogin = "packages/web/src/routes/(auth)/login.tsx";
+    const desktopApproval = "packages/desktop/src/routes/approvals.tsx";
+    for (const file of [
+      webLogin,
+      "packages/web/src/features/settings/account-dialog.tsx",
+      "packages/auth/src/client/password-setup-email.tsx",
+    ])
+      expect(browserModes(verificationPlan(model, [file]))).toEqual(["smoke", "none"]);
+    for (const file of [desktopApproval, "packages/desktop/src/routes/(auth)/reset-password.tsx"])
+      expect(browserModes(verificationPlan(model, [file]))).toEqual(["none", "smoke"]);
+    for (const file of [
+      "packages/auth/src/hooks.ts",
+      "packages/tasks/src/client/approval-body.tsx",
+      "packages/control/src/application/commands.ts",
+      "apps/api/server/rpc/approvals.ts",
+    ])
+      expect(browserModes(verificationPlan(model, [file]))).toEqual(["smoke", "smoke"]);
+    expect(
+      browserModes(
+        verificationPlan(model, [
+          "packages/auth/src/session-security.test.ts",
+          "packages/desktop/src/routes/terminal.tsx",
+        ]),
+      ),
+    ).toEqual(["none", "none"]);
+    const mixed = verificationPlan(model, [
+      webLogin,
+      "packages/desktop/e2e/access.spec.ts",
+      desktopApproval,
+    ]);
+    expect(browserModes(mixed)).toEqual(["smoke", "full"]);
+    expect(mixed.browser.web.reasons.join(" ")).toContain(webLogin);
+    expect(mixed.browser.desktop.reasons).toEqual([
+      "Application E2E input changed: packages/desktop/e2e/access.spec.ts",
+    ]);
   });
   it.each([
     ["packages/desktop/src/index.ts", false],
@@ -162,7 +201,7 @@ describe("affected verification", () => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.workspaces).toEqual(["desktop"]);
     expect(plan.native).toBe(native);
-    expect(plan.browser).toBe("none");
+    expect(browserModes(plan)).toEqual(["none", "none"]);
   });
   it.each([
     "packages/desktop/main.go",
@@ -238,7 +277,7 @@ describe("affected verification", () => {
     expect(plan.nativeRunners).toEqual([]);
     expect(plan.artifacts).toEqual([]);
     expect(plan.backend).toBe(false);
-    expect(plan.browser).toBe("none");
+    expect(browserModes(plan)).toEqual(["none", "none"]);
     expect(plan.tasks.every((task) => /#task:(?:check|test)$/.test(task))).toBe(true);
   });
   it.each([
@@ -366,7 +405,7 @@ describe("affected verification", () => {
     ]);
     const release = verificationPlan(model, [files[0]!], { full: true });
     expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
-    expect(release.browser).toBe("all");
+    expect(browserModes(release)).toEqual(["full", "full"]);
     expect(release.backend).toBe(true);
     expect(release.tasks).toContain("desktop#task:mygo:test");
   });
@@ -478,20 +517,21 @@ describe("affected verification", () => {
     expect(daily.workspaces).toHaveLength(taskModel(root).members.length);
     expect(daily.nativeRunners).toEqual([]);
     expect(daily.artifacts).toEqual([]);
-    expect(daily.browser).toBe("none");
+    expect(browserModes(daily)).toEqual(["none", "none"]);
     expect(daily.backend).toBe(false);
     expect(daily.distribution).toBe(false);
     expect(daily.containerSmoke).toBe(false);
     const release = githubPlan(root, "push", { ref: "refs/tags/v1.0.0", before });
     expect(release.artifacts).toEqual(["api"]);
     expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
-    expect(release.browser).toBe("all");
+    expect(browserModes(release)).toEqual(["full", "full"]);
     expect(release.backend).toBe(true);
     expect(release.distribution).toBe(true);
     expect(release.containerSmoke).toBe(true);
   });
   it("carries failed Web changes through later canary pushes until the combined revision passes", async () => {
     const { root } = platformProject();
+    member(root, "e2e");
     const git = (...args: string[]) =>
       execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: "pipe" }).trim();
     function commit(message: string) {
@@ -509,7 +549,8 @@ describe("affected verification", () => {
     }
     git("init", "-q");
     const baseline = commit("verified baseline");
-    const webFile = "packages/web/src/index.ts";
+    const webFile = "packages/web/src/routes/(auth)/login.tsx";
+    mkdirSync(join(root, "packages/web/src/routes/(auth)"), { recursive: true });
     writeFileSync(join(root, webFile), "export const changed = true;");
     const failed = commit("Web change");
     mkdirSync(join(root, "docs"));
@@ -548,8 +589,10 @@ describe("affected verification", () => {
       expect.any(Object),
     );
     expect(retry.full).toBe(false);
+    expect(retry.baseline).toBe(baseline);
     expect(retry.files).toContain(webFile);
     expect(retry.tasks).toContain("web#task:test");
+    expect(browserModes(retry)).toEqual(["smoke", "none"]);
 
     mkdirSync(join(root, ".github/workflows"), { recursive: true });
     writeFileSync(
@@ -567,6 +610,7 @@ describe("affected verification", () => {
     );
     expect(await readGithubPlan(root)).toMatchObject({
       full: false,
+      baseline: renamed,
       files: ["docs/next.md"],
       tasks: [],
     });

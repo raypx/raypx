@@ -48,7 +48,7 @@ test(
 
 test(
   "Web sign-in translates verification errors and exposes password recovery",
-  { tag: "@web" },
+  { tag: ["@web", "@smoke"] },
   async ({ page }) => {
     await page.route("**/api/auth/sign-in/email", (route) =>
       authResponse(

@@ -112,6 +112,7 @@ explicit `bun run --cwd apps/desktop native:agents` gate with its existing prere
 | Shared JS dependency/configuration                                                | All workspace source checks/tests; no release builds or native runners              |
 | API inputs, backend suites/fixtures or direct API runtime dependencies            | Source checks/tests plus PostgreSQL/Redis integration                               |
 | Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Go checks and relevant macOS/Windows native checks                                  |
+| Login, account password and remote approval source                                | Smoke for the affected Web or Desktop browser project                               |
 | App-owned or shared `e2e/` inputs                                                 | The owning browser project, or both projects for shared inputs                      |
 | Release preparation                                                               | Full source/build/audit checks plus separate database/browser/native platform gates |
 

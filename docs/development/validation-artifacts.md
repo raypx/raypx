@@ -239,8 +239,12 @@ locally and the CLI suite in CI. The CLI test cache fingerprints both fixture fi
 Source checks follow transitive workspace dependents. The CI backend gate follows API
 inputs and its direct manifest runtime dependencies. API PostgreSQL, Redis and cluster
 suite edits and shared backend fixture changes also select that gate, including in a
-push with shared configuration changes. App-owned `e2e/` changes run that app's browser
-project; changes in the shared E2E workspace run both projects.
+push with shared configuration changes. Login, password setup and remote approval
+source changes run the relevant Web or Desktop browser smoke. App-owned `e2e/`
+changes run that app's full browser suite, and shared E2E changes run both full
+suites. A full suite takes precedence over smoke for the same project. The plan
+summary shows the comparison baseline SHA and the input paths that selected each
+browser project.
 
 Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
 Go host targets, builds outputs and runs independent artifact probes concurrently.

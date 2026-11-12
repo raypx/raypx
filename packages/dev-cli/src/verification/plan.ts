@@ -3,10 +3,13 @@ import { join } from "node:path";
 import { changedFiles as readChanges, affectedWorkspaces } from "../repo/verification.js";
 import { privateTestFile, taskModel, taskRef, type TaskModel } from "@raypx/task-graph/model";
 import type { Manifest } from "@raypx/task-graph/workspaces";
+import type { BrowserSurface } from "@raypx/task-graph/browser-tests";
 import { toolingImpact } from "./tooling.js";
 import { relatedTaskLifecycle } from "@raypx/task-graph/lifecycle";
 
 type Artifact = "api" | "web" | "cli";
+type BrowserMode = "none" | "smoke" | "full";
+type BrowserPlan = Record<BrowserSurface, { mode: BrowserMode; reasons: string[] }>;
 export interface VerificationPlan {
   full: boolean;
   reasons: string[];
@@ -19,7 +22,7 @@ export interface VerificationPlan {
   nativeRunners: string[];
   backend: boolean;
   containerSmoke: boolean;
-  browser: "none" | "web" | "desktop" | "all";
+  browser: BrowserPlan;
 }
 export function changedFiles(
   root: string,
@@ -71,19 +74,70 @@ function backendChanges(model: TaskModel, files: string[], changed: ReadonlySet<
   );
 }
 
-function browserChanges(model: TaskModel, files: string[]): VerificationPlan["browser"] {
+const appSmokeInputs = {
+  web: /^src\/(?:features\/(?:auth\/|settings\/|tasks\/client\.ts$)|routes\/(?:\(auth\)\/|\(app\)\/(?:route|settings|approvals|tasks)\.tsx$))/,
+  desktop:
+    /^src\/(?:features\/(?:auth\/|tasks\/(?:client|workspace|remote-navigation)\.[jt]sx?$)|routes\/(?:\(auth\)\/|(?:approvals|tasks|account)\.tsx$))/,
+} satisfies Record<BrowserSurface, RegExp>;
+
+const webPasswordInputs =
+  /^packages\/auth\/src\/client\/password-(?:change-dialog|setup-email)\.tsx$/;
+const sharedSmokeInputs = [
+  /^packages\/auth\/(?:src|locales)\//,
+  /^packages\/account\/src\/(?:access|server|index)\.ts$/,
+  /^packages\/tasks\/src\/(?:client\/(?:approval[-.]|conversation(?:\/|\.tsx$)|(?:remote-query|use-task-conversation)\.ts$|workspace\.tsx$)|model\/port\.ts$)/,
+  /^packages\/client\/src\/(?:tasks|relay)\.ts$/,
+  /^packages\/contracts\/src\/tasks\.ts$/,
+  /^packages\/control\/src\/(?:relay\/|application\/commands\.ts$)/,
+  /^apps\/api\/server\/(?:rpc\/(?:approvals|relay)|(?:app|runtime)\/relay)\.ts$/,
+];
+
+function browserChanges(model: TaskModel, files: string[], full: boolean): BrowserPlan {
+  const browser: BrowserPlan = {
+    web: { mode: "none", reasons: [] },
+    desktop: { mode: "none", reasons: [] },
+  };
+  function select(surface: BrowserSurface, mode: "smoke" | "full", reason: string) {
+    const selection = browser[surface];
+    if (selection.mode === "full" && mode === "smoke") return;
+    if (selection.mode !== mode) {
+      selection.mode = mode;
+      selection.reasons = [];
+    }
+    if (selection.reasons.length < 5) selection.reasons.push(reason);
+  }
+  if (full) {
+    select("web", "full", "Full verification");
+    select("desktop", "full", "Full verification");
+    return browser;
+  }
   const shared = model.members.find((member) => member.name === "@raypx/e2e");
-  if (!shared) return "none";
-  const touches = (path: string) =>
-    files.some((file) => file.startsWith(`${path}/`) && !documentation(file));
-  if (touches(shared.path)) return "all";
-  const projects = new Set(
-    model.members.flatMap((member) =>
-      member.browserProject && touches(`${member.path}/e2e`) ? [member.browserProject] : [],
-    ),
+  if (!shared) return browser;
+  const apps = model.members.flatMap(({ path, browserProject }) =>
+    browserProject ? [{ path, surface: browserProject }] : [],
   );
-  if (projects.size > 1) return "all";
-  return projects.values().next().value ?? "none";
+  for (const file of files) {
+    if (documentation(file)) continue;
+    if (file.startsWith(`${shared.path}/`)) {
+      select("web", "full", `Shared E2E input changed: ${file}`);
+      select("desktop", "full", `Shared E2E input changed: ${file}`);
+      continue;
+    }
+    for (const { path, surface } of apps) {
+      if (file.startsWith(`${path}/e2e/`)) {
+        select(surface, "full", `Application E2E input changed: ${file}`);
+      } else if (!/\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file)) {
+        const appInput =
+          file.startsWith(`${path}/`) && appSmokeInputs[surface].test(file.slice(path.length + 1));
+        const sharedInput = webPasswordInputs.test(file)
+          ? surface === "web"
+          : sharedSmokeInputs.some((input) => input.test(file));
+        if (appInput || sharedInput)
+          select(surface, "smoke", `Authentication or remote approval input changed: ${file}`);
+      }
+    }
+  }
+  return browser;
 }
 
 /** Railway builds ordinary source changes; CI images exercise changes to the container path. */
@@ -282,7 +336,7 @@ export function verificationPlan(
     ...native,
     backend,
     containerSmoke: full || files.some(containerSmokeInput),
-    browser: full ? "all" : browserChanges(model, files),
+    browser: browserChanges(model, files, full),
   };
 }
 

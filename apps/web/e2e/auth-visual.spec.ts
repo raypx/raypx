@@ -126,7 +126,7 @@ for (const mail of [
 
 test(
   "Web password reset and verified email replace forms with complete recovery states",
-  { tag: "@web" },
+  { tag: ["@web", "@smoke"] },
   async ({ page }) => {
     const resets: Record<string, unknown>[] = [];
     await page.route("**/api/auth/reset-password", (route) => {

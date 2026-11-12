@@ -95,7 +95,7 @@ test(
 
 test(
   "Desktop authentication recovery states keep the email, cooldown and next action",
-  { tag: "@desktop" },
+  { tag: ["@desktop", "@smoke"] },
   async ({ page }) => {
     await page.setViewportSize({ width: 800, height: 640 });
     await page.emulateMedia({ reducedMotion: "reduce" });

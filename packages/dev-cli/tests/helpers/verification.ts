@@ -60,16 +60,18 @@ export function platformProject() {
       deps: { "@raypx/ui": "workspace:*", "@raypx/feature": "workspace:*" },
       extra: {
         name,
+        raypx: { browserTestProject: name },
         scripts:
           name === "desktop"
             ? {
                 ...scripts,
+                e2e: "raypx-dev e2e",
                 "native:build": "bun native.ts",
                 "native:prepare": "bun prepare.ts",
                 "mygo:check": "go vet ./...",
                 "mygo:test": "go test ./...",
               }
-            : scripts,
+            : { ...scripts, e2e: "raypx-dev e2e" },
       },
     });
   member(root, "cli", {

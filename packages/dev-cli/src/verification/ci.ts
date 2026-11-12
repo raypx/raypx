@@ -4,7 +4,7 @@ import { runTasks } from "../repository.js";
 import { taskModel } from "@raypx/task-graph/model";
 import { changedFiles, verificationPlan } from "./plan.js";
 import { distributionRequested } from "./events.js";
-import { ciOutputs, parseCiPlan, requiredGates, sourcePhases } from "./gates.js";
+import { ciOutputs, parseCiPlan, requiredGates, sourcePhases, type CiPlan } from "./gates.js";
 import { sourceChecks } from "./execution.js";
 
 const canaryRef = "refs/heads/canary";
@@ -15,7 +15,7 @@ export function githubPlan(
   eventName: string,
   event: Record<string, unknown>,
   canaryBase?: string,
-) {
+): CiPlan {
   const pull = event.pull_request as { base: { sha: string } } | undefined;
   const ref = typeof event.ref === "string" ? event.ref : "";
   const tag = eventName === "push" && ref.startsWith("refs/tags/");
@@ -29,16 +29,21 @@ export function githubPlan(
   const reasons: string[] = [];
   if (establishBaseline)
     reasons.push("No verified canary ancestor; establishing a baseline with full verification");
-  else if (!full) reasons.push("Event base unavailable; checking all sources and native targets");
+  else if (tag) reasons.push("Release tag requests full verification");
+  else if (eventName === "workflow_dispatch") reasons.push("Manual run requests full verification");
+  else if (!before) reasons.push("Event base unavailable; checking all sources and native targets");
   const changed = before
     ? changedFiles(root, "HEAD", { before, head: "HEAD" })
-    : { files: [], reasons };
+    : { files: [], reasons: [] };
+  const baseline =
+    before && /^[0-9a-f]{40}$/.test(before) && !changed.reasons.length ? before : undefined;
   return {
     ...verificationPlan(taskModel(root), changed.files, {
       full,
-      reasons: changed.reasons,
+      reasons: [...reasons, ...changed.reasons],
       macos: tag || (eventName === "workflow_dispatch" && (macos === true || macos === "true")),
     }),
+    ...(baseline ? { baseline } : {}),
     distribution: distributionRequested(
       eventName,
       ref,
@@ -125,11 +130,18 @@ export async function ciGate(root: string, args: string[]) {
       await runTasks(root, `api#${task}`);
   } else if (gate === "browser") {
     const { reportBuildSizes } = await import("../validation/build-size.js");
-    await runTasks(root, `@raypx/e2e#${plan.browser === "all" ? "e2e" : `e2e:${plan.browser}`}`);
-    reportBuildSizes(root, {
-      packages: plan.browser === "all" ? ["web", "desktop"] : [plan.browser],
-      browser: true,
-      required: true,
-    });
+    const { web, desktop } = plan.browser;
+    const packages = (["web", "desktop"] as const).filter(
+      (surface) => plan.browser[surface].mode !== "none",
+    );
+    if (web.mode === desktop.mode) {
+      await runTasks(root, web.mode === "smoke" ? "@raypx/e2e#e2e:smoke" : "@raypx/e2e#e2e");
+    } else {
+      for (const surface of packages)
+        await runTasks(root, `@raypx/e2e#e2e:${surface}`, [], {
+          RAYPX_E2E_SMOKE: plan.browser[surface].mode === "smoke" ? "1" : "0",
+        });
+    }
+    reportBuildSizes(root, { packages, browser: true, required: true });
   } else throw new Error("Unknown internal CI gate");
 }

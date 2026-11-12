@@ -7,6 +7,8 @@ import { githubPlan, ciGate } from "./ci.js";
 import { ciOutputs, gateDefinitions, parseCiPlan, requiredGates, sourcePhases } from "./gates.js";
 import { executionTasks } from "./execution.js";
 import * as execution from "./execution.js";
+import * as repository from "../repository.js";
+import * as sizes from "../validation/build-size.js";
 import { assertCiResult } from "./result.js";
 import { distributionRequested } from "./events.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
@@ -139,12 +141,14 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
     { ...plan, containerSmoke: undefined },
     { ...plan, browser: "unknown" },
     { ...plan, browser: ["all"] },
+    { ...plan, browser: { ...plan.browser, web: { mode: "smoke", reasons: [] } } },
+    { ...plan, baseline: "HEAD~1" },
     { ...plan, artifacts: ["unknown"] },
     { ...plan, nativeRunners: ["windows-latest"] },
     { ...plan, distribution: true },
   ])
     expect(() =>
-      parseCiPlan(JSON.stringify({ version: 2, revision: "commit-a", plan: invalid }), "commit-a"),
+      parseCiPlan(JSON.stringify({ ...JSON.parse(outputs.plan), plan: invalid }), "commit-a"),
     ).toThrow(/CI plan/);
   expect(() =>
     parseCiPlan(JSON.stringify({ version: 1, revision: "commit-a", plan }), "commit-a"),
@@ -158,6 +162,41 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
   await expect(ciGate(root, ["source"])).rejects.toThrow(/Unknown internal CI gate/);
   await expect(ciGate(root, ["source", "unknown"])).rejects.toThrow(/Unknown source CI phase/);
   await expect(ciGate(root, ["source", "tests"])).rejects.toThrow(/was not selected/);
+});
+
+it("dispatches per-project smoke and full browser selections through VP", async () => {
+  const { root, model } = project();
+  const run = vi.spyOn(repository, "runTasks").mockResolvedValue(undefined);
+  const report = vi
+    .spyOn(sizes, "reportBuildSizes")
+    .mockReturnValue(sizes.collectBuildSizes(root, { packages: [] }));
+  const plan = { ...verificationPlan(model, []), distribution: false };
+  const smoke = { mode: "smoke", reasons: ["Changed login"] } as const;
+  const full = { mode: "full", reasons: ["Changed suite"] } as const;
+  vi.stubEnv("GITHUB_SHA", "commit-a");
+  vi.stubEnv(
+    "RAYPX_CI_PLAN",
+    ciOutputs(
+      {
+        ...plan,
+        browser: {
+          web: { ...smoke, reasons: [...smoke.reasons] },
+          desktop: { ...full, reasons: [...full.reasons] },
+        },
+      },
+      "commit-a",
+    ).plan,
+  );
+  await ciGate(root, ["browser"]);
+  expect(run.mock.calls).toEqual([
+    [root, "@raypx/e2e#e2e:web", [], { RAYPX_E2E_SMOKE: "1" }],
+    [root, "@raypx/e2e#e2e:desktop", [], { RAYPX_E2E_SMOKE: "0" }],
+  ]);
+  expect(report).toHaveBeenCalledWith(root, {
+    packages: ["web", "desktop"],
+    browser: true,
+    required: true,
+  });
 });
 
 it.each([false, true])(
