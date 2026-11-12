@@ -1,0 +1,33 @@
+apps/web/e2e/landing-visual.spec.ts
+  s_af4bf7abf9b42a::t_16546a8790cad7 2,4-5,9-12,14-17,20-22,26-29,31-38
+  s_af4bf7abf9b42a::t_252e91b74cfb9a 13,23,30
+apps/web/e2e/access.spec.ts
+  s_af4bf7abf9b42a::t_063ed90d7ea4cd 26-27,86,89
+  s_af4bf7abf9b42a::t_59143c1ff41d5e 35-36
+docs/development/testing.md
+  s_af4bf7abf9b42a::t_c21656ca78536b 201-202
+  s_af4bf7abf9b42a::t_8435640d4f827a 200
+docs/development/ui.md
+  s_af4bf7abf9b42a::t_c21656ca78536b 105
+  s_af4bf7abf9b42a::t_8435640d4f827a 122-124
+e2e/tests/journeys/navigation.ts
+  s_af4bf7abf9b42a::t_59143c1ff41d5e 21,46,71,96,158,209,220,224-225
+e2e/tests/helpers/testing.ts
+  s_af4bf7abf9b42a::t_252e91b74cfb9a 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2672a9b56f380c6219123cd05f5243c569b667b2",
+  "prompts": {},
+  "sessions": {
+    "s_af4bf7abf9b42a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf50-ddb2-79e1-806c-dafd31aa2199",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
