@@ -32,18 +32,18 @@ export function githubPlan(
   else if (tag) reasons.push("Release tag requests full verification");
   else if (eventName === "workflow_dispatch") reasons.push("Manual run requests full verification");
   else if (!before) reasons.push("Event base unavailable; checking all sources and native targets");
-  const changed = before
-    ? changedFiles(root, "HEAD", { before, head: "HEAD" })
-    : { files: [], reasons: [] };
-  const baseline =
-    before && /^[0-9a-f]{40}$/.test(before) && !changed.reasons.length ? before : undefined;
+  const {
+    files,
+    reasons: changeReasons,
+    ...comparison
+  } = before ? changedFiles(root, "HEAD", { before, head: "HEAD" }) : { files: [], reasons: [] };
   return {
-    ...verificationPlan(taskModel(root), changed.files, {
+    ...verificationPlan(taskModel(root), files, {
+      ...comparison,
       full,
-      reasons: [...reasons, ...changed.reasons],
+      reasons: [...reasons, ...changeReasons],
       macos: tag || (eventName === "workflow_dispatch" && (macos === true || macos === "true")),
     }),
-    ...(baseline ? { baseline } : {}),
     distribution: distributionRequested(
       eventName,
       ref,

@@ -47,7 +47,8 @@ boundaries; this page keeps the behavior.
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
 - `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
   all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
-  base; `--dry-run` prints the plan, local test selection/reasons and expanded VP graph.
+  base. `--dry-run` prints the comparison baseline SHA, local test selection and
+  expanded VP graph without running tasks. Regular verification also prints the SHA.
   `--no-cache` forwards to VP for container runs where filesystem tracing is unavailable.
   Local tests follow source imports, retaining integration and filesystem/process
   assertions; indirect consumers and unknown/configuration/deleted inputs use complete

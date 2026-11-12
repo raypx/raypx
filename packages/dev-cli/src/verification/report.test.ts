@@ -22,6 +22,24 @@ it("reports the comparison SHA and escaped browser selection reasons", () => {
   expect(content).toContain("Web browser · smoke");
   expect(content).toContain("Changed login &lt;view&gt;.tsx");
   expect(content).toContain("Desktop browser · skipped");
+  expect(content).toContain("Source tests · skipped");
+  expect(content).toContain("Native checks · skipped");
+  expect(content).toContain("Backend integration · skipped");
+  expect(content).toContain("Container smoke · skipped");
+});
+
+it("reports selected source and acceptance jobs with their native runners", () => {
+  const { root, model } = project();
+  const summary = join(root, "summary.md");
+  vi.stubEnv("GITHUB_STEP_SUMMARY", summary);
+  const plan = verificationPlan(model, [], { full: true });
+  reportCiPlan({ ...plan, distribution: true });
+  const content = readFileSync(summary, "utf8");
+  expect(content).toContain("Source tests · selected");
+  expect(content).toContain("Native checks · macos-latest, windows-latest");
+  expect(content).toContain("Native distribution · selected");
+  expect(content).toContain("Backend integration · selected");
+  expect(content).toContain("Container smoke · selected");
 });
 
 it("replaces stale success evidence before starting checks and records a failed run", async () => {

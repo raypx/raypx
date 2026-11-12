@@ -17,6 +17,7 @@ export function changedFiles(
         git(["ls-files", "--others", "--exclude-standard", "-z"]),
       );
     return {
+      ...(/^[0-9a-f]{40}$/.test(from) ? { baseline: from } : {}),
       files: [...new Set(values.flatMap((value) => value.split("\0").filter(Boolean)))].sort(),
       reasons: [] as string[],
     };

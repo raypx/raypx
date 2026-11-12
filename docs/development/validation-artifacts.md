@@ -214,7 +214,9 @@ are scoped to each existing package test task and participate in its VP cache ke
 CI and `--full` run complete suites for selected workspaces. Native inputs independently select Go host tasks.
 The default base is the merge-base with `origin/canary`; staged, unstaged,
 untracked, renamed and deleted files count.
-Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
+Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan and its
+resolved baseline SHA. Root guides such as `DESIGN.md` and `CONTRIBUTING.md`
+receive repository checks without selecting workspace suites on their own.
 Unknown inputs, shared JS configuration/lockfiles, or an unavailable base broaden
 source checks to all workspaces. This does not request release builds, Knip, browser
 acceptance or database jobs. An unavailable Git base also selects native checks
@@ -243,8 +245,9 @@ push with shared configuration changes. Login, password setup and remote approva
 source changes run the relevant Web or Desktop browser smoke. App-owned `e2e/`
 changes run that app's full browser suite, and shared E2E changes run both full
 suites. A full suite takes precedence over smoke for the same project. The plan
-summary shows the comparison baseline SHA and the input paths that selected each
-browser project.
+summary shows the comparison baseline SHA, the input paths that selected each
+browser project, the selected native runners, and whether source tests, native
+distribution, backend integration and container smoke were selected.
 
 Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
 Go host targets, builds outputs and runs independent artifact probes concurrently.

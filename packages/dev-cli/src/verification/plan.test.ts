@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { project, platformProject } from "../../tests/helpers/verification.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 import { taskModel, taskPlan, taskRef } from "@raypx/task-graph/model";
-import { changedFiles, verificationPlan } from "./plan.js";
+import { changedFiles, localPlan, verificationPlan } from "./plan.js";
 import { githubPlan, readGithubPlan } from "./ci.js";
 import { verifyOptions } from ".";
 import { executionTasks } from "./execution.js";
@@ -78,10 +78,25 @@ describe("affected verification", () => {
   });
   it("keeps documentation-only feedback independent of JavaScript and native runners", () => {
     const { model } = project();
-    const plan = verificationPlan(model, ["docs/development/testing.md", "AGENTS.md"]);
+    const files = [
+      "docs/development/testing.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "CONTEXT.md",
+      "CONTRIBUTING.md",
+      "DESIGN.md",
+      "GLOSSARY.md",
+      "PRODUCT.md",
+    ];
+    const plan = verificationPlan(model, files);
+    expect(plan.files).toEqual(files);
+    expect(plan.reasons).toEqual([]);
     expect(plan.workspaces).toEqual([]);
     expect(plan.tasks).toEqual([]);
     expect(plan.native).toBe(false);
+    expect(verificationPlan(model, ["unclassified.md"]).workspaces).toHaveLength(
+      model.members.length,
+    );
   });
   it("propagates a change to every dependent workspace", () => {
     const plan = verificationPlan(platformProject(), ["packages/ui/src/index.ts"]);
@@ -219,13 +234,14 @@ describe("affected verification", () => {
   it("retains renderer verification for mixed changes and full native verification", () => {
     const model = platformProject();
     const go = "packages/desktop/internal/desktop/preferences.go";
-    const mixed = verificationPlan(model, [go, "packages/desktop/src/index.ts"]);
+    const mixed = verificationPlan(model, [go, "packages/desktop/src/index.ts", "DESIGN.md"]);
     const full = verificationPlan(model, [go], { full: true });
     for (const plan of [mixed, full]) {
       expect(plan.tasks).toContain("desktop#task:check");
       expect(plan.tasks).toContain("desktop#task:test");
       expect(plan.tasks).toContain("desktop#task:mygo:test");
     }
+    expect(mixed.workspaces).toEqual(["desktop"]);
     expect(full.tasks).toContain("api#task:check");
   });
   it("limits workflow orchestration to Dev CLI while retaining shared-action and native acceptance", () => {
@@ -437,7 +453,9 @@ describe("affected verification", () => {
       "fixture",
     );
     git("update-ref", "refs/remotes/origin/canary", "HEAD");
-    expect(changedFiles(root)).toEqual({ files: [], reasons: [] });
+    const baseline = git("rev-parse", "HEAD").toString().trim();
+    expect(changedFiles(root)).toEqual({ baseline, files: [], reasons: [] });
+    expect(localPlan(root, { base: "HEAD" }).baseline).toBe(baseline);
     renameSync(join(root, "old name.ts"), join(root, "new name.ts"));
     git("add", "old name.ts", "new name.ts");
     unlinkSync(join(root, "deleted.ts"));
@@ -454,6 +472,7 @@ describe("affected verification", () => {
       ]),
     );
     expect(changedFiles(root, "missing-ref").reasons).not.toEqual([]);
+    expect(localPlan(root, { base: "missing-ref" }).baseline).toBeUndefined();
   });
   it("runs manual/tag events fully and checks all sources when push bases are unavailable", () => {
     const { root } = project();

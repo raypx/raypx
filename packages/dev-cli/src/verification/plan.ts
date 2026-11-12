@@ -11,6 +11,7 @@ type Artifact = "api" | "web" | "cli";
 type BrowserMode = "none" | "smoke" | "full";
 type BrowserPlan = Record<BrowserSurface, { mode: BrowserMode; reasons: string[] }>;
 export interface VerificationPlan {
+  baseline?: string;
   full: boolean;
   reasons: string[];
   files: string[];
@@ -39,7 +40,9 @@ export function changedFiles(
 }
 function documentation(file: string) {
   return (
-    file.startsWith("docs/") || /(?:^|\/)(?:README|AGENTS|CHANGELOG|LICENSE)(?:\.md)?$/.test(file)
+    file.startsWith("docs/") ||
+    /^(?:CLAUDE|CONTEXT|CONTRIBUTING|DESIGN|GLOSSARY|PRODUCT)\.md$/.test(file) ||
+    /(?:^|\/)(?:README|AGENTS|CHANGELOG|LICENSE)(?:\.md)?$/.test(file)
   );
 }
 function globalInput(file: string) {
@@ -231,7 +234,7 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean, macos: 
 export function verificationPlan(
   model: TaskModel,
   files: string[],
-  options: { full?: boolean; reasons?: string[]; macos?: boolean } = {},
+  options: { full?: boolean; reasons?: string[]; macos?: boolean; baseline?: string } = {},
 ): VerificationPlan {
   const reasons = [...(options.reasons ?? [])];
   const full = Boolean(options.full);
@@ -327,6 +330,7 @@ export function verificationPlan(
   if (lifecycle && !affected.has(lifecycle.workspace))
     tasks.push(taskRef(lifecycle.workspace, "test"));
   return {
+    ...(options.baseline ? { baseline: options.baseline } : {}),
     full,
     reasons: [...new Set(reasons)],
     files,
@@ -345,6 +349,6 @@ export function localPlan(
   options: { full?: boolean; base?: string } = {},
   model: TaskModel = taskModel(root),
 ) {
-  const changed = changedFiles(root, options.base);
-  return verificationPlan(model, changed.files, { ...options, reasons: changed.reasons });
+  const { files, ...comparison } = changedFiles(root, options.base);
+  return verificationPlan(model, files, { ...options, ...comparison });
 }

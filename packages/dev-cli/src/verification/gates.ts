@@ -1,7 +1,7 @@
 import type { VerificationPlan } from "./plan.js";
 
 export type SourcePhase = "checks" | "tests";
-export type CiPlan = VerificationPlan & { distribution: boolean; baseline?: string };
+export type CiPlan = VerificationPlan & { distribution: boolean };
 const ciPlanVersion = 3;
 
 /** Keep native checks together; workspace suites run on their own runner. */

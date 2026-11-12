@@ -2,7 +2,7 @@ import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from 
 import { join } from "node:path";
 import type { VerificationPlan } from "./plan.js";
 import { taskRef } from "@raypx/task-graph/model";
-import type { CiPlan, SourcePhase } from "./gates.js";
+import { sourcePhases, type CiPlan, type SourcePhase } from "./gates.js";
 
 export function reportCiPlan(plan: CiPlan) {
   const summary = process.env.GITHUB_STEP_SUMMARY;
@@ -19,6 +19,7 @@ export function reportCiPlan(plan: CiPlan) {
     `- Baseline SHA ${plan.baseline ? `\`${plan.baseline}\`` : "unavailable"}`,
     `- ${plan.full ? "Full" : "Affected"} source verification · ${plan.workspaces.length} workspaces`,
     ...plan.reasons.slice(0, 10).map((reason) => `  - <code>${safe(reason)}</code>`),
+    `- Source tests · ${sourcePhases(plan).includes("tests") ? "selected" : "skipped"}`,
   ];
   for (const [surface, selection] of Object.entries(plan.browser)) {
     lines.push(
@@ -26,6 +27,12 @@ export function reportCiPlan(plan: CiPlan) {
     );
     for (const reason of selection.reasons) lines.push(`  - <code>${safe(reason)}</code>`);
   }
+  lines.push(
+    `- Native checks · ${plan.nativeRunners.join(", ") || "skipped"}`,
+    `- Native distribution · ${plan.distribution ? "selected" : "skipped"}`,
+    `- Backend integration · ${plan.backend ? "selected" : "skipped"}`,
+    `- Container smoke · ${plan.containerSmoke ? "selected" : "skipped"}`,
+  );
   appendFileSync(summary, `${lines.join("\n")}\n`);
 }
 

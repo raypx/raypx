@@ -39,6 +39,7 @@ export async function verify(root: string, args: string[]) {
   console.log(
     `Verification: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces`,
   );
+  console.log(`Baseline SHA ${plan.baseline ?? "unavailable"}`);
   for (const reason of plan.reasons) console.log(reason);
   for (const test of tests)
     console.log(
