@@ -115,15 +115,14 @@ it("compiles once in prepare and transports an immutable artifact by exact ID", 
 
 it("verifies the shared payload before running native acceptance", () => {
   const payload = named("Verify prepared CLI", checks);
+  const runners = named("Cross-platform process and task runners", checks);
   const herdr = named("Herdr terminal integration", checks);
   const go = named("Desktop MyGo checks", checks);
-  for (const step of [
-    herdr,
-    go,
-    named("Cross-platform process and task runners", checks),
-    named("Installed CLI package", checks),
-  ])
+  for (const step of [herdr, go, runners, named("Installed CLI package", checks)])
     expect(checks.indexOf(step)).toBeGreaterThan(checks.indexOf(payload));
+  expect(runners.run).toContain(
+    "bun run --cwd packages/task-graph test ./tests/integration/task-leaf.test.ts",
+  );
   expect(herdr.env?.RAYPX_HERDR_COMPILED).toBe("1");
   expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe(
     "${{ inputs.distribution == 'true' && '3' || '1' }}",
