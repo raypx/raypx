@@ -1,0 +1,21 @@
+e2e/tests/helpers/layout.ts
+  s_af4bf7abf9b42a::t_be5b1bd93f029e 4,17-20
+e2e/tests/journeys/tasks/conversation.ts
+  s_af4bf7abf9b42a::t_be5b1bd93f029e 269,284,381
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0479db8cbc1a064a17028129235d2cb224f9f4b0",
+  "prompts": {},
+  "sessions": {
+    "s_af4bf7abf9b42a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf50-ddb2-79e1-806c-dafd31aa2199",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
