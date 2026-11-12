@@ -1,0 +1,26 @@
+packages/dev-cli/src/verification/execution.ts
+  s_652cc4f0b5d7e1::t_241c66212988b0 13-18,29-34,60-61,102-104
+packages/dev-cli/src/verification/execution.test.ts
+  s_652cc4f0b5d7e1::t_1730088122a3f5 7,31-40
+  s_652cc4f0b5d7e1::t_6fb8650e5d3419 41
+turbo.json
+  s_652cc4f0b5d7e1::t_241c66212988b0 296-315
+docs/development/validation-artifacts.md
+  s_652cc4f0b5d7e1::t_7602ef30f3dbed 202-204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "26685a10c38d786b02bc50ac9f4d206fc9290216",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
