@@ -144,7 +144,7 @@ export async function runTests(root: string, cwd: string, args: string[]) {
       console.log(
         [
           "bun run test [all|unit|component|integration|coverage|postgres|redis|cluster] [--package name|path] [VP flags] [-- test flags]",
-          "bun run test e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [-- Playwright flags]",
+          "bun e2e [--web|--desktop] [--smoke] [--visual] [Playwright flags]",
           "bun run test inventory [--layers] [--baseline file] [--owners file]",
           "bun run test backends [--with-e2e [-- Playwright flags]]",
           "bun run test list",

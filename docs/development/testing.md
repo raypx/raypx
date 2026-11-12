@@ -1,8 +1,8 @@
 # Testing and verification
 
-Run focused workspace tests, then `bun run verify` for daily delivery. It checks
-policy/locales, changed-file format/lint and affected types/tests; native inputs
-add current-platform Go checks. `bun run verify --full` adds repository audits,
+Run focused workspace tests, then `bun verify` for daily delivery. It checks
+policy/locales, changed-file format/lint and affected types/tests. Native inputs
+add current-platform Go checks. `bun verify --full` adds repository audits,
 builds and relocated artifact probes for release preparation. Neither command
 replaces separate database, browser, installed native or live-provider acceptance.
 
@@ -18,7 +18,8 @@ The four SDK probes fail when outbound network isolation cannot be established.
 ## Test commands
 
 Root commands discover scripts from workspace manifests; each workspace owns its
-actual suites. Ordinary Vitest tests need no database, GUI or provider login.
+actual suites. Use `bun run test` to select the root script because `bun test`
+starts Bun's built-in test runner. Ordinary Vitest tests need no database, GUI or provider login.
 
 ```sh
 bun run test --help
@@ -76,11 +77,10 @@ The inventory audit uses Vitest JSON reports from the workspace scripts.
 
 ```sh
 bun --cwd e2e --bun playwright install --only-shell chromium
-bun run test e2e --package web --smoke -- --workers=1
-bun run --cwd e2e e2e
-bun run --cwd apps/web e2e -- settings.spec.ts
-bun run --cwd apps/desktop e2e -- --grep template
-bun run --cwd e2e e2e --web --dry-run
+bun e2e
+bun e2e --web --smoke --workers=1
+bun e2e --desktop --grep template
+bun e2e --web --dry-run
 
 bun run test inventory --layers
 bun run --cwd packages/tooling test:inventory
@@ -89,7 +89,8 @@ bun run test backends --with-e2e -- --workers=1
 ```
 
 Browser commands use the same scoped arguments and build plan from root, `e2e/` or
-the selected application. Root `--package` resolves workspace names and paths.
+the selected application. The root `bun e2e` command accepts Playwright flags
+directly. Root `--package` resolves workspace names and paths.
 Private `_e2e` scripts are terminal runners for VP, not public entry points.
 `raypx.taskScripts` connects each public command to a real private script, rejecting
 chains or missing targets so a direct command cannot recursively enter its own graph.
@@ -187,7 +188,7 @@ analytics, navigation, memory, cloud schedules and task journeys are registered 
 once in `e2e/tests/journeys/`; `surface` and `base` fixtures come from the selected
 Playwright project. Application fixtures use the public `@raypx/e2e/testing` entry.
 The root config defines `web` and `desktop` projects with separate test directories.
-`bun run test e2e -- --list` lists the complete ordinary inventory without builds
+`bun e2e --list` lists the complete ordinary inventory without builds
 or servers; fixed counts are not an ownership contract.
 
 Combine cases only within one coherent journey. Keep independent failures, account
@@ -245,7 +246,7 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 - `TEST_REDIS_URL` pointing to a disposable Redis or Valkey (`docker compose up -d valkey`
   serves `redis://localhost:6380`): `bun run test redis` checks the session cache,
   fixed-window counters and concurrent RPC limits. Keys use a unique, expiring prefix.
-- bun run test e2e runs real Chromium Web/Desktop-renderer acceptance. Install
+- `bun e2e` runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
 - bun run package:desktop on macOS and Windows checks the actual native package.
   Release acceptance additionally verifies daemon-owned encrypted session persistence
@@ -256,23 +257,21 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 
 ### Faster browser feedback
 
-The complete compiled-artifact gate remains `bun run test e2e`, with every ordinary
+The complete compiled-artifact gate is `bun e2e`, with every ordinary
 assertion. For daily work, select the owning application before building or serving:
 
 ```sh
-bun run --cwd apps/web e2e
-bun run --cwd apps/desktop e2e -- settings.spec.ts
-bun run test e2e --package web -- --grep template
-bun run test e2e -- --project=desktop
-bun run test e2e --web --smoke
-bun run test e2e --package desktop -- --list
-bun run test e2e --package web --dry-run
+bun e2e --web
+bun e2e --desktop settings.spec.ts
+bun e2e --web --grep template
+bun e2e --desktop --list
 ```
 
 Package names/paths, local application scripts, `--web`/`--desktop` and native
 Playwright `--project=web|desktop` select the same build and server scope. Conflicting
 selectors fail before running. Projects select application cases; smoke and user
-grep intersect within that project. Pass filenames or Playwright flags after `--`.
+grep intersect within that project. Use `--` when a Playwright argument would
+otherwise be interpreted as a repository option.
 Listing cases bypasses VP builds and Playwright does not start servers. Focused
 runs are feedback tools; run complete acceptance before release.
 
@@ -307,9 +306,9 @@ screenshots remain enabled; CI records traces on the first retry. Capture the
 existing theme, locale and feature screenshots explicitly, or record a local trace:
 
 ```sh
-bun run test e2e --visual
-bun run raypx-dev e2e --desktop --visual -- --grep template
-bun run test e2e --web -- --grep template --trace on
+bun e2e --visual
+bun e2e --desktop --visual --grep template
+bun e2e --web --grep template --trace on
 ```
 
 Each mode builds only its required surfaces, using synthetic analytics settings

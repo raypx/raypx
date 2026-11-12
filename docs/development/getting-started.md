@@ -28,8 +28,8 @@ workspace dependency. For direct terminal use, run `bun link` once in
 `raypx-dev doctor` or `raypx-dev verify`. The root `bun run raypx-dev <command>`
 entry uses the same executable without requiring a global link.
 
-Desktop's Go module lives in apps/desktop. Daily `bun run verify` selects affected
-JavaScript and Go checks; `bun run verify --full` checks all current-platform sources
+Desktop's Go module lives in apps/desktop. Daily `bun verify` selects affected
+JavaScript and Go checks. `bun verify --full` checks all current-platform sources
 and artifacts for release preparation or an explicit full-validation request.
 Shared JS configuration/lockfile changes broaden source checks without starting
 native runners. See the [Desktop guide](desktop.md#build-and-release).
@@ -39,7 +39,9 @@ dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp 
 oxfmt and oxlint fixes on staged files only. The `commit-msg` hook checks the
 [commit subject format](../../CONTRIBUTING.md#commit-messages). Check hook installation
 with `bun --bun vp hooks status`.
-`VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun run verify`.
+`VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun verify`.
+Use `bun lint` for a standalone lint pass and `bun format` to check formatting.
+`bun format --write` applies formatting with the same VP rules and ignore files.
 
 Remote tasks require Redis. `docker compose up -d valkey` starts Valkey on 6380; set
 `REDIS_URL=redis://localhost:6380` to cache sessions and keep rate limits in Redis
@@ -48,20 +50,20 @@ instead of PostgreSQL. API sessions remain persisted in PostgreSQL.
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
 Start `docker compose up -d postgres` (PostgreSQL on 5433, Valkey on 6380),
-then run `bun run dev`. API startup applies pending foundation migrations before
+then run `bun dev`. API startup applies pending foundation migrations before
 initializing its runtime. Set `DATABASE_MIGRATE_ON_START=false` to skip this step
 when migrations are managed separately; `bun run db:migrate` remains available explicitly.
 Never point API startup or migration commands at the retired database or volume.
 bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation schema of DATABASE_URL.
 
-bun run dev starts Web (Start SSR on 3000) and the combined backend (3002).
+`bun dev` starts Web (Start SSR on 3000) and the combined backend (3002).
 Nitro hosts `/relay` alongside HTTP. Redis is optional for this default topology;
 set `SERVER_ROLE=api` and run another copy with `SERVER_ROLE=relay` only when
 using a shared private broker. See [backend roles](../architecture/0051-backend-runtime-roles.md).
-bun run dev:desktop starts Desktop development;
-bun run package:desktop packages it with its version-matched CLI. Phones use the Web
+`bun dev:desktop` starts Desktop development.
+`bun package:desktop` packages it with its version-matched CLI. Phones use the Web
 application for the remote workbench. An Expo Mobile account/login baseline is
-also available through `bun run dev:mobile`; see [Mobile](mobile.md).
+also available through `bun dev:mobile`. See the [Mobile guide](mobile.md).
 Desktop reads its connection at runtime from `~/.raypx/config.toml`, defaulting
 to production. To use the local API, set `base_url = "http://localhost:3002"`
 and `web_url = "http://localhost:3000"`, then fully quit and restart Desktop.
@@ -69,7 +71,7 @@ Use a separate absolute `RAYPX_HOME` for isolated development configurations.
 See [Desktop configuration](desktop.md#connection-configuration) for profiles/self-hosting.
 `VITE_API_URL` and `VITE_WEB_URL` still configure ordinary browser previews/Web
 builds; they do not override an installed Desktop's TOML settings.
-bun run dev:storybook previews `@raypx/ui` components on 6006; bun run build:storybook
+`bun dev:storybook` previews `@raypx/ui` components on 6006. `bun build:storybook`
 writes the static site to `apps/storybook/dist`.
 
 Bun catalogs hold third-party versions: the default `catalog:` contains shared

@@ -7,12 +7,12 @@ production-origin cookie persistence require separate packaged platform checks.
 
 ## Interface
 
-Run `bun run test e2e` for the complete compiled-artifact gate. Install the headless
+Run `bun e2e` from the root for the complete compiled-artifact gate. Install the headless
 browser with `bun --bun playwright install --only-shell chromium` in this workspace.
-For daily work use `bun run --cwd apps/web e2e` or `apps/desktop e2e`; root
-`test e2e --package web|desktop` and Playwright `--project=web|desktop` select the
-same application. `--web`/`--desktop`, `--smoke` and `--visual` remain available.
-Pass filenames and Playwright flags after `--`. `--list` collects cases without
+Use `bun e2e --web` or `bun e2e --desktop` to select one application.
+Package scripts and Playwright `--project=web|desktop` select the same scope.
+Pass filenames and Playwright flags directly. Use `--` for arguments that would
+otherwise be interpreted as repository options. `--list` collects cases without
 building applications or starting servers. `--dry-run` shows the VP plan.
 
 Each application owns `apps/<app>/e2e/*.spec.ts` (including task subdirectories).
@@ -41,7 +41,7 @@ artifacts. Reports live in ignored `test-results/<all|web|desktop>/` directories
 CI defaults to two workers; local 12+ CPU/32+ GiB hosts use eight, 8+ CPU/16+ GiB
 hosts four, and smaller hosts one or two. Explicit `--workers` overrides this.
 
-Surface, smoke and user grep filters intersect. Full `test e2e` retains every
+Surface, smoke and user grep filters intersect. Full `bun e2e` retains every
 ordinary case; focused runs do not replace release acceptance. Each case gets a
 fresh browser context and response fixtures. `signedInAccount` supplies its
 member `account.access` projection; custom signed-in cases use `accountAccessFixture`.
@@ -74,7 +74,7 @@ default compiled-artifact configuration. Client authorization is disabled only o
 these isolated test servers; API traffic uses synthetic responses. It validates
 both renderer surfaces without claiming native WebView acceptance.
 
-Run bun run --cwd e2e check; bun run test e2e is an explicit browser gate.
+Run `bun run --cwd e2e check`. `bun e2e` is the explicit browser gate.
 
 The control browser test is an explicit real-backend gate. Launch the isolated API
 with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build

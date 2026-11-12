@@ -23,8 +23,8 @@ bun install
 cp .env.example .env
 # Starts a NEW database on 5433; does not reuse the old volume.
 docker compose up -d postgres
-bun run db:migrate
-bun run dev
+bun db:migrate
+bun dev
 ```
 
 Web (TanStack Start SSR) runs on 3000; the combined API/Relay backend runs on 3002.
@@ -41,22 +41,18 @@ On macOS and Windows, the independent CLI daemon owns scheduling and execution;
 closing or quitting Desktop leaves daemon tasks running.
 External tools run with the user's OS permissions.
 
-## Commands
+## Daily commands
 
-```sh
-bun run workspace:list
-bun run workspace:new example --target universal         # preview
-bun run workspace:new example --target universal --write # create
-bun run check
-bun run test
-bun run test unit
-bun run test --package tasks
-bun run --cwd packages/tasks test
-bun run build
-bun run verify
-bun run verify --full
-bun run package:desktop
-```
+| Task              | Command                        |
+| ----------------- | ------------------------------ |
+| Start Web and API | `bun dev`                      |
+| Start Desktop     | `bun dev:desktop`              |
+| Test a workspace  | `bun run test --package tasks` |
+| Run browser E2E   | `bun e2e`                      |
+| Verify changes    | `bun verify`                   |
+| Check formatting  | `bun format`                   |
+| Apply formatting  | `bun format --write`           |
+| Build             | `bun run build`                |
 
 VP discovers tasks from workspace manifests. Engineering commands are exposed
 as `raypx-dev`; the product executable is `raypx`. Workspace discovery reads the

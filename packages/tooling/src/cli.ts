@@ -113,6 +113,18 @@ async function main([command, ...args]: string[]) {
       if (args.length) throw new Error("Usage: raypx-dev i18n");
       findings(checkLocales(root), "Locale catalogs");
       break;
+    case "format": {
+      const separator = args.indexOf("--");
+      const options = separator < 0 ? args : args.slice(0, separator);
+      if (options.includes("--help") || options.includes("-h"))
+        console.log("bun format checks formatting by default. Pass --write to apply changes.\n");
+      const hasOutputMode = options.some(
+        (arg) => arg === "--check" || arg === "--write" || arg === "--list-different",
+      );
+      const flags = hasOutputMode ? args : ["--check", ...args];
+      await run(process.execPath, ["--bun", "vp", "fmt", ...flags], root);
+      break;
+    }
     case "verify":
       await verify(root, args);
       break;
@@ -180,7 +192,7 @@ async function main([command, ...args]: string[]) {
     }
     case undefined:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | deployment:smoke | env | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | format | verify | smoke | deployment:smoke | env | clean | clean:artifacts | doctor",
       );
       break;
     default:

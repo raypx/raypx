@@ -14,14 +14,14 @@ export function verifyOptions(args: string[]) {
     else if (arg === "--dry-run") options.dry = true;
     else if (arg === "--base" && args[i + 1] && !args[i + 1]!.startsWith("-"))
       options.base = args[++i]!;
-    else throw new Error("Usage: bun run verify [--full] [--no-cache] [--base ref] [--dry-run]");
+    else throw new Error("Usage: bun verify [--full] [--no-cache] [--base ref] [--dry-run]");
   }
   return options;
 }
 export async function verify(root: string, args: string[]) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0]!)) {
     console.log(
-      "bun run verify              Affected types and related tests; native-input Go checks\nbun run verify --full       Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run, --no-cache (container filesystem tracing). GUI/database/browser acceptance runs in CI.",
+      "bun verify          Affected types and related tests; native-input Go checks\nbun verify --full   Complete suites, current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run, --no-cache (container filesystem tracing). GUI/database/browser acceptance runs in CI.",
     );
     return;
   }

@@ -20,6 +20,7 @@ CLI imports do not start a command until the caller invokes `runCli`.
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
+- raypx-dev format [--write] [files] defaults to VP's format check and forwards native VP formatter flags.
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev i18n
   Discover `locales/<language>/<namespace>.ts` or `.json` from workspace manifests;
