@@ -1,0 +1,19 @@
+apps/desktop/e2e/navigation.spec.ts
+  s_aad5c7bcc15a02::t_4bcd44736764b6 2-3,6-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "069a98f1650748dfd59efb217109b292f4a2adb6",
+  "prompts": {},
+  "sessions": {
+    "s_aad5c7bcc15a02": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf35-903c-7091-a4e6-0a2e2063ff63",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
