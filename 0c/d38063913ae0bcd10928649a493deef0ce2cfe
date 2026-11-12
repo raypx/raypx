@@ -1,0 +1,32 @@
+packages/dev-cli/tests/integration/deployment.test.ts
+  s_28758cb14041db::t_cfe6ce0beda7f0 151-152,156
+  s_28758cb14041db::t_cf0b9602638c48 93-99,130,148-150,157
+  s_28758cb14041db::t_70d3f4565ad55b 153-154
+docs/development/validation-artifacts.md
+  s_28758cb14041db::t_cf0b9602638c48 156-158
+deploy/build.sh
+  s_28758cb14041db::t_cf0b9602638c48 32-43,50,56,58,62,65,67
+deploy/AGENTS.md
+  s_28758cb14041db::t_cf0b9602638c48 16-17
+packages/dev-cli/tests/integration/deployment-smoke.test.ts
+  s_28758cb14041db::t_cf0b9602638c48 58
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_28758cb14041db::t_cf0b9602638c48 187,193-195,202-203,218-219,221
+  s_28758cb14041db::t_70766b6d0769ea 196-201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0cd38063913ae0bcd10928649a493deef0ce2cfe",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
