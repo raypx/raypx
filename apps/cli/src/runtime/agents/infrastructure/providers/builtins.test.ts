@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { agentProviders } from "@raypx/core/tasks";
 import { builtinDrivers } from "./builtins.js";
 

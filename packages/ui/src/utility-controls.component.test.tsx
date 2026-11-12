@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { IconButton } from "./icon-button.js";
 import { HelpHint } from "./help-hint.js";
 import {

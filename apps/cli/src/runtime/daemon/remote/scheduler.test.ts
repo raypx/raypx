@@ -1,6 +1,6 @@
 import { agentPort } from "../../../../tests/helpers/remote-agent-port.js";
 import { deferred, ManualScheduler, RelaySocket } from "@raypx/testing";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";

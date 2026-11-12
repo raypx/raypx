@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { secureHtml } from "./csp.js";
 

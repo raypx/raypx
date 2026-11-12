@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { createHash } from "node:crypto";
 import { ControlService } from "@raypx/control";
 import {

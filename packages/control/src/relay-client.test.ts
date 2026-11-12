@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { ControlService } from "./service.js";
 import { createRemoteRelay } from "./relay/client.js";
 import type { RelayCluster, RelayOperation, RelayReply } from "./relay/cluster.js";

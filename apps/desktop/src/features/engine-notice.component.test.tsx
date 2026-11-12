@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { BrowserLanguageProvider } from "../i18n.js";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { EngineNotice } from "./engine/notice.js";

@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { resolve } from "node:path";
 import {
   assertSmokeOwnerRunning,

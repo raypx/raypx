@@ -1,7 +1,7 @@
 import { BrowserLanguageProvider } from "../tests/i18n.js";
 import { StrictMode } from "react";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,

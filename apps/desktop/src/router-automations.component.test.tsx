@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
 import {

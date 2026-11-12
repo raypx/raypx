@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 import { migrateApiDatabase } from "./migrations.js";
 
 const mocks = vi.hoisted(() => ({

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { createApiClient, isMissingProcedure } from "./api.js";
 
 it("reads headers again after a credential change and always uses POST", async () => {

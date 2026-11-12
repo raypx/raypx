@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { decide, DecisionRejected, type DecideState } from "./decider.js";
 import { FakeIds } from "./ports.js";
 import type { LiveFacts } from "./commands.js";

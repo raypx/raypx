@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, within } from "@testing-library/react";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import type { JobRun } from "@raypx/core/jobs";
 import { mocks, grants, job, deferred, emit, page } from "../tests/helpers/router-local.js";
 

@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { ContextError } from "@raypx/core/memory";
 import { taskExecutionPrompt, type TaskContextSnapshot } from "@raypx/core/tasks";
 import { ControlService } from "@raypx/control";

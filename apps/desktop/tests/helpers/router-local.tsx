@@ -15,7 +15,7 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 // Load matcher types without registering against jest-dom's separate Vitest runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
-import { afterAll, afterEach, beforeAll, beforeEach, expect, vi } from "vite-plus/test";
+import { afterAll, afterEach, beforeAll, beforeEach, expect, vi } from "vitest";
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
 

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { TaskPanels } from "../task-panels.js";
 
 function panels(detailVisible: boolean) {

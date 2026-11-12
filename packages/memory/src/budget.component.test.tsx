@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { ContextDocument } from "@raypx/core/memory";
 import { taskExecutionBudget } from "@raypx/core/tasks";
 import { ContextBudget } from "./client.js";

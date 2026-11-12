@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { workspaceGraph, taskRef } from "../../src/workspace-graph.js";

@@ -1,7 +1,7 @@
 import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 
 import { ApprovalBody } from "./approval-body.js";
 

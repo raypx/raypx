@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { accessForRole } from "@raypx/account/access";
 import type { AuthSession } from "@raypx/core/auth";

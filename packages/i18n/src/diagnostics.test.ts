@@ -1,5 +1,5 @@
 import { IntlError, IntlErrorCode } from "use-intl/core";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { intlErrorHandlers } from "./diagnostics.js";
 import { createTranslator } from "./translator.js";
 

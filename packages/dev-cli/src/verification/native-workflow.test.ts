@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 
 type Step = {
   id?: string;

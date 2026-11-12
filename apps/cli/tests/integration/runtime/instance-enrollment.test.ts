@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { enrollTestProfile } from "../../helpers/instance.js";
 
 it("reports the enrollment subprocess exit and safe code without its private error text", async () => {

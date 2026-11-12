@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { StrictMode, Suspense, startTransition, useState } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogLanguageProvider } from "./catalog-provider.js";
 import { createCatalogStore } from "./catalog-store.js";
 import en from "../locales/en/index.js";

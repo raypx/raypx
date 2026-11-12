@@ -1,6 +1,6 @@
 import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { render, screen } from "@testing-library/react";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 
 import type { TaskActivity } from "@raypx/core/tasks";
 import { ToolActivityRow } from "./tool-activity.js";

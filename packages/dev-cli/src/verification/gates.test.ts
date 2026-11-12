@@ -1,6 +1,6 @@
 import { copyFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { project } from "../../tests/helpers/verification.js";
 import { verificationPlan } from "./plan.js";
 import { githubPlan, ciGate } from "./ci.js";

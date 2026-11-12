@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { project } from "../../tests/helpers/verification.js";
 import { verify } from "./index.js";
 import { completionReport, precheckTimings, reportCiPlan } from "./report.js";

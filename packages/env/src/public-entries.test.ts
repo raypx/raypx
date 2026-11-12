@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from "vite-plus/test";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { createEnv, defineEnv, EnvError, z, type InferEnv } from "@raypx/env";
 import { runtimeEnv } from "./runtime.js";
 import externalZod from "zod";

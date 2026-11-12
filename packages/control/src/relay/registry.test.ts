@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import type { RelayClientFrame } from "@raypx/contracts/tasks";
 import { relayFixture } from "../../tests/helpers/relay.js";
 

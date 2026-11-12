@@ -2,7 +2,7 @@ import { cp, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, expect, it } from "vite-plus/test";
+import { afterAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { sql } from "drizzle-orm";
 

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { createClientIpReader } from "./app/client-ip.js";
 
 it("ignores spoofed forwarding from other containers and strips only trusted rightmost hops", () => {

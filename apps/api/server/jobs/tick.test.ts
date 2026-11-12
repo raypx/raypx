@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import type { CloudJobsService } from "@raypx/jobs/server";
 import type { SafeEvent } from "@raypx/logger/safe";
 import { createScheduleTick } from "./tick.js";

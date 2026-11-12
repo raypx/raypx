@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import {
   installWindowsSmoke,
   type SmokeRegistration,

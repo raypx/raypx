@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { type RelayServerFrame } from "@raypx/contracts/tasks";
 import { hostFixtures } from "../../../../helpers/remote-control.js";
 const { control } = hostFixtures();

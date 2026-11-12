@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it } from "vitest";
 import { createBrowserI18n, createTranslations, useLanguagePreference } from "./browser.js";
 import commonEn from "../locales/en/index.js";
 import commonZh from "../locales/zh/index.js";

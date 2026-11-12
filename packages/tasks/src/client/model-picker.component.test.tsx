@@ -1,6 +1,6 @@
 import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { expect, it, vi, beforeEach } from "vite-plus/test";
+import { expect, it, vi, beforeEach } from "vitest";
 
 import { useState } from "react";
 import type { ModelCatalog, ModelSelection } from "@raypx/core/tasks";

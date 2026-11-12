@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 const load = vi.hoisted(() => vi.fn());
 vi.mock("./account.js", () => ({ loadAccount: load }));

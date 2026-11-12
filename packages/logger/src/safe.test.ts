@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createLogger, initLogger } from "./index.js";
 import { createEventPolicy, safeError, withEventPolicy, type SafeEvent } from "./safe.js";
 

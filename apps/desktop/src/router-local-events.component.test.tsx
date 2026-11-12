@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import type { LocalMethod } from "@raypx/contracts/local";
 import type { JobDefinition } from "@raypx/core/jobs";
 import { mocks, grants, job, deferred, emit, page } from "../tests/helpers/router-local.js";

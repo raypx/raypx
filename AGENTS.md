@@ -65,7 +65,7 @@ The accepted foundation design and current architecture decisions define the imp
   Mobile dependencies (including its Expo-supported React/types) and catalog:dev for
   build/test tools. DOM React and React DOM use the shared default catalog. Keep external versions in these catalogs
   and use workspace:* for internal dependencies.
-- Keep coverage aligned with Vite+'s bundled Vitest and native modules within
+- Keep `vitest` and `@vitest/coverage-v8` on the same version and native modules within
   Expo's bundled version ranges.
 - DOM React and React DOM share one exact version. Mobile owns its Expo-supported
   React version in catalog:mobile; shared React peers must support both. Metro
@@ -78,7 +78,7 @@ The accepted foundation design and current architecture decisions define the imp
   and Linux Desktop acceptance remains unverified. `internal/app` owns framework APIs and
   `internal/desktop` owns OS capabilities and finite CLI bootstrap. Bun/VP owns JS builds.
 - Type checks use tsc --noEmit with an explicit project; Bun runs scripts.
-- Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
+- Vite+ owns leaf build/lint/format. Bun runs standalone Vitest for source tests.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
   `test --package` and package-local scripts must select the same suites and prerequisites.
 - Colocate unit tests with their source. Name DOM suites `*.component.test.ts(x)`;
@@ -86,7 +86,7 @@ The accepted foundation design and current architecture decisions define the imp
   Application-owned browser acceptance may use `e2e/`; the root E2E workspace
   discovers Web and Desktop cases there. `*.test.*` is Vitest; `*.spec.*` is
   reserved for Playwright under `e2e/`, and policy rejects it elsewhere.
-  Root vite.config.ts discovers native test projects from package.json workspaces;
+  Root vitest.config.ts discovers native test projects from package.json workspaces;
   test.config.ts exports runner defaults as a plain Vitest config. Each workspace
   owns include patterns, projects and overrides using native defineConfig/mergeConfig;
   do not introduce custom config factories or option schemas. Application Vite plugins

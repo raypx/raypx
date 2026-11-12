@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { BrowserLanguageProvider } from "../../i18n.js";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 
 import { deferred } from "../../../tests/helpers/desktop.js";

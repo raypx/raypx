@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { isTaskActive, taskCursor } from "./task.js";
 it("does not offer cancellation for terminal deliveries", () => {
   expect(isTaskActive({ status: "delivery_failed" })).toBe(false);

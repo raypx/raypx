@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, writeFile, readFile, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { sealCliPayload } from "@raypx/tooling/build/cli";
 import { installRuntimeCopy, verifyInstallation } from "./installation.js";
 vi.mock("../daemon/build.js", () => ({ cliBuild: { version: "1.0.0", builtAt: 42 } }));

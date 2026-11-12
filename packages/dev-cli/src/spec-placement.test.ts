@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { checkSpecPlacement } from "./policy.js";
 import { workspaceFixtures } from "../tests/helpers/workspace.js";
 

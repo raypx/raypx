@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ list: vi.fn() }));
 vi.mock("@raypx/client/api", () => ({ createApiClient: () => ({ jobs: { list: mocks.list } }) }));
 vi.mock("./features/auth/client.js", () => ({ apiUrl: "https://api.example.test" }));

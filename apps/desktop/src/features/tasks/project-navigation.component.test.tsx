@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { BrowserLanguageProvider } from "../../i18n.js";
-import { afterEach, beforeEach, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   createMemoryHistory,

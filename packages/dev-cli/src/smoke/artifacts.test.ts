@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const probeArtifact = vi.hoisted(() => vi.fn(async (_options: unknown) => {}));
 vi.mock("../repo/artifact.js", () => ({ probeArtifact }));

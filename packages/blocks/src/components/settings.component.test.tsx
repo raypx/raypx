@@ -1,6 +1,6 @@
 import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { ThemeProvider } from "@raypx/ui/themes";
 import { AppearanceSettings, LanguageSettings, SettingsPage, SettingsSection } from "./settings.js";

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { shouldInstallWindowsSmoke } from "../../tests/native/smoke/launch.js";
 
 const hosted = {

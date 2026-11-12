@@ -1,4 +1,4 @@
-import { expect, expectTypeOf, it, vi } from "vite-plus/test";
+import { expect, expectTypeOf, it, vi } from "vitest";
 import { createLocalClient, type LocalClient } from "./local-client.js";
 import { LOCAL_WORKSPACE_ID, localParams } from "./local.js";
 

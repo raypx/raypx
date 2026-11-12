@@ -3,7 +3,7 @@ import { BrowserLanguageProvider } from "../i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import type { LocalEvent } from "@raypx/contracts/local";
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),

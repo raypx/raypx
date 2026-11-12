@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { applyActivityEvent, taskActivityPage } from "./activity.js";
 import { taskActivitySchema, type TaskActivity } from "./tasks.js";
 const base = {

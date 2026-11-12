@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { imports } from "../repo/architecture.js";
 import { layerViolations, type SourceNode } from "./source-layers.js";
 

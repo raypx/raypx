@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
 import { useTheme } from "@raypx/ui/themes";
 import { type ReactNode } from "react";

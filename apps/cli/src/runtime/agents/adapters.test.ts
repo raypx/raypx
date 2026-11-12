@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { CodexAdapter } from "@raypx/providers/codex";
 import { ClaudeAdapter } from "@raypx/providers/claude";
 import { initialExecutionPrompt } from "./harness/execution.js";

@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { cleanup, render, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   session: { data: null as { user: { id: string } } | null, isPending: false },

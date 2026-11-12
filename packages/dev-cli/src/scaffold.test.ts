@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { checkArchitecture } from "./repo/architecture.js";
 import { discover } from "./repository.js";
 import { scaffold } from "./scaffold.js";
@@ -29,11 +29,11 @@ describe("workspace scaffolding", () => {
     expect(
       JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
         .devDependencies,
-    ).toEqual({ "@raypx/tsconfig": "workspace:*" });
+    ).toEqual({ "@raypx/tsconfig": "workspace:*", vitest: "catalog:dev" });
     const scripts = JSON.parse(
       readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"),
     ).scripts;
-    expect(scripts.test).not.toContain("passWithNoTests");
+    expect(scripts.test).toBe("bun --bun vitest run");
     expect(scripts["test:integration"]).toBeUndefined();
     expect(scripts["test:component"]).toBeUndefined();
     expect(() =>

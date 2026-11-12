@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { createMemoryHistory, createRouter, type AnyRoute } from "@tanstack/react-router";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { routeTree } from "./routeTree.gen.js";
 
 function leaves(route: AnyRoute): AnyRoute[] {

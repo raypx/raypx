@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth } from "./server.js";
 

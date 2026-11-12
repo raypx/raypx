@@ -8,7 +8,7 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 
 import type { ContextDocumentSummary } from "@raypx/core/memory";
 import type { MemoryUsagePort } from "@raypx/memory/client";

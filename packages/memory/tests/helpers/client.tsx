@@ -3,7 +3,7 @@ import { cleanup } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
-import { afterEach, beforeEach, expect, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import type { ContextDocument, ContextVersion } from "@raypx/core/memory";
 import type { MemoryClientPort } from "../../src/client.js";

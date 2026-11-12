@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { cliInstallation } from "./installation.js";
 
 it("recognizes a source runtime when VP names its executable bun.native", () => {

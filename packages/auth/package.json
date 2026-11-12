@@ -15,10 +15,10 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run --project component",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "bun --bun vp test --run --coverage"
+    "test": "bun --bun vitest run",
+    "test:component": "bun --bun vitest run --project component",
+    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vitest run --coverage"
   },
   "dependencies": {
     "@raypx/core": "workspace:*",
@@ -34,7 +34,8 @@
     "@vitest/coverage-v8": "catalog:dev",
     "happy-dom": "catalog:dev",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "vitest": "catalog:dev"
   },
   "peerDependencies": {
     "react": "^19.3.0"

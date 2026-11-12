@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import type { HumanRequest } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { localResults } from "@raypx/contracts/local-client";

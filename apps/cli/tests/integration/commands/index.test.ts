@@ -1,5 +1,5 @@
 import { enrolledInstance } from "../../helpers/enrolled.js";
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { access, mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

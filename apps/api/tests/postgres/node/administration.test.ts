@@ -1,5 +1,5 @@
 import { cleanupExpired } from "../../../server/jobs/cleanup.js";
-import { afterAll, beforeAll, expect, it } from "vite-plus/test";
+import { afterAll, beforeAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { adminAudit, user, systemConfiguration } from "@raypx/database/schema";
 import { and, eq, sql } from "drizzle-orm";

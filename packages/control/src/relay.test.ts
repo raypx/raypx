@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { RelayHub } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";
 import { connected, memoryControlRepository } from "../tests/helpers/control.js";

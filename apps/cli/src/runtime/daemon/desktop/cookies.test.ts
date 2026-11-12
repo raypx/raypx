@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { parseSessionCookie, SessionCookies } from "./cookies.js";
 
 const origin = new URL("https://api.example.test");

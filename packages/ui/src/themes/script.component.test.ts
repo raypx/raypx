@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { themeColors } from "./config.js";
 import { createThemeScript } from "./script.js";

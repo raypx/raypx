@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import { CONNECTION_KEY } from "../../config.js";
 import { readDesktopConnection } from "./connection.js";
 

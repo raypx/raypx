@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { mocks, page } from "../tests/helpers/router-auth.js";
 
 describe("public legal routes", () => {

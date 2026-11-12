@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 
 const rm = vi.hoisted(() => vi.fn<typeof import("node:fs/promises").rm>());
 vi.mock("node:fs/promises", () => ({ rm }));

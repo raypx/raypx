@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { sealCliPayload } from "@raypx/tooling/build/cli";
 import config from "../../../mygo.config.js";
 import { assertNativeTarget, prepare } from "../../../scripts/host/mygo.js";

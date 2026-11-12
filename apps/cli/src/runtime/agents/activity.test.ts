@@ -1,7 +1,7 @@
 import { decodeCodexActivity } from "@raypx/providers/codex";
 import { decodeClaudeActivity } from "@raypx/providers/claude";
 import { bounded } from "./projection.js";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { ConversationRecorder } from "./activity.js";
 import type { ActivityDraft } from "./model.js";
 

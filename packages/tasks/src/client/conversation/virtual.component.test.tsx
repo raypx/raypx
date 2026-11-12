@@ -2,7 +2,7 @@ import { BrowserLanguageProvider } from "../../../tests/i18n.js";
 import { Profiler, type ProfilerOnRenderCallback } from "react";
 import { mockTaskLayout } from "../../../tests/helpers/layout.js";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { Conversation } from "../conversation.js";

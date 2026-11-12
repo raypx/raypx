@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { parseLocalePreference, resolveLocalePreference } from "./preferences.js";
 import en from "../locales/en/index.js";
 import zh from "../locales/zh/index.js";

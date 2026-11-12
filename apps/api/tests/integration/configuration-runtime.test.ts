@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { Database } from "@raypx/database/connection";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults } from "@raypx/contracts/api";

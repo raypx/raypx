@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it, vi } from "vitest";
 import { EmptyState } from "./empty-state.js";
 import { StatusBadge } from "./status-badge.js";
 import { SectionHeading } from "./section-heading.js";

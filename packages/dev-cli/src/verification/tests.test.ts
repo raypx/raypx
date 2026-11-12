@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 import { workspaceGraph } from "../workspace-graph.js";
 import { platformProject } from "../../tests/helpers/verification.js";
@@ -20,7 +20,7 @@ function project() {
     join(root, "package.json"),
     JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
+  const scripts = { check: "bun check.ts", test: "bun --bun vitest run" };
   member(root, "feature", { extra: { scripts } });
   member(root, "consumer", { deps: { "@raypx/feature": "workspace:*" }, extra: { scripts } });
   member(root, "unrelated", { extra: { scripts } });
@@ -102,7 +102,7 @@ describe("local related test selection", () => {
   });
   it("selects the CLI task lifecycle suite for its API subprocess inputs", () => {
     const { root, plan, write } = project();
-    const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
+    const scripts = { check: "bun check.ts", test: "bun --bun vitest run" };
     const api = member(root, "api", { extra: { name: "api", scripts } });
     const cli = member(root, "cli", { extra: { name: "cli", scripts } });
     const lifecycle = "tests/integration/runtime/daemon/task-lifecycle.test.ts";
@@ -172,7 +172,7 @@ describe("local related test selection", () => {
     const { root, write, plan } = project();
     member(root, "dev-cli", {
       metadata: { kind: "tooling" },
-      extra: { scripts: { check: "bun check.ts", test: "bun --bun vp test --run" } },
+      extra: { scripts: { check: "bun check.ts", test: "bun --bun vitest run" } },
     });
     write("packages/dev-cli/src/verification/plan.ts", "export const value = 1;");
     write("packages/dev-cli/src/verification/plan.test.ts", 'import { value } from "./plan";');

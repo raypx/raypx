@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
 import { ConversationState } from "../model.js";

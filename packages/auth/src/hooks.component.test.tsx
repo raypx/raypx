@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useAuthActions } from "./hooks.js";
 import { createAuthClient } from "better-auth/react";
 

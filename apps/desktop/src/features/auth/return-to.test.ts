@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { desktopReturnTo } from "./return-to.js";
 
 it.each([

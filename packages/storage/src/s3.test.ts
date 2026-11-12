@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createS3Storage } from "./s3.js";
 
 const config = {

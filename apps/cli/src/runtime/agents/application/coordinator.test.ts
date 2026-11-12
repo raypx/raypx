@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { AgentTask } from "@raypx/core/tasks";
 import type { LocalAgentTask } from "../model.js";
 import { ExecutionCoordinator, type ExecutionRepository } from "./coordinator.js";

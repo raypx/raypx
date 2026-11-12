@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 
 it("loads the native check runner without JavaScript workspace dependencies", () => {
   const desktop = mkdtempSync(join(tmpdir(), "raypx-go-check-"));

@@ -1,6 +1,6 @@
 import type { SessionFactory } from "@raypx/providers/core";
 import { readFileSync } from "node:fs";
-import { afterEach, vi } from "vite-plus/test";
+import { afterEach, vi } from "vitest";
 
 import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { ManagedExecution } from "../../src/runtime/agents/harness/execution.js";

@@ -2,7 +2,7 @@ import { closeProfileStorage } from "./sqlite.js";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach } from "vite-plus/test";
+import { afterEach } from "vitest";
 import { createRuntime } from "./enrolled.js";
 import type { LocalRuntime } from "../../src/runtime/index.js";
 import type { RecordDiagnostic } from "../../src/diagnostics.js";

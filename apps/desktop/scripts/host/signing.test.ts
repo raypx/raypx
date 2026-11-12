@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { signingEnvironment } from "./signing.js";
 
 it("removes signing and update credentials from test-package children", () => {

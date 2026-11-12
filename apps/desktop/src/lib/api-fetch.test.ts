@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { createDesktopFetch } from "./api-fetch.js";
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),

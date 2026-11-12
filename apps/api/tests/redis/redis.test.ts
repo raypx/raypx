@@ -1,4 +1,4 @@
-import { afterAll, expect, it } from "vite-plus/test";
+import { afterAll, expect, it } from "vitest";
 import { connectRedis } from "../../server/runtime/redis.js";
 
 const url = process.env.TEST_REDIS_URL;

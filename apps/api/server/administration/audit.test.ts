@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { AuditService, AuditUnavailable } from "./audit.js";
 const intent = {
   action: "configuration.update" as const,

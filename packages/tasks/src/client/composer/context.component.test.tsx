@@ -2,7 +2,7 @@ import { BrowserLanguageProvider } from "../../../tests/i18n.js";
 import { useRef, useState } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
 import type { TaskWorkspacePort } from "@raypx/tasks/model";

@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import * as matchers from "@testing-library/jest-dom/matchers";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import type { CloudJob, CloudJobRun } from "@raypx/core/jobs";
 import type { CloudJobsPort, JobDevicesPort } from "./client.js";

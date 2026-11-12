@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, expect, it } from "vite-plus/test";
+import { beforeAll, afterAll, expect, it } from "vitest";
 import { eq, inArray } from "drizzle-orm";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { user, instanceEnrollment } from "@raypx/database/schema";

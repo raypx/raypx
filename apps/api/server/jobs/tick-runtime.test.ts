@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 import tickTask from "./runtime/tick.js";
 const mocks = vi.hoisted(() => ({ runtime: vi.fn() }));
 vi.mock("../runtime/backend.js", () => ({ getBackendRuntime: mocks.runtime }));

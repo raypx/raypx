@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import apiCases from "../../../../fixtures/desktop/api-paths.json";
 import cookieCases from "../../../../fixtures/desktop/cookies.json";
 import localCases from "../../../../fixtures/desktop/local-methods.json";

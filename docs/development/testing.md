@@ -18,8 +18,9 @@ The four SDK probes fail when outbound network isolation cannot be established.
 ## Test commands
 
 Root commands discover scripts from workspace manifests; each workspace owns its
-actual suites. Use `bun run test` to select the root script because `bun test`
-starts Bun's built-in test runner. Ordinary Vitest tests need no database, GUI or provider login.
+actual suites and runs standalone Vitest under Bun. Use `bun run test` to select
+the root script because `bun test` starts Bun's built-in test runner. Ordinary
+Vitest tests need no database, GUI or provider login.
 
 ```sh
 bun run test --help
@@ -214,15 +215,15 @@ or coverage settings directly in that workspace's `vitest.config.ts`; no shared
 factory or custom option interface needs to change. Native config merging also
 preserves shared React deduplication when a workspace adds aliases.
 
-Root `vite.config.ts` discovers these configs from `package.json` workspaces and
+Root `vitest.config.ts` discovers these configs from `package.json` workspaces and
 loads them through native Vitest `projects`. Nested projects retain their workspace
 configuration and get names such as `desktop (unit)` and `web (component)`.
 IDE discovery and direct runs use this root entry:
 
 ```sh
-bun --bun vp test --project '@raypx/core'
-bun --bun vp test --project 'desktop (unit)'
-bun --bun vp test list --filesOnly
+bun --bun vitest run --project '@raypx/core'
+bun --bun vitest run --project 'desktop (unit)'
+bun --bun vitest list --filesOnly
 ```
 
 `bun run test` uses the Turbo task graph and package-owned scripts, including their
@@ -238,8 +239,8 @@ Database seeding and behavior assertions stay in each suite.
 
 ### DOM matchers with the hoisted install
 
-Register @testing-library/jest-dom/matchers using expect.extend on the expect
-exported by vite-plus/test. Keep the jest-dom/vitest import type-only for assertion
+Register `@testing-library/jest-dom/matchers` using `expect.extend` on the `expect`
+exported by `vitest`. Keep the `jest-dom/vitest` import type-only for assertion
 augmentation; its runtime side effect can extend a different auto-installed Vitest
 peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 

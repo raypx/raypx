@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { SelectField } from "./select-field.js";
 
 const options = [

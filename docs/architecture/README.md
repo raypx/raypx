@@ -359,6 +359,7 @@ current implementation.
 - [0058: Derived source platforms](0058-derived-source-platforms.md) — superseded by 0059
 - [0059: Manifest workspace boundaries](0059-manifest-workspace-boundaries.md)
 - [0060: Turbo task graph](0060-turbo-task-graph.md) — supersedes the VP task graph in 0057
+- [0061: Standalone Vitest](0061-standalone-vitest.md) — updates the leaf test runner in 0060
 
 ## Distribution and performance
 

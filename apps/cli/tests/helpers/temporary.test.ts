@@ -1,7 +1,7 @@
 import { chmod, mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { removeTemporaryDirectory } from "./temporary.js";
 
 it("removes cyclic and dangling fixture links while preserving external targets", async () => {

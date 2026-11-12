@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { DesktopExecutions } from "./executions.js";
 import type { ExecutionHost } from "../../owner.js";
 

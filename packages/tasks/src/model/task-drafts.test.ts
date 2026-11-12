@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { readTaskDrafts, sameDraft, MAX_TASK_DRAFTS } from "../model.js";
 const draft = {
   id: "draft-1",

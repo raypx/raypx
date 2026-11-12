@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { readAccount } from "./index.js";
 

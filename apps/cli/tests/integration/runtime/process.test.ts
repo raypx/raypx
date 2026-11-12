@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { stripVTControlCharacters } from "node:util";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { runtimeFixtures } from "../../helpers/runtime.js";
 
 const { fixture } = runtimeFixtures();

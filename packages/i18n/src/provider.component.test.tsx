@@ -2,7 +2,7 @@
 import { BrowserLanguageProvider, useTranslations } from "../tests/i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLanguagePreference, useLocale } from "./browser.js";
 
 function system(languages: string[]) {

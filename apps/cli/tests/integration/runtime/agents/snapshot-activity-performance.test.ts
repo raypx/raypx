@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { uuid, task, activity, fixture } from "../../../helpers/agent-snapshot.js";
 
 afterEach(() => vi.restoreAllMocks());

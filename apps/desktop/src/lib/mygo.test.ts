@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyGoBridge } from "./mygo.js";
 
 const streamId = "123e4567-e89b-42d3-a456-426614174000";

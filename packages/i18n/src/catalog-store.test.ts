@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "./catalog-store.js";
 import { messages as staticCatalogs } from "../locales/index.js";
 import en from "../locales/en/index.js";

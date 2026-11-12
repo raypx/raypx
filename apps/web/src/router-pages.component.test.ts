@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { createMemoryHistory, createRouter, type AnyRoute } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { routeTree } from "./routeTree.gen.js";
 import { webPages } from "./features/auth/access.js";
 

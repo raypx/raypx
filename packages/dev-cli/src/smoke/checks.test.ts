@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { checkWeb } from "./checks.js";
 
 function fixture(home: string) {

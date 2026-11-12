@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { DesktopApi } from "./api.js";
 import { SessionCookies } from "./cookies.js";
 

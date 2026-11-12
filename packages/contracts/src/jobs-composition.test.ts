@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import * as jobs from "@raypx/core/jobs";
 import * as local from "./local.js";
 

@@ -1,4 +1,4 @@
-import { vi } from "vite-plus/test";
+import { vi } from "vitest";
 import type { RelayServerFrame } from "@raypx/contracts/tasks";
 import { ControlService } from "../../src/service.js";
 import { RelayHub } from "../../src/relay/hub.js";

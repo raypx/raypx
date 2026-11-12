@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import type { AgentEvent, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { runSteps } from "./run-steps.js";
 

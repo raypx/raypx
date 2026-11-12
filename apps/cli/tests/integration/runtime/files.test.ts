@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { chmod, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createRuntime } from "../../helpers/enrolled.js";

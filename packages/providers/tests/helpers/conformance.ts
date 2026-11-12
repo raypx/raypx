@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import type { ProviderSession } from "../../src/core/index.js";
 import { observeDrain, type createTestProviderHost } from "./host.js";
 

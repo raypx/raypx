@@ -32,7 +32,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
   };
   if (options.tests)
     Object.assign(scripts, {
-      test: "bun --bun vp test --run",
+      test: "bun --bun vitest run",
     });
   const manifest = {
     name: packageName,
@@ -44,6 +44,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     devDependencies: {
       "@raypx/tsconfig": "workspace:*",
       ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
+      ...(options.tests ? { vitest: "catalog:dev" } : {}),
     },
   };
   const config =

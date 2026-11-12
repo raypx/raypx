@@ -1,5 +1,5 @@
 import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";

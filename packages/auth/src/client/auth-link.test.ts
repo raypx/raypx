@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { readAuthLink } from "./auth-link.js";
 
 it.each(["", "?token=%20%20", "?error=TOKEN_EXPIRED", "?token=old&error=TOKEN_EXPIRED"])(

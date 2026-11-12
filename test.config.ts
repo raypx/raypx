@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite-plus/test/config";
+import { defineConfig } from "vitest/config";
 
 const domSetup = fileURLToPath(new URL("./test.dom.ts", import.meta.url));
 
@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: { dedupe: ["react", "react-dom"] },
   test: {
     environment: "node",
-    // VP owns workspace parallelism; larger suites override this locally.
+    // Turbo runs workspace suites in parallel; larger suites override this locally.
     maxWorkers: 1,
     execArgv: ["--no-env-file", "--no-install"],
     setupFiles: [domSetup],

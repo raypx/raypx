@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { collectInventory } from "../../src/validation/inventory.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
 

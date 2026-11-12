@@ -12,10 +12,10 @@
     "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project e2e/tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --project unit",
-    "test:component": "bun --bun vp test --run --project component",
-    "test:coverage": "bun --bun vp test --run --coverage",
+    "test": "bun --bun vitest run",
+    "test:unit": "bun --bun vitest run --project unit",
+    "test:component": "bun --bun vitest run --project component",
+    "test:coverage": "bun --bun vitest run --coverage",
     "e2e": "raypx-dev e2e",
     "build:e2e": "bun --bun vp build --config vite.app.config.ts"
   },
@@ -64,7 +64,8 @@
     "happy-dom": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",
-    "vite-plus": "catalog:dev"
+    "vite-plus": "catalog:dev",
+    "vitest": "catalog:dev"
   },
   "raypx": {
     "bundledDependencies": [

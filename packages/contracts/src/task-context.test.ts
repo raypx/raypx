@@ -1,5 +1,5 @@
 import { taskCreateSchema } from "@raypx/core/tasks";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { localParams } from "./local.js";
 import { relayCommandSchema, relayClientSchema } from "./tasks.js";
 

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import * as core from "@raypx/core/tasks";
 import { agentRunStatusSchema } from "@raypx/core/agent-runs";
 import * as tasks from "./tasks.js";

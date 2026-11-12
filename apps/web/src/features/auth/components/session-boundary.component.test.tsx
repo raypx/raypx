@@ -1,5 +1,5 @@
 import { BrowserLanguageProvider } from "../../../i18n.js";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { SessionBoundary } from "./session-boundary.js";

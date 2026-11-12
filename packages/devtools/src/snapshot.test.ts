@@ -5,7 +5,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { createSnapshotReader } from "./snapshot.js";
 
 async function fixture() {

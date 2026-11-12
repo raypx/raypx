@@ -284,6 +284,7 @@
         "bun.lock",
         "tsconfig.json",
         "vite.config.ts",
+        "vitest.config.ts",
         "test.config.ts",
         "test.dom.ts",
         "deploy/*.ts",

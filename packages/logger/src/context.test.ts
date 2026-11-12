@@ -1,6 +1,6 @@
 import { createLogger, initLogger, type AuditableLogger, type WideEvent } from "evlog";
 import { createLoggerStorage } from "evlog/toolkit/storage";
-import { beforeEach, describe, expect, expectTypeOf, it } from "vite-plus/test";
+import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 
 import { getLogger, runWithLogger, useLogger } from "./context.js";
 

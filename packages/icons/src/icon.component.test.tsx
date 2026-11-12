@@ -1,5 +1,5 @@
 import { createRef } from "react";
-import { afterEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { SearchIcon } from "./icons/search.js";
 import { DeleteIcon } from "./icons/delete.js";

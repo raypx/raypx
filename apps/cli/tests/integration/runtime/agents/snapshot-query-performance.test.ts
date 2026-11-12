@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import { uuid, normalizedSql, task, request, fixture } from "../../../helpers/agent-snapshot.js";
 

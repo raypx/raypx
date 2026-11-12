@@ -1,4 +1,4 @@
-import { expectTypeOf } from "vite-plus/test";
+import { expectTypeOf } from "vitest";
 import { createTranslator } from "../../src/translator.js";
 import { createFormatter } from "../../src/formatter.js";
 import { createTranslations, type IntlProvider } from "../../src/react.js";

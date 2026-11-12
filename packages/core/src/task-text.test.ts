@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { taskText, normalizeTaskJson } from "./task-text.js";
 it("keeps code points intact at either end of the protocol UTF-16 budget", () => {
   expect(taskText("x".repeat(31999) + "😀z", 32000)).toBe("x".repeat(31999));

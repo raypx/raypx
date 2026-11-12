@@ -51,7 +51,7 @@ function documentation(file: string) {
   );
 }
 function globalInput(file: string) {
-  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/)/.test(
+  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vitest\.config|vite\.config)[^/]*|\.github\/)/.test(
     file,
   );
 }

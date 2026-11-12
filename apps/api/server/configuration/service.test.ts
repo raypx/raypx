@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { AuthSession } from "@raypx/core/auth";
 import { configurationDefaults } from "@raypx/contracts/api";
 import { createCache } from "../cache/cache.js";

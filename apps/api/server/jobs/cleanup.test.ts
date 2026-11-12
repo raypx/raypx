@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import type { Database } from "@raypx/database/connection";
 import type { SafeEvent } from "@raypx/logger/safe";
 import { createCleanupJob, runCleanupJob } from "./cleanup.js";

@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const transport = vi.hoisted(() => ({
   dispatch: undefined as ((event: unknown) => void) | undefined,
   cancel: vi.fn(),

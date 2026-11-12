@@ -19,7 +19,7 @@ runs:
       run: |
         bun run --cwd packages/runtime-node test
         bun run --cwd packages/dev-cli test ./src/validation/build-size.test.ts
-        bun run --cwd apps/cli --bun vp test --run tests/integration/distribution/archive.test.ts
+        bun run --cwd apps/cli test tests/integration/distribution/archive.test.ts
     - name: Enable Windows Firewall for isolated provider acceptance
       if: runner.os == 'Windows'
       shell: pwsh

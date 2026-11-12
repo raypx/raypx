@@ -1,5 +1,5 @@
 import { profileStorage } from "../../../helpers/sqlite.js";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { mkdtemp, mkdir, realpath, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";

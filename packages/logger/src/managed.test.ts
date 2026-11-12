@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { createManagedDrain, type ManagedSink } from "./managed.js";
 import type { SafeEvent } from "./safe.js";
 

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from "vite-plus/test";
+import { afterAll, beforeAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { like } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";

@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { ControlService } from "@raypx/control";
 import { RelayHub } from "@raypx/control/relay";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";

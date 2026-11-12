@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { Suspense, use } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { createTranslations, IntlProvider, useLocale } from "./react.js";

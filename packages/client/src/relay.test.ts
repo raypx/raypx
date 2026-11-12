@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { createTaskClient } from "./tasks.js";
 import type { ApiClient } from "./api.js";
 

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { PiRunner } from "@raypx/providers/pi";
 import {
   piMessage,

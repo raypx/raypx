@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { desktopFixture, deferred } from "../../../tests/helpers/desktop.js";
 import { createEngineController } from "./model.js";
 

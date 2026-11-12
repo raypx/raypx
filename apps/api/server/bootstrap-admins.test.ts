@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { Auth } from "@raypx/auth/server";
 import { bootstrapAdministrators } from "./administration/bootstrap.js";
 

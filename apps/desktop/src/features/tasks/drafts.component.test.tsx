@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import {

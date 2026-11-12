@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { BrowserLanguageProvider } from "../i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ request: vi.fn(), installed: false, conflict: false }));
 vi.mock("../lib/desktop.js", () => ({ localRequest: mocks.request }));

@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { createCache } from "./cache.js";
 import { createMemoryStore } from "./memory.js";
 import { createTieredStore } from "./tiered.js";

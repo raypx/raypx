@@ -1,6 +1,6 @@
 import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 import { workspaceGraph } from "../workspace-graph.js";
 import { verificationPlan } from "./plan.js";
@@ -12,7 +12,7 @@ function project() {
     join(root, "package.json"),
     JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
   );
-  const scripts = { check: "bun check.ts", test: "bun --bun vp test --run" };
+  const scripts = { check: "bun check.ts", test: "bun --bun vitest run" };
   member(root, "tooling", {
     metadata: { kind: "tooling" },
     extra: {

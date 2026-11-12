@@ -185,6 +185,6 @@ async function claude() {
   }
 }
 
-// The process stays alive on stdin; vite-plus/tests may not settle a module's
+// The process stays alive on stdin; Vitest may not settle a module's
 // top-level await, so the session loop is started without awaiting it here.
 void (provider === "codex" ? codex() : claude());

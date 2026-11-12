@@ -1,7 +1,7 @@
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { afterEach, it, expect, vi } from "vite-plus/test";
+import { afterEach, it, expect, vi } from "vitest";
 import { extractArchive } from "../../../scripts/archive.js";
 
 const roots: string[] = [];

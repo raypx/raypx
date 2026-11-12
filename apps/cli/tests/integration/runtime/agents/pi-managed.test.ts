@@ -1,7 +1,7 @@
 import { AgentStore } from "../../../../src/runtime/agents/store.js";
 import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite.js";
 import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
-import { expect, it, afterEach, vi } from "vite-plus/test";
+import { expect, it, afterEach, vi } from "vitest";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";

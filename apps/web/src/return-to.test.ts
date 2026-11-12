@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { safeReturnTo } from "./features/auth/return-to.js";
 it.each([
   "https://evil.test/tasks",

@@ -1,6 +1,6 @@
 import { BrowserLanguageProvider } from "../../../src/i18n.js";
 import { useSyncExternalStore } from "react";
-import { afterEach, beforeEach, expect, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import {
   createMemoryHistory,

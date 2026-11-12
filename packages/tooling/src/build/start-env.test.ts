@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { startEnvironment } from "./start-env.js";
 const roots: string[] = [];
 afterEach(() => {

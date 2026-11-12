@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 
 const root = resolve(import.meta.dirname, "../../../..");
 const read = (file: string) => readFileSync(join(root, file), "utf8");

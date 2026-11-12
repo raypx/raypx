@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { LocalMethod } from "@raypx/contracts/local";
 import { DesktopApi } from "./api.js";
 import { DesktopControl } from "./control.js";

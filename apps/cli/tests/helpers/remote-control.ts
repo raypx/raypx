@@ -1,5 +1,5 @@
 import { agentPort } from "./remote-agent-port.js";
-import { afterEach, expect, vi } from "vite-plus/test";
+import { afterEach, expect, vi } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

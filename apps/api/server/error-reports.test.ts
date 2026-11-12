@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it, vi } from "vitest";
 import type { SafeEvent } from "@raypx/logger/safe";
 import { withErrorReports } from "./error-reports.js";
 import { newRequestId } from "./api.js";

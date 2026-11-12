@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it, vi } from "vitest";
 import { createRuntime } from "../../helpers/enrolled.js";
 import { acquireLock } from "../../../src/runtime/state/index.js";
 import type { Diagnostic } from "../../../src/diagnostics.js";

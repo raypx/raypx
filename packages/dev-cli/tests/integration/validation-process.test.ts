@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { Evidence, type ValidationProcess } from "../../src/validation/evidence.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
 

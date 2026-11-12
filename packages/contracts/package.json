@@ -14,9 +14,9 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "bun --bun vp test --run --coverage"
+    "test": "bun --bun vitest run",
+    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vitest run --coverage"
   },
   "dependencies": {
     "@orpc/contract": "catalog:",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@vitest/coverage-v8": "catalog:dev"
+    "@vitest/coverage-v8": "catalog:dev",
+    "vitest": "catalog:dev"
   }
 }

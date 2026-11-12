@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { localParams, localRequestSchema } from "./local.js";
 it("keeps local approval methods account-free and removes only the old private observed surface", () => {
   for (const method of ["approvals.local.settings", "approvals.local.list"] as const) {

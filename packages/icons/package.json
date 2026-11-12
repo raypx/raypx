@@ -83,8 +83,8 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:component": "bun --bun vp test --run .component.test."
+    "test": "bun --bun vitest run",
+    "test:component": "bun --bun vitest run .component.test."
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "catalog:",
@@ -99,7 +99,7 @@
     "happy-dom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite-plus": "catalog:dev"
+    "vitest": "catalog:dev"
   },
   "peerDependencies": {
     "react": "^19.3.0"

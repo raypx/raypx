@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { nativeSmokeOptions } from "./smoke-options.js";
 
 it("defaults native smoke and its restart phases to quiet presentation", () => {

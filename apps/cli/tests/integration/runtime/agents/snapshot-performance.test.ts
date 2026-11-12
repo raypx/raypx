@@ -1,5 +1,5 @@
 import { profileStorage } from "../../../helpers/sqlite.js";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
 import { StateStore } from "../../../../src/runtime/state/index.js";

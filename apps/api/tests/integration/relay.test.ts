@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { createTaskClient } from "@raypx/client/tasks";
 import { relayFixture, relaySocket } from "../helpers/relay.js";

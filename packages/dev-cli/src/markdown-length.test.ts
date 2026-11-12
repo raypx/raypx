@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { checkMarkdownLength } from "./policy.js";
 import { workspaceFixtures } from "../tests/helpers/workspace.js";
 

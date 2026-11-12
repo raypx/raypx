@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { hostState, initialHostState, type HostEvent, type HostState } from "./host-state.js";
 import type { HostBinding } from "./vault.js";
 

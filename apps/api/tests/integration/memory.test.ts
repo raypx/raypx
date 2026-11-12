@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { ContextError, type ContextDocument, type ContextVersion } from "@raypx/core/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";

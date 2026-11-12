@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { outputLines, safeText, terminalLocale } from "./text.js";
 
 describe("terminal display text", () => {

@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 import cleanupTask from "./runtime/cleanup.js";
 
 const mocks = vi.hoisted(() => ({ runtime: vi.fn() }));

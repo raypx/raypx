@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { ContextDocument } from "@raypx/core/memory";
 import { useState } from "react";
 import type { TaskContextSelection } from "@raypx/core/tasks";

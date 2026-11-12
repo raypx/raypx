@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import type { RootGrant } from "@raypx/contracts/local";
 import { rememberProject } from "./features/tasks/project-history.js";
 import { mocks, grants, deferred, testRouter, mount, page } from "../tests/helpers/router-local.js";

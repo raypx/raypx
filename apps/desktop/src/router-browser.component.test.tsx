@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it } from "vitest";
 import { mocks, mount } from "../tests/helpers/router-local.js";
 import { getRouter } from "./router.js";
 

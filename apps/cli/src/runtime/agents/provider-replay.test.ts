@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import type { ReplayRecord } from "../../../tests/helpers/provider-replay.js";
 import { bootstrap, late, fixture } from "../../../tests/helpers/provider-session.js";
 

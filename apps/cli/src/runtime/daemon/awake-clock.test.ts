@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { AwakeClock } from "./awake-clock.js";
 
 function fixture(maxStep = 10_000) {

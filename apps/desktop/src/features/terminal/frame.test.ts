@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { terminalFrame } from "./frame.js";
 describe("terminal screen frames", () => {
   it("queues a reset before complete frames and preserves incremental Unicode bytes", () => {

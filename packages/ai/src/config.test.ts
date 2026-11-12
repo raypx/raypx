@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { mergeAiSettings, parseAiSettings } from "./config.js";
 import { createCompatibleProvider } from "./providers.js";
 it("isolates provider and endpoint credentials while retaining request defaults", () => {

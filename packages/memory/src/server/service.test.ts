@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { ContextError, type ContextDocument, type ContextVersion } from "@raypx/core/memory";
 import { ContextLibraryService, type ContextLibraryRepository } from "../server.js";
 

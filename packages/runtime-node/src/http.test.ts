@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import { serveHttp, directHttpClient } from "./http.js";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

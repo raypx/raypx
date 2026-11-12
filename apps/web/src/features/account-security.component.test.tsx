@@ -1,6 +1,6 @@
 import { BrowserLanguageProvider } from "../i18n.js";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 
 import { AccountSessions } from "./auth/components/account-sessions.js";
 import { ProfileSettings } from "./auth/components/profile-settings.js";

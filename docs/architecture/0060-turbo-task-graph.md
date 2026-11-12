@@ -5,6 +5,8 @@ Date: 2026-11-12
 Status: Accepted. Supersedes the VP task graph and `@raypx/task-graph` in
 [ADR 0057](0057-repository-automation-workspaces.md).
 
+[ADR 0061](0061-standalone-vitest.md) updates the leaf test runner decision.
+
 ## Context
 
 VP registered a private `task:*` definition for every package script through a

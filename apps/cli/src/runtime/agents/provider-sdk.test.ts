@@ -1,5 +1,5 @@
 import type { SessionFactory } from "@raypx/providers/core";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { memoryConversation, fixture } from "../../../tests/helpers/provider-session.js";
 
 it("runs an in-process SDK session and holds its project lock until effects drain", async () => {

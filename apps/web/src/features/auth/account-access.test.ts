@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ headers: new Headers(), create: vi.fn(), access: vi.fn() }));
 // Select the SSR implementation without running the application Vite plugins.
 vi.mock("@tanstack/react-start", () => ({

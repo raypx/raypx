@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { accessForRole } from "@raypx/account/access";
 import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 

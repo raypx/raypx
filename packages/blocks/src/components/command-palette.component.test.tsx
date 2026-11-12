@@ -1,7 +1,7 @@
 import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { useState } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 
 import { CommandPalette, type CommandGroup } from "./command-palette.js";
 

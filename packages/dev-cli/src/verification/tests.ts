@@ -130,7 +130,7 @@ export function localTests(
         )
       )
         return all("Configuration, fixture, setup or non-code input");
-      if (!/\bvp test\b/.test(member.scripts.test!)) return all("Custom test runner");
+      if (!/\bvitest run\b/.test(member.scripts.test!)) return all("Custom test runner");
       const sources = testSources(join(root, member.path)).filter(
         (file) => testLayer(file) !== "external",
       );

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { cloudJobInputSchema } from "../jobs.js";
 import { nextJobRuns } from "./schedule.js";
 

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { serverOrigin, sessionStoragePrefix } from "./config.js";
 import { sessionAccess } from "./session-policy.js";
 

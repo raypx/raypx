@@ -1,4 +1,4 @@
-import { vi } from "vite-plus/test";
+import { vi } from "vitest";
 
 // happy-dom has no layout; keep the real virtualizer with measurable rows/viewport.
 export function mockTaskLayout(scope: "all" | "list") {

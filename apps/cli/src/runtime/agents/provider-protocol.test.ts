@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { CodexAdapter } from "@raypx/providers/codex";
 import { parseProviderReplay, ProviderReplay } from "../../../tests/helpers/provider-replay.js";
 import type { ReplayRecord } from "../../../tests/helpers/provider-replay.js";

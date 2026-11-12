@@ -152,9 +152,9 @@ PATH or explicit binary settings, and stops children before deleting their data.
 Read i18n's public static `./config` through workspace discovery for locale policy.
 Dev CLI owns ICU message comparison in `src/validation/catalog-parity.ts` and
 uses the dev catalog's ICU parser. Keep the i18n runtime out of its dependency closure.
-Dev CLI uses `vp test` with four isolated file workers and a 30-second test timeout.
+Dev CLI runs standalone Vitest under Bun with four isolated file workers and a 30-second test timeout.
 Its scripts select layers through Vitest filters.
-Root `vite.config.ts` discovers workspace configs as native Vitest projects from
+Root `vitest.config.ts` discovers workspace configs as native Vitest projects from
 package.json workspaces. `test.config.ts` is a plain defaults object;
 workspace configs use native `defineConfig`/`mergeConfig`
 and own their include patterns, projects and overrides. Do not wrap Vitest options

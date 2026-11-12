@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import type { AgentTask } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import {

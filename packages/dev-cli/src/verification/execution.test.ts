@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { project } from "../../tests/helpers/verification.js";
 import * as processes from "@raypx/runtime-node/process";
 import * as repository from "../repository.js";

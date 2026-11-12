@@ -1,5 +1,5 @@
 import { profileStorage } from "../../../helpers/sqlite.js";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { agentFixtures } from "../../../helpers/agents.js";

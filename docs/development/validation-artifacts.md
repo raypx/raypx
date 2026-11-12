@@ -206,7 +206,7 @@ A broad change (shared inputs or `--full`) lints the whole repository as the cac
 `//#lint` Turbo task, so an unchanged tree restores it; a narrow change lints only its
 own files directly. Lint runs type-aware rules without its own type check; TypeScript diagnostics come
 from the cached workspace checks and the root `types` task, which checks every
-workspace's Vitest configuration under Node.
+workspace's Vitest configuration.
 Changed files select formatting/lint and affected workspace types through reverse
 dependency graphs. Local test selection follows transitive source imports and changed
 test files, retaining affected integration suites and filesystem/subprocess assertions.
@@ -437,7 +437,7 @@ root overrides. Keep `oxlint` and `@oxlint/plugins` overridden together at `1.90
 until the React `immutability` false positive in bundled Oxlint 1.91.0 is fixed
 ([upstream issue](https://github.com/oxc-project/oxc/issues/28401)). Revalidate lint,
 formatting and Tooling before removing these overrides.
-Keep `@vitest/coverage-v8` at `5.1.0`, matching Vite+ 1.5.1's bundled Vitest.
+Pin standalone `vitest` and `@vitest/coverage-v8` to the same version in the dev catalog.
 Workspaces inheriting the shared coverage configuration declare
 `@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
 

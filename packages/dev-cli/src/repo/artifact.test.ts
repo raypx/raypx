@@ -1,7 +1,7 @@
 import { copyFile, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import { probeArtifact, stageArtifact } from "./artifact.js";
 
 const roots: string[] = [];

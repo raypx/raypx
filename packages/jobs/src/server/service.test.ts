@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { JobError, type CloudJob, type CloudJobRun } from "@raypx/core/jobs";
 import {
   CloudJobsService,

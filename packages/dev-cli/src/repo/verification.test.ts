@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { affectedWorkspaces, changedFiles } from "./verification.js";
 const members = [
   { name: "cli", dependencies: ["desktop"] },

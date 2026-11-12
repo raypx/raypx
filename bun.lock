@@ -16,6 +16,7 @@
         "turbo": "catalog:dev",
         "typescript": "catalog:dev",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "apps/api": {
@@ -56,6 +57,7 @@
         "@vitest/coverage-v8": "catalog:dev",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "apps/cli": {
@@ -90,7 +92,7 @@
         "@types/semver": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "drizzle-kit": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "apps/desktop": {
@@ -144,6 +146,7 @@
         "typescript": "catalog:dev",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "apps/mobile": {
@@ -184,7 +187,7 @@
         "@types/react": "catalog:mobile",
         "@vitest/coverage-v8": "catalog:dev",
         "tailwindcss": "catalog:",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "apps/storybook": {
@@ -258,6 +261,7 @@
         "typescript": "catalog:dev",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "e2e": {
@@ -289,6 +293,7 @@
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
         "wrangler": "catalog:dev",
       },
     },
@@ -304,7 +309,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/account": {
@@ -323,6 +328,7 @@
         "@types/react": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "react": "catalog:",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -338,6 +344,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/analytics": {
@@ -356,6 +363,7 @@
         "@vitest/coverage-v8": "catalog:dev",
         "happy-dom": "catalog:dev",
         "react-dom": "catalog:",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -379,6 +387,7 @@
         "happy-dom": "catalog:dev",
         "react": "catalog:",
         "react-dom": "catalog:",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -405,6 +414,7 @@
         "react": "catalog:",
         "react-dom": "catalog:",
         "vite": "catalog:dev",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -424,6 +434,7 @@
         "@raypx/testing": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/contracts": {
@@ -438,6 +449,7 @@
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/control": {
@@ -457,7 +469,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/core": {
@@ -470,6 +482,7 @@
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/database": {
@@ -484,6 +497,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
         "drizzle-kit": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/dev-cli": {
@@ -503,7 +517,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/devtools": {
@@ -522,6 +536,7 @@
         "@vitest/coverage-v8": "catalog:dev",
         "happy-dom": "catalog:dev",
         "vite": "catalog:dev",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "@tanstack/react-query": "^5.105.3",
@@ -547,6 +562,7 @@
         "@vitest/coverage-v8": "catalog:dev",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/env": {
@@ -559,6 +575,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/i18n": {
@@ -578,6 +595,7 @@
         "react": "catalog:",
         "react-dom": "catalog:",
         "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -599,7 +617,7 @@
         "happy-dom": "catalog:dev",
         "react": "catalog:",
         "react-dom": "catalog:",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -616,7 +634,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/jobs": {
@@ -641,6 +659,7 @@
         "@vitest/coverage-v8": "catalog:dev",
         "happy-dom": "catalog:dev",
         "react": "catalog:",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -656,6 +675,7 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/memory": {
@@ -679,6 +699,7 @@
         "@vitest/coverage-v8": "catalog:dev",
         "happy-dom": "catalog:dev",
         "react": "catalog:",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -696,7 +717,7 @@
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/runtime-node": {
@@ -714,7 +735,7 @@
         "@types/ws": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "typescript": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/storage": {
@@ -727,6 +748,7 @@
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/tasks": {
@@ -757,6 +779,7 @@
         "happy-dom": "catalog:dev",
         "react": "catalog:",
         "react-dom": "catalog:",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "@tanstack/react-query": "^5.105.3",
@@ -778,6 +801,7 @@
         "@types/bun": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "nitro": "catalog:",
+        "vitest": "catalog:dev",
       },
     },
     "packages/tsconfig": {
@@ -786,7 +810,7 @@
       "devDependencies": {
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "vite-plus": "catalog:dev",
+        "vitest": "catalog:dev",
       },
     },
     "packages/ui": {
@@ -814,6 +838,7 @@
         "react": "catalog:",
         "react-dom": "catalog:",
         "vite": "catalog:dev",
+        "vitest": "catalog:dev",
       },
       "peerDependencies": {
         "react": "^19.3.0",
@@ -924,6 +949,7 @@
       "typescript": "^7.0.2",
       "vite": "npm:@voidzero-dev/vite-plus-core@^1.5.1",
       "vite-plus": "^1.5.1",
+      "vitest": "5.1.0",
       "wrangler": "4.157.0",
     },
     "mobile": {
@@ -2618,7 +2644,7 @@
 
     "fetchdts": ["fetchdts@0.2.0", "", {}, "sha512-PJb4ZTGT2/wK78RmVrxZITStWabhZlKBsL52VOgq+c7clEkdHdEB+0rtzrXCbZJqeYJj+IwNWYqB5/G6vouA6A=="],
 
-    "fflate": ["fflate@0.4.9", "", {}, "sha512-zdxgIEddhfsyCaWpJ2SdXEP8ZMrKJ6+5jl4OupODcywU0IhRk6gdXuVGcPICyfx2H97hVK7xmJtRLPjkxAX8Vw=="],
+    "fflate": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
 
     "fill-range": ["fill-range@7.1.1", "", { "dependencies": { "to-regex-range": "^5.0.1" } }, "sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg=="],
 
@@ -3706,8 +3732,6 @@
 
     "@vitest/expect/tinyrainbow": ["tinyrainbow@2.0.0", "", {}, "sha512-op4nsTR47R6p0vMUUoYl/a+ljLFVtlfaXkLQmqfLR1qHma1h/ysYk4hEXZ880bf2CYgTskvTa/e196Vd5dDQXw=="],
 
-    "@vitest/ui/fflate": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
-
     "accepts/mime-types": ["mime-types@2.1.35", "", { "dependencies": { "mime-db": "1.52.0" } }, "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw=="],
 
     "ansi-escapes/type-fest": ["type-fest@0.21.3", "", {}, "sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w=="],
@@ -3811,6 +3835,8 @@
     "parse-png/pngjs": ["pngjs@3.4.0", "", {}, "sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w=="],
 
     "plist/@xmldom/xmldom": ["@xmldom/xmldom@0.9.12", "", {}, "sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A=="],
+
+    "posthog-js/fflate": ["fflate@0.4.9", "", {}, "sha512-zdxgIEddhfsyCaWpJ2SdXEP8ZMrKJ6+5jl4OupODcywU0IhRk6gdXuVGcPICyfx2H97hVK7xmJtRLPjkxAX8Vw=="],
 
     "pretty-format/react-is": ["react-is@18.3.1", "", {}, "sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg=="],
 

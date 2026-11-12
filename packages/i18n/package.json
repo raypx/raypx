@@ -16,10 +16,10 @@
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --project server",
-    "test:component": "bun --bun vp test --run --project browser",
-    "test:coverage": "bun --bun vp test --run --coverage"
+    "test": "bun --bun vitest run",
+    "test:unit": "bun --bun vitest run --project server",
+    "test:component": "bun --bun vitest run --project browser",
+    "test:coverage": "bun --bun vitest run --coverage"
   },
   "dependencies": {
     "use-intl": "catalog:"
@@ -34,7 +34,8 @@
     "happy-dom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite-plus": "catalog:dev"
+    "vite-plus": "catalog:dev",
+    "vitest": "catalog:dev"
   },
   "peerDependencies": {
     "react": "^19.3.0"

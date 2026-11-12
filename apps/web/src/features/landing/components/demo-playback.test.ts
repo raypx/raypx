@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { demoStage, isPreviewStep, nextStep, previewSteps } from "./demo-playback.js";
 
 describe("homepage demo playback", () => {

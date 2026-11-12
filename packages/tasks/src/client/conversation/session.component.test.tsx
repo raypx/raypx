@@ -1,6 +1,6 @@
 import { BrowserLanguageProvider } from "../../../tests/i18n.js";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { AgentTask, TaskActivity, TaskInput } from "@raypx/core/tasks";

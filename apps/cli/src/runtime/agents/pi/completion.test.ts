@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { createAssistantMessageEventStream } from "@raypx/ai";
 import type { StreamFn } from "@earendil-works/pi-agent-core";
 import { PiRunner } from "@raypx/providers/pi";

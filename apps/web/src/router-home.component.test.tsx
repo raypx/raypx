@@ -10,7 +10,7 @@ import {
 import { renderToString } from "react-dom/server";
 import type { AccountState } from "@raypx/account";
 
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 
 const session = vi.hoisted(() => vi.fn(() => ({ isPending: true, data: null, error: null })));
 vi.mock("./features/auth/client.js", () => ({

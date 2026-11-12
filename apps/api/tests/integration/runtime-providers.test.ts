@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 import type { AuthSession } from "@raypx/core/auth";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
 import { createApiClient } from "@raypx/client/api";

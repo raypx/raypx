@@ -1,5 +1,5 @@
 import type { JobDefinition, JobRun } from "@raypx/core/jobs";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it, vi } from "vitest";
 import { runSession, type TuiService } from "./session.js";
 import type { TuiTerminal } from "./terminal.js";
 

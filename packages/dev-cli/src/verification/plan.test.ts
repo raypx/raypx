@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { project, platformProject } from "../../tests/helpers/verification.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 import { workspaceGraph } from "../workspace-graph.js";
@@ -224,7 +224,7 @@ describe("affected verification", () => {
     const { root } = platformProject();
     member(root, "dev-cli", {
       metadata: { kind: "tooling" },
-      extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
+      extra: { scripts: { check: "tsc --noEmit", test: "vitest run" } },
     });
     const model = workspaceGraph(root);
     for (const file of ["ci.yml", "container-smoke.yml", "artifact-performance.yml"]) {
@@ -319,7 +319,7 @@ describe("affected verification", () => {
     const { root } = platformProject();
     member(root, "tooling", {
       metadata: { kind: "tooling" },
-      extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
+      extra: { scripts: { check: "tsc --noEmit", test: "vitest run" } },
     });
     const model = workspaceGraph(root);
     for (const file of [
@@ -340,7 +340,7 @@ describe("affected verification", () => {
     for (const name of ["tooling", "dev-cli", "runtime-node"])
       member(root, name, {
         metadata: { kind: name === "runtime-node" ? "library" : "tooling" },
-        extra: { scripts: { check: "tsc --noEmit", test: "vp test --run" } },
+        extra: { scripts: { check: "tsc --noEmit", test: "vitest run" } },
       });
     const model = workspaceGraph(root);
     for (const file of [

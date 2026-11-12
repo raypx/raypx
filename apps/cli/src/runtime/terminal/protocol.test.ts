@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { hookDecision, parseHookInvocation, terminalCapabilities } from "./protocol.js";
 
 const permission = {

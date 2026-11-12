@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { beforeEach, expect, it, vi } from "vitest";
 import { FitAddon } from "@xterm/addon-fit";
 import { deferred, mocks, page } from "../../../tests/helpers/router-local.js";
 

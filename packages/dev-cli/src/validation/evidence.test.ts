@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { workspaceFixtures } from "../../tests/helpers/workspace.js";
 import { Evidence } from "./evidence.js";
 

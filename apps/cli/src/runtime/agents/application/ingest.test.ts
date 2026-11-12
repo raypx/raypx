@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { ProviderEventIngestor, type IngestStore } from "./ingest.js";
 import { FakeIds } from "../domain/ports.js";
 import type { LocalAgentTask } from "../model.js";

@@ -9,9 +9,9 @@
   "scripts": {
     "email:dev": "bun --bun vp dev --config vite.app.config.ts",
     "check": "tsc --noEmit --project tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
-    "test:coverage": "bun --bun vp test --run --coverage"
+    "test": "bun --bun vitest run",
+    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:coverage": "bun --bun vitest run --coverage"
   },
   "dependencies": {
     "react": "catalog:",
@@ -26,6 +26,7 @@
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite": "catalog:dev",
-    "vite-plus": "catalog:dev"
+    "vite-plus": "catalog:dev",
+    "vitest": "catalog:dev"
   }
 }

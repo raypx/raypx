@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import { taskInputActivitySchema } from "@raypx/core/tasks";
 import { relayFixture } from "../../tests/helpers/relay.js";
 

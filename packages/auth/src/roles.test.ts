@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth, readAuthSession } from "./server.js";
 import { accountRoles, assignedRoles, permissionsForRoles } from "./access.js";

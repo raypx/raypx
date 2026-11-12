@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { BrowserLanguageProvider } from "../../i18n.js";
-import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { Profiler } from "react";

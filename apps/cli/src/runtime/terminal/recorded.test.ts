@@ -1,6 +1,6 @@
 import { decodeCodexActivity } from "@raypx/providers/codex";
 import { decodeClaudeActivity } from "@raypx/providers/claude";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";

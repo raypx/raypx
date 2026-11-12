@@ -10,8 +10,8 @@
     "deploy": "bun scripts/wrangler.ts deploy",
     "build": "bun --bun vp build --config vite.app.config.ts",
     "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project src/tsconfig.json",
-    "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
+    "test": "bun --bun vitest run",
+    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
   },
   "dependencies": {
     "@cloudflare/containers": "catalog:"
@@ -22,6 +22,7 @@
     "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev",
+    "vitest": "catalog:dev",
     "wrangler": "catalog:dev"
   }
 }

@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import type { AssistantMessage } from "@raypx/ai";
 import { cases, promptFor, validateCases } from "./cases.js";
 import { evaluate, grade, simulator } from "./harness.js";

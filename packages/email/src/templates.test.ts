@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, vi } from "vitest";
 import { renderLinkEmail } from "./templates.js";
 import { createMailer, MailUnavailableError } from "./server.js";
 

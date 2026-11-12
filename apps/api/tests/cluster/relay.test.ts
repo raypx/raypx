@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, expect, it } from "vite-plus/test";
+import { afterAll, afterEach, beforeAll, expect, it } from "vitest";
 import { serve } from "bun";
 import { resolve } from "node:path";
 import { Redis } from "ioredis";

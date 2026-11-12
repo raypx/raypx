@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { testLayer } from "./test-sources.js";
 import { baselineCases, compareCases, ownerMap } from "./inventory.js";
 

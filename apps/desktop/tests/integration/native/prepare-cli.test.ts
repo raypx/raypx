@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, expect, it } from "vite-plus/test";
+import { afterEach, expect, it } from "vitest";
 import { stageCli } from "../../../scripts/host/prepare-cli.js";
 
 const roots: string[] = [];

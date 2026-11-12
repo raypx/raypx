@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { checkIntlEngine } from "./intl-engine.js";
 import { discover } from "../repository.js";
 import { workspaceFixtures } from "../../tests/helpers/workspace.ts";

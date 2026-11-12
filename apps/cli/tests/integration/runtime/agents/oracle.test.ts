@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { EPOCH, orchestrationHost } from "../../../helpers/orchestration.js";
 import { AgentStore } from "../../../../src/runtime/agents/store.js";
 import { fold } from "../../../../src/runtime/agents/domain/fold.js";

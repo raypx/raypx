@@ -8,7 +8,7 @@ import {
   type RootRouteOptions,
 } from "@tanstack/react-router";
 import { cleanup, render } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vite-plus/test";
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 import { ThemeProvider } from "@raypx/ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

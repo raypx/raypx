@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { expect, it } from "vite-plus/test";
+import { expect, it } from "vitest";
 import { discover } from "../../src/repository.js";
 import { testLayer, testSources } from "../../src/validation/test-sources.js";
 

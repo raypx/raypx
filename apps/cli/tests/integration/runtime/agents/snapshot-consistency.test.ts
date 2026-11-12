@@ -1,7 +1,7 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite.js";
-import { afterEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
 import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
