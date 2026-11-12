@@ -145,7 +145,7 @@ export function ModelPicker({
                   : t("chooseModel")}
             </span>
           </ComboboxTrigger>
-          <ComboboxContent className="min-w-64">
+          <ComboboxContent aria-labelledby={`${id}-label`} className="min-w-64">
             <div className="p-1">
               <ComboboxInput aria-label={t("searchModels")} placeholder={t("searchModels")} />
             </div>

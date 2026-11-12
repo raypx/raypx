@@ -54,7 +54,9 @@ full-text mode, message revisions and explicit history loading.
 ## Constraints
 
 No default test script. Do not import application source or seed operator databases.
-Use accessible roles and real UI state. Browser preview does not simulate native IPC.
+Use accessible roles and real UI state. The Desktop local model-picker fixture
+supplies preload values and synthetic responses on the renderer WebSocket.
+Native IPC and OS behavior are covered by the separate packaged gates.
 HTTP fixtures isolate signed-out and form response rendering; they do not establish
 server authentication correctness. The API PostgreSQL gate exercises real signup,
 verification, password reset and session revocation. Manual screenshots require

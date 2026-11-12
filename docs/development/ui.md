@@ -108,6 +108,9 @@ spotlights and artwork shifts respond to hover only. Reduced motion removes all 
 
 ## Preview and validation
 
+The [Combobox guide](components/combobox.md) links the public API, interactive
+Storybook examples and the Web and Desktop task-page browser cases.
+
 The public homepage pairs its main actions with a labelled workflow example (session,
 diff review and result) in an application frame. This is illustrative data, not an
 account projection or an executable session. Step cards select the example and show

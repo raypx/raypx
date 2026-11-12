@@ -1,19 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
-import {
-  Combobox,
-  ComboboxCollection,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxGroup,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxLabel,
-  ComboboxList,
-  ComboboxTrigger,
-  ComboboxValue,
-} from "@raypx/ui/components/ui/combobox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import {
@@ -122,61 +109,6 @@ export const FormStates: Story = {
     </FieldGroup>
   ),
 };
-
-type Choice = { value: string; label: string; disabled?: boolean };
-const choiceGroups = [
-  {
-    label: "语言 / Languages",
-    items: [
-      { value: "zh", label: "简体中文" },
-      { value: "en", label: "English" },
-      { value: "unavailable", label: "未配置 / Not configured", disabled: true },
-    ],
-  },
-  { label: "设备 / Device", items: [{ value: "auto", label: "跟随设备 / Follow device" }] },
-];
-
-function GroupedSearchExample() {
-  const [value, setValue] = useState<Choice | null>(choiceGroups[0]!.items[0]!);
-  return (
-    <Field className="max-w-sm">
-      <FieldLabel htmlFor="foundation-language">语言 / Language</FieldLabel>
-      <Combobox<Choice>
-        items={choiceGroups}
-        value={value}
-        onValueChange={setValue}
-        itemToStringLabel={(item) => item.label}
-        isItemEqualToValue={(a, b) => a.value === b.value}
-      >
-        <ComboboxTrigger id="foundation-language" className="w-full">
-          <span className="min-w-0 truncate">
-            <ComboboxValue />
-          </span>
-        </ComboboxTrigger>
-        <ComboboxContent>
-          <ComboboxInput aria-label="搜索语言 / Find language" placeholder="搜索 / Search" />
-          <ComboboxEmpty>没有匹配项 / No matches</ComboboxEmpty>
-          <ComboboxList>
-            {(group: (typeof choiceGroups)[number]) => (
-              <ComboboxGroup key={group.label} items={group.items}>
-                <ComboboxLabel>{group.label}</ComboboxLabel>
-                <ComboboxCollection>
-                  {(item: Choice) => (
-                    <ComboboxItem key={item.value} value={item} disabled={item.disabled}>
-                      {item.label}
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-              </ComboboxGroup>
-            )}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-    </Field>
-  );
-}
-
-export const GroupedSearch: Story = { render: () => <GroupedSearchExample /> };
 
 function MultilineGroupExample() {
   const [value, setValue] = useState(

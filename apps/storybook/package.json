@@ -12,7 +12,8 @@
     "@raypx/icons": "workspace:*",
     "@raypx/ui": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "storybook": "catalog:dev"
   },
   "devDependencies": {
     "@raypx/task-graph": "workspace:*",
@@ -24,7 +25,6 @@
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
-    "storybook": "catalog:dev",
     "vite": "catalog:dev"
   }
 }
