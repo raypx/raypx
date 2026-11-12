@@ -1,0 +1,81 @@
+.dockerignore
+  s_652cc4f0b5d7e1::t_9e8f241f2a90f3 28
+AGENTS.md
+  s_652cc4f0b5d7e1::t_f107cc43da669a 55-63
+README.md
+  s_652cc4f0b5d7e1::t_b3b36bd10ffca2 57
+apps/api/Dockerfile
+  s_652cc4f0b5d7e1::t_3f7753b45b2cb9 41
+apps/cli/README.md
+  s_652cc4f0b5d7e1::t_7649a280267109 35
+apps/desktop/AGENTS.md
+  s_652cc4f0b5d7e1::t_354cc76b722a61 170,173
+apps/desktop/README.md
+  s_652cc4f0b5d7e1::t_ac4caedd244440 53,58
+apps/mobile/AGENTS.md
+  s_652cc4f0b5d7e1::t_aa00ea12ad9536 40
+apps/web/Dockerfile
+  s_652cc4f0b5d7e1::t_bb32d901b05c15 26
+deploy/AGENTS.md
+  s_652cc4f0b5d7e1::t_5bfd3b5db3aa41 16-17
+docs/architecture/0057-repository-automation-workspaces.md
+  s_652cc4f0b5d7e1::t_991ab66c4cade2 7-8
+docs/architecture/0060-turbo-task-graph.md
+  s_652cc4f0b5d7e1::t_8241608e457450 1-64
+docs/architecture/README.md
+  s_652cc4f0b5d7e1::t_9e296ed2f10c4c 361
+docs/development/agent-quality.md
+  s_652cc4f0b5d7e1::t_dafb3b07b440cc 4
+docs/development/deployment.md
+  s_652cc4f0b5d7e1::t_79274d3fca19ae 57
+docs/development/dev-cli.md
+  s_652cc4f0b5d7e1::t_7b057dea20345d 9-10,14,44-45,51-52,65,76,100,124,136,143-144
+docs/development/getting-started.md
+  s_652cc4f0b5d7e1::t_289ddca2c5d8ff 44,150,157-163,167-168,171-172,176
+docs/development/railway.md
+  s_652cc4f0b5d7e1::t_4eaf3a8dd2d710 202
+docs/development/testing.md
+  s_652cc4f0b5d7e1::t_67085c1fa2e568 9,62,64,66,94-95,228,280,298-299
+docs/development/validation-artifacts.md
+  s_652cc4f0b5d7e1::t_dd0e6e6e6e134f 24,189-200,204,210,228,261,289,291-292,318,323,334,343-344,396-405,418
+docs/development/workspaces.md
+  s_652cc4f0b5d7e1::t_c0dca97ee1ed84 11,34,60-62,64-69,72,74-75,99-100
+e2e/AGENTS.md
+  s_652cc4f0b5d7e1::t_e5ee08a240c7f8 16,26,33-35
+infra/AGENTS.md
+  s_652cc4f0b5d7e1::t_d78c2d8713c23c 7
+infra/cloudflare/README.md
+  s_652cc4f0b5d7e1::t_7eade786a2a8b2 61,82
+infra/railway/README.md
+  s_652cc4f0b5d7e1::t_c9a13bb6eabb05 24
+knip.json
+  s_652cc4f0b5d7e1::t_b60ff848839151 7
+packages/dev-cli/AGENTS.md
+  s_652cc4f0b5d7e1::t_cc917c21c533f2 6-11,23,34
+packages/dev-cli/src/browser-tests.ts
+  s_652cc4f0b5d7e1::t_e2c8b4765eb0dd 1
+packages/dev-cli/src/repo/workspaces.ts
+  s_652cc4f0b5d7e1::t_779466713ed46b 64
+packages/dev-cli/src/workspace-graph.ts
+  s_652cc4f0b5d7e1::t_6d0c46fccd9d55 23,69
+packages/runtime-node/AGENTS.md
+  s_652cc4f0b5d7e1::t_cb3925af9b246b 5-6
+packages/tooling/AGENTS.md
+  s_652cc4f0b5d7e1::t_4bd1c721237367 6,31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "059a087e716bbb36bd886bf45767fd8a37c1a031",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
