@@ -266,7 +266,7 @@ export function registerTests() {
       await page.getByRole("button", { name: "Send now", exact: true }).click();
       await expect(composer).toHaveValue("");
       expect(inputs).toEqual(["queue", "steer"]);
-      await expectViewportShell(page);
+      await expectViewportShell(page, surface);
       await capture(page, {
         path: test.info().outputPath(`${surface.toLowerCase()}-conversation.png`),
         fullPage: true,
@@ -281,7 +281,7 @@ export function registerTests() {
       });
       // The native Desktop shell has an 800px minimum window width.
       await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
-      await expectViewportShell(page);
+      await expectViewportShell(page, surface);
       await capture(page, {
         path: test.info().outputPath(`${surface.toLowerCase()}-conversation-mobile.png`),
         fullPage: true,
@@ -378,7 +378,7 @@ export function registerTests() {
         );
         await page.getByRole("button", { name: /Improve task delivery reliability/ }).click();
         await expect(page.getByRole("heading", { name: "Raypx", exact: true })).toBeVisible();
-        await expectViewportShell(page);
+        await expectViewportShell(page, surface);
         await capture(page, {
           path: test.info().outputPath("web-conversation-dark-zh.png"),
           fullPage: true,

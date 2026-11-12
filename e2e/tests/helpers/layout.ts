@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 /** Long task content must scroll without moving application navigation off-screen. */
-export async function expectViewportShell(page: Page) {
+export async function expectViewportShell(page: Page, surface: "Web" | "Desktop") {
   const main = page.getByRole("main");
   const sidebar = page.getByRole("complementary");
   const banner = page.getByRole("banner");
@@ -13,10 +13,11 @@ export async function expectViewportShell(page: Page) {
   const sidebarBefore = await sidebar.boundingBox();
   const bannerBefore = await banner.boundingBox();
   const mainBefore = await main.boundingBox();
-  expect(sidebarBefore!.y).toBe(0);
-  expect(sidebarBefore!.height).toBeCloseTo(viewport.height, 0);
   expect(bannerBefore!.y).toBe(0);
-  expect(mainBefore!.y).toBeCloseTo(bannerBefore!.height, 0);
+  const contentTop = bannerBefore!.y + bannerBefore!.height;
+  expect(sidebarBefore!.y).toBeCloseTo(surface === "Desktop" ? contentTop : 0, 0);
+  expect(sidebarBefore!.y + sidebarBefore!.height).toBeCloseTo(viewport.height, 0);
+  expect(mainBefore!.y).toBeCloseTo(contentTop, 0);
   expect(mainBefore!.y + mainBefore!.height).toBeCloseTo(viewport.height, 0);
   const search = page.getByRole("searchbox");
   if (await search.isVisible()) {
