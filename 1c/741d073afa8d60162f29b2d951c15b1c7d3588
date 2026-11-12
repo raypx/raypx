@@ -1,0 +1,47 @@
+apps/web/e2e/user-management.spec.ts
+  s_af4bf7abf9b42a::t_d7c836cb712a9c 16,32,38,77,98,102-107,124-125
+  s_af4bf7abf9b42a::t_9ae0c0283c622d 12-15,74-76,84-91,108-109
+  s_af4bf7abf9b42a::t_9b15780726ed18 61-62,64
+e2e/tests/journeys/tasks/conversation-performance.ts
+  s_af4bf7abf9b42a::t_c2521855e80458 196
+e2e/tests/journeys/tasks/drafts.ts
+  s_af4bf7abf9b42a::t_22bdd4e4338044 133
+apps/web/e2e/access.spec.ts
+  s_af4bf7abf9b42a::t_c2521855e80458 225-228,230
+  s_af4bf7abf9b42a::t_9b15780726ed18 48
+e2e/tests/journeys/memory.ts
+  s_af4bf7abf9b42a::t_22bdd4e4338044 297-302
+apps/web/e2e/auth-visual.spec.ts
+  s_af4bf7abf9b42a::t_9ae0c0283c622d 14,20-28,30-31,33,37-40,42,46-48
+  s_af4bf7abf9b42a::t_9b15780726ed18 9-11,17,45,75,77,105,116,128-132,171-172,214
+apps/web/e2e/settings.spec.ts
+  s_af4bf7abf9b42a::t_c2521855e80458 137
+  s_af4bf7abf9b42a::t_9ae0c0283c622d 148,151-154,222,227-271,273
+apps/web/e2e/auth.spec.ts
+  s_af4bf7abf9b42a::t_9b15780726ed18 37,48,64-66,68,71
+e2e/tests/journeys/tasks/conversation.ts
+  s_af4bf7abf9b42a::t_a97de3280dd5e7 271,304
+  s_af4bf7abf9b42a::t_22bdd4e4338044 267-270,289-290,302
+docs/development/ui.md
+  s_af4bf7abf9b42a::t_c2521855e80458 33-35
+apps/web/e2e/administration.spec.ts
+  s_af4bf7abf9b42a::t_650eccde4ff403 115-117
+  s_af4bf7abf9b42a::t_9ae0c0283c622d 11-22,24-49,51-61,63-89,91-94,96-107,109-114,118-121,123-129,131-145,147-166
+  s_af4bf7abf9b42a::t_9680d686caa036 10,23,90,95,108,130,146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1c741d073afa8d60162f29b2d951c15b1c7d3588",
+  "prompts": {},
+  "sessions": {
+    "s_af4bf7abf9b42a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf50-ddb2-79e1-806c-dafd31aa2199",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
