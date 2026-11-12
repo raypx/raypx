@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ComponentProps, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { NamespaceKeys, NestedKeyOf } from "use-intl/core";
 import {
   IntlProvider as NativeIntlProvider,
@@ -10,14 +10,19 @@ import { formats, resolveIntlOptions } from "./formats.js";
 import { isLocale } from "./locale.js";
 import { resolveLocalePreference, type LocalePreference } from "./preferences.js";
 import type { Translator } from "./translator.js";
-import type { CatalogShape, DynamicMessages, Locale, MessagesByLocale } from "./types.js";
+import type {
+  CatalogShape,
+  DynamicMessages,
+  IntlRuntimeOptions,
+  Locale,
+  MessagesByLocale,
+} from "./types.js";
 
-type IntlProviderProps<M extends DynamicMessages> = Omit<
-  ComponentProps<typeof NativeIntlProvider>,
-  "locale" | "messages"
-> & {
+/** Exactly the options forwarded to use-intl; anything else must be added here first. */
+type IntlProviderProps<M extends DynamicMessages> = IntlRuntimeOptions & {
   locale: Locale;
   messages: CatalogShape<M> | null;
+  children?: ReactNode;
 };
 
 const providerDateTimeFormats = { ...formats.dateTime };

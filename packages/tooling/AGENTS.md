@@ -36,6 +36,8 @@ CLI imports do not start a command until the caller invokes `runCli`.
   included). Suites, `tests/` files and `e2e` are test importers: they keep `./testing*`
   entries and tooling surfaces alive; other entries need production use. `raypx.entryConsumers` is the declared-exception escape hatch and is
   validated against the exported keys.
+  `policy` also requires one workspace to declare `use-intl`, rejects `next-intl` and keeps
+  FormatJS runtimes out of other product workspaces (`src/validation/intl-engine.ts`).
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
 - raypx-dev size [--package name|path] [--native] [--browser] [--require]
