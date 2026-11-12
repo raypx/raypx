@@ -1,0 +1,19 @@
+apps/desktop/tests/integration/native/task.test.ts
+  s_652cc4f0b5d7e1::t_cff1c20ec8b502 56,78,80,103-105,115,121,127,133,138-139,155-156,162,173,186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d73aeff9d4395634efce5a1a08a60356574de6a7",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
