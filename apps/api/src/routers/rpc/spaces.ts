@@ -107,10 +107,9 @@ export function createSpaceHandlers({
         .use(write)
         .use(requireTrustedOrigin)
         .use(quota)
-        .handler(({ context, input }) =>
-          scoped(context, input.spaceId, (scope) =>
-            options.conversations.createGroup!(scope, input),
-          ),
+        // The repository validates the group strictly; the Space selector is not part of it.
+        .handler(({ context, input: { spaceId, ...group } }) =>
+          scoped(context, spaceId, (scope) => options.conversations.createGroup!(scope, group)),
         ),
       listGroups: os.conversations.listGroups
         .use(read)
