@@ -1,0 +1,330 @@
+packages/auth/AGENTS.md
+  s_b3a73425358550::t_9a6bacd6beb354 47-48
+  s_b3a73425358550::t_2b165ab4d547dc 44-46,108-109
+packages/database/src/schema.ts
+  s_b3a73425358550::t_52c786606a99e4 40-44,50,55-72,74,447
+  s_b3a73425358550::t_4ab849c81cdea0 435-444,449-456
+  s_b3a73425358550::t_d3fa5d3e356041 14,445
+  s_b3a73425358550::t_da2f21e98f4da1 33,38-39,45-49,51-54,73,448
+apps/desktop/src/features/auth/components/browser-login.tsx
+  s_b3a73425358550::t_182d1cf6cc1af2 1-10,20-21,24-25,33-38,46-49,51,55-56,62-76,81,84-87,89-95,107-111,117,138,170-172
+  s_b3a73425358550::t_ed1fe680ef1d6a 26-27,29-32,57-61,78,88,118,151-169
+  s_b3a73425358550::t_9a6bacd6beb354 11-19,22-23,39-45,52-54,83,96-106,112-113,119-136,139-150
+  s_b3a73425358550::t_bf95780238a00e 77,80,82
+  s_b3a73425358550::t_4ab849c81cdea0 79
+  s_b3a73425358550::t_b218016e7acde0 28,50,114-116,137
+apps/desktop/src/router-account.component.test.tsx
+  s_b3a73425358550::t_9e66330534b9c3 23-24,149,156-158,165,168,256,385,389-392,396
+  s_b3a73425358550::t_bbf0d242e9ce68 386-388
+apps/api/src/routers/index.ts
+  s_b3a73425358550::t_4ab849c81cdea0 23-27
+apps/web/src/features/auth/components/turnstile.tsx
+  s_b3a73425358550::t_541a5cb3204667 1-14,16-33,37-38,43-49,51-52,54-97,99-100,102-116,118,120
+  s_b3a73425358550::t_b53f8b576cba8d 15,34-36,39-42,50,53,98,101,117,119
+apps/web/AGENTS.md
+  s_b3a73425358550::t_9a6bacd6beb354 196,198-200
+  s_b3a73425358550::t_88fde09cd2327f 197,302-303
+apps/web/e2e/auth.spec.ts
+  s_b3a73425358550::t_62a275842f6818 77-81,83-112,114-119,121-131
+  s_b3a73425358550::t_bbf0d242e9ce68 82,113,120
+apps/api/src/env.contract.ts
+  s_b3a73425358550::t_52c786606a99e4 17-18
+  s_b3a73425358550::t_541a5cb3204667 19-20
+docs/architecture/0062-desktop-browser-sign-in.md
+  s_b3a73425358550::t_9a6bacd6beb354 1-4,6-28
+  s_b3a73425358550::t_4673c71cc5c905 5
+apps/web/src/features/settings/account-dialog.tsx
+  s_b3a73425358550::t_36ff7179719736 2,78-80
+  s_b3a73425358550::t_f3b22c4ecc15d4 1,128,149,151-178,182-186
+packages/tasks/locales/en/tasks.ts
+  s_b3a73425358550::t_ed1fe680ef1d6a 73,76
+apps/desktop/src/features/reauthorize.component.test.tsx
+  s_b3a73425358550::t_675fb928008536 3,9-12,25,49-52,80,116,118-122,129-131,133-134,138-141,143-144
+  s_b3a73425358550::t_2153d8f29e3fe4 132,142
+apps/cli/src/runtime/daemon/desktop/browser-login.ts
+  s_b3a73425358550::t_9a6bacd6beb354 3-4,8-9,19-20,88,90,104-106,109-113,115,122,124-135,142-144,149-151,153,156-160
+  s_b3a73425358550::t_182d1cf6cc1af2 93
+  s_b3a73425358550::t_4ab849c81cdea0 164-171
+  s_b3a73425358550::t_48fbf973c0e3dc 1-2,10-18,21-56,63-86,91-92,94-101,116-117,119,136-141,145-147,162,172-201
+  s_b3a73425358550::t_b8f9bb9363de2e 118
+  s_b3a73425358550::t_bf95780238a00e 5-7,57,59,61,89,102,107-108,121,123,148,152,154,161,163
+  s_b3a73425358550::t_0df3026b443621 58,60,62,87,103,114,120,155
+apps/desktop/src/router-local-events.component.test.tsx
+  s_b3a73425358550::t_9e66330534b9c3 119,122
+apps/desktop/src/features/tasks/settings.tsx
+  s_b3a73425358550::t_ed1fe680ef1d6a 248-249
+apps/cli/AGENTS.md
+  s_b3a73425358550::t_9a6bacd6beb354 114-115
+  s_b3a73425358550::t_323488aa7e2253 112-113
+packages/auth/package.json
+  s_b3a73425358550::t_ad247b9f72ca62 24
+  s_b3a73425358550::t_0662695fa21c1c 25-26,31-32
+apps/desktop/locales/en/index.ts
+  s_b3a73425358550::t_182d1cf6cc1af2 10,27
+apps/web/src/features/auth/components/desktop-authorization.tsx
+  s_b3a73425358550::t_ed1fe680ef1d6a 53,138-147
+  s_b3a73425358550::t_4ab849c81cdea0 4-49,63-137,148-171
+  s_b3a73425358550::t_0eebb74c40a692 1-3,50-52,54-62,172-174
+packages/auth/src/hooks.ts
+  s_b3a73425358550::t_52c786606a99e4 5,36,94
+  s_b3a73425358550::t_fbb8785ae9b1ac 195,201,212-228
+  s_b3a73425358550::t_e8feb75ad2b6b0 229
+packages/auth/locales/zh/auth.ts
+  s_b3a73425358550::t_52c786606a99e4 67
+  s_b3a73425358550::t_36ff7179719736 75,92-99
+  s_b3a73425358550::t_541a5cb3204667 78
+  s_b3a73425358550::t_408defd28bbd54 76-77,79-91
+apps/mobile/src/locale.ts
+  s_b3a73425358550::t_81c15b23bc160e 23
+apps/web/src/return-to.test.ts
+  s_b3a73425358550::t_9a6bacd6beb354 22-23,25,27
+  s_b3a73425358550::t_bbf0d242e9ce68 24,26
+apps/web/locales/zh/desktopAuthorization.ts
+  s_b3a73425358550::t_ed1fe680ef1d6a 1-11
+apps/cli/src/runtime/daemon/desktop/control.ts
+  s_b3a73425358550::t_bf95780238a00e 117,124
+  s_b3a73425358550::t_48fbf973c0e3dc 1-2,54,59-65,125-128,138,265
+  s_b3a73425358550::t_f093686912a142 118-123
+apps/desktop/src/routes/(auth)/login.tsx
+  s_b3a73425358550::t_182d1cf6cc1af2 2,4-9
+packages/contracts/src/desktop.ts
+  s_b3a73425358550::t_bf95780238a00e 1,108
+  s_b3a73425358550::t_48fbf973c0e3dc 97-99,104-107,109-111
+  s_b3a73425358550::t_4ab849c81cdea0 100-103
+apps/cli/src/runtime/daemon/desktop/browser-login.test.ts
+  s_b3a73425358550::t_bbf0d242e9ce68 2-8,15,37-42,50,52,54-60,62-66,85-93,98,108,151
+  s_b3a73425358550::t_9a6bacd6beb354 23-33,67-75,110-112
+  s_b3a73425358550::t_5f88e5cea5095b 1,9-14,16-22,34-35,44-49,51,61,76-83,94-97,99-107,109,113-148,152-155
+  s_b3a73425358550::t_f163ebec6e9155 36,43,53,84,149-150
+packages/auth/src/client/auth-form.tsx
+  s_b3a73425358550::t_fbb8785ae9b1ac 51,70,86
+  s_b3a73425358550::t_36ff7179719736 52,71,199
+apps/desktop/src/lib/mygo.ts
+  s_b3a73425358550::t_182d1cf6cc1af2 7-8,294-295
+  s_b3a73425358550::t_9a6bacd6beb354 296-299
+  s_b3a73425358550::t_77d25aa9ccbca8 300-303
+packages/auth/src/desktop-login.ts
+  s_b3a73425358550::t_4ab849c81cdea0 24-41,44-47,50-56,61-64,74-80,90-106,108,121-125,132-138,144-160,162-168,170-196,198-329
+  s_b3a73425358550::t_ef4092405a9081 4-22,43,49,57-58,65,67-73,81-89,107,109-120,126-130,139-140,332
+  s_b3a73425358550::t_fab349bfa9b37d 1-3,23,42,48,59-60,66,131,141-143,161,169,197,330-331
+apps/cli/src/runtime/daemon/desktop/api.ts
+  s_b3a73425358550::t_48fbf973c0e3dc 201-203,206,212-224,232,234-237,261-269,276-280
+  s_b3a73425358550::t_4ab849c81cdea0 1-8,207-210,226-230,238-248,254-259
+  s_eef59b89cb8179::t_b11da0157dcceb 252,260,270-275
+  s_b3a73425358550::t_bf95780238a00e 198-200,205,211,225,231,233,249-251,253,281
+  s_b3a73425358550::t_ab173d34e333b1 204
+apps/api/tests/postgres/node/auth.test.ts
+  s_b3a73425358550::t_62a275842f6818 7-14,29,49-51,64,66,70,215-284,420
+  s_b3a73425358550::t_05cc531d63960e 285-286,336-419,421-427
+apps/desktop/src/features/tasks/reauthorize.tsx
+  s_b3a73425358550::t_ed1fe680ef1d6a 1,11-12,14-16,19,29-31,34-35
+  s_b3a73425358550::t_1c9a5f1e9ad2b4 23,28,36
+packages/tasks/locales/zh/tasks.ts
+  s_b3a73425358550::t_ed1fe680ef1d6a 71,73
+apps/web/src/features/auth/components/verification-code.tsx
+  s_b3a73425358550::t_541a5cb3204667 6-13,15-59,61-66
+  s_b3a73425358550::t_c93148e3d4ef92 1-5,14,60,67-184
+packages/database/drizzle-foundation/20261113073429_account-authentication/snapshot.json
+  s_b3a73425358550::t_dda91a4b9c9f91 1-3942
+apps/web/src/features/auth/auth-guard.ts
+  s_b3a73425358550::t_ed1fe680ef1d6a 17-18
+deploy/compose.yaml
+  s_b3a73425358550::t_bbf0d242e9ce68 98
+  s_b3a73425358550::t_52c786606a99e4 70-71
+  s_b3a73425358550::t_541a5cb3204667 72-73
+package.json
+  s_b3a73425358550::t_ad247b9f72ca62 14
+  s_b3a73425358550::t_979b45eaa6483c 15
+apps/web/src/features/auth/client.ts
+  s_b3a73425358550::t_52c786606a99e4 1-3,7,14-15,19
+  s_b3a73425358550::t_c4a9b89deaa584 4-6,16-18
+apps/desktop/AGENTS.md
+  s_b3a73425358550::t_9a6bacd6beb354 95
+  s_b3a73425358550::t_56bd73969e2c0a 92-94
+deploy/.env.example
+  s_b3a73425358550::t_52c786606a99e4 25
+  s_b3a73425358550::t_541a5cb3204667 26-28
+  s_b3a73425358550::t_26e16d49d34cf7 23-24
+packages/contracts/src/desktop-login.ts
+  s_b3a73425358550::t_4ab849c81cdea0 19-22,47-55
+  s_b3a73425358550::t_ef4092405a9081 5-17,26-34,38,45,56-66
+  s_b3a73425358550::t_0eff9e6de84947 1-4,18,23-25,35-37,39-44,46,67
+packages/auth/src/desktop-login.test.ts
+  s_b3a73425358550::t_9a6bacd6beb354 27-50,54-62,64-65,71,73,79-80,120,154-157,181-183,199,201,203
+  s_b3a73425358550::t_4ab849c81cdea0 3-25,70,72,74-78,82-96,105,109-117,122-132,150-153,158-180,188-198,200,202,204-222
+  s_b3a73425358550::t_675fb928008536 51-52,63,66-68,81,97-101,103,121,133-145,147,223-228,230-234,236-239,241-242,245,247,249-256,258-259
+  s_b3a73425358550::t_2fa9f1d6174143 1-2,26,53,69,102,104,106-108,118-119,146,148-149,184-187,229,235,240,243-244,246,248,257
+apps/desktop/src/features/auth/components/form.tsx
+  s_b3a73425358550::t_9e66330534b9c3 1,27,38
+apps/web/src/features/auth/components/passkey-sign-in.tsx
+  s_b3a73425358550::t_36ff7179719736 1-7,9-37,39-48,50-52,54,56
+  s_b3a73425358550::t_61b477c0fafa5a 8,38,49,53,55
+apps/desktop/src/features/auth/routes.component.test.tsx
+  s_b3a73425358550::t_5f88e5cea5095b 21-22,95,104-106,136-137,141-142,150-151,155,159,212-214,218-229
+  s_b3a73425358550::t_bbf0d242e9ce68 135,138-140,157,215-217
+  s_b3a73425358550::t_9a6bacd6beb354 152-154,156
+apps/web/src/features/auth/components/sign-in-methods.tsx
+  s_b3a73425358550::t_36ff7179719736 1-14,18,22-55,57-66,68-73,75-76,78,80-81,83-85,87-90,92-94,96-97,99-107,109-119,121-125,127,129,131-140,142-150,152
+  s_b3a73425358550::t_75ad065ab2ef83 15-17,19-21,56,67,74,77,79,82,86,91,95,98,108,120,126,128,130,141,151
+packages/auth/src/client.ts
+  s_b3a73425358550::t_52c786606a99e4 1
+  s_b3a73425358550::t_316e34cf498f52 3
+apps/api/src/middleware/http.ts
+  s_b3a73425358550::t_541a5cb3204667 65-69,71
+  s_b3a73425358550::t_72033f90993631 70
+packages/contracts/AGENTS.md
+  s_b3a73425358550::t_9a6bacd6beb354 19-21
+apps/web/src/routes/(auth)/route.tsx
+  s_b3a73425358550::t_ed1fe680ef1d6a 10,12-15
+  s_b3a73425358550::t_bd04a21aba4b60 11
+packages/auth/locales/en/auth.ts
+  s_b3a73425358550::t_52c786606a99e4 66
+  s_b3a73425358550::t_36ff7179719736 74,91-98
+  s_b3a73425358550::t_541a5cb3204667 77
+  s_b3a73425358550::t_c51a5e9c9adc5d 75-76,78-90
+apps/desktop/e2e/access.spec.ts
+  s_b3a73425358550::t_9e66330534b9c3 108,123,126
+apps/desktop/locales/en/desktopLogin.ts
+  s_b3a73425358550::t_182d1cf6cc1af2 1-8
+apps/mobile/src/auth.ts
+  s_b3a73425358550::t_675fb928008536 2,16
+packages/auth/src/server.ts
+  s_b3a73425358550::t_ef4092405a9081 2,8-9,26,97,120,126,132,172-175,180,184-185,447
+  s_b3a73425358550::t_fbb8785ae9b1ac 106,154-156,210-211,238,263,265-271
+  s_b3a73425358550::t_52c786606a99e4 4-5,46-47,98-101,104-105,171,214-217,239-244,246-248,253,273
+  s_b3a73425358550::t_81c15b23bc160e 212-213,232-237
+  s_b3a73425358550::t_541a5cb3204667 3,48,107-117,147-153,157-160,162-170,190,193-194,196,478
+  s_b3a73425358550::t_4ab849c81cdea0 176-179,182-183
+  s_b3a73425358550::t_60dccf4683254f 6-7,39,102-103,118-119,127-131,146,161,181,186,195,208-209,245,249-252,254-262,264,272
+apps/cli/src/runtime/daemon/desktop/cookies.ts
+  s_b3a73425358550::t_b8f9bb9363de2e 180-181,183-185
+  s_b3a73425358550::t_74954b09d44023 179,188
+docs/development/accounts.md
+  s_b3a73425358550::t_55fad71aeafc31 301-305
+  s_b3a73425358550::t_9a6bacd6beb354 294-297,307
+  s_b3a73425358550::t_6177c55df0d257 298-300,306,308-350
+packages/database/drizzle-foundation/20261113073429_account-authentication/migration.sql
+  s_b3a73425358550::t_dda91a4b9c9f91 1-188
+apps/desktop/bridge.ts
+  s_b3a73425358550::t_182d1cf6cc1af2 26-28,62-63
+  s_b3a73425358550::t_4ab849c81cdea0 58,60-61
+  s_b3a73425358550::t_91ffc27d8aa212 59
+apps/web/src/features/auth/components/auth-form.tsx
+  s_b3a73425358550::t_541a5cb3204667 62-63,65,69,109,118-125
+  s_b3a73425358550::t_36ff7179719736 3,76-94,113
+  s_b3a73425358550::t_fbb8785ae9b1ac 2,104
+  s_b3a73425358550::t_7477bd93ab6787 1,56,64,95-96,114-117,126-128
+docs/architecture/README.md
+  s_b3a73425358550::t_9a6bacd6beb354 384
+  s_b3a73425358550::t_9a129ff0ac2fd6 56-61,82-83,385
+.env.example
+  s_b3a73425358550::t_541a5cb3204667 19-21
+  s_b3a73425358550::t_52c786606a99e4 18
+  s_b3a73425358550::t_3352b5b9c8660c 16-17
+apps/web/locales/en/desktopAuthorization.ts
+  s_b3a73425358550::t_ed1fe680ef1d6a 1-11
+packages/database/src/oauth-schema.ts
+  s_b3a73425358550::t_d3fa5d3e356041 12-16,24,67,83,104,118,186
+  s_b3a73425358550::t_4ab849c81cdea0 1-11,17-23,25-66,68-82,84-103,105-117,119-185
+apps/desktop/locales/zh/desktopLogin.ts
+  s_b3a73425358550::t_182d1cf6cc1af2 1-8
+apps/api/src/env.ts
+  s_b3a73425358550::t_52c786606a99e4 37-43
+  s_b3a73425358550::t_541a5cb3204667 44-45,91-92,94
+  s_b3a73425358550::t_9dcd520a7bdd3f 93
+apps/web/src/features/auth/return-to.ts
+  s_b3a73425358550::t_9a6bacd6beb354 21-23
+  s_b3a73425358550::t_182d1cf6cc1af2 7
+  s_b3a73425358550::t_8fcd1d1ea915ec 1,24-26
+apps/api/src/runtime/adapters.ts
+  s_b3a73425358550::t_52c786606a99e4 57-58
+  s_b3a73425358550::t_541a5cb3204667 59-62,65-66
+  s_b3a73425358550::t_e10757c635274b 63-64
+apps/desktop/locales/zh/index.ts
+  s_b3a73425358550::t_182d1cf6cc1af2 10,27
+apps/mobile/app/login.tsx
+  s_b3a73425358550::t_675fb928008536 14-27,50-103,105-127
+  s_b3a73425358550::t_0b8ea69c244332 104
+apps/desktop/e2e/auth.spec.ts
+  s_b3a73425358550::t_5f88e5cea5095b 79,83,86
+apps/api/AGENTS.md
+  s_b3a73425358550::t_928678348566ad 23-24,315-316
+apps/api/src/config/resend.ts
+  s_b3a73425358550::t_b96c181d5969e8 134
+apps/api/src/jobs/cleanup.test.ts
+  s_b3a73425358550::t_c0123daa81d813 38
+apps/api/src/jobs/cleanup.ts
+  s_b3a73425358550::t_5cf22bad3a27db 2-8,37,55,62-67,134,143
+apps/api/src/jobs/runtime.test.ts
+  s_b3a73425358550::t_e3d5858b0c0748 15
+apps/api/src/logging/events.ts
+  s_b3a73425358550::t_e5c15bdd64d001 32
+apps/api/src/logging/policy.ts
+  s_b3a73425358550::t_7f49bc4226814e 25
+apps/api/src/middleware/auth-preflight.ts
+  s_b3a73425358550::t_e67199de001a23 13-18
+apps/api/tests/postgres/node/cleanup.test.ts
+  s_b3a73425358550::t_e76d4fbf4a7943 80
+apps/api/vite.app.config.ts
+  s_b3a73425358550::t_d3eb1e9a5c3149 58-59
+apps/mobile/AGENTS.md
+  s_b3a73425358550::t_5d529b2bc16573 63-64
+apps/web/locales/en/index.ts
+  s_b3a73425358550::t_da74d5205c40bb 10,27
+apps/web/locales/zh/index.ts
+  s_b3a73425358550::t_a088fdd407946d 10,27
+apps/web/src/features/auth/components/two-factor-settings.tsx
+  s_b3a73425358550::t_6a2f09f1452dbd 1-172
+apps/web/src/routeTree.gen.ts
+  s_eef59b89cb8179::t_e1d6d10bdc8e59 24,92-96,162,183,209,233,254,279,388-394,516,525
+apps/web/src/routes/(auth)/desktop-authorize.tsx
+  s_b3a73425358550::t_76517b2bb6edce 1-21
+apps/web/tests/helpers/router-auth.tsx
+  s_b3a73425358550::t_b03c4e3fed2306 41,67,130-131
+bun.lock
+  s_b3a73425358550::t_01e28161879a62 386-388,394,896-897,1235-1238,1447-1448,1551-1552,1783-1808,1989-1992,2379-2380,3283-3286,3343-3344,3563-3564,3995-3996
+docs/architecture/0063-desktop-oauth.md
+  s_b3a73425358550::t_efe85dcaaecfd2 1-27
+infra/railway/Caddyfile
+  s_b3a73425358550::t_e95e2f148ef5d8 23
+packages/auth/src/server.test.ts
+  s_b3a73425358550::t_7a977b6eaa63fc 149-253
+packages/auth/src/social-login.test.ts
+  s_b3a73425358550::t_8afd9c1d3a9466 18,221-261
+packages/contracts/src/api.ts
+  s_eef59b89cb8179::t_deee445e10b8f1 1
+packages/database/AGENTS.md
+  s_b3a73425358550::t_0f42dcfdfb71df 35,98-99
+packages/email/AGENTS.md
+  s_b3a73425358550::t_a500d66a1cb55a 17
+packages/email/src/server.ts
+  s_b3a73425358550::t_b8a735cc7463f7 9,18,39,42,44,59-72,75
+packages/email/src/types.ts
+  s_b3a73425358550::t_30fd76c961f16f 10-12,16
+packages/tooling/src/build/deployment.ts
+  s_b3a73425358550::t_8f5ad92e019bff 11-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "02230b255c81efbc45ccf4115ab5e3fc0650f3b1",
+  "prompts": {},
+  "sessions": {
+    "s_b3a73425358550": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d384-f0df-7d93-8e7b-1bd5033a7825",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_eef59b89cb8179": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d381-e520-7691-9cd0-10aa2b9a009d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
