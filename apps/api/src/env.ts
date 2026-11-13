@@ -1,7 +1,24 @@
 import { normalizeTrustedOrigins } from "@raypx/core/auth";
 import { defineEnv, type Preset, z } from "@raypx/env";
 import type apiEnvironmentSources from "./env.contract.js";
+function computerLimit(fallback: string) {
+  return z
+    .string()
+    .regex(/^[1-9][0-9]*$/)
+    .default(fallback)
+    .transform(Number)
+    .pipe(z.number().int().max(1000));
+}
 const server = {
+  COMPUTER_PROVIDER: z.enum(["none", "docker"]).default("none"),
+  SANDBOX_SUPERVISOR_URL: z.url().optional(),
+  SANDBOX_SUPERVISOR_TOKEN: z
+    .string()
+    .min(32)
+    .regex(/^[^\r\n]+$/)
+    .optional(),
+  COMPUTERS_PER_MEMBER: computerLimit("10"),
+  COMPUTERS_PER_SPACE: computerLimit("1"),
   SERVER_ROLE: z.enum(["api", "both"]).default("both"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   AGENT_MODELS: z.string().default("[]"),
@@ -61,6 +78,34 @@ const list = (value: string | undefined) =>
 
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
   const env = defineEnv({ extends: [apiServerEnv], runtimeEnv, isServer: true });
+  if (env.SANDBOX_SUPERVISOR_URL) {
+    const url = new URL(env.SANDBOX_SUPERVISOR_URL);
+    if (
+      !/^https?:$/.test(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash
+    )
+      throw new Error("Invalid SANDBOX_SUPERVISOR_URL");
+  }
+  if (env.COMPUTER_PROVIDER === "docker") {
+    if (!env.SANDBOX_SUPERVISOR_URL || !env.SANDBOX_SUPERVISOR_TOKEN)
+      throw new Error(
+        "COMPUTER_PROVIDER=docker requires SANDBOX_SUPERVISOR_URL and SANDBOX_SUPERVISOR_TOKEN",
+      );
+    for (const [key, value] of Object.entries(runtimeEnv)) {
+      if (
+        key !== "SANDBOX_SUPERVISOR_TOKEN" &&
+        (value === env.SANDBOX_SUPERVISOR_TOKEN ||
+          value?.includes(JSON.stringify(env.SANDBOX_SUPERVISOR_TOKEN)))
+      )
+        throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
+    }
+    if ([env.AUTH_SECRET, env.APP_KEY].includes(env.SANDBOX_SUPERVISOR_TOKEN))
+      throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
+  }
   if (env.SERVER_ROLE === "api" && !env.REDIS_URL)
     throw new Error("The api role requires REDIS_URL; use both for a single backend");
   if (env.NODE_ENV === "production") {

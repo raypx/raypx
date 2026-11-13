@@ -12,6 +12,7 @@ import {
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
     expect(Object.keys(apiContract)).toEqual([
+      "computers",
       "spaces",
       "agents",
       "conversations",
@@ -29,6 +30,7 @@ describe("foundation contract", () => {
       "relay",
       "account",
     ]);
+    expect(Object.keys(apiContract.computers)).toEqual(["get", "start", "stop"]);
     expect(apiContract).not.toHaveProperty("terminal");
     expect(apiContract).not.toHaveProperty("files");
     expect(Object.keys(apiContract.agents)).toEqual([

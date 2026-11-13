@@ -27,6 +27,12 @@ Space/Agent. `conversation_reply_segments` stores completed text. State and segm
 events use same-Space references; first-response time commits with segment output. `/connection` also exposes an owned,
 dedicated LISTEN connection; feature adapters choose the channel and payload.
 
+`computers` stores team/private scope, neutral provider, state, generation, home
+revision and lifecycle lease/fence. One partial unique index permits one team
+computer per Space; private Agent, creator member and event references include
+space_id. Restrictive owner foreign keys prevent silent resource orphaning.
+`computer.state` joins the existing conversation event counter/payload convention.
+
 ## Constraints
 
 Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`

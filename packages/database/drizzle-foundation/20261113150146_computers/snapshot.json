@@ -1,0 +1,782 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "87fedea7-421c-4019-8dc0-0d3de9bf5f2f",
+  "prevIds": [
+    "5cc0ae72-2966-4976-8ac6-180e1ac96050"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|tbl|public.computers",
+        "n|tbl|public.computers",
+        "e|tbl|public.computers",
+        "n|rel|public.computers",
+        "n|type|public.computers",
+        "n|rel|public.computers_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_events",
+        "computer_id"
+      ],
+      "writes": [
+        "s|col|public.conversation_events.computer_id",
+        "n|col|public.conversation_events.computer_id",
+        "e|col|public.conversation_events.computer_id"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "computers",
+        "computers_team_idx"
+      ],
+      "writes": [
+        "s|idx|public.computers_team_idx",
+        "n|idx|public.computers_team_idx",
+        "e|idx|public.computers_team_idx",
+        "n|rel|public.computers_team_idx"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computers.space_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "computers",
+        "computers_private_agent_idx"
+      ],
+      "writes": [
+        "s|idx|public.computers_private_agent_idx",
+        "n|idx|public.computers_private_agent_idx",
+        "e|idx|public.computers_private_agent_idx",
+        "n|rel|public.computers_private_agent_idx"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.agent_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "computers",
+        "computers_creator_idx"
+      ],
+      "writes": [
+        "s|idx|public.computers_creator_idx",
+        "n|idx|public.computers_creator_idx",
+        "e|idx|public.computers_creator_idx",
+        "n|rel|public.computers_creator_idx"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computers.created_by_account_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|fk|public.computers.computers_space_id_spaces_id_fkey",
+        "n|fk|public.computers.computers_space_id_spaces_id_fkey",
+        "e|fk|public.computers.computers_space_id_spaces_id_fkey",
+        "n|con|public.computers.computers_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|fk|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey",
+        "n|fk|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey",
+        "e|fk|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey",
+        "n|con|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.agent_id",
+        "n|col|public.agents.space_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|fk|public.computers.computers_ml9XhGwYtCtS_fkey",
+        "n|fk|public.computers.computers_ml9XhGwYtCtS_fkey",
+        "e|fk|public.computers.computers_ml9XhGwYtCtS_fkey",
+        "n|con|public.computers.computers_ml9XhGwYtCtS_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.created_by_account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|fk|public.conversation_events.conversation_events_yYRNLMt1Sepk_fkey",
+        "n|fk|public.conversation_events.conversation_events_yYRNLMt1Sepk_fkey",
+        "e|fk|public.conversation_events.conversation_events_yYRNLMt1Sepk_fkey",
+        "n|con|public.conversation_events.conversation_events_yYRNLMt1Sepk_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.conversation_events.space_id",
+        "n|col|public.conversation_events.computer_id",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.id",
+        "e|uniqueness|public.computers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|ck|public.conversation_events.conversation_events_kind_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|col|public.conversation_events.kind",
+        "e|col|public.conversation_events.kind"
+      ],
+      "sqlHash": "da282753d9fff797"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|ck|public.conversation_events.conversation_events_payload_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|col|public.conversation_events.kind",
+        "n|col|public.conversation_events.message_id",
+        "n|col|public.conversation_events.run_id",
+        "n|col|public.conversation_events.segment_id",
+        "n|col|public.conversation_events.data",
+        "n|col|public.conversation_events.computer_id",
+        "e|col|public.conversation_events.kind",
+        "e|col|public.conversation_events.message_id",
+        "e|col|public.conversation_events.run_id",
+        "e|col|public.conversation_events.segment_id",
+        "e|col|public.conversation_events.data"
+      ],
+      "sqlHash": "48fee565e70e9954"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "computers",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "scope",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "agent_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "created_by_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "provider",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "state",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'stopped'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "generation",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "home_revision",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "lease_owner",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "lease_expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "lease_fence",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "failure_code",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "computer_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_team_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"scope\" = 'team'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_private_agent_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "agent_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"scope\" = 'private'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_creator_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "created_by_account_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_space_id_agent_id_agents_space_id_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "agent_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "agents",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_ml9XhGwYtCtS_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "created_by_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_events_yYRNLMt1Sepk_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "computer_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "computers",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_scope_check",
+        "value": "(\"scope\" = 'team' and \"agent_id\" is null) or (\"scope\" = 'private' and \"agent_id\" is not null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_provider_check",
+        "value": "\"provider\" in ('memory', 'sandbox')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_state_check",
+        "value": "\"state\" in ('stopped', 'starting', 'running', 'stopping', 'failed', 'destroyed')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_generation_check",
+        "value": "\"generation\" > 0 and \"generation\" <= 9007199254740991 and \"lease_fence\" >= 0 and \"lease_fence\" <= 9007199254740991",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_revision_check",
+        "value": "\"home_revision\" is null or \"home_revision\" ~ '^[a-f0-9]{64}$'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_lease_check",
+        "value": "(\"lease_owner\" is null) = (\"lease_expires_at\" is null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_failure_check",
+        "value": "(\"state\" = 'failed' and \"failure_code\" is not null and \"failure_code\" in ('PROVIDER_UNAVAILABLE', 'RESTORE_FAILED')) or (\"state\" <> 'failed' and \"failure_code\" is null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_events\",\"conversation_events_kind_check\"]",
+      "set": {
+        "value": "\"kind\" in ('message.created', 'run.state', 'reply.segment', 'computer.state')"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_events\",\"conversation_events_payload_check\"]",
+      "set": {
+        "value": "(\n      (\"kind\" = 'message.created' and \"message_id\" is not null and \"run_id\" is null and \"segment_id\" is null and \"data\" is null and \"computer_id\" is null) or\n      (\"kind\" = 'run.state' and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"data\" is not null and \"computer_id\" is null) or\n      (\"kind\" = 'reply.segment' and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is not null and \"data\" is null and \"computer_id\" is null) or\n      (\"kind\" = 'computer.state' and \"message_id\" is null and \"run_id\" is null and \"segment_id\" is null and \"computer_id\" is not null and \"data\" is not null)\n    )"
+      }
+    }
+  ]
+}

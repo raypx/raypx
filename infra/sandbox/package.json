@@ -1,0 +1,21 @@
+{
+  "name": "sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vitest run",
+    "start": "bun src/main.ts",
+    "build": "bun build src/main.ts --target=bun --packages=bundle --outfile=dist/server.mjs"
+  },
+  "dependencies": {
+    "@raypx/providers": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
+    "vitest": "catalog:dev"
+  }
+}

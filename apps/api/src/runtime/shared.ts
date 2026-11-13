@@ -1,3 +1,6 @@
+import { createComputersService } from "@raypx/computers/server";
+import { createComputersRepository } from "@raypx/computers/server/postgres";
+import { configuredComputerProvider } from "./computers.js";
 import { ConversationRunner } from "@raypx/agents/server";
 import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
 import { InstanceService } from "@raypx/instances/server";
@@ -147,6 +150,14 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     // Keep sessions request-owned even when the process reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
     const spaces = createSpaceAccess(db);
+    const computerProvider = await configuredComputerProvider(environment);
+    const computers = createComputersService(
+      createComputersRepository(db, {
+        perSpace: environment.COMPUTERS_PER_SPACE,
+        perMember: environment.COMPUTERS_PER_MEMBER,
+      }),
+      computerProvider,
+    );
     const conversationModels =
       resources.createModels?.() ??
       createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS);
@@ -160,6 +171,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     lifecycle.own(() => runner.close());
     const conversations = runner.conversations;
     return {
+      computers,
       spaces,
       liveReplies: runner.live,
       conversations,
@@ -182,6 +194,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        computers,
         spaces,
         conversations,
         conversationModels,
@@ -208,6 +221,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         logger,
         readiness: {
           ...readiness,
+          ...(computerProvider ? { sandbox: () => computerProvider.describe() } : {}),
           ...(resources.relayReadiness ? { relay: resources.relayReadiness } : {}),
         },
         ...(rateLimit ? { rateLimit } : {}),

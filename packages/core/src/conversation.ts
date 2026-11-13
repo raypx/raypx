@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  computerIdSchema,
+  computerStateSchema,
+  computerGenerationSchema,
+  homeRevisionSchema,
+} from "./computers.js";
 import { agentIdSchema, agentModelChoiceSchema, conversationIdSchema } from "./agents.js";
 import { spaceIdSchema } from "./spaces.js";
 
@@ -78,6 +84,14 @@ const eventFields = {
 };
 export const conversationEventSchema = z
   .discriminatedUnion("kind", [
+    z.strictObject({
+      ...eventFields,
+      kind: z.literal("computer.state"),
+      computerId: computerIdSchema,
+      state: computerStateSchema,
+      generation: computerGenerationSchema,
+      homeRevision: homeRevisionSchema.nullable(),
+    }),
     z.strictObject({
       ...eventFields,
       kind: z.literal("message.created"),

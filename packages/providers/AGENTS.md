@@ -1,6 +1,6 @@
 # @raypx/providers
 
-Private provider source library for the CLI's private harness. CLI owns execution policy,
+Private provider source library for the CLI harness and server-owned Computer adapters. CLI owns its execution policy,
 storage, process transport, files, credentials, SQLite and lifecycle. Never import
 applications, authentication or database implementations. Export only explicit entries.
 
@@ -24,3 +24,12 @@ runtime entries never import it. Keep fakes at the transport/SDK boundary, verif
 handles cannot emit or approve work, and that cancellation waits for transport/SDK drain.
 
 Run this workspace's check and tests, CLI adapter/replay/provider tests, then repository verify.
+
+- `./computer` owns the provider-neutral lifecycle, execution, bounded file and home
+  port plus the offline virtual in-memory implementation. API's Computers service
+  and Sandbox consume it. It never executes host commands.
+- `./computer/docker` is the lazily selected supervisor HTTP adapter, consumed by
+  API. Only Sandbox opens the Engine socket. Vendor details stay inside adapters.
+- `./testing/computer` is the runner-injected conformance suite consumed by Sandbox
+  tests; it imports no test runner at runtime. Live conformance requires the explicit
+  RAYPX_TEST_DOCKER=1 flag and a prepared supervisor/image; tests never build or pull.

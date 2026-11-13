@@ -1,3 +1,4 @@
+import { ComputerOperationError } from "@raypx/computers/server";
 import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { ORPCError } from "@orpc/server";
 import { SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
@@ -16,6 +17,8 @@ export function createSpaceHandlers({
     try {
       return await run();
     } catch (error) {
+      if (error instanceof ComputerOperationError)
+        throw new ORPCError("CONFLICT", { message: error.code });
       if (error instanceof InvalidConversationCursor) throw new ORPCError("BAD_REQUEST");
       if (!(error instanceof SpaceNotFound)) throw error;
       throw new ORPCError("NOT_FOUND", {
@@ -36,6 +39,27 @@ export function createSpaceHandlers({
   const write = withRpcPermission();
   const quota = limitAccount({ window: 60, max: 30 });
   return {
+    computers: {
+      get: os.computers.get
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.computers.get(scope)),
+        ),
+      start: os.computers.start
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.computers.start(scope)),
+        ),
+      stop: os.computers.stop
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.computers.stop(scope)),
+        ),
+    },
     conversations: {
       stop: os.conversations.stop
         .use(write)

@@ -175,8 +175,11 @@ Cloud schedules do not claim local plans or move them between accounts. See
 
 ## Provider adapters
 
-One private `@raypx/providers` source library holds every provider adapter, with CLI as
-its only consumer. `./core` defines the injected session, execution and process I/O
+One private `@raypx/providers` source library holds the CLI provider adapters and
+server-owned Computer port. CLI consumes the session adapters; Computers and API
+consume `/computer`, and API lazily selects `/computer/docker`. The private Sandbox
+service consumes the port and owns the Engine connection. `/testing/computer` is
+the shared runner-injected conformance suite consumed by Sandbox tests. `./core` defines the injected session, execution and process I/O
 ports and normalized conversation events. `./codex` and `./claude` implement native
 protocol adapters; `./pi` and `./pi/context` hold the Node-targeted Pi SDK session and
 transcript schema, the only sources that import `@raypx/ai` or the Pi SDK. CLI supplies

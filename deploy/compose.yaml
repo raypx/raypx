@@ -66,6 +66,11 @@ services:
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
+      COMPUTER_PROVIDER: ${COMPUTER_PROVIDER:-none}
+      SANDBOX_SUPERVISOR_URL: ${SANDBOX_SUPERVISOR_URL:-}
+      SANDBOX_SUPERVISOR_TOKEN: ${SANDBOX_SUPERVISOR_TOKEN:-}
+      COMPUTERS_PER_MEMBER: ${COMPUTERS_PER_MEMBER:-10}
+      COMPUTERS_PER_SPACE: ${COMPUTERS_PER_SPACE:-1}
       AGENT_MODELS: ${AGENT_MODELS:-}
       AGENT_MODEL_CREDENTIALS: ${AGENT_MODEL_CREDENTIALS:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
@@ -83,7 +88,7 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-    networks: [backend, proxy]
+    networks: [backend, proxy, sandbox-control]
     mem_limit: ${API_MEMORY:-768m}
     cpus: ${API_CPUS:-1}
     healthcheck:
@@ -113,6 +118,33 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.service=${COMPOSE_PROJECT_NAME:?}-api"
+
+  sandbox:
+    profiles: [sandbox]
+    image: raypx/sandbox:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    environment:
+      SANDBOX_LISTEN_ADDRESS: ${SANDBOX_LISTEN_ADDRESS:-172.30.40.2}
+      SANDBOX_PORT: "4020"
+      SANDBOX_SUPERVISOR_TOKEN: ${SANDBOX_SUPERVISOR_TOKEN:-}
+      SANDBOX_COMPUTER_IMAGE: ${SANDBOX_COMPUTER_IMAGE:-}
+      SANDBOX_NAMESPACE: ${COMPOSE_PROJECT_NAME:?}
+      SANDBOX_STATE_DIRECTORY: /var/lib/raypx-sandbox
+      SANDBOX_MEMORY_BYTES: ${SANDBOX_MEMORY_BYTES:-536870912}
+      SANDBOX_NANO_CPUS: ${SANDBOX_NANO_CPUS:-1000000000}
+      SANDBOX_PIDS_LIMIT: ${SANDBOX_PIDS_LIMIT:-128}
+      SANDBOX_RESTRICTED_EGRESS: ${SANDBOX_RESTRICTED_EGRESS:-false}
+      SANDBOX_HOST_RULES_APPLIED: ${SANDBOX_HOST_RULES_APPLIED:-false}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - sandbox-state:/var/lib/raypx-sandbox
+    networks:
+      sandbox-control:
+        ipv4_address: ${SANDBOX_LISTEN_ADDRESS:-172.30.40.2}
+    mem_limit: 256m
+    cpus: 0.5
 
   web:
     image: raypx/web:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
@@ -150,10 +182,16 @@ services:
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-https.redirectscheme.scheme=https"
 
 volumes:
+  sandbox-state:
   postgres:
     name: ${POSTGRES_VOLUME_NAME:-${COMPOSE_PROJECT_NAME:?}_postgres}
 
 networks:
+  sandbox-control:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${SANDBOX_CONTROL_SUBNET:-172.30.40.0/24}
   backend:
     internal: true
   proxy:

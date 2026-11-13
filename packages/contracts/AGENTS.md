@@ -17,6 +17,8 @@ the strict projection contains no provider connection or credential fields.
 `/api` also composes the version-1 conversation stream subscribe/ACK/unsubscribe
 frames, transient reply prefix/delta frames and event/snapshot-required replies.
 `conversations.stop` cancels a selected Run. Snapshots include Runs and reply segments.
+`computers.get/start/stop` compose Core Computer state, use the same session/Space
+boundary and expose no command or file operation. `not-configured` is explicit.
 Member management remains outside this slice.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 

@@ -93,6 +93,79 @@ Validate without printing resolved secrets:
 docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 ```
 
+## Optional computers
+
+The default `COMPUTER_PROVIDER=none` keeps every other backend capability available.
+To enable isolated computers, build the supervisor and computer images separately;
+`build.sh` still builds the three required application images only. Supply verified
+manifest digests for `oven/bun:1.4.4` and `python:3.13-slim-bookworm`; there is no
+floating base fallback. Build from the repository root, without a secret build arg:
+
+```sh
+docker build -f infra/sandbox/Dockerfile --build-arg BUN_IMAGE_DIGEST="$BUN_IMAGE_DIGEST" -t "raypx/sandbox:${COMPOSE_PROJECT_NAME}-${RAYPX_RELEASE}" .
+docker build -f infra/sandbox/Computer.Dockerfile --build-arg BUN_IMAGE_DIGEST="$BUN_IMAGE_DIGEST" --build-arg COMPUTER_BASE_DIGEST="$COMPUTER_BASE_DIGEST" -t raypx/computer:prepared .
+```
+
+Publish the prepared computer image to an operator-controlled registry if needed,
+record its immutable digest, and preload it into the selected Engine. Set
+`SANDBOX_COMPUTER_IMAGE` to that digest reference. Provision never pulls or builds.
+The image contains a shell, coreutils, git, Python 3.13 and the repository-pinned Bun.
+Use an Engine supporting API v1.47. Generate a new, dedicated 32+ character
+`SANDBOX_SUPERVISOR_TOKEN`; it must differ from authentication, encryption, model
+and other credentials. Pass it only to the backend and supervisor. Set
+`COMPUTER_PROVIDER=docker` and `SANDBOX_SUPERVISOR_URL=http://sandbox:4020`.
+
+Start the opt-in profile explicitly:
+
+```sh
+docker compose --env-file deploy/.env -f deploy/compose.yaml --profile sandbox config --quiet
+docker compose --env-file deploy/.env -f deploy/compose.yaml --profile sandbox up -d sandbox
+```
+
+Recreate API with the updated protected settings through the usual deployment
+workflow. The supervisor publishes no port. It binds its explicit private IP on
+`sandbox-control`; the API joins that network without receiving a socket mount.
+The default address/subnet are `172.30.40.2` and `172.30.40.0/24`; override both
+for each project if they overlap another network. Keep the configured listener IP
+inside that subnet. Only the supervisor mounts `/var/run/docker.sock`; treat its
+socket access as host control. Its separate `sandbox-state` volume stores metadata,
+generation tombstones and immutable snapshots. Run one supervisor per state volume.
+Back it up with PostgreSQL; do not delete it during image replacement.
+
+`SANDBOX_MEMORY_BYTES`, `SANDBOX_NANO_CPUS` (one CPU = 1,000,000,000) and
+`SANDBOX_PIDS_LIMIT` are positive decimal ceilings; malformed settings fail startup
+and name the setting. Computers run as UID/GID 1000, with no privileges or host
+network, read-only root, bounded tmpfs and only their own home volume.
+`COMPUTERS_PER_SPACE` and `COMPUTERS_PER_MEMBER` cap retained records (defaults 1
+and 10). Stopped homes still count. API stores no command output or file content
+through these lifecycle procedures.
+
+For restricted egress, set `SANDBOX_RESTRICTED_EGRESS=true` and apply host firewall
+rules on the deterministic bridge (`rpx` + the first ten hex characters of SHA-256
+of the Compose project name). The rules must reject the host itself, local/private
+networks, link-local and cloud metadata destinations, including IPv6, while allowing
+public internet traffic and established replies. Use the Docker host's supported
+firewall backend and verify from a prepared computer; a bridge alone does not
+provide this restriction. Only then set `SANDBOX_HOST_RULES_APPLIED=true`.
+The supervisor reports unrestricted egress otherwise; it cannot verify the host
+ruleset. Keep computer traffic away from backend/control networks with those rules.
+
+Offline tests use a fake Engine HTTP transport and never start listeners. To run
+real acceptance against a prepared supervisor and images on an isolated host:
+
+```sh
+RAYPX_TEST_DOCKER=1 SANDBOX_SUPERVISOR_URL=http://127.0.0.1:4020 SANDBOX_SUPERVISOR_TOKEN="$SANDBOX_SUPERVISOR_TOKEN" bun run --cwd packages/providers test -- tests/computer/conformance.test.ts
+```
+
+This opt-in suite creates and destroys only its own UUID computers. It retains
+revision tombstones/snapshots under the supervisor's normal retention policy.
+Also verify per platform: a command cannot read the Engine socket or another
+Space's home, cannot use host networking, respects memory/CPU/PID limits, and can
+reach public internet but not host/LAN/metadata when restricted egress is asserted.
+Restart the supervisor and Engine, replace a computer, and inject a restore failure
+to verify fencing and preservation of the last committed revision. These real
+Engine and firewall checks are required before describing isolation as accepted.
+
 ## Optional split roles
 
 `deploy/compose.split.yaml` overlays the default topology. API sets SERVER_ROLE=api;

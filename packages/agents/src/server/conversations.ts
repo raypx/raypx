@@ -394,6 +394,8 @@ export function createConversationsRepository(
           const entries = rows.map((row) => {
             let payload: object = {};
             if (row.event.kind === "message.created") payload = { messageId: row.event.messageId };
+            if (row.event.kind === "computer.state")
+              payload = { ...(row.event.data as object), computerId: row.event.computerId };
             if (row.event.kind === "run.state")
               payload = { ...(row.event.data as object), runId: row.event.runId };
             if (row.event.kind === "reply.segment") {

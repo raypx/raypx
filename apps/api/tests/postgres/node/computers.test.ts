@@ -1,0 +1,91 @@
+import { afterAll, beforeAll, expect, it } from "vitest";
+import { connectDatabase, migrateDatabase } from "@raypx/database";
+import { computers, spaces, user } from "@raypx/database/schema";
+import { inArray } from "drizzle-orm";
+import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import { createComputersService } from "@raypx/computers/server";
+import { createComputersRepository } from "@raypx/computers/server/postgres";
+import { createMemoryComputerProvider } from "@raypx/providers/computer";
+import { createApiClient } from "@raypx/client/api";
+import { createApiApp } from "../../helpers/app.js";
+const url = process.env.TEST_DATABASE_URL;
+if (!url || !new URL(url).pathname.endsWith("_test"))
+  throw new Error("A freshly created disposable *_test database is required");
+const connection = connectDatabase(url);
+const owner = `computer-api-${crypto.randomUUID()}`;
+const stranger = `computer-api-${crypto.randomUUID()}`;
+const owned: string[] = [];
+const access = createSpaceAccess(connection.db);
+const service = createComputersService(
+  createComputersRepository(connection.db),
+  createMemoryComputerProvider(),
+  "memory",
+);
+beforeAll(async () => {
+  await migrateDatabase(url);
+  await connection.db.insert(user).values(
+    [owner, stranger].map((id) => ({
+      id,
+      name: "Computer fixture",
+      email: `${id}@example.test`,
+      emailVerified: true,
+    })),
+  );
+});
+afterAll(async () => {
+  try {
+    await connection.db.delete(computers).where(inArray(computers.spaceId, owned));
+    await connection.db.delete(spaces).where(inArray(spaces.id, owned));
+    await connection.db.delete(user).where(inArray(user.id, [owner, stranger]));
+  } finally {
+    await connection.close();
+  }
+});
+function client(id: string) {
+  const app = createApiApp({
+    spaces: access,
+    computers: service,
+    allowedOrigins: ["https://web.example.test"],
+    readSession: async () => ({
+      user: {
+        id,
+        name: "Fixture",
+        email: `${id}@example.test`,
+        emailVerified: true,
+        role: "admin",
+      },
+      session: { id: `session-${id}`, userId: id, expiresAt: new Date(Date.now() + 60_000) },
+    }),
+  });
+  return createApiClient({
+    baseUrl: "https://api.example.test",
+    headers: { origin: "https://web.example.test" },
+    fetch: async (requestUrl, init) => app.fetch(new Request(requestUrl, init)),
+  });
+}
+it("admits fresh Space members, provisions once, and refuses outsiders on read/start/stop", async () => {
+  const { space } = await access.create(owner, { name: "Computer API fixture" });
+  owned.push(space.id);
+  for (const procedure of ["get", "start", "stop"] as const)
+    await expect(
+      client(stranger).computers[procedure]({ spaceId: space.id }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(await client(owner).computers.get({ spaceId: space.id })).toEqual({
+    status: "available",
+    computer: null,
+  });
+  expect(await client(owner).computers.start({ spaceId: space.id })).toMatchObject({
+    status: "available",
+    computer: { state: "running", spaceId: space.id },
+  });
+  expect(await client(owner).computers.stop({ spaceId: space.id })).toMatchObject({
+    status: "available",
+    computer: { state: "stopped" },
+  });
+  expect(
+    await connection.db
+      .select()
+      .from(computers)
+      .where(inArray(computers.spaceId, [space.id])),
+  ).toHaveLength(1);
+});

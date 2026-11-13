@@ -114,3 +114,63 @@ not sandbox isolation. The product says so where the grant is given.
   process environment or standard input. It is not written to the home.
 - Output that returns to the model is bounded. A known secret value in output is
   redacted before it reaches the conversation.
+
+## Initial Computer slice
+
+`@raypx/core/computers` owns the records; `@raypx/computers/server` owns the
+Space-scoped lifecycle service and `/server/postgres` its persistence. Provider
+records use the neutral `sandbox` key; deployment chooses the concrete adapter.
+The private scope is constrained by a same-Space Agent foreign key but has no
+writer yet. A team computer has no Agent owner. Foreign keys restrict deletion
+of a computer's owners until a later resumable deletion workflow releases it;
+there is no cascade that can silently orphan a running computer.
+
+`computers.get/start/stop` resolve current membership, and mutations require a
+trusted Origin. Reads allocate nothing; the first explicit start creates the one
+team record. With `COMPUTER_PROVIDER=none`, all three return `not-configured` and
+allocate nothing. The in-memory provider can be injected into server compositions
+without a sandbox; it runs a documented virtual command set and never executes on
+the backend host. No Run or model receives this port in this slice.
+
+A lifecycle claim has a five-minute expiry and an increasing fence. Completion
+compares Space, computer, generation, owner, fence and expiry. Start after a stop
+or failed operation advances the provider generation; repeated start while running
+is idempotent. Stop cannot take over an unfinished start. These are lifecycle
+leases, not the later per-Agent execution leases. The database commits each
+transition with a `computer.state` event in every existing Conversation in the
+Space, using the existing locked counters and content-free PostgreSQL notices.
+Quotas count retained computer records created by a member across their Spaces;
+there is still only one team computer per Space. Private allocation, Run leases
+and automatic idle shutdown will arrive with their consumers.
+
+The supervisor runs as one instance per private state volume. It persists
+fences before replacement I/O and retains generation tombstones after destroy.
+Destroy removes compute and its working volume, retaining the committed home;
+only a greater generation can provision it again. Revision files are bounded
+version-1 JSON archives, addressed by SHA-256 over the normalized archive.
+Snapshots cancel and drain known command process groups before exporting the
+whole home. Stop commits a snapshot. Restores use a fresh home volume and candidate
+container, verify the exported revision, then switch; failure retains the previous
+revision and never substitutes an empty home. Snapshots are local to the
+supervisor state volume; off-host backup and retention cleanup are not implemented.
+
+Paths for file calls and cwd are relative to `/home/computer/workspace`.
+File helpers walk directory descriptors with `O_NOFOLLOW`; traversal, absolute
+paths and link components are refused. List responses contain at most 1,000
+entries and a truncation flag. Reads and writes cap each file at 32 MiB.
+Home archives include regular files, directories, permissions and link entries
+without following links; special or unreadable files fail the snapshot. An archive
+has at most 10,000 entries, 32 MiB of file bytes and 64 MiB of encoded JSON.
+Execution streams base64 stdout/stderr with one combined budget of at most 1 MiB
+and one exit event. Command environments belong only to that command. Cancellation
+kills its process group; detached processes that deliberately escape that group
+are not individually contained, and container stop/destroy is the final boundary.
+There is no home disk quota in this slice. Provider descriptions report these
+limits and never claim network restriction without the host-rules assertion.
+
+The supervisor uses Engine HTTP API v1.47 directly through Bun's Unix-socket
+fetch; no vendor SDK or backend socket configuration is needed. Provision only
+uses a prepared digest-pinned image, without pulling or building it. The computer
+bridge name is `rpx` plus the first ten hexadecimal SHA-256 characters of
+`SANDBOX_NAMESPACE`. The deployment guide describes the private listener,
+dedicated token, host-rules assertion and opt-in acceptance commands.

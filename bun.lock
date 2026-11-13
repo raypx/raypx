@@ -35,6 +35,7 @@
         "@raypx/ai": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/client": "workspace:*",
+        "@raypx/computers": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/control": "workspace:*",
         "@raypx/core": "workspace:*",
@@ -46,6 +47,7 @@
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
+        "@raypx/providers": "workspace:*",
         "@raypx/spaces": "workspace:*",
         "@raypx/storage": "workspace:*",
         "better-auth": "catalog:",
@@ -327,6 +329,19 @@
         "vitest": "catalog:dev",
       },
     },
+    "infra/sandbox": {
+      "name": "sandbox",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/providers": "workspace:*",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "vitest": "catalog:dev",
+      },
+    },
     "packages/account": {
       "name": "@raypx/account",
       "version": "0.0.0",
@@ -487,6 +502,21 @@
         "@raypx/testing": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
+        "vitest": "catalog:dev",
+      },
+    },
+    "packages/computers": {
+      "name": "@raypx/computers",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "@raypx/providers": "workspace:*",
+        "@raypx/spaces": "workspace:*",
+        "drizzle-orm": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
         "vitest": "catalog:dev",
       },
     },
@@ -1944,6 +1974,8 @@
     "@raypx/blocks": ["@raypx/blocks@workspace:packages/blocks"],
 
     "@raypx/client": ["@raypx/client@workspace:packages/client"],
+
+    "@raypx/computers": ["@raypx/computers@workspace:packages/computers"],
 
     "@raypx/contracts": ["@raypx/contracts@workspace:packages/contracts"],
 
@@ -3446,6 +3478,8 @@
     "run-applescript": ["run-applescript@7.1.0", "", {}, "sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q=="],
 
     "safe-buffer": ["safe-buffer@5.2.1", "", {}, "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ=="],
+
+    "sandbox": ["sandbox@workspace:infra/sandbox"],
 
     "sandbox-cli-detector": ["sandbox-cli-detector@0.2.0", "", { "bin": { "sandbox-cli-detector": "dist/cli.js" } }, "sha512-4lyHX0ZU0AZKwjgZ1InxZAa3PNpyEb8rOQ+Zss1ReYmhNzW0Q+h1zE5nvniXN0HaAWZaZE1zgVNEirb0R7LmNg=="],
 

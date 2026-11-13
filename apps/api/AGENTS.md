@@ -10,6 +10,12 @@ API injects the owned database and authorization/transport ports.
 
 ## Interface
 
+`computers.get/start/stop` uses `@raypx/computers/server` with fresh membership,
+trusted mutation Origin and account quotas. Runtime injects no provider by default;
+`COMPUTER_PROVIDER=docker` lazily loads the private supervisor HTTP adapter and
+requires its independent URL/token. No Engine socket setting is accepted by API.
+The first explicit start creates the team computer; no model or Run consumes it.
+
 `spaces.*` resolves the account from the current session and delegates first-use
 private-Space bootstrap and discovery to `@raypx/spaces/server`. `agents.*`
 resolves that account's member row for the selected Space on every request before

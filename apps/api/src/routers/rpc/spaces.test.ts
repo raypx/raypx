@@ -38,7 +38,13 @@ function fixture() {
   const create = vi.fn<SpaceAccess["create"]>(async () => membership);
   const readSession = vi.fn(async () => auth);
   const models = vi.fn(async () => [{ modelId: "offered", name: "Offered model" }]);
+  const computers = {
+    get: vi.fn(async () => ({ status: "not-configured" as const })),
+    start: vi.fn(async () => ({ status: "not-configured" as const })),
+    stop: vi.fn(async () => ({ status: "not-configured" as const })),
+  };
   const app = createApiApp({
+    computers,
     spaces: { resolve, list, create },
     conversationModels: { list: models },
     readSession,
@@ -60,6 +66,7 @@ function fixture() {
     create,
     readSession,
     models,
+    computers,
     admit() {
       admitted = true;
     },
@@ -134,6 +141,35 @@ it("takes account identity only from the session and protects creation with trus
   f.signOut();
   await expect(f.client().spaces.list({})).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   await expect(f.client().agents.list({ spaceId: f.spaceId })).rejects.toMatchObject({
+    code: "UNAUTHORIZED",
+  });
+});
+
+it("refuses non-members on every Computer procedure and requires trusted mutation Origin", async () => {
+  const f = fixture();
+  for (const procedure of ["get", "start", "stop"] as const) {
+    await expect(f.client().computers[procedure]({ spaceId: f.spaceId })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    expect(f.computers[procedure]).not.toHaveBeenCalled();
+  }
+  f.admit();
+  expect(await f.client().computers.get({ spaceId: f.spaceId })).toEqual({
+    status: "not-configured",
+  });
+  for (const procedure of ["start", "stop"] as const) {
+    await expect(
+      f.client("https://untrusted.example.test").computers[procedure]({ spaceId: f.spaceId }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(await f.client().computers[procedure]({ spaceId: f.spaceId })).toEqual({
+      status: "not-configured",
+    });
+    expect(f.computers[procedure]).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: f.spaceId }),
+    );
+  }
+  f.signOut();
+  await expect(f.client().computers.get({ spaceId: f.spaceId })).rejects.toMatchObject({
     code: "UNAUTHORIZED",
   });
 });

@@ -78,6 +78,68 @@ export const agents = pgTable(
   },
   (table) => [primaryKey({ columns: [table.spaceId, table.id] })],
 );
+export const computers = pgTable(
+  "computers",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id),
+    id: text("id").notNull(),
+    scope: text("scope", { enum: ["team", "private"] }).notNull(),
+    agentId: text("agent_id"),
+    createdByAccountId: text("created_by_account_id").notNull(),
+    provider: text("provider", { enum: ["memory", "sandbox"] }).notNull(),
+    state: text("state", {
+      enum: ["stopped", "starting", "running", "stopping", "failed", "destroyed"],
+    })
+      .notNull()
+      .default("stopped"),
+    generation: bigint("generation", { mode: "number" }).notNull().default(1),
+    homeRevision: text("home_revision"),
+    leaseOwner: text("lease_owner"),
+    leaseExpiresAt: date("lease_expires_at"),
+    leaseFence: bigint("lease_fence", { mode: "number" }).notNull().default(0),
+    failureCode: text("failure_code", { enum: ["PROVIDER_UNAVAILABLE", "RESTORE_FAILED"] }),
+    ...timestamps(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.id] }),
+    uniqueIndex("computers_team_idx")
+      .on(t.spaceId)
+      .where(sql`${t.scope} = 'team'`),
+    uniqueIndex("computers_private_agent_idx")
+      .on(t.spaceId, t.agentId)
+      .where(sql`${t.scope} = 'private'`),
+    index("computers_creator_idx").on(t.createdByAccountId),
+    foreignKey({ columns: [t.spaceId, t.agentId], foreignColumns: [agents.spaceId, agents.id] }),
+    foreignKey({
+      columns: [t.spaceId, t.createdByAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }),
+    check(
+      "computers_scope_check",
+      sql`(${t.scope} = 'team' and ${t.agentId} is null) or (${t.scope} = 'private' and ${t.agentId} is not null)`,
+    ),
+    check("computers_provider_check", sql`${t.provider} in ('memory', 'sandbox')`),
+    check(
+      "computers_state_check",
+      sql`${t.state} in ('stopped', 'starting', 'running', 'stopping', 'failed', 'destroyed')`,
+    ),
+    check(
+      "computers_generation_check",
+      sql`${t.generation} > 0 and ${t.generation} <= 9007199254740991 and ${t.leaseFence} >= 0 and ${t.leaseFence} <= 9007199254740991`,
+    ),
+    check(
+      "computers_revision_check",
+      sql`${t.homeRevision} is null or ${t.homeRevision} ~ '^[a-f0-9]{64}$'`,
+    ),
+    check("computers_lease_check", sql`(${t.leaseOwner} is null) = (${t.leaseExpiresAt} is null)`),
+    check(
+      "computers_failure_check",
+      sql`(${t.state} = 'failed' and ${t.failureCode} is not null and ${t.failureCode} in ('PROVIDER_UNAVAILABLE', 'RESTORE_FAILED')) or (${t.state} <> 'failed' and ${t.failureCode} is null)`,
+    ),
+  ],
+);
 export const conversations = pgTable(
   "conversations",
   {
@@ -261,11 +323,14 @@ export const conversationEvents = pgTable(
     spaceId: text("space_id").notNull(),
     conversationId: text("conversation_id").notNull(),
     sequence: bigint("sequence", { mode: "number" }).notNull(),
-    kind: text("kind", { enum: ["message.created", "run.state", "reply.segment"] }).notNull(),
+    kind: text("kind", {
+      enum: ["message.created", "run.state", "reply.segment", "computer.state"],
+    }).notNull(),
     messageId: text("message_id"),
     data: jsonb("data"),
     runId: text("run_id"),
     segmentId: text("segment_id"),
+    computerId: text("computer_id"),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
@@ -299,17 +364,22 @@ export const conversationEvents = pgTable(
         conversationReplySegments.id,
       ],
     }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.computerId],
+      foreignColumns: [computers.spaceId, computers.id],
+    }),
     check(
       "conversation_events_payload_check",
       sql`(
-      (${table.kind} = 'message.created' and ${table.messageId} is not null and ${table.runId} is null and ${table.segmentId} is null and ${table.data} is null) or
-      (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null) or
-      (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null)
+      (${table.kind} = 'message.created' and ${table.messageId} is not null and ${table.runId} is null and ${table.segmentId} is null and ${table.data} is null and ${table.computerId} is null) or
+      (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null and ${table.computerId} is null) or
+      (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null and ${table.computerId} is null) or
+      (${table.kind} = 'computer.state' and ${table.messageId} is null and ${table.runId} is null and ${table.segmentId} is null and ${table.computerId} is not null and ${table.data} is not null)
     )`,
     ),
     check(
       "conversation_events_kind_check",
-      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment')`,
+      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment', 'computer.state')`,
     ),
   ],
 );
@@ -723,6 +793,7 @@ export const {
 } = oauthTables(user, session);
 
 export const schema = {
+  computers,
   conversationRuns,
   conversationReplySegments,
   conversationCounters,

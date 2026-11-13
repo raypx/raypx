@@ -1,3 +1,4 @@
+import { spaceComputerSchema } from "@raypx/core/computers";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import {
@@ -45,4 +46,10 @@ export const agentsContract = {
     .input(agentSelection.extend({ agent: agentInputSchema }))
     .output(agentConversation),
   delete: session.input(agentSelection).output(z.strictObject({ deleted: z.literal(true) })),
+};
+
+export const computersContract = {
+  get: session.input(spaceSelection).output(spaceComputerSchema),
+  start: session.input(spaceSelection).output(spaceComputerSchema),
+  stop: session.input(spaceSelection).output(spaceComputerSchema),
 };

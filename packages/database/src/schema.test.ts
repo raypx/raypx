@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { schema, user } from "./schema.js";
+import { computers, conversationEvents, schema, user } from "./schema.js";
 
 it("uses the public schema with Better Auth Admin fields", () => {
   expect(Object.keys(schema)).toEqual(
@@ -20,4 +20,28 @@ it("uses the public schema with Better Auth Admin fields", () => {
   expect(config.columns.map((c) => c.name)).toEqual(
     expect.arrayContaining(["role", "banned", "ban_reason", "ban_expires"]),
   );
+});
+
+it("keeps Computer references fenced by the same Space in the database metadata", () => {
+  for (const table of [computers, conversationEvents]) {
+    const foreignKeys = getTableConfig(table).foreignKeys.map((key) => key.reference());
+    for (const reference of foreignKeys.filter((key) =>
+      key.columns.some((column) =>
+        ["agent_id", "created_by_account_id", "computer_id"].includes(column.name),
+      ),
+    )) {
+      expect(reference.columns[0]?.name).toBe("space_id");
+      expect(reference.foreignColumns[0]?.name).toBe("space_id");
+      expect(reference.columns).toHaveLength(2);
+    }
+  }
+  const indexes = getTableConfig(computers).indexes;
+  expect(
+    indexes.some(
+      (index) =>
+        index.config.name === "computers_team_idx" &&
+        index.config.unique &&
+        index.config.where !== undefined,
+    ),
+  ).toBe(true);
 });

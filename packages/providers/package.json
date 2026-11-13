@@ -8,7 +8,10 @@
     "./claude": "./src/claude/index.ts",
     "./codex": "./src/codex/index.ts",
     "./pi": "./src/pi/index.ts",
-    "./pi/context": "./src/pi/context.ts"
+    "./pi/context": "./src/pi/context.ts",
+    "./computer": "./src/computer/index.ts",
+    "./computer/docker": "./src/computer/docker.ts",
+    "./testing/computer": "./tests/helpers/computer.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
