@@ -1,0 +1,150 @@
+apps/api/tests/postgres/node/conversation.test.ts
+  s_04570bda3fdb03::t_6e3077b0b64b7a 27,182-193,200-201,208-213,216-217
+  s_04570bda3fdb03::t_0571bcfa7adf29 6-9,194-199,202-207,214-215
+  s_04570bda3fdb03::t_9338cd1852d0d2 218
+apps/api/tests/integration/conversation-stream.test.ts
+  s_04570bda3fdb03::t_0571bcfa7adf29 10-129
+  s_04570bda3fdb03::t_0014cf9aa224d5 1-9
+apps/cli/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 180-182
+docs/roadmap.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 4-8
+packages/client/src/relay.ts
+  s_04570bda3fdb03::t_4f83509adfd5e7 1
+packages/database/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 21-25
+apps/cli/src/runtime/daemon/acknowledged-stream.ts
+  s_04570bda3fdb03::t_4f83509adfd5e7 1,3,5-7
+packages/core/src/conversation.ts
+  s_04570bda3fdb03::t_4f83509adfd5e7 1-8,14-26,39-46
+  s_04570bda3fdb03::t_0571bcfa7adf29 9-13,27-38,49-52
+  s_04570bda3fdb03::t_f8b152683cbe3b 47-48,53
+packages/contracts/src/api.test.ts
+  s_04570bda3fdb03::t_73d5df2cd0f02d 17
+apps/api/src/conversations/socket.ts
+  s_04570bda3fdb03::t_fddd15430d124b 1-29,35-39,44-45,49-53
+  s_04570bda3fdb03::t_0571bcfa7adf29 30-34,40-43,46-48
+apps/api/src/runtime/shared.ts
+  s_04570bda3fdb03::t_7d465fa3e4a78e 3-6
+  s_04570bda3fdb03::t_fddd15430d124b 47
+  s_04570bda3fdb03::t_73d5df2cd0f02d 146-147,149-150,170-171
+packages/contracts/src/conversation.ts
+  s_04570bda3fdb03::t_73d5df2cd0f02d 1-3,9-16,23-24,30-31,43-58
+  s_04570bda3fdb03::t_0571bcfa7adf29 4-8,17-22,25-29,32-42
+packages/database/src/connection.ts
+  s_04570bda3fdb03::t_2493b2bf38b1a3 35-42,46-49
+  s_04570bda3fdb03::t_0571bcfa7adf29 43-45
+packages/client/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 14-16
+packages/core/package.json
+  s_04570bda3fdb03::t_4f83509adfd5e7 17-18
+apps/api/src/routers/rpc/spaces.ts
+  s_04570bda3fdb03::t_0571bcfa7adf29 40-62
+  s_04570bda3fdb03::t_73d5df2cd0f02d 1,19,39,63
+packages/agents/tests/postgres/conversation-events.test.ts
+  s_04570bda3fdb03::t_6e3077b0b64b7a 14
+  s_04570bda3fdb03::t_0571bcfa7adf29 4-10,15-121,123,136,147-181
+  s_04570bda3fdb03::t_7d465fa3e4a78e 124-132,137-143
+  s_04570bda3fdb03::t_67d3c03b104f01 1-3,11-13,122,133-135,144-146,182
+packages/agents/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 12-20
+  s_04570bda3fdb03::t_449b542fa85672 21
+packages/agents/src/conversations.ts
+  s_04570bda3fdb03::t_f8b152683cbe3b 1-4,9-11,17-18,25-29,34-37
+  s_04570bda3fdb03::t_0571bcfa7adf29 5-8,12-16,19-24,30-33
+packages/core/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 14-15
+apps/api/package.json
+  s_04570bda3fdb03::t_0571bcfa7adf29 33
+apps/api/tests/helpers/conversations.ts
+  s_04570bda3fdb03::t_4b9b0b7a83a3ca 1-5,12-20,25,30-36,40,55-56,66-69,87-100,110,132
+  s_04570bda3fdb03::t_0571bcfa7adf29 6-11,21-24,26-29,37-39,41-54,57-65,70-86,101-109,111-131
+docs/architecture/README.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 9-14
+packages/core/src/conversation.test.ts
+  s_04570bda3fdb03::t_7445fa93c806d9 1,7-8,17-19,23-26,30,41-46,49
+  s_04570bda3fdb03::t_0571bcfa7adf29 2-6,9-16,20-22,27-29,31-40,47-48
+apps/api/src/app/options.ts
+  s_04570bda3fdb03::t_73d5df2cd0f02d 18,23
+packages/database/src/schema.ts
+  s_04570bda3fdb03::t_0571bcfa7adf29 104-194
+  s_04570bda3fdb03::t_4f83509adfd5e7 103,195,605-607
+apps/api/src/conversations/stream.ts
+  s_04570bda3fdb03::t_0571bcfa7adf29 30-31,38-46,58-70,88-89,94-95,104-111,120-124,145-147,149-151,157-163,171-176,179-184,192-199,207
+  s_04570bda3fdb03::t_fddd15430d124b 1-29,32-37,47-57,71-87,90-93,96-103,112-119,125-144,148,152-156,164-170,177-178,185-191,200-206,208-211
+apps/api/src/conversations/stream.test.ts
+  s_04570bda3fdb03::t_0571bcfa7adf29 7-9,18-20,22-29,34-35,49-51,54-56,61-63,67-68,71-75,79-83,93,96,108-109
+  s_04570bda3fdb03::t_4b9b0b7a83a3ca 1-6,10-17,21,30-33,36-48,52-53,57-60,64-66,69-70,76-78,84-90,94-95,97-102,114
+  s_04570bda3fdb03::t_bc4a8035972589 91-92,103-107,110-113
+packages/contracts/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 13-17
+packages/agents/src/server/conversations.ts
+  s_04570bda3fdb03::t_7d465fa3e4a78e 108-115
+  s_04570bda3fdb03::t_0571bcfa7adf29 3-8,10-16,25-28,32-40,52-56,61-65,67-75,83-93,96-107,122-163,166-182,187-188,190-202
+  s_04570bda3fdb03::t_f8b152683cbe3b 1-2,9,17-24,29-31,41-51,57-60,66,76-82,94-95,116-121,164-165,183-186,189,203-206
+docs/architecture/events.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 75-125
+apps/api/src/routers/rpc/spaces.test.ts
+  s_04570bda3fdb03::t_7d465fa3e4a78e 70-74
+  s_04570bda3fdb03::t_7445fa93c806d9 4,67,75-76,84-85
+  s_04570bda3fdb03::t_0571bcfa7adf29 69
+docs/architecture/spaces.md
+  s_04570bda3fdb03::t_a3d6928e56cf56 26-28
+packages/agents/src/server/fanout.ts
+  s_04570bda3fdb03::t_f8b152683cbe3b 2-6,8-13,23,25,27-28
+  s_04570bda3fdb03::t_2493b2bf38b1a3 1,7,24,26
+  s_04570bda3fdb03::t_0571bcfa7adf29 14-22
+packages/contracts/src/api.ts
+  s_04570bda3fdb03::t_73d5df2cd0f02d 29-30,62
+packages/client/src/acknowledged-stream.test.ts
+  s_04570bda3fdb03::t_7445fa93c806d9 1-15,19-23,30-41
+  s_04570bda3fdb03::t_0571bcfa7adf29 16-18,24-29
+packages/client/src/acknowledged-stream.ts
+  s_04570bda3fdb03::t_4f83509adfd5e7 1-20,23-68
+  s_04570bda3fdb03::t_0571bcfa7adf29 21-22
+apps/api/src/conversations/socket.test.ts
+  s_04570bda3fdb03::t_6e3077b0b64b7a 1-10,19-21,37-41
+  s_04570bda3fdb03::t_0571bcfa7adf29 11-18,22-36
+apps/api/src/runtime/server.ts
+  s_04570bda3fdb03::t_fddd15430d124b 1-3,75,90-91
+  s_04570bda3fdb03::t_0571bcfa7adf29 66-73,99-111,119-122
+packages/agents/src/server/fanout.test.ts
+  s_04570bda3fdb03::t_6e3077b0b64b7a 1-8,13-15,18-21,27-28
+  s_04570bda3fdb03::t_0571bcfa7adf29 9-12,16-17,22-26
+apps/api/AGENTS.md
+  s_04570bda3fdb03::t_0571bcfa7adf29 19-26
+apps/api/tests/integration/runtime-providers.test.ts
+  s_04570bda3fdb03::t_7d465fa3e4a78e 32-35
+packages/agents/src/server.ts
+  s_04570bda3fdb03::t_f8b152683cbe3b 15
+  s_04570bda3fdb03::t_0571bcfa7adf29 16-23
+packages/contracts/src/conversation.test.ts
+  s_04570bda3fdb03::t_0571bcfa7adf29 5-6,8-12,14-18,22-28,30-35
+  s_04570bda3fdb03::t_7445fa93c806d9 1-4,7,13,19-21,29,36-37
+apps/api/tests/helpers/app.ts
+  s_04570bda3fdb03::t_73d5df2cd0f02d 9
+packages/agents/src/server/postgres.ts
+  s_04570bda3fdb03::t_f8b152683cbe3b 103-105
+bun.lock
+  s_04570bda3fdb03::t_ba72951b2cd995 36
+packages/database/drizzle-foundation/20261113124751_conversation-events/migration.sql
+  s_04570bda3fdb03::t_b22bc3961ccbcb 1-41
+packages/database/drizzle-foundation/20261113124751_conversation-events/snapshot.json
+  s_04570bda3fdb03::t_43d9c4b1651348 1-894
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "dfd0a2b2e0d0586329db2b230576f8f059559a9f",
+  "prompts": {},
+  "sessions": {
+    "s_04570bda3fdb03": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d4ed-da4b-74b3-b913-44c2b776e2d8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
