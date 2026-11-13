@@ -1,0 +1,137 @@
+apps/api/src/env.contract.ts
+  s_652cc4f0b5d7e1::t_d46518bb2fea69 11
+apps/api/src/middleware/rpc.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 4
+apps/api/tests/helpers/control-server.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 9
+apps/api/tests/postgres/node/instances.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 17
+packages/database/src/connection.ts
+  s_652cc4f0b5d7e1::t_6b98c7c595cff6 8-14,19-27
+apps/api/tests/postgres/node/control.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 12
+apps/api/src/routers/rpc/memory.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 95
+  s_652cc4f0b5d7e1::t_3cbe2597a86f16 94
+apps/api/tests/integration/access.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 5
+apps/api/tests/integration/memory.test.ts
+  s_652cc4f0b5d7e1::t_aeb7d8ca1e46ee 6,60-61
+  s_652cc4f0b5d7e1::t_a596b14af06761 5
+apps/api/src/config/resend.ts
+  s_652cc4f0b5d7e1::t_7172178e979e76 6-7,66-98,102-104
+.env.example
+  s_652cc4f0b5d7e1::t_9a61db3f582763 9
+apps/api/src/logging/events.ts
+  s_652cc4f0b5d7e1::t_53188dbe33beb0 36-37,56
+apps/api/src/runtime/control.ts
+  s_652cc4f0b5d7e1::t_53188dbe33beb0 1-28
+apps/api/tests/integration/logging.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 6
+docs/development/object-storage.md
+  s_652cc4f0b5d7e1::t_9a61db3f582763 26,47-48
+apps/api/tests/postgres/node/session-attachments.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 16
+apps/api/tests/integration/jobs.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 11
+apps/api/src/routers/rpc/instances.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 4
+apps/api/tests/integration/openapi.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 5
+apps/api/src/routers/rpc/attachments.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 25
+apps/api/tests/postgres/node/auth.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 8
+deploy/.env.example
+  s_652cc4f0b5d7e1::t_9a61db3f582763 14-15
+apps/api/src/env.test.ts
+  s_652cc4f0b5d7e1::t_b4ce6f5af9659b 29-47
+apps/api/src/middleware/auth-preflight.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 40
+apps/api/src/config/migrate.ts
+  s_652cc4f0b5d7e1::t_d46518bb2fea69 36,84
+apps/api/src/hosts.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 12
+apps/api/tests/postgres/node/admin.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 9
+apps/api/tests/helpers/app.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 1-55
+apps/api/tests/postgres/node/resend.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 8
+apps/api/src/env.ts
+  s_652cc4f0b5d7e1::t_d46518bb2fea69 28-29,60,64,68-72
+apps/api/src/runtime/shared.ts
+  s_652cc4f0b5d7e1::t_53188dbe33beb0 35,37-39,101-104
+  s_652cc4f0b5d7e1::t_d46518bb2fea69 77-78,111,164-165
+apps/api/src/runtime/database.ts
+  s_652cc4f0b5d7e1::t_6b98c7c595cff6 1-14
+packages/database/AGENTS.md
+  s_652cc4f0b5d7e1::t_6b98c7c595cff6 24-26
+apps/api/src/runtime/relay.ts
+  s_652cc4f0b5d7e1::t_6b98c7c595cff6 4,13
+  s_652cc4f0b5d7e1::t_53188dbe33beb0 9,14,17
+deploy/compose.yaml
+  s_652cc4f0b5d7e1::t_9a61db3f582763 32,61
+packages/dev-cli/src/smoke/artifacts.ts
+  s_652cc4f0b5d7e1::t_9a61db3f582763 34
+apps/api/src/runtime/server.ts
+  s_652cc4f0b5d7e1::t_53188dbe33beb0 66-73
+  s_652cc4f0b5d7e1::t_6b98c7c595cff6 7,50
+apps/api/src/runtime/adapters.ts
+  s_28758cb14041db::t_9fe37a3e5172bb 4-5,8-21,25
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_652cc4f0b5d7e1::t_9a61db3f582763 311
+apps/api/src/app/options.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 17,19,21,23-25,27-31
+apps/api/tests/integration/config.test.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 5
+apps/api/AGENTS.md
+  s_652cc4f0b5d7e1::t_aeb7d8ca1e46ee 52-56,287-289
+  s_652cc4f0b5d7e1::t_9a61db3f582763 150-152
+  s_28758cb14041db::t_316a0c383fa833 119-120,190-191,237,243-244,249
+docs/development/railway.md
+  s_652cc4f0b5d7e1::t_9a61db3f582763 223
+  s_652cc4f0b5d7e1::t_68c4905fbe3f8f 37-43
+apps/api/tests/helpers/relay.ts
+  s_652cc4f0b5d7e1::t_a596b14af06761 8
+apps/api/src/rate-limit.ts
+  s_28758cb14041db::t_9fe37a3e5172bb 32-59
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_652cc4f0b5d7e1::t_9a61db3f582763 124
+apps/api/src/config/audited-write.ts
+  s_652cc4f0b5d7e1::t_7172178e979e76 1-44
+docs/development/configuration.md
+  s_652cc4f0b5d7e1::t_9a61db3f582763 86,94
+apps/api/src/storage/config.ts
+  s_652cc4f0b5d7e1::t_7172178e979e76 15-16,155-196,200-202
+apps/api/src/rate-limit.test.ts
+  s_28758cb14041db::t_9fe37a3e5172bb 1-18
+apps/api/tests/integration/api.test.ts
+  s_652cc4f0b5d7e1::t_b4108c2b83c8ed 6,85
+docs/development/deployment.md
+  s_652cc4f0b5d7e1::t_07e838cd277725 23-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "993ae4a1341edb4da78f89fe77dc4d29248a8dae",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
