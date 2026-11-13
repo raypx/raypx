@@ -51,6 +51,7 @@ export class AgentRuntime {
   private readonly execution: ExecutionCoordinator;
   private readonly projectsService: LocalExecutionProjects;
   private readonly commands: AgentCommandService;
+  readonly restored: Promise<void>;
   private readonly starting = new Map<string, ReturnType<ExecutionCoordinator["start"]>>();
   private readonly snapshots = new Map<
     string,
@@ -136,11 +137,29 @@ export class AgentRuntime {
       this.clock,
     );
 
-    // Startup sweep: effects addressed a process that no longer exists, so they are
-    // abandoned rather than replayed, and every task still active is interrupted.
     this.store.recoverEffects();
-    for (const local of this.store.tasks({ activeOnly: true }))
-      this.execution.status(local, "interrupted", undefined, "HOST_RESTARTED");
+    const recoveries: Promise<void>[] = [];
+    const pi = options.pi;
+    for (const local of this.store.tasks({ activeOnly: true })) {
+      const recoverable = local.task.status === "waiting" || local.task.status === "running";
+      // Automation history owns its own interruption and overlap semantics.
+      const approvalId =
+        recoverable && !this.state.run(local.task.id) ? pi?.approvalId?.(local) : undefined;
+      const approval = approvalId ? this.store.getRequest(local.binding, approvalId) : undefined;
+      if (
+        pi?.restore &&
+        approval?.taskId === local.task.id &&
+        approval.kind === "permission" &&
+        (approval.status === "pending" || approval.status === "applied") &&
+        Date.parse(approval.expiresAt) > this.clock.now().getTime()
+      ) {
+        const restore = pi.restore.bind(pi);
+        recoveries.push(this.execution.restore(local, () => restore(local, approval)));
+      } else {
+        this.execution.status(local, "interrupted", undefined, "HOST_RESTARTED");
+      }
+    }
+    this.restored = Promise.all(recoveries).then(() => {});
   }
   validateProject(target: TaskContextTarget) {
     this.projectsService.validate(target);
@@ -388,7 +407,8 @@ export class AgentRuntime {
   detach(binding: string) {
     return this.execution.detach(binding);
   }
-  close() {
-    return this.execution.close();
+  async close() {
+    await this.execution.close();
+    await this.restored;
   }
 }

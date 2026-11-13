@@ -35,6 +35,12 @@ export interface PiContext {
   };
   status: PiStatus;
   messages: Message[];
+  pendingApproval?: {
+    requestId: string;
+    id: string;
+    name: string;
+    arguments: Record<string, unknown>;
+  };
   /** A committed intent with no committed outcome must never be replayed. */
   pendingEffect?: { id: string; name: string };
 }
@@ -55,11 +61,12 @@ export interface PiRunnerOptions {
   ) => import("@raypx/ai").AiStream | Promise<import("@raypx/ai").AiStream>;
   tools: AgentTool[];
   authorize(
-    call: { id: string; name: string; arguments: unknown },
+    call: { id: string; name: string; arguments: unknown; requestId?: string },
     signal: AbortSignal,
   ): Promise<"allow" | "deny">;
   store: PiContextStore;
   maxRequests?: number;
+  restoreApproval?: boolean;
   effectful?(name: string): boolean;
   onActivity?(event: ConversationEvent): void;
 }
@@ -108,11 +115,32 @@ function failedMessage(model: Model<Api>, aborted: boolean): AssistantMessage {
   };
 }
 
+/** Resume only the final outstanding call from the latest assistant message. */
+function recoverablePiApproval(context: PiContext, callId: string) {
+  const messages = context.messages;
+  let assistant = messages.length - 1;
+  while (assistant >= 0 && messages[assistant]?.role === "toolResult") assistant--;
+  const message = messages[assistant];
+  if (message?.role !== "assistant" || message.stopReason !== "toolUse") return false;
+  const completed = new Set(
+    messages
+      .slice(assistant + 1)
+      .flatMap((item) => (item.role === "toolResult" ? [item.toolCallId] : [])),
+  );
+  const outstanding = message.content.filter(
+    (part) => part.type === "toolCall" && !completed.has(part.id),
+  );
+  return (
+    outstanding.length === 1 && outstanding[0]?.type === "toolCall" && outstanding[0].id === callId
+  );
+}
+
 /** Bounded SDK loop. The injected host owns tools, durable context and authorization. */
 export class PiRunner {
   private pending: Promise<PiResult> | undefined;
   private controller: AbortController | undefined;
   private agent: Agent | undefined;
+  private suspended = false;
   constructor(private readonly options: PiRunnerOptions) {}
 
   run(prompt: string, options: PiRunOptions = {}): Promise<PiResult> {
@@ -156,7 +184,8 @@ export class PiRunner {
   }
 
   /** Cancellation settles only after model/tools/listeners and the terminal commit finish. */
-  async cancel(): Promise<void> {
+  async cancel(suspend = false): Promise<void> {
+    this.suspended = suspend;
     this.controller?.abort();
     this.agent?.abort();
     await this.pending;
@@ -197,6 +226,7 @@ export class PiRunner {
           status: next.status,
           ...(checkpoint.identity ? { identity: checkpoint.identity } : {}),
           messages: next.messages,
+          ...(next.pendingApproval ? { pendingApproval: next.pendingApproval } : {}),
           ...(next.pendingEffect ? { pendingEffect: next.pendingEffect } : {}),
         };
         const revision = await this.options.store.commit(
@@ -216,14 +246,82 @@ export class PiRunner {
       } catch {
         throw stop("PI_PERSISTENCE_FAILED");
       }
+      const approval = this.options.restoreApproval ? checkpoint.pendingApproval : undefined;
       if (
-        checkpoint.status === "running" ||
+        (checkpoint.status === "running" && !approval) ||
         checkpoint.status === "uncertain" ||
         checkpoint.pendingEffect
       )
         return { status: "failed", text: "", code: "PI_RECOVERY_REQUIRED" };
       if (signal.aborted) return abortedResult();
-      await write({ status: "running", messages: checkpoint.messages });
+      if (approval) {
+        const tool = this.options.tools.find(({ name }) => name === approval.name);
+        if (!tool || !recoverablePiApproval(checkpoint, approval.id))
+          return { status: "failed", text: "", code: "PI_RECOVERY_REQUIRED" };
+        let decision: "allow" | "deny" = "deny";
+        pause();
+        try {
+          decision = await this.options.authorize(approval, signal);
+        } catch {
+          // A lost approval is never authorization.
+        } finally {
+          resume();
+        }
+        if (signal.aborted && this.suspended) return abortedResult();
+        if (decision !== "allow" || signal.aborted) {
+          await write({
+            status: signal.aborted ? "cancelled" : "failed",
+            messages: checkpoint.messages,
+          });
+          return signal.aborted
+            ? abortedResult()
+            : { status: "failed", text: "", code: "PI_TOOL_DENIED" };
+        }
+        await write({
+          status: "running",
+          messages: checkpoint.messages,
+          pendingEffect: { id: approval.id, name: approval.name },
+        });
+        this.options.onActivity?.({
+          type: "tool",
+          id: approval.id,
+          name: approval.name,
+          status: "running",
+        });
+        try {
+          signal.throwIfAborted();
+          const result = await tool.execute(
+            approval.id,
+            structuredClone(approval.arguments),
+            signal,
+          );
+          if (result.isError) throw new Error("Tool failed");
+          await write({
+            status: "running",
+            messages: [
+              ...checkpoint.messages,
+              {
+                role: "toolResult",
+                toolCallId: approval.id,
+                toolName: approval.name,
+                content: result.content,
+                details: result.details,
+                isError: false,
+                timestamp: Date.now(),
+              },
+            ],
+          });
+          this.options.onActivity?.({ type: "tool-result", id: approval.id, failed: false });
+        } catch {
+          if (!failure) {
+            await write({ ...checkpoint, status: "uncertain" });
+            this.options.onActivity?.({ type: "tool-result", id: approval.id, failed: true });
+          }
+          return { status: "failed", text: "", code: failure ?? "PI_TOOL_FAILED" };
+        }
+      } else {
+        await write({ status: "running", messages: checkpoint.messages });
+      }
       const tools = this.options.tools.map((tool): AgentTool => ({
         ...tool,
         replay: "never",
@@ -238,6 +336,7 @@ export class PiRunner {
             throw stop(failure ?? "PI_TOOL_DENIED");
           try {
             // The durable authorized intent already exists before any caller effect starts.
+            this.options.onActivity?.({ type: "tool", id, name: tool.name, status: "running" });
             const result = await tool.execute(id, args, activeSignal);
             if (result.isError) throw new Error("Tool failed");
             return result;
@@ -349,11 +448,31 @@ export class PiRunner {
             failure = "PI_DUPLICATE_TOOL_CALL";
             return { block: true, terminate: true, reason: failure };
           }
+          const effectful = this.options.effectful?.(toolCall.name) !== false;
+          const pendingApproval =
+            effectful &&
+            args &&
+            typeof args === "object" &&
+            !Array.isArray(args) &&
+            recoverablePiApproval(checkpoint, toolCall.id)
+              ? {
+                  requestId: crypto.randomUUID(),
+                  id: toolCall.id,
+                  name: toolCall.name,
+                  arguments: structuredClone(args as Record<string, unknown>),
+                }
+              : undefined;
+          if (pendingApproval) await write({ ...checkpoint, pendingApproval });
           let decision: "allow" | "deny" = "deny";
           pause();
           try {
             decision = await this.options.authorize(
-              { id: toolCall.id, name: toolCall.name, arguments: structuredClone(args) },
+              {
+                id: toolCall.id,
+                name: toolCall.name,
+                arguments: structuredClone(args),
+                ...(pendingApproval ? { requestId: pendingApproval.requestId } : {}),
+              },
               activeSignal ?? signal,
             );
           } catch {
@@ -365,20 +484,18 @@ export class PiRunner {
             failure ??= "PI_TOOL_DENIED";
             return { block: true, terminate: true, reason: "PI_TOOL_DENIED" };
           }
-          if (this.options.effectful?.(toolCall.name) !== false)
-            await write({ ...checkpoint, pendingEffect: { id: toolCall.id, name: toolCall.name } });
+          if (effectful)
+            await write({
+              status: "running",
+              messages: checkpoint.messages,
+              pendingEffect: { id: toolCall.id, name: toolCall.name },
+            });
           return undefined;
         },
       });
       this.agent = agent;
       agent.subscribe(async (event) => {
-        if (event.type === "tool_execution_start")
-          this.options.onActivity?.({
-            type: "tool",
-            id: event.toolCallId,
-            name: event.toolName,
-            status: "running",
-          });
+        if (this.suspended) return;
         if (event.type === "tool_execution_end")
           this.options.onActivity?.({
             type: "tool-result",
@@ -430,7 +547,8 @@ export class PiRunner {
         await write({ ...checkpoint, status: result.status });
         return result;
       }
-      await agent.prompt(prompt.trim());
+      if (approval) await agent.continue();
+      else await agent.prompt(prompt.trim());
       await agent.waitForIdle();
       const last = [...checkpoint.messages]
         .reverse()
@@ -448,7 +566,7 @@ export class PiRunner {
           : failure
             ? "failed"
             : "succeeded";
-      if (failure !== "PI_PERSISTENCE_FAILED")
+      if (!this.suspended && failure !== "PI_PERSISTENCE_FAILED")
         await write({ ...checkpoint, status: checkpoint.pendingEffect ? "uncertain" : status });
       return {
         status: failure === "PI_PERSISTENCE_FAILED" ? "failed" : status,

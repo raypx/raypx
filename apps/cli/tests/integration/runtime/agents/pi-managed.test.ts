@@ -2,10 +2,12 @@ import { AgentStore } from "../../../../src/runtime/agents/store.js";
 import { SqlitePiContextStore } from "../../../../src/runtime/agents/harness/context/sqlite.js";
 import { AgentRuntime } from "../../../../src/runtime/agents/index.js";
 import { expect, it, afterEach, vi } from "vitest";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { runtimeFixtures } from "../../../helpers/runtime.js";
+import { startDaemon } from "../../../helpers/enrolled.js";
+import { createDaemonClient } from "../../../../src/transport/daemon-client.js";
 import { aiFixture } from "../../../helpers/ai.js";
 const { fixture } = runtimeFixtures();
 const servers: ReturnType<typeof aiFixture>[] = [];
@@ -368,4 +370,104 @@ it("rejects continuation of an allocated Pi context that never received its firs
     "SESSION_UNAVAILABLE",
   );
   expect(server.requests).toHaveLength(0);
+});
+
+it("restores the original Pi approval after owner restart and records the preexisting and resulting changes", async () => {
+  const f = await fixture();
+  function git(...args: string[]) {
+    const result = Bun.spawnSync(["git", ...args], {
+      cwd: f.authorized,
+      env: { ...process.env, GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" },
+    });
+    expect(result.exitCode).toBe(0);
+  }
+  git("init");
+  await writeFile(join(f.authorized, "existing.txt"), "before commit\n");
+  await writeFile(join(f.authorized, "result.txt"), "before run\n");
+  git("add", ".");
+  git(
+    "-c",
+    "user.name=Raypx Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-m",
+    "baseline",
+  );
+  await writeFile(join(f.authorized, "existing.txt"), "preexisting work\n");
+
+  vi.stubEnv("RAYPX_HOME", f.dir);
+  const original = await f.runtime.files.read(f.grant.id, "result.txt");
+  const server = aiFixture({
+    toolSequence: [
+      {
+        name: "files_write",
+        arguments: { path: "result.txt", text: "approved change\n", version: original.version },
+      },
+      null,
+    ],
+  });
+  servers.push(server);
+  await writeFile(
+    join(f.dir, "config.toml"),
+    `[ai]\nprovider = "local"\nmodel = "fixture-model"\napi = "openai-completions"\nbase_url = "${server.url}"\n`,
+  );
+  const owner = LOCAL_WORKSPACE_ID;
+  f.runtime.agents.configure(f.grant.id, ["pi"]);
+  const device = await f.runtime.agents.localDevice(owner);
+  const id = crypto.randomUUID();
+  await f.runtime.agents.localExecute(owner, id, {
+    method: "tasks.create",
+    input: {
+      id,
+      deviceId: device.id,
+      projectId: f.grant.id,
+      provider: "pi",
+      mode: "run",
+      prompt: "Synthetic approved change",
+    },
+  });
+  await expect.poll(() => f.runtime.agents.localApprovals(owner)).toHaveLength(1);
+  const [approval] = f.runtime.agents.localApprovals(owner);
+  expect(await readFile(join(f.authorized, "result.txt"), "utf8")).toBe("before run\n");
+  expect(server.requests).toHaveLength(1);
+
+  await f.runtime.close();
+  const daemon = await startDaemon({ dataDir: f.dir });
+  const restored = await createDaemonClient({ dataDir: f.dir }, false);
+  try {
+    expect(await restored.request("agents.local.approvals", { accountId: owner })).toEqual([
+      approval,
+    ]);
+    expect(server.requests).toHaveLength(1);
+    const decision = {
+      method: "approvals.decide" as const,
+      input: { id: approval!.id, decision: { type: "allow" as const } },
+    };
+    const send = () =>
+      restored.request("agents.local.execute", {
+        accountId: owner,
+        id: crypto.randomUUID(),
+        request: decision,
+      });
+    const get = () => restored.request("agents.local.get", { accountId: owner, id });
+    expect(await send()).toMatchObject({
+      ok: true,
+      value: { id: approval!.id, status: "applied" },
+    });
+    await expect.poll(async () => (await get()).task.status).toBe("succeeded");
+    expect(await send()).toMatchObject({ ok: true });
+    expect(server.requests).toHaveLength(2);
+    expect(await readFile(join(f.authorized, "result.txt"), "utf8")).toBe("approved change\n");
+    const detail = await get();
+    expect(detail.requests).toHaveLength(1);
+    expect(detail.activity.filter((entry) => entry.kind === "tool")).toHaveLength(1);
+    expect(detail.review?.before?.patch).toContain("+preexisting work");
+    expect(detail.review?.before?.patch).not.toContain("result.txt");
+    expect(detail.review?.after?.patch).toContain("+approved change");
+    expect(detail.review?.before?.revision).toBe(detail.review?.after?.revision);
+  } finally {
+    await restored.close();
+    await daemon.close();
+  }
 });

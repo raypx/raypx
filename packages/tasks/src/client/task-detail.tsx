@@ -4,6 +4,7 @@ import { ModelPicker } from "./model-picker.js";
 import type { ModelSelection } from "@raypx/core/tasks";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { agentProviderMetadata } from "@raypx/core/tasks";
+import { TaskReview } from "./task-review.js";
 import { Approval } from "./approval.js";
 
 import { ContextSnapshot } from "@raypx/memory/client";
@@ -256,6 +257,7 @@ function TaskDetailView({
           )}
         </section>
       )}
+      {local && !isTaskActive(data.task) && data.review && <TaskReview review={data.review} />}
       <TaskConversationPanel
         task={data.task}
         entries={data.activity}

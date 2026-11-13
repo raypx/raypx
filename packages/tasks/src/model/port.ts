@@ -4,6 +4,7 @@ import type {
   ModelCatalog,
   ModelSelection,
   TaskContinuation,
+  TaskReview,
   AgentTask,
   HumanRequest,
   TaskActivity,
@@ -19,6 +20,7 @@ export interface TaskReadOptions {
 export interface TaskHistoryPage {
   task: AgentTask;
   continuation?: TaskContinuation | undefined;
+  review?: TaskReview | undefined;
   events: { cursor: number; event: AgentEvent }[];
   requests: HumanRequest[];
   activity: TaskActivity[];

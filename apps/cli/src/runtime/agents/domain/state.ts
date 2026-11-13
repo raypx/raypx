@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { taskSchema, type TaskActivity } from "@raypx/core/tasks";
+import { taskSchema, taskReviewSchema, type TaskActivity } from "@raypx/core/tasks";
 
 /**
  * The persisted task aggregate: a Core task plus this device's binding and the
@@ -17,6 +17,7 @@ export const localAgentTaskSchema = z.object({
   task: taskSchema,
   binding: z.string().min(1),
   sessionId: z.string().nullable(),
+  review: taskReviewSchema.optional(),
   tokenUsage: tokenUsageSchema.optional(),
 });
 

@@ -1,4 +1,4 @@
-import { activeTaskStatuses } from "@raypx/core/tasks";
+import { activeTaskStatuses, type HumanRequest } from "@raypx/core/tasks";
 import { prepareModelContext } from "@raypx/ai";
 import { PiAdapter, type PiSessionOptions } from "@raypx/providers/pi";
 import type { TaskFollowUp } from "@raypx/core/tasks";
@@ -44,7 +44,7 @@ export class PiHost implements PiExecutionServices {
         revision: context.revision,
         model: context.identity.model,
         blocked:
-          ((context.pendingEffect || context.messages.length === 0) &&
+          ((context.pendingEffect || context.pendingApproval || context.messages.length === 0) &&
             !activeTaskStatuses.includes(local.task.status)) ||
           context.status === "uncertain" ||
           context.identity.ownerTaskId !== local.task.id,
@@ -54,17 +54,55 @@ export class PiHost implements PiExecutionServices {
       store.close();
     }
   }
+  approvalId(local: LocalAgentTask) {
+    if (
+      local.task.mode !== "run" ||
+      local.task.provider !== "pi" ||
+      !local.sessionId?.startsWith("pi:v1:")
+    )
+      return undefined;
+    const store = new SqlitePiContextStore(this.state.db, local.sessionId);
+    try {
+      const context = store.snapshot();
+      if (
+        context.status === "running" &&
+        !context.pendingEffect &&
+        context.identity?.ownerTaskId === local.task.id &&
+        context.identity.binding === local.binding &&
+        context.identity.projectId === local.task.projectId
+      )
+        return context.pendingApproval?.requestId;
+    } catch {
+      // A corrupt checkpoint cannot authorize execution.
+    } finally {
+      store.close();
+    }
+  }
+  restore(local: LocalAgentTask, approval: HumanRequest) {
+    if (this.approvalId(local) !== approval.id)
+      throw new LocalError("PI_RECOVERY_REQUIRED", "Pending Pi approval is unavailable");
+    return this.prepare(local, undefined, undefined, true);
+  }
   async prepare(
     local: LocalAgentTask,
     parent?: LocalAgentTask,
     follow?: FollowUp,
+    restoreApproval = false,
   ): Promise<PreparedPiSession> {
     const task = local.task;
     const selected = await this.models.resolve(task.model ?? parent?.task.model);
-    const sessionId = parent?.sessionId ?? "pi:v1:" + crypto.randomUUID();
+    const sessionId = restoreApproval
+      ? local.sessionId!
+      : (parent?.sessionId ?? "pi:v1:" + crypto.randomUUID());
     const store = new SqlitePiContextStore(this.state.db, sessionId);
     try {
       let checkpoint = store.snapshot();
+      if (
+        restoreApproval &&
+        (!checkpoint.identity ||
+          JSON.stringify(checkpoint.identity.model) !== JSON.stringify(selected.selection))
+      )
+        throw new LocalError("AI_MODEL_NOT_FOUND", "Original model connection is unavailable");
       if (parent) {
         const identity = checkpoint.identity;
         if (
@@ -81,7 +119,11 @@ export class PiHost implements PiExecutionServices {
           );
         if (follow?.contextRevision !== checkpoint.revision)
           throw new LocalError("PI_CONTEXT_CONFLICT", "Refresh Pi context before continuing.");
-        if (checkpoint.pendingEffect || checkpoint.status === "uncertain")
+        if (
+          checkpoint.pendingEffect ||
+          checkpoint.pendingApproval ||
+          checkpoint.status === "uncertain"
+        )
           throw new LocalError(
             "PI_RECOVERY_REQUIRED",
             "An effect has no confirmed outcome. Inspect it and start a new session.",
@@ -118,7 +160,7 @@ export class PiHost implements PiExecutionServices {
         model: selected.selection,
       };
       const { revision, ...context } = checkpoint;
-      await store.commit(revision, { ...context, identity });
+      if (!restoreApproval) await store.commit(revision, { ...context, identity });
       task.model = selected.selection;
       local.sessionId = sessionId;
       return {
@@ -132,6 +174,7 @@ export class PiHost implements PiExecutionServices {
           const options: PiSessionOptions = {
             ...selected,
             ...bridge,
+            restoreApproval,
             store,
             sessionId,
             close: () => {

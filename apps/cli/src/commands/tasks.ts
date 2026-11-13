@@ -38,6 +38,7 @@ export function createTaskCommands(invocation: CliArgs, options: ProfileOptions)
     input: "Queue or steer an active task",
     list: "List local Agent tasks",
     get: "Read a task and its approvals",
+    diff: "Read the recorded Git review for a local Pi Run",
     cancel: "Cancel and drain an Agent task",
     watch: "Watch authoritative task snapshots as NDJSON",
     "approvals list": "List pending Agent approvals",
@@ -108,7 +109,13 @@ export function createTaskCommands(invocation: CliArgs, options: ProfileOptions)
               );
             else if (action === "list")
               result = await request("agents.local.list", { ...params, ...owner });
-            else if (action === "get")
+            else if (action === "diff") {
+              const detail = await request("agents.local.get", {
+                ...owner,
+                id: taskId.parse(params).id,
+              });
+              result = detail.review ?? { before: null, after: null };
+            } else if (action === "get")
               result = await request("agents.local.get", {
                 ...params,
                 ...owner,

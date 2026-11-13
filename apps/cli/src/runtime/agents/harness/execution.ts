@@ -1,4 +1,4 @@
-import { taskText } from "@raypx/core/task-text";
+import { normalizeTaskJson, taskText } from "@raypx/core/task-text";
 import {
   taskExecutionPrompt,
   humanRequestSchema,
@@ -61,6 +61,7 @@ type Pending = {
   request: HumanRequest;
   resolve(decision: HumanDecision): void;
   timer: ReturnType<typeof setTimeout>;
+  durable: boolean;
 };
 /** Single owner for turn/input/approval state and the project lock through process draining. */
 export class ManagedExecution {
@@ -264,6 +265,7 @@ export class ManagedExecution {
     body: string,
     questions: HumanRequest["questions"] = [],
     deadline?: number,
+    durableId?: string,
   ): Promise<HumanDecision> {
     if (this.cancelled || this.finished) return { type: "deny", note: "Task stopped" };
     if (
@@ -276,19 +278,39 @@ export class ManagedExecution {
       };
     const now = this.clock.now().getTime();
     const expiresAt = new Date(Math.min(now + 600_000, deadline ?? Infinity)).toISOString();
-    const request = humanRequestSchema.parse({
-      id: this.ids.generate(),
-      taskId: this.local.task.id,
-      kind,
-      title: taskText(title, 500),
-      body: taskText(body, 128_000),
-      questions,
-      expiresAt,
-      status: "pending",
-      decision: null,
-    });
-    this.effects.status("waiting");
-    this.store.request(this.local.binding, request);
+    if (durableId && normalizeTaskJson(body) !== body)
+      return { type: "deny", note: "Invalid approval arguments" };
+    const saved = durableId ? this.store.getRequest(this.local.binding, durableId) : undefined;
+    if (
+      saved &&
+      (saved.taskId !== this.local.task.id ||
+        saved.kind !== kind ||
+        saved.title !== title ||
+        saved.body !== body ||
+        Date.parse(saved.expiresAt) <= now ||
+        (saved.status !== "pending" && saved.status !== "applied"))
+    )
+      return { type: "deny", note: "Approval unavailable" };
+    if (saved?.status === "applied") {
+      this.effects.status("running");
+      this.effects.approvalReady?.();
+      return saved.decision ?? { type: "deny", note: "Approval unavailable" };
+    }
+    const request =
+      saved ??
+      humanRequestSchema.parse({
+        id: durableId ?? this.ids.generate(),
+        taskId: this.local.task.id,
+        kind,
+        title: taskText(title, 500),
+        body: taskText(body, 128_000),
+        questions,
+        expiresAt,
+        status: "pending",
+        decision: null,
+      });
+    if (!durableId || this.local.task.status !== "waiting") this.effects.status("waiting");
+    if (!saved) this.store.request(this.local.binding, request);
     const answer = new Promise<HumanDecision>((resolve) => {
       const timer = setTimeout(
         () => {
@@ -297,11 +319,12 @@ export class ManagedExecution {
           this.effects.changed();
           resolve({ type: "deny", note: "Request expired" });
         },
-        Math.max(1, Date.parse(expiresAt) - this.clock.now().getTime()),
+        Math.max(1, Date.parse(request.expiresAt) - this.clock.now().getTime()),
       );
-      this.pending.set(request.id, { request, resolve, timer });
+      this.pending.set(request.id, { request, resolve, timer, durable: durableId !== undefined });
     });
-    this.effects.changed(isDesktopBinding(this.local.binding) ? request.id : undefined);
+    this.effects.approvalReady?.();
+    this.effects.changed(!saved && isDesktopBinding(this.local.binding) ? request.id : undefined);
     const result = await answer;
     if (!this.cancelled && !this.finished) this.effects.status("running");
     return result;
@@ -535,6 +558,31 @@ export class ManagedExecution {
     this.cancelled = true;
     this.finish("cancelled");
   }
+  async suspendApproval() {
+    const handle = this.process;
+    if (
+      this.finished ||
+      !handle?.suspend ||
+      ![...this.pending.values()].some((item) => item.durable)
+    )
+      return false;
+    this.finished = true;
+    this.conversation.stop("interrupted");
+    for (const item of this.pending.values()) {
+      clearTimeout(item.timer);
+    }
+    const stopping = handle.suspend();
+    for (const item of this.pending.values()) item.resolve({ type: "deny", note: "Host stopping" });
+    this.pending.clear();
+    try {
+      await stopping;
+    } finally {
+      this.unlock();
+      this.effects.ended();
+      this.complete();
+    }
+    return true;
+  }
   waitForFinish() {
     return this.finishedExecution;
   }
@@ -551,7 +599,11 @@ export class ManagedExecution {
     const completion = (async () => {
       await this.process?.kill();
       await this.process?.completed.catch(() => {});
-      this.unlock();
+      try {
+        await this.effects.beforeRelease?.();
+      } finally {
+        this.unlock();
+      }
       this.effects.ended();
       this.effects.status(status, summary);
     })();

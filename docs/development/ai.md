@@ -340,6 +340,22 @@ coverage and executable/JS sizes; it contains no prompts or credentials.
 
 ## Managed Pi tasks
 
+The Desktop Run result includes **Project changes** for a device-local Pi Run.
+CLI reads the same result with `raypx tasks diff '{"id":"<run-id>"}'`.
+The execution host records bounded Git snapshots before launching and after
+draining the Run. Each includes the current HEAD and untracked names. Both tracked patches use
+the starting HEAD when available, so changes committed during a Run stay visible. This shows preexisting changes alongside the
+final state. Concurrent external edits can also appear in the final state.
+The snapshots stay in the local task record. A missing Git baseline, unavailable
+repository or over-limit output appears as unavailable.
+
+An interactive Pi Run waiting on a single remaining tool approval can recover that approval
+after the execution owner restarts. The original request ID, expiry, model
+connection and tool arguments still apply. The host reacquires the project and
+checks its grants before using the saved approval. An unresolved effect intent
+blocks continuation and requires inspection. Multi-call batches with other
+outstanding tool calls are interrupted on restart.
+
 Desktop and `raypx tasks` run Pi through the existing CLI daemon, using granted
 projects and the same `[ai]` TOML/environment configuration. Run `raypx tasks models
 --json` to inspect configured models and copy a selection reference. Desktop can

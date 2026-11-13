@@ -162,5 +162,8 @@ export const piStoredContextSchema = z.strictObject({
     .optional(),
   status: z.enum(["idle", "running", "succeeded", "failed", "cancelled", "uncertain"]),
   messages: z.array(message),
+  pendingApproval: z
+    .strictObject({ requestId: z.uuid(), id, name: id, arguments: object })
+    .optional(),
   pendingEffect: z.strictObject({ id, name: id }).optional(),
 });

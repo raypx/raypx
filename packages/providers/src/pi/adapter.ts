@@ -33,28 +33,28 @@ export class PiAdapter implements ProviderSession {
   preview = "";
   summary = "";
   private stopped = false;
+  private restoreApproval: boolean;
   private runner: PiRunner | undefined;
   private pending: Promise<void> | undefined;
   constructor(
     private readonly options: PiSessionOptions,
     private readonly ports: AdapterPorts,
   ) {
+    this.restoreApproval = options.restoreApproval === true;
     let drained!: () => void;
     const completed = new Promise<void>((resolve) => {
       drained = resolve;
     });
     let closing: Promise<void> | undefined;
-    this.handle = {
-      completed,
-      kill: () =>
-        (closing ??= (async () => {
-          this.stopped = true;
-          await this.runner?.cancel();
-          await this.pending;
-          this.options.close();
-          drained();
-        })()),
-    };
+    const stop = (suspend: boolean) =>
+      (closing ??= (async () => {
+        this.stopped = true;
+        await this.runner?.cancel(suspend);
+        await this.pending;
+        this.options.close();
+        drained();
+      })());
+    this.handle = { completed, kill: () => stop(false), suspend: () => stop(true) };
   }
   async initialize(_mode: AgentTask["mode"], sessionId?: string) {
     if (sessionId && sessionId !== this.options.sessionId) throw new Error("SESSION_UNAVAILABLE");
@@ -71,8 +71,10 @@ export class PiAdapter implements ProviderSession {
     this.runner = new PiRunner({
       ...this.options,
       tools: this.options.tools(mode),
+      restoreApproval: this.restoreApproval,
       onActivity: activity,
     });
+    this.restoreApproval = false;
     const pending = this.runner
       .run(prompt, { timeoutMs: 600_000 })
       .then((result) => {

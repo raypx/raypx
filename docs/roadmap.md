@@ -18,14 +18,11 @@ projections; it does not transfer Agent ownership to the server.
 Pi already supports model selection, Plan and Run modes, approved project tools
 and continuation from saved context. See [managed Pi tasks](development/ai.md#managed-pi-tasks).
 
-## Next increment: review changes from a local Pi Run
+## Local Pi Run review
 
-Deliver a complete project session on Desktop and CLI. A developer configures a
-model, inspects an authorized project in Plan, approves a change in Run, reviews
-the resulting project diff and continues from saved context. Start with a read-only
-diff. Distinguish changes already present before the Run from changes observed
-during it. Report unavailable diffs explicitly. Preserve the project's existing
-grants and keep model credentials on the execution device.
+Desktop and CLI show bounded, read-only Git snapshots before and after a device-local
+Pi Run. A single remaining tool approval can survive an owner restart. See
+[managed Pi tasks](development/ai.md#managed-pi-tasks) for the user flow and limits.
 
 Exercise the workflow with a synthetic project and a deterministic model fixture.
 Collect separate, opt-in live Pi acceptance for packaged Desktop and CLI on

@@ -55,6 +55,7 @@ export function createLocalRouter({
       !["tools.cancel", "terminal.close"].includes(method)
     )
       await instanceAccess.assert();
+    if (method.startsWith("agents.")) await getAgents().restored;
     switch (method) {
       case "instance.status":
         localParams[method].parse(raw);

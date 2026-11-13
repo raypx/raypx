@@ -86,6 +86,17 @@ export const modelCatalogSchema = z.object({
   default: modelSelectionSchema.nullable(),
 });
 export type ModelCatalog = z.infer<typeof modelCatalogSchema>;
+const taskReviewSnapshotSchema = z.strictObject({
+  revision: z.string().regex(/^[a-f0-9]{40,64}$/),
+  patch: z.string().max(48_000),
+  untracked: z.array(z.string().min(1).max(4096)).max(200),
+});
+export const taskReviewSchema = z.strictObject({
+  before: taskReviewSnapshotSchema.nullable(),
+  after: taskReviewSnapshotSchema.nullable(),
+});
+export type TaskReview = z.infer<typeof taskReviewSchema>;
+
 export const taskContinuationSchema = z.object({
   revision: z.number().int().nonnegative(),
   model: modelSelectionSchema,

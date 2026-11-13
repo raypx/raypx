@@ -43,5 +43,7 @@ export interface ExecutionEffects {
   /** Adapter transports inherit user tools and the bundled Node PATH entry. */
   environment(): Record<string, string | undefined>;
   track(completion: Promise<void>): void;
+  approvalReady?(): void;
+  beforeRelease?(): Promise<void>;
   ended(): void;
 }

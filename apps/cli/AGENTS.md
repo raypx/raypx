@@ -106,6 +106,8 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
   metadata-only baseline in SQLite and advance it with run admission. Only Pi jobs accept
   additional triggers. Persist receipt and run admission together.
   Keep delivery data out of diagnostics and reuse normal project grants and tool approvals.
+  Local Pi Run review records bounded before/after Git snapshots in the task aggregate.
+  An eligible pending Pi tool approval survives owner restart with the original request ID and expiry.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - Formal production packaging (ADR 0047) uses stable Bun 1.4.4: VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
 

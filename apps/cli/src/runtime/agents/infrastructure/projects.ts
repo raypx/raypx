@@ -6,6 +6,8 @@ import type { TaskContextTarget, AgentProvider } from "@raypx/core/tasks";
 import { existsSync, realpathSync } from "node:fs";
 import { acquireLock, type StateStore } from "../../state/index.js";
 import type { ExecutionProjects } from "../application/coordinator.js";
+import { captureProjectReview } from "./review.js";
+
 export class LocalExecutionProjects implements ExecutionProjects {
   constructor(
     private readonly state: StateStore,
@@ -43,6 +45,8 @@ export class LocalExecutionProjects implements ExecutionProjects {
   acquire(key: string) {
     return acquireLock(this.state.directory, key);
   }
+  review = captureProjectReview;
+
   async list(): Promise<DeviceProject[]> {
     const roots = this.state.roots();
     const result: DeviceProject[] = [];

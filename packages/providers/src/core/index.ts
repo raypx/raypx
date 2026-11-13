@@ -4,6 +4,7 @@ import type { AskApproval, TransportFactory } from "./transport.js";
 /** A session lifetime, including SDK streams, that must drain before releasing ownership. */
 export interface ExecutionHandle {
   readonly completed: Promise<void>;
+  suspend?(): Promise<void>;
   kill(): Promise<void>;
 }
 

@@ -127,7 +127,7 @@ export function createPiTools(
         })),
     effectful: (name: string) => !readOnly.has(name),
     authorize: async (
-      call: { name: string; arguments: unknown },
+      call: { name: string; arguments: unknown; requestId?: string },
       signal: AbortSignal,
     ): Promise<"allow" | "deny"> => {
       if (signal.aborted || !definitions.some((entry) => entry.name === call.name)) return "deny";
@@ -138,6 +138,9 @@ export function createPiTools(
         "permission",
         call.name,
         JSON.stringify({ tool: call.name, arguments: call.arguments }, null, 2),
+        undefined,
+        undefined,
+        call.requestId,
       );
       return !signal.aborted && decision.type === "allow" ? "allow" : "deny";
     },

@@ -3,14 +3,16 @@ import type {
   AgentEvent,
   TaskInput,
   TaskFollowUp,
+  TaskReview,
   AgentProvider,
 } from "@raypx/core/tasks";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { TaskContextError, activeTaskStatuses } from "@raypx/core/tasks";
 import { taskText } from "@raypx/core/task-text";
 import type { TaskChange } from "@raypx/contracts/tasks";
 import type { TokenTotals } from "@raypx/providers/core";
 import type { LocalAgentTask } from "../model.js";
-import { isDesktopBinding } from "../model.js";
+import { desktopBinding, isDesktopBinding } from "../model.js";
 import type { ExecutionStore } from "../harness/ports.js";
 import { cryptoIds, systemClock, type Clock, type Ids } from "../domain/ports.js";
 import type { Effect, LiveFacts } from "../domain/commands.js";
@@ -37,6 +39,10 @@ export interface ExecutionProjects {
   canonical(path: string): string;
   lockKey(directory: string): Promise<string>;
   acquire(key: string): (() => void) | null;
+  review?(
+    directory: string,
+    baseline?: string,
+  ): Promise<NonNullable<TaskReview["before"]> | undefined>;
 }
 export interface ApprovalEndpoints {
   endpoint(id: string): { url: string; token: string };
@@ -209,6 +215,13 @@ export class ExecutionCoordinator {
     let factory: import("@raypx/providers/core").SessionFactory;
     let dispose: (() => void) | undefined;
     try {
+      if (
+        task.provider === "pi" &&
+        task.mode === "run" &&
+        binding === desktopBinding(LOCAL_WORKSPACE_ID) &&
+        this.projects.review
+      )
+        local.review = { before: (await this.projects.review(directory)) ?? null, after: null };
       const prepared = await this.providers.prepare(local, parent, follow);
       factory = prepared.factory;
       dispose = prepared.dispose;
@@ -229,6 +242,58 @@ export class ExecutionCoordinator {
       this.status(local, "cancelled");
       return { accepted: true };
     }
+    this.launch(local, directory, unlock, factory, dispose);
+    return { accepted: true };
+  }
+
+  async restore(
+    local: LocalAgentTask,
+    prepare: () => Promise<{
+      factory: import("@raypx/providers/core").SessionFactory;
+      dispose(this: void): void;
+    }>,
+  ) {
+    if (this.closing) return;
+    let unlock: (() => void) | null = null;
+    let dispose: (() => void) | undefined;
+    try {
+      if (this.options.assertInstance) await this.options.assertInstance();
+      const root = this.projects.find(local.task.projectId, local.task.provider);
+      if (!root) throw new LocalError("PROJECT_UNAVAILABLE", "Project unavailable");
+      const directory = this.projects.canonical(root);
+      unlock = this.projects.acquire(await this.projects.lockKey(directory));
+      if (!unlock) throw new LocalError("PROJECT_BUSY", "Project in use");
+      const prepared = await prepare();
+      dispose = prepared.dispose;
+      if (this.closing) {
+        dispose();
+        unlock();
+        return;
+      }
+      const ready = Promise.withResolvers<void>();
+      this.launch(local, directory, unlock, prepared.factory, dispose, ready.resolve);
+      return ready.promise;
+    } catch (error) {
+      dispose?.();
+      unlock?.();
+      this.status(
+        local,
+        "interrupted",
+        error instanceof LocalError ? error.code : "PI_RECOVERY_REQUIRED",
+        "HOST_RESTARTED",
+      );
+    }
+  }
+
+  private launch(
+    local: LocalAgentTask,
+    directory: string,
+    unlock: () => void,
+    factory: import("@raypx/providers/core").SessionFactory,
+    dispose: (() => void) | undefined,
+    restored?: () => void,
+  ) {
+    const { task, binding } = local;
     // Provider and recorder reports reach storage only through the ingestor.
     const ingest = new ProviderEventIngestor(this.store, local, this.ids, (event) =>
       this.changedFor(local, event),
@@ -264,10 +329,25 @@ export class ExecutionCoordinator {
             () => this.completions.delete(completion),
           );
         },
+        ...(restored ? { approvalReady: restored } : {}),
+        beforeRelease: async () => {
+          if (!local.review || !this.projects.review) return;
+          let after: TaskReview["after"] = null;
+          try {
+            const rootNow = this.projects.find(task.projectId, task.provider);
+            if (rootNow && this.projects.canonical(rootNow) === directory)
+              after =
+                (await this.projects.review(directory, local.review.before?.revision)) ?? null;
+          } catch {
+            // The project is no longer readable through its original grant.
+          }
+          local.review = { ...local.review, after };
+        },
         ended: () => {
           dispose?.();
           this.hooks.forget(task.id);
           this.active.delete(task.id);
+          restored?.();
         },
       },
       factory,
@@ -277,7 +357,7 @@ export class ExecutionCoordinator {
       ingest,
     );
     this.active.set(task.id, execution);
-    this.status(local, "running");
+    if (!restored) this.status(local, "running");
     void execution
       .run(directory)
       .catch((error: unknown) =>
@@ -289,7 +369,6 @@ export class ExecutionCoordinator {
             : "AGENT_PROTOCOL_FAILED",
         ),
       );
-    return { accepted: true };
   }
   /** Live process facts the decider reads; it never touches a handle itself. */
   live(): LiveFacts {
@@ -329,7 +408,11 @@ export class ExecutionCoordinator {
   async close() {
     this.closing = true;
     const executions = [...this.active.values()];
-    for (const execution of executions) execution.cancel();
+    await Promise.all(
+      executions.map(async (execution) => {
+        if (!(await execution.suspendApproval())) execution.cancel();
+      }),
+    );
     await this.drain();
     await this.hooks.close();
   }

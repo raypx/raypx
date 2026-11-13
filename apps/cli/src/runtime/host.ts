@@ -73,7 +73,10 @@ export function createHost(options: {
     restore() {
       void runtime.instanceAccess
         .assert()
-        .then(() => owner.restore())
+        .then(async () => {
+          await runtime.agents.restored;
+          return owner.restore();
+        })
         .catch((error: unknown) => {
           if (!(error instanceof InstanceError)) backgroundFailure(error);
         });

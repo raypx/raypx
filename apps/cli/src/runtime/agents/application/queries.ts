@@ -66,6 +66,7 @@ export class AgentQueries {
     const continuation = this.inspect(local);
     return {
       task: local.task,
+      ...(local.review ? { review: local.review } : {}),
       ...(continuation ? { continuation } : {}),
       runStatus: projectTaskStatusToRunStatus(local.task, pendingKind),
       ...this.store.activityPage(binding, id, beforeActivity),

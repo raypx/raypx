@@ -21,6 +21,7 @@ export type AskApproval = (
   body: string,
   questions?: HumanRequest["questions"],
   deadline?: number,
+  durableId?: string,
 ) => Promise<HumanDecision>;
 export const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
