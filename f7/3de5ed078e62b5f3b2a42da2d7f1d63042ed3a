@@ -1,0 +1,25 @@
+PRODUCT.md
+  s_f9cc0d01f49051::t_bbd544bb7e8927 31-36
+  s_f9cc0d01f49051::t_827b560ad36d5a 37
+docs/roadmap.md
+  s_f9cc0d01f49051::t_61b7351b4c6609 9-39,51,57-59,61-79,92-119,125-142,149-167,187-203,210-223,235
+  s_f9cc0d01f49051::t_eb318a93c04e4d 236
+README.md
+  s_f9cc0d01f49051::t_83ffd1d9836e7b 41-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f73de5ed078e62b5f3b2a42da2d7f1d63042ed3a",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
