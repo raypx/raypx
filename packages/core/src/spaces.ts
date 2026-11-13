@@ -106,6 +106,36 @@ export const spaceEventSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     id: z.number().int().positive(),
     spaceId: spaceIdSchema,
+    kind: z.literal("page.created"),
+    payload: z.strictObject({
+      pageId: z.string().min(1).max(128),
+      version: z.number().int().positive(),
+    }),
+    createdAt: z.iso.datetime(),
+  }),
+  z.strictObject({
+    id: z.number().int().positive(),
+    spaceId: spaceIdSchema,
+    kind: z.literal("page.updated"),
+    payload: z.strictObject({
+      pageId: z.string().min(1).max(128),
+      version: z.number().int().positive(),
+    }),
+    createdAt: z.iso.datetime(),
+  }),
+  z.strictObject({
+    id: z.number().int().positive(),
+    spaceId: spaceIdSchema,
+    kind: z.literal("page.deleted"),
+    payload: z.strictObject({
+      pageId: z.string().min(1).max(128),
+      version: z.number().int().positive(),
+    }),
+    createdAt: z.iso.datetime(),
+  }),
+  z.strictObject({
+    id: z.number().int().positive(),
+    spaceId: spaceIdSchema,
     kind: z.literal("space.member.joined"),
     payload: z.strictObject({ accountId: z.string() }),
     createdAt: z.iso.datetime(),

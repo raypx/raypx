@@ -4,6 +4,9 @@ import { createRpcRouter as createRouter } from "../../src/routers/rpc/index.js"
 import type { ReadReadiness } from "../../src/app/readiness.js";
 
 const services = [
+  "pages",
+  "skills",
+  "mcpServers",
   "routines",
   "spaceMemory",
   "modelConnections",

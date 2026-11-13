@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react-test-renderer";
 import type { ApprovalCardView } from "@raypx/agents/model";
-import { approvalRequestIdSchema } from "@raypx/core/approvals";
+import { approvalRequestIdSchema, mcpToolNameSchema } from "@raypx/core/approvals";
 import { runIdSchema } from "@raypx/core/conversation";
 import { findByLabel, press, renderNative, textContent } from "../../tests/native.js";
+import en from "@raypx/agents/messages/en";
+import zh from "@raypx/agents/messages/zh";
+import { useLocales } from "../../tests/mocks/localization.js";
 import { ApprovalCard } from "./approval-card.js";
 
 function card(patch: Partial<ApprovalCardView> = {}): ApprovalCardView {
@@ -27,6 +30,7 @@ function card(patch: Partial<ApprovalCardView> = {}): ApprovalCardView {
 
 afterEach(() => {
   vi.useRealTimers();
+  useLocales.mockReset();
 });
 
 describe("native approval card", () => {
@@ -103,3 +107,31 @@ describe("native approval card", () => {
     await view.unmount();
   });
 });
+
+it.each(["en", "zh"] as const)(
+  "uses shared Page, skill and remote labels in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const labels = { en, zh }[language].agents.tools;
+    const cases = [
+      ["agent_page_create", labels.createPage],
+      ["agent_page_update", labels.updatePage],
+      ["agent_page_read", labels.readPage],
+      ["agent_skill_load", labels.loadSkill],
+      ["agent_skill_save", labels.saveSkill],
+      [mcpToolNameSchema.parse("mcp_server__read_page"), "MCP server / read page"],
+    ] as const;
+    for (const [toolName, label] of cases) {
+      const view = await renderNative(
+        <ApprovalCard
+          card={card({ toolName })}
+          accountId="member-1"
+          onAnswer={vi.fn()}
+          onRefresh={vi.fn()}
+        />,
+      );
+      expect(textContent(view.root)).toContain(label);
+      await view.unmount();
+    }
+  },
+);

@@ -36,3 +36,8 @@ Run this workspace's check and tests, CLI adapter/replay/provider tests, then re
 - `./testing/computer` is the runner-injected conformance suite consumed by Sandbox
   tests; it imports no test runner at runtime. Live conformance requires the explicit
   RAYPX_TEST_DOCKER=1 flag and a prepared supervisor/image; tests never build or pull.
+
+`./mcp` is the one remote HTTP tool adapter. It lazily loads the official client
+SDK and supplies bounded, DNS-pinned HTTP requests with per-request address and
+redirect admission. It never runs stdio, third-party code, ambient credentials or
+model authority. Callers own secrets, approval/effects and untrusted provenance.

@@ -27,19 +27,8 @@ import {
   ApprovalSettingsController,
   type ApprovalSettingsPort,
 } from "../model/approval-settings.js";
+import { toolDisplayLabel } from "../model/tool-label.js";
 import { useTranslations } from "./i18n.js";
-
-const toolKeys = {
-  computer_list_files: "tools.listFiles",
-  computer_read_file: "tools.readFile",
-  computer_write_file: "tools.writeFile",
-  computer_run_command: "tools.runCommand",
-  agent_memory_save: "tools.saveMemory",
-  agent_memory_update: "tools.updateMemory",
-  agent_send_message: "tools.messageAgent",
-  agent_delegate: "tools.delegateTask",
-  agent_wait: "tools.waitForChildren",
-} as const;
 
 function ruleKey(rule: ApprovalRule) {
   return JSON.stringify([rule.toolName, rule.executable, rule.decision]);
@@ -85,7 +74,7 @@ function SettingsChanges({
           <li key={`${action}-${ruleKey(rule)}`} className="wrap-anywhere">
             {t(`approvalSettings.${action}`, {
               list: t(`approvalSettings.${rule.decision}`),
-              tool: t(toolKeys[rule.toolName]),
+              tool: toolDisplayLabel(rule.toolName, t),
               executable: rule.executable ?? "",
             })}
           </li>
@@ -134,7 +123,7 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
   const draft = state.draft;
   const toolOptions = computerToolNameSchema.options.map((value) => ({
     value,
-    label: t(toolKeys[value]),
+    label: toolDisplayLabel(value, t),
   }));
   function addRule() {
     const added = controller.addRule({
@@ -247,7 +236,7 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
                       className="flex min-w-0 items-center gap-2 py-2"
                     >
                       <span className="min-w-0 flex-1 text-sm wrap-anywhere">
-                        {t(toolKeys[rule.toolName])}
+                        {toolDisplayLabel(rule.toolName, t)}
                         {rule.executable && (
                           <code className="mt-1 block text-xs wrap-anywhere">
                             {rule.executable}
@@ -257,7 +246,7 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
                       <IconButton
                         size="icon-sm"
                         label={t("approvalSettings.removeRule", {
-                          tool: t(toolKeys[rule.toolName]),
+                          tool: toolDisplayLabel(rule.toolName, t),
                           executable: rule.executable ?? "",
                         })}
                         disabled={state.busy}

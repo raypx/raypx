@@ -33,8 +33,8 @@ export function withMemoryTools(
   return {
     ...computer,
     definitions: (run) => [...computer.definitions(run), ...memory.definitions()],
-    prepare(call) {
-      if (!isMemory(call.name)) return computer.prepare(call);
+    prepare(call, run) {
+      if (!isMemory(call.name)) return computer.prepare(call, run);
       if (!call.id || call.id.length > 128 || call.id.includes("\0") || call.argumentsError)
         throw new ComputerToolsError("INVALID_ARGUMENTS");
       guarded(call);

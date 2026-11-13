@@ -84,3 +84,8 @@ Computer approval names also cover the memory save/update change tools.
 Conversation schemas also describe named groups, explicit Agent mentions, Agent
 authors and optional Agent/parent Run attribution on events, segments and live text.
 Group mutation and Agent messaging refusals are separate from Run failure unions.
+
+`/pages`, `/skills` and `/mcp-servers` own bounded Page/version/share metadata,
+text-only skill ownership/availability and remote server configuration/test outcomes.
+`/approvals` separately validates namespaced remote names without extending the
+built-in enum. Space events add content-free `page.created/updated/deleted` records.

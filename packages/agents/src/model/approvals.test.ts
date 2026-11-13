@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { approvalRequestIdSchema, type ApprovalRequest } from "@raypx/core/approvals";
+import {
+  approvalRequestIdSchema,
+  mcpToolNameSchema,
+  type ApprovalRequest,
+} from "@raypx/core/approvals";
 import { agentIdSchema, conversationIdSchema } from "@raypx/core/agents";
 import { messageIdSchema, runIdSchema, type ConversationEvent } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
@@ -98,6 +102,17 @@ function harness() {
   return { controller, approvals, connections };
 }
 afterEach(() => vi.useRealTimers());
+
+it("projects exact remote names and keeps their additional summary", () => {
+  const value = request({
+    toolName: mcpToolNameSchema.parse("mcp_server__read_page"),
+    argumentSummary: "Read a shared report",
+  });
+  const state = new ApprovalProjection(selection);
+  state.receive(value, 1);
+  expect(state.getSnapshot()[0]?.toolName).toBe(value.toolName);
+  expect(approvalExtraSummary(value)).toBe("Read a shared report");
+});
 
 describe("approval projection", () => {
   it.each([

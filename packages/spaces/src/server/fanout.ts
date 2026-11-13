@@ -6,6 +6,9 @@ const kinds = new Set([
   "space.member.role_changed",
   "space.renamed",
   "space.deleted",
+  "page.created",
+  "page.updated",
+  "page.deleted",
 ]);
 
 /** Content-free hints; replay and membership checks still read PostgreSQL. */

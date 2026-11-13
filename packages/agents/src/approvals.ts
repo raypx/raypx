@@ -8,7 +8,7 @@ import {
   type ApprovalSettings,
   type ApprovalSettingsState,
   type RevisionedApprovalSettings,
-  type ComputerToolName,
+  type ToolName,
   type Effect,
 } from "@raypx/core/approvals";
 import type { RunId } from "@raypx/core/conversation";
@@ -56,12 +56,13 @@ export class EffectInProgressError extends Error {
 /** Prepared by the one computer-tool definition, before policy or execution. */
 export interface ApprovalCall {
   id: string;
-  name: ComputerToolName;
+  name: ToolName;
   arguments: Record<string, unknown>;
   argumentSummary: string;
   target: string;
   executable?: string;
   changes: boolean;
+  readOnlyAnnotated?: boolean;
 }
 export interface ApprovalSettingsInput {
   mode: ApprovalMode | "auto";
@@ -161,6 +162,14 @@ export function approvalDisposition(
 ): "approved" | "blocked" | "ask" {
   const rules = settings.rules.filter((rule) => matchingRule(rule, call));
   if (rules.some((rule) => rule.decision === "block")) return "blocked";
+  // Remote annotations are untrusted metadata. Only an exact Allow promotes
+  // that annotated call to a read; all remote calls still record effects.
+  if (
+    call.name.startsWith("mcp_") &&
+    call.readOnlyAnnotated &&
+    rules.some((rule) => rule.decision === "allow")
+  )
+    return "approved";
   if (!call.changes || settings.mode === "never") return "approved";
   if (untrustedInput) return "ask";
   if (rules.some((rule) => rule.decision === "allow")) return "approved";

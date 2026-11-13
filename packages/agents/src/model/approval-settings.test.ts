@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import type { ApprovalSettings } from "@raypx/core/approvals";
+import { mcpToolNameSchema, type ApprovalSettings } from "@raypx/core/approvals";
 import { ApprovalSettingsController, type ApprovalSettingsPort } from "./approval-settings.js";
 
 const availableModes = [
@@ -10,6 +10,22 @@ const availableModes = [
 
 const initial: ApprovalSettings = { mode: "ask", rules: [] };
 const allowed = { toolName: "computer_write_file", executable: null, decision: "allow" } as const;
+
+it("retains exact dynamic rules while removing only the selected entry", async () => {
+  const { controller, settings, updateSettings } = fixture();
+  const allow = {
+    toolName: mcpToolNameSchema.parse("mcp_server__read_page"),
+    executable: null,
+    decision: "allow" as const,
+  };
+  const block = { ...allow, decision: "block" as const };
+  settings.mockResolvedValue({ mode: "ask", rules: [allow, block], revision: 1, availableModes });
+  await controller.load();
+  controller.removeRule(allow);
+  expect(controller.getSnapshot().draft?.rules).toEqual([block]);
+  await expect(controller.save(async () => true)).resolves.toBe(true);
+  expect(updateSettings).toHaveBeenCalledWith({ mode: "ask", rules: [block], expectedRevision: 1 });
+});
 
 function fixture() {
   const settings = vi.fn<ApprovalSettingsPort["settings"]>(async () => ({

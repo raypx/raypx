@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { Button } from "heroui-native/button";
-import type { conversationTimelineRows } from "@raypx/agents/model";
+import { toolDisplayLabel, type conversationTimelineRows } from "@raypx/agents/model";
 import type { ToolActivity as ToolCall } from "@raypx/core/conversation";
 import { useCopy } from "../locale.js";
 
@@ -9,18 +9,10 @@ type ActivityRow = Extract<
   ReturnType<typeof conversationTimelineRows>[number],
   { kind: "activity" }
 >;
-const toolKeys = {
-  computer_list_files: "agents.tools.listFiles",
-  computer_read_file: "agents.tools.readFile",
-  computer_write_file: "agents.tools.writeFile",
-  computer_run_command: "agents.tools.runCommand",
-} as const;
 
 function ToolCallRow({ call }: { call: ToolCall }) {
   const { t } = useCopy();
-  const name = Object.hasOwn(toolKeys, call.toolName)
-    ? t(toolKeys[call.toolName as keyof typeof toolKeys])
-    : call.toolName.replaceAll("_", " ");
+  const name = toolDisplayLabel(call.toolName, (key) => t(`agents.${key}`));
   return (
     <View
       testID={`tool:${call.runId}:${call.toolCallId}`}

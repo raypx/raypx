@@ -69,6 +69,63 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it.each(["page.created", "page.updated", "page.deleted"] as const)(
+  "ACKs %s without applying it to membership state, then processes membership events",
+  async (kind) => {
+    const h = fixture();
+    h.controller.start();
+    h.connections[0]!.onFrame({ type: "ready", version: 1 });
+    await settle();
+    h.connections[0]!.onFrame({
+      type: "space.event",
+      spaceId,
+      event: { id: 1, spaceId, kind, createdAt, payload: { pageId: "page", version: 1 } },
+    });
+    await settle();
+    expect(h.onEvent).not.toHaveBeenCalled();
+    expect(h.onExit).not.toHaveBeenCalled();
+    expect(h.frames.at(-1)).toEqual({ version: 1, type: "space.ack", spaceId, sequence: 1 });
+    const role: SpaceEvent = {
+      id: 2,
+      spaceId,
+      kind: "space.member.role_changed",
+      createdAt,
+      payload: { accountId: "viewer", role: "owner" },
+    };
+    h.connections[0]!.onFrame({ type: "space.event", spaceId, event: role });
+    await settle();
+    expect(h.onEvent).toHaveBeenCalledExactlyOnceWith(role);
+    expect(h.onExit).not.toHaveBeenCalled();
+    expect(h.frames.at(-1)).toEqual({ version: 1, type: "space.ack", spaceId, sequence: 2 });
+  },
+);
+
+it.each(["space.member.joined", "space.member.role_changed"] as const)(
+  "ignores historical %s for a rejoined member",
+  async (kind) => {
+    const h = fixture();
+    h.list.mockResolvedValue([{ ...membership, member: { ...membership.member, createdAt } }]);
+    h.controller.start();
+    h.connections[0]!.onFrame({ type: "ready", version: 1 });
+    await settle();
+    const event: SpaceEvent =
+      kind === "space.member.joined"
+        ? { id: 1, spaceId, kind, createdAt: joinedAt, payload: { accountId: "viewer" } }
+        : {
+            id: 1,
+            spaceId,
+            kind,
+            createdAt: joinedAt,
+            payload: { accountId: "viewer", role: "member" },
+          };
+    h.connections[0]!.onFrame({ type: "space.event", spaceId, event });
+    await settle();
+    expect(h.onEvent).not.toHaveBeenCalled();
+    expect(h.onExit).not.toHaveBeenCalled();
+    expect(h.frames.at(-1)).toEqual({ version: 1, type: "space.ack", spaceId, sequence: 1 });
+  },
+);
+
 it("reconciles at startup and ready, then subscribes to the selected Space", async () => {
   const h = fixture();
   h.controller.start();

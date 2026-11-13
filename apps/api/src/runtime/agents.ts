@@ -19,6 +19,16 @@ import { createRoutinesService } from "@raypx/jobs/routines";
 import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
 import type { ConversationId } from "@raypx/core/agents";
 import { withMemoryTools } from "../conversations/memory-tools.js";
+import { createPagesService } from "@raypx/pages/server";
+import { createPagesRepository } from "@raypx/pages/server/postgres";
+import { createSkillsService } from "@raypx/skills/server";
+import { createSkillsRepository } from "@raypx/skills/server/postgres";
+import { withPageTools } from "../conversations/page-tools.js";
+import { withSkillTools } from "../conversations/skill-tools.js";
+import { withMcpTools } from "../conversations/mcp-tools.js";
+import { createMcpServers } from "../conversations/mcp-servers.js";
+import { createMcpServersRepository } from "../conversations/mcp-postgres.js";
+import { createMcpTransport } from "@raypx/providers/mcp";
 import { createRoutineWorker } from "../routines/worker.js";
 import { createSpaceDeletionWorker } from "../spaces/deletion-worker.js";
 import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
@@ -73,16 +83,30 @@ export async function composeAgents(
   });
   const deploymentSecrets = knownComputerSecrets(environment);
   const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(db));
-  const tools = withMemoryTools(
+  const keys = applicationSecretKeyProvider(environment.APP_KEY);
+  const pages = createPagesService(createPagesRepository(db));
+  const skills = createSkillsService(createSkillsRepository(db));
+  const mcpServers = createMcpServers(createMcpServersRepository(db), keys, createMcpTransport());
+  const protectedValues = () => [
+    ...deploymentSecrets,
+    ...modelConnections.protectedValues(),
+    ...mcpServers.protectedValues(),
+  ];
+  const memoryTools = withMemoryTools(
     createComputerTools(
       computers,
       computerProvider,
-      () => [...deploymentSecrets, ...modelConnections.protectedValues()],
+      protectedValues,
       repository.pinResources,
       createComputerUseQueue(db),
     ),
     spaceMemory,
-    () => [...deploymentSecrets, ...modelConnections.protectedValues()],
+    protectedValues,
+  );
+  const tools = withMcpTools(
+    withSkillTools(withPageTools(memoryTools, pages, protectedValues), skills, protectedValues),
+    mcpServers,
+    protectedValues,
   );
   const runner = new ConversationRunner(
     repository,
@@ -100,9 +124,9 @@ export async function composeAgents(
       attemptTimeoutMs: environment.RUN_ATTEMPT_TIMEOUT_MS,
       backupMarginMs: environment.RUN_BACKUP_MARGIN_MS,
       recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId),
+      loadSkills: (scope, run) => skills.runCatalog(scope, run.agentId),
     },
   );
-  const keys = applicationSecretKeyProvider(environment.APP_KEY);
   const routines = createRoutinesService(
     createRoutinesRepository(db, {
       backupDelayMs: environment.RUN_ATTEMPT_TIMEOUT_MS + environment.RUN_BACKUP_MARGIN_MS,
@@ -138,6 +162,9 @@ export async function composeAgents(
         .emit({ status: 503, code: "EXECUTION_FAILED" }),
   });
   return {
+    pages,
+    skills,
+    mcpServers,
     spaceManagement,
     spaceDeletionWorker,
     routines,

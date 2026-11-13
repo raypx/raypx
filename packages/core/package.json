@@ -20,7 +20,10 @@
     "./computers": "./src/computers.ts",
     "./approvals": "./src/approvals.ts",
     "./routines": "./src/routines.ts",
-    "./space-memory": "./src/space-memory.ts"
+    "./space-memory": "./src/space-memory.ts",
+    "./pages": "./src/pages.ts",
+    "./skills": "./src/skills.ts",
+    "./mcp-servers": "./src/mcp-servers.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

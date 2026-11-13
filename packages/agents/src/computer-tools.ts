@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Tool, ToolCall } from "@raypx/ai";
 import type { ComputersService } from "@raypx/computers/server";
 import { ComputerOperationError } from "@raypx/computers/server";
-import { MAX_TOOL_RESULT, type ComputerToolName } from "@raypx/core/approvals";
+import { MAX_TOOL_RESULT, type ToolName } from "@raypx/core/approvals";
 import type { Run } from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
 import {
@@ -85,12 +85,14 @@ export class ComputerToolsError extends Error {
 }
 export interface PreparedComputerCall {
   id: string;
-  name: ComputerToolName;
+  name: ToolName;
   arguments: Record<string, unknown>;
   argumentSummary: string;
   target: string;
   executable?: string;
   changes: boolean;
+  /** Remote annotation only grants read semantics with an exact member Allow. */
+  readOnlyAnnotated?: boolean;
 }
 export interface ComputerTools {
   definitions(run?: ExecutionRun): Tool[];
@@ -103,7 +105,9 @@ export interface ComputerTools {
     operation: () => Promise<string>,
   ): Promise<string>;
   initialize?(scope: SpaceScope, run: ExecutionRun, signal: AbortSignal): Promise<void>;
-  prepare(call: ToolCall): PreparedComputerCall;
+  snapshot?(run: ExecutionRun): unknown;
+  restore?(run: ExecutionRun, snapshot: unknown): void;
+  prepare(call: ToolCall, run?: ExecutionRun): PreparedComputerCall;
   execute(
     scope: SpaceScope,
     run: ExecutionRun,

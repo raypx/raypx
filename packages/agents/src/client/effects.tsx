@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from "@raypx/ui/components/ui/dialog";
 import type { ApprovalPort, ConversationSelection } from "../model.js";
-import { toolLabelKeys } from "./approval-card.js";
+import { toolDisplayLabel } from "../model/tool-label.js";
 import { useTranslations } from "./i18n.js";
 
 export function EffectRecords({
@@ -85,7 +85,7 @@ export function EffectRecords({
           <ul className="flex min-w-0 flex-col gap-3">
             {effects?.map((effect) => (
               <li key={effect.key} className="flex min-w-0 flex-col gap-1 border-b pb-3 text-xs">
-                <span className="font-medium">{t(toolLabelKeys[effect.toolName])}</span>
+                <span className="font-medium">{toolDisplayLabel(effect.toolName, t)}</span>
                 <span>{t(`effects.states.${effect.state}`)}</span>
                 <time
                   className="tabular-nums wrap-anywhere"

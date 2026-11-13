@@ -7,7 +7,7 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import type { ApprovalCardView, ApprovalPort, ConversationSelection } from "../model.js";
-import { toolLabelKeys } from "./approval-card.js";
+import { toolDisplayLabel } from "../model/tool-label.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
 
@@ -46,9 +46,7 @@ function ToolActivityRow({
   selection?: ConversationSelection | undefined;
 }) {
   const t = useTranslations("agents");
-  const toolName = Object.hasOwn(toolLabelKeys, call.toolName)
-    ? t(toolLabelKeys[call.toolName as keyof typeof toolLabelKeys])
-    : call.toolName.replaceAll("_", " ");
+  const toolName = toolDisplayLabel(call.toolName, t);
   const refusal = interactionCode(call);
   return (
     <li

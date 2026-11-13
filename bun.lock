@@ -2,6 +2,44 @@
   "lockfileVersion": 2,
   "configVersion": 1,
   "workspaces": {
+    "packages/skills": {
+      "name": "@raypx/skills",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "@raypx/spaces": "workspace:*",
+        "drizzle-orm": "catalog:",
+        "zod": "catalog:"
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "vitest": "catalog:dev"
+      }
+    },
+    "packages/pages": {
+      "name": "@raypx/pages",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "@raypx/spaces": "workspace:*",
+        "drizzle-orm": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "react-markdown": "catalog:",
+        "remark-gfm": "catalog:",
+        "zod": "catalog:"
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "@types/react": "catalog:dev",
+        "@types/react-dom": "catalog:dev",
+        "vitest": "catalog:dev"
+      }
+    },
     "": {
       "name": "raypx",
       "devDependencies": {
@@ -47,7 +85,9 @@
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
+        "@raypx/pages": "workspace:*",
         "@raypx/providers": "workspace:*",
+        "@raypx/skills": "workspace:*",
         "@raypx/spaces": "workspace:*",
         "@raypx/storage": "workspace:*",
         "better-auth": "catalog:",
@@ -59,7 +99,7 @@
         "ioredis": "catalog:",
         "lodash-es": "catalog:",
         "nitro": "catalog:",
-        "zod": "catalog:",
+        "zod": "catalog:"
       },
       "devDependencies": {
         "@raypx/tooling": "workspace:*",
@@ -72,8 +112,8 @@
         "swagger-ui-dist": "catalog:dev",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
-        "vitest": "catalog:dev",
-      },
+        "vitest": "catalog:dev"
+      }
     },
     "apps/cli": {
       "name": "cli",
@@ -824,15 +864,16 @@
       "version": "0.0.0",
       "dependencies": {
         "@earendil-works/pi-agent-core": "catalog:",
+        "@modelcontextprotocol/client": "catalog:",
         "@raypx/ai": "workspace:*",
         "@raypx/core": "workspace:*",
-        "zod": "catalog:",
+        "zod": "catalog:"
       },
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
         "@vitest/coverage-v8": "catalog:dev",
-        "vitest": "catalog:dev",
-      },
+        "vitest": "catalog:dev"
+      }
     },
     "packages/runtime-node": {
       "name": "@raypx/runtime-node",
@@ -983,6 +1024,7 @@
     "vite": "catalog:dev",
   },
   "catalog": {
+    "@modelcontextprotocol/client": "^2.4.0",
     "@base-ui/react": "^1.9.0",
     "@better-auth/drizzle-adapter": "^1.7.22",
     "@better-auth/oauth-provider": "1.7.22",
@@ -1120,6 +1162,8 @@
     },
   },
   "packages": {
+    "@raypx/skills": ["@raypx/skills@workspace:packages/skills"],
+    "@raypx/pages": ["@raypx/pages@workspace:packages/pages"],
     "2g": ["2g@1.0.1", "", { "peerDependencies": { "typescript": ">=5.8.0" }, "optionalPeers": ["typescript"], "bin": { "2g": "bin/cli.js" } }, "sha512-+uViadKOS/wwR4pFu5g8TPn3QHpKqoX19JHCnp8k/3cLpImdcXozwvZA6Q/5PeW3AcU8neL8faaMidBcv7o8CA=="],
 
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],

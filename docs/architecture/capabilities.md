@@ -55,8 +55,8 @@ A connection belongs to the account that added it.
   providers use the shared connection settings and standard protocol capabilities.
 - **App connections** use an optional connector port. A managed connector provider
   can supply a catalog. No connector is required.
-- **MCP servers** are remote servers reached over HTTP. A local command server
-  runs only inside a computer, or when a deployment administrator adds it.
+- **MCP servers** are remote servers reached over HTTP. Backend command/stdio
+  servers are refused; local command-server execution is not implemented here.
 - **OpenAPI tools** are generated from a document the member supplies.
 
 Each Agent chooses which connections it uses. Availability decides what a Space
@@ -94,8 +94,9 @@ Construction performs no database writes or network requests.
 
 ## Skills
 
-- A skill is reusable know-how in text. It needs no account and holds no
-  credentials.
+- A skill is reusable know-how in text, with no credentials or executable parts.
+  Member skills are account-owned with Space availability. Agent-created skills
+  belong only to their creation Space.
 - Installing a skill or a plugin never runs third-party code in the backend. Parts
   that would, such as hooks or scripts, are not installed, and the product names
   what it left out.
@@ -173,3 +174,61 @@ The old account context documents, local memory library, device Cron and cloud
 job projections remain solely for retained consumers. Retire those procedures,
 clients, profile tables and cloud projection tables with their final consumers;
 there is no import, compatibility alias or second Space authority.
+
+## Phase 5 backend decisions
+
+Pages use `@raypx/pages/server` with immutable PostgreSQL snapshots, bounded to
+256 KiB UTF-8 per version and 1,000 Pages per Space. Keeping these self-contained
+text documents in PostgreSQL makes CAS, version creation, Run mutation deduplication
+and the Space event one transaction; no object-storage asset lifecycle is introduced.
+An edit, rename or restore requires `expectedVersion`; stale writes return
+`PAGE_CONFLICT`. Restoring copies the selected title/kind/body into a new version.
+Author provenance is historical context rather than current permission. Agent
+writes are limited to Pages that Agent maintains and retain the normal approval
+rules, including routine Runs. Tool writes accept at most 32,000 UTF-16 units and
+reads page through bounded text slices.
+
+Share creation returns 32 random bytes as hex once. Only SHA-256 hashes persist;
+links may pin a version or follow the current one, expire, or be revoked individually
+or together. Public requests read authoritative state each time, including claimed
+Space deletion. Revoked, expired and invalid tokens share a not-found response.
+`GET /page-content/public/:token` never reads an account session. The authenticated
+`GET /page-content/member/:spaceId/:pageId?version=N` serves the same document and
+headers after fresh membership admission. Both are read-only, no-store and cookie-free.
+Markdown uses CommonMark/GFM with raw HTML disabled and allowlisted tags/protocols.
+HTML keeps inline scripts/styles and data images under an opaque sandbox origin:
+no same-origin, forms, frames, objects, external images/scripts or network access.
+CSP frame ancestors are the configured application origins. Public admission is
+120 requests per address/minute and 60 per token/minute; only digests enter limits.
+
+Skills use `@raypx/skills/server`. Account skills follow all/selected membership
+availability, including future Spaces in all mode. Learned skills are separate
+Space-local text records. Agent enablement is per member and Agent so sharing an
+Agent cannot grant another member's account resources. Run start pins up to 32
+enabled names/descriptions within 8,000 serialized units; body loads page through
+bounded untrusted text. Save uses ordinary change approval, fenced persistence
+and Run/tool-call deduplication. Logical removal retains learned-skill mutation
+targets. Imports accept Markdown with name/description front matter or ZIP, bounded
+to 2 MiB input, 512 KiB expanded and 128 entries. Only Markdown/text references
+install; omitted executable/unsupported entries and executable front-matter fields
+are named. Traversal, symlinks and other special files are rejected. Imports never
+write extracted paths or execute package content.
+
+Remote MCP servers are account-owned with the same all/selected availability and
+per-member Agent selection. Credentials are write-only encrypted secret-store
+children. The official TypeScript client SDK is loaded lazily by the providers
+adapter, with DNS-pinned HTTP transport, bounded JSON/SSE responses, deadlines and
+cancellation. Every request and redirect resolves/admit addresses anew; nonpublic
+addresses are rejected except explicitly permitted loopback endpoints. Redirects
+cannot change origin or forward credentials to another host. Backend stdio
+configuration returns `MCP_STDIO_UNSUPPORTED`. Server testing returns stable codes
+and tool names only. Recovery freezes tool metadata and endpoint fingerprints,
+revalidates owner/membership/availability, and never stores credentials in pins.
+
+Remote names are `mcp_<server UUID without hyphens>__<remote tool name>`, distinct
+from the closed built-in name enum. All calls record effects and lifecycle events.
+A read-only annotation grants read approval behavior only with an exact member
+Allow; Block always wins. Other calls follow change policy, including untrusted
+write rules. Completed effects replay their durable result without dispatching
+again; uncertain external outcomes remain unknown and are never retried automatically.
+Managed app connectors and OpenAPI tools remain outside this backend slice.

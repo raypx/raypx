@@ -1,3 +1,6 @@
+import { pagesContract } from "./pages.js";
+import { skillsContract } from "./skills.js";
+import { mcpServersContract } from "./mcp-servers.js";
 export * from "./desktop-login.js";
 import { collectApiExposure, exposeApiTo } from "./exposure.js";
 import { rpcAccess } from "./policy.js";
@@ -61,6 +64,9 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  pages: pagesContract,
+  skills: skillsContract,
+  mcpServers: mcpServersContract,
   routines: routinesContract,
   spaceMemory: spaceMemoryContract,
   modelConnections: modelConnectionsContract,

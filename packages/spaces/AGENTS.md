@@ -27,3 +27,8 @@ and every admission still read PostgreSQL.
 Use public workspace entries, `.js` relative specifiers and Core domain schemas.
 Run `bun run --cwd packages/spaces check` and `test`. `test:postgres` selects
 `tests/postgres/` and requires a newly provisioned disposable `*_test` database.
+
+Page changes add independent Space events without changing conversation variants.
+Soft removal clears account skill/MCP availability and per-member Agent selections
+before the membership tombstone is marked removed. Shared Page/skill text survives
+member departure; retained membership identity grants no access.

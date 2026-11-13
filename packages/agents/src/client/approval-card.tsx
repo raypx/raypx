@@ -4,6 +4,7 @@ import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { cn } from "@raypx/ui/lib/utils";
 import {
+  toolDisplayLabel,
   approvalRemainingSeconds,
   approvalDuration,
   approvalDeadlineProminent,
@@ -12,17 +13,7 @@ import {
 } from "../model.js";
 import { useTranslations } from "./i18n.js";
 
-export const toolLabelKeys = {
-  computer_list_files: "tools.listFiles",
-  computer_read_file: "tools.readFile",
-  computer_write_file: "tools.writeFile",
-  computer_run_command: "tools.runCommand",
-  agent_memory_save: "tools.saveMemory",
-  agent_memory_update: "tools.updateMemory",
-  agent_send_message: "tools.messageAgent",
-  agent_delegate: "tools.delegateTask",
-  agent_wait: "tools.waitForChildren",
-} as const;
+export { toolLabelKeys } from "../model/tool-label.js";
 
 /** A timer updates presentation only; the server decides when a request resolves. */
 export function useApprovalRemaining(card: ApprovalCardView, onExpired: () => void) {
@@ -130,7 +121,7 @@ export function ApprovalCard({
       className="flex min-w-0 flex-col gap-2 rounded-lg border p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <h3 id={id} className="min-w-0 font-medium wrap-anywhere">
-        {t(toolLabelKeys[card.toolName])}
+        {toolDisplayLabel(card.toolName, t)}
       </h3>
       {agentName && (
         <p data-approval-agent className="min-w-0 text-xs text-muted-foreground wrap-anywhere">

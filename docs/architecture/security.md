@@ -98,3 +98,14 @@ reassignment. Deleting a routine or Space cascades its occurrences, deliveries a
 encrypted secret. Run/message actor IDs are historical selectors, so account deletion cannot punch
 gaps in a surviving conversation stream. Memory's author FK becomes null while its
 immutable provenance remains historical context in a surviving shared Space.
+
+Phase 5 Page responses use `sandbox allow-scripts` without `allow-same-origin`,
+`default-src 'none'`, inline-only script/style, data-only images, `connect-src 'none'`,
+`frame-src 'none'`, `form-action 'none'`, `base-uri 'none'` and application-only frame
+ancestors. Both document routes add nosniff, no-referrer and no-store and strip
+Set-Cookie. Public serving never invokes authentication; share tokens authorize
+only one Page. The ordinary API session/origin gates remain the only API admission.
+Remote tool endpoints bind the validated DNS address to the socket lookup for
+each request and revalidate redirects, preventing an unchecked second resolution.
+Remote header values use the existing encrypted envelopes and never enter public
+server projections, tool catalogs, effects, lifecycle events or checkpoints.

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Switch } from "heroui-native/switch";
 import {
+  toolDisplayLabel,
   approvalDeadlineProminent,
   approvalDuration,
   approvalExtraSummary,
@@ -10,18 +11,6 @@ import {
 } from "@raypx/agents/model";
 import { useCopy } from "../locale.js";
 import { Action } from "../ui.js";
-
-const toolKeys = {
-  computer_list_files: "agents.tools.listFiles",
-  computer_read_file: "agents.tools.readFile",
-  computer_write_file: "agents.tools.writeFile",
-  computer_run_command: "agents.tools.runCommand",
-  agent_memory_save: "agents.tools.saveMemory",
-  agent_memory_update: "agents.tools.updateMemory",
-  agent_send_message: "agents.tools.messageAgent",
-  agent_delegate: "agents.tools.delegateTask",
-  agent_wait: "agents.tools.waitForChildren",
-} as const;
 
 export interface ApprovalCardProps {
   card: ApprovalCardView;
@@ -76,7 +65,7 @@ export function ApprovalCard({ card, accountId, onAnswer, onRefresh }: ApprovalC
   return (
     <View className="gap-3 rounded-lg border border-border p-4">
       <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
-        {t(toolKeys[card.toolName])}
+        {toolDisplayLabel(card.toolName, (key) => t(`agents.${key}`))}
       </Text>
       <Text selectable className="text-sm text-foreground">
         {card.target}

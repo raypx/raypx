@@ -154,6 +154,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       modelConnections,
       routines,
       spaceMemory,
+      pages,
+      skills,
+      mcpServers,
       routineWorker,
       spaceManagement,
       spaceDeletionWorker,
@@ -163,6 +166,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     lifecycle.own(() => spaceDeletionWorker.close());
     const conversations = runner.conversations;
     return {
+      pages,
+      skills,
+      mcpServers,
       routines,
       spaceMemory,
       routineWorker,
@@ -199,6 +205,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        pages,
+        skills,
+        mcpServers,
         routines,
         spaceMemory,
         ...(environment.ROUTINE_EMAIL_RELAY_TOKEN

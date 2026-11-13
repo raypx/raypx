@@ -185,3 +185,11 @@ Space foreign keys. Agent tombstones preserve message and Run attribution after
 Agent deletion. Direct Conversation uniqueness is partial by kind. Run parent and
 origin-message references and delegation intents/results remain in their original
 Space/conversation, cascade with Space deletion and carry attempt fences.
+
+Pages retain bounded immutable bodies, author provenance and mutation receipts in
+`page_versions`; `page_share_links` stores only token hashes and optional same-Space
+version pins. Skills separate account text/availability from Space-local learned
+text; tombstones retain fenced mutation targets. Remote server secrets are encrypted
+children of account-owned metadata. Agent skill/server selections bind current
+member identity and Space through composite keys. Every new relationship cascades
+with its owning record; soft membership removal explicitly clears selections.

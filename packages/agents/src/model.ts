@@ -85,6 +85,7 @@ export {
   type ApprovalCardView,
   type ApprovalCardError,
 } from "./model/approvals.js";
+export { toolDisplayLabel, toolLabelKeys, type ToolLabelKey } from "./model/tool-label.js";
 
 export {
   SpaceManagementController,

@@ -12,6 +12,9 @@ import {
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
     expect(Object.keys(apiContract)).toEqual([
+      "pages",
+      "skills",
+      "mcpServers",
       "routines",
       "spaceMemory",
       "modelConnections",

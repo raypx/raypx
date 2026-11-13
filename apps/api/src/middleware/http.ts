@@ -9,6 +9,14 @@ import type { ApiRouterEnv } from "../routers/request.js";
 
 export const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
 
+/** Only the two document routes may provide their own sandbox policy. */
+function pageDocumentPath(path: string): boolean {
+  return (
+    /^\/page-content\/public\/[^/]+$/.test(path) ||
+    /^\/page-content\/member\/[^/]+\/[^/]+$/.test(path)
+  );
+}
+
 /**
  * Letters only, so log redaction never mistakes an ID for a card or phone number and
  * masks it: the same ID must appear in responses, logs and error reports.
@@ -43,18 +51,21 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
       }
     }
   });
-  app.use(
-    "*",
-    secureHeaders({
-      xFrameOptions: "DENY",
-      // Web and Desktop read responses cross-origin; CORS remains the access control.
-      crossOriginResourcePolicy: false,
-    }),
-  );
+  const headers = secureHeaders({ xFrameOptions: "DENY", crossOriginResourcePolicy: false });
+  const pageHeaders = secureHeaders({ xFrameOptions: false, crossOriginResourcePolicy: false });
+  app.use("*", (c, next) => (pageDocumentPath(c.req.path) ? pageHeaders : headers)(c, next));
   app.use("*", async (c, next) => {
     await next();
-    if (c.req.path !== openApiDocsPath || !c.res.headers.has("content-security-policy"))
+    if (
+      (!pageDocumentPath(c.req.path) && c.req.path !== openApiDocsPath) ||
+      !c.res.headers.has("content-security-policy")
+    )
       c.header("content-security-policy", apiContentSecurityPolicy);
+    if (pageDocumentPath(c.req.path)) {
+      c.res.headers.delete("set-cookie");
+      c.header("cache-control", "no-store");
+      c.header("referrer-policy", "no-referrer");
+    }
   });
   app.use(
     "*",

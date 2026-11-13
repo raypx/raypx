@@ -1,3 +1,6 @@
+import { createPagesHandlers } from "./pages.js";
+import { createSkillsHandlers } from "./skills.js";
+import { createMcpServersHandlers } from "./mcp-servers.js";
 import { Hono } from "hono";
 import { limitAttachmentBody } from "../../middleware/attachment-limit.js";
 import { RPCHandler } from "@orpc/server/fetch";
@@ -30,6 +33,9 @@ export const rpcPrefix = "/rpc";
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const setup = createRpcSetup(options);
   return setup.implementer.router({
+    pages: createPagesHandlers(setup),
+    skills: createSkillsHandlers(setup),
+    mcpServers: createMcpServersHandlers(setup),
     routines: createRoutineHandlers(setup),
     spaceMemory: createSpaceMemoryHandlers(setup),
     ...createSpaceHandlers(setup),

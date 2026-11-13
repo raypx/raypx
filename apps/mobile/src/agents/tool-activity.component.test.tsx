@@ -100,3 +100,41 @@ it("surfaces waiting and failed calls on the collapsed summary", async () => {
   );
   await view.unmount();
 });
+
+it.each(["en", "zh"] as const)(
+  "uses the same built-in and remote activity labels in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const labels = { en, zh }[language].agents.tools;
+    const names = [
+      "agent_page_create",
+      "agent_page_update",
+      "agent_page_read",
+      "agent_skill_load",
+      "agent_skill_save",
+      "mcp_server__read_page",
+    ];
+    const view = await renderNative(
+      <ToolActivity
+        row={row(
+          names.map((toolName, index) => ({ ...call, toolName, toolCallId: `call-${index}` })),
+        )}
+      />,
+    );
+    const trigger = view.root.find(
+      (node) => typeof node.type === "string" && node.props.accessibilityState?.expanded === false,
+    );
+    await press(trigger);
+    const content = textContent(view.root);
+    for (const label of [
+      labels.createPage,
+      labels.updatePage,
+      labels.readPage,
+      labels.loadSkill,
+      labels.saveSkill,
+      "MCP server / read page",
+    ])
+      expect(content).toContain(label);
+    await view.unmount();
+  },
+);

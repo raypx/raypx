@@ -169,3 +169,9 @@ key; list/get/history/events never return a credential or secret reference.
 removeGroupAgent/setGroupDefaultResponder/deleteGroup` expose named Space groups.
 Member sends accept structural Agent mentions; existing outputs gain optional
 Agent/parent attribution. No procedure accepts a member authority selector.
+
+`/api` composes session-owned `pages.*`, `skills.*` and `mcpServers.*`. Page and
+skill reads select a fresh Space; account skill/server availability and per-member
+Agent selections never expose another member's resources. Only share creation
+returns a token; server credential headers are input-only. Public document serving
+is an independent HTTP route and never an API credential.

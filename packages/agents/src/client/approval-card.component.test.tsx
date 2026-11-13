@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
-import { approvalRequestIdSchema } from "@raypx/core/approvals";
+import { approvalRequestIdSchema, mcpToolNameSchema } from "@raypx/core/approvals";
 import { runIdSchema } from "@raypx/core/conversation";
 import type { ApprovalCardView } from "../model.js";
 import { ApprovalCard } from "./approval-card.js";
@@ -284,8 +284,23 @@ it.each([
   { language: "zh" as const, toolName: "agent_memory_save" as const, label: "保存记忆" },
   { language: "en" as const, toolName: "agent_memory_update" as const, label: "Update memory" },
   { language: "zh" as const, toolName: "agent_memory_update" as const, label: "更新记忆" },
+  { language: "en" as const, toolName: "agent_page_create" as const, label: "Create page" },
+  { language: "zh" as const, toolName: "agent_page_create" as const, label: "创建页面" },
+  { language: "en" as const, toolName: "agent_page_update" as const, label: "Update page" },
+  { language: "zh" as const, toolName: "agent_page_update" as const, label: "更新页面" },
+  { language: "en" as const, toolName: "agent_page_read" as const, label: "Read page" },
+  { language: "zh" as const, toolName: "agent_page_read" as const, label: "读取页面" },
+  { language: "en" as const, toolName: "agent_skill_load" as const, label: "Load skill" },
+  { language: "zh" as const, toolName: "agent_skill_load" as const, label: "加载技能" },
+  { language: "en" as const, toolName: "agent_skill_save" as const, label: "Save skill" },
+  { language: "zh" as const, toolName: "agent_skill_save" as const, label: "保存技能" },
 ])("names $toolName plainly on approval cards in $language", ({ language, toolName, label }) => {
   fixture(pendingCard({ toolName, target: "Agent memory" }), language);
   expect(screen.getByRole("heading", { name: label })).toBeVisible();
   expect(screen.queryByText(toolName)).toBeNull();
+});
+
+it.each(["en", "zh"] as const)("renders remote tool names as text in %s", (language) => {
+  fixture(pendingCard({ toolName: mcpToolNameSchema.parse("mcp_server__read_page") }), language);
+  expect(screen.getByRole("heading", { name: "MCP server / read page" })).toBeVisible();
 });

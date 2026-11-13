@@ -156,6 +156,15 @@ memory.
 Pages with versions and share links, MCP servers, app connections, OpenAPI tools
 and skills. See [capabilities](architecture/capabilities.md).
 
+Backend slice: immutable Pages with CAS/restore and hashed revocable share links,
+sandboxed public/member document serving, text-only skills with non-executing
+Markdown/ZIP imports, and member-owned remote HTTP MCP servers use the existing
+approval/effect/secret-store path. Enabled skill metadata and remote tool catalogs
+are checkpointed for recovery. Model connections were already implemented.
+Managed app connectors and OpenAPI tools remain outside this slice. Client delivery,
+PostgreSQL and loopback HTTP acceptance remain separate gates; an unrun database
+or listener is not claimed as passed.
+
 Acceptance:
 
 - A share link exposes one page. Revoking it makes the page unreadable on the next

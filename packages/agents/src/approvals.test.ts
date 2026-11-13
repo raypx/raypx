@@ -666,3 +666,60 @@ it.each(["webhook", "email", "repository"] as const)(
     );
   },
 );
+
+it("applies exact remote rules and trusts read annotations only with Allow", () => {
+  const remote: ApprovalCall = {
+    ...write,
+    name: "mcp_server__lookup" as import("@raypx/core/approvals").McpToolName,
+    readOnlyAnnotated: true,
+  };
+  const allow = { toolName: remote.name, executable: null, decision: "allow" as const };
+  const block = { ...allow, decision: "block" as const };
+  expect(approvalDisposition({ mode: "ask", rules: [] }, remote)).toBe("ask");
+  expect(approvalDisposition({ mode: "ask", rules: [allow] }, remote)).toBe("approved");
+  expect(approvalDisposition({ mode: "ask", rules: [allow] }, remote, true)).toBe("approved");
+  expect(
+    approvalDisposition(
+      { mode: "ask", rules: [allow] },
+      { ...remote, readOnlyAnnotated: false },
+      true,
+    ),
+  ).toBe("ask");
+  expect(approvalDisposition({ mode: "never", rules: [allow, block] }, remote)).toBe("blocked");
+  expect(
+    approvalDisposition(
+      { mode: "ask", rules: [allow] },
+      { ...remote, name: "mcp_server__write" as typeof remote.name },
+    ),
+  ).toBe("ask");
+});
+
+it("applies routine Page writes to the same approval policy as member changes", () => {
+  const page: ApprovalCall = { ...write, name: "agent_page_update" };
+  const allow = { toolName: page.name, executable: null, decision: "allow" as const };
+  expect(approvalDisposition({ mode: "ask", rules: [] }, page)).toBe("ask");
+  expect(approvalDisposition({ mode: "ask", rules: [allow] }, page)).toBe("approved");
+  expect(approvalDisposition({ mode: "ask", rules: [allow] }, page, true)).toBe("ask");
+});
+
+it("reuses a completed remote effect after resume without invoking the transport again", async () => {
+  const { service } = fixture();
+  const remote: ApprovalCall = {
+    ...write,
+    name: "mcp_server__write" as import("@raypx/core/approvals").McpToolName,
+  };
+  const transport = vi.fn(async () =>
+    JSON.stringify({ state: "succeeded", trust: "untrusted", content: "done" }),
+  );
+  const signal = new AbortController().signal;
+  const first = await service.executeEffect(scope, run, remote, transport, signal);
+  const resumed = await service.executeEffect(
+    scope,
+    { ...run, fence: 2, attemptId: "resumed" },
+    remote,
+    transport,
+    signal,
+  );
+  expect(resumed).toBe(first);
+  expect(transport).toHaveBeenCalledTimes(1);
+});

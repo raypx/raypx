@@ -2,6 +2,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import {
+  computerToolNameSchema,
+  mcpToolNameSchema,
+  type ApprovalRule,
+} from "@raypx/core/approvals";
+import {
   ApprovalSettingsController,
   type ApprovalSettingsPort,
 } from "../model/approval-settings.js";
@@ -20,10 +25,10 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-async function mount(language: "en" | "zh" = "en") {
+async function mount(language: "en" | "zh" = "en", rules: ApprovalRule[] = []) {
   const settings = vi.fn<ApprovalSettingsPort["settings"]>(async () => ({
     mode: "ask",
-    rules: [],
+    rules,
     revision: 0,
     availableModes,
   }));
@@ -43,6 +48,54 @@ async function mount(language: "en" | "zh" = "en") {
   );
   return { controller, settings, updateSettings };
 }
+
+it.each(["en", "zh"] as const)(
+  "preserves exact remote rules as read-only rows with removal in %s",
+  async (language) => {
+    const strings = { en, zh }[language].agents;
+    const rule: ApprovalRule = {
+      toolName: mcpToolNameSchema.parse("mcp_server__read_page"),
+      executable: null,
+      decision: "block",
+    };
+    const { controller, updateSettings } = await mount(language, [rule]);
+    const label = "MCP server / read page";
+    expect(screen.getByText(label)).toBeVisible();
+    expect(
+      screen.queryByRole("textbox", { name: strings.approvalSettings.tool }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: strings.approvalSettings.addRule }));
+    expect(controller.getSnapshot().draft?.rules).toEqual([
+      rule,
+      { toolName: "computer_write_file", executable: null, decision: "allow" },
+    ]);
+    fireEvent.click(screen.getByRole("button", { name: strings.save }));
+    await waitFor(() =>
+      expect(updateSettings).toHaveBeenCalledWith({
+        mode: "ask",
+        rules: [rule, { toolName: "computer_write_file", executable: null, decision: "allow" }],
+        expectedRevision: 0,
+      }),
+    );
+    const select = screen.getByRole("combobox", { name: strings.approvalSettings.tool });
+    fireEvent.click(select);
+    const options = await screen.findAllByRole("option");
+    expect(options).toHaveLength(computerToolNameSchema.options.length);
+    expect(options.some((option) => option.textContent?.includes(label))).toBe(false);
+    fireEvent.keyDown(select, { key: "Escape" });
+    const remove = screen.getByRole("button", {
+      name: strings.approvalSettings.removeRule
+        .replace("{tool}", label)
+        .replace("{executable}", "")
+        .trim(),
+    });
+    fireEvent.click(remove);
+    expect(screen.queryByText(label)).not.toBeInTheDocument();
+    expect(controller.getSnapshot().draft?.rules).toEqual([
+      { toolName: "computer_write_file", executable: null, decision: "allow" },
+    ]);
+  },
+);
 
 it.each(["en", "zh"] as const)(
   "shows translated modes and bounded editable rules in %s",

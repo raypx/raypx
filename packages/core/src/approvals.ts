@@ -10,15 +10,29 @@ export const computerToolNameSchema = z.enum([
   "computer_run_command",
   "agent_memory_save",
   "agent_memory_update",
+  "agent_page_create",
+  "agent_page_update",
+  "agent_page_read",
+  "agent_skill_load",
+  "agent_skill_save",
 ]);
 export type ComputerToolName = z.infer<typeof computerToolNameSchema>;
+/** Dynamic remote tools never extend the closed built-in catalog. */
+export const mcpToolNameSchema = z
+  .string()
+  .max(128)
+  .regex(/^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$/)
+  .brand<"McpToolName">();
+export type McpToolName = z.infer<typeof mcpToolNameSchema>;
+export const toolNameSchema = z.union([computerToolNameSchema, mcpToolNameSchema]);
+export type ToolName = z.infer<typeof toolNameSchema>;
 export const approvalModeSchema = z.enum(["ask", "never"]);
 export type ApprovalMode = z.infer<typeof approvalModeSchema>;
 // Accept the explicit choice at the boundary so the service can report unavailability.
 export const approvalModeInputSchema = z.enum(["ask", "never", "auto"]);
 export const approvalRuleSchema = z
   .strictObject({
-    toolName: computerToolNameSchema,
+    toolName: toolNameSchema,
     executable: z.string().min(1).max(1_024).nullable(),
     decision: z.enum(["allow", "block"]),
   })
@@ -73,7 +87,7 @@ export const approvalCardFields = {
   requestId: approvalRequestIdSchema,
   toolCallId: z.string().min(1).max(128).optional(),
   runId: runIdSchema,
-  toolName: computerToolNameSchema,
+  toolName: toolNameSchema,
   argumentSummary: z.string().max(1_024),
   target: z.string().min(1).max(1_024),
   memberAccountId: z.string().min(1).max(128),
@@ -86,7 +100,7 @@ export const approvalRequestSchema = z.strictObject({
   runId: runIdSchema,
   memberAccountId: z.string().min(1).max(128),
   toolCallId: z.string().min(1).max(128),
-  toolName: computerToolNameSchema,
+  toolName: toolNameSchema,
   arguments: toolArgumentsSchema,
   argumentSummary: approvalCardFields.argumentSummary,
   target: approvalCardFields.target,
@@ -103,7 +117,7 @@ export const effectSchema = z.strictObject({
   conversationId: conversationIdSchema,
   runId: runIdSchema,
   toolCallId: z.string().min(1).max(128),
-  toolName: computerToolNameSchema,
+  toolName: toolNameSchema,
   argumentHash: z.string().regex(/^[a-f0-9]{64}$/),
   state: z.enum(["intent", "succeeded", "failed", "unknown"]),
   result: z.string().max(MAX_TOOL_RESULT).nullable(),

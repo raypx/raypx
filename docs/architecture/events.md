@@ -245,6 +245,9 @@ absent. The event contains `{ id, spaceId, kind, payload, createdAt }`:
 | `space.member.removed`      | `{ accountId }`       |
 | `space.member.role_changed` | `{ accountId, role }` |
 | `space.renamed`             | `{ name }`            |
+| `page.created`              | `{ pageId, version }` |
+| `page.updated`              | `{ pageId, version }` |
+| `page.deleted`              | `{ pageId, version }` |
 
 `id` is an ordered replay/ACK cursor, not a gap-free conversation sequence. Space
 events have indefinite retention and can also be read through `spaces.events`.
@@ -293,3 +296,9 @@ hops and at most sixteen Agent-initiated Runs per originating member message.
 Refusals return stable tool-result codes. `allowCrossSpaceMessages` defaults to
 false; enabling it records intent only. Cross-Space delivery remains unavailable
 and is explicitly refused.
+
+Page events are additive Space-stream variants. They contain no title/body or share
+token and commit with their Page mutation. They use the existing ordered cursor,
+ACK, fresh membership and content-free fanout path. Remote tool activity uses the
+existing tool lifecycle variants with exact namespaced names, never credentials
+or remote results. No Run-state, failure or trigger variant is added in phase 5.

@@ -1,13 +1,14 @@
-import type { ApprovalRequest, ApprovalState, ComputerToolName } from "@raypx/core/approvals";
+import type { ApprovalRequest, ApprovalState, ToolName } from "@raypx/core/approvals";
 import type { ConversationEvent, RunId } from "@raypx/core/conversation";
 import type { ConversationSelection } from "./port.js";
+import { toolDisplayLabel, type ToolLabelKey } from "./tool-label.js";
 
 export type ApprovalCardError = "ruleLimit" | "unconfirmed" | "resolvedElsewhere";
 export interface ApprovalCardView {
   requestId: ApprovalRequest["id"];
   runId: RunId;
   toolCallId?: string | undefined;
-  toolName: ComputerToolName;
+  toolName: ToolName;
   target: string;
   argumentSummary: string;
   memberAccountId: string;
@@ -39,18 +40,25 @@ export function approvalExtraSummary(
   card: Pick<ApprovalCardView, "toolName" | "target" | "argumentSummary">,
 ) {
   const labels = {
-    computer_list_files: ["List files", "列出文件"],
-    computer_read_file: ["Read file", "Read a file", "读取文件"],
-    computer_write_file: ["Write file", "Write a file", "写入文件"],
-    computer_run_command: ["Run command", "Run a command", "运行命令"],
-    agent_memory_save: ["Save memory", "保存记忆"],
-    agent_memory_update: ["Update memory", "更新记忆"],
-    agent_send_message: ["Message Agent", "向智能体发消息"],
-    agent_delegate: ["Delegate task", "委派任务"],
-    agent_wait: ["Wait for delegated work", "等待委派任务"],
-  };
+    "tools.listFiles": ["List files", "列出文件"],
+    "tools.readFile": ["Read file", "Read a file", "读取文件"],
+    "tools.writeFile": ["Write file", "Write a file", "写入文件"],
+    "tools.runCommand": ["Run command", "Run a command", "运行命令"],
+    "tools.saveMemory": ["Save memory", "保存记忆"],
+    "tools.updateMemory": ["Update memory", "更新记忆"],
+    "tools.createPage": ["Create page", "创建页面"],
+    "tools.updatePage": ["Update page", "更新页面"],
+    "tools.readPage": ["Read page", "读取页面"],
+    "tools.loadSkill": ["Load skill", "加载技能"],
+    "tools.saveSkill": ["Save skill", "保存技能"],
+    "tools.messageAgent": ["Message Agent", "向智能体发消息"],
+    "tools.delegateTask": ["Delegate task", "委派任务"],
+    "tools.waitForChildren": ["Wait for delegated work", "等待委派任务"],
+  } satisfies Record<ToolLabelKey, string[]>;
   const summary = card.argumentSummary.trim();
-  const redundant = labels[card.toolName].some(
+  const display = toolDisplayLabel(card.toolName);
+  const variants = Object.hasOwn(labels, display) ? labels[display as ToolLabelKey] : [display];
+  const redundant = variants.some(
     (label) =>
       summary === label ||
       summary === `${label}: ${card.target}` ||

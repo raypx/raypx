@@ -34,6 +34,7 @@ import type { Agent } from "@raypx/core/agents";
 import type { SpaceDirectoryMember, SpaceSettings } from "@raypx/core/spaces";
 import type { RunId, ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import {
+  toolDisplayLabel,
   ConversationController,
   ComputerController,
   type ComputerPort,
@@ -58,7 +59,7 @@ import { CapabilitySheet } from "./capability-sheet.js";
 import { CapabilityPanels } from "./capability-panel.js";
 import type { AgentsWorkspacePort } from "../model.js";
 import { ComputerIndicator, ComputerPanel } from "./computer.js";
-import { ApprovalCard, toolLabelKeys } from "./approval-card.js";
+import { ApprovalCard } from "./approval-card.js";
 import { ToolActivity } from "./tool-activity.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
@@ -454,7 +455,9 @@ function ConversationContents({
       const previous = observedCards.current.get(card.requestId);
       observedCards.current.set(card.requestId, card.state);
       if (!previous && card.state === "pending")
-        cardAnnouncements.push(t("approval.announced", { tool: t(toolLabelKeys[card.toolName]) }));
+        cardAnnouncements.push(
+          t("approval.announced", { tool: toolDisplayLabel(card.toolName, t) }),
+        );
       else if (previous && previous !== card.state)
         cardAnnouncements.push(t(`approval.states.${card.state}`));
     }

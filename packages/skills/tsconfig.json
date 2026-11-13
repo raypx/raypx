@@ -1,0 +1,9 @@
+{
+  "extends": "@raypx/tsconfig/base.json",
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["bun"]
+  }
+}

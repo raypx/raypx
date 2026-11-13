@@ -12,6 +12,11 @@ import {
   routines,
   routineSecrets,
   modelConnectionSpaces,
+  memberSkillSpaces,
+  agentMemberSkills,
+  agentSpaceSkills,
+  mcpServerSpaces,
+  agentMcpServers,
 } from "@raypx/database/schema";
 import {
   SpaceMutationError,
@@ -264,6 +269,40 @@ export function createSpaceManagement(db: Database, hooks: SpaceManagementHooks)
             eq(modelConnectionSpaces.spaceId, scope.spaceId),
             eq(modelConnectionSpaces.accountId, accountId),
           ),
+        );
+      await tx
+        .delete(memberSkillSpaces)
+        .where(
+          and(
+            eq(memberSkillSpaces.spaceId, scope.spaceId),
+            eq(memberSkillSpaces.accountId, accountId),
+          ),
+        );
+      await tx
+        .delete(agentMemberSkills)
+        .where(
+          and(
+            eq(agentMemberSkills.spaceId, scope.spaceId),
+            eq(agentMemberSkills.accountId, accountId),
+          ),
+        );
+      await tx
+        .delete(agentSpaceSkills)
+        .where(
+          and(
+            eq(agentSpaceSkills.spaceId, scope.spaceId),
+            eq(agentSpaceSkills.accountId, accountId),
+          ),
+        );
+      await tx
+        .delete(mcpServerSpaces)
+        .where(
+          and(eq(mcpServerSpaces.spaceId, scope.spaceId), eq(mcpServerSpaces.accountId, accountId)),
+        );
+      await tx
+        .delete(agentMcpServers)
+        .where(
+          and(eq(agentMcpServers.spaceId, scope.spaceId), eq(agentMcpServers.accountId, accountId)),
         );
       const cancelledInvitations = await tx
         .update(spaceInvitations)

@@ -98,7 +98,12 @@
     "updateMemory": "Update memory",
     "messageAgent": "Message Agent",
     "delegateTask": "Delegate task",
-    "waitForChildren": "Wait for delegated work"
+    "waitForChildren": "Wait for delegated work",
+    "createPage": "Create page",
+    "updatePage": "Update page",
+    "readPage": "Read page",
+    "loadSkill": "Load skill",
+    "saveSkill": "Save skill"
   },
   "approval": {
     "answeredBy": "Answered by {member}",

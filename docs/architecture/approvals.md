@@ -150,3 +150,11 @@ Delegation inherits this flag and the originating member. Child requests use the
 child Run ID in the same Conversation, and remain answerable only by that member.
 Delegating or messaging an Agent provides no additional credentials, approval
 mode or access to another member's connections.
+
+Page create/update and skill save are built-in changes; Page read and skill load
+are bounded reads. Their approval, effect, lifecycle and execution fences are the
+same as other tools. Exact remote names use a separate open validated type;
+there are no wildcard or prefix rules. Every remote call records an effect, even
+a read. An annotation alone cannot grant read behavior: an exact Allow is also
+required. Block precedes both that read allowance and Never ask. A normal remote
+change retains untrusted-input precedence over Allow.

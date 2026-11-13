@@ -119,3 +119,12 @@ the originating member, message root and bounded chain/budget. Agent identities 
 participant rows are retained as tombstones for historical same-Space references.
 Delegation is a durable Run child in the same conversation, with fenced, deduplicated
 intents and checkpointed result delivery. Child text stays in activity, not replies.
+
+Phase 5 composes injected Page, skill and remote tool adapters with the same approval,
+effect, lifecycle and attempt fence path. Built-in names remain a closed catalog;
+remote names use a separately validated open type. Skill metadata and credential-free
+remote tool catalogs are frozen in checkpoints; recovery revalidates current access
+without replacing accepted metadata. Body loads remain bounded untrusted reference text.
+`toolDisplayLabel` in `/model` shares built-in catalog keys and bounded remote tool
+labels with DOM and Mobile. Approval projections preserve open exact tool names;
+settings list remote rules with removal while adding only built-in tool rules.

@@ -9,6 +9,7 @@ import { createOpenApiRoutes } from "./openapi.js";
 import type { ApiRouterEnv } from "./request.js";
 import { createRpcRouter, createRpcRoutes, rpcPrefix } from "./rpc/index.js";
 import { createRoutineIngressRoutes } from "../routines/http.js";
+import { createPagesRoutes } from "../pages/http.js";
 
 export function createApiApp(options: ApiAppOptions) {
   const app = new Hono<ApiRouterEnv>();
@@ -20,6 +21,17 @@ export function createApiApp(options: ApiAppOptions) {
   const router = createRpcRouter(options, readReadiness);
   const timeout = options.rpcTimeoutMs ?? 15_000;
   app
+    .route(
+      "/page-content",
+      createPagesRoutes({
+        pages: options.pages,
+        spaces: options.spaces,
+        readSession: (headers) => options.readSession(headers),
+        allowedOrigins: options.allowedOrigins,
+        ...(options.rateLimit ? { rateLimit: options.rateLimit } : {}),
+        ...(options.clientIpHeader ? { clientIpHeader: options.clientIpHeader } : {}),
+      }),
+    )
     .route(
       "/routines",
       createRoutineIngressRoutes({

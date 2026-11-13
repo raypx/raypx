@@ -1206,3 +1206,54 @@ it("waits for the computer driver before creating an effect intent", async () =>
   await advance();
   expect(db.rows[0]!.run.state).toBe("succeeded");
 });
+
+it("pins enabled skill metadata and restores the dynamic tool catalog across handover", async () => {
+  const db = store();
+  const firstModel = model();
+  const resumedModel = model();
+  const runtime = await toolFixture(db, "never");
+  const originalCatalog = { mcp: [{ serverId: "server", fingerprint: "fixed", tools: [] }] };
+  const loadSkills = vi.fn(async () => [
+    { id: "reference", name: "Reports", description: "Write a report" },
+  ]);
+  const firstTools = { ...runtime.tools(), snapshot: () => structuredClone(originalCatalog) };
+  const first = runner(
+    db,
+    firstModel.models,
+    { tools: firstTools, approvals: runtime.approvals },
+    { loadSkills },
+  );
+  await send(first);
+  await advance();
+  expect(loadSkills).toHaveBeenCalledOnce();
+  expect(db.rows[0]!.checkpoint.skills).toEqual(await loadSkills.mock.results[0]!.value);
+  expect(db.rows[0]!.checkpoint.toolCatalog).toEqual(originalCatalog);
+  expect(
+    firstModel.calls[0]!.input.history.some((entry) =>
+      entry.text.includes('"source":"enabled_skills"'),
+    ),
+  ).toBe(true);
+  await first.close();
+  const restore = vi.fn();
+  const changedSkills = vi.fn(async () => [
+    { id: "new", name: "Changed", description: "New metadata" },
+  ]);
+  const resumedTools = { ...runtime.tools(), snapshot: () => ({ mcp: [] }), restore };
+  const second = runner(
+    db,
+    resumedModel.models,
+    { tools: resumedTools, approvals: runtime.approvals },
+    { loadSkills: changedSkills },
+  );
+  await second.startWorker();
+  await advance();
+  expect(changedSkills).not.toHaveBeenCalled();
+  expect(restore).toHaveBeenCalledWith(
+    expect.objectContaining({ id: db.rows[0]!.run.id }),
+    originalCatalog,
+  );
+  expect(resumedModel.calls[0]!.input.history).toEqual(firstModel.calls[0]!.input.history);
+  resumedModel.calls[0]!.complete("Resumed");
+  await advance();
+  expect(db.rows[0]!.run.state).toBe("succeeded");
+});

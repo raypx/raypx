@@ -11,7 +11,8 @@
     "./pi/context": "./src/pi/context.ts",
     "./computer": "./src/computer/index.ts",
     "./computer/docker": "./src/computer/docker.ts",
-    "./testing/computer": "./tests/helpers/computer.ts"
+    "./testing/computer": "./tests/helpers/computer.ts",
+    "./mcp": "./src/mcp/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "catalog:",
+    "@modelcontextprotocol/client": "catalog:",
     "@raypx/ai": "workspace:*",
     "@raypx/core": "workspace:*",
     "zod": "catalog:"

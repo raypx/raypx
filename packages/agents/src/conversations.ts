@@ -114,6 +114,9 @@ export interface RunCheckpoint {
     untrustedInput: boolean;
   };
   routineTiming?: { dueAt: string; startedAt: string; timezone: string; annotation: string };
+  skills?: Array<{ id: string; name: string; description: string }>;
+  /** Credential-free, frozen dynamic tool metadata. */
+  toolCatalog?: unknown;
 }
 export interface RunExecution {
   /** Fresh admission for the Run's initiating member, independent of who woke it. */

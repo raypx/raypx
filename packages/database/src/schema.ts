@@ -158,6 +158,9 @@ export const spaceEvents = pgTable(
         "space.member.removed",
         "space.member.role_changed",
         "space.renamed",
+        "page.created",
+        "page.updated",
+        "page.deleted",
       ],
     }).notNull(),
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
@@ -168,7 +171,7 @@ export const spaceEvents = pgTable(
     primaryKey({ columns: [table.spaceId, table.id] }),
     check(
       "space_events_kind_check",
-      sql`${table.kind} in ('space.member.joined', 'space.member.removed', 'space.member.role_changed', 'space.renamed')`,
+      sql`${table.kind} in ('space.member.joined', 'space.member.removed', 'space.member.role_changed', 'space.renamed', 'page.created', 'page.updated', 'page.deleted')`,
     ),
     foreignKey({
       columns: [table.spaceId, table.subjectAccountId],
@@ -942,7 +945,7 @@ export const approvalRules = pgTable(
     check("approval_rules_decision_check", sql`${table.decision} in ('allow', 'block')`),
     check(
       "approval_rules_tool_check",
-      sql`${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update')`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_rules_executable_check",
@@ -1018,7 +1021,7 @@ export const approvalRequests = pgTable(
     }).onDelete("cascade"),
     check(
       "approval_requests_tool_check",
-      sql`${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update')`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_requests_state_check",
@@ -1065,7 +1068,7 @@ export const conversationEffects = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_effects_tool_check",
-      sql`${table.toolName} in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update')`,
+      sql`(${table.toolName} in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or ${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(${table.toolName}) <= 128)`,
     ),
     check(
       "conversation_effects_state_check",
@@ -1908,7 +1911,354 @@ export const conversationRunMemoryPins = pgTable(
   ],
 );
 
+export const pages = pgTable(
+  "pages",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    agentId: text("agent_id"),
+    title: text("title").notNull(),
+    kind: text("kind", { enum: ["document", "html"] }).notNull(),
+    version: integer("version").notNull().default(1),
+    createdAt: date("created_at").notNull().defaultNow(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    foreignKey({
+      columns: [table.spaceId, table.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    index("pages_list_idx").on(table.spaceId, table.updatedAt, table.id),
+    index("pages_agent_idx").on(table.spaceId, table.agentId),
+    check("pages_kind_check", sql`${table.kind} in ('document', 'html')`),
+    check("pages_version_check", sql`${table.version} > 0`),
+    check("pages_title_check", sql`length(${table.title}) between 1 and 200`),
+  ],
+);
+export const pageVersions = pgTable(
+  "page_versions",
+  {
+    spaceId: text("space_id").notNull(),
+    pageId: text("page_id").notNull(),
+    version: integer("version").notNull(),
+    title: text("title").notNull(),
+    kind: text("kind", { enum: ["document", "html"] }).notNull(),
+    body: text("body").notNull(),
+    // Historical attribution, never an account, membership or execution grant.
+    author: jsonb("author")
+      .$type<{ kind: "member" | "run"; accountId: string; runId: string | null }>()
+      .notNull(),
+    reason: text("reason", { enum: ["created", "updated", "renamed", "restored"] }).notNull(),
+    mutationKey: text("mutation_key"),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.pageId, table.version] }),
+    foreignKey({
+      columns: [table.spaceId, table.pageId],
+      foreignColumns: [pages.spaceId, pages.id],
+    }).onDelete("cascade"),
+    uniqueIndex("page_versions_mutation_idx")
+      .on(table.spaceId, table.mutationKey)
+      .where(sql`${table.mutationKey} is not null`),
+    check("page_versions_version_check", sql`${table.version} > 0`),
+    check("page_versions_kind_check", sql`${table.kind} in ('document', 'html')`),
+    check(
+      "page_versions_reason_check",
+      sql`${table.reason} in ('created', 'updated', 'renamed', 'restored')`,
+    ),
+    check("page_versions_size_check", sql`octet_length(${table.body}) <= 262144`),
+  ],
+);
+export const pageShareLinks = pgTable(
+  "page_share_links",
+  {
+    spaceId: text("space_id").notNull(),
+    id: text("id").notNull(),
+    pageId: text("page_id").notNull(),
+    version: integer("version"),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+    expiresAt: date("expires_at"),
+    revokedAt: date("revoked_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    foreignKey({
+      columns: [table.spaceId, table.pageId],
+      foreignColumns: [pages.spaceId, pages.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.pageId, table.version],
+      foreignColumns: [pageVersions.spaceId, pageVersions.pageId, pageVersions.version],
+    }).onDelete("cascade"),
+    uniqueIndex("page_share_links_token_idx").on(table.tokenHash),
+    index("page_share_links_page_idx").on(table.spaceId, table.pageId, table.createdAt, table.id),
+    check("page_share_links_hash_check", sql`${table.tokenHash} ~ '^[a-f0-9]{64}$'`),
+    check("page_share_links_version_check", sql`${table.version} is null or ${table.version} > 0`),
+  ],
+);
+
+const skillTimes = () => ({
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+const skillContentColumns = () => ({
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  body: text("body").notNull(),
+});
+export const memberSkills = pgTable(
+  "member_skills",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    ...skillContentColumns(),
+    availability: text("availability", { enum: ["all", "selected"] }).notNull(),
+    ...skillTimes(),
+  },
+  (table) => [
+    unique("member_skills_owner_idx").on(table.id, table.accountId),
+    index("member_skills_account_idx").on(table.accountId, table.createdAt, table.id),
+    check("member_skills_availability_check", sql`${table.availability} in ('all', 'selected')`),
+    check(
+      "member_skills_size_check",
+      sql`length(${table.name}) between 1 and 120 and length(${table.description}) between 1 and 500 and octet_length(${table.body}) <= 256000`,
+    ),
+  ],
+);
+export const memberSkillSpaces = pgTable(
+  "member_skill_spaces",
+  {
+    skillId: text("skill_id").notNull(),
+    accountId: text("account_id").notNull(),
+    spaceId: text("space_id").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.skillId, table.spaceId] }),
+    foreignKey({
+      columns: [table.skillId, table.accountId],
+      foreignColumns: [memberSkills.id, memberSkills.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    index("member_skill_spaces_member_idx").on(table.spaceId, table.accountId, table.skillId),
+  ],
+);
+export const spaceSkills = pgTable(
+  "space_skills",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    agentId: text("agent_id").notNull(),
+    ...skillContentColumns(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    ...skillTimes(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    foreignKey({
+      columns: [table.spaceId, table.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    index("space_skills_order_idx").on(table.spaceId, table.createdAt, table.id),
+    check(
+      "space_skills_size_check",
+      sql`length(${table.name}) between 1 and 120 and length(${table.description}) between 1 and 500 and octet_length(${table.body}) <= 256000`,
+    ),
+  ],
+);
+export const agentMemberSkills = pgTable(
+  "agent_member_skills",
+  {
+    spaceId: text("space_id").notNull(),
+    agentId: text("agent_id").notNull(),
+    accountId: text("account_id").notNull(),
+    skillId: text("skill_id").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.agentId, table.accountId, table.skillId] }),
+    foreignKey({
+      columns: [table.spaceId, table.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.skillId, table.accountId],
+      foreignColumns: [memberSkills.id, memberSkills.accountId],
+    }).onDelete("cascade"),
+    index("agent_member_skills_skill_idx").on(table.skillId, table.accountId),
+  ],
+);
+export const agentSpaceSkills = pgTable(
+  "agent_space_skills",
+  {
+    spaceId: text("space_id").notNull(),
+    agentId: text("agent_id").notNull(),
+    accountId: text("account_id").notNull(),
+    skillId: text("skill_id").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.agentId, table.accountId, table.skillId] }),
+    foreignKey({
+      columns: [table.spaceId, table.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.skillId],
+      foreignColumns: [spaceSkills.spaceId, spaceSkills.id],
+    }).onDelete("cascade"),
+    index("agent_space_skills_skill_idx").on(table.spaceId, table.skillId),
+  ],
+);
+export const skillMutations = pgTable(
+  "skill_mutations",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    toolCallId: text("tool_call_id").notNull(),
+    skillId: text("skill_id").notNull(),
+    digest: text("digest").notNull(),
+    fence: integer("fence").notNull(),
+    result: jsonb("result").$type<{ id: string }>().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.runId, table.toolCallId] }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.skillId],
+      foreignColumns: [spaceSkills.spaceId, spaceSkills.id],
+    }).onDelete("cascade"),
+    index("skill_mutations_skill_idx").on(table.spaceId, table.skillId),
+  ],
+);
+
+export const mcpServers = pgTable(
+  "mcp_servers",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    url: text("url").notNull(),
+    availability: text("availability", { enum: ["all", "selected"] }).notNull(),
+    secretId: text("secret_id").notNull(),
+    hasCredentials: boolean("has_credentials").notNull().default(false),
+    createdAt: date("created_at").notNull().defaultNow(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    unique("mcp_servers_owner_idx").on(t.id, t.accountId),
+    unique("mcp_servers_secret_owner_idx").on(t.id, t.accountId, t.secretId),
+    index("mcp_servers_account_idx").on(t.accountId, t.createdAt, t.id),
+    check("mcp_servers_availability_check", sql`${t.availability} in ('all', 'selected')`),
+  ],
+);
+export const mcpServerSecrets = pgTable(
+  "mcp_server_secrets",
+  {
+    id: text("id").primaryKey(),
+    serverId: text("server_id").notNull(),
+    accountId: text("account_id").notNull(),
+    ciphertext: text("ciphertext").notNull(),
+    wrappedDataKey: text("wrapped_data_key").notNull(),
+    keyId: text("key_id").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.serverId, t.accountId, t.id],
+      foreignColumns: [mcpServers.id, mcpServers.accountId, mcpServers.secretId],
+    }).onDelete("cascade"),
+    index("mcp_server_secrets_owner_idx").on(t.accountId, t.serverId),
+  ],
+);
+export const mcpServerSpaces = pgTable(
+  "mcp_server_spaces",
+  {
+    serverId: text("server_id").notNull(),
+    accountId: text("account_id").notNull(),
+    spaceId: text("space_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.serverId, t.spaceId] }),
+    foreignKey({
+      columns: [t.serverId, t.accountId],
+      foreignColumns: [mcpServers.id, mcpServers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    index("mcp_server_spaces_member_idx").on(t.spaceId, t.accountId, t.serverId),
+  ],
+);
+export const agentMcpServers = pgTable(
+  "agent_mcp_servers",
+  {
+    spaceId: text("space_id").notNull(),
+    agentId: text("agent_id").notNull(),
+    accountId: text("account_id").notNull(),
+    serverId: text("server_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.agentId, t.accountId, t.serverId] }),
+    foreignKey({
+      columns: [t.spaceId, t.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.serverId, t.accountId],
+      foreignColumns: [mcpServers.id, mcpServers.accountId],
+    }).onDelete("cascade"),
+    index("agent_mcp_servers_owner_idx").on(t.accountId, t.serverId),
+  ],
+);
+
 export const schema = {
+  pages,
+  pageVersions,
+  pageShareLinks,
+  memberSkills,
+  memberSkillSpaces,
+  spaceSkills,
+  agentMemberSkills,
+  agentSpaceSkills,
+  skillMutations,
+  mcpServers,
+  mcpServerSecrets,
+  mcpServerSpaces,
+  agentMcpServers,
   spaceInvitations,
   spaceSettingsOverrides,
   spaceAudit,

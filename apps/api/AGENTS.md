@@ -395,3 +395,10 @@ start scans schedules; shutdown stops scans and drains before runner/storage.
 Email requires paired `ROUTINE_EMAIL_RELAY_TOKEN` and `ROUTINE_EMAIL_DOMAIN`;
 the token is dedicated and never reaches a worker. Memory tools share the existing
 approval/effect pipeline and secret guards, with stale execution fences propagated.
+
+Phase 5 composes Pages, skills and remote HTTP servers for both API and worker Runs.
+`/page-content/public/:token` never resolves a session; `/page-content/member/:spaceId/:pageId`
+resolves it freshly. Both preserve their sandbox CSP rather than API's deny-frame
+policy, set no cookies and use no-store. Public limits use token/address digests.
+Only model/remote adapters open secret-store envelopes. Remote credential guards
+cover tool metadata, arguments and results before checkpoints/effects/events.

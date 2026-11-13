@@ -289,3 +289,12 @@ deletion removes the corresponding pin relations through CASCADE; it never delet
 the checkpoint or changes accepted context, and later writes do not recreate those
 references. A resume hydrates remaining pins in original selection order and uses
 the same context bytes without looking up newer memory.
+
+Phase 5 freezes the enabled skill name/description catalog and credential-free
+remote tool metadata in the first checkpoint before inference. Recovery restores
+accepted metadata, revalidates current per-member availability and endpoint
+fingerprints, and does not silently relist changed remote tool schemas. Skill
+body loads still require current enablement. Page and learned-skill writes use
+attempt fences and durable mutation receipts in addition to effect outcomes.
+Stopping aborts remote transport through the same Run signal; completed effect
+outcomes are reused on resume while unknown outcomes retain the existing guard.

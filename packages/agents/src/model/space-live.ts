@@ -106,7 +106,12 @@ export class SpaceLiveController {
               )
                 return;
               const event = frame.event;
-              if (!this.alreadyReflected(event)) {
+              if (
+                event.kind !== "page.created" &&
+                event.kind !== "page.updated" &&
+                event.kind !== "page.deleted" &&
+                !this.alreadyReflected(event)
+              ) {
                 // A discovery started before this event may contain an older name or role.
                 ++this.reconcileRead;
                 if (
@@ -153,7 +158,9 @@ export class SpaceLiveController {
     // Rejoining does not erase old membership events. A prior removal must not
     // evict the newly admitted member when subscribing from the beginning.
     if (
-      event.kind !== "space.renamed" &&
+      (event.kind === "space.member.joined" ||
+        event.kind === "space.member.removed" ||
+        event.kind === "space.member.role_changed") &&
       event.payload.accountId === this.options.accountId &&
       membership &&
       Date.parse(event.createdAt) <= Date.parse(membership.member.createdAt)

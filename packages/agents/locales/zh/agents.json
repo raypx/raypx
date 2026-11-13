@@ -98,7 +98,12 @@
     "updateMemory": "更新记忆",
     "messageAgent": "向智能体发消息",
     "delegateTask": "委派任务",
-    "waitForChildren": "等待委派任务"
+    "waitForChildren": "等待委派任务",
+    "createPage": "创建页面",
+    "updatePage": "更新页面",
+    "readPage": "读取页面",
+    "loadSkill": "加载技能",
+    "saveSkill": "保存技能"
   },
   "approval": {
     "answeredBy": "由{member}处理",

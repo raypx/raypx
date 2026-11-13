@@ -474,6 +474,8 @@ export function createConversationsRepository(
       .orderBy(asc(effects.createdAt), asc(effects.key));
     const data: StoredCheckpoint = {
       ...continuation,
+      ...(stored.skills ? { skills: stored.skills } : {}),
+      ...(stored.toolCatalog !== undefined ? { toolCatalog: stored.toolCatalog } : {}),
       openEffects: open.map((effect) => effect.key),
       ...(memory
         ? { memory: { context: memory.context, untrustedInput: memory.untrustedInput } }
