@@ -27,7 +27,10 @@ Run this workspace's check and tests, CLI adapter/replay/provider tests, then re
 
 - `./computer` owns the provider-neutral lifecycle, execution, bounded file and home
   port plus the offline virtual in-memory implementation. API's Computers service
-  and Sandbox consume it. It never executes host commands.
+  and Sandbox consume it. It never executes host commands. Optional `readFile`
+  returns a bounded prefix and observed total size for member previews; memory
+  and Docker implement it. Docker runs the fixed no-follow reader through private
+  execution transport in the prepared computer image, never a shell or backend process.
 - `./computer/docker` is the lazily selected supervisor HTTP adapter, consumed by
   API. Only Sandbox opens the Engine socket. Vendor details stay inside adapters.
 - `./testing/computer` is the runner-injected conformance suite consumed by Sandbox

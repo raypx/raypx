@@ -118,6 +118,7 @@ it.each(["ask", "never"] as const)(
   async (mode) => {
     const f = fixture();
     await f.rpc.approvals.updateSettings({
+      expectedRevision: (await f.rpc.approvals.settings({})).revision,
       mode,
       rules: [{ toolName: "computer_write_file", executable: null, decision: "block" }],
     });
@@ -136,6 +137,7 @@ it.each(["allowed", "never"] as const)(
   async (policy) => {
     const f = fixture();
     await f.rpc.approvals.updateSettings({
+      expectedRevision: (await f.rpc.approvals.settings({})).revision,
       mode: policy === "never" ? "never" : "ask",
       rules:
         policy === "allowed"
@@ -216,7 +218,11 @@ it("stop resolves pending approvals as cancelled and cancels a running command",
   expect(pending.requests[0]!.state).toBe("cancelled");
   expect(pending.runs[0]!.state).toBe("cancelled");
   const f = fixture();
-  await f.rpc.approvals.updateSettings({ mode: "never", rules: [] });
+  await f.rpc.approvals.updateSettings({
+    expectedRevision: (await f.rpc.approvals.settings({})).revision,
+    mode: "never",
+    rules: [],
+  });
   const execute = vi.spyOn(f.provider, "execute");
   await f.send();
   await expect.poll(() => f.calls.length).toBe(1);
@@ -237,7 +243,11 @@ it("stop resolves pending approvals as cancelled and cancels a running command",
 
 it("reuses recorded effects for identical calls and blocks continuation after an interrupted effect", async () => {
   const f = fixture();
-  await f.rpc.approvals.updateSettings({ mode: "never", rules: [] });
+  await f.rpc.approvals.updateSettings({
+    expectedRevision: (await f.rpc.approvals.settings({})).revision,
+    mode: "never",
+    rules: [],
+  });
   const writeFile = vi.spyOn(f.provider, "write");
   await startWrite(f);
   await expect.poll(() => f.calls.length).toBe(2);
@@ -261,11 +271,21 @@ it("reuses recorded effects for identical calls and blocks continuation after an
 
 it("bounds computer output before returning it to the model and refuses Auto explicitly", async () => {
   const f = fixture();
-  await expect(f.rpc.approvals.updateSettings({ mode: "auto", rules: [] })).rejects.toMatchObject({
+  await expect(
+    f.rpc.approvals.updateSettings({
+      expectedRevision: (await f.rpc.approvals.settings({})).revision,
+      mode: "auto",
+      rules: [],
+    }),
+  ).rejects.toMatchObject({
     code: "BAD_REQUEST",
     message: "APPROVAL_MODE_UNAVAILABLE",
   });
-  await f.rpc.approvals.updateSettings({ mode: "never", rules: [] });
+  await f.rpc.approvals.updateSettings({
+    expectedRevision: (await f.rpc.approvals.settings({})).revision,
+    mode: "never",
+    rules: [],
+  });
   await f.send();
   await expect.poll(() => f.calls.length).toBe(1);
   f.calls[0]!.toolCalls([
@@ -293,7 +313,11 @@ it("rejects a non-member before reading or answering requests and protects mutat
       .approvals.answer({ spaceId: f.spaceId, requestId, decision: "approved" }),
   ).rejects.toMatchObject({ code: "FORBIDDEN" });
   await expect(
-    f.client("https://evil.example.test").approvals.updateSettings({ mode: "never", rules: [] }),
+    f.client("https://evil.example.test").approvals.updateSettings({
+      expectedRevision: (await f.rpc.approvals.settings({})).revision,
+      mode: "never",
+      rules: [],
+    }),
   ).rejects.toMatchObject({ code: "FORBIDDEN" });
   const reads = vi.spyOn(f.agentApprovals, "listPending");
   const answers = vi.spyOn(f.agentApprovals, "answer");
@@ -315,7 +339,11 @@ it("rejects a non-member before reading or answering requests and protects mutat
 it("bounds tool rounds and stops before another effect can run", async () => {
   const f = fixture({ maxToolRounds: 1 });
   const writeFile = vi.spyOn(f.provider, "write");
-  await f.rpc.approvals.updateSettings({ mode: "never", rules: [] });
+  await f.rpc.approvals.updateSettings({
+    expectedRevision: (await f.rpc.approvals.settings({})).revision,
+    mode: "never",
+    rules: [],
+  });
   await startWrite(f);
   await expect.poll(() => f.calls.length).toBe(2);
   f.calls[1]!.toolCalls([write("over-budget")]);
@@ -323,4 +351,46 @@ it("bounds tool rounds and stops before another effect can run", async () => {
   expect(writeFile).toHaveBeenCalledTimes(1);
   expect(f.effects).toHaveLength(1);
   expect(f.calls).toHaveLength(2);
+});
+
+it("returns approval mode availability and a current-settings conflict for stale edits", async () => {
+  const f = fixture();
+  const initial = await f.rpc.approvals.settings({});
+  expect(initial).toMatchObject({
+    revision: 0,
+    availableModes: [
+      { mode: "ask", available: true, reasonCode: null },
+      { mode: "never", available: true, reasonCode: null },
+      { mode: "auto", available: false, reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+    ],
+  });
+  const current = await f.rpc.approvals.updateSettings({
+    mode: "never",
+    rules: [],
+    expectedRevision: initial.revision,
+  });
+  expect(current.revision).toBe(1);
+  await expect(
+    f.rpc.approvals.updateSettings({
+      mode: "ask",
+      rules: [],
+      expectedRevision: initial.revision,
+    }),
+  ).rejects.toMatchObject({
+    code: "CONFLICT",
+    message: "APPROVAL_SETTINGS_CONFLICT",
+    data: { code: "APPROVAL_SETTINGS_CONFLICT", settings: current },
+  });
+  expect(await f.rpc.approvals.settings({})).toEqual(current);
+  await expect(
+    f.rpc.approvals.updateSettings({
+      mode: "auto",
+      rules: [],
+      expectedRevision: current.revision,
+    }),
+  ).rejects.toMatchObject({
+    code: "BAD_REQUEST",
+    message: "APPROVAL_MODE_UNAVAILABLE",
+    data: { reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+  });
 });

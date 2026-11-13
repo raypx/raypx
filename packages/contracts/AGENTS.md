@@ -7,6 +7,10 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 
 ## Interface
 
+`modelConnections.list/create/update/delete/test` is session-account scoped.
+Credentials are input-only on create/update; metadata outputs never include a
+secret reference. Model offers add connection/deployment source without endpoints.
+
 `/api` composes `spaces.list/create` and `agents.create/list/get/update/delete`
 from Core. They require a session, independently of deployment permissions. A
 `spaceId` selects the requested resource; API resolves membership on every call.
@@ -16,13 +20,18 @@ the strict projection contains no provider connection or credential fields.
 `conversations.send/events/snapshot` use the same session and Space admission.
 `/api` also composes the version-1 conversation stream subscribe/ACK/unsubscribe
 frames, transient reply prefix/delta frames and event/snapshot-required replies.
-`conversations.stop` cancels a selected Run. Snapshots include Runs and reply segments.
-`computers.get/start/stop` compose Core Computer state, use the same session/Space
-boundary and expose no command or file operation. `not-configured` is explicit.
+`conversations.stop` cancels a selected Run. Snapshots include Runs, reply segments
+and optional bounded toolActivity/toolActivityTruncated fields. Tool lifecycle events
+share toolCallId with approval cards and contain summaries/outcomes only.
+`computers.get/start/stop` compose Core Computer state. `computers.listDirectory/readFile`
+are bounded read-only workspace access. All use the same session/Space boundary;
+file reads never start compute. Unconfigured, stopped and unavailable states are explicit.
 Member management remains outside this slice.
 `approvals.pending/answer/settings/updateSettings/effects` compose backend Computer
 approval schemas. Pending/answer/effects select a Space; settings use the session
-account. Auto is accepted only to return explicit unavailability. Card events carry
+account. Settings return their revision and mode availability; updates require
+expectedRevision and return current settings on an explicit stale-edit conflict.
+Auto is accepted only to return explicit unavailability. Card events carry
 bounded summaries and targets, never exact arguments or file/command content.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 

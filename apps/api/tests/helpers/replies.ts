@@ -12,6 +12,7 @@ import {
   messageSchema,
   type ConversationEvent,
   type ReplySegment,
+  type ToolActivity,
 } from "@raypx/core/conversation";
 import { conversationFixture } from "./conversations.js";
 import { modelFixture } from "./model.js";
@@ -54,7 +55,23 @@ export function replyFixture(toolRuntime?: RunTools) {
       throw new StaleRunFenceError();
     return stored;
   }
+  const toolActivity = new Map<string, ToolActivity>();
   const repository: ConversationsRepository & ConversationRunRepository = {
+    async beginTool(_scope, run, tool) {
+      active(run);
+      const key = `${run.id}/${tool.toolCallId}`;
+      if (toolActivity.has(key)) return;
+      toolActivity.set(key, {
+        runId: run.id,
+        ...tool,
+        startedAt: new Date().toISOString(),
+        finishedAt: null,
+        outcome: null,
+        durationMs: null,
+        exitStatus: null,
+      });
+      publish({ kind: "tool.started", runId: run.id, ...tool });
+    },
     ...f.conversations,
     async send(_scope, _id, input) {
       const existing = receipts.get(input.idempotencyKey);
@@ -194,7 +211,10 @@ export function replyFixture(toolRuntime?: RunTools) {
     async commitTurn(_scope, run, turn) {
       const stored = active(run);
       checkpoints.set(run.id, structuredClone(turn.checkpoint));
-      if (!turn.text || !turn.segmentId) return false;
+      if (!turn.text || !turn.segmentId) {
+        for (const tool of turn.tools ?? []) await repository.beginTool(f.scope, run, tool);
+        return false;
+      }
       const segment: ReplySegment = {
         id: turn.segmentId,
         spaceId: f.spaceId,
@@ -208,6 +228,7 @@ export function replyFixture(toolRuntime?: RunTools) {
       const firstResponse = !stored.firstResponseAt;
       stored.firstResponseAt ??= turn.firstResponseAt ?? now();
       publish({ kind: "reply.segment", segment });
+      for (const tool of turn.tools ?? []) await repository.beginTool(f.scope, run, tool);
       return firstResponse;
     },
     async heartbeat(_scope, run, leaseMs) {
@@ -223,9 +244,28 @@ export function replyFixture(toolRuntime?: RunTools) {
       active(run);
       leases.delete(run.id);
     },
-    async saveCheckpoint(_scope, run, checkpoint) {
+    async saveCheckpoint(_scope, run, checkpoint, tool) {
       active(run);
       checkpoints.set(run.id, structuredClone(checkpoint));
+      if (tool) {
+        const activity = toolActivity.get(`${run.id}/${tool.toolCallId}`)!;
+        if (activity.finishedAt) return;
+        activity.finishedAt = now();
+        activity.durationMs = Math.max(0, Date.now() - Date.parse(activity.startedAt));
+        activity.outcome = tool.outcome;
+        activity.exitStatus = tool.exitStatus;
+        publish({
+          kind: "tool.finished",
+          runId: run.id,
+          toolCallId: activity.toolCallId,
+          toolName: activity.toolName,
+          target: activity.target,
+          argumentSummary: activity.argumentSummary,
+          outcome: activity.outcome,
+          durationMs: activity.durationMs,
+          exitStatus: activity.exitStatus,
+        });
+      }
     },
     async consumeSteering(_scope, run, checkpoint) {
       active(run);

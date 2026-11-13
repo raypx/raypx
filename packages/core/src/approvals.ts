@@ -30,6 +30,26 @@ export const approvalSettingsSchema = z.strictObject({
   rules: z.array(approvalRuleSchema).max(256),
 });
 export type ApprovalSettings = z.infer<typeof approvalSettingsSchema>;
+export const revisionedApprovalSettingsSchema = approvalSettingsSchema.extend({
+  revision: z.number().int().nonnegative(),
+});
+export type RevisionedApprovalSettings = z.infer<typeof revisionedApprovalSettingsSchema>;
+export const approvalModeAvailabilitySchema = z.discriminatedUnion("available", [
+  z.strictObject({
+    mode: approvalModeInputSchema,
+    available: z.literal(true),
+    reasonCode: z.null(),
+  }),
+  z.strictObject({
+    mode: approvalModeInputSchema,
+    available: z.literal(false),
+    reasonCode: z.enum(["REVIEW_MODEL_NOT_CONFIGURED"]),
+  }),
+]);
+export const approvalSettingsStateSchema = revisionedApprovalSettingsSchema.extend({
+  availableModes: z.array(approvalModeAvailabilitySchema).length(3),
+});
+export type ApprovalSettingsState = z.infer<typeof approvalSettingsStateSchema>;
 export const approvalRequestIdSchema = z.string().min(1).max(128).brand<"ApprovalRequestId">();
 export const approvalStateSchema = z.enum([
   "pending",
@@ -49,6 +69,7 @@ export const toolArgumentsSchema = z
   );
 export const approvalCardFields = {
   requestId: approvalRequestIdSchema,
+  toolCallId: z.string().min(1).max(128).optional(),
   runId: runIdSchema,
   toolName: computerToolNameSchema,
   argumentSummary: z.string().max(1_024),

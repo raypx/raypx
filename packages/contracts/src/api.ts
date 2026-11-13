@@ -30,6 +30,7 @@ import { memoryContract } from "./memory.js";
 import { conversationsContract } from "./conversation.js";
 export * from "./conversation.js";
 import { spacesContract, agentsContract, computersContract } from "./spaces.js";
+import { modelConnectionsContract } from "./model-connections.js";
 export * from "./memory.js";
 import {
   hostAuthorizationSchema,
@@ -58,6 +59,7 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  modelConnections: modelConnectionsContract,
   computers: computersContract,
   spaces: spacesContract,
   agents: agentsContract,

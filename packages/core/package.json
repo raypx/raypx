@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./model-connections": "./src/model-connections.ts",
     "./spaces": "./src/spaces.ts",
     "./agents": "./src/agents.ts",
     "./auth": "./src/auth.ts",

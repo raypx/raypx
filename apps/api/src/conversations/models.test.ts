@@ -29,8 +29,8 @@ it("projects configured identifiers and display names without provider or creden
   );
   try {
     await expect(models.list(scope)).resolves.toEqual([
-      { modelId: "chat", name: "Friendly chat" },
-      { modelId: "plain", name: "plain" },
+      { modelId: "chat", name: "Friendly chat", source: "deployment" },
+      { modelId: "plain", name: "plain", source: "deployment" },
     ]);
   } finally {
     models.close();
@@ -99,7 +99,7 @@ it("pins the deployment connection selectors and rejects removal or remapping on
     await expect(original.resolve(run)).resolves.toHaveProperty("connectionId", run.connectionId);
     await expect(missing.resolve(run)).rejects.toMatchObject({ code: "CONNECTION_UNAVAILABLE" });
     await expect(remapped.resolve(run)).rejects.toMatchObject({ code: "CONNECTION_UNAVAILABLE" });
-    await expect(removed.resolve(run)).rejects.toMatchObject({ code: "AI_MODEL_NOT_FOUND" });
+    await expect(removed.resolve(run)).rejects.toMatchObject({ code: "CONNECTION_UNAVAILABLE" });
   } finally {
     for (const models of [original, missing, remapped, removed]) models.close();
   }

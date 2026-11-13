@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { computers, spaces, user } from "@raypx/database/schema";
-import { inArray } from "drizzle-orm";
+import { computers, spaces, spaceMembers, user } from "@raypx/database/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { createComputersService } from "@raypx/computers/server";
 import { createComputersRepository } from "@raypx/computers/server/postgres";
@@ -16,11 +16,9 @@ const owner = `computer-api-${crypto.randomUUID()}`;
 const stranger = `computer-api-${crypto.randomUUID()}`;
 const owned: string[] = [];
 const access = createSpaceAccess(connection.db);
-const service = createComputersService(
-  createComputersRepository(connection.db),
-  createMemoryComputerProvider(),
-  "memory",
-);
+const repository = createComputersRepository(connection.db);
+const provider = createMemoryComputerProvider();
+const service = createComputersService(repository, provider, "memory");
 beforeAll(async () => {
   await migrateDatabase(url);
   await connection.db.insert(user).values(
@@ -41,10 +39,10 @@ afterAll(async () => {
     await connection.close();
   }
 });
-function client(id: string) {
+function client(id: string, computerService = service) {
   const app = createApiApp({
     spaces: access,
-    computers: service,
+    computers: computerService,
     allowedOrigins: ["https://web.example.test"],
     readSession: async () => ({
       user: {
@@ -88,4 +86,62 @@ it("admits fresh Space members, provisions once, and refuses outsiders on read/s
       .from(computers)
       .where(inArray(computers.spaceId, [space.id])),
   ).toHaveLength(1);
+});
+
+it("reads bounded workspace files for current members without starting stopped compute", async () => {
+  const { space } = await access.create(owner, { name: "Computer files fixture" });
+  owned.push(space.id);
+  const ownerClient = client(owner);
+  expect(await ownerClient.computers.readFile({ spaceId: space.id, path: "file" })).toEqual({
+    status: "not-running",
+    state: null,
+  });
+  expect(await repository.get(await access.resolve(owner, space.id))).toBeNull();
+  expect(
+    await client(owner, createComputersService(repository, null)).computers.listDirectory({
+      spaceId: space.id,
+    }),
+  ).toEqual({ status: "not-configured" });
+  await ownerClient.computers.start({ spaceId: space.id });
+  const computer = (await repository.get(await access.resolve(owner, space.id)))!;
+  const ref = { id: computer.id, generation: computer.generation };
+  await provider.write(ref, "a", Buffer.from("hello world").toString("base64"));
+  await provider.write(ref, "b", "AA==");
+  expect(await ownerClient.computers.listDirectory({ spaceId: space.id, limit: 1 })).toEqual({
+    status: "available",
+    entries: [{ path: "a", kind: "file" }],
+    truncated: true,
+  });
+  expect(
+    await ownerClient.computers.readFile({ spaceId: space.id, path: "a", maxBytes: 5 }),
+  ).toEqual({
+    status: "available",
+    bytes: "aGVsbG8=",
+    size: 11,
+    truncated: true,
+    contentType: "text",
+  });
+  await expect(
+    ownerClient.computers.readFile({ spaceId: space.id, path: "../outside" }),
+  ).rejects.toMatchObject({ data: { error: { code: "FILE_PATH_REFUSED" } } });
+  await expect(
+    client(stranger).computers.readFile({ spaceId: space.id, path: "a" }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await connection.db
+    .insert(spaceMembers)
+    .values({ spaceId: space.id, accountId: stranger, role: "member" });
+  expect(await client(stranger).computers.readFile({ spaceId: space.id, path: "b" })).toMatchObject(
+    { status: "available", contentType: "binary" },
+  );
+  await connection.db
+    .delete(spaceMembers)
+    .where(and(eq(spaceMembers.spaceId, space.id), eq(spaceMembers.accountId, stranger)));
+  await expect(
+    client(stranger).computers.listDirectory({ spaceId: space.id }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await ownerClient.computers.stop({ spaceId: space.id });
+  expect(await ownerClient.computers.readFile({ spaceId: space.id, path: "a" })).toEqual({
+    status: "not-running",
+    state: "stopped",
+  });
 });

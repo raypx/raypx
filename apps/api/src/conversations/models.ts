@@ -4,7 +4,10 @@ import { RunResourceUnavailableError, type ModelAccess } from "@raypx/agents/ser
 import type { SpaceScope } from "@raypx/spaces/server";
 
 export interface ConversationModels extends ModelAccess {
-  list(scope: SpaceScope): Promise<Array<{ modelId: string; name: string }>>;
+  list(
+    this: void,
+    scope: SpaceScope,
+  ): Promise<Array<{ modelId: string; name: string; source?: "deployment" | "connection" }>>;
 }
 
 const catalogSchema = z.array(
@@ -36,11 +39,19 @@ export function createDeploymentModels(
     async list() {
       return catalog
         .filter((entry) => Object.hasOwn(credentials, entry.credentialId))
-        .map((entry) => ({ modelId: entry.modelId, name: entry.name ?? entry.modelId }));
+        .map((entry) => ({
+          modelId: entry.modelId,
+          name: entry.name ?? entry.modelId,
+          source: "deployment" as const,
+        }));
     },
     async resolve(run) {
       const entry = catalog.find((item) => item.modelId === run.model.modelId);
-      if (!entry) throw new AiError("AI_MODEL_NOT_FOUND");
+      if (!entry) {
+        if ("connectionId" in run && run.connectionId)
+          throw new RunResourceUnavailableError("CONNECTION_UNAVAILABLE");
+        throw new AiError("AI_MODEL_NOT_FOUND");
+      }
       const apiKey = Object.hasOwn(credentials, entry.credentialId)
         ? credentials[entry.credentialId]
         : undefined;

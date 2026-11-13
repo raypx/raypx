@@ -12,6 +12,7 @@ import {
   type ProviderComputer,
   type ProcessEvent,
 } from "./port.js";
+import { MAX_COMPUTER_FILE_BYTES } from "@raypx/core/computers";
 
 type Entry =
   | { kind: "file"; bytes: string; mode: number }
@@ -243,6 +244,18 @@ export function createMemoryComputerProvider(): ComputerProvider {
       if (Buffer.from(entry.bytes, "base64").length > maxBytes)
         throw new ComputerError("LIMIT_EXCEEDED");
       return { bytes: entry.bytes };
+    },
+    async readFile(ref, path, maxBytes) {
+      const c = current(ref, true);
+      bound(maxBytes, MAX_COMPUTER_FILE_BYTES);
+      const entry = c.files.get(pathFor(c, path));
+      if (entry?.kind !== "file") throw new ComputerError("NOT_FOUND");
+      const bytes = Buffer.from(entry.bytes, "base64");
+      return {
+        bytes: bytes.subarray(0, maxBytes).toString("base64"),
+        size: bytes.length,
+        truncated: bytes.length > maxBytes,
+      };
     },
     async write(ref, path, bytes) {
       const c = current(ref, true);

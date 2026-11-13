@@ -1,10 +1,13 @@
 import {
   approvalSettingsSchema,
+  approvalSettingsStateSchema,
   MAX_TOOL_RESULT,
   type ApprovalMode,
   type ApprovalRequest,
   type ApprovalRule,
   type ApprovalSettings,
+  type ApprovalSettingsState,
+  type RevisionedApprovalSettings,
   type ComputerToolName,
   type Effect,
 } from "@raypx/core/approvals";
@@ -35,6 +38,13 @@ export class EffectUnknownError extends Error {
     this.name = "EffectUnknownError";
   }
 }
+export class ApprovalSettingsConflictError extends Error {
+  readonly code = "APPROVAL_SETTINGS_CONFLICT";
+  constructor(readonly settings: RevisionedApprovalSettings) {
+    super("APPROVAL_SETTINGS_CONFLICT");
+    this.name = "ApprovalSettingsConflictError";
+  }
+}
 /** A previous attempt may still have computer work in flight. Never infer or replay yet. */
 export class EffectInProgressError extends Error {
   readonly code = "EFFECT_IN_PROGRESS";
@@ -56,6 +66,7 @@ export interface ApprovalCall {
 export interface ApprovalSettingsInput {
   mode: ApprovalMode | "auto";
   rules: ApprovalRule[];
+  expectedRevision: number;
 }
 export type ApprovalOutcome = "approved" | "denied" | "blocked" | "expired" | "cancelled";
 export interface ApprovalAnswer {
@@ -63,8 +74,13 @@ export interface ApprovalAnswer {
   allowTool?: boolean;
 }
 export interface ApprovalsRepository {
-  getSettings(accountId: string, defaultMode: ApprovalMode): Promise<ApprovalSettings>;
-  updateSettings(accountId: string, settings: ApprovalSettings): Promise<ApprovalSettings>;
+  getSettings(accountId: string, defaultMode: ApprovalMode): Promise<RevisionedApprovalSettings>;
+  updateSettings(
+    accountId: string,
+    settings: ApprovalSettings,
+    expectedRevision: number,
+    defaultMode: ApprovalMode,
+  ): Promise<RevisionedApprovalSettings>;
   listPending(scope: SpaceScope, now: Date): Promise<ApprovalRequest[]>;
   answer(
     scope: SpaceScope,
@@ -108,8 +124,8 @@ export interface ApprovalsRepository {
   ): Promise<void>;
 }
 export interface ApprovalsService {
-  getSettings(accountId: string): Promise<ApprovalSettings>;
-  updateSettings(accountId: string, input: ApprovalSettingsInput): Promise<ApprovalSettings>;
+  getSettings(accountId: string): Promise<ApprovalSettingsState>;
+  updateSettings(accountId: string, input: ApprovalSettingsInput): Promise<ApprovalSettingsState>;
   listPending(scope: SpaceScope): Promise<ApprovalRequest[]>;
   answer(scope: SpaceScope, id: string, answer: ApprovalAnswer): Promise<ApprovalRequest>;
   authorize(
@@ -204,8 +220,18 @@ export function createApprovalsService(
   const now = options.now ?? (() => new Date());
   if (![requestTtlMs, pollIntervalMs].every((value) => Number.isSafeInteger(value) && value > 0))
     throw new RangeError("Invalid approval timing");
+  function settingsState(value: RevisionedApprovalSettings): ApprovalSettingsState {
+    return approvalSettingsStateSchema.parse({
+      ...value,
+      availableModes: [
+        { mode: "ask", available: true, reasonCode: null },
+        { mode: "never", available: true, reasonCode: null },
+        { mode: "auto", available: false, reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+      ],
+    });
+  }
   async function settings(accountId: string) {
-    return repository.getSettings(accountId, defaultMode);
+    return settingsState(await repository.getSettings(accountId, defaultMode));
   }
   async function assertContinuable(scope: SpaceScope, run: ExecutionRun) {
     const effects = await repository.listEffects(scope, run.id, now(), run);
@@ -218,7 +244,16 @@ export function createApprovalsService(
     getSettings: settings,
     async updateSettings(accountId, input) {
       if (input.mode === "auto") throw new ApprovalOperationError("MODE_UNAVAILABLE");
-      return repository.updateSettings(accountId, approvalSettingsSchema.parse(input));
+      const value = approvalSettingsSchema.parse({ mode: input.mode, rules: input.rules });
+      try {
+        return settingsState(
+          await repository.updateSettings(accountId, value, input.expectedRevision, defaultMode),
+        );
+      } catch (error) {
+        if (error instanceof ApprovalSettingsConflictError)
+          throw new ApprovalSettingsConflictError(settingsState(error.settings));
+        throw error;
+      }
     },
     listPending: (scope) => repository.listPending(scope, now()),
     answer: (scope, id, answer) => repository.answer(scope, id, answer, now()),
@@ -261,7 +296,7 @@ export function createApprovalsService(
     async executeEffect(scope, run, call, operation, signal) {
       if (signal.aborted) return computerToolResult("cancelled", "The action was cancelled.");
       if (disposition(await settings(run.memberAccountId), call) === "blocked")
-        return computerToolResult("failed", "The action was refused by the Block list.");
+        return computerToolResult("refused", "BLOCKED");
       const argumentHash = await digest(canonicalJson(call.arguments));
       const key = await digest(canonicalJson([run.id, call.id, call.name, argumentHash]));
       const intent: Effect = {

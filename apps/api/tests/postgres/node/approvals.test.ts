@@ -121,7 +121,11 @@ beforeAll(async () => {
 });
 beforeEach(async () => {
   clock = new Date();
-  await ownerClient.approvals.updateSettings({ mode: "ask", rules: [] });
+  await ownerClient.approvals.updateSettings({
+    expectedRevision: (await ownerClient.approvals.settings({})).revision,
+    mode: "ask",
+    rules: [],
+  });
 });
 afterAll(async () => {
   try {
@@ -321,7 +325,11 @@ it("cancels a pending request through HTTP stop and keeps the cancelled resoluti
 });
 
 it("does not execute a recorded effect twice and exposes interrupted intent as unknown before continuation", async () => {
-  await ownerClient.approvals.updateSettings({ mode: "never", rules: [] });
+  await ownerClient.approvals.updateSettings({
+    expectedRevision: (await ownerClient.approvals.settings({})).revision,
+    mode: "never",
+    rules: [],
+  });
   const saved = await agents.create(scope, definition);
   await repository.send(scope, saved.conversation.id, { idempotencyKey: "effect", text: "Effect" });
   const execution = (await repository.claimNext(scope, saved.conversation.id, {
@@ -391,11 +399,20 @@ it("does not execute a recorded effect twice and exposes interrupted intent as u
 
 it("rejects unavailable Auto explicitly and keeps account settings isolated", async () => {
   await expect(
-    ownerClient.approvals.updateSettings({ mode: "auto", rules: [] }),
+    ownerClient.approvals.updateSettings({
+      expectedRevision: (await ownerClient.approvals.settings({})).revision,
+      mode: "auto",
+      rules: [],
+    }),
   ).rejects.toMatchObject({ code: "BAD_REQUEST", message: "APPROVAL_MODE_UNAVAILABLE" });
   await ownerClient.approvals.updateSettings({
+    expectedRevision: (await ownerClient.approvals.settings({})).revision,
     mode: "never",
     rules: [{ toolName: "computer_run_command", executable: "git", decision: "block" }],
   });
-  expect(await outsiderClient.approvals.settings({})).toEqual({ mode: "ask", rules: [] });
+  expect(await outsiderClient.approvals.settings({})).toMatchObject({
+    mode: "ask",
+    rules: [],
+    revision: 0,
+  });
 });

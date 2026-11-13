@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
-import type { ApprovalSettings } from "@raypx/core/approvals";
 import {
   ApprovalSettingsController,
   type ApprovalSettingsPort,
@@ -16,8 +15,14 @@ beforeEach(() => {
 });
 
 async function mount(language: "en" | "zh" = "en") {
-  const settings = vi.fn(async (): Promise<ApprovalSettings> => ({ mode: "ask", rules: [] }));
-  const updateSettings = vi.fn<ApprovalSettingsPort["updateSettings"]>(async (input) => input);
+  const settings = vi.fn<ApprovalSettingsPort["settings"]>(async () => ({
+    mode: "ask",
+    rules: [],
+    revision: 0,
+  }));
+  const updateSettings = vi.fn<ApprovalSettingsPort["updateSettings"]>(
+    async ({ expectedRevision, ...saved }) => ({ ...saved, revision: expectedRevision + 1 }),
+  );
   const controller = new ApprovalSettingsController({ settings, updateSettings });
   await controller.load();
   render(
@@ -48,6 +53,7 @@ it.each(["en", "zh"] as const)(
       expect(updateSettings).toHaveBeenCalledWith({
         mode: "ask",
         rules: [{ toolName: "computer_write_file", executable: null, decision: "allow" }],
+        expectedRevision: 0,
       }),
     );
     expect(await screen.findByRole("status")).toHaveTextContent(
@@ -73,7 +79,7 @@ it("confirms Never ask with Cancel focused and preserves selection after cancell
 it("keeps local input on conflict and reloads only after explicit discard", async () => {
   const { settings, updateSettings } = await mount();
   fireEvent.click(screen.getByRole("button", { name: "Add rule" }));
-  settings.mockResolvedValue({ mode: "never", rules: [] });
+  settings.mockResolvedValue({ mode: "never", rules: [], revision: 1 });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
   const reload = await screen.findByRole("button", { name: "Discard changes and reload" });
   expect(screen.getByRole("button", { name: "Remove Write a file" })).toBeInTheDocument();

@@ -493,9 +493,126 @@ export const approvalSettings = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     mode: text("mode", { enum: ["ask", "never"] }).notNull(),
+    revision: integer("revision").notNull().default(0),
     updatedAt: date("updated_at").notNull().defaultNow(),
   },
   (table) => [check("approval_settings_mode_check", sql`${table.mode} in ('ask', 'never')`)],
+);
+export const modelConnections = pgTable(
+  "model_connections",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    kind: text("kind", {
+      enum: ["anthropic", "openai", "google", "openrouter", "compatible"],
+    }).notNull(),
+    baseUrl: text("base_url"),
+    api: text("api", { enum: ["anthropic-messages", "openai-completions", "openai-responses"] }),
+    models: jsonb("models").$type<string[]>().notNull(),
+    availability: text("availability", { enum: ["all", "selected"] }).notNull(),
+    secretId: text("secret_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    unique("model_connections_secret_owner_idx").on(table.id, table.accountId, table.secretId),
+    unique("model_connections_owner_idx").on(table.id, table.accountId),
+    index("model_connections_account_idx").on(table.accountId, table.createdAt, table.id),
+    check(
+      "model_connections_kind_check",
+      sql`${table.kind} in ('anthropic', 'openai', 'google', 'openrouter', 'compatible')`,
+    ),
+    check(
+      "model_connections_availability_check",
+      sql`${table.availability} in ('all', 'selected')`,
+    ),
+    check(
+      "model_connections_protocol_check",
+      sql`(${table.kind} = 'compatible' and ${table.baseUrl} is not null and ${table.api} in ('anthropic-messages', 'openai-completions', 'openai-responses')) or (${table.kind} <> 'compatible' and ${table.baseUrl} is null and ${table.api} is null)`,
+    ),
+  ],
+);
+// The secret is a child of its connection, so direct connection/account deletion erases it too.
+export const modelConnectionSecrets = pgTable(
+  "model_connection_secrets",
+  {
+    id: text("id").primaryKey(),
+    connectionId: text("connection_id").notNull(),
+    accountId: text("account_id").notNull(),
+    ciphertext: text("ciphertext").notNull(),
+    wrappedDataKey: text("wrapped_data_key").notNull(),
+    keyId: text("key_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.connectionId, table.accountId, table.id],
+      foreignColumns: [modelConnections.id, modelConnections.accountId, modelConnections.secretId],
+    }).onDelete("cascade"),
+    index("model_connection_secrets_owner_idx").on(table.accountId, table.connectionId),
+  ],
+);
+export const modelConnectionSpaces = pgTable(
+  "model_connection_spaces",
+  {
+    connectionId: text("connection_id").notNull(),
+    accountId: text("account_id").notNull(),
+    spaceId: text("space_id").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.connectionId, table.spaceId] }),
+    foreignKey({
+      columns: [table.connectionId, table.accountId],
+      foreignColumns: [modelConnections.id, modelConnections.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    index("model_connection_spaces_member_idx").on(
+      table.spaceId,
+      table.accountId,
+      table.connectionId,
+    ),
+  ],
+);
+export const conversationToolCalls = pgTable(
+  "conversation_tool_calls",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    toolCallId: text("tool_call_id").notNull(),
+    toolName: text("tool_name").notNull(),
+    target: text("target").notNull(),
+    argumentSummary: text("argument_summary").notNull(),
+    startedAt: date("started_at").notNull().defaultNow(),
+    finishedAt: date("finished_at"),
+    outcome: text("outcome", { enum: ["succeeded", "failed", "refused", "cancelled", "unknown"] }),
+    durationMs: integer("duration_ms"),
+    exitStatus: integer("exit_status"),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.runId, table.toolCallId] }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    index("conversation_tool_calls_snapshot_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.startedAt,
+      table.runId,
+      table.toolCallId,
+    ),
+  ],
 );
 export const approvalRules = pgTable(
   "approval_rules",
@@ -653,6 +770,8 @@ export const conversationEvents = pgTable(
         "computer.state",
         "card.created",
         "card.resolved",
+        "tool.started",
+        "tool.finished",
       ],
     }).notNull(),
     messageId: text("message_id"),
@@ -714,12 +833,13 @@ export const conversationEvents = pgTable(
       (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null and ${table.computerId} is null and ${table.requestId} is null) or
       (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null and ${table.computerId} is null and ${table.requestId} is null) or
       (${table.kind} = 'computer.state' and ${table.messageId} is null and ${table.runId} is null and ${table.segmentId} is null and ${table.computerId} is not null and ${table.data} is not null and ${table.requestId} is null) or
+      (${table.kind} in ('tool.started', 'tool.finished') and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.computerId} is null and ${table.requestId} is null and ${table.data} is not null) or
       (${table.kind} in ('card.created', 'card.resolved') and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.computerId} is null and ${table.requestId} is not null and ${table.data} is not null)
     )`,
     ),
     check(
       "conversation_events_kind_check",
-      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved')`,
+      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished')`,
     ),
   ],
 );
@@ -1133,6 +1253,10 @@ export const {
 } = oauthTables(user, session);
 
 export const schema = {
+  modelConnections,
+  modelConnectionSecrets,
+  modelConnectionSpaces,
+  conversationToolCalls,
   computers,
   conversationRuns,
   conversationRunAttempts,

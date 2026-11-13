@@ -21,15 +21,16 @@ clients follow it.
 
 Each conversation has one ordered event log in PostgreSQL.
 
-| Event kind        | Carries                                       |
-| ----------------- | --------------------------------------------- |
-| `message.created` | A member, Agent or trigger message            |
-| `reply.segment`   | A completed segment of reply text             |
-| `card.created`    | An approval, a question or a result card      |
-| `card.resolved`   | The answer and who gave it                    |
-| `run.state`       | A Run's state change                          |
-| `activity`        | A tool call summary for the activity view     |
-| `computer.state`  | A computer's start, stop or unavailable state |
+| Event kind        | Carries                                          |
+| ----------------- | ------------------------------------------------ |
+| `message.created` | A member, Agent or trigger message               |
+| `reply.segment`   | A completed segment of reply text                |
+| `card.created`    | An approval, a question or a result card         |
+| `card.resolved`   | The answer and who gave it                       |
+| `run.state`       | A Run's state change                             |
+| `tool.started`    | Bounded target and argument summary for a call   |
+| `tool.finished`   | Stable outcome, duration and command exit status |
+| `computer.state`  | A computer's start, stop or unavailable state    |
 
 - A per-conversation counter assigns each event a sequence number in the
   transaction that writes it. Sequences have no gaps.
@@ -77,7 +78,7 @@ member enables previews.
 
 `@raypx/core/conversation` defines member messages and the immutable
 `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created`
-and `card.resolved` event variants. Events reference the stored message or segment; cursor
+`card.resolved`, `tool.started` and `tool.finished` event variants. Events reference the stored message or segment; cursor
 reads hydrate that message for transport. Run state events contain only the Run ID, state and a stable failure code. Snapshots include messages, Runs and completed reply segments.
 `@raypx/agents/server` owns scoped conversation persistence and the small fanout
 subscriber port. The PostgreSQL repository accepts a transactional publisher;
@@ -132,7 +133,7 @@ is published on the notification channel or written to logs.
 ## Approval cards
 
 Both card events carry the usual `spaceId`, `conversationId`, `sequence` and
-`createdAt`, plus `requestId`, `runId`, `toolName`, `argumentSummary`, `target`,
+`createdAt`, plus `requestId`, `runId`, `toolCallId`, `toolName`, `argumentSummary`, `target`,
 `memberAccountId` and `expiresAt`. Summary and target are at most 1,024 UTF-16 code
 units. `card.resolved` also carries `outcome` (`approved`, `denied`, `expired` or
 `cancelled`) and nullable `answeredByAccountId`. Exact arguments, file contents,
@@ -180,3 +181,31 @@ in snapshots after event retention. A socket joining during completion gets eith
 the prefix and following appends, or the committed segment through cursor replay.
 The first visible text timestamp is captured in memory and written to the Run in
 the segment/event transaction.
+
+## Tool lifecycle
+
+Every call, including reads and refusals, commits `tool.started` with the model
+turn's pending-call checkpoint, before policy or execution and `tool.finished` on a durable outcome. Both contain `runId`,
+`toolCallId`, `toolName`, `target` (path or executable) and `argumentSummary`.
+Targets and summaries are bounded to 1,024 UTF-16 code units. Summaries include
+only an operation, path/cwd and argument count; never full arguments, file content
+or command output. Finish adds `outcome` (`succeeded`, `failed`, `refused`,
+`cancelled` or `unknown`), `durationMs` and nullable `exitStatus`. Exit status is
+present for confirmed command exits and survives result truncation. Duration is
+wall time since the original call start, including approval/recovery waits, capped
+at 2,147,483,647 milliseconds.
+
+A Space-owned lifecycle row keyed by Run/tool-call ID deduplicates events even
+when the event prefix has been retained away. Writes validate the attempt fence
+under the conversation counter lock. Member effect reads also take the current
+Run lock and use its stored fence when observing lazy expiry, without requiring
+a live attempt. An effect's completion or transition to unknown commits its
+finish event in the same transaction. Reads and refusals
+commit finish with the tool-result checkpoint. Stop closes open calls as
+cancelled in its cancellation transaction. A handover preserves open calls.
+Approval cards expose the same `toolCallId` for correlation.
+
+Snapshots add `toolActivity` (at most the newest 100 lifecycle rows, returned in
+start order) and `toolActivityTruncated`. Each row contains the shared summary
+fields, `startedAt`, nullable `finishedAt`, `outcome`, `durationMs` and `exitStatus`.
+This projection survives event retention and contains no tool results.

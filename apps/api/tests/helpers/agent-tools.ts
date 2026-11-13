@@ -1,5 +1,6 @@
 import {
   ApprovalOperationError,
+  ApprovalSettingsConflictError,
   EffectUnknownError,
   createApprovalsService,
   createComputerTools,
@@ -10,7 +11,7 @@ import { createComputersService, type ComputersRepository } from "@raypx/compute
 import {
   approvalRequestSchema,
   type ApprovalRequest,
-  type ApprovalSettings,
+  type RevisionedApprovalSettings,
   type Effect,
 } from "@raypx/core/approvals";
 import { computerSchema, type Computer } from "@raypx/core/computers";
@@ -26,7 +27,7 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
   const now = () => new Date(clock);
   const requests: ApprovalRequest[] = [];
   const effects: Effect[] = [];
-  const accountSettings = new Map<string, ApprovalSettings>();
+  const accountSettings = new Map<string, RevisionedApprovalSettings>();
   function expireEffects(scope: SpaceScope, runId: string, at: Date) {
     for (const effect of effects)
       if (
@@ -58,6 +59,7 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
     publish({
       kind,
       requestId: request.id,
+      toolCallId: request.toolCallId,
       runId: request.runId,
       toolName: request.toolName,
       argumentSummary: request.argumentSummary,
@@ -100,12 +102,20 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
   const approvalRepository: ApprovalsRepository = {
     async getSettings(accountId, defaultMode) {
       if (!accountSettings.has(accountId))
-        accountSettings.set(accountId, { mode: defaultMode, rules: [] });
+        accountSettings.set(accountId, { mode: defaultMode, rules: [], revision: 0 });
       return structuredClone(accountSettings.get(accountId)!);
     },
-    async updateSettings(accountId, input) {
-      accountSettings.set(accountId, structuredClone(input));
-      return structuredClone(input);
+    async updateSettings(accountId, input, expectedRevision, defaultMode) {
+      const current = accountSettings.get(accountId) ?? {
+        mode: defaultMode,
+        rules: [],
+        revision: 0,
+      };
+      if (current.revision !== expectedRevision)
+        throw new ApprovalSettingsConflictError(structuredClone(current));
+      const updated = { ...structuredClone(input), revision: expectedRevision + 1 };
+      accountSettings.set(accountId, updated);
+      return structuredClone(updated);
     },
     async listPending(scope, at) {
       const addressed = requests.filter(
@@ -130,6 +140,7 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
       }
       if (answer.decision === "approved" && answer.allowTool) {
         const settings = accountSettings.get(scope.member.accountId)!;
+        settings.revision += 1;
         settings.rules.push({
           toolName: request.toolName,
           executable:

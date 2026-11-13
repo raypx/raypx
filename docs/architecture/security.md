@@ -41,6 +41,20 @@ isolation between them there.
 - A webhook key and an invitation link are stored as digests.
 - Rotating the wrapping key re-wraps data keys without rewriting secret values.
 
+The implemented model secret store uses a fresh random data key for each supplied
+credential. The existing configuration-center HKDF/AES-GCM cipher encrypts the
+value and wraps its data key, binding both to the account and secret identity.
+The default wrapping provider derives from the existing `APP_KEY`; an injected
+key provider may use an external service. Internal `rewrap` changes only the
+wrapped data key. It is an operator capability, with no account API procedure.
+API and recovery workers must share the same `APP_KEY`. Relay needs none.
+
+Only backend model resolution and owner-requested connection tests decrypt values.
+No read API returns a value, ciphertext, wrapped key or secret reference. Run pins
+contain no credential. Model response guards and request-owned Computer tool
+guards reject credential echoes before events, effects or checkpoints persist
+them; these guards are released when the execution attempt settles.
+
 ## Untrusted input
 
 - Webhook bodies, inbound email, fetched pages, file content and other Agents'

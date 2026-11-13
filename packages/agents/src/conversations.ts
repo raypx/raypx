@@ -7,6 +7,8 @@ import type {
   RunId,
   RunFailure,
   ReplySegment,
+  ToolActivity,
+  ToolOutcome,
 } from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { Message as ModelMessage, ToolCall } from "@raypx/ai";
@@ -24,6 +26,8 @@ export interface ConversationSnapshot {
   runs: Run[];
   segments: ReplySegment[];
   cursor: number;
+  toolActivity?: ToolActivity[];
+  toolActivityTruncated?: boolean;
 }
 export interface ConversationsRepository {
   stop(scope: SpaceScope, id: ConversationId, runId: RunId): Promise<Run>;
@@ -97,7 +101,19 @@ export interface RunnableConversation {
   scope: SpaceScope;
   id: ConversationId;
 }
+export interface ToolSummary {
+  toolCallId: string;
+  toolName: string;
+  target: string;
+  argumentSummary: string;
+}
+export interface ToolCompletion {
+  toolCallId: string;
+  outcome: ToolOutcome;
+  exitStatus: number | null;
+}
 export interface ConversationRunRepository {
+  beginTool(scope: SpaceScope, run: ExecutionRun, tool: ToolSummary): Promise<void>;
   claimNext(
     scope: SpaceScope,
     id: ConversationId,
@@ -126,6 +142,7 @@ export interface ConversationRunRepository {
     run: ExecutionRun,
     turn: {
       checkpoint: RunCheckpoint;
+      tools?: ToolSummary[];
       segmentId?: string;
       text?: string;
       firstResponseAt?: string;
@@ -136,6 +153,7 @@ export interface ConversationRunRepository {
     scope: SpaceScope,
     run: ExecutionRun,
     checkpoint: RunCheckpoint,
+    tool?: ToolCompletion,
   ): Promise<void>;
   consumeSteering(
     scope: SpaceScope,

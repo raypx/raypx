@@ -1,4 +1,4 @@
-import { ComputerOperationError } from "@raypx/computers/server";
+import { ComputerFilesError, ComputerOperationError } from "@raypx/computers/server";
 import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { ORPCError } from "@orpc/server";
 import { SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
@@ -17,6 +17,10 @@ export function createSpaceHandlers({
     try {
       return await run();
     } catch (error) {
+      if (error instanceof ComputerFilesError)
+        throw new ORPCError(error.code === "FILE_NOT_FOUND" ? "NOT_FOUND" : "BAD_REQUEST", {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        });
       if (error instanceof ComputerOperationError)
         throw new ORPCError("CONFLICT", { message: error.code });
       if (error instanceof InvalidConversationCursor) throw new ORPCError("BAD_REQUEST");
@@ -44,6 +48,20 @@ export function createSpaceHandlers({
         .use(read)
         .handler(({ context, input }) =>
           scoped(context, input.spaceId, (scope) => options.computers.get(scope)),
+        ),
+      listDirectory: os.computers.listDirectory
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.computers.listDirectory(scope, input.path, input.limit),
+          ),
+        ),
+      readFile: os.computers.readFile
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.computers.readFile(scope, input.path, input.maxBytes),
+          ),
         ),
       start: os.computers.start
         .use(write)

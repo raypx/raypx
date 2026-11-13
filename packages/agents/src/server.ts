@@ -19,6 +19,8 @@ export type {
   RunExecution,
   ExecutionRun,
   RunCheckpoint,
+  ToolSummary,
+  ToolCompletion,
   ConversationEventEntry,
   ConversationEvents,
   ConversationSnapshot,
@@ -38,6 +40,7 @@ export {
 export {
   createApprovalsService,
   ApprovalOperationError,
+  ApprovalSettingsConflictError,
   EffectUnknownError,
   EffectInProgressError,
   type ApprovalsService,

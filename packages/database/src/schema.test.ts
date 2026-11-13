@@ -12,6 +12,10 @@ import {
   conversationRunCheckpoints,
   conversationRunSteering,
   conversationRunBackupJobs,
+  conversationToolCalls,
+  modelConnections,
+  modelConnectionSecrets,
+  modelConnectionSpaces,
   schema,
   user,
 } from "./schema.js";
@@ -41,6 +45,7 @@ it("keeps durable execution records within their Space and cascades every owned 
     conversationRunCheckpoints,
     conversationRunSteering,
     conversationRunBackupJobs,
+    conversationToolCalls,
   ]) {
     const config = getTableConfig(table);
     expect(config.primaryKeys[0]?.columns[0]?.name).toBe("space_id");
@@ -68,6 +73,23 @@ it("keeps durable execution records within their Space and cascades every owned 
       key.reference().columns.some((column) => column.name === "computer_id"),
     )?.onDelete,
   ).toBe("cascade");
+});
+
+it("cascades member connection, secret and selection ownership without retaining credentials in records", () => {
+  for (const table of [modelConnections, modelConnectionSecrets, modelConnectionSpaces]) {
+    const config = getTableConfig(table);
+    expect(config.foreignKeys.length).toBeGreaterThan(0);
+    for (const key of config.foreignKeys) expect(key.onDelete).toBe("cascade");
+  }
+  expect(getTableConfig(modelConnections).columns.map((column) => column.name)).not.toContain(
+    "ciphertext",
+  );
+  expect(getTableConfig(modelConnectionSecrets).columns.map((column) => column.name)).toEqual(
+    expect.arrayContaining(["ciphertext", "wrapped_data_key", "key_id"]),
+  );
+  expect(getTableConfig(approvalSettings).columns.map((column) => column.name)).toContain(
+    "revision",
+  );
 });
 
 it("keeps Computer references fenced by the same Space in the database metadata", () => {

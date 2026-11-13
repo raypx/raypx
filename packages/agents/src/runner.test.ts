@@ -86,7 +86,15 @@ function store() {
       throw new StaleRunFenceError();
     return row;
   }
+  const toolEvents: Array<{ kind: string; toolCallId: string; outcome?: string }> = [];
+  const toolCalls = new Map<string, { finished: boolean }>();
   const repository: ConversationsRepository & ConversationRunRepository = {
+    async beginTool(_scope, run, tool) {
+      owned(run);
+      if (toolCalls.has(tool.toolCallId)) return;
+      toolCalls.set(tool.toolCallId, { finished: false });
+      toolEvents.push({ kind: "tool.started", toolCallId: tool.toolCallId });
+    },
     async send(_scope, conversationId, input) {
       const msg = messageSchema.parse({
         id: crypto.randomUUID(),
@@ -234,6 +242,7 @@ function store() {
     async commitTurn(_scope, run, turn) {
       const row = owned(run);
       row.checkpoint = structuredClone(turn.checkpoint);
+      for (const tool of turn.tools ?? []) await repository.beginTool(scope, run, tool);
       const first = !!turn.text && !row.run.firstResponseAt;
       if (turn.text) {
         visible.push(turn.text);
@@ -241,8 +250,16 @@ function store() {
       }
       return first;
     },
-    async saveCheckpoint(_scope, run, checkpoint) {
+    async saveCheckpoint(_scope, run, checkpoint, tool) {
       owned(run).checkpoint = structuredClone(checkpoint);
+      if (tool && !toolCalls.get(tool.toolCallId)?.finished) {
+        toolCalls.get(tool.toolCallId)!.finished = true;
+        toolEvents.push({
+          kind: "tool.finished",
+          toolCallId: tool.toolCallId,
+          outcome: tool.outcome,
+        });
+      }
     },
     async consumeSteering(_scope, run, checkpoint) {
       const row = owned(run);
@@ -263,6 +280,11 @@ function store() {
     async stop(_scope, _id, runId) {
       const row = rows.find((candidate) => candidate.run.id === runId)!;
       row.run.state = "cancelled";
+      for (const [toolCallId, tool] of toolCalls) {
+        if (tool.finished) continue;
+        tool.finished = true;
+        toolEvents.push({ kind: "tool.finished", toolCallId, outcome: "cancelled" });
+      }
       row.run.finishedAt = now();
       row.ownerId = null;
       row.backupAt = null;
@@ -288,7 +310,7 @@ function store() {
       listeners.clear();
     },
   };
-  return { rows, visible, repository, crashed, fanout, owned };
+  return { rows, visible, repository, crashed, fanout, owned, toolEvents, toolCalls };
 }
 function model() {
   const calls: Array<{
@@ -528,6 +550,8 @@ async function toolFixture(db: ReturnType<typeof store>, mode: "ask" | "never" =
   await provider.provision(ref);
   const writes = vi.spyOn(provider, "write");
   const computers: ComputersService = {
+    listDirectory: async () => ({ status: "not-configured" }),
+    readFile: async () => ({ status: "not-configured" }),
     get: async () => ({ status: "available", computer }),
     start: async () => ({ status: "available", computer }),
     stop: async () => ({ status: "available", computer }),
@@ -536,10 +560,10 @@ async function toolFixture(db: ReturnType<typeof store>, mode: "ask" | "never" =
   const effects = new Map<string, Effect>();
   const repository: ApprovalsRepository = {
     async getSettings() {
-      return { mode, rules: [] };
+      return { mode, rules: [], revision: 0 };
     },
-    async updateSettings(_account, value) {
-      return value;
+    async updateSettings(_account, value, expectedRevision) {
+      return { ...value, revision: expectedRevision + 1 };
     },
     async listPending() {
       return [...requests.values()].filter((request) => request.state === "pending");
@@ -675,6 +699,10 @@ it("reuses a recorded effect after a crash between the outcome and tool checkpoi
   await advance(40);
   await vi.waitFor(() => expect(b.calls).toHaveLength(1), { interval: 1 });
   expect(tools.writes).toHaveBeenCalledTimes(1);
+  expect(db.toolEvents).toEqual([
+    { kind: "tool.started", toolCallId: writeCall.id },
+    { kind: "tool.finished", toolCallId: writeCall.id, outcome: "succeeded" },
+  ]);
   b.calls[0]!.complete("Recovered without another write");
   await advance();
   expect(db.rows[0]!.run.state).toBe("succeeded");
@@ -702,4 +730,60 @@ it("uses a due backup to recover a crash even when the regular scan misses it", 
   await advance();
   expect(db.rows[0]!.run.state).toBe("succeeded");
   expect(db.rows[0]!.backupAt).toBeNull();
+});
+
+it("publishes lifecycle for approval-free reads and refused writes without arguments or results", async () => {
+  const db = store();
+  const tools = await toolFixture(db, "ask");
+  const m = model();
+  const r = runner(db, m.models, { tools: tools.tools(), approvals: tools.approvals });
+  await send(r);
+  await advance();
+  const readCall: ToolCall = {
+    type: "toolCall",
+    id: "list-1",
+    name: "computer_list_files",
+    arguments: { path: "." },
+  };
+  m.calls[0]!.complete("", [readCall, writeCall]);
+  await vi.waitFor(() => expect(tools.requests.size).toBe(1), { interval: 1 });
+  expect(db.toolEvents).toEqual([
+    { kind: "tool.started", toolCallId: "list-1" },
+    { kind: "tool.started", toolCallId: writeCall.id },
+    { kind: "tool.finished", toolCallId: "list-1", outcome: "succeeded" },
+  ]);
+  await tools.approvals.answer(scope, [...tools.requests.keys()][0]!, { decision: "denied" });
+  await vi.waitFor(() => expect(m.calls).toHaveLength(2), { interval: 1 });
+  m.calls[1]!.complete("Done");
+  await advance();
+  expect(db.toolEvents.at(-1)).toEqual({
+    kind: "tool.finished",
+    toolCallId: writeCall.id,
+    outcome: "refused",
+  });
+  expect(JSON.stringify(db.toolEvents)).not.toContain("Recorded once");
+  expect(tools.writes).not.toHaveBeenCalled();
+});
+
+it("commits lifecycle for every pending call before approval and cancels later calls on stop", async () => {
+  const db = store();
+  const tools = await toolFixture(db, "ask");
+  const m = model();
+  const r = runner(db, m.models, { tools: tools.tools(), approvals: tools.approvals });
+  await send(r);
+  await advance();
+  const laterCall = { ...writeCall, id: "later-write" };
+  m.calls[0]!.complete("", [writeCall, laterCall]);
+  await vi.waitFor(() => expect(tools.requests.size).toBe(1), { interval: 1 });
+  expect(db.toolEvents).toEqual([
+    { kind: "tool.started", toolCallId: writeCall.id },
+    { kind: "tool.started", toolCallId: laterCall.id },
+  ]);
+  await r.conversations.stop(scope, id, db.rows[0]!.run.id);
+  await advance();
+  expect(db.toolEvents.slice(2)).toEqual([
+    { kind: "tool.finished", toolCallId: writeCall.id, outcome: "cancelled" },
+    { kind: "tool.finished", toolCallId: laterCall.id, outcome: "cancelled" },
+  ]);
+  expect(tools.writes).not.toHaveBeenCalled();
 });

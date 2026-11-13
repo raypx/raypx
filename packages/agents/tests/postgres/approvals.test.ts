@@ -1,18 +1,24 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import {
   approvalRules,
+  approvalSettings,
   approvalRequests,
   conversationEvents,
   conversationEffects,
   conversationRuns,
+  conversationToolCalls,
   spaceMembers,
   spaces,
   user,
 } from "@raypx/database/schema";
 import type { Effect } from "@raypx/core/approvals";
-import type { ExecutionRun, RunClaimOptions } from "../../src/conversations.js";
+import {
+  StaleRunFenceError,
+  type ExecutionRun,
+  type RunClaimOptions,
+} from "../../src/conversations.js";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { createApprovalsService, type ApprovalCall } from "../../src/approvals.js";
@@ -81,7 +87,8 @@ beforeEach(async () => {
     idempotencyKey: "start",
   });
   run = (await conversations.claimNext(scope, conversation.id, claimOptions))!.run;
-  await approvals.updateSettings(owner, { mode: "ask", rules: [] });
+  const settings = await approvals.getSettings(owner, "ask");
+  await approvals.updateSettings(owner, { mode: "ask", rules: [] }, settings.revision, "ask");
 });
 afterAll(async () => {
   try {
@@ -184,10 +191,16 @@ it("stop atomically cancels a pending request and repeated stop appends no event
 });
 it("requires a new request for changed arguments and adding Allow never erases a Block", async () => {
   const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
-  await approvals.updateSettings(owner, {
-    mode: "ask",
-    rules: [{ toolName: call.name, executable: null, decision: "block" }],
-  });
+  const settings = await approvals.getSettings(owner, "ask");
+  await approvals.updateSettings(
+    owner,
+    {
+      mode: "ask",
+      rules: [{ toolName: call.name, executable: null, decision: "block" }],
+    },
+    settings.revision,
+    "ask",
+  );
   await approvals.answer(scope, request.id, { decision: "approved", allowTool: true }, createdAt);
   const stored = await first.db
     .select()
@@ -237,14 +250,20 @@ it("requires a new request for changed arguments and adding Allow never erases a
   ).toBe(request.id);
 });
 it("keeps a request answerable when remembering Allow would exceed the rule bound", async () => {
-  await approvals.updateSettings(owner, {
-    mode: "ask",
-    rules: Array.from({ length: 256 }, (_, index) => ({
-      toolName: "computer_run_command" as const,
-      executable: `executable-${index}`,
-      decision: "allow" as const,
-    })),
-  });
+  const settings = await approvals.getSettings(owner, "ask");
+  await approvals.updateSettings(
+    owner,
+    {
+      mode: "ask",
+      rules: Array.from({ length: 256 }, (_, index) => ({
+        toolName: "computer_run_command" as const,
+        executable: `executable-${index}`,
+        decision: "allow" as const,
+      })),
+    },
+    settings.revision,
+    "ask",
+  );
   const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
   await expect(
     approvals.answer(scope, request.id, { decision: "approved", allowTool: true }, createdAt),
@@ -373,6 +392,159 @@ it("leaves a young intent unchanged across repository instances and allows its o
   ).toBe("intent");
   await approvals.completeEffect(scope, intent.key, "succeeded", "written", observedAt, run);
   expect((await service.listEffects(scope, run.id))[0]!.state).toBe("succeeded");
+});
+
+it("persists lazy expiry on a member read without an attempt or lifecycle record", async () => {
+  const { conversation } = await createAgentsRepository(first.db).create(scope, {
+    name: "Unclaimed effect",
+    instructions: "",
+    model: { modelId: "fixture" },
+  });
+  await conversations.send(scope, conversation.id, { text: "Work", idempotencyKey: "unclaimed" });
+  const queued = (await conversations.snapshot(scope, conversation.id)).runs[0]!;
+  const key = uniqueEffectKey();
+  await first.db.insert(conversationEffects).values({
+    spaceId: scope.spaceId,
+    conversationId: conversation.id,
+    runId: queued.id,
+    key,
+    argumentHash: "b".repeat(64),
+    toolCallId: "unclaimed-call",
+    toolName: call.name,
+    state: "intent",
+    createdAt,
+  });
+  const observedAt = new Date(createdAt.getTime() + EFFECT_INTENT_TIMEOUT_MS);
+  const service = createApprovalsService(competing, { now: () => observedAt });
+  expect(await service.listEffects(other, queued.id)).toMatchObject([
+    { key, state: "unknown", result: null },
+  ]);
+  const [stored] = await first.db
+    .select()
+    .from(conversationEffects)
+    .where(and(eq(conversationEffects.spaceId, scope.spaceId), eq(conversationEffects.key, key)));
+  expect(stored).toMatchObject({ state: "unknown", result: null, completedAt: null, fence: 0 });
+});
+
+it("atomically finishes lazy-expired tools once across concurrent reads and a resumed attempt", async () => {
+  // A future injected clock detects accidental use of database time for expiry.
+  const intentAt = new Date("2099-01-01T00:00:00Z");
+  let observedAt = new Date(intentAt.getTime() + EFFECT_INTENT_TIMEOUT_MS - 1);
+  const service = createApprovalsService(approvals, { now: () => observedAt });
+  const reader = createApprovalsService(competing, { now: () => observedAt });
+  const summary = {
+    toolCallId: call.id,
+    toolName: call.name,
+    target: call.target,
+    argumentSummary: call.argumentSummary,
+  };
+  const intent: Effect = {
+    spaceId: scope.spaceId,
+    conversationId: run.conversationId,
+    runId: run.id,
+    key: uniqueEffectKey(),
+    argumentHash: "c".repeat(64),
+    toolCallId: call.id,
+    toolName: call.name,
+    state: "intent",
+    result: null,
+    createdAt: intentAt.toISOString(),
+    completedAt: null,
+  };
+  await conversations.beginTool(scope, run, summary);
+  await approvals.beginEffect(scope, run, intent, intentAt);
+  await conversations.release(scope, run);
+  const before = await conversations.snapshot(scope, run.conversationId);
+  expect(await reader.listEffects(other, run.id)).toMatchObject([{ state: "intent" }]);
+  expect((await conversations.snapshot(scope, run.conversationId)).cursor).toBe(before.cursor);
+  observedAt = new Date(observedAt.getTime() + 1);
+
+  const unavailable = createApprovalsService(
+    createApprovalsRepository(second.db, async () => {
+      throw new Error("Fixture fanout failure");
+    }),
+    { now: () => observedAt },
+  );
+  await expect(unavailable.listEffects(scope, run.id)).rejects.toThrow("Fixture fanout failure");
+  const effectSelection = and(
+    eq(conversationEffects.spaceId, scope.spaceId),
+    eq(conversationEffects.key, intent.key),
+  );
+  const [rolledBack] = await first.db.select().from(conversationEffects).where(effectSelection);
+  expect(rolledBack).toMatchObject({ state: "intent", result: null });
+  expect((await conversations.snapshot(scope, run.conversationId)).toolActivity).toMatchObject([
+    { toolCallId: call.id, finishedAt: null, outcome: null },
+  ]);
+  expect((await conversations.snapshot(scope, run.conversationId)).cursor).toBe(before.cursor);
+
+  for (const result of await Promise.all([
+    service.listEffects(scope, run.id),
+    reader.listEffects(other, run.id),
+  ]))
+    expect(result).toMatchObject([{ state: "unknown", result: null }]);
+
+  async function lifecycle() {
+    return first.db
+      .select()
+      .from(conversationEvents)
+      .where(
+        and(
+          eq(conversationEvents.spaceId, scope.spaceId),
+          eq(conversationEvents.runId, run.id),
+          eq(conversationEvents.kind, "tool.finished"),
+        ),
+      )
+      .orderBy(asc(conversationEvents.sequence));
+  }
+  const finished = await lifecycle();
+  expect(finished).toHaveLength(1);
+  expect(finished[0]).toMatchObject({
+    fence: run.fence,
+    sequence: before.cursor + 1,
+    createdAt: observedAt,
+    data: { ...summary, outcome: "unknown", durationMs: expect.any(Number), exitStatus: null },
+  });
+  const [stored] = await first.db.select().from(conversationEffects).where(effectSelection);
+  expect(stored).toMatchObject({ state: "unknown", result: null, completedAt: null });
+
+  const resumed = (await conversations.claimNext(scope, run.conversationId, {
+    ...claimOptions,
+    ownerId: "resumed-approval-fixture",
+  }))!.run;
+  expect(resumed.fence).toBeGreaterThan(run.fence);
+  await expect(approvals.listEffects(scope, run.id, observedAt, run)).rejects.toBeInstanceOf(
+    StaleRunFenceError,
+  );
+  await conversations.beginTool(scope, resumed, summary);
+  await expect(reader.assertContinuable(scope, resumed)).rejects.toMatchObject({
+    code: "EFFECT_UNKNOWN",
+  });
+  await expect(
+    competing.beginEffect(scope, resumed, { ...intent, key: uniqueEffectKey() }, observedAt),
+  ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
+  await expect(
+    competing.completeEffect(scope, intent.key, "succeeded", "late result", observedAt, resumed),
+  ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
+  await service.listEffects(scope, run.id);
+  await reader.listEffects(other, run.id);
+  await conversations.finish(scope, resumed, "EFFECT_UNKNOWN");
+  expect(await lifecycle()).toEqual(finished);
+  expect((await conversations.snapshot(scope, run.conversationId)).toolActivity).toMatchObject([
+    { ...summary, outcome: "unknown", finishedAt: observedAt.toISOString() },
+  ]);
+  const storedCalls = await first.db
+    .select()
+    .from(conversationToolCalls)
+    .where(
+      and(
+        eq(conversationToolCalls.spaceId, scope.spaceId),
+        eq(conversationToolCalls.runId, run.id),
+      ),
+    )
+    .orderBy(asc(conversationToolCalls.toolCallId));
+  expect(storedCalls).toMatchObject([
+    { toolCallId: call.id, outcome: "unknown", fence: run.fence },
+  ]);
 });
 
 it.each(["current", "older"])(
@@ -623,4 +795,64 @@ it("rejects cross-Space approval, effect and card foreign keys in PostgreSQL", a
       data: { toolName: call.name, argumentSummary: call.argumentSummary },
     }),
   ).rejects.toMatchObject({ cause: { code: "23503" } });
+});
+
+it("serializes competing settings revisions and returns the winning settings on conflict", async () => {
+  const before = await approvals.getSettings(owner, "ask");
+  const results = await Promise.allSettled([
+    approvals.updateSettings(owner, { mode: "never", rules: [] }, before.revision, "ask"),
+    competing.updateSettings(
+      owner,
+      {
+        mode: "ask",
+        rules: [{ toolName: "computer_write_file", executable: null, decision: "block" }],
+      },
+      before.revision,
+      "ask",
+    ),
+  ]);
+  const successful = results.filter((result) => result.status === "fulfilled");
+  const failed = results.filter((result) => result.status === "rejected");
+  expect(successful).toHaveLength(1);
+  expect(failed).toHaveLength(1);
+  const current = await approvals.getSettings(owner, "ask");
+  expect(current.revision).toBe(before.revision + 1);
+  expect(failed[0]!.reason).toMatchObject({
+    code: "APPROVAL_SETTINGS_CONFLICT",
+    settings: current,
+  });
+});
+
+it("cascades revisioned approval settings and rules when their account is deleted", async () => {
+  const accountId = `approval-settings-delete-${crypto.randomUUID()}`;
+  await first.db.insert(user).values({
+    id: accountId,
+    name: "Deleted settings owner",
+    email: `${accountId}@example.test`,
+  });
+  try {
+    const initial = await approvals.getSettings(accountId, "never");
+    expect(initial).toEqual({ mode: "never", rules: [], revision: 0 });
+    await approvals.updateSettings(
+      accountId,
+      {
+        mode: "ask",
+        rules: [{ toolName: "computer_read_file", executable: null, decision: "block" }],
+      },
+      initial.revision,
+      "never",
+    );
+    await first.db.delete(user).where(eq(user.id, accountId));
+    expect(
+      await first.db
+        .select()
+        .from(approvalSettings)
+        .where(eq(approvalSettings.accountId, accountId)),
+    ).toEqual([]);
+    expect(
+      await first.db.select().from(approvalRules).where(eq(approvalRules.accountId, accountId)),
+    ).toEqual([]);
+  } finally {
+    await first.db.delete(user).where(eq(user.id, accountId));
+  }
 });

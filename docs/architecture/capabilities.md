@@ -62,6 +62,36 @@ A connection belongs to the account that added it.
 Each Agent chooses which connections it uses. Availability decides what a Space
 may touch; the Agent decides what it needs.
 
+### Implemented model connections
+
+`modelConnections.list/create/update/delete/test` manage only the session account's
+connections. A connection stores a display name, an existing AI transport kind,
+offered model identifiers and optional compatible endpoint/protocol settings.
+Credentials are write-only: create requires `secret`; update replaces it only
+when `secret` is supplied. Lists expose neither the secret nor its storage reference.
+Compatible endpoints use the existing AI adapter's HTTPS/loopback and URL rules.
+
+Availability defaults to `{ mode: "all" }`, including future Spaces; deliberate
+narrowing uses `{ mode: "selected", spaceIds }`, including an empty selection.
+Every selected Space must currently contain the owner. Membership or Space
+deletion removes that selection, while the account's connection remains.
+Deleting the account or connection cascades its encrypted secret and selections.
+
+`agents.models` returns the caller's available choices with `source: "connection"`
+or `"deployment"`, without endpoints or credentials. Member choices have opaque
+IDs derived from connection identity and model identifier; clients retain
+the returned `modelId` unchanged. A Run resolves as its initiating member, first
+against that member's available connections and then the deployment catalog.
+Its private connection pin covers identity, kind, endpoint, protocol and exact
+model, excluding the credential, name and availability settings. Rotating only
+the credential preserves recovery. Removing access, deleting a connection or
+remapping its selected endpoint/model fails recovery with `CONNECTION_UNAVAILABLE`.
+
+Testing performs one ten-second request with a one-token output budget and a
+fixed prompt. It returns only `SUCCEEDED`, `AUTHENTICATION_FAILED`, `RATE_LIMITED`,
+`TIMED_OUT`, `MODEL_UNAVAILABLE` or `REQUEST_FAILED`. No provider error is returned.
+Construction performs no database writes or network requests.
+
 ## Skills
 
 - A skill is reusable know-how in text. It needs no account and holds no

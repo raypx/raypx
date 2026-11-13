@@ -1,4 +1,11 @@
-import { spaceComputerSchema } from "@raypx/core/computers";
+import {
+  MAX_COMPUTER_DIRECTORY_ENTRIES,
+  MAX_COMPUTER_FILE_BYTES,
+  computerDirectorySchema,
+  computerFileSchema,
+  computerFilePathSchema,
+  spaceComputerSchema,
+} from "@raypx/core/computers";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import {
@@ -28,13 +35,15 @@ export const spacesContract = {
   create: session.input(spaceInputSchema).output(membership),
 };
 export const agentsContract = {
-  models: session
-    .input(spaceSelection)
-    .output(
-      z.array(
-        z.strictObject({ modelId: z.string().min(1).max(200), name: z.string().min(1).max(200) }),
-      ),
+  models: session.input(spaceSelection).output(
+    z.array(
+      z.strictObject({
+        modelId: z.string().min(1).max(200),
+        name: z.string().min(1).max(200),
+        source: z.enum(["deployment", "connection"]).default("deployment"),
+      }),
     ),
+  ),
   list: session
     .input(spaceSelection.extend({ limit: z.number().int().min(1).max(100).default(50) }))
     .output(z.array(agentConversation).max(100)),
@@ -52,4 +61,25 @@ export const computersContract = {
   get: session.input(spaceSelection).output(spaceComputerSchema),
   start: session.input(spaceSelection).output(spaceComputerSchema),
   stop: session.input(spaceSelection).output(spaceComputerSchema),
+  listDirectory: session
+    .input(
+      spaceSelection.extend({
+        path: computerFilePathSchema.default("."),
+        limit: z.number().int().min(1).max(MAX_COMPUTER_DIRECTORY_ENTRIES).default(100),
+      }),
+    )
+    .output(computerDirectorySchema),
+  readFile: session
+    .input(
+      spaceSelection.extend({
+        path: computerFilePathSchema,
+        maxBytes: z
+          .number()
+          .int()
+          .min(1)
+          .max(MAX_COMPUTER_FILE_BYTES)
+          .default(MAX_COMPUTER_FILE_BYTES),
+      }),
+    )
+    .output(computerFileSchema),
 };

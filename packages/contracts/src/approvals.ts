@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   approvalModeInputSchema,
   approvalRuleSchema,
-  approvalSettingsSchema,
+  approvalSettingsStateSchema,
   approvalRequestSchema,
   effectSchema,
 } from "@raypx/core/approvals";
@@ -25,15 +25,16 @@ export const agentApprovalsContract = {
       }),
     )
     .output(approvalRequestSchema),
-  settings: session.input(z.strictObject({})).output(approvalSettingsSchema),
+  settings: session.input(z.strictObject({})).output(approvalSettingsStateSchema),
   updateSettings: session
     .input(
       z.strictObject({
         mode: approvalModeInputSchema,
         rules: z.array(approvalRuleSchema).max(256),
+        expectedRevision: z.number().int().nonnegative(),
       }),
     )
-    .output(approvalSettingsSchema),
+    .output(approvalSettingsStateSchema),
   effects: session
     .input(selection.extend({ runId: runIdSchema }))
     .output(z.array(effectSchema).max(512)),

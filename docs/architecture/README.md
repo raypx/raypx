@@ -9,8 +9,10 @@ The earlier architecture and decision records remain in the history of `canary`.
 Phase 1 provides Space/member and Agent/Conversation schemas, scoped repositories,
 session-authorized oRPC, member messages, ordered conversation logs, snapshots and
 an acknowledged WebSocket event stream. Backend Runs provide Pi model calls,
-transient reply text, committed segments and cancellation in one API-enabled
-process. There are no tools, leases, attempts, steering or crash recovery yet.
+transient reply text, committed segments, fenced leases, checkpoints, steering,
+recovery and cancellation. The bounded Computer tool loop supports approvals,
+effect records and durable tool lifecycle activity. Members can browse bounded
+team-computer files and manage their own encrypted model connections.
 
 The shared `/agents` workspace is the signed-in home in Web and Desktop. Project
 and session pages, Waiting, New session and the guest task editor/handoff are
@@ -20,11 +22,11 @@ The CLI harness, SQLite profiles, enrollment, native host/channel and remote rea
 projections remain until their owning phases replace them. The daemon is not yet
 a device connector. See [Spaces](spaces.md#implemented-foundation-slice),
 [Events](events.md#implemented-conversation-slice) and
-[Execution](execution.md#implemented-phase-1-reply-slice).
+[Execution](execution.md#implemented-durable-backend).
 
 The topology and workspace roles below describe the target. Current backend roles
-are still `api|relay|both`, with Redis required for split device roles; no worker or
-supervisor is implied by the phase 1 client closeout.
+include `api`, `worker`, `relay` and default `all`; retained `both` also remains.
+PostgreSQL coordinates durable Runs; split retained device roles require Redis.
 
 Raypx is the durable home for persistent Agents. An Agent has an identity, one
 continuing conversation, memory, routines and a computer. It keeps working while

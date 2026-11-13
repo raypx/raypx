@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   conversations,
@@ -15,6 +15,7 @@ import {
   conversationRunBackupJobs as backupJobs,
   conversationEffects as effects,
   computers,
+  conversationToolCalls as toolCalls,
   spaceMembers,
 } from "@raypx/database/schema";
 import type { ConversationId } from "@raypx/core/agents";
@@ -44,6 +45,12 @@ import type {
 import { RunResourceUnavailableError } from "../conversations.js";
 import { conversationView } from "../views.js";
 import { assertRunFence } from "./fence.js";
+import {
+  beginToolEvent,
+  finishToolEvent,
+  finishOpenToolEvents,
+  toolActivityView,
+} from "./tool-events.js";
 
 export const conversationChannel = "raypx_conversation_events";
 /** Called inside the committing transaction: PostgreSQL delivers only after commit. */
@@ -199,6 +206,7 @@ export function createConversationsRepository(
         fence,
         requestId: request.id,
         data: {
+          toolCallId: request.toolCallId,
           toolName: request.toolName,
           argumentSummary: request.argumentSummary,
           target: request.target,
@@ -281,6 +289,13 @@ export function createConversationsRepository(
     return result;
   }
   return {
+    async beginTool(scope, run, tool) {
+      await db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
+        await beginToolEvent(tx, scope, run, tool, publish);
+      });
+    },
     getRun,
     async stop(scope, id, runId) {
       return db.transaction(async (tx) => {
@@ -325,6 +340,7 @@ export function createConversationsRepository(
           );
         await appendState(tx, scope, run, counter.sequence + 1);
         await cancelPendingRequests(tx, scope, run, counter.sequence + 1);
+        await finishOpenToolEvents(tx, scope, { ...run, fence: row.fence }, "cancelled", publish);
         return run;
       });
     },
@@ -794,7 +810,16 @@ export function createConversationsRepository(
             .where(jobSelection);
         else await tx.delete(backupJobs).where(jobSelection);
         await appendState(tx, scope, runView(row!), counter.sequence + 1, run.fence);
-        if (!retryAt) await cancelPendingRequests(tx, scope, run, counter.sequence + 1, run.fence);
+        if (!retryAt) {
+          await cancelPendingRequests(tx, scope, run, counter.sequence + 1, run.fence);
+          await finishOpenToolEvents(
+            tx,
+            scope,
+            run,
+            failure === "EFFECT_UNKNOWN" ? "unknown" : "failed",
+            publish,
+          );
+        }
         Object.assign(run, runView(row!));
         return true;
       });
@@ -804,7 +829,10 @@ export function createConversationsRepository(
         const counter = await lock(tx, scope, run.conversationId);
         const active = await assertRunFence(tx, scope, run);
         await writeCheckpoint(tx, scope, run, turn.checkpoint);
-        if (!turn.text || !turn.segmentId) return false;
+        if (!turn.text || !turn.segmentId) {
+          for (const tool of turn.tools ?? []) await beginToolEvent(tx, scope, run, tool, publish);
+          return false;
+        }
         const sequence = counter.sequence + 1;
         await tx.insert(segments).values({
           spaceId: scope.spaceId,
@@ -835,14 +863,16 @@ export function createConversationsRepository(
           .set({ sequence })
           .where(counterSelection(scope, run.conversationId));
         await publish(tx, { conversationId: run.conversationId, sequence });
+        for (const tool of turn.tools ?? []) await beginToolEvent(tx, scope, run, tool, publish);
         return first;
       });
     },
-    async saveCheckpoint(scope, run, checkpoint) {
+    async saveCheckpoint(scope, run, checkpoint, tool) {
       await db.transaction(async (tx) => {
         await lock(tx, scope, run.conversationId);
         await assertRunFence(tx, scope, run);
         await writeCheckpoint(tx, scope, run, checkpoint);
+        if (tool) await finishToolEvent(tx, scope, run, tool, publish);
       });
     },
     async consumeSteering(scope, run, checkpoint) {
@@ -1066,6 +1096,8 @@ export function createConversationsRepository(
             if (row.event.kind === "message.created") payload = { messageId: row.event.messageId };
             if (row.event.kind === "computer.state")
               payload = { ...(row.event.data as object), computerId: row.event.computerId };
+            if (row.event.kind === "tool.started" || row.event.kind === "tool.finished")
+              payload = { ...(row.event.data as object), runId: row.event.runId };
             if (row.event.kind === "run.state")
               payload = { ...(row.event.data as object), runId: row.event.runId };
             if (row.event.kind === "card.created" || row.event.kind === "card.resolved")
@@ -1103,7 +1135,15 @@ export function createConversationsRepository(
             .from(messages)
             .where(and(eq(messages.spaceId, scope.spaceId), eq(messages.conversationId, id)))
             .orderBy(asc(messages.sequence));
+          const activity = await tx
+            .select()
+            .from(toolCalls)
+            .where(and(eq(toolCalls.spaceId, scope.spaceId), eq(toolCalls.conversationId, id)))
+            .orderBy(desc(toolCalls.startedAt), desc(toolCalls.runId), desc(toolCalls.toolCallId))
+            .limit(101);
           return {
+            toolActivity: activity.slice(0, 100).reverse().map(toolActivityView),
+            toolActivityTruncated: activity.length > 100,
             conversation: conversationView(conversation),
             messages: rows.map(message),
             runs: (

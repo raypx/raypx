@@ -144,11 +144,18 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     // Keep sessions request-owned even when the process reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
     const spaces = createSpaceAccess(db);
-    const { runner, computerProvider, computers, conversationModels, agentApprovals } =
-      await composeAgents(db, environment, logger, resources.createModels);
+    const {
+      runner,
+      computerProvider,
+      computers,
+      conversationModels,
+      agentApprovals,
+      modelConnections,
+    } = await composeAgents(db, environment, logger, resources.createModels);
     lifecycle.own(() => runner.close());
     const conversations = runner.conversations;
     return {
+      modelConnections,
       agentApprovals,
       runner,
       stopClaiming: () => runner.stopClaiming(),
@@ -175,6 +182,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        modelConnections,
         agentApprovals,
         computers,
         spaces,

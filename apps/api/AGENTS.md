@@ -18,10 +18,13 @@ Explicit start or the first executed model tool creates the team computer.
 Runtime composes Computer tools and approval/effect services with the runner.
 `approvals.pending/answer/effects` require fresh Space membership; answers require
 the addressed account. `approvals.settings/updateSettings` use the session account.
-Mutations require trusted Origin and quotas. Auto review is explicitly unavailable.
+Mutations require trusted Origin and quotas. Account approval settings require an
+expected revision for writes and return current settings on conflict; settings
+reads expose Auto's REVIEW_MODEL_NOT_CONFIGURED availability reason.
 APPROVAL_DEFAULT_MODE defaults to ask; APPROVAL_REQUEST_TTL_MS defaults to 600000.
-Runtime construction performs no effect or recovery I/O. Effect reads lazily
-persist unknown only after the shared intent timeout; worker start owns recovery scans. Known deployment
+Runtime construction performs no effect or recovery I/O. Effect reads and attempt
+decisions persist unknown after the shared intent timeout, with a tracked tool's
+single finish event in the same transaction; worker start owns recovery scans. Known deployment
 secrets are rejected at Computer input/output.
 
 `spaces.*` resolves the account from the current session and delegates first-use
@@ -51,7 +54,14 @@ prefixes/deltas stay in the executor; all API processes replay committed events.
 Shutdown drains HTTP, releases leases and preserves approval requests for another
 worker before closing storage. No provider text or credentials enter execution logs. `RuntimeProviders.createConversationFanout`
 can inject the subscriber for offline runtime tests.
-`agents.models` lists only opaque identifiers and display names after resolving Space
+`modelConnections.list/create/update/delete/test` uses the session account only.
+Secrets are write-only and envelope-encrypted with the configuration cipher and
+APP_KEY key provider. API and recovery workers share APP_KEY; constructors do no I/O.
+All-Space availability includes future Spaces; selected availability references
+current owner memberships and cascades with them. Deleting a connection/account
+cascades its secret. Run pins exclude credentials; rotation remains resumable.
+Request-owned credential guards cover both model responses and Computer results.
+`agents.models` lists opaque identifiers, display names and connection/deployment source after resolving Space
 membership. Configured display names default to the opaque identifier; entries without
 a configured credential are not offered. Provider details and credentials stay private.
 The owning feature packages also have separate `test:postgres` modes.

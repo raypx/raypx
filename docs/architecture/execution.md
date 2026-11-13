@@ -22,8 +22,9 @@ unique index keeps one running or waiting Run per Space/Agent.
 
 The first claim pins the Agent's opaque model ID and instructions. Model access
 pins a connection fingerprint over the deployment provider, exact model and
-credential selector, without storing the key. Rotating the key under that same
-selector is allowed; removing or remapping a pinned connection fails with
+credential selector, or the member connection identity, kind, endpoint, protocol
+and exact model, without storing the key. Rotating the key under that same
+connection is allowed; removing access to or remapping a pinned connection fails with
 `CONNECTION_UNAVAILABLE`. A configured Computer provider starts and pins the
 Space team computer and generation before execution; recovery validates that
 identity without provisioning a replacement. A missing pin fails with
@@ -106,11 +107,13 @@ that credential separately. Do not put deployment selectors in Agent records.
 An empty catalog lets API start and serve authentication, CRUD and messages;
 a Run using an unconfigured ID fails visibly. Malformed JSON or duplicate opaque
 IDs reject startup with a generic configuration error that contains no raw input.
-Ambient provider keys are never consulted. A later member-owned Connection
-adapter can implement the same port using the Run's Space and member identity.
+Ambient provider keys are never consulted. Member-owned connections resolve
+through the same port using the Run's Space and member identity; see
+[connections](capabilities.md#implemented-model-connections). Recovery workers
+require the same existing `APP_KEY` as API to decrypt those credentials.
 
 The remaining sections describe the broader execution architecture. Routines,
-inbound triggers, delegation, member-owned Connections and additional model roles
+inbound triggers, delegation and additional model roles
 remain future capabilities; phase 2 implements only the backend slice above.
 
 ## Dispatch

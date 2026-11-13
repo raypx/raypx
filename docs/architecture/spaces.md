@@ -21,7 +21,9 @@ limiting. Missing membership and missing records both return `NOT_FOUND`.
 
 An Agent's model choice is an opaque `modelId`, without an endpoint, credential or
 vendor field. `agents.models` resolves membership and returns only offered
-`{ modelId, name }` pairs. An optional deployment display name defaults to the
+`{ modelId, name, source }` entries, where source is `connection` or `deployment`.
+Member-owned models are available only to their owner in the selected Space.
+An optional deployment display name defaults to the
 opaque identifier; entries without configured credentials are not offered.
 Updates replace the configuration and preserve the Conversation.
 Agent/Conversation creation is atomic. Deletion removes both synchronously while

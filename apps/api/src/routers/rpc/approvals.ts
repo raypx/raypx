@@ -1,5 +1,5 @@
 import type { RpcSetup } from "./setup.js";
-import { ApprovalOperationError } from "@raypx/agents/server";
+import { ApprovalOperationError, ApprovalSettingsConflictError } from "@raypx/agents/server";
 import { SpaceNotFound } from "@raypx/core/spaces";
 import { ORPCError } from "@orpc/server";
 export function createApprovalsHandlers({
@@ -15,9 +15,17 @@ export function createApprovalsHandlers({
       return await operation();
     } catch (error) {
       if (error instanceof SpaceNotFound) throw new ORPCError("NOT_FOUND");
+      if (error instanceof ApprovalSettingsConflictError)
+        throw new ORPCError("CONFLICT", {
+          message: error.code,
+          data: { code: error.code, settings: error.settings },
+        });
       if (error instanceof ApprovalOperationError) {
         if (error.code === "MODE_UNAVAILABLE")
-          throw new ORPCError("BAD_REQUEST", { message: "APPROVAL_MODE_UNAVAILABLE" });
+          throw new ORPCError("BAD_REQUEST", {
+            message: "APPROVAL_MODE_UNAVAILABLE",
+            data: { reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+          });
         if (error.code === "NOT_FOUND" || error.code === "NOT_ADDRESSED")
           throw new ORPCError("NOT_FOUND");
         throw new ORPCError("CONFLICT", { message: error.code });

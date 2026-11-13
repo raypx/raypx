@@ -1,19 +1,22 @@
 import {
   ComputerError,
   MAX_HOME_BYTES,
+  bound,
   commandSchema,
   computerRefSchema,
   fileEntrySchema,
   homeArchiveSchema,
   processEventSchema,
   providerComputerSchema,
+  workspacePath,
   type ComputerDescription,
   type ComputerProvider,
   type ComputerRef,
   type ProcessEvent,
 } from "./index.js";
 import { z } from "zod";
-import { homeRevisionSchema } from "@raypx/core/computers";
+import { homeRevisionSchema, MAX_COMPUTER_FILE_BYTES } from "@raypx/core/computers";
+import { filePreviewScript } from "./file-preview.js";
 
 type Fetch = (request: Request) => Promise<Response>;
 const descriptionSchema = z.strictObject({
@@ -99,7 +102,7 @@ export function createDockerComputerProvider(options: {
   async function view(ref: ComputerRef, operation: string) {
     return providerComputerSchema.parse(await json(await call(ref, operation)));
   }
-  return {
+  const provider: ComputerProvider = {
     async describe(): Promise<ComputerDescription> {
       const response = await checked(
         await request(
@@ -172,6 +175,54 @@ export function createDockerComputerProvider(options: {
         .strictObject({ bytes: z.base64() })
         .parse(await json(await call(ref, "files/read", { path, maxBytes })));
     },
+    async readFile(ref, path, maxBytes) {
+      const clean = workspacePath(path);
+      if (!clean) throw new ComputerError("INVALID_INPUT");
+      bound(maxBytes, MAX_COMPUTER_FILE_BYTES);
+      // The prepared computer image already provides this interpreter for its file helper.
+      const process = await provider.execute(ref, {
+        executable: "/usr/local/bin/python3",
+        argv: ["-I", "-c", filePreviewScript, clean, String(maxBytes)],
+        cwd: ".",
+        environment: {},
+        outputBudget: Math.ceil(maxBytes / 3) * 4 + 1024,
+      });
+      const timer = setTimeout(() => void process.cancel().catch(() => {}), 5000);
+      const chunks: Buffer[] = [];
+      let exited = false;
+      try {
+        for await (const event of process.events) {
+          if (event.kind === "stdout") chunks.push(Buffer.from(event.bytes, "base64"));
+          if (event.kind === "exit") {
+            if (event.status !== 0 || event.cancelled || event.truncated)
+              throw new ComputerError("PROVIDER_UNAVAILABLE");
+            exited = true;
+          }
+        }
+        if (!exited) throw new ComputerError("PROVIDER_UNAVAILABLE");
+        const response = JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
+        const refusal = z
+          .strictObject({ code: z.enum(["NOT_FOUND", "INVALID_INPUT", "PROVIDER_UNAVAILABLE"]) })
+          .safeParse(response);
+        if (refusal.success) throw new ComputerError(refusal.data.code);
+        const result = z
+          .strictObject({
+            bytes: z.base64().max(Math.ceil(maxBytes / 3) * 4),
+            size: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+            truncated: z.boolean(),
+          })
+          .parse(response);
+        if (Buffer.from(result.bytes, "base64").length > maxBytes)
+          throw new ComputerError("LIMIT_EXCEEDED");
+        return result;
+      } catch (error) {
+        if (error instanceof ComputerError) throw error;
+        throw new ComputerError("PROVIDER_UNAVAILABLE");
+      } finally {
+        clearTimeout(timer);
+        if (!exited) await process.cancel().catch(() => {});
+      }
+    },
     async write(ref, path, bytes) {
       await call(ref, "files/write", { path, bytes });
     },
@@ -185,4 +236,5 @@ export function createDockerComputerProvider(options: {
       return revisionSchema.parse(await json(await call(ref, "snapshot")));
     },
   };
+  return provider;
 }

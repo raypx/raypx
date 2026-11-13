@@ -36,7 +36,7 @@ const run: ExecutionRun = {
   computerId: null,
   computerGeneration: null,
 };
-function fixture(knownSecrets: string[] = []) {
+function fixture(knownSecrets: string[] | (() => readonly string[]) = []) {
   run.computerId = null;
   run.computerGeneration = null;
   run.startedAt = null;
@@ -86,6 +86,30 @@ function fixture(knownSecrets: string[] = []) {
   }
   return { tools, provider, service, repository, prepare, execute, row: () => row };
 }
+
+it("checks request-owned credentials before returning any tool result", async () => {
+  const values: string[] = [];
+  const f = fixture(() => values);
+  const tools = f.tools;
+  const signal = new AbortController().signal;
+  await tools.initialize!(scope, run, signal);
+  const row = f.row()!;
+  const ref = { id: row.id, generation: row.generation };
+  const secret = "member-credential-private-value";
+  await f.provider.write(ref, "private.txt", Buffer.from(secret).toString("base64"));
+  values.push(secret);
+  await expect(f.execute("computer_read_file", { path: "private.txt" })).rejects.toThrow(
+    "SECRET_OUTPUT",
+  );
+  expect(() => f.prepare("computer_write_file", { path: "file", content: secret })).toThrow(
+    "SECRET_INPUT",
+  );
+  values.splice(0);
+  expect(f.prepare("computer_write_file", { path: "file", content: secret })).toHaveProperty(
+    "name",
+    "computer_write_file",
+  );
+});
 
 it("offers nothing and allocates nothing without a configured provider", () => {
   const f = fixture();

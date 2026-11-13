@@ -79,7 +79,14 @@ Never ask and an Allow added from an older pending request. Lists apply to reads
 as well as changes; unlisted list/read calls need no approval. Write and command
 calls are changes.
 
-`approvals.settings/updateSettings` use the session account. `approvals.pending`
+`approvals.settings/updateSettings` use the session account. Their responses add
+`revision` and `availableModes`, containing `{ mode, available, reasonCode }` for
+Ask, Never ask and Auto. Auto reports `REVIEW_MODEL_NOT_CONFIGURED`; available
+modes have a null reason. Updating requires `expectedRevision`. A stale edit
+returns `CONFLICT` with `APPROVAL_SETTINGS_CONFLICT` and the current settings in
+error data, without changing them. Remembering a new Allow rule from a card also
+advances the revision, so it cannot be overwritten by an older settings form.
+`approvals.pending`
 lists at most 100 pending requests addressed to the caller in a selected Space.
 `approvals.answer` accepts that Space, a request ID, `approved` or `denied`, and
 optional `allowTool`. The latter adds the exact action to Allow without replacing
@@ -105,12 +112,18 @@ SHA-256 of canonical JSON arguments (object keys sorted, array order preserved).
 Intent commits before invoking the Computer port; the bounded result and terminal
 outcome commit afterwards. A recorded result is reused for that key. A lost tool
 response or an outcome that cannot be committed is also unknown; only a returned
-outcome establishes a failed or cancelled change. At process
-startup, before accepting work, unfinished intents become `unknown`. An existing
-intent or unknown outcome blocks continuation with `EFFECT_UNKNOWN`, including a
-different later change in the same Run. `approvals.effects` exposes up to 512
-records for a selected Space/Run. No automatic retry, recovery or manual-continue
-procedure is implemented, and no exactly-once external effect is claimed.
+outcome establishes a failed or cancelled change. Every effect read or decision,
+including `approvals.effects`, persists intents older than the tool execution
+deadline plus margin as `unknown` in the observing transaction, using the service's
+injected clock. A young intent blocks with `EFFECT_IN_PROGRESS`; an unknown outcome
+blocks with `EFFECT_UNKNOWN`, including a different later change in the same Run.
+Member reads lock the conversation counter and current Run without requiring a
+live execution lease. Expiry and a tracked tool's single `tool.finished` event with
+outcome `unknown` commit together under that Run's current fence. Later reads and
+resumed attempts do not append another finish event. Expiry does not require an
+attempt, a matching effect fence or lifecycle metadata to classify an intent.
+`approvals.effects` exposes up to 512 records for a selected Space/Run. Unknown
+effects are never replayed automatically; no exactly-once external effect is claimed.
 
 Protected input is deferred. Known deployment secret values are rejected from
 tool arguments before records or Computer calls, and from output before effects

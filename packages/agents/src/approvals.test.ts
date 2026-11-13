@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   approvalRequestSchema,
   type ApprovalRequest,
-  type ApprovalSettings,
+  type RevisionedApprovalSettings,
   type Effect,
 } from "@raypx/core/approvals";
 import { runSchema } from "@raypx/core/conversation";
@@ -11,6 +11,7 @@ import type { SpaceScope } from "@raypx/spaces/server";
 import {
   createApprovalsService,
   ApprovalOperationError,
+  ApprovalSettingsConflictError,
   EffectUnknownError,
   type ApprovalCall,
   type ApprovalsRepository,
@@ -78,7 +79,7 @@ const command: ApprovalCall = {
 function fixture() {
   const requests = new Map<string, ApprovalRequest>();
   const effects = new Map<string, Effect>();
-  let settings: ApprovalSettings | undefined;
+  let settings: RevisionedApprovalSettings | undefined;
   function expireEffects(selected: SpaceScope, runId: string, now: Date) {
     for (const effect of effects.values())
       if (
@@ -106,11 +107,14 @@ function fixture() {
   };
   const repository: ApprovalsRepository = {
     async getSettings(_accountId, defaultMode) {
-      settings ??= { mode: defaultMode, rules: [] };
+      settings ??= { mode: defaultMode, rules: [], revision: 0 };
       return structuredClone(settings);
     },
-    async updateSettings(_accountId, input) {
-      settings = structuredClone(input);
+    async updateSettings(_accountId, input, expectedRevision, defaultMode) {
+      settings ??= { mode: defaultMode, rules: [], revision: 0 };
+      if (settings.revision !== expectedRevision)
+        throw new ApprovalSettingsConflictError(structuredClone(settings));
+      settings = { ...structuredClone(input), revision: expectedRevision + 1 };
       return settings;
     },
     async listPending(selected, now) {
@@ -156,8 +160,18 @@ function fixture() {
         resolve(request, "expired", now);
         throw new ApprovalOperationError("EXPIRED");
       }
-      if (answer.allowTool && answer.decision === "approved")
-        settings!.rules.push({ toolName: request.toolName, executable: null, decision: "allow" });
+      if (answer.allowTool && answer.decision === "approved") {
+        const executable =
+          typeof request.arguments.executable === "string" ? request.arguments.executable : null;
+        if (
+          !settings!.rules.some(
+            (rule) => rule.toolName === request.toolName && rule.executable === executable,
+          )
+        ) {
+          settings!.rules.push({ toolName: request.toolName, executable, decision: "allow" });
+          settings!.revision += 1;
+        }
+      }
       return resolve(request, answer.decision, now, selected.member.accountId);
     },
     async pollRequest(_scope, _run, id, now) {
@@ -256,6 +270,7 @@ it.each(["ask", "never"] as const)(
   async (mode) => {
     const { service, requests } = fixture();
     await service.updateSettings("owner", {
+      expectedRevision: (await service.getSettings("owner")).revision,
       mode,
       rules: [
         { toolName: write.name, executable: null, decision: "block" },
@@ -276,10 +291,17 @@ it.each(["ask", "never"] as const)(
 );
 it("allows exact tools and executables; never bypasses Block; explicitly rejects Auto", async () => {
   const { service, requests } = fixture();
-  await expect(service.updateSettings("owner", { mode: "auto", rules: [] })).rejects.toMatchObject({
+  await expect(
+    service.updateSettings("owner", {
+      expectedRevision: (await service.getSettings("owner")).revision,
+      mode: "auto",
+      rules: [],
+    }),
+  ).rejects.toMatchObject({
     code: "MODE_UNAVAILABLE",
   });
   await service.updateSettings("owner", {
+    expectedRevision: (await service.getSettings("owner")).revision,
     mode: "ask",
     rules: [
       { toolName: write.name, executable: null, decision: "allow" },
@@ -300,7 +322,11 @@ it("allows exact tools and executables; never bypasses Block; explicitly rejects
   expect(requests.size).toBe(1);
   await vi.advanceTimersByTimeAsync(21);
   expect(await pending).toBe("expired");
-  await service.updateSettings("owner", { mode: "never", rules: [] });
+  await service.updateSettings("owner", {
+    expectedRevision: (await service.getSettings("owner")).revision,
+    mode: "never",
+    rules: [],
+  });
   expect(await service.authorize(scope, run, write, new AbortController().signal)).toBe("approved");
   expect(requests.size).toBe(1);
 });
@@ -309,6 +335,7 @@ it("rechecks a Block added while a request is pending", async () => {
   const pending = service.authorize(scope, run, write, new AbortController().signal);
   await vi.advanceTimersByTimeAsync(1);
   await service.updateSettings("owner", {
+    expectedRevision: (await service.getSettings("owner")).revision,
     mode: "ask",
     rules: [{ toolName: write.name, executable: null, decision: "block" }],
   });
@@ -458,3 +485,51 @@ it.each(["handover", "lease-lost", "timeout"])(
     expect(requests.get(request.id)!.state).toBe("pending");
   },
 );
+
+it("reports mode availability and refuses a stale settings update with the current revision", async () => {
+  const { service } = fixture();
+  const initial = await service.getSettings("owner");
+  expect(initial).toMatchObject({
+    mode: "ask",
+    rules: [],
+    revision: 0,
+    availableModes: [
+      { mode: "ask", available: true, reasonCode: null },
+      { mode: "never", available: true, reasonCode: null },
+      { mode: "auto", available: false, reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+    ],
+  });
+  const saved = await service.updateSettings("owner", {
+    mode: "never",
+    rules: [],
+    expectedRevision: initial.revision,
+  });
+  expect(saved.revision).toBe(1);
+  await expect(
+    service.updateSettings("owner", {
+      mode: "ask",
+      rules: [{ toolName: write.name, executable: null, decision: "block" }],
+      expectedRevision: initial.revision,
+    }),
+  ).rejects.toMatchObject({ code: "APPROVAL_SETTINGS_CONFLICT", settings: saved });
+  expect(await service.getSettings("owner")).toEqual(saved);
+});
+
+it("advances the settings revision when an approval remembers a new Allow rule", async () => {
+  const { service, requests } = fixture();
+  const before = await service.getSettings("owner");
+  const pending = service.authorize(scope, run, write, new AbortController().signal);
+  await vi.advanceTimersByTimeAsync(1);
+  await service.answer(scope, [...requests.keys()][0]!, { decision: "approved", allowTool: true });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await pending).toBe("approved");
+  const current = await service.getSettings("owner");
+  expect(current.revision).toBe(before.revision + 1);
+  await expect(
+    service.updateSettings("owner", {
+      mode: "never",
+      rules: [],
+      expectedRevision: before.revision,
+    }),
+  ).rejects.toMatchObject({ code: "APPROVAL_SETTINGS_CONFLICT", settings: current });
+});

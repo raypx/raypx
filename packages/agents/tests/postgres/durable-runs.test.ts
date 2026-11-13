@@ -13,6 +13,7 @@ import {
   conversationRunCheckpoints as checkpoints,
   conversationRunSteering as steering,
   conversationRuns as runs,
+  conversationToolCalls as toolCalls,
   computers as computerRows,
   spaceMembers,
   spaces,
@@ -333,7 +334,11 @@ it("rejects every stale fence and commits turn events with the last checkpoint a
 
 it("recovers pending calls from a checkpoint without re-executing a recorded Computer effect", async () => {
   const runtime = toolRuntime();
-  await runtime.approvals.updateSettings(owner, { mode: "never", rules: [] });
+  await runtime.approvals.updateSettings(owner, {
+    expectedRevision: (await runtime.approvals.getSettings(owner)).revision,
+    mode: "never",
+    rules: [],
+  });
   await send();
   const original = (await writer.claimNext(scope, id, claim))!;
   await runtime.tools.initialize!(scope, original.run, new AbortController().signal);
@@ -346,13 +351,21 @@ it("recovers pending calls from a checkpoint without re-executing a recorded Com
     pendingCalls: [writeCall],
   };
   const firstResponseAt = new Date().toISOString();
+  const call = runtime.tools.prepare(writeCall);
   await writer.commitTurn(scope, original.run, {
     checkpoint,
+    tools: [
+      {
+        toolCallId: call.id,
+        toolName: call.name,
+        target: call.target,
+        argumentSummary: call.argumentSummary,
+      },
+    ],
     text: "Before crash",
     segmentId: crypto.randomUUID(),
     firstResponseAt,
   });
-  const call = runtime.tools.prepare(writeCall);
   const signal = new AbortController().signal;
   await runtime.approvals.executeEffect(
     scope,
@@ -379,6 +392,11 @@ it("recovers pending calls from a checkpoint without re-executing a recorded Com
   const snapshot = await writer.snapshot(scope, id);
   expect(snapshot.segments.map((segment) => segment.text)).toEqual(["Before crash", "Recovered"]);
   expect(snapshot.runs[0]!.firstResponseAt).toBe(firstResponseAt);
+  const page = await writer.events(scope, id, 0, 100);
+  if (page.status !== "events") throw new Error("Unexpected retention");
+  expect(page.events.filter(({ event }) => event.kind === "tool.started")).toHaveLength(1);
+  expect(page.events.filter(({ event }) => event.kind === "tool.finished")).toHaveLength(1);
+  expect(snapshot.toolActivity).toMatchObject([{ toolCallId: call.id, outcome: "succeeded" }]);
 });
 
 it("rejects stale approval creation, polling and effect writes after takeover", async () => {
@@ -429,7 +447,11 @@ it("rejects stale approval creation, polling and effect writes after takeover", 
 
 it("recovers a dropped runner on the worker scan interval without repeating committed turns", async () => {
   const runtime = toolRuntime();
-  await runtime.approvals.updateSettings(owner, { mode: "never", rules: [] });
+  await runtime.approvals.updateSettings(owner, {
+    expectedRevision: (await runtime.approvals.getSettings(owner)).revision,
+    mode: "never",
+    rules: [],
+  });
   const a = fixture(),
     b = fixture();
   let dropped = false;
@@ -469,7 +491,11 @@ it("recovers a dropped runner on the worker scan interval without repeating comm
 
 it("hands an approval wait to another runner and delivers waiting steering without a second Run", async () => {
   const runtime = toolRuntime();
-  await runtime.approvals.updateSettings(owner, { mode: "ask", rules: [] });
+  await runtime.approvals.updateSettings(owner, {
+    expectedRevision: (await runtime.approvals.getSettings(owner)).revision,
+    mode: "ask",
+    rules: [],
+  });
   const a = fixture(),
     b = fixture();
   const firstRunner = runner(writer, a.models, runtime);
@@ -642,4 +668,110 @@ it("enforces same-Space durable references and removes all records with the Spac
     expect(await first.db.select().from(table).where(eq(table.spaceId, isolated.spaceId))).toEqual(
       [],
     );
+});
+
+it("commits tool lifecycle once across a resumed fence and retains bounded snapshots after event pruning", async () => {
+  await send();
+  const original = (await writer.claimNext(scope, id, claim))!;
+  const summary = {
+    toolCallId: "read-lifecycle",
+    toolName: "computer_read_file",
+    target: "notes.txt",
+    argumentSummary: "Path: notes.txt",
+  };
+  await writer.beginTool(scope, original.run, summary);
+  await writer.beginTool(scope, original.run, summary);
+  await writer.release(scope, original.run);
+  const resumed = (await competitor.claimNext(scope, id, { ...claim, ownerId: "fixture-b" }))!;
+  await competitor.beginTool(scope, resumed.run, summary);
+  await expect(writer.beginTool(scope, original.run, summary)).rejects.toBeInstanceOf(
+    StaleRunFenceError,
+  );
+  await competitor.saveCheckpoint(scope, resumed.run, blank(), {
+    toolCallId: summary.toolCallId,
+    outcome: "succeeded",
+    exitStatus: null,
+  });
+  await competitor.saveCheckpoint(scope, resumed.run, blank(), {
+    toolCallId: summary.toolCallId,
+    outcome: "succeeded",
+    exitStatus: null,
+  });
+  const page = await writer.events(scope, id, 0, 100);
+  if (page.status !== "events") throw new Error("Unexpected retention");
+  const lifecycle = page.events.filter(
+    ({ event }) => event.kind === "tool.started" || event.kind === "tool.finished",
+  );
+  expect(lifecycle.map(({ event }) => event.kind)).toEqual(["tool.started", "tool.finished"]);
+  expect(lifecycle[1]!.event).toMatchObject({
+    ...summary,
+    outcome: "succeeded",
+    durationMs: expect.any(Number),
+    exitStatus: null,
+  });
+  expect(page.events.map(({ event }) => event.sequence)).toEqual(
+    Array.from({ length: page.events.length }, (_, i) => i + 1),
+  );
+  await writer.retainAfter(scope, id, page.cursor);
+  await competitor.beginTool(scope, resumed.run, summary);
+  const snapshot = await writer.snapshot(scope, id);
+  expect(snapshot.toolActivity).toHaveLength(1);
+  expect(snapshot.toolActivityTruncated).toBe(false);
+  expect(snapshot.toolActivity![0]).toMatchObject({ ...summary, outcome: "succeeded" });
+  for (let index = 0; index < 101; index++)
+    await competitor.beginTool(scope, resumed.run, {
+      ...summary,
+      toolCallId: `bounded-${String(index).padStart(3, "0")}`,
+    });
+  const bounded = await writer.snapshot(scope, id);
+  expect(bounded.toolActivity).toHaveLength(100);
+  expect(bounded.toolActivityTruncated).toBe(true);
+  const [otherSpace] = await first.db
+    .select()
+    .from(toolCalls)
+    .where(and(eq(toolCalls.spaceId, foreignScope.spaceId), eq(toolCalls.runId, resumed.run.id)));
+  expect(otherSpace).toBeUndefined();
+  const temporary = await access.create(owner, { name: "Lifecycle deletion" });
+  const temporaryScope = await access.resolve(owner, temporary.space.id);
+  const temporaryId = (await createAgentsRepository(first.db).create(temporaryScope, agent))
+    .conversation.id;
+  await writer.send(temporaryScope, temporaryId, { idempotencyKey: "temporary", text: "Start" });
+  const temporaryRun = (await writer.claimNext(temporaryScope, temporaryId, claim))!;
+  await writer.beginTool(temporaryScope, temporaryRun.run, summary);
+  await first.db.delete(spaces).where(eq(spaces.id, temporary.space.id));
+  expect(
+    await first.db.select().from(toolCalls).where(eq(toolCalls.spaceId, temporary.space.id)),
+  ).toEqual([]);
+});
+
+it("starts all pending calls in the model checkpoint transaction and cancels unexecuted calls", async () => {
+  await send();
+  const execution = (await writer.claimNext(scope, id, claim))!;
+  const summaries = ["first-pending", "later-pending"].map((toolCallId) => ({
+    toolCallId,
+    toolName: "computer_write_file",
+    target: "notes.txt",
+    argumentSummary: "Write file: notes.txt",
+  }));
+  const pending: ToolCall[] = summaries.map((summary) => ({
+    type: "toolCall",
+    id: summary.toolCallId,
+    name: summary.toolName,
+    arguments: { path: "notes.txt", content: "private-not-in-activity" },
+  }));
+  const checkpoint: RunCheckpoint = { ...blank(), pendingCalls: pending, rounds: 1 };
+  await writer.commitTurn(scope, execution.run, { checkpoint, tools: summaries });
+  expect((await writer.snapshot(scope, id)).toolActivity?.map((tool) => tool.toolCallId)).toEqual([
+    "first-pending",
+    "later-pending",
+  ]);
+  await writer.stop(scope, id, execution.run.id);
+  const activity = (await writer.snapshot(scope, id)).toolActivity!;
+  expect(activity).toHaveLength(2);
+  expect(activity.every((tool) => tool.outcome === "cancelled")).toBe(true);
+  const page = await writer.events(scope, id, 0, 100);
+  if (page.status !== "events") throw new Error("Unexpected retention");
+  expect(page.events.filter(({ event }) => event.kind === "tool.started")).toHaveLength(2);
+  expect(page.events.filter(({ event }) => event.kind === "tool.finished")).toHaveLength(2);
+  expect(JSON.stringify(activity)).not.toContain("private-not-in-activity");
 });

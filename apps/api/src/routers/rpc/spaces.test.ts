@@ -4,9 +4,10 @@ import { SpaceNotFound, spaceIdSchema, spaceSchema, spaceMemberSchema } from "@r
 import { conversationIdSchema, agentIdSchema } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
 import type { SpaceAccess } from "@raypx/spaces/server";
+import type { RateLimiter } from "../../rate-limit/types.js";
 import { createApiApp } from "../../../tests/helpers/app.js";
 
-function fixture() {
+function fixture(rateLimit?: RateLimiter) {
   let auth: AuthSession | null = {
     user: {
       id: "account",
@@ -42,6 +43,8 @@ function fixture() {
     get: vi.fn(async () => ({ status: "not-configured" as const })),
     start: vi.fn(async () => ({ status: "not-configured" as const })),
     stop: vi.fn(async () => ({ status: "not-configured" as const })),
+    listDirectory: vi.fn(async () => ({ status: "not-configured" as const })),
+    readFile: vi.fn(async () => ({ status: "not-configured" as const })),
   };
   const app = createApiApp({
     computers,
@@ -49,6 +52,7 @@ function fixture() {
     conversationModels: { list: models },
     readSession,
     allowedOrigins: ["https://web.example.test"],
+    ...(rateLimit ? { rateLimit } : {}),
   });
   function client(origin = "https://web.example.test") {
     return createApiClient({
@@ -107,7 +111,7 @@ it("lists only offered model names after fresh session and Space membership admi
   const f = fixture();
   f.admit();
   await expect(f.client().agents.models({ spaceId: f.spaceId })).resolves.toEqual([
-    { modelId: "offered", name: "Offered model" },
+    { modelId: "offered", name: "Offered model", source: "deployment" },
   ]);
   expect(f.models).toHaveBeenCalledWith(expect.objectContaining({ spaceId: f.spaceId }));
   f.signOut();
@@ -172,4 +176,48 @@ it("refuses non-members on every Computer procedure and requires trusted mutatio
   await expect(f.client().computers.get({ spaceId: f.spaceId })).rejects.toMatchObject({
     code: "UNAUTHORIZED",
   });
+});
+
+it("admits file reads only for fresh Space members, with bounded inputs and read quotas", async () => {
+  const rateLimit = vi.fn<RateLimiter>(async () => true);
+  const f = fixture(rateLimit);
+  for (const request of [
+    () => f.client().computers.listDirectory({ spaceId: f.spaceId }),
+    () => f.client().computers.readFile({ spaceId: f.spaceId, path: "note" }),
+  ])
+    await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(f.computers.listDirectory).not.toHaveBeenCalled();
+  expect(f.computers.readFile).not.toHaveBeenCalled();
+  f.admit();
+  expect(await f.client().computers.listDirectory({ spaceId: f.spaceId })).toEqual({
+    status: "not-configured",
+  });
+  expect(await f.client().computers.readFile({ spaceId: f.spaceId, path: "note" })).toEqual({
+    status: "not-configured",
+  });
+  expect(f.computers.listDirectory).toHaveBeenCalledWith(
+    expect.objectContaining({ spaceId: f.spaceId }),
+    ".",
+    100,
+  );
+  expect(f.computers.readFile).toHaveBeenCalledWith(
+    expect.objectContaining({ spaceId: f.spaceId }),
+    "note",
+    65536,
+  );
+  expect(rateLimit.mock.calls.slice(-2)).toEqual([
+    ["rpc:account:computers.listDirectory", { window: 60, max: 60 }],
+    ["rpc:account:computers.readFile", { window: 60, max: 60 }],
+  ]);
+  await expect(
+    f.client().computers.listDirectory({ spaceId: f.spaceId, limit: 201 }),
+  ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  await expect(
+    f.client().computers.readFile({ spaceId: f.spaceId, path: "note", maxBytes: 65537 }),
+  ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  rateLimit.mockResolvedValue(false);
+  await expect(
+    f.client().computers.readFile({ spaceId: f.spaceId, path: "note" }),
+  ).rejects.toMatchObject({ code: "TOO_MANY_REQUESTS", data: { error: { code: "RATE_LIMITED" } } });
+  expect(f.computers.readFile).toHaveBeenCalledTimes(1);
 });

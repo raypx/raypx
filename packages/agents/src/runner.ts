@@ -22,9 +22,11 @@ import {
   type ExecutionRun,
   type RunCheckpoint,
   type RunExecution,
+  type ToolSummary,
 } from "./conversations.js";
 import { EffectInProgressError, EffectUnknownError, type ApprovalsService } from "./approvals.js";
 import { ComputerToolsError, type ComputerTools } from "./computer-tools.js";
+import { toolCompletion } from "./tool-lifecycle.js";
 
 export interface ModelTurn extends Pick<RunExecution, "instructions" | "history"> {
   /** Canonical model history after the initial conversation context. */
@@ -39,6 +41,8 @@ export interface RunTools {
 
 /** Credentials stay in the adapter; only its opaque connection identity is persisted. */
 export interface ModelAccess {
+  /** Release request-owned sensitive state after an attempt settles. Never serialized. */
+  release?(this: void, run: Run): void;
   resolve(
     this: void,
     run: Run,
@@ -46,7 +50,7 @@ export interface ModelAccess {
     connectionId?: string;
     stream(input: ModelTurn, signal: AbortSignal): AiStream;
   }>;
-  close(): void;
+  close(this: void): void;
 }
 export interface RunnerOptions {
   ownerId?: string;
@@ -337,6 +341,15 @@ export class ConversationRunner {
       }),
     };
   }
+  private toolSummary(call: ToolCall): ToolSummary {
+    const prepared = this.prepared(call);
+    return {
+      toolCallId: call.id,
+      toolName: call.name,
+      target: prepared?.executable ?? prepared?.target ?? "unavailable",
+      argumentSummary: prepared?.argumentSummary ?? "Invalid tool call",
+    };
+  }
   private async toolResult(
     scope: SpaceScope,
     run: ExecutionRun,
@@ -344,6 +357,7 @@ export class ConversationRunner {
     controller: AbortController,
   ): Promise<ModelMessage> {
     const prepared = this.prepared(call);
+    await this.repository.beginTool(scope, run, this.toolSummary(call));
     let output: string;
     let isError = false;
     if (!prepared || !this.toolRuntime) {
@@ -483,7 +497,16 @@ export class ConversationRunner {
           checkpoint.continuation.push(output);
           checkpoint.pendingCalls.shift();
           storing = true;
-          await this.repository.saveCheckpoint(scope, run, checkpoint);
+          const text =
+            output.role === "toolResult"
+              ? output.content.find((part) => part.type === "text")
+              : undefined;
+          await this.repository.saveCheckpoint(
+            scope,
+            run,
+            checkpoint,
+            toolCompletion(call.id, text?.type === "text" ? text.text : null, "failed"),
+          );
           storing = false;
         }
         storing = true;
@@ -562,6 +585,7 @@ export class ConversationRunner {
         storing = true;
         const committed = await this.repository.commitTurn(scope, run, {
           checkpoint,
+          tools: checkpoint.pendingCalls.map((call) => this.toolSummary(call)),
           ...(text ? { segmentId, text, firstResponseAt: firstResponseAt! } : {}),
         });
         storing = false;
@@ -623,6 +647,7 @@ export class ConversationRunner {
         if (controller.signal.reason === "cancelled") terminal = true;
         this.active.delete(run.id);
         this.toolRuntime?.tools.release(run);
+        this.models.release?.(run);
         this.live.clear(run);
         if (terminal) {
           const finishedAt = run.finishedAt ? Date.parse(run.finishedAt) : Date.now();

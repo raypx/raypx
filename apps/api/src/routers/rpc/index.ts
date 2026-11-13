@@ -21,6 +21,7 @@ import { createRelayHandlers } from "./relay.js";
 import { createAccountHandlers } from "./account.js";
 import { createAttachmentHandlers } from "./attachments.js";
 import { createSpaceHandlers } from "./spaces.js";
+import { createModelConnectionsHandlers } from "./model-connections.js";
 
 export const rpcPrefix = "/rpc";
 
@@ -28,6 +29,7 @@ export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadi
   const setup = createRpcSetup(options);
   return setup.implementer.router({
     ...createSpaceHandlers(setup),
+    modelConnections: createModelConnectionsHandlers(setup),
     admin: createAdministrationHandlers(setup, readReadiness),
     attachments: createAttachmentHandlers(setup),
     instances: createInstancesHandlers(setup),

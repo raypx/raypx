@@ -3,6 +3,7 @@ import { z } from "zod";
 import { conversationIdSchema, conversationSchema } from "@raypx/core/agents";
 import {
   conversationEventSchema,
+  toolActivitySchema,
   runSchema,
   runIdSchema,
   replySegmentSchema,
@@ -36,6 +37,8 @@ export const conversationSnapshotSchema = z.strictObject({
   messages: z.array(messageSchema),
   runs: z.array(runSchema),
   segments: z.array(replySegmentSchema),
+  toolActivity: z.array(toolActivitySchema).max(100).optional(),
+  toolActivityTruncated: z.boolean().optional(),
   cursor,
 });
 const session = oc.meta(exposeApiTo("renderer"), rpcAccess("session"));

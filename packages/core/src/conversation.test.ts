@@ -106,3 +106,36 @@ it("accepts completed reply and run state events while rejecting reasoning and p
       false,
     );
 });
+
+it("bounds lifecycle metadata and excludes raw arguments, contents and tool output", () => {
+  const base = {
+    spaceId: "space",
+    conversationId: "conversation",
+    runId: "run",
+    toolCallId: "call",
+    toolName: "computer_read_file",
+    target: "notes.txt",
+    argumentSummary: "Path: notes.txt",
+    sequence: 1,
+    createdAt: new Date().toISOString(),
+  };
+  expect(conversationEventSchema.parse({ ...base, kind: "tool.started" }).kind).toBe(
+    "tool.started",
+  );
+  const finished = {
+    ...base,
+    kind: "tool.finished",
+    outcome: "succeeded",
+    durationMs: 1,
+    exitStatus: null,
+  };
+  expect(conversationEventSchema.parse(finished).kind).toBe("tool.finished");
+  for (const extra of [
+    { arguments: { path: "private" } },
+    { output: "private" },
+    { target: "x".repeat(1025) },
+    { argumentSummary: "x".repeat(1025) },
+    { durationMs: -1 },
+  ])
+    expect(conversationEventSchema.safeParse({ ...finished, ...extra }).success).toBe(false);
+});

@@ -24,11 +24,12 @@ it("worker and relay do not require or parse API authentication or mail settings
     NODE_ENV: "production",
     DATABASE_URL: "postgres://fixture:fixture@db.example.test:5432/raypx_test",
     AUTH_SECRET: "invalid",
-    APP_KEY: "invalid",
+    APP_KEY: "synthetic-app-key-for-tests-only-32-chars",
     AUTH_URL: "invalid",
     RESEND_API_KEY: "invalid",
   });
   expect(environment).not.toHaveProperty("AUTH_SECRET");
+  expect(environment.APP_KEY).toBe("synthetic-app-key-for-tests-only-32-chars");
   expect(environment).not.toHaveProperty("AUTH_URL");
   expect(environment).not.toHaveProperty("REDIS_URL");
   expect(environment.RUN_RECOVERY_INTERVAL_MS).toBe(5_000);
@@ -38,6 +39,14 @@ it("worker and relay do not require or parse API authentication or mail settings
       ALLOWED_ORIGINS: "https://app.example.test",
     }).REDIS_URL,
   ).toBeUndefined();
+});
+it("requires the shared application key for production member-connection recovery", () => {
+  expect(() =>
+    getWorkerEnvironment({
+      NODE_ENV: "production",
+      DATABASE_URL: "postgres://fixture:fixture@db.example.test:5432/raypx_test",
+    }),
+  ).toThrow("Production worker requires APP_KEY");
 });
 it("validates lease heartbeat headroom and recovery bounds", () => {
   expect(() => getWorkerEnvironment({ RUN_RECOVERY_INTERVAL_MS: "0" })).toThrow(

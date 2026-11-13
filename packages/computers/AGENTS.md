@@ -3,7 +3,8 @@
 `/server` owns team-computer lifecycle and database-free ports. `/server/postgres`
 owns Space-scoped persistence and transactional computer.state events for every
 Conversation in that Space. API resolves fresh SpaceScope and injects the provider.
-No Agent runtime or model consumes the Computer port yet.
+Member directory/file reads use that scope, never provision compute, and expose
+explicit unavailable states. Previews cap at 200 entries or 64 KiB of file bytes.
 
 Read never provisions. Start lazily claims the unique team row under the Space lock.
 Lifecycle leases serialize backend callers; a start increments the provider generation.

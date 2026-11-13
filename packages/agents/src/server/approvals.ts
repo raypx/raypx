@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   approvalSettings as settings,
@@ -12,7 +12,7 @@ import {
 } from "@raypx/database/schema";
 import {
   approvalRequestSchema,
-  approvalSettingsSchema,
+  revisionedApprovalSettingsSchema,
   effectSchema,
   type ApprovalRequest,
   type ApprovalState,
@@ -23,6 +23,7 @@ import { SpaceNotFound } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
 import {
   ApprovalOperationError,
+  ApprovalSettingsConflictError,
   EffectUnknownError,
   EffectInProgressError,
   type ApprovalsRepository,
@@ -31,8 +32,26 @@ import { publishConversationNotice } from "./conversations.js";
 import { EFFECT_INTENT_TIMEOUT_MS } from "../tool-limits.js";
 import type { ExecutionRun } from "../conversations.js";
 import { assertRunFence } from "./fence.js";
+import { finishToolEvent } from "./tool-events.js";
+import { toolCompletion } from "../tool-lifecycle.js";
 
 type Transaction = Pick<Database, "select" | "insert" | "update" | "delete" | "execute">;
+async function settingsView(tx: Transaction, row: typeof settings.$inferSelect) {
+  const items = await tx
+    .select({
+      toolName: rules.toolName,
+      executable: rules.executable,
+      decision: rules.decision,
+    })
+    .from(rules)
+    .where(eq(rules.accountId, row.accountId))
+    .orderBy(asc(rules.toolName), asc(rules.executable));
+  return revisionedApprovalSettingsSchema.parse({
+    mode: row.mode,
+    rules: items,
+    revision: row.revision,
+  });
+}
 function requestView(row: typeof requests.$inferSelect): ApprovalRequest {
   const { fence: _fence, ...request } = row;
   return approvalRequestSchema.parse({
@@ -53,6 +72,7 @@ function effectView(row: typeof effects.$inferSelect) {
 /** Cards deliberately omit the exact arguments, including file contents. */
 export function approvalCardData(request: ApprovalRequest) {
   return {
+    toolCallId: request.toolCallId,
     toolName: request.toolName,
     argumentSummary: request.argumentSummary,
     target: request.target,
@@ -93,8 +113,28 @@ export function createApprovalsRepository(
     if (!run) throw new SpaceNotFound();
     return run;
   }
-  async function expireIntents(tx: Transaction, scope: SpaceScope, runId: RunId, now: Date) {
-    await tx
+  async function lockObservedRun(tx: Transaction, scope: SpaceScope, runId: RunId) {
+    const selected = await requireRun(tx, scope, runId);
+    const conversationId = selected.conversationId as ConversationId;
+    // Member reads can observe abandoned or unclaimed work. Serialize their
+    // monotonic expiry with attempt writes without requiring a live lease.
+    await lock(tx, scope, conversationId);
+    const [current] = await tx
+      .select({ fence: runs.fence })
+      .from(runs)
+      .where(and(eq(runs.spaceId, scope.spaceId), eq(runs.id, runId)))
+      .for("update");
+    if (!current) throw new SpaceNotFound();
+    return { id: runId, conversationId, fence: current.fence };
+  }
+  async function expireIntents(
+    tx: Transaction,
+    scope: SpaceScope,
+    runId: RunId,
+    now: Date,
+    observer: Pick<ExecutionRun, "id" | "conversationId" | "fence">,
+  ) {
+    const expired = await tx
       .update(effects)
       .set({ state: "unknown" })
       .where(
@@ -104,6 +144,17 @@ export function createApprovalsRepository(
           eq(effects.state, "intent"),
           lte(effects.createdAt, new Date(now.getTime() - EFFECT_INTENT_TIMEOUT_MS)),
         ),
+      )
+      .returning({ toolCallId: effects.toolCallId });
+    expired.sort((a, b) => a.toolCallId.localeCompare(b.toolCallId));
+    for (const effect of expired)
+      await finishToolEvent(
+        tx,
+        scope,
+        observer,
+        toolCompletion(effect.toolCallId, null),
+        publish,
+        now,
       );
   }
   async function findRequest(tx: Pick<Database, "select">, scope: SpaceScope, id: string) {
@@ -253,25 +304,22 @@ export function createApprovalsRepository(
           .from(settings)
           .where(eq(settings.accountId, accountId))
           .for("share");
-        const items = await tx
-          .select({
-            toolName: rules.toolName,
-            executable: rules.executable,
-            decision: rules.decision,
-          })
-          .from(rules)
-          .where(eq(rules.accountId, accountId))
-          .orderBy(asc(rules.toolName), asc(rules.executable));
-        return approvalSettingsSchema.parse({ mode: row!.mode, rules: items });
+        return settingsView(tx, row!);
       });
     },
-    async updateSettings(accountId, input) {
+    async updateSettings(accountId, input, expectedRevision, defaultMode) {
       return db.transaction(async (tx) => {
-        await tx.insert(settings).values({ accountId, mode: input.mode }).onConflictDoNothing();
-        await tx.select().from(settings).where(eq(settings.accountId, accountId)).for("update");
+        await tx.insert(settings).values({ accountId, mode: defaultMode }).onConflictDoNothing();
+        const [current] = await tx
+          .select()
+          .from(settings)
+          .where(eq(settings.accountId, accountId))
+          .for("update");
+        if (current!.revision !== expectedRevision)
+          throw new ApprovalSettingsConflictError(await settingsView(tx, current!));
         await tx
           .update(settings)
-          .set({ mode: input.mode, updatedAt: new Date() })
+          .set({ mode: input.mode, revision: current!.revision + 1, updatedAt: new Date() })
           .where(eq(settings.accountId, accountId));
         await tx.delete(rules).where(eq(rules.accountId, accountId));
         // Block wins if a caller supplied the same exact action more than once.
@@ -284,7 +332,7 @@ export function createApprovalsRepository(
           await tx
             .insert(rules)
             .values([...unique.values()].map((rule) => ({ ...rule, accountId })));
-        return { mode: input.mode, rules: [...unique.values()] };
+        return settingsView(tx, { ...current!, mode: input.mode, revision: current!.revision + 1 });
       });
     },
     async listPending(scope, now) {
@@ -346,6 +394,10 @@ export function createApprovalsRepository(
           };
         if (answer.decision === "approved" && answer.allowTool) {
           await tx
+            .insert(settings)
+            .values({ accountId: scope.member.accountId, mode: "ask" })
+            .onConflictDoNothing();
+          await tx
             .select()
             .from(settings)
             .where(eq(settings.accountId, scope.member.accountId))
@@ -366,7 +418,7 @@ export function createApprovalsRepository(
             )
           )
             throw new ApprovalOperationError("RULE_LIMIT");
-          await tx
+          const inserted = await tx
             .insert(rules)
             .values({
               accountId: scope.member.accountId,
@@ -374,7 +426,13 @@ export function createApprovalsRepository(
               executable,
               decision: "allow",
             })
-            .onConflictDoNothing();
+            .onConflictDoNothing()
+            .returning({ accountId: rules.accountId });
+          if (inserted.length)
+            await tx
+              .update(settings)
+              .set({ revision: sql`${settings.revision} + 1`, updatedAt: now })
+              .where(eq(settings.accountId, scope.member.accountId));
         }
         return {
           expired: false,
@@ -459,11 +517,14 @@ export function createApprovalsRepository(
     },
     async listEffects(scope, runId, now, execution) {
       return db.transaction(async (tx) => {
+        let observer: Pick<ExecutionRun, "id" | "conversationId" | "fence">;
         if (execution) {
+          if (execution.id !== runId) throw new SpaceNotFound();
           await lock(tx, scope, execution.conversationId);
           await assertRunFence(tx, scope, execution);
-        } else await requireRun(tx, scope, runId);
-        await expireIntents(tx, scope, runId, now);
+          observer = execution;
+        } else observer = await lockObservedRun(tx, scope, runId);
+        await expireIntents(tx, scope, runId, now, observer);
         const rows = await tx
           .select()
           .from(effects)
@@ -477,7 +538,7 @@ export function createApprovalsRepository(
       const result = await db.transaction(async (tx) => {
         await lock(tx, scope, run.conversationId);
         const active = await assertRunFence(tx, scope, run);
-        await expireIntents(tx, scope, run.id, now);
+        await expireIntents(tx, scope, run.id, now, run);
         const [existing] = await tx
           .select()
           .from(effects)
@@ -522,13 +583,13 @@ export function createApprovalsRepository(
         await lock(tx, scope, run.conversationId);
         await assertRunFence(tx, scope, run);
         const [effect] = await tx
-          .select({ runId: effects.runId, fence: effects.fence })
+          .select({ runId: effects.runId, fence: effects.fence, toolCallId: effects.toolCallId })
           .from(effects)
           .where(and(eq(effects.spaceId, scope.spaceId), eq(effects.key, key)));
         if (!effect || effect.runId !== run.id) return false;
         // The current owner may observe an intent left by another attempt.
         // Persist its uncertainty before refusing that attempt's late outcome.
-        await expireIntents(tx, scope, effect.runId as RunId, now);
+        await expireIntents(tx, scope, effect.runId as RunId, now, run);
         if (effect.fence !== run.fence) return false;
         const [row] = await tx
           .update(effects)
@@ -541,6 +602,15 @@ export function createApprovalsRepository(
             ),
           )
           .returning({ key: effects.key });
+        if (row)
+          await finishToolEvent(
+            tx,
+            scope,
+            run,
+            toolCompletion(effect.toolCallId, result, state),
+            publish,
+            now,
+          );
         return row !== undefined;
       });
       if (!updated) throw new EffectUnknownError();

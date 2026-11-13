@@ -96,8 +96,39 @@ const eventFields = {
   sequence: eventSequenceSchema,
   createdAt: z.iso.datetime(),
 };
+export const toolOutcomeSchema = z.enum(["succeeded", "failed", "refused", "cancelled", "unknown"]);
+export const toolLifecycleFields = {
+  runId: runIdSchema,
+  toolCallId: z.string().min(1).max(128),
+  toolName: z.string().min(1).max(128),
+  target: z.string().min(1).max(1_024),
+  argumentSummary: z.string().max(1_024),
+};
+export const toolActivitySchema = z.strictObject({
+  ...toolLifecycleFields,
+  startedAt: z.iso.datetime(),
+  finishedAt: z.iso.datetime().nullable(),
+  outcome: toolOutcomeSchema.nullable(),
+  durationMs: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
+  exitStatus: z.number().int().nullable(),
+});
+export type ToolActivity = z.infer<typeof toolActivitySchema>;
+export type ToolOutcome = z.infer<typeof toolOutcomeSchema>;
 export const conversationEventSchema = z
   .discriminatedUnion("kind", [
+    z.strictObject({
+      ...eventFields,
+      ...toolLifecycleFields,
+      kind: z.literal("tool.started"),
+    }),
+    z.strictObject({
+      ...eventFields,
+      ...toolLifecycleFields,
+      kind: z.literal("tool.finished"),
+      outcome: toolOutcomeSchema,
+      durationMs: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+      exitStatus: z.number().int().nullable(),
+    }),
     z.strictObject({
       ...eventFields,
       ...approvalCardFields,

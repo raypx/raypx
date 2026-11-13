@@ -4,6 +4,7 @@ import {
   computerGenerationSchema,
   computerStateSchema,
   homeRevisionSchema,
+  computerDirectoryEntrySchema,
 } from "@raypx/core/computers";
 
 export const MAX_OUTPUT_BYTES = 1024 * 1024;
@@ -74,10 +75,7 @@ export interface ComputerProcess {
   events: AsyncIterable<ProcessEvent>;
   cancel(this: void): Promise<void>;
 }
-export const fileEntrySchema = z.strictObject({
-  path: z.string().max(4096),
-  kind: z.enum(["file", "directory", "symlink"]),
-});
+export const fileEntrySchema = computerDirectoryEntrySchema;
 export type FileEntry = z.infer<typeof fileEntrySchema>;
 export const homeEntrySchema = z.discriminatedUnion("kind", [
   z.strictObject({
@@ -127,6 +125,12 @@ export interface ComputerProvider {
     limit: number,
   ): Promise<{ entries: FileEntry[]; truncated: boolean }>;
   read(ref: ComputerRef, path: string, maxBytes: number): Promise<{ bytes: string }>;
+  /** Optional bounded member preview; never starts compute or follows link components. */
+  readFile?(
+    ref: ComputerRef,
+    path: string,
+    maxBytes: number,
+  ): Promise<{ bytes: string; size: number; truncated: boolean }>;
   write(ref: ComputerRef, path: string, bytes: string): Promise<void>;
   exportHome(ref: ComputerRef): Promise<HomeArchive>;
   importHome(ref: ComputerRef, archive: HomeArchive): Promise<{ revision: string }>;

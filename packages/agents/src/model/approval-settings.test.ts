@@ -6,8 +6,13 @@ const initial: ApprovalSettings = { mode: "ask", rules: [] };
 const allowed = { toolName: "computer_write_file", executable: null, decision: "allow" } as const;
 
 function fixture() {
-  const settings = vi.fn(async () => initial);
-  const updateSettings = vi.fn<ApprovalSettingsPort["updateSettings"]>(async (input) => input);
+  const settings = vi.fn<ApprovalSettingsPort["settings"]>(async () => ({
+    ...initial,
+    revision: 0,
+  }));
+  const updateSettings = vi.fn<ApprovalSettingsPort["updateSettings"]>(
+    async ({ expectedRevision, ...saved }) => ({ ...saved, revision: expectedRevision + 1 }),
+  );
   const controller = new ApprovalSettingsController({ settings, updateSettings });
   return { controller, settings, updateSettings };
 }
@@ -25,6 +30,7 @@ it("edits exact Allow and Block entries and replaces mode and rules together", a
   expect(updateSettings).toHaveBeenCalledWith({
     mode: "ask",
     rules: [{ ...allowed, decision: "block" }],
+    expectedRevision: 0,
   });
   expect(controller.getSnapshot()).toMatchObject({ dirty: false, saved: true });
 });
@@ -68,7 +74,7 @@ it("detects changed settings before replacement without losing local rules", asy
   const { controller, settings, updateSettings } = fixture();
   await controller.load();
   controller.addRule(allowed);
-  settings.mockResolvedValue({ mode: "never", rules: [] });
+  settings.mockResolvedValue({ mode: "never", rules: [], revision: 1 });
   await expect(controller.save(async () => true)).resolves.toBe(false);
   expect(controller.getSnapshot()).toMatchObject({
     error: "conflict",
@@ -110,14 +116,14 @@ it("recognizes a saved replacement after an uncertain response without writing a
   updateSettings.mockRejectedValueOnce(new Error("response lost"));
   await controller.save(async () => true);
   expect(controller.getSnapshot().error).toBe("save");
-  settings.mockResolvedValue({ mode: "ask", rules: [allowed] });
+  settings.mockResolvedValue({ mode: "ask", rules: [allowed], revision: 1 });
   await expect(controller.save(async () => true)).resolves.toBe(true);
   expect(updateSettings).toHaveBeenCalledOnce();
 });
 
 it("ignores a read completed after account teardown", async () => {
   const { controller, settings } = fixture();
-  let finish!: (value: ApprovalSettings) => void;
+  let finish!: (value: ApprovalSettings & { revision: number }) => void;
   settings.mockReturnValueOnce(
     new Promise((done) => {
       finish = done;
@@ -128,7 +134,7 @@ it("ignores a read completed after account teardown", async () => {
   const read = controller.load();
   controller.dispose();
   const before = listener.mock.calls.length;
-  finish(initial);
+  finish({ ...initial, revision: 0 });
   await read;
   expect(listener).toHaveBeenCalledTimes(before);
   expect(controller.getSnapshot().draft).toBeNull();

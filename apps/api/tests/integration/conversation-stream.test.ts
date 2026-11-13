@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
 import { replyFixture } from "../helpers/replies.js";
+import { agentToolsFixture } from "../helpers/agent-tools.js";
 import { ConversationRunner, type LiveReplies } from "@raypx/agents/server";
 import { Hono } from "hono";
 import { conversationServerFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
@@ -238,4 +239,55 @@ it("replays committed output once after a worker resumes a handed-over Run with 
     "Committed after handover",
   ]);
   expect(reply.runs).toHaveLength(1);
+});
+
+it("replays tool lifecycle and related approval cards over /events without tool contents", async () => {
+  const reply = agentToolsFixture();
+  cleanups.push(() => reply.runner.close());
+  const f = await fixture(reply);
+  const peer = await f.connect(0, true);
+  await reply.conversations.send(reply.scope, reply.conversationId, {
+    text: "Inspect",
+    idempotencyKey: "tool-events",
+  });
+  await expect.poll(() => reply.calls.length).toBe(1);
+  reply.calls[0]!.toolCalls([
+    { type: "toolCall", id: "socket-list", name: "computer_list_files", arguments: { path: "." } },
+  ]);
+  await expect.poll(() => reply.calls.length).toBe(2);
+  reply.calls[1]!.complete("Done");
+  await expect.poll(() => reply.runs[0]!.state).toBe("succeeded");
+  await expect.poll(() => peer.sequences().at(-1)).toBe(reply.log.length);
+  const lifecycle = peer.frames.flatMap((frame) =>
+    frame.type === "event" &&
+    (frame.entry.event.kind === "tool.started" || frame.entry.event.kind === "tool.finished")
+      ? [frame.entry.event]
+      : [],
+  );
+  expect(lifecycle.map((event) => event.kind)).toEqual(["tool.started", "tool.finished"]);
+  expect(lifecycle[0]).toMatchObject({
+    toolCallId: "socket-list",
+    toolName: "computer_list_files",
+    target: ".",
+  });
+  expect(lifecycle[1]).toMatchObject({
+    toolCallId: "socket-list",
+    outcome: "succeeded",
+    durationMs: expect.any(Number),
+    exitStatus: null,
+  });
+  expect(JSON.stringify(lifecycle)).not.toMatch(/fixture-known-secret|arguments|stdout|stderr/);
+  peer.socket.close();
+  const replay = await f.connect(0, true);
+  await expect.poll(() => replay.sequences().at(-1)).toBe(reply.log.length);
+  expect(
+    replay.frames.filter(
+      (frame) => frame.type === "event" && frame.entry.event.kind === "tool.started",
+    ),
+  ).toHaveLength(1);
+  expect(
+    replay.frames.filter(
+      (frame) => frame.type === "event" && frame.entry.event.kind === "tool.finished",
+    ),
+  ).toHaveLength(1);
 });

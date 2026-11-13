@@ -5,9 +5,15 @@ import {
   type ApprovalSettings,
 } from "@raypx/core/approvals";
 
+/** Settings as the server returns them; the revision guards a concurrent save. */
+type RevisionedSettings = ApprovalSettings & { revision: number };
+
 export interface ApprovalSettingsPort {
-  settings(this: void, input: Record<string, never>): Promise<ApprovalSettings>;
-  updateSettings(this: void, input: ApprovalSettings): Promise<ApprovalSettings>;
+  settings(this: void, input: Record<string, never>): Promise<RevisionedSettings>;
+  updateSettings(
+    this: void,
+    input: ApprovalSettings & { expectedRevision: number },
+  ): Promise<RevisionedSettings>;
 }
 
 export interface ApprovalSettingsView {
@@ -140,8 +146,11 @@ export class ApprovalSettingsController {
         this.update({ error: "conflict" });
         return false;
       }
-      // The contract has no expected revision; this preflight cannot close the read/write race.
-      const result = await this.port.updateSettings(copy(draft));
+      // The server rejects a stale revision, which closes the race this preflight cannot.
+      const result = await this.port.updateSettings({
+        ...copy(draft),
+        expectedRevision: fresh.revision,
+      });
       if (this.disposed) return false;
       this.baseline = copy(result);
       this.update({ draft: copy(result), dirty: false, saved: true });

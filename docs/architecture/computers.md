@@ -159,6 +159,25 @@ Paths for file calls and cwd are relative to `/home/computer/workspace`.
 File helpers walk directory descriptors with `O_NOFOLLOW`; traversal, absolute
 paths and link components are refused. List responses contain at most 1,000
 entries and a truncation flag. Reads and writes cap each file at 32 MiB.
+The member procedures `computers.listDirectory` and `computers.readFile` resolve
+fresh Space membership on every request and share the read quota of 60 requests
+per account/procedure per minute. They never provision or restart compute.
+An unconfigured provider returns `not-configured`; a missing, stopped or
+transitioning computer returns `not-running` with its nullable observed state.
+An unavailable provider returns `unavailable` with `COMPUTER_UNAVAILABLE`;
+a provider without member previews returns `FILES_UNAVAILABLE`.
+
+Directory previews default to 100 entries and cap at 200, with a `truncated`
+flag. File previews return base64 `bytes`, the observed total `size`,
+`truncated` and detected `contentType` (`text` or `binary`); the default and
+maximum byte budget is 64 KiB. Text detection checks UTF-8 and disallows binary
+control bytes, while tolerating a partial final code point in a truncated prefix.
+The in-memory provider reads a prefix directly. The Docker adapter uses the
+existing private execution transport to run a fixed isolated Python reader
+inside the prepared computer image, with no shell, a five-second deadline,
+bounded output and no-follow directory descriptors. This needs no supervisor
+protocol change. A size is an observation, not a snapshot of a concurrently
+changing file. There are no member file write or delete procedures.
 Home archives include regular files, directories, permissions and link entries
 without following links; special or unreadable files fail the snapshot. An archive
 has at most 10,000 entries, 32 MiB of file bytes and 64 MiB of encoded JSON.

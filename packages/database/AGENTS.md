@@ -11,6 +11,15 @@ PostgreSQL persistence for the new account foundation.
 
 ## Ownership
 
+`model_connections` is account-owned metadata. `model_connection_secrets` is its
+encrypted child, with a wrapped data key and key-provider selector. Composite
+references bind owner/secret identity and cascade with connection/account deletion.
+`model_connection_spaces` narrows availability to current owner memberships and
+cascades when memberships or Spaces disappear without deleting the connection.
+`conversation_tool_calls` retains bounded tool lifecycle metadata and deduplication
+after event pruning; its Run/Space reference cascades. Approval settings carry a
+monotonic revision for compare-and-swap writes.
+
 PostgreSQL persistence for the new account foundation.
 
 `spaces`, `space_members`, `agents` and `conversations` add the server-owned domain

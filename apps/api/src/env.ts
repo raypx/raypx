@@ -179,6 +179,7 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
       COMPUTERS_PER_SPACE: server.COMPUTERS_PER_SPACE,
       AGENT_MODELS: server.AGENT_MODELS,
       AGENT_MODEL_CREDENTIALS: server.AGENT_MODEL_CREDENTIALS,
+      APP_KEY: server.APP_KEY,
       APPROVAL_DEFAULT_MODE: server.APPROVAL_DEFAULT_MODE,
       APPROVAL_REQUEST_TTL_MS: server.APPROVAL_REQUEST_TTL_MS,
       RUN_RECOVERY_INTERVAL_MS: server.RUN_RECOVERY_INTERVAL_MS,
@@ -191,6 +192,11 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
   validateRunTiming(environment);
   if (environment.NODE_ENV === "production" && !runtimeEnv.DATABASE_URL)
     throw new Error("Production worker requires DATABASE_URL");
+  if (
+    environment.NODE_ENV === "production" &&
+    (!runtimeEnv.APP_KEY || environment.APP_KEY.startsWith("raypx-development"))
+  )
+    throw new Error("Production worker requires APP_KEY");
   if (!/^postgres(?:ql)?:$/.test(new URL(environment.DATABASE_URL).protocol))
     throw new Error("Invalid worker database protocol");
   if (

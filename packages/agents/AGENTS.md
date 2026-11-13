@@ -61,3 +61,12 @@ remain historical selectors so a missing computer produces an explicit failure.
 Use public workspace entries and `.js` relative specifiers. Unit tests live beside
 source. Run `bun run --cwd packages/agents check` and `test`. `test:postgres`
 selects `tests/postgres/` and requires a newly provisioned disposable `*_test` database.
+
+Tool lifecycle records deduplicate `tool.started`/`tool.finished` by Run/tool-call
+ID across resumes and event retention. Effect outcomes and finish events commit
+together; reads/refusals finish with their checkpoint. Snapshot activity is capped
+at 100 and contains summaries only. Approval cards correlate by toolCallId.
+Every effect read/decision lazily expires old intents using the service clock.
+Member reads hold counter/Run locks and use the current stored fence without a
+live lease; tracked-tool unknown events commit once with expiry. Executor writes
+still require the current unexpired attempt fence.

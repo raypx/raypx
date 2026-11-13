@@ -12,6 +12,13 @@ import {
 import type { Database } from "@raypx/database/connection";
 import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
 import type { ApiLogging } from "../logging.js";
+import { createModelConnections } from "../conversations/connections.js";
+import { createModelConnectionsRepository } from "../conversations/connections-postgres.js";
+import { createConnectionTransport } from "../conversations/connection-transport.js";
+import {
+  applicationSecretKeyProvider,
+  createPostgresSecretStore,
+} from "../conversations/secrets.js";
 import {
   configuredComputerProvider,
   knownComputerSecrets,
@@ -33,9 +40,16 @@ export async function composeAgents(
     }),
     computerProvider,
   );
+  const modelConnections = createModelConnections(
+    createModelConnectionsRepository(db),
+    createPostgresSecretStore(db, applicationSecretKeyProvider(environment.APP_KEY)),
+    createConnectionTransport(),
+  );
   const conversationModels =
     createModels?.() ??
-    createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS);
+    modelConnections.models(
+      createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS),
+    );
   const agentApprovals = createApprovalsService(createApprovalsRepository(db), {
     defaultMode: environment.APPROVAL_DEFAULT_MODE,
     requestTtlMs: environment.APPROVAL_REQUEST_TTL_MS,
@@ -44,10 +58,11 @@ export async function composeAgents(
     timeoutMs: environment.RUN_ATTEMPT_TIMEOUT_MS,
     backupMarginMs: environment.RUN_BACKUP_MARGIN_MS,
   });
+  const deploymentSecrets = knownComputerSecrets(environment);
   const tools = createComputerTools(
     computers,
     computerProvider,
-    knownComputerSecrets(environment),
+    () => [...deploymentSecrets, ...modelConnections.protectedValues()],
     repository.pinResources,
   );
   const runner = new ConversationRunner(
@@ -67,5 +82,12 @@ export async function composeAgents(
       backupMarginMs: environment.RUN_BACKUP_MARGIN_MS,
     },
   );
-  return { runner, computers, computerProvider, conversationModels, agentApprovals };
+  return {
+    runner,
+    computers,
+    computerProvider,
+    conversationModels,
+    agentApprovals,
+    modelConnections,
+  };
 }

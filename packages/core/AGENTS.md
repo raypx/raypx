@@ -7,9 +7,15 @@ adapters, execution hosts and product views. Schemas are the single source of in
 
 ## Interface
 
-- `/computers` owns vendor-neutral Computer state, generations, revisions and Space projections.
-- `/approvals` owns account modes and exact-tool rules, Space approval requests and
-  bounded effect records. Auto remains an explicitly unavailable input choice.
+- `/model-connections` owns account connection metadata, existing transport kinds,
+  offered models, explicit all/selected Space availability and stable test outcomes.
+  Secret values and persistence references are absent from public records.
+
+- `/computers` owns vendor-neutral Computer state, generations, revisions, bounded
+  member file previews and Space projections.
+- `/approvals` owns account modes, revisioned settings and mode availability,
+  exact-tool rules, Space approval requests and bounded effect records.
+  Auto reports the stable REVIEW_MODEL_NOT_CONFIGURED reason.
 - `/spaces` owns Space IDs, names, membership roles and pure membership matching.
 - `/agents` owns persistent Agent configuration and IDs, Conversation IDs and the
   pure direct-Conversation constructor. Model choices are opaque model IDs, with no
@@ -17,7 +23,8 @@ adapters, execution hosts and product views. Schemas are the single source of in
 - `/conversation` owns member Message and immutable ConversationEvent schemas, event
   sequences, Runs, reply segments, live text projections and pure retention-boundary checks. CONNECTION_UNAVAILABLE and COMPUTER_UNAVAILABLE
   are stable resumed-Run failures; execution capabilities and fences stay private to
-  Agents/server. Writers implement `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created` and `card.resolved`.
+  Agents/server. Writers implement `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created`, `card.resolved`, `tool.started` and `tool.finished`.
+  Tool lifecycle metadata and bounded snapshot activity exclude arguments and results.
 - `/memory` owns document/version schemas, mutation inputs and domain errors.
 - `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
   calculations. Cron instances stay paused and are stopped after calculation;
