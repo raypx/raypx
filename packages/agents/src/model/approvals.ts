@@ -6,6 +6,7 @@ export type ApprovalCardError = "ruleLimit" | "unconfirmed" | "resolvedElsewhere
 export interface ApprovalCardView {
   requestId: ApprovalRequest["id"];
   runId: RunId;
+  toolCallId?: string | undefined;
   toolName: ComputerToolName;
   target: string;
   argumentSummary: string;
@@ -90,6 +91,7 @@ export class ApprovalProjection {
     this.put({
       requestId: event.requestId,
       runId: event.runId,
+      toolCallId: event.toolCallId,
       toolName: event.toolName,
       target: event.target.slice(0, 1_024),
       argumentSummary: event.argumentSummary.slice(0, 1_024),
@@ -138,6 +140,7 @@ export class ApprovalProjection {
     this.put({
       requestId: request.id,
       runId: request.runId,
+      toolCallId: request.toolCallId,
       toolName: request.toolName,
       target: request.target.slice(0, 1_024),
       argumentSummary: request.argumentSummary.slice(0, 1_024),

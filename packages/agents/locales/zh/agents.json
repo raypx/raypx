@@ -15,7 +15,7 @@
   "model": "模型",
   "chooseModel": "选择模型",
   "unavailableModel": "不可用的模型：{model}",
-  "noModels": "此服务器暂无可用模型。",
+  "noModels": "暂无可用模型。",
   "noAgents": "此空间暂无智能体",
   "chooseAgent": "选择智能体以打开对话。",
   "emptyConversation": "开始对话",
@@ -121,8 +121,20 @@
   },
   "activity": {
     "title": "活动",
-    "requests": "{count}个工具请求",
-    "empty": "尚未收到此空间的工具请求。"
+    "used": "使用了{count}个工具",
+    "empty": "此空间暂无工具活动。",
+    "failedCount": "{count}个失败",
+    "duration": "{seconds}秒",
+    "exitStatus": "退出状态{status}",
+    "truncated": "显示最近100次工具调用。",
+    "outcomes": {
+      "running": "进行中",
+      "succeeded": "已成功",
+      "failed": "已失败",
+      "refused": "已拒绝",
+      "cancelled": "已取消",
+      "unknown": "结果未知"
+    }
   },
   "effects": {
     "open": "查看操作记录",
@@ -142,8 +154,7 @@
     "mode": "模式",
     "ask": "更改前询问",
     "never": "从不询问",
-    "auto": "自动（不可用）",
-    "autoUnavailable": "此服务器不支持自动审批。",
+    "auto": "自动",
     "blockHint": "所有模式都会拒绝阻止的操作；阻止优先于允许。",
     "allow": "允许列表",
     "block": "阻止列表",
@@ -158,14 +169,93 @@
     "saved": "审批设置已保存。",
     "load": "无法加载审批设置，请重试。",
     "save": "无法确认保存结果，已保留你的更改。",
-    "conflict": "其他客户端已更改设置。已保留你的更改；重新加载将放弃当前更改并查看最新设置。",
+    "conflict": "另一客户端更改了设置。你的更改已保留。请查看服务器更改，再重新应用或放弃。",
     "ruleLimit": "最多可添加256条规则，请先移除一条规则。",
     "invalidRule": "请选择工具，并为命令规则填写完整可执行程序名。",
-    "discardReload": "放弃更改并重新加载"
+    "discardReload": "放弃更改并重新加载",
+    "reapply": "重新应用我的更改",
+    "serverVersion": "服务器设置 · 修订 {revision}",
+    "serverMode": "模式：{previous} → {current}",
+    "serverAdded": "已添加到{list}：{tool} {executable}",
+    "serverRemoved": "已从{list}移除：{tool} {executable}",
+    "reasons": {
+      "REVIEW_MODEL_NOT_CONFIGURED": "尚未配置审核模型。"
+    }
   },
   "running": "运行中",
   "succeeded": "已完成",
   "sendDuringReply": "回复期间发送消息",
   "CONNECTION_UNAVAILABLE": "此运行使用的连接不可用。",
-  "COMPUTER_UNAVAILABLE": "此运行使用的电脑不可用。"
+  "COMPUTER_UNAVAILABLE": "此运行使用的电脑不可用。",
+  "connections": {
+    "title": "模型",
+    "add": "添加模型连接",
+    "edit": "编辑模型连接",
+    "empty": "暂无模型连接",
+    "kind": "类型",
+    "models": "提供的模型",
+    "modelsHint": "每行填写一个模型标识。",
+    "availability": "可用范围",
+    "allSpaces": "所有空间",
+    "selectedSpaces": "指定空间",
+    "noSpaces": "无可用空间",
+    "test": "测试",
+    "testNamed": "测试 {name}",
+    "editNamed": "编辑 {name}",
+    "deleteNamed": "删除 {name}",
+    "delete": "删除连接",
+    "deleteTitle": "删除 {name}？",
+    "deleteDescription": "固定使用此连接的运行将无法恢复。",
+    "endpoint": "端点 URL",
+    "protocol": "协议",
+    "secret": "API 密钥",
+    "keepSecret": "留空以保留当前密钥。",
+    "invalid": "请检查名称、模型标识、端点和 API 密钥。",
+    "manage": "管理模型连接",
+    "memberModels": "你的连接",
+    "deploymentModels": "服务器模型",
+    "kinds": {
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google",
+      "openrouter": "OpenRouter",
+      "compatible": "兼容端点"
+    },
+    "protocols": {
+      "anthropic-messages": "Anthropic Messages",
+      "openai-completions": "OpenAI Chat Completions",
+      "openai-responses": "OpenAI Responses"
+    },
+    "errors": {
+      "load": "无法加载模型连接，请重试。",
+      "save": "无法保存连接，请重新输入密钥后重试。",
+      "delete": "无法删除连接，请重试。"
+    },
+    "outcomes": {
+      "SUCCEEDED": "连接成功",
+      "AUTHENTICATION_FAILED": "身份验证失败",
+      "RATE_LIMITED": "已达请求频率限制",
+      "TIMED_OUT": "连接超时",
+      "MODEL_UNAVAILABLE": "模型不可用",
+      "REQUEST_FAILED": "请求失败"
+    },
+    "searchKeywords": "模型 连接 API 密钥 提供商 端点"
+  },
+  "files": {
+    "title": "文件",
+    "refresh": "刷新文件",
+    "workspace": "工作目录",
+    "preview": "文件预览",
+    "empty": "此目录为空。",
+    "loadError": "无法加载文件，请刷新重试。",
+    "notConfigured": "尚未配置电脑文件。",
+    "unavailable": "电脑文件暂不可用。",
+    "directoryTruncated": "部分条目未显示。",
+    "previewTruncated": "此预览仅显示文件开头部分。",
+    "binary": "二进制文件",
+    "symlink": "无法预览符号链接。",
+    "size": "{size, number} 字节",
+    "computerUnavailable": "电脑暂不可用。",
+    "notRunning": "{state}，电脑运行时可查看文件。"
+  }
 }

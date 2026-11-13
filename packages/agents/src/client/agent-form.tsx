@@ -4,7 +4,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import { SelectField } from "@raypx/ui/select-field";
+import { ModelPicker } from "./model-picker.js";
 import {
   Dialog,
   DialogContent,
@@ -20,11 +20,13 @@ export function AgentForm({
   models,
   onSave,
   onClose,
+  onOpenModels,
 }: {
   initial: AgentInput | null;
   models: readonly OfferedModel[];
   onSave: (input: AgentInput) => Promise<void>;
   onClose: () => void;
+  onOpenModels?: (() => void) | undefined;
 }) {
   const t = useTranslations("agents");
   const id = useId();
@@ -33,19 +35,8 @@ export function AgentForm({
   const [modelId, setModelId] = useState(initial?.model.modelId ?? models[0]?.modelId ?? "");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
-  const missing = modelId !== "" && !models.some((model) => model.modelId === modelId);
   const modelAllowed =
     models.some((model) => model.modelId === modelId) || initial?.model.modelId === modelId;
-  const options: { value: string; label: string; disabled?: boolean }[] = models.map((model) => ({
-    value: model.modelId,
-    label: model.name,
-  }));
-  if (missing)
-    options.push({
-      value: modelId,
-      label: t("unavailableModel", { model: modelId }),
-      disabled: true,
-    });
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,29 +89,14 @@ export function AgentForm({
             </Field>
             <Field>
               <FieldLabel htmlFor={`${id}-model`}>{t("model")}</FieldLabel>
-              {models.length > 0 ? (
-                <SelectField
-                  id={`${id}-model`}
-                  value={modelId}
-                  options={options}
-                  placeholder={t("chooseModel")}
-                  disabled={pending}
-                  onValueChange={setModelId}
-                />
-              ) : (
-                <div
-                  id={`${id}-model`}
-                  role="status"
-                  className="flex flex-col gap-2 text-sm text-muted-foreground"
-                >
-                  <p>{t("noModels")}</p>
-                  {initial && (
-                    <p className="wrap-anywhere">
-                      {t("unavailableModel", { model: initial.model.modelId })}
-                    </p>
-                  )}
-                </div>
-              )}
+              <ModelPicker
+                id={`${id}-model`}
+                models={models}
+                value={modelId}
+                disabled={pending}
+                onValueChange={setModelId}
+                onOpenModels={onOpenModels}
+              />
             </Field>
           </FieldGroup>
           {failed && (

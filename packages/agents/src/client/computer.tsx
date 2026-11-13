@@ -9,8 +9,15 @@ import { CloseIcon } from "@raypx/icons/close";
 import { PlayIcon } from "@raypx/icons/play";
 import { StopIcon } from "@raypx/icons/stop";
 import { RefreshIcon } from "@raypx/icons/refresh";
-import type { ApprovalCardView, ComputerController, ComputerView } from "../model.js";
+import type { ToolActivity } from "@raypx/core/conversation";
+import type {
+  ApprovalPort,
+  ConversationSelection,
+  ComputerController,
+  ComputerView,
+} from "../model.js";
 import { ComputerActivity } from "./tool-activity.js";
+import { ComputerFiles } from "./computer-files.js";
 import { useTranslations } from "./i18n.js";
 
 const statusKeys = {
@@ -73,11 +80,15 @@ export function ComputerPanel({
   onClose,
   sheet = false,
   activity = [],
+  approvalPort,
+  selection,
 }: {
   controller: ComputerController;
   onClose: () => void;
   sheet?: boolean;
-  activity?: readonly ApprovalCardView[];
+  activity?: readonly ToolActivity[];
+  approvalPort?: ApprovalPort | undefined;
+  selection?: ConversationSelection | undefined;
 }) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
@@ -115,7 +126,7 @@ export function ComputerPanel({
   const titleClass =
     "min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
+    <div className="box-border flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-6 overflow-x-hidden overflow-y-auto p-4">
       <header className="flex min-w-0 items-center justify-between gap-2">
         {sheet ? (
           <SheetTitle className={titleClass}>{t("computerTitle")}</SheetTitle>
@@ -168,7 +179,22 @@ export function ComputerPanel({
           </Button>
         )}
       </section>
-      <ComputerActivity cards={activity} />
+      {controller.files && (
+        <ComputerFiles
+          controller={controller.files}
+          status={state.status}
+          refreshKey={activity
+            .filter(
+              (tool) =>
+                tool.finishedAt &&
+                (tool.toolName === "computer_write_file" ||
+                  tool.toolName === "computer_run_command"),
+            )
+            .map((tool) => `${tool.runId}:${tool.toolCallId}:${tool.finishedAt}`)
+            .join("|")}
+        />
+      )}
+      <ComputerActivity activity={activity} approvalPort={approvalPort} selection={selection} />
       {confirmation.dialog}
     </div>
   );

@@ -7,10 +7,12 @@ import type {
   Run,
   RunFailure,
   RunId,
+  ToolActivity,
 } from "@raypx/core/conversation";
 import { MAX_REPLY_TEXT } from "@raypx/core/conversation";
 import type { ConversationSelection, ConversationSnapshot } from "./port.js";
 import type { ApprovalCardView } from "./approvals.js";
+import { applyToolActivityEvent, mergeToolActivity } from "./tool-activity.js";
 
 export interface RunView {
   id: RunId;
@@ -25,6 +27,8 @@ export interface ConversationView {
   segments: ReplySegment[];
   runs: RunView[];
   liveReplies: LiveReply[];
+  toolActivity: ToolActivity[];
+  toolActivityTruncated: boolean;
 }
 export type ConversationRow =
   | { id: string; kind: "member"; sender: string; sequence: number; text: string }
@@ -78,41 +82,59 @@ export type ConversationTimelineRow =
       sender: "approval";
       sequence: number;
       runId: RunId;
-      cards: ApprovalCardView[];
+      activity: ToolActivity[];
+      pendingCount: number;
     };
 
-/** A request has exactly one transcript representation, including after its reply is gone. */
+/** Pending cards replace their matching activity row until the request resolves. */
 export function conversationTimelineRows(
   view: ConversationView,
   cards: readonly ApprovalCardView[],
 ): ConversationTimelineRow[] {
   const rows: ConversationTimelineRow[] = conversationRows(view);
-  const groups = new Map<RunId, ApprovalCardView[]>();
-  for (const card of cards) {
-    if (card.state === "pending") {
-      rows.push({
-        id: `approval:${card.requestId}`,
-        kind: "approval",
-        sender: "approval",
-        sequence: card.sequence,
-        card,
-      });
-      continue;
-    }
-    const group = groups.get(card.runId) ?? [];
-    group.push(card);
-    groups.set(card.runId, group);
-  }
-  for (const [runId, requests] of groups) {
-    requests.sort((a, b) => a.sequence - b.sequence);
+  const pending = cards.filter(
+    (card) =>
+      card.state === "pending" &&
+      !view.toolActivity.some(
+        (call) =>
+          call.runId === card.runId &&
+          call.toolCallId === card.toolCallId &&
+          call.finishedAt !== null,
+      ),
+  );
+  const runIds = new Set([
+    ...view.toolActivity.map((call) => call.runId),
+    ...pending.map((card) => card.runId),
+  ]);
+  for (const runId of runIds) {
+    const requests = pending.filter((card) => card.runId === runId);
+    const activity = view.toolActivity.filter(
+      (call) =>
+        call.runId === runId && !requests.some((card) => card.toolCallId === call.toolCallId),
+    );
+    const reply = rows.find((row) => row.kind === "reply" && row.run?.id === runId);
+    const run = view.runs.find((item) => item.id === runId);
+    const message = view.messages.find((item) => item.id === run?.messageId);
+    let sequence = requests[0]?.sequence ?? view.cursor + 1;
+    if (message) sequence = message.sequence + 0.6;
+    if (reply) sequence = reply.sequence + 0.1;
     rows.push({
       id: `activity:${runId}`,
       kind: "activity",
       sender: "approval",
-      sequence: requests[0]!.sequence,
+      sequence,
       runId,
-      cards: requests,
+      activity,
+      pendingCount: requests.length,
     });
+    for (const card of requests)
+      rows.push({
+        id: `approval:${card.requestId}`,
+        kind: "approval",
+        sender: "approval",
+        sequence: sequence + 0.1 + requests.indexOf(card) / 1_000,
+        card,
+      });
   }
   return rows.sort((a, b) => a.sequence - b.sequence);
 }
@@ -154,6 +176,8 @@ export class ConversationState {
     segments: [],
     runs: [],
     liveReplies: [],
+    toolActivity: [],
+    toolActivityTruncated: false,
   };
   constructor(readonly selection: ConversationSelection) {}
   getSnapshot = (): ConversationView => this.view;
@@ -197,6 +221,8 @@ export class ConversationState {
         createdAt: run.createdAt,
       })),
       liveReplies: [],
+      toolActivity: mergeToolActivity([], snapshot.toolActivity ?? []),
+      toolActivityTruncated: snapshot.toolActivityTruncated ?? false,
     };
     return true;
   }
@@ -249,6 +275,19 @@ export class ConversationState {
         liveReplies: this.view.liveReplies.filter(
           (item) => item.segmentId !== segment.id && item.runId !== segment.runId,
         ),
+      };
+    }
+    if (event.kind === "tool.started" || event.kind === "tool.finished") {
+      const toolActivity = applyToolActivityEvent(this.view.toolActivity, event);
+      this.view = {
+        ...this.view,
+        toolActivity,
+        toolActivityTruncated:
+          this.view.toolActivityTruncated ||
+          (this.view.toolActivity.length === 100 &&
+            !this.view.toolActivity.some(
+              (call) => call.runId === event.runId && call.toolCallId === event.toolCallId,
+            )),
       };
     }
     this.view = { ...this.view, cursor: event.sequence };

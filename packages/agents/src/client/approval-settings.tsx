@@ -2,6 +2,7 @@ import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import {
   computerToolNameSchema,
   type ApprovalRule,
+  type ApprovalSettingsState,
   type ComputerToolName,
 } from "@raypx/core/approvals";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -34,6 +35,60 @@ const toolKeys = {
   computer_write_file: "tools.writeFile",
   computer_run_command: "tools.runCommand",
 } as const;
+
+function ruleKey(rule: ApprovalRule) {
+  return JSON.stringify([rule.toolName, rule.executable, rule.decision]);
+}
+
+function SettingsChanges({
+  previous,
+  current,
+}: {
+  previous: ApprovalSettingsState;
+  current: ApprovalSettingsState;
+}) {
+  const t = useTranslations("agents");
+  const oldRules = new Set(previous.rules.map(ruleKey));
+  const newRules = new Set(current.rules.map(ruleKey));
+  const changes = [
+    ...current.rules
+      .filter((rule) => !oldRules.has(ruleKey(rule)))
+      .map((rule) => ({
+        rule,
+        action: "serverAdded" as const,
+      })),
+    ...previous.rules
+      .filter((rule) => !newRules.has(ruleKey(rule)))
+      .map((rule) => ({
+        rule,
+        action: "serverRemoved" as const,
+      })),
+  ];
+  return (
+    <div className="mt-2 flex min-w-0 flex-col gap-2 text-sm">
+      <p>{t("approvalSettings.serverVersion", { revision: String(current.revision) })}</p>
+      {previous.mode !== current.mode && (
+        <p>
+          {t("approvalSettings.serverMode", {
+            previous: t(`approvalSettings.${previous.mode}`),
+            current: t(`approvalSettings.${current.mode}`),
+          })}
+        </p>
+      )}
+      <ul className="flex min-w-0 flex-col gap-1">
+        {changes.map(({ rule, action }) => (
+          <li key={`${action}-${ruleKey(rule)}`} className="wrap-anywhere">
+            {t(`approvalSettings.${action}`, {
+              list: t(`approvalSettings.${rule.decision}`),
+              tool: t(toolKeys[rule.toolName]),
+              executable: rule.executable ?? "",
+            })}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function ApprovalSettings({ port }: { port: ApprovalSettingsPort }) {
   const t = useTranslations("agents");
@@ -84,16 +139,17 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
     });
     if (added) setExecutable("");
   }
+  function confirmNever() {
+    return confirmation.confirm({
+      requestKey: "approval-never-ask",
+      title: t("approvalSettings.neverTitle"),
+      description: t("approvalSettings.neverDescription"),
+      confirmLabel: t("approvalSettings.never"),
+      cancelLabel: t("cancel"),
+    });
+  }
   function save() {
-    void controller.save(() =>
-      confirmation.confirm({
-        requestKey: "approval-never-ask",
-        title: t("approvalSettings.neverTitle"),
-        description: t("approvalSettings.neverDescription"),
-        confirmLabel: t("approvalSettings.never"),
-        cancelLabel: t("cancel"),
-      }),
-    );
+    void controller.save(confirmNever);
   }
   return (
     <section aria-labelledby={`${id}-title`} className="flex min-w-0 flex-col gap-4 py-6">
@@ -105,13 +161,28 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
       {state.error && (
         <Alert>
           <AlertDescription>{t(`approvalSettings.${state.error}`)}</AlertDescription>
+          {state.conflict && <SettingsChanges {...state.conflict} />}
+          {state.conflict && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 mr-2"
+              disabled={state.busy}
+              onClick={() => void controller.reapply(confirmNever)}
+            >
+              {t("approvalSettings.reapply")}
+            </Button>
+          )}
           {(state.error === "load" || state.error === "conflict") && (
             <Button
               variant="outline"
               size="sm"
               className="mt-2 self-start"
               disabled={state.busy}
-              onClick={() => void controller.load()}
+              onClick={() => {
+                if (state.conflict) controller.discardConflict();
+                else void controller.load();
+              }}
             >
               {state.error === "conflict" ? t("approvalSettings.discardReload") : t("refresh")}
             </Button>
@@ -130,27 +201,27 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
                 if (value === "ask" || value === "never") controller.setMode(value);
               }}
             >
-              <Field orientation="horizontal">
-                <RadioGroupItem id={`${id}-ask`} value="ask" />
-                <FieldLabel htmlFor={`${id}-ask`}>{t("approvalSettings.ask")}</FieldLabel>
-              </Field>
-              <Field orientation="horizontal">
-                <RadioGroupItem id={`${id}-never`} value="never" />
-                <FieldLabel htmlFor={`${id}-never`}>{t("approvalSettings.never")}</FieldLabel>
-              </Field>
-              <Field orientation="horizontal" data-disabled>
-                <RadioGroupItem
-                  id={`${id}-auto`}
-                  value="auto"
-                  disabled
-                  aria-describedby={`${id}-auto-reason`}
-                />
-                <FieldLabel htmlFor={`${id}-auto`}>{t("approvalSettings.auto")}</FieldLabel>
-              </Field>
+              {state.availableModes.map((entry) => (
+                <div key={entry.mode} className="flex min-w-0 flex-col gap-1">
+                  <Field orientation="horizontal" data-disabled={!entry.available || undefined}>
+                    <RadioGroupItem
+                      id={`${id}-${entry.mode}`}
+                      value={entry.mode}
+                      disabled={!entry.available}
+                      aria-describedby={entry.reasonCode ? `${id}-${entry.mode}-reason` : undefined}
+                    />
+                    <FieldLabel htmlFor={`${id}-${entry.mode}`}>
+                      {t(`approvalSettings.${entry.mode}`)}
+                    </FieldLabel>
+                  </Field>
+                  {entry.reasonCode && (
+                    <p id={`${id}-${entry.mode}-reason`} className="text-xs text-muted-foreground">
+                      {t(`approvalSettings.reasons.${entry.reasonCode}`)}
+                    </p>
+                  )}
+                </div>
+              ))}
             </RadioGroup>
-            <p id={`${id}-auto-reason`} className="text-xs text-muted-foreground">
-              {t("approvalSettings.autoUnavailable")}
-            </p>
           </fieldset>
           <p className="text-xs text-muted-foreground">{t("approvalSettings.blockHint")}</p>
           {(["allow", "block"] as const).map((list) => (
@@ -273,7 +344,7 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
             </FieldGroup>
           </fieldset>
           <div className="flex flex-wrap items-center gap-3">
-            <Button disabled={state.busy || !state.dirty} onClick={save}>
+            <Button disabled={state.busy || !state.dirty || !!state.conflict} onClick={save}>
               {t("save")}
             </Button>
             <span role="status" className="text-sm text-muted-foreground">

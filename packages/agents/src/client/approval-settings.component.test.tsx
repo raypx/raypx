@@ -9,6 +9,12 @@ import { ApprovalSettingsEditor } from "./approval-settings.js";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
 
+const availableModes = [
+  { mode: "ask", available: true, reasonCode: null },
+  { mode: "never", available: true, reasonCode: null },
+  { mode: "auto", available: false, reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+] satisfies import("@raypx/core/approvals").ApprovalSettingsState["availableModes"];
+
 const { BrowserLanguageProvider } = createBrowserI18n<typeof en>({ en, zh });
 beforeEach(() => {
   localStorage.clear();
@@ -19,9 +25,14 @@ async function mount(language: "en" | "zh" = "en") {
     mode: "ask",
     rules: [],
     revision: 0,
+    availableModes,
   }));
   const updateSettings = vi.fn<ApprovalSettingsPort["updateSettings"]>(
-    async ({ expectedRevision, ...saved }) => ({ ...saved, revision: expectedRevision + 1 }),
+    async ({ expectedRevision, ...saved }) => ({
+      ...saved,
+      revision: expectedRevision + 1,
+      availableModes,
+    }),
   );
   const controller = new ApprovalSettingsController({ settings, updateSettings });
   await controller.load();
@@ -41,9 +52,10 @@ it.each(["en", "zh"] as const)(
     expect(
       screen.getByRole("radio", { name: english ? "Ask before changes" : "更改前询问" }),
     ).toHaveAttribute("aria-checked", "true");
-    expect(
-      screen.getByRole("radio", { name: english ? "Auto (unavailable)" : "自动（不可用）" }),
-    ).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: english ? "Auto" : "自动" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     fireEvent.click(screen.getByRole("button", { name: english ? "Add rule" : "添加规则" }));
     expect(
       screen.getByRole("button", { name: english ? "Remove Write a file" : "移除写入文件" }),
@@ -79,14 +91,45 @@ it("confirms Never ask with Cancel focused and preserves selection after cancell
 it("keeps local input on conflict and reloads only after explicit discard", async () => {
   const { settings, updateSettings } = await mount();
   fireEvent.click(screen.getByRole("button", { name: "Add rule" }));
-  settings.mockResolvedValue({ mode: "never", rules: [], revision: 1 });
+  settings.mockResolvedValue({ mode: "never", rules: [], revision: 1, availableModes });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
   const reload = await screen.findByRole("button", { name: "Discard changes and reload" });
   expect(screen.getByRole("button", { name: "Remove Write a file" })).toBeInTheDocument();
   expect(updateSettings).not.toHaveBeenCalled();
+  expect(screen.getByText("Mode: Ask before changes → Never ask")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Reapply my changes" })).toBeEnabled();
   fireEvent.click(reload);
   await waitFor(() =>
     expect(screen.queryByRole("button", { name: "Remove Write a file" })).not.toBeInTheDocument(),
   );
   expect(screen.getByRole("radio", { name: "Never ask" })).toHaveAttribute("aria-checked", "true");
 });
+
+it.each(["en", "zh"] as const)(
+  "shows server rule changes and reapplies in %s",
+  async (language) => {
+    const { settings, updateSettings } = await mount(language);
+    const english = language === "en";
+    fireEvent.click(screen.getByRole("button", { name: english ? "Add rule" : "添加规则" }));
+    const rules = [
+      { toolName: "computer_read_file", executable: null, decision: "block" },
+    ] as const;
+    settings.mockResolvedValue({ mode: "ask", rules: [...rules], revision: 2, availableModes });
+    fireEvent.click(screen.getByRole("button", { name: english ? "Save" : "保存" }));
+    expect(
+      await screen.findByText(
+        english ? "Added to Block list: Read a file" : "已添加到阻止列表：读取文件",
+      ),
+    ).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("button", { name: english ? "Reapply my changes" : "重新应用我的更改" }),
+    );
+    await waitFor(() =>
+      expect(updateSettings).toHaveBeenCalledWith({
+        mode: "ask",
+        rules: [{ toolName: "computer_write_file", executable: null, decision: "allow" }],
+        expectedRevision: 2,
+      }),
+    );
+  },
+);

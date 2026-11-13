@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { agentSchema, conversationIdSchema, directConversation } from "@raypx/core/agents";
 import { spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
 import { applyAgents, applySpaces, createAgentsPageState } from "@raypx/agents/model";
 import { changeText, findByLabel, press, renderNative, textContent } from "../../tests/native.js";
 import { AgentDirectory, AgentEditor } from "./directory.js";
+import { useLocales } from "../../tests/mocks/localization.js";
+
+afterEach(() => useLocales.mockReset());
 
 const date = "2026-11-14T00:00:00.000Z";
 const agent = agentSchema.parse({
@@ -43,7 +47,10 @@ function directoryProps() {
     item,
   ]);
   return {
-    state: { ...state, models: [{ modelId: "model-one", name: "Offered model" }] },
+    state: {
+      ...state,
+      models: [{ modelId: "model-one", name: "Offered model", source: "deployment" as const }],
+    },
     loading: false,
     error: false,
     refreshing: false,
@@ -55,7 +62,7 @@ function directoryProps() {
     onDelete: vi.fn(),
     onAccount: vi.fn(),
     onCreateSpace: vi.fn(),
-  };
+  } satisfies ComponentProps<typeof AgentDirectory>;
 }
 
 describe("mobile Agent directory", () => {
@@ -92,24 +99,32 @@ describe("mobile Agent directory", () => {
     await view.unmount();
   });
 
-  it("shows the no-model state and cannot create an Agent without an offered model", async () => {
-    const onSave = vi.fn();
-    const view = await renderNative(
-      <AgentEditor models={[]} busy={false} error={false} onSave={onSave} onCancel={vi.fn()} />,
-    );
-    await changeText(findByLabel(view.root, "Name"), "New Agent");
-    expect(textContent(view.root)).toContain("No models are available on this server.");
-    await press(findByLabel(view.root, "Create Agent"));
-    expect(onSave).not.toHaveBeenCalled();
-    await view.unmount();
-  });
+  it.each([
+    { language: "en", name: "Name", create: "Create Agent", empty: "No models are available." },
+    { language: "zh", name: "名称", create: "创建智能体", empty: "暂无可用模型。" },
+  ])(
+    "shows the no-model state and cannot create an Agent without an offered model in $language",
+    async ({ language, name, create, empty }) => {
+      useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+      const onSave = vi.fn();
+      const view = await renderNative(
+        <AgentEditor models={[]} busy={false} error={false} onSave={onSave} onCancel={vi.fn()} />,
+      );
+      await changeText(findByLabel(view.root, name), "New Agent");
+      expect(textContent(view.root)).toContain(empty);
+      expect(findByLabel(view.root, create).props.isDisabled).toBe(true);
+      await press(findByLabel(view.root, create));
+      expect(onSave).not.toHaveBeenCalled();
+      await view.unmount();
+    },
+  );
 
   it("preserves instructions and submits the selected offered model", async () => {
     const onSave = vi.fn();
     const view = await renderNative(
       <AgentEditor
         item={item}
-        models={[{ modelId: "model-one", name: "Offered model" }]}
+        models={[{ modelId: "model-one", name: "Offered model", source: "deployment" }]}
         busy={false}
         error={false}
         onSave={onSave}
@@ -127,30 +142,64 @@ describe("mobile Agent directory", () => {
     await view.unmount();
   });
 
-  it("shows catalog sources subtly and submits the chosen model identity", async () => {
-    const onSave = vi.fn();
-    const view = await renderNative(
-      <AgentEditor
-        item={item}
-        models={[
-          { modelId: "model-one", name: "Hosted model", source: "deployment" },
-          { modelId: "model-two", name: "Connected model", source: "connection" },
-        ]}
-        busy={false}
-        error={false}
-        onSave={onSave}
-        onCancel={vi.fn()}
-      />,
-    );
-    expect(textContent(findByLabel(view.root, "Model"))).toContain("Deployment");
-    await press(findByLabel(view.root, "Connected model, Connection"));
-    expect(textContent(findByLabel(view.root, "Model"))).toContain("Connection");
-    await press(findByLabel(view.root, "Save"));
-    expect(onSave).toHaveBeenCalledWith({
-      name: item.agent.name,
-      instructions: item.agent.instructions,
-      model: { modelId: "model-two" },
-    });
-    await view.unmount();
-  });
+  it.each([
+    {
+      language: "en",
+      model: "Model",
+      connection: "Connection",
+      deployment: "Deployment",
+      memberGroup: "Your connections",
+      serverGroup: "Server models",
+      save: "Save",
+    },
+    {
+      language: "zh",
+      model: "模型",
+      connection: "连接",
+      deployment: "部署",
+      memberGroup: "你的连接",
+      serverGroup: "服务器模型",
+      save: "保存",
+    },
+  ])(
+    "groups catalog sources and submits the chosen model identity in $language",
+    async ({ language, model, connection, deployment, memberGroup, serverGroup, save }) => {
+      useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+      const onSave = vi.fn();
+      const view = await renderNative(
+        <AgentEditor
+          item={item}
+          models={[
+            { modelId: "model-one", name: "Hosted model", source: "deployment" },
+            {
+              modelId: "opaque-member-model",
+              name: "Personal / Connected model",
+              source: "connection",
+            },
+          ]}
+          busy={false}
+          error={false}
+          onSave={onSave}
+          onCancel={vi.fn()}
+        />,
+      );
+      const groupHeadings = view.root
+        .findAll(
+          (node) => typeof node.type === "string" && node.props.accessibilityRole === "header",
+        )
+        .map(textContent)
+        .filter((text) => text === memberGroup || text === serverGroup);
+      expect(groupHeadings).toEqual([memberGroup, serverGroup]);
+      expect(textContent(findByLabel(view.root, model))).toContain(deployment);
+      await press(findByLabel(view.root, `Personal / Connected model, ${connection}`));
+      expect(textContent(findByLabel(view.root, model))).toContain(connection);
+      await press(findByLabel(view.root, save));
+      expect(onSave).toHaveBeenCalledWith({
+        name: item.agent.name,
+        instructions: item.agent.instructions,
+        model: { modelId: "opaque-member-model" },
+      });
+      await view.unmount();
+    },
+  );
 });

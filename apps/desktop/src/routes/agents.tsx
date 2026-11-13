@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AgentsWorkspace } from "@raypx/agents/client";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
+import { useSettingsNavigation } from "../features/settings/navigation.js";
 import { agentsClient } from "../features/agents/client.js";
 import { desktopConversationSocket } from "../features/agents/socket.js";
 import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
@@ -30,6 +31,8 @@ function AgentsPage() {
 }
 
 function SignedInAgents({ accountId }: { accountId: string }) {
+  const settings = useSettingsNavigation();
+  const settingsHash = useLocation({ select: (location) => location.hash });
   const selection = Route.useSearch();
   const navigate = Route.useNavigate();
   const socket = useMemo(() => desktopConversationSocket(accountId), [accountId]);
@@ -40,6 +43,8 @@ function SignedInAgents({ accountId }: { accountId: string }) {
       origin={apiUrl}
       socket={socket}
       {...selection}
+      modelCatalogKey={settingsHash}
+      onOpenModels={() => void settings.open("models")}
       onNavigate={(next) => void navigate({ search: parseAgentSelection(next) })}
     />
   );

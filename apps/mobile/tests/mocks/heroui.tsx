@@ -50,6 +50,7 @@ export const Select = Object.assign(SelectRoot, {
   Content: NativeView,
   Item: SelectItem,
   ItemLabel: NativeText,
+  ListLabel: NativeText,
   ItemIndicator: NativeText,
   Close: NativeButton,
 });

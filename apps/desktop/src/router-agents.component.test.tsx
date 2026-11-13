@@ -27,7 +27,16 @@ vi.mock("./features/auth/client.js", () => ({
   },
 }));
 vi.mock("./features/agents/client.js", () => ({
-  agentsClient: { spaces: { list: mocks.spaces } },
+  agentsClient: {
+    spaces: { list: mocks.spaces },
+    computers: {
+      get: async () => ({ status: "not-configured" as const }),
+      start: async () => ({ status: "not-configured" as const }),
+      stop: async () => ({ status: "not-configured" as const }),
+      listDirectory: async () => ({ status: "not-configured" as const }),
+      readFile: async () => ({ status: "not-configured" as const }),
+    },
+  },
 }));
 vi.mock("./features/agents/socket.js", () => ({ desktopConversationSocket: mocks.socket }));
 import { Route } from "./routes/agents.js";

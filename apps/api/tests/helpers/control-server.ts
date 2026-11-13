@@ -23,6 +23,12 @@ import {
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { browserModelFixture } from "./browser-model.js";
+import { createModelConnections } from "../../src/conversations/connections.js";
+import { createModelConnectionsRepository } from "../../src/conversations/connections-postgres.js";
+import {
+  applicationSecretKeyProvider,
+  createPostgresSecretStore,
+} from "../../src/conversations/secrets.js";
 import { createComputersService } from "@raypx/computers/server";
 import { createComputersRepository } from "@raypx/computers/server/postgres";
 import { createMemoryComputerProvider } from "@raypx/providers/computer";
@@ -72,10 +78,19 @@ const config = createConfigService({
 });
 const spaces = createSpaceAccess(connection.db);
 const model = browserModelFixture();
+const modelConnections = createModelConnections(
+  createModelConnectionsRepository(connection.db),
+  createPostgresSecretStore(
+    connection.db,
+    applicationSecretKeyProvider("browser-fixture-model-encryption-key"),
+  ),
+  model.connectionTransport,
+);
+const conversationModels = modelConnections.models(model.models);
 const agentApprovals = createApprovalsService(createApprovalsRepository(connection.db));
 const runner = new ConversationRunner(
   createConversationsRepository(connection.db),
-  model.models,
+  conversationModels,
   undefined,
   undefined,
   { tools: createComputerTools(computers, computerProvider, []), approvals: agentApprovals },
@@ -119,10 +134,11 @@ const app = createApiApp({
   control,
   config,
   computers,
+  modelConnections,
   agentApprovals,
   spaces,
   agents: createAgentsRepository(connection.db),
-  conversationModels: model.models,
+  conversationModels,
   conversations: runner.conversations,
   onRevoke: (userId, deviceId) => hub.revoke(userId, deviceId),
 });

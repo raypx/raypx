@@ -16,6 +16,8 @@ import {
 import { cn } from "@raypx/ui/lib/utils";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
 import type { AgentInput } from "@raypx/core/agents";
+import type { ToolActivity } from "@raypx/core/conversation";
+import { mergeToolActivity, toolActivityKey } from "../model/tool-activity.js";
 import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -38,7 +40,6 @@ import {
   type ConversationPort,
   type ComputerPort,
   type ConversationSocketPort,
-  type ApprovalCardView,
   type ApprovalPort,
 } from "../model.js";
 import { AgentForm } from "./agent-form.js";
@@ -53,6 +54,8 @@ export interface AgentsWorkspaceProps {
   origin: string;
   spaceId?: string;
   agentId?: string;
+  onOpenModels?: (() => void) | undefined;
+  modelCatalogKey?: string | undefined;
   onNavigate?: (selection: { spaceId: string; agentId?: string }) => void;
   socket?: ConversationSocketPort;
   drafts?: ConversationDraftStore;
@@ -71,6 +74,8 @@ function AgentsWorkspaceContents({
   spaceId,
   agentId,
   onNavigate,
+  onOpenModels,
+  modelCatalogKey,
   socket,
   drafts,
 }: AgentsWorkspaceProps) {
@@ -92,21 +97,13 @@ function AgentsWorkspaceContents({
   const loading = spacesLoading || agentsLoading;
   const [failed, setFailed] = useState(false);
   const [refresh, setRefresh] = useState(0);
-  const [activity, setActivity] = useState<Record<string, readonly ApprovalCardView[]>>({});
+  const [activity, setActivity] = useState<Record<string, readonly ToolActivity[]>>({});
   const rememberActivity = useCallback(
-    (selectedSpaceId: string, cards: readonly ApprovalCardView[]) => {
-      setActivity((previous) => {
-        const entries = new Map(
-          (previous[selectedSpaceId] ?? []).map((card) => [card.requestId, card]),
-        );
-        for (const card of cards) entries.set(card.requestId, card);
-        return {
-          ...previous,
-          [selectedSpaceId]: [...entries.values()]
-            .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-            .slice(0, 100),
-        };
-      });
+    (selectedSpaceId: string, calls: readonly ToolActivity[]) => {
+      setActivity((previous) => ({
+        ...previous,
+        [selectedSpaceId]: mergeToolActivity(previous[selectedSpaceId] ?? [], calls),
+      }));
     },
     [],
   );
@@ -130,6 +127,14 @@ function AgentsWorkspaceContents({
       get: (input) => client.computers.get(input),
       start: (input) => client.computers.start(input),
       stop: (input) => client.computers.stop(input),
+      ...(client.computers.listDirectory && client.computers.readFile
+        ? {
+            listDirectory: (input: Parameters<NonNullable<ComputerPort["listDirectory"]>>[0]) =>
+              client.computers.listDirectory!(input),
+            readFile: (input: Parameters<NonNullable<ComputerPort["readFile"]>>[0]) =>
+              client.computers.readFile!(input),
+          }
+        : {}),
     }),
     [client],
   );
@@ -195,7 +200,62 @@ function AgentsWorkspaceContents({
     return () => {
       cancelled = true;
     };
-  }, [client, page.spaceId, agentId, refresh]);
+  }, [client, page.spaceId, agentId, refresh, modelCatalogKey]);
+
+  const activityRefresh = useRef(0);
+  async function refreshSpaceActivity() {
+    const selectedSpace = current.current.spaceId;
+    if (!selectedSpace) return;
+    const generation = ++activityRefresh.current;
+    const conversations = current.current.agents.slice(0, 100);
+    const before = new Map(
+      (activity[selectedSpace] ?? []).map((call) => [toolActivityKey(call), call]),
+    );
+    const collected: ToolActivity[] = [];
+    let next = 0;
+    async function readNext() {
+      while (next < conversations.length) {
+        const item = conversations[next++];
+        if (
+          !item ||
+          !mounted.current ||
+          current.current.spaceId !== selectedSpace ||
+          generation !== activityRefresh.current
+        )
+          return;
+        try {
+          const snapshot = await conversationPort.snapshot({
+            spaceId: item.agent.spaceId,
+            conversationId: item.conversation.id,
+          });
+          if (
+            mounted.current &&
+            current.current.spaceId === selectedSpace &&
+            generation === activityRefresh.current
+          )
+            collected.push(...(snapshot.toolActivity ?? []));
+        } catch {
+          // Another Agent may be deleted or become inaccessible during the bounded read.
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(4, conversations.length) }, readNext));
+    if (
+      !mounted.current ||
+      current.current.spaceId !== selectedSpace ||
+      generation !== activityRefresh.current
+    )
+      return;
+    setActivity((previous) => {
+      const duringRefresh = (previous[selectedSpace] ?? []).filter(
+        (call) => before.get(toolActivityKey(call)) !== call,
+      );
+      return {
+        ...previous,
+        [selectedSpace]: mergeToolActivity(mergeToolActivity([], collected), duringRefresh),
+      };
+    });
+  }
 
   const selected = page.agents.find((item) => item.agent.id === page.agentId);
   const rowButtons = useRef(new Map<string, HTMLElement>());
@@ -477,6 +537,7 @@ function AgentsWorkspaceContents({
                 approvalPort={approvalPort}
                 activity={activity[selected.agent.spaceId]}
                 onActivity={rememberActivity}
+                onComputerOpen={() => void refreshSpaceActivity()}
                 socket={eventSocket}
                 drafts={draftStore}
                 origin={origin}
@@ -502,6 +563,14 @@ function AgentsWorkspaceContents({
           models={page.models}
           onSave={saveAgent}
           onClose={() => setForm(null)}
+          onOpenModels={
+            onOpenModels
+              ? () => {
+                  setForm(null);
+                  onOpenModels();
+                }
+              : undefined
+          }
         />
       )}
       {confirmation.dialog}

@@ -1,16 +1,18 @@
 import { useTranslations } from "../../i18n.js";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
-import { ApprovalSettings } from "@raypx/agents/client";
+import { ApprovalSettings, ModelConnections } from "@raypx/agents/client";
 
 import { getBridge, isDesktop } from "../../lib/desktop.js";
 import { useState } from "react";
+import { useLocation } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { authClient } from "../auth/client.js";
 import { agentsClient } from "../agents/client.js";
 
 export default function SettingsContent() {
   const t = useTranslations("settings");
+  const models = useLocation({ select: (location) => location.hash === "settings/models" });
   const session = authClient.useSession();
   const accountId = !session.isPending && !session.error ? session.data?.user.id : undefined;
   return (
@@ -21,6 +23,14 @@ export default function SettingsContent() {
       </section>
       <SessionRecovery />
       {accountId && <ApprovalSettings key={accountId} port={agentsClient.approvals} />}
+      {accountId && (
+        <ModelConnections
+          key={`models:${accountId}`}
+          port={agentsClient.modelConnections}
+          spaces={agentsClient.spaces}
+          focus={models}
+        />
+      )}
       <div className="border-b border-border">
         <AnalyticsSettings />
       </div>

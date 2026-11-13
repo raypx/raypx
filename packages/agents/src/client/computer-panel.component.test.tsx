@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import type { SpaceComputer } from "@raypx/core/computers";
 import { Sheet, SheetContent } from "@raypx/ui/components/ui/sheet";
-import { ComputerController, type ComputerPort } from "../model.js";
+import { ComputerController, type ComputerFilesPort, type ComputerPort } from "../model.js";
 import { ComputerPanel } from "./computer.js";
 import {
   computerEvent,
@@ -18,11 +18,12 @@ import zh from "../../locales/zh/index.js";
 const { BrowserLanguageProvider } = createBrowserI18n<typeof en>({ en, zh });
 const controllers: ComputerController[] = [];
 
-function fixture(initial: SpaceComputer = computerResult()) {
+function fixture(initial: SpaceComputer = computerResult(), files?: ComputerFilesPort) {
   const port: ComputerPort = {
     get: vi.fn(async () => initial),
     start: vi.fn(async () => computerResult("running")),
     stop: vi.fn(async () => computerResult("stopped")),
+    ...files,
   };
   const controller = new ComputerController(computerSpaceId, port);
   controllers.push(controller);
@@ -106,6 +107,33 @@ it("shows loading without lifecycle controls and gives a narrow sheet an accessi
   expect(within(dialog).getAllByRole("button")).toHaveLength(1);
   expect(within(dialog).getByRole("button", { name: "关闭电脑面板" })).toBeInTheDocument();
 });
+
+it.each([false, true])(
+  "bounds the padded scroll container and Files region with sheet=%s",
+  async (sheet) => {
+    const test = fixture(computerResult("running"), {
+      listDirectory: async () => ({ status: "available", entries: [], truncated: false }),
+      readFile: vi.fn(),
+    });
+    await test.controller.refresh();
+    test.mount("en", sheet);
+    const files = screen.getByRole("region", { name: "Files" });
+    await within(files).findByRole("tree", { name: "Workspace" });
+    const scroll = files.parentElement!;
+    expect(scroll).toHaveClass(
+      "box-border",
+      "w-full",
+      "min-w-0",
+      "max-w-full",
+      "overflow-x-hidden",
+      "overflow-y-auto",
+      "p-4",
+    );
+    expect(scroll).not.toHaveClass("overflow-x-clip");
+    expect(files).toHaveClass("w-full", "min-w-0", "max-w-full");
+    expect(Boolean(scroll.closest('[data-slot="sheet-content"]'))).toBe(sheet);
+  },
+);
 
 it("disables start through the request and applies its live return state", async () => {
   const test = fixture();

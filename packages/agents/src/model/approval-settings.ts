@@ -1,19 +1,18 @@
 import {
   approvalRuleSchema,
+  approvalSettingsStateSchema,
   type ApprovalMode,
   type ApprovalRule,
   type ApprovalSettings,
+  type ApprovalSettingsState,
 } from "@raypx/core/approvals";
 
-/** Settings as the server returns them; the revision guards a concurrent save. */
-type RevisionedSettings = ApprovalSettings & { revision: number };
-
 export interface ApprovalSettingsPort {
-  settings(this: void, input: Record<string, never>): Promise<RevisionedSettings>;
+  settings(this: void, input: Record<string, never>): Promise<ApprovalSettingsState>;
   updateSettings(
     this: void,
     input: ApprovalSettings & { expectedRevision: number },
-  ): Promise<RevisionedSettings>;
+  ): Promise<ApprovalSettingsState>;
 }
 
 export interface ApprovalSettingsView {
@@ -21,6 +20,8 @@ export interface ApprovalSettingsView {
   busy: boolean;
   dirty: boolean;
   saved: boolean;
+  availableModes: ApprovalSettingsState["availableModes"];
+  conflict: { previous: ApprovalSettingsState; current: ApprovalSettingsState } | null;
   error: "load" | "save" | "conflict" | "ruleLimit" | "invalidRule" | null;
 }
 
@@ -37,6 +38,22 @@ function fingerprint(settings: ApprovalSettings) {
   });
 }
 
+function copyState(settings: ApprovalSettingsState): ApprovalSettingsState {
+  return {
+    ...copy(settings),
+    revision: settings.revision,
+    availableModes: settings.availableModes.map((mode) => ({ ...mode })),
+  };
+}
+
+function conflictSettings(error: unknown): ApprovalSettingsState | null {
+  if (!error || typeof error !== "object" || !("data" in error)) return null;
+  const data = error.data;
+  if (!data || typeof data !== "object" || !("settings" in data)) return null;
+  const parsed = approvalSettingsStateSchema.safeParse(data.settings);
+  return parsed.success ? parsed.data : null;
+}
+
 /** Account-local edit buffer. Reads never silently replace unsaved changes. */
 export class ApprovalSettingsController {
   private view: ApprovalSettingsView = {
@@ -44,9 +61,11 @@ export class ApprovalSettingsController {
     busy: false,
     dirty: false,
     saved: false,
+    availableModes: [],
+    conflict: null,
     error: null,
   };
-  private baseline: ApprovalSettings | null = null;
+  private baseline: ApprovalSettingsState | null = null;
   private readonly listeners = new Set<() => void>();
   private disposed = false;
 
@@ -69,7 +88,7 @@ export class ApprovalSettingsController {
       draft,
       dirty: !this.baseline || fingerprint(draft) !== fingerprint(this.baseline),
       saved: false,
-      error: null,
+      error: this.view.conflict ? "conflict" : null,
     });
   }
   async load(): Promise<void> {
@@ -78,8 +97,13 @@ export class ApprovalSettingsController {
     try {
       const result = await this.port.settings({});
       if (this.disposed) return;
-      this.baseline = copy(result);
-      this.update({ draft: copy(result), dirty: false });
+      this.baseline = copyState(result);
+      this.update({
+        draft: copy(result),
+        availableModes: result.availableModes,
+        dirty: false,
+        conflict: null,
+      });
     } catch {
       this.update({ error: "load" });
     } finally {
@@ -88,6 +112,7 @@ export class ApprovalSettingsController {
   }
   setMode(mode: ApprovalMode) {
     if (this.disposed || this.view.busy || !this.view.draft) return;
+    if (!this.view.availableModes.some((entry) => entry.mode === mode && entry.available)) return;
     this.edit({ ...this.view.draft, mode });
   }
   addRule(rule: ApprovalRule): boolean {
@@ -128,7 +153,15 @@ export class ApprovalSettingsController {
   async save(confirmNever: () => Promise<boolean>): Promise<boolean> {
     const draft = this.view.draft;
     const baseline = this.baseline;
-    if (this.disposed || this.view.busy || !this.view.dirty || !draft || !baseline) return false;
+    if (
+      this.disposed ||
+      this.view.busy ||
+      this.view.conflict ||
+      !this.view.dirty ||
+      !draft ||
+      !baseline
+    )
+      return false;
     this.update({ busy: true, saved: false, error: null });
     try {
       if (draft.mode === "never" && baseline.mode !== "never" && !(await confirmNever()))
@@ -138,12 +171,12 @@ export class ApprovalSettingsController {
       if (this.disposed) return false;
       // A lost response may already have saved this exact replacement.
       if (fingerprint(fresh) === fingerprint(draft)) {
-        this.baseline = copy(fresh);
-        this.update({ dirty: false, saved: true });
+        this.baseline = copyState(fresh);
+        this.update({ dirty: false, saved: true, availableModes: fresh.availableModes });
         return true;
       }
-      if (fingerprint(fresh) !== fingerprint(baseline)) {
-        this.update({ error: "conflict" });
+      if (fresh.revision !== baseline.revision) {
+        this.setConflict(baseline, fresh);
         return false;
       }
       // The server rejects a stale revision, which closes the race this preflight cannot.
@@ -152,20 +185,61 @@ export class ApprovalSettingsController {
         expectedRevision: fresh.revision,
       });
       if (this.disposed) return false;
-      this.baseline = copy(result);
-      this.update({ draft: copy(result), dirty: false, saved: true });
+      this.baseline = copyState(result);
+      this.update({
+        draft: copy(result),
+        dirty: false,
+        saved: true,
+        availableModes: result.availableModes,
+      });
       return true;
     } catch (error) {
       let kind: ApprovalSettingsView["error"] = "save";
       if (error && typeof error === "object") {
         if ("message" in error && error.message === "RULE_LIMIT") kind = "ruleLimit";
-        else if ("code" in error && error.code === "CONFLICT") kind = "conflict";
+        else if ("code" in error && error.code === "CONFLICT") {
+          kind = "conflict";
+          const current =
+            conflictSettings(error) ?? (await this.port.settings({}).catch(() => null));
+          if (current) this.setConflict(baseline, current);
+        }
       }
       this.update({ error: kind });
       return false;
     } finally {
       this.update({ busy: false });
     }
+  }
+  private setConflict(previous: ApprovalSettingsState, current: ApprovalSettingsState) {
+    this.update({
+      error: "conflict",
+      availableModes: current.availableModes,
+      conflict: { previous: copyState(previous), current: copyState(current) },
+    });
+  }
+  async reapply(confirmNever: () => Promise<boolean>): Promise<boolean> {
+    const conflict = this.view.conflict;
+    if (this.disposed || this.view.busy || !conflict) return false;
+    this.baseline = copyState(conflict.current);
+    this.update({
+      conflict: null,
+      error: null,
+      dirty: !!this.view.draft && fingerprint(this.view.draft) !== fingerprint(conflict.current),
+    });
+    return this.save(confirmNever);
+  }
+  discardConflict() {
+    const conflict = this.view.conflict;
+    if (this.disposed || this.view.busy || !conflict) return;
+    this.baseline = copyState(conflict.current);
+    this.update({
+      draft: copy(conflict.current),
+      availableModes: conflict.current.availableModes,
+      dirty: false,
+      saved: false,
+      error: null,
+      conflict: null,
+    });
   }
   dispose() {
     this.disposed = true;

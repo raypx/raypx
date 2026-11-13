@@ -84,14 +84,14 @@ beforeEach(() => {
 });
 
 function fixture({
-  models = [{ modelId: "fixture", name: "Fixture model" }],
+  models = [{ modelId: "fixture", name: "Fixture model", source: "deployment" as const }],
   snapshot,
   language = "en",
   items = [{ agent, conversation }],
   memberships = [membership],
   approvals,
 }: {
-  models?: { modelId: string; name: string }[];
+  models?: { modelId: string; name: string; source: "connection" | "deployment" }[];
   snapshot?: ConversationSnapshot;
   language?: "en" | "zh";
   items?: AgentConversationView[];
@@ -229,6 +229,20 @@ it.each(["en", "zh"] as const)(
         runs: [{ ...run, state: "waiting" }],
         segments: [],
         cursor: 3,
+        toolActivity: [
+          {
+            runId: run.id,
+            toolCallId: request.toolCallId,
+            toolName: request.toolName,
+            target: request.target,
+            argumentSummary: request.argumentSummary,
+            startedAt: time,
+            finishedAt: null,
+            outcome: null,
+            durationMs: null,
+            exitStatus: null,
+          },
+        ],
       },
     });
     test.mount(true);
@@ -246,7 +260,7 @@ it.each(["en", "zh"] as const)(
     expect(screen.getByRole("button", { name: strings.sendDuringReply })).toBeEnabled();
     expect(screen.queryByRole("button", { name: strings.stop })).not.toBeInTheDocument();
     expect(screen.getAllByText("notes.txt", { exact: true })).toHaveLength(1);
-    expect(screen.getByRole("log").querySelector("[data-tool-activity]")).toBeNull();
+    expect(screen.getByRole("log").querySelector("[data-tool-call]")).toBeNull();
     fireEvent.click(approve);
     expect(approve).toBeDisabled();
     expect(screen.getByRole("button", { name: strings.approval.deny })).toBeDisabled();
@@ -262,6 +276,7 @@ it.each(["en", "zh"] as const)(
           sequence: 4,
           createdAt: time,
           requestId: request.id,
+          toolCallId: request.toolCallId,
           runId: run.id,
           toolName: request.toolName,
           argumentSummary: request.argumentSummary,
@@ -281,10 +296,30 @@ it.each(["en", "zh"] as const)(
     ).not.toBeInTheDocument();
     expect(screen.getByRole("log").querySelector("[data-approval-card]")).toBeNull();
     expect(screen.getByRole("status")).toHaveTextContent(strings.approval.states.approved);
+    await test.emit({
+      type: "event",
+      entry: {
+        event: {
+          kind: "tool.finished",
+          spaceId: agent.spaceId,
+          conversationId: conversation.id,
+          sequence: 5,
+          createdAt: time,
+          runId: run.id,
+          toolCallId: request.toolCallId,
+          toolName: request.toolName,
+          target: request.target,
+          argumentSummary: request.argumentSummary,
+          outcome: "succeeded",
+          durationMs: 100,
+          exitStatus: null,
+        },
+      },
+    });
     const activity = screen.getByRole("log").querySelector("[data-tool-activity]")!;
     fireEvent.click(within(activity as HTMLElement).getByRole("button"));
     expect(
-      within(activity as HTMLElement).getByText(strings.approval.states.approved),
+      within(activity as HTMLElement).getByText(strings.activity.outcomes.succeeded),
     ).toBeInTheDocument();
     expect(screen.getAllByText("notes.txt", { exact: true })).toHaveLength(1);
     expect(editor).toHaveValue("Keep chatting while waiting");
@@ -327,7 +362,7 @@ it("shows the backend's empty model state without an empty picker", async () => 
   await screen.findByRole("button", { name: "Writing Agent" });
   fireEvent.click(screen.getByRole("button", { name: "New Agent" }));
   const dialog = await screen.findByRole("dialog");
-  expect(within(dialog).getByText("No models are available on this server.")).toBeInTheDocument();
+  expect(within(dialog).getByText("No models are available.")).toBeInTheDocument();
   expect(within(dialog).queryByRole("combobox", { name: "Model" })).not.toBeInTheDocument();
   fireEvent.change(within(dialog).getByRole("textbox", { name: "Name" }), {
     target: { value: "Agent without a model" },
@@ -342,7 +377,7 @@ it("allows metadata edits with an unchanged unavailable model and never chooses 
   await screen.findByRole("button", { name: "Writing Agent" });
   await rowAction("Edit Agent");
   const dialog = await screen.findByRole("dialog");
-  expect(within(dialog).getByText("No models are available on this server.")).toBeInTheDocument();
+  expect(within(dialog).getByText("No models are available.")).toBeInTheDocument();
   expect(within(dialog).getByText("Unavailable model: fixture")).toBeInTheDocument();
   expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
   fireEvent.change(within(dialog).getByRole("textbox", { name: "Name" }), {
@@ -1264,6 +1299,14 @@ it.each([
       });
       expect(panel).toContainElement(heading);
       expect(panel.classList.contains("motion-reduce:transition-none")).toBe(width < 1280);
+      expect(panel.classList.contains("data-[side=right]:data-starting-style:translate-x-0")).toBe(
+        width < 1280,
+      );
+      expect(panel.classList.contains("data-[side=right]:data-ending-style:translate-x-0")).toBe(
+        width < 1280,
+      );
+      expect(panel).not.toHaveClass("data-[side=right]:data-starting-style:translate-x-[2.5rem]");
+      expect(panel).not.toHaveClass("data-[side=right]:data-ending-style:translate-x-[2.5rem]");
       expect(width >= 1280 && document.activeElement === heading).toBe(width >= 1280);
       expectShrinkableConversation();
       fireEvent.click(

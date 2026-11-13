@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { AccountDetails } from "@raypx/account/client";
-import { ApprovalSettings } from "@raypx/agents/client";
+import { ApprovalSettings, ModelConnections } from "@raypx/agents/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 
@@ -66,6 +66,17 @@ export default function AccountSettingsDialog({
       <AccountSettingsContent value="account">
         <PrivateSettings>
           {(id) => <AccountProfile key={id} accountId={id} reload={reload} onClose={onClose} />}
+        </PrivateSettings>
+      </AccountSettingsContent>
+      <AccountSettingsContent value="models">
+        <PrivateSettings>
+          {(id) => (
+            <ModelConnections
+              key={id}
+              port={agentsClient.modelConnections}
+              spaces={agentsClient.spaces}
+            />
+          )}
         </PrivateSettings>
       </AccountSettingsContent>
       <AccountSettingsContent value="instances">

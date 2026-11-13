@@ -6,10 +6,12 @@ import type {
   ReplySegment,
   Run,
   RunId,
+  ToolActivity,
 } from "@raypx/core/conversation";
 import type { Space, SpaceId, SpaceInput, SpaceMember } from "@raypx/core/spaces";
 import type { SpaceComputer } from "@raypx/core/computers";
 import type { ApprovalRequest, Effect } from "@raypx/core/approvals";
+import type { ComputerFilesPort } from "./computer-files.js";
 
 export interface ApprovalPort {
   pending(this: void, input: { spaceId: SpaceId }): Promise<ApprovalRequest[]>;
@@ -25,7 +27,7 @@ export interface ApprovalPort {
   effects(this: void, input: { spaceId: SpaceId; runId: RunId }): Promise<Effect[]>;
 }
 
-export interface ComputerPort {
+export interface ComputerPort extends Partial<ComputerFilesPort> {
   get(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
   start(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
   stop(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
@@ -45,6 +47,8 @@ export interface ConversationSnapshot {
   runs: Run[];
   segments: ReplySegment[];
   cursor: number;
+  toolActivity?: ToolActivity[] | undefined;
+  toolActivityTruncated?: boolean | undefined;
 }
 export interface ConversationPort {
   snapshot(this: void, input: ConversationSelection): Promise<ConversationSnapshot>;
@@ -80,10 +84,9 @@ export interface AgentConversationView {
   conversation: Conversation;
 }
 export interface OfferedModel {
+  source: "connection" | "deployment";
   modelId: string;
   name: string;
-  /** Optional display metadata; injected catalogs may provide only model identity/name. */
-  source?: "connection" | "deployment";
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {

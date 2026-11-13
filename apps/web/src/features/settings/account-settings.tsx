@@ -67,6 +67,7 @@ export function AccountSettingsPanel({
   children: ReactNode;
 }) {
   const t = useTranslations("auth");
+  const models = useTranslations("agents");
   const c = useTranslations("common");
   const i = useTranslations("instances");
   const s = useTranslations("settings");
@@ -80,13 +81,20 @@ export function AccountSettingsPanel({
   const sections = (
     [
       { value: "account", label: c("account"), icon: UserCircleIcon },
+      { value: "models", label: models("connections.title"), icon: SettingsIcon },
       { value: "password", label: t("password"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
       { value: "instances", label: i("instances"), icon: MonitorIcon },
       { value: "preferences", label: s("device"), icon: SettingsIcon },
       { value: "diagnostics", label: a("title"), icon: ShieldCheckIcon },
     ] as const
-  ).map((item) => ({ ...item, keywords: s(`searchKeywords.${item.value}`) }));
+  ).map((item) => ({
+    ...item,
+    keywords:
+      item.value === "models"
+        ? models("connections.searchKeywords")
+        : s(`searchKeywords.${item.value}`),
+  }));
   const searchTerms = query.normalize("NFKC").trim().toLowerCase().split(/\s+/).filter(Boolean);
   const searching = searchTerms.length > 0;
   const results = sections.filter((item) => {

@@ -77,9 +77,10 @@ not verify native layout, keyboard, accessibility or device socket behavior.
 Markdown suites exercise the real parser and reply renderer. Keep its list/table
 dependencies inside Vitest's module pipeline and select their native ESM/TS entries;
 CommonJS `require` bypasses the native aliases. SVG stays a native host mock.
-The model picker shows catalog source metadata. Tool lifecycle rows wait for the
-shared conversation model to expose `tool.started`/`tool.finished` activity; never
-project those events separately in Mobile.
+The model picker groups offered choices by source. Tool activity renders the shared
+timeline's `activity` and `pendingCount`; approval rows render their single `card`.
+The shared model owns lifecycle replay and toolCallId matching; never project
+those events separately in Mobile.
 The manual Mobile build workflow verifies unsigned native builds on GitHub runners.
 Mobile release uses EAS for signed builds. Both workflows configure generated native
 projects to run Metro with Bun. Keep native projects ignored.

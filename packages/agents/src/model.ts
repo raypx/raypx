@@ -52,6 +52,26 @@ export type {
 } from "./model/port.js";
 export { ComputerController, type ComputerView } from "./model/computer.js";
 export {
+  ComputerFilesController,
+  computerFileRows,
+  computerFileDestination,
+  computerPreviewText,
+  type ComputerFilesPort,
+  type ComputerFilesView,
+  type ComputerFileTreeRow,
+  type DirectoryView,
+  type FilePreviewView,
+} from "./model/computer-files.js";
+export {
+  ModelConnectionsController,
+  ConnectionSecret,
+  createConnectionDraft,
+  connectionConfiguration,
+  modelChoiceGroups,
+  type ModelConnectionsPort,
+  type ModelConnectionDraft,
+} from "./model/model-connections.js";
+export {
   ApprovalProjection,
   approvalRemainingSeconds,
   approvalDuration,

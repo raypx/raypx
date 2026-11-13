@@ -42,6 +42,9 @@ async function openPanel(url = "/agents#settings/account") {
                 <input aria-label="Draft name" defaultValue="Ada" />
               </label>
             </AccountSettingsContent>
+            <AccountSettingsContent value="models">
+              Model connection controls
+            </AccountSettingsContent>
             <AccountSettingsContent value="password">Password controls</AccountSettingsContent>
             <AccountSettingsContent value="sessions">
               <PrivateSessions />
@@ -303,4 +306,11 @@ it("lets a nested language menu handle Escape without clearing settings search",
   await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
   expect(search.value).toBe("system");
   expect(router.state.location.href).toBe("/agents#settings/preferences");
+});
+
+it("opens the Models category directly without replacing the background", async () => {
+  const { router } = await openPanel("/agents#settings/models");
+  expect(screen.getByRole("tab", { name: "Models" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("tabpanel")).toHaveTextContent("Model connection controls");
+  expect(router.state.location.pathname).toBe("/agents");
 });

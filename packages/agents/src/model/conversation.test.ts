@@ -8,15 +8,12 @@ import {
   type ReplySegment,
   type Run,
 } from "@raypx/core/conversation";
-import { approvalRequestIdSchema } from "@raypx/core/approvals";
-import type { ApprovalCardView } from "./approvals.js";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { ConversationController } from "./controller.js";
 import {
   ConversationState,
   conversationRows,
   activeConversationRun,
-  conversationTimelineRows,
   conversationSenderVisible,
 } from "./conversation.js";
 import { conversationDraftKey, readConversationDraft } from "./drafts.js";
@@ -698,50 +695,6 @@ describe("chat presentation", () => {
     test.controller.dispose();
   });
 });
-
-it.each(["pending", "approved", "denied", "expired", "cancelled"] as const)(
-  "represents a %s request exactly once in the timeline",
-  (state) => {
-    const card: ApprovalCardView = {
-      requestId: approvalRequestIdSchema.parse("request"),
-      runId: run().id,
-      toolName: "computer_write_file",
-      target: "file.txt",
-      argumentSummary: "Write file: file.txt",
-      memberAccountId: "member",
-      createdAt: time,
-      expiresAt: "2100-01-01T00:00:00Z",
-      sequence: 3,
-      state,
-      answeredByAccountId: state === "approved" ? "member" : null,
-      answering: false,
-      error: null,
-    };
-    // Even a resolved request without a retained reply must stay reachable.
-    const rows = conversationTimelineRows(
-      { messages: [], runs: [], segments: [], liveReplies: [], cursor: 3 },
-      [card],
-    );
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.kind).toBe(state === "pending" ? "approval" : "activity");
-    const grouped = rows.flatMap((row) => (row.kind === "activity" ? row.cards : []));
-    expect(grouped).toEqual(state === "pending" ? [] : [card]);
-    const next = {
-      ...card,
-      requestId: approvalRequestIdSchema.parse("next"),
-      sequence: 4,
-      state: "pending" as const,
-    };
-    const mixed = conversationTimelineRows(
-      { messages: [], runs: [], segments: [], liveReplies: [], cursor: 4 },
-      [{ ...card, state: "approved" }, next],
-    );
-    expect(mixed.map((row) => row.kind)).toEqual(["activity", "approval"]);
-    expect(mixed[0]?.kind === "activity" && mixed[0].cards).toEqual([
-      { ...card, state: "approved" },
-    ]);
-  },
-);
 
 it.each([false, true])(
   "uses sender context without adding group UI (consecutive: %s)",

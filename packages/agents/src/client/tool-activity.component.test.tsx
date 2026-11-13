@@ -1,72 +1,61 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
-import { approvalRequestIdSchema } from "@raypx/core/approvals";
-import { runIdSchema } from "@raypx/core/conversation";
-import type { ApprovalCardView } from "../model.js";
+import { runIdSchema, type ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import { ComputerActivity, ToolActivity } from "./tool-activity.js";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
 
 const { BrowserLanguageProvider } = createBrowserI18n<typeof en>({ en, zh });
-const card: ApprovalCardView = {
-  requestId: approvalRequestIdSchema.parse("request-one"),
+const call: ToolCallActivity = {
   runId: runIdSchema.parse("run-one"),
+  toolCallId: "call-one",
   toolName: "computer_write_file",
   target: "notes/report.txt",
   argumentSummary: "bounded argument summary",
-  memberAccountId: "account",
-  expiresAt: "2100-01-01T00:00:00.000Z",
-  createdAt: "2026-01-01T00:00:00.000Z",
-  sequence: 3,
-  state: "approved",
-  answeredByAccountId: "account",
-  answering: false,
-  error: null,
+  startedAt: "2026-01-01T00:00:00.000Z",
+  finishedAt: "2026-01-01T00:00:01.000Z",
+  outcome: "succeeded",
+  durationMs: 1_000,
+  exitStatus: null,
 };
 
-it.each(["en", "zh"] as const)(
-  "starts collapsed and expands bounded tool names, targets and request outcomes in %s",
-  (language) => {
-    const strings = { en, zh }[language].agents;
-    const privateCard = {
-      ...card,
-      arguments: { content: "PRIVATE FILE BODY" },
-      output: "PRIVATE OUTPUT",
-    };
-    render(
-      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
-        <ToolActivity accountId="account" cards={[privateCard]} runId={card.runId} />
-      </BrowserLanguageProvider>,
-    );
-    const trigger = screen.getByRole("button");
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("list", { name: strings.activity.title })).not.toBeInTheDocument();
-    fireEvent.click(trigger);
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
-    const list = screen.getByRole("list", { name: strings.activity.title });
-    expect(within(list).getByText(strings.tools.writeFile)).toBeVisible();
-    expect(within(list).getByText("notes/report.txt")).toBeVisible();
-    expect(within(list).getByText(strings.approval.states.approved)).toBeVisible();
-    expect(
-      within(list).getByText(language === "en" ? "Answered by You" : "由你处理"),
-    ).toBeVisible();
-    expect(screen.queryByText("bounded argument summary")).not.toBeInTheDocument();
-    expect(screen.queryByText("PRIVATE FILE BODY")).not.toBeInTheDocument();
-    expect(screen.queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
-  },
-);
+it.each(["en", "zh"] as const)("starts collapsed and shows real outcomes in %s", (language) => {
+  const strings = { en, zh }[language].agents;
+  const privateCall = {
+    ...call,
+    arguments: { content: "PRIVATE FILE BODY" },
+    output: "PRIVATE OUTPUT",
+  };
+  render(
+    <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+      <ToolActivity activity={[privateCall]} runId={call.runId} />
+    </BrowserLanguageProvider>,
+  );
+  const trigger = screen.getByRole("button");
+  expect(trigger).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByRole("list", { name: strings.activity.title })).not.toBeInTheDocument();
+  fireEvent.click(trigger);
+  const list = screen.getByRole("list", { name: strings.activity.title });
+  expect(within(list).getByText(strings.tools.writeFile)).toBeVisible();
+  expect(within(list).getByText("notes/report.txt")).toBeVisible();
+  expect(within(list).getByText(strings.activity.outcomes.succeeded)).toBeVisible();
+  expect(screen.queryByText("bounded argument summary")).not.toBeInTheDocument();
+  expect(screen.queryByText("PRIVATE FILE BODY")).not.toBeInTheDocument();
+  expect(screen.queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
+});
 
-it("keeps each request as a separate row and limits computer activity to twenty recent requests", () => {
-  const cards = Array.from({ length: 24 }, (_, index) => ({
-    ...card,
-    requestId: approvalRequestIdSchema.parse(`request-${index}`),
+it("limits the computer list to twenty recent calls, including reads", () => {
+  const activity = Array.from({ length: 24 }, (_, index) => ({
+    ...call,
+    toolCallId: `call-${index}`,
+    toolName: "computer_read_file",
     target: `report-${index}.txt`,
-    createdAt: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
+    startedAt: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
   }));
   render(
     <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
-      <ComputerActivity cards={cards} />
+      <ComputerActivity activity={activity} />
     </BrowserLanguageProvider>,
   );
   expect(screen.getAllByRole("listitem")).toHaveLength(20);
@@ -79,29 +68,43 @@ it("keeps each request as a separate row and limits computer activity to twenty 
 it("omits an empty reply activity group", () => {
   const view = render(
     <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
-      <ToolActivity accountId="account" cards={[]} runId={card.runId} />
+      <ToolActivity activity={[]} runId={call.runId} />
     </BrowserLanguageProvider>,
   );
   expect(view.container.querySelector("[data-tool-activity]")).toBeNull();
 });
 
-it.each(["approved", "denied", "expired", "cancelled"] as const)(
-  "keeps %s as a compact request row",
-  (state) => {
+it.each(["succeeded", "failed", "refused", "cancelled", "unknown", null] as const)(
+  "renders the %s lifecycle state with duration and command failure status",
+  (outcome) => {
     render(
       <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
         <ToolActivity
-          accountId="account"
-          cards={[{ ...card, state, answeredByAccountId: "Alex" }]}
-          runId={card.runId}
+          activity={[{ ...call, toolName: "computer_run_command", outcome, exitStatus: 7 }]}
+          runId={call.runId}
         />
       </BrowserLanguageProvider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "1 tool request" }));
+    fireEvent.click(screen.getByRole("button"));
     const row = screen.getByRole("listitem");
-    expect(row).toHaveTextContent(en.agents.approval.states[state]);
-    expect(row).toHaveTextContent("Answered by Alex");
-    expect(row).toHaveAttribute("data-message-row", `approval:${card.requestId}`);
-    expect(row.querySelector("[data-approval-card]")).toBeNull();
+    expect(row).toHaveTextContent(en.agents.activity.outcomes[outcome ?? "running"]);
+    expect(row).toHaveTextContent("1.0 s");
+    expect(within(row).queryByText("Exit status 7") !== null).toBe(outcome === "failed");
+    expect(row).toHaveAttribute("data-tool-call", call.toolCallId);
   },
 );
+
+it("surfaces waiting and failure on the collapsed summary", () => {
+  const view = render(
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <ToolActivity activity={[{ ...call, outcome: "failed" }]} runId={call.runId} />
+    </BrowserLanguageProvider>,
+  );
+  expect(screen.getByRole("button")).toHaveTextContent("1 failed");
+  view.rerender(
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <ToolActivity activity={[]} pendingCount={1} runId={call.runId} />
+    </BrowserLanguageProvider>,
+  );
+  expect(screen.getByRole("button")).toHaveTextContent("Waiting for approval");
+});

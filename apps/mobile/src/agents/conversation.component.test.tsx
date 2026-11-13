@@ -8,6 +8,7 @@ import {
   type Message,
   type Run,
   type RunFailure,
+  type ToolActivity,
 } from "@raypx/core/conversation";
 import {
   ComputerController,
@@ -90,6 +91,28 @@ function pendingRequest(): ApprovalRequest {
   });
 }
 
+function toolCall(): ToolActivity {
+  const request = pendingRequest();
+  return {
+    runId: request.runId,
+    toolCallId: request.toolCallId,
+    toolName: request.toolName,
+    target: request.target,
+    argumentSummary: request.argumentSummary,
+    startedAt: time,
+    finishedAt: null,
+    outcome: null,
+    durationMs: null,
+    exitStatus: null,
+  };
+}
+
+function toolRows(root: import("react-test-renderer").ReactTestInstance) {
+  return root.findAll(
+    (node) => typeof node.type === "string" && node.props.testID === "tool:run:tool-call",
+  );
+}
+
 async function harness(
   initial: Partial<ConversationSnapshot> = {},
   requests: ApprovalRequest[] = [],
@@ -104,6 +127,8 @@ async function harness(
       segments: [],
       runs: [],
       cursor: 0,
+      toolActivity: [],
+      toolActivityTruncated: false,
       ...initial,
     })),
     send: vi.fn(async (input) => message(input.message.text, 3)),
@@ -278,11 +303,23 @@ describe("mobile Agent conversation", () => {
   });
 
   it("keeps the composer usable while waiting for approval and offers Stop", async () => {
-    const h = await harness({ messages: [message()], runs: [run("waiting")], cursor: 2 }, [
-      pendingRequest(),
-    ]);
+    const h = await harness(
+      { messages: [message()], runs: [run("waiting")], cursor: 2, toolActivity: [toolCall()] },
+      [pendingRequest()],
+    );
     expect(textContent(h.view.root)).toContain("Waiting for approval");
     expect(findByLabel(h.view.root, "Approve")).toBeDefined();
+    expect(
+      h.view.root.findAll(
+        (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Approve",
+      ),
+    ).toHaveLength(1);
+    expect(
+      findByLabel(h.view.root, "Used 1 tool · Waiting for approval").props.accessibilityState
+        .expanded,
+    ).toBe(false);
+    await press(findByLabel(h.view.root, "Used 1 tool · Waiting for approval"));
+    expect(toolRows(h.view.root)).toHaveLength(0);
     expect(findByLabel(h.view.root, "Message").props.editable).toBe(true);
     await changeText(findByLabel(h.view.root, "Message"), "Continue with a question");
     await press(findByLabel(h.view.root, "Send"));
@@ -294,6 +331,126 @@ describe("mobile Agent conversation", () => {
     expect(h.port.stop).toHaveBeenCalledExactlyOnceWith({ ...selection, runId: run().id });
     expect(h.controller.getSnapshot().cards[0]?.state).toBe("pending");
     await h.close();
+  });
+
+  it("replaces a pending card with its event-driven tool row and restores the same activity after reload", async () => {
+    const h = await harness({ messages: [message()], runs: [run()], cursor: 2 });
+    const request = pendingRequest();
+    const fields = {
+      ...selection,
+      runId: request.runId,
+      toolCallId: request.toolCallId,
+      toolName: request.toolName,
+      target: request.target,
+      argumentSummary: request.argumentSummary,
+    };
+    await h.frame({
+      type: "event",
+      entry: { event: { ...fields, kind: "tool.started", sequence: 3, createdAt: time } },
+    });
+    expect(findByLabel(h.view.root, "Used 1 tool · In progress")).toBeDefined();
+    const cardFields = {
+      ...fields,
+      requestId: request.id,
+      memberAccountId: accountId,
+      expiresAt: request.expiresAt,
+    };
+    await h.frame({
+      type: "event",
+      entry: { event: { ...cardFields, kind: "card.created", sequence: 4, createdAt: time } },
+    });
+    await h.frame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          kind: "run.state",
+          runId: request.runId,
+          state: "waiting",
+          failureCode: null,
+          sequence: 5,
+          createdAt: time,
+        },
+      },
+    });
+    expect(
+      h.view.root.findAll(
+        (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Approve",
+      ),
+    ).toHaveLength(1);
+    await press(findByLabel(h.view.root, "Used 1 tool · Waiting for approval"));
+    expect(toolRows(h.view.root)).toHaveLength(0);
+    await h.frame({
+      type: "event",
+      entry: {
+        event: {
+          ...cardFields,
+          kind: "card.resolved",
+          outcome: "approved",
+          answeredByAccountId: accountId,
+          sequence: 6,
+          createdAt: time,
+        },
+      },
+    });
+    await h.frame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          kind: "run.state",
+          runId: request.runId,
+          state: "running",
+          failureCode: null,
+          sequence: 7,
+          createdAt: time,
+        },
+      },
+    });
+    const finish: ConversationServerFrame = {
+      type: "event",
+      entry: {
+        event: {
+          ...fields,
+          kind: "tool.finished",
+          outcome: "succeeded",
+          durationMs: 2_000,
+          exitStatus: null,
+          sequence: 8,
+          createdAt: "2026-11-14T00:00:02.000Z",
+        },
+      },
+    };
+    await h.frame(finish);
+    await h.frame(finish);
+    expect(
+      h.view.root.findAll(
+        (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Approve",
+      ),
+    ).toHaveLength(0);
+    expect(toolRows(h.view.root)).toHaveLength(1);
+    const activityText = textContent(toolRows(h.view.root)[0]!);
+    expect(activityText).toContain("Write a file");
+    expect(activityText).toContain("notes.md");
+    expect(activityText).toContain("Succeeded");
+    expect(activityText).toContain("2.0 s");
+    expect(h.frames.at(-1)).toEqual({ type: "ack", version: 1, ...selection, sequence: 8 });
+    const toolActivity = h.controller.getSnapshot().toolActivity;
+    await h.close();
+    const restored = await harness({
+      messages: [message()],
+      runs: [run()],
+      cursor: 8,
+      toolActivity,
+    });
+    expect(findByLabel(restored.view.root, "Used 1 tool").props.accessibilityState.expanded).toBe(
+      false,
+    );
+    await press(findByLabel(restored.view.root, "Used 1 tool"));
+    expect(toolRows(restored.view.root)).toHaveLength(1);
+    expect(textContent(toolRows(restored.view.root)[0]!)).toBe(activityText);
+    expect(restored.port.send).not.toHaveBeenCalled();
+    await restored.close();
   });
 
   it("preserves reachable Agent navigation and editing actions", async () => {

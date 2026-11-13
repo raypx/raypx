@@ -85,7 +85,16 @@ vi.mock("../../src/features/auth/access.js", async (original) => ({
   }),
 }));
 vi.mock("../../src/features/agents/client.js", () => ({
-  agentsClient: { spaces: { list: mocks.agentsSpaces } },
+  agentsClient: {
+    spaces: { list: mocks.agentsSpaces },
+    computers: {
+      get: async () => ({ status: "not-configured" as const }),
+      start: async () => ({ status: "not-configured" as const }),
+      stop: async () => ({ status: "not-configured" as const }),
+      listDirectory: async () => ({ status: "not-configured" as const }),
+      readFile: async () => ({ status: "not-configured" as const }),
+    },
+  },
 }));
 // Route-composition cases exercise account overlays above administration without network I/O.
 vi.mock("../../src/features/admin/client.js", () => ({

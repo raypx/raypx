@@ -19,6 +19,7 @@ import { Action } from "../ui.js";
 import { ApprovalCard } from "./approval-card.js";
 import { ComputerIndicator, ComputerSheet } from "./computer-sheet.js";
 import { ReplyMarkdown } from "./markdown.js";
+import { ToolActivity } from "./tool-activity.js";
 
 const StyledSafeAreaView = withUniwind(SafeAreaView);
 type TimelineRow = ReturnType<typeof conversationTimelineRows>[number];
@@ -69,7 +70,7 @@ export function AgentConversation({
   const active = activeConversationRun(state.runs);
   const rows = conversationTimelineRows(state, state.cards);
   const lastRun = state.runs.at(-1);
-  const pendingCards = state.cards.filter((card) => card.state === "pending");
+  const pendingCards = rows.filter((row) => row.kind === "approval");
   async function stop() {
     if (!active || stopPending.current) return;
     stopPending.current = true;
@@ -96,20 +97,7 @@ export function AgentConversation({
           onRefresh={() => void controller.refreshApprovals()}
         />
       );
-    if (row.kind === "activity")
-      return (
-        <View className="gap-2">
-          {row.cards.map((card) => (
-            <ApprovalCard
-              key={card.requestId}
-              card={card}
-              accountId={accountId}
-              onAnswer={() => {}}
-              onRefresh={() => void controller.refreshApprovals()}
-            />
-          ))}
-        </View>
-      );
+    if (row.kind === "activity") return <ToolActivity row={row} />;
     if (row.kind === "member")
       return (
         <View className="items-end">
@@ -193,6 +181,11 @@ export function AgentConversation({
                 />
               ) : null}
             </View>
+          ) : null}
+          {state.toolActivityTruncated ? (
+            <Text className="px-4 py-2 text-xs text-muted-foreground">
+              {t("agents.activity.truncated")}
+            </Text>
           ) : null}
           <FlatList
             ref={history}

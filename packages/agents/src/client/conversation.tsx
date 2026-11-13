@@ -31,7 +31,7 @@ import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SendIcon } from "@raypx/icons/send";
 import { StopIcon } from "@raypx/icons/stop";
-import type { RunId } from "@raypx/core/conversation";
+import type { RunId, ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import {
   ConversationController,
   ComputerController,
@@ -69,8 +69,9 @@ interface AgentConversationProps {
   port: ConversationPort;
   computerPort: ComputerPort;
   approvalPort?: ApprovalPort | undefined;
-  activity?: readonly ApprovalCardView[] | undefined;
-  onActivity?: ((spaceId: string, cards: readonly ApprovalCardView[]) => void) | undefined;
+  activity?: readonly ToolCallActivity[] | undefined;
+  onActivity?: ((spaceId: string, calls: readonly ToolCallActivity[]) => void) | undefined;
+  onComputerOpen?: (() => void) | undefined;
   socket: ConversationSocketPort;
   drafts: ConversationDraftStore;
   origin: string;
@@ -88,6 +89,7 @@ export function AgentConversation({
   approvalPort,
   activity,
   onActivity,
+  onComputerOpen,
   socket,
   drafts,
   origin,
@@ -154,6 +156,7 @@ export function AgentConversation({
       approvalPort={approvalPort}
       activity={activity}
       onActivity={onActivity}
+      onComputerOpen={onComputerOpen}
     />
   );
 }
@@ -168,6 +171,7 @@ function ConversationContents({
   approvalPort,
   activity,
   onActivity,
+  onComputerOpen,
 }: {
   item: AgentConversationView;
   controller: ConversationController;
@@ -176,8 +180,9 @@ function ConversationContents({
   showAgentNames: boolean;
   hasOtherMembers: boolean;
   approvalPort: ApprovalPort | undefined;
-  activity: readonly ApprovalCardView[] | undefined;
-  onActivity: ((spaceId: string, cards: readonly ApprovalCardView[]) => void) | undefined;
+  activity: readonly ToolCallActivity[] | undefined;
+  onActivity: ((spaceId: string, calls: readonly ToolCallActivity[]) => void) | undefined;
+  onComputerOpen: (() => void) | undefined;
 }) {
   const t = useTranslations("agents");
   const id = useId();
@@ -211,10 +216,24 @@ function ConversationContents({
     controller.getSnapshot,
     controller.getSnapshot,
   );
-  const { messages, runs, segments, liveReplies, cursor } = state;
+  const { messages, runs, segments, liveReplies, cursor, toolActivity, toolActivityTruncated } =
+    state;
   const rows = useMemo(
-    () => conversationTimelineRows({ messages, runs, segments, liveReplies, cursor }, state.cards),
-    [messages, runs, segments, liveReplies, cursor, state.cards],
+    () =>
+      conversationTimelineRows(
+        { messages, runs, segments, liveReplies, cursor, toolActivity, toolActivityTruncated },
+        state.cards,
+      ),
+    [
+      messages,
+      runs,
+      segments,
+      liveReplies,
+      cursor,
+      toolActivity,
+      toolActivityTruncated,
+      state.cards,
+    ],
   );
   const pendingCards = useMemo(
     () =>
@@ -222,9 +241,15 @@ function ConversationContents({
         (card) =>
           card.state === "pending" &&
           card.memberAccountId === accountId &&
-          card.error !== "resolvedElsewhere",
+          card.error !== "resolvedElsewhere" &&
+          !state.toolActivity.some(
+            (call) =>
+              call.runId === card.runId &&
+              call.toolCallId === card.toolCallId &&
+              call.finishedAt !== null,
+          ),
       ),
-    [state.cards, accountId],
+    [state.cards, state.toolActivity, accountId],
   );
   const senderContext = {
     showAgentNames,
@@ -232,8 +257,8 @@ function ConversationContents({
       hasOtherMembers || messages.some((message) => message.author.accountId !== accountId),
   };
   useEffect(() => {
-    if (state.cards.length) onActivity?.(item.agent.spaceId, state.cards);
-  }, [state.cards, onActivity, item.agent.spaceId]);
+    if (state.toolActivity.length) onActivity?.(item.agent.spaceId, state.toolActivity);
+  }, [state.toolActivity, onActivity, item.agent.spaceId]);
   const active = activeConversationRun(state.runs);
   const showStop = active !== undefined && !state.draft.trim();
   let sendLabel = active ? t("sendDuringReply") : t("send");
@@ -386,7 +411,10 @@ function ConversationContents({
                 panelId={panelId}
                 onOpen={() => {
                   if (computerOpen) closeComputer();
-                  else setComputerOpen(true);
+                  else {
+                    setComputerOpen(true);
+                    onComputerOpen?.();
+                  }
                 }}
               />
               {state.connection !== "live" && state.error !== "load" && (
@@ -429,6 +457,9 @@ function ConversationContents({
             onScroll={trackReading}
           >
             <div ref={content} className="flex min-h-full min-w-0 flex-col gap-2 pb-2">
+              {state.toolActivityTruncated && (
+                <p className="text-xs text-muted-foreground">{t("activity.truncated")}</p>
+              )}
               {state.loading && (
                 <Empty role="status">
                   <EmptyTitle>{t("loading")}</EmptyTitle>
@@ -453,8 +484,13 @@ function ConversationContents({
                     <ToolActivity
                       key={row.id}
                       runId={row.runId}
-                      cards={row.cards}
-                      accountId={accountId}
+                      activity={row.activity}
+                      pendingCount={row.pendingCount}
+                      approvalPort={approvalPort}
+                      selection={{
+                        spaceId: item.agent.spaceId,
+                        conversationId: item.conversation.id,
+                      }}
                     />
                   );
                 if (row.kind === "approval")
@@ -683,7 +719,9 @@ function ConversationContents({
           <ComputerPanel
             controller={computer}
             onClose={closeComputer}
-            activity={activity ?? state.cards}
+            activity={activity ?? state.toolActivity}
+            approvalPort={approvalPort}
+            selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
           />
         </aside>
       )}
@@ -698,13 +736,16 @@ function ConversationContents({
             id={panelId}
             showCloseButton={false}
             finalFocus={computerTrigger}
-            className="max-w-[calc(100vw-3rem)] motion-reduce:transform-none motion-reduce:transition-none"
+            // Keep the file surface inside the viewport during the sheet's opacity transition.
+            className="max-w-[calc(100vw-3rem)] data-[side=right]:data-ending-style:translate-x-0 data-[side=right]:data-starting-style:translate-x-0 motion-reduce:transform-none motion-reduce:transition-none"
           >
             <ComputerPanel
               sheet
               controller={computer}
               onClose={closeComputer}
-              activity={activity ?? state.cards}
+              activity={activity ?? state.toolActivity}
+              approvalPort={approvalPort}
+              selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
             />
           </SheetContent>
         </Sheet>

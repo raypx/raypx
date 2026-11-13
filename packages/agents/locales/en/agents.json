@@ -15,7 +15,7 @@
   "model": "Model",
   "chooseModel": "Choose a model",
   "unavailableModel": "Unavailable model: {model}",
-  "noModels": "No models are available on this server.",
+  "noModels": "No models are available.",
   "noAgents": "No Agents in this Space",
   "chooseAgent": "Choose an Agent to open its conversation.",
   "emptyConversation": "Start a conversation",
@@ -121,8 +121,20 @@
   },
   "activity": {
     "title": "Activity",
-    "requests": "{count, plural, one {# tool request} other {# tool requests}}",
-    "empty": "No tool requests observed in this Space yet."
+    "used": "{count, plural, one {Used # tool} other {Used # tools}}",
+    "empty": "No tool activity in this Space yet.",
+    "failedCount": "{count, plural, one {# failed} other {# failed}}",
+    "duration": "{seconds} s",
+    "exitStatus": "Exit status {status}",
+    "truncated": "Showing the latest 100 tool calls.",
+    "outcomes": {
+      "running": "In progress",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "refused": "Refused",
+      "cancelled": "Cancelled",
+      "unknown": "Outcome unknown"
+    }
   },
   "effects": {
     "open": "Review effects",
@@ -142,8 +154,7 @@
     "mode": "Mode",
     "ask": "Ask before changes",
     "never": "Never ask",
-    "auto": "Auto (unavailable)",
-    "autoUnavailable": "Auto is unavailable on this server.",
+    "auto": "Auto",
     "blockHint": "Blocked actions are refused in every mode; Block wins over Allow.",
     "allow": "Allow list",
     "block": "Block list",
@@ -158,14 +169,93 @@
     "saved": "Approval settings saved.",
     "load": "Could not load approval settings. Try again.",
     "save": "Could not confirm the save. Your changes are kept.",
-    "conflict": "Settings changed on another client. Your changes are kept; reload to discard them and review the latest settings.",
+    "conflict": "Settings changed on another client. Your changes are kept. Review the server changes before reapplying or discarding.",
     "ruleLimit": "The rule limit is 256. Remove a rule before adding another.",
     "invalidRule": "Choose a tool and an exact executable for command rules.",
-    "discardReload": "Discard changes and reload"
+    "discardReload": "Discard changes and reload",
+    "reapply": "Reapply my changes",
+    "serverVersion": "Server settings · revision {revision}",
+    "serverMode": "Mode: {previous} → {current}",
+    "serverAdded": "Added to {list}: {tool} {executable}",
+    "serverRemoved": "Removed from {list}: {tool} {executable}",
+    "reasons": {
+      "REVIEW_MODEL_NOT_CONFIGURED": "A review model is not configured."
+    }
   },
   "running": "Running",
   "succeeded": "Completed",
   "sendDuringReply": "Send message during reply",
   "CONNECTION_UNAVAILABLE": "The connection used by this Run is unavailable.",
-  "COMPUTER_UNAVAILABLE": "The computer used by this Run is unavailable."
+  "COMPUTER_UNAVAILABLE": "The computer used by this Run is unavailable.",
+  "connections": {
+    "title": "Models",
+    "add": "Add model connection",
+    "edit": "Edit model connection",
+    "empty": "No model connections",
+    "kind": "Kind",
+    "models": "Offered models",
+    "modelsHint": "One model identifier per line.",
+    "availability": "Available in",
+    "allSpaces": "All Spaces",
+    "selectedSpaces": "Chosen Spaces",
+    "noSpaces": "No Spaces",
+    "test": "Test",
+    "testNamed": "Test {name}",
+    "editNamed": "Edit {name}",
+    "deleteNamed": "Delete {name}",
+    "delete": "Delete connection",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "Runs pinned to this connection will fail to resume.",
+    "endpoint": "Endpoint URL",
+    "protocol": "Protocol",
+    "secret": "API key",
+    "keepSecret": "Leave empty to keep the current key.",
+    "invalid": "Check the name, model identifiers, endpoint and API key.",
+    "manage": "Manage model connections",
+    "memberModels": "Your connections",
+    "deploymentModels": "Server models",
+    "kinds": {
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google",
+      "openrouter": "OpenRouter",
+      "compatible": "Compatible endpoint"
+    },
+    "protocols": {
+      "anthropic-messages": "Anthropic Messages",
+      "openai-completions": "OpenAI Chat Completions",
+      "openai-responses": "OpenAI Responses"
+    },
+    "errors": {
+      "load": "Could not load model connections. Try again.",
+      "save": "Could not save the connection. Enter the key again to retry.",
+      "delete": "Could not delete the connection. Try again."
+    },
+    "outcomes": {
+      "SUCCEEDED": "Connection succeeded",
+      "AUTHENTICATION_FAILED": "Authentication failed",
+      "RATE_LIMITED": "Rate limit reached",
+      "TIMED_OUT": "Connection timed out",
+      "MODEL_UNAVAILABLE": "Model unavailable",
+      "REQUEST_FAILED": "Request failed"
+    },
+    "searchKeywords": "models model connections API key provider endpoint"
+  },
+  "files": {
+    "title": "Files",
+    "refresh": "Refresh files",
+    "workspace": "Workspace",
+    "preview": "File preview",
+    "empty": "This directory is empty.",
+    "loadError": "Could not load files. Try refreshing.",
+    "notConfigured": "Computer files are not configured.",
+    "unavailable": "Computer files are unavailable.",
+    "directoryTruncated": "Some entries are not shown.",
+    "previewTruncated": "This preview shows only the beginning of the file.",
+    "binary": "Binary file",
+    "symlink": "Symbolic links cannot be previewed.",
+    "size": "{size, number} bytes",
+    "computerUnavailable": "The computer is unavailable.",
+    "notRunning": "{state}. Files are available while the computer is running."
+  }
 }

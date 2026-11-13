@@ -2,6 +2,7 @@ import { useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 
 const settingsSections = [
   "account",
+  "models",
   "preferences",
   "diagnostics",
   "password",

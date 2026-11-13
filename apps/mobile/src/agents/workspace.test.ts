@@ -86,7 +86,7 @@ function harness() {
     agents: {
       list: vi.fn(async ({ spaceId }) => [spaceId === "space-one" ? one : two]),
       models: vi.fn(async ({ spaceId }) => [
-        { modelId: `model-${spaceId}`, name: `Model ${spaceId}` },
+        { modelId: `model-${spaceId}`, name: `Model ${spaceId}`, source: "deployment" as const },
       ]),
       create: vi.fn(),
       update: vi.fn(),
@@ -222,7 +222,7 @@ describe("mobile workspace composition", () => {
     expect(h.workspace.getSnapshot().page).toMatchObject({
       spaceId: "space-two",
       agents: [two],
-      models: [{ modelId: "model-space-two", name: "Model space-two" }],
+      models: [{ modelId: "model-space-two", name: "Model space-two", source: "deployment" }],
     });
     expect(h.preference.write).toHaveBeenLastCalledWith("space-two");
     expect(() => h.workspace.conversation(one)).toThrow("Wrong Space");

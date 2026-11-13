@@ -131,7 +131,10 @@ test(
     await expect(editor).toHaveValue("A draft while approval is pending");
     await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
     await editor.fill("");
-    await expect(page.locator("[data-tool-activity]")).toHaveCount(0);
+    await expect(page.locator("[data-tool-call]")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Used 1 tool Waiting for approval", exact: true }),
+    ).toBeVisible();
     await expect(approval.getByText("browser-fixture.txt", { exact: true })).toHaveCount(1);
     await expect(
       approval.getByText("Write file: browser-fixture.txt", { exact: true }),
@@ -185,11 +188,12 @@ test(
     await expect(approval).toHaveCount(0);
     await expect(editor).toBeFocused();
     const activity = page.locator("[data-tool-activity]").first();
-    const activityToggle = activity.getByRole("button", { name: "1 tool request", exact: true });
+    const activityToggle = activity.getByRole("button", { name: /^Used 1 tool/ });
     await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
     await activityToggle.click();
-    await expect(activity.getByText("Approved", { exact: true })).toBeVisible();
-    await expect(activity.getByText("Answered by You", { exact: true })).toBeVisible();
+    await expect(activity.getByText("Write a file", { exact: true })).toBeVisible();
+    await expect(activity.getByText("Succeeded", { exact: true })).toBeVisible();
+    await expect(activity.locator('[data-tool-call="browser-write-file"]')).toHaveCount(1);
     await expect(activity.getByText("browser-fixture.txt", { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toBeVisible();
@@ -199,6 +203,7 @@ test(
     expect(finishWrite.status()).toBe(204);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(2);
     await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toHaveCount(0);
+    const activityHistory = await activity.locator("[data-tool-call]").allTextContents();
     await activityToggle.click();
     for (const viewport of [
       { width: 1440, height: 860 },
@@ -210,11 +215,50 @@ test(
       await expectConversationGeometry(page, name);
       await computer.click();
       await expectConversationGeometry(page, name, viewport.width < 1280);
-      await page.getByRole("button", { name: "Close computer panel", exact: true }).click();
+      const panel = page.getByRole(viewport.width < 1280 ? "dialog" : "complementary", {
+        name: "Team computer",
+        exact: true,
+      });
+      const files = panel.getByRole("region", { name: "Files", exact: true });
+      await files.getByRole("treeitem", { name: "browser-fixture.txt", exact: true }).click();
+      await expect(files.getByRole("region", { name: "File preview", exact: true })).toContainText(
+        "A deterministic browser approval fixture.",
+      );
+      await expect(files.getByText("42 bytes", { exact: true })).toHaveCount(2);
+      await expect(
+        panel
+          .getByRole("region", { name: "Activity", exact: true })
+          .getByText("Succeeded", { exact: true }),
+      ).toBeVisible();
+      // The sheet slides in; measure only after it has come to rest inside the viewport.
+      await expect
+        .poll(async () => {
+          const box = await panel.boundingBox();
+          return box!.x + box!.width;
+        })
+        .toBeLessThanOrEqual(viewport.width);
+      for (const surface of [panel, files, files.locator("pre")]) {
+        expect(await surface.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+        const box = await surface.boundingBox();
+        expect(box!.x).toBeGreaterThanOrEqual(0);
+        expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+      }
+      await panel.getByRole("button", { name: "Close computer panel", exact: true }).click();
     }
     await page.reload();
     await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(2);
+    await expect(approval).toHaveCount(0);
+    await activityToggle.click();
+    await expect(activity.locator('[data-tool-call="browser-write-file"]')).toHaveCount(1);
+    expect(await activity.locator("[data-tool-call]").allTextContents()).toEqual(activityHistory);
+    await computer.click();
+    const restoredFiles = page.getByRole("region", { name: "Files", exact: true });
+    await restoredFiles.getByRole("treeitem", { name: "browser-fixture.txt", exact: true }).click();
+    await expect(
+      restoredFiles.getByRole("region", { name: "File preview", exact: true }),
+    ).toContainText("A deterministic browser approval fixture.");
+    await page.getByRole("button", { name: "Close computer panel", exact: true }).click();
     await page.setViewportSize({ width: 375, height: 812 });
     await page.getByRole("button", { name: "Back to Agents", exact: true }).click();
     await expect(page.getByRole("button", { name, exact: true })).toBeFocused();

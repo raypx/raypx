@@ -11,7 +11,12 @@ import { FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, View } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 import type { AgentInput } from "@raypx/core/agents";
-import type { AgentConversationView, AgentsPageState, OfferedModel } from "@raypx/agents/model";
+import {
+  modelChoiceGroups,
+  type AgentConversationView,
+  type AgentsPageState,
+  type OfferedModel,
+} from "@raypx/agents/model";
 import { useCopy } from "../locale.js";
 import { Action } from "../ui.js";
 
@@ -203,6 +208,21 @@ export function AgentEditor({
   const [instructions, setInstructions] = useState(item?.agent.instructions ?? "");
   const [modelId, setModelId] = useState(item?.agent.model.modelId ?? models[0]?.modelId ?? "");
   const modelOffered = models.some((model) => model.modelId === modelId);
+  const groupedModels = modelChoiceGroups(models);
+  const modelGroups = (["connection", "deployment"] as const)
+    .map((source) => ({
+      label: t(
+        source === "connection"
+          ? "agents.connections.memberModels"
+          : "agents.connections.deploymentModels",
+      ),
+      options: groupedModels[source].map((model) => ({
+        value: model.modelId,
+        label: model.name,
+        description: t(`mobile.modelSource.${model.source}`),
+      })),
+    }))
+    .filter((group) => group.options.length > 0);
   const canSave = name.trim().length > 0 && modelOffered && !busy;
   function save() {
     if (!canSave) return;
@@ -251,13 +271,8 @@ export function AgentEditor({
                 <Choice
                   label={t("agents.model")}
                   placeholder={t("agents.chooseModel")}
-                  options={models.map((model) => ({
-                    value: model.modelId,
-                    label: model.name,
-                    ...(model.source
-                      ? { description: t(`mobile.modelSource.${model.source}`) }
-                      : {}),
-                  }))}
+                  options={modelGroups.flatMap((group) => group.options)}
+                  groups={modelGroups}
                   value={modelId}
                   onChange={setModelId}
                   disabled={busy}
@@ -288,17 +303,46 @@ export function AgentEditor({
   );
 }
 
+interface ChoiceOption {
+  value: string;
+  label: string;
+  description?: string;
+}
+
+function ChoiceItem({ option }: { option: ChoiceOption }) {
+  return (
+    <Select.Item
+      value={option.value}
+      label={option.label}
+      accessibilityLabel={
+        option.description ? `${option.label}, ${option.description}` : option.label
+      }
+      className="min-h-12 py-3"
+    >
+      <View className="min-w-0 flex-1 gap-1">
+        <Select.ItemLabel className="text-base" />
+        {option.description ? (
+          <Text className="text-xs text-muted-foreground">{option.description}</Text>
+        ) : null}
+      </View>
+      <Select.ItemIndicator />
+    </Select.Item>
+  );
+}
+
 function Choice({
   label,
   placeholder,
   options,
+  groups,
   value,
   onChange,
   disabled = false,
 }: {
   label: string;
   placeholder: string;
-  options: { value: string; label: string; description?: string }[];
+  options: ChoiceOption[];
+  groups?: { label: string; options: ChoiceOption[] }[];
   value: string;
   onChange(this: void, value: string): void;
   disabled?: boolean;
@@ -327,24 +371,15 @@ function Choice({
           <Select.Overlay />
           <Select.Content presentation="popover" width="trigger">
             <ScrollView className="max-h-72" keyboardShouldPersistTaps="handled">
-              {options.map((option) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  label={option.label}
-                  accessibilityLabel={
-                    option.description ? `${option.label}, ${option.description}` : option.label
-                  }
-                  className="min-h-12 py-3"
-                >
-                  <View className="min-w-0 flex-1 gap-1">
-                    <Select.ItemLabel className="text-base" />
-                    {option.description ? (
-                      <Text className="text-xs text-muted-foreground">{option.description}</Text>
-                    ) : null}
-                  </View>
-                  <Select.ItemIndicator />
-                </Select.Item>
+              {(groups ?? [{ label: "", options }]).map((group) => (
+                <View key={group.label} className="gap-1">
+                  {group.label ? (
+                    <Select.ListLabel accessibilityRole="header">{group.label}</Select.ListLabel>
+                  ) : null}
+                  {group.options.map((option) => (
+                    <ChoiceItem key={option.value} option={option} />
+                  ))}
+                </View>
               ))}
             </ScrollView>
           </Select.Content>
