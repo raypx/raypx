@@ -1,0 +1,19 @@
+apps/api/tests/postgres/node/auth.test.ts
+  s_28758cb14041db::t_d3a08c63e9088a 12-14,43-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "461e652c1dc3d412daa236f65489afa609f885d7",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
