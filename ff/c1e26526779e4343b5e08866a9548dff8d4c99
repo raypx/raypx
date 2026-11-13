@@ -1,0 +1,292 @@
+packages/core/src/pages.test.ts
+  s_b4b4555ce87008::t_fe42e41d5d9001 10-18
+  s_b4b4555ce87008::t_b0b24c918a144b 1-9
+packages/agents/locales/zh/agents.json
+  s_b4b4555ce87008::t_419da96a957423 101-106
+packages/agents/src/model.ts
+  s_b4b4555ce87008::t_d4fe73a75a1d3d 88
+packages/agents/src/model/space-live.ts
+  s_b4b4555ce87008::t_d4fe73a75a1d3d 109-114,161-163
+apps/mobile/src/agents/approval-card.tsx
+  s_b4b4555ce87008::t_419da96a957423 5,68
+apps/mobile/src/agents/tool-activity.tsx
+  s_b4b4555ce87008::t_419da96a957423 4,15
+packages/agents/src/client/effects.tsx
+  s_b4b4555ce87008::t_419da96a957423 13,88
+packages/agents/src/model/approvals.ts
+  s_b4b4555ce87008::t_d4fe73a75a1d3d 1,4,11,43-57,61
+  s_b4b4555ce87008::t_b0b24c918a144b 59-60
+packages/agents/src/model/space-live.test.ts
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 89-92,111-120
+  s_b4b4555ce87008::t_7a91bbbf08a4ba 72-88,93-110,121-128
+packages/agents/src/client/approval-settings.component.test.tsx
+  s_b4b4555ce87008::t_7a91bbbf08a4ba 28,31,52-55,61-63,67-72,92-93,97-98
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 5-8,56-60,64-66,73-79,86-91,94-96
+  s_b4b4555ce87008::t_e8ad2dd1cb143f 80-85
+  s_b4b4555ce87008::t_fe5b7659102468 4,99
+packages/agents/src/client/approval-card.component.test.tsx
+  s_b4b4555ce87008::t_e8ad2dd1cb143f 4,287-296,302-305
+  s_b4b4555ce87008::t_5085a15025c033 306
+packages/agents/src/model/tool-label.ts
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 36-42
+  s_b4b4555ce87008::t_d4fe73a75a1d3d 1-35,43
+packages/agents/src/client/tool-activity.tsx
+  s_b4b4555ce87008::t_419da96a957423 10,49
+apps/mobile/src/agents/approval-card.component.test.tsx
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 111-137
+  s_b4b4555ce87008::t_11f4c44d2c3a17 4,7-9,33,110
+packages/agents/src/model/approval-settings.test.ts
+  s_b4b4555ce87008::t_e8ad2dd1cb143f 2,14-15,21-28
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 16-20
+  s_b4b4555ce87008::t_788b046e93812f 29
+apps/mobile/src/agents/tool-activity.component.test.tsx
+  s_b4b4555ce87008::t_11f4c44d2c3a17 103
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 104-140
+apps/api/tests/integration/capabilities-rpc.test.ts
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 107-110,304-310,331-411,414-479,485-543
+  s_b4b4555ce87008::t_6a640aa96f4174 324,326
+  s_b4b4555ce87008::t_0dd99ca38ee030 1-106,111-303,311-323,325,327-330,412-413,480-484,544-570
+packages/agents/AGENTS.md
+  s_b4b4555ce87008::t_a27fe29f4171b4 128-130
+  s_b4b4555ce87008::t_aab423a048abb0 125-127
+packages/agents/src/client/approval-card.tsx
+  s_b4b4555ce87008::t_419da96a957423 7,16,124
+packages/core/src/pages.ts
+  s_b4b4555ce87008::t_fe42e41d5d9001 23-25,31,37,47,53,63
+  s_b4b4555ce87008::t_b0b24c918a144b 10-22,76-77
+  s_b4b4555ce87008::t_b8c7f34383ba1a 1-9,26-30,32-36,38-46,48-52,54-62,64-75
+packages/agents/locales/en/agents.json
+  s_b4b4555ce87008::t_419da96a957423 101-106
+packages/agents/src/client/approval-settings.tsx
+  s_b4b4555ce87008::t_419da96a957423 30,77,126,239,249
+packages/agents/src/client/conversation.tsx
+  s_b4b4555ce87008::t_419da96a957423 37,62
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 458-460
+packages/agents/src/model/tool-label.test.ts
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 7-12,28-30,38-55
+  s_b4b4555ce87008::t_7a91bbbf08a4ba 1-6,13-27,31-37
+packages/agents/src/model/approvals.test.ts
+  s_b4b4555ce87008::t_e8ad2dd1cb143f 106,111-115
+  s_b4b4555ce87008::t_d2ef1a6bf103a5 2-6,107-110
+  s_b4b4555ce87008::t_ecbeff45e3e59e 116
+apps/api/AGENTS.md
+  s_f9cc0d01f49051::t_2c4394eed827a9 398-404
+apps/api/package.json
+  s_f9cc0d01f49051::t_a028672a4950ed 47,49
+apps/api/src/app/options.ts
+  s_f9cc0d01f49051::t_49f78fe9b0d00f 22-24
+apps/api/src/conversations/mcp-postgres.ts
+  s_f9cc0d01f49051::t_1b542de2a68d14 1-298
+apps/api/src/conversations/mcp-servers.test.ts
+  s_f9cc0d01f49051::t_dd6ce90b915b5e 1-225
+apps/api/src/conversations/mcp-servers.ts
+  s_f9cc0d01f49051::t_9087df2297a7ed 1-302
+apps/api/src/conversations/mcp-tools.test.ts
+  s_f9cc0d01f49051::t_54a4372ee8bff5 1-136
+apps/api/src/conversations/mcp-tools.ts
+  s_f9cc0d01f49051::t_38b0fe6aae453e 1-208
+apps/api/src/conversations/memory-tools.ts
+  s_f9cc0d01f49051::t_fdc30b2454fd9d 36-37
+apps/api/src/conversations/page-tools.test.ts
+  s_f9cc0d01f49051::t_320b56de52d685 1-191
+apps/api/src/conversations/page-tools.ts
+  s_f9cc0d01f49051::t_fc005c20ffb97d 1-73
+apps/api/src/conversations/secret-envelope.ts
+  s_f9cc0d01f49051::t_e77c178decc19e 1-56
+apps/api/src/conversations/secrets.ts
+  s_f9cc0d01f49051::t_52990c4a5e87ae 4-9,11
+apps/api/src/conversations/skill-tools.test.ts
+  s_f9cc0d01f49051::t_cc301ae41237c2 1-145
+apps/api/src/conversations/skill-tools.ts
+  s_f9cc0d01f49051::t_e7b310662c8bad 1-71
+apps/api/src/middleware/http.ts
+  s_f9cc0d01f49051::t_be22359724f277 12-19,54-56,59-62,64-68
+apps/api/src/pages/http.test.ts
+  s_f9cc0d01f49051::t_fd59f730b1c92c 1-130
+apps/api/src/pages/http.ts
+  s_f9cc0d01f49051::t_c8c64736176197 1-112
+apps/api/src/routers/index.ts
+  s_f9cc0d01f49051::t_ea3659a78cfe7c 12,24-34
+apps/api/src/routers/rpc/index.ts
+  s_f9cc0d01f49051::t_93b8acde3139bf 1-3,36-38
+apps/api/src/routers/rpc/mcp-servers.ts
+  s_f9cc0d01f49051::t_4a2ea996dc153e 1-105
+apps/api/src/routers/rpc/pages.ts
+  s_f9cc0d01f49051::t_505f94c23df912 1-131
+apps/api/src/routers/rpc/skills.ts
+  s_f9cc0d01f49051::t_817f9e222909f6 1-106
+apps/api/src/runtime/agents.ts
+  s_f9cc0d01f49051::t_9cd261c093799c 22-31,86-95,99,104-109,127,165-167
+apps/api/src/runtime/shared.ts
+  s_f9cc0d01f49051::t_d38c5625809e51 157-159,169-171,208-210
+apps/api/tests/helpers/app.ts
+  s_f9cc0d01f49051::t_22eb4f8537db51 7-9
+apps/api/tests/postgres/node/mcp.test.ts
+  s_f9cc0d01f49051::t_5a220b9d425d8a 1-157
+bun.lock
+  s_f9cc0d01f49051::t_a12b1d3d4e6f47 5-42,88,90,102,115-116,867,870,875-876,1027,1165-1166
+docs/architecture/approvals.md
+  s_f9cc0d01f49051::t_19793a24a7c015 153-160
+docs/architecture/capabilities.md
+  s_f9cc0d01f49051::t_cae7f8cd127152 58-59,97-99,177-234
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_36aae20fd79bcb 248-250,299-304
+docs/architecture/execution.md
+  s_f9cc0d01f49051::t_e605debeaf6ec0 292-300
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_57e5c2c36c2254 101-111
+docs/roadmap.md
+  s_f9cc0d01f49051::t_09a71ad592d621 159-167
+package.json
+  s_f9cc0d01f49051::t_f83660d9bd8812 70-71
+packages/agents/src/approvals.test.ts
+  s_f9cc0d01f49051::t_885fd834c94db8 669-725
+packages/agents/src/approvals.ts
+  s_f9cc0d01f49051::t_76f70a3dd4cf06 11,59,65,165-172
+packages/agents/src/computer-tools.ts
+  s_f9cc0d01f49051::t_7353482baeaf8a 5,88,94-95,108-110
+packages/agents/src/conversations.ts
+  s_f9cc0d01f49051::t_7d2a3b4ff533f0 117-119
+packages/agents/src/runner.test.ts
+  s_f9cc0d01f49051::t_dd28c7cda14c74 1209-1259
+packages/agents/src/runner.ts
+  s_f9cc0d01f49051::t_8c61d90db79b7c 70-73,255-258,295,491,493,498-502,515,530,538,553-554,630,743-744,746-751,761-766,780-791,925,933
+packages/agents/src/server/conversations.ts
+  s_f9cc0d01f49051::t_ef6e30b1ae0f88 477-478
+packages/contracts/AGENTS.md
+  s_f9cc0d01f49051::t_0dad697e2ae8dd 172-177
+packages/contracts/src/api.test.ts
+  s_f9cc0d01f49051::t_e549ddf9b33e42 15-17
+packages/contracts/src/api.ts
+  s_f9cc0d01f49051::t_93d24e4f97faaf 1-3,67-69
+packages/contracts/src/mcp-servers.ts
+  s_f9cc0d01f49051::t_79b138fa4171bc 1-47
+packages/contracts/src/pages.ts
+  s_f9cc0d01f49051::t_c7a03011a0e2c2 1-62
+packages/contracts/src/skills.ts
+  s_f9cc0d01f49051::t_c90a8b7b6defbb 1-63
+packages/core/AGENTS.md
+  s_f9cc0d01f49051::t_147443249144bf 87-91
+packages/core/package.json
+  s_f9cc0d01f49051::t_913b2e8b1c183a 23-26
+packages/core/src/approvals.ts
+  s_f9cc0d01f49051::t_6ce9205868f171 13-17,20-28,35,90,103,120
+packages/core/src/mcp-servers.ts
+  s_f9cc0d01f49051::t_4fea5f8a7c8ed3 1-63
+packages/core/src/skills.ts
+  s_f9cc0d01f49051::t_208445bc2423b8 1-81
+packages/core/src/spaces.ts
+  s_f9cc0d01f49051::t_13c0220c45fc27 106-135
+packages/database/AGENTS.md
+  s_f9cc0d01f49051::t_e0a85e6f5d1fc3 188-195
+packages/database/drizzle-foundation/20261113221325_common_old_lace/migration.sql
+  s_f9cc0d01f49051::t_7206c7c08afabb 1-195
+packages/database/drizzle-foundation/20261113221325_common_old_lace/snapshot.json
+  s_f9cc0d01f49051::t_7b3d71862dfc42 1-4226
+packages/database/src/schema.ts
+  s_f9cc0d01f49051::t_b6e9dd40802466 161-163,174,948,1024,1071,1914-2247,2249-2261
+packages/pages/AGENTS.md
+  s_f9cc0d01f49051::t_05549df5ef2840 1-13
+packages/pages/package.json
+  s_f9cc0d01f49051::t_2ef0c12a64b913 1-34
+packages/pages/src/server.ts
+  s_f9cc0d01f49051::t_ea59c625ba9f9d 1-6
+packages/pages/src/server/postgres.ts
+  s_f9cc0d01f49051::t_74bb0d1bec3dc4 1-451
+packages/pages/src/server/render.test.ts
+  s_f9cc0d01f49051::t_29b8e5fc735286 1-48
+packages/pages/src/server/render.ts
+  s_f9cc0d01f49051::t_e5c8148f12d6ec 1-81
+packages/pages/src/server/service.ts
+  s_f9cc0d01f49051::t_fd9bcfdf6d3a20 1-89
+packages/pages/src/server/tools.test.ts
+  s_f9cc0d01f49051::t_bd8d2a3a651ee4 1-100
+packages/pages/src/server/tools.ts
+  s_f9cc0d01f49051::t_7d455e573c2fa6 1-126
+packages/pages/src/server/types.ts
+  s_f9cc0d01f49051::t_1b0317c84d0dc4 1-104
+packages/pages/tests/postgres/pages.test.ts
+  s_f9cc0d01f49051::t_c4b433dca75e94 1-305
+packages/pages/tsconfig.json
+  s_f9cc0d01f49051::t_97101aeb6e7165 1-5
+packages/pages/vitest.config.ts
+  s_f9cc0d01f49051::t_54d9e886537021 1-12
+packages/providers/AGENTS.md
+  s_f9cc0d01f49051::t_36ee28d58131aa 39-43
+packages/providers/package.json
+  s_f9cc0d01f49051::t_375bb046ed0a41 14-15,24
+packages/providers/src/mcp/credentials.ts
+  s_f9cc0d01f49051::t_8051b94a29f5b8 1-22
+packages/providers/src/mcp/index.ts
+  s_f9cc0d01f49051::t_e63cd4135bc996 1-11
+packages/providers/src/mcp/port.ts
+  s_f9cc0d01f49051::t_f94d2f32a2e196 1-27
+packages/providers/src/mcp/transport.test.ts
+  s_f9cc0d01f49051::t_441a65143c23dc 1-132
+packages/providers/src/mcp/transport.ts
+  s_f9cc0d01f49051::t_eaa638f15efd05 1-292
+packages/providers/src/mcp/url.test.ts
+  s_f9cc0d01f49051::t_8bcefb5bf43979 1-62
+packages/providers/src/mcp/url.ts
+  s_f9cc0d01f49051::t_753586f1aa578c 1-107
+packages/providers/tests/mcp-http.integration.test.ts
+  s_f9cc0d01f49051::t_d31ffe41e2b755 1-65
+packages/skills/AGENTS.md
+  s_f9cc0d01f49051::t_d2fc412f1906d6 1-14
+packages/skills/package.json
+  s_f9cc0d01f49051::t_5be05b811a6936 1-28
+packages/skills/src/server.ts
+  s_f9cc0d01f49051::t_f53dd5cde75e36 1-13
+packages/skills/src/server/import.test.ts
+  s_f9cc0d01f49051::t_e6214a7151b00c 1-146
+packages/skills/src/server/import.ts
+  s_f9cc0d01f49051::t_b3a2a294a13651 1-240
+packages/skills/src/server/postgres.ts
+  s_f9cc0d01f49051::t_362085839d4722 1-457
+packages/skills/src/server/service.test.ts
+  s_f9cc0d01f49051::t_20c32fac269ea9 1-93
+packages/skills/src/server/service.ts
+  s_f9cc0d01f49051::t_7a7f2bae49f1ec 1-89
+packages/skills/src/server/tools.test.ts
+  s_f9cc0d01f49051::t_f68e5057d4de1f 1-91
+packages/skills/src/server/tools.ts
+  s_f9cc0d01f49051::t_1ca2e8bfac1302 1-104
+packages/skills/src/server/types.ts
+  s_f9cc0d01f49051::t_7aa1d7019cbf08 1-72
+packages/skills/tests/postgres/skills.test.ts
+  s_f9cc0d01f49051::t_5eee538d24dc48 1-258
+packages/skills/tsconfig.json
+  s_f9cc0d01f49051::t_2073eb862dfc44 1-9
+packages/skills/vitest.config.ts
+  s_f9cc0d01f49051::t_79baaa3943ca07 1-13
+packages/spaces/AGENTS.md
+  s_f9cc0d01f49051::t_99f1c347038a04 30-34
+packages/spaces/src/server/fanout.ts
+  s_f9cc0d01f49051::t_6651c157d823b2 9-11
+packages/spaces/src/server/management.ts
+  s_f9cc0d01f49051::t_4ea941f7e51fb7 15-19,273-306
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ffc1e26526779e4343b5e08866a9548dff8d4c99",
+  "prompts": {},
+  "sessions": {
+    "s_b4b4555ce87008": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d6ec-6741-7962-8ad6-dccbce19e3e1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
