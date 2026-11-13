@@ -1,0 +1,109 @@
+packages/blocks/src/components/shell.tsx
+  s_04df538318df34::t_b37abb274f894c 105
+packages/blocks/package.json
+  s_04df538318df34::t_b37abb274f894c 13-14,24-26
+packages/tasks/locales/zh/tasks.json
+  s_04df538318df34::t_b37abb274f894c 279-282
+packages/agents/src/model.ts
+  s_04df538318df34::t_f37b3e270db374 3-5
+packages/agents/src/model/controller.ts
+  s_04df538318df34::t_ae75d9f961ce81 106
+packages/agents/src/client/workspace.component.test.tsx
+  s_04df538318df34::t_bd7d308b46406e 978-1061
+  s_04df538318df34::t_861f412450056d 548-552,574-576,579-593,599-620,627-629,634-637,641-649,655-663,670-678,682-710,725-751,781-784,792-795,797-799,809-814,823-834,844-846,851-861,866-869,874-882,884-904,907-921,941-969,972-974
+  s_04df538318df34::t_0e3205465eced3 537-547,553-573,577-578,594-598,621-626,630-633,638-640,650-654,664-669,679-681,711-724,752-754,756-758,977
+  s_04df538318df34::t_c7676e6007ffeb 940
+  s_04df538318df34::t_65bad2419c5f26 755,759-780,785-791,796,800-808,815-822,835-843,847-850,862,864-865,870-873,883,905-906,922-939,970-971,975-976
+  s_04df538318df34::t_0ac51ffb8d58a2 863
+  s_04df538318df34::t_1399a71b06c9ee 534-536
+packages/agents/src/client/workspace.tsx
+  s_04df538318df34::t_0ac51ffb8d58a2 14
+  s_04df538318df34::t_a0c2e0a3c8c424 243
+  s_04df538318df34::t_bd7d308b46406e 346
+  s_04df538318df34::t_861f412450056d 6-12,164-165,242,244,248-257,259-260,265,270,273-285,287-290,292-330,332-345,347-394,396-405,407-418
+  s_04df538318df34::t_0488fe4cf301e1 1-5,13,162-163,166-167,241,245-247,258,264
+  s_04df538318df34::t_067e64fe326445 161
+packages/tasks/src/client/markdown.tsx
+  s_04df538318df34::t_861f412450056d 6-10,13
+  s_04df538318df34::t_b37abb274f894c 1-2,4-5,15
+packages/agents/src/model/conversation.ts
+  s_04df538318df34::t_f37b3e270db374 28-74
+apps/web/src/router-agents.component.test.tsx
+  s_04df538318df34::t_e4c54c49b3321e 24-25
+packages/icons/src/icons/more-horizontal.ts
+  s_04df538318df34::t_0ac51ffb8d58a2 1-4
+packages/tasks/locales/en/tasks.json
+  s_04df538318df34::t_b37abb274f894c 279-282
+apps/desktop/src/router-agents.component.test.tsx
+  s_04df538318df34::t_a0c2e0a3c8c424 43-54,86-92
+  s_04df538318df34::t_663595c1f9d517 1,55-69,71,109
+  s_04df538318df34::t_3683933a914476 11-12,42
+  s_04df538318df34::t_e4c54c49b3321e 108
+packages/agents/src/client/conversation.tsx
+  s_04df538318df34::t_5c9604e9de1059 13,21-22,25-26,33-34,100,110,115,117,119-121,123-124,135,142,167,169-182,185-189,192,195-200,202-207,214-226,233,251,260-262,272-274,276-277,285,287-288,294-297,303,315-317,335-336,341,353,363-364,388-395,409,416,421-422,429-430,437,446-450,470-471
+  s_04df538318df34::t_d819f7af4ab021 130,184,193-194,201
+  s_04df538318df34::t_b1ba1eaaf3de57 1
+  s_04df538318df34::t_861f412450056d 2-12,16-20,96-98,106,131-134,136-141,164-166,190-191,208-213,242,247-250,252-259,263-271,278-284,289-293,298-302,304-314,318-331,333-334,338-339,342-351,354-358,360-362,365-370,372-387,396-403,423-428,431-436,438-445,451-469
+  s_04df538318df34::t_1b75817a5af278 143-163,337,340,371
+  s_04df538318df34::t_c7676e6007ffeb 227-230,411
+packages/tasks/AGENTS.md
+  s_04df538318df34::t_d819f7af4ab021 107
+packages/icons/src/icons/copy.ts
+  s_04df538318df34::t_0ac51ffb8d58a2 1-4
+docs/development/ui.md
+  s_04df538318df34::t_d819f7af4ab021 24-32
+packages/agents/locales/zh/agents.json
+  s_04df538318df34::t_b37abb274f894c 58-65
+  s_04df538318df34::t_5c9604e9de1059 66-67
+packages/agents/AGENTS.md
+  s_04df538318df34::t_d819f7af4ab021 5-9
+packages/agents/locales/en/agents.json
+  s_04df538318df34::t_5c9604e9de1059 66-67
+  s_04df538318df34::t_b37abb274f894c 58-65
+packages/agents/tsconfig.json
+  s_04df538318df34::t_d819f7af4ab021 3
+packages/blocks/AGENTS.md
+  s_04df538318df34::t_d819f7af4ab021 44,66-68,73
+packages/blocks/src/components/markdown.tsx
+  s_04df538318df34::t_663595c1f9d517 84-86
+  s_04df538318df34::t_b37abb274f894c 1-2,13,15-16,24-55,57-78,81-83,87-104,111-112,125-128,139-140,146-148
+  s_04df538318df34::t_3683933a914476 7
+  s_04df538318df34::t_b1ba1eaaf3de57 17,23,56,79-80
+  s_04df538318df34::t_0ac51ffb8d58a2 14,110
+  s_04df538318df34::t_861f412450056d 3-6,8-12,18-22,105-109,113-124,129-138,141-145
+apps/web/e2e/agents.spec.ts
+  s_04df538318df34::t_663595c1f9d517 11
+  s_04df538318df34::t_861f412450056d 19,44-71
+packages/blocks/src/components/markdown.component.test.tsx
+  s_04df538318df34::t_0ac51ffb8d58a2 1-4,14-15,23-27,31-39,43-47,50-58
+  s_04df538318df34::t_861f412450056d 5-13,16-22,28-30,40-42
+  s_04df538318df34::t_663595c1f9d517 48-49
+packages/agents/src/model/conversation.test.ts
+  s_04df538318df34::t_0ac51ffb8d58a2 13,616-622,629-639,645-646,666-667,677-691
+  s_04df538318df34::t_861f412450056d 623-628,640-644,647-665,668-676
+  s_04df538318df34::t_e32857c7c3b7bb 692
+packages/icons/package.json
+  s_04df538318df34::t_0ac51ffb8d58a2 82-84
+bun.lock
+  s_04df538318df34::t_deb84ee7eb4022 357,377,457-458,843,2718,4176-4177
+packages/agents/package.json
+  s_04df538318df34::t_1e6457a0b463f8 24,44
+packages/tasks/package.json
+  s_04df538318df34::t_40adfe3764199c 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "06cdad6edf6bb749c8cd3074f8fadf4099f96665",
+  "prompts": {},
+  "sessions": {
+    "s_04df538318df34": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d53d-6e70-7af2-8caa-e598880f7c9f",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
