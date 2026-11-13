@@ -1,0 +1,21 @@
+apps/api/tests/helpers/control-server.ts
+  s_f9cc0d01f49051::t_d3a30e8933770e 21-23,54-59,108
+apps/web/e2e/agents.spec.ts
+  s_f9cc0d01f49051::t_664cce70a19d4e 30-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3a5891a03071f64b230fef551487828c052a8613",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
