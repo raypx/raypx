@@ -35,7 +35,7 @@ it.each(["web", "desktop"] as const)(
     restore({ usage: true, errors: false });
     await waitFor(() => expect(client.capture).toHaveBeenCalledWith("app_opened"));
     expect(client.capture).toHaveBeenCalledWith("page_viewed", {
-      page: surface === "web" ? "account" : "files",
+      page: surface === "web" ? "home" : "agents",
     });
     view.rerender(app("/tasks/private-task-id"));
     await waitFor(() =>

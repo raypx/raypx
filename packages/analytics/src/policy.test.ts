@@ -1,24 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
-import type { TaskClient } from "@raypx/client/tasks";
-type AgentTask = Awaited<ReturnType<TaskClient["tasks"]["create"]>>;
-import { createNoopAnalytics } from "@raypx-kit/analytics";
+import { describe, expect, it } from "vitest";
 import { eventPolicy, parseAnalyticsConsent, analyticsPage } from "./index.js";
-import {
-  instrumentTaskClient,
-  createRaypxAnalytics,
-  createQueryFailureReporter,
-} from "./browser.js";
+import { createQueryFailureReporter } from "./browser.js";
 it("projects explicit enums and never forwards task content or raw URLs", () => {
   expect(
-    eventPolicy("task_create_result", {
-      scope: "local",
-      provider: "codex",
-      outcome: "accepted",
+    eventPolicy("page_viewed", {
+      page: "agents",
       prompt: "private",
       path: "/Users/private",
       id: "private-id",
     }),
-  ).toEqual({ scope: "local", provider: "codex", outcome: "accepted" });
+  ).toEqual({ page: "agents" });
   expect(eventPolicy("page_viewed", { page: "/reset-password?token=secret" })).toEqual({
     page: "other",
   });
@@ -27,118 +18,25 @@ it("projects explicit enums and never forwards task content or raw URLs", () => 
     usage: false,
     errors: true,
   });
-  expect(analyticsPage("/", "desktop")).toBe("files");
-  expect(analyticsPage("/automations", "desktop")).toBe("jobs");
+  expect(analyticsPage("/", "desktop")).toBe("agents");
+  expect(analyticsPage("/", "web")).toBe("home");
+  expect(analyticsPage("/agents")).toBe("agents");
+  expect(analyticsPage("/memory")).toBe("memory");
+  for (const path of ["/projects", "/tasks", "/approvals", "/automations", "/files", "/terminal"])
+    expect(analyticsPage(path, "desktop")).toBe("other");
+  expect(eventPolicy("task_create_result", {})).toBeNull();
 });
-it("records mutation responses once per attempt while reads and raw arguments stay private", async () => {
-  const analytics = { ...createNoopAnalytics(), capture: vi.fn() };
-  const result: AgentTask = {
-    id: "private-id",
-    deviceId: "private-device",
-    projectId: "private-project",
-    provider: "codex",
-    mode: "run",
-    prompt: "private",
-    status: "running",
-    summary: "",
-    parentTaskId: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  const create = vi.fn().mockResolvedValue(result);
-  const client = {
-    tasks: { create, list: vi.fn().mockResolvedValue([]) },
-    approvals: { decide: vi.fn().mockResolvedValue({}) },
-  };
-  const wrapped = instrumentTaskClient(client, analytics, "local");
-  const input = {
-    id: "private-id",
-    deviceId: "private-device",
-    projectId: "private-project",
-    provider: "codex" as const,
-    mode: "run" as const,
-    prompt: "private-content",
-  };
-  expect(await wrapped.tasks.create(input)).toBe(result);
-  await wrapped.tasks.list({ limit: 100 });
-  expect(analytics.capture.mock.calls).toEqual([
-    ["task_create_result", { scope: "local", provider: "codex", outcome: "accepted" }],
-  ]);
-  const error = new Error("/Users/private bad output");
-  create.mockRejectedValueOnce(error);
-  await expect(wrapped.tasks.create(input)).rejects.toBe(error);
-  expect(analytics.capture).toHaveBeenLastCalledWith("task_create_result", {
-    scope: "local",
-    provider: "codex",
-    outcome: "failed",
-    code: "UNEXPECTED_ERROR",
-  });
-});
-it("drops late mutation diagnostics after an account change without changing the result", async () => {
-  const analytics = createRaypxAnalytics({
-    token: "",
-    host: "",
-    release: "test",
-    environment: "test",
-    surface: "desktop",
-  });
-  analytics.setConsent({ usage: true, errors: false });
-  analytics.identify("account-a");
-  const capture = vi.spyOn(analytics, "capture");
-  let resolve!: (value: AgentTask) => void;
-  const client = {
-    tasks: {
-      create: () =>
-        new Promise<AgentTask>((done) => {
-          resolve = done;
-        }),
-    },
-    approvals: {
-      decide: vi.fn(async (): Promise<never> => {
-        throw new Error("Unexpected call");
-      }),
-    },
-  };
-  const wrapped = instrumentTaskClient(client, analytics, "local");
-  const result: AgentTask = {
-    id: "private-task",
-    deviceId: "device",
-    projectId: "project",
-    provider: "codex",
-    mode: "run",
-    prompt: "private",
-    status: "running",
-    summary: "",
-    parentTaskId: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  const pending = wrapped.tasks.create({
-    id: "id",
-    deviceId: "device",
-    projectId: "project",
-    provider: "codex",
-    mode: "run",
-    prompt: "private",
-  });
-  analytics.identify("account-b");
-  resolve(result);
-  expect(await pending).toBe(result);
-  expect(capture).not.toHaveBeenCalled();
-  analytics.dispose();
-});
-
 describe("query failures", () => {
   it("keeps only the query family, safe code and a well-formed request ID", () => {
     expect(
       eventPolicy("query_failed", {
-        query: "tasks",
+        query: "account",
         code: "DEVICE_OFFLINE",
         requestId: "req_abcdefghijklmnopqrstuvwx",
         path: "/secret",
       }),
     ).toEqual({
-      query: "tasks",
+      query: "account",
       code: "DEVICE_OFFLINE",
       requestId: "req_abcdefghijklmnopqrstuvwx",
     });
@@ -158,12 +56,16 @@ describe("query failures", () => {
     const error = {
       data: { error: { code: "NETWORK_UNAVAILABLE" }, requestId: "req_abcdefghijklmnopqrstuvwx" },
     };
-    report(error, ["tasks", 1, "workspace"]);
-    report(error, ["tasks", 1, "devices"]);
+    report(error, ["account", 1, "workspace"]);
+    report(error, ["account", 1, "devices"]);
     expect(captured).toEqual([
       [
         "query_failed",
-        { query: "tasks", code: "NETWORK_UNAVAILABLE", requestId: "req_abcdefghijklmnopqrstuvwx" },
+        {
+          query: "account",
+          code: "NETWORK_UNAVAILABLE",
+          requestId: "req_abcdefghijklmnopqrstuvwx",
+        },
       ],
     ]);
   });

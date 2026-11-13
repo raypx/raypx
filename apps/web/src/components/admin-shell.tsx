@@ -81,13 +81,13 @@ export function AdminShell() {
       navigationLabels={[t("dash.nav.console")]}
       secondaryNavigation={[
         {
-          to: "/projects",
+          to: "/agents",
           label: t("common.backToWorkspace"),
           icon: <ArrowLeftIcon />,
         },
       ]}
       LinkComponent={AdminLink}
-      breadcrumbs={page ? [t(page.title)] : []}
+      breadcrumbs={[]}
       layout={page?.layout ?? "document"}
       account={<UserButton variant="sidebar" />}
     >

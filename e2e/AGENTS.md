@@ -15,9 +15,9 @@ Pass filenames and Playwright flags directly. Use `--` for arguments that would
 otherwise be interpreted as repository options. `--list` collects cases without
 building applications or starting servers. `--dry-run` lists the application builds Turbo would run.
 
-Each application owns `apps/<app>/e2e/*.spec.ts` (including task subdirectories).
-Web owns auth, administration and account settings; Desktop owns local access,
-settings and task pagination. Shared journeys live in `tests/journeys/`; application
+Each application owns `apps/<app>/e2e/*.spec.ts` .
+Web owns auth, administration, account settings and Conversation backend acceptance;
+Desktop owns renderer sign-in and device settings. Both start signed-in work at `/agents`. Shared journeys live in `tests/journeys/`; application
 files call their `registerTests` through `@raypx/e2e/journeys/*`. Write each shared
 flow once; project fixtures inject the surface and base URL. Shared response,
 layout and interaction helpers stay in `tests/helpers/`, with application consumers
@@ -48,26 +48,22 @@ fresh browser context and response fixtures. `signedInAccount` supplies its
 member `account.access` projection; custom signed-in cases use `accountAccessFixture`.
 The automatic public fixture defaults to guest access. Named steps identify checks
 within a combined journey. See docs/development/testing.md for the coverage map.
-Conversation fixtures load at most 200 messages across initial data, older pages
-and gap fills. Fourfold Chromium CPU throttling exercises the DOM bound, focus,
-full-text mode, message revisions and explicit history loading.
+Shared navigation journeys cover Agents, account menus, local preferences, English/Chinese
+and 375px/1280px layouts. Memory journeys cover the retained standalone reference library.
 
 ## Constraints
 
 No default test script. Do not import application source or seed operator databases.
-Use accessible roles and real UI state. The Desktop local model-picker fixture
-supplies preload values and synthetic responses on the renderer WebSocket.
-Native IPC and OS behavior are covered by the separate packaged gates.
+Use accessible roles and real UI state. Native IPC and OS behavior are covered by the separate packaged gates.
 HTTP fixtures isolate signed-out and form response rendering; they do not establish
 server authentication correctness. The API PostgreSQL gate exercises real signup,
 verification, password reset and session revocation. Manual screenshots require
 `--visual`; failure screenshots remain enabled. Local traces are off by default;
 CI records the first retry. Use `--trace on` for explicit local diagnosis.
 Visual artifacts are written under ignored test-results for inspection.
-Guest Web acceptance asserts no private list/subscription requests before login,
-preserves the original page and draft choices through sign-in, and checks restoration
-does not send a task. Desktop local pages stay available before login and during session
-errors; remote views require confirmed login and preserve their return destination.
+Guests keep the public landing/legal/authentication pages and device preferences.
+Private Agents routes preserve an allowlisted login destination and issue no private
+reads before authentication. Guest task drafts and project/session browser flows are removed.
 
 ## Verification
 
@@ -82,10 +78,7 @@ Run `bun run --cwd e2e check`. `bun e2e` is the explicit browser gate.
 The owned backend fixture also supplies the deterministic Conversation model and a test-only completion
 gate for Web's `agents.spec.ts`; that case verifies streaming before commit and history
 after reload. It is skipped without the owned backend fixture.
-The control browser test is an explicit real-backend gate. Launch the isolated API
-with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build
-both surfaces against that fixture API. The `control` project is registered only when that fixture is present; ordinary
-project runs do not establish real-backend acceptance.
-For an HTTP loopback fixture, set `VITE_API_URL` to that exact API origin when
-building both surfaces. The dedicated Desktop browser output includes only that
-validated loopback Origin in connect-src; static serving preserves its HTML/CSP.
+The owned backend fixture is opt-in; ordinary browser response fixtures do not prove
+real backend, PostgreSQL, provider or native WebView behavior. Keep the fixture API
+origin explicit in client builds. Desktop browser output allows only its validated
+loopback API origin; static serving preserves its HTML/CSP.

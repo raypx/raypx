@@ -156,3 +156,20 @@ it("keeps password setup hidden on failed account reads and requires the current
   );
   expect(mocks.requestPasswordReset).not.toHaveBeenCalled();
 });
+
+it.each(["en", "zh"])("renders one settings title in %s", async (locale) => {
+  localStorage.setItem("raypx_locale", locale);
+  await page("/settings");
+  const title = locale === "zh" ? "设置" : "Settings";
+  expect(await screen.findByRole("heading", { name: title, level: 1 })).toBeVisible();
+  expect(screen.getAllByRole("heading", { name: title })).toHaveLength(1);
+});
+
+it.each(["en", "zh"])("renders one administration title in %s", async (locale) => {
+  signIn("admin");
+  localStorage.setItem("raypx_locale", locale);
+  await page("/admin");
+  const title = locale === "zh" ? "概览" : "Overview";
+  expect(await screen.findByRole("heading", { name: title, level: 1 })).toBeVisible();
+  expect(screen.getAllByRole("heading", { name: title })).toHaveLength(1);
+});

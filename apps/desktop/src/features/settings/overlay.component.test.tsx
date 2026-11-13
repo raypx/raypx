@@ -76,18 +76,18 @@ function Background() {
 }
 async function page(
   history = createMemoryHistory({
-    initialEntries: ["/files?rootId=work&path=notes&offset=100#selected"],
+    initialEntries: ["/agents?spaceId=work&agentId=notes#selected"],
   }),
 ) {
   const root = createRootRoute({ component: Shell });
   const router = createRouter({
     history,
     routeTree: root.addChildren([
-      createRoute({ getParentRoute: () => root, path: "/files", component: Background }),
+      createRoute({ getParentRoute: () => root, path: "/agents", component: Background }),
       createRoute({
         getParentRoute: () => root,
-        path: "/automations",
-        component: () => <p>Automations background</p>,
+        path: "/memory",
+        component: () => <p>Memory background</p>,
       }),
       createRoute({ getParentRoute: () => root, path: "/prior-page", component: () => null }),
     ]),
@@ -112,7 +112,7 @@ it("loads settings on demand while preserving the background draft, path and sea
   await userEvent.click(screen.getByRole("button", { name: "Open settings" }));
   expect(await screen.findByRole("dialog", { name: "Settings" })).toBeVisible();
   expect(await screen.findByRole("textbox", { name: "Settings preference" })).toBeVisible();
-  expect(router.state.location.href).toBe("/files?rootId=work&path=notes&offset=100#settings");
+  expect(router.state.location.href).toBe("/agents?spaceId=work&agentId=notes#settings");
   expect(background).toBeInTheDocument();
   expect(background).toHaveValue("Unsaved local work");
   expect(mocks.backgroundMount).toHaveBeenCalledTimes(1);
@@ -144,13 +144,13 @@ it("uses browser back and forward to close and reopen the overlay without remoun
 
 it("closes a direct or refreshed settings URL in place instead of returning to the previous page", async () => {
   const router = await page(
-    createMemoryHistory({ initialEntries: ["/prior-page", "/files?rootId=work#settings"] }),
+    createMemoryHistory({ initialEntries: ["/prior-page", "/agents?spaceId=work#settings"] }),
   );
   await screen.findByRole("dialog", { name: "Settings" });
   const index = router.state.location.state.__TSR_index;
   await userEvent.click(screen.getByRole("button", { name: "Close" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(router.state.location.href).toBe("/files?rootId=work");
+  expect(router.state.location.href).toBe("/agents?spaceId=work");
   expect(router.state.location.state.__TSR_index).toBe(index);
   expect(router.history.length).toBe(2);
 });
@@ -174,39 +174,38 @@ it("does not return to a stale background after the current page changes", async
   await userEvent.click(screen.getByRole("button", { name: "Open settings" }));
   await screen.findByRole("dialog", { name: "Settings" });
   await router.navigate({
-    href: "/automations?scope=local#settings",
+    href: "/memory?scope=local#settings",
     replace: true,
     state: (previous) => previous,
   });
   await userEvent.click(screen.getByRole("button", { name: "Close" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(router.state.location.href).toBe("/automations?scope=local");
+  expect(router.state.location.href).toBe("/memory?scope=local");
   expect(router.state.location.state.desktopSettingsBackground).toBeUndefined();
-  expect(screen.getByText("Automations background")).toBeVisible();
+  expect(screen.getByText("Memory background")).toBeVisible();
 });
 
 it("opens only the exact settings fragment", async () => {
-  await page(createMemoryHistory({ initialEntries: ["/files#settings/appearance"] }));
+  await page(createMemoryHistory({ initialEntries: ["/agents#settings/appearance"] }));
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("textbox", { name: "Settings preference" })).not.toBeInTheDocument();
 });
 
 it("preserves the packaged MyGo route and search when closing a settings deep link", async () => {
-  const search = new URLSearchParams({ rootId: "work", path: "src/设计 & notes", offset: "100" });
-  window.history.replaceState({}, "", `/index.html#/files?${search}#settings`);
+  const search = new URLSearchParams({ spaceId: "work", agentId: "src/设计 & notes" });
+  window.history.replaceState({}, "", `/index.html#/agents?${search}#settings`);
   try {
     const router = await page(createHashHistory());
     await screen.findByRole("dialog", { name: "Settings" });
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(router.state.location.pathname).toBe("/files");
+    expect(router.state.location.pathname).toBe("/agents");
     expect(router.state.location.search).toMatchObject({
-      rootId: "work",
-      path: "src/设计 & notes",
-      offset: 100,
+      spaceId: "work",
+      agentId: "src/设计 & notes",
     });
     expect(window.location.pathname).toBe("/index.html");
-    expect(window.location.hash).toMatch(/^#\/files\?/);
+    expect(window.location.hash).toMatch(/^#\/agents\?/);
     expect(window.location.hash).not.toContain("#settings");
   } finally {
     window.history.replaceState({}, "", "/");

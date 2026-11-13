@@ -1,15 +1,10 @@
 import { useTranslations } from "../../i18n.js";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
-import { DeviceSettings } from "@raypx/tasks/client";
 
-import { RemoteBoundary } from "../auth/components/remote-boundary.js";
-import { authClient } from "../auth/client.js";
 import { getBridge, isDesktop } from "../../lib/desktop.js";
 import { useState } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
-import { AgentSettings } from "../tasks/settings.js";
-import { taskClient } from "../tasks/client.js";
 
 export default function SettingsContent() {
   const t = useTranslations("settings");
@@ -19,12 +14,10 @@ export default function SettingsContent() {
         <AppearanceSettings />
         <LanguageSettings />
       </section>
-      <AgentSettings />
       <SessionRecovery />
       <div className="border-b border-border">
         <AnalyticsSettings />
       </div>
-      <ConnectedDevicesSettings />
     </>
   );
 }
@@ -47,18 +40,5 @@ function SessionRecovery() {
         {t("recoverSignIn")}
       </Button>
     </section>
-  );
-}
-
-function ConnectedDevicesSettings() {
-  const session = authClient.useSession();
-  if (!session.isPending && !session.error && session.data?.user.id) {
-    return <DeviceSettings client={taskClient} accountId={session.data.user.id} />;
-  }
-  if (isDesktop()) return null;
-  return (
-    <RemoteBoundary>
-      {(accountId) => <DeviceSettings client={taskClient} accountId={accountId} />}
-    </RemoteBoundary>
   );
 }

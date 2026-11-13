@@ -7,7 +7,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 
 import { useDesktopPlatform } from "../../lib/platform-context.js";
 import { analytics } from "../analytics/client.js";
-import { signOutDesktopHost } from "../tasks/host-session.js";
+import { signOutDesktopHost } from "./host-session.js";
 import { authClient, webUrl } from "./client.js";
 
 interface SignOutState {

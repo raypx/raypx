@@ -6,7 +6,8 @@ Root is platform-neutral for Native preference validation. Browser entries never
 read application environment variables. Web/Desktop inject configuration and stores.
 Consent starts disabled, is device-local and is not an account preference. No prompts,
 task IDs, outputs, answers, filesystem paths, URLs or account profile attributes.
-Task mutation decorators report accepted/failed attempts, not final execution status.
+Page observations describe current Agents, Memory, account and authentication screens.
+Retired task/scope/approval mutation decorators are removed with their clients.
 Do not depend on auth, tasks or native implementations. SDK loading stays deferred.
 Consumers import /client/styles.css to include shared settings in Tailwind scanning.
 `/client/application` combines consent restoration, the error boundary and page
@@ -19,6 +20,5 @@ Tests live beside source; consent UI/browser storage suites use the
 ## Catalog ownership
 
 Own `analytics` in `locales/<language>/`, with handwritten language entries
-and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
-JSON nested strings, one format per namespace/language. Bind private translation
+and pure `/messages/en` and `/messages/zh` exports. Use JSON nested strings for every language and namespace. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.

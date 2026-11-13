@@ -10,7 +10,7 @@ import { desktopReturnTo } from "../return-to.js";
 function authLinkLocation(to: AuthFormLinkProps["to"], returnTo: string) {
   if (to === "account") return { to: returnTo };
   const destination = `/${to}` as const;
-  if (returnTo === "/") return { to: destination };
+  if (returnTo === "/agents") return { to: destination };
   return { to: destination, search: { returnTo } };
 }
 

@@ -2,7 +2,9 @@
 
 ## Purpose
 
-The browser/native-safe remote API SDK.
+The browser/native-safe remote API SDK. New Agents clients consume `/api`; the
+retained device-task `/tasks` entry has only runtime acceptance consumers after phase 1
+client removal and records its later removal through `raypx.entryConsumers`.
 
 ## Interface
 
@@ -22,7 +24,7 @@ outgoing responses to that signal. Stop also cancels the retry lifetime.
 types from `@raypx/contracts/tasks` directly; the client does not re-export them.
 Task mutations use the relay; HTTP reads retain
 the existing projection contracts. Relay traffic contains no credentials in URLs.
-Task subscriptions carry typed device/event/reset changes. Relay requires v4 for
+Task subscriptions carry typed device/event/reset changes. Relay requires v5 for
 managed tasks and observed requests. Unsupported versions stop with UPGRADE_REQUIRED;
 there is no downgrade or missing-procedure fallback. New account attachment explicitly
 restarts a rejected connection after the server is upgraded.

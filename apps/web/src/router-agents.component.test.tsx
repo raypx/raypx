@@ -1,12 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { expect, it } from "vitest";
 import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
-
-const agents = vi.hoisted(() => ({ spaces: vi.fn(async () => []) }));
-vi.mock("./features/agents/client.js", () => ({
-  agentsClient: { spaces: { list: agents.spaces } },
-}));
-beforeEach(() => agents.spaces.mockClear());
 
 it("redirects guests before private reads and preserves the validated conversation destination", async () => {
   const destination =
@@ -14,7 +8,7 @@ it("redirects guests before private reads and preserves the validated conversati
   const router = await page(destination);
   await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
   expect(router.state.location.search).toMatchObject({ returnTo: destination });
-  expect(agents.spaces).not.toHaveBeenCalled();
+  expect(mocks.agentsSpaces).not.toHaveBeenCalled();
 });
 
 it("mounts the shared Agent workspace for a confirmed member without a deployment permission", async () => {
@@ -23,8 +17,11 @@ it("mounts the shared Agent workspace for a confirmed member without a deploymen
   expect(await screen.findByRole("heading", { name: "Agents", level: 1 })).toBeVisible();
   expect(screen.getAllByRole("heading", { name: "Agents" })).toHaveLength(1);
   expect(screen.getByRole("main").firstElementChild?.className).toContain("h-full");
-  await waitFor(() => expect(agents.spaces).toHaveBeenCalledOnce());
-  expect(screen.getByRole("link", { name: "Projects" })).toBeVisible();
+  await waitFor(() => expect(mocks.agentsSpaces).toHaveBeenCalledOnce());
+  expect(screen.queryByRole("link", { name: "Projects" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Waiting" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "New session" })).toBeNull();
   expect(screen.getByRole("link", { name: "Agents" })).toBeVisible();
 });
 
@@ -33,5 +30,5 @@ it("does not mount private conversation reads while the session is unavailable",
   mocks.loadAccount.mockResolvedValue({ status: "unavailable" });
   await page("/agents");
   expect(await screen.findByRole("alert")).toBeVisible();
-  expect(agents.spaces).not.toHaveBeenCalled();
+  expect(mocks.agentsSpaces).not.toHaveBeenCalled();
 });

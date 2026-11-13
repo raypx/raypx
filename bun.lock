@@ -123,19 +123,14 @@
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
         "@raypx/instances": "workspace:*",
-        "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/runtime-node": "workspace:*",
-        "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-start": "catalog:",
-        "@xterm/addon-fit": "catalog:",
-        "@xterm/xterm": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
-        "zustand": "catalog:",
       },
       "devDependencies": {
         "@hona/strobe": "catalog:dev",
@@ -143,6 +138,7 @@
         "@raypx/dev-cli": "workspace:*",
         "@raypx/devtools": "workspace:*",
         "@raypx/e2e": "workspace:*",
+        "@raypx/tasks": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",
@@ -241,9 +237,7 @@
         "@raypx/i18n": "workspace:*",
         "@raypx/icons": "workspace:*",
         "@raypx/instances": "workspace:*",
-        "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
-        "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-router": "catalog:",
@@ -399,7 +393,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx-kit/analytics": "catalog:",
-        "@raypx/client": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/ui": "workspace:*",
       },
@@ -2368,10 +2361,6 @@
     "@webcontainer/env": ["@webcontainer/env@1.1.1", "", {}, "sha512-6aN99yL695Hi9SuIk1oC88l9o0gmxL1nGWWQ/kNy81HigJ0FoaoTXpytCj6ItzgyCEwA9kF1wixsTuv5cjsgng=="],
 
     "@xmldom/xmldom": ["@xmldom/xmldom@0.8.15", "", {}, "sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA=="],
-
-    "@xterm/addon-fit": ["@xterm/addon-fit@0.11.0", "", {}, "sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g=="],
-
-    "@xterm/xterm": ["@xterm/xterm@6.0.0", "", {}, "sha512-TQwDdQGtwwDt+2cgKDLn0IRaSxYu1tSUjgKarSDkUM0ZNiSRXFpjxEsvc/Zgc5kq5omJ+V0a8/kIM2WD3sMOYg=="],
 
     "@yuku-core/binding-android-arm64": ["@yuku-core/binding-android-arm64@0.19.0", "", { "os": "android", "cpu": "arm64" }, "sha512-wdL2XmTiZixAOaHk9Z0JJZ8u9Qm8d333Zjpc6gaxXFX+UR5BlsfxZ7a2+2Rm71pamppsPYGUGFq2oVLbh6DISw=="],
 

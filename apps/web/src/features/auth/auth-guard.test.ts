@@ -14,11 +14,11 @@ function guard(pathname: string, searchStr = "", queryClient = new QueryClient()
   return authPageGuard({ context: { queryClient }, location: { pathname, searchStr } });
 }
 it.each(["/login", "/signup", "/LOGIN/"])(
-  "redirects a confirmed account from %s to projects",
+  "redirects a confirmed account from %s to Agents",
   async (path) => {
     load.mockResolvedValue(account);
     await expect(guard(path)).rejects.toMatchObject({
-      options: { to: "/projects", replace: true },
+      options: { to: "/agents", replace: true },
     });
   },
 );
@@ -48,12 +48,15 @@ it.each(["?oauth=success", "?error=access_denied"])(
     expect(load).not.toHaveBeenCalled();
   },
 );
-it("defers a signed-in guest draft handoff to client completion", async () => {
-  load.mockResolvedValue(account);
-  expect(await guard("/login", "?returnTo=%2Ftasks%3FguestDraft%3Dnonce")).toEqual({
-    completeSignIn: true,
-  });
-});
+it.each(["/projects", "/tasks", "/approvals", "/automations"])(
+  "rejects retired destination %s",
+  async (path) => {
+    load.mockResolvedValue(account);
+    await expect(guard("/login", `?returnTo=${encodeURIComponent(path)}`)).rejects.toMatchObject({
+      options: { to: "/" },
+    });
+  },
+);
 it.each(["signed-out", "unavailable"])("does not redirect a %s account", async (status) => {
   load.mockResolvedValue({ status });
   expect(await guard("/login")).toEqual({ completeSignIn: false });

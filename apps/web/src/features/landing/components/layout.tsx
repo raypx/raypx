@@ -28,7 +28,7 @@ export function LandingLayout() {
           {[
             ["#workflow", t("howTitle")],
             ["#workspace", c("workspace")],
-            ["#computers", c("connectedComputers")],
+            ["#computers", t("nextTitle")],
           ].map(([href, label]) => (
             <a key={href} href={href} className={buttonVariants({ variant: "ghost", size: "sm" })}>
               {label}

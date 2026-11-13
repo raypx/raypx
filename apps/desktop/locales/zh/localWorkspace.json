@@ -1,23 +1,4 @@
 {
-  "localMode": "本机工作区",
-  "welcome": "从这台电脑开始",
-  "welcomeHint": "选择本地项目并检查 Agent，然后编写第一条消息。",
-  "ownershipHint": "本地会话和草稿始终留在本机，登录或退出不会迁移、上传或停止它们。",
-  "remoteSignIn": "登录以使用远程功能",
-  "remoteSignInHint": "登录后可使用远程功能；已注册的本地工具可离线使用。",
-  "getStarted": "打开入门引导",
-  "chooseProject": "授权项目文件夹",
-  "projectMissing": "本机已无法访问此项目。",
-  "chooseAnotherProject": "授权其他文件夹",
-  "authorizing": "正在授权…",
-  "projectHint": "仅授权本机访问。",
-  "checkAgent": "检查 Claude Code 或 Codex",
-  "agentHint": "安装并登录 Claude Code 或 Codex。",
-  "agentUnavailable": "暂时无法读取 Agent 状态，请重新检查。",
-  "checkAgain": "重新检查 Agent",
-  "firstTask": "编写第一条消息",
-  "firstTaskHint": "发送前不会执行。",
-  "writeTask": "编写消息",
-  "exploreLocal": "先体验本地终端",
-  "remoteLater": "稍后配置远程访问"
+  "remoteSignIn": "登录以继续",
+  "remoteSignInHint": "登录后即可访问你的 Agent 和对话。"
 }

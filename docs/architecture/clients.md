@@ -17,8 +17,12 @@ contracts. A workflow works on every client or degrades for a stated reason.
 
 `@raypx/agents/model` owns Space/Agent page selection, the conversation projection,
 the applied cursor and injected read, command, stream and draft ports.
-`@raypx/agents/client` adapts them to React for the additive `/agents` routes in
-Web and Desktop. Project, session, task and automation pages remain available.
+`@raypx/agents/client` adapts them to React for `/agents`, the signed-in home in
+Web and Desktop. Project/session pages, Waiting, New session and guest task drafts
+are removed, together with dependent Automations and Desktop project tools.
+Account/security, administration/configuration, authentication, public Web pages,
+device preferences and the standalone earlier Memory library remain. That Memory
+is device/account-owned; phase 1 replies do not recall it.
 The Space picker appears after a second Space exists; a labelled New Space action
 is always available. Agent forms use the backend's offered model names and show
 an explicit unavailable state when that catalog is empty.

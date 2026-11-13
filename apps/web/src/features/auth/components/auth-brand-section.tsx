@@ -2,7 +2,6 @@ import { useTranslations } from "../../../i18n.js";
 import { CodeFolderIcon } from "@raypx/icons/code-folder";
 import { MonitorIcon } from "@raypx/icons/monitor";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
-import { TerminalWindowIcon } from "@raypx/icons/terminal-window";
 import type { IconComponent } from "@raypx/icons";
 
 import { cn } from "@raypx/ui/lib/utils";
@@ -14,11 +13,11 @@ import { accentGradient } from "../../../components/brand-accent.js";
  * example approval labelled as such; nothing here moves or reads account state.
  */
 export function AuthBrandSection() {
-  const t = useTranslations("auth");
+  const t = useTranslations("guest");
   const features = [
-    { icon: MonitorIcon, text: t("featureLocal") },
-    { icon: ShieldCheckIcon, text: t("featureApprovals") },
-    { icon: CodeFolderIcon, text: t("featureRemote") },
+    { icon: MonitorIcon, text: t("stepSpaceHint") },
+    { icon: ShieldCheckIcon, text: t("stepAgentHint") },
+    { icon: CodeFolderIcon, text: t("stepConversationHint") },
   ] as const;
   return (
     <aside className="relative isolate hidden min-w-0 flex-col justify-center gap-9 overflow-hidden border-l border-border bg-muted/30 p-10 lg:flex">
@@ -34,10 +33,10 @@ export function AuthBrandSection() {
       <div className="flex flex-col gap-3">
         <span aria-hidden="true" className={cn("h-1 w-10 rounded-full", accentGradient)} />
         <h2 className="text-2xl leading-tight font-semibold tracking-tight text-balance">
-          {t("brandTitle")}
+          {t("title")}
         </h2>
         <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
-          {t("brandIntro")}
+          {t("heroSummary")}
         </p>
       </div>
       <ol className="relative flex flex-col gap-3.5">
@@ -49,7 +48,6 @@ export function AuthBrandSection() {
           <FeatureItem key={text} icon={icon} text={text} index={index} />
         ))}
       </ol>
-      <ExampleApproval />
     </aside>
   );
 }
@@ -79,39 +77,5 @@ function FeatureItem({
         {String(index + 1).padStart(2, "0")}
       </span>
     </li>
-  );
-}
-
-function ExampleApproval() {
-  const common = useTranslations("common");
-  const t = useTranslations("guest");
-  return (
-    <div
-      aria-hidden="true"
-      className="relative flex flex-col gap-3 rounded-xl border border-border bg-background/90 p-3.5 shadow-soft backdrop-blur-sm"
-    >
-      <span className="absolute -top-2.5 right-3 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
-        {t("example")}
-      </span>
-      <div className="flex min-w-0 items-center gap-2 text-xs">
-        <span
-          className={cn(
-            "grid size-5 shrink-0 place-items-center rounded-md text-white",
-            accentGradient,
-          )}
-        >
-          <TerminalWindowIcon className="size-3" />
-        </span>
-        <span className="font-medium">Agent</span>
-        <span className="ml-auto truncate text-muted-foreground">{t("previewNeedsYou")}</span>
-      </div>
-      <code className="truncate rounded-md bg-muted px-2.5 py-1.5 text-xs">bun run db:migrate</code>
-      <div className="flex justify-end gap-2 text-xs">
-        <span className="rounded-md border border-border px-2.5 py-1">{common("deny")}</span>
-        <span className="rounded-md bg-foreground px-2.5 py-1 text-background">
-          {t("exampleApprove")}
-        </span>
-      </div>
-    </div>
   );
 }

@@ -22,16 +22,10 @@ describe("Desktop shell pages", () => {
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
       ),
     ).toEqual({
-      "/": { title: "common.projects", layout: "workbench" },
-      "/files": { title: "common.files", layout: "tool" },
+      "/": undefined,
       "/account": { title: "common.account", layout: "document" },
       "/agents": { title: "agents.title", layout: "tool" },
-      "/approvals": { title: "common.approvals", layout: "workbench" },
-      "/automations": { title: "common.jobs", layout: "workbench" },
       "/memory": { title: "memory.title", layout: "workbench" },
-      "/tasks": { title: "common.tasks", layout: "workbench" },
-      "/terminal": { title: "common.terminal", layout: "tool" },
-      "/welcome": { title: "localWorkspace.welcome", layout: "document" },
     });
   });
 });

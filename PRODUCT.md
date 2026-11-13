@@ -6,70 +6,139 @@
 
 web
 
-The Desktop renderer uses the web UI stack. Desktop and CLI are the primary surfaces for local Pi sessions. Browser Web provides optional remote access for supported workflows, including from phones.
+Web and the Desktop renderer share the Agents workspace. Web serves desktop and
+phone browsers. Desktop uses the MyGo host and the bundled Bun CLI/daemon; reducing
+that daemon to a device connector is later roadmap work. Mobile currently provides
+an account and sign-in baseline.
 
 ## Users
 
-Individual developers who use an agent to inspect and change projects on their own computer. Each local profile has one Owner and one execution Host. A first sign-in binds the local instance to one account and server origin. Registered instances continue offline without an active account session.
+People who want a persistent Agent with one continuing conversation, available
+from every signed-in device. A Space keeps work apart and is the authorization
+boundary. Phase 1 serves an account's private Space and additional Spaces it
+creates; invitations, membership management and shared group conversations come
+later. Existing developer-oriented CLI tools remain during the transition.
 
 ## Product Purpose
 
-Raypx is a personal workbench for running Pi in local projects. The primary flow is to open an authorized project, choose a model, start or continue a Pi session, respond to approval requests, and inspect the result. A project represents one authorized directory on one computer. Desktop restores the most recent valid local project or guides the person through directory authorization, Agent detection and their first message. Opening a page or restoring a draft never starts execution. Web opens authorized remote projects after login; account details have their own page.
+Raypx is the home for persistent Agents. The target Agent has an identity,
+instructions, a model choice, memory, routines and a computer, and can keep working
+while the person is away. Phase 1 delivers the conversation: sign in, open Agents,
+choose a Space, create or select an Agent, send a message and follow its streamed
+reply in the same conversation on Web or Desktop. Opening a page or restoring a
+draft never sends a message.
 
 ## Positioning
 
-Pi is the primary agent for new capabilities. Prioritize model setup, controlled project tools, review of project changes and durable session continuation on Desktop and CLI. Claude and Codex support local and opted-in remote workflows. See the [product roadmap](docs/roadmap.md) for delivery order.
+PostgreSQL is the one authority for Agents, conversations, Runs and events. Clients
+express intent and render the backend's state. Pi runs inside the backend for
+phase 1 replies; it uses deployment-configured models and credentials. The target
+keeps the Agent runtime and credentials outside computers and uses provider-neutral
+ports for optional services. See the [architecture](docs/architecture/README.md)
+and [roadmap](docs/roadmap.md).
 
-The device owns Pi execution and local history. Model requests go to the endpoint selected for the Run. Device-owned tasks and drafts are never uploaded to Raypx automatically, including when remote access is enabled. The account registers the instance and separately connects computers and remote approvals. Registration uploads only device identity metadata.
+Conversation content is stored on the server. A self-hosted deployment keeps that
+content under the operator's control. The earlier device-owned runtime remains in
+the repository, but does not own the new conversations and is not an offline mode
+for them. No earlier profile data is imported.
 
 ## Operating Context
 
-Web runs in desktop and phone browsers. Desktop targets macOS 13.5+ and Windows through a system web view and the bundled CLI. Linux keeps the CLI without a claim of complete Desktop acceptance. People authorize local directories, run Cron automations and terminals, and run local or opted-in remote Claude and Codex tasks. Device-owned Pi tasks run through Desktop and the public task CLI. Remote Agent tasks and approvals synchronize between Web and opted-in hosts. The local setup guide authorizes a project, checks installed agent capabilities, and opens the task editor without starting work.
+Signed-in Web and Desktop open `/agents` by default, retaining validated return
+destinations for account and administration flows. Web keeps the public landing and
+legal pages. Account and security settings, deployment administration and the
+configuration center remain available. Theme and English/Chinese language choices
+are device preferences.
+
+Desktop targets macOS 13.5+ and Windows through WKWebView or WebView2. Linux Desktop
+acceptance remains unverified. The existing native host still launches the bundled
+CLI and handles native session/enrollment boundaries; phase 1 does not replace it.
+Browser renderer checks establish no packaged native-platform result.
 
 ## Capabilities and Constraints
 
-Email and password accounts, verification and reset, theme, English and Chinese, local files, Cron automations, terminals, and local or opted-in remote Claude and Codex tasks are in this release. Local Pi tasks add model selection, device defaults, approved file/command tools and deliberate model changes between Runs. A finished local Pi Run shows read-only project changes from Git snapshots taken before and after it. Local Pi automations start a session from a Cron schedule, a Webhook, authenticated inbound email, a GitHub repository event or a project file change. Missed occurrences are skipped.
+Phase 1 provides Space creation/selection, Agent management with one direct
+Conversation per Agent, member messages, ordered conversation events, snapshots,
+acknowledged reconnect/replay, streamed reply text, committed reply segments,
+queued Runs and explicit stop. Models come from the backend's offered catalog;
+an unavailable model or missing configuration is an explicit state.
 
-Accounts can also sign in with Google or GitHub when the deployment configures them, with a passkey, or with an emailed single-use code. People can link or unlink providers and protect password login with an authenticator app and backup codes. Desktop signs in and renews Host authorization through the system browser, where the person reviews the computer and the active Web account. The CLI keeps instance enrollment. Organization accounts and enterprise SSO are outside this release.
+Replies execute in one API-enabled process. There are no tools, attempts, leases,
+fencing, steering, automatic retries or crash recovery. A second message queues
+another Run. Closing a client does not own or cancel a backend reply, but a backend
+crash can leave work unfinished. Durable execution is phase 2, not a phase 1 claim.
 
-Remote session editors in Web and Desktop can attach UTF-8 text files once an administrator configures object storage. Desktop's offline session path stays device-local. Web can be installed as an app that opens the projects page. Offline, it shows a retry page and keeps no cached data.
+Computers, sandbox tools, approvals/effects, routines, Agent/Space memory, maintained
+Pages, model/app connections, MCP, skills, invitations, group conversations,
+delegation, the device connector and full Mobile workflows are later phases.
+Their target designs do not make them available in the current Agents workspace.
+Retained Memory screens manage the earlier device/account-owned records; they are
+not Agent or Space memory and are not recalled by phase 1 replies. Automations
+screens that linked to removed sessions are removed rather than left broken.
 
-Verified administrators can manage site identity, registration, email delivery, object storage, background cleanup and the fixed member/admin account assignments in Web. The user list supports name and email search. Administrators cannot change their own role. Web has a dedicated administration area with UTC account registration statistics, current-instance dependency status and durable role/configuration audit, including failures and refusals. Audit history is retained indefinitely; missing audit storage blocks management writes.
+Project/session pages, New session, Waiting, the guest task editor and guest draft
+handoff are removed from Web and the Desktop renderer. Desktop's project Files,
+Terminal, onboarding and old execution settings are also removed from the renderer.
+The CLI/daemon, local SQLite stores, native Go functionality, device projection
+APIs and related server contracts remain pending their owning replacement phases.
+Development guides still describe that retained code.
 
-Guests can browse, change preferences, and prepare session drafts. Local projects, sessions, requests and tools require first-time instance registration. After registration they remain usable offline and after online logout. Remote history, computer connections, execution and approvals require login. After login, return to the original page and restore drafts without sending them. Local runtime state and device preferences survive logout.
+Accounts retain password sign-in, verification/reset, passkeys, email codes,
+optional Google/GitHub providers, provider linking and authenticator security.
+Desktop signs in through the system browser. Administrators retain site identity,
+registration, email, object storage, cleanup, account roles and audited management.
+A deployment administrator role grants no Space access without membership.
 
-New Desktop local tasks and drafts belong to the current device workspace across login and logout. Another account or server origin cannot take over that profile. Old account-owned local workspaces and automatic data migration are unsupported. Memory and task templates have explicit device or account ownership and immutable versions. Tasks use only user-selected references and keep their captured context after later edits.
+Guests can browse public pages and change device preferences. Conversations require
+a reachable server and an online account session. Unsent drafts and unconfirmed
+send receipts stay on the device, isolated by server origin, account, Space and
+conversation. Restoring text or retrying a failed Run only restores editing state;
+a new Send is explicit. Preferences and retained CLI profiles survive logout.
+Another account or server origin cannot take over an existing device profile.
 
-macOS and Windows Desktop checks for active Agent tasks on Quit. The user can keep them running in the independent CLI daemon, stop the checked tasks and exit, or cancel quitting. Explicit logout or revoke cancels affected remote work and preserves device-owned tasks. Stopping the daemon cancels owned work. Recovery after a host or OS restart is a separate capability.
+Bun and TypeScript own the CLI, application features and contracts. MyGo uses Go
+1.27.3; packaged Desktop users do not install Bun. Deterministic tests run offline;
+live model, PostgreSQL, browser and packaged native acceptance are separate gates.
+Never claim an unrun platform passed.
 
-macOS can install Claude and Codex terminal hooks. Per-project Away mode forwards validated Bash approvals to a registered local Desktop without an active online session. The visible, unminimized Desktop holds a 15-second approval lease. Hidden, minimized, or Quit releases it. Cloud terminal sharing needs a separate explicit project scope inside the local scope. A qualified cloud channel can continue while Desktop is closed. Timeout or unavailability returns control to the terminal. This release does not support simultaneous native-terminal answers. Terminal outputs and full session streams are not synchronized. This remains a plaintext private test feature until content protection is complete.
+Billing/seats, SCIM/enterprise SSO, a public plugin marketplace, messaging channels,
+voice and a visual workflow builder are not planned. Additional providers and
+other capabilities require a concrete workflow and decision.
 
-The CLI, application features, and shared contracts use Bun and TypeScript. Desktop uses a MyGo policy host and system WKWebView or WebView2. Native development and packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
-
-Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, the complete native mobile workbench, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. This document describes the earlier device-owned product that the code on this branch still implements. The [target architecture](docs/architecture/README.md) replaces it phase by phase. The Expo Mobile workspace currently implements the account/login baseline. Shared packages are added only when a real consumer needs them.
-
-Show real execution, permission failures, and retry state. Never fabricate data.
+Show real execution, permission failures and retry state. Never fabricate data.
 
 ## Brand Commitments
 
-The product name is Raypx. Keep the original brand mark and the neutral light and dark visual system.
+The product name is Raypx. Keep the original brand mark and the neutral light and
+dark visual system. Public-page decoration may use the scoped logo palette in
+DESIGN.md; the workbench stays neutral.
 
 ## Evidence on Hand
 
-The working Web and Desktop interfaces, their copy, and the original logo are in this repository. There are no testimonials, case studies, press mentions, or pricing claims to reuse. Do not invent them.
+The Web and Desktop implementations, their copy and the original logo are in this
+repository. Tests and fixtures are evidence only for the checks actually run.
+There are no testimonials, case studies, press mentions or pricing claims to reuse.
+Do not invent them or present illustrative content as real customer activity.
 
 ## Product Principles
 
-- Organize work by project and describe Agent work records as sessions in the interface. Existing execution and parent/child continuation semantics remain unchanged.
-- An execution target includes ownership scope, computer and project. Missing authorization or an offline computer is an explicit state, never a reason to switch directories.
-- Keep unsent text and selected reference revisions isolated by project and owner. List pagination filters the project before limiting records.
-- Project tools default to that authorized directory. General references are explicitly labelled; unassigned automations remain available in global management.
-- Register each local instance once. Keep its signed identity and local history through logout; permit offline work. Remote data and Host grants require a separate online session. Instance revocation blocks and cancels local execution after a successful sync.
-- Device-owned work stays on the device. Nothing local is uploaded automatically.
-- Show real execution, failures, and retry state. Never fabricate data.
-- Tasks keep the references and context the user selected. Later edits do not rewrite that capture.
-- Add a shared package only when a real consumer needs it.
+- Organize the signed-in product around Agents and their one continuing conversation.
+- Treat a Space as the authorization boundary. Context is never permission;
+  resources never cross Spaces implicitly.
+- Keep PostgreSQL as the one authority. Clients express intent; the backend owns
+  authorization, validation and execution. Label later capabilities as future work.
+- Keep the Agent runtime and credentials outside computers. A granted device has
+  the user's OS permissions and is not sandbox isolation.
+- Keep drafts scoped to server origin, account, Space and conversation. Restoration
+  never starts work, and an uncertain send retains its idempotency identity.
+- Show real execution, failures and retry state. Never fabricate data or imply
+  exactly-once external effects.
+- Preserve the retained device runtime's security boundaries until its replacement
+  phase. Do not upload or import its history automatically.
+- Add a shared package only when an established responsibility and consumer need it.
 
 ## Accessibility & Inclusion
 
-English and Chinese are both first-class. Web layouts must remain usable in phone browsers, with long copy in either language.
+English and Chinese are both first-class. Keep phone browsers, long copy in either
+language, keyboard navigation, visible focus, accessible labels, touch targets and
+reduced motion usable in the shared Web/Desktop interface.

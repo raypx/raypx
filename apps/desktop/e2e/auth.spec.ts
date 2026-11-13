@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 import { authResponse, capture, desktop, test } from "@raypx/e2e/testing";
 
 const authPages = [
-  ["login", "/login?returnTo=%2Ftasks%3Fscope%3Dremote"],
+  ["login", "/login?returnTo=%2Fagents"],
   ["signup", "/signup"],
   ["forgot-password", "/forgot-password"],
   ["reset-password", "/reset-password?token=browser-fixture-only"],
@@ -79,13 +79,13 @@ test(
   "Desktop browser sign-in follows language changes and returns to the workspace",
   { tag: "@desktop" },
   async ({ page }) => {
-    await page.goto(desktop + "/login?returnTo=%2Ftasks%3Fscope%3Dremote");
+    await page.goto(desktop + "/login?returnTo=%2Fagents");
     await expect(page.getByRole("button", { name: "Sign in with browser" })).toBeVisible();
     await page.getByRole("button", { name: "Language", exact: true }).click();
     await page.getByRole("menuitemradio", { name: "简体中文", exact: true }).click();
     await expect(page.getByRole("button", { name: "在浏览器中登录" })).toBeVisible();
     await page.getByRole("link", { name: "返回工作台", exact: true }).click();
-    await expect(page).toHaveURL(desktop + "/tasks?scope=remote");
+    await expect(page).toHaveURL(desktop + "/login?returnTo=%2Fagents");
   },
 );
 

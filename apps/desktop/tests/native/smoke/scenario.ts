@@ -202,10 +202,8 @@ async function localSessionFixture() {
     "Synthetic shell session did not mount the desktop workspace",
   );
   await navigate("/");
-  const homeTitles = [messages.en, messages.zh].flatMap((locale) => [
-    locale.localWorkspace.welcome,
-    locale.common.files,
-  ]);
+  // Earlier native-tool acceptance awaits replacement with the Agents journey.
+  const homeTitles = ["Start on this computer", "从这台电脑开始", "Files", "文件"];
   await waitFor(
     async () =>
       Boolean(
@@ -723,7 +721,8 @@ try {
     );
     stage = "local renderer terminal";
     await navigate("/terminal");
-    const advancedLabels = [messages.en.terminal.advanced, messages.zh.terminal.advanced];
+    // Earlier terminal acceptance remains a separate, unrun native gate.
+    const advancedLabels = ["Advanced options", "高级选项"];
     await waitFor(
       async () =>
         Boolean(

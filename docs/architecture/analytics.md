@@ -2,7 +2,7 @@
 
 `@raypx-kit/analytics` owns the consent-controlled PostHog client and optional React
 bindings. `@raypx/analytics` owns Raypx event schemas, static surface metadata,
-mutation decorators and shared settings. Application composition roots inject
+shared settings. Application composition roots inject
 configuration, identity and preference stores. API/Native/CLI collection and
 session recording are outside this first integration; evlog remains unchanged.
 
@@ -26,11 +26,11 @@ writes do not enable a new category and leave an explicit retry message.
 ## Events and errors
 
 Explicit events are `app_opened`, `page_viewed`, `sign_in_succeeded`,
-`task_create_result`, `approval_submit_result`, `task_scope_changed` and `query_failed`. `query_failed`
+`query_failed`. `query_failed`
 reports a failed remote read (query family, safe code, API request ID) at most once per
 minute per family, so failures can be matched to the API logs.
-A create result means accepted/failed operation attempts, not completed execution.
-Reads, retries by Query and relay invalidations do not emit mutation results.
+Retired task/scope/approval mutation diagnostics are removed with their clients.
+Page observations include Agents and the retained Memory library.
 Page identifiers and enum properties are projected through an allowlist, both
 before capture and after SDK enrichment. SDK URL/referrer/person enrichment is
 removed. Local tasks contribute only consented operation counters; task IDs,
@@ -86,7 +86,7 @@ from a failed upload or serve hidden maps accidentally.
 
 Kit tests exercise consent, real SDK requests, sanitizer boundaries, StrictMode and
 SSR imports, including packed consumers without React. Raypx tests exercise enum
-policies, preference failures, native persistence and actual mutation callbacks.
+policies, preference failures, native persistence and current page enums.
 Browser tests use a mock ingestion endpoint and synthetic account data; no real
 user information or PostHog project is needed. A real release still needs configured
 PostHog credentials to verify ingestion and original-source resolution in its UI.

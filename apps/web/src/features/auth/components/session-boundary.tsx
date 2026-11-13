@@ -1,13 +1,12 @@
 import { useTranslations } from "../../../i18n.js";
 import type { ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { LockIcon } from "@raypx/icons/lock";
-import { guestReturnTo } from "../../tasks/guest-draft.js";
-import { authClient, apiUrl } from "../client.js";
+import { authClient } from "../client.js";
 import { safeReturnTo } from "../return-to.js";
 
 export function SignInLink({
@@ -19,7 +18,6 @@ export function SignInLink({
   returnTo?: string;
   variant?: "default" | "outline";
 }) {
-  const navigate = useNavigate();
   const current = useLocation({ select: (location) => location.href });
   const c = useTranslations("common");
   return (
@@ -27,15 +25,6 @@ export function SignInLink({
       to="/login"
       search={{ returnTo: safeReturnTo(returnTo ?? current) }}
       className={cn(buttonVariants({ variant }))}
-      onClick={(event) => {
-        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-          return;
-        event.preventDefault();
-        void navigate({
-          to: "/login",
-          search: { returnTo: guestReturnTo(apiUrl, returnTo ?? current) },
-        });
-      }}
     >
       {children ?? c("signIn")}
     </Link>

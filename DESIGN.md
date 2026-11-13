@@ -30,16 +30,17 @@ Reserve `shadow-popover` for floating menus, search results and popovers; static
 do not lift on hover. Use tabular numerals for counts, dates and table measurements.
 The shell owns page widths and gutters: document pages cap at 48rem, workbenches
 at 100rem, and tools fill the content region. Pages do not add outer widths or
-gutters. Sidebar navigation and project shortcuts share a 36px minimum row and
+gutters. Sidebar navigation rows share a 36px minimum height and
 20px icons; touch navigation keeps a 44px minimum.
 
-Desktop opens the most recent valid local project, with project authorization,
-Agent readiness and the first message as its empty state. Web uses a public landing
-page at `/` and opens remote projects at `/projects`; account details live at
-`/account`. Local work remains available before login. Remote actions offer contextual
-sign-in and return to the requested page. Web layouts also serve phone browsers.
-The Expo iOS/Android app requires login by default and opens its account screen
-after authentication. Native task views and push notifications are later work.
+Agents is the signed-in home in Web and Desktop. Web keeps its public landing
+page at `/`; account details live at `/account`. Guests sign in before opening
+conversations; there is no guest task editor or draft handoff. Preserve validated
+return destinations for account and administration flows. Conversations need a
+reachable server. The earlier CLI/native runtime remains during the transition,
+but the renderer does not restore a local project as its home. Web layouts serve
+phone browsers. Mobile currently provides account/sign-in, with full Agent views
+and notifications later in the roadmap.
 
 Public pages (landing, authentication, privacy) share one header, which gains a surface
 only after scrolling. The landing header adds a compact account avatar with the same
@@ -52,40 +53,35 @@ for glows, gradient marks and selection accents, never for controls or text that
 be read, and may show example interfaces with fixed sample data when each frame is
 labelled as an example. The workbench never uses the logo palette.
 
-The homepage shows a centered hero, a labelled application example with its step tabs
-inside the frame, a three-step overview, workspace links with example interfaces and
-the Desktop-to-Web connection band on first paint. The header links to the lower
-sections on wider screens. Two particle trails behind the hero respond to a mouse
-pointer and feed light along the top of the frame on the same eight-second timeline.
-The connection line carries decorative packets and the example can play its steps.
-These loops pause offscreen and in hidden tabs. Reduced motion leaves static trails
-and hides the travelling lights. The example holds while its content is hovered or a
-step tab has focus, stops when a visitor chooses a step and offers a labelled autoplay
-toggle. Other artwork moves only on hover. Authentication and privacy pages render
-without entrances or loops.
+The homepage shows a centered hero, a labelled static conversation example, a
+three-step Space/Agent/conversation overview, links to available screens and a
+clearly marked later-capabilities section. Its authentication side region uses
+the same phase 1 facts. Do not depict tool approvals or computer execution as
+available in phase 1. Decorative hero trails and frame light may animate on the
+existing timeline, pause offscreen/in hidden tabs and become static with reduced
+motion. Conversation examples do not autoplay. Authentication and legal pages
+render without entrances or loops. Label sample content and never invent usage,
+customer results, testimonials or pricing.
 
-Web puts New session and Search (⌘K / Ctrl K) under the sidebar brand. Desktop puts the
-sidebar toggle, Search and New session in the window title bar, clear of the native
-window buttons. New session uses the primary button treatment in both frames.
-Both sidebars list Projects, the pending inbox, Automations and Memory,
-then projects with their recent sessions, above one fixed footer row for the account
-and the settings shortcut.
-Each project entry opens its page; a chevron folds its newest conversations (follow-ups
-fold into the session they continue), and only running, waiting or failed sessions show
-a status mark. The command palette searches actions, pages, projects and recent sessions. Use consistent 20px icons with 1.75 strokes, visible keyboard focus and
-labelled tooltips in the collapsed rail; keep pending counts visible. Desktop separates
-local projects, with bounded recent shortcuts and searchable expansion, from connected
-computers, which appear only after sign-in. Guests get a direct sign-in action; the
-account menu manages an existing account only.
+Both sidebars lead to Agents and retain reachable account/security, device
+preferences and permission-filtered administration/configuration. Retained Memory
+views manage the earlier device/account records; do not imply they are Agent/Space
+memory. Remove navigation for features whose required pages are gone. Do not show
+New session, projects, session shortcuts, Waiting or the guest editor. Desktop
+keeps its sidebar toggle and Search clear of native window buttons. Search covers
+available pages and actions; removed workflows never appear as results. Use
+consistent 20px icons with 1.75 strokes, visible keyboard focus and labelled collapsed-rail tooltips.
+Keep one fixed footer for account and settings. Guests get a direct sign-in action;
+the account menu manages an existing account only.
 
-The top bar carries page context through the shell toolbar slots. Project pages show
-the project name and its Sessions, Files, References, Automations and Terminal tabs there;
-the shared segmented navigation shows the active tool. On narrow Web pages it wraps
-onto a separate row and scrolls horizontally if needed. Remote projects expose only
-supported tools. Page actions and scope
-switches sit at the end of the top bar. The session editor consumes the chosen
-computer/project without repeating selectors. A muted editor header and a separate
-Session history heading distinguish composition from the loaded history.
+The shell owns one page title through its toolbar slots. A page may replace that
+title with context, never render the title twice. Actions and scope controls sit at
+the end; long English/Chinese labels truncate or wrap without covering controls.
+At 375px keep the navigation rail and show either the Agent list or the selected
+conversation, with a labelled back action. At 1280px the list and conversation can
+sit side by side. Keep the transcript scrollable and composer reachable without
+horizontal page overflow. Unsent text stays scoped to the selected conversation;
+restoring it never sends. Theme and language remain reachable in either width.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.
@@ -94,8 +90,8 @@ Respect reduced motion, narrow screens, long Chinese/English content and large f
 
 Authentication uses one centered, bordered panel with a 16px radius. Web keeps the
 original logo and theme/language controls in a shared public header. At 1024px and
-above, the panel caps at 60rem and pairs the form with numbered product facts and a
-labelled example approval in a static side region; narrower screens use one column
+above, the panel caps at 60rem and pairs the form with numbered phase 1 product
+facts in a static side region; narrower screens use one column
 and natural document scrolling. The form caps at 25rem. Desktop uses a compact
 single-column panel inside its native title-bar frame, with the return-to-workspace
 action above it. Applications own panel padding; shared Auth owns only field rhythm and
@@ -132,27 +128,21 @@ irreversible actions and privacy disclosures. Icon-only controls use `IconButton
 carries an accessible label and a tooltip. Chinese and English copy stay equally short
 and change together.
 
-Application chrome composes the shadcn Sidebar, with a persistent icon rail on
-narrow screens. Session workspaces show one pane at a time in a reading column: the
-project's persistent composer, drafts and full session history, or the open session with
-a Back to sessions action. Completed sessions lead with the
-result and collapse the process. Overview counts describe the loaded page and switch
-filters in one segmented row; pending answers and running work are distinct. Use
-actual statuses, never synthetic progress. Tool calls show an intent icon, a live or
-final duration and their status; while a session runs with no visible output, one
-quiet working line says so. The Activity disclosure reads as one run: a glyph spine
-of status changes, human requests and tool-call summaries, with the step in flight
-banded. Session statuses share one badge whose
-shape carries the state: a pulsing dot while work runs, a solid dot when an answer
-is needed, a check when completed and an alert on failure. Metadata rows separate
-their items with middle dots. Stack columns on narrow screens and focus the opened
-detail. Charts use thin columns with rounded data ends on one baseline, label only
-the extreme and the latest value, show every value on hover and keep a table view.
+Application chrome composes the shadcn Sidebar with a persistent icon rail on
+narrow screens. Agent conversations show member messages and replies, with stable
+order and reading position as text streams. Enter sends, Shift+Enter inserts a
+newline and IME owns composition. Show queued, running, failed and cancelled states
+accurately, with explicit stop and retry editing. Announce Run lifecycle changes
+without announcing every streamed token. A failed-Run retry restores text for a
+new explicit Send; an uncertain delivery retains its receipt identity.
 
-Terminal requests have a separate section from managed tasks. Load tool inputs only
-on expansion; show waiting, decided, delivered and uncertain outcomes accurately.
-Keep receipt identity on retry, hide expired actions and retain the processed item
-when an answer succeeds. Use explicit project and Away opt-in in Desktop settings.
+Phase 1 has no tools, computers, approval cards or recovery. Do not add ornamental
+activity, fake progress or controls for later capabilities. When those phases
+arrive, chat keeps useful progress and results while tool lifecycle belongs in the
+activity view. Keep failures, unavailable states and uncertain outcomes explicit.
+Charts, where used in administration, use thin columns with rounded data ends on
+one baseline. Label the extremes and latest value, expose every actual value on
+hover and retain a table view.
 
 Web administration has its own /admin shell with Overview, Users, Site settings and
 Audit log. A single console link leaves the personal workspace navigation uncluttered.

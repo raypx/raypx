@@ -18,6 +18,7 @@ Hugeicons Free glyphs, decorative defaults and consistent sizing/stroke behavior
 - Only this package imports Hugeicons. Use the free MIT Stroke Rounded collection.
 - Add a glyph when a real consumer needs it, via a static public glyph subpath import and
   an explicit package export. Keep the factory private and preserve tree shaking.
+- Remove a glyph and its export when its final consumer is removed.
 - This is a browser library. No UI, theme, routing, account or application imports;
   no native renderer or universal entry until an actual consumer needs one.
 - Keep all glyph geometry in the upstream icon data. Do not redraw brand artwork.

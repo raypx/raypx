@@ -16,12 +16,8 @@ import { Route as landingRouteRouteImport } from './routes/(landing)/route'
 import { Route as legalRouteRouteImport } from './routes/(legal)/route'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as appAgentsRouteImport } from './routes/(app)/agents'
-import { Route as appApprovalsRouteImport } from './routes/(app)/approvals'
-import { Route as appAutomationsRouteImport } from './routes/(app)/automations'
 import { Route as appMemoryRouteImport } from './routes/(app)/memory'
-import { Route as appProjectsRouteImport } from './routes/(app)/projects'
 import { Route as appSettingsRouteImport } from './routes/(app)/settings'
-import { Route as appTasksRouteImport } from './routes/(app)/tasks'
 import { Route as authDesktopAuthorizeRouteImport } from './routes/(auth)/desktop-authorize'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
@@ -65,34 +61,14 @@ const appAgentsRoute = appAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => appRouteRoute,
 } as any)
-const appApprovalsRoute = appApprovalsRouteImport.update({
-  id: '/approvals',
-  path: '/approvals',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appAutomationsRoute = appAutomationsRouteImport.update({
-  id: '/automations',
-  path: '/automations',
-  getParentRoute: () => appRouteRoute,
-} as any)
 const appMemoryRoute = appMemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
   getParentRoute: () => appRouteRoute,
 } as any)
-const appProjectsRoute = appProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => appRouteRoute,
-} as any)
 const appSettingsRoute = appSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appTasksRoute = appTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
   getParentRoute: () => appRouteRoute,
 } as any)
 const authDesktopAuthorizeRoute = authDesktopAuthorizeRouteImport.update({
@@ -160,12 +136,8 @@ export interface FileRoutesByFullPath {
   '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/agents': typeof appAgentsRoute
-  '/approvals': typeof appApprovalsRoute
-  '/automations': typeof appAutomationsRoute
   '/memory': typeof appMemoryRoute
-  '/projects': typeof appProjectsRoute
   '/settings': typeof appSettingsRoute
-  '/tasks': typeof appTasksRoute
   '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
@@ -182,12 +154,8 @@ export interface FileRoutesByTo {
   '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/agents': typeof appAgentsRoute
-  '/approvals': typeof appApprovalsRoute
-  '/automations': typeof appAutomationsRoute
   '/memory': typeof appMemoryRoute
-  '/projects': typeof appProjectsRoute
   '/settings': typeof appSettingsRoute
-  '/tasks': typeof appTasksRoute
   '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
@@ -209,12 +177,8 @@ export interface FileRoutesById {
   '/(legal)': typeof legalRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/(app)/agents': typeof appAgentsRoute
-  '/(app)/approvals': typeof appApprovalsRoute
-  '/(app)/automations': typeof appAutomationsRoute
   '/(app)/memory': typeof appMemoryRoute
-  '/(app)/projects': typeof appProjectsRoute
   '/(app)/settings': typeof appSettingsRoute
-  '/(app)/tasks': typeof appTasksRoute
   '/(auth)/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
@@ -234,12 +198,8 @@ export interface FileRouteTypes {
     | '/'
     | '/health'
     | '/agents'
-    | '/approvals'
-    | '/automations'
     | '/memory'
-    | '/projects'
     | '/settings'
-    | '/tasks'
     | '/desktop-authorize'
     | '/forgot-password'
     | '/login'
@@ -256,12 +216,8 @@ export interface FileRouteTypes {
     | '/'
     | '/health'
     | '/agents'
-    | '/approvals'
-    | '/automations'
     | '/memory'
-    | '/projects'
     | '/settings'
-    | '/tasks'
     | '/desktop-authorize'
     | '/forgot-password'
     | '/login'
@@ -282,12 +238,8 @@ export interface FileRouteTypes {
     | '/(legal)'
     | '/health'
     | '/(app)/agents'
-    | '/(app)/approvals'
-    | '/(app)/automations'
     | '/(app)/memory'
-    | '/(app)/projects'
     | '/(app)/settings'
-    | '/(app)/tasks'
     | '/(auth)/desktop-authorize'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
@@ -362,20 +314,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAgentsRouteImport
       parentRoute: typeof appRouteRoute
     }
-    '/(app)/approvals': {
-      id: '/(app)/approvals'
-      path: '/approvals'
-      fullPath: '/approvals'
-      preLoaderRoute: typeof appApprovalsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/automations': {
-      id: '/(app)/automations'
-      path: '/automations'
-      fullPath: '/automations'
-      preLoaderRoute: typeof appAutomationsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
     '/(app)/memory': {
       id: '/(app)/memory'
       path: '/memory'
@@ -383,25 +321,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appMemoryRouteImport
       parentRoute: typeof appRouteRoute
     }
-    '/(app)/projects': {
-      id: '/(app)/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof appProjectsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
     '/(app)/settings': {
       id: '/(app)/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof appSettingsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/tasks': {
-      id: '/(app)/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof appTasksRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(auth)/desktop-authorize': {
@@ -511,22 +435,14 @@ const adminRouteRouteWithChildren = adminRouteRoute._addFileChildren(
 
 interface appRouteRouteChildren {
   appAgentsRoute: typeof appAgentsRoute
-  appApprovalsRoute: typeof appApprovalsRoute
-  appAutomationsRoute: typeof appAutomationsRoute
   appMemoryRoute: typeof appMemoryRoute
-  appProjectsRoute: typeof appProjectsRoute
   appSettingsRoute: typeof appSettingsRoute
-  appTasksRoute: typeof appTasksRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appAgentsRoute: appAgentsRoute,
-  appApprovalsRoute: appApprovalsRoute,
-  appAutomationsRoute: appAutomationsRoute,
   appMemoryRoute: appMemoryRoute,
-  appProjectsRoute: appProjectsRoute,
   appSettingsRoute: appSettingsRoute,
-  appTasksRoute: appTasksRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(

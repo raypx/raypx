@@ -35,12 +35,8 @@ type PageTitle =
   | "dash.nav.audit"
   | "common.users"
   | "site.title"
-  | "common.approvals"
   | "common.home"
-  | "common.projects"
-  | "common.jobs"
   | "common.settings"
-  | "common.tasks"
   | "memory.title";
 
 declare module "@tanstack/react-router" {

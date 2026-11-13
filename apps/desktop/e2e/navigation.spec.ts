@@ -1,20 +1,20 @@
 import { registerTests } from "@raypx/e2e/journeys/navigation";
-import { desktop, test } from "@raypx/e2e/testing";
+import { desktop, test, signedInAccount } from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
 
 registerTests();
 
 test("keeps window commands clear of native title bar insets", async ({ page }) => {
+  await signedInAccount(page);
   await page.setViewportSize({ width: 800, height: 620 });
   await page.goto(`${desktop}/`);
   const header = page.getByRole("banner");
   const sidebar = page.getByRole("complementary");
   const collapse = header.getByRole("button", { name: "Collapse sidebar" });
   const search = header.getByRole("button", { name: "Search", exact: true });
-  const newSession = header.getByRole("link", { name: "New session", exact: true });
   await expect(collapse).toBeVisible();
   await expect(search).toBeVisible();
-  await expect(newSession).toHaveAttribute("href", /[?&]compose=true/);
+  await expect(header.getByRole("link", { name: "New session", exact: true })).toHaveCount(0);
 
   // The browser preview can check layout against MyGo's CSS inputs.
   for (const insets of [

@@ -13,7 +13,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 
 import { authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
-import { taskClient } from "../features/tasks/client.js";
+import { accountClient } from "../features/auth/account-client.js";
 
 export const Route = createFileRoute("/account")({
   staticData: { page: { title: "common.account", layout: "document" } },
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/account")({
       });
       if (session.error) return { status: "unavailable" } as const;
       return session.data
-        ? readAccount(taskClient, { signal: abortController.signal })
+        ? readAccount(accountClient, { signal: abortController.signal })
         : ({ status: "signed-out" } as const);
     } catch {
       return { status: "unavailable" } as const;

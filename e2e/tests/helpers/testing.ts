@@ -3,11 +3,9 @@ export { web, desktop } from "./surfaces.js";
 export {
   accountAccessFixture,
   authResponse,
-  connectedProject,
   signedInAccount,
   webShellFixture,
 } from "./account-fixture.js";
 export { preferencesPersist } from "./preferences.js";
 export { capture } from "./capture.js";
 export { selectOption } from "./select.js";
-export { expectPrivatePages } from "./access.js";

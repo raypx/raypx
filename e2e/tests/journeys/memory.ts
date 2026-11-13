@@ -3,71 +3,24 @@ import { expect } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.js";
 
 import type { ContextDocument, ContextDocumentInput, ContextVersion } from "@raypx/core/memory";
-import type { RelayClientFrame } from "@raypx/contracts/tasks";
-import type { AgentTask } from "@raypx/core/tasks";
 import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
 import { selectOption } from "../helpers/select.js";
 
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {
   test(
-    `versions a template and preserves its captured task context`,
+    `creates, versions, restores and deletes a standalone reference`,
     { tag: "@smoke" },
     async ({ page, surface, base }) => {
       const memoryPath = surface === "Desktop" ? "/memory?scope=account" : "/memory";
       if (surface === "Web") await webShellFixture(page);
       await signedInAccount(page);
-      const deviceId = crypto.randomUUID(),
-        projectId = crypto.randomUUID(),
-        time = new Date().toISOString();
-      const tasksPath =
-        "/tasks?" +
-        new URLSearchParams({
-          ...(surface === "Desktop" ? { scope: "remote" } : {}),
-          device: deviceId,
-          project: projectId,
-        });
+      const time = new Date().toISOString();
       const original = "Run the project tests and explain the result.";
-      let document: ContextDocument | undefined, task: AgentTask | undefined;
+      let document: ContextDocument | undefined;
       const versions: ContextVersion[] = [];
-      let submitted: Extract<RelayClientFrame, { type: "request" }> | undefined;
       const remember = (reason: ContextVersion["reason"], restoredFrom?: number) =>
         versions.unshift({ ...document!, reason, ...(restoredFrom ? { restoredFrom } : {}) });
-      await page.route("**/rpc/devices/list", (route) =>
-        authResponse(route, {
-          json: [
-            {
-              id: deviceId,
-              name: "Context workstation",
-              platform: "darwin",
-              appVersion: "0.1.0",
-              epoch: 1,
-              revoked: false,
-              online: true,
-              lastSeenAt: time,
-              projects: [
-                { id: projectId, name: "Context project", dirty: false, providers: ["codex"] },
-              ],
-              capabilities: [
-                {
-                  provider: "codex",
-                  available: true,
-                  reason: "ready",
-                  version: "fixture",
-                  definition: {
-                    version: 1 as const,
-                    runtime: "process" as const,
-                    modes: ["plan" as const, "run" as const],
-                    approvals: true,
-                    modelSelection: false,
-                  },
-                  inputModes: ["steer" as const, "queue" as const],
-                },
-              ],
-            },
-          ],
-        }),
-      );
       await page.route("**/rpc/memory/list", (route) =>
         authResponse(route, { json: document ? [document] : [] }),
       );
@@ -135,60 +88,6 @@ export function registerTests() {
         versions.splice(0);
         return authResponse(route, { json: { deleted: true } });
       });
-      await page.route("**/rpc/tasks/list", (route) =>
-        authResponse(route, { json: task ? [task] : [] }),
-      );
-      await page.route("**/rpc/tasks/get", (route) =>
-        authResponse(route, { json: { task, events: [], requests: [], activity: [] } }),
-      );
-      await page.route("**/rpc/relay/ticket", (route) =>
-        authResponse(route, {
-          json: { token: "fixture-only", expiresAt: new Date(Date.now() + 60000).toISOString() },
-        }),
-      );
-      await page.routeWebSocket(/\/relay(?:\?|$)/, (socket) =>
-        socket.onMessage((raw) => {
-          const frame = JSON.parse(String(raw)) as RelayClientFrame;
-          if (frame.type === "auth")
-            socket.send(
-              JSON.stringify({
-                type: "ready",
-                role: "viewer",
-                protocolVersion: 5,
-              }),
-            );
-          if (frame.type !== "request" || frame.request.method !== "tasks.create") return;
-          submitted = frame;
-          const { contextSelection, ...input } = frame.request.input;
-          expect(contextSelection).toEqual({ sources: [{ id: document!.id, revision: 3 }] });
-          task = {
-            ...input,
-            parentTaskId: null,
-            status: "succeeded",
-            summary: "Template applied",
-            createdAt: time,
-            updatedAt: time,
-            context: {
-              capturedAt: time,
-              sources: [
-                {
-                  id: document!.id,
-                  revision: 3,
-                  kind: document!.kind,
-                  name: document!.name,
-                  content: document!.content,
-                  scope: "account",
-                  project: document!.project,
-                },
-              ],
-            },
-          };
-          socket.send(
-            JSON.stringify({ type: "result", id: frame.id, result: { ok: true, value: task } }),
-          );
-        }),
-      );
-
       await page.goto(base + memoryPath);
       await page.getByRole("button", { name: "New reference", exact: true }).click();
       await selectOption(
@@ -225,51 +124,13 @@ export function registerTests() {
         fullPage: true,
       });
 
-      await page.goto(base + tasksPath);
-      const composer = page.getByRole("form", { name: "New session", exact: true });
-      if (!(await composer.isVisible()))
-        await page.getByRole("button", { name: "New session", exact: true }).click();
-      if (!(await page.getByRole("combobox", { name: "Agent", exact: true }).isVisible()))
-        await page.getByRole("button", { name: /Session options/ }).click();
-      await selectOption(page, page.getByRole("combobox", { name: "Agent", exact: true }), "codex");
-      await page
-        .getByRole("textbox", { name: "What should the agent do?", exact: true })
-        .fill("Check this repository.");
-      await page.getByRole("button", { name: /Memory and templates \(0\/8\)/ }).click();
-      await page.getByRole("checkbox", { name: /Repository check template/ }).check();
-      await expect(page.getByLabel("Reference and session budget")).toBeVisible();
-      await page
-        .getByRole("textbox", { name: "What should the agent do?", exact: true })
-        .fill("x".repeat(32_000));
-      await expect(
-        composer.getByRole("button", { name: "Send session", exact: true }),
-      ).toBeDisabled();
-      expect(submitted).toBeUndefined();
-      const viewport = page.viewportSize()!;
-      await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
-      await page.getByLabel("Reference and session budget").scrollIntoViewIfNeeded();
-      await capture(page, {
-        path: test.info().outputPath(`${surface.toLowerCase()}-context-budget.png`),
-        fullPage: true,
-      });
-      await page.setViewportSize(viewport);
-      await page
-        .getByRole("textbox", { name: "What should the agent do?", exact: true })
-        .fill("Check this repository.");
-      await composer.getByRole("button", { name: "Send session", exact: true }).click();
-      const snapshot = page.getByRole("region", { name: "Session context", exact: true });
-      await expect(snapshot).toBeVisible();
-      await snapshot.getByRole("button", { name: /Repository check template/ }).click();
-      await expect(snapshot.getByText(original, { exact: true })).toBeVisible();
-      expect(submitted).toBeDefined();
-
       await page.goto(base + memoryPath);
       await page
         .getByRole("button", { name: "Edit: Repository check template", exact: true })
         .click();
       await page
         .getByRole("textbox", { name: "Reference content", exact: true })
-        .fill("Changed after the task was created.");
+        .fill("Keep a newer reference revision.");
       await page.getByRole("button", { name: "Save changes", exact: true }).click();
       await expect.poll(() => document?.revision).toBe(4);
       await page
@@ -300,19 +161,7 @@ export function registerTests() {
           exact: true,
         }),
       ).toHaveCount(0);
-      await page.goto(
-        `${base}${tasksPath}${tasksPath.includes("?") ? "&" : "?"}taskId=${task!.id}`,
-      );
-      const retained = page.getByRole("region", { name: "Session context", exact: true });
-      await retained.getByRole("button", { name: /Repository check template/ }).click();
-      await expect(retained.getByText(original, { exact: true })).toBeVisible();
-      await expect(retained).toContainText("Revision 3");
-      await expect(retained).not.toContainText("Changed after");
-      await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
-      await capture(page, {
-        path: test.info().outputPath(`${surface.toLowerCase()}-task-context.png`),
-        fullPage: true,
-      });
+      await expect(page.getByRole("main")).not.toContainText("Repository check template");
     },
   );
 }

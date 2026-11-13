@@ -61,12 +61,10 @@ vi.mock("./features/auth/client.js", () => ({
     }),
   },
 }));
-vi.mock("./features/tasks/client.js", () => ({
-  taskClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
+vi.mock("./features/auth/account-client.js", () => ({
+  accountClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
 }));
-vi.mock("./features/tasks/host-session.js", () => ({ signOutDesktopHost: mocks.hostSignOut }));
-// The generated tree imports terminal code, but account tests never mount xterm.
-vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));
+vi.mock("./features/auth/host-session.js", () => ({ signOutDesktopHost: mocks.hostSignOut }));
 
 const ada: AccountProfile = { id: "ada", name: "Ada Lovelace", email: "ada@example.test" };
 const grace: AccountProfile = { id: "grace", name: "Grace Hopper", email: "grace@example.test" };

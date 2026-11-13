@@ -1,21 +1,30 @@
 # Architecture
 
-Status: target architecture on the `next` branch. The code on this branch still
-implements the earlier device-owned product. Guides under
-[development](../development/getting-started.md) describe that code until a
-[delivery phase](../roadmap.md) replaces it. The earlier architecture and its
-decision records remain in the history of `canary`.
+Status: target architecture on the `next` branch, delivered in
+[roadmap phases](../roadmap.md). Phase 1 is the signed-in Web/Desktop client home;
+the earlier device runtime remains in the repository. Guides under
+[development](../development/getting-started.md) still describe that retained code.
+The earlier architecture and decision records remain in the history of `canary`.
 
-The additive Phase 1 slices provide Space/member and Agent/Conversation schemas,
-scoped repositories and session-authorized oRPC, followed by member messages,
-ordered conversation logs, snapshots and an acknowledged WebSocket event stream.
-The third slice adds queued backend Runs, Pi model calls, transient reply text,
-committed reply segments and cancellation, using one API-enabled process. Device
-functionality remains in place. The shared Web/Desktop `/agents` workspace now
-provides Space selection, Agent management and streamed conversations; durable
-execution remains pending. See [Spaces](spaces.md#implemented-foundation-slice),
+Phase 1 provides Space/member and Agent/Conversation schemas, scoped repositories,
+session-authorized oRPC, member messages, ordered conversation logs, snapshots and
+an acknowledged WebSocket event stream. Backend Runs provide Pi model calls,
+transient reply text, committed segments and cancellation in one API-enabled
+process. There are no tools, leases, attempts, steering or crash recovery yet.
+
+The shared `/agents` workspace is the signed-in home in Web and Desktop. Project
+and session pages, Waiting, New session and the guest task editor/handoff are
+removed from those clients, along with dependent Automations screens. The retained
+Memory views still manage earlier device/account records, not Agent/Space memory.
+The CLI harness, SQLite profiles, enrollment, native host/channel and remote read
+projections remain until their owning phases replace them. The daemon is not yet
+a device connector. See [Spaces](spaces.md#implemented-foundation-slice),
 [Events](events.md#implemented-conversation-slice) and
 [Execution](execution.md#implemented-phase-1-reply-slice).
+
+The topology and workspace roles below describe the target. Current backend roles
+are still `api|relay|both`, with Redis required for split device roles; no worker or
+supervisor is implied by the phase 1 client closeout.
 
 Raypx is the durable home for persistent Agents. An Agent has an identity, one
 continuing conversation, memory, routines and a computer. It keeps working while

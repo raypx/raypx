@@ -24,18 +24,13 @@ export default defineConfig({
     trace: settings.trace,
     screenshot: "only-on-failure",
   },
-  projects: [
-    ...(["web", "desktop"] as const)
-      .filter((project) => settings.surface === "all" || settings.surface === project)
-      .map((project) => ({
-        name: project,
-        testDir: `../apps/${project}/e2e`,
-        use: { baseURL: project === "web" ? web : desktop },
-      })),
-    ...(process.env.CONTROL_E2E_API_URL && settings.surface === "all"
-      ? [{ name: "control", testMatch: "**/e2e/tests/control.spec.ts" }]
-      : []),
-  ],
+  projects: (["web", "desktop"] as const)
+    .filter((project) => settings.surface === "all" || settings.surface === project)
+    .map((project) => ({
+      name: project,
+      testDir: `../apps/${project}/e2e`,
+      use: { baseURL: project === "web" ? web : desktop },
+    })),
   webServer: [
     ...(settings.surface === "desktop"
       ? []

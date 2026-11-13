@@ -5,5 +5,5 @@ export const Route = createFileRoute("/(auth)/login")({ component: LoginPage });
 
 function LoginPage() {
   const { returnTo } = Route.useSearch();
-  return <BrowserLogin returnTo={returnTo ?? "/"} />;
+  return <BrowserLogin returnTo={returnTo ?? "/agents"} />;
 }

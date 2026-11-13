@@ -2,27 +2,28 @@ import { expect, it } from "vitest";
 import { desktopReturnTo } from "./return-to.js";
 
 it.each([
-  "https://outside.test/tasks",
-  "//outside.test/tasks",
+  "https://outside.test/agents",
+  "//outside.test/agents",
   "/\\outside.test",
-  "/tasks\n",
-  "/login?returnTo=/tasks",
-  "/tasks/../login",
+  "/agents\n",
+  "/login?returnTo=/agents",
+  "/agents/../login",
   "/%2f%2foutside.test",
   "/settings",
   null,
-])("rejects an unsafe desktop login destination %s", (input) => {
-  expect(desktopReturnTo(input)).toBe("/");
+  "/tasks?scope=remote",
+  "/approvals",
+  "/files",
+  "/terminal",
+  "/automations",
+  "/welcome",
+])("returns to Agents for an unavailable desktop destination %s", (input) => {
+  expect(desktopReturnTo(input)).toBe("/agents");
 });
-it("retains local/remote scope and the selected project through login", () => {
-  expect(desktopReturnTo("/agents?spaceId=space&agentId=agent")).toBe(
-    "/agents?spaceId=space&agentId=agent",
+it("retains the selected Space, Agent and standalone library through login", () => {
+  expect(desktopReturnTo("/agents?spaceId=space&agentId=agent#settings")).toBe(
+    "/agents?spaceId=space&agentId=agent#settings",
   );
-  expect(desktopReturnTo("/tasks?scope=remote#editor")).toBe("/tasks?scope=remote#editor");
-  expect(desktopReturnTo("/approvals?scope=local&project=project-a")).toBe(
-    "/approvals?scope=local&project=project-a",
-  );
-  expect(desktopReturnTo("/tasks?scope=remote&project=project-a#settings")).toBe(
-    "/tasks?scope=remote&project=project-a#settings",
-  );
+  expect(desktopReturnTo("/memory?scope=account")).toBe("/memory?scope=account");
+  expect(desktopReturnTo("/account")).toBe("/account");
 });
