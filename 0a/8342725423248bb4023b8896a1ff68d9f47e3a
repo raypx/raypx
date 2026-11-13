@@ -1,0 +1,25 @@
+apps/cli/tests/smoke/windows-payload.ts
+  s_19d87b106e605b::t_6e235bb7622ca7 166-167,176-180
+  s_19d87b106e605b::t_2a6fab59d474ed 8,144
+apps/cli/tests/helpers/payload-proxy.ts
+  s_19d87b106e605b::t_2a6fab59d474ed 1-54
+apps/cli/tests/integration/distribution/payload-proxy.test.ts
+  s_19d87b106e605b::t_2a6fab59d474ed 1-38,40-42,48
+  s_19d87b106e605b::t_e417a46540439d 39,43-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0a8342725423248bb4023b8896a1ff68d9f47e3a",
+  "prompts": {},
+  "sessions": {
+    "s_19d87b106e605b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d475-9e04-7b90-9e32-d5f7dadf404e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
