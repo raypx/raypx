@@ -1,0 +1,121 @@
+packages/dev-cli/src/validation/sandbox.test.ts
+  s_c40555f2e71e47::t_ce36c35fa61ff3 3-7,16-19,21-29,31-34,53-58,66-79,84-91,97-120,137-139,153-165,167-176,188-194,209-218,220-224,236-238,245-248,252-254,256-258,263-274,277-279,351-355
+  s_c40555f2e71e47::t_682cbe96ca11c4 1,8-15,20,30,35-39,52,59-65,80,82-83,92-96,121-136,140-144,147-148,151-152,166,177-187,195-208,219,225-235,239-244,249-251,255,259-262,275-276,280-288,315,338-340,342-350,356-361
+  s_c40555f2e71e47::t_c4eded87e4f1ab 81,341
+  s_c40555f2e71e47::t_a5fc31de085bb9 2,40-41,51,149-150
+  s_c40555f2e71e47::t_e0bb97241ea713 42-50,145-146,289-297,301-309,313-314,316-317
+  s_c40555f2e71e47::t_0e5eff137c9594 298-300,310-312,318-337
+deploy/.env.example
+  s_c40555f2e71e47::t_ddca71ccd05c02 91-94,97-99
+packages/dev-cli/src/test-command.test.ts
+  s_c40555f2e71e47::t_ce36c35fa61ff3 86-107
+  s_c40555f2e71e47::t_3abdb019573067 84-85,108
+packages/dev-cli/src/verification/plan.test.ts
+  s_c40555f2e71e47::t_9daa3250c3362e 686-710,713-725,728-730
+  s_c40555f2e71e47::t_553bae7d179bb6 712,727
+  s_c40555f2e71e47::t_4a23b8b8f4a6ec 711,726
+infra/sandbox/src/egress.test.ts
+  s_c40555f2e71e47::t_53d389f4ba7aba 1-20,26,31-72
+  s_c40555f2e71e47::t_f3fe0670db760b 21-24,28,30
+  s_c40555f2e71e47::t_1aff4ffa1a82ed 25,27,29
+packages/dev-cli/src/verification/plan.ts
+  s_c40555f2e71e47::t_0022abcc478ba6 31,173-193,365
+infra/sandbox/egress.sh
+  s_c40555f2e71e47::t_71142263c921e6 35,106-108,111
+  s_c40555f2e71e47::t_e282f6ce4b540c 3,36,40-43,45,47,49-66,70-74,89-90,92-93,95-100,110,118,123-128,138-146,148-167,169-185,189-214
+  s_c40555f2e71e47::t_3bbdcd18a4252c 1-2,4-34,37-39,44,46,48,67-69,75-88,91,94,101-105,109,112-117,119-122,129-137,147,168,186-188
+packages/dev-cli/src/verification/gates.ts
+  s_c40555f2e71e47::t_0022abcc478ba6 5,19,40,61
+packages/dev-cli/src/validation/sandbox-probes.ts
+  s_c40555f2e71e47::t_6663f906053b30 1-68,70-71,75,80,82
+  s_c40555f2e71e47::t_b9f8a76a5a0276 69,72-74,76-79,81
+packages/dev-cli/src/validation/sandbox.ts
+  s_c40555f2e71e47::t_6b895ab8a3165e 6-11,111-116,125-127,137-142,155-158,347,350,360-377,406-412
+  s_c40555f2e71e47::t_ce36c35fa61ff3 59-61,121-122,129-131,169-171,173-174,178-182,185-198,208-219,222-225,239-257,262-271,273-277,280-282,287-289,291-295,297-306,318-320,325-331,334-338,354-359,378-396,398-402,420-423,425-427,431-436,442-445,456-459,465-469,474-476,479-492
+  s_c40555f2e71e47::t_79980c8bf9c7a0 120,123,133-136,168,172,175
+  s_c40555f2e71e47::t_0e5eff137c9594 162-166
+  s_c40555f2e71e47::t_aaee3d4c56b240 95-102,145,183-184
+  s_c40555f2e71e47::t_bc5a9ca434e3e0 226-227,454
+  s_c40555f2e71e47::t_aad620918d4f08 1-5,12-58,62-94,103-110,117-119,124,128,132,143-144,146-153,159-161,167,176-177,199-207,220-221,228-238,258-261,272,278-279,283-286,290,296,307-317,321-324,332-333,339-346,351-353,397,403-404,413-419,424,428-430,437-441,446-453,455,460-464,470-473,477-478,493-495
+  s_c40555f2e71e47::t_c4eded87e4f1ab 154,348-349,405
+infra/sandbox/src/config.ts
+  s_c40555f2e71e47::t_3907b2faba36b9 47-48
+infra/sandbox/src/config.test.ts
+  s_c40555f2e71e47::t_3907b2faba36b9 27-33
+docs/development/validation-artifacts.md
+  s_c40555f2e71e47::t_bc5a9ca434e3e0 160-161,202-203
+  s_c40555f2e71e47::t_1b8ee2513faf6c 12-13,146-159,162-201,204-212
+  s_c40555f2e71e47::t_55d6da286c2ced 213
+deploy/compose.yaml
+  s_c40555f2e71e47::t_ddca71ccd05c02 125-129,139,147-149
+docs/architecture/computers.md
+  s_c40555f2e71e47::t_1b8ee2513faf6c 84-85,178-196
+packages/dev-cli/package.json
+  s_c40555f2e71e47::t_3abdb019573067 15-16
+.github/workflows/ci.yml
+  s_c40555f2e71e47::t_0022abcc478ba6 44,179-185,203
+.github/workflows/sandbox.yml
+  s_c40555f2e71e47::t_0022abcc478ba6 1-30
+packages/dev-cli/src/validation/sandbox-plan.ts
+  s_c40555f2e71e47::t_6663f906053b30 1-36,49-56
+  s_c40555f2e71e47::t_79980c8bf9c7a0 37-48
+packages/dev-cli/src/test-command.ts
+  s_c40555f2e71e47::t_3abdb019573067 23,31,88,139,158-160
+packages/dev-cli/src/verification/gates.test.ts
+  s_c40555f2e71e47::t_be7c32ca857061 401
+  s_c40555f2e71e47::t_9daa3250c3362e 29,34,144-145,164,320-329,336,352,360,379-381,386-390,397-400,402
+  s_c40555f2e71e47::t_4a23b8b8f4a6ec 330-335,382-385,391-396
+  s_c40555f2e71e47::t_aace0edaf9f8df 403
+infra/sandbox/package.json
+  s_c40555f2e71e47::t_695308bea46047 9
+docs/development/testing.md
+  s_c40555f2e71e47::t_1b8ee2513faf6c 98,250-258,274-278
+  s_c40555f2e71e47::t_fed6e675d7a824 279
+packages/dev-cli/src/verification/ci.ts
+  s_c40555f2e71e47::t_0022abcc478ba6 128-130
+infra/sandbox/src/compose.test.ts
+  s_c40555f2e71e47::t_ddca71ccd05c02 1-57,59-62
+  s_c40555f2e71e47::t_d7c6713a44529b 58
+docs/development/dev-cli.md
+  s_c40555f2e71e47::t_1b8ee2513faf6c 12,38-44,105-107
+packages/dev-cli/src/verification/report.test.ts
+  s_c40555f2e71e47::t_9daa3250c3362e 29,44
+docs/development/deployment.md
+  s_c40555f2e71e47::t_7e5636dff7258b 105,111-113,136-140,145-146,151-155,157-198,213-217
+  s_c40555f2e71e47::t_07bef8a9a24ab4 218
+packages/dev-cli/src/verification/report.ts
+  s_c40555f2e71e47::t_0022abcc478ba6 35
+infra/sandbox/AGENTS.md
+  s_c40555f2e71e47::t_bc5a9ca434e3e0 15-16
+  s_c40555f2e71e47::t_71142263c921e6 17-21
+packages/dev-cli/AGENTS.md
+  s_c40555f2e71e47::t_3abdb019573067 31-32
+packages/computers/package.json
+  s_f9cc0d01f49051::t_94b71c3fd6c843 13
+packages/spaces/package.json
+  s_f9cc0d01f49051::t_aff228acaadc92 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fdd3ae023bf33f3bf9a86ea554813dfe573df4ce",
+  "prompts": {},
+  "sessions": {
+    "s_c40555f2e71e47": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d5a8-4111-74b0-adad-1f9638f25cca",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
