@@ -1,0 +1,49 @@
+docs/architecture/README.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 118-127
+docs/architecture/clients.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 28-30,41
+docs/architecture/0066-server-owned-agent-platform.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 5-7
+docs/development/local-sqlite.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 58
+apps/cli/README.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 9
+docs/development/desktop.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 5
+docs/development/mygo-bun-migration-plan.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 6
+infra/cloudflare/README.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 4
+docs/development/accounts.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 313
+docs/development/deployment.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 6
+docs/architecture/operations.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 25
+docs/development/getting-started.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 63,198
+docs/development/i18n-intl-vendoring.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 7
+docs/development/validation-artifacts.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 56
+apps/web/AGENTS.md
+  s_f9cc0d01f49051::t_a28c5acf292a25 193
+docs/architecture/internationalization.md
+  s_f9cc0d01f49051::t_84458390a61075 40,124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e52b048010cee505f0579b0e7767867a971d7b30",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
