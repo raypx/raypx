@@ -1,0 +1,49 @@
+apps/api/AGENTS.md
+  s_28758cb14041db::t_cc278cfe57d7c0 276
+apps/api/package.json
+  s_28758cb14041db::t_f14f488bea29d3 7
+apps/api/src/app/options.ts
+  s_28758cb14041db::t_ce588ca3dd810e 1-2
+apps/api/src/bootstrap-admins.test.ts
+  s_28758cb14041db::t_d8704432dbba9d 3
+apps/api/src/config/migrate.ts
+  s_28758cb14041db::t_a61e9e5910185d 6
+apps/api/src/config/repository.ts
+  s_28758cb14041db::t_aeac10bd10676b 1-2
+apps/api/src/config/resend.ts
+  s_28758cb14041db::t_818ca49491cf8a 6-7
+apps/api/src/config/service.ts
+  s_28758cb14041db::t_b2383d1525cab0 1
+apps/api/src/middleware/audit.ts
+  s_28758cb14041db::t_b65674412bf402 3
+apps/api/src/runtime/shared.ts
+  s_28758cb14041db::t_4ce91186719457 14,18-19,39
+apps/api/src/storage/config.ts
+  s_28758cb14041db::t_dc593e6cfca10f 15-16
+apps/api/tests/integration/config.test.ts
+  s_28758cb14041db::t_3dd326ead71e8b 11
+apps/api/tests/postgres/node/admin.test.ts
+  s_28758cb14041db::t_ec41faf6541bc2 10-12
+apps/api/tests/postgres/node/resend.test.ts
+  s_28758cb14041db::t_46475a49994b64 10-11
+apps/api/tests/postgres/node/session-attachments.test.ts
+  s_28758cb14041db::t_ad146eb54294b3 18-19,30
+docs/development/configuration.md
+  s_28758cb14041db::t_83789d4e0c884d 195-196
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "cd76cda3b6b03f266ac296ce8cc02609b1896582",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
