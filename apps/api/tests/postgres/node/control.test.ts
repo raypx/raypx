@@ -419,13 +419,13 @@ it("rejects invalid task projections at the repository boundary without rewritin
   const f = await connected(service, auth),
     task = await running(service, f);
   await connection.db.execute(
-    sql`update raypx_foundation.control_task set body = body - 'status' where user_id=${auth.user.id} and id=${task.id}`,
+    sql`update public.control_task set body = body - 'status' where user_id=${auth.user.id} and id=${task.id}`,
   );
   await expect(repository.read(auth.user.id, (tx) => tx.get("task", task.id))).rejects.toThrow(
     "Invalid stored control data",
   );
   const rows = await connection.db.execute<{ missing: boolean }>(
-    sql`select not (body ? 'status') as missing from raypx_foundation.control_task where user_id=${auth.user.id} and id=${task.id}`,
+    sql`select not (body ? 'status') as missing from public.control_task where user_id=${auth.user.id} and id=${task.id}`,
   );
   expect(rows[0]?.missing).toBe(true);
 });

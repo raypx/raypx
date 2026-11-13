@@ -8,7 +8,7 @@ export function createAdministrationHandlers(
 ) {
   return {
     overview: os.admin.overview
-      .use(withRpcPermission({ procedure: "admin.overview", window: 60, max: 60 }))
+      .use(withRpcPermission({ window: 60, max: 60 }))
       .handler(async ({ input }) => {
         if (!options.administration) throw new ORPCError("SERVICE_UNAVAILABLE");
         try {
@@ -17,21 +17,19 @@ export function createAdministrationHandlers(
           throw new ORPCError("SERVICE_UNAVAILABLE");
         }
       }),
-    health: os.admin.health
-      .use(withRpcPermission({ procedure: "admin.health", window: 60, max: 60 }))
-      .handler(async () => {
-        const checks = await readReadiness();
-        return {
-          observedAt: new Date().toISOString(),
-          checks: {
-            database: checks.database ?? ("not-configured" as const),
-            redis: checks.redis ?? ("not-configured" as const),
-            relay: checks.relay ?? ("not-configured" as const),
-          },
-        };
-      }),
+    health: os.admin.health.use(withRpcPermission({ window: 60, max: 60 })).handler(async () => {
+      const checks = await readReadiness();
+      return {
+        observedAt: new Date().toISOString(),
+        checks: {
+          database: checks.database ?? ("not-configured" as const),
+          redis: checks.redis ?? ("not-configured" as const),
+          relay: checks.relay ?? ("not-configured" as const),
+        },
+      };
+    }),
     audit: os.admin.audit
-      .use(withRpcPermission({ procedure: "admin.audit", window: 60, max: 60 }))
+      .use(withRpcPermission({ window: 60, max: 60 }))
       .handler(async ({ input }) => {
         if (!options.administration) throw new ORPCError("SERVICE_UNAVAILABLE");
         try {

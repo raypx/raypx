@@ -1,5 +1,6 @@
 import { collectApiExposure, exposeApiTo } from "./exposure.js";
-export { getRpcAccess } from "./policy.js";
+import { rpcAccess } from "./policy.js";
+export { getRpcAccess, getRpcAudit } from "./policy.js";
 import { administrationContract } from "./admin.js";
 import { sessionAttachmentContract } from "./attachments.js";
 export * from "./admin.js";
@@ -59,32 +60,32 @@ export const apiContract = {
   jobs: jobsContract,
   hosts: {
     authorize: oc
-      .meta(exposeApiTo("native"))
+      .meta(exposeApiTo("native"), rpcAccess("projects.read"))
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int().positive() }))
       .output(hostAuthorizationSchema),
     grant: oc
-      .meta(exposeApiTo("host"))
+      .meta(exposeApiTo("host"), rpcAccess("public"))
       .input(z.object({ credential: z.string().min(64).max(200) }))
       .output(z.object({ accountId: z.string(), grant: deviceGrantSchema })),
     revoke: oc
-      .meta(exposeApiTo("native"))
+      .meta(exposeApiTo("native"), rpcAccess("public"))
       .input(z.object({ credential: z.string().min(64).max(200) }))
       .output(z.object({ revoked: z.literal(true) })),
   },
   observed: {
     list: httpRead("/observed-requests", "observed", "List observed terminal requests and sessions")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("approvals.read"))
       .input(z.object({}))
       .output(observedProjectionSchema),
     get: httpRead("/observed-requests/{id}", "observed", "Read an observed terminal request")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("approvals.read"))
       .input(z.object({ id: z.string().uuid() }))
       .output(terminalRequestSchema),
   },
   configuration: configurationContract,
   devices: {
     register: oc
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("projects.read"))
       .input(
         z.object({
           installationId: z.string().uuid(),
@@ -96,21 +97,21 @@ export const apiContract = {
       )
       .output(deviceGrantSchema),
     refreshGrant: oc
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("projects.read"))
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
       .output(deviceGrantSchema),
     list: httpRead("/devices", "devices", "List registered computers")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("projects.read"))
       .input(z.object({}))
       .output(z.array(deviceSchema)),
     revoke: oc
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("projects.read"))
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
       .output(z.object({ revoked: z.literal(true) })),
   },
   tasks: {
     list: httpRead("/tasks", "tasks", "List remote tasks")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("tasks.read"))
       .input(
         z.object({
           before: z.string().optional(),
@@ -121,7 +122,7 @@ export const apiContract = {
       )
       .output(z.array(taskSchema)),
     get: httpRead("/tasks/{id}", "tasks", "Read a task and its activity")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("tasks.read"))
       .input(
         z.object({
           id: z.string().uuid(),
@@ -141,23 +142,23 @@ export const apiContract = {
   },
   approvals: {
     list: httpRead("/approvals", "approvals", "List pending approvals")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("approvals.read"))
       .input(z.object({}))
       .output(z.array(humanRequestSchema)),
   },
   relay: {
     ticket: oc
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("tasks.read"))
       .input(z.object({}))
       .output(z.object({ token: z.string(), expiresAt: z.string() })),
   },
   account: {
     get: httpRead("/account", "account", "Read the signed-in account")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("session"))
       .input(z.object({}))
       .output(accountProfileSchema),
     access: httpRead("/account/access", "account", "Read current account permissions", "optional")
-      .meta(exposeApiTo("renderer"))
+      .meta(exposeApiTo("renderer"), rpcAccess("public"))
       .input(z.strictObject({}))
       .output(accountAccessSchema),
   },

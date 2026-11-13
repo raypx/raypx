@@ -8,15 +8,30 @@ import { Switch } from "@raypx/ui/components/ui/switch";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsIndicator,
+  TabsList,
+  TabsTrigger,
+} from "@raypx/ui/components/ui/tabs";
+import { ArchiveIcon } from "@raypx/icons/archive";
+import { InfoIcon } from "@raypx/icons/info";
+import { MailIcon } from "@raypx/icons/mail";
+import { SettingsIcon } from "@raypx/icons/settings";
 import { PageHeader } from "@raypx/ui/page-header";
 import { authClient } from "../../auth/client.js";
 import { configurationClient, configurationError, type Configuration } from "../client.js";
+import { ConfigurationActions } from "./actions.js";
 import { StorageSettings } from "./storage.js";
 import { ResendSettings } from "./resend.js";
 
 const row =
-  "grid items-start gap-4 border-b border-border py-5 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] @xl/main:items-center @xl/main:gap-x-8";
+  "grid items-start gap-3 px-4 py-4 sm:px-6 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,15rem)] @xl/main:items-center @xl/main:gap-x-6";
+const panel =
+  "rounded-xl border border-border bg-card text-card-foreground focus-visible:ring-2 focus-visible:ring-ring";
+const tabTrigger =
+  "relative z-10 gap-2 px-2 sm:px-3 group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:bg-transparent group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:shadow-none dark:group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:border-transparent dark:group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:bg-transparent";
 
 export function ConfigurationSettings() {
   const common = useTranslations("common");
@@ -35,7 +50,7 @@ export function ConfigurationSettings() {
   function content() {
     if (session.error)
       return (
-        <div className="flex flex-col items-start gap-4 py-8">
+        <div className="flex flex-col items-start gap-4 p-4 sm:p-6">
           <Alert variant="destructive">
             <AlertDescription>{t("unavailable")}</AlertDescription>
           </Alert>
@@ -50,14 +65,14 @@ export function ConfigurationSettings() {
       );
     if (!session.isPending && !accountId)
       return (
-        <p role="alert" className="py-8">
+        <p role="alert" className="p-4 sm:p-6">
           {t("forbidden")}
         </p>
       );
     if (query.isError) {
       const failure = configurationError(query.error);
       return (
-        <div className="flex flex-col items-start gap-4 py-8">
+        <div className="flex flex-col items-start gap-4 p-4 sm:p-6">
           <Alert variant="destructive">
             <AlertDescription>{t(failure)}</AlertDescription>
           </Alert>
@@ -82,9 +97,9 @@ export function ConfigurationSettings() {
         />
       );
     return (
-      <div role="status" aria-label={t("loading")} className="flex flex-col gap-6 py-6">
+      <div role="status" aria-label={t("loading")} className="flex flex-col gap-4 p-4 sm:p-6">
         {[1, 2, 3].map((n) => (
-          <Skeleton key={n} className="h-20 rounded-lg" />
+          <Skeleton key={n} className="h-14 rounded-lg" />
         ))}
       </div>
     );
@@ -93,19 +108,36 @@ export function ConfigurationSettings() {
     <section className="flex min-w-0 flex-col gap-6">
       <PageHeader title={t("title")} description={t("intro")} />
       {accountId && !session.error ? (
-        <Tabs value={tab} onValueChange={(value) => setTab(String(value))} className="gap-5">
-          <TabsList aria-label={t("title")}>
-            <TabsTrigger value="site">{t("siteTab")}</TabsTrigger>
-            <TabsTrigger value="storage">{t("storage.title")}</TabsTrigger>
-            <TabsTrigger value="resend">{t("mail.title")}</TabsTrigger>
+        <Tabs value={tab} onValueChange={(value) => setTab(String(value))} className="gap-4">
+          <TabsList
+            aria-label={t("title")}
+            className="relative isolate w-full justify-start sm:w-fit"
+          >
+            <TabsTrigger value="site" className={tabTrigger}>
+              <SettingsIcon aria-hidden="true" className="hidden sm:block" />
+              {t("siteTab")}
+            </TabsTrigger>
+            <TabsTrigger value="storage" className={tabTrigger}>
+              <ArchiveIcon aria-hidden="true" className="hidden sm:block" />
+              {t("storage.title")}
+            </TabsTrigger>
+            <TabsTrigger value="resend" className={tabTrigger}>
+              <MailIcon aria-hidden="true" className="hidden sm:block" />
+              {t("mail.title")}
+            </TabsTrigger>
+            <TabsIndicator
+              aria-hidden="true"
+              data-config-indicator=""
+              className="pointer-events-none absolute top-(--active-tab-top) left-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) rounded-md bg-background shadow-sm motion-safe:transition-[translate,width] motion-safe:duration-150 motion-safe:ease-out group-has-[:focus-visible]/tabs-list:transition-none dark:bg-input/30"
+            />
           </TabsList>
-          <TabsContent value="site" keepMounted>
+          <TabsContent value="site" keepMounted className={panel} hidden={tab !== "site"}>
             {content()}
           </TabsContent>
-          <TabsContent value="storage" keepMounted>
+          <TabsContent value="storage" keepMounted className={panel} hidden={tab !== "storage"}>
             <StorageSettings key={accountId} accountId={accountId} active={tab === "storage"} />
           </TabsContent>
-          <TabsContent value="resend" keepMounted>
+          <TabsContent value="resend" keepMounted className={panel} hidden={tab !== "resend"}>
             <ResendSettings key={accountId} accountId={accountId} active={tab === "resend"} />
           </TabsContent>
         </Tabs>
@@ -123,7 +155,6 @@ export function ConfigurationForm({
   configuration: Configuration;
   accountId: string;
 }) {
-  const common = useTranslations("common");
   const t = useTranslations("site");
   const client = useQueryClient();
   const [saved, setSaved] = useState(configuration);
@@ -182,8 +213,8 @@ export function ConfigurationForm({
         if (!busy && dirty && !conflict && values.siteName.trim()) save.mutate();
       }}
     >
-      <fieldset disabled={busy} className="min-w-0 border-t border-border">
-        <FieldGroup className="gap-0">
+      <fieldset disabled={busy} className="min-w-0">
+        <FieldGroup className="gap-0 divide-y divide-border">
           <Field className={row}>
             <div>
               <FieldLabel htmlFor="site-name">{t("siteName")}</FieldLabel>
@@ -242,38 +273,27 @@ export function ConfigurationForm({
             </div>
             <p
               id="cleanup-state"
-              className="text-xs leading-6 text-muted-foreground @xl/main:col-span-2"
+              className="rounded-md bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground @xl/main:col-span-2"
             >
               {t(saved.deployment.jobsEnabled ? "jobsAvailable" : "jobsDisabled")}
             </p>
           </Field>
         </FieldGroup>
       </fieldset>
-      <div className="flex flex-wrap items-center gap-3 py-5">
-        <Button type="submit" disabled={busy || !dirty || conflict || !values.siteName.trim()}>
-          {t(save.isPending ? "saving" : "save")}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={busy || !dirty}
-          onClick={() => {
-            setValues(saved.values);
-            setNotice(false);
-            if (!conflict) save.reset();
-          }}
-        >
-          {common("discard")}
-        </Button>
-        {dirty && !notice && <span className="text-sm text-muted-foreground">{t("unsaved")}</span>}
-        {notice && (
-          <span role="status" className="text-sm">
-            {t("saved")}
-          </span>
-        )}
-      </div>
+      <ConfigurationActions
+        busy={busy}
+        saving={save.isPending}
+        dirty={dirty}
+        saved={notice}
+        canSave={!busy && dirty && !conflict && Boolean(values.siteName.trim())}
+        onDiscard={() => {
+          setValues(saved.values);
+          setNotice(false);
+          if (!conflict) save.reset();
+        }}
+      />
       {(save.isError || reload.isError) && (
-        <div className="flex flex-col items-start gap-3 pb-6">
+        <div className="flex flex-col items-start gap-3 border-t border-border px-4 py-4 sm:px-6">
           <Alert variant="destructive">
             <AlertDescription>{t(configurationError(reload.error ?? save.error))}</AlertDescription>
           </Alert>
@@ -285,11 +305,14 @@ export function ConfigurationForm({
         </div>
       )}
       <section
-        className="flex flex-col gap-2 border-t border-border pt-5 text-sm leading-6 text-muted-foreground"
+        className="flex items-start gap-2.5 border-t border-border px-4 py-4 text-sm leading-6 text-muted-foreground sm:px-6"
         aria-label={t("deployment")}
       >
-        <h2 className="text-sm font-medium text-foreground">{t("deployment")}</h2>
-        <p>{t("deploymentHint")}</p>
+        <InfoIcon aria-hidden="true" className="mt-1 size-4 shrink-0" />
+        <div>
+          <h2 className="font-medium text-foreground">{t("deployment")}</h2>
+          <p>{t("deploymentHint")}</p>
+        </div>
       </section>
     </form>
   );

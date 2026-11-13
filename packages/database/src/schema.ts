@@ -2,7 +2,7 @@ import {
   bigint,
   boolean,
   index,
-  pgSchema,
+  pgTable,
   text,
   timestamp,
   uniqueIndex,
@@ -12,13 +12,12 @@ import {
 } from "drizzle-orm/pg-core";
 import { defineRelations, sql } from "drizzle-orm";
 
-export const foundation = pgSchema("raypx_foundation");
 const date = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 const timestamps = () => ({
   createdAt: date("created_at").notNull().defaultNow(),
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
-export const user = foundation.table(
+export const user = pgTable(
   "user",
   {
     id: text("id").primaryKey(),
@@ -34,7 +33,7 @@ export const user = foundation.table(
   },
   (table) => [index("user_created_at_idx").on(table.createdAt)],
 );
-export const session = foundation.table(
+export const session = pgTable(
   "session",
   {
     id: text("id").primaryKey(),
@@ -53,7 +52,7 @@ export const session = foundation.table(
     index("session_expires_at_idx").on(table.expiresAt),
   ],
 );
-export const account = foundation.table(
+export const account = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
@@ -76,7 +75,7 @@ export const account = foundation.table(
     uniqueIndex("account_provider_account_idx").on(table.providerId, table.accountId),
   ],
 );
-export const verification = foundation.table(
+export const verification = pgTable(
   "verification",
   {
     id: text("id").primaryKey(),
@@ -92,7 +91,7 @@ export const verification = foundation.table(
 );
 
 // Better Auth and API RPC limits share this table; keys are IP/path or rpc:<user>:<procedure>.
-export const rateLimit = foundation.table(
+export const rateLimit = pgTable(
   "rate_limit",
   {
     id: text("id").primaryKey(),
@@ -104,7 +103,7 @@ export const rateLimit = foundation.table(
 );
 
 // One versioned row stores non-secret site settings. Policy belongs to API.
-export const systemConfiguration = foundation.table("system_configuration", {
+export const systemConfiguration = pgTable("system_configuration", {
   id: text("id").primaryKey(),
   siteName: text("site_name").notNull(),
   registrationEnabled: boolean("registration_enabled").notNull(),
@@ -114,7 +113,7 @@ export const systemConfiguration = foundation.table("system_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
-export const storageConfiguration = foundation.table("storage_configuration", {
+export const storageConfiguration = pgTable("storage_configuration", {
   id: text("id").primaryKey(),
   endpoint: text("endpoint").notNull(),
   region: text("region").notNull(),
@@ -125,7 +124,7 @@ export const storageConfiguration = foundation.table("storage_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
-export const mailConfiguration = foundation.table("mail_configuration", {
+export const mailConfiguration = pgTable("mail_configuration", {
   id: text("id").primaryKey(),
   from: text("sender").notNull(),
   defaultLocale: text("default_locale", { enum: ["en", "zh"] }).notNull(),
@@ -135,7 +134,7 @@ export const mailConfiguration = foundation.table("mail_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
-export const sessionAttachment = foundation.table(
+export const sessionAttachment = pgTable(
   "session_attachment",
   {
     id: text("id").primaryKey(),
@@ -156,7 +155,7 @@ export const sessionAttachment = foundation.table(
 );
 
 // Control records are separate from authentication and never contain CLI credentials.
-export const controlOwner = foundation.table("control_owner", {
+export const controlOwner = pgTable("control_owner", {
   securityEpoch: integer("security_epoch").notNull().default(0),
   securityRevokedAt: date("security_revoked_at"),
   userId: text("user_id")
@@ -164,7 +163,7 @@ export const controlOwner = foundation.table("control_owner", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 const controlRecord = (name: string) =>
-  foundation.table(
+  pgTable(
     name,
     {
       id: text("id").notNull(),
@@ -239,7 +238,7 @@ export const controlCredential = controlRecord("control_credential");
 export const controlObservedSession = controlRecord("control_observed_session");
 export const controlObservedRequest = controlRecord("control_observed_request");
 
-export const cloudJob = foundation.table(
+export const cloudJob = pgTable(
   "cloud_job",
   {
     id: text("id").primaryKey(),
@@ -262,7 +261,7 @@ export const cloudJob = foundation.table(
       .where(sql`${table.enabled}=true`),
   ],
 );
-export const cloudJobRun = foundation.table(
+export const cloudJobRun = pgTable(
   "cloud_job_run",
   {
     id: text("id").primaryKey(),
@@ -296,7 +295,7 @@ export const cloudJobRun = foundation.table(
 );
 
 // Account context libraries retain immutable revisions; archiving never deletes history.
-export const contextDocument = foundation.table(
+export const contextDocument = pgTable(
   "context_document",
   {
     id: text("id").primaryKey(),
@@ -318,7 +317,7 @@ export const contextDocument = foundation.table(
   ],
 );
 // Body-free deletion receipts reserve IDs so pinned references can never change identity.
-export const contextDeletion = foundation.table(
+export const contextDeletion = pgTable(
   "context_deletion",
   {
     id: text("id").primaryKey(),
@@ -330,7 +329,7 @@ export const contextDeletion = foundation.table(
   },
   (table) => [index("context_deletion_owner_idx").on(table.userId)],
 );
-export const contextVersion = foundation.table(
+export const contextVersion = pgTable(
   "context_version",
   {
     documentId: text("document_id")
@@ -348,7 +347,7 @@ export const contextVersion = foundation.table(
   ],
 );
 
-export const runtimeInstance = foundation.table(
+export const runtimeInstance = pgTable(
   "runtime_instance",
   {
     id: text("id").primaryKey(),
@@ -359,7 +358,7 @@ export const runtimeInstance = foundation.table(
   },
   (table) => [index("runtime_instance_owner_idx").on(table.userId, table.id)],
 );
-export const instanceEnrollment = foundation.table(
+export const instanceEnrollment = pgTable(
   "instance_enrollment",
   {
     id: text("id").primaryKey(),
@@ -371,7 +370,7 @@ export const instanceEnrollment = foundation.table(
 );
 
 // Independent of account lifetimes: immutable terminal management history.
-export const adminAudit = foundation.table(
+export const adminAudit = pgTable(
   "admin_audit",
   {
     id: text("id").primaryKey(),

@@ -267,8 +267,12 @@ uses a projection marker and never increments host-owned request revisions.
 
 `src/routers/rpc/` contains feature handlers and their service error mapping.
 `boundary.ts` wires shared oRPC middleware and adapts Control calls for multiple routers.
-Each RPC handler declares its quota alongside the procedure. Shared middleware
-applies the account key and enforces the quota.
+Every procedure declares its access in `@raypx/contracts/api` (`public`, `session`
+or a permission) and its handler uses `withPublicRpcAccess` or `withRpcPermission`;
+a test rejects a served procedure without one. Handlers never resolve sessions or
+name permissions themselves. Each handler declares its quota alongside the
+procedure; the account key is the contract path. Use `limitAccount` when the quota
+must follow the trusted Origin check.
 `src/app/options.ts` owns composition options. RPC handlers
 never import the HTTP application entry. Runtime composes project validation
 before Memory and control commands.
@@ -283,11 +287,13 @@ same PostgreSQL transaction. Failed finalization leaves visible uncertainty;
 post-commit failures cannot rewrite success. Preserve authenticated actor scopes
 across concurrent requests and direct-service/operator calls. Custom configuration
 repository factories receive AuditService and must keep this atomic contract.
-The Hono boundary audits admitted, identified role/configuration requests including
-refusals and applies an admission quota through `hono-rate-limiter` using the
-runtime's shared rate limiter. The `admin.*` and `configuration.*` handlers
-use oRPC middleware to enforce the access declared on each procedure. The
-middleware rejects a missing declaration. Configuration mutations check the
+Audited requests are recorded for an admitted, identified caller, including
+refusals, behind an admission quota on the runtime's shared rate limiter. A contract
+procedure declares `rpcAudit(action)`; the first shared oRPC middleware opens the
+record before input validation and resolves the request's session once for the audit
+and access checks. The Hono boundary audits only Better Auth's role route through
+`hono-rate-limiter`. Never match RPC paths there. The access middleware rejects a missing
+declaration. Configuration mutations check the
 account permission, quota and trusted Origin in that order.
 Dependency checks reuse `/ready` probes;
 statistics and audit expose no task content, addresses, secrets or raw HTTP bodies.

@@ -1,0 +1,1045 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "f06bcb49-27ad-4098-bb8f-1adba63c8e75",
+  "prevIds": [
+    "551fc7a7-d8ea-4193-99ef-bbf6ca45a182"
+  ],
+  "footprints": [
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "account"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.account",
+        "n|tbl|raypx_foundation.account",
+        "n|rel|raypx_foundation.account",
+        "n|type|raypx_foundation.account",
+        "s|tbl|public.account",
+        "n|tbl|public.account",
+        "n|rel|public.account",
+        "n|type|public.account",
+        "e|tbl|raypx_foundation.account",
+        "e|tbl|public.account",
+        "n|rel|raypx_foundation.account_pkey",
+        "n|rel|public.account_pkey",
+        "n|rel|raypx_foundation.account_provider_account_idx",
+        "n|rel|public.account_provider_account_idx",
+        "n|rel|raypx_foundation.account_user_id_idx",
+        "n|rel|public.account_user_id_idx"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "admin_audit"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.admin_audit",
+        "n|tbl|raypx_foundation.admin_audit",
+        "n|rel|raypx_foundation.admin_audit",
+        "n|type|raypx_foundation.admin_audit",
+        "s|tbl|public.admin_audit",
+        "n|tbl|public.admin_audit",
+        "n|rel|public.admin_audit",
+        "n|type|public.admin_audit",
+        "e|tbl|raypx_foundation.admin_audit",
+        "e|tbl|public.admin_audit",
+        "n|rel|raypx_foundation.admin_audit_actor_time_idx",
+        "n|rel|public.admin_audit_actor_time_idx",
+        "n|rel|raypx_foundation.admin_audit_pkey",
+        "n|rel|public.admin_audit_pkey",
+        "n|rel|raypx_foundation.admin_audit_target_time_idx",
+        "n|rel|public.admin_audit_target_time_idx",
+        "n|rel|raypx_foundation.admin_audit_time_idx",
+        "n|rel|public.admin_audit_time_idx"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "cloud_job"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.cloud_job",
+        "n|tbl|raypx_foundation.cloud_job",
+        "n|rel|raypx_foundation.cloud_job",
+        "n|type|raypx_foundation.cloud_job",
+        "s|tbl|public.cloud_job",
+        "n|tbl|public.cloud_job",
+        "n|rel|public.cloud_job",
+        "n|type|public.cloud_job",
+        "e|tbl|raypx_foundation.cloud_job",
+        "e|tbl|public.cloud_job",
+        "n|rel|raypx_foundation.cloud_job_due_idx",
+        "n|rel|public.cloud_job_due_idx",
+        "n|rel|raypx_foundation.cloud_job_owner_idx",
+        "n|rel|public.cloud_job_owner_idx",
+        "n|rel|raypx_foundation.cloud_job_pkey",
+        "n|rel|public.cloud_job_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "cloud_job_run"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.cloud_job_run",
+        "n|tbl|raypx_foundation.cloud_job_run",
+        "n|rel|raypx_foundation.cloud_job_run",
+        "n|type|raypx_foundation.cloud_job_run",
+        "s|tbl|public.cloud_job_run",
+        "n|tbl|public.cloud_job_run",
+        "n|rel|public.cloud_job_run",
+        "n|type|public.cloud_job_run",
+        "e|tbl|raypx_foundation.cloud_job_run",
+        "e|tbl|public.cloud_job_run",
+        "n|rel|raypx_foundation.cloud_job_run_active_idx",
+        "n|rel|public.cloud_job_run_active_idx",
+        "n|rel|raypx_foundation.cloud_job_run_history_idx",
+        "n|rel|public.cloud_job_run_history_idx",
+        "n|rel|raypx_foundation.cloud_job_run_pkey",
+        "n|rel|public.cloud_job_run_pkey",
+        "n|rel|raypx_foundation.cloud_job_run_schedule_idx",
+        "n|rel|public.cloud_job_run_schedule_idx"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "context_deletion"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.context_deletion",
+        "n|tbl|raypx_foundation.context_deletion",
+        "n|rel|raypx_foundation.context_deletion",
+        "n|type|raypx_foundation.context_deletion",
+        "s|tbl|public.context_deletion",
+        "n|tbl|public.context_deletion",
+        "n|rel|public.context_deletion",
+        "n|type|public.context_deletion",
+        "e|tbl|raypx_foundation.context_deletion",
+        "e|tbl|public.context_deletion",
+        "n|rel|raypx_foundation.context_deletion_owner_idx",
+        "n|rel|public.context_deletion_owner_idx",
+        "n|rel|raypx_foundation.context_deletion_pkey",
+        "n|rel|public.context_deletion_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "context_document"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.context_document",
+        "n|tbl|raypx_foundation.context_document",
+        "n|rel|raypx_foundation.context_document",
+        "n|type|raypx_foundation.context_document",
+        "s|tbl|public.context_document",
+        "n|tbl|public.context_document",
+        "n|rel|public.context_document",
+        "n|type|public.context_document",
+        "e|tbl|raypx_foundation.context_document",
+        "e|tbl|public.context_document",
+        "n|rel|raypx_foundation.context_document_canonical_id_idx",
+        "n|rel|public.context_document_canonical_id_idx",
+        "n|rel|raypx_foundation.context_document_owner_idx",
+        "n|rel|public.context_document_owner_idx",
+        "n|rel|raypx_foundation.context_document_pkey",
+        "n|rel|public.context_document_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "context_version"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.context_version",
+        "n|tbl|raypx_foundation.context_version",
+        "n|rel|raypx_foundation.context_version",
+        "n|type|raypx_foundation.context_version",
+        "s|tbl|public.context_version",
+        "n|tbl|public.context_version",
+        "n|rel|public.context_version",
+        "n|type|public.context_version",
+        "e|tbl|raypx_foundation.context_version",
+        "e|tbl|public.context_version",
+        "n|rel|raypx_foundation.context_version_owner_idx",
+        "n|rel|public.context_version_owner_idx",
+        "n|rel|raypx_foundation.context_version_pkey",
+        "n|rel|public.context_version_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_command"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_command",
+        "n|tbl|raypx_foundation.control_command",
+        "n|rel|raypx_foundation.control_command",
+        "n|type|raypx_foundation.control_command",
+        "s|tbl|public.control_command",
+        "n|tbl|public.control_command",
+        "n|rel|public.control_command",
+        "n|type|public.control_command",
+        "e|tbl|raypx_foundation.control_command",
+        "e|tbl|public.control_command",
+        "n|rel|raypx_foundation.control_command_context_expiry_idx",
+        "n|rel|public.control_command_context_expiry_idx",
+        "n|rel|raypx_foundation.control_command_context_owner_idx",
+        "n|rel|public.control_command_context_owner_idx",
+        "n|rel|raypx_foundation.control_command_device_idx",
+        "n|rel|public.control_command_device_idx",
+        "n|rel|raypx_foundation.control_command_pkey",
+        "n|rel|public.control_command_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_credential"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_credential",
+        "n|tbl|raypx_foundation.control_credential",
+        "n|rel|raypx_foundation.control_credential",
+        "n|type|raypx_foundation.control_credential",
+        "s|tbl|public.control_credential",
+        "n|tbl|public.control_credential",
+        "n|rel|public.control_credential",
+        "n|type|public.control_credential",
+        "e|tbl|raypx_foundation.control_credential",
+        "e|tbl|public.control_credential",
+        "n|rel|raypx_foundation.control_credential_device_idx",
+        "n|rel|public.control_credential_device_idx",
+        "n|rel|raypx_foundation.control_credential_hash_idx",
+        "n|rel|public.control_credential_hash_idx",
+        "n|rel|raypx_foundation.control_credential_pkey",
+        "n|rel|public.control_credential_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_device"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_device",
+        "n|tbl|raypx_foundation.control_device",
+        "n|rel|raypx_foundation.control_device",
+        "n|type|raypx_foundation.control_device",
+        "s|tbl|public.control_device",
+        "n|tbl|public.control_device",
+        "n|rel|public.control_device",
+        "n|type|public.control_device",
+        "e|tbl|raypx_foundation.control_device",
+        "e|tbl|public.control_device",
+        "n|rel|raypx_foundation.control_device_device_idx",
+        "n|rel|public.control_device_device_idx",
+        "n|rel|raypx_foundation.control_device_pkey",
+        "n|rel|public.control_device_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_event"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_event",
+        "n|tbl|raypx_foundation.control_event",
+        "n|rel|raypx_foundation.control_event",
+        "n|type|raypx_foundation.control_event",
+        "s|tbl|public.control_event",
+        "n|tbl|public.control_event",
+        "n|rel|public.control_event",
+        "n|type|public.control_event",
+        "e|tbl|raypx_foundation.control_event",
+        "e|tbl|public.control_event",
+        "n|rel|raypx_foundation.control_event_activity_idx",
+        "n|rel|public.control_event_activity_idx",
+        "n|rel|raypx_foundation.control_event_device_idx",
+        "n|rel|public.control_event_device_idx",
+        "n|rel|raypx_foundation.control_event_pkey",
+        "n|rel|public.control_event_pkey",
+        "n|rel|raypx_foundation.control_event_replay_idx",
+        "n|rel|public.control_event_replay_idx",
+        "n|rel|raypx_foundation.control_event_stream_idx",
+        "n|rel|public.control_event_stream_idx",
+        "n|rel|raypx_foundation.control_event_task_cursor_idx",
+        "n|rel|public.control_event_task_cursor_idx"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_grant"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_grant",
+        "n|tbl|raypx_foundation.control_grant",
+        "n|rel|raypx_foundation.control_grant",
+        "n|type|raypx_foundation.control_grant",
+        "s|tbl|public.control_grant",
+        "n|tbl|public.control_grant",
+        "n|rel|public.control_grant",
+        "n|type|public.control_grant",
+        "e|tbl|raypx_foundation.control_grant",
+        "e|tbl|public.control_grant",
+        "n|rel|raypx_foundation.control_grant_device_idx",
+        "n|rel|public.control_grant_device_idx",
+        "n|rel|raypx_foundation.control_grant_pkey",
+        "n|rel|public.control_grant_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_observed_request"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_observed_request",
+        "n|tbl|raypx_foundation.control_observed_request",
+        "n|rel|raypx_foundation.control_observed_request",
+        "n|type|raypx_foundation.control_observed_request",
+        "s|tbl|public.control_observed_request",
+        "n|tbl|public.control_observed_request",
+        "n|rel|public.control_observed_request",
+        "n|type|public.control_observed_request",
+        "e|tbl|raypx_foundation.control_observed_request",
+        "e|tbl|public.control_observed_request",
+        "n|rel|raypx_foundation.control_observed_request_device_idx",
+        "n|rel|public.control_observed_request_device_idx",
+        "n|rel|raypx_foundation.control_observed_request_pkey",
+        "n|rel|public.control_observed_request_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_observed_session"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_observed_session",
+        "n|tbl|raypx_foundation.control_observed_session",
+        "n|rel|raypx_foundation.control_observed_session",
+        "n|type|raypx_foundation.control_observed_session",
+        "s|tbl|public.control_observed_session",
+        "n|tbl|public.control_observed_session",
+        "n|rel|public.control_observed_session",
+        "n|type|public.control_observed_session",
+        "e|tbl|raypx_foundation.control_observed_session",
+        "e|tbl|public.control_observed_session",
+        "n|rel|raypx_foundation.control_observed_session_device_idx",
+        "n|rel|public.control_observed_session_device_idx",
+        "n|rel|raypx_foundation.control_observed_session_pkey",
+        "n|rel|public.control_observed_session_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_owner"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_owner",
+        "n|tbl|raypx_foundation.control_owner",
+        "n|rel|raypx_foundation.control_owner",
+        "n|type|raypx_foundation.control_owner",
+        "s|tbl|public.control_owner",
+        "n|tbl|public.control_owner",
+        "n|rel|public.control_owner",
+        "n|type|public.control_owner",
+        "e|tbl|raypx_foundation.control_owner",
+        "e|tbl|public.control_owner",
+        "n|rel|raypx_foundation.control_owner_pkey",
+        "n|rel|public.control_owner_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_project"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_project",
+        "n|tbl|raypx_foundation.control_project",
+        "n|rel|raypx_foundation.control_project",
+        "n|type|raypx_foundation.control_project",
+        "s|tbl|public.control_project",
+        "n|tbl|public.control_project",
+        "n|rel|public.control_project",
+        "n|type|public.control_project",
+        "e|tbl|raypx_foundation.control_project",
+        "e|tbl|public.control_project",
+        "n|rel|raypx_foundation.control_project_device_idx",
+        "n|rel|public.control_project_device_idx",
+        "n|rel|raypx_foundation.control_project_pkey",
+        "n|rel|public.control_project_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_request"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_request",
+        "n|tbl|raypx_foundation.control_request",
+        "n|rel|raypx_foundation.control_request",
+        "n|type|raypx_foundation.control_request",
+        "s|tbl|public.control_request",
+        "n|tbl|public.control_request",
+        "n|rel|public.control_request",
+        "n|type|public.control_request",
+        "e|tbl|raypx_foundation.control_request",
+        "e|tbl|public.control_request",
+        "n|rel|raypx_foundation.control_request_device_idx",
+        "n|rel|public.control_request_device_idx",
+        "n|rel|raypx_foundation.control_request_pkey",
+        "n|rel|public.control_request_pkey",
+        "n|rel|raypx_foundation.control_request_task_idx",
+        "n|rel|public.control_request_task_idx"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_task"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.control_task",
+        "n|tbl|raypx_foundation.control_task",
+        "n|rel|raypx_foundation.control_task",
+        "n|type|raypx_foundation.control_task",
+        "s|tbl|public.control_task",
+        "n|tbl|public.control_task",
+        "n|rel|public.control_task",
+        "n|type|public.control_task",
+        "e|tbl|raypx_foundation.control_task",
+        "e|tbl|public.control_task",
+        "n|rel|raypx_foundation.control_task_device_idx",
+        "n|rel|public.control_task_device_idx",
+        "n|rel|raypx_foundation.control_task_pkey",
+        "n|rel|public.control_task_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "instance_enrollment"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.instance_enrollment",
+        "n|tbl|raypx_foundation.instance_enrollment",
+        "n|rel|raypx_foundation.instance_enrollment",
+        "n|type|raypx_foundation.instance_enrollment",
+        "s|tbl|public.instance_enrollment",
+        "n|tbl|public.instance_enrollment",
+        "n|rel|public.instance_enrollment",
+        "n|type|public.instance_enrollment",
+        "e|tbl|raypx_foundation.instance_enrollment",
+        "e|tbl|public.instance_enrollment",
+        "n|rel|raypx_foundation.instance_enrollment_code_hash_key",
+        "n|rel|public.instance_enrollment_code_hash_key",
+        "n|rel|raypx_foundation.instance_enrollment_expiry_idx",
+        "n|rel|public.instance_enrollment_expiry_idx",
+        "n|rel|raypx_foundation.instance_enrollment_pkey",
+        "n|rel|public.instance_enrollment_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "mail_configuration"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.mail_configuration",
+        "n|tbl|raypx_foundation.mail_configuration",
+        "n|rel|raypx_foundation.mail_configuration",
+        "n|type|raypx_foundation.mail_configuration",
+        "s|tbl|public.mail_configuration",
+        "n|tbl|public.mail_configuration",
+        "n|rel|public.mail_configuration",
+        "n|type|public.mail_configuration",
+        "e|tbl|raypx_foundation.mail_configuration",
+        "e|tbl|public.mail_configuration",
+        "n|rel|raypx_foundation.mail_configuration_pkey",
+        "n|rel|public.mail_configuration_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "rate_limit"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.rate_limit",
+        "n|tbl|raypx_foundation.rate_limit",
+        "n|rel|raypx_foundation.rate_limit",
+        "n|type|raypx_foundation.rate_limit",
+        "s|tbl|public.rate_limit",
+        "n|tbl|public.rate_limit",
+        "n|rel|public.rate_limit",
+        "n|type|public.rate_limit",
+        "e|tbl|raypx_foundation.rate_limit",
+        "e|tbl|public.rate_limit",
+        "n|rel|raypx_foundation.rate_limit_key_key",
+        "n|rel|public.rate_limit_key_key",
+        "n|rel|raypx_foundation.rate_limit_last_request_idx",
+        "n|rel|public.rate_limit_last_request_idx",
+        "n|rel|raypx_foundation.rate_limit_pkey",
+        "n|rel|public.rate_limit_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "runtime_instance"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.runtime_instance",
+        "n|tbl|raypx_foundation.runtime_instance",
+        "n|rel|raypx_foundation.runtime_instance",
+        "n|type|raypx_foundation.runtime_instance",
+        "s|tbl|public.runtime_instance",
+        "n|tbl|public.runtime_instance",
+        "n|rel|public.runtime_instance",
+        "n|type|public.runtime_instance",
+        "e|tbl|raypx_foundation.runtime_instance",
+        "e|tbl|public.runtime_instance",
+        "n|rel|raypx_foundation.runtime_instance_owner_idx",
+        "n|rel|public.runtime_instance_owner_idx",
+        "n|rel|raypx_foundation.runtime_instance_pkey",
+        "n|rel|public.runtime_instance_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "session"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.session",
+        "n|tbl|raypx_foundation.session",
+        "n|rel|raypx_foundation.session",
+        "n|type|raypx_foundation.session",
+        "s|tbl|public.session",
+        "n|tbl|public.session",
+        "n|rel|public.session",
+        "n|type|public.session",
+        "e|tbl|raypx_foundation.session",
+        "e|tbl|public.session",
+        "n|rel|raypx_foundation.session_expires_at_idx",
+        "n|rel|public.session_expires_at_idx",
+        "n|rel|raypx_foundation.session_pkey",
+        "n|rel|public.session_pkey",
+        "n|rel|raypx_foundation.session_token_key",
+        "n|rel|public.session_token_key",
+        "n|rel|raypx_foundation.session_user_id_idx",
+        "n|rel|public.session_user_id_idx"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "session_attachment"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.session_attachment",
+        "n|tbl|raypx_foundation.session_attachment",
+        "n|rel|raypx_foundation.session_attachment",
+        "n|type|raypx_foundation.session_attachment",
+        "s|tbl|public.session_attachment",
+        "n|tbl|public.session_attachment",
+        "n|rel|public.session_attachment",
+        "n|type|public.session_attachment",
+        "e|tbl|raypx_foundation.session_attachment",
+        "e|tbl|public.session_attachment",
+        "n|rel|raypx_foundation.session_attachment_expiry_idx",
+        "n|rel|public.session_attachment_expiry_idx",
+        "n|rel|raypx_foundation.session_attachment_owner_idx",
+        "n|rel|public.session_attachment_owner_idx",
+        "n|rel|raypx_foundation.session_attachment_pkey",
+        "n|rel|public.session_attachment_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "storage_configuration"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.storage_configuration",
+        "n|tbl|raypx_foundation.storage_configuration",
+        "n|rel|raypx_foundation.storage_configuration",
+        "n|type|raypx_foundation.storage_configuration",
+        "s|tbl|public.storage_configuration",
+        "n|tbl|public.storage_configuration",
+        "n|rel|public.storage_configuration",
+        "n|type|public.storage_configuration",
+        "e|tbl|raypx_foundation.storage_configuration",
+        "e|tbl|public.storage_configuration",
+        "n|rel|raypx_foundation.storage_configuration_pkey",
+        "n|rel|public.storage_configuration_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "system_configuration"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.system_configuration",
+        "n|tbl|raypx_foundation.system_configuration",
+        "n|rel|raypx_foundation.system_configuration",
+        "n|type|raypx_foundation.system_configuration",
+        "s|tbl|public.system_configuration",
+        "n|tbl|public.system_configuration",
+        "n|rel|public.system_configuration",
+        "n|type|public.system_configuration",
+        "e|tbl|raypx_foundation.system_configuration",
+        "e|tbl|public.system_configuration",
+        "n|rel|raypx_foundation.system_configuration_pkey",
+        "n|rel|public.system_configuration_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "user"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.user",
+        "n|tbl|raypx_foundation.user",
+        "n|rel|raypx_foundation.user",
+        "n|type|raypx_foundation.user",
+        "s|tbl|public.user",
+        "n|tbl|public.user",
+        "n|rel|public.user",
+        "n|type|public.user",
+        "e|tbl|raypx_foundation.user",
+        "e|tbl|public.user",
+        "n|rel|raypx_foundation.user_created_at_idx",
+        "n|rel|public.user_created_at_idx",
+        "n|rel|raypx_foundation.user_email_key",
+        "n|rel|public.user_email_key",
+        "n|rel|raypx_foundation.user_pkey",
+        "n|rel|public.user_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "move_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "verification"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.verification",
+        "n|tbl|raypx_foundation.verification",
+        "n|rel|raypx_foundation.verification",
+        "n|type|raypx_foundation.verification",
+        "s|tbl|public.verification",
+        "n|tbl|public.verification",
+        "n|rel|public.verification",
+        "n|type|public.verification",
+        "e|tbl|raypx_foundation.verification",
+        "e|tbl|public.verification",
+        "n|rel|raypx_foundation.verification_expires_at_idx",
+        "n|rel|public.verification_expires_at_idx",
+        "n|rel|raypx_foundation.verification_identifier_idx",
+        "n|rel|public.verification_identifier_idx",
+        "n|rel|raypx_foundation.verification_pkey",
+        "n|rel|public.verification_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_schema",
+      "statementTarget": [
+        "schema",
+        "raypx_foundation"
+      ],
+      "writes": [
+        "s|sch|raypx_foundation",
+        "n|sch|raypx_foundation",
+        "e|sch|raypx_foundation"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"account\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"admin_audit\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"cloud_job\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"cloud_job_run\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"context_deletion\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"context_document\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"context_version\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_command\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_credential\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_device\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_event\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_grant\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_observed_request\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_observed_session\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_owner\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_project\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_request\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"control_task\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"instance_enrollment\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"mail_configuration\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"rate_limit\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"runtime_instance\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"session\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"session_attachment\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"storage_configuration\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"system_configuration\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"user\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"raypx_foundation\",\"verification\"]",
+      "set": {
+        "schema": "public"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "schemas\u0000[\"raypx_foundation\"]"
+    }
+  ]
+}

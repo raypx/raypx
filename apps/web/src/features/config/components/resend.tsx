@@ -19,6 +19,7 @@ import { Switch } from "@raypx/ui/components/ui/switch";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useTranslations } from "../../../i18n.js";
 import { configurationClient, configurationError } from "../client.js";
+import { ConfigurationActions } from "./actions.js";
 
 const defaults = { from: "", defaultLocale: "en", enabled: true } as const;
 const languages = LOCALE_OPTIONS.map(({ value, nativeName }) => ({ value, label: nativeName }));
@@ -43,7 +44,7 @@ export function ResendSettings({ accountId, active }: { accountId: string; activ
   });
   if (query.isError)
     return (
-      <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-col items-start gap-3 p-4 sm:p-6">
         <Alert variant="destructive">
           <AlertDescription>{t(configurationError(query.error))}</AlertDescription>
         </Alert>
@@ -58,7 +59,12 @@ export function ResendSettings({ accountId, active }: { accountId: string; activ
         )}
       </div>
     );
-  if (!query.data) return <LoadingState label={t("loading")} />;
+  if (!query.data)
+    return (
+      <div className="px-4 sm:px-6">
+        <LoadingState label={t("loading")} />
+      </div>
+    );
   return <ResendForm initial={query.data} queryKey={queryKey} />;
 }
 
@@ -69,7 +75,6 @@ function ResendForm({
   initial: ResendSettingsSnapshot;
   queryKey: string[];
 }) {
-  const c = useTranslations("common");
   const t = useTranslations("site.mail");
   const site = useTranslations("site");
   const cache = useQueryClient();
@@ -138,19 +143,22 @@ function ResendForm({
   return (
     <form
       aria-busy={busy}
-      className="flex flex-col gap-4"
+      className="flex flex-col"
       onSubmit={(event) => {
         event.preventDefault();
         if (canSave) save.mutate();
       }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
         <h2 className="font-medium">Resend</h2>
         <Badge variant={status === "enabled" ? "secondary" : "outline"}>{t(status)}</Badge>
       </div>
-      <fieldset disabled={busy} className="min-w-0">
+      <fieldset disabled={busy} className="min-w-0 px-4 pt-3 pb-5 sm:px-6">
         <FieldGroup className="gap-4">
-          <Field orientation="horizontal" className="justify-between border-y border-border py-3">
+          <Field
+            orientation="horizontal"
+            className="justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5"
+          >
             <FieldLabel htmlFor="resend-enabled">{t("allowMail")}</FieldLabel>
             <Switch
               id="resend-enabled"
@@ -227,29 +235,20 @@ function ResendForm({
           </Field>
         </FieldGroup>
       </fieldset>
-      <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-        <Button type="submit" disabled={!canSave}>
-          {site(save.isPending ? "saving" : "save")}
-        </Button>
-        <Button
-          variant="outline"
-          disabled={busy || !dirty}
-          onClick={() => {
-            setValues(current);
-            setApiKey("");
-            edited();
-          }}
-        >
-          {c("discard")}
-        </Button>
-        {notice && (
-          <span role="status" className="text-sm">
-            {site("saved")}
-          </span>
-        )}
-      </div>
+      <ConfigurationActions
+        busy={busy}
+        saving={save.isPending}
+        dirty={dirty}
+        saved={notice}
+        canSave={canSave}
+        onDiscard={() => {
+          setValues(current);
+          setApiKey("");
+          edited();
+        }}
+      />
       {(save.isError || reload.isError) && (
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex flex-col items-start gap-2 border-t border-border px-4 py-4 sm:px-6">
           <Alert variant="destructive">
             <AlertDescription>{t(resendError(reload.error ?? save.error))}</AlertDescription>
           </Alert>

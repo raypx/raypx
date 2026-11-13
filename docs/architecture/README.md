@@ -29,7 +29,8 @@ flowchart LR
   Daemon --> Tools[Providers / project tools]
 ```
 
-PostgreSQL stores account data and remote read projections. The device profile
+Raypx's dedicated PostgreSQL database stores account data, remote read projections
+and the Drizzle migration ledger in `public`. The device profile
 owns local work, enrollment identity, execution receipts and its replay journal.
 Remote authorization enables an outbound channel; it does not transfer ownership
 of local work or upload unrelated history. Closing Desktop disconnects its UI

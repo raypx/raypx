@@ -1,7 +1,7 @@
 import type { AgentProvider } from "@raypx/core/tasks";
 import type { PiExecutionServices } from "../../pi/ports.js";
 import { ProviderRegistry, type ProviderDriver } from "../../application/providers.js";
-import { createAdapter, discoverProviders } from "./process.js";
+import { createAdapter, discoverProviders, type DiscoveryOptions } from "./process.js";
 import type { TransportFactory } from "../../harness/transport.js";
 import { LocalError } from "../../../errors.js";
 
@@ -10,11 +10,11 @@ export function builtinDrivers(
   pi?: PiExecutionServices,
   transport?: TransportFactory,
   /** Tests pass explicit executables and must not discover a real installation. */
-  explicitOnly = false,
+  options: DiscoveryOptions = {},
 ): ProviderDriver[] {
   const executables = new Map<AgentProvider, string>();
   let probes: ReturnType<typeof discoverProviders> | undefined;
-  const discovery = () => (probes ??= discoverProviders(overrides, executables, { explicitOnly }));
+  const discovery = () => (probes ??= discoverProviders(overrides, executables, options));
   const processDrivers: ProviderDriver[] = (["codex", "claude"] as const).map((provider) => ({
     provider,
     remote: true,
@@ -59,7 +59,7 @@ export function createProviderRegistry(
   overrides: Partial<Record<AgentProvider, string>> = {},
   pi?: PiExecutionServices,
   transport?: TransportFactory,
-  explicitOnly = false,
+  options: DiscoveryOptions = {},
 ) {
-  return new ProviderRegistry(builtinDrivers(overrides, pi, transport, explicitOnly));
+  return new ProviderRegistry(builtinDrivers(overrides, pi, transport, options));
 }

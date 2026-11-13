@@ -5,12 +5,21 @@ export function createHostsHandlers({
   os,
   controlCall,
   options,
-  allowedOrigins,
   enforceLimit,
   controlFailure,
+  withRpcPermission,
+  withPublicRpcAccess,
+  requireTrustedOrigin,
 }: Pick<
   RpcBoundary,
-  "os" | "controlCall" | "options" | "allowedOrigins" | "enforceLimit" | "controlFailure"
+  | "os"
+  | "controlCall"
+  | "options"
+  | "enforceLimit"
+  | "controlFailure"
+  | "withRpcPermission"
+  | "withPublicRpcAccess"
+  | "requireTrustedOrigin"
 >) {
   const digest = async (value: string) =>
     Array.from(
@@ -30,20 +39,13 @@ export function createHostsHandlers({
   };
 
   return {
-    authorize: os.hosts.authorize.handler(({ input, context }) => {
-      const origin = context.headers.get("origin");
-      if (!origin || !allowedOrigins.includes(origin))
-        throw new ORPCError("FORBIDDEN", {
-          data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
-        });
-      return controlCall(
-        context,
-        "projects.read",
-        (control, auth) => control.credentials.authorizeHost(auth, input),
-        { procedure: "hosts.authorize", window: 60, max: 5 },
-      );
-    }),
-    grant: os.hosts.grant.handler(async ({ input, context }) => {
+    authorize: os.hosts.authorize
+      .use(requireTrustedOrigin)
+      .use(withRpcPermission({ window: 60, max: 5 }))
+      .handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.credentials.authorizeHost(auth, input)),
+      ),
+    grant: os.hosts.grant.use(withPublicRpcAccess).handler(async ({ input, context }) => {
       if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
       await limitPeer(context, "hosts.grant");
       await enforceLimit(context, `rpc:hosts.grant:credential:${await digest(input.credential)}`, {
@@ -56,7 +58,7 @@ export function createHostsHandlers({
         return controlFailure(error, context);
       }
     }),
-    revoke: os.hosts.revoke.handler(async ({ input, context }) => {
+    revoke: os.hosts.revoke.use(withPublicRpcAccess).handler(async ({ input, context }) => {
       if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
       await limitPeer(context, "hosts.revoke");
       try {

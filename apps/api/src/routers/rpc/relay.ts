@@ -1,12 +1,14 @@
 import type { RpcBoundary } from "./boundary.js";
-export function createRelayHandlers({ os, controlCall }: Pick<RpcBoundary, "os" | "controlCall">) {
+export function createRelayHandlers({
+  os,
+  controlCall,
+  withRpcPermission,
+}: Pick<RpcBoundary, "os" | "controlCall" | "withRpcPermission">) {
   return {
-    ticket: os.relay.ticket.handler(({ context }) =>
-      controlCall(context, "tasks.read", (control, auth) => control.credentials.ticket(auth), {
-        procedure: "relay.ticket",
-        window: 60,
-        max: 60,
-      }),
-    ),
+    ticket: os.relay.ticket
+      .use(withRpcPermission({ window: 60, max: 60 }))
+      .handler(({ context }) =>
+        controlCall(context, (control, auth) => control.credentials.ticket(auth)),
+      ),
   };
 }

@@ -82,7 +82,7 @@ Bun's Nitro server runs the schedule while the API process is alive, using
 
 ## Cleanup policy
 
-Only the following `raypx_foundation` records are eligible:
+Only the following records in the Raypx database's `public` schema are eligible:
 
 | Records                | Eligibility                         | Maximum per invocation |
 | ---------------------- | ----------------------------------- | ---------------------- |

@@ -251,6 +251,9 @@ Keep editable drafts through network failures and revision conflicts, with expli
 reload/discard actions. Object storage and Resend credentials are write-only, stay in the
 form until save or discard, and are absent from responses. Public settings supply
 the shell label and signup availability.
+The configuration tabs animate the selection indicator for pointer input. Keyboard
+selection and reduced-motion preferences disable that transition. The three forms
+share their save, discard and confirmation layout.
 
 ## Account access and administration
 

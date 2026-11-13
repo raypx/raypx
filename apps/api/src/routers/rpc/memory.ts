@@ -1,123 +1,102 @@
 import { ORPCError } from "@orpc/server";
 import { ContextError } from "@raypx/core/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";
-import type { AccountRateLimit, RpcContext } from "../../middleware/rpc.js";
+import type { AccountContext } from "../../middleware/rpc.js";
 import type { RpcBoundary } from "./boundary.js";
+
+type Status = "NOT_FOUND" | "BAD_REQUEST" | "UNAUTHORIZED" | "SERVICE_UNAVAILABLE";
+const statuses: Readonly<Record<string, Status>> = {
+  CONTEXT_NOT_FOUND: "NOT_FOUND",
+  INVALID_CONTEXT: "BAD_REQUEST",
+  CONTEXT_TOO_LARGE: "BAD_REQUEST",
+  AUTH_REQUIRED: "UNAUTHORIZED",
+  CONTEXT_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+};
+
 export function createMemoryHandlers({
   os,
   options,
-  requirePermission,
-  checkTrustedOrigin,
-  enforceAccountLimit,
+  withRpcPermission,
+  requireTrustedOrigin,
+  limitAccount,
 }: Pick<
   RpcBoundary,
-  "os" | "options" | "requirePermission" | "checkTrustedOrigin" | "enforceAccountLimit"
+  "os" | "options" | "withRpcPermission" | "requireTrustedOrigin" | "limitAccount"
 >) {
   async function memoryCall<T>(
-    context: RpcContext,
-    limit: AccountRateLimit,
-    write: boolean,
+    context: AccountContext,
     run: (service: ContextLibraryService, owner: string) => Promise<T>,
   ) {
-    const auth = await requirePermission(context, "memory.manage");
-    if (write) checkTrustedOrigin(context);
-    await enforceAccountLimit(context, auth, limit);
     if (!options.memory) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
-      return await run(options.memory, auth.user.id);
+      return await run(options.memory, context.auth.user.id);
     } catch (error) {
       if (!(error instanceof ContextError)) throw error;
-      const code =
-        error.code === "CONTEXT_NOT_FOUND"
-          ? "NOT_FOUND"
-          : ["INVALID_CONTEXT", "CONTEXT_TOO_LARGE"].includes(error.code)
-            ? "BAD_REQUEST"
-            : error.code === "AUTH_REQUIRED"
-              ? "UNAUTHORIZED"
-              : error.code === "CONTEXT_UNAVAILABLE"
-                ? "SERVICE_UNAVAILABLE"
-                : "CONFLICT";
-      throw new ORPCError(code, {
+      throw new ORPCError(statuses[error.code] ?? "CONFLICT", {
         data: { error: { code: error.code }, requestId: context.requestId },
       });
     }
   }
+  // Writes reject an untrusted Origin before they spend the account's quota.
+  const canManage = withRpcPermission();
 
   return {
-    list: os.memory.list.handler(({ context }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.list", window: 60, max: 60 },
-        false,
-        (service, owner) => service.list(owner),
+    list: os.memory.list
+      .use(withRpcPermission({ window: 60, max: 60 }))
+      .handler(({ context }) => memoryCall(context, (service, owner) => service.list(owner))),
+    get: os.memory.get
+      .use(withRpcPermission({ window: 60, max: 60 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.get(owner, input)),
       ),
-    ),
-    get: os.memory.get.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.get", window: 60, max: 60 },
-        false,
-        (service, owner) => service.get(owner, input),
+    create: os.memory.create
+      .use(canManage)
+      .use(requireTrustedOrigin)
+      .use(limitAccount({ window: 60, max: 20 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.create(owner, input)),
       ),
-    ),
-    create: os.memory.create.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.create", window: 60, max: 20 },
-        true,
-        (service, owner) => service.create(owner, input),
+    update: os.memory.update
+      .use(canManage)
+      .use(requireTrustedOrigin)
+      .use(limitAccount({ window: 60, max: 30 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.update(owner, input)),
       ),
-    ),
-    update: os.memory.update.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.update", window: 60, max: 30 },
-        true,
-        (service, owner) => service.update(owner, input),
+    archive: os.memory.archive
+      .use(canManage)
+      .use(requireTrustedOrigin)
+      .use(limitAccount({ window: 60, max: 20 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.archive(owner, input)),
       ),
-    ),
-    archive: os.memory.archive.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.archive", window: 60, max: 20 },
-        true,
-        (service, owner) => service.archive(owner, input),
+    history: os.memory.history
+      .use(withRpcPermission({ window: 60, max: 60 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.history(owner, input)),
       ),
-    ),
-    history: os.memory.history.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.history", window: 60, max: 60 },
-        false,
-        (service, owner) => service.history(owner, input),
+    delete: os.memory.delete
+      .use(canManage)
+      .use(requireTrustedOrigin)
+      .use(limitAccount({ window: 60, max: 20 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.delete(owner, input)),
       ),
-    ),
-    delete: os.memory.delete.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.delete", window: 60, max: 20 },
-        true,
-        (service, owner) => service.delete(owner, input),
+    restore: os.memory.restore
+      .use(canManage)
+      .use(requireTrustedOrigin)
+      .use(limitAccount({ window: 60, max: 20 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) => service.restore(owner, input)),
       ),
-    ),
-    restore: os.memory.restore.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.restore", window: 60, max: 20 },
-        true,
-        (service, owner) => service.restore(owner, input),
-      ),
-    ),
-    resolve: os.memory.resolve.handler(({ context, input }) =>
-      memoryCall(
-        context,
-        { procedure: "memory.resolve", window: 60, max: 30 },
-        false,
-        (service, owner) =>
+    resolve: os.memory.resolve
+      .use(withRpcPermission({ window: 60, max: 30 }))
+      .handler(({ context, input }) =>
+        memoryCall(context, (service, owner) =>
           options.resolveContext
             ? options.resolveContext(owner, input.selection, input.target, input.prompt ?? " ")
             : service.resolve(owner, input.selection, input.target, input.prompt ?? " "),
+        ),
       ),
-    ),
   };
 }

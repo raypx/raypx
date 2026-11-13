@@ -1,14 +1,9 @@
 import { ORPCError } from "@orpc/server";
-import type { AccountPermission } from "@raypx/account/access";
 import { ControlError, type ControlService } from "@raypx/control";
 import { normalizeTrustedOrigins, type AuthSession } from "@raypx/core/auth";
 import { createAccessPolicy } from "../../access.js";
 import type { ApiAppOptions } from "../../app/options.js";
-import {
-  createRpcMiddleware,
-  type AccountRateLimit,
-  type RpcContext,
-} from "../../middleware/rpc.js";
+import { createRpcMiddleware, type AccountContext, type RpcContext } from "../../middleware/rpc.js";
 
 function controlFailure(error: unknown, context: RpcContext): never {
   if (!(error instanceof ControlError)) throw error;
@@ -31,19 +26,14 @@ export function createRpcBoundary(options: ApiAppOptions) {
   const access = options.access ?? createAccessPolicy();
   const allowedOrigins = normalizeTrustedOrigins(options.allowedOrigins);
   const middleware = createRpcMiddleware(options, access, allowedOrigins);
-  const { requirePermission, enforceAccountLimit } = middleware;
 
   async function controlCall<T>(
-    context: RpcContext,
-    permission: AccountPermission,
+    context: AccountContext,
     run: (control: ControlService, auth: AuthSession) => Promise<T>,
-    limit?: AccountRateLimit,
   ) {
-    const auth = await requirePermission(context, permission);
     if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
-    if (limit) await enforceAccountLimit(context, auth, limit);
     try {
-      return await run(options.control, auth);
+      return await run(options.control, context.auth);
     } catch (error) {
       return controlFailure(error, context);
     }
@@ -53,7 +43,6 @@ export function createRpcBoundary(options: ApiAppOptions) {
     ...middleware,
     controlCall,
     options,
-    allowedOrigins,
     controlFailure,
     access,
   };
