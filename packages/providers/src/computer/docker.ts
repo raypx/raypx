@@ -136,6 +136,12 @@ export function createDockerComputerProvider(options: {
             if (pending.length > 2 * 1024 * 1024) throw new ComputerError("LIMIT_EXCEEDED");
             let end = pending.indexOf("\n");
             while (end >= 0) {
+              // The supervisor opens the stream with an empty line to flush the response head.
+              if (end === 0) {
+                pending = pending.slice(1);
+                end = pending.indexOf("\n");
+                continue;
+              }
               const event = processEventSchema.parse(JSON.parse(pending.slice(0, end)));
               if (exited) throw new ComputerError("PROVIDER_UNAVAILABLE");
               if (event.kind === "exit") exited = true;

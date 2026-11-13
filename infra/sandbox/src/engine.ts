@@ -95,13 +95,13 @@ export class Engine {
       data,
       Buffer.alloc(((512 - (data.length % 512)) % 512) + 1024),
     ]);
-    const response = await this.request(`/v1.47/containers/${container}/archive?path=/tmp`, {
+    const response = await this.request(`/v1.47/containers/${container}/archive?path=/run/raypx`, {
       method: "PUT",
       headers: { "content-type": "application/x-tar" },
       body: tar,
     });
     if (!response.ok) throw new ComputerError("PROVIDER_UNAVAILABLE");
-    return this.exec(container, ["python3", "/opt/raypx/home.py", operation, `/tmp/${name}`]);
+    return this.exec(container, ["python3", "/opt/raypx/home.py", operation, `/run/raypx/${name}`]);
   }
   async helper<T>(
     container: string,

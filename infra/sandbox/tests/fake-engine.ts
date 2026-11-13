@@ -60,10 +60,13 @@ export function fakeEngine() {
     const path = raw.replace("/v1.47", "");
     const method = init.method ?? "GET";
     if (path.includes("/archive?")) {
+      // A real Engine refuses uploads into a read-only root or a tmpfs; only a volume path works.
+      if (!path.endsWith("/archive?path=/run/raypx"))
+        return Response.json({ message: "container rootfs is marked read-only" }, { status: 400 });
       const tar = Buffer.from(init.body as Uint8Array);
       const name = tar.subarray(0, 100).toString().replace(/\0.*$/, "");
       const size = Number.parseInt(tar.subarray(124, 136).toString().replace(/\0.*$/, ""), 8);
-      inputs.set(`/tmp/${name}`, JSON.parse(tar.subarray(512, 512 + size).toString()));
+      inputs.set(`/run/raypx/${name}`, JSON.parse(tar.subarray(512, 512 + size).toString()));
       return new Response(null);
     }
     const body = init.body ? (JSON.parse(init.body as string) as Record<string, unknown>) : {};

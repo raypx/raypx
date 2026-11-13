@@ -101,6 +101,11 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
           const iterator = process.events[Symbol.asyncIterator]();
           const encoder = new TextEncoder();
           const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+              // An empty line flushes the response head, so the caller can cancel a command
+              // that has produced no output yet.
+              controller.enqueue(encoder.encode("\n"));
+            },
             async pull(controller) {
               try {
                 const { value, done } = await iterator.next();

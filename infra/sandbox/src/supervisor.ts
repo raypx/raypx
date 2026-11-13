@@ -105,7 +105,12 @@ export function createSupervisor(
           NetworkMode: config.network,
           Init: true,
           Tmpfs: { "/tmp": "rw,nosuid,nodev,noexec,size=67108864,mode=1777" },
-          Mounts: [{ Type: "volume", Source: volume, Target: "/home/computer" }],
+          // The Engine refuses archive uploads into a read-only root or a tmpfs, so helper
+          // input travels through a private anonymous volume that the image owns as uid 1000.
+          Mounts: [
+            { Type: "volume", Source: volume, Target: "/home/computer" },
+            { Type: "volume", Target: "/run/raypx" },
+          ],
           LogConfig: { Type: "none" },
         },
       });
@@ -114,14 +119,21 @@ export function createSupervisor(
       return { ...c, container, volume, state: "running" as "running" | "stopped" };
     } catch (error) {
       if (container)
-        await engine.response(`/containers/${container}?force=true`, "DELETE").catch(() => {});
+        await engine
+          .response(`/containers/${container}?force=true&v=true`, "DELETE")
+          .catch(() => {});
       await engine.response(`/volumes/${volume}`, "DELETE").catch(() => {});
       throw error;
     }
   }
   async function remove(c: StoredComputer) {
     if (c.container)
-      await engine.response(`/containers/${c.container}?force=true`, "DELETE", undefined, [404]);
+      await engine.response(
+        `/containers/${c.container}?force=true&v=true`,
+        "DELETE",
+        undefined,
+        [404],
+      );
     if (c.volume) await engine.response(`/volumes/${c.volume}`, "DELETE", undefined, [404]);
   }
   async function cancelAll(id: string) {

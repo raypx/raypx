@@ -7,7 +7,8 @@ FROM python:3.13-slim-bookworm@sha256:${COMPUTER_BASE_DIGEST}
 RUN apt-get update && apt-get install -y --no-install-recommends coreutils git ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 1000 --create-home --shell /bin/sh computer \
-    && mkdir -p /home/computer/workspace && chown -R 1000:1000 /home/computer
+    && mkdir -p /home/computer/workspace && chown -R 1000:1000 /home/computer \
+    && mkdir -p /run/raypx && chown 1000:1000 /run/raypx && chmod 700 /run/raypx
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY infra/sandbox/src/home.py /opt/raypx/home.py
 USER 1000:1000

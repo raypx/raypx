@@ -42,7 +42,10 @@ it("applies ceilings, a non-root user, only the owned home and a deterministic p
       Privileged: false,
       ReadonlyRootfs: true,
       CapDrop: ["ALL"],
-      Mounts: [{ Type: "volume", Target: "/home/computer" }],
+      Mounts: [
+        { Type: "volume", Target: "/home/computer" },
+        { Type: "volume", Target: "/run/raypx" },
+      ],
       LogConfig: { Type: "none" },
     },
   });
@@ -50,7 +53,7 @@ it("applies ceilings, a non-root user, only the owned home and a deterministic p
   expect(f.fake.calls.find((c) => c.path === "/networks/create")?.body).toMatchObject({
     Options: { "com.docker.network.bridge.name": f.config.bridge },
   });
-  expect((create as { HostConfig: { Mounts: unknown[] } }).HostConfig.Mounts).toHaveLength(1);
+  expect((create as { HostConfig: { Mounts: unknown[] } }).HostConfig.Mounts).toHaveLength(2);
 });
 it("reports restricted egress only with both explicit assertions", async () => {
   for (const [enabled, applied, expected] of [
