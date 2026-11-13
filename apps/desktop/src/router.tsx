@@ -31,7 +31,7 @@ export function getRouter() {
   });
 }
 /** Message keys that title shell pages; each translates without values. */
-type PageTitle = "agents.title" | "common.account";
+type PageTitle = "agents.spaceSettings.joinTitle" | "agents.title" | "common.account";
 
 declare module "@tanstack/react-router" {
   interface HistoryState {

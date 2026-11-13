@@ -4,7 +4,7 @@ import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { useSettingsNavigation } from "../../features/settings/navigation.js";
 import { agentsClient } from "../../features/agents/client.js";
 import { SessionBoundary } from "../../features/auth/components/session-boundary.js";
-import { apiUrl } from "../../features/auth/client.js";
+import { apiUrl, webUrl } from "../../features/auth/client.js";
 import { safeReturnTo } from "../../features/auth/return-to.js";
 import { PageAccessFeedback, webPageGuard } from "../../features/auth/route-guard.js";
 
@@ -30,6 +30,9 @@ function AgentsPage() {
         <AgentsWorkspace
           key={`${apiUrl}:${accountId}`}
           client={agentsClient}
+          spaceManagement={agentsClient.spaces}
+          accountApprovalSettings={agentsClient.approvals}
+          invitationOrigin={webUrl}
           accountId={accountId}
           origin={apiUrl}
           {...selection}

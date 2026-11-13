@@ -16,6 +16,7 @@ import { Route as landingRouteRouteImport } from './routes/(landing)/route'
 import { Route as legalRouteRouteImport } from './routes/(legal)/route'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as appAgentsRouteImport } from './routes/(app)/agents'
+import { Route as appJoinRouteImport } from './routes/(app)/join'
 import { Route as appSettingsRouteImport } from './routes/(app)/settings'
 import { Route as authDesktopAuthorizeRouteImport } from './routes/(auth)/desktop-authorize'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
@@ -58,6 +59,11 @@ const HealthRoute = HealthRouteImport.update({
 const appAgentsRoute = appAgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appJoinRoute = appJoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appSettingsRoute = appSettingsRouteImport.update({
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/agents': typeof appAgentsRoute
+  '/join': typeof appJoinRoute
   '/settings': typeof appSettingsRoute
   '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/agents': typeof appAgentsRoute
+  '/join': typeof appJoinRoute
   '/settings': typeof appSettingsRoute
   '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/(legal)': typeof legalRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/(app)/agents': typeof appAgentsRoute
+  '/(app)/join': typeof appJoinRoute
   '/(app)/settings': typeof appSettingsRoute
   '/(auth)/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/'
     | '/health'
     | '/agents'
+    | '/join'
     | '/settings'
     | '/desktop-authorize'
     | '/forgot-password'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/health'
     | '/agents'
+    | '/join'
     | '/settings'
     | '/desktop-authorize'
     | '/forgot-password'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/(legal)'
     | '/health'
     | '/(app)/agents'
+    | '/(app)/join'
     | '/(app)/settings'
     | '/(auth)/desktop-authorize'
     | '/(auth)/forgot-password'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents'
       preLoaderRoute: typeof appAgentsRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/join': {
+      id: '/(app)/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof appJoinRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/settings': {
@@ -416,11 +435,13 @@ const adminRouteRouteWithChildren = adminRouteRoute._addFileChildren(
 
 interface appRouteRouteChildren {
   appAgentsRoute: typeof appAgentsRoute
+  appJoinRoute: typeof appJoinRoute
   appSettingsRoute: typeof appSettingsRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appAgentsRoute: appAgentsRoute,
+  appJoinRoute: appJoinRoute,
   appSettingsRoute: appSettingsRoute,
 }
 

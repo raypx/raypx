@@ -30,6 +30,7 @@ import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SendIcon } from "@raypx/icons/send";
 import { StopIcon } from "@raypx/icons/stop";
+import type { SpaceDirectoryMember, SpaceSettings } from "@raypx/core/spaces";
 import type { RunId, ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import {
   ConversationController,
@@ -83,6 +84,8 @@ interface AgentConversationProps {
   showAgentNames?: boolean;
   /** A mount may supply membership context when its data source exposes it. */
   hasOtherMembers?: boolean;
+  members?: readonly SpaceDirectoryMember[] | undefined;
+  spaceSettings?: SpaceSettings | null | undefined;
 }
 
 export function AgentConversation({
@@ -100,6 +103,8 @@ export function AgentConversation({
   accountId,
   showAgentNames = false,
   hasOtherMembers = false,
+  members,
+  spaceSettings,
 }: AgentConversationProps) {
   const t = useTranslations("agents");
   const [controllers, setControllers] = useState<{
@@ -159,6 +164,8 @@ export function AgentConversation({
       accountId={accountId}
       showAgentNames={showAgentNames}
       hasOtherMembers={hasOtherMembers}
+      members={members}
+      spaceSettings={spaceSettings}
       approvalPort={approvalPort}
       activity={activity}
       onActivity={onActivity}
@@ -176,6 +183,8 @@ function ConversationContents({
   accountId,
   showAgentNames,
   hasOtherMembers,
+  members,
+  spaceSettings,
   approvalPort,
   activity,
   onActivity,
@@ -189,6 +198,8 @@ function ConversationContents({
   accountId: string;
   showAgentNames: boolean;
   hasOtherMembers: boolean;
+  members: readonly SpaceDirectoryMember[] | undefined;
+  spaceSettings: SpaceSettings | null | undefined;
   approvalPort: ApprovalPort | undefined;
   activity: readonly ToolCallActivity[] | undefined;
   onActivity: ((spaceId: string, calls: readonly ToolCallActivity[]) => void) | undefined;
@@ -293,10 +304,15 @@ function ConversationContents({
       ),
     [state.cards, state.toolActivity, accountId],
   );
+  const memberName = (memberAccountId: string) => {
+    if (memberAccountId === accountId) return t("you");
+    return members?.find((member) => member.accountId === memberAccountId)?.name || t("member");
+  };
   const senderContext = {
     showAgentNames,
-    hasOtherMembers:
-      hasOtherMembers || messages.some((message) => message.author.accountId !== accountId),
+    hasOtherMembers: members
+      ? members.length > 1
+      : hasOtherMembers || messages.some((message) => message.author.accountId !== accountId),
   };
   useEffect(() => {
     if (state.toolActivity.length) onActivity?.(item.agent.spaceId, state.toolActivity);
@@ -544,6 +560,8 @@ function ConversationContents({
                       activity={row.activity}
                       pendingCount={row.pendingCount}
                       approvalPort={approvalPort}
+                      answers={state.cards}
+                      memberName={senderContext.hasOtherMembers ? memberName : undefined}
                       selection={{
                         spaceId: item.agent.spaceId,
                         conversationId: item.conversation.id,
@@ -556,6 +574,7 @@ function ConversationContents({
                       key={row.id}
                       card={row.card}
                       accountId={accountId}
+                      memberName={memberName}
                       onAnswer={(decision, allowTool) =>
                         controller.answerApproval(row.card.requestId, decision, allowTool)
                       }
@@ -580,7 +599,7 @@ function ConversationContents({
                     >
                       {showSender && (
                         <h3 className="text-xs font-medium text-muted-foreground">
-                          {row.sender === `member:${accountId}` ? t("you") : t("member")}
+                          {memberName(row.sender.slice("member:".length))}
                         </h3>
                       )}
                       <p className="max-w-[90%] rounded-lg bg-muted px-3 py-2 text-sm whitespace-pre-wrap wrap-anywhere">
@@ -755,7 +774,13 @@ function ConversationContents({
                   void send();
                 }}
               />
-              <InputGroupAddon align="block-end" className="justify-end">
+              <InputGroupAddon align="block-end" className="flex-wrap justify-end">
+                {spaceSettings?.approvalMode && (
+                  <span className="min-w-0 flex-1 text-xs wrap-anywhere text-muted-foreground">
+                    {t("spaceSettings.overridesDefault")}:{" "}
+                    {t(`approvalSettings.${spaceSettings.approvalMode}`)}
+                  </span>
+                )}
                 <PendingApprovalControl cards={pendingCards} history={history} />
                 {showStop && active ? (
                   <IconButton

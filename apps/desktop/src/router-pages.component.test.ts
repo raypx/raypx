@@ -24,6 +24,7 @@ describe("Desktop shell pages", () => {
     ).toEqual({
       "/": undefined,
       "/account": { title: "common.account", layout: "document" },
+      "/join": { title: "agents.spaceSettings.joinTitle", layout: "document" },
       "/agents": { title: "agents.title", layout: "tool" },
     });
   });

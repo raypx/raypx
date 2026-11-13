@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AgentsRouteImport } from './routes/agents'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -36,6 +37,11 @@ const AccountRoute = AccountRouteImport.update({
 const AgentsRoute = AgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
+  '/join': typeof JoinRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
+  '/join': typeof JoinRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
+  '/join': typeof JoinRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/agents'
+    | '/join'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/agents'
+    | '/join'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/account'
     | '/agents'
+    | '/join'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -135,6 +147,7 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   AccountRoute: typeof AccountRoute
   AgentsRoute: typeof AgentsRoute
+  JoinRoute: typeof JoinRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents'
       preLoaderRoute: typeof AgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   AccountRoute: AccountRoute,
   AgentsRoute: AgentsRoute,
+  JoinRoute: JoinRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

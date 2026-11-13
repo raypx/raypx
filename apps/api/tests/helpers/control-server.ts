@@ -3,7 +3,7 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { serve } from "bun";
 import { RelayHub } from "@raypx/control/relay";
 import { user, schema } from "@raypx/database/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiApp } from "./app.js";
@@ -19,8 +19,13 @@ import {
   createConversationsRepository,
   createConversationFanout,
   createApprovalsRepository,
+  cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
-import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import {
+  createSpaceAccess,
+  createSpaceFanout,
+  createSpaceManagement,
+} from "@raypx/spaces/server/postgres";
 import { createRoutinesService } from "@raypx/jobs/routines";
 import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
 import { createSpaceMemoryService } from "@raypx/memory/space-server";
@@ -58,7 +63,13 @@ if (
 await migrateDatabase(url);
 const connection = connectDatabase(url);
 const email = "control-e2e@example.com";
-await connection.db.delete(user).where(eq(user.email, email));
+const accounts = [
+  { email, name: "Control Browser Test" },
+  { email: "control-member-web@example.com", name: "Web Space Member" },
+  { email: "control-member-desktop@example.com", name: "Desktop Space Member" },
+];
+const accountEmails = accounts.map((account) => account.email);
+await connection.db.delete(user).where(inArray(user.email, accountEmails));
 const auth = createAuth({
   database: drizzleAdapter(connection.db, { provider: "pg", schema }),
   config: {
@@ -112,6 +123,11 @@ const runner = new ConversationRunner(
   },
   { recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId) },
 );
+const spaceManagement = createSpaceManagement(connection.db, {
+  beforeMemberRemoved: cancelSpaceRuns,
+  afterMemberRemoved: (scope, accountId) => runner.cancelMember(scope.spaceId, accountId),
+  afterDeletionClaimed: (spaceId) => runner.cancelMember(spaceId),
+});
 const routineKeys = applicationSecretKeyProvider("browser-fixture-routine-encryption-key");
 const routines = createRoutinesService(createRoutinesRepository(connection.db), {
   dispatch: (scope, conversationId) => runner.dispatch(scope, conversationId as ConversationId),
@@ -122,6 +138,7 @@ const routines = createRoutinesService(createRoutinesRepository(connection.db), 
   },
 });
 const fanout = createConversationFanout(url);
+const spaceFanout = createSpaceFanout(url);
 const readSession = (headers: Headers) => readAuthSession(auth, headers);
 const stream = new ConversationStream({
   spaces,
@@ -129,6 +146,8 @@ const stream = new ConversationStream({
   fanout,
   readSession,
   live: runner.live,
+  spaceEvents: spaceManagement,
+  spaceFanout,
 });
 await stream.start();
 const hub = new RelayHub(async (run) => {
@@ -165,24 +184,26 @@ const app = createApiApp({
   routines,
   spaceMemory,
   spaces,
+  spaceManagement,
   agents: createAgentsRepository(connection.db),
   conversationModels,
   conversations: runner.conversations,
   onRevoke: (userId, deviceId) => hub.revoke(userId, deviceId),
 });
-const signup = await app.fetch(
-  new Request(`http://127.0.0.1:${port}/api/auth/sign-up/email`, {
-    method: "POST",
-    headers: { "content-type": "application/json", origin: "http://127.0.0.1:4173" },
-    body: JSON.stringify({
-      email,
-      password: "Raypx-control-test-123",
-      name: "Control Browser Test",
+for (const account of accounts) {
+  const signup = await app.fetch(
+    new Request(`http://127.0.0.1:${port}/api/auth/sign-up/email`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "http://127.0.0.1:4173" },
+      body: JSON.stringify({ ...account, password: "Raypx-control-test-123" }),
     }),
-  }),
-);
-if (signup.status !== 200) throw new Error("Unable to seed browser fixture account");
-await connection.db.update(user).set({ emailVerified: true }).where(eq(user.email, email));
+  );
+  if (signup.status !== 200) throw new Error("Unable to seed browser fixture account");
+  await connection.db
+    .update(user)
+    .set({ emailVerified: true })
+    .where(eq(user.email, account.email));
+}
 type SocketData =
   | { id: string; kind: "relay" }
   | { id: string; kind: "conversation"; accountId: string; headers: Headers };
@@ -265,8 +286,9 @@ const stop = async () => {
   await stream.shutdown();
   await runner.close();
   await fanout.close();
+  await spaceFanout.close();
   await server.stop(true);
-  await connection.db.delete(user).where(eq(user.email, email));
+  await connection.db.delete(user).where(inArray(user.email, accountEmails));
   await connection.close();
   process.exit(0);
 };

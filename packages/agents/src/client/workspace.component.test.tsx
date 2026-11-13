@@ -15,6 +15,7 @@ import type {
   ConversationSocketPort,
   ConversationSnapshot,
   ApprovalPort,
+  SpaceManagementPort,
 } from "../model.js";
 import { AgentConversation } from "./conversation.js";
 import { AgentsWorkspace } from "./workspace.js";
@@ -165,7 +166,11 @@ function fixture({
     },
     conversations: { snapshot: readSnapshot, send, stop },
   };
-  function mount(selected = false, frame?: "document" | "window") {
+  function mount(
+    selected = false,
+    frame?: "document" | "window",
+    onNavigate?: (selection: { spaceId: string; agentId?: string }) => void,
+  ) {
     const workspace = (
       <AgentsWorkspace
         client={client}
@@ -174,6 +179,7 @@ function fixture({
         socket={socket}
         drafts={drafts}
         {...(selected ? { agentId: agent.id } : {})}
+        {...(onNavigate ? { onNavigate } : {})}
       />
     );
     return render(
@@ -1779,5 +1785,170 @@ it.each(
     } finally {
       vi.unstubAllGlobals();
     }
+  },
+);
+
+it.each(["removed", "deleting"] as const)(
+  "closes a %s Space immediately and keeps a later user choice when exit discovery finishes",
+  async (reason) => {
+    const two = {
+      space: {
+        ...membership.space,
+        id: spaceSchema.shape.id.parse("space-two"),
+        name: "Second Space",
+      },
+      member: { ...membership.member, spaceId: spaceSchema.shape.id.parse("space-two") },
+    };
+    const three = {
+      space: {
+        ...membership.space,
+        id: spaceSchema.shape.id.parse("space-three"),
+        name: "Third Space",
+      },
+      member: { ...membership.member, spaceId: spaceSchema.shape.id.parse("space-three") },
+    };
+    let memberships = [membership, two, three];
+    const context = fixture({ memberships });
+    const list = vi.fn(async () => memberships);
+    context.client.spaces.list = list;
+    context.client.agents.list = async ({ spaceId }) =>
+      spaceId === membership.space.id ? [{ agent, conversation }] : [];
+    const unused = async () => {
+      throw new Error("Unexpected Space operation");
+    };
+    let acknowledgeDeletion!: (value: Awaited<ReturnType<SpaceManagementPort["delete"]>>) => void;
+    const deleteSpace = vi.fn<SpaceManagementPort["delete"]>(
+      () =>
+        new Promise((resolve) => {
+          acknowledgeDeletion = resolve;
+        }),
+    );
+    const management: SpaceManagementPort = {
+      get: async ({ spaceId }) => memberships.find((entry) => entry.space.id === spaceId)!.space,
+      members: async ({ spaceId }) => [
+        {
+          ...memberships.find((entry) => entry.space.id === spaceId)!.member,
+          name: "Viewer",
+          image: null,
+        },
+      ],
+      settings: async ({ spaceId }) => ({ spaceId, approvalMode: null, updatedAt: null }),
+      invitations: async () => [],
+      rename: unused,
+      delete: deleteSpace,
+      leave: unused,
+      updateMemberRole: unused,
+      removeMember: unused,
+      createInvitation: unused,
+      cancelInvitation: unused,
+      cancelInvitations: unused,
+      previewInvitation: unused,
+      acceptInvitation: unused,
+      setApprovalOverride: unused,
+      clearApprovalOverride: unused,
+      audit: unused,
+      events: unused,
+    };
+    context.client.spaceManagement = management;
+    const connections: Array<{
+      callbacks: Parameters<ConversationSocketPort["connect"]>[0];
+      sent: unknown[];
+    }> = [];
+    context.socket.connect = (callbacks) => {
+      const sent: unknown[] = [];
+      connections.push({ callbacks, sent });
+      queueMicrotask(() => callbacks.onFrame({ type: "ready", version: 1 }));
+      return { send: (value) => sent.push(value), close() {} };
+    };
+    const onNavigate = vi.fn();
+    await act(async () => {
+      context.mount(true, "document", onNavigate);
+    });
+    await screen.findByRole("button", { name: "Computer: Not configured on this server" });
+    await waitFor(() =>
+      expect(
+        connections.some(({ sent }) =>
+          sent.some((value) => JSON.stringify(value).includes('"type":"space.subscribe"')),
+        ),
+      ).toBe(true),
+    );
+    const live = connections.find(({ sent }) =>
+      sent.some((value) => JSON.stringify(value).includes('"type":"space.subscribe"')),
+    )!;
+    const user = userEvent.setup();
+    if (reason === "deleting") {
+      await user.click(screen.getByRole("button", { name: "Space" }));
+      await user.click(
+        await screen.findByRole("menuitem", { name: en.agents.spaceSettings.title }),
+      );
+      const settings = await screen.findByRole("dialog", { name: en.agents.spaceSettings.title });
+      await user.click(
+        within(settings).getByRole("button", { name: en.agents.spaceSettings.delete }),
+      );
+      const title = en.agents.spaceSettings.deleteTitle.replace("{name}", membership.space.name);
+      const confirmation = await screen.findByRole("dialog", { name: title });
+      const prompt = en.agents.spaceSettings.typeName.replace("{name}", membership.space.name);
+      await user.type(
+        within(confirmation).getByRole("textbox", { name: prompt }),
+        membership.space.name,
+      );
+      await user.click(
+        within(confirmation).getByRole("button", { name: en.agents.spaceSettings.delete }),
+      );
+    }
+    await waitFor(() => expect(deleteSpace).toHaveBeenCalledTimes(reason === "deleting" ? 1 : 0));
+    let finish!: (value: typeof memberships) => void;
+    if (reason === "deleting") list.mockResolvedValueOnce([two, three]);
+    list.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    memberships = [two, three];
+    await act(async () => {
+      if (reason === "deleting") live.callbacks.onClose(4003);
+      else
+        live.callbacks.onFrame({
+          type: "space.event",
+          spaceId: membership.space.id,
+          event: {
+            id: 1,
+            spaceId: membership.space.id,
+            kind: "space.member.removed",
+            payload: { accountId: "account" },
+            createdAt: "2026-11-14T03:00:00Z",
+          },
+        });
+    });
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith({ spaceId: two.space.id }));
+    expect(
+      screen.queryByRole("button", { name: "Computer: Not configured on this server" }),
+    ).toBeNull();
+    const initialExit =
+      reason === "deleting"
+        ? en.agents.spaceSettings.exitUnavailable
+        : en.agents.spaceSettings.exitRemoved;
+    expect(await screen.findByText(initialExit)).toBeVisible();
+    if (reason === "deleting") {
+      await act(async () => {
+        acknowledgeDeletion({ spaceId: membership.space.id, status: "deleting" });
+      });
+    }
+    const confirmedExit =
+      reason === "deleting"
+        ? en.agents.spaceSettings.exitDeleted
+        : en.agents.spaceSettings.exitRemoved;
+    expect(await screen.findByText(confirmedExit)).toBeVisible();
+    const switcher = await screen.findByRole("button", { name: "Space" });
+    await waitFor(() => expect(switcher).toBeEnabled());
+    await user.click(switcher);
+    await user.click(await screen.findByRole("menuitemradio", { name: three.space.name }));
+    expect(onNavigate).toHaveBeenLastCalledWith({ spaceId: three.space.id });
+    await act(async () => {
+      finish(memberships);
+    });
+    expect(onNavigate).toHaveBeenLastCalledWith({ spaceId: three.space.id });
+    expect(screen.getByRole("button", { name: "Space" })).toHaveTextContent(three.space.name);
   },
 );

@@ -77,12 +77,14 @@ function ApprovalDeadline({ card, onExpired }: { card: ApprovalCardView; onExpir
 export function ApprovalCard({
   card,
   accountId,
+  memberName,
   onAnswer,
   onExpired,
   onAnswered,
 }: {
   card: ApprovalCardView;
   accountId: string;
+  memberName?: ((id: string) => string) | undefined;
   onAnswer: (decision: "approved" | "denied", allowTool: boolean) => Promise<boolean>;
   onExpired: () => void;
   onAnswered: () => void;
@@ -131,7 +133,9 @@ export function ApprovalCard({
       )}
       {!addressed && (
         <p className="text-xs text-muted-foreground wrap-anywhere">
-          {t("approval.waitingFor", { member: card.memberAccountId })}
+          {t("approval.waitingFor", {
+            member: memberName?.(card.memberAccountId) ?? card.memberAccountId,
+          })}
         </p>
       )}
       <ApprovalDeadline

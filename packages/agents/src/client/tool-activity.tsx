@@ -6,7 +6,7 @@ import {
   CollapsibleContent,
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import type { ApprovalPort, ConversationSelection } from "../model.js";
+import type { ApprovalCardView, ApprovalPort, ConversationSelection } from "../model.js";
 import { toolLabelKeys } from "./approval-card.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
@@ -15,8 +15,12 @@ function ToolActivityRow({
   call,
   approvalPort,
   selection,
+  answer,
+  memberName,
 }: {
   call: ToolCallActivity;
+  answer?: ApprovalCardView | undefined;
+  memberName?: ((id: string) => string) | undefined;
   approvalPort?: ApprovalPort | undefined;
   selection?: ConversationSelection | undefined;
 }) {
@@ -50,6 +54,16 @@ function ToolActivityRow({
             </span>
           )}
       </span>
+      {answer?.answeredByAccountId &&
+        memberName &&
+        (answer.state === "approved" || answer.state === "denied") && (
+          <span className="text-muted-foreground">
+            {t(
+              answer.state === "approved" ? "spaceSettings.approvedBy" : "spaceSettings.deniedBy",
+              { name: memberName(answer.answeredByAccountId) },
+            )}
+          </span>
+        )}
       {call.outcome === "unknown" && approvalPort && selection && (
         <EffectRecords port={approvalPort} selection={selection} runId={call.runId} />
       )}
@@ -61,12 +75,16 @@ export function ToolActivity({
   activity,
   runId,
   pendingCount = 0,
+  answers,
+  memberName,
   approvalPort,
   selection,
 }: {
   activity: readonly ToolCallActivity[];
   runId: string;
   pendingCount?: number;
+  answers?: readonly ApprovalCardView[] | undefined;
+  memberName?: ((id: string) => string) | undefined;
   approvalPort?: ApprovalPort | undefined;
   selection?: ConversationSelection | undefined;
 }) {
@@ -95,7 +113,14 @@ export function ToolActivity({
         <div className="flex min-w-0 flex-col gap-2 py-2">
           <ul aria-label={t("activity.title")} className="flex min-w-0 flex-col gap-2">
             {activity.map((call) => (
-              <ToolActivityRow key={JSON.stringify([call.runId, call.toolCallId])} call={call} />
+              <ToolActivityRow
+                key={JSON.stringify([call.runId, call.toolCallId])}
+                call={call}
+                answer={answers?.find(
+                  (entry) => entry.runId === call.runId && entry.toolCallId === call.toolCallId,
+                )}
+                memberName={memberName}
+              />
             ))}
           </ul>
           {unknownRun && approvalPort && selection && (

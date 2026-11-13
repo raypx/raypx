@@ -29,7 +29,6 @@ import { isDesktop } from "../lib/desktop.js";
 import { useDesktopEngine } from "../features/engine/provider.js";
 import { WindowDragRegion } from "./window-drag-region.js";
 import { Button } from "@raypx/ui/components/ui/button";
-import { SettingsOverlay } from "../features/settings/overlay.js";
 import { useSettingsNavigation } from "../features/settings/navigation.js";
 
 type DesktopPath = "/agents" | "/account";
@@ -147,7 +146,6 @@ export function DesktopShell() {
           <Outlet />
         </AppShell>
       </div>
-      <SettingsOverlay />
       <DesktopCommandMenu
         open={searchOpen}
         onOpenChange={setSearchOpen}

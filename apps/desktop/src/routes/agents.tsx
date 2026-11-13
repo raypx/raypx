@@ -6,7 +6,7 @@ import { useSettingsNavigation } from "../features/settings/navigation.js";
 import { agentsClient } from "../features/agents/client.js";
 import { desktopConversationSocket } from "../features/agents/socket.js";
 import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
-import { apiUrl, authClient } from "../features/auth/client.js";
+import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { desktopReturnTo } from "../features/auth/return-to.js";
 
 export const Route = createFileRoute("/agents")({
@@ -39,6 +39,9 @@ function SignedInAgents({ accountId }: { accountId: string }) {
   return (
     <AgentsWorkspace
       client={agentsClient}
+      spaceManagement={agentsClient.spaces}
+      accountApprovalSettings={agentsClient.approvals}
+      invitationOrigin={webUrl}
       accountId={accountId}
       origin={apiUrl}
       socket={socket}

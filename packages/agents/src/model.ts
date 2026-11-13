@@ -81,3 +81,22 @@ export {
   type ApprovalCardView,
   type ApprovalCardError,
 } from "./model/approvals.js";
+
+export {
+  SpaceManagementController,
+  SpaceJoinController,
+  spaceManagementError,
+  filteredSpaceAudit,
+  spaceApprovalDisplay,
+  type SpaceManagementPort,
+  type SpaceManagementView,
+  type SpaceManagementError,
+  type SpaceJoinView,
+  type SpaceAuditFilter,
+  type SpaceExitReason,
+  type SpaceInvitationPreview,
+  type SpaceInvitationAcceptance,
+  type IssuedSpaceInvitation,
+  type SpaceMemberRemoval,
+  type SpaceAuditPage,
+} from "./model/space-management.js";

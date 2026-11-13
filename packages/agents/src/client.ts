@@ -2,3 +2,5 @@ export { AgentsWorkspace, type AgentsWorkspaceProps } from "./client/workspace.j
 export { ApprovalSettings } from "./client/approval-settings.js";
 export { ModelConnections } from "./client/model-connections.js";
 export { browserConversationSocket as createBrowserConversationSocket } from "./client/browser-ports.js";
+export { SpaceSettingsPanel } from "./client/space-settings.js";
+export { JoinSpaceView } from "./client/join-space.js";

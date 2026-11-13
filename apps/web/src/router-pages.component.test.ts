@@ -43,6 +43,7 @@ describe("application shell pages", () => {
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
       ),
     ).toEqual({
+      "/join": { title: "agents.spaceSettings.joinTitle", layout: "document" },
       "/agents": { title: "agents.title", layout: "tool" },
       "/admin/": { title: "dash.nav.overview", layout: "workbench" },
       "/admin/audit": { title: "dash.nav.audit", layout: "workbench" },

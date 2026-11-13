@@ -3,6 +3,10 @@ import { InstanceGate } from "./instance-gate.js";
 import { EngineGate } from "../../engine/gate.js";
 import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useRouterState } from "@tanstack/react-router";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { IconButton } from "@raypx/ui/icon-button";
+import { cn } from "@raypx/ui/lib/utils";
+import { useSettingsNavigation } from "../../settings/navigation.js";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 
 import { buttonVariants } from "@raypx/ui/components/ui/button";
@@ -11,6 +15,7 @@ import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { desktopReturnTo } from "../return-to.js";
 
 const publicPaths = new Set([
+  "/join",
   "/login",
   "/signup",
   "/forgot-password",
@@ -20,6 +25,7 @@ const publicPaths = new Set([
 
 function AuthLayout({ children }: { children: ReactNode }) {
   const t = useTranslations("common");
+  const settings = useSettingsNavigation();
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
@@ -32,20 +38,26 @@ function AuthLayout({ children }: { children: ReactNode }) {
         >
           <Logo className="text-sm [&_[data-slot=logo-mark]]:size-6" />
         </Link>
-        <div className="ml-auto flex items-center gap-1 [--app-region:no-drag]">
+        <div className="ml-auto flex min-w-0 items-center gap-1 [--app-region:no-drag]">
           <Link
             to={returnTo}
-            className={buttonVariants({
-              variant: "ghost",
-              size: "sm",
-              className: "max-w-36 truncate",
-            })}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "min-w-0 max-w-36 shrink",
+            )}
           >
             <ArrowLeftIcon data-icon="inline-start" />
-            {t("backToWorkspace")}
+            <span className="truncate">{t("backToWorkspace")}</span>
           </Link>
           <ThemeToggle />
           <LanguageMenu />
+          <IconButton
+            label={t("settings")}
+            aria-haspopup="dialog"
+            onClick={() => void settings.open()}
+          >
+            <SettingsIcon aria-hidden="true" />
+          </IconButton>
         </div>
       </header>
       <main

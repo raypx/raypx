@@ -3,6 +3,7 @@ import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/rea
 import { DesktopShell, ShellSkeleton } from "../components/shell.js";
 import { ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences.js";
+import { SettingsOverlay } from "../features/settings/overlay.js";
 import { SessionGate } from "../features/auth/components/session-gate.js";
 import { DesktopSignOutProvider } from "../features/auth/sign-out.js";
 import { DesktopRuntimeProvider } from "../features/engine/provider.js";
@@ -70,6 +71,7 @@ function RootComponent() {
               <SessionGate>
                 <DesktopShell />
               </SessionGate>
+              <SettingsOverlay />
             </DesktopSignOutProvider>
           </DesktopRuntimeProvider>
           {Devtools && (

@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("./features/auth/client.js", () => ({
   apiUrl: "https://api.example.test",
+  webUrl: "https://web.example.test",
   authClient: {
     useSession: () => ({
       isPending: false,

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { ShellToolbar, ShellSidebarHeader, ShellPrimaryAction } from "@raypx/blocks/shell";
 import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
 import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
@@ -14,6 +22,13 @@ import {
   DropdownMenuSeparator,
 } from "@raypx/ui/components/ui/dropdown-menu";
 import { cn } from "@raypx/ui/lib/utils";
+import { SettingsIcon } from "@raypx/icons/settings";
+import { SpaceLiveController } from "../model/space-live.js";
+import { SpaceManagementController, type SpaceManagementPort } from "../model/space-management.js";
+import type { ApprovalSettingsPort } from "../model/approval-settings.js";
+import { SpaceSettingsPanel } from "./space-settings.js";
+import { CapabilitySheet } from "./capability-sheet.js";
+import { PausedRoutinePanel } from "./space-routine.js";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
 import type { AgentInput } from "@raypx/core/agents";
 import type { ToolActivity } from "@raypx/core/conversation";
@@ -50,6 +65,9 @@ import { useTranslations } from "./i18n.js";
 
 export interface AgentsWorkspaceProps {
   client: AgentsWorkspacePort;
+  spaceManagement?: SpaceManagementPort | undefined;
+  accountApprovalSettings?: Pick<ApprovalSettingsPort, "settings"> | undefined;
+  invitationOrigin?: string | undefined;
   accountId: string;
   origin: string;
   spaceId?: string;
@@ -69,6 +87,9 @@ export function AgentsWorkspace(props: AgentsWorkspaceProps) {
 
 function AgentsWorkspaceContents({
   client,
+  spaceManagement = client.spaceManagement,
+  accountApprovalSettings = client.accountApprovalSettings,
+  invitationOrigin,
   accountId,
   origin,
   spaceId,
@@ -83,13 +104,15 @@ function AgentsWorkspaceContents({
   const [page, setPage] = useState(createAgentsPageState);
   const current = useRef(page);
   const mounted = useRef(true);
+  const navigationRevision = useRef(0);
+  const lastSpaceExit = useRef<{ spaceId: string; revision: number } | null>(null);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
     };
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     current.current = page;
   }, [page]);
   const [spacesLoading, setSpacesLoading] = useState(true);
@@ -107,6 +130,12 @@ function AgentsWorkspaceContents({
     },
     [],
   );
+  const [spaceSettingsOpen, setSpaceSettingsOpen] = useState(false);
+  const [routineTarget, setRoutineTarget] = useState<string | null>(null);
+  const [spaceNotice, setSpaceNotice] = useState<
+    "removed" | "unavailable" | "deleting" | "left" | null
+  >(null);
+  const spaceTrigger = useRef<HTMLButtonElement>(null);
   const [newSpace, setNewSpace] = useState(false);
   const [form, setForm] = useState<"new" | AgentConversationView | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -202,6 +231,115 @@ function AgentsWorkspaceContents({
     };
   }, [client, page.spaceId, agentId, refresh, modelCatalogKey]);
 
+  const confirmSpaceExit = useCallback(
+    (reason: "deleting" | "left") => {
+      if (!mounted.current) return;
+      const exited = lastSpaceExit.current;
+      const stillCurrent = current.current.spaceId === page.spaceId;
+      const stillShowingExit =
+        exited?.spaceId === page.spaceId && exited.revision === navigationRevision.current;
+      if (stillCurrent || stillShowingExit) setSpaceNotice(reason);
+    },
+    [page.spaceId],
+  );
+  const membership = page.spaces.find(({ space }) => space.id === page.spaceId);
+  const management = useMemo(() => {
+    if (!page.spaceId || !spaceManagement || typeof spaceManagement.members !== "function")
+      return null;
+    return new SpaceManagementController({
+      spaceId: page.spaceId,
+      accountId,
+      port: spaceManagement,
+      ...(accountApprovalSettings ? { accountApprovals: accountApprovalSettings } : {}),
+    });
+  }, [page.spaceId, accountId, spaceManagement, accountApprovalSettings]);
+  const managementState = useSyncExternalStore(
+    management?.subscribe ?? subscribeNothing,
+    management?.getSnapshot ?? emptyManagement,
+    management?.getSnapshot ?? emptyManagement,
+  );
+  useEffect(() => {
+    if (!management) return;
+    management.setExitConfirmationHandler(confirmSpaceExit);
+    return () => management.dispose();
+  }, [management, confirmSpaceExit]);
+  useEffect(() => {
+    if (management) void management.load(membership?.member.role === "owner");
+  }, [management, membership?.member.role, modelCatalogKey]);
+  const exitSpace = useCallback(
+    (reason: "removed" | "unavailable" | "deleting" | "left", selectedSpace: string) => {
+      if (!mounted.current || current.current.spaceId !== selectedSpace) return;
+      const revision = ++navigationRevision.current;
+      lastSpaceExit.current = { spaceId: selectedSpace, revision };
+      setSpaceSettingsOpen(false);
+      setRoutineTarget(null);
+      setForm(null);
+      setSpaceNotice(reason);
+      // Close the old conversation immediately, before discovery can finish.
+      const fallback = applySpaces(
+        current.current,
+        current.current.spaces.filter(({ space }) => space.id !== selectedSpace),
+      );
+      current.current = fallback;
+      setPage(fallback);
+      if (fallback.spaceId) onNavigate?.({ spaceId: fallback.spaceId });
+      void client.spaces
+        .list({})
+        .then((spaces) => {
+          if (!mounted.current || revision !== navigationRevision.current) return;
+          const reconciled = applySpaces(current.current, spaces);
+          current.current = reconciled;
+          setPage(reconciled);
+          if (reconciled.spaceId && reconciled.spaceId !== fallback.spaceId)
+            onNavigate?.({ spaceId: reconciled.spaceId });
+        })
+        .catch(() => {});
+    },
+    [client, onNavigate],
+  );
+  useEffect(() => {
+    if (!management || !page.spaceId) return;
+    const selectedSpace = page.spaceId;
+    const live = new SpaceLiveController({
+      spaceId: selectedSpace,
+      accountId,
+      socket: eventSocket,
+      list: () => client.spaces.list({}),
+      onMemberships(spaces) {
+        if (mounted.current) setPage((state) => applySpaces(state, spaces));
+      },
+      async onEvent(event) {
+        if (event.spaceId === selectedSpace) {
+          if (event.id <= management.getSnapshot().eventCursor) return;
+          const applied = await management.applyEvent(event);
+          if (!applied) throw new Error("Space directory refresh failed");
+        }
+        setPage((state) => ({
+          ...state,
+          spaces: state.spaces.map((entry) => {
+            if (entry.space.id !== event.spaceId) return entry;
+            if (event.kind === "space.renamed")
+              return { ...entry, space: { ...entry.space, name: event.payload.name } };
+            if (event.kind === "space.member.role_changed" && event.payload.accountId === accountId)
+              return { ...entry, member: { ...entry.member, role: event.payload.role } };
+            return entry;
+          }),
+        }));
+      },
+      onExit: (reason) => exitSpace(reason, selectedSpace),
+    });
+    live.start();
+    const reconcile = () => {
+      void live.reconcile().catch(() => {});
+      void management.refreshMembers();
+    };
+    window.addEventListener("focus", reconcile);
+    return () => {
+      window.removeEventListener("focus", reconcile);
+      live.dispose();
+    };
+  }, [management, page.spaceId, accountId, eventSocket, client, exitSpace]);
+
   const activityRefresh = useRef(0);
   async function refreshSpaceActivity() {
     const selectedSpace = current.current.spaceId;
@@ -266,24 +404,44 @@ function AgentsWorkspaceContents({
     previousSelection.current = selected?.agent.id ?? null;
   }, [selected]);
   function chooseSpace(value: string) {
+    ++navigationRevision.current;
+    setSpaceNotice(null);
     setForm(null);
-    setPage((state) => selectSpace(state, value));
+    setSpaceSettingsOpen(false);
+    setRoutineTarget(null);
+    const nextPage = selectSpace(current.current, value);
+    current.current = nextPage;
+    setPage(nextPage);
     onNavigate?.({ spaceId: value });
   }
   function chooseAgent(item: AgentConversationView) {
-    setPage((state) => selectAgent(state, item.agent.id));
+    ++navigationRevision.current;
+    const nextPage = selectAgent(current.current, item.agent.id);
+    current.current = nextPage;
+    setPage(nextPage);
     onNavigate?.({ spaceId: item.agent.spaceId, agentId: item.agent.id });
   }
   function back() {
-    setPage((state) => ({ ...state, agentId: null }));
+    ++navigationRevision.current;
+    current.current = { ...current.current, agentId: null };
+    setPage(current.current);
     if (page.spaceId) onNavigate?.({ spaceId: page.spaceId });
   }
   async function createSpace(name: string) {
-    const membership = await client.spaces.create({ name });
+    const revision = ++navigationRevision.current;
+    const created = await client.spaces.create({ name });
     if (!mounted.current) return;
-    setPage((state) => applySpaces(state, [...state.spaces, membership], membership.space.id));
     setNewSpace(false);
-    onNavigate?.({ spaceId: membership.space.id });
+    if (revision !== navigationRevision.current) return;
+    const nextPage = applySpaces(
+      current.current,
+      [...current.current.spaces, created],
+      created.space.id,
+    );
+    current.current = nextPage;
+    setPage(nextPage);
+    setSpaceNotice(null);
+    onNavigate?.({ spaceId: created.space.id });
   }
   async function saveAgent(input: AgentInput) {
     const selectedSpace = page.spaceId;
@@ -350,6 +508,7 @@ function AgentsWorkspaceContents({
             <DropdownMenuTrigger
               render={
                 <Button
+                  ref={spaceTrigger}
                   variant="ghost"
                   aria-label={t("space")}
                   disabled={loading}
@@ -381,6 +540,12 @@ function AgentsWorkspaceContents({
                 </>
               )}
               <DropdownMenuGroup>
+                {management && (
+                  <DropdownMenuItem onClick={() => setSpaceSettingsOpen(true)}>
+                    <SettingsIcon aria-hidden="true" />
+                    {t("spaceSettings.title")}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => setNewSpace(true)}>
                   <PlusIcon aria-hidden="true" />
                   {t("newSpace")}
@@ -403,6 +568,11 @@ function AgentsWorkspaceContents({
             <span className="truncate sidebar-icon:hidden">{t("newAgent")}</span>
           </Button>
         </ShellPrimaryAction>
+      )}
+      {spaceNotice && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t(spaceExitKeys[spaceNotice])}
+        </p>
       )}
       {failed && (
         <Alert>
@@ -543,6 +713,8 @@ function AgentsWorkspaceContents({
                 drafts={draftStore}
                 origin={origin}
                 accountId={accountId}
+                members={managementState?.members}
+                spaceSettings={managementState?.settings}
               />
             </div>
           ) : (
@@ -574,7 +746,65 @@ function AgentsWorkspaceContents({
           }
         />
       )}
+      {management && membership && (
+        <CapabilitySheet
+          open={spaceSettingsOpen}
+          onClose={() => {
+            management.clearIssuedInvitation();
+            setSpaceSettingsOpen(false);
+          }}
+          title={t("spaceSettings.title")}
+          closeLabel={t("close")}
+          finalFocus={() => spaceTrigger.current ?? false}
+          className="w-full sm:max-w-2xl"
+        >
+          {spaceSettingsOpen && (
+            <SpaceSettingsPanel
+              controller={management}
+              role={membership.member.role}
+              invitationOrigin={invitationOrigin ?? origin}
+              onExit={(reason) => exitSpace(reason, management.spaceId)}
+              onOpenRoutine={(id) => {
+                management.clearIssuedInvitation();
+                setSpaceSettingsOpen(false);
+                setRoutineTarget(id);
+              }}
+            />
+          )}
+        </CapabilitySheet>
+      )}
+      {routineTarget && page.spaceId && client.routines && (
+        <CapabilitySheet
+          open
+          onClose={() => setRoutineTarget(null)}
+          title={t("routines")}
+          closeLabel={t("close")}
+          finalFocus={() => spaceTrigger.current ?? false}
+          className="w-full sm:max-w-2xl"
+        >
+          <PausedRoutinePanel
+            id={routineTarget}
+            spaceId={page.spaceId}
+            accountId={accountId}
+            origin={origin}
+            port={client.routines}
+          />
+        </CapabilitySheet>
+      )}
       {confirmation.dialog}
     </div>
   );
+}
+
+const spaceExitKeys = {
+  removed: "spaceSettings.exitRemoved",
+  unavailable: "spaceSettings.exitUnavailable",
+  deleting: "spaceSettings.exitDeleted",
+  left: "spaceSettings.exitLeft",
+} as const;
+function subscribeNothing() {
+  return () => {};
+}
+function emptyManagement() {
+  return null;
 }
