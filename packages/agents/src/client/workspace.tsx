@@ -279,9 +279,11 @@ function AgentsWorkspaceContents({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-clip">
-      <ShellToolbar>
-        <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
-      </ShellToolbar>
+      {!selected && (
+        <ShellToolbar>
+          <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
+        </ShellToolbar>
+      )}
       <ShellSidebarHeader>
         {(page.spaces.length > 0 || loading) && (
           <DropdownMenu>

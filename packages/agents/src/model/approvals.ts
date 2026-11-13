@@ -24,6 +24,36 @@ export function approvalRemainingSeconds(card: Pick<ApprovalCardView, "expiresAt
   return Math.max(0, Math.ceil((Date.parse(card.expiresAt) - now) / 1_000));
 }
 
+export function approvalDuration(seconds: number) {
+  if (seconds > 60) return { unit: "minutes" as const, value: Math.ceil(seconds / 60) };
+  return { unit: "seconds" as const, value: Math.max(0, seconds) };
+}
+
+export function approvalDeadlineProminent(seconds: number) {
+  return seconds <= 60;
+}
+
+/** Remove only known tool summaries that repeat the action and target exactly. */
+export function approvalExtraSummary(
+  card: Pick<ApprovalCardView, "toolName" | "target" | "argumentSummary">,
+) {
+  const labels = {
+    computer_list_files: ["List files", "列出文件"],
+    computer_read_file: ["Read file", "Read a file", "读取文件"],
+    computer_write_file: ["Write file", "Write a file", "写入文件"],
+    computer_run_command: ["Run command", "Run a command", "运行命令"],
+  };
+  const summary = card.argumentSummary.trim();
+  const redundant = labels[card.toolName].some(
+    (label) =>
+      summary === label ||
+      summary === `${label}: ${card.target}` ||
+      summary === `${label}：${card.target}`,
+  );
+  if (redundant || summary === card.target || summary === `Path: ${card.target}`) return "";
+  return summary.slice(0, 1024);
+}
+
 /** These are approval outcomes, never claims that an approved tool actually ran. */
 export function activityForRun(cards: readonly ApprovalCardView[], runId: RunId) {
   return cards.filter((card) => card.runId === runId).sort((a, b) => a.sequence - b.sequence);

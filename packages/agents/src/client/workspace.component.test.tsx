@@ -15,6 +15,7 @@ import type {
   ConversationSnapshot,
   ApprovalPort,
 } from "../model.js";
+import { AgentConversation } from "./conversation.js";
 import { AgentsWorkspace } from "./workspace.js";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
@@ -171,6 +172,7 @@ function fixture({
   }
   return {
     mount,
+    socket,
     client,
     drafts,
     storage,
@@ -235,10 +237,16 @@ it.each(["en", "zh"] as const)(
     expect(screen.getByRole("status")).toHaveTextContent(
       language === "en" ? "Approval requested: Write a file" : "请求审批：写入文件",
     );
+    const announcements: string[] = [];
+    const live = screen.getByRole("status");
+    const observer = new MutationObserver(() => announcements.push(live.textContent ?? ""));
+    observer.observe(live, { childList: true, subtree: true, characterData: true });
     const editor = screen.getByRole("textbox", { name: strings.message });
     fireEvent.change(editor, { target: { value: "Keep chatting while waiting" } });
-    expect(screen.getByRole("button", { name: strings.send })).toBeEnabled();
-    expect(screen.getByRole("button", { name: strings.stop })).toBeEnabled();
+    expect(screen.getByRole("button", { name: strings.sendDuringReply })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: strings.stop })).not.toBeInTheDocument();
+    expect(screen.getAllByText("notes.txt", { exact: true })).toHaveLength(1);
+    expect(screen.getByRole("log").querySelector("[data-tool-activity]")).toBeNull();
     fireEvent.click(approve);
     expect(approve).toBeDisabled();
     expect(screen.getByRole("button", { name: strings.approval.deny })).toBeDisabled();
@@ -271,11 +279,19 @@ it.each(["en", "zh"] as const)(
     expect(
       screen.queryByRole("button", { name: strings.approval.approve }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("log").querySelector("[data-approval-card]")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent(strings.approval.states.approved);
+    const activity = screen.getByRole("log").querySelector("[data-tool-activity]")!;
+    fireEvent.click(within(activity as HTMLElement).getByRole("button"));
     expect(
-      within(screen.getByRole("log")).getByText(strings.approval.states.approved),
+      within(activity as HTMLElement).getByText(strings.approval.states.approved),
     ).toBeInTheDocument();
+    expect(screen.getAllByText("notes.txt", { exact: true })).toHaveLength(1);
     expect(editor).toHaveValue("Keep chatting while waiting");
     expect(editor).toHaveFocus();
+    await act(async () => {});
+    expect(announcements).toEqual([strings.approval.states.approved]);
+    observer.disconnect();
   },
 );
 
@@ -826,7 +842,7 @@ it("focuses the conversation on selection and restores the selected row on Back"
   const row = await screen.findByRole("button", { name: "Writing Agent" });
   fireEvent.click(row);
   await screen.findByRole("textbox", { name: "Message" });
-  expect(screen.getByRole("heading", { level: 2, name: "Writing Agent" })).toHaveFocus();
+  expect(screen.getByRole("heading", { level: 1, name: "Writing Agent" })).toHaveFocus();
   expect(row).toHaveAttribute("aria-current", "page");
   fireEvent.click(screen.getByRole("button", { name: "Back to Agents" }));
   expect(row).toHaveFocus();
@@ -863,7 +879,8 @@ it("shows one sender for consecutive messages and no status for a completed repl
   test.mount(true);
   const log = await screen.findByRole("log");
   await screen.findByText("A completed answer");
-  expect(within(log).getAllByText("You")).toHaveLength(1);
+  expect(within(log).queryByText("You")).not.toBeInTheDocument();
+  expect(within(log).queryByText("Writing Agent")).not.toBeInTheDocument();
   expect(within(log).queryByText("Completed")).not.toBeInTheDocument();
   expect(screen.queryByText("Live")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Refresh" })).not.toBeInTheDocument();
@@ -1208,8 +1225,8 @@ it.each([
       const pane = screen.getByRole("region", {
         name: language === "en" ? "Conversation" : "对话",
       });
-      const title = within(pane).getByRole("heading", { level: 2, name });
-      const sender = within(pane).getByRole("heading", { level: 3, name });
+      const title = screen.getByRole("heading", { level: 1, name });
+      const bubble = pane.querySelector("[data-reply-bubble]")!;
       const editor = within(pane).getByRole("textbox", {
         name: language === "en" ? "Message" : "消息",
       });
@@ -1230,15 +1247,12 @@ it.each([
         expect(title).toHaveAttribute("title", name);
         expect(trigger.parentElement).toHaveClass("shrink-0", "whitespace-nowrap");
         expect(trigger.parentElement).not.toHaveClass("truncate");
-        expect(sender).toHaveClass("min-w-0", "truncate");
-        expect(sender).toHaveAttribute("title", name);
-        expect(sender).toHaveTextContent(name);
-        // The same bounded wrapper sizes the sender and the bubble.
-        expect(sender.parentElement).toHaveClass("min-w-0", "w-full", "max-w-[90%]");
-        expect(sender.nextElementSibling).toHaveClass("min-w-0", "border");
+        expect(within(pane).queryByRole("heading", { level: 3, name })).not.toBeInTheDocument();
+        expect(bubble.parentElement).toHaveClass("min-w-0", "w-fit", "max-w-[90%]");
+        expect(bubble).toHaveClass("min-w-0", "border");
         expect(editor.closest("form")).toHaveClass("min-w-0");
       }
-      expect(sender).toHaveAccessibleName(name);
+      expect(title).toHaveAccessibleName(name);
       expectShrinkableConversation();
       fireEvent.click(trigger);
       const heading = await screen.findByRole("heading", {
@@ -1259,7 +1273,7 @@ it.each([
       );
       await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
       await waitFor(() => expect(trigger).toHaveFocus());
-      expect(sender).toHaveAccessibleName(name);
+      expect(title).toHaveAccessibleName(name);
       expectShrinkableConversation();
       view.unmount();
     } finally {
@@ -1267,3 +1281,220 @@ it.each([
     }
   },
 );
+
+it.each(["en", "zh"] as const)(
+  "attaches pending navigation to the composer only while its card is offscreen in %s",
+  async (language) => {
+    let notify: IntersectionObserverCallback = () => {};
+    const disconnect = vi.fn();
+    let root: Element | Document | null | undefined;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+          notify = callback;
+          root = options?.root;
+        }
+        observe() {}
+        disconnect = disconnect;
+      },
+    );
+    try {
+      const request = approvalRequestSchema.parse({
+        id: "pending-navigation",
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        runId: run.id,
+        memberAccountId: "account",
+        toolCallId: "call",
+        toolName: "computer_write_file",
+        arguments: { path: "file.txt", content: "body" },
+        target: "file.txt",
+        argumentSummary: "Write file: file.txt",
+        state: "pending",
+        createdAt: time,
+        expiresAt: "2100-01-01T00:00:00Z",
+        resolvedAt: null,
+        answeredByAccountId: null,
+      });
+      const view = fixture({
+        language,
+        approvals: { pending: async () => [request], answer: vi.fn(), effects: async () => [] },
+      }).mount(true);
+      const control = await screen.findByRole("button", {
+        name: language === "en" ? "Review 1 approval" : "查看1个待审批请求",
+      });
+      const card = view.container.querySelector<HTMLElement>("[data-approval-card]")!;
+      const scroll = vi.fn();
+      card.scrollIntoView = scroll;
+      expect(root).toBe(screen.getByRole("log"));
+      expect(control.closest('[data-slot="input-group"]')).not.toBeNull();
+      expect(control).toHaveAttribute("aria-controls", card.id);
+      fireEvent.click(control);
+      expect(scroll).toHaveBeenCalledExactlyOnceWith({ block: "nearest", behavior: "instant" });
+      expect(card).toHaveFocus();
+      const rect = card.getBoundingClientRect();
+      const entry = {
+        target: card,
+        isIntersecting: true,
+        intersectionRatio: 1,
+        boundingClientRect: rect,
+        intersectionRect: rect,
+        rootBounds: rect,
+        time: 0,
+      } satisfies IntersectionObserverEntry;
+      act(() => notify([entry], {} as IntersectionObserver));
+      expect(
+        screen.queryByRole("button", { name: /Review 1 approval|查看1个待审批请求/ }),
+      ).not.toBeInTheDocument();
+      act(() =>
+        notify(
+          [{ ...entry, isIntersecting: false, intersectionRatio: 0 }],
+          {} as IntersectionObserver,
+        ),
+      );
+      expect(
+        screen.getByRole("button", { name: /Review 1 approval|查看1个待审批请求/ }),
+      ).toBeInTheDocument();
+      view.unmount();
+      expect(disconnect).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  },
+);
+
+it.each(["queued", "running", "waiting"] as const)(
+  "uses one primary composer action while %s and preserves keyboard behavior",
+  async (state) => {
+    const test = fixture({
+      snapshot: {
+        conversation,
+        messages: [message],
+        runs: [{ ...run, state }],
+        segments: [],
+        cursor: 3,
+      },
+    });
+    test.mount(true);
+    const stop = await screen.findByRole("button", { name: "Stop reply" });
+    expect(stop).toHaveClass("bg-primary", "text-primary-foreground");
+    const editor = screen.getByRole("textbox", { name: "Message" });
+    const form = editor.closest("form")!;
+    expect(within(form).getAllByRole("button")).toHaveLength(1);
+    fireEvent.change(editor, { target: { value: "More detail" } });
+    const send = screen.getByRole("button", { name: "Send message during reply" });
+    expect(send).toBeEnabled();
+    expect(within(form).getAllByRole("button")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Stop reply" })).not.toBeInTheDocument();
+    fireEvent.keyDown(editor, { key: "Enter", shiftKey: true });
+    fireEvent.compositionStart(editor);
+    fireEvent.keyDown(editor, { key: "Enter" });
+    fireEvent.compositionEnd(editor);
+    fireEvent.keyDown(editor, { key: "Enter", keyCode: 229 });
+    expect(test.send).not.toHaveBeenCalled();
+    fireEvent.change(editor, { target: { value: " " } });
+    expect(screen.getByRole("button", { name: "Stop reply" })).toBeEnabled();
+    fireEvent.change(editor, { target: { value: "More detail" } });
+    fireEvent.keyDown(editor, { key: "Enter" });
+    await waitFor(() => expect(test.send).toHaveBeenCalledOnce());
+    expect(test.send).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.objectContaining({ text: "More detail" }) }),
+    );
+    expect(editor).toHaveFocus();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "supports sender context while direct single-member conversations omit labels in %s",
+  async (language) => {
+    const strings = { en, zh }[language].agents;
+    const test = fixture({
+      snapshot: {
+        conversation,
+        messages: [message],
+        runs: [{ ...run, state: "succeeded" }],
+        segments: [
+          {
+            id: "segment",
+            spaceId: agent.spaceId,
+            conversationId: conversation.id,
+            runId: run.id,
+            sequence: 3,
+            text: "Short answer",
+            createdAt: time,
+          },
+        ],
+        cursor: 3,
+      },
+    });
+    const props = {
+      item: { agent, conversation },
+      port: test.client.conversations,
+      computerPort: test.client.computers,
+      socket: test.socket,
+      drafts: test.drafts,
+      origin: "https://example.test",
+      accountId: "account",
+    };
+    function contents(showAgentNames: boolean, hasOtherMembers: boolean) {
+      return (
+        <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+          <AgentConversation
+            {...props}
+            showAgentNames={showAgentNames}
+            hasOtherMembers={hasOtherMembers}
+          />
+        </BrowserLanguageProvider>
+      );
+    }
+    const view = render(contents(false, false));
+    await screen.findByText("Short answer");
+    const log = screen.getByRole("log");
+    expect(within(log).queryByRole("heading")).not.toBeInTheDocument();
+    const bubble = log.querySelector("[data-reply-bubble]")!;
+    expect(bubble.parentElement).toHaveClass("w-fit", "max-w-[90%]");
+    expect(log.firstElementChild).toHaveClass("gap-2");
+    expect(screen.getAllByRole("heading", { name: agent.name })).toHaveLength(1);
+    view.rerender(contents(true, true));
+    expect(within(log).getByRole("heading", { name: agent.name })).toBeInTheDocument();
+    expect(within(log).getByRole("heading", { name: strings.you })).toBeInTheDocument();
+  },
+);
+
+it("keeps an exchange tight and separates the next member turn", async () => {
+  const nextMessage = {
+    ...message,
+    id: messageSchema.shape.id.parse("next-message"),
+    sequence: 5,
+    text: "Next exchange",
+  };
+  const nextRun = {
+    ...run,
+    id: runSchema.shape.id.parse("next-run"),
+    messageId: nextMessage.id,
+    state: "succeeded" as const,
+  };
+  const test = fixture({
+    snapshot: {
+      conversation,
+      messages: [message, nextMessage],
+      runs: [{ ...run, state: "succeeded" }, nextRun],
+      cursor: 8,
+      segments: [run, nextRun].map((value, index) => ({
+        id: `segment-${index}`,
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        runId: value.id,
+        sequence: 4 + index * 4,
+        text: `Answer ${index}`,
+        createdAt: time,
+      })),
+    },
+  });
+  test.mount(true);
+  await screen.findByText("Answer 1");
+  expect(screen.getByText("Hello Agent").closest("article")).not.toHaveClass("mt-4");
+  expect(screen.getByText("Next exchange").closest("article")).toHaveClass("mt-4");
+  expect(screen.getByRole("log").firstElementChild).toHaveClass("gap-2");
+});

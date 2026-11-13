@@ -10,6 +10,7 @@ import type {
 } from "@raypx/core/conversation";
 import { MAX_REPLY_TEXT } from "@raypx/core/conversation";
 import type { ConversationSelection, ConversationSnapshot } from "./port.js";
+import type { ApprovalCardView } from "./approvals.js";
 
 export interface RunView {
   id: RunId;
@@ -66,6 +67,64 @@ export function conversationRows(view: ConversationView): ConversationRow[] {
     });
   }
   return rows.sort((left, right) => left.sequence - right.sequence);
+}
+
+export type ConversationTimelineRow =
+  | ConversationRow
+  | { id: string; kind: "approval"; sender: "approval"; sequence: number; card: ApprovalCardView }
+  | {
+      id: string;
+      kind: "activity";
+      sender: "approval";
+      sequence: number;
+      runId: RunId;
+      cards: ApprovalCardView[];
+    };
+
+/** A request has exactly one transcript representation, including after its reply is gone. */
+export function conversationTimelineRows(
+  view: ConversationView,
+  cards: readonly ApprovalCardView[],
+): ConversationTimelineRow[] {
+  const rows: ConversationTimelineRow[] = conversationRows(view);
+  const groups = new Map<RunId, ApprovalCardView[]>();
+  for (const card of cards) {
+    if (card.state === "pending") {
+      rows.push({
+        id: `approval:${card.requestId}`,
+        kind: "approval",
+        sender: "approval",
+        sequence: card.sequence,
+        card,
+      });
+      continue;
+    }
+    const group = groups.get(card.runId) ?? [];
+    group.push(card);
+    groups.set(card.runId, group);
+  }
+  for (const [runId, requests] of groups) {
+    requests.sort((a, b) => a.sequence - b.sequence);
+    rows.push({
+      id: `activity:${runId}`,
+      kind: "activity",
+      sender: "approval",
+      sequence: requests[0]!.sequence,
+      runId,
+      cards: requests,
+    });
+  }
+  return rows.sort((a, b) => a.sequence - b.sequence);
+}
+
+export function conversationSenderVisible(
+  kind: "member" | "reply",
+  context: { showAgentNames: boolean; hasOtherMembers: boolean },
+  consecutive: boolean,
+) {
+  if (consecutive) return false;
+  if (kind === "reply") return context.showAgentNames;
+  return context.hasOtherMembers;
 }
 
 /** Stop the running reply first, then any queued reply in this conversation. */

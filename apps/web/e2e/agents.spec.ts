@@ -6,20 +6,23 @@ const apiUrl = process.env.CONTROL_E2E_API_URL;
 async function expectConversationGeometry(page: Page, name: string, sheetOpen = false) {
   // DOM locators also measure the conversation while the modal sheet makes it inert.
   const pane = page.locator('section[aria-label="Conversation"]');
-  const heading = pane.locator("header h2");
-  const sender = pane.locator("article h3[title]").first();
-  const bubble = sender.locator("xpath=following-sibling::div[1]");
+  const heading = page.locator("[data-conversation-header] h1");
+  const bubble = pane.locator("[data-reply-bubble]").first();
   await expect(heading).toHaveText(name);
+  await expect(page.locator("[data-conversation-header] h1")).toHaveCount(1);
+  await expect(pane.locator("article h3[title]")).toHaveCount(0);
+  await expect(pane.locator("h1, h2")).toHaveCount(0);
   const paneBox = await pane.boundingBox();
   const headingBox = await heading.boundingBox();
-  const senderBox = await sender.boundingBox();
   const bubbleBox = await bubble.boundingBox();
-  expect(headingBox!.x).toBeGreaterThanOrEqual(paneBox!.x);
-  expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(paneBox!.x + paneBox!.width);
-  expect(senderBox!.x).toBeGreaterThanOrEqual(bubbleBox!.x);
-  expect(senderBox!.x + senderBox!.width).toBeLessThanOrEqual(bubbleBox!.x + bubbleBox!.width);
-  await expect(sender).toHaveText(name);
-  await expect(sender).toHaveCSS("text-overflow", "ellipsis");
+  const viewport = page.viewportSize()!;
+  expect(headingBox!.x).toBeGreaterThanOrEqual(0);
+  expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(viewport.width);
+  await expect(heading).toHaveCSS("text-overflow", "ellipsis");
+  expect(bubbleBox!.x).toBeGreaterThanOrEqual(paneBox!.x);
+  expect(bubbleBox!.x + bubbleBox!.width).toBeLessThanOrEqual(paneBox!.x + paneBox!.width);
+  // The fixture's one-line reply should hug its text when space permits.
+  if (paneBox!.width > 400) expect(bubbleBox!.width).toBeLessThan(paneBox!.width * 0.9);
   await expect.poll(() => pane.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
   await expect.poll(() => pane.evaluate((node) => node.scrollLeft)).toBe(0);
   await expect
@@ -41,15 +44,18 @@ async function expectConversationGeometry(page: Page, name: string, sheetOpen = 
     )
     .toBe(true);
   if (!sheetOpen) {
-    const indicator = pane.getByRole("button", { name: "Computer: Running", exact: true });
+    const indicator = page.getByRole("button", { name: "Computer: Running", exact: true });
     await expect(indicator).toBeVisible();
     expect(await indicator.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
     const status = indicator.getByText("Running", { exact: true });
     expect(await status.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-    await expect(sender).toHaveAccessibleName(name);
+    await expect(heading).toHaveAccessibleName(name);
+    const indicatorBox = await indicator.boundingBox();
+    expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(indicatorBox!.x);
   }
   for (const selector of ["[data-approval-card]", "[data-tool-activity]"]) {
     const row = pane.locator(selector).first();
+    if ((await row.count()) === 0) continue;
     await expect(row).toBeVisible();
     const box = await row.boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(paneBox!.x);
@@ -116,18 +122,23 @@ test(
     await expect(approval.getByRole("button", { name: "Approve", exact: true })).toBeEnabled();
     // A request leaves the composer usable; no message is submitted by restoring a draft.
     await editor.fill("A draft while approval is pending");
-    await expect(page.getByRole("button", { name: "Send", exact: true })).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: "Send message during reply", exact: true }),
+    ).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toHaveCount(0);
     await page.reload();
     await expect(approval).toBeVisible();
     await expect(editor).toHaveValue("A draft while approval is pending");
     await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
     await editor.fill("");
-    const activity = page.locator("[data-tool-activity]").first();
-    const activityToggle = activity.getByRole("button", { name: /tool requests?/ });
-    await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
-    await activityToggle.click();
-    await expect(activityToggle).toHaveAttribute("aria-expanded", "true");
-    await expect(activity.getByText("Write a file", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-tool-activity]")).toHaveCount(0);
+    await expect(approval.getByText("browser-fixture.txt", { exact: true })).toHaveCount(1);
+    await expect(
+      approval.getByText("Write file: browser-fixture.txt", { exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Review 1 approval", exact: true })).toHaveCount(
+      0,
+    );
     // Both mounts use a bounded log and a composer at the bottom of the shell.
     for (const viewport of [
       { width: 1440, height: 860 },
@@ -171,7 +182,15 @@ test(
     }
     await approval.getByRole("button", { name: "Approve", exact: true }).click();
     await expect(approval.getByRole("button", { name: "Approve", exact: true })).toHaveCount(0);
-    await expect(approval.getByText("Approved", { exact: true })).toBeVisible();
+    await expect(approval).toHaveCount(0);
+    await expect(editor).toBeFocused();
+    const activity = page.locator("[data-tool-activity]").first();
+    const activityToggle = activity.getByRole("button", { name: "1 tool request", exact: true });
+    await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
+    await activityToggle.click();
+    await expect(activity.getByText("Approved", { exact: true })).toBeVisible();
+    await expect(activity.getByText("Answered by You", { exact: true })).toBeVisible();
+    await expect(activity.getByText("browser-fixture.txt", { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toBeVisible();
     const finishWrite = await page.request.post(`${apiUrl}/fixture/conversation/complete`, {
@@ -180,6 +199,19 @@ test(
     expect(finishWrite.status()).toBe(204);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(2);
     await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toHaveCount(0);
+    await activityToggle.click();
+    for (const viewport of [
+      { width: 1440, height: 860 },
+      { width: 1280, height: 800 },
+      { width: 1024, height: 768 },
+      { width: 375, height: 812 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expectConversationGeometry(page, name);
+      await computer.click();
+      await expectConversationGeometry(page, name, viewport.width < 1280);
+      await page.getByRole("button", { name: "Close computer panel", exact: true }).click();
+    }
     await page.reload();
     await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(2);

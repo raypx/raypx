@@ -9,7 +9,10 @@ import {
   useState,
   useSyncExternalStore,
   type FormEvent,
+  type RefObject,
 } from "react";
+import { ShellToolbar } from "@raypx/blocks/shell";
+import { cn } from "@raypx/ui/lib/utils";
 import { Sheet, SheetContent } from "@raypx/ui/components/ui/sheet";
 import { ReplyMarkdown } from "@raypx/blocks/markdown";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -34,7 +37,8 @@ import {
   ComputerController,
   type ComputerPort,
   activeConversationRun,
-  conversationRows,
+  conversationTimelineRows,
+  conversationSenderVisible,
   type AgentConversationView,
   type ConversationDraftStore,
   type ConversationSocketPort,
@@ -71,6 +75,10 @@ interface AgentConversationProps {
   drafts: ConversationDraftStore;
   origin: string;
   accountId: string;
+  /** Reserved for a conversation with multiple Agents; direct conversations omit names. */
+  showAgentNames?: boolean;
+  /** A mount may supply membership context when its data source exposes it. */
+  hasOtherMembers?: boolean;
 }
 
 export function AgentConversation({
@@ -84,6 +92,8 @@ export function AgentConversation({
   drafts,
   origin,
   accountId,
+  showAgentNames = false,
+  hasOtherMembers = false,
 }: AgentConversationProps) {
   const t = useTranslations("agents");
   const [controllers, setControllers] = useState<{
@@ -139,6 +149,8 @@ export function AgentConversation({
       controller={controllers.conversation}
       computer={controllers.computer}
       accountId={accountId}
+      showAgentNames={showAgentNames}
+      hasOtherMembers={hasOtherMembers}
       approvalPort={approvalPort}
       activity={activity}
       onActivity={onActivity}
@@ -151,6 +163,8 @@ function ConversationContents({
   controller,
   computer,
   accountId,
+  showAgentNames,
+  hasOtherMembers,
   approvalPort,
   activity,
   onActivity,
@@ -159,6 +173,8 @@ function ConversationContents({
   controller: ConversationController;
   computer: ComputerController;
   accountId: string;
+  showAgentNames: boolean;
+  hasOtherMembers: boolean;
   approvalPort: ApprovalPort | undefined;
   activity: readonly ApprovalCardView[] | undefined;
   onActivity: ((spaceId: string, cards: readonly ApprovalCardView[]) => void) | undefined;
@@ -187,7 +203,7 @@ function ConversationContents({
   const composing = useRef(false);
   const [away, setAway] = useState(false);
   const [stopping, setStopping] = useState<RunId | null>(null);
-  const [announcement, setAnnouncement] = useState("");
+  const [announcement, setAnnouncement] = useState({ revision: 0, text: "" });
   const observed = useRef(new Map<RunId, string>());
   const observedCards = useRef(new Map<string, string>());
   const state = useSyncExternalStore(
@@ -196,34 +212,32 @@ function ConversationContents({
     controller.getSnapshot,
   );
   const { messages, runs, segments, liveReplies, cursor } = state;
-  const chatRows = useMemo(
-    () => conversationRows({ messages, runs, segments, liveReplies, cursor }),
-    [messages, runs, segments, liveReplies, cursor],
-  );
   const rows = useMemo(
+    () => conversationTimelineRows({ messages, runs, segments, liveReplies, cursor }, state.cards),
+    [messages, runs, segments, liveReplies, cursor, state.cards],
+  );
+  const pendingCards = useMemo(
     () =>
-      [
-        ...chatRows,
-        ...state.cards.map((card) => ({
-          id: `approval:${card.requestId}`,
-          kind: "approval" as const,
-          sender: "approval",
-          sequence: card.sequence,
-          card,
-        })),
-      ].sort((left, right) => left.sequence - right.sequence),
-    [chatRows, state.cards],
+      state.cards.filter(
+        (card) =>
+          card.state === "pending" &&
+          card.memberAccountId === accountId &&
+          card.error !== "resolvedElsewhere",
+      ),
+    [state.cards, accountId],
   );
-  const pendingCards = state.cards.filter(
-    (card) =>
-      card.state === "pending" &&
-      card.memberAccountId === accountId &&
-      card.error !== "resolvedElsewhere",
-  );
+  const senderContext = {
+    showAgentNames,
+    hasOtherMembers:
+      hasOtherMembers || messages.some((message) => message.author.accountId !== accountId),
+  };
   useEffect(() => {
     if (state.cards.length) onActivity?.(item.agent.spaceId, state.cards);
   }, [state.cards, onActivity, item.agent.spaceId]);
   const active = activeConversationRun(state.runs);
+  const showStop = active !== undefined && !state.draft.trim();
+  let sendLabel = active ? t("sendDuringReply") : t("send");
+  if (state.sending) sendLabel = t("sending");
   const sendDisabled =
     state.loading ||
     state.error === "load" ||
@@ -270,14 +284,20 @@ function ConversationContents({
         if (run.state === "cancelled") next = t("cancelled");
       }
     }
+    const cardAnnouncements: string[] = [];
     for (const card of state.cards) {
       const previous = observedCards.current.get(card.requestId);
       observedCards.current.set(card.requestId, card.state);
       if (!previous && card.state === "pending")
-        next = t("approval.announced", { tool: t(toolLabelKeys[card.toolName]) });
-      else if (previous && previous !== card.state) next = t(`approval.states.${card.state}`);
+        cardAnnouncements.push(t("approval.announced", { tool: t(toolLabelKeys[card.toolName]) }));
+      else if (previous && previous !== card.state)
+        cardAnnouncements.push(t(`approval.states.${card.state}`));
     }
-    if (next) queueMicrotask(() => setAnnouncement(next));
+    const text = cardAnnouncements.length ? cardAnnouncements.join(" ") : next;
+    if (text)
+      queueMicrotask(() =>
+        setAnnouncement((previous) => ({ revision: previous.revision + 1, text })),
+      );
   }, [state.runs, state.cards, t]);
 
   const restoreReading = useCallback(() => {
@@ -319,7 +339,7 @@ function ConversationContents({
     history.current?.focus();
   }
   async function send() {
-    if ((active && active.state !== "waiting") || sendDisabled) return;
+    if (sendDisabled) return;
     await controller.send();
     editor.current?.focus();
   }
@@ -348,42 +368,44 @@ function ConversationContents({
         aria-label={t("conversation")}
         className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-4 overflow-clip"
       >
-        <header className="flex min-w-0 shrink-0 items-center gap-2 border-b pb-3">
-          <h2
-            ref={title}
-            tabIndex={-1}
-            title={item.agent.name}
-            className="min-w-0 flex-1 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {item.agent.name}
-          </h2>
-          <div className="flex shrink-0 flex-col items-end gap-1 whitespace-nowrap @sm/main:flex-row @sm/main:items-center">
-            <ComputerIndicator
-              ref={computerTrigger}
-              state={computerState}
-              open={computerOpen}
-              panelId={panelId}
-              onOpen={() => {
-                if (computerOpen) closeComputer();
-                else setComputerOpen(true);
-              }}
-            />
-            {state.connection !== "live" && state.error !== "load" && (
-              <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                <span role="status">{t(connectionKeys[state.connection])}</span>
-                {state.connection === "reconnecting" && (
-                  <IconButton
-                    size="icon-sm"
-                    label={t("refresh")}
-                    onClick={() => controller.reconnect()}
-                  >
-                    <RefreshIcon aria-hidden="true" />
-                  </IconButton>
-                )}
-              </div>
-            )}
-          </div>
-        </header>
+        <ShellToolbar>
+          <header data-conversation-header className="flex min-w-0 flex-1 items-center gap-2">
+            <h1
+              ref={title}
+              tabIndex={-1}
+              title={item.agent.name}
+              className="min-w-0 flex-1 truncate rounded-md text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {item.agent.name}
+            </h1>
+            <div className="flex shrink-0 flex-col items-end gap-1 whitespace-nowrap @sm/main:flex-row @sm/main:items-center">
+              <ComputerIndicator
+                ref={computerTrigger}
+                state={computerState}
+                open={computerOpen}
+                panelId={panelId}
+                onOpen={() => {
+                  if (computerOpen) closeComputer();
+                  else setComputerOpen(true);
+                }}
+              />
+              {state.connection !== "live" && state.error !== "load" && (
+                <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                  <span role="status">{t(connectionKeys[state.connection])}</span>
+                  {state.connection === "reconnecting" && (
+                    <IconButton
+                      size="icon-sm"
+                      label={t("refresh")}
+                      onClick={() => controller.reconnect()}
+                    >
+                      <RefreshIcon aria-hidden="true" />
+                    </IconButton>
+                  )}
+                </div>
+              )}
+            </div>
+          </header>
+        </ShellToolbar>
         {state.error && (
           <Alert>
             <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
@@ -406,7 +428,7 @@ function ConversationContents({
             className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring [overflow-anchor:none]"
             onScroll={trackReading}
           >
-            <div ref={content} className="flex min-h-full min-w-0 flex-col gap-4 pb-4">
+            <div ref={content} className="flex min-h-full min-w-0 flex-col gap-2 pb-2">
               {state.loading && (
                 <Empty role="status">
                   <EmptyTitle>{t("loading")}</EmptyTitle>
@@ -426,6 +448,15 @@ function ConversationContents({
                 </Empty>
               )}
               {rows.map((row, index) => {
+                if (row.kind === "activity")
+                  return (
+                    <ToolActivity
+                      key={row.id}
+                      runId={row.runId}
+                      cards={row.cards}
+                      accountId={accountId}
+                    />
+                  );
                 if (row.kind === "approval")
                   return (
                     <ApprovalCard
@@ -439,13 +470,20 @@ function ConversationContents({
                       onAnswered={() => editor.current?.focus()}
                     />
                   );
-                const showSender = index === 0 || rows[index - 1]?.sender !== row.sender;
+                const showSender = conversationSenderVisible(
+                  row.kind,
+                  senderContext,
+                  index > 0 && rows[index - 1]?.sender === row.sender,
+                );
                 if (row.kind === "member")
                   return (
                     <article
                       key={row.id}
                       data-message-row={row.id}
-                      className="flex min-w-0 flex-col items-end gap-1 pl-6"
+                      className={cn(
+                        "flex min-w-0 flex-col items-end gap-1 pl-6",
+                        index > 0 && rows[index - 1]?.kind !== "member" && "mt-4",
+                      )}
                     >
                       {showSender && (
                         <h3 className="text-xs font-medium text-muted-foreground">
@@ -472,7 +510,7 @@ function ConversationContents({
                     aria-busy={producing}
                     className="flex min-w-0 flex-col pr-6"
                   >
-                    <div className="flex w-full min-w-0 max-w-[90%] flex-col gap-2">
+                    <div className="flex w-fit min-w-0 max-w-[90%] flex-col gap-2">
                       {showSender && (
                         <h3
                           title={item.agent.name}
@@ -481,7 +519,10 @@ function ConversationContents({
                           {item.agent.name}
                         </h3>
                       )}
-                      <div className="min-w-0 rounded-lg border px-3 py-3 text-sm">
+                      <div
+                        data-reply-bubble
+                        className="min-w-0 rounded-lg border px-3 py-2 text-sm"
+                      >
                         {row.text && (
                           <ReplyMarkdown
                             copyLabel={t("copyCode")}
@@ -534,12 +575,6 @@ function ConversationContents({
                           </div>
                         )}
                       </div>
-                      {run && (
-                        <ToolActivity
-                          runId={run.id}
-                          cards={state.cards.filter((card) => card.runId === run.id)}
-                        />
-                      )}
                     </div>
                   </article>
                 );
@@ -556,7 +591,7 @@ function ConversationContents({
           )}
         </div>
         <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-          {announcement}
+          <span key={announcement.revision}>{announcement.text}</span>
         </p>
         {state.pending && !state.sending && (
           <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -578,22 +613,6 @@ function ConversationContents({
               {t("refresh")}
             </Button>
           </div>
-        )}
-        {pendingCards.length > 0 && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="max-w-full shrink-0 self-start"
-            onClick={() => {
-              const card = pendingCards[0];
-              if (!card) return;
-              const node = document.getElementById(`approval-${card.requestId}`);
-              node?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
-              node?.focus({ preventScroll: true });
-            }}
-          >
-            {t("approval.pendingCount", { count: pendingCards.length })}
-          </Button>
         )}
         <form onSubmit={submit} className="min-w-0 shrink-0">
           <Field>
@@ -630,7 +649,8 @@ function ConversationContents({
                 }}
               />
               <InputGroupAddon align="block-end" className="justify-end">
-                {active && (
+                <PendingApprovalControl cards={pendingCards} history={history} />
+                {showStop && active ? (
                   <IconButton
                     variant="default"
                     label={t("stop")}
@@ -639,12 +659,11 @@ function ConversationContents({
                   >
                     <StopIcon aria-hidden="true" />
                   </IconButton>
-                )}
-                {(!active || active.state === "waiting") && (
+                ) : (
                   <IconButton
                     type="submit"
                     variant="default"
-                    label={state.sending ? t("sending") : t("send")}
+                    label={sendLabel}
                     disabled={sendDisabled}
                   >
                     <SendIcon aria-hidden="true" />
@@ -702,4 +721,50 @@ function subscribeWide(listener: () => void) {
 }
 function isWide() {
   return window.matchMedia?.(wideQuery).matches ?? false;
+}
+
+/** Visibility updates stay with the composer affordance, outside the transcript. */
+function PendingApprovalControl({
+  cards,
+  history,
+}: {
+  cards: readonly ApprovalCardView[];
+  history: RefObject<HTMLDivElement | null>;
+}) {
+  const t = useTranslations("agents");
+  const requestId = cards[0]?.requestId;
+  const [visible, setVisible] = useState<string | null>(null);
+  useEffect(() => {
+    if (!requestId || !history.current || typeof IntersectionObserver === "undefined") return;
+    const node = document.getElementById(`approval-${requestId}`);
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setVisible(entry?.isIntersecting ? requestId : null);
+      },
+      { root: history.current },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [requestId, history]);
+  if (!requestId || visible === requestId) return null;
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="secondary"
+      className="mr-auto min-w-0 max-w-full shrink"
+      aria-controls={`approval-${requestId}`}
+      onClick={() => {
+        const node = document.getElementById(`approval-${requestId}`);
+        node?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+        node?.focus({ preventScroll: true });
+      }}
+    >
+      <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
+      <span className="min-w-0 truncate">
+        {t("approval.pendingCount", { count: cards.length })}
+      </span>
+    </Button>
+  );
 }

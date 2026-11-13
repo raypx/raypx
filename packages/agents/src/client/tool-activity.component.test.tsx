@@ -36,7 +36,7 @@ it.each(["en", "zh"] as const)(
     };
     render(
       <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
-        <ToolActivity cards={[privateCard]} runId={card.runId} />
+        <ToolActivity accountId="account" cards={[privateCard]} runId={card.runId} />
       </BrowserLanguageProvider>,
     );
     const trigger = screen.getByRole("button");
@@ -48,6 +48,9 @@ it.each(["en", "zh"] as const)(
     expect(within(list).getByText(strings.tools.writeFile)).toBeVisible();
     expect(within(list).getByText("notes/report.txt")).toBeVisible();
     expect(within(list).getByText(strings.approval.states.approved)).toBeVisible();
+    expect(
+      within(list).getByText(language === "en" ? "Answered by You" : "由你处理"),
+    ).toBeVisible();
     expect(screen.queryByText("bounded argument summary")).not.toBeInTheDocument();
     expect(screen.queryByText("PRIVATE FILE BODY")).not.toBeInTheDocument();
     expect(screen.queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
@@ -76,8 +79,29 @@ it("keeps each request as a separate row and limits computer activity to twenty 
 it("omits an empty reply activity group", () => {
   const view = render(
     <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
-      <ToolActivity cards={[]} runId={card.runId} />
+      <ToolActivity accountId="account" cards={[]} runId={card.runId} />
     </BrowserLanguageProvider>,
   );
   expect(view.container.querySelector("[data-tool-activity]")).toBeNull();
 });
+
+it.each(["approved", "denied", "expired", "cancelled"] as const)(
+  "keeps %s as a compact request row",
+  (state) => {
+    render(
+      <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+        <ToolActivity
+          accountId="account"
+          cards={[{ ...card, state, answeredByAccountId: "Alex" }]}
+          runId={card.runId}
+        />
+      </BrowserLanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "1 tool request" }));
+    const row = screen.getByRole("listitem");
+    expect(row).toHaveTextContent(en.agents.approval.states[state]);
+    expect(row).toHaveTextContent("Answered by Alex");
+    expect(row).toHaveAttribute("data-message-row", `approval:${card.requestId}`);
+    expect(row.querySelector("[data-approval-card]")).toBeNull();
+  },
+);

@@ -7,10 +7,14 @@ React lives only in `/client`. Web and Desktop consume that shared workspace. Th
 list/detail panes fill the tool layout, with a scrolling transcript and fixed composer.
 Space selection and New Agent mount into sidebar slots. The conversation header
 opens the lifecycle-only computer panel: a sheet below 1280px, an inline side panel
-at wider widths. Stop requires confirmation; tools and approvals remain unimplemented.
+at wider widths. Computer Stop requires confirmation. Pending approvals appear once as
+cards; resolved requests fold into tool rows. The composer links to offscreen requests
+and shows one primary Stop or Send action. Sending uses the existing message port.
 Model conversation rows keep reply identity/order stable from queue through commit.
 The client reuses Blocks Markdown, keeps reading anchors, and announces Run lifecycle
-changes only. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
+and approval changes without announcing streaming text or deadline ticks. Direct replies
+omit sender names; optional sender context supports multiple participants. The top bar
+owns the selected Agent name and computer indicator. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
 `/messages/en` and `/messages/zh` own the `agents` catalog; `/client/styles.css`
 registers Tailwind sources only. Component tests use happy-dom and
 `*.component.test.tsx`; `test:unit` selects the pure model and server suites.

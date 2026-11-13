@@ -1,6 +1,8 @@
 export {
   ConversationState,
   conversationRows,
+  conversationTimelineRows,
+  conversationSenderVisible,
   activeConversationRun,
   type ConversationRow,
   type ConversationView,
@@ -52,6 +54,9 @@ export { ComputerController, type ComputerView } from "./model/computer.js";
 export {
   ApprovalProjection,
   approvalRemainingSeconds,
+  approvalDuration,
+  approvalDeadlineProminent,
+  approvalExtraSummary,
   activityForRun,
   type ApprovalCardView,
   type ApprovalCardError,

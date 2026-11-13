@@ -62,7 +62,9 @@ it.each(["en", "zh"] as const)("shows another member's request read-only in %s",
   const strings = { en, zh }[language].agents;
   fixture(pendingCard({ memberAccountId: "another-member" }), language);
   expect(screen.getByRole("heading", { name: strings.tools.writeFile })).toBeInTheDocument();
-  expect(screen.getByText(/another-member/)).toBeInTheDocument();
+  expect(
+    screen.getByText(language === "en" ? "Waiting for another-member" : "等待another-member审批"),
+  ).toBeInTheDocument();
   expect(screen.getByText(/notes\/report.txt/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: strings.approval.approve })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: strings.approval.deny })).not.toBeInTheDocument();
@@ -94,24 +96,15 @@ it("sends the remembered exact-tool answer once and disables both controls while
   expect(view.onAnswered).toHaveBeenCalledOnce();
   view.update({ ...card, state: "approved", answeredByAccountId: "account" });
   expect(screen.queryByRole("button")).not.toBeInTheDocument();
-  expect(screen.getByText(new RegExp(en.agents.approval.states.approved))).toBeInTheDocument();
+  expect(view.container.querySelector("[data-approval-card]")).toBeNull();
 });
 
-it.each(["en", "zh"] as const)(
-  "renders every resolved state and its answerer without controls in %s",
-  (language) => {
-    const strings = { en, zh }[language].agents;
-    for (const state of ["approved", "denied", "expired", "cancelled"] as const) {
-      const view = fixture(
-        pendingCard({ state, answeredByAccountId: "reviewer-account" }),
-        language,
-      );
-      expect(
-        screen.getByText(new RegExp(strings.approval.states[state])).parentElement,
-      ).toHaveTextContent("reviewer-account");
-      expect(screen.queryByRole("button")).not.toBeInTheDocument();
-      view.unmount();
-    }
+it.each(["approved", "denied", "expired", "cancelled"] as const)(
+  "omits the full card after %s resolution",
+  (state) => {
+    const view = fixture(pendingCard({ state, answeredByAccountId: "reviewer-account" }));
+    expect(view.container.querySelector("[data-approval-card]")).toBeNull();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   },
 );
 
@@ -126,9 +119,8 @@ it("bounds both target and summary independently", () => {
   const view = fixture(
     pendingCard({ target: "x".repeat(1100), argumentSummary: "y".repeat(1100) }),
   );
-  expect(view.container.querySelector("pre")?.textContent).toBe(
-    `${"x".repeat(1024)}\n${"y".repeat(1024)}`,
-  );
+  expect(view.container.querySelector("code")?.textContent).toBe("x".repeat(1024));
+  expect(view.container.querySelector("pre")?.textContent).toBe("y".repeat(1024));
 });
 
 it.each(["en", "zh"] as const)(
@@ -183,4 +175,71 @@ it("keeps an unconfirmed or already-resolved answer inert without another answer
   fireEvent.click(screen.getByRole("button", { name: en.agents.approval.deny }));
   expect(view.onAnswer).not.toHaveBeenCalled();
   expect(screen.getByText(en.agents.approval.resolvedElsewhere)).toBeInTheDocument();
+});
+
+it.each(["en", "zh"] as const)(
+  "omits the viewer addressee and repeated arguments in %s",
+  (language) => {
+    const view = fixture(
+      pendingCard({
+        target: "browser-fixture.txt",
+        argumentSummary: "Write file: browser-fixture.txt",
+      }),
+      language,
+    );
+    expect(screen.getAllByText("browser-fixture.txt", { exact: true })).toHaveLength(1);
+    expect(view.container.querySelector("pre")).toBeNull();
+    expect(screen.queryByText(/For You|审批人/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Waiting for account|等待account/)).not.toBeInTheDocument();
+  },
+);
+
+it.each([
+  ["en", 600, "10 min left"],
+  ["en", 599, "10 min left"],
+  ["en", 61, "2 min left"],
+  ["en", 60, "60 s left"],
+  ["en", 45, "45 s left"],
+  ["en", 1, "1 s left"],
+  ["zh", 600, "剩余10分钟"],
+  ["zh", 599, "剩余10分钟"],
+  ["zh", 61, "剩余2分钟"],
+  ["zh", 60, "剩余60秒"],
+  ["zh", 45, "剩余45秒"],
+  ["zh", 1, "剩余1秒"],
+] as const)("formats a silent %s deadline at %i seconds", (language, seconds, expected) => {
+  vi.useFakeTimers();
+  const now = Date.parse("2026-01-01T00:00:00Z");
+  vi.setSystemTime(now);
+  fixture(pendingCard({ expiresAt: new Date(now + seconds * 1000).toISOString() }), language);
+  const deadline = screen.getByText(expected);
+  expect(deadline).toHaveAttribute("aria-live", "off");
+  expect(deadline.classList.contains("font-medium")).toBe(seconds <= 60);
+});
+
+it("updates only the deadline on each tick and switches from minutes to seconds", async () => {
+  vi.useFakeTimers();
+  const now = Date.parse("2026-01-01T00:00:00Z");
+  vi.setSystemTime(now);
+  const view = fixture(pendingCard({ expiresAt: new Date(now + 61_000).toISOString() }));
+  const card = view.container.querySelector("article")!;
+  const mutations: MutationRecord[] = [];
+  const observer = new MutationObserver((entries) => mutations.push(...entries));
+  observer.observe(card, { attributes: true, subtree: true, childList: true, characterData: true });
+  expect(screen.getByText("2 min left")).toBeInTheDocument();
+  await act(async () => vi.advanceTimersByTime(1000));
+  expect(screen.getByText("60 s left")).toBeInTheDocument();
+  await act(async () => vi.advanceTimersByTime(15_000));
+  expect(screen.getByText("45 s left")).toBeInTheDocument();
+  expect(mutations.length).toBeGreaterThan(0);
+  expect(
+    mutations.every((mutation) => {
+      const node =
+        mutation.target.nodeType === Node.ELEMENT_NODE
+          ? (mutation.target as Element)
+          : mutation.target.parentElement;
+      return node?.closest("[data-approval-deadline]") !== null;
+    }),
+  ).toBe(true);
+  observer.disconnect();
 });

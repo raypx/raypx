@@ -96,9 +96,7 @@
     "runCommand": "运行命令"
   },
   "approval": {
-    "addressedTo": "审批人：{member}",
     "answeredBy": "由{member}处理",
-    "remaining": "剩余{seconds}秒",
     "awaitingExpiry": "已到期，正在确认状态…",
     "alwaysTool": "始终允许此工具",
     "alwaysExecutable": "始终允许此工具运行此可执行程序",
@@ -107,7 +105,7 @@
     "ruleLimit": "允许列表已满。你仍可仅批准本次操作。",
     "unconfirmed": "尚未确认你的答复，正在等待服务器状态。",
     "resolvedElsewhere": "此请求已不再等待审批，正在等待最终状态。",
-    "pendingCount": "{count}个审批等待你处理",
+    "pendingCount": "查看{count}个待审批请求",
     "announced": "请求审批：{tool}",
     "loadError": "无法刷新审批，请重试。",
     "states": {
@@ -116,7 +114,10 @@
       "denied": "已拒绝",
       "expired": "已过期",
       "cancelled": "已取消"
-    }
+    },
+    "waitingFor": "等待{member}审批",
+    "minutesLeft": "剩余{count}分钟",
+    "secondsLeft": "剩余{count}秒"
   },
   "activity": {
     "title": "活动",
@@ -164,6 +165,7 @@
   },
   "running": "运行中",
   "succeeded": "已完成",
+  "sendDuringReply": "回复期间发送消息",
   "CONNECTION_UNAVAILABLE": "此运行使用的连接不可用。",
   "COMPUTER_UNAVAILABLE": "此运行使用的电脑不可用。"
 }

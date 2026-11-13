@@ -3,7 +3,14 @@ import { approvalRequestIdSchema, type ApprovalRequest } from "@raypx/core/appro
 import { agentIdSchema, conversationIdSchema } from "@raypx/core/agents";
 import { messageIdSchema, runIdSchema, type ConversationEvent } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
-import { ApprovalProjection, activityForRun, approvalRemainingSeconds } from "./approvals.js";
+import {
+  ApprovalProjection,
+  activityForRun,
+  approvalRemainingSeconds,
+  approvalDuration,
+  approvalDeadlineProminent,
+  approvalExtraSummary,
+} from "./approvals.js";
 import { ConversationController } from "./controller.js";
 import type { ApprovalPort, ConversationSnapshot, ConversationSocketPort } from "./port.js";
 
@@ -93,6 +100,37 @@ function harness() {
 afterEach(() => vi.useRealTimers());
 
 describe("approval projection", () => {
+  it.each([
+    [600, "minutes", 10],
+    [599, "minutes", 10],
+    [61, "minutes", 2],
+    [60, "seconds", 60],
+    [45, "seconds", 45],
+    [1, "seconds", 1],
+    [0, "seconds", 0],
+  ] as const)("formats %i remaining seconds", (seconds, unit, value) => {
+    expect(approvalDuration(seconds)).toEqual({ unit, value });
+    expect(approvalDeadlineProminent(seconds)).toBe(seconds <= 60);
+  });
+  it.each([
+    "Write file: file.txt",
+    "Write a file",
+    "file.txt",
+    "写入文件：file.txt",
+    "Path: file.txt",
+  ])("omits redundant summary %s", (argumentSummary) => {
+    expect(approvalExtraSummary({ ...request(), argumentSummary })).toBe("");
+  });
+  it("keeps additional arguments, including commands and file size", () => {
+    expect(approvalExtraSummary(request())).toBe("Write 20 bytes");
+    expect(
+      approvalExtraSummary({
+        ...request(),
+        toolName: "computer_run_command",
+        argumentSummary: "git status",
+      }),
+    ).toBe("git status");
+  });
   it.each(["approved", "denied", "expired", "cancelled"] as const)(
     "converges card creation and %s resolution without keeping arguments",
     (outcome) => {

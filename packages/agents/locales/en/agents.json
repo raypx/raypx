@@ -96,9 +96,7 @@
     "runCommand": "Run a command"
   },
   "approval": {
-    "addressedTo": "For {member}",
     "answeredBy": "Answered by {member}",
-    "remaining": "{seconds}s remaining",
     "awaitingExpiry": "Time elapsed; confirming expiry…",
     "alwaysTool": "Always allow this exact tool",
     "alwaysExecutable": "Always allow this tool with this exact executable",
@@ -107,7 +105,7 @@
     "ruleLimit": "The Allow list is full. You can approve once without remembering.",
     "unconfirmed": "Your answer is unconfirmed. Waiting for the server state.",
     "resolvedElsewhere": "This request is no longer pending. Waiting for its final state.",
-    "pendingCount": "{count, plural, one {# approval waiting for you} other {# approvals waiting for you}}",
+    "pendingCount": "{count, plural, one {Review # approval} other {Review # approvals}}",
     "announced": "Approval requested: {tool}",
     "loadError": "Could not refresh approvals. Try again.",
     "states": {
@@ -116,7 +114,10 @@
       "denied": "Denied",
       "expired": "Expired",
       "cancelled": "Cancelled"
-    }
+    },
+    "waitingFor": "Waiting for {member}",
+    "minutesLeft": "{count} min left",
+    "secondsLeft": "{count} s left"
   },
   "activity": {
     "title": "Activity",
@@ -164,6 +165,7 @@
   },
   "running": "Running",
   "succeeded": "Completed",
+  "sendDuringReply": "Send message during reply",
   "CONNECTION_UNAVAILABLE": "The connection used by this Run is unavailable.",
   "COMPUTER_UNAVAILABLE": "The computer used by this Run is unavailable."
 }

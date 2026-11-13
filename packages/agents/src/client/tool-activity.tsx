@@ -13,9 +13,11 @@ import { useTranslations } from "./i18n.js";
 export function ToolActivity({
   cards,
   runId,
+  accountId,
 }: {
   cards: readonly ApprovalCardView[];
   runId: string;
+  accountId: string;
 }) {
   const t = useTranslations("agents");
   if (!cards.length) return null;
@@ -28,7 +30,11 @@ export function ToolActivity({
       <CollapsibleContent animated>
         <ul aria-label={t("activity.title")} className="flex min-w-0 flex-col gap-2 py-2">
           {cards.map((card) => (
-            <li key={card.requestId} className="flex min-w-0 flex-col gap-1 border-l pl-3 text-xs">
+            <li
+              key={card.requestId}
+              data-message-row={`approval:${card.requestId}`}
+              className="flex min-w-0 flex-col gap-1 border-l pl-3 text-xs"
+            >
               <span className="min-w-0 font-medium wrap-anywhere">
                 {t(toolLabelKeys[card.toolName])}
               </span>
@@ -36,6 +42,14 @@ export function ToolActivity({
                 {card.target.slice(0, 1024)}
               </span>
               <span className="text-muted-foreground">{t(`approval.states.${card.state}`)}</span>
+              {card.answeredByAccountId && (
+                <span className="text-muted-foreground">
+                  {t("approval.answeredBy", {
+                    member:
+                      card.answeredByAccountId === accountId ? t("you") : card.answeredByAccountId,
+                  })}
+                </span>
+              )}
             </li>
           ))}
         </ul>
