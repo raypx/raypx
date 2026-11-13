@@ -19,6 +19,7 @@ function fixture() {
   };
   const spaceId = spaceIdSchema.parse("space");
   const now = new Date().toISOString();
+  let admitted = false;
   const membership = {
     space: spaceSchema.parse({ id: spaceId, name: "Personal", createdAt: now, updatedAt: now }),
     member: spaceMemberSchema.parse({
@@ -29,13 +30,17 @@ function fixture() {
     }),
   };
   const resolve = vi.fn<SpaceAccess["resolve"]>(async () => {
+    if (admitted)
+      return { spaceId, member: membership.member } as Awaited<ReturnType<SpaceAccess["resolve"]>>;
     throw new SpaceNotFound();
   });
   const list = vi.fn<SpaceAccess["list"]>(async () => [membership]);
   const create = vi.fn<SpaceAccess["create"]>(async () => membership);
   const readSession = vi.fn(async () => auth);
+  const models = vi.fn(async () => [{ modelId: "offered", name: "Offered model" }]);
   const app = createApiApp({
     spaces: { resolve, list, create },
+    conversationModels: { list: models },
     readSession,
     allowedOrigins: ["https://web.example.test"],
   });
@@ -54,6 +59,10 @@ function fixture() {
     list,
     create,
     readSession,
+    models,
+    admit() {
+      admitted = true;
+    },
     signOut() {
       auth = null;
     },
@@ -74,6 +83,7 @@ it("resolves membership on every Agent procedure and refuses even deployment adm
       }),
     () => f.client().conversations.events({ spaceId: f.spaceId, conversationId }),
     () => f.client().conversations.snapshot({ spaceId: f.spaceId, conversationId }),
+    () => f.client().agents.models({ spaceId: f.spaceId }),
     () => f.client().agents.list({ spaceId: f.spaceId }),
     () => f.client().agents.get({ spaceId: f.spaceId, id }),
     () => f.client().agents.create({ spaceId: f.spaceId, agent }),
@@ -81,9 +91,23 @@ it("resolves membership on every Agent procedure and refuses even deployment adm
     () => f.client().agents.delete({ spaceId: f.spaceId, id }),
   ])
     await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
-  expect(f.resolve).toHaveBeenCalledTimes(8);
-  expect(f.readSession).toHaveBeenCalledTimes(8);
+  expect(f.resolve).toHaveBeenCalledTimes(9);
+  expect(f.readSession).toHaveBeenCalledTimes(9);
   for (const args of f.resolve.mock.calls) expect(args).toEqual(["account", f.spaceId]);
+});
+
+it("lists only offered model names after fresh session and Space membership admission", async () => {
+  const f = fixture();
+  f.admit();
+  await expect(f.client().agents.models({ spaceId: f.spaceId })).resolves.toEqual([
+    { modelId: "offered", name: "Offered model" },
+  ]);
+  expect(f.models).toHaveBeenCalledWith(expect.objectContaining({ spaceId: f.spaceId }));
+  f.signOut();
+  await expect(f.client().agents.models({ spaceId: f.spaceId })).rejects.toMatchObject({
+    code: "UNAUTHORIZED",
+  });
+  expect(f.models).toHaveBeenCalledTimes(1);
 });
 
 it("takes account identity only from the session and protects creation with trusted Origin", async () => {

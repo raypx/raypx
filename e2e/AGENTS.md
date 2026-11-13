@@ -79,6 +79,9 @@ both renderer surfaces without claiming native WebView acceptance.
 
 Run `bun run --cwd e2e check`. `bun e2e` is the explicit browser gate.
 
+The owned backend fixture also supplies the deterministic Conversation model and a test-only completion
+gate for Web's `agents.spec.ts`; that case verifies streaming before commit and history
+after reload. It is skipped without the owned backend fixture.
 The control browser test is an explicit real-backend gate. Launch the isolated API
 with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build
 both surfaces against that fixture API. The `control` project is registered only when that fixture is present; ordinary

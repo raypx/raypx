@@ -31,7 +31,14 @@ describe("foundation contract", () => {
     ]);
     expect(apiContract).not.toHaveProperty("terminal");
     expect(apiContract).not.toHaveProperty("files");
-    expect(Object.keys(apiContract.agents)).toEqual(["list", "create", "get", "update", "delete"]);
+    expect(Object.keys(apiContract.agents)).toEqual([
+      "models",
+      "list",
+      "create",
+      "get",
+      "update",
+      "delete",
+    ]);
     expect(Object.keys(apiContract.account)).toEqual(["get", "access"]);
     expect(Object.keys(apiContract.hosts)).toEqual(["authorize", "grant", "revoke"]);
     expect(Object.keys(apiContract.observed)).toEqual(["list", "get"]);

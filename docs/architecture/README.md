@@ -11,8 +11,9 @@ scoped repositories and session-authorized oRPC, followed by member messages,
 ordered conversation logs, snapshots and an acknowledged WebSocket event stream.
 The third slice adds queued backend Runs, Pi model calls, transient reply text,
 committed reply segments and cancellation, using one API-enabled process. Device
-functionality remains in place; Conversation UI and durable execution are still
-pending. See [Spaces](spaces.md#implemented-foundation-slice),
+functionality remains in place. The shared Web/Desktop `/agents` workspace now
+provides Space selection, Agent management and streamed conversations; durable
+execution remains pending. See [Spaces](spaces.md#implemented-foundation-slice),
 [Events](events.md#implemented-conversation-slice) and
 [Execution](execution.md#implemented-phase-1-reply-slice).
 

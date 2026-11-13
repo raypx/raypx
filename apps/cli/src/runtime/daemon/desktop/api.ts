@@ -11,6 +11,7 @@ import { z } from "zod";
 import { LocalError } from "../../errors.js";
 import { abortable } from "../cancellation.js";
 import { parseSessionCookie, type SessionCookies } from "./cookies.js";
+import { DesktopEvents, type EventsSocketFactory } from "./events.js";
 
 const authPaths = new Set([
   "/api/auth/get-session",
@@ -85,6 +86,7 @@ async function readBody(response: Response, signal: AbortSignal) {
 
 /** HTTP policy and session state belong to the daemon, independent of a renderer lifetime. */
 export class DesktopApi {
+  readonly events: DesktopEvents;
   private readonly requests = new Map<string, AbortController>();
   private active = 0;
   private readonly lifetime = new AbortController();
@@ -92,12 +94,16 @@ export class DesktopApi {
     readonly cookies: SessionCookies,
     private readonly fetch: Fetch = (request) =>
       globalThis.fetch(request, { redirect: "manual", credentials: "omit" }),
-  ) {}
+    connectEvents?: EventsSocketFactory,
+  ) {
+    this.events = new DesktopEvents(cookies, connectEvents);
+  }
   get idle() {
-    return this.active === 0;
+    return this.active === 0 && this.events.idle;
   }
   close() {
     this.lifetime.abort();
+    this.events.closeAll();
   }
   cancel(client: string, id: string) {
     this.requests.get(`${client}:${id}`)?.abort();

@@ -1,5 +1,5 @@
-import { ConversationRunner, type ModelAccess } from "@raypx/agents/server";
-import { createDeploymentModels } from "../conversations/models.js";
+import { ConversationRunner } from "@raypx/agents/server";
+import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
 import { InstanceService } from "@raypx/instances/server";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import {
@@ -46,7 +46,7 @@ import { composeControl } from "./control.js";
 import type { ControlService } from "@raypx/control";
 
 export interface RuntimeProviders {
-  createModels?: () => ModelAccess;
+  createModels?: () => ConversationModels;
   createConversationFanout?: () => import("@raypx/agents/server").ConversationFanout;
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
   createConfigRepository?: (db: Database, audit: AuditService) => ConfigRepository;
@@ -147,10 +147,12 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     // Keep sessions request-owned even when the process reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
     const spaces = createSpaceAccess(db);
+    const conversationModels =
+      resources.createModels?.() ??
+      createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS);
     const runner = new ConversationRunner(
       createConversationsRepository(db),
-      resources.createModels?.() ??
-        createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS),
+      conversationModels,
       (code) => logger.createLogger({ operation: "run.execution" }).emit({ status: 503, code }),
       (operation, runId, durationMs) =>
         logger.createLogger({ operation }).emit({ status: 200, code: "OK", runId, durationMs }),
@@ -182,6 +184,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       app: createApiApp({
         spaces,
         conversations,
+        conversationModels,
         agents: createAgentsRepository(db),
         instances,
         audit,

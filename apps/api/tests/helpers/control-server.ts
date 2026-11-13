@@ -9,6 +9,20 @@ import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiApp } from "./app.js";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
+import { ConversationRunner } from "@raypx/agents/server";
+import {
+  createAgentsRepository,
+  createConversationsRepository,
+  createConversationFanout,
+} from "@raypx/agents/server/postgres";
+import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import { ConversationStream } from "../../src/conversations/stream.js";
+import { browserModelFixture } from "./browser-model.js";
+import { AuditService } from "../../src/admin/audit.js";
+import { createAdministrationRepository } from "../../src/admin/repository.js";
+import { createConfigRepository } from "../../src/config/repository.js";
+import { createConfigService } from "../../src/config/service.js";
+import { createAccessPolicy } from "../../src/access.js";
 const url = process.env.TEST_DATABASE_URL;
 const port = Number(process.env.CONTROL_E2E_PORT);
 if (
@@ -34,6 +48,26 @@ const auth = createAuth({
   mailer: { async sendVerification() {}, async sendPasswordReset() {} },
 });
 const control = new ControlService(createControlRepository(connection.db));
+// Sign-up reads the registration switch, so the fixture needs the real configuration service.
+const audit = new AuditService(createAdministrationRepository(connection.db));
+const config = createConfigService({
+  repository: createConfigRepository(connection.db, audit),
+  audit,
+  access: createAccessPolicy(),
+});
+const spaces = createSpaceAccess(connection.db);
+const model = browserModelFixture();
+const runner = new ConversationRunner(createConversationsRepository(connection.db), model.models);
+const fanout = createConversationFanout(url);
+const readSession = (headers: Headers) => readAuthSession(auth, headers);
+const stream = new ConversationStream({
+  spaces,
+  conversations: runner.conversations,
+  fanout,
+  readSession,
+  live: runner.live,
+});
+await stream.start();
 const hub = new RelayHub(async (run) => {
   try {
     return await run(control);
@@ -58,9 +92,14 @@ const hub = new RelayHub(async (run) => {
 });
 const app = createApiApp({
   authHandler: (request) => auth.handler(request),
-  readSession: (headers) => readAuthSession(auth, headers),
+  readSession,
   allowedOrigins: ["http://127.0.0.1:4173", "http://127.0.0.1:4174"],
   control,
+  config,
+  spaces,
+  agents: createAgentsRepository(connection.db),
+  conversationModels: model.models,
+  conversations: runner.conversations,
   onRevoke: (userId, deviceId) => hub.revoke(userId, deviceId),
 });
 const signup = await app.fetch(
@@ -76,21 +115,58 @@ const signup = await app.fetch(
 );
 if (signup.status !== 200) throw new Error("Unable to seed browser fixture account");
 await connection.db.update(user).set({ emailVerified: true }).where(eq(user.email, email));
-const server = serve<{ id: string }>({
+type SocketData =
+  | { id: string; kind: "relay" }
+  | { id: string; kind: "conversation"; accountId: string; headers: Headers };
+const server = serve<SocketData>({
   hostname: "127.0.0.1",
   port,
-  fetch(request, listener) {
+  async fetch(request, listener) {
+    const path = new URL(request.url).pathname;
+    if (path === "/events" || path === "/fixture/conversation/complete") {
+      const origin = request.headers.get("origin");
+      if (origin && !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
+        return new Response(null, { status: 403 });
+      const session = await readSession(request.headers);
+      if (!session) return new Response(null, { status: 401 });
+      if (path === "/fixture/conversation/complete") {
+        if (request.method !== "POST") return new Response(null, { status: 405 });
+        model.complete();
+        return new Response(null, { status: 204 });
+      }
+      if (
+        listener.upgrade(request, {
+          data: {
+            id: crypto.randomUUID(),
+            kind: "conversation",
+            accountId: session.user.id,
+            headers: request.headers,
+          },
+        })
+      )
+        return;
+      return new Response(null, { status: 426 });
+    }
     if (new URL(request.url).pathname === "/relay") {
       const origin = request.headers.get("origin");
       if (origin && !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
         return new Response(null, { status: 403 });
-      if (listener.upgrade(request, { data: { id: crypto.randomUUID() } })) return;
+      if (listener.upgrade(request, { data: { id: crypto.randomUUID(), kind: "relay" } })) return;
       return new Response(null, { status: 426 });
     }
     return app.fetch(request);
   },
   websocket: {
     open(socket) {
+      if (socket.data.kind === "conversation") {
+        stream.open(socket.data.id, socket.data.accountId, socket.data.headers, {
+          send: (frame) => {
+            socket.send(JSON.stringify(frame));
+          },
+          close: (code, reason) => socket.close(code, reason),
+        });
+        return;
+      }
       hub.open({
         id: socket.data.id,
         send: (frame) => {
@@ -100,9 +176,17 @@ const server = serve<{ id: string }>({
       });
     },
     message(socket, value) {
+      if (socket.data.kind === "conversation") {
+        if (typeof value === "string") stream.receive(socket.data.id, value);
+        return;
+      }
       if (typeof value === "string") void hub.receive(socket.data.id, value);
     },
     close(socket) {
+      if (socket.data.kind === "conversation") {
+        stream.close(socket.data.id);
+        return;
+      }
       void hub.close(socket.data.id);
     },
   },
@@ -110,6 +194,9 @@ const server = serve<{ id: string }>({
 console.log(`Control browser fixture ready on 127.0.0.1:${port}`);
 const stop = async () => {
   await hub.shutdown();
+  await stream.shutdown();
+  await runner.close();
+  await fanout.close();
   await server.stop(true);
   await connection.db.delete(user).where(eq(user.email, email));
   await connection.close();

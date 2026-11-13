@@ -14,6 +14,13 @@ README.md lists the layout, build and acceptance commands. Preserve DesktopBridg
 
 ## Interface
 
+`/agents` mounts the shared `@raypx/agents/client` workspace after login and uses
+`/model` search validation. It is separate from device-owned task pages. Native
+`eventsOpen/Read/Send/Close` bridge only the configured origin's `/events`; the
+daemon owns its cookie. The renderer applies and ACKs each event, preserving its
+cursor across reconnects. Ordinary browser previews use the authenticated browser
+socket. Draft identity includes origin, account, Space and Conversation.
+
 `main.go`, `go.mod` and `mygo.config.ts` share the frontend root, following the
 MyGo Web template. `main.go` embeds prepared assets and calls `internal/app`,
 which owns MyGo windows, tray and restricted renderer entry points.

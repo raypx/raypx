@@ -27,6 +27,13 @@ export const spacesContract = {
   create: session.input(spaceInputSchema).output(membership),
 };
 export const agentsContract = {
+  models: session
+    .input(spaceSelection)
+    .output(
+      z.array(
+        z.strictObject({ modelId: z.string().min(1).max(200), name: z.string().min(1).max(200) }),
+      ),
+    ),
   list: session
     .input(spaceSelection.extend({ limit: z.number().int().min(1).max(100).default(50) }))
     .output(z.array(agentConversation).max(100)),

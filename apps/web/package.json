@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
+    "@raypx/agents": "workspace:*",
     "@raypx/analytics": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/blocks": "workspace:*",

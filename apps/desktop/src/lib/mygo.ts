@@ -6,6 +6,8 @@ import {
   desktopExecutionResults,
   desktopLoginRequests,
   desktopLoginResults,
+  desktopEventsRequests,
+  desktopEventsResults,
 } from "@raypx/contracts/desktop";
 import {
   DESKTOP_METHODS,
@@ -281,6 +283,12 @@ export async function createMyGoBridge(dispatch: (event: unknown) => void): Prom
           return runtime.call("Desktop.Request", "repair_connector", { provider });
         }
         const method = DESKTOP_METHODS[key];
+        if (Object.hasOwn(desktopEventsRequests, method)) {
+          const action = method as keyof typeof desktopEventsRequests;
+          return desktopEventsResults[action].parse(
+            await requestDaemon(action, desktopEventsRequests[action].parse(input), 30_000),
+          );
+        }
         if (Object.hasOwn(desktopExecutionRequests, method)) {
           const query = method as keyof typeof desktopExecutionRequests;
           return desktopExecutionResults[query].parse(

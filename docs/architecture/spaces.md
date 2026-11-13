@@ -20,11 +20,15 @@ can manage Agents; deployment roles do not bypass admission. Lists filter before
 limiting. Missing membership and missing records both return `NOT_FOUND`.
 
 An Agent's model choice is an opaque `modelId`, without an endpoint, credential or
-vendor field. Updates replace the configuration and preserve the Conversation.
+vendor field. `agents.models` resolves membership and returns only offered
+`{ modelId, name }` pairs. An optional deployment display name defaults to the
+opaque identifier; entries without configured credentials are not offered.
+Updates replace the configuration and preserve the Conversation.
 Agent/Conversation creation is atomic. Deletion removes both synchronously while
 they have no execution or external resources; resumable deletion precedes those
-future dependencies. Space/member mutation, model execution and UI remain outside
-these slices. Member messages and their stream are described in
+future dependencies. The shared Agents client provides Space creation/switching,
+Agent forms and direct conversations in Web and Desktop. Member mutation remains
+outside these slices. Member messages and their stream are described in
 [the implemented conversation slice](events.md#implemented-conversation-slice). Invitations, membership management and their audit
 workflow remain Phase 6 work.
 

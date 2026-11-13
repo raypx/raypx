@@ -25,6 +25,7 @@ describe("Desktop shell pages", () => {
       "/": { title: "common.projects", layout: "workbench" },
       "/files": { title: "common.files", layout: "tool" },
       "/account": { title: "common.account", layout: "document" },
+      "/agents": { title: "agents.title", layout: "tool" },
       "/approvals": { title: "common.approvals", layout: "workbench" },
       "/automations": { title: "common.jobs", layout: "workbench" },
       "/memory": { title: "memory.title", layout: "workbench" },

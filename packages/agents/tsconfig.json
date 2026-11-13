@@ -1,5 +1,4 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
-  "compilerOptions": {},
-  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"]
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["src", "tests", "locales"]
 }

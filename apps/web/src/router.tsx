@@ -29,6 +29,7 @@ export function getRouter() {
 }
 /** Message keys that title shell pages; each translates without values. */
 type PageTitle =
+  | "agents.title"
   | "dash.nav.console"
   | "dash.nav.overview"
   | "dash.nav.audit"

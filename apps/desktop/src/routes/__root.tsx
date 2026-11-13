@@ -38,7 +38,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
         <ThemeScript initialThemeSource={desktopInitialThemeSource} />
       </head>
-      <body className="h-dvh min-w-[800px] overflow-hidden">
+      <body className="h-dvh min-w-0 overflow-hidden">
         {children}
         <Scripts />
       </body>

@@ -15,6 +15,22 @@ contracts. A workflow works on every client or degrades for a stated reason.
 - Unsent text is a draft kept on the device, isolated by Space and conversation.
   Restoring a draft never sends it.
 
+`@raypx/agents/model` owns Space/Agent page selection, the conversation projection,
+the applied cursor and injected read, command, stream and draft ports.
+`@raypx/agents/client` adapts them to React for the additive `/agents` routes in
+Web and Desktop. Project, session, task and automation pages remain available.
+The Space picker appears after a second Space exists; a labelled New Space action
+is always available. Agent forms use the backend's offered model names and show
+an explicit unavailable state when that catalog is empty.
+
+Conversation history and its cursor live together in component memory. Reload
+starts from an authoritative snapshot; reconnect resumes the existing projection.
+Only the unsent draft and any frozen unconfirmed-send receipt persist on the
+device, keyed by server origin, account, Space and conversation. A delivery retry
+uses that same key; a failed-Run retry restores the triggering text for an explicit
+new Send. Neither restoration sends anything. Streaming text is outside live
+regions; a polite status announces reply activity and completion.
+
 ## Web
 
 - TanStack Start renders on the server and runs on Bun. It imports no backend,
@@ -34,6 +50,12 @@ contracts. A workflow works on every client or degrades for a stated reason.
 - Granting a Space access to this device asks for native confirmation. The device
   connector keeps running after the window closes, so granted work continues.
 - The renderer receives no credentials.
+
+The daemon bridges `/events` through bounded private open/read/send/close methods
+on the existing renderer channel. It fixes the destination and session headers;
+the renderer receives validated conversation frames and sends its own ACK after
+application. Peer loss, account selection and session replacement close the
+remote socket. Browser previews use the ordinary cookie-authenticated WebSocket.
 
 ## Mobile
 

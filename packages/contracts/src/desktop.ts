@@ -2,6 +2,7 @@ import { desktopLoginAuthorizationSchema, desktopLoginStartSchema } from "./desk
 import { z } from "zod";
 import { localEventSchema } from "./local.js";
 import { localResults } from "./client.js";
+import { conversationClientFrameSchema, conversationServerFrameSchema } from "./conversation.js";
 
 export const desktopExecutionSchema = z.strictObject({
   id: z.uuid(),
@@ -108,4 +109,19 @@ export const desktopLoginResults = {
   browser_login_start: desktopLoginAuthorizationSchema,
   browser_login_wait: z.literal(true),
   browser_login_cancel: z.literal(true),
+};
+
+/** Selected-origin conversation stream; session headers stay in the daemon. */
+const desktopEventsIdentity = z.strictObject({ id: z.uuid() });
+export const desktopEventsRequests = {
+  events_open: desktopEventsIdentity.extend({ accountId: z.string().min(1).max(128) }),
+  events_read: desktopEventsIdentity,
+  events_send: desktopEventsIdentity.extend({ frame: conversationClientFrameSchema }),
+  events_close: desktopEventsIdentity,
+};
+export const desktopEventsResults = {
+  events_open: z.literal(true),
+  events_read: conversationServerFrameSchema.nullable(),
+  events_send: z.literal(true),
+  events_close: z.literal(true),
 };

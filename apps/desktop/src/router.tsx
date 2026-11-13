@@ -32,6 +32,7 @@ export function getRouter() {
 }
 /** Message keys that title shell pages; each translates without values. */
 type PageTitle =
+  | "agents.title"
   | "common.account"
   | "common.approvals"
   | "common.files"

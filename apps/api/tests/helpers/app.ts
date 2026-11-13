@@ -7,6 +7,7 @@ const services = [
   "spaces",
   "agents",
   "conversations",
+  "conversationModels",
   "instances",
   "administration",
   "config",

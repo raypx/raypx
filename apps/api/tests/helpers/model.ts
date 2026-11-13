@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import { createAssistantMessageEventStream, type AssistantMessage } from "@raypx/ai";
-import type { ModelAccess, RunExecution } from "@raypx/agents/server";
+import type { RunExecution } from "@raypx/agents/server";
+import type { ConversationModels } from "../../src/conversations/models.js";
 
 /** Explicit gates, no clocks or provider network. Also used by the PostgreSQL suite. */
 export function modelFixture() {
@@ -11,7 +12,8 @@ export function modelFixture() {
     complete(finalText?: string): void;
     fail(): void;
   }> = [];
-  const models: ModelAccess = {
+  const models: ConversationModels = {
+    list: async () => [{ modelId: "fixture", name: "Deterministic fixture" }],
     resolve: vi.fn(async () => ({
       stream: (_input: Pick<RunExecution, "instructions" | "history">, signal: AbortSignal) => {
         const stream = createAssistantMessageEventStream();

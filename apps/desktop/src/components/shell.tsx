@@ -28,6 +28,7 @@ import { FolderOpenIcon } from "@raypx/icons/folder-open";
 import { InboxIcon } from "@raypx/icons/inbox";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { BookOpenIcon } from "@raypx/icons/book-open";
+import { AgentIcon } from "@raypx/icons/agent";
 import { AppShell, type ShellAction, type ShellLinkProps } from "@raypx/blocks/shell";
 import { useCommandShortcut } from "@raypx/blocks/command-palette";
 import { PlusIcon } from "@raypx/icons/plus";
@@ -46,6 +47,7 @@ import { useSettingsNavigation } from "../features/settings/navigation.js";
 const pendingClient = createPendingClient(localTaskClient, taskClient);
 
 type DesktopPath =
+  | "/agents"
   | "/"
   | "/files"
   | "/automations"
@@ -124,6 +126,7 @@ export function DesktopShell() {
     { to: "/approvals", label: c("approvals"), icon: <InboxIcon /> },
     { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
     { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
+    { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
   ] as const;
   const [targetScope, targetDevice, targetProject] = target?.split(":") ?? [];
   const actions: ShellAction[] = [
@@ -183,6 +186,7 @@ export function DesktopShell() {
               },
               pages[2],
               pages[3],
+              pages[4],
             ],
           ]}
           accountAction={

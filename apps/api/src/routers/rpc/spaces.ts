@@ -83,6 +83,11 @@ export function createSpaceHandlers({
         ),
     },
     agents: {
+      models: os.agents.models
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.conversationModels.list(scope)),
+        ),
       list: os.agents.list
         .use(read)
         .handler(({ context, input }) =>

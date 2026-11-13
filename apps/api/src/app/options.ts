@@ -16,11 +16,13 @@ import type { CloudJobsService } from "@raypx/jobs/server";
 import type { ContextLibraryService } from "@raypx/memory/server";
 import type { SpaceAccess } from "@raypx/spaces/server";
 import type { ConversationsRepository, AgentsRepository } from "@raypx/agents/server";
+import type { ConversationModels } from "../conversations/models.js";
 /** Every service is required: an absent one is a composition error, not a runtime state. */
 export interface ApiAppOptions {
   spaces: SpaceAccess;
   agents: AgentsRepository;
   conversations: ConversationsRepository;
+  conversationModels: Pick<ConversationModels, "list">;
   instances: InstanceService;
   audit?: AuditService;
   administration: AdministrationQueries;

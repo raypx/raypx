@@ -1,4 +1,4 @@
-import { desktopLoginRequests } from "@raypx/contracts/desktop";
+import { desktopLoginRequests, desktopEventsRequests } from "@raypx/contracts/desktop";
 import { BrowserLogin } from "./browser-login.js";
 import { accountProfileSchema } from "@raypx/contracts/api";
 import { localResults, type LocalClientMethod } from "@raypx/contracts/local-client";
@@ -73,11 +73,13 @@ export class DesktopControl {
   }
   /** Forgets the verified account in this control without telling the daemon to detach. */
   private deselect() {
+    this.api.events.closeAll();
     this.selection.abort();
     this.selection = new AbortController();
     this.selected = null;
   }
   async select(account: string | null, client: string, parent: AbortSignal) {
+    this.api.events.closeAll();
     this.selection.abort();
     const selection = new AbortController();
     this.selection = selection;
@@ -114,6 +116,25 @@ export class DesktopControl {
     signal: AbortSignal,
   ): Promise<unknown> {
     signal.throwIfAborted();
+    if (method === "events_open") {
+      const input = desktopEventsRequests.events_open.parse(raw);
+      const scope = AbortSignal.any([signal, this.httpScope.signal, this.selection.signal]);
+      await this.verify(input.accountId, scope);
+      scope.throwIfAborted();
+      return this.api.events.open(client, input.id, scope);
+    }
+    if (method === "events_read") {
+      const input = desktopEventsRequests.events_read.parse(raw);
+      return this.api.events.read(client, input.id, signal);
+    }
+    if (method === "events_send") {
+      const input = desktopEventsRequests.events_send.parse(raw);
+      return this.api.events.send(client, input.id, input.frame);
+    }
+    if (method === "events_close") {
+      const input = desktopEventsRequests.events_close.parse(raw);
+      return this.api.events.close(client, input.id);
+    }
     if (method === "browser_login_start") {
       const input = desktopLoginRequests[method].parse(raw);
       if (input.reauthorizeHost) {
@@ -262,6 +283,7 @@ export class DesktopControl {
     return localResults[method].parse(await host.request(method, parsed, client, signal));
   }
   close() {
+    this.api.events.closeAll();
     this.browserLogin.cancel();
     this.selection.abort();
     this.httpScope.abort();

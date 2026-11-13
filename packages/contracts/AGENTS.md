@@ -11,6 +11,8 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 from Core. They require a session, independently of deployment permissions. A
 `spaceId` selects the requested resource; API resolves membership on every call.
 Agent replies pair the Agent with its one direct Conversation.
+`agents.models` reads the selected Space's offered model identifiers/display names;
+the strict projection contains no provider connection or credential fields.
 `conversations.send/events/snapshot` use the same session and Space admission.
 `/api` also composes the version-1 conversation stream subscribe/ACK/unsubscribe
 frames, transient reply prefix/delta frames and event/snapshot-required replies.
@@ -19,7 +21,10 @@ Member management remains outside this slice.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 
 `/desktop`: bounded API request/reply DTOs, scoped execution list/result/terminal
-restore queries and the separate renderer channel's capability/authentication/request/ACK
+restore queries and credential-free conversation stream open/read/send/close DTOs.
+The latter transport the existing `/api` conversation frames unchanged.
+`/desktop` also owns
+the separate renderer channel's capability/authentication/request/ACK
 frames. Native supplies ownership; query inputs cannot choose owner/origin/identity.
 This entry never describes the
 administrative daemon router. The daemon derives renderer local admission from

@@ -3,6 +3,7 @@ import { resumablePath } from "@raypx/core/auth";
 const paths = new Set([
   "/",
   "/files",
+  "/agents",
   "/tasks",
   "/approvals",
   "/account",

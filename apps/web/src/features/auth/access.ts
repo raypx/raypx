@@ -17,6 +17,7 @@ export function accountAccessQuery(accountId: string | null) {
 
 /** Guest browsing, private feature access and navigation share one policy. */
 export const webPages = {
+  "/agents": { permission: null, guest: false, publicNavigation: true },
   "/admin": { permission: "admin.read", guest: false, publicNavigation: false },
   "/admin/audit": { permission: "audit.read", guest: false, publicNavigation: false },
   "/projects": { permission: "projects.read", guest: true, publicNavigation: true },

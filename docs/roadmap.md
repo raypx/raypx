@@ -4,8 +4,9 @@ This is the delivery order for the [target architecture](architecture/README.md)
 Phase 1's additive slices implement Spaces, membership records, Agent CRUD with
 one direct Conversation per Agent, and member messages with an ordered event log,
 snapshots, an acknowledged event stream, and process-local model replies with
-queued Runs, transient deltas, committed segments and stop. UI for these records
-remains to be implemented. The earlier device-owned product
+queued Runs, transient deltas, committed segments and stop. The shared `/agents`
+workspace now exposes Spaces, Agent management and conversations in Web and
+Desktop, with device-local drafts and deterministic browser acceptance. The earlier device-owned product
 remains until a phase replaces it.
 
 ## Phase overview
@@ -50,8 +51,8 @@ Acceptance:
   mid-segment shows the same final text.
 - The same conversation renders in Web and Desktop.
 
-Replaces: project and session pages, the guest task editor and remote read
-projections.
+The phase-1 slices are additive: project and session pages, the guest task editor
+and remote read projections remain available. Their replacement is deferred.
 
 ## 2. Durable Runs
 

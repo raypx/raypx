@@ -1,17 +1,26 @@
 import { z } from "zod";
 import { AiError, createAiClient, type Message } from "@raypx/ai";
 import type { ModelAccess } from "@raypx/agents/server";
+import type { SpaceScope } from "@raypx/spaces/server";
+
+export interface ConversationModels extends ModelAccess {
+  list(scope: SpaceScope): Promise<Array<{ modelId: string; name: string }>>;
+}
 
 const catalogSchema = z.array(
   z.strictObject({
     modelId: z.string().min(1).max(200),
+    name: z.string().trim().min(1).max(200).optional(),
     provider: z.string().min(1),
     model: z.string().min(1),
     credentialId: z.string().min(1),
   }),
 );
 /** Deployment-only adapter. Opaque IDs and member scope are the execution boundary. */
-export function createDeploymentModels(catalogJson: string, credentialsJson: string): ModelAccess {
+export function createDeploymentModels(
+  catalogJson: string,
+  credentialsJson: string,
+): ConversationModels {
   let catalog: z.infer<typeof catalogSchema>;
   let credentials: Record<string, string>;
   try {
@@ -24,6 +33,11 @@ export function createDeploymentModels(catalogJson: string, credentialsJson: str
   }
   const client = createAiClient();
   return {
+    async list() {
+      return catalog
+        .filter((entry) => Object.hasOwn(credentials, entry.credentialId))
+        .map((entry) => ({ modelId: entry.modelId, name: entry.name ?? entry.modelId }));
+    },
     async resolve(run) {
       const entry = catalog.find((item) => item.modelId === run.model.modelId);
       if (!entry) throw new AiError("AI_MODEL_NOT_FOUND");

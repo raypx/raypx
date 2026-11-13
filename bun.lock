@@ -113,6 +113,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@raypx/account": "workspace:*",
+        "@raypx/agents": "workspace:*",
         "@raypx/analytics": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/blocks": "workspace:*",
@@ -230,6 +231,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx/account": "workspace:*",
+        "@raypx/agents": "workspace:*",
         "@raypx/analytics": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/blocks": "workspace:*",
@@ -352,14 +354,29 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx/ai": "workspace:*",
+        "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
+        "@raypx/i18n": "workspace:*",
+        "@raypx/icons": "workspace:*",
         "@raypx/spaces": "workspace:*",
+        "@raypx/ui": "workspace:*",
         "drizzle-orm": "catalog:",
       },
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
+        "@testing-library/jest-dom": "catalog:dev",
+        "@testing-library/react": "catalog:dev",
+        "@testing-library/user-event": "catalog:dev",
+        "@types/react": "catalog:dev",
+        "@types/react-dom": "catalog:dev",
+        "happy-dom": "catalog:dev",
+        "react": "catalog:",
+        "react-dom": "catalog:",
         "vitest": "catalog:dev",
+      },
+      "peerDependencies": {
+        "react": "^19.3.0",
       },
     },
     "packages/ai": {

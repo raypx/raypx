@@ -6,10 +6,33 @@ export default defineConfig(({ mode }) =>
     defaults,
     defineConfig({
       test: {
-        include:
+        projects:
           mode === "postgres"
-            ? ["tests/postgres/**/*.test.ts"]
-            : ["src/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
+            ? [
+                {
+                  extends: true,
+                  test: { name: "postgres", include: ["tests/postgres/**/*.test.ts"] },
+                },
+              ]
+            : [
+                {
+                  extends: true,
+                  test: {
+                    name: "unit",
+                    include: ["src/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
+                    exclude: ["**/*.component.test.*"],
+                  },
+                },
+                {
+                  extends: true,
+                  test: {
+                    name: "component",
+                    environment: "happy-dom",
+                    include: ["src/**/*.component.test.tsx"],
+                    setupFiles: ["./tests/setup.ts"],
+                  },
+                },
+              ],
         fileParallelism: false,
       },
     }),

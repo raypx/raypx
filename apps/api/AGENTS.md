@@ -30,6 +30,9 @@ membership/Origin/quota admission. Live prefixes/deltas share the executor's API
 process; use one API-enabled process for this slice. Shutdown cancels active calls
 before closing storage. No provider text or credentials enter execution logs. `RuntimeProviders.createConversationFanout`
 can inject the subscriber for offline runtime tests.
+`agents.models` lists only opaque identifiers and display names after resolving Space
+membership. Configured display names default to the opaque identifier; entries without
+a configured credential are not offered. Provider details and credentials stay private.
 The owning feature packages also have separate `test:postgres` modes.
 `deployment:fixture:build --outfile <absolute-path>` bundles the test-only account
 provisioner for `smoke:deployment` as one minified Bun ESM file, without embedding

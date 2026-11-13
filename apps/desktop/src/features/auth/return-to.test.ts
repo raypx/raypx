@@ -15,6 +15,9 @@ it.each([
   expect(desktopReturnTo(input)).toBe("/");
 });
 it("retains local/remote scope and the selected project through login", () => {
+  expect(desktopReturnTo("/agents?spaceId=space&agentId=agent")).toBe(
+    "/agents?spaceId=space&agentId=agent",
+  );
   expect(desktopReturnTo("/tasks?scope=remote#editor")).toBe("/tasks?scope=remote#editor");
   expect(desktopReturnTo("/approvals?scope=local&project=project-a")).toBe(
     "/approvals?scope=local&project=project-a",

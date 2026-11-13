@@ -17,8 +17,17 @@ uses Tailwind utilities, translated copy and icons from `@raypx/icons`.
   editor and submission transitions; Tasks/client adapts them to React. Views use
   the existing ports and authoritative request state.
 - Applications own routes, authentication/session loading and platform adapters.
-  Native Mobile uses a separate RN implementation; only pure tokens and brand
-  assets cross from UI into Native.
+
+The additive `/agents` workspace follows the same split: `@raypx/agents/model`
+owns page selection, event/cursor convergence and injected command, stream and
+draft ports; `/client` owns the shared Space/Agent forms and bounded transcript.
+Web uses the cookie-authenticated `/events` socket and Desktop injects its
+credential-free daemon bridge. Component suites cover both languages, explicit
+retry, reconnect/snapshot recovery and stale account completions. The Web
+`e2e/agents.spec.ts` uses the owned backend's gated deterministic model to observe
+streaming before commit and identical history after reload.
+Native Mobile uses a separate RN implementation; only pure tokens and brand
+assets cross from UI into Native.
 
 ## Authentication composition
 

@@ -130,6 +130,13 @@ is published on the notification channel or written to logs.
 
 ## Live replies in phase 1
 
+The shared Agents model applies snapshots and consecutive event sequences before
+acknowledging. Duplicate events are harmless; gaps request a fresh snapshot.
+Transient deltas require adjacent UTF-16 offsets and converge to the committed
+segment. Missing offsets reconnect for a fresh prefix. The UI retains its draft
+through connecting, live, reconnecting and snapshot-required states, labels queued
+member messages and terminal failures, and offers explicit stop and retry editing.
+
 The initial reply executor and its `/events` subscribers share one API-enabled
 backend process. The existing PostgreSQL fanout still distributes committed events;
 live prefixes are process memory, with no content on LISTEN/NOTIFY. Multi-process

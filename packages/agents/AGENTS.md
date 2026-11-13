@@ -1,5 +1,15 @@
 # @raypx/agents
 
+`/model` owns pure Space/Agent page selection, the conversation projection and its
+injected RPC, stream and draft ports. Applied state and cursor advance together;
+React lives only in `/client`. Web and Desktop consume that shared workspace.
+`/messages/en` and `/messages/zh` own the `agents` catalog; `/client/styles.css`
+registers Tailwind sources only. Component tests use happy-dom and
+`*.component.test.tsx`; `test:unit` selects the pure model and server suites.
+Drafts and frozen uncertain-send receipts stay on the device, scoped by origin,
+account, Space and Conversation. Restoration and failed-Run retry only restore
+editing state. Never resend without an explicit action or render provider content as HTML.
+
 `/server` exposes database-free repository ports and Agent/Conversation projections.
 `/server/postgres` implements persistence. These are separate from device-owned
 tasks and execution. Core owns the

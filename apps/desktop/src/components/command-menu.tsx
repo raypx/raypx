@@ -16,7 +16,7 @@ import { useProjectCatalog } from "../features/tasks/project-catalog.js";
 import { rememberProject } from "../features/tasks/project-history.js";
 import { isDesktop } from "../lib/desktop.js";
 
-type DesktopPage = "/" | "/approvals" | "/automations" | "/memory";
+type DesktopPage = "/" | "/agents" | "/approvals" | "/automations" | "/memory";
 const recentLimit = 8;
 
 /** Desktop's ⌘K search over actions, pages, this computer's projects and recent sessions. */

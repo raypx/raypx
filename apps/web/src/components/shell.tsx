@@ -35,6 +35,7 @@ import { SettingsIcon } from "@raypx/icons/settings";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { ScheduleIcon } from "@raypx/icons/schedule";
 import { BookOpenIcon } from "@raypx/icons/book-open";
+import { AgentIcon } from "@raypx/icons/agent";
 import {
   AppShell,
   type ShellAction,
@@ -108,6 +109,7 @@ export function WebShell() {
       ),
   });
   const navigation: ShellNavItem<WebPath>[] = [
+    { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
     { to: "/projects", label: c("projects"), icon: <FolderOpenIcon />, exact: true },
     {
       to: "/approvals",

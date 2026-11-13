@@ -5,6 +5,7 @@ import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DevicePreferences } from "./preferences.js";
 import type { DesktopApiRequest, DesktopApiResponse } from "./api.js";
 import type { DesktopExecution } from "@raypx/contracts/desktop";
+import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
 
 interface EngineStatus {
   status: "starting" | "ready" | "error";
@@ -28,6 +29,10 @@ export const DESKTOP_METHODS = {
   browserLoginCancel: "browser_login_cancel",
   apiFetch: "api_fetch",
   apiCancel: "api_cancel",
+  eventsOpen: "events_open",
+  eventsRead: "events_read",
+  eventsSend: "events_send",
+  eventsClose: "events_close",
   controlInfo: "control_info",
   terminalSettings: "terminal_settings",
   terminalConfigure: "terminal_configure",
@@ -64,6 +69,10 @@ type DesktopRequests = {
   openExternal: { params: { url: string }; response: boolean };
   apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
   apiCancel: { params: { id: string }; response: boolean };
+  eventsOpen: { params: { id: string; accountId: string }; response: true };
+  eventsRead: { params: { id: string }; response: ConversationServerFrame | null };
+  eventsSend: { params: { id: string; frame: ConversationClientFrame }; response: true };
+  eventsClose: { params: { id: string }; response: true };
   controlInfo: { params: { accountId: string }; response: ControlInfo };
   terminalSettings: {
     params: { accountId: string };

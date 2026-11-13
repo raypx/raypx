@@ -22,6 +22,11 @@ output, stable LocalError codes, and prompts/credentials/provider errors out of
 diagnostics. Returned tool calls remain data for a caller to authorize and execute.
 
 Private `daemon desktop` is a finite, bounded stdin/JSON bootstrap for ADR 0052.
+Its private `events_open/read/send/close` methods bridge the selected server's
+authenticated `/events` socket without exporting session headers. Reads and
+queues are bounded, peer/session replacement closes streams, and the renderer
+alone applies and acknowledges durable conversation events. This does not start
+model execution locally or expose another remote endpoint.
 Administrative IPC issues a separate native capability and a one-use renderer
 WebSocket capability; neither grants the other's methods. `daemon/desktop` owns
 the selected-origin API policy, account verification, encrypted session table and
