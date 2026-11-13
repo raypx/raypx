@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
-import { AuditUnavailable, type AuditIntent } from "../administration/audit.js";
+import { AuditUnavailable, type AuditIntent } from "../admin/audit.js";
 import type { ApiAppOptions } from "../app/options.js";
 import type { ApiRouterEnv } from "../routers/request.js";
 

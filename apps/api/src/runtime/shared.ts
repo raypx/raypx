@@ -11,12 +11,12 @@ import type { ObjectStorage } from "@raypx/storage";
 import { createControlRepository } from "@raypx/control/postgres";
 import { createContextRepository } from "@raypx/memory/server/postgres";
 import { ControlService, ControlProjects } from "@raypx/control";
-import { createAuditedAuthAdapter } from "../administration/auth-adapter.js";
+import { createAuditedAuthAdapter } from "../admin/auth-adapter.js";
 import {
   createAdministrationRepository,
   type AdministrationRepository,
-} from "../administration/repository.js";
-import { AuditService } from "../administration/audit.js";
+} from "../admin/repository.js";
+import { AuditService } from "../admin/audit.js";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
 import { configurationDefaults } from "@raypx/contracts/api";
@@ -36,7 +36,7 @@ import { JobError } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
 import { createScheduleTick } from "../jobs/tick.js";
 import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
-import { createStorageSettings, databaseStorage } from "../storage/configuration.js";
+import { createStorageSettings, databaseStorage } from "../storage/config.js";
 import { createSessionAttachments, withSessionAttachments } from "../storage/attachments.js";
 
 export interface RuntimeProviders {

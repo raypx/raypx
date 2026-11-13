@@ -273,7 +273,7 @@ before Memory and control commands.
 
 ## Administration
 
-`src/administration` owns overview queries, cursor-based audit history, request
+`src/admin` owns overview queries, cursor-based audit history, request
 scopes and the audited Better Auth adapter. Runtime injects one AuditService into
 HTTP, the Auth adapter and configuration persistence. Audited mutations must write
 a durable intent first and commit success alongside their business change in the

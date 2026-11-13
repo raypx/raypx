@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "auth:bootstrap-admins": "bun src/administration/bootstrap.ts",
+    "auth:bootstrap-admins": "bun src/admin/bootstrap.ts",
     "db:migrate": "bun src/config/migrate.ts",
     "dev": "bun --bun vp dev --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",

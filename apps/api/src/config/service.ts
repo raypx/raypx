@@ -1,4 +1,4 @@
-import type { AuditService } from "../administration/audit.js";
+import type { AuditService } from "../admin/audit.js";
 import { hasPermission } from "@raypx/account/access";
 import type { AccessPolicy } from "../access.js";
 import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";

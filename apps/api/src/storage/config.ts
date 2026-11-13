@@ -12,8 +12,8 @@ import type { StorageSettingsService } from "../config/types.js";
 import { ConfigurationError } from "../config/service.js";
 import { createConfigurationReads, type ConfigurationReads } from "../config/reads.js";
 import { configurationCipher } from "../config/credentials.js";
-import { AuditUnavailable, type AuditService } from "../administration/audit.js";
-import { writeAuditSuccess } from "../administration/repository.js";
+import { AuditUnavailable, type AuditService } from "../admin/audit.js";
+import { writeAuditSuccess } from "../admin/repository.js";
 
 const safeStorageLocationSchema = storageLocationSchema.extend({
   endpoint: storageLocationSchema.shape.endpoint.refine((value) => {

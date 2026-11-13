@@ -15,8 +15,8 @@ import { connected, controlAuth } from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "../../../src/routers/index.js";
 import { createConfigurationReads } from "../../../src/config/reads.js";
-import { AuditService } from "../../../src/administration/audit.js";
-import { createAdministrationRepository } from "../../../src/administration/repository.js";
+import { AuditService } from "../../../src/admin/audit.js";
+import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import { cleanupExpired } from "../../../src/jobs/cleanup.js";
 import {
   createSessionAttachments,
@@ -27,7 +27,7 @@ import {
   createStorageSettings,
   saveStorageConfiguration,
   storageConfigSchema,
-} from "../../../src/storage/configuration.js";
+} from "../../../src/storage/config.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

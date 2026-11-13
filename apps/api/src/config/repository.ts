@@ -1,5 +1,5 @@
-import type { AuditService } from "../administration/audit.js";
-import { writeAuditSuccess } from "../administration/repository.js";
+import type { AuditService } from "../admin/audit.js";
+import { writeAuditSuccess } from "../admin/repository.js";
 import type { Database } from "@raypx/database/connection";
 import { systemConfiguration } from "@raypx/database/schema";
 import { and, eq, sql } from "drizzle-orm";

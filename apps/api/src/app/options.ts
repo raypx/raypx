@@ -1,5 +1,5 @@
-import type { AuditService } from "../administration/audit.js";
-import type { AdministrationQueries } from "../administration/types.js";
+import type { AuditService } from "../admin/audit.js";
+import type { AdministrationQueries } from "../admin/types.js";
 import type { InstanceService } from "@raypx/instances/server";
 import type {
   ConfigurationService,

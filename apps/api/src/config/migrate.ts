@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { migrateDatabase } from "@raypx/database";
 import { resendUpdateSchema } from "@raypx/contracts/api";
 import { initializeResend } from "./resend.js";
-import { saveStorageConfiguration, storageConfigSchema } from "../storage/configuration.js";
+import { saveStorageConfiguration, storageConfigSchema } from "../storage/config.js";
 
 const migrations = fileURLToPath(
   new URL("../../../../packages/database/drizzle-foundation", import.meta.url),

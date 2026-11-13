@@ -7,8 +7,8 @@ import { createMailer } from "@raypx/email/server";
 import { eq } from "drizzle-orm";
 import { createApiApp } from "../../../src/routers/index.js";
 import { createConfigurationReads } from "../../../src/config/reads.js";
-import { AuditService } from "../../../src/administration/audit.js";
-import { createAdministrationRepository } from "../../../src/administration/repository.js";
+import { AuditService } from "../../../src/admin/audit.js";
+import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import {
   createResendSettings,
   databaseMailer,

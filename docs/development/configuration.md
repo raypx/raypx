@@ -192,8 +192,8 @@ importing another application's source.
 ## Verification
 
 ```sh
-bun run --cwd apps/api test -- tests/integration/configuration.test.ts
-bun run --cwd apps/api test -- src/configuration tests/integration/configuration-runtime.test.ts tests/integration/runtime-providers.test.ts src/jobs
+bun run --cwd apps/api test -- tests/integration/config.test.ts
+bun run --cwd apps/api test -- src/config tests/integration/config-runtime.test.ts tests/integration/runtime-providers.test.ts src/jobs
 bun run --cwd apps/web test -- src/features/configuration.component.test.tsx
 NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_configuration_test bun run test postgres
 bun run verify

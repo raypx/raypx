@@ -3,8 +3,8 @@ import type { ResendSettingsSnapshot, ResendSettingsUpdate } from "@raypx/contra
 import type { Database } from "@raypx/database/connection";
 import { mailConfiguration } from "@raypx/database/schema";
 import { createMailer, MailUnavailableError, type Mailer } from "@raypx/email/server";
-import { AuditUnavailable, type AuditService } from "../administration/audit.js";
-import { writeAuditSuccess } from "../administration/repository.js";
+import { AuditUnavailable, type AuditService } from "../admin/audit.js";
+import { writeAuditSuccess } from "../admin/repository.js";
 import { configurationCipher } from "./credentials.js";
 import { ConfigurationError } from "./service.js";
 import { createConfigurationReads, type ConfigurationReads } from "./reads.js";

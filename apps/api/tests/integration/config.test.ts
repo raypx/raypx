@@ -8,7 +8,7 @@ import { hasPermission } from "@raypx/account/access";
 import { createConfigurationService } from "../../src/config/service.js";
 import type { ConfigurationRepository } from "../../src/config/types.js";
 import { getApiEnvironment } from "../../src/env.js";
-import { AuditService } from "../../src/administration/audit.js";
+import { AuditService } from "../../src/admin/audit.js";
 import type { ApiAppOptions } from "../../src/app/options.js";
 import type { RateLimiter } from "../../src/rate-limit/types.js";
 
