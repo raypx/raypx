@@ -9,6 +9,7 @@ export {
 export { preferencesPersist } from "./preferences.js";
 export { capture } from "./capture.js";
 export { selectOption } from "./select.js";
+export { expectSurfaceAtRest, expectSurfaceControls } from "./geometry.js";
 export {
   expectConversationHeaderControls,
   openConversationCapability,

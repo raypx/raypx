@@ -32,6 +32,8 @@ export function applyToolActivityEvent(
   const finished = event.kind === "tool.finished";
   const call: ToolActivity = {
     runId: event.runId,
+    agentId: event.agentId ?? existing?.agentId,
+    parentRunId: event.parentRunId ?? existing?.parentRunId,
     toolCallId: event.toolCallId,
     toolName: event.toolName,
     target: event.target.slice(0, 1_024),

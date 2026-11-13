@@ -122,7 +122,9 @@
     },
     "waitingFor": "Waiting for {member}",
     "minutesLeft": "{count} min left",
-    "secondsLeft": "{count} s left"
+    "secondsLeft": "{count} s left",
+    "requestedBy": "Requested by {name}",
+    "childTask": "Task: {task}"
   },
   "activity": {
     "title": "Activity",
@@ -410,5 +412,55 @@
     "deniedBy": "Denied by {name}",
     "joinSignIn": "Sign in",
     "joinSignInHint": "Sign in in the new tab, then return to this invitation."
+  },
+  "groups": {
+    "title": "Groups",
+    "direct": "Direct Agents",
+    "new": "New group",
+    "create": "Create group",
+    "name": "Group name",
+    "participants": "Participants",
+    "chooseAgents": "Choose Agents",
+    "count": "{count} selected · 2–32 Agents",
+    "add": "Add Agents",
+    "remove": "Remove",
+    "removeNamed": "Remove {name}",
+    "delete": "Delete group",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "This deletes the group and its conversation. The Agents remain."
+  },
+  "GROUP_MIN_AGENTS": "A group needs at least two Agents.",
+  "GROUP_AGENT_NOT_PARTICIPANT": "Choose an Agent participating in this group.",
+  "GROUP_AGENT_LIMIT": "A group can have up to 32 Agents.",
+  "AGENT_MESSAGE_CROSS_SPACE_DISABLED": "Messaging another Space is disabled.",
+  "AGENT_MESSAGE_CROSS_SPACE_UNSUPPORTED": "Messaging another Space is unavailable.",
+  "AGENT_MESSAGE_TARGET_INVALID": "The target Agent is unavailable.",
+  "AGENT_MESSAGE_DEPTH_LIMIT": "The Agent message chain reached its limit.",
+  "AGENT_MESSAGE_BUDGET_LIMIT": "The Agent message limit was reached.",
+  "DELEGATION_DEPTH_LIMIT": "The delegated work reached its depth limit.",
+  "DELEGATION_CONCURRENT_LIMIT": "The concurrent delegated work limit was reached.",
+  "DELEGATION_TOTAL_LIMIT": "The delegated work limit was reached.",
+  "AGENT_TARGET_UNAVAILABLE": "The selected Agent is unavailable.",
+  "mentions": {
+    "picker": "Mention an Agent",
+    "search": "Search Agents",
+    "empty": "No matching Agents",
+    "noReply": "No Agent will respond without a mention.",
+    "to": "to {name}",
+    "stop": "Stop {name}’s reply",
+    "unknownAgent": "Agent"
+  },
+  "delegation": {
+    "title": "Delegated work ({count})",
+    "task": "Delegated task",
+    "waiting": "Waiting for delegated work",
+    "states": {
+      "queued": "Queued for computer",
+      "running": "Running",
+      "waiting": "Waiting for approval",
+      "succeeded": "Finished",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.js";
+import { expectSurfaceAtRest, expectSurfaceControls } from "../helpers/geometry.js";
 import { capture } from "../helpers/capture.js";
 import {
   accountAccessFixture,
@@ -22,6 +23,7 @@ async function emptyAgentsSpace(page: Page, accountId: string) {
       ],
     }),
   );
+  await page.route("**/rpc/conversations/listGroups", (route) => authResponse(route, { json: [] }));
   await page.route("**/rpc/agents/list", (route) => authResponse(route, { json: [] }));
   await page.route("**/rpc/agents/models", (route) =>
     authResponse(route, { json: [{ modelId: "fixture", name: "Fixture model" }] }),
@@ -57,9 +59,10 @@ export function registerTests() {
     await expect(sidebar.getByRole("button", { name: "Space", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Space", exact: true })).toHaveCount(1);
     await expect(page.getByRole("button", { name: "New Agent", exact: true })).toHaveCount(1);
-    await expect(
-      page.getByRole("main").getByRole("button", { name: "New Agent", exact: true }),
-    ).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "New Agent", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New group", exact: true })).toHaveCount(1);
+    await expect(sidebar.getByRole("button", { name: "New group", exact: true })).toBeVisible();
+    await expectSurfaceControls(page, sidebar);
     await expect(navigation.getByRole("group", { name: "Workspace", exact: true })).toHaveCount(0);
     await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await expect(
@@ -75,6 +78,17 @@ export function registerTests() {
     await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
     const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
     await expect(expand).toHaveAttribute("aria-expanded", "false");
+    await expectSurfaceControls(page, sidebar);
+    for (const name of ["New Agent", "New group"]) {
+      const opener = sidebar.getByRole("button", { name, exact: true });
+      await expect(opener).toBeVisible();
+      await opener.click({ timeout: 5000 });
+      const dialog = page.getByRole("dialog", { name, exact: true });
+      await expectSurfaceAtRest(page, dialog);
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(opener).toBeFocused();
+    }
     await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await page.reload();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
@@ -117,6 +131,7 @@ export function registerTests() {
       const title = locale === "zh" ? "智能体" : "Agents";
       const space = locale === "zh" ? "空间" : "Space";
       const newAgent = locale === "zh" ? "新建智能体" : "New Agent";
+      const newGroup = locale === "zh" ? "新建群组" : "New group";
       for (const width of [375, 1280]) {
         await page.setViewportSize({ width, height: 812 });
         await expect(page.getByRole("heading", { name: title, exact: true })).toHaveCount(1);
@@ -128,9 +143,19 @@ export function registerTests() {
           page.getByRole("complementary").getByRole("button", { name: space, exact: true }),
         ).toBeVisible();
         await expect(page.getByRole("button", { name: newAgent, exact: true })).toHaveCount(1);
-        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-          true,
-        );
+        const sidebar = page.getByRole("complementary");
+        await expect(page.getByRole("button", { name: newGroup, exact: true })).toHaveCount(1);
+        for (const name of [newAgent, newGroup]) {
+          const opener = sidebar.getByRole("button", { name, exact: true });
+          await expect(opener).toBeVisible();
+          await opener.click({ timeout: 5000 });
+          const dialog = page.getByRole("dialog", { name, exact: true });
+          await expectSurfaceAtRest(page, dialog);
+          await page.keyboard.press("Escape");
+          await expect(dialog).toBeHidden();
+          await expect(opener).toBeFocused();
+        }
+        await expectSurfaceControls(page, sidebar);
         await capture(page, {
           path: test.info().outputPath(`agents-shell-${locale}-${width}.png`),
           fullPage: true,

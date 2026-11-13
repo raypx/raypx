@@ -127,3 +127,51 @@ it.each(["en", "zh"] as const)("names memory tools plainly in activity in %s", (
   expect(screen.getByText(strings.tools.updateMemory)).toBeVisible();
   expect(screen.queryByText("agent_memory_save")).toBeNull();
 });
+
+it.each(["en", "zh"] as const)(
+  "shows an exposed Agent refusal code as a quiet inline state in %s",
+  async (language) => {
+    const strings = { en, zh }[language].agents;
+    render(
+      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+        <ToolActivity
+          runId={call.runId}
+          activity={[
+            {
+              ...call,
+              toolName: "agent_delegate",
+              outcome: "refused",
+              argumentSummary: "DELEGATION_CONCURRENT_LIMIT",
+            },
+          ]}
+        />
+      </BrowserLanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByText(strings.DELEGATION_CONCURRENT_LIMIT)).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  },
+);
+
+it.each(["en", "zh"] as const)("names Agent interaction tools plainly in %s", (language) => {
+  const strings = { en, zh }[language].agents;
+  render(
+    <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+      <ToolActivity
+        runId={call.runId}
+        activity={[
+          { ...call, toolCallId: "message", toolName: "agent_send_message" },
+          { ...call, toolCallId: "delegate", toolName: "agent_delegate" },
+          { ...call, toolCallId: "wait", toolName: "agent_wait" },
+        ]}
+      />
+    </BrowserLanguageProvider>,
+  );
+  fireEvent.click(screen.getByRole("button"));
+  expect(screen.getByText(strings.tools.messageAgent)).toBeVisible();
+  expect(screen.getByText(strings.tools.delegateTask)).toBeVisible();
+  expect(screen.getByText(strings.tools.waitForChildren)).toBeVisible();
+  expect(screen.queryByText("agent_send_message")).toBeNull();
+  expect(screen.queryByText("agent_delegate")).toBeNull();
+  expect(screen.queryByText("agent_wait")).toBeNull();
+});

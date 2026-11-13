@@ -39,6 +39,7 @@ function SignedInAgents({ accountId }: { accountId: string }) {
   return (
     <AgentsWorkspace
       client={agentsClient}
+      groups={agentsClient.conversations}
       spaceManagement={agentsClient.spaces}
       accountApprovalSettings={agentsClient.approvals}
       invitationOrigin={webUrl}

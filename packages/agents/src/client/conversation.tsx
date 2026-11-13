@@ -30,6 +30,7 @@ import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SendIcon } from "@raypx/icons/send";
 import { StopIcon } from "@raypx/icons/stop";
+import type { Agent } from "@raypx/core/agents";
 import type { SpaceDirectoryMember, SpaceSettings } from "@raypx/core/spaces";
 import type { RunId, ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import {
@@ -46,6 +47,13 @@ import {
   type ApprovalCardView,
   type ApprovalPort,
 } from "../model.js";
+import { delegatedWork } from "../model/conversation.js";
+import { mentionIds, mentionQueryAt } from "../model/mentions.js";
+import type { GroupConversationView } from "../model/port.js";
+import { MentionPicker } from "./mention-picker.js";
+import { DelegatedWork } from "./delegated-work.js";
+import { GroupAvatars } from "./group-directory.js";
+import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
 import { CapabilitySheet } from "./capability-sheet.js";
 import { CapabilityPanels } from "./capability-panel.js";
 import type { AgentsWorkspacePort } from "../model.js";
@@ -68,6 +76,9 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  group?: GroupConversationView | undefined;
+  agentDirectory?: readonly Agent[] | undefined;
+  onManageParticipants?: (() => void) | undefined;
   capabilities?: Pick<AgentsWorkspacePort, "routines" | "spaceMemory"> | undefined;
   item: AgentConversationView;
   port: ConversationPort;
@@ -89,6 +100,9 @@ interface AgentConversationProps {
 }
 
 export function AgentConversation({
+  group,
+  agentDirectory,
+  onManageParticipants,
   capabilities,
   item,
   port,
@@ -157,6 +171,9 @@ export function AgentConversation({
   return (
     <ConversationContents
       item={item}
+      group={group}
+      agentDirectory={agentDirectory}
+      onManageParticipants={onManageParticipants}
       capabilities={capabilities}
       origin={origin}
       controller={controllers.conversation}
@@ -175,6 +192,9 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  group,
+  agentDirectory,
+  onManageParticipants,
   capabilities,
   origin,
   item,
@@ -191,6 +211,9 @@ function ConversationContents({
   onComputerOpen,
 }: {
   item: AgentConversationView;
+  group: GroupConversationView | undefined;
+  agentDirectory: readonly Agent[] | undefined;
+  onManageParticipants: (() => void) | undefined;
   capabilities: Pick<AgentsWorkspacePort, "routines" | "spaceMemory"> | undefined;
   origin: string;
   controller: ConversationController;
@@ -239,9 +262,11 @@ function ConversationContents({
   const follow = useRef(true);
   const anchor = useRef<{ node: HTMLElement; offset: number } | null>(null);
   const composing = useRef(false);
+  const dismissedMention = useRef<{ text: string; caret: number } | null>(null);
+  const [mentionRange, setMentionRange] = useState<ReturnType<typeof mentionQueryAt>>(null);
   const [away, setAway] = useState(false);
   const [targetRun, setTargetRun] = useState<string | null>(null);
-  const [stopping, setStopping] = useState<RunId | null>(null);
+  const [stopping, setStopping] = useState<ReadonlySet<RunId>>(() => new Set());
   const [announcement, setAnnouncement] = useState({ revision: 0, text: "" });
   const observed = useRef(new Map<RunId, string>());
   const observedCards = useRef(new Map<string, string>());
@@ -309,16 +334,73 @@ function ConversationContents({
     return members?.find((member) => member.accountId === memberAccountId)?.name || t("member");
   };
   const senderContext = {
-    showAgentNames,
+    showAgentNames: !!group || showAgentNames,
     hasOtherMembers: members
       ? members.length > 1
-      : hasOtherMembers || messages.some((message) => message.author.accountId !== accountId),
+      : hasOtherMembers ||
+        messages.some(
+          (message) => message.author.kind === "member" && message.author.accountId !== accountId,
+        ),
   };
+  const visibleSenders = useMemo(() => {
+    const visible = new Set<string>();
+    let previousSender: string | undefined;
+    for (const row of rows) {
+      if (row.kind !== "member" && row.kind !== "reply") continue;
+      if (
+        conversationSenderVisible(
+          row.agentId ? "reply" : row.kind,
+          {
+            showAgentNames: senderContext.showAgentNames,
+            hasOtherMembers: senderContext.hasOtherMembers,
+          },
+          previousSender === row.sender,
+        )
+      )
+        visible.add(row.id);
+      previousSender = row.sender;
+    }
+    return visible;
+  }, [rows, senderContext.showAgentNames, senderContext.hasOtherMembers]);
   useEffect(() => {
     if (state.toolActivity.length) onActivity?.(item.agent.spaceId, state.toolActivity);
   }, [state.toolActivity, onActivity, item.agent.spaceId]);
   const active = activeConversationRun(state.runs);
-  const showStop = active !== undefined && !state.draft.trim();
+  const showStop = !group && active !== undefined && !state.draft.trim();
+  const agentName = (agentId: string | undefined) => {
+    if (!group) return item.agent.name;
+    return (
+      group.agents.find((agent) => agent.id === agentId)?.name ??
+      agentDirectory?.find((agent) => agent.id === agentId)?.name ??
+      t("mentions.unknownAgent")
+    );
+  };
+  const conversationName = group?.conversation.name ?? item.agent.name;
+  function closeMentions() {
+    const node = editor.current;
+    if (node) dismissedMention.current = { text: node.value, caret: node.selectionStart };
+    setMentionRange(null);
+    node?.focus();
+  }
+  function updateMentionPicker(node: HTMLTextAreaElement, explicit = false) {
+    if (!group || composing.current || state.pending) return;
+    const text = node.value;
+    const caret = node.selectionStart;
+    const dismissed = dismissedMention.current;
+    if (!explicit && dismissed?.text === text && dismissed.caret === caret) return;
+    const range = mentionQueryAt(text, caret);
+    const selected = controller
+      .getSnapshot()
+      .mentionTokens?.some((token) => token.start === range?.start && caret <= token.end);
+    if (selected && !explicit) {
+      setMentionRange(null);
+      return;
+    }
+    if (explicit) dismissedMention.current = null;
+    setMentionRange(
+      range ?? (explicit ? { start: caret, end: node.selectionEnd, query: "" } : null),
+    );
+  }
   let sendLabel = active ? t("sendDuringReply") : t("send");
   if (state.sending) sendLabel = t("sending");
   const sendDisabled =
@@ -435,12 +517,12 @@ function ConversationContents({
     void send();
   }
   async function stop(runId: RunId) {
-    if (stopping) return;
-    setStopping(runId);
+    if (stopping.has(runId)) return;
+    setStopping((current) => new Set([...current, runId]));
     try {
       await controller.stop(runId);
     } finally {
-      setStopping(null);
+      setStopping((current) => new Set([...current].filter((candidate) => candidate !== runId)));
       editor.current?.focus();
     }
   }
@@ -459,11 +541,21 @@ function ConversationContents({
             <h1
               ref={title}
               tabIndex={-1}
-              title={item.agent.name}
+              title={conversationName}
               className="min-w-0 flex-1 truncate rounded-md text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {item.agent.name}
+              {conversationName}
             </h1>
+            {group && (
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label={t("groups.participants")}
+                onClick={onManageParticipants}
+              >
+                <GroupAvatars agents={group.agents} />
+              </Button>
+            )}
             <div
               data-conversation-actions
               className="flex shrink-0 flex-row flex-nowrap items-center gap-1 whitespace-nowrap"
@@ -519,6 +611,11 @@ function ConversationContents({
             )}
           </Alert>
         )}
+        {state.sendCode && (
+          <p role="status" className="text-xs text-muted-foreground">
+            {t(state.sendCode)}
+          </p>
+        )}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           <div
             ref={history}
@@ -568,11 +665,14 @@ function ConversationContents({
                       }}
                     />
                   );
-                if (row.kind === "approval")
+                if (row.kind === "approval") {
+                  const asking = state.runs.find((run) => run.id === row.card.runId);
                   return (
                     <ApprovalCard
                       key={row.id}
                       card={row.card}
+                      agentName={group ? agentName(asking?.agentId) : undefined}
+                      taskSummary={asking?.parentRunId ? t("delegation.task") : undefined}
                       accountId={accountId}
                       memberName={memberName}
                       onAnswer={(decision, allowTool) =>
@@ -582,11 +682,34 @@ function ConversationContents({
                       onAnswered={() => editor.current?.focus()}
                     />
                   );
-                const showSender = conversationSenderVisible(
-                  row.kind,
-                  senderContext,
-                  index > 0 && rows[index - 1]?.sender === row.sender,
-                );
+                }
+                const showSender = visibleSenders.has(row.id);
+                if (row.kind === "member" && row.agentId)
+                  return (
+                    <article
+                      key={row.id}
+                      data-message-row={row.id}
+                      data-agent-message={row.agentId}
+                      className="flex min-w-0 flex-col gap-1 pr-6"
+                    >
+                      {showSender && (
+                        <h3 className="flex min-w-0 items-center gap-2 text-xs font-medium">
+                          <Avatar size="sm" aria-hidden="true">
+                            <AvatarFallback>{agentName(row.agentId).slice(0, 1)}</AvatarFallback>
+                          </Avatar>
+                          <span className="truncate">{agentName(row.agentId)}</span>
+                        </h3>
+                      )}
+                      {!!row.targetAgentIds?.length && (
+                        <p className="text-xs text-muted-foreground wrap-anywhere">
+                          {t("mentions.to", { name: row.targetAgentIds.map(agentName).join(", ") })}
+                        </p>
+                      )}
+                      <p className="max-w-[90%] rounded-lg border px-3 py-2 text-sm whitespace-pre-wrap wrap-anywhere">
+                        {row.text}
+                      </p>
+                    </article>
+                  );
                 if (row.kind === "member")
                   return (
                     <article
@@ -608,7 +731,21 @@ function ConversationContents({
                     </article>
                   );
                 const run = row.run;
+                const work = run ? delegatedWork(state, run.id) : [];
+                const waitingOnWork =
+                  work.some((child) =>
+                    ["queued", "running", "waiting"].includes(child.run.state),
+                  ) &&
+                  state.toolActivity.some(
+                    (call) =>
+                      call.runId === run?.id &&
+                      call.toolName === "agent_wait" &&
+                      call.outcome === null,
+                  );
                 const producing = run?.state === "running" || run?.state === "queued";
+                let runStatus = run ? t(run.state) : "";
+                if (run?.state === "running") runStatus = t("replying");
+                if (waitingOnWork) runStatus = t("delegation.waiting");
                 const retryMessage = state.messages.find(
                   (message) => message.id === run?.messageId,
                 );
@@ -639,10 +776,13 @@ function ConversationContents({
                       )}
                       {showSender && (
                         <h3
-                          title={item.agent.name}
-                          className="min-w-0 truncate text-xs font-medium"
+                          title={agentName(row.agentId)}
+                          className="flex min-w-0 items-center gap-2 text-xs font-medium"
                         >
-                          {item.agent.name}
+                          <Avatar size="sm" aria-hidden="true">
+                            <AvatarFallback>{agentName(row.agentId).slice(0, 1)}</AvatarFallback>
+                          </Avatar>
+                          <span className="min-w-0 truncate">{agentName(row.agentId)}</span>
                         </h3>
                       )}
                       <div
@@ -660,9 +800,7 @@ function ConversationContents({
                         )}
                         {run && run.state !== "succeeded" && (
                           <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className={row.text ? "mt-2" : undefined}>
-                              {run.state === "running" ? t("replying") : t(run.state)}
-                            </span>
+                            <span className={row.text ? "mt-2" : undefined}>{runStatus}</span>
                             {run.failureCode && (
                               <span className="wrap-anywhere">{t(run.failureCode)}</span>
                             )}
@@ -701,6 +839,31 @@ function ConversationContents({
                           </div>
                         )}
                       </div>
+                      {group && run && ["queued", "running", "waiting"].includes(run.state) && (
+                        <IconButton
+                          size="icon-sm"
+                          variant="ghost"
+                          label={t("mentions.stop", { name: agentName(row.agentId) })}
+                          disabled={stopping.has(run.id)}
+                          onClick={() => void stop(run.id)}
+                        >
+                          <StopIcon aria-hidden="true" />
+                        </IconButton>
+                      )}
+                      {run && (
+                        <DelegatedWork
+                          work={work}
+                          parentRunId={run.id}
+                          agentName={group ? agentName : undefined}
+                          answers={state.cards}
+                          approvalPort={approvalPort}
+                          selection={{
+                            spaceId: item.agent.spaceId,
+                            conversationId: item.conversation.id,
+                          }}
+                          memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                        />
+                      )}
                     </div>
                   </article>
                 );
@@ -745,6 +908,27 @@ function ConversationContents({
             <FieldLabel htmlFor={id} className="sr-only">
               {t("message")}
             </FieldLabel>
+            {group && mentionRange && (
+              <MentionPicker
+                agents={group.agents}
+                query={mentionRange.query}
+                editor={editor}
+                onClose={closeMentions}
+                onSelect={(agent) => {
+                  const caret = controller.addMention(
+                    mentionRange.start,
+                    mentionRange.end,
+                    agent.id,
+                    agent.name,
+                  );
+                  closeMentions();
+                  requestAnimationFrame(() => {
+                    editor.current?.focus();
+                    editor.current?.setSelectionRange(caret, caret);
+                  });
+                }}
+              />
+            )}
             <InputGroup>
               <InputGroupTextarea
                 ref={editor}
@@ -754,14 +938,34 @@ function ConversationContents({
                 maxLength={32_000}
                 placeholder={t("message")}
                 className="max-h-48 min-h-16 overflow-y-auto"
-                onChange={(event) => controller.setDraft(event.target.value)}
+                onChange={(event) => {
+                  controller.setDraft(event.currentTarget.value);
+                  updateMentionPicker(event.currentTarget);
+                }}
+                aria-keyshortcuts={group ? "Control+Shift+M Meta+Shift+M" : undefined}
+                onSelect={(event) => updateMentionPicker(event.currentTarget)}
                 onCompositionStart={() => {
                   composing.current = true;
+                  setMentionRange(null);
                 }}
-                onCompositionEnd={() => {
+                onCompositionEnd={(event) => {
                   composing.current = false;
+                  controller.setDraft(event.currentTarget.value);
+                  updateMentionPicker(event.currentTarget);
                 }}
                 onKeyDown={(event) => {
+                  if (composing.current || event.nativeEvent.isComposing || event.keyCode === 229)
+                    return;
+                  if (
+                    group &&
+                    (event.ctrlKey || event.metaKey) &&
+                    event.shiftKey &&
+                    event.key.toLowerCase() === "m"
+                  ) {
+                    event.preventDefault();
+                    updateMentionPicker(event.currentTarget, true);
+                    return;
+                  }
                   if (
                     event.key !== "Enter" ||
                     event.shiftKey ||
@@ -775,6 +979,13 @@ function ConversationContents({
                 }}
               />
               <InputGroupAddon align="block-end" className="flex-wrap justify-end">
+                {group &&
+                  state.draft.trim() &&
+                  mentionIds(state.mentionTokens ?? []).length === 0 && (
+                    <span className="mr-auto min-w-0 text-xs wrap-anywhere text-muted-foreground">
+                      {t("mentions.noReply")}
+                    </span>
+                  )}
                 {spaceSettings?.approvalMode && (
                   <span className="min-w-0 flex-1 text-xs wrap-anywhere text-muted-foreground">
                     {t("spaceSettings.overridesDefault")}:{" "}
@@ -786,7 +997,7 @@ function ConversationContents({
                   <IconButton
                     variant="default"
                     label={t("stop")}
-                    disabled={stopping !== null}
+                    disabled={stopping.size > 0}
                     onClick={() => void stop(active.id)}
                   >
                     <StopIcon aria-hidden="true" />

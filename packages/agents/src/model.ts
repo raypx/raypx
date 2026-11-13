@@ -33,6 +33,8 @@ export {
   applyAgents,
   selectSpace,
   selectAgent,
+  applyGroups,
+  selectGroup,
   type AgentsPageState,
 } from "./model/page.js";
 export type {
@@ -48,6 +50,8 @@ export type {
   AgentsWorkspacePort,
   SpaceMembership,
   AgentConversationView,
+  GroupConversationView,
+  GroupsPort,
   OfferedModel,
 } from "./model/port.js";
 export { ComputerController, type ComputerView } from "./model/computer.js";

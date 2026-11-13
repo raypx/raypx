@@ -1,4 +1,6 @@
 import type { ConversationServerFrame } from "@raypx/contracts/api";
+import type { AgentId } from "@raypx/core/agents";
+import { editMentionTokens, insertMention, mentionIds, type MentionToken } from "./mentions.js";
 import type { RunId } from "@raypx/core/conversation";
 import type { ApprovalRequest } from "@raypx/core/approvals";
 import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
@@ -31,6 +33,8 @@ export interface ConversationControllerView extends ConversationView {
   loading: boolean;
   error: ConversationError | null;
   draft: string;
+  mentionTokens?: MentionToken[] | undefined;
+  sendCode?: SendFailureCode | null | undefined;
   sending: boolean;
   pending: PendingMessage | null;
 }
@@ -83,6 +87,7 @@ export class ConversationController {
       loading: true,
       error,
       draft: draft.text,
+      mentionTokens: draft.mentionTokens ?? [],
       pending: draft.pending,
       sending: false,
     };
@@ -109,7 +114,11 @@ export class ConversationController {
   private persist(text = this.view.draft, pending = this.view.pending): boolean {
     try {
       if (!text && !pending) this.options.drafts.remove(this.draftKey);
-      else this.options.drafts.write(this.draftKey, writeConversationDraft({ text, pending }));
+      else
+        this.options.drafts.write(
+          this.draftKey,
+          writeConversationDraft({ text, pending, mentionTokens: this.view.mentionTokens }),
+        );
       this.storageUnavailable = false;
       if (this.view.error === "storage") this.update({ error: null });
       return true;
@@ -121,8 +130,28 @@ export class ConversationController {
   }
   setDraft(text: string) {
     if (this.disposed || text.length > MAX_CONVERSATION_DRAFT) return;
-    this.update({ draft: text, error: this.view.error === "load" ? "load" : null });
+    this.update({
+      draft: text,
+      mentionTokens: editMentionTokens(this.view.draft, text, this.view.mentionTokens ?? []),
+      sendCode: null,
+      error: this.view.error === "load" ? "load" : null,
+    });
     this.persist(text);
+  }
+  addMention(start: number, end: number, agentId: AgentId, label: string): number {
+    if (this.disposed || this.view.pending) return end;
+    const result = insertMention(
+      this.view.draft,
+      this.view.mentionTokens ?? [],
+      start,
+      end,
+      agentId,
+      label,
+    );
+    if (result.text.length > MAX_CONVERSATION_DRAFT) return end;
+    this.update({ draft: result.text, mentionTokens: result.tokens });
+    this.persist();
+    return result.caret;
   }
   async start() {
     if (this.started || this.disposed) return;
@@ -340,6 +369,7 @@ export class ConversationController {
     const pending = this.view.pending ?? {
       text: this.view.draft,
       idempotencyKey: this.options.key(),
+      ...(this.view.mentionTokens?.length ? { mentions: mentionIds(this.view.mentionTokens) } : {}),
     };
     if (!pending.idempotencyKey || pending.idempotencyKey.length > 128) return false;
     if (!this.persist(this.view.draft, pending)) return false;
@@ -409,10 +439,22 @@ export class ConversationController {
       if (this.disposed) return false;
       if (!this.state.receiveMessage(message)) throw new Error("Invalid conversation receipt");
       const draft = this.view.draft === pending.text ? "" : this.view.draft;
-      this.update({ sending: false, pending: null, draft });
+      this.update({
+        sending: false,
+        pending: null,
+        draft,
+        mentionTokens: draft ? this.view.mentionTokens : [],
+        sendCode: null,
+      });
       this.persist(draft, null);
       return true;
-    } catch {
+    } catch (error) {
+      const code = sendFailureCode(error);
+      if (code) {
+        this.update({ sending: false, pending: null, sendCode: code, error: null });
+        this.persist(this.view.draft, null);
+        return false;
+      }
       this.update({ sending: false, error: "send" });
       return false;
     }
@@ -446,4 +488,24 @@ export class ConversationController {
     this.closeSocket();
     this.listeners.clear();
   }
+}
+
+const sendFailureCodes = [
+  "GROUP_MIN_AGENTS",
+  "GROUP_AGENT_NOT_PARTICIPANT",
+  "GROUP_AGENT_LIMIT",
+  "AGENT_TARGET_UNAVAILABLE",
+] as const;
+type SendFailureCode = (typeof sendFailureCodes)[number];
+function sendFailureCode(error: unknown): SendFailureCode | null {
+  if (!error || typeof error !== "object") return null;
+  const data = "data" in error ? error.data : undefined;
+  const nested = data && typeof data === "object" && "error" in data ? data.error : undefined;
+  const candidates = [
+    "code" in error ? error.code : undefined,
+    error instanceof Error ? error.message : undefined,
+    data && typeof data === "object" && "code" in data ? data.code : undefined,
+    nested && typeof nested === "object" && "code" in nested ? nested.code : undefined,
+  ];
+  return sendFailureCodes.find((code) => candidates.includes(code)) ?? null;
 }

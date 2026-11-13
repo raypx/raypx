@@ -1,12 +1,13 @@
-import { createAssistantMessageEventStream, type AssistantMessage } from "@raypx/ai";
+import { createAssistantMessageEventStream, type AssistantMessage, type ToolCall } from "@raypx/ai";
 import type { ModelTurn } from "@raypx/agents/server";
+import type { Run } from "@raypx/core/conversation";
 import type { ConversationModels } from "../../src/conversations/models.js";
 import { createConnectionTransport } from "../../src/conversations/connection-transport.js";
 
 /** An explicit completion gate lets browsers inspect streamed text before commit. */
 export function browserModelFixture() {
-  const completions = new Set<() => void>();
-  const resolve = async (completeImmediately = false) => ({
+  const completions = new Map<() => void, { conversationId: string | undefined; group: boolean }>();
+  const resolve = async (completeImmediately = false, run?: Run) => ({
     stream(input: ModelTurn, signal: AbortSignal) {
       const stream = createAssistantMessageEventStream();
       let text = "Fixture reply";
@@ -31,6 +32,47 @@ export function browserModelFixture() {
       }
       const lastMessage = [...input.history].reverse().find((entry) => entry.role === "user");
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
+      const groupCoordinator = input.instructions.includes("Fixture group coordinator.");
+      const groupResponder = input.instructions.includes("Fixture group responder.");
+      const child = Boolean(run?.parentRunId);
+      const results = (input.continuation ?? []).filter((entry) => entry.role === "toolResult");
+      function toolCall(name: string, id: string, args: ToolCall["arguments"], prefix = "") {
+        const request: AssistantMessage = {
+          ...message(),
+          content: [
+            ...(prefix ? [{ type: "text" as const, text: prefix }] : []),
+            { type: "toolCall", id, name, arguments: args },
+          ],
+          stopReason: "toolUse",
+        };
+        if (prefix)
+          stream.push({ type: "text_delta", contentIndex: 0, delta: prefix, partial: request });
+        stream.push({ type: "done", reason: "toolUse", message: request });
+        stream.end(request);
+        return stream;
+      }
+      // These instruction markers are private to the owned browser fixture. The
+      // actual backend still decides which explicit mentions start which Runs.
+      if (groupCoordinator && !child) {
+        const delegated = results.some((entry) => entry.toolName === "agent_delegate");
+        const waited = results.some((entry) => entry.toolName === "agent_wait");
+        if (!delegated)
+          return toolCall(
+            "agent_delegate",
+            "browser-group-delegate",
+            { task: "Write the delegated fixture file" },
+            "Fixture coordinator is delegating.",
+          );
+        if (!waited) return toolCall("agent_wait", "browser-group-wait", {});
+        text = "Fixture coordinator finished delegated work.";
+      }
+      if (groupResponder && !child) text = "Fixture independent reply";
+      if (child && !results.some((entry) => entry.toolName === "computer_write_file"))
+        return toolCall("computer_write_file", "browser-group-child-write", {
+          path: "browser-group-fixture.txt",
+          content: "A deterministic delegated browser fixture.\n",
+        });
+      if (child) text = "Fixture delegated task finished.";
       if (requestsFile && !input.continuation?.length) {
         const request: AssistantMessage = {
           ...message(),
@@ -59,11 +101,12 @@ export function browserModelFixture() {
       function complete() {
         completions.delete(complete);
         signal.removeEventListener("abort", abort);
-        text += " completed.";
+        const suffix = groupCoordinator || child ? "" : " completed.";
+        text += suffix;
         stream.push({
           type: "text_delta",
           contentIndex: 0,
-          delta: " completed.",
+          delta: suffix,
           partial: message(),
         });
         stream.push({ type: "text_end", contentIndex: 0, content: text, partial: message() });
@@ -72,10 +115,13 @@ export function browserModelFixture() {
       }
       stream.push({ type: "text_delta", contentIndex: 0, delta: text, partial: message() });
       signal.addEventListener("abort", abort, { once: true });
-      completions.add(complete);
+      completions.set(complete, {
+        conversationId: run?.conversationId,
+        group: groupCoordinator || groupResponder || child,
+      });
       // Background-triggered replies complete independently of the interactive
       // streaming gate, so parallel browser journeys cannot release each other.
-      if (completeImmediately) queueMicrotask(complete);
+      if (completeImmediately || groupCoordinator || child) queueMicrotask(complete);
       return stream;
     },
   });
@@ -83,7 +129,7 @@ export function browserModelFixture() {
     list: async () => [
       { modelId: "browser-fixture", name: "Deterministic fixture", source: "deployment" },
     ],
-    resolve: (run) => resolve(run.trigger !== "message"),
+    resolve: (run) => resolve(run.trigger !== "message", run),
     close() {
       completions.clear();
     },
@@ -95,8 +141,12 @@ export function browserModelFixture() {
       resolve: () => resolve(),
       test: async () => "SUCCEEDED" as const,
     },
-    complete() {
-      for (const complete of completions) complete();
+    complete(conversationId?: string) {
+      for (const [complete, entry] of completions) {
+        // Existing direct-conversation gates do not release concurrent group
+        // journeys, and each renderer's group gate addresses its own Conversation.
+        if (conversationId ? entry.conversationId === conversationId : !entry.group) complete();
+      }
     },
   };
 }

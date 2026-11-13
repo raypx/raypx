@@ -220,7 +220,26 @@ const server = serve<SocketData>({
       if (!session) return new Response(null, { status: 401 });
       if (path === "/fixture/conversation/complete") {
         if (request.method !== "POST") return new Response(null, { status: 405 });
-        model.complete();
+        const body = await request.text();
+        let conversationId: string | undefined;
+        if (body) {
+          try {
+            const input: unknown = JSON.parse(body);
+            if (
+              !input ||
+              typeof input !== "object" ||
+              !("conversationId" in input) ||
+              typeof input.conversationId !== "string" ||
+              !input.conversationId ||
+              input.conversationId.length > 128
+            )
+              return new Response(null, { status: 400 });
+            conversationId = input.conversationId;
+          } catch {
+            return new Response(null, { status: 400 });
+          }
+        }
+        model.complete(conversationId);
         return new Response(null, { status: 204 });
       }
       if (

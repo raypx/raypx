@@ -81,6 +81,8 @@ export function ApprovalCard({
   card,
   accountId,
   memberName,
+  agentName,
+  taskSummary,
   onAnswer,
   onExpired,
   onAnswered,
@@ -88,6 +90,8 @@ export function ApprovalCard({
   card: ApprovalCardView;
   accountId: string;
   memberName?: ((id: string) => string) | undefined;
+  agentName?: string | undefined;
+  taskSummary?: string | undefined;
   onAnswer: (decision: "approved" | "denied", allowTool: boolean) => Promise<boolean>;
   onExpired: () => void;
   onAnswered: () => void;
@@ -128,6 +132,16 @@ export function ApprovalCard({
       <h3 id={id} className="min-w-0 font-medium wrap-anywhere">
         {t(toolLabelKeys[card.toolName])}
       </h3>
+      {agentName && (
+        <p data-approval-agent className="min-w-0 text-xs text-muted-foreground wrap-anywhere">
+          {t("approval.requestedBy", { name: agentName })}
+        </p>
+      )}
+      {taskSummary && (
+        <p data-approval-task className="min-w-0 text-xs text-muted-foreground wrap-anywhere">
+          {t("approval.childTask", { task: taskSummary.slice(0, 240) })}
+        </p>
+      )}
       <code className="min-w-0 rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap wrap-anywhere">
         {card.target.slice(0, 1024)}
       </code>

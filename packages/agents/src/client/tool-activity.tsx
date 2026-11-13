@@ -11,6 +11,27 @@ import { toolLabelKeys } from "./approval-card.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
 
+const interactionCodes = {
+  AGENT_MESSAGE_CROSS_SPACE_DISABLED: "AGENT_MESSAGE_CROSS_SPACE_DISABLED",
+  AGENT_MESSAGE_CROSS_SPACE_UNSUPPORTED: "AGENT_MESSAGE_CROSS_SPACE_UNSUPPORTED",
+  AGENT_MESSAGE_TARGET_INVALID: "AGENT_MESSAGE_TARGET_INVALID",
+  AGENT_MESSAGE_DEPTH_LIMIT: "AGENT_MESSAGE_DEPTH_LIMIT",
+  AGENT_MESSAGE_BUDGET_LIMIT: "AGENT_MESSAGE_BUDGET_LIMIT",
+  DELEGATION_DEPTH_LIMIT: "DELEGATION_DEPTH_LIMIT",
+  DELEGATION_CONCURRENT_LIMIT: "DELEGATION_CONCURRENT_LIMIT",
+  DELEGATION_TOTAL_LIMIT: "DELEGATION_TOTAL_LIMIT",
+  AGENT_TARGET_UNAVAILABLE: "AGENT_TARGET_UNAVAILABLE",
+} as const;
+
+function interactionCode(call: ToolCallActivity) {
+  if (call.outcome !== "refused") return undefined;
+  if (Object.hasOwn(interactionCodes, call.argumentSummary))
+    return interactionCodes[call.argumentSummary as keyof typeof interactionCodes];
+  if (Object.hasOwn(interactionCodes, call.target))
+    return interactionCodes[call.target as keyof typeof interactionCodes];
+  return undefined;
+}
+
 function ToolActivityRow({
   call,
   approvalPort,
@@ -28,6 +49,7 @@ function ToolActivityRow({
   const toolName = Object.hasOwn(toolLabelKeys, call.toolName)
     ? t(toolLabelKeys[call.toolName as keyof typeof toolLabelKeys])
     : call.toolName.replaceAll("_", " ");
+  const refusal = interactionCode(call);
   return (
     <li
       data-message-row={`tool:${call.runId}:${call.toolCallId}`}
@@ -40,7 +62,7 @@ function ToolActivityRow({
         {call.target.slice(0, 1_024)}
       </span>
       <span className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-muted-foreground">
-        <span>{t(`activity.outcomes.${call.outcome ?? "running"}`)}</span>
+        <span>{refusal ? t(refusal) : t(`activity.outcomes.${call.outcome ?? "running"}`)}</span>
         {call.durationMs !== null && (
           <span className="tabular-nums">
             {t("activity.duration", { seconds: (call.durationMs / 1_000).toFixed(1) })}

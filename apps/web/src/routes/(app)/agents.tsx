@@ -30,6 +30,7 @@ function AgentsPage() {
         <AgentsWorkspace
           key={`${apiUrl}:${accountId}`}
           client={agentsClient}
+          groups={agentsClient.conversations}
           spaceManagement={agentsClient.spaces}
           accountApprovalSettings={agentsClient.approvals}
           invitationOrigin={webUrl}

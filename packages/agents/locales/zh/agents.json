@@ -122,7 +122,9 @@
     },
     "waitingFor": "等待{member}审批",
     "minutesLeft": "剩余{count}分钟",
-    "secondsLeft": "剩余{count}秒"
+    "secondsLeft": "剩余{count}秒",
+    "requestedBy": "{name} 请求审批",
+    "childTask": "任务：{task}"
   },
   "activity": {
     "title": "活动",
@@ -410,5 +412,55 @@
     "deniedBy": "{name} 已拒绝",
     "joinSignIn": "登录",
     "joinSignInHint": "在新标签页中登录，然后返回此邀请。"
+  },
+  "groups": {
+    "title": "群组",
+    "direct": "Agent 私聊",
+    "new": "新建群组",
+    "create": "创建群组",
+    "name": "群组名称",
+    "participants": "参与 Agent",
+    "chooseAgents": "选择 Agent",
+    "count": "已选 {count} 个 · 需要 2–32 个 Agent",
+    "add": "添加 Agent",
+    "remove": "移除",
+    "removeNamed": "移除 {name}",
+    "delete": "删除群组",
+    "deleteTitle": "删除 {name}？",
+    "deleteDescription": "这会删除群组及其对话，Agent 会保留。"
+  },
+  "GROUP_MIN_AGENTS": "群组至少需要两个智能体。",
+  "GROUP_AGENT_NOT_PARTICIPANT": "请选择此群组中的智能体。",
+  "GROUP_AGENT_LIMIT": "群组最多可有 32 个智能体。",
+  "AGENT_MESSAGE_CROSS_SPACE_DISABLED": "未启用跨空间消息。",
+  "AGENT_MESSAGE_CROSS_SPACE_UNSUPPORTED": "暂不支持跨空间消息。",
+  "AGENT_MESSAGE_TARGET_INVALID": "目标智能体不可用。",
+  "AGENT_MESSAGE_DEPTH_LIMIT": "智能体消息链已达到上限。",
+  "AGENT_MESSAGE_BUDGET_LIMIT": "智能体消息数量已达到上限。",
+  "DELEGATION_DEPTH_LIMIT": "委派工作层级已达到上限。",
+  "DELEGATION_CONCURRENT_LIMIT": "同时委派的工作数量已达到上限。",
+  "DELEGATION_TOTAL_LIMIT": "委派工作总数已达到上限。",
+  "AGENT_TARGET_UNAVAILABLE": "所选智能体不可用。",
+  "mentions": {
+    "picker": "提及智能体",
+    "search": "搜索智能体",
+    "empty": "没有匹配的智能体",
+    "noReply": "未提及智能体，不会收到回复。",
+    "to": "发给 {name}",
+    "stop": "停止 {name} 的回复",
+    "unknownAgent": "智能体"
+  },
+  "delegation": {
+    "title": "委派工作（{count}）",
+    "task": "委派任务",
+    "waiting": "等待委派工作",
+    "states": {
+      "queued": "等待电脑",
+      "running": "执行中",
+      "waiting": "等待审批",
+      "succeeded": "已完成",
+      "failed": "未完成",
+      "cancelled": "已取消"
+    }
   }
 }

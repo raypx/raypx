@@ -16,6 +16,8 @@ import { applyToolActivityEvent, mergeToolActivity } from "./tool-activity.js";
 
 export interface RunView {
   id: RunId;
+  agentId?: Run["agentId"] | undefined;
+  parentRunId?: RunId | null | undefined;
   state: Run["state"];
   failureCode: RunFailure | null;
   messageId: string | undefined;
@@ -33,11 +35,20 @@ export interface ConversationView {
   toolActivityTruncated: boolean;
 }
 export type ConversationRow =
-  | { id: string; kind: "member"; sender: string; sequence: number; text: string }
+  | {
+      id: string;
+      kind: "member";
+      sender: string;
+      sequence: number;
+      text: string;
+      agentId?: Run["agentId"] | undefined;
+      targetAgentIds?: Message["mentions"] | undefined;
+    }
   | {
       id: string;
       kind: "reply";
-      sender: "agent";
+      sender: string;
+      agentId?: Run["agentId"] | undefined;
       sequence: number;
       text: string;
       run: RunView | undefined;
@@ -48,7 +59,13 @@ export function conversationRows(view: ConversationView): ConversationRow[] {
   const rows: ConversationRow[] = view.messages.map((message) => ({
     id: message.id,
     kind: "member",
-    sender: `member:${message.author.accountId}`,
+    sender:
+      message.author.kind === "agent"
+        ? `agent:${message.author.agentId}`
+        : `member:${message.author.accountId}`,
+    ...(message.author.kind === "agent"
+      ? { agentId: message.author.agentId, targetAgentIds: message.mentions }
+      : {}),
     sequence: message.sequence,
     text: message.text,
   }));
@@ -61,18 +78,31 @@ export function conversationRows(view: ConversationView): ConversationRow[] {
     const run = view.runs.find((item) => item.id === id);
     const segments = view.segments.filter((item) => item.runId === id);
     const live = view.liveReplies.find((item) => item.runId === id);
-    if (run?.state === "succeeded" && segments.length === 0 && !live) continue;
+    if (run?.parentRunId || segments.some((segment) => segment.parentRunId) || live?.parentRunId)
+      continue;
+    if (
+      run?.state === "succeeded" &&
+      segments.length === 0 &&
+      !live &&
+      !view.runs.some((child) => child.parentRunId === id)
+    )
+      continue;
     const message = view.messages.find((item) => item.id === run?.messageId);
     rows.push({
       id: `reply:${id}`,
       kind: "reply",
-      sender: "agent",
+      sender: `agent:${run?.agentId ?? segments[0]?.agentId ?? live?.agentId ?? ""}`,
+      agentId: run?.agentId ?? segments[0]?.agentId ?? live?.agentId,
       sequence: message ? message.sequence + 0.5 : (segments[0]?.sequence ?? view.cursor + 1),
-      text: segments.map((segment) => segment.text).join("\n\n") || live?.text || "",
+      text: [...segments.map((segment) => segment.text), ...(live?.text ? [live.text] : [])].join(
+        "\n\n",
+      ),
       run,
     });
   }
-  return rows.sort((left, right) => left.sequence - right.sequence);
+  return rows.sort(
+    (left, right) => left.sequence - right.sequence || left.id.localeCompare(right.id),
+  );
 }
 
 export type ConversationTimelineRow =
@@ -110,6 +140,9 @@ export function conversationTimelineRows(
   ]);
   for (const runId of runIds) {
     const requests = pending.filter((card) => card.runId === runId);
+    const child =
+      view.runs.find((run) => run.id === runId)?.parentRunId ||
+      view.toolActivity.find((call) => call.runId === runId)?.parentRunId;
     const activity = view.toolActivity.filter(
       (call) =>
         call.runId === runId && !requests.some((card) => card.toolCallId === call.toolCallId),
@@ -120,15 +153,16 @@ export function conversationTimelineRows(
     let sequence = requests[0]?.sequence ?? view.cursor + 1;
     if (message) sequence = message.sequence + 0.6;
     if (reply) sequence = reply.sequence + 0.1;
-    rows.push({
-      id: `activity:${runId}`,
-      kind: "activity",
-      sender: "approval",
-      sequence,
-      runId,
-      activity,
-      pendingCount: requests.length,
-    });
+    if (!child)
+      rows.push({
+        id: `activity:${runId}`,
+        kind: "activity",
+        sender: "approval",
+        sequence,
+        runId,
+        activity,
+        pendingCount: requests.length,
+      });
     for (const card of requests)
       rows.push({
         id: `approval:${card.requestId}`,
@@ -152,12 +186,46 @@ export function conversationSenderVisible(
 }
 
 /** Stop the running reply first, then any queued reply in this conversation. */
-export function activeConversationRun(runs: readonly RunView[]): RunView | undefined {
+export function activeConversationRun(
+  runs: readonly RunView[],
+  agentId?: string,
+): RunView | undefined {
+  const eligible = runs.filter((run) => !run.parentRunId && (!agentId || run.agentId === agentId));
   return (
-    runs.find((run) => run.state === "running") ??
-    runs.find((run) => run.state === "waiting") ??
-    runs.find((run) => run.state === "queued")
+    eligible.find((run) => run.state === "running") ??
+    eligible.find((run) => run.state === "waiting") ??
+    eligible.find((run) => run.state === "queued")
   );
+}
+/** Explicit mention IDs choose independent per-Agent steering targets. */
+export function conversationSteeringTargets(runs: readonly RunView[], mentions: readonly string[]) {
+  return [...new Set(mentions)].flatMap((id) => {
+    const run = activeConversationRun(runs, id);
+    return run ? [run] : [];
+  });
+}
+
+/** Descendants remain activity under their root reply, never additional chat replies. */
+export function delegatedWork(view: ConversationView, parentRunId: string) {
+  const descendants = new Set<string>([parentRunId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const run of view.runs) {
+      if (run.parentRunId && descendants.has(run.parentRunId) && !descendants.has(run.id)) {
+        descendants.add(run.id);
+        changed = true;
+      }
+    }
+  }
+  return view.runs
+    .filter((run) => run.id !== parentRunId && descendants.has(run.id))
+    .map((run) => ({
+      run,
+      // The public snapshot has no delegation summary or tool-call-to-child relation.
+      task: "",
+      activity: view.toolActivity.filter((call) => call.runId === run.id),
+    }));
 }
 export interface ConversationEventEntry {
   event: ConversationEvent;
@@ -217,6 +285,8 @@ export class ConversationState {
       ),
       runs: snapshot.runs.map((run) => ({
         id: run.id,
+        agentId: run.agentId,
+        parentRunId: run.parentRunId,
         state: run.state,
         failureCode: run.failureCode,
         messageId: run.messageId,
@@ -238,11 +308,22 @@ export class ConversationState {
       const detail = scoped.get(run.id);
       if (
         !detail ||
-        (run.trigger === detail.trigger && run.inboundProvenance === detail.inboundProvenance)
+        (run.trigger === detail.trigger &&
+          run.inboundProvenance === detail.inboundProvenance &&
+          run.agentId === detail.agentId &&
+          run.parentRunId === detail.parentRunId &&
+          run.messageId === detail.messageId)
       )
         return run;
       changed = true;
-      return { ...run, trigger: detail.trigger, inboundProvenance: detail.inboundProvenance };
+      return {
+        ...run,
+        messageId: detail.messageId,
+        agentId: detail.agentId,
+        parentRunId: detail.parentRunId,
+        trigger: detail.trigger,
+        inboundProvenance: detail.inboundProvenance,
+      };
     });
     if (changed) this.view = { ...this.view, runs: projected };
     return changed;
@@ -269,10 +350,12 @@ export class ConversationState {
       const previous = this.view.runs.find((run) => run.id === event.runId);
       const messageId =
         previous?.messageId ??
-        this.view.messages.find((message) => message.sequence === event.sequence - 1)?.id;
+        [...this.view.messages].reverse().find((message) => message.sequence < event.sequence)?.id;
       const run: RunView = {
         ...previous,
         id: event.runId,
+        agentId: event.agentId ?? previous?.agentId,
+        parentRunId: event.parentRunId ?? previous?.parentRunId,
         state: event.state,
         failureCode: event.failureCode,
         messageId,
@@ -280,7 +363,9 @@ export class ConversationState {
       };
       this.view = {
         ...this.view,
-        runs: [...this.view.runs.filter((item) => item.id !== run.id), run],
+        runs: previous
+          ? this.view.runs.map((item) => (item.id === run.id ? run : item))
+          : [...this.view.runs, run],
         liveReplies: terminal(run.state)
           ? this.view.liveReplies.filter((item) => item.runId !== run.id)
           : this.view.liveReplies,
@@ -330,7 +415,7 @@ export class ConversationState {
     const run = this.view.runs.find((item) => item.id === frame.runId);
     if (
       (run && terminal(run.state)) ||
-      this.view.segments.some((item) => item.id === frame.segmentId || item.runId === frame.runId)
+      this.view.segments.some((item) => item.id === frame.segmentId)
     )
       return "ignored";
     const previous = this.view.liveReplies.find(
@@ -347,6 +432,8 @@ export class ConversationState {
       conversationId: frame.conversationId,
       runId: frame.runId,
       segmentId: frame.segmentId,
+      agentId: frame.agentId,
+      parentRunId: frame.parentRunId,
       text,
     };
     this.view = {

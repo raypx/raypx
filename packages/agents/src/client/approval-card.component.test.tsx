@@ -115,6 +115,12 @@ it("escapes the bounded summary as literal text", () => {
   expect(view.container.querySelector("img")).toBeNull();
 });
 
+it("keeps direct approval cards free of Agent and child-task labels", () => {
+  const view = fixture();
+  expect(view.container.querySelector("[data-approval-agent]")).toBeNull();
+  expect(view.container.querySelector("[data-approval-task]")).toBeNull();
+});
+
 it("bounds both target and summary independently", () => {
   const view = fixture(
     pendingCard({ target: "x".repeat(1100), argumentSummary: "y".repeat(1100) }),
@@ -216,6 +222,35 @@ it.each([
   expect(deadline).toHaveAttribute("aria-live", "off");
   expect(deadline.classList.contains("font-medium")).toBe(seconds <= 60);
 });
+
+it.each(["en", "zh"] as const)(
+  "tags a child approval without granting another member control in %s",
+  (language) => {
+    const strings = { en, zh }[language].agents;
+    const view = render(
+      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+        <ApprovalCard
+          card={pendingCard({ memberAccountId: "another-member" })}
+          accountId="account"
+          agentName="研究 Agent"
+          taskSummary={"x".repeat(300)}
+          onAnswer={vi.fn()}
+          onAnswered={vi.fn()}
+          onExpired={vi.fn()}
+        />
+      </BrowserLanguageProvider>,
+    );
+    expect(view.container.querySelector("[data-approval-agent]")).toHaveTextContent("研究 Agent");
+    expect(view.container.querySelector("[data-approval-task]")).toHaveTextContent("x".repeat(240));
+    expect(view.container.querySelector("[data-approval-task]")).not.toHaveTextContent(
+      "x".repeat(241),
+    );
+    expect(
+      screen.queryByRole("button", { name: strings.approval.approve }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  },
+);
 
 it("updates only the deadline on each tick and switches from minutes to seconds", async () => {
   vi.useFakeTimers();

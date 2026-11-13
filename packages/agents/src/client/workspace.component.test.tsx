@@ -1952,3 +1952,43 @@ it.each(["removed", "deleting"] as const)(
     expect(screen.getByRole("button", { name: "Space" })).toHaveTextContent(three.space.name);
   },
 );
+it.each(["en", "zh"] as const)(
+  "keeps one primary New Agent and a separate secondary New group in the empty sidebar (%s)",
+  async (language) => {
+    const f = fixture({ items: [], language });
+    f.client.groups = {
+      listGroups: async () => [],
+      createGroup: vi.fn(),
+      getGroup: vi.fn(),
+      renameGroup: vi.fn(),
+      addGroupAgent: vi.fn(),
+      removeGroupAgent: vi.fn(),
+      deleteGroup: vi.fn(),
+    };
+    const copy = catalogs[language].agents;
+    const common = catalogs[language].common;
+    await act(async () => {
+      f.mount(false, "document");
+    });
+    await screen.findByText(copy.noAgents);
+    const sidebar = screen.getByRole("complementary");
+    const primary = within(sidebar).getByRole("button", { name: copy.newAgent });
+    const secondary = within(sidebar).getByRole("button", { name: copy.groups.new });
+    expect(screen.getAllByRole("button", { name: copy.newAgent })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: copy.groups.new })).toHaveLength(1);
+    expect(primary).toHaveClass("bg-primary");
+    expect(secondary).not.toHaveClass("bg-primary");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: common.collapseSidebar }));
+    expect(primary).toBeVisible();
+    expect(secondary).toBeVisible();
+    for (const opener of [primary, secondary]) {
+      await user.click(opener);
+      await screen.findByRole("dialog", { name: opener.getAttribute("aria-label")! });
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(opener).toHaveFocus());
+    }
+    expect(f.create).not.toHaveBeenCalled();
+  },
+);

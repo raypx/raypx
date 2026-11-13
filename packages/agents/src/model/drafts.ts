@@ -1,11 +1,15 @@
+import { validMentionTokens, type MentionToken } from "./mentions.js";
+import type { AgentId } from "@raypx/core/agents";
 import type { ConversationOwner, ConversationSelection } from "./port.js";
 
 export const MAX_CONVERSATION_DRAFT = 32_000;
 export interface PendingMessage {
   idempotencyKey: string;
+  mentions?: AgentId[] | undefined;
   text: string;
 }
 export interface ConversationDraft {
+  mentionTokens?: MentionToken[] | undefined;
   text: string;
   pending: PendingMessage | null;
 }
@@ -29,7 +33,11 @@ export function readConversationDraft(raw: string | null): ConversationDraft {
     if (!value || typeof value !== "object" || !("version" in value) || value.version !== 1)
       return empty;
     if (!("text" in value) || !isText(value.text)) return empty;
-    if (!("pending" in value) || value.pending === null) return { text: value.text, pending: null };
+    const mentionTokens =
+      "mentionTokens" in value ? validMentionTokens(value.mentionTokens, value.text) : [];
+    const tokens = mentionTokens.length ? { mentionTokens } : {};
+    if (!("pending" in value) || value.pending === null)
+      return { text: value.text, pending: null, ...tokens };
     const pending = value.pending;
     if (
       !pending ||
@@ -43,14 +51,38 @@ export function readConversationDraft(raw: string | null): ConversationDraft {
       pending.idempotencyKey.length > 128
     )
       return empty;
+    if (
+      "mentions" in pending &&
+      (!Array.isArray(pending.mentions) ||
+        pending.mentions.length > 32 ||
+        !pending.mentions.every(
+          (id) => typeof id === "string" && id.length > 0 && id.length <= 128,
+        ))
+    )
+      return empty;
     return {
       text: value.text,
-      pending: { text: pending.text, idempotencyKey: pending.idempotencyKey },
+      ...tokens,
+      pending: {
+        text: pending.text,
+        idempotencyKey: pending.idempotencyKey,
+        ...("mentions" in pending &&
+        Array.isArray(pending.mentions) &&
+        pending.mentions.length <= 32 &&
+        pending.mentions.every((id) => typeof id === "string" && id.length > 0 && id.length <= 128)
+          ? { mentions: pending.mentions as AgentId[] }
+          : {}),
+      },
     };
   } catch {
     return empty;
   }
 }
 export function writeConversationDraft(draft: ConversationDraft) {
-  return JSON.stringify({ version: 1, text: draft.text, pending: draft.pending });
+  return JSON.stringify({
+    version: 1,
+    text: draft.text,
+    pending: draft.pending,
+    ...(draft.mentionTokens?.length ? { mentionTokens: draft.mentionTokens } : {}),
+  });
 }

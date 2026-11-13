@@ -30,7 +30,7 @@ import { SpaceSettingsPanel } from "./space-settings.js";
 import { CapabilitySheet } from "./capability-sheet.js";
 import { PausedRoutinePanel } from "./space-routine.js";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
-import type { AgentInput } from "@raypx/core/agents";
+import type { AgentInput, Conversation, GroupConversationInput } from "@raypx/core/agents";
 import type { ToolActivity } from "@raypx/core/conversation";
 import { mergeToolActivity, toolActivityKey } from "../model/tool-activity.js";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -45,6 +45,10 @@ import { ChevronsUpDownIcon } from "@raypx/icons/chevrons-up-down";
 import { PlusIcon } from "@raypx/icons/plus";
 import {
   applyAgents,
+  applyGroups,
+  selectGroup,
+  type GroupsPort,
+  type GroupConversationView,
   applySpaces,
   createAgentsPageState,
   selectAgent,
@@ -57,6 +61,7 @@ import {
   type ConversationSocketPort,
   type ApprovalPort,
 } from "../model.js";
+import { GroupForm, GroupParticipants, GroupAvatars } from "./group-directory.js";
 import { AgentForm } from "./agent-form.js";
 import { SpaceForm } from "./space-form.js";
 import { AgentConversation } from "./conversation.js";
@@ -72,9 +77,11 @@ export interface AgentsWorkspaceProps {
   origin: string;
   spaceId?: string;
   agentId?: string;
+  groupId?: string;
+  groups?: GroupsPort | undefined;
   onOpenModels?: (() => void) | undefined;
   modelCatalogKey?: string | undefined;
-  onNavigate?: (selection: { spaceId: string; agentId?: string }) => void;
+  onNavigate?: (selection: { spaceId: string; agentId?: string; groupId?: string }) => void;
   socket?: ConversationSocketPort;
   drafts?: ConversationDraftStore;
 }
@@ -94,6 +101,8 @@ function AgentsWorkspaceContents({
   origin,
   spaceId,
   agentId,
+  groupId,
+  groups = client.groups,
   onNavigate,
   onOpenModels,
   modelCatalogKey,
@@ -138,6 +147,13 @@ function AgentsWorkspaceContents({
   const spaceTrigger = useRef<HTMLButtonElement>(null);
   const [newSpace, setNewSpace] = useState(false);
   const [form, setForm] = useState<"new" | AgentConversationView | null>(null);
+  const [newGroup, setNewGroup] = useState(false);
+  const groupFormRevision = useRef(0);
+  const newGroupTrigger = useRef<HTMLButtonElement>(null);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const participantsTrigger = useRef<HTMLElement | null>(null);
+  const participantsRequest = useRef(0);
   const [deleting, setDeleting] = useState<string | null>(null);
   const deletingRef = useRef<string | null>(null);
   const confirmation = useConfirmation();
@@ -212,12 +228,27 @@ function AgentsWorkspaceContents({
     void Promise.all([
       client.agents.list({ spaceId: selected, limit: 100 }),
       client.agents.models({ spaceId: selected }),
+      groups?.listGroups({ spaceId: selected, limit: 100 }) ?? Promise.resolve([]),
     ])
-      .then(([agents, models]) => {
+      .then(([agents, models, conversations]) => {
         if (!cancelled)
           setPage((state) => {
             if (state.spaceId !== selected) return state;
-            return { ...applyAgents(state, selected, agents, agentId), models };
+            const next = applyAgents(state, selected, agents, agentId);
+            return {
+              ...applyGroups(
+                next,
+                selected,
+                conversations.map((conversation) => ({
+                  conversation,
+                  agents: agents
+                    .filter((item) => conversation.agentIds?.includes(item.agent.id))
+                    .map((item) => item.agent),
+                })),
+                groupId,
+              ),
+              models,
+            };
           });
       })
       .catch(() => {
@@ -229,7 +260,7 @@ function AgentsWorkspaceContents({
     return () => {
       cancelled = true;
     };
-  }, [client, page.spaceId, agentId, refresh, modelCatalogKey]);
+  }, [client, groups, page.spaceId, agentId, groupId, refresh, modelCatalogKey]);
 
   const confirmSpaceExit = useCallback(
     (reason: "deleting" | "left") => {
@@ -274,6 +305,10 @@ function AgentsWorkspaceContents({
       setSpaceSettingsOpen(false);
       setRoutineTarget(null);
       setForm(null);
+      ++participantsRequest.current;
+      setParticipantsOpen(false);
+      ++groupFormRevision.current;
+      setNewGroup(false);
       setSpaceNotice(reason);
       // Close the old conversation immediately, before discovery can finish.
       const fallback = applySpaces(
@@ -345,7 +380,15 @@ function AgentsWorkspaceContents({
     const selectedSpace = current.current.spaceId;
     if (!selectedSpace) return;
     const generation = ++activityRefresh.current;
-    const conversations = current.current.agents.slice(0, 100);
+    const conversations = [
+      ...current.current.agents
+        .slice(0, 100)
+        .map((item) => ({ spaceId: item.agent.spaceId, conversationId: item.conversation.id })),
+      ...(current.current.groups ?? []).slice(0, 100).map((item) => ({
+        spaceId: item.conversation.spaceId,
+        conversationId: item.conversation.id,
+      })),
+    ];
     const before = new Map(
       (activity[selectedSpace] ?? []).map((call) => [toolActivityKey(call), call]),
     );
@@ -362,10 +405,7 @@ function AgentsWorkspaceContents({
         )
           return;
         try {
-          const snapshot = await conversationPort.snapshot({
-            spaceId: item.agent.spaceId,
-            conversationId: item.conversation.id,
-          });
+          const snapshot = await conversationPort.snapshot(item);
           if (
             mounted.current &&
             current.current.spaceId === selectedSpace &&
@@ -395,20 +435,28 @@ function AgentsWorkspaceContents({
     });
   }
 
-  const selected = page.agents.find((item) => item.agent.id === page.agentId);
+  const selectedGroup = page.groups?.find((item) => item.conversation.id === page.groupId);
+  const groupAgent = selectedGroup?.agents[0];
+  const selected =
+    selectedGroup && groupAgent
+      ? { agent: groupAgent, conversation: selectedGroup.conversation }
+      : page.agents.find((item) => item.agent.id === page.agentId);
   const rowButtons = useRef(new Map<string, HTMLElement>());
   const previousSelection = useRef<string | null>(null);
+  const selectedRowId = selectedGroup?.conversation.id ?? selected?.agent.id ?? null;
   useLayoutEffect(() => {
-    if (!selected && previousSelection.current)
-      rowButtons.current.get(previousSelection.current)?.focus();
-    previousSelection.current = selected?.agent.id ?? null;
-  }, [selected]);
+    if (!selectedRowId && previousSelection.current)
+      (rowButtons.current.get(previousSelection.current) ?? newGroupTrigger.current)?.focus();
+    previousSelection.current = selectedRowId;
+  }, [selectedRowId]);
   function chooseSpace(value: string) {
     ++navigationRevision.current;
     setSpaceNotice(null);
     setForm(null);
     setSpaceSettingsOpen(false);
     setRoutineTarget(null);
+    closeParticipants();
+    closeGroupForm();
     const nextPage = selectSpace(current.current, value);
     current.current = nextPage;
     setPage(nextPage);
@@ -416,14 +464,112 @@ function AgentsWorkspaceContents({
   }
   function chooseAgent(item: AgentConversationView) {
     ++navigationRevision.current;
+    closeParticipants();
     const nextPage = selectAgent(current.current, item.agent.id);
     current.current = nextPage;
     setPage(nextPage);
     onNavigate?.({ spaceId: item.agent.spaceId, agentId: item.agent.id });
   }
+  function chooseGroup(item: GroupConversationView) {
+    ++navigationRevision.current;
+    closeParticipants();
+    const nextPage = selectGroup(current.current, item.conversation.id);
+    current.current = nextPage;
+    setPage(nextPage);
+    onNavigate?.({ spaceId: item.conversation.spaceId, groupId: item.conversation.id });
+  }
+  function updateGroup(conversation: Conversation) {
+    setPage((state) => {
+      if (state.spaceId !== conversation.spaceId) return state;
+      const updatedGroups =
+        state.groups?.map((item) => {
+          if (item.conversation.id !== conversation.id) return item;
+          return {
+            conversation,
+            agents: state.agents
+              .filter((entry) => conversation.agentIds?.includes(entry.agent.id))
+              .map((entry) => entry.agent),
+          };
+        }) ?? [];
+      return { ...state, groups: updatedGroups };
+    });
+  }
+  function closeParticipants() {
+    ++participantsRequest.current;
+    setParticipantsOpen(false);
+  }
+  function openParticipants() {
+    if (!selectedGroup || !groups) return;
+    const request = ++participantsRequest.current;
+    participantsTrigger.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setParticipantsOpen(true);
+    setParticipantsLoading(true);
+    void groups
+      .getGroup({
+        spaceId: selectedGroup.conversation.spaceId,
+        conversationId: selectedGroup.conversation.id,
+      })
+      .then((conversation) => {
+        if (request === participantsRequest.current) updateGroup(conversation);
+      })
+      .catch(() => {
+        if (request === participantsRequest.current) setFailed(true);
+      })
+      .finally(() => {
+        if (request === participantsRequest.current) setParticipantsLoading(false);
+      });
+  }
+  function closeGroupForm() {
+    ++groupFormRevision.current;
+    setNewGroup(false);
+  }
+  async function createGroup(input: GroupConversationInput) {
+    const selectedSpace = page.spaceId;
+    if (!groups || !selectedSpace) return;
+    const revision = navigationRevision.current;
+    const formRevision = groupFormRevision.current;
+    const conversation = await groups.createGroup({ ...input, spaceId: selectedSpace });
+    if (!mounted.current || current.current.spaceId !== selectedSpace) return;
+    const selectCreated =
+      revision === navigationRevision.current && formRevision === groupFormRevision.current;
+    setPage((state) => {
+      if (state.spaceId !== selectedSpace) return state;
+      const created = {
+        conversation,
+        agents: state.agents
+          .filter((entry) => conversation.agentIds?.includes(entry.agent.id))
+          .map((entry) => entry.agent),
+      };
+      const updatedGroups = [
+        ...(state.groups ?? []).filter((item) => item.conversation.id !== conversation.id),
+        created,
+      ];
+      if (!selectCreated) return { ...state, groups: updatedGroups };
+      return { ...state, agentId: null, groupId: conversation.id, groups: updatedGroups };
+    });
+    if (!selectCreated) return;
+    closeGroupForm();
+    onNavigate?.({ spaceId: selectedSpace, groupId: conversation.id });
+  }
+  function groupDeleted(group: GroupConversationView) {
+    if (!mounted.current || current.current.spaceId !== group.conversation.spaceId) return;
+    const wasSelected = current.current.groupId === group.conversation.id;
+    if (wasSelected) closeParticipants();
+    setPage((state) => {
+      if (state.spaceId !== group.conversation.spaceId) return state;
+      return {
+        ...state,
+        groupId: wasSelected ? null : (state.groupId ?? null),
+        groups:
+          state.groups?.filter((item) => item.conversation.id !== group.conversation.id) ?? [],
+      };
+    });
+    if (wasSelected) onNavigate?.({ spaceId: group.conversation.spaceId });
+  }
   function back() {
     ++navigationRevision.current;
-    current.current = { ...current.current, agentId: null };
+    current.current = { ...current.current, agentId: null, groupId: null };
     setPage(current.current);
     if (page.spaceId) onNavigate?.({ spaceId: page.spaceId });
   }
@@ -458,8 +604,19 @@ function AgentsWorkspaceContents({
     if (!mounted.current || current.current.spaceId !== selectedSpace) return;
     setPage((state) => ({
       ...state,
+      ...(state.groups
+        ? {
+            groups: state.groups.map((group) => ({
+              ...group,
+              agents: group.agents.map((agent) =>
+                agent.id === saved.agent.id ? saved.agent : agent,
+              ),
+            })),
+          }
+        : {}),
       agents: [...state.agents.filter((item) => item.agent.id !== saved.agent.id), saved],
       agentId: saved.agent.id,
+      groupId: null,
     }));
     setForm(null);
     onNavigate?.({ spaceId: selectedSpace, agentId: saved.agent.id });
@@ -487,6 +644,7 @@ function AgentsWorkspaceContents({
         agentId: wasSelected ? null : state.agentId,
       }));
       if (wasSelected) onNavigate?.({ spaceId: item.agent.spaceId });
+      if (groups) setRefresh((value) => value + 1);
     } catch {
       if (mounted.current) setFailed(true);
     } finally {
@@ -555,18 +713,34 @@ function AgentsWorkspaceContents({
           </DropdownMenu>
         )}
       </ShellSidebarHeader>
-      {page.agents.length > 0 && (
+      {(page.spaceId || loading) && (
         <ShellPrimaryAction>
-          <Button
-            disabled={!page.spaceId || loading}
-            onClick={() => setForm("new")}
-            className="w-full min-w-0 sidebar-icon:px-0"
-            aria-label={t("newAgent")}
-            title={t("newAgent")}
-          >
-            <AgentIcon data-icon="inline-start" aria-hidden="true" />
-            <span className="truncate sidebar-icon:hidden">{t("newAgent")}</span>
-          </Button>
+          <div className="flex min-w-0 flex-col gap-1">
+            <Button
+              disabled={!page.spaceId || loading}
+              onClick={() => setForm("new")}
+              className="w-full min-w-0 sidebar-icon:px-0"
+              aria-label={t("newAgent")}
+              title={t("newAgent")}
+            >
+              <AgentIcon data-icon="inline-start" aria-hidden="true" />
+              <span className="truncate sidebar-icon:hidden">{t("newAgent")}</span>
+            </Button>
+            {groups && (
+              <Button
+                ref={newGroupTrigger}
+                variant="ghost"
+                disabled={!page.spaceId || loading}
+                onClick={() => setNewGroup(true)}
+                className="w-full min-w-0 sidebar-icon:px-0"
+                aria-label={t("groups.new")}
+                title={t("groups.new")}
+              >
+                <PlusIcon data-icon="inline-start" aria-hidden="true" />
+                <span className="truncate sidebar-icon:hidden">{t("groups.new")}</span>
+              </Button>
+            )}
+          </div>
         </ShellPrimaryAction>
       )}
       {spaceNotice && (
@@ -613,7 +787,6 @@ function AgentsWorkspaceContents({
             </EmptyMedia>
             <EmptyTitle>{t("noAgents")}</EmptyTitle>
           </EmptyHeader>
-          <Button onClick={() => setForm("new")}>{t("newAgent")}</Button>
         </Empty>
       )}
       {page.agents.length > 0 && (
@@ -625,6 +798,9 @@ function AgentsWorkspaceContents({
               selected ? "hidden" : "flex w-full",
             )}
           >
+            <h2 className="mb-2 px-3 text-xs font-medium text-muted-foreground">
+              {t("groups.direct")}
+            </h2>
             <ul className="flex min-w-0 flex-col gap-1">
               {page.agents.map((item) => (
                 <li
@@ -690,6 +866,38 @@ function AgentsWorkspaceContents({
                 </li>
               ))}
             </ul>
+            {groups && (
+              <section className="mt-6 flex min-w-0 flex-col gap-2" aria-label={t("groups.title")}>
+                <div className="flex min-w-0 items-center justify-between gap-2 px-3">
+                  <h2 className="text-xs font-medium text-muted-foreground">{t("groups.title")}</h2>
+                </div>
+                <ul className="flex min-w-0 flex-col gap-1">
+                  {page.groups?.map((item) => (
+                    <li key={item.conversation.id}>
+                      <Button
+                        ref={(node) => {
+                          if (node) rowButtons.current.set(item.conversation.id, node);
+                          else rowButtons.current.delete(item.conversation.id);
+                        }}
+                        variant="ghost"
+                        className={cn(
+                          "h-auto min-h-14 w-full min-w-0 justify-start py-2 text-left",
+                          item.conversation.id === page.groupId &&
+                            "bg-muted ring-1 ring-border ring-inset",
+                        )}
+                        aria-label={item.conversation.name}
+                        title={item.conversation.name}
+                        aria-current={item.conversation.id === page.groupId ? "page" : undefined}
+                        onClick={() => chooseGroup(item)}
+                      >
+                        <GroupAvatars agents={item.agents} />
+                        <span className="min-w-0 flex-1 truncate">{item.conversation.name}</span>
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </aside>
           {selected ? (
             <div className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-2 overflow-clip">
@@ -702,6 +910,9 @@ function AgentsWorkspaceContents({
               <AgentConversation
                 key={JSON.stringify([accountId, origin, selected.conversation.id])}
                 item={selected}
+                group={selectedGroup}
+                agentDirectory={page.agents.map((entry) => entry.agent)}
+                onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
                 capabilities={client}
                 port={conversationPort}
                 computerPort={computerPort}
@@ -728,6 +939,32 @@ function AgentsWorkspaceContents({
             </Empty>
           )}
         </div>
+      )}
+      {newGroup && <GroupForm agents={page.agents} onSave={createGroup} onClose={closeGroupForm} />}
+      {selectedGroup && groups && (
+        <CapabilitySheet
+          open={participantsOpen}
+          onClose={closeParticipants}
+          title={t("groups.participants")}
+          closeLabel={t("close")}
+          finalFocus={() => participantsTrigger.current ?? false}
+          className="w-full sm:max-w-lg"
+        >
+          {participantsOpen && participantsLoading && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {t("loading")}
+            </p>
+          )}
+          {participantsOpen && !participantsLoading && (
+            <GroupParticipants
+              group={selectedGroup}
+              agents={page.agents}
+              port={groups}
+              onChange={updateGroup}
+              onDeleted={() => groupDeleted(selectedGroup)}
+            />
+          )}
+        </CapabilitySheet>
       )}
       {newSpace && <SpaceForm onSave={createSpace} onClose={() => setNewSpace(false)} />}
       {form && (

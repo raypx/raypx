@@ -1,5 +1,12 @@
 import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
-import type { Agent, AgentId, AgentInput, Conversation, ConversationId } from "@raypx/core/agents";
+import type {
+  Agent,
+  AgentId,
+  AgentInput,
+  Conversation,
+  ConversationId,
+  GroupConversationInput,
+} from "@raypx/core/agents";
 import type {
   MemberMessageInput,
   Message,
@@ -86,6 +93,28 @@ export interface AgentConversationView {
   agent: Agent;
   conversation: Conversation;
 }
+export interface GroupConversationView {
+  conversation: Conversation;
+  agents: Agent[];
+}
+export interface GroupsPort {
+  createGroup(
+    this: void,
+    input: GroupConversationInput & { spaceId: SpaceId },
+  ): Promise<Conversation>;
+  listGroups(this: void, input: { spaceId: SpaceId; limit?: number }): Promise<Conversation[]>;
+  getGroup(this: void, input: ConversationSelection): Promise<Conversation>;
+  renameGroup(this: void, input: ConversationSelection & { name: string }): Promise<Conversation>;
+  addGroupAgent(
+    this: void,
+    input: ConversationSelection & { agentId: AgentId },
+  ): Promise<Conversation>;
+  removeGroupAgent(
+    this: void,
+    input: ConversationSelection & { agentId: AgentId },
+  ): Promise<Conversation>;
+  deleteGroup(this: void, input: ConversationSelection): Promise<{ deleted: true }>;
+}
 export interface OfferedModel {
   source: "connection" | "deployment";
   modelId: string;
@@ -93,6 +122,7 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  groups?: GroupsPort;
   spaceManagement?: SpaceManagementPort;
   accountApprovalSettings?: {
     settings(input: Record<string, never>): Promise<ApprovalSettingsState>;
