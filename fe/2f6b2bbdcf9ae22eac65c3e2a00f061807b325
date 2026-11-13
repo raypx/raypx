@@ -1,0 +1,29 @@
+infra/sandbox/Computer.Dockerfile
+  s_f9cc0d01f49051::t_a6f0bee20b558b 10-11
+infra/sandbox/src/engine.ts
+  s_f9cc0d01f49051::t_658383541fabe5 98,104
+infra/sandbox/src/http.ts
+  s_f9cc0d01f49051::t_5cec26637f9f03 104-108
+infra/sandbox/src/supervisor.test.ts
+  s_f9cc0d01f49051::t_0e0c79645f68b5 45-48,56
+infra/sandbox/tests/fake-engine.ts
+  s_f9cc0d01f49051::t_884eb7353320ff 63-65,69
+packages/providers/src/computer/docker.ts
+  s_f9cc0d01f49051::t_41a91ad4cac2c3 139-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fe2f6b2bbdcf9ae22eac65c3e2a00f061807b325",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
