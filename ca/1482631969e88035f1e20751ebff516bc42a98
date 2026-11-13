@@ -1,0 +1,51 @@
+packages/contracts/src/api.ts
+  s_28758cb14041db::t_85df4ffd59dd58 1,165
+  s_28758cb14041db::t_13a61d78de4436 61,65,69,75,79,86,98,102,106,112,123,143,148-151,155,159
+packages/contracts/src/administration.ts
+  s_28758cb14041db::t_85df4ffd59dd58 1
+  s_28758cb14041db::t_13a61d78de4436 45,59-78,80
+packages/contracts/src/api-exposure.ts
+  s_28758cb14041db::t_9a9bc8ba66769f 1-4,6-8,10-12,14-24
+  s_28758cb14041db::t_3c16af2c2fa705 5,9,13
+packages/contracts/src/jobs.ts
+  s_28758cb14041db::t_85df4ffd59dd58 1,18
+  s_28758cb14041db::t_13a61d78de4436 15,20,30,33-36,38
+packages/contracts/src/configuration.ts
+  s_28758cb14041db::t_85df4ffd59dd58 1,120-121
+  s_28758cb14041db::t_13a61d78de4436 93,96-119
+docs/development/desktop.md
+  s_28758cb14041db::t_3c16af2c2fa705 213-215
+apps/cli/src/runtime/daemon/desktop/api.test.ts
+  s_28758cb14041db::t_3c16af2c2fa705 22,42-56
+  s_28758cb14041db::t_a8c531fb8662b9 57-58
+packages/contracts/src/memory.ts
+  s_28758cb14041db::t_13a61d78de4436 26,30,35-42,44,47-50,52
+  s_28758cb14041db::t_85df4ffd59dd58 1,33-34
+packages/contracts/src/api.test.ts
+  s_28758cb14041db::t_3c16af2c2fa705 1,3-4,36-37,47-59
+  s_28758cb14041db::t_19199aca0b62dc 38-46
+packages/contracts/src/instances.ts
+  s_28758cb14041db::t_85df4ffd59dd58 1,16,25-27
+  s_28758cb14041db::t_13a61d78de4436 17-24,29
+packages/contracts/AGENTS.md
+  s_28758cb14041db::t_3c16af2c2fa705 19-25,29
+packages/contracts/src/attachments.ts
+  s_28758cb14041db::t_85df4ffd59dd58 1
+  s_28758cb14041db::t_13a61d78de4436 22-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ca1482631969e88035f1e20751ebff516bc42a98",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
