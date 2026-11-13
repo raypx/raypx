@@ -193,6 +193,10 @@ transactional indexes or otherwise block writers, stop the existing API for an
 agreed maintenance window before migration; ordinary rolling pre-deploy execution
 does not stop the old API or Relay. Preserve migration history and storage on rollback.
 
+The migration to `public` changes the schema used by all database readers and
+writers. Stop the old API and Relay before the pre-deploy migration. Start the new
+services after it completes.
+
 The shared application Dockerfiles use manifest/dependency layer caching without
 cache mounts. Railway requires literal service-specific cache mount IDs, so those
 mounts would prevent portable files. Source-only changes reuse installed layers;

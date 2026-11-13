@@ -19,26 +19,13 @@ export function auditMutations(options: ApiAppOptions): MiddlewareHandler<ApiRou
     : undefined;
   return async (c, next) => {
     const path = decodeURIComponent(c.req.path).replace(/\/+$/, "");
+    // Audited RPC procedures declare `rpcAudit` on their contract; oRPC runs those.
     const action =
-      c.req.method !== "POST"
-        ? null
-        : path === "/api/auth/admin/set-role"
-          ? "user.role.update"
-          : [
-                "/rpc/configuration/update",
-                "/rpc/configuration/updateStorage",
-                "/rpc/configuration/updateResend",
-              ].includes(path)
-            ? "configuration.update"
-            : null;
+      c.req.method === "POST" && path === "/api/auth/admin/set-role" ? "user.role.update" : null;
     if (!action || !audit) return next();
     try {
       const session = await options.readSession(c.req.raw.headers);
-      if (!session) {
-        if (action === "user.role.update")
-          return c.json({ code: "FORBIDDEN", message: "Access denied" }, 403);
-        return next();
-      }
+      if (!session) return c.json({ code: "FORBIDDEN", message: "Access denied" }, 403);
       const actorId = session.user.id;
       const intent: AuditIntent = {
         action,
@@ -56,18 +43,6 @@ export function auditMutations(options: ApiAppOptions): MiddlewareHandler<ApiRou
       c.set("auditActorId", actorId);
       return await limitAdmission(c, auditRequest);
     } catch (error) {
-      if (error instanceof AuditUnavailable && path.startsWith("/rpc/"))
-        return c.json(
-          {
-            json: {
-              defined: false,
-              code: "SERVICE_UNAVAILABLE",
-              message: "Administration audit is unavailable",
-              data: { error: { code: "AUDIT_UNAVAILABLE" }, requestId: c.get("requestId") },
-            },
-          },
-          503,
-        );
       if (error instanceof AuditUnavailable)
         return c.json(
           { code: "AUDIT_UNAVAILABLE", message: "Administration audit is unavailable" },

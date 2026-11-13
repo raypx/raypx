@@ -1,41 +1,31 @@
 import { ORPCError } from "@orpc/server";
 import { InstanceError } from "@raypx/instances";
 import type { InstanceService } from "@raypx/instances/server";
-import type { RpcContext } from "../../middleware/rpc.js";
+import type { AccountContext, RpcContext } from "../../middleware/rpc.js";
 import type { RpcBoundary } from "./boundary.js";
 export function createInstancesHandlers({
   os,
   options,
-  requirePermission,
-  allowedOrigins,
   enforceLimit,
-}: Pick<RpcBoundary, "os" | "options" | "requirePermission" | "allowedOrigins" | "enforceLimit">) {
+  withRpcPermission,
+  withPublicRpcAccess,
+  requireTrustedOrigin,
+}: Pick<
+  RpcBoundary,
+  | "os"
+  | "options"
+  | "enforceLimit"
+  | "withRpcPermission"
+  | "withPublicRpcAccess"
+  | "requireTrustedOrigin"
+>) {
   async function instanceCall<T>(
     context: RpcContext,
-    owner: boolean,
-    write: boolean,
-    run: (service: InstanceService, accountId: string) => Promise<T>,
-    deviceId?: string,
+    run: (service: InstanceService) => Promise<T>,
   ): Promise<T> {
-    const auth = owner ? await requirePermission(context, "projects.read") : undefined;
-    if (write && owner) {
-      const origin = context.headers.get("origin");
-      if (!origin || !allowedOrigins.includes(origin)) throw new ORPCError("FORBIDDEN");
-    }
-    const address = options.clientIpHeader
-      ? (context.headers.get(options.clientIpHeader) ?? "unknown")
-      : "unknown";
-    // The caller chooses the device ID, so it only narrows a limit the address already has.
-    if (!auth && deviceId)
-      await enforceLimit(context, `instance:${address}:peer`, { window: 60, max: 300 });
-    await enforceLimit(
-      context,
-      `instance:${auth?.user.id ?? (deviceId ? address + ":" + deviceId : address)}:${owner ? "owner" : "device"}`,
-      { window: 60, max: owner ? 30 : 60 },
-    );
     if (!options.instances) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
-      return await run(options.instances, auth?.user.id ?? "");
+      return await run(options.instances);
     } catch (error) {
       if (!(error instanceof InstanceError)) throw error;
       throw new ORPCError(error.code === "INSTANCE_NOT_FOUND" ? "NOT_FOUND" : "CONFLICT", {
@@ -43,36 +33,66 @@ export function createInstancesHandlers({
       });
     }
   }
+  /** Owner procedures share one account window. */
+  async function ownerCall<T>(
+    context: AccountContext,
+    run: (service: InstanceService, accountId: string) => Promise<T>,
+  ) {
+    const accountId = context.auth.user.id;
+    await enforceLimit(context, `instance:${accountId}:owner`, { window: 60, max: 30 });
+    return instanceCall(context, (service) => run(service, accountId));
+  }
+  async function deviceCall<T>(
+    context: RpcContext,
+    run: (service: InstanceService) => Promise<T>,
+    deviceId?: string,
+  ) {
+    const address = options.clientIpHeader
+      ? (context.headers.get(options.clientIpHeader) ?? "unknown")
+      : "unknown";
+    // The caller chooses the device ID, so it only narrows a limit the address already has.
+    if (deviceId) await enforceLimit(context, `instance:${address}:peer`, { window: 60, max: 300 });
+    const key = deviceId ? `${address}:${deviceId}` : address;
+    await enforceLimit(context, `instance:${key}:device`, { window: 60, max: 60 });
+    return instanceCall(context, run);
+  }
+  const owner = withRpcPermission();
 
   return {
-    begin: os.instances.begin.handler(({ input, context }) =>
-      instanceCall(context, false, true, (service) => service.begin(input)),
-    ),
-    inspect: os.instances.inspect.handler(({ input, context }) =>
-      instanceCall(context, true, false, (service) => service.inspect(input.code)),
-    ),
-    approve: os.instances.approve.handler(({ input, context }) =>
-      instanceCall(context, true, true, (service, owner) => service.approve(owner, input.code)),
-    ),
-    poll: os.instances.poll.handler(({ input, context }) =>
-      instanceCall(
-        context,
-        false,
-        false,
-        (service) => service.poll(input.id, input.token),
-        input.id,
+    begin: os.instances.begin
+      .use(withPublicRpcAccess)
+      .handler(({ input, context }) => deviceCall(context, (service) => service.begin(input))),
+    inspect: os.instances.inspect
+      .use(owner)
+      .handler(({ input, context }) =>
+        ownerCall(context, (service) => service.inspect(input.code)),
       ),
-    ),
-    check: os.instances.check.handler(({ input, context }) =>
-      instanceCall(context, false, false, (service) => service.check(input), input.instanceId),
-    ),
-    list: os.instances.list.handler(({ context }) =>
-      instanceCall(context, true, false, (service, owner) => service.list(owner)),
-    ),
-    revoke: os.instances.revoke.handler(({ input, context }) =>
-      instanceCall(context, true, true, (service, owner) =>
-        service.revoke(owner, input.instanceId),
+    approve: os.instances.approve
+      .use(owner)
+      .use(requireTrustedOrigin)
+      .handler(({ input, context }) =>
+        ownerCall(context, (service, accountId) => service.approve(accountId, input.code)),
       ),
-    ),
+    poll: os.instances.poll
+      .use(withPublicRpcAccess)
+      .handler(({ input, context }) =>
+        deviceCall(context, (service) => service.poll(input.id, input.token), input.id),
+      ),
+    check: os.instances.check
+      .use(withPublicRpcAccess)
+      .handler(({ input, context }) =>
+        deviceCall(context, (service) => service.check(input), input.instanceId),
+      ),
+    list: os.instances.list
+      .use(owner)
+      .handler(({ context }) =>
+        ownerCall(context, (service, accountId) => service.list(accountId)),
+      ),
+    revoke: os.instances.revoke
+      .use(owner)
+      .use(requireTrustedOrigin)
+      .handler(({ input, context }) =>
+        ownerCall(context, (service, accountId) => service.revoke(accountId, input.instanceId)),
+      ),
   };
 }

@@ -73,6 +73,8 @@ export function agentFixtures(runtimeOptions: AgentFixtureOptions = {}) {
         ...runtimeOptions,
         ...ports,
         explicitExecutables: true,
+        // A fresh fixture executable can take seconds to start while other suites run.
+        discoveryTimeoutMs: 30_000,
         executables: { [provider]: file },
         ...(resolveContext ? { resolveContext } : {}),
       },

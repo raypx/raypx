@@ -37,12 +37,12 @@ it("serializes independent migration processes and does not reapply committed hi
   expect(results.map(([code]) => code)).toEqual([0, 0, 0]);
   const expected = (await readdir(migrations)).sort();
   const rows = await connection.db.execute<{ name: string }>(sql`
-    select name from raypx_foundation_migrations.__drizzle_migrations order by name
+    select name from public.__drizzle_migrations order by name
   `);
   expect(rows.map((row) => row.name)).toEqual(expected);
   await migrateDatabase(url);
   const count = await connection.db.execute<{ count: number }>(sql`
-    select count(*)::integer as count from raypx_foundation_migrations.__drizzle_migrations
+    select count(*)::integer as count from public.__drizzle_migrations
   `);
   expect(count[0]!.count).toBe(expected.length);
 });
@@ -92,27 +92,24 @@ it("rolls back a failed migration and releases its lock for a subsequent startup
     await mkdir(folder);
     await writeFile(
       join(folder, "migration.sql"),
-      `CREATE TABLE raypx_foundation.${table} (id integer);\n--> statement-breakpoint\nSELECT 1 / 0;`,
+      `CREATE TABLE public.${table} (id integer);\n--> statement-breakpoint\nSELECT 1 / 0;`,
     );
     await expect(migrateDatabase(url, directory)).rejects.toThrow("1 / 0");
     const rows = await connection.db.execute<{ name: string | null }>(sql`
-      select to_regclass(${`raypx_foundation.${table}`})::text as name
+      select to_regclass(${`public.${table}`})::text as name
     `);
     expect(rows[0]!.name).toBeNull();
-    await writeFile(
-      join(folder, "migration.sql"),
-      `CREATE TABLE raypx_foundation.${table} (id integer);`,
-    );
+    await writeFile(join(folder, "migration.sql"), `CREATE TABLE public.${table} (id integer);`);
     await expect(
       migrateDatabase(url, directory, async (tx) => {
         await tx.execute(
-          sql`insert into ${sql.identifier("raypx_foundation")}.${sql.identifier(table)} values (1)`,
+          sql`insert into ${sql.identifier("public")}.${sql.identifier(table)} values (1)`,
         );
         throw new Error("provider import failed");
       }),
     ).rejects.toThrow("provider import failed");
     const rolledBack = await connection.db.execute<{ name: string | null }>(sql`
-      select to_regclass(${`raypx_foundation.${table}`})::text as name
+      select to_regclass(${`public.${table}`})::text as name
     `);
     expect(rolledBack[0]!.name).toBeNull();
     expect((await worker())[0]).toBe(0);

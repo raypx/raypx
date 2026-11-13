@@ -1,7 +1,13 @@
 import { oc } from "@orpc/contract";
 import { describe, expect, it } from "vitest";
 import { collectApiExposure, exposeApiTo } from "./exposure.js";
-import { accountProfileSchema, apiContract, apiExposure, getRpcAccess } from "./api.js";
+import {
+  accountProfileSchema,
+  apiContract,
+  apiExposure,
+  getRpcAccess,
+  getRpcAudit,
+} from "./api.js";
 
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
@@ -65,4 +71,31 @@ describe("foundation contract", () => {
       }
     }
   });
+});
+
+it("declares an access policy on every API procedure", () => {
+  const undeclared = Object.entries(apiContract).flatMap(([group, procedures]) =>
+    Object.entries(procedures)
+      .filter(([, procedure]) => getRpcAccess(procedure) === undefined)
+      .map(([name]) => `${group}.${name}`),
+  );
+  expect(undeclared).toEqual([]);
+});
+
+it("audits exactly the procedures that require the configuration update permission", () => {
+  const audited = Object.entries(apiContract).flatMap(([group, procedures]) =>
+    Object.entries(procedures)
+      .filter(([, procedure]) => getRpcAudit(procedure) !== undefined)
+      .map(([name, procedure]) => [`${group}.${name}`, getRpcAudit(procedure)]),
+  );
+  expect(audited).toEqual([
+    ["configuration.update", "configuration.update"],
+    ["configuration.updateStorage", "configuration.update"],
+    ["configuration.updateResend", "configuration.update"],
+  ]);
+  for (const procedures of Object.values(apiContract))
+    for (const procedure of Object.values(procedures))
+      expect(getRpcAudit(procedure) !== undefined).toBe(
+        getRpcAccess(procedure) === "configuration.update",
+      );
 });

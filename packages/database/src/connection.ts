@@ -9,6 +9,7 @@ export interface DatabaseOptions {
 export function connectDatabase(databaseUrl: string, options: DatabaseOptions = {}) {
   const client = postgres(databaseUrl, {
     max: options.max ?? 10,
+    connection: { search_path: "public" },
     ...(options.fetchTypes === undefined ? {} : { fetch_types: options.fetchTypes }),
   });
   let closed: Promise<void> | undefined;

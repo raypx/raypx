@@ -65,7 +65,7 @@ export function createConfigurationHandlers({
       }));
     }),
     update: os.configuration.update
-      .use(withRpcPermission({ procedure: "configuration.update", window: 60, max: 10 }))
+      .use(withRpcPermission({ window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(({ context, input }) =>
         configurationCall(context, (service) => service.update(input, context.auth)),
@@ -79,7 +79,7 @@ export function createConfigurationHandlers({
       }
     }),
     updateStorage: os.configuration.updateStorage
-      .use(withRpcPermission({ procedure: "configuration.updateStorage", window: 60, max: 10 }))
+      .use(withRpcPermission({ window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(async ({ context, input }) => {
         if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
@@ -98,7 +98,7 @@ export function createConfigurationHandlers({
       }
     }),
     updateResend: os.configuration.updateResend
-      .use(withRpcPermission({ procedure: "configuration.updateResend", window: 60, max: 10 }))
+      .use(withRpcPermission({ window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(async ({ context, input }) => {
         if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");

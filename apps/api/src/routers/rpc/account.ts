@@ -5,17 +5,18 @@ export function createAccountHandlers({
   os,
   options,
   access,
-}: Pick<RpcBoundary, "os" | "options" | "access">) {
-  const accountService = createAccountService({
-    readSession: (headers) => options.readSession(headers),
-  });
-
+  withRpcPermission,
+  withPublicRpcAccess,
+}: Pick<RpcBoundary, "os" | "options" | "access" | "withRpcPermission" | "withPublicRpcAccess">) {
   return {
-    access: os.account.access.handler(async ({ context }) =>
-      access(await options.readSession(context.headers)),
-    ),
-    get: os.account.get.handler(async ({ context }) => {
-      const account = await accountService.get(context.headers);
+    access: os.account.access
+      .use(withPublicRpcAccess)
+      .handler(async ({ context }) => access(await options.readSession(context.headers))),
+    get: os.account.get.use(withRpcPermission()).handler(async ({ context }) => {
+      // The middleware already resolved this request's session; project it without a second read.
+      const account = await createAccountService({ readSession: async () => context.auth }).get(
+        context.headers,
+      );
       if (!account)
         throw new ORPCError("UNAUTHORIZED", {
           data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },

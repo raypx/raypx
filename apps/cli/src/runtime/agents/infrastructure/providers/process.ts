@@ -53,7 +53,9 @@ export function createAdapter(
 /** Discovery is bounded in both time and output, including incompatible installations. */
 export interface DiscoveryOptions {
   /** Skip PATH/HOME lookup and use only an explicit executable per provider. */
-  explicitOnly?: boolean;
+  explicitOnly?: boolean | undefined;
+  /** Upper bound for one `--version` probe (default 3 s). */
+  timeoutMs?: number | undefined;
 }
 
 export async function discoverProviders(
@@ -100,7 +102,7 @@ export async function discoverProviders(
         timer = setTimeout(() => {
           child.kill();
           void reader.cancel().catch(() => {});
-        }, 3000);
+        }, options.timeoutMs ?? 3000);
         let raw = "",
           size = 0;
         while (true) {

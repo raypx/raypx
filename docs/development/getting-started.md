@@ -55,7 +55,7 @@ then run `bun dev`. API startup applies pending foundation migrations before
 initializing its runtime. Set `DATABASE_MIGRATE_ON_START=false` to skip this step
 when migrations are managed separately; `bun run db:migrate` remains available explicitly.
 Never point API startup or migration commands at the retired database or volume.
-bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation schema of DATABASE_URL.
+`bun run db:studio` opens Drizzle Studio (read/write) on the `public` schema of `DATABASE_URL`.
 
 `bun dev` starts Web (Start SSR on 3000) and the combined backend (3002).
 Nitro hosts `/relay` alongside HTTP. Redis is optional for this default topology;

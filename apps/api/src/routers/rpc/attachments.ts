@@ -3,49 +3,43 @@ import { AttachmentError } from "../../storage/types.js";
 import { ControlError } from "@raypx/control";
 import type { RpcBoundary } from "./boundary.js";
 
+type Status = "TOO_MANY_REQUESTS" | "SERVICE_UNAVAILABLE";
+const statuses: Readonly<Record<string, Status>> = {
+  ATTACHMENT_LIMIT: "TOO_MANY_REQUESTS",
+  STORAGE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+};
+function failureCode(error: unknown) {
+  if (error instanceof AttachmentError) return error.code;
+  return error instanceof ControlError ? "CONTEXT_PROJECT_MISMATCH" : "STORAGE_UNAVAILABLE";
+}
+
 export function createAttachmentHandlers({
   os,
   options,
-  allowedOrigins,
-  requirePermission,
-}: Pick<RpcBoundary, "os" | "options" | "allowedOrigins" | "requirePermission">) {
+  withRpcPermission,
+  requireTrustedOrigin,
+}: Pick<RpcBoundary, "os" | "options" | "withRpcPermission" | "requireTrustedOrigin">) {
   return {
-    status: os.attachments.status.handler(async ({ context }) => {
-      await requirePermission(context, "tasks.read");
+    status: os.attachments.status.use(withRpcPermission()).handler(async () => {
       try {
         return { enabled: (await options.attachments?.enabled()) ?? false };
       } catch {
         throw new ORPCError("SERVICE_UNAVAILABLE");
       }
     }),
-    upload: os.attachments.upload.handler(async ({ context, input }) => {
-      const origin = context.headers.get("origin");
-      if (!origin || !allowedOrigins.includes(origin)) throw new ORPCError("FORBIDDEN");
-      const auth = await requirePermission(context, "tasks.read", {
-        procedure: "attachments.upload",
-        window: 60,
-        max: 10,
-      });
-      try {
-        if (!options.attachments) throw new AttachmentError("STORAGE_UNAVAILABLE");
-        return await options.attachments.upload(auth.user.id, input);
-      } catch (error) {
-        const code =
-          error instanceof AttachmentError
-            ? error.code
-            : error instanceof ControlError
-              ? "CONTEXT_PROJECT_MISMATCH"
-              : "STORAGE_UNAVAILABLE";
-        const status =
-          code === "ATTACHMENT_LIMIT"
-            ? "TOO_MANY_REQUESTS"
-            : code === "STORAGE_UNAVAILABLE"
-              ? "SERVICE_UNAVAILABLE"
-              : "BAD_REQUEST";
-        throw new ORPCError(status, {
-          data: { error: { code }, requestId: context.requestId },
-        });
-      }
-    }),
+    upload: os.attachments.upload
+      .use(requireTrustedOrigin)
+      .use(withRpcPermission({ window: 60, max: 10 }))
+      .handler(async ({ context, input }) => {
+        try {
+          if (!options.attachments) throw new AttachmentError("STORAGE_UNAVAILABLE");
+          return await options.attachments.upload(context.auth.user.id, input);
+        } catch (error) {
+          const code = failureCode(error);
+          throw new ORPCError(statuses[code] ?? "BAD_REQUEST", {
+            data: { error: { code }, requestId: context.requestId },
+          });
+        }
+      }),
   };
 }

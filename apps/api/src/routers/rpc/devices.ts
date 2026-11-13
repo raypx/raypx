@@ -3,31 +3,27 @@ export function createDevicesHandlers({
   os,
   controlCall,
   options,
-}: Pick<RpcBoundary, "os" | "controlCall" | "options">) {
+  withRpcPermission,
+}: Pick<RpcBoundary, "os" | "controlCall" | "options" | "withRpcPermission">) {
+  const canRead = withRpcPermission();
   return {
-    register: os.devices.register.handler(({ input, context }) =>
-      controlCall(
-        context,
-        "projects.read",
-        (control, auth) => control.credentials.register(auth, input),
-        { procedure: "devices.register", window: 60, max: 10 },
+    register: os.devices.register
+      .use(withRpcPermission({ window: 60, max: 10 }))
+      .handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.credentials.register(auth, input)),
       ),
-    ),
-    refreshGrant: os.devices.refreshGrant.handler(({ input, context }) =>
-      controlCall(
-        context,
-        "projects.read",
-        (control, auth) => control.credentials.refreshGrant(auth, input),
-        { procedure: "devices.refreshGrant", window: 60, max: 30 },
+    refreshGrant: os.devices.refreshGrant
+      .use(withRpcPermission({ window: 60, max: 30 }))
+      .handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.credentials.refreshGrant(auth, input)),
       ),
-    ),
-    list: os.devices.list.handler(({ context }) =>
-      controlCall(context, "projects.read", (control, auth) =>
-        control.credentials.listDevices(auth.user.id),
+    list: os.devices.list
+      .use(canRead)
+      .handler(({ context }) =>
+        controlCall(context, (control, auth) => control.credentials.listDevices(auth.user.id)),
       ),
-    ),
-    revoke: os.devices.revoke.handler(({ input, context }) =>
-      controlCall(context, "projects.read", async (control, auth) => {
+    revoke: os.devices.revoke.use(canRead).handler(({ input, context }) =>
+      controlCall(context, async (control, auth) => {
         const result = await control.credentials.revoke(auth.user.id, input);
         await options.onRevoke?.(auth.user.id, input.deviceId);
         return result;

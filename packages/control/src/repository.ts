@@ -102,8 +102,8 @@ export function eventWindowPrune(userId: string, deviceId: string, streamId: str
   // stale per-device statistics rescan the materialized window for every row.
   return sql`with replay as materialized (
           select ctid as pointer, body->>'streamId' as stream_id, row_number() over (order by (body->>'cursor')::bigint desc) as position, sum(octet_length(body::text)) over (order by (body->>'cursor')::bigint desc) as bytes
-          from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind' NOT IN ('activity','activity_delta'))
-          delete from raypx_foundation.control_event e using replay r where e.user_id=${userId} and e.device_id=${deviceId} and e.ctid=r.pointer
+          from public.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind' NOT IN ('activity','activity_delta'))
+          delete from public.control_event e using replay r where e.user_id=${userId} and e.device_id=${deviceId} and e.ctid=r.pointer
           and (r.stream_id != ${streamId} or r.position>4096 or r.bytes>8388608)`;
 }
 
@@ -114,22 +114,22 @@ export function contextCommandPrune(now: Date | SQL, userId?: string) {
   const cutoff = sql`to_char((${time} - ${CONTEXT_COMMAND_TTL_MS} * interval '1 millisecond') at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
   const candidates =
     userId === undefined
-      ? sql`select c.ctid as pointer,c.user_id,c.id from raypx_foundation.control_command c
+      ? sql`select c.ctid as pointer,c.user_id,c.id from public.control_command c
         where jsonb_typeof(c.body->'context')='object' and ${captured}<=${cutoff}
         order by ${captured},c.user_id,c.id limit 1000 for update of c skip locked`
       : sql`with replay as materialized (
         select c.ctid as pointer,c.user_id,c.id,${captured} as captured_at,
           row_number() over (order by ${captured} desc,c.id desc) as position,
           sum(octet_length(c.body::text)) over (order by ${captured} desc,c.id desc) as bytes
-        from raypx_foundation.control_command c
+        from public.control_command c
         where c.user_id=${userId} and jsonb_typeof(c.body->'context')='object')
-      select c.ctid as pointer,c.user_id,c.id from raypx_foundation.control_command c
+      select c.ctid as pointer,c.user_id,c.id from public.control_command c
         inner join replay r on c.ctid=r.pointer and c.user_id=r.user_id
         where c.user_id=${userId} and jsonb_typeof(c.body->'context')='object'
           and (r.captured_at<=${cutoff} or r.position>4096 or r.bytes>8388608)
         order by r.captured_at,c.id limit 1000 for update of c skip locked`;
   return sql`with candidates as materialized (${candidates}), compacted as (
-      update raypx_foundation.control_command c set body=jsonb_strip_nulls(jsonb_build_object(
+      update public.control_command c set body=jsonb_strip_nulls(jsonb_build_object(
         'id',c.id,'deviceId',c.device_id,'capturedAt',${captured},'compacted',true,
         'requestHash',case when c.body->>'requestHash' ~ '^[0-9a-f]{64}$' then c.body->>'requestHash' else null end))
       from candidates p where c.ctid=p.pointer and c.user_id=p.user_id and c.id=p.id
@@ -148,13 +148,13 @@ export function createControlRepository(database: Database): ControlRepository {
       async (databaseTx) => {
         if (!readOnly) {
           await databaseTx.execute(
-            sql`insert into raypx_foundation.control_owner (user_id) values (${userId}) on conflict do nothing`,
+            sql`insert into public.control_owner (user_id) values (${userId}) on conflict do nothing`,
           );
           // Device projections share the security fence; authorization mutations own it exclusively.
           await databaseTx.execute(
             deviceId === undefined
-              ? sql`select user_id from raypx_foundation.control_owner where user_id = ${userId} for update`
-              : sql`select user_id from raypx_foundation.control_owner where user_id = ${userId} for share`,
+              ? sql`select user_id from public.control_owner where user_id = ${userId} for update`
+              : sql`select user_id from public.control_owner where user_id = ${userId} for share`,
           );
           if (deviceId !== undefined)
             await databaseTx.execute(
@@ -172,20 +172,20 @@ export function createControlRepository(database: Database): ControlRepository {
           },
           async sessionActive(id, now) {
             const rows = await databaseTx.execute(
-              sql`select id from raypx_foundation.session where id = ${id} and user_id = ${userId} and expires_at > ${now.toISOString()}::timestamptz`,
+              sql`select id from public.session where id = ${id} and user_id = ${userId} and expires_at > ${now.toISOString()}::timestamptz`,
             );
             return rows.length > 0;
           },
           async securityVersion() {
             // Password changes/reset invalidate host credentials even if cookie cleanup fails.
             const rows = await databaseTx.execute<{ version: string }>(
-              sql`select md5(coalesce(string_agg(id || ':' || coalesce(password,''), ',' order by id),'') || ':' || coalesce((select security_epoch::text from raypx_foundation.control_owner where user_id=${userId}),'0')) as version from raypx_foundation.account where user_id=${userId}`,
+              sql`select md5(coalesce(string_agg(id || ':' || coalesce(password,''), ',' order by id),'') || ':' || coalesce((select security_epoch::text from public.control_owner where user_id=${userId}),'0')) as version from public.account where user_id=${userId}`,
             );
             return rows[0]!.version;
           },
           async hostSessionAllowed(createdAt) {
             const rows = await databaseTx.execute(
-              sql`select user_id from raypx_foundation.control_owner where user_id=${userId} and (security_revoked_at is null or security_revoked_at < ${createdAt.toISOString()}::timestamptz)`,
+              sql`select user_id from public.control_owner where user_id=${userId} and (security_revoked_at is null or security_revoked_at < ${createdAt.toISOString()}::timestamptz)`,
             );
             return rows.length > 0;
           },
@@ -193,7 +193,7 @@ export function createControlRepository(database: Database): ControlRepository {
             if (deviceId !== undefined)
               throw new Error("Security changes require an account transaction");
             await databaseTx.execute(
-              sql`update raypx_foundation.control_owner set security_epoch=security_epoch+1, security_revoked_at=clock_timestamp() where user_id=${userId}`,
+              sql`update public.control_owner set security_epoch=security_epoch+1, security_revoked_at=clock_timestamp() where user_id=${userId}`,
             );
           },
           async get<K extends RecordKind>(kind: K, id: string) {
@@ -242,7 +242,7 @@ export function createControlRepository(database: Database): ControlRepository {
             await databaseTx.execute(eventWindowPrune(userId, targetDeviceId, streamId));
             if (orphans)
               await databaseTx.execute(
-                sql`delete from raypx_foundation.control_event where user_id=${userId} and id in (select e.id from raypx_foundation.control_event e where e.user_id=${userId} and e.device_id=${targetDeviceId} and not exists (select 1 from raypx_foundation.control_task t where t.user_id=e.user_id and t.id=e.body->>'taskId') limit 1000)`,
+                sql`delete from public.control_event where user_id=${userId} and id in (select e.id from public.control_event e where e.user_id=${userId} and e.device_id=${targetDeviceId} and not exists (select 1 from public.control_task t where t.user_id=e.user_id and t.id=e.body->>'taskId') limit 1000)`,
               );
           },
         };
@@ -256,14 +256,14 @@ export function createControlRepository(database: Database): ControlRepository {
     deviceTransaction: (userId, deviceId, run) => execute(userId, false, run, deviceId),
     async findGrant(hash) {
       const rows = await database.execute<{ user_id: string }>(
-        sql`select user_id from raypx_foundation.control_grant where id = ${hash}`,
+        sql`select user_id from public.control_grant where id = ${hash}`,
       );
       const row = rows[0];
       return row ? { userId: row.user_id } : undefined;
     },
     async findCredential(hash) {
       const rows = await database.execute<{ user_id: string }>(
-        sql`select user_id from raypx_foundation.control_credential where id=${hash}`,
+        sql`select user_id from public.control_credential where id=${hash}`,
       );
       return rows[0] ? { userId: rows[0].user_id } : undefined;
     },

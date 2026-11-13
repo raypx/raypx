@@ -25,7 +25,7 @@ export const rpcPrefix = "/rpc";
 
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const boundary = createRpcBoundary(options);
-  return boundary.os.router({
+  return boundary.implementer.router({
     admin: createAdministrationHandlers(boundary, readReadiness),
     attachments: createAttachmentHandlers(boundary),
     instances: createInstancesHandlers(boundary),

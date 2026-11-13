@@ -190,6 +190,74 @@ describe("administrator configuration", () => {
     expect(f.authHandler).not.toHaveBeenCalled();
   });
 
+  it("audits declared configuration writes inside oRPC, including refusals and invalid input", async () => {
+    const begin = vi.fn(async () => "audit-id");
+    const finish = vi.fn(async () => {});
+    const rateLimit = vi.fn<RateLimiter>(async () => true);
+    const f = fixture({ audit: new AuditService({ begin, finish }), rateLimit });
+    const admin = f.auth;
+    const write = () => f.client().update({ values: configurationDefaults, revision: 0 });
+
+    f.setAuth({ ...admin, user: { ...admin.user, role: "member" } });
+    await expect(write()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(begin).toHaveBeenCalledExactlyOnceWith({
+      action: "configuration.update",
+      actorId: "admin",
+      source: "http",
+      requestId: expect.stringMatching(/^req_[a-z]{24}$/),
+    });
+    expect(finish).toHaveBeenCalledExactlyOnceWith("audit-id", "rejected", "HTTP_403");
+    // The admission quota precedes the audit record; a refused caller spends nothing else.
+    expect(rateLimit.mock.calls).toEqual([["admin.audit:admin", { window: 60, max: 60 }]]);
+
+    f.setAuth(admin);
+    finish.mockClear();
+    await expect(
+      f.client().update({ values: { siteName: 1 }, revision: 0 } as never),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(finish).toHaveBeenCalledExactlyOnceWith("audit-id", "failed", "HTTP_400");
+
+    begin.mockClear();
+    f.setAuth(null);
+    await expect(write()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await f
+      .client()
+      .get({})
+      .catch(() => {});
+    expect(begin).not.toHaveBeenCalled();
+    expect(f.repository.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses an audited write over quota or without a durable audit record", async () => {
+    const begin = vi.fn(async () => "audit-id");
+    const limited = fixture({
+      audit: new AuditService({ begin, finish: async () => {} }),
+      rateLimit: async () => false,
+    });
+    const input = { values: configurationDefaults, revision: 0 };
+    await expect(limited.client().update(input)).rejects.toMatchObject({
+      code: "TOO_MANY_REQUESTS",
+      data: { error: { code: "RATE_LIMITED" } },
+    });
+    expect(begin).not.toHaveBeenCalled();
+
+    begin.mockRejectedValue(new Error("journal offline"));
+    const unavailable = fixture({ audit: new AuditService({ begin, finish: async () => {} }) });
+    for (const write of [
+      () => unavailable.client().update(input),
+      () =>
+        unavailable.client().updateResend({
+          values: { from: "sender@example.test", defaultLocale: "en", enabled: true },
+          revision: 0,
+        }),
+    ])
+      await expect(write()).rejects.toMatchObject({
+        code: "SERVICE_UNAVAILABLE",
+        data: { error: { code: "AUDIT_UNAVAILABLE" } },
+      });
+    expect(unavailable.repository.update).not.toHaveBeenCalled();
+  });
+
   it("saves validated values, exposes only public fields, and refuses stale versions", async () => {
     const f = fixture();
     const values = {

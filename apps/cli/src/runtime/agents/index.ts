@@ -64,6 +64,8 @@ export class AgentRuntime {
       transport?: import("./harness/transport.js").TransportFactory;
       /** Tests supply explicit executables and never discover a real installation. */
       explicitExecutables?: boolean;
+      /** Bound for one provider `--version` probe; tests on busy hosts raise it. */
+      discoveryTimeoutMs?: number;
       ids?: Ids;
       resolveContext?: (
         selection: TaskContextSelection,
@@ -76,12 +78,10 @@ export class AgentRuntime {
     this.ids = options.ids ?? cryptoIds;
     this.instanceId = this.ids.generate();
     this.store = new AgentStore(state.db, 4096, 8 * 1024 * 1024, this.clock, this.ids);
-    this.providers = createProviderRegistry(
-      options.executables,
-      options.pi,
-      options.transport,
-      options.explicitExecutables,
-    );
+    this.providers = createProviderRegistry(options.executables, options.pi, options.transport, {
+      explicitOnly: options.explicitExecutables,
+      timeoutMs: options.discoveryTimeoutMs,
+    });
     this.projectsService = new LocalExecutionProjects(state, this.store);
     const hooks = new ClaudeApprovalServer((id) => this.execution.get(id));
     this.execution = new ExecutionCoordinator(

@@ -1,5 +1,5 @@
 import { exposeApiTo } from "./exposure.js";
-import { rpcAccess } from "./policy.js";
+import { rpcAccess, rpcAudit } from "./policy.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { httpRead } from "./http.js";
@@ -107,7 +107,11 @@ export const configurationContract = {
       }),
     ),
   update: oc
-    .meta(exposeApiTo("renderer"), rpcAccess("configuration.update"))
+    .meta(
+      exposeApiTo("renderer"),
+      rpcAccess("configuration.update"),
+      rpcAudit("configuration.update"),
+    )
     .input(configurationUpdateSchema)
     .output(configurationSnapshotSchema),
   storage: oc
@@ -115,7 +119,7 @@ export const configurationContract = {
     .input(z.strictObject({}))
     .output(storageSettingsSnapshotSchema),
   updateStorage: oc
-    .meta(exposeApiTo("web"), rpcAccess("configuration.update"))
+    .meta(exposeApiTo("web"), rpcAccess("configuration.update"), rpcAudit("configuration.update"))
     .input(storageSettingsUpdateSchema)
     .output(storageSettingsSnapshotSchema),
   resend: oc
@@ -123,7 +127,7 @@ export const configurationContract = {
     .input(z.strictObject({}))
     .output(resendSnapshotSchema),
   updateResend: oc
-    .meta(exposeApiTo("web"), rpcAccess("configuration.update"))
+    .meta(exposeApiTo("web"), rpcAccess("configuration.update"), rpcAudit("configuration.update"))
     .input(resendUpdateSchema)
     .output(resendSnapshotSchema),
 };

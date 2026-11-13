@@ -212,10 +212,10 @@ it("blocks mutations when intent storage is unavailable", async () => {
 });
 it("rolls back actual role writes if the success audit cannot commit", async () => {
   await db.execute(
-    sql`create function raypx_foundation.audit_test_reject() returns trigger language plpgsql as $$ begin if new.outcome = 'success' then raise exception 'audit test unavailable'; end if; return new; end $$`,
+    sql`create function public.audit_test_reject() returns trigger language plpgsql as $$ begin if new.outcome = 'success' then raise exception 'audit test unavailable'; end if; return new; end $$`,
   );
   await db.execute(
-    sql`create trigger audit_test_reject before update on raypx_foundation.admin_audit for each row execute function raypx_foundation.audit_test_reject()`,
+    sql`create trigger audit_test_reject before update on public.admin_audit for each row execute function public.audit_test_reject()`,
   );
   try {
     expect(
@@ -232,8 +232,8 @@ it("rolls back actual role writes if the success audit cannot commit", async () 
     ).rejects.toBeDefined();
     expect((await configuration.read()).revision).toBe(current.revision);
   } finally {
-    await db.execute(sql`drop trigger audit_test_reject on raypx_foundation.admin_audit`);
-    await db.execute(sql`drop function raypx_foundation.audit_test_reject()`);
+    await db.execute(sql`drop trigger audit_test_reject on public.admin_audit`);
+    await db.execute(sql`drop function public.audit_test_reject()`);
   }
 });
 it("rechecks administrator permission when concurrent role updates reach the database", async () => {

@@ -15,7 +15,10 @@ PostgreSQL persistence for the new account foundation.
 
 ## Constraints
 
-Use postgres.js and Drizzle. Active tables are in raypx_foundation; migration history uses raypx_foundation_migrations. Only drizzle-foundation is retained; retired migration histories are available in Git history. No reset/drop command. Generate new migrations with drizzle-kit; never edit generated SQL or snapshots. No runtime dependency on auth, tooling or apps.
+Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`
+live in the dedicated Raypx database. Keep the `drizzle-foundation` history intact.
+Generate new migrations with drizzle-kit. Never edit generated SQL or snapshots.
+No reset/drop command or runtime dependency on auth, tooling or apps.
 `studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
 Schema generation and Studio run through the private `@raypx/drizzle-kit` workspace.
 Bun defaults to a process pool of ten connections. `/connection` keeps runtime
@@ -24,6 +27,7 @@ API startup and explicit commands share the migrator's transaction-scoped adviso
 before any ledger/schema access. Lock acquisition waits at most 120 seconds; subsequent
 DDL lock waits are bounded to ten seconds. Migration, ledger and lock release commit or
 roll back together. Keep the official Drizzle migrator inside that transaction.
+The migrator moves the previous ledger into `public` before Drizzle reads it.
 The API's `db:migrate` command can inject a provider import into the same
 transaction after the schema applies. Database has no dependency on provider policy.
 Session and verification expiry indexes support API maintenance batches; retention
@@ -41,7 +45,7 @@ bun run --cwd packages/database test
 DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/database generate
 ```
 
-Remote control records share the foundation schema and cascade with the account.
+Remote control records share the public schema and cascade with the account.
 `control_owner` provides a transactional cross-instance account write lock; read-only projections do not acquire it; payloads are
 explicit domain projections. Changes require generated foundation migrations.
 
@@ -56,7 +60,7 @@ publication and expiry metadata. API owns encryption, object writes and admissio
 `control_credential` stores only restricted host credential hashes/expiry; API owns
 issuance and revocation. `control_observed_session` and `control_observed_request`
 store bounded observed projections separately from managed tasks. Their migrations
-are generated with the foundation schema and never applied to a retired database.
+are generated with the Raypx schema and never applied to a retired database.
 
 `control_owner.security_epoch/security_revoked_at` fence host credentials and stale
 bootstrap cookies during security revocation. Auth/API own their transition policy.
