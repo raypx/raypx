@@ -23,6 +23,7 @@ boundaries behind the implementation.
 - [Planned Spaces and sandbox computers](architecture/0065-spaces-and-sandbox-computers.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)
 - [Pi product roadmap](roadmap.md)
+- [Next platform plan](next/README.md) — proposal on the `next` branch
 
 ## Development and verification
 
