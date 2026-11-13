@@ -1,0 +1,165 @@
+apps/web/e2e/admin.spec.ts
+  s_28758cb14041db::t_123f0fe5804f54 178-192
+docs/development/getting-started.md
+  s_28758cb14041db::t_cdb5b904393cef 58
+docs/development/server-jobs.md
+  s_28758cb14041db::t_cdb5b904393cef 85
+apps/api/src/middleware/audit.ts
+  s_652cc4f0b5d7e1::t_076f3ef8f6262c 22,24,28
+packages/control/src/repository.ts
+  s_28758cb14041db::t_7d6cc23a8324e2 105-106,117,124,126,132,151,156-157,175,182,188,196,245,259,266
+apps/api/src/routers/rpc/tasks.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 2-7,9-12,14-19
+apps/api/tests/integration/config.test.ts
+  s_652cc4f0b5d7e1::t_b1dd34635b685d 193-224,226-260
+  s_652cc4f0b5d7e1::t_600c0036ee6202 225
+apps/api/AGENTS.md
+  s_652cc4f0b5d7e1::t_dc72ee442a0dc2 270-275,296
+  s_28758cb14041db::t_e25e27f1b590a9 290-295
+apps/api/src/routers/rpc/memory.ts
+  s_652cc4f0b5d7e1::t_af97a8e177402f 4,6-15,19-21,24,27,32,35,40-41,44-50,52-57,59-64,66-71,73-76,78-83,85-90,92-95,99
+apps/web/src/features/config/components/storage.tsx
+  s_28758cb14041db::t_c26a00893f8895 41,52-57,131,137,141,143-146,198-209,211
+  s_28758cb14041db::t_9e77d8587d8549 13
+apps/api/src/routers/rpc/config.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 68,82,101
+packages/database/src/migrate.ts
+  s_28758cb14041db::t_783d1efa65b119 23-33,36
+packages/ui/src/components/ui/tabs.tsx
+  s_28758cb14041db::t_610c8a331f30f1 73-75
+apps/web/AGENTS.md
+  s_28758cb14041db::t_d523f7d5d9a661 254-256
+apps/cli/src/runtime/agents/infrastructure/providers/builtins.ts
+  s_652cc4f0b5d7e1::t_6c15cde6789b6c 4,13,17,62,64
+apps/cli/src/runtime/agents/infrastructure/providers/process.ts
+  s_652cc4f0b5d7e1::t_6c15cde6789b6c 56-58,105
+packages/contracts/src/instances.ts
+  s_652cc4f0b5d7e1::t_84185e5ef0fff9 17-20,29-40
+  s_652cc4f0b5d7e1::t_8ec4c556d44a47 2,22,26,42
+packages/contracts/src/memory.ts
+  s_652cc4f0b5d7e1::t_8ec4c556d44a47 2,27,31,43,47,51,55,59
+  s_652cc4f0b5d7e1::t_84185e5ef0fff9 34-41
+apps/api/src/routers/rpc/relay.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 2-6,8-12
+packages/database/src/schema.test.ts
+  s_28758cb14041db::t_783d1efa65b119 5,18
+packages/contracts/AGENTS.md
+  s_652cc4f0b5d7e1::t_f7f023e21a3d13 23-25
+  s_28758cb14041db::t_eccee8aa0213fd 26-27
+apps/api/src/middleware/rpc.test.ts
+  s_652cc4f0b5d7e1::t_fead05ec9895e6 4-5,9,17-22,28-39,48,50-51
+  s_652cc4f0b5d7e1::t_198f11771f8b81 16
+  s_652cc4f0b5d7e1::t_90fde3844c538f 1,40-44
+  s_652cc4f0b5d7e1::t_24682946d6f195 45-47,49,52
+packages/database/src/connection.ts
+  s_28758cb14041db::t_783d1efa65b119 12
+apps/api/src/routers/rpc/boundary.ts
+  s_652cc4f0b5d7e1::t_84185e5ef0fff9 6
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 31,36
+packages/database/AGENTS.md
+  s_28758cb14041db::t_cdb5b904393cef 18-21,30,48,63
+apps/api/src/routers/rpc/instances.ts
+  s_652cc4f0b5d7e1::t_af97a8e177402f 4,10-21,24,28,36-59,62-89,91-95
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_28758cb14041db::t_7d6cc23a8324e2 40,45,95,99,102,106,112
+apps/api/src/routers/rpc/jobs.ts
+  s_652cc4f0b5d7e1::t_af97a8e177402f 4,6-17,21-23,26,29,34,37,42-43,46-52,54-59,61-66,68-73,75-80
+apps/api/tests/postgres/node/control.test.ts
+  s_28758cb14041db::t_7d6cc23a8324e2 422,428
+packages/contracts/src/policy.ts
+  s_652cc4f0b5d7e1::t_076f3ef8f6262c 3,12-16
+  s_652cc4f0b5d7e1::t_8ec4c556d44a47 5-6
+  s_652cc4f0b5d7e1::t_debac57b103969 17
+packages/contracts/src/jobs.ts
+  s_652cc4f0b5d7e1::t_84185e5ef0fff9 19-22
+  s_652cc4f0b5d7e1::t_8ec4c556d44a47 2,16,24,34,38,42
+apps/api/src/routers/rpc/account.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 8-10,12,14-19
+  s_652cc4f0b5d7e1::t_07104730d7dcb8 13
+apps/api/src/routers/rpc/attachments.ts
+  s_652cc4f0b5d7e1::t_af97a8e177402f 6-15,19-21,23,30-43
+apps/web/src/features/config/components/settings.tsx
+  s_28758cb14041db::t_5865f3ad8fc8d3 134,137,140
+  s_28758cb14041db::t_c26a00893f8895 18-21,25,30-32,53,68,75,100,102,111,116-127,216-217,276,283-294,296,308,311-315
+  s_28758cb14041db::t_610c8a331f30f1 11-15,17,33-34,112-115,128-132
+  s_28758cb14041db::t_28fdd85ea003f8 16
+apps/web/src/features/config/components/resend.tsx
+  s_28758cb14041db::t_c26a00893f8895 47,62-67,146,152,156,158-161,238-249,251
+  s_28758cb14041db::t_0abf552be001fb 22
+packages/contracts/src/attachments.ts
+  s_652cc4f0b5d7e1::t_8ec4c556d44a47 2,24,28
+apps/web/src/features/config/components/actions.tsx
+  s_28758cb14041db::t_c26a00893f8895 1-45
+apps/api/src/routers/rpc/admin.ts
+  s_652cc4f0b5d7e1::t_84185e5ef0fff9 20-30
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 11,32
+apps/api/src/middleware/rpc.ts
+  s_652cc4f0b5d7e1::t_84185e5ef0fff9 172-174
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 1-5,7,19-27,31-32,38,136,142,148-150,152-171,177,192
+  s_652cc4f0b5d7e1::t_a21a6a337d1c30 28-30
+  s_652cc4f0b5d7e1::t_076f3ef8f6262c 9-10,55,60-66,68-88,90-102,137
+  s_28758cb14041db::t_e25e27f1b590a9 187
+  s_652cc4f0b5d7e1::t_06d193b6f5ddd6 6,33-37,89,186
+apps/api/src/routers/rpc/approvals.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 5-6,8-11
+apps/api/src/routers/rpc/observed.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 5-7,9-12,14-19
+docs/development/railway.md
+  s_28758cb14041db::t_cdb5b904393cef 196-199
+packages/contracts/src/config.ts
+  s_652cc4f0b5d7e1::t_076f3ef8f6262c 2,110-114,122,130
+apps/api/src/routers/rpc/index.ts
+  s_28758cb14041db::t_e25e27f1b590a9 28
+apps/api/src/routers/rpc/hosts.ts
+  s_652cc4f0b5d7e1::t_af97a8e177402f 10-12,15-22,42-48,61
+apps/cli/src/runtime/agents/index.ts
+  s_652cc4f0b5d7e1::t_6c15cde6789b6c 67-68,81-84
+apps/api/src/routers/rpc/devices.ts
+  s_652cc4f0b5d7e1::t_c3ab62257f7199 6-8,10-13,15-18,20-23,25-26
+apps/api/tests/postgres/node/admin.test.ts
+  s_28758cb14041db::t_7d6cc23a8324e2 215,218,235-236
+docs/architecture/README.md
+  s_28758cb14041db::t_7034d073a1ca65 32-33
+apps/cli/tests/helpers/agents.ts
+  s_652cc4f0b5d7e1::t_6c15cde6789b6c 76-77
+packages/contracts/src/api.ts
+  s_652cc4f0b5d7e1::t_076f3ef8f6262c 3
+  s_652cc4f0b5d7e1::t_8ec4c556d44a47 2,63,67,71,77,81,88,100,104,108,114,125,145,151,157,161
+packages/contracts/src/api.test.ts
+  s_652cc4f0b5d7e1::t_b1dd34635b685d 4-10,83-100
+  s_652cc4f0b5d7e1::t_fead05ec9895e6 75-82,101
+apps/cli/vitest.config.ts
+  s_652cc4f0b5d7e1::t_98a508146e616c 10-15
+packages/database/drizzle-foundation/20261113045439_public-schema/migration.sql
+  s_28758cb14041db::t_90e054bf5f65f4 1-57
+packages/database/drizzle-foundation/20261113045439_public-schema/snapshot.json
+  s_28758cb14041db::t_19d0be1bed4b8f 1-1045
+packages/database/drizzle.config.ts
+  s_28758cb14041db::t_9d21d86dd1b532 7-8
+packages/database/src/schema.ts
+  s_28758cb14041db::t_f54f5a5ce05fa3 5,20,36,55,78,94,106,116,127,137,158,166,241,264,298,320,332,350,361,373
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "4bfba0f208141adf1bb5cda7e6d922da67220b5c",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
