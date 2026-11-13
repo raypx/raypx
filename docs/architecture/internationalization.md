@@ -21,6 +21,7 @@ comparison and reads i18n's static locale policy through workspace discovery.
 | Analytics | analytics                                        |
 | Blocks    | settings                                         |
 | Instances | instances                                        |
+| API       | api                                              |
 | Web       | dash, users, site, guest, legal                  |
 | Desktop   | files, terminal, engine, command, localWorkspace |
 

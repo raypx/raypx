@@ -19,7 +19,7 @@ export function checkDeployment(root: string): string[] {
       services: Record<string, ComposeService>;
     };
     const environment = services.api?.environment ?? {};
-    const contract = "apps/api/server/env.contract.ts";
+    const contract = "apps/api/src/env.contract.ts";
     const declared = readStaticCatalog(contract, read(contract));
     if (!declared || typeof declared !== "object" || !Object.keys(declared).length)
       throw new Error("API environment contract missing");

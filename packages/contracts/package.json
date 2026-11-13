@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@orpc/contract": "catalog:",
+    "@orpc/openapi": "catalog:",
     "@raypx/core": "workspace:*",
     "@raypx/instances": "workspace:*",
     "zod": "catalog:"

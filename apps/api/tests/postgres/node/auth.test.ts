@@ -5,7 +5,7 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { schema, user, session } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "../../../server/api.js";
+import { createApiApp } from "../../../src/routers/index.js";
 import type { AuthMailInput } from "@raypx/auth/server";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
@@ -96,6 +96,10 @@ it("registers, verifies, signs in, resets password and revokes the session", asy
     fetch: async (input, init) => app.fetch(new Request(input, init)),
   });
   expect(await client.account.get({})).toMatchObject({ email, name: "Foundation User" });
+  const readOpenApiAccount = () => app.request("/api/v1/account", { headers });
+  const account = await readOpenApiAccount();
+  expect(account.status).toBe(200);
+  expect(await account.json()).toMatchObject({ email, name: "Foundation User" });
   const currentUser = (await readAuthSession(auth, headers))!.user;
   expect(await client.account.access({})).toMatchObject({ role: "member" });
   expect(
@@ -128,6 +132,7 @@ it("registers, verifies, signs in, resets password and revokes the session", asy
     (await request("sign-in/email", { email, password: "original-password-123" })).status,
   ).toBe(401);
   expect(await readAuthSession(auth, headers)).toBeNull();
+  expect((await readOpenApiAccount()).status).toBe(401);
   const replacement = await request("sign-in/email", {
     email,
     password: "replacement-password-456",

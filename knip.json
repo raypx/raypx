@@ -8,9 +8,10 @@
     },
     "apps/api": {
       "entry": [
-        "server/app/*.ts",
-        "server/runtime/plugin.ts",
-        "server/jobs/runtime/*.ts",
+        "src/app/*.ts",
+        "src/routers/openapi-assets.ts",
+        "src/runtime/plugin.ts",
+        "src/jobs/runtime/*.ts",
         "vite.app.config.ts",
         "tests/helpers/control-server.ts",
         "tests/fixtures/deployment.ts",

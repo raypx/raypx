@@ -6,7 +6,7 @@ import { afterAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { mailConfiguration, storageConfiguration } from "@raypx/database/schema";
 import { eq, sql } from "drizzle-orm";
-import { databaseMailer } from "../../../server/configuration/resend.js";
+import { databaseMailer } from "../../../src/config/resend.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
@@ -15,7 +15,7 @@ const connection = connectDatabase(url, { max: 3 });
 const migrations = fileURLToPath(
   new URL("../../../../../packages/database/drizzle-foundation", import.meta.url),
 );
-const command = fileURLToPath(new URL("../../../server/configuration/migrate.ts", import.meta.url));
+const command = fileURLToPath(new URL("../../../src/config/migrate.ts", import.meta.url));
 afterAll(() => connection.close());
 
 function worker(args: string[] = [], env: Record<string, string> = {}, stdin?: Uint8Array) {

@@ -1,7 +1,9 @@
 import { memoryControlRepository } from "@raypx/control/testing";
 import { describe, expect, it, vi } from "vitest";
+import { Hono } from "hono";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "../../server/api.js";
+import { createAuthRoutes } from "../../src/routers/auth.js";
+import { createApiApp } from "../../src/routers/index.js";
 import { ControlService } from "@raypx/control";
 import type { AuthSession } from "@raypx/core/auth";
 
@@ -72,6 +74,62 @@ describe("HTTP foundation", () => {
       200,
     );
     expect(dispatched).toBe(2);
+  });
+
+  it("applies auth checks relative to the mounted path", async () => {
+    const authHandler = vi.fn(async (request: Request) =>
+      Response.json({ path: new URL(request.url).pathname }),
+    );
+    const mounted = new Hono().route(
+      "/custom/auth",
+      createAuthRoutes({
+        allowedOrigins: [],
+        readSession: async () => null,
+        mailAvailable: async () => false,
+        authHandler,
+      }),
+    );
+    const denied = await mounted.request("/custom/auth/sign-up%2Femail/", { method: "POST" });
+    expect(denied.status).toBe(503);
+    expect(authHandler).not.toHaveBeenCalled();
+    const response = await mounted.request("/custom/auth/get-session");
+    expect(await response.json()).toEqual({ path: "/custom/auth/get-session" });
+  });
+
+  it("negotiates the language of auth preflight errors without persisting a preference", async () => {
+    const localized = createApiApp({
+      mailAvailable: async () => false,
+      allowedOrigins: ["https://web.example.com"],
+      readSession: async () => null,
+      authHandler: async () => Response.json({}),
+    });
+    const response = await localized.request("/api/auth/request-password-reset?lang=en", {
+      method: "POST",
+      headers: {
+        origin: "https://web.example.com",
+        "accept-language": "en;q=0, fr;q=1, zh-Hant-TW;q=0.8",
+        cookie: "locale=en",
+      },
+    });
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Content-Language")).toBe("zh");
+    expect(response.headers.get("Vary")?.toLowerCase().split(/,\s*/)).toEqual(
+      expect.arrayContaining(["accept-language", "origin"]),
+    );
+    expect(response.headers.has("Set-Cookie")).toBe(false);
+    expect(await response.json()).toEqual({
+      code: "MAIL_NOT_CONFIGURED",
+      message: "暂时无法发送验证邮件",
+    });
+    const fallback = await localized.request("/api/auth/request-password-reset?lang=zh", {
+      method: "POST",
+      headers: { "accept-language": "fr", cookie: "locale=zh" },
+    });
+    expect(fallback.headers.get("Content-Language")).toBe("en");
+    expect(await fallback.json()).toEqual({
+      code: "MAIL_NOT_CONFIGURED",
+      message: "Authentication email is unavailable",
+    });
   });
 
   it("authenticates each account request with no legacy role requirement", async () => {

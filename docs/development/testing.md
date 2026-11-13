@@ -230,7 +230,8 @@ bun --bun vitest list --filesOnly
 prerequisites. The root Vitest entry runs the configured source suites directly;
 database modes, Playwright and native artifact acceptance use their dedicated commands.
 
-API tests use source-adjacent `server/**/*.test.ts` and `tests/integration/` for the default gate.
+API tests use source-adjacent suites in `src/` plus
+`tests/integration/` for the default gate.
 `test:unit` and `test:integration` select these layers. Database suites live
 under `tests/postgres/node/`, selected only by the `postgres` mode in
 `vitest.config.ts`.

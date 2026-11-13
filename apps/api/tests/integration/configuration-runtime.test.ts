@@ -2,9 +2,9 @@ import { expect, it, vi } from "vitest";
 import type { Database } from "@raypx/database/connection";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { getApiEnvironment } from "../../server/env.js";
-import { createApiLogging } from "../../server/logging.js";
-import { createRuntime, type RuntimeResources } from "../../server/runtime/shared.js";
+import { getApiEnvironment } from "../../src/env.js";
+import { createApiLogging } from "../../src/logging.js";
+import { createRuntime, type RuntimeResources } from "../../src/runtime/shared.js";
 
 it("scopes injected repositories to each runtime and shares the service with HTTP and jobs", async () => {
   const logger = createApiLogging({ environment: "test", sink: () => {} });

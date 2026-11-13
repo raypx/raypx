@@ -4,6 +4,8 @@ export * from "./administration.js";
 export * from "./attachments.js";
 import { instancesContract } from "./instances.js";
 import { oc } from "@orpc/contract";
+import { httpRead } from "./http.js";
+export { httpApiPrefix } from "./http.js";
 import { z } from "zod";
 import { accountAccessSchema } from "./access.js";
 export * from "./access.js";
@@ -65,8 +67,12 @@ export const apiContract = {
       .output(z.object({ revoked: z.literal(true) })),
   },
   observed: {
-    list: oc.input(z.object({})).output(observedProjectionSchema),
-    get: oc.input(z.object({ id: z.string().uuid() })).output(terminalRequestSchema),
+    list: httpRead("/observed-requests", "observed", "List observed terminal requests and sessions")
+      .input(z.object({}))
+      .output(observedProjectionSchema),
+    get: httpRead("/observed-requests/{id}", "observed", "Read an observed terminal request")
+      .input(z.object({ id: z.string().uuid() }))
+      .output(terminalRequestSchema),
   },
   configuration: configurationContract,
   devices: {
@@ -84,13 +90,15 @@ export const apiContract = {
     refreshGrant: oc
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
       .output(deviceGrantSchema),
-    list: oc.input(z.object({})).output(z.array(deviceSchema)),
+    list: httpRead("/devices", "devices", "List registered computers")
+      .input(z.object({}))
+      .output(z.array(deviceSchema)),
     revoke: oc
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
       .output(z.object({ revoked: z.literal(true) })),
   },
   tasks: {
-    list: oc
+    list: httpRead("/tasks", "tasks", "List remote tasks")
       .input(
         z.object({
           before: z.string().optional(),
@@ -100,7 +108,7 @@ export const apiContract = {
         }),
       )
       .output(z.array(taskSchema)),
-    get: oc
+    get: httpRead("/tasks/{id}", "tasks", "Read a task and its activity")
       .input(
         z.object({
           id: z.string().uuid(),
@@ -119,14 +127,20 @@ export const apiContract = {
       ),
   },
   approvals: {
-    list: oc.input(z.object({})).output(z.array(humanRequestSchema)),
+    list: httpRead("/approvals", "approvals", "List pending approvals")
+      .input(z.object({}))
+      .output(z.array(humanRequestSchema)),
   },
   relay: {
     ticket: oc.input(z.object({})).output(z.object({ token: z.string(), expiresAt: z.string() })),
   },
   account: {
-    get: oc.input(z.object({})).output(accountProfileSchema),
-    access: oc.input(z.strictObject({})).output(accountAccessSchema),
+    get: httpRead("/account", "account", "Read the signed-in account")
+      .input(z.object({}))
+      .output(accountProfileSchema),
+    access: httpRead("/account/access", "account", "Read current account permissions", "optional")
+      .input(z.strictObject({}))
+      .output(accountAccessSchema),
   },
 };
 

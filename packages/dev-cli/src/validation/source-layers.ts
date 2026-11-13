@@ -13,7 +13,7 @@ function layer(path: string) {
   if (path.includes("/agents/domain/")) return "orchestration-domain";
   if (path.includes("/application/")) return "application";
   if (path.includes("/src/model/")) return "model";
-  if (path.includes("/server/rpc/")) return "rpc";
+  if (path.startsWith("apps/api/src/routers/rpc/")) return "rpc";
   if (path.includes("/infrastructure/")) return "adapter";
   return undefined;
 }
@@ -36,7 +36,7 @@ function forbidden(owner: string, target: string, request: string) {
       return Boolean(target) && !/\/agents\/domain\/|^packages\/core\//.test(target);
     return true;
   }
-  if (owner === "rpc" && /\/server\/api\.[jt]s$/.test(target)) return true;
+  if (owner === "rpc" && target === "apps/api/src/routers/index.ts") return true;
   if (owner === "adapter") return /\/runtime\/index\.[cm]?[jt]s$/.test(target);
   const infrastructure =
     /\/(?:infrastructure|sqlite)\//.test(target) ||

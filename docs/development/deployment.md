@@ -133,6 +133,12 @@ Check HTTPS and origin certificate, /health, database/relay-aware /ready, redire
 SSR assets, real login, secure cookies and authenticated WebSocket dispatch/revoke.
 Unconfigured mail or unrun native/browser acceptance is unavailable, not passed.
 
+Each backend process coalesces concurrent PostgreSQL and Redis readiness probes
+and reuses completed results for one second. The API's `/ready` and authorized
+administrator health check share these results. Relay status is read on demand.
+Slow probes return `unavailable` after three seconds and remain the only probe
+for that dependency until the driver settles. `/ready` uses `Cache-Control: no-store`.
+
 `bun run smoke:deployment` builds the real Compose runtime/migration images and
 Railway deploy image. It first exercises the combined backend without starting
 Redis, then split roles from one image with a temporary broker. Both profiles

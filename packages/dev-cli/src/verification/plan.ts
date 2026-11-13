@@ -97,7 +97,7 @@ const sharedSmokeInputs = [
   /^packages\/client\/src\/(?:tasks|relay)\.ts$/,
   /^packages\/contracts\/src\/tasks\.ts$/,
   /^packages\/control\/src\/(?:relay\/|application\/commands\.ts$)/,
-  /^apps\/api\/server\/(?:rpc\/(?:approvals|relay)|(?:app|runtime)\/relay)\.ts$/,
+  /^apps\/api\/src\/(?:routers\/(?:rpc\/(?:approvals|relay)|relay\/socket)|runtime\/relay)\.ts$/,
 ];
 
 function browserChanges(model: WorkspaceGraph, files: string[], full: boolean): BrowserPlan {

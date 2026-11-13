@@ -1,5 +1,6 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { httpRead } from "./http.js";
 import {
   cloudJobCreateSchema,
   cloudJobInputSchema,
@@ -9,7 +10,7 @@ import {
 
 /** Account-owned schedules; no caller-selected actor or arbitrary server command. */
 export const jobsContract = {
-  list: oc
+  list: httpRead("/jobs", "jobs", "List automations")
     .input(z.object({}))
     .output(z.object({ enabled: z.boolean(), jobs: z.array(cloudJobSchema).max(100) })),
   create: oc.input(cloudJobCreateSchema).output(cloudJobSchema),
@@ -26,7 +27,7 @@ export const jobsContract = {
     .input(z.strictObject({ id: z.uuid(), revision: z.number().int().positive() }))
     .output(z.object({ deleted: z.literal(true) })),
   run: oc.input(z.strictObject({ id: z.uuid(), requestId: z.uuid() })).output(cloudJobRunSchema),
-  history: oc
+  history: httpRead("/jobs/{id}/runs", "jobs", "Read automation run history")
     .input(z.strictObject({ id: z.uuid(), limit: z.number().int().min(1).max(100).default(50) }))
     .output(z.array(cloudJobRunSchema).max(100)),
 };

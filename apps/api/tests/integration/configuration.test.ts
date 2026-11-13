@@ -2,14 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/core/auth";
-import { createApiApp } from "../../server/api.js";
-import { createAccessPolicy } from "../../server/access.js";
+import { createApiApp } from "../../src/routers/index.js";
+import { createAccessPolicy } from "../../src/access.js";
 import { hasPermission } from "@raypx/account/access";
-import { createConfigurationService } from "../../server/configuration/service.js";
-import type { ConfigurationRepository } from "../../server/configuration/types.js";
-import { getApiEnvironment } from "../../server/env.js";
+import { createConfigurationService } from "../../src/config/service.js";
+import type { ConfigurationRepository } from "../../src/config/types.js";
+import { getApiEnvironment } from "../../src/env.js";
+import { AuditService } from "../../src/administration/audit.js";
+import type { ApiAppOptions } from "../../src/app/options.js";
+import type { RateLimiter } from "../../src/rate-limit/types.js";
 
-function fixture() {
+function fixture(options: Pick<ApiAppOptions, "audit" | "rateLimit"> = {}) {
   let state: ConfigurationSnapshot = {
     values: { ...configurationDefaults },
     revision: 0,
@@ -47,6 +50,7 @@ function fixture() {
     allowedOrigins: ["https://web.example.test/", "invalid"],
     jobsEnabled: false,
     mailAvailable: async () => true,
+    ...options,
   });
   const client = (origin: string = "https://web.example.test") =>
     createApiClient({
@@ -109,6 +113,74 @@ describe("administrator configuration", () => {
       }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     expect(f.repository.update).not.toHaveBeenCalled();
+  });
+
+  it("checks permissions, per-procedure quotas and origin in order for every configuration write", async () => {
+    const rateLimit = vi.fn<RateLimiter>();
+    const f = fixture({ rateLimit });
+    const admin = f.auth;
+    const client = f.client("https://untrusted.example.test");
+    const writes = {
+      update: () => client.update({ values: configurationDefaults, revision: 0 }),
+      updateStorage: () =>
+        client.updateStorage({
+          values: {
+            endpoint: "https://s3.example.test",
+            region: "us-east-1",
+            bucket: "test-bucket",
+            enabled: true,
+          },
+          revision: 0,
+        }),
+      updateResend: () =>
+        client.updateResend({
+          values: { from: "sender@example.test", defaultLocale: "en", enabled: true },
+          revision: 0,
+        }),
+    };
+    f.setAuth({ ...admin, user: { ...admin.user, role: "member" } });
+    for (const write of Object.values(writes)) {
+      await expect(write()).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        data: { error: { code: "FORBIDDEN" } },
+      });
+    }
+    expect(rateLimit).not.toHaveBeenCalled();
+
+    f.setAuth(admin);
+    for (const [procedure, write] of Object.entries(writes)) {
+      rateLimit.mockClear();
+      rateLimit.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+      await expect(write()).rejects.toMatchObject({
+        code: "TOO_MANY_REQUESTS",
+        data: { error: { code: "RATE_LIMITED" } },
+      });
+      await expect(write()).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        data: { error: { code: "ORIGIN_REJECTED" } },
+      });
+      expect(rateLimit.mock.calls).toEqual([
+        [`rpc:admin:configuration.${procedure}`, { window: 60, max: 10 }],
+        [`rpc:admin:configuration.${procedure}`, { window: 60, max: 10 }],
+      ]);
+    }
+    expect(f.repository.update).not.toHaveBeenCalled();
+  });
+
+  it("rate limits audited HTTP requests before opening an audit record", async () => {
+    const begin = vi.fn(async () => "audit-id");
+    const audit = new AuditService({ begin, finish: async () => {} });
+    const rateLimit = vi.fn(async () => false);
+    const f = fixture({ audit, rateLimit });
+    const response = await f.app.request("/api/auth/admin/set-role", { method: "POST" });
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      code: "RATE_LIMITED",
+      message: "Too many administration requests",
+    });
+    expect(rateLimit).toHaveBeenCalledExactlyOnceWith("admin.audit:admin", { window: 60, max: 60 });
+    expect(begin).not.toHaveBeenCalled();
+    expect(f.authHandler).not.toHaveBeenCalled();
   });
 
   it("saves validated values, exposes only public fields, and refuses stale versions", async () => {

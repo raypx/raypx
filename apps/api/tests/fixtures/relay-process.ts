@@ -1,4 +1,4 @@
-import { createBackendRuntime } from "../../server/runtime/backend.js";
+import { createBackendRuntime } from "../../src/runtime/backend.js";
 import { serveBackend } from "./backend-server.js";
 
 const runtime = await createBackendRuntime(process.env);

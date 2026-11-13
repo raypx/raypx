@@ -5,15 +5,15 @@ import { createApiClient } from "@raypx/client/api";
 import { controlAuth } from "@raypx/control/testing";
 import { createMailer } from "@raypx/email/server";
 import { eq } from "drizzle-orm";
-import { createApiApp } from "../../../server/api.js";
-import { createConfigurationReads } from "../../../server/configuration/reads.js";
-import { AuditService } from "../../../server/administration/audit.js";
-import { createAdministrationRepository } from "../../../server/administration/repository.js";
+import { createApiApp } from "../../../src/routers/index.js";
+import { createConfigurationReads } from "../../../src/config/reads.js";
+import { AuditService } from "../../../src/administration/audit.js";
+import { createAdministrationRepository } from "../../../src/administration/repository.js";
 import {
   createResendSettings,
   databaseMailer,
   initializeResend,
-} from "../../../server/configuration/resend.js";
+} from "../../../src/config/resend.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

@@ -16,7 +16,7 @@ RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
 FROM dependencies AS migration-payload
 COPY . .
-RUN bun --no-env-file build apps/api/server/configuration/migrate.ts --target=bun --format=esm --minify --packages=bundle --env=disable --outfile=/migration/apps/api/server/configuration/migrate.ts \
+RUN bun --no-env-file build apps/api/src/config/migrate.ts --target=bun --format=esm --minify --packages=bundle --env=disable --outfile=/migration/apps/api/src/config/migrate.ts \
   && cp apps/api/package.json /migration/apps/api/ \
   && mkdir -p /migration/packages/database \
   && printf '%s\n' '{"scripts":{"migrate":"bun run --cwd ../../apps/api db:migrate"}}' > /migration/packages/database/package.json \

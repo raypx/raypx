@@ -1,6 +1,6 @@
 # Server jobs
 
-The API owns server-side jobs under `apps/api/server/jobs/`. Nitro Tasks supplies
+The API owns server-side jobs under `apps/api/src/jobs/`. Nitro Tasks supplies
 the named task registry and platform scheduling. `maintenance:cleanup` runs on
 `*/15 * * * *` (every 15 minutes) through the Bun Nitro server. This is independent of device-local CLI schedules and
 Agent execution.
@@ -130,7 +130,7 @@ curl -X POST http://localhost:3002/_nitro/tasks/maintenance:cleanup
 `/_nitro/tasks/maintenance:cleanup` returns 404.
 
 ```sh
-bun run --cwd apps/api test -- server/jobs
+bun run --cwd apps/api test -- src/jobs
 NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres
 bun run verify
 ```
@@ -141,8 +141,8 @@ limits. The default unit gate requires no database.
 
 ## Adding a task
 
-Keep business logic in `server/jobs/`, with thin platform entry modules in
-`server/jobs/runtime/`. Register the handler by absolute path in the API's Nitro
+Keep business logic in `src/jobs/`, with thin platform entry modules in
+`src/jobs/runtime/`. Register the handler by absolute path in the API's Nitro
 configuration and its `scheduledTasks` registry. Specify
 the job's idempotency, concurrency and retry policy before enabling it; cleanup's
 transaction lock is specific to this task. Use separate locks for unrelated jobs.

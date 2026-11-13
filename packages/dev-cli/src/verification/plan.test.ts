@@ -160,7 +160,9 @@ describe("affected verification", () => {
       "packages/auth/src/hooks.ts",
       "packages/tasks/src/client/approval-body.tsx",
       "packages/control/src/application/commands.ts",
-      "apps/api/server/rpc/approvals.ts",
+      "apps/api/src/routers/rpc/approvals.ts",
+      "apps/api/src/routers/relay/socket.ts",
+      "apps/api/src/runtime/relay.ts",
     ])
       expect(browserModes(verificationPlan(model, [file]))).toEqual(["smoke", "smoke"]);
     expect(
@@ -648,7 +650,7 @@ it("selects container acceptance for image definitions, deployment adapters and 
     "apps/desktop/src/routes/settings.tsx",
     "packages/api/src/server.ts",
     "packages/tokens/src/index.ts",
-    "apps/api/server/app/relay.ts",
+    "apps/api/src/routers/relay/socket.ts",
     "infra/cloudflare/src/index.ts",
     "infra/railway/stack.test.ts",
     "packages/tooling/src/build/cli.ts",

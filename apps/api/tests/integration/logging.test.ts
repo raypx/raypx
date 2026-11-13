@@ -1,10 +1,10 @@
-import type { ApiAppOptions } from "../../server/app/options.js";
+import type { ApiAppOptions } from "../../src/app/options.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import type { AuthSession } from "@raypx/core/auth";
 import type { SafeEvent } from "@raypx/logger/safe";
-import { createApiApp } from "../../server/api.js";
-import { createApiLogging, type ApiLogging } from "../../server/logging.js";
+import { createApiApp } from "../../src/routers/index.js";
+import { createApiLogging, type ApiLogging } from "../../src/logging.js";
 
 const secret = {
   cookie: "private-cookie-value-71",

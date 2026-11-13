@@ -47,6 +47,7 @@ boundaries behind the implementation.
 ## Accounts and shared services
 
 - [Accounts, sessions, roles, administration and OAuth](development/accounts.md)
+- [HTTP API and OpenAPI](development/openapi.md)
 - [Administrator configuration](development/configuration.md)
 - [Server caching](development/caching.md)
 - [Object storage](development/object-storage.md)

@@ -20,7 +20,7 @@ function fixture() {
     "apps/api/Dockerfile",
     "apps/web/Dockerfile",
     "deploy/compose.split.yaml",
-    "apps/api/server/env.contract.ts",
+    "apps/api/src/env.contract.ts",
   ]) {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     copyFileSync(join(repository, file), join(root, file));
@@ -38,7 +38,7 @@ it("detects newly declared API settings missing from deployment adapters", () =>
   const root = fixture();
   replace(
     root,
-    "apps/api/server/env.contract.ts",
+    "apps/api/src/env.contract.ts",
     '  REDIS_URL: "input",',
     '"NEW_SETTING": "input",\n  REDIS_URL: "input",',
   );
@@ -77,13 +77,8 @@ it("rejects a port that only starts with the required digits", () => {
 });
 it("reads quoted environment declarations without executing API modules", () => {
   const root = fixture();
-  replace(
-    root,
-    "apps/api/server/env.contract.ts",
-    '  REDIS_URL: "input",',
-    '\t"REDIS_URL": "input",',
-  );
-  writeFileSync(join(root, "apps/api/server/env.ts"), 'throw new Error("must never execute");');
+  replace(root, "apps/api/src/env.contract.ts", '  REDIS_URL: "input",', '\t"REDIS_URL": "input",');
+  writeFileSync(join(root, "apps/api/src/env.ts"), 'throw new Error("must never execute");');
   expect(checkDeployment(root)).toEqual([]);
 });
 it("ignores build-stage settings and checks the inherited Railway runtime", () => {

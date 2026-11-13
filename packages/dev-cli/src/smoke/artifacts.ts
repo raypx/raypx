@@ -64,8 +64,10 @@ async function probeRelay(root: string): Promise<void> {
         throw new Error("Relay artifact must report dependency unavailability safely");
       if ((await fetch(`${base}/relay`)).status !== 503)
         throw new Error("Relay artifact must not fall back to process-local routing");
-      if ((await fetch(`${base}/rpc/__missing`)).status !== 404)
-        throw new Error("Relay artifact must not expose API routes");
+      for (const path of ["/rpc/__missing", "/api/docs", "/api/docs/assets/swagger-ui-bundle.js"]) {
+        if ((await fetch(`${base}${path}`)).status !== 404)
+          throw new Error(`Relay artifact must not expose ${path}`);
+      }
     },
   });
   console.log(

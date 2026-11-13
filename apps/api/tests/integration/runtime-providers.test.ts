@@ -3,16 +3,16 @@ import type { AuthSession } from "@raypx/core/auth";
 import type { Database, DatabaseConnection } from "@raypx/database/connection";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults, type ConfigurationSnapshot } from "@raypx/contracts/api";
-import { createApiRuntime } from "../../server/runtime/server.js";
-import { getApiEnvironment } from "../../server/env.js";
-import type { RuntimeProviders } from "../../server/runtime/shared.js";
+import { createApiRuntime } from "../../src/runtime/server.js";
+import { getApiEnvironment } from "../../src/env.js";
+import type { RuntimeProviders } from "../../src/runtime/shared.js";
 
 const mocks = vi.hoisted(() => ({
   connect: vi.fn<() => DatabaseConnection>(),
   readSession: vi.fn<(auth: unknown, headers: Headers) => Promise<AuthSession | null>>(),
   migrate: vi.fn(async (_environment: unknown) => {}),
 }));
-vi.mock("../../server/runtime/migrations.js", () => ({ migrateApiDatabase: mocks.migrate }));
+vi.mock("../../src/runtime/migrations.js", () => ({ migrateApiDatabase: mocks.migrate }));
 vi.mock("@raypx/database/connection", () => ({ connectDatabase: mocks.connect }));
 vi.mock("@raypx/auth/server", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@raypx/auth/server")>()),

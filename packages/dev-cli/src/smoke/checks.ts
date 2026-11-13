@@ -12,6 +12,31 @@ export async function checkApi(
     if (response.status !== 404)
       throw new Error(`API ${path} returned ${response.status}, expected 404`);
   }
+  const docs = await fetch(`${base}/api/docs`);
+  const assetPath = "/api/docs/assets/swagger-ui-bundle.js";
+  if (!docs.ok || !(await docs.text()).includes(assetPath))
+    throw new Error("API Swagger UI must reference its bundled assets");
+  const asset = await fetch(`${base}${assetPath}`);
+  if (
+    !asset.ok ||
+    !asset.headers.get("content-type")?.includes("javascript") ||
+    !(await asset.text())
+  )
+    throw new Error("API must serve the bundled Swagger UI script");
+  if ((await fetch(`${base}/api/docs/assets/package.json`)).status !== 404)
+    throw new Error("API must only expose the allowlisted Swagger UI assets");
+  if (!options.gateway) {
+    const upgrade = { upgrade: "websocket" };
+    for (const path of ["/api/docs", assetPath]) {
+      if ((await fetch(`${base}${path}`, { headers: upgrade })).status !== 404)
+        throw new Error(`API ${path} must reject WebSocket upgrades`);
+    }
+    const rejected = await fetch(`${base}/relay`, {
+      headers: { ...upgrade, origin: "https://disallowed.example.invalid" },
+    });
+    if (rejected.status !== (options.relay ? 403 : 404))
+      throw new Error("Relay must enforce role and Origin before upgrading");
+  }
   const signup = await fetch(`${base}/api/auth/sign-up/email`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: options.origin ?? base },

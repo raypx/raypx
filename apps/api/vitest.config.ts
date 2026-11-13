@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
         defaults,
         defineConfig({
           test: {
-            include: ["server/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
+            include: ["src/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
           },
         }),
       );

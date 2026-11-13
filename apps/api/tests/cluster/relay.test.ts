@@ -15,9 +15,9 @@ import type { AgentTask } from "@raypx/core/tasks";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
-import { createApiRuntime } from "../../server/runtime/server.js";
+import { createApiRuntime } from "../../src/runtime/server.js";
 import { serveBackend } from "../fixtures/backend-server.js";
-import { getApiEnvironment } from "../../server/env.js";
+import { getApiEnvironment } from "../../src/env.js";
 import { connected, controlAuth, observed } from "@raypx/control/testing";
 
 const url = process.env.TEST_DATABASE_URL,
@@ -274,7 +274,7 @@ it.each(["api", "both"] as const)(
         { timeout: 10_000 },
       )
       .toBe(200);
-    expect((await runtime.app.fetch(new Request("http://localhost/relay"))).status).toBe(404);
+    expect((await runtime.app.request("/relay")).status).toBe(role === "both" ? 426 : 404);
     const device = await wire({ url: `ws://127.0.0.1:${port}/relay` }, "device", host.grant.token);
     device.send(f.announce);
     await device.take("resume");

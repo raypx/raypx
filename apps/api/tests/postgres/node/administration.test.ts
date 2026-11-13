@@ -1,4 +1,4 @@
-import { cleanupExpired } from "../../../server/jobs/cleanup.js";
+import { cleanupExpired } from "../../../src/jobs/cleanup.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { adminAudit, user, systemConfiguration } from "@raypx/database/schema";
@@ -6,13 +6,13 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { createApiApp } from "../../../server/api.js";
-import { AuditService } from "../../../server/administration/audit.js";
-import { createAdministrationRepository } from "../../../server/administration/repository.js";
-import { createAuditedAuthAdapter } from "../../../server/administration/auth-adapter.js";
-import { createConfigurationRepository } from "../../../server/configuration/repository.js";
-import { createConfigurationService } from "../../../server/configuration/service.js";
-import { createAccessPolicy } from "../../../server/access.js";
+import { createApiApp } from "../../../src/routers/index.js";
+import { AuditService } from "../../../src/administration/audit.js";
+import { createAdministrationRepository } from "../../../src/administration/repository.js";
+import { createAuditedAuthAdapter } from "../../../src/administration/auth-adapter.js";
+import { createConfigurationRepository } from "../../../src/config/repository.js";
+import { createConfigurationService } from "../../../src/config/service.js";
+import { createAccessPolicy } from "../../../src/access.js";
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("An isolated *_test database is required");

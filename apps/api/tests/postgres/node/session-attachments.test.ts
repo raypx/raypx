@@ -13,21 +13,21 @@ import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 import { connected, controlAuth } from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "../../../server/api.js";
-import { createConfigurationReads } from "../../../server/configuration/reads.js";
-import { AuditService } from "../../../server/administration/audit.js";
-import { createAdministrationRepository } from "../../../server/administration/repository.js";
-import { cleanupExpired } from "../../../server/jobs/cleanup.js";
+import { createApiApp } from "../../../src/routers/index.js";
+import { createConfigurationReads } from "../../../src/config/reads.js";
+import { AuditService } from "../../../src/administration/audit.js";
+import { createAdministrationRepository } from "../../../src/administration/repository.js";
+import { cleanupExpired } from "../../../src/jobs/cleanup.js";
 import {
   createSessionAttachments,
   withSessionAttachments,
-} from "../../../server/storage/attachments.js";
+} from "../../../src/storage/attachments.js";
 import {
   databaseStorage,
   createStorageSettings,
   saveStorageConfiguration,
   storageConfigSchema,
-} from "../../../server/storage/configuration.js";
+} from "../../../src/storage/configuration.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

@@ -4,7 +4,7 @@ import { like } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth } from "@raypx/auth/server";
 import { rateLimit, schema } from "@raypx/database/schema";
-import { createRateLimiter } from "../../../server/rate-limit.js";
+import { createRateLimiter } from "../../../src/rate-limit.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

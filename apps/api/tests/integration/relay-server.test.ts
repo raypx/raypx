@@ -4,8 +4,9 @@ import { RelayHub } from "@raypx/control/relay";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 import { relayServerSchema, type RelayServerFrame } from "@raypx/contracts/tasks";
 import { serveBackend } from "../fixtures/backend-server.js";
-import { Hono } from "hono";
-import { checkReadiness } from "../../server/app/readiness.js";
+import { createReadinessCheck } from "../../src/app/readiness.js";
+import { createRelayHttpApp } from "../../src/routers/relay/http.js";
+import { createRelaySocketRoutes } from "../../src/routers/relay/socket.js";
 
 const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {
@@ -15,14 +16,12 @@ function fixture(databaseReady: () => Promise<unknown> = async () => {}) {
   const repository = memoryControlRepository();
   const control = new ControlService(repository);
   const hub = new RelayHub(async (use) => use(control));
-  const app = new Hono();
-  app.get("/health", (c) => c.json({ status: "ok", service: "relay" }));
-  app.get("/ready", async (c) => {
-    const checks = await checkReadiness({ database: databaseReady });
-    const ok = checks.database === "ok";
-    return c.json({ status: ok ? "ok" : "unavailable", checks }, ok ? 200 : 503);
-  });
-  const listener = serveBackend({ hub, app, allowedOrigins: ["https://app.example.test"] });
+  const readReadiness = createReadinessCheck({ database: databaseReady });
+  const app = createRelayHttpApp(readReadiness).route(
+    "/relay",
+    createRelaySocketRoutes({ hub, allowedOrigins: ["https://app.example.test"] }),
+  );
+  const listener = serveBackend({ app });
   let closing: Promise<void> | undefined;
   const server = {
     url: listener.url,
@@ -64,6 +63,14 @@ it("serves liveness and dependency readiness and exposes no login or local execu
 });
 it("rejects disallowed origins before upgrade and permits authenticated native clients without Origin", async () => {
   const f = fixture();
+  const upgraded = await fetch(new URL("/relay", f.url), {
+    headers: { upgrade: "websocket", origin: "https://evil.example.test" },
+  });
+  expect(upgraded.status).toBe(403);
+  const unknown = await fetch(new URL("/unknown", f.url), {
+    headers: { upgrade: "websocket" },
+  });
+  expect(unknown.status).toBe(404);
   expect(
     (await fetch(new URL("/relay", f.url), { headers: { origin: "https://evil.example.test" } }))
       .status,

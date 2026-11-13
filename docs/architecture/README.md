@@ -93,8 +93,11 @@ startup reads no Auth/mail/signing configuration and exposes no login or RPC.
 Cloudflare runs the same backend image with the relay role. The gateway keeps
 `/relay` at the public origin. See [ADR 0051](0051-backend-runtime-roles.md) and
 [deployment](../development/deployment.md).
-API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,
-/rpc/_, /health and /ready; `/relay` uses Nitro WebSocket hooks. Other paths are JSON 404s. Web renders on the server with
+API Nitro owns one listener and shutdown. One Hono Fetch app mounts `/api/auth/*`,
+`/rpc/*`, `/health`, `/ready` and the [versioned HTTP API](../development/openapi.md)
+with its OpenAPI document. Hono routes `/relay` and supplies CrossWS hooks to
+Nitro's Bun listener. Unmatched paths
+are JSON 404s. Web renders on the server with
 device preferences from cookies/Accept-Language and the account from account.get,
 forwarding only Better Auth cookies. It never imports API, auth server or DB code.
 Its server must receive the session cookie: share one origin, or set AUTH_DOMAIN

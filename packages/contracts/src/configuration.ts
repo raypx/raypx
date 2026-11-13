@@ -1,5 +1,6 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { httpRead } from "./http.js";
 
 /** Explicit, non-secret settings. Never accept arbitrary environment keys. */
 export const configurationValuesSchema = z.strictObject({
@@ -87,7 +88,9 @@ export const resendUpdateSchema = z.strictObject({
 export type ResendSettingsSnapshot = z.infer<typeof resendSnapshotSchema>;
 export type ResendSettingsUpdate = z.infer<typeof resendUpdateSchema>;
 export const configurationContract = {
-  public: oc.input(z.object({})).output(publicConfigurationSchema),
+  public: httpRead("/configuration", "configuration", "Read public site settings", "public")
+    .input(z.object({}))
+    .output(publicConfigurationSchema),
   access: oc.input(z.object({})).output(z.object({ allowed: z.boolean() })),
   get: oc.input(z.object({})).output(
     configurationSnapshotSchema.extend({

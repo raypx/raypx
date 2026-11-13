@@ -23,16 +23,31 @@ bypass real-user verification.
 provider discovery. API injects optional paired `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
 and `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; neither secret reaches Web. `/rpc/*` serves the explicit oRPC account
 contract. `/health` reports process liveness without querying PostgreSQL;
-`/ready` checks configured dependencies. Every other path is a JSON 404; Web is a separate service.
+`/ready` checks configured dependencies. `/api/openapi.json` combines the Hono
+health routes and the explicit read-only oRPC selection served under `/api/v1/*`.
+`/api/docs` renders that document through oRPC's Swagger UI reference plugin.
+Nitro serves the bundled Swagger assets from `/api/docs/assets/` on the same origin in API-enabled roles.
+`src/routers/openapi.ts` uses the OpenAPI metadata in `@raypx/contracts/api` to
+select the same procedures for HTTP dispatch and schema generation. Keep
+credential issuance, writes and private transports on their
+existing boundaries. Unmatched paths return a JSON 404; Web is a separate service.
+Versioned HTTP routes use resource paths, `GET` for reads, path parameters for
+resource IDs and query parameters for filters and pagination. Known resources
+return `405` with `Allow` for unsupported methods.
 
-Unit tests live beside `server/` source; `tests/integration/` and these unit tests
+Unit tests live beside source in `src/`; `tests/integration/` and these unit tests
 form the default database-free gate. `tests/postgres/node/` uses the `postgres`
 mode of `vitest.config.ts` for real-database tests. Shared fixtures stay in `tests/`.
 
 ## Ownership
 
 Nitro owns the platform entry. Hono owns the shared Fetch application.
-Platform entry modules live in `app/`; runtime composition and adapters live in `runtime/`.
+The Nitro Fetch entry lives in `src/app/`; runtime composition and adapters
+live in `src/runtime/`. Hono and oRPC middleware live in `src/middleware/`.
+`src/routers/index.ts` applies shared HTTP middleware and mounts the auth,
+health, OpenAPI and oRPC subrouters with `app.route()`.
+`src/routers/relay/` owns Relay HTTP probes and the Hono WebSocket route.
+Hono admits upgrades and supplies CrossWS hooks to Nitro's Bun listener.
 `runtime/shared.ts` composes services from the injected database, logger and providers.
 `runtime/adapters.ts` picks session and rate-limit adapters and builds the auth config.
 `runtime/lifecycle.ts` closes
@@ -85,7 +100,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Dev and build run vp under Bun (`bun --bun vp`); start `.output/server/index.mjs`
   with `bun`, built by the shared Nitro `bun` preset.
   Common target options come from `@raypx/tooling/build/nitro`; API owns routes and runtime plugins.
-- Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
+- Web owns product pages and assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Dockerfile is shared by Compose and Railway. Its default deploy stage carries
   the bundled Bun migration command and canonical SQL
@@ -98,38 +113,45 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address
-  and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
+  and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy. `src/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
   have pre-lookup limits by platform-owned client address (120/min) and credential
   digest (6/min); never use a caller-selected forwarding header or raw bearer key.
-- Optional `REDIS_URL` (Bun runtime, `server/runtime/redis.ts` with ioredis) becomes
+- Optional `REDIS_URL` (Bun runtime, `src/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
   broadcasts configuration changes.
   Sessions are still written to PostgreSQL. Requires
   Redis 7+ or Valkey (`EXPIRE NX`, `GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
-- `/ready` probes PostgreSQL (and Redis when configured) within three seconds and
-  returns per-dependency `ok`/`unavailable` without error details; `/health` stays
-  liveness-only. RPC rejects `__proto__`/`constructor.prototype` input keys (`INVALID_INPUT`,
+- `/ready` and authorized administrator health share one in-flight probe per
+  dependency per runtime. PostgreSQL and Redis results are reused for one second.
+  Relay state is read on demand. A three-second deadline returns `unavailable`
+  without driver details or starting another probe while the driver is pending.
+  `/ready` is `no-store` and `/health` stays liveness-only.
+  RPC rejects `__proto__`/`constructor.prototype` input keys (`INVALID_INPUT`,
   oRPC beta.44 dropped its plugin) and runs a 15 s
   `TimeoutHandlerPlugin`; a middleware answers `SERVICE_UNAVAILABLE`/`REQUEST_TIMEOUT`
   because database calls do not observe the abort signal.
 - Request IDs are `req_` plus 24 letters so log redaction never masks them. With
   `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST`, error-level and 5xx events also go to
-  PostHog error tracking after the field policy, best effort (`server/error-reports.ts`).
-- `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
+  PostHog error tracking after the field policy, best effort (`src/error-reports.ts`).
+- API responses use a deny-all CSP. `/api/docs` allows same-origin assets and
+  connections, with a per-response nonce for its bootstrap script.
+  `secureHeaders` sends `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
 - Production API-enabled roles require explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
-  `server/env.contract.ts` is the static deployment input catalog. The runtime schema
+  `src/env.contract.ts` is the static deployment input catalog. The runtime schema
   must declare exactly its keys; tooling reads this data without importing API runtime.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
 - Close the PostgreSQL pool idempotently through Nitro's close hook.
 - No old business endpoints, worker or local execution endpoints. API starts one listener;
-  Nitro hosts `/relay` in the both/relay roles; the api role exposes no peers.
+  Hono admits `/relay` upgrades in the both/relay roles through Nitro's listener.
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
+- Auth preflight errors negotiate `Accept-Language` with Hono and mark the response
+  with `Content-Language`. Better Auth receives the original request for mail negotiation.
 - Never import another app. Local CLI execution stays outside the HTTP API.
-- Runtime configures `@raypx/logger` (evlog) once through `server/logging.ts`; typed application events pass `logging/policy.ts` and the shared bounded managed drain, flushed on Nitro shutdown.
+- Runtime configures `@raypx/logger` (evlog) once through `src/logging.ts`; typed application events pass `logging/policy.ts` and the shared bounded managed drain, flushed on Nitro shutdown.
   PostHog has separate 16-event/four-request bounds, two-second deadlines and loss statistics.
   Managed close bounds waiting to ten seconds. Log cleanup context counts as `contextReceipts` (command names are sensitive).
   Hono owns non-RPC events; the matching `@orpc/evlog` plugin owns RPC events.
@@ -152,7 +174,7 @@ TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/
 read projections. `/postgres` provides the control/context adapters. Account
 mutations take an exclusive owner lock; device projection transactions take a
 shared security fence and device advisory lock. Read-only reads take neither lock.
-HTTP RPC exposes reads, device management and one-time viewer tickets. Nitro hosts
+HTTP RPC exposes reads, device management and one-time viewer tickets. Hono routes
 Relay v5 WebSockets in the `both` (default) and `relay` roles. One build supports
 all roles. Combined scheduling/revocation calls RelayHub directly; configured Redis
 attaches cluster routing and shared caches. Split api/relay roles require Redis.
@@ -176,7 +198,7 @@ reset. Materialize the window once before deletion, even with stale device stati
 
 ## Administrator configuration
 
-`server/configuration/` owns the typed non-secret site settings and PostgreSQL repository.
+`src/config/` owns the typed non-secret site settings and PostgreSQL repository.
 `types.ts` defines the reader, service and repository ports. Inject `ConfigurationReader`
 into read-only consumers; `createRuntime` exposes `configuration` and accepts a
 `createConfigurationRepository(db)` factory scoped to its owned connection.
@@ -185,7 +207,7 @@ The runtime constructor accepts these typed providers as a second argument.
 each call; consumers must not retain that session between requests. Direct
 service writes require a freshly resolved administrator session and expected revision,
 just like HTTP writes. Keep the service in its owned runtime.
-`server/access.ts` projects Better Auth's persisted roles from fresh verified sessions,
+`src/access.ts` projects Better Auth's persisted roles from fresh verified sessions,
 using its shared ACL through `@raypx/account/access`. `account.access`
 projects these grants; menu visibility never authorizes an API request. Remote HTTP
 reads/writes check their feature permission and retain account/device ownership checks.
@@ -206,7 +228,7 @@ and project before storing an original in the private bucket. The split relay
 reads bounded text projections from PostgreSQL. `RuntimeProviders.storage`
 overrides the provider for tests. See `docs/development/object-storage.md`.
 `configuration.resend/updateResend` use the same authorization and audit gates.
-Site, S3 and Resend use `configuration/reads.ts` for typed fresh and cached reads.
+Site, S3 and Resend use `src/config/reads.ts` for typed fresh and cached reads.
 Each save clears its scope after commit and publishes its revision over Redis.
 A five-second TTL covers missed notifications. Keep administrator reads,
 registration admission and S3 uploads on the authoritative path.
@@ -241,11 +263,17 @@ observed sessions/requests transactionally, preserving managed history. Backgrou
 cleanup drains old revoked-device projections in batches of 1000 per table. Server cancellation
 uses a projection marker and never increments host-owned request revisions.
 
-server/rpc contains feature handlers and their shared authentication/error boundary. server/app/options.ts owns composition options; RPC handlers never import the HTTP application entry. Runtime composes project validation before Memory and control commands.
+`src/routers/rpc/` contains feature handlers and their service error mapping.
+`boundary.ts` wires shared oRPC middleware and adapts Control calls for multiple routers.
+Each RPC handler declares its quota alongside the procedure. Shared middleware
+applies the account key and enforces the quota.
+`src/app/options.ts` owns composition options. RPC handlers
+never import the HTTP application entry. Runtime composes project validation
+before Memory and control commands.
 
 ## Administration
 
-`server/administration` owns overview queries, cursor-based audit history, request
+`src/administration` owns overview queries, cursor-based audit history, request
 scopes and the audited Better Auth adapter. Runtime injects one AuditService into
 HTTP, the Auth adapter and configuration persistence. Audited mutations must write
 a durable intent first and commit success alongside their business change in the
@@ -254,7 +282,9 @@ post-commit failures cannot rewrite success. Preserve authenticated actor scopes
 across concurrent requests and direct-service/operator calls. Custom configuration
 repository factories receive AuditService and must keep this atomic contract.
 The Hono boundary audits admitted, identified role/configuration requests including
-refusals, applies a bounded admission rate, and exposes only safe errors.
+refusals and applies an admission quota through `hono-rate-limiter` using the
+runtime's shared rate limiter. Configuration mutations declare permission, account
+quota and trusted Origin checks as oRPC middleware.
 `admin.*` reads require fresh permissions. Dependency checks reuse `/ready` probes;
 statistics and audit expose no task content, addresses, secrets or raw HTTP bodies.
 Audit records survive account deletion and are never removed by cleanup jobs.

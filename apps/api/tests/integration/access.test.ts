@@ -2,8 +2,8 @@ import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { accessForRole } from "@raypx/account/access";
 import type { AuthSession } from "@raypx/core/auth";
-import { createApiApp } from "../../server/api.js";
-import { createAccessPolicy } from "../../server/access.js";
+import { createApiApp } from "../../src/routers/index.js";
+import { createAccessPolicy } from "../../src/access.js";
 
 function fixture() {
   let session: AuthSession | null = null;
@@ -95,4 +95,33 @@ it("checks remote permissions before reading private services", async () => {
     () => client.memory.list({}),
   ])
     await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
+});
+
+it("shares dependency results between public readiness and authorized administrator health", async () => {
+  const database = vi.fn(async () => {});
+  const app = createApiApp({
+    access: createAccessPolicy(),
+    authHandler: async () => Response.json({}),
+    readSession: async (headers) => (headers.get("cookie") === "admin" ? admin : null),
+    allowedOrigins: [],
+    readiness: { database },
+  });
+  const client = createApiClient({
+    baseUrl: "https://api.example.test",
+    fetch: async (input, init) => app.fetch(new Request(input, init)),
+  });
+  await expect(client.admin.health({})).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  expect(database).not.toHaveBeenCalled();
+  const ready = await app.request("/ready");
+  expect(ready.status).toBe(200);
+  expect(ready.headers.get("cache-control")).toBe("no-store");
+  const authenticated = createApiClient({
+    baseUrl: "https://api.example.test",
+    headers: { cookie: "admin" },
+    fetch: async (input, init) => app.fetch(new Request(input, init)),
+  });
+  await expect(authenticated.admin.health({})).resolves.toMatchObject({
+    checks: { database: "ok", redis: "not-configured", relay: "not-configured" },
+  });
+  expect(database).toHaveBeenCalledOnce();
 });

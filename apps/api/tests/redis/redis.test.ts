@@ -1,6 +1,6 @@
 import { afterAll, expect, it, vi } from "vitest";
 import { Redis } from "ioredis";
-import { connectRedis } from "../../server/runtime/redis.js";
+import { connectRedis } from "../../src/runtime/redis.js";
 
 const url = process.env.TEST_REDIS_URL;
 if (!url) throw new Error("TEST_REDIS_URL is required");
