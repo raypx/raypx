@@ -1,0 +1,197 @@
+.gitignore
+  s_652cc4f0b5d7e1::t_84e90c1386f6b9 82-84
+AGENTS.md
+  s_652cc4f0b5d7e1::t_fd9cff7a287826 102,104-106
+apps/api/locales/en/api.json
+  s_652cc4f0b5d7e1::t_a5a8def03281e7 1-5
+apps/api/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_b582668656408a 1
+apps/api/locales/zh/api.json
+  s_652cc4f0b5d7e1::t_e66361a7df5dc0 1-5
+apps/api/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_b7d3e349eeb3e5 1
+apps/desktop/locales/en/command.json
+  s_652cc4f0b5d7e1::t_ee45d0f71d3447 1-6
+apps/desktop/locales/en/desktopLogin.json
+  s_652cc4f0b5d7e1::t_9436260589a097 1-8
+apps/desktop/locales/en/engine.json
+  s_652cc4f0b5d7e1::t_7318941edf39e0 1-8
+apps/desktop/locales/en/files.json
+  s_652cc4f0b5d7e1::t_fc99b936b1ab9a 1-25
+apps/desktop/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_2e65224fe2f3e3 10-15
+apps/desktop/locales/en/localWorkspace.json
+  s_652cc4f0b5d7e1::t_e5432542b6b132 1-23
+apps/desktop/locales/en/terminal.json
+  s_652cc4f0b5d7e1::t_1445e9193e1726 1-34,36-51
+apps/desktop/locales/zh/command.json
+  s_652cc4f0b5d7e1::t_4a42f1de8265e0 1-6
+apps/desktop/locales/zh/desktopLogin.json
+  s_652cc4f0b5d7e1::t_cbb95a3f82a04e 1-8
+apps/desktop/locales/zh/engine.json
+  s_652cc4f0b5d7e1::t_c27ca133b3166e 1-8
+apps/desktop/locales/zh/files.json
+  s_652cc4f0b5d7e1::t_62b52155f72b09 1-25
+apps/desktop/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_1c5b8203e35f07 10-15
+apps/desktop/locales/zh/localWorkspace.json
+  s_652cc4f0b5d7e1::t_a90ea1be67d0d2 1-23
+apps/desktop/locales/zh/terminal.json
+  s_652cc4f0b5d7e1::t_a744aca37a9e72 1-51
+apps/web/locales/en/dash.json
+  s_652cc4f0b5d7e1::t_c1309989e89d3a 1-45
+apps/web/locales/en/desktopAuthorization.json
+  s_652cc4f0b5d7e1::t_74bc0c86cf0022 1-11
+apps/web/locales/en/guest.json
+  s_652cc4f0b5d7e1::t_f96b71d40a3aea 1-58
+apps/web/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_d442d43ff7bb14 10-15
+apps/web/locales/en/legal.json
+  s_652cc4f0b5d7e1::t_f265e1d578143b 1-45
+apps/web/locales/en/site.json
+  s_652cc4f0b5d7e1::t_e23b6c1b39b582 1-68
+apps/web/locales/en/users.json
+  s_652cc4f0b5d7e1::t_31c096dd26a2d8 1-76
+apps/web/locales/zh/dash.json
+  s_652cc4f0b5d7e1::t_12e4ea079df461 1-6,8-45
+apps/web/locales/zh/desktopAuthorization.json
+  s_652cc4f0b5d7e1::t_1e50340b9bd2e8 1-11
+apps/web/locales/zh/guest.json
+  s_652cc4f0b5d7e1::t_5e1c77d98d6d39 1-58
+apps/web/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_0b77b6ad74c270 10-15
+apps/web/locales/zh/legal.json
+  s_652cc4f0b5d7e1::t_231d85a1d124f8 1-13,15-18,20-23,25-28,30-33,35-38,40-45
+apps/web/locales/zh/site.json
+  s_652cc4f0b5d7e1::t_76dc1b4fd7a03b 1-68
+apps/web/locales/zh/users.json
+  s_652cc4f0b5d7e1::t_3bde26d35916bb 1-76
+docs/architecture/0064-json-message-catalogs.md
+  s_652cc4f0b5d7e1::t_73b80825bd8f04 1-27
+docs/architecture/README.md
+  s_652cc4f0b5d7e1::t_d43604a91f291a 167,386
+docs/architecture/internationalization.md
+  s_652cc4f0b5d7e1::t_647ba4d268c847 40-43,46-59,119
+docs/development/dev-cli.md
+  s_652cc4f0b5d7e1::t_1a0c48b865c010 16-17,19-21
+package.json
+  s_652cc4f0b5d7e1::t_d92dd67a5d388d 154
+packages/account/locales/en/access.json
+  s_652cc4f0b5d7e1::t_543910809e3020 1-4
+packages/account/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_6b39a9acf62d9a 1
+packages/account/locales/zh/access.json
+  s_652cc4f0b5d7e1::t_37afa307e70a92 1-4
+packages/account/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_ebbf0a80e2261c 1
+packages/analytics/locales/en/analytics.json
+  s_652cc4f0b5d7e1::t_83e42978919f48 1-14
+packages/analytics/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_69abc991e7fa1a 1
+packages/analytics/locales/zh/analytics.json
+  s_652cc4f0b5d7e1::t_48c830c117758e 1-14
+packages/analytics/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_bcd0248eaa94c6 1
+packages/auth/locales/en/auth.json
+  s_652cc4f0b5d7e1::t_463f287837d93c 1-113
+packages/auth/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_48c8e6833db090 1
+packages/auth/locales/zh/auth.json
+  s_652cc4f0b5d7e1::t_b88c5b82a3eae9 1-113
+packages/auth/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_754ab139ffdde7 1
+packages/blocks/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_81fcc0e09e1e5d 1
+packages/blocks/locales/en/settings.json
+  s_652cc4f0b5d7e1::t_2b6f6cc446c819 1-29
+packages/blocks/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_ae1e0d76cdadca 1
+packages/blocks/locales/zh/settings.json
+  s_652cc4f0b5d7e1::t_697cdcec0ded2c 1-29
+packages/dev-cli/src/cli.ts
+  s_652cc4f0b5d7e1::t_81b1805a9719cb 120-121,123-128
+packages/dev-cli/src/locales.test.ts
+  s_652cc4f0b5d7e1::t_9ffeaeed232ab7 1,4,34,36,38,53,55,103,145,148,150-151,154,164-165,168-169,171,175,178-188,190-195,201-202,210,232-235,237,260,271,304,322
+packages/dev-cli/src/policy.ts
+  s_652cc4f0b5d7e1::t_1c69f3494a5b76 80
+packages/dev-cli/src/repo/catalog-types.ts
+  s_652cc4f0b5d7e1::t_6d6ff8d5c8d421 1-58
+packages/dev-cli/src/validation/locales.ts
+  s_652cc4f0b5d7e1::t_76fcdf18fcc907 4,37,42-59,77,122-123
+packages/devtools/locales/en/devtools.json
+  s_652cc4f0b5d7e1::t_8d2b10956eed5b 1-31
+packages/devtools/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_bb5b4f482b9a50 1
+packages/devtools/locales/zh/devtools.json
+  s_652cc4f0b5d7e1::t_573a7da717001a 1-31
+packages/devtools/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_4d747f69eda42d 1
+packages/i18n/AGENTS.md
+  s_652cc4f0b5d7e1::t_c2131705f4d934 25-32
+packages/i18n/README.md
+  s_652cc4f0b5d7e1::t_e5bb2a586ead1d 14,16,19,25-29
+packages/i18n/locales/en/common.json
+  s_652cc4f0b5d7e1::t_d9841cf39a8156 1-84
+packages/i18n/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_932182bbc53831 1
+packages/i18n/locales/zh/common.json
+  s_652cc4f0b5d7e1::t_3b245b2515883a 1-84
+packages/i18n/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_f93dce98c6c4bb 1
+packages/instances/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_82074794d12370 1
+packages/instances/locales/en/instances.json
+  s_652cc4f0b5d7e1::t_a4641f9c681726 1-28
+packages/instances/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_17901976381bd2 1
+packages/instances/locales/zh/instances.json
+  s_652cc4f0b5d7e1::t_8c3a352557d212 1-28
+packages/jobs/locales/en/automations.json
+  s_652cc4f0b5d7e1::t_249486e619fb38 1-161
+packages/jobs/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_f4caf7f2da4f6e 1
+packages/jobs/locales/zh/automations.json
+  s_652cc4f0b5d7e1::t_a4c7b802827470 1-161
+packages/jobs/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_0daf48843e8875 1
+packages/memory/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_81d92fcafc2317 1
+packages/memory/locales/en/memory.json
+  s_652cc4f0b5d7e1::t_0eacf4425a885f 1-96
+packages/memory/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_7d4582cfe4e16d 1
+packages/memory/locales/zh/memory.json
+  s_652cc4f0b5d7e1::t_8e68edf3e64577 1-96
+packages/tasks/locales/en/index.ts
+  s_652cc4f0b5d7e1::t_5372117358ed23 1
+packages/tasks/locales/en/tasks.json
+  s_652cc4f0b5d7e1::t_1fc7dd36b3018b 1-273
+packages/tasks/locales/zh/index.ts
+  s_652cc4f0b5d7e1::t_bfc1d68b879d6f 1
+packages/tasks/locales/zh/tasks.json
+  s_652cc4f0b5d7e1::t_ec610eafcad650 1-273
+packages/tsconfig/AGENTS.md
+  s_652cc4f0b5d7e1::t_9e9f431aeb8e37 33-34
+packages/tsconfig/README.md
+  s_652cc4f0b5d7e1::t_c6501e24b4a711 39-56
+packages/tsconfig/base.json
+  s_652cc4f0b5d7e1::t_d64fb43ab30e2f 18
+turbo.json
+  s_652cc4f0b5d7e1::t_40eb9587444008 21,280-287,289
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fa2de4c6765db77a8f9e109f7d783f9305f8ed9f",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
