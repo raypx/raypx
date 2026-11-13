@@ -2,6 +2,8 @@
 export default {
   SERVER_ROLE: "input",
   NODE_ENV: "derived",
+  AGENT_MODELS: "input",
+  AGENT_MODEL_CREDENTIALS: "input",
   ADMIN_EMAILS: "input",
   JOBS_ENABLED: "input",
   DATABASE_MIGRATE_ON_START: "input",

@@ -70,6 +70,7 @@ export async function createApiRuntime(
     conversations: runtime.conversations,
     readSession: runtime.readSession,
     fanout,
+    live: runtime.liveReplies,
   });
   try {
     await events.start();

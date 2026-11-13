@@ -64,7 +64,7 @@ it("assigns gapless sequences under concurrent independent writers, including du
   expect(page.status).toBe("events");
   if (page.status !== "events") throw new Error("Unexpected snapshot");
   expect(page.events.map((entry) => entry.event.sequence)).toEqual(
-    Array.from({ length: 12 }, (_, i) => i + 1),
+    Array.from({ length: 24 }, (_, i) => i + 1),
   );
   const duplicate = await writers[1]!.send(scope, id, {
     idempotencyKey: "concurrent-0",
@@ -90,21 +90,21 @@ it("reads after a bounded cursor, resumes from a consistent snapshot and remembe
   expect(incremental).toMatchObject({
     status: "events",
     cursor: next.sequence,
-    hasMore: false,
+    hasMore: true,
     events: [{ message: next }],
   });
-  await writers[0]!.retainAfter(scope, id, next.sequence);
+  await writers[0]!.retainAfter(scope, id, next.sequence + 1);
   expect(await writers[1]!.events(scope, id, snapshot.cursor, 1)).toEqual({
     status: "snapshot-required",
-    cursor: next.sequence,
+    cursor: next.sequence + 1,
   });
-  expect(await writers[1]!.events(scope, id, next.sequence, 1)).toEqual({
+  expect(await writers[1]!.events(scope, id, next.sequence + 1, 1)).toEqual({
     status: "events",
     events: [],
-    cursor: next.sequence,
+    cursor: next.sequence + 1,
     hasMore: false,
   });
-  expect((await writers[0]!.snapshot(scope, id)).messages.length).toBe(next.sequence);
+  expect((await writers[0]!.snapshot(scope, id)).messages.length).toBe((next.sequence + 1) / 2);
   // An idempotent retry still returns its original message after log compaction.
   expect((await send("after-snapshot")).id).toBe(next.id);
 });
@@ -151,7 +151,7 @@ it("delivers content-free committed hints across LISTEN connections; retries and
     const committed = await send("notification", writers[1]);
     await expect
       .poll(() => notices)
-      .toContainEqual({ conversationId: id, sequence: committed.sequence });
+      .toContainEqual({ conversationId: id, sequence: committed.sequence + 1 });
     const count = notices.length;
     await send("notification");
     const failing = createConversationsRepository(first.db, async (tx, notice) => {
@@ -174,7 +174,7 @@ it("delivers content-free committed hints across LISTEN connections; retries and
           eq(conversationCounters.conversationId, id),
         ),
       );
-    expect(rows[0]!.sequence).toBe(committed.sequence);
+    expect(rows[0]!.sequence).toBe(committed.sequence + 1);
   } finally {
     await unsubscribe();
     await listener.close();

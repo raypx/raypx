@@ -3,6 +3,10 @@ import { z } from "zod";
 import { conversationIdSchema, conversationSchema } from "@raypx/core/agents";
 import {
   conversationEventSchema,
+  runSchema,
+  runIdSchema,
+  replySegmentSchema,
+  liveReplySchema,
   memberMessageInputSchema,
   messageSchema,
 } from "@raypx/core/conversation";
@@ -12,7 +16,12 @@ import { rpcAccess } from "./policy.js";
 
 const cursor = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
 const selection = z.strictObject({ spaceId: spaceIdSchema, conversationId: conversationIdSchema });
-const entry = z.strictObject({ event: conversationEventSchema, message: messageSchema });
+const entry = z
+  .strictObject({ event: conversationEventSchema, message: messageSchema.optional() })
+  .refine(
+    (value) => (value.event.kind === "message.created") === (value.message !== undefined),
+    "Only message.created requires a hydrated message",
+  );
 export const conversationEventsSchema = z.discriminatedUnion("status", [
   z.strictObject({
     status: z.literal("events"),
@@ -25,10 +34,13 @@ export const conversationEventsSchema = z.discriminatedUnion("status", [
 export const conversationSnapshotSchema = z.strictObject({
   conversation: conversationSchema,
   messages: z.array(messageSchema),
+  runs: z.array(runSchema),
+  segments: z.array(replySegmentSchema),
   cursor,
 });
 const session = oc.meta(exposeApiTo("renderer"), rpcAccess("session"));
 export const conversationsContract = {
+  stop: session.input(selection.extend({ runId: runIdSchema })).output(runSchema),
   send: session
     .input(selection.extend({ message: memberMessageInputSchema }))
     .output(messageSchema),
@@ -50,6 +62,11 @@ export const conversationClientFrameSchema = z.discriminatedUnion("type", [
 ]);
 export type ConversationClientFrame = z.infer<typeof conversationClientFrameSchema>;
 export const conversationServerFrameSchema = z.discriminatedUnion("type", [
+  liveReplySchema.extend({ type: z.literal("reply.prefix"), offset: z.literal(0) }),
+  liveReplySchema.extend({
+    type: z.literal("reply.delta"),
+    offset: z.number().int().min(0).max(32_000),
+  }),
   z.strictObject({ type: z.literal("ready"), version: z.literal(1) }),
   z.strictObject({ type: z.literal("event"), entry }),
   selection.extend({ type: z.literal("snapshot-required"), cursor }),

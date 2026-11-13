@@ -4,6 +4,8 @@ import type apiEnvironmentSources from "./env.contract.js";
 const server = {
   SERVER_ROLE: z.enum(["api", "both"]).default("both"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  AGENT_MODELS: z.string().default("[]"),
+  AGENT_MODEL_CREDENTIALS: z.string().default("{}"),
   ADMIN_EMAILS: z
     .string()
     .default("")

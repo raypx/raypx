@@ -44,6 +44,10 @@ Set `DB_MIGRATE_IMPORT_CONFIG=true` and provide the existing provider inputs
 for the Compose migration job when upgrading an environment-based configuration.
 Remove the import flag and inputs after the migration succeeds.
 Optional OAuth, analytics and cookie domain settings are explicit in the template.
+`AGENT_MODELS` and protected `AGENT_MODEL_CREDENTIALS` configure the initial backend
+reply executor; both default to empty JSON containers. See the
+[execution guide](../architecture/execution.md#deployment-model-configuration).
+Conversation live replies currently require one API-enabled process.
 `JOBS_ENABLED` enables server
 maintenance and cloud scheduling. Empty optional values disable integrations.
 A configured Redis outage fails readiness and closes cluster peers; it never

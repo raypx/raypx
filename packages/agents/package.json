@@ -13,6 +13,7 @@
     "test:postgres": "bun --bun vitest run --mode postgres"
   },
   "dependencies": {
+    "@raypx/ai": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/spaces": "workspace:*",

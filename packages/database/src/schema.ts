@@ -164,14 +164,108 @@ export const conversationMessages = pgTable(
     ),
   ],
 );
+export const conversationRuns = pgTable(
+  "conversation_runs",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    id: text("id").notNull(),
+    agentId: text("agent_id").notNull(),
+    trigger: text("trigger").notNull().default("message"),
+    messageId: text("message_id").notNull(),
+    messageSequence: bigint("message_sequence", { mode: "number" }).notNull(),
+    memberAccountId: text("member_account_id").notNull(),
+    modelId: text("model_id").notNull(),
+    instructions: text("instructions").notNull(),
+    state: text("state", { enum: ["queued", "running", "succeeded", "failed", "cancelled"] })
+      .notNull()
+      .default("queued"),
+    failureCode: text("failure_code"),
+    createdAt: date("created_at").notNull().defaultNow(),
+    startedAt: date("started_at"),
+    firstResponseAt: date("first_response_at"),
+    finishedAt: date("finished_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
+    uniqueIndex("conversation_runs_message_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.messageId,
+    ),
+    uniqueIndex("conversation_runs_active_agent_idx")
+      .on(table.spaceId, table.agentId)
+      .where(sql`${table.state} = 'running'`),
+    index("conversation_runs_queue_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.state,
+      table.messageSequence,
+    ),
+    foreignKey({
+      columns: [table.spaceId, table.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.memberAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.messageId, table.messageSequence],
+      foreignColumns: [
+        conversationMessages.spaceId,
+        conversationMessages.conversationId,
+        conversationMessages.id,
+        conversationMessages.sequence,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_runs_state_check",
+      sql`${table.state} in ('queued', 'running', 'succeeded', 'failed', 'cancelled')`,
+    ),
+    check("conversation_runs_trigger_check", sql`${table.trigger} = 'message'`),
+  ],
+);
+export const conversationReplySegments = pgTable(
+  "conversation_reply_segments",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    id: text("id").notNull(),
+    runId: text("run_id").notNull(),
+    sequence: bigint("sequence", { mode: "number" }).notNull(),
+    text: text("text").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
+    uniqueIndex("conversation_reply_segments_sequence_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+  ],
+);
+
 export const conversationEvents = pgTable(
   "conversation_events",
   {
     spaceId: text("space_id").notNull(),
     conversationId: text("conversation_id").notNull(),
     sequence: bigint("sequence", { mode: "number" }).notNull(),
-    kind: text("kind", { enum: ["message.created"] }).notNull(),
-    messageId: text("message_id").notNull(),
+    kind: text("kind", { enum: ["message.created", "run.state", "reply.segment"] }).notNull(),
+    messageId: text("message_id"),
+    data: jsonb("data"),
+    runId: text("run_id"),
+    segmentId: text("segment_id"),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
@@ -189,7 +283,34 @@ export const conversationEvents = pgTable(
         conversationMessages.sequence,
       ],
     }).onDelete("cascade"),
-    check("conversation_events_kind_check", sql`${table.kind} = 'message.created'`),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.segmentId],
+      foreignColumns: [
+        conversationReplySegments.spaceId,
+        conversationReplySegments.conversationId,
+        conversationReplySegments.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_events_payload_check",
+      sql`(
+      (${table.kind} = 'message.created' and ${table.messageId} is not null and ${table.runId} is null and ${table.segmentId} is null and ${table.data} is null) or
+      (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null) or
+      (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null)
+    )`,
+    ),
+    check(
+      "conversation_events_kind_check",
+      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment')`,
+    ),
   ],
 );
 
@@ -602,6 +723,8 @@ export const {
 } = oauthTables(user, session);
 
 export const schema = {
+  conversationRuns,
+  conversationReplySegments,
   conversationCounters,
   conversationMessages,
   conversationEvents,

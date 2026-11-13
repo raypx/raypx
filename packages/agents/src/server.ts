@@ -15,9 +15,13 @@ export interface AgentsRepository {
 
 export type {
   ConversationsRepository,
+  ConversationRunRepository,
+  RunExecution,
   ConversationEventEntry,
   ConversationEvents,
   ConversationSnapshot,
   ConversationFanout,
   ConversationNotice,
 } from "./conversations.js";
+
+export { ConversationRunner, LiveReplies, type ModelAccess } from "./runner.js";

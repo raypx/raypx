@@ -9,9 +9,12 @@ decision records remain in the history of `canary`.
 The additive Phase 1 slices provide Space/member and Agent/Conversation schemas,
 scoped repositories and session-authorized oRPC, followed by member messages,
 ordered conversation logs, snapshots and an acknowledged WebSocket event stream.
-Device functionality remains in place. Model calls and reply generation are not
-yet implemented; see [Spaces](spaces.md#implemented-foundation-slice) and
-[Events](events.md#implemented-conversation-slice).
+The third slice adds queued backend Runs, Pi model calls, transient reply text,
+committed reply segments and cancellation, using one API-enabled process. Device
+functionality remains in place; Conversation UI and durable execution are still
+pending. See [Spaces](spaces.md#implemented-foundation-slice),
+[Events](events.md#implemented-conversation-slice) and
+[Execution](execution.md#implemented-phase-1-reply-slice).
 
 Raypx is the durable home for persistent Agents. An Agent has an identity, one
 continuing conversation, memory, routines and a computer. It keeps working while

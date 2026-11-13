@@ -32,6 +32,7 @@
         "@orpc/zod": "catalog:",
         "@raypx/account": "workspace:*",
         "@raypx/agents": "workspace:*",
+        "@raypx/ai": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
@@ -350,6 +351,7 @@
       "name": "@raypx/agents",
       "version": "0.0.0",
       "dependencies": {
+        "@raypx/ai": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/spaces": "workspace:*",

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { conversationIdSchema } from "./agents.js";
+import { agentIdSchema, agentModelChoiceSchema, conversationIdSchema } from "./agents.js";
 import { spaceIdSchema } from "./spaces.js";
 
 export const eventSequenceSchema = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
@@ -23,20 +23,91 @@ export const messageSchema = z.strictObject({
   createdAt: z.iso.datetime(),
 });
 export type Message = z.infer<typeof messageSchema>;
-// Add variants here only when their writer ships. Events reference the one stored message.
+export const runIdSchema = z.string().min(1).max(128).brand<"RunId">();
+export const runStateSchema = z.enum(["queued", "running", "succeeded", "failed", "cancelled"]);
+export const runFailureSchema = z.enum([
+  "MODEL_UNAVAILABLE",
+  "MODEL_NOT_CONFIGURED",
+  "MODEL_AUTH_REQUIRED",
+  "MODEL_RATE_LIMITED",
+  "MODEL_TIMEOUT",
+  "MODEL_FAILED",
+  "REPLY_TOO_LARGE",
+  "EXECUTION_FAILED",
+]);
+export const runSchema = z
+  .strictObject({
+    id: runIdSchema,
+    spaceId: spaceIdSchema,
+    conversationId: conversationIdSchema,
+    agentId: agentIdSchema,
+    trigger: z.literal("message"),
+    messageId: messageIdSchema,
+    memberAccountId: z.string().min(1).max(128),
+    model: agentModelChoiceSchema,
+    state: runStateSchema,
+    failureCode: runFailureSchema.nullable(),
+    createdAt: z.iso.datetime(),
+    startedAt: z.iso.datetime().nullable(),
+    firstResponseAt: z.iso.datetime().nullable(),
+    finishedAt: z.iso.datetime().nullable(),
+  })
+  .refine(
+    (run) => (run.state === "failed") === (run.failureCode !== null),
+    "Failed Runs require a stable failure code",
+  );
+export type Run = z.infer<typeof runSchema>;
+export type RunId = z.infer<typeof runIdSchema>;
+export type RunFailure = z.infer<typeof runFailureSchema>;
+export const MAX_REPLY_TEXT = 32_000;
+export const replySegmentSchema = z.strictObject({
+  id: z.string().min(1).max(128),
+  spaceId: spaceIdSchema,
+  conversationId: conversationIdSchema,
+  runId: runIdSchema,
+  sequence: eventSequenceSchema,
+  text: z.string().min(1).max(MAX_REPLY_TEXT),
+  createdAt: z.iso.datetime(),
+});
+export type ReplySegment = z.infer<typeof replySegmentSchema>;
+const eventFields = {
+  spaceId: spaceIdSchema,
+  conversationId: conversationIdSchema,
+  sequence: eventSequenceSchema,
+  createdAt: z.iso.datetime(),
+};
 export const conversationEventSchema = z
   .discriminatedUnion("kind", [
     z.strictObject({
-      spaceId: spaceIdSchema,
-      conversationId: conversationIdSchema,
-      sequence: eventSequenceSchema,
+      ...eventFields,
       kind: z.literal("message.created"),
       messageId: messageIdSchema,
-      createdAt: z.iso.datetime(),
+    }),
+    z.strictObject({
+      ...eventFields,
+      kind: z.literal("run.state"),
+      runId: runIdSchema,
+      state: runStateSchema,
+      failureCode: runFailureSchema.nullable(),
+    }),
+    z.strictObject({
+      ...eventFields,
+      kind: z.literal("reply.segment"),
+      segment: replySegmentSchema,
     }),
   ])
   .readonly();
 export type ConversationEvent = z.infer<typeof conversationEventSchema>;
+
+// Transient replacement prefix followed by offset-addressed appends; never advances a cursor.
+export const liveReplySchema = z.strictObject({
+  spaceId: spaceIdSchema,
+  conversationId: conversationIdSchema,
+  runId: runIdSchema,
+  segmentId: z.string().min(1).max(128),
+  text: z.string().max(MAX_REPLY_TEXT),
+});
+export type LiveReply = z.infer<typeof liveReplySchema>;
 
 /** retainedAfter is the greatest sequence removed from the log, including an empty log. */
 export function eventCursorStatus(cursor: number, retainedAfter: number, latest: number) {

@@ -17,9 +17,14 @@ counter, reuse a member/conversation idempotency receipt, then atomically insert
 message and immutable event, advance the counter and publish a content-free hint.
 Snapshot and cursor reads use repeatable-read transactions. Prefix retention keeps
 messages and advances the replay floor atomically. API owns socket lifecycle,
-ACKs and fresh membership checks. Execution and provider credentials stay outside.
-With no Runs, computers or stored objects in these slices, deletion is synchronous;
-add the resumable deletion workflow before those resources become dependents.
+ACKs and fresh membership checks. Sends also create a pinned queued Run and state
+event. `/server` owns ConversationRunner, the injectable member-aware ModelAccess
+port and process-local LiveReplies prefixes. It uses the public AI transport and
+serializes each Agent's queued Runs. Stop commits cancellation before aborting;
+segment output and first-response time commit together. No tools, leases,
+attempts, retries or recovery exist yet. API owns credentials and configuration.
+Deletion still cascades synchronously; active Run status checks abort deleted work.
+Add resumable deletion before computers or stored objects become dependents.
 
 Use public workspace entries and `.js` relative specifiers. Unit tests live beside
 source. Run `bun run --cwd packages/agents check` and `test`. `test:postgres`

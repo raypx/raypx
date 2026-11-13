@@ -22,7 +22,13 @@ CrossWS route on the same listener in API-enabled roles. It multiplexes bounded
 subscriptions, exact event ACKs and snapshot-required recovery; clients persist
 and resubmit their last applied cursor. The stream rechecks sessions/membership
 before delivery and on a one-second poll. Runtime owns the PostgreSQL fanout port,
-LISTEN connection, timer and socket shutdown. `RuntimeProviders.createConversationFanout`
+LISTEN connection, timer and socket shutdown. API also composes ConversationRunner
+and the deployment ModelAccess adapter using optional AGENT_MODELS and protected
+AGENT_MODEL_CREDENTIALS JSON inputs. Empty configuration permits startup; missing
+models fail Runs visibly without fallback. `conversations.stop` uses the same
+membership/Origin/quota admission. Live prefixes/deltas share the executor's API
+process; use one API-enabled process for this slice. Shutdown cancels active calls
+before closing storage. No provider text or credentials enter execution logs. `RuntimeProviders.createConversationFanout`
 can inject the subscriber for offline runtime tests.
 The owning feature packages also have separate `test:postgres` modes.
 `deployment:fixture:build --outfile <absolute-path>` bundles the test-only account

@@ -37,6 +37,15 @@ export function createSpaceHandlers({
   const quota = limitAccount({ window: 60, max: 30 });
   return {
     conversations: {
+      stop: os.conversations.stop
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.stop(scope, input.conversationId, input.runId),
+          ),
+        ),
       send: os.conversations.send
         .use(write)
         .use(requireTrustedOrigin)

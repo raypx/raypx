@@ -3,6 +3,63 @@
 A Run is one unit of Agent work. Pi executes it inside the backend process. This
 guide covers how a Run starts, how one process owns it, and how it recovers.
 
+## Implemented phase 1 reply slice
+
+The sections below describe the target execution system. The current Conversation
+slice implements message-triggered Runs inside the backend, with `queued`,
+`running`, `succeeded`, `failed` and `cancelled` states. It has no Attempt,
+lease, fence, checkpoint, backup job, retry or crash recovery. A crashed process
+can leave queued/running records; no startup scan resumes them in this slice.
+
+A send transaction pins the opaque model ID and Agent instructions, links the
+trigger message and the initiating Space member, and writes the queued state
+alongside the message. `@raypx/agents/server` owns the process-local runner and
+member-aware model access port. API supplies deployment configuration and the
+existing `@raypx/ai` Pi transport. Nothing imports the CLI harness.
+
+A task takes the conversation counter lock, refuses to start when a Run is already
+running, and starts the earliest queued trigger. A partial unique index on
+Space/Agent enforces one running Run. On completion it drains the next queued Run.
+A second message queues its own Run; it does not steer the current one. Context
+pairs each prior member message with its committed reply, then adds the triggering
+message. Inputs queued later are excluded. Each Run's pinned instructions become
+the system prompt. There are no tools.
+
+`conversations.stop` takes Space, Conversation and Run IDs through the usual fresh
+membership, Origin and quota gates. It atomically cancels queued or running work,
+publishes `run.state`, then aborts the local model request. Repeated stops return
+the existing terminal state. A one-second active-Run status check also observes a
+stop committed by another process. Conditional output/state writes prevent late
+model completion from replacing cancellation. Graceful runtime close cancels and
+aborts active model calls before closing the database or model transport.
+
+Missing model IDs fail with `MODEL_UNAVAILABLE`; absent deployment credentials use
+`MODEL_NOT_CONFIGURED`. Auth, rate-limit, deadline and other model failures map to
+stable domain codes. There is one request attempt and no model fallback. Raw
+provider errors, prompts and credentials reach neither events nor logs. Only Run
+IDs, stable codes and millisecond timings enter execution diagnostics. The
+first-response timestamp persists atomically with the completed segment and event.
+
+### Deployment model configuration
+
+API's static environment contract declares two optional JSON strings, empty by
+default:
+
+- `AGENT_MODELS`: an array of `{ modelId, provider, model, credentialId }`.
+  `modelId` is Raypx's opaque Agent choice; the other selectors exist only in the
+  deployment adapter. Provider/model selectors must exist in Pi's default catalog.
+- `AGENT_MODEL_CREDENTIALS`: an object mapping `credentialId` to the API key.
+  Keep it in protected runtime settings, never a build argument or a domain row.
+
+For example, a catalog entry can map `"assistant-main"` to an exact Pi provider
+and model with `"credentialId": "deployment-main"`; the protected map supplies
+that credential separately. Do not put deployment selectors in Agent records.
+An empty catalog lets API start and serve authentication, CRUD and messages;
+a Run using an unconfigured ID fails visibly. Malformed JSON or duplicate opaque
+IDs reject startup with a generic configuration error that contains no raw input.
+Ambient provider keys are never consulted. A later member-owned Connection
+adapter can implement the same port using the Run's Space and member identity.
+
 ## Dispatch
 
 Work starts at once in the process that creates it.

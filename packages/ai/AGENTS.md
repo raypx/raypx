@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Pi AI model transport for the bundled Bun CLI.
+Pi AI model transport for the bundled Bun CLI and backend Conversation replies.
 
 ## Interface
 
 The root exports createAiClient, provider factories, Pi context/tool types,
 createAssistantMessageEventStream and stable AiError codes. Consumers are CLI's
-explicit ai command group and the injected `@raypx/providers/pi` adapter. The client supplies model resolution and configuration-only auth checks; the root also exports SDK-backed request context preparation. `/config` exposes pure settings parsing and merging. Agent execution,
+explicit ai command group, the injected `@raypx/providers/pi` adapter and API's deployment model adapter. `@raypx/agents/server` consumes its stream types and stable errors. The client supplies model resolution and configuration-only auth checks; the root also exports SDK-backed request context preparation. `/config` exposes pure settings parsing and merging. Agent execution,
 tool approval and durable context remain outside this transport package.
 Tool parameters use plain JSON Schema. Consumers own schema construction; CLI
 converts its existing Zod definitions with z.toJSONSchema.

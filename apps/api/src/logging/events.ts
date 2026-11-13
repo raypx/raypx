@@ -19,6 +19,10 @@ interface RequestFields {
   durationMs: number;
 }
 interface ApiEventFields {
+  "run.execution_started": { status: number; code: string; runId: string; durationMs: number };
+  "run.first_response": { status: number; code: string; runId: string; durationMs: number };
+  "run.finished": { status: number; code: string; runId: string; durationMs: number };
+  "run.execution": { status: number; code: "EXECUTION_FAILED" };
   "http.request": RequestFields;
   "rpc.request": RequestFields & { rpc: { system: string; method: string } };
   "job.cleanup": {
@@ -54,7 +58,16 @@ type ApiEventStart =
       RequestFields,
       "requestId" | "method" | "route"
     >)
-  | { operation: "job.cleanup" | "job.schedules" | "relay.cluster" };
+  | {
+      operation:
+        | "job.cleanup"
+        | "job.schedules"
+        | "relay.cluster"
+        | "run.execution"
+        | "run.execution_started"
+        | "run.first_response"
+        | "run.finished";
+    };
 
 export interface ApiEventLogger<Operation extends ApiOperation> {
   set(fields: Partial<ApiEventFields[Operation]>): void;

@@ -76,8 +76,8 @@ member enables previews.
 ## Implemented conversation slice
 
 `@raypx/core/conversation` defines member messages and the immutable
-`message.created` event variant. Events reference the one stored message; cursor
-reads hydrate that message for transport. Future variants ship with their writers.
+`message.created`, `run.state` and `reply.segment` event variants. Events reference the stored message or segment; cursor
+reads hydrate that message for transport. Run state events contain only the Run ID, state and a stable failure code. Snapshots include messages, Runs and completed reply segments. Future variants ship with their writers.
 `@raypx/agents/server` owns scoped conversation persistence and the small fanout
 subscriber port. The PostgreSQL repository accepts a transactional publisher;
 its default calls `pg_notify` inside the write transaction, so rollbacks publish
@@ -87,12 +87,16 @@ nothing. Notifications contain exactly `conversationId` and `sequence`.
 The key is scoped to Space, Conversation and session member. Retrying a key returns
 the original message, even if retry text differs or its event was compacted.
 One counter-row lock serializes writers and prefix retention; failed transactions
-consume no sequence. Sending does not invoke a model or schedule a Run.
+consume no sequence. A new send commits the member message, a queued Run and
+`message.created`/`run.state` events in one transaction. A retry creates neither a
+second message nor a second Run. After commit, the process schedules an independent
+task; the request does not await the model. The Run uses the Agent model and
+instructions captured by that transaction.
 
 `conversations.events` reads `after` (default 0) with `limit` from 1 through 100.
-It returns ordered `{ event, message }` entries, the last returned cursor and
+It returns ordered `{ event, message? }` entries (only `message.created` carries a hydrated message; `reply.segment` embeds the completed segment), the last returned cursor and
 `hasMore`, or `status: snapshot-required`. Future cursors are rejected.
-`conversations.snapshot` returns Conversation metadata, all current messages and
+`conversations.snapshot` returns Conversation metadata, all current messages, Runs, completed segments and
 a resume cursor from one repeatable-read snapshot. Event retention is indefinite
 by default. The internal `retainAfter` maintenance operation removes only a prefix
 and persists its floor even when no events remain. Message history and retry keys
@@ -123,3 +127,30 @@ connection with 4003; authentication loss uses 4001. Invalid frames/cursors/ACKs
 use 4000, unavailable storage uses 1013, and shutdown uses 1001. Socket and query
 bounds apply independently. No message text, account credentials or event content
 is published on the notification channel or written to logs.
+
+## Live replies in phase 1
+
+The initial reply executor and its `/events` subscribers share one API-enabled
+backend process. The existing PostgreSQL fanout still distributes committed events;
+live prefixes are process memory, with no content on LISTEN/NOTIFY. Multi-process
+transient distribution is outside this slice; use one API-enabled process for
+Conversation model execution until that port is added. Relay may remain separate.
+
+After replay reaches the current durable cursor, the server sends `reply.prefix`
+with `spaceId`, `conversationId`, `runId`, `segmentId`, `offset: 0` and the whole
+open text. Subsequent `reply.delta` frames carry the same identifiers, an offset
+in UTF-16 code units and text to append at that offset. Deltas may be coalesced
+while replay is awaiting ACKs. Prefix capture and offset registration occur
+synchronously, so a joining subscriber cannot miss a concurrent append. Every
+delivery still rechecks authentication and Space membership.
+
+Transient frames neither advance nor require an event ACK. Clients replace a
+segment's draft on a prefix, require adjacent offsets for appends, and replace it
+with the full `reply.segment` when that event arrives. A terminal failed or
+cancelled `run.state` clears any uncommitted draft. A successful model turn is one
+segment, limited to 32,000 UTF-16 code units. Reasoning and tool-call content are
+never published. Errors or stops discard incomplete text; completed segments stay
+in snapshots after event retention. A socket joining during completion gets either
+the prefix and following appends, or the committed segment through cursor replay.
+The first visible text timestamp is captured in memory and written to the Run in
+the segment/event transaction.

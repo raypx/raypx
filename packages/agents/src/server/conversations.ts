@@ -2,6 +2,9 @@ import { and, asc, eq, gt, lte, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   conversations,
+  agents,
+  conversationRuns as runs,
+  conversationReplySegments as segments,
   conversationCounters as counters,
   conversationMessages as messages,
   conversationEvents as events,
@@ -13,11 +16,19 @@ import {
   memberMessageInputSchema,
   messageSchema,
   conversationEventSchema,
+  runSchema,
+  replySegmentSchema,
+  type Run,
+  type RunId,
 } from "@raypx/core/conversation";
 import { normalizeTaskJson } from "@raypx/core/task-text";
 import { SpaceNotFound } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
-import type { ConversationsRepository, ConversationNotice } from "../conversations.js";
+import type {
+  ConversationsRepository,
+  ConversationRunRepository,
+  ConversationNotice,
+} from "../conversations.js";
 import { conversationView } from "../views.js";
 
 export const conversationChannel = "raypx_conversation_events";
@@ -39,10 +50,31 @@ function message(row: typeof messages.$inferSelect) {
     createdAt: row.createdAt.toISOString(),
   });
 }
+function runView(row: typeof runs.$inferSelect) {
+  return runSchema.parse({
+    id: row.id,
+    spaceId: row.spaceId,
+    conversationId: row.conversationId,
+    agentId: row.agentId,
+    trigger: row.trigger,
+    messageId: row.messageId,
+    memberAccountId: row.memberAccountId,
+    model: { modelId: row.modelId },
+    state: row.state,
+    failureCode: row.failureCode,
+    createdAt: row.createdAt.toISOString(),
+    startedAt: row.startedAt?.toISOString() ?? null,
+    firstResponseAt: row.firstResponseAt?.toISOString() ?? null,
+    finishedAt: row.finishedAt?.toISOString() ?? null,
+  });
+}
+function segmentView(row: typeof segments.$inferSelect) {
+  return replySegmentSchema.parse({ ...row, createdAt: row.createdAt.toISOString() });
+}
 export function createConversationsRepository(
   db: Database,
   publish = publishConversationNotice,
-): ConversationsRepository {
+): ConversationsRepository & ConversationRunRepository {
   function selection(scope: SpaceScope, id: ConversationId) {
     return and(eq(conversations.spaceId, scope.spaceId), eq(conversations.id, id));
   }
@@ -75,7 +107,191 @@ export function createConversationsRepository(
       .for("update");
     return counter!;
   }
+  const runSelection = (scope: SpaceScope, id: ConversationId, runId: RunId) =>
+    and(eq(runs.spaceId, scope.spaceId), eq(runs.conversationId, id), eq(runs.id, runId));
+  async function appendState(
+    tx: Pick<Database, "insert" | "update" | "execute">,
+    scope: SpaceScope,
+    run: Run,
+    sequence: number,
+  ) {
+    await tx.insert(events).values({
+      spaceId: scope.spaceId,
+      conversationId: run.conversationId,
+      sequence,
+      kind: "run.state",
+      runId: run.id,
+      data: { state: run.state, failureCode: run.failureCode },
+    });
+    await tx.update(counters).set({ sequence }).where(counterSelection(scope, run.conversationId));
+    await publish(tx, { conversationId: run.conversationId, sequence });
+  }
+  async function getRun(scope: SpaceScope, id: ConversationId, runId: RunId) {
+    const [row] = await db
+      .select()
+      .from(runs)
+      .where(runSelection(scope, id, runId));
+    if (!row) throw new SpaceNotFound();
+    return runView(row);
+  }
   return {
+    getRun,
+    async stop(scope, id, runId) {
+      return db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, id);
+        const [row] = await tx
+          .select()
+          .from(runs)
+          .where(runSelection(scope, id, runId));
+        if (!row) throw new SpaceNotFound();
+        if (row.state !== "queued" && row.state !== "running") return runView(row);
+        const [updated] = await tx
+          .update(runs)
+          .set({ state: "cancelled", finishedAt: new Date() })
+          .where(runSelection(scope, id, runId))
+          .returning();
+        const run = runView(updated!);
+        await appendState(tx, scope, run, counter.sequence + 1);
+        return run;
+      });
+    },
+    async claimNext(scope, id) {
+      return db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, id);
+        const [active] = await tx
+          .select({ id: runs.id })
+          .from(runs)
+          .where(
+            and(
+              eq(runs.spaceId, scope.spaceId),
+              eq(runs.conversationId, id),
+              eq(runs.state, "running"),
+            ),
+          );
+        if (active) return undefined;
+        const [next] = await tx
+          .select()
+          .from(runs)
+          .where(
+            and(
+              eq(runs.spaceId, scope.spaceId),
+              eq(runs.conversationId, id),
+              eq(runs.state, "queued"),
+            ),
+          )
+          .orderBy(asc(runs.messageSequence))
+          .limit(1);
+        if (!next) return undefined;
+        const [row] = await tx
+          .update(runs)
+          .set({ state: "running", startedAt: new Date() })
+          .where(runSelection(scope, id, next.id as RunId))
+          .returning();
+        const run = runView(row!);
+        await appendState(tx, scope, run, counter.sequence + 1);
+        const inputs = await tx
+          .select()
+          .from(messages)
+          .where(
+            and(
+              eq(messages.spaceId, scope.spaceId),
+              eq(messages.conversationId, id),
+              lte(messages.sequence, next.messageSequence),
+            ),
+          );
+        const outputs = await tx
+          .select()
+          .from(segments)
+          .where(
+            and(
+              eq(segments.spaceId, scope.spaceId),
+              eq(segments.conversationId, id),
+              lte(segments.sequence, counter.sequence),
+            ),
+          );
+        const priorRuns = await tx
+          .select()
+          .from(runs)
+          .where(
+            and(
+              eq(runs.spaceId, scope.spaceId),
+              eq(runs.conversationId, id),
+              lte(runs.messageSequence, next.messageSequence),
+            ),
+          );
+        // Pair each member input with its reply. Arrival order can put queued inputs before earlier replies.
+        const history = inputs
+          .sort((a, b) => a.sequence - b.sequence)
+          .flatMap((m) => {
+            const owner = priorRuns.find((r) => r.messageId === m.id);
+            const replies = outputs
+              .filter((s) => s.runId === owner?.id)
+              .sort((a, b) => a.sequence - b.sequence);
+            return [
+              { role: "user" as const, text: m.text, createdAt: m.createdAt.toISOString() },
+              ...replies.map((s) => ({
+                role: "assistant" as const,
+                text: s.text,
+                createdAt: s.createdAt.toISOString(),
+              })),
+            ];
+          });
+        return { run, instructions: next.instructions, history };
+      });
+    },
+    async finish(scope, run, failure) {
+      await db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, run.conversationId);
+        const [row] = await tx
+          .update(runs)
+          .set({
+            state: failure ? "failed" : "succeeded",
+            failureCode: failure,
+            finishedAt: new Date(),
+          })
+          .where(and(runSelection(scope, run.conversationId, run.id), eq(runs.state, "running")))
+          .returning();
+        if (row) await appendState(tx, scope, runView(row), counter.sequence + 1);
+      });
+    },
+    async commitSegment(scope, run, segmentId, text, firstResponseAt) {
+      return db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, run.conversationId);
+        const [active] = await tx
+          .select()
+          .from(runs)
+          .where(and(runSelection(scope, run.conversationId, run.id), eq(runs.state, "running")));
+        if (!active) return false;
+        const sequence = counter.sequence + 1;
+        await tx.insert(segments).values({
+          spaceId: scope.spaceId,
+          conversationId: run.conversationId,
+          id: segmentId,
+          runId: run.id,
+          sequence,
+          text: normalizeTaskJson(text),
+        });
+        await tx.insert(events).values({
+          spaceId: scope.spaceId,
+          conversationId: run.conversationId,
+          sequence,
+          kind: "reply.segment",
+          runId: run.id,
+          segmentId,
+        });
+        if (!active.firstResponseAt)
+          await tx
+            .update(runs)
+            .set({ firstResponseAt: new Date(firstResponseAt) })
+            .where(runSelection(scope, run.conversationId, run.id));
+        await tx
+          .update(counters)
+          .set({ sequence })
+          .where(counterSelection(scope, run.conversationId));
+        await publish(tx, { conversationId: run.conversationId, sequence });
+        return true;
+      });
+    },
     async send(scope, id, input) {
       const values = memberMessageInputSchema.parse(input);
       return db.transaction(async (tx) => {
@@ -113,8 +329,26 @@ export function createConversationsRepository(
           messageId: row!.id,
           createdAt: row!.createdAt,
         });
-        await tx.update(counters).set({ sequence }).where(counterSelection(scope, id));
-        await publish(tx, { conversationId: id, sequence });
+        const conversation = await requireConversation(tx, scope, id);
+        const [agent] = await tx
+          .select()
+          .from(agents)
+          .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, conversation.agentId)));
+        const [run] = await tx
+          .insert(runs)
+          .values({
+            spaceId: scope.spaceId,
+            conversationId: id,
+            id: crypto.randomUUID(),
+            agentId: conversation.agentId,
+            messageId: row!.id,
+            messageSequence: sequence,
+            memberAccountId: scope.member.accountId,
+            modelId: agent!.modelId,
+            instructions: agent!.instructions,
+          })
+          .returning();
+        await appendState(tx, scope, runView(run!), sequence + 1);
         return message(row!);
       });
     },
@@ -130,14 +364,22 @@ export function createConversationsRepository(
           if (status === "invalid-cursor") throw new InvalidConversationCursor();
           if (status === "snapshot-required") return { status, cursor: latest };
           const rows = await tx
-            .select({ event: events, message: messages })
+            .select({ event: events, message: messages, segment: segments })
             .from(events)
-            .innerJoin(
+            .leftJoin(
               messages,
               and(
                 eq(messages.spaceId, events.spaceId),
                 eq(messages.conversationId, events.conversationId),
                 eq(messages.id, events.messageId),
+              ),
+            )
+            .leftJoin(
+              segments,
+              and(
+                eq(segments.spaceId, events.spaceId),
+                eq(segments.conversationId, events.conversationId),
+                eq(segments.id, events.segmentId),
               ),
             )
             .where(
@@ -149,13 +391,24 @@ export function createConversationsRepository(
             )
             .orderBy(asc(events.sequence))
             .limit(limit);
-          const entries = rows.map((row) => ({
-            event: conversationEventSchema.parse({
-              ...row.event,
+          const entries = rows.map((row) => {
+            let payload: object = {};
+            if (row.event.kind === "message.created") payload = { messageId: row.event.messageId };
+            if (row.event.kind === "run.state")
+              payload = { ...(row.event.data as object), runId: row.event.runId };
+            if (row.event.kind === "reply.segment") {
+              payload = { segment: segmentView(row.segment!) };
+            }
+            const event = conversationEventSchema.parse({
+              spaceId: row.event.spaceId,
+              conversationId: row.event.conversationId,
+              sequence: row.event.sequence,
+              kind: row.event.kind,
+              ...payload,
               createdAt: row.event.createdAt.toISOString(),
-            }),
-            message: message(row.message),
-          }));
+            });
+            return { event, ...(row.message ? { message: message(row.message) } : {}) };
+          });
           const cursor = entries.at(-1)?.event.sequence ?? after;
           return { status: "events", events: entries, cursor, hasMore: cursor < latest };
         },
@@ -175,6 +428,20 @@ export function createConversationsRepository(
           return {
             conversation: conversationView(conversation),
             messages: rows.map(message),
+            runs: (
+              await tx
+                .select()
+                .from(runs)
+                .where(and(eq(runs.spaceId, scope.spaceId), eq(runs.conversationId, id)))
+                .orderBy(asc(runs.messageSequence))
+            ).map(runView),
+            segments: (
+              await tx
+                .select()
+                .from(segments)
+                .where(and(eq(segments.spaceId, scope.spaceId), eq(segments.conversationId, id)))
+                .orderBy(asc(segments.sequence))
+            ).map(segmentView),
             cursor: counter?.sequence ?? 0,
           };
         },

@@ -98,6 +98,9 @@ export function conversationFixture() {
   });
   const conversations: ConversationsRepository = {
     events,
+    stop: async () => {
+      throw new Error("Unused");
+    },
     send: async () => {
       throw new Error("Unused");
     },
@@ -119,6 +122,12 @@ export function conversationFixture() {
     readSession,
     fanout,
     append,
+    publish(entry: ConversationEventEntry) {
+      logs.get(entry.event.conversationId)!.push(entry);
+      for (const listener of listeners)
+        listener({ conversationId: entry.event.conversationId, sequence: entry.event.sequence });
+    },
+    log: logs.get(conversationId)!,
     removeMember() {
       member = false;
     },

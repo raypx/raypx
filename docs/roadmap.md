@@ -3,8 +3,9 @@
 This is the delivery order for the [target architecture](architecture/README.md).
 Phase 1's additive slices implement Spaces, membership records, Agent CRUD with
 one direct Conversation per Agent, and member messages with an ordered event log,
-snapshots and an acknowledged event stream. Model calls, reply generation and UI
-for these records remain to be implemented. The earlier device-owned product
+snapshots, an acknowledged event stream, and process-local model replies with
+queued Runs, transient deltas, committed segments and stop. UI for these records
+remains to be implemented. The earlier device-owned product
 remains until a phase replaces it.
 
 ## Phase overview

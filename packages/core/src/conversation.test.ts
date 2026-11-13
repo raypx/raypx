@@ -3,6 +3,7 @@ import {
   conversationEventSchema,
   eventCursorStatus,
   memberMessageInputSchema,
+  runSchema,
 } from "./conversation.js";
 
 it("accepts only implemented immutable event variants and references message content", () => {
@@ -46,4 +47,61 @@ it("distinguishes retained boundaries, caught-up cursors and invalid future curs
   expect(eventCursorStatus(10, 10, 10)).toBe("ready");
   for (const cursor of [-1, 1.5, 11, NaN])
     expect(eventCursorStatus(cursor, 0, 10)).toBe("invalid-cursor");
+});
+
+it("models only current Run states and pins opaque model/member identity without credentials", () => {
+  const base = {
+    id: "run",
+    spaceId: "space",
+    conversationId: "conversation",
+    agentId: "agent",
+    trigger: "message",
+    messageId: "message",
+    memberAccountId: "member",
+    model: { modelId: "opaque-model" },
+    state: "queued",
+    failureCode: null,
+    createdAt: new Date().toISOString(),
+    startedAt: null,
+    firstResponseAt: null,
+    finishedAt: null,
+  };
+  expect(runSchema.parse(base).model).toEqual({ modelId: "opaque-model" });
+  for (const change of [
+    { state: "waiting" },
+    { trigger: "routine" },
+    { apiKey: "secret" },
+    { state: "failed", failureCode: "raw provider failure" },
+    { state: "failed" },
+    { failureCode: "MODEL_FAILED" },
+  ])
+    expect(runSchema.safeParse({ ...base, ...change }).success).toBe(false);
+  expect(
+    runSchema.safeParse({ ...base, state: "failed", failureCode: "MODEL_UNAVAILABLE" }).success,
+  ).toBe(true);
+});
+it("accepts completed reply and run state events while rejecting reasoning and placeholders", () => {
+  const base = {
+    spaceId: "space",
+    conversationId: "conversation",
+    sequence: 2,
+    createdAt: new Date().toISOString(),
+  };
+  expect(
+    conversationEventSchema.safeParse({
+      ...base,
+      kind: "run.state",
+      runId: "run",
+      state: "failed",
+      failureCode: "MODEL_FAILED",
+    }).success,
+  ).toBe(true);
+  const segment = { ...base, id: "segment", runId: "run", text: "Reply" };
+  expect(conversationEventSchema.parse({ ...base, kind: "reply.segment", segment }).kind).toBe(
+    "reply.segment",
+  );
+  for (const kind of ["reasoning", "placeholder"])
+    expect(conversationEventSchema.safeParse({ ...base, kind, text: "Hidden" }).success).toBe(
+      false,
+    );
 });

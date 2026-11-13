@@ -21,7 +21,10 @@ one direct Conversation. Features own scoped queries, API owns session admission
 `conversation_messages`, `conversation_events` and `conversation_counters` use
 Space/Conversation composite references. Messages retain the member-scoped retry
 key; immutable events reference their content. The locked counter and retention
-floor commit with event writes/pruning. `/connection` also exposes an owned,
+floor commit with event writes/pruning. `conversation_runs` pins message, member,
+Agent model and instructions; a partial unique index permits one running Run per
+Space/Agent. `conversation_reply_segments` stores completed text. State and segment
+events use same-Space references; first-response time commits with segment output. `/connection` also exposes an owned,
 dedicated LISTEN connection; feature adapters choose the channel and payload.
 
 ## Constraints

@@ -8,7 +8,11 @@ import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
 import type { ConversationId } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
-import type { ConversationFanout, ConversationsRepository } from "@raypx/agents/server";
+import type {
+  ConversationFanout,
+  ConversationsRepository,
+  LiveReplies,
+} from "@raypx/agents/server";
 import type { SpaceAccess } from "@raypx/spaces/server";
 
 interface Subscription {
@@ -18,6 +22,9 @@ interface Subscription {
   controller: AbortController;
   running: boolean;
   dirty: boolean;
+  liveSegment?: string;
+  liveOffset: number;
+  committedSegment?: string;
 }
 interface Connection {
   accountId: string;
@@ -34,6 +41,7 @@ const streamId = (spaceId: string, conversationId: string) =>
 export class ConversationStream {
   private readonly peers = new Map<string, Connection>();
   private unsubscribe: (() => Promise<void>) | undefined;
+  private unsubscribeLive: (() => void) | undefined;
   private timer: ReturnType<typeof setInterval> | undefined;
   constructor(
     private readonly options: {
@@ -42,6 +50,7 @@ export class ConversationStream {
       readSession(headers: Headers): Promise<AuthSession | null>;
       fanout: ConversationFanout;
       pollMs?: number;
+      live?: LiveReplies;
     },
   ) {}
   async start() {
@@ -49,6 +58,11 @@ export class ConversationStream {
       for (const peer of this.peers.values())
         for (const subscription of peer.subscriptions.values())
           if (subscription.conversationId === notice.conversationId) this.wake(peer, subscription);
+    });
+    this.unsubscribeLive = this.options.live?.subscribe((id) => {
+      for (const peer of this.peers.values())
+        for (const subscription of peer.subscriptions.values())
+          if (subscription.conversationId === id) this.wake(peer, subscription);
     });
     // Hints may be lost during LISTEN reconnects. Polling also rechecks idle memberships/sessions.
     this.timer = setInterval(() => {
@@ -108,6 +122,7 @@ export class ConversationStream {
         controller: new AbortController(),
         running: false,
         dirty: false,
+        liveOffset: 0,
       };
       peer.subscriptions.set(key, subscription);
       this.wake(peer, subscription);
@@ -189,6 +204,8 @@ export class ConversationStream {
       for (const entry of result.events) {
         // A page can wait on an ACK. Reauthorize before delivering its next event.
         if (!(await this.authorize(peer, subscription))) return;
+        if (entry.event.kind === "reply.segment")
+          subscription.committedSegment = entry.event.segment.id;
         await subscription.stream.wait(
           {
             streamId: streamId(subscription.spaceId, subscription.conversationId),
@@ -198,13 +215,35 @@ export class ConversationStream {
           () => peer.send({ type: "event", entry }),
         );
       }
-      if (result.hasMore) subscription.dirty = true;
+      if (result.hasMore) {
+        subscription.dirty = true;
+        continue;
+      }
+      // Read synchronously after replay and authorization: the prefix and offset form one handoff.
+      if (!(await this.authorize(peer, subscription))) return;
+      const live = this.options.live?.read(subscription.spaceId, subscription.conversationId);
+      if (!live || subscription.committedSegment === live.segmentId) continue;
+      if (subscription.liveSegment !== live.segmentId) {
+        peer.send({ ...live, type: "reply.prefix", offset: 0 });
+        subscription.liveSegment = live.segmentId;
+        subscription.liveOffset = live.text.length;
+      } else if (live.text.length > subscription.liveOffset) {
+        peer.send({
+          ...live,
+          type: "reply.delta",
+          offset: subscription.liveOffset,
+          text: live.text.slice(subscription.liveOffset),
+        });
+        subscription.liveOffset = live.text.length;
+      }
     }
   }
   async shutdown() {
     if (this.timer) clearInterval(this.timer);
     this.timer = undefined;
     for (const peer of this.peers.values()) this.fail(peer, 1001, "Server shutting down");
+    this.unsubscribeLive?.();
+    this.unsubscribeLive = undefined;
     await this.unsubscribe?.();
     this.unsubscribe = undefined;
   }

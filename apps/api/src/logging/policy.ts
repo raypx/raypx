@@ -3,6 +3,7 @@ import type { EventPolicyOptions } from "@raypx/logger/safe";
 /** API-owned policy; new application fields require an explicit runtime allowlist. */
 const API_LOG_FIELDS = [
   "operation",
+  "runId",
   "requestId",
   "method",
   "route",

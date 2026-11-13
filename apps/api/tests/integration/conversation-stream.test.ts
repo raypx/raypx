@@ -1,4 +1,6 @@
 import { afterEach, expect, it } from "vitest";
+import { replyFixture } from "../helpers/replies.js";
+import type { LiveReplies } from "@raypx/agents/server";
 import { Hono } from "hono";
 import { conversationServerFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
 import { ConversationStream } from "../../src/conversations/stream.js";
@@ -10,8 +12,9 @@ const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
 });
-async function fixture() {
-  const f = conversationFixture();
+async function fixture(
+  f: ReturnType<typeof conversationFixture> & { live?: LiveReplies } = conversationFixture(),
+) {
   const stream = new ConversationStream({ ...f, pollMs: 10 });
   await stream.start();
   cleanups.push(() => stream.shutdown());
@@ -27,15 +30,26 @@ async function fixture() {
   cleanups.push(async () => {
     await server.stop(true);
   });
-  async function connect(after = 0) {
+  async function connect(after = 0, autoAck = false) {
     const url = new URL("/events", server.url);
     url.protocol = "ws:";
     const socket = new WebSocket(url);
     const frames: ConversationServerFrame[] = [];
     const closed: number[] = [];
-    socket.addEventListener("message", (event) =>
-      frames.push(conversationServerFrameSchema.parse(JSON.parse(String(event.data)))),
-    );
+    socket.addEventListener("message", (event) => {
+      const frame = conversationServerFrameSchema.parse(JSON.parse(String(event.data)));
+      frames.push(frame);
+      if (autoAck && frame.type === "event")
+        socket.send(
+          JSON.stringify({
+            version: 1,
+            spaceId: f.spaceId,
+            conversationId: f.conversationId,
+            type: "ack",
+            sequence: frame.entry.event.sequence,
+          }),
+        );
+    });
     socket.addEventListener("close", (event) => closed.push(event.code));
     cleanups.push(async () => {
       socket.close();
@@ -126,4 +140,50 @@ it("requires a live session and checks Origin before upgrading on the existing l
   expect(
     (await fetch(new URL("/events", f.server.url), { headers: { upgrade: "websocket" } })).status,
   ).toBe(401);
+});
+
+it("streams a fixture reply on the loopback socket and a mid-segment subscriber converges", async () => {
+  const reply = replyFixture();
+  cleanups.push(() => reply.runner.close());
+  const f = await fixture(reply);
+  const first = await f.connect(0, true);
+  await reply.conversations.send(reply.scope, reply.conversationId, {
+    text: "Private input",
+    idempotencyKey: "socket-reply",
+  });
+  await expect.poll(() => reply.calls.length).toBe(1);
+  await expect.poll(() => first.frames.some((frame) => frame.type === "reply.prefix")).toBe(true);
+  reply.calls[0]!.delta("Hello");
+  const text = (frames: ConversationServerFrame[]) => {
+    let result = "";
+    for (const frame of frames) {
+      if (frame.type === "reply.prefix") result = frame.text;
+      if (frame.type === "reply.delta") {
+        if (frame.offset !== result.length) throw new Error("Noncontiguous live delta");
+        result += frame.text;
+      }
+      if (frame.type === "event" && frame.entry.event.kind === "reply.segment")
+        result = frame.entry.event.segment.text;
+    }
+    return result;
+  };
+  await expect.poll(() => text(first.frames)).toBe("Hello");
+  const middle = await f.connect(0, true);
+  await expect.poll(() => text(middle.frames)).toBe("Hello");
+  reply.calls[0]!.delta(" world");
+  await expect.poll(() => text(middle.frames)).toBe("Hello world");
+  reply.calls[0]!.complete();
+  for (const peer of [first, middle]) {
+    await expect
+      .poll(
+        () =>
+          peer.frames.filter(
+            (frame) => frame.type === "event" && frame.entry.event.kind === "reply.segment",
+          ).length,
+      )
+      .toBe(1);
+    expect(text(peer.frames)).toBe("Hello world");
+  }
+  expect(first.frames.some((frame) => frame.type === "reply.delta")).toBe(true);
+  expect(reply.segments).toHaveLength(1);
 });

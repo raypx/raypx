@@ -195,14 +195,20 @@ it("Message/Event: commits idempotently, snapshots at a cursor and refuses all r
     status: "events",
     events: [{ message: sent }],
     cursor: 1,
-    hasMore: false,
+    hasMore: true,
   });
   const snapshot = await client.conversations.snapshot(selection);
-  expect(snapshot).toEqual({ conversation: saved.conversation, messages: [sent], cursor: 1 });
+  expect(snapshot).toMatchObject({
+    conversation: saved.conversation,
+    messages: [sent],
+    runs: [{ state: "queued", model: agent.model }],
+    segments: [],
+    cursor: 2,
+  });
   expect(await client.conversations.events({ ...selection, after: snapshot.cursor })).toEqual({
     status: "events",
     events: [],
-    cursor: 1,
+    cursor: 2,
     hasMore: false,
   });
   for (const selected of [selection, { ...selection, spaceId: b.space.id }]) {
@@ -211,6 +217,7 @@ it("Message/Event: commits idempotently, snapshots at a cursor and refuses all r
       () => client.conversations.send({ ...selected, message }),
       () => client.conversations.events(selected),
       () => client.conversations.snapshot(selected),
+      () => client.conversations.stop({ ...selected, runId: snapshot.runs[0]!.id }),
     ])
       await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
   }
