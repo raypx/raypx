@@ -88,5 +88,5 @@ test("Web exposes an installable manifest and retries the same page URL after go
   await page.getByRole("link", { name: "Try again", exact: true }).click();
   expect((await retry).ok()).toBe(true);
   await expect(page).toHaveURL(target);
-  await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
 });
