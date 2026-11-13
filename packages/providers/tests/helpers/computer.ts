@@ -72,11 +72,18 @@ export function computerConformance(
           .join(""),
       ).toBe("abc");
       expect(events.at(-1)).toMatchObject({ kind: "exit", truncated: true, cancelled: false });
-      expect(await execute("sh", ["-c", "printf abc; printf def >&2; exit 7"], 4)).toEqual([
-        { kind: "stdout", bytes: "YWJj" },
-        { kind: "stderr", bytes: "ZA==" },
-        { kind: "exit", status: 7, cancelled: false, truncated: true },
-      ]);
+      // The two streams are independent pipes, so their relative order is not fixed. The budget
+      // is shared: four bytes arrive in total, each stream keeps its own prefix.
+      const mixed = await execute("sh", ["-c", "printf abc; printf def >&2; exit 7"], 4);
+      const stream = (kind: "stdout" | "stderr") =>
+        mixed
+          .filter((e) => e.kind === kind)
+          .map((e) => ("bytes" in e ? Buffer.from(e.bytes, "base64").toString() : ""))
+          .join("");
+      expect("abc".startsWith(stream("stdout"))).toBe(true);
+      expect("def".startsWith(stream("stderr"))).toBe(true);
+      expect(stream("stdout").length + stream("stderr").length).toBe(4);
+      expect(mixed.at(-1)).toEqual({ kind: "exit", status: 7, cancelled: false, truncated: true });
       expect((await execute("printf", ["\\377\\000"]))[0]).toEqual({
         kind: "stdout",
         bytes: "/wA=",
