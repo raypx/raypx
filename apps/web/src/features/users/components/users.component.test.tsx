@@ -264,12 +264,62 @@ it("clears the applied server search and returns to the first page", async () =>
       expect.objectContaining({ query: expect.objectContaining({ offset: 20 }) }),
     ),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
+  fireEvent.click(screen.getByRole("button", { name: "Remove filter: Email address: lin" }));
   expect(screen.getByLabelText("Search users")).toHaveValue("");
   await waitFor(() => {
     const query = mocks.list.mock.lastCall?.[0].query;
     expect(query).toMatchObject({ offset: 0, limit: 20 });
     expect(query).not.toHaveProperty("searchValue");
   });
-  expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
+  expect(screen.queryByRole("group", { name: "Applied filters" })).toBeNull();
+});
+
+it("combines verification with the applied search and removes filters independently", async () => {
+  const unverified = { ...member, emailVerified: false };
+  mocks.list.mockImplementation(async ({ query }) => ({
+    data:
+      query.filterValue === false
+        ? { users: [unverified], total: 1 }
+        : { users: query.offset === 20 ? [member] : [actor, member], total: 21 },
+  }));
+  page();
+  await screen.findByText(member.email);
+  const search = screen.getByLabelText("Search users");
+  fireEvent.change(search, { target: { value: "lin" } });
+  fireEvent.click(screen.getByRole("button", { name: "Search users" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  await screen.findByText("21–21 of 21 users");
+
+  await userEvent.click(screen.getByRole("combobox", { name: "Email verification" }));
+  await userEvent.click(await screen.findByRole("option", { name: "Unverified" }));
+  expect(await screen.findByText("1–1 of 1 user")).toBeVisible();
+  expect(mocks.list.mock.lastCall?.[0].query).toMatchObject({
+    offset: 0,
+    searchValue: "lin",
+    filterField: "emailVerified",
+    filterOperator: "eq",
+    filterValue: false,
+  });
+
+  await userEvent.click(screen.getByRole("button", { name: "Remove filter: Unverified" }));
+  expect(search).toHaveFocus();
+  await waitFor(() => {
+    const query = mocks.list.mock.lastCall?.[0].query;
+    expect(query).toMatchObject({ searchValue: "lin" });
+    expect(query).not.toHaveProperty("filterValue");
+  });
+  expect(screen.getByRole("button", { name: "Remove filter: Email address: lin" })).toBeVisible();
+
+  await userEvent.click(screen.getByRole("combobox", { name: "Email verification" }));
+  await userEvent.click(await screen.findByRole("option", { name: "Verified" }));
+  await userEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(search).toHaveValue("");
+  expect(screen.queryByRole("group", { name: "Applied filters" })).toBeNull();
+  await waitFor(() => {
+    const query = mocks.list.mock.lastCall?.[0].query;
+    expect(query).toMatchObject({ offset: 0, sortDirection: "desc" });
+    expect(query).not.toHaveProperty("searchValue");
+    expect(query).not.toHaveProperty("filterValue");
+  });
 });

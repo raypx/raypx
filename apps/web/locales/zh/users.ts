@@ -4,8 +4,13 @@ import type en from "../en/users.js";
 export default {
   searchBy: "搜索字段",
   search: "搜索用户",
+  filters: "用户筛选",
+  appliedFilters: "已应用的筛选",
+  removeFilter: "移除筛选：{filter}",
+  clearFilters: "清除筛选",
   email: "邮箱",
   verification: "邮箱验证",
+  anyVerification: "全部状态",
   role: "角色",
   created: "注册时间",
   newestFirst: "最新注册优先",
@@ -44,6 +49,7 @@ export default {
   failed: "角色修改失败，请检查网络后重试。",
   refreshFailed: "角色已保存，请重试刷新列表。",
   empty: "没有匹配的用户。",
+  noUsers: "暂无用户。",
   pagination: "用户分页",
-  page: "第 {page} 页 · 共 {total} 位用户",
+  results: "第 {from, number}–{to, number} 位，共 {total, number} 位用户",
 } as const satisfies CatalogShape<typeof en>;

@@ -52,6 +52,7 @@ const options = {
 };
 const app = createApiApp(options);
 const accounts: string[] = [];
+const fixtureName = `Audit Fixture ${crypto.randomUUID()}`;
 let administrator = "",
   member = "",
   adminCookie = "",
@@ -76,7 +77,7 @@ beforeAll(async () => {
     const email = `admin-audit-${crypto.randomUUID()}@example.test`;
     const response = await post(
       "sign-up/email",
-      { email, name: "Audit Fixture", password: "fixture-password-123" },
+      { email, name: fixtureName, password: "fixture-password-123" },
       "",
     );
     if (response.status !== 200) throw new Error("Fixture signup failed");
@@ -104,6 +105,36 @@ afterAll(async () => {
   await db.delete(systemConfiguration).where(eq(systemConfiguration.updatedBy, administrator));
   for (const id of accounts) await db.delete(user).where(eq(user.id, id));
   await connection.close();
+});
+it("combines user search and email verification before counting and paginating", async () => {
+  await db.update(user).set({ emailVerified: false }).where(eq(user.id, member));
+  try {
+    const query = new URLSearchParams({
+      searchField: "name",
+      searchValue: fixtureName,
+      filterField: "emailVerified",
+      filterOperator: "eq",
+      limit: "1",
+    });
+    for (const [verified, id] of [
+      [true, administrator],
+      [false, member],
+    ] as const) {
+      query.set("filterValue", String(verified));
+      const response = await app.fetch(
+        new Request(`http://localhost:3002/api/auth/admin/list-users?${query.toString()}`, {
+          headers: { cookie: adminCookie },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        users: [{ id, emailVerified: verified }],
+        total: 1,
+      });
+    }
+  } finally {
+    await db.update(user).set({ emailVerified: true }).where(eq(user.id, member));
+  }
 });
 it("commits role and configuration changes with safe durable audit and records refusals", async () => {
   expect((await post("admin/set-role", { userId: member, role: "admin" }, "")).status).toBe(403);

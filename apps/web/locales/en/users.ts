@@ -1,8 +1,13 @@
 export default {
   searchBy: "Search by",
   search: "Search users",
+  filters: "User filters",
+  appliedFilters: "Applied filters",
+  removeFilter: "Remove filter: {filter}",
+  clearFilters: "Clear filters",
   email: "Email address",
   verification: "Email verification",
+  anyVerification: "Any status",
   role: "Role",
   created: "Registered",
   newestFirst: "Newest first",
@@ -41,6 +46,7 @@ export default {
   failed: "Unable to change this role. Check your connection and try again.",
   refreshFailed: "The role was saved. Try again to refresh the list.",
   empty: "No matching users.",
+  noUsers: "No users to display.",
   pagination: "User pages",
-  page: "Page {page, number} · {total, plural, one {# user} other {# users}}",
+  results: "{from, number}–{to, number} of {total, plural, one {# user} other {# users}}",
 } as const;

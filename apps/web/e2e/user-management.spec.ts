@@ -25,7 +25,7 @@ test(
         name: `Member ${index}`,
         email: `member-${index}@example.test`,
         role: "member",
-        emailVerified: true,
+        emailVerified: index !== 19,
         createdAt: "2026-11-01T00:00:00Z",
       })),
     ];
@@ -38,7 +38,12 @@ test(
       searches.push(query);
       const search = query.get("searchValue") ?? "";
       const field = query.get("searchField") === "name" ? "name" : "email";
-      const matches = users.filter((user) => user[field].includes(search));
+      const verification = query.get("filterValue");
+      const matches = users.filter(
+        (user) =>
+          user[field].includes(search) &&
+          (verification === null || String(user.emailVerified) === verification),
+      );
       const offset = Number(query.get("offset") ?? 0);
       return authResponse(route, {
         users: matches.slice(offset, offset + 20),
@@ -75,6 +80,16 @@ test(
       table.getByRole("row").filter({ hasText: "member-19@example.test" }),
     ).toBeVisible();
     expect(searches.some((query) => query.get("offset") === "20")).toBe(true);
+    await page.getByRole("combobox", { name: "Email verification" }).click();
+    await page.getByRole("option", { name: "Unverified", exact: true }).click();
+    await expect(page.getByRole("navigation", { name: "User pages" })).toContainText(
+      "1–1 of 1 user",
+    );
+    expect(searches.at(-1)?.get("filterField")).toBe("emailVerified");
+    expect(searches.at(-1)?.get("filterValue")).toBe("false");
+    expect(Number(searches.at(-1)?.get("offset") ?? 0)).toBe(0);
+    await page.getByRole("button", { name: "Remove filter: Unverified" }).click();
+    await expect(page.getByLabel("Search users", { exact: true })).toBeFocused();
     await page.getByRole("combobox", { name: "Search by" }).click();
     await page.getByRole("option", { name: "Name", exact: true }).click();
     await page.getByLabel("Search users", { exact: true }).fill("Member 0");
@@ -89,6 +104,9 @@ test(
           Number(query.get("offset") ?? 0) === 0,
       ),
     ).toBe(true);
+    await page.getByRole("combobox", { name: "Email verification" }).click();
+    await page.getByRole("option", { name: "Verified", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Clear filters", exact: true })).toBeVisible();
     const previewButton = row.getByRole("button", { name: "View permissions" });
     await previewButton.press("Enter");
     const preview = page.getByRole("dialog", { name: "View permissions" });
@@ -115,6 +133,9 @@ test(
       expect.objectContaining({ userId: "member-0", role: "admin" }),
     ]);
     await capture(page, { path: test.info().outputPath("users-mobile.png"), fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(row).toBeVisible();
+    await capture(page, { path: test.info().outputPath("users-desktop.png"), fullPage: true });
   },
 );
 

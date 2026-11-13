@@ -266,7 +266,9 @@ recovery and browser-only draft completion. A successful login navigates after c
 clear, without invalidating the auth route mid-completion.
 `/admin/users` composes the account-keyed users feature through Better Auth's existing
 Admin client. Its shared DataTable renders server searches, registration-date sorting,
-and 20-row pagination. Changing sort returns to page one. Role changes require
+email verification filters and 20-row pagination with server result totals. The filter
+bar shows applied conditions as removable controls. Search, filter and sort changes
+return to page one. Role changes require
 confirmation, prevent self-editing, and retry a completed mutation's refresh separately.
 The role preview and change dialog derive their permission lists from Auth's shared ACL.
 

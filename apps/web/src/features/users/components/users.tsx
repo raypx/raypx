@@ -5,12 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { assignedRoles, type AuthRole } from "@raypx/auth/access";
 import { hasPermission } from "@raypx/account/access";
 import { Button } from "@raypx/ui/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { PageHeader } from "@raypx/ui/page-header";
-import { SearchIcon } from "@raypx/icons/search";
 import { RefreshIcon } from "@raypx/icons/refresh";
-import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import {
   Dialog,
   DialogContent,
@@ -27,21 +25,21 @@ import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { accountAccessQuery } from "../../auth/access.js";
 import { authClient, apiUrl } from "../../auth/client.js";
-import { UserTable, type UserRoleSelection, type UserSortDirection } from "./user-table.js";
+import { UserTable, type UserRoleSelection } from "./user-table.js";
+import { UserFilters, type UserFiltersValue } from "./user-filters.js";
 import { RolePermissions } from "./role-permissions.js";
 
 const pageSize = 20;
-type SearchField = "email" | "name";
-
 export function Users({ accountId }: { accountId: string }) {
   const c = useTranslations("common");
   const t = useTranslations("users");
   const cache = useQueryClient();
-  const [field, setField] = useState<SearchField>("email");
-  const [draft, setDraft] = useState("");
-  const [search, setSearch] = useState({ field: "email" as SearchField, value: "" });
+  const [filters, setFilters] = useState<UserFiltersValue>({
+    search: null,
+    verification: "all",
+    sortDirection: "desc",
+  });
   const [offset, setOffset] = useState(0);
-  const [sortDirection, setSortDirection] = useState<UserSortDirection>("desc");
   const [selection, setSelection] = useState<
     (UserRoleSelection & { mode: "view" | "edit" }) | null
   >(null);
@@ -71,8 +69,9 @@ export function Users({ accountId }: { accountId: string }) {
   const canView = hasPermission(permissions, "users.read");
   const canChange = canView && hasPermission(permissions, "users.roles.update");
   const listKey = ["admin-users", apiUrl, accountId] as const;
+  const { search, verification, sortDirection } = filters;
   const users = useQuery({
-    queryKey: [...listKey, search, offset, sortDirection],
+    queryKey: [...listKey, filters, offset],
     queryFn: async ({ signal }) => {
       const result = await authClient.admin.listUsers({
         query: {
@@ -80,11 +79,18 @@ export function Users({ accountId }: { accountId: string }) {
           offset,
           sortBy: "createdAt",
           sortDirection,
-          ...(search.value
+          ...(search
             ? {
                 searchValue: search.value,
                 searchField: search.field,
                 searchOperator: "contains" as const,
+              }
+            : {}),
+          ...(verification !== "all"
+            ? {
+                filterField: "emailVerified",
+                filterOperator: "eq" as const,
+                filterValue: verification === "verified",
               }
             : {}),
         },
@@ -102,6 +108,8 @@ export function Users({ accountId }: { accountId: string }) {
     retry: false,
     staleTime: 0,
   });
+  const total = users.data?.total ?? 0;
+  const loaded = users.data?.users.length ?? 0;
   const refresh = async () => {
     await Promise.all([
       cache.invalidateQueries({ queryKey: listKey }, { throwOnError: true }),
@@ -164,133 +172,68 @@ export function Users({ accountId }: { accountId: string }) {
           </IconButton>
         }
       />
-      <form
-        className="rounded-xl border border-border bg-sidebar p-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setOffset(0);
-          setSearch({ field, value: draft.trim() });
-        }}
-      >
-        <FieldGroup className="grid gap-3 @xl/main:grid-cols-[8rem_minmax(0,1fr)_9rem_auto] @xl/main:items-end">
-          <Field className="min-w-0">
-            <FieldLabel htmlFor="user-search-field">{t("searchBy")}</FieldLabel>
-            <SelectField
-              id="user-search-field"
-              value={field}
-              onValueChange={setField}
-              options={[
-                { value: "email", label: t("email") },
-                { value: "name", label: c("name") },
-              ]}
+      <div className="min-w-0 rounded-xl border border-border">
+        <UserFilters
+          filters={filters}
+          onChange={(value) => {
+            setFilters(value);
+            setOffset(0);
+          }}
+        />
+        <div aria-busy={users.isFetching} className="min-w-0">
+          {users.isError ? (
+            <div className="flex flex-col items-start gap-3 p-4">
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {users.error.message === "FORBIDDEN" ? t("forbidden") : c("networkError")}
+                </AlertDescription>
+              </Alert>
+              <Button variant="outline" onClick={() => void users.refetch()}>
+                {c("retry")}
+              </Button>
+            </div>
+          ) : users.isPending ? (
+            <LoadingState label={c("loading")} />
+          ) : loaded === 0 ? (
+            <EmptyState title={t(search || verification !== "all" ? "empty" : "noUsers")} />
+          ) : (
+            <UserTable
+              rows={users.data.users}
+              accountId={accountId}
+              canView={canView}
+              canChange={canChange}
+              sortDirection={sortDirection}
+              onOpenRole={openRole}
             />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="user-search">{t("search")}</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon>
-                <SearchIcon aria-hidden="true" />
-              </InputGroupAddon>
-              <InputGroupInput
-                id="user-search"
-                value={draft}
-                maxLength={320}
-                onChange={(event) => setDraft(event.target.value)}
-              />
-            </InputGroup>
-          </Field>
-          <Field className="min-w-0">
-            <FieldLabel htmlFor="user-sort">{t("created")}</FieldLabel>
-            <SelectField
-              id="user-sort"
-              value={sortDirection}
-              onValueChange={(direction) => {
-                setSortDirection(direction);
-                setOffset(0);
-              }}
-              options={[
-                { value: "desc", label: t("newestFirst") },
-                { value: "asc", label: t("oldestFirst") },
-              ]}
-            />
-          </Field>
-          <Button type="submit">{t("search")}</Button>
-        </FieldGroup>
-        {search.value && (
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            <span className="min-w-0 wrap-anywhere">
-              {search.field === "email" ? t("email") : c("name")}: {search.value}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              onClick={() => {
-                setDraft("");
-                setOffset(0);
-                setSearch({ field, value: "" });
-              }}
-            >
-              {c("clearSearch")}
-            </Button>
-          </div>
-        )}
-      </form>
-      <div aria-busy={users.isFetching} className="min-w-0">
-        {users.isError ? (
-          <div className="flex flex-col items-start gap-3">
-            <Alert variant="destructive">
-              <AlertDescription>
-                {users.error.message === "FORBIDDEN" ? t("forbidden") : c("networkError")}
-              </AlertDescription>
-            </Alert>
-            <Button variant="outline" onClick={() => void users.refetch()}>
-              {c("retry")}
-            </Button>
-          </div>
-        ) : users.isPending ? (
-          <LoadingState label={c("loading")} />
-        ) : users.data.users.length === 0 ? (
-          <EmptyState title={t("empty")} />
-        ) : (
-          <UserTable
-            rows={users.data.users}
-            accountId={accountId}
-            canView={canView}
-            canChange={canChange}
-            sortDirection={sortDirection}
-            onOpenRole={openRole}
-          />
-        )}
-      </div>
-      <nav
-        aria-label={t("pagination")}
-        className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
-      >
-        <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">
-          {users.data &&
-            t("page", {
-              page: Math.floor(offset / pageSize) + 1,
-              total: users.data?.total ?? 0,
-            })}
-        </p>
-        <div className="flex gap-2">
-          <IconButton
-            label={c("previousPage")}
-            disabled={offset === 0 || users.isFetching}
-            onClick={() => setOffset(Math.max(0, offset - pageSize))}
-          >
-            <ArrowLeftIcon aria-hidden="true" />
-          </IconButton>
-          <IconButton
-            label={c("nextPage")}
-            disabled={users.isFetching || offset + pageSize >= (users.data?.total ?? 0)}
-            onClick={() => setOffset(offset + pageSize)}
-          >
-            <ArrowRightIcon aria-hidden="true" />
-          </IconButton>
+          )}
         </div>
-      </nav>
+        <nav
+          aria-label={t("pagination")}
+          className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-2 @xl/main:px-4"
+        >
+          <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">
+            {users.isSuccess &&
+              loaded > 0 &&
+              t("results", { from: offset + 1, to: offset + loaded, total })}
+          </p>
+          <div className="flex gap-2">
+            <IconButton
+              label={c("previousPage")}
+              disabled={offset === 0 || users.isFetching}
+              onClick={() => setOffset(Math.max(0, offset - pageSize))}
+            >
+              <ArrowLeftIcon aria-hidden="true" />
+            </IconButton>
+            <IconButton
+              label={c("nextPage")}
+              disabled={users.isFetching || offset + pageSize >= total}
+              onClick={() => setOffset(offset + pageSize)}
+            >
+              <ArrowRightIcon aria-hidden="true" />
+            </IconButton>
+          </div>
+        </nav>
+      </div>
       <Dialog
         open={selection !== null && canView}
         onOpenChange={(open) => {
