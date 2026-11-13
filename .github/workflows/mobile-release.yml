@@ -1,5 +1,5 @@
 name: Mobile release
-run-name: Mobile release
+run-name: Mobile release · ${{ github.ref_name }} · ${{ inputs.platform }}${{ inputs.submit && ' · submit' || '' }}
 on:
   workflow_dispatch:
     inputs:

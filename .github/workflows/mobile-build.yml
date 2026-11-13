@@ -1,5 +1,5 @@
 name: Mobile build
-run-name: Mobile build
+run-name: Mobile build · ${{ github.ref_name }} · ${{ inputs.platform }}
 on:
   workflow_dispatch:
     inputs:
