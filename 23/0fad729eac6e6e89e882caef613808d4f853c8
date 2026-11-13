@@ -1,0 +1,57 @@
+apps/web/e2e/agents.spec.ts
+  s_f9cc0d01f49051::t_ccf7804d59c775 9-10,12-14,18-25,47,52-54,58,125-128,134-141,185-193,202-214
+packages/agents/AGENTS.md
+  s_f9cc0d01f49051::t_6941ca78295029 10-12,15-17
+packages/agents/locales/en/agents.json
+  s_0cb58c94429543::t_cd38d9207996ee 108,117-120,168
+packages/agents/locales/zh/agents.json
+  s_0cb58c94429543::t_fb0d484beb3dec 108,117-120,168
+packages/agents/src/client/approval-card.component.test.tsx
+  s_f9cc0d01f49051::t_c559e9723cf190 65-67,99,102-107,122-123,179-245
+packages/agents/src/client/approval-card.tsx
+  s_f9cc0d01f49051::t_c098811ca88791 5-12,40-45,53-74,91,93-94,103,110,119,124-130,132,135-171
+packages/agents/src/client/conversation.tsx
+  s_f9cc0d01f49051::t_b36c9187e9bb48 12,14-15,40-41,78-81,95-96,152-153,166-167,176-177,206,216-217,219-227,229-233,238-240,287,292-294,296-300,342,371-408,431,451-459,473-477,483-486,513,522-525,594,652-653,662,666,725-770
+packages/agents/src/client/tool-activity.component.test.tsx
+  s_f9cc0d01f49051::t_4a284fb4f14c6b 39,51-53,82,87-107
+packages/agents/src/client/tool-activity.tsx
+  s_f9cc0d01f49051::t_a6d8413bc33f21 16,20,33-37,45-52
+packages/agents/src/client/workspace.component.test.tsx
+  s_f9cc0d01f49051::t_7de2525a1e8058 18,175,240-243,246-249,282-285,287,289,292-294,845,882-883,1228-1229,1250-1252,1255,1276,1284-1500
+packages/agents/src/client/workspace.tsx
+  s_f9cc0d01f49051::t_bad36e98b40ed5 282-286
+packages/agents/src/model.ts
+  s_f9cc0d01f49051::t_153c03c5c05876 4-5,57-59
+packages/agents/src/model/approvals.test.ts
+  s_f9cc0d01f49051::t_f3f8d64fc3e037 6-13,103-133
+packages/agents/src/model/approvals.ts
+  s_f9cc0d01f49051::t_58a654777e9d2f 27-56
+packages/agents/src/model/conversation.test.ts
+  s_f9cc0d01f49051::t_ebcc1ba55897cc 11-12,15-21,701-761
+packages/agents/src/model/conversation.ts
+  s_f9cc0d01f49051::t_61e44cf88e9092 13,72-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "230fad729eac6e6e89e882caef613808d4f853c8",
+  "prompts": {},
+  "sessions": {
+    "s_0cb58c94429543": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d5ef-085b-7380-b04a-c1ed08530feb",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
